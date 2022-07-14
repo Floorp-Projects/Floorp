@@ -440,6 +440,21 @@ class Raptor(
                 },
             ],
             [
+                ["--test-bytecode-cache"],
+                {
+                    "dest": "test_bytecode_cache",
+                    "action": "store_true",
+                    "default": False,
+                    "help": (
+                        "If set, the pageload test will set the preference "
+                        "`dom.script_loader.bytecode_cache.strategy=-1` and wait 20 seconds "
+                        "after the first cold pageload to populate the bytecode cache before "
+                        "running a warm pageload test. Only available if `--chimera` "
+                        "is also provided."
+                    ),
+                },
+            ],
+            [
                 ["--chimera"],
                 {
                     "dest": "chimera",
@@ -963,6 +978,8 @@ class Raptor(
             options.extend(
                 ["--browser-cycles={}".format(self.config.get("browser_cycles"))]
             )
+        if self.config.get("test_bytecode_cache", False):
+            options.extend(["--test-bytecode-cache"])
 
         if self.config.get("webext", False):
             options.extend(["--webext"])

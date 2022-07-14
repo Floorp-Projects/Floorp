@@ -6718,6 +6718,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -6739,6 +6744,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -6760,6 +6770,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -6806,6 +6821,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -6852,6 +6872,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -6873,6 +6898,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -6914,6 +6944,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -6935,6 +6970,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -7001,6 +7041,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -7022,6 +7067,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -7043,6 +7093,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-bing-search**
         - ❌
         - ❌
@@ -7084,6 +7139,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-bing-search**
         - ❌
         - ❌
@@ -7125,6 +7185,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -7146,6 +7211,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-bing-search**
         - ❌
         - ❌
@@ -7187,6 +7257,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-bing-search**
         - ❌
         - ❌
@@ -7208,6 +7283,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-bing-search**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-bing-search**
         - ❌
         - ❌
@@ -7762,6 +7842,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -7783,6 +7868,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -7804,6 +7894,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -7835,6 +7930,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -7866,6 +7966,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -7887,6 +7992,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -7918,6 +8028,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -7939,6 +8054,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -9705,6 +9825,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -9726,6 +9851,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -9747,6 +9877,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-fandom**
         - ❌
         - ❌
@@ -9788,6 +9923,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-fandom**
         - ❌
         - ❌
@@ -9829,6 +9969,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -9850,6 +9995,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-fandom**
         - ❌
         - ❌
@@ -9891,6 +10041,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-fandom**
         - ❌
         - ❌
@@ -9912,6 +10067,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-fandom**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-fandom**
         - ❌
         - ❌
@@ -10993,6 +11153,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -11014,6 +11179,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -11035,6 +11205,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-google-slides**
         - ❌
         - ❌
@@ -11076,6 +11251,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-google-slides**
         - ❌
         - ❌
@@ -11117,6 +11297,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -11138,6 +11323,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-google-slides**
         - ❌
         - ❌
@@ -11179,6 +11369,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-google-slides**
         - ❌
         - ❌
@@ -11200,6 +11395,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-google-slides**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-google-slides**
         - ❌
         - ❌
@@ -12472,6 +12672,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -12488,6 +12693,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -12504,6 +12714,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -12530,6 +12745,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -12556,6 +12776,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -12572,6 +12797,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -12598,6 +12828,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -12614,6 +12849,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -16034,6 +16274,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -16055,6 +16300,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -16076,6 +16326,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-twitter**
         - ❌
         - ❌
@@ -16117,6 +16372,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-twitter**
         - ❌
         - ❌
@@ -16158,6 +16418,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -16179,6 +16444,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-twitter**
         - ❌
         - ❌
@@ -16220,6 +16490,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-twitter**
         - ❌
         - ❌
@@ -16241,6 +16516,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-twitter**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-twitter**
         - ❌
         - ❌
@@ -16830,6 +17110,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -16851,6 +17136,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -16872,6 +17162,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -16913,6 +17208,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -16954,6 +17254,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -16975,6 +17280,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -17016,6 +17326,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -17037,6 +17352,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -17103,6 +17423,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -17124,6 +17449,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -17145,6 +17475,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-yahoo-mail**
         - ❌
         - ❌
@@ -17186,6 +17521,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-yahoo-mail**
         - ❌
         - ❌
@@ -17227,6 +17567,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -17248,6 +17593,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-yahoo-mail**
         - ❌
         - ❌
@@ -17289,6 +17639,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-yahoo-mail**
         - ❌
         - ❌
@@ -17310,6 +17665,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-yahoo-mail**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-yahoo-mail**
         - ❌
         - ❌
@@ -19469,6 +19829,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -19490,6 +19855,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -19511,6 +19881,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -19542,6 +19917,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -19573,6 +19953,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -19594,6 +19979,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -19625,6 +20015,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -19646,6 +20041,11 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -23672,6 +24072,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -23693,6 +24098,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -23714,6 +24124,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -23760,6 +24175,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -23806,6 +24226,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -23827,6 +24252,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -23868,6 +24298,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-amazon**
         - ❌
         - ❌
@@ -23889,6 +24324,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-amazon**
         - ❌
         - ❌
@@ -25510,6 +25950,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25531,6 +25976,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25552,6 +26002,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -25583,6 +26038,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -25614,6 +26074,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25635,6 +26100,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -25666,6 +26136,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-cnn**
         - ❌
         - ❌
@@ -25687,6 +26162,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-cnn**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-cnn**
         - ❌
         - ❌
@@ -30318,6 +30798,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -30334,6 +30819,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -30350,6 +30840,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -30376,6 +30871,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -30402,6 +30902,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -30418,6 +30923,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -30444,6 +30954,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-instagram**
         - ❌
         - ❌
@@ -30460,6 +30975,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-instagram**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-instagram**
         - ❌
         - ❌
@@ -32705,6 +33225,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -32726,6 +33251,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -32747,6 +33277,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -32788,6 +33323,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -32829,6 +33369,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -32850,6 +33395,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
@@ -32891,6 +33441,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-tp6-essential-firefox-wikipedia**
         - ❌
         - ❌
@@ -32912,6 +33467,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-wikipedia**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
       * - **browsertime-tp6-essential-chrome-wikipedia**
         - ❌
         - ❌
