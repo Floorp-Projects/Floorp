@@ -216,12 +216,6 @@ void RtpTransceiver::SetChannel(
 
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);
 
-  if (!channel_) {
-    for (const auto& receiver : receivers_)
-      receiver->internal()->SetSourceEnded();
-    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(1);  // There should not be an invoke.
-  }
-
   if (channel_to_delete || !senders_.empty() || !receivers_.empty()) {
     channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
       auto* media_channel = channel_ ? channel_->media_channel() : nullptr;
