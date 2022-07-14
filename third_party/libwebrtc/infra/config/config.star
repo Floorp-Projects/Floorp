@@ -661,7 +661,7 @@ mac_builder, mac_try_job = normal_builder_factory(
 )
 
 ios_builder, ios_try_job = normal_builder_factory(
-    dimensions = {"os": "Mac-10.15"},
+    dimensions = {"os": "Mac-11"},
     properties = {"xcode_build_version": WEBRTC_IOS_XCODE_VERSION},
     caches = [swarming.cache(
         name = "xcode_ios_" + WEBRTC_IOS_XCODE_VERSION,
