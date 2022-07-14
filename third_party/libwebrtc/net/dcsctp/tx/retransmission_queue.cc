@@ -529,16 +529,15 @@ size_t RetransmissionQueue::max_bytes_to_send() const {
   return std::min(rwnd(), left);
 }
 
-void RetransmissionQueue::PrepareResetStreams(
-    rtc::ArrayView<const StreamID> streams) {
+void RetransmissionQueue::PrepareResetStream(StreamID stream_id) {
   // TODO(boivie): These calls are now only affecting the send queue. The
   // packet buffer can also change behavior - for example draining the chunk
   // producer and eagerly assign TSNs so that an "Outgoing SSN Reset Request"
   // can be sent quickly, with a known `sender_last_assigned_tsn`.
-  send_queue_.PrepareResetStreams(streams);
+  send_queue_.PrepareResetStream(stream_id);
 }
-bool RetransmissionQueue::CanResetStreams() const {
-  return send_queue_.CanResetStreams();
+bool RetransmissionQueue::HasStreamsReadyToBeReset() const {
+  return send_queue_.HasStreamsReadyToBeReset();
 }
 void RetransmissionQueue::CommitResetStreams() {
   send_queue_.CommitResetStreams();

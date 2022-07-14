@@ -26,6 +26,7 @@
 namespace dcsctp {
 namespace {
 using ::testing::SizeIs;
+using ::testing::UnorderedElementsAre;
 
 constexpr TimeMs kNow = TimeMs(0);
 constexpr StreamID kStreamID(1);
@@ -252,10 +253,13 @@ TEST_F(RRSendQueueTest, PrepareResetStreamsDiscardsStream) {
   buf_.Add(kNow, DcSctpMessage(StreamID(2), PPID(54), {1, 2, 3, 4, 5}));
   EXPECT_EQ(buf_.total_buffered_amount(), 8u);
 
-  buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(1)}));
+  buf_.PrepareResetStream(StreamID(1));
   EXPECT_EQ(buf_.total_buffered_amount(), 5u);
+
+  EXPECT_THAT(buf_.GetStreamsReadyToBeReset(),
+              UnorderedElementsAre(StreamID(1)));
   buf_.CommitResetStreams();
-  buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(2)}));
+  buf_.PrepareResetStream(StreamID(2));
   EXPECT_EQ(buf_.total_buffered_amount(), 0u);
 }
 
@@ -270,21 +274,27 @@ TEST_F(RRSendQueueTest, PrepareResetStreamsNotPartialPackets) {
   EXPECT_EQ(chunk_one->data.stream_id, kStreamID);
   EXPECT_EQ(buf_.total_buffered_amount(), 2 * payload.size() - 50);
 
-  StreamID stream_ids[] = {StreamID(1)};
-  buf_.PrepareResetStreams(stream_ids);
+  buf_.PrepareResetStream(StreamID(1));
   EXPECT_EQ(buf_.total_buffered_amount(), payload.size() - 50);
 }
 
 TEST_F(RRSendQueueTest, EnqueuedItemsArePausedDuringStreamReset) {
   std::vector<uint8_t> payload(50);
 
-  buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(1)}));
+  buf_.PrepareResetStream(StreamID(1));
   EXPECT_EQ(buf_.total_buffered_amount(), 0u);
 
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
   EXPECT_EQ(buf_.total_buffered_amount(), payload.size());
 
   EXPECT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize).has_value());
+
+  EXPECT_TRUE(buf_.HasStreamsReadyToBeReset());
+  EXPECT_THAT(buf_.GetStreamsReadyToBeReset(),
+              UnorderedElementsAre(StreamID(1)));
+
+  EXPECT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize).has_value());
+
   buf_.CommitResetStreams();
   EXPECT_EQ(buf_.total_buffered_amount(), payload.size());
 
@@ -309,8 +319,7 @@ TEST_F(RRSendQueueTest, PausedStreamsStillSendPartialMessagesUntilEnd) {
   EXPECT_EQ(buf_.total_buffered_amount(), 2 * kPayloadSize - kFragmentSize);
 
   // This will stop the second message from being sent.
-  StreamID stream_ids[] = {StreamID(1)};
-  buf_.PrepareResetStreams(stream_ids);
+  buf_.PrepareResetStream(StreamID(1));
   EXPECT_EQ(buf_.total_buffered_amount(), 1 * kPayloadSize - kFragmentSize);
 
   // Should still produce fragments until end of message.
@@ -340,13 +349,14 @@ TEST_F(RRSendQueueTest, CommittingResetsSSN) {
   ASSERT_TRUE(chunk_two.has_value());
   EXPECT_EQ(chunk_two->data.ssn, SSN(1));
 
-  StreamID stream_ids[] = {StreamID(1)};
-  buf_.PrepareResetStreams(stream_ids);
+  buf_.PrepareResetStream(StreamID(1));
 
   // Buffered
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
 
-  EXPECT_TRUE(buf_.CanResetStreams());
+  EXPECT_TRUE(buf_.HasStreamsReadyToBeReset());
+  EXPECT_THAT(buf_.GetStreamsReadyToBeReset(),
+              UnorderedElementsAre(StreamID(1)));
   buf_.CommitResetStreams();
 
   absl::optional<SendQueue::DataToSend> chunk_three =
@@ -373,14 +383,16 @@ TEST_F(RRSendQueueTest, CommittingResetsSSNForPausedStreamsOnly) {
   EXPECT_EQ(chunk_two->data.stream_id, StreamID(3));
   EXPECT_EQ(chunk_two->data.ssn, SSN(0));
 
-  StreamID stream_ids[] = {StreamID(3)};
-  buf_.PrepareResetStreams(stream_ids);
+  buf_.PrepareResetStream(StreamID(3));
 
   // Send two more messages - SID 3 will buffer, SID 1 will send.
   buf_.Add(kNow, DcSctpMessage(StreamID(1), kPPID, payload));
   buf_.Add(kNow, DcSctpMessage(StreamID(3), kPPID, payload));
 
-  EXPECT_TRUE(buf_.CanResetStreams());
+  EXPECT_TRUE(buf_.HasStreamsReadyToBeReset());
+  EXPECT_THAT(buf_.GetStreamsReadyToBeReset(),
+              UnorderedElementsAre(StreamID(3)));
+
   buf_.CommitResetStreams();
 
   absl::optional<SendQueue::DataToSend> chunk_three =
@@ -412,12 +424,14 @@ TEST_F(RRSendQueueTest, RollBackResumesSSN) {
   ASSERT_TRUE(chunk_two.has_value());
   EXPECT_EQ(chunk_two->data.ssn, SSN(1));
 
-  buf_.PrepareResetStreams(std::vector<StreamID>({StreamID(1)}));
+  buf_.PrepareResetStream(StreamID(1));
 
   // Buffered
   buf_.Add(kNow, DcSctpMessage(kStreamID, kPPID, payload));
 
-  EXPECT_TRUE(buf_.CanResetStreams());
+  EXPECT_TRUE(buf_.HasStreamsReadyToBeReset());
+  EXPECT_THAT(buf_.GetStreamsReadyToBeReset(),
+              UnorderedElementsAre(StreamID(1)));
   buf_.RollbackResetStreams();
 
   absl::optional<SendQueue::DataToSend> chunk_three =

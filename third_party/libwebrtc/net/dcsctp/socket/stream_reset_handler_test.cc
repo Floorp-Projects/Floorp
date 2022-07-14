@@ -343,10 +343,13 @@ TEST_F(StreamResetHandlerTest, ResetStreamsDeferred) {
 }
 
 TEST_F(StreamResetHandlerTest, SendOutgoingRequestDirectly) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
+
   absl::optional<ReConfigChunk> reconfig = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig.has_value());
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -360,13 +363,21 @@ TEST_F(StreamResetHandlerTest, SendOutgoingRequestDirectly) {
 }
 
 TEST_F(StreamResetHandlerTest, ResetMultipleStreamsInOneRequest) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(3);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(40)));
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(41)));
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42))).Times(2);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(43)));
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(44)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
   handler_->ResetStreams(
       std::vector<StreamID>({StreamID(43), StreamID(44), StreamID(41)}));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42), StreamID(40)}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(
+          std::vector<StreamID>({StreamID(40), StreamID(41), StreamID(42),
+                                 StreamID(43), StreamID(44)})));
   absl::optional<ReConfigChunk> reconfig = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig.has_value());
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -382,10 +393,10 @@ TEST_F(StreamResetHandlerTest, ResetMultipleStreamsInOneRequest) {
 }
 
 TEST_F(StreamResetHandlerTest, SendOutgoingRequestDeferred) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-  EXPECT_CALL(producer_, CanResetStreams())
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset())
       .WillOnce(Return(false))
       .WillOnce(Return(false))
       .WillOnce(Return(true));
@@ -396,10 +407,12 @@ TEST_F(StreamResetHandlerTest, SendOutgoingRequestDeferred) {
 }
 
 TEST_F(StreamResetHandlerTest, SendOutgoingResettingOnPositiveResponse) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
 
   absl::optional<ReConfigChunk> reconfig = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig.has_value());
@@ -412,8 +425,8 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResettingOnPositiveResponse) {
       req.request_sequence_number(), ResponseResult::kSuccessPerformed));
   ReConfigChunk response_reconfig(builder.Build());
 
-  EXPECT_CALL(producer_, CommitResetStreams()).Times(1);
-  EXPECT_CALL(producer_, RollbackResetStreams()).Times(0);
+  EXPECT_CALL(producer_, CommitResetStreams);
+  EXPECT_CALL(producer_, RollbackResetStreams).Times(0);
 
   // Processing a response shouldn't result in sending anything.
   EXPECT_CALL(callbacks_, OnError).Times(0);
@@ -422,10 +435,12 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResettingOnPositiveResponse) {
 }
 
 TEST_F(StreamResetHandlerTest, SendOutgoingResetRollbackOnError) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
 
   absl::optional<ReConfigChunk> reconfig = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig.has_value());
@@ -438,8 +453,8 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRollbackOnError) {
       req.request_sequence_number(), ResponseResult::kErrorBadSequenceNumber));
   ReConfigChunk response_reconfig(builder.Build());
 
-  EXPECT_CALL(producer_, CommitResetStreams()).Times(0);
-  EXPECT_CALL(producer_, RollbackResetStreams()).Times(1);
+  EXPECT_CALL(producer_, CommitResetStreams).Times(0);
+  EXPECT_CALL(producer_, RollbackResetStreams);
 
   // Only requests should result in sending responses.
   EXPECT_CALL(callbacks_, OnError).Times(0);
@@ -450,10 +465,12 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRollbackOnError) {
 TEST_F(StreamResetHandlerTest, SendOutgoingResetRetransmitOnInProgress) {
   static constexpr StreamID kStreamToReset = StreamID(42);
 
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(kStreamToReset));
   handler_->ResetStreams(std::vector<StreamID>({kStreamToReset}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({kStreamToReset})));
 
   absl::optional<ReConfigChunk> reconfig1 = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig1.has_value());
@@ -499,10 +516,13 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRetransmitOnInProgress) {
 }
 
 TEST_F(StreamResetHandlerTest, ResetWhileRequestIsSentWillQueue) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
+
   absl::optional<ReConfigChunk> reconfig1 = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig1.has_value());
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -514,6 +534,8 @@ TEST_F(StreamResetHandlerTest, ResetWhileRequestIsSentWillQueue) {
   EXPECT_THAT(req1.stream_ids(), UnorderedElementsAre(StreamID(42)));
 
   // Streams reset while the request is in-flight will be queued.
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(41)));
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(43)));
   StreamID stream_ids[] = {StreamID(41), StreamID(43)};
   handler_->ResetStreams(stream_ids);
   EXPECT_EQ(handler_->MakeStreamResetRequest(), absl::nullopt);
@@ -532,7 +554,10 @@ TEST_F(StreamResetHandlerTest, ResetWhileRequestIsSentWillQueue) {
   handler_->HandleReConfig(std::move(response_reconfig));
 
   // Response has been processed. A new request can be sent.
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(41), StreamID(43)})));
+
   absl::optional<ReConfigChunk> reconfig2 = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig2.has_value());
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -591,21 +616,31 @@ TEST_F(StreamResetHandlerTest, SendSameRequestTwiceReturnsNothingToDo) {
 
 TEST_F(StreamResetHandlerTest,
        HandoverIsAllowedOnlyWhenNoStreamIsBeingOrWillBeReset) {
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
   EXPECT_EQ(
       handler_->GetHandoverReadiness(),
       HandoverReadinessStatus(HandoverUnreadinessReason::kPendingStreamReset));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset())
+      .WillOnce(Return(true))
+      .WillOnce(Return(false));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
+
   ASSERT_TRUE(handler_->MakeStreamResetRequest().has_value());
   EXPECT_EQ(handler_->GetHandoverReadiness(),
             HandoverReadinessStatus(
                 HandoverUnreadinessReason::kPendingStreamResetRequest));
 
   // Reset more streams while the request is in-flight.
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(41)));
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(43)));
   StreamID stream_ids[] = {StreamID(41), StreamID(43)};
   handler_->ResetStreams(stream_ids);
+
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
   EXPECT_EQ(handler_->GetHandoverReadiness(),
             HandoverReadinessStatus()
                 .Add(HandoverUnreadinessReason::kPendingStreamResetRequest)
@@ -618,12 +653,18 @@ TEST_F(StreamResetHandlerTest,
                         .Add(ReconfigurationResponseParameter(
                             kMyInitialReqSn, ResponseResult::kSuccessPerformed))
                         .Build()));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
   EXPECT_EQ(
       handler_->GetHandoverReadiness(),
       HandoverReadinessStatus(HandoverUnreadinessReason::kPendingStreamReset));
 
   // Second request can be sent.
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset())
+      .WillOnce(Return(true))
+      .WillOnce(Return(false));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(41), StreamID(43)})));
+
   ASSERT_TRUE(handler_->MakeStreamResetRequest().has_value());
   EXPECT_EQ(handler_->GetHandoverReadiness(),
             HandoverReadinessStatus(
@@ -638,16 +679,21 @@ TEST_F(StreamResetHandlerTest,
           .Build()));
 
   // Seconds response has been processed. No pending resets.
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(false));
+
   EXPECT_TRUE(handler_->GetHandoverReadiness().IsReady());
 }
 
 TEST_F(StreamResetHandlerTest, HandoverInInitialState) {
   PerformHandover();
 
-  EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+  EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
   handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-  EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+  EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+      .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
+
   absl::optional<ReConfigChunk> reconfig = handler_->MakeStreamResetRequest();
   ASSERT_TRUE(reconfig.has_value());
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -663,10 +709,15 @@ TEST_F(StreamResetHandlerTest, HandoverInInitialState) {
 TEST_F(StreamResetHandlerTest, HandoverAfterHavingResetOneStream) {
   // Reset one stream
   {
-    EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+    EXPECT_CALL(producer_, PrepareResetStream(StreamID(42)));
     handler_->ResetStreams(std::vector<StreamID>({StreamID(42)}));
 
-    EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+    EXPECT_CALL(producer_, HasStreamsReadyToBeReset())
+        .WillOnce(Return(true))
+        .WillOnce(Return(false));
+    EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+        .WillOnce(Return(std::vector<StreamID>({StreamID(42)})));
+
     ASSERT_HAS_VALUE_AND_ASSIGN(ReConfigChunk reconfig,
                                 handler_->MakeStreamResetRequest());
     ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -690,10 +741,13 @@ TEST_F(StreamResetHandlerTest, HandoverAfterHavingResetOneStream) {
 
   // Reset another stream after handover
   {
-    EXPECT_CALL(producer_, PrepareResetStreams).Times(1);
+    EXPECT_CALL(producer_, PrepareResetStream(StreamID(43)));
     handler_->ResetStreams(std::vector<StreamID>({StreamID(43)}));
 
-    EXPECT_CALL(producer_, CanResetStreams()).WillOnce(Return(true));
+    EXPECT_CALL(producer_, HasStreamsReadyToBeReset()).WillOnce(Return(true));
+    EXPECT_CALL(producer_, GetStreamsReadyToBeReset())
+        .WillOnce(Return(std::vector<StreamID>({StreamID(43)})));
+
     ASSERT_HAS_VALUE_AND_ASSIGN(ReConfigChunk reconfig,
                                 handler_->MakeStreamResetRequest());
     ASSERT_HAS_VALUE_AND_ASSIGN(
