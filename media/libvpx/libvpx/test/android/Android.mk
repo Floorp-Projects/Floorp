@@ -34,6 +34,9 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/third_party/googletest/src/
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/third_party/googletest/src/include/
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/third_party/googletest/src/include/
 LOCAL_SRC_FILES := ./third_party/googletest/src/src/gtest-all.cc
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-BSD
+LOCAL_LICENSE_CONDITIONS := notice
+LOCAL_NOTICE_FILE := $(LOCAL_PATH)/../../LICENSE $(LOCAL_PATH)/../../PATENTS
 include $(BUILD_STATIC_LIBRARY)
 
 #libvpx_test
@@ -48,6 +51,9 @@ else
   LOCAL_STATIC_LIBRARIES += vpx
 endif
 
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-BSD
+LOCAL_LICENSE_CONDITIONS := notice
+LOCAL_NOTICE_FILE := $(LOCAL_PATH)/../../LICENSE $(LOCAL_PATH)/../../PATENTS
 include $(LOCAL_PATH)/test/test.mk
 LOCAL_C_INCLUDES := $(BINDINGS_DIR)
 FILTERED_SRC := $(sort $(filter %.cc %.c, $(LIBVPX_TEST_SRCS-yes)))

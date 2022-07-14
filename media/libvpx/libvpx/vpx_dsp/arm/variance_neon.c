@@ -268,7 +268,7 @@ void vpx_get16x16var_neon(const uint8_t *src_ptr, int src_stride,
   variance_neon_w16(src_ptr, src_stride, ref_ptr, ref_stride, 16, 16, sse, sum);
 }
 
-#define varianceNxM(n, m, shift)                                             \
+#define VARIANCENXM(n, m, shift)                                             \
   unsigned int vpx_variance##n##x##m##_neon(                                 \
       const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,        \
       int ref_stride, unsigned int *sse) {                                   \
@@ -288,16 +288,16 @@ void vpx_get16x16var_neon(const uint8_t *src_ptr, int src_stride,
       return *sse - (uint32_t)(((int64_t)sum * sum) >> shift);               \
   }
 
-varianceNxM(4, 4, 4);
-varianceNxM(4, 8, 5);
-varianceNxM(8, 4, 5);
-varianceNxM(8, 8, 6);
-varianceNxM(8, 16, 7);
-varianceNxM(16, 8, 7);
-varianceNxM(16, 16, 8);
-varianceNxM(16, 32, 9);
-varianceNxM(32, 16, 9);
-varianceNxM(32, 32, 10);
+VARIANCENXM(4, 4, 4)
+VARIANCENXM(4, 8, 5)
+VARIANCENXM(8, 4, 5)
+VARIANCENXM(8, 8, 6)
+VARIANCENXM(8, 16, 7)
+VARIANCENXM(16, 8, 7)
+VARIANCENXM(16, 16, 8)
+VARIANCENXM(16, 32, 9)
+VARIANCENXM(32, 16, 9)
+VARIANCENXM(32, 32, 10)
 
 unsigned int vpx_variance32x64_neon(const uint8_t *src_ptr, int src_stride,
                                     const uint8_t *ref_ptr, int ref_stride,

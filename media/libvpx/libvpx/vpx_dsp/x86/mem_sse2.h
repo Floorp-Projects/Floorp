@@ -16,12 +16,12 @@
 
 #include "./vpx_config.h"
 
-static INLINE void storeu_uint32(void *dst, uint32_t v) {
+static INLINE void storeu_int32(void *dst, int32_t v) {
   memcpy(dst, &v, sizeof(v));
 }
 
-static INLINE uint32_t loadu_uint32(const void *src) {
-  uint32_t v;
+static INLINE int32_t loadu_int32(const void *src) {
+  int32_t v;
   memcpy(&v, src, sizeof(v));
   return v;
 }

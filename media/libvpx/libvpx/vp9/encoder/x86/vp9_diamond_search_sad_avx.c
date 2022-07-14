@@ -76,9 +76,9 @@ int vp9_diamond_search_sad_avx(const MACROBLOCK *x,
                                int *num00, const vp9_variance_fn_ptr_t *fn_ptr,
                                const MV *center_mv) {
   const int_mv maxmv = pack_int_mv(x->mv_limits.row_max, x->mv_limits.col_max);
-  const __m128i v_max_mv_w = _mm_set1_epi32(maxmv.as_int);
+  const __m128i v_max_mv_w = _mm_set1_epi32((int)maxmv.as_int);
   const int_mv minmv = pack_int_mv(x->mv_limits.row_min, x->mv_limits.col_min);
-  const __m128i v_min_mv_w = _mm_set1_epi32(minmv.as_int);
+  const __m128i v_min_mv_w = _mm_set1_epi32((int)minmv.as_int);
 
   const __m128i v_spb_d = _mm_set1_epi32(sad_per_bit);
 
@@ -96,14 +96,14 @@ int vp9_diamond_search_sad_avx(const MACROBLOCK *x,
 
   const int_mv fcenter_mv =
       pack_int_mv(center_mv->row >> 3, center_mv->col >> 3);
-  const __m128i vfcmv = _mm_set1_epi32(fcenter_mv.as_int);
+  const __m128i vfcmv = _mm_set1_epi32((int)fcenter_mv.as_int);
 
   const int ref_row = clamp(ref_mv->row, minmv.as_mv.row, maxmv.as_mv.row);
   const int ref_col = clamp(ref_mv->col, minmv.as_mv.col, maxmv.as_mv.col);
 
   int_mv bmv = pack_int_mv(ref_row, ref_col);
   int_mv new_bmv = bmv;
-  __m128i v_bmv_w = _mm_set1_epi32(bmv.as_int);
+  __m128i v_bmv_w = _mm_set1_epi32((int)bmv.as_int);
 
   const int what_stride = x->plane[0].src.stride;
   const int in_what_stride = x->e_mbd.plane[0].pre[0].stride;
@@ -282,7 +282,14 @@ int vp9_diamond_search_sad_avx(const MACROBLOCK *x,
 
         // Update the global minimum if the local minimum is smaller
         if (LIKELY(local_best_sad < best_sad)) {
+#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
           new_bmv = ((const int_mv *)&v_these_mv_w)[local_best_idx];
+#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
           new_best_address = ((const uint8_t **)v_blocka)[local_best_idx];
 
           best_sad = local_best_sad;
@@ -293,7 +300,7 @@ int vp9_diamond_search_sad_avx(const MACROBLOCK *x,
     bmv = new_bmv;
     best_address = new_best_address;
 
-    v_bmv_w = _mm_set1_epi32(bmv.as_int);
+    v_bmv_w = _mm_set1_epi32((int)bmv.as_int);
 #if VPX_ARCH_X86_64
     v_ba_q = _mm_set1_epi64x((intptr_t)best_address);
 #else

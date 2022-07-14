@@ -113,6 +113,7 @@ VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/temporal_filter_constants.h
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_quantize_sse2.c
 VP9_CX_SRCS-$(HAVE_AVX2) += encoder/x86/vp9_quantize_avx2.c
 VP9_CX_SRCS-$(HAVE_AVX) += encoder/x86/vp9_diamond_search_sad_avx.c
+VP9_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/vp9_diamond_search_sad_neon.c
 ifeq ($(CONFIG_VP9_HIGHBITDEPTH),yes)
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_highbd_block_error_intrin_sse2.c
 VP9_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/highbd_temporal_filter_sse4.c
@@ -127,6 +128,7 @@ endif
 
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_dct_intrin_sse2.c
 VP9_CX_SRCS-$(HAVE_SSSE3) += encoder/x86/vp9_frame_scale_ssse3.c
+VP9_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/vp9_dct_neon.c
 
 ifeq ($(CONFIG_VP9_TEMPORAL_DENOISING),yes)
 VP9_CX_SRCS-$(HAVE_SSE2) += encoder/x86/vp9_denoiser_sse2.c

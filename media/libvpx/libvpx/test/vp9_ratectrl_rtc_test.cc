@@ -270,6 +270,7 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
     for (int i = 0; i < VPX_MAX_LAYERS; ++i) {
       svc_params_.max_quantizers[i] = 56;
       svc_params_.min_quantizers[i] = 2;
+      svc_params_.speed_per_layer[i] = 7;
     }
     cfg_.rc_end_usage = VPX_CBR;
     cfg_.g_lag_in_frames = 0;
@@ -318,6 +319,7 @@ class RcInterfaceSvcTest : public ::libvpx_test::EncoderTest,
     rc_cfg_.ss_number_layers = 3;
     rc_cfg_.ts_number_layers = 3;
     rc_cfg_.rc_mode = VPX_CBR;
+    rc_cfg_.aq_mode = aq_mode_;
 
     rc_cfg_.scaling_factor_num[0] = 1;
     rc_cfg_.scaling_factor_den[0] = 4;
@@ -367,10 +369,5 @@ TEST_P(RcInterfaceSvcTest, Svc) { RunSvc(); }
 
 VP9_INSTANTIATE_TEST_SUITE(RcInterfaceTest, ::testing::Values(0, 3),
                            ::testing::Values(VPX_CBR, VPX_VBR));
-VP9_INSTANTIATE_TEST_SUITE(RcInterfaceSvcTest, ::testing::Values(0));
+VP9_INSTANTIATE_TEST_SUITE(RcInterfaceSvcTest, ::testing::Values(0, 3));
 }  // namespace
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

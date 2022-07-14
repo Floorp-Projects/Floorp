@@ -32,8 +32,8 @@ static INLINE void calculate_dqcoeff_and_store(const int16x8_t qcoeff,
 }
 
 void vpx_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                         int skip_block, const int16_t *zbin_ptr,
-                         const int16_t *round_ptr, const int16_t *quant_ptr,
+                         const int16_t *zbin_ptr, const int16_t *round_ptr,
+                         const int16_t *quant_ptr,
                          const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
                          tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
                          uint16_t *eob_ptr, const int16_t *scan,
@@ -42,8 +42,6 @@ void vpx_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   const int16x8_t neg_one = vdupq_n_s16(-1);
   uint16x8_t eob_max;
   (void)scan;
-  (void)skip_block;
-  assert(!skip_block);
 
   // Process first 8 values which include a dc component.
   {
@@ -189,7 +187,7 @@ static INLINE void calculate_dqcoeff_and_store_32x32(const int16x8_t qcoeff,
 // Main difference is that zbin values are halved before comparison and dqcoeff
 // values are divided by 2. zbin is rounded but dqcoeff is not.
 void vpx_quantize_b_32x32_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                               int skip_block, const int16_t *zbin_ptr,
+                               const int16_t *zbin_ptr,
                                const int16_t *round_ptr,
                                const int16_t *quant_ptr,
                                const int16_t *quant_shift_ptr,
@@ -202,8 +200,6 @@ void vpx_quantize_b_32x32_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   int i;
   (void)scan;
   (void)n_coeffs;  // Because we will always calculate 32*32.
-  (void)skip_block;
-  assert(!skip_block);
 
   // Process first 8 values which include a dc component.
   {

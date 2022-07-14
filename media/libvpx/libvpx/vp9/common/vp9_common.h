@@ -27,10 +27,10 @@ extern "C" {
 
 // Only need this for fixed-size arrays, for structs just assign.
 #define vp9_copy(dest, src)              \
-  {                                      \
+  do {                                   \
     assert(sizeof(dest) == sizeof(src)); \
     memcpy(dest, src, sizeof(src));      \
-  }
+  } while (0)
 
 // Use this for variably-sized arrays.
 #define vp9_copy_array(dest, src, n)           \

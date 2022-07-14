@@ -100,6 +100,7 @@ EOF
 all_platforms="${all_platforms} arm64-android-gcc"
 all_platforms="${all_platforms} arm64-darwin-gcc"
 all_platforms="${all_platforms} arm64-darwin20-gcc"
+all_platforms="${all_platforms} arm64-darwin21-gcc"
 all_platforms="${all_platforms} arm64-linux-gcc"
 all_platforms="${all_platforms} arm64-win64-gcc"
 all_platforms="${all_platforms} arm64-win64-vs15"
@@ -113,6 +114,8 @@ all_platforms="${all_platforms} armv7-win32-vs14"
 all_platforms="${all_platforms} armv7-win32-vs15"
 all_platforms="${all_platforms} armv7s-darwin-gcc"
 all_platforms="${all_platforms} armv8-linux-gcc"
+all_platforms="${all_platforms} loongarch32-linux-gcc"
+all_platforms="${all_platforms} loongarch64-linux-gcc"
 all_platforms="${all_platforms} mips32-linux-gcc"
 all_platforms="${all_platforms} mips64-linux-gcc"
 all_platforms="${all_platforms} ppc64le-linux-gcc"
@@ -139,6 +142,7 @@ all_platforms="${all_platforms} x86-win32-gcc"
 all_platforms="${all_platforms} x86-win32-vs14"
 all_platforms="${all_platforms} x86-win32-vs15"
 all_platforms="${all_platforms} x86-win32-vs16"
+all_platforms="${all_platforms} x86-win32-vs17"
 all_platforms="${all_platforms} x86_64-android-gcc"
 all_platforms="${all_platforms} x86_64-darwin9-gcc"
 all_platforms="${all_platforms} x86_64-darwin10-gcc"
@@ -152,6 +156,7 @@ all_platforms="${all_platforms} x86_64-darwin17-gcc"
 all_platforms="${all_platforms} x86_64-darwin18-gcc"
 all_platforms="${all_platforms} x86_64-darwin19-gcc"
 all_platforms="${all_platforms} x86_64-darwin20-gcc"
+all_platforms="${all_platforms} x86_64-darwin21-gcc"
 all_platforms="${all_platforms} x86_64-iphonesimulator-gcc"
 all_platforms="${all_platforms} x86_64-linux-gcc"
 all_platforms="${all_platforms} x86_64-linux-icc"
@@ -160,6 +165,7 @@ all_platforms="${all_platforms} x86_64-win64-gcc"
 all_platforms="${all_platforms} x86_64-win64-vs14"
 all_platforms="${all_platforms} x86_64-win64-vs15"
 all_platforms="${all_platforms} x86_64-win64-vs16"
+all_platforms="${all_platforms} x86_64-win64-vs17"
 all_platforms="${all_platforms} generic-gnu"
 
 # all_targets is a list of all targets that can be configured
@@ -235,6 +241,7 @@ ARCH_LIST="
     x86
     x86_64
     ppc
+    loongarch
 "
 ARCH_EXT_LIST_X86="
     mmx
@@ -250,6 +257,8 @@ ARCH_EXT_LIST_X86="
 
 ARCH_EXT_LIST_LOONGSON="
     mmi
+    lsx
+    lasx
 "
 
 ARCH_EXT_LIST="
@@ -620,7 +629,10 @@ process_toolchain() {
         check_add_cflags -Wall
         check_add_cflags -Wdeclaration-after-statement
         check_add_cflags -Wdisabled-optimization
+        check_add_cflags -Wextra-semi
+        check_add_cflags -Wextra-semi-stmt
         check_add_cflags -Wfloat-conversion
+        check_add_cflags -Wformat=2
         check_add_cflags -Wparentheses-equality
         check_add_cflags -Wpointer-arith
         check_add_cflags -Wtype-limits

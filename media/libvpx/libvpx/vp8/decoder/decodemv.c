@@ -173,7 +173,8 @@ const vp8_prob vp8_sub_mv_ref_prob3[8][VP8_SUBMVREFS - 1] = {
   { 208, 1, 1 }     /* SUBMVREF_LEFT_ABOVE_ZED  */
 };
 
-static const vp8_prob *get_sub_mv_ref_prob(const int left, const int above) {
+static const vp8_prob *get_sub_mv_ref_prob(const uint32_t left,
+                                           const uint32_t above) {
   int lez = (left == 0);
   int aez = (above == 0);
   int lea = (left == above);

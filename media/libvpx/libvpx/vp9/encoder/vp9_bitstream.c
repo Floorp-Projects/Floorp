@@ -236,11 +236,11 @@ static void write_ref_frames(const VP9_COMMON *cm, const MACROBLOCKD *const xd,
   }
 }
 
-static void pack_inter_mode_mvs(
-    VP9_COMP *cpi, const MACROBLOCKD *const xd,
-    const MB_MODE_INFO_EXT *const mbmi_ext, vpx_writer *w,
-    unsigned int *const max_mv_magnitude,
-    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
+static void pack_inter_mode_mvs(VP9_COMP *cpi, const MACROBLOCKD *const xd,
+                                const MB_MODE_INFO_EXT *const mbmi_ext,
+                                vpx_writer *w,
+                                unsigned int *const max_mv_magnitude,
+                                int interp_filter_selected[][SWITCHABLE]) {
   VP9_COMMON *const cm = &cpi->common;
   const nmv_context *nmvc = &cm->fc->nmvc;
   const struct segmentation *const seg = &cm->seg;
@@ -373,11 +373,12 @@ static void write_mb_modes_kf(const VP9_COMMON *cm, const MACROBLOCKD *xd,
   write_intra_mode(w, mi->uv_mode, vp9_kf_uv_mode_prob[mi->mode]);
 }
 
-static void write_modes_b(
-    VP9_COMP *cpi, MACROBLOCKD *const xd, const TileInfo *const tile,
-    vpx_writer *w, TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
-    int mi_row, int mi_col, unsigned int *const max_mv_magnitude,
-    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
+static void write_modes_b(VP9_COMP *cpi, MACROBLOCKD *const xd,
+                          const TileInfo *const tile, vpx_writer *w,
+                          TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
+                          int mi_row, int mi_col,
+                          unsigned int *const max_mv_magnitude,
+                          int interp_filter_selected[][SWITCHABLE]) {
   const VP9_COMMON *const cm = &cpi->common;
   const MB_MODE_INFO_EXT *const mbmi_ext =
       cpi->td.mb.mbmi_ext_base + (mi_row * cm->mi_cols + mi_col);
@@ -422,12 +423,12 @@ static void write_partition(const VP9_COMMON *const cm,
   }
 }
 
-static void write_modes_sb(
-    VP9_COMP *cpi, MACROBLOCKD *const xd, const TileInfo *const tile,
-    vpx_writer *w, TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
-    int mi_row, int mi_col, BLOCK_SIZE bsize,
-    unsigned int *const max_mv_magnitude,
-    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
+static void write_modes_sb(VP9_COMP *cpi, MACROBLOCKD *const xd,
+                           const TileInfo *const tile, vpx_writer *w,
+                           TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
+                           int mi_row, int mi_col, BLOCK_SIZE bsize,
+                           unsigned int *const max_mv_magnitude,
+                           int interp_filter_selected[][SWITCHABLE]) {
   const VP9_COMMON *const cm = &cpi->common;
   const int bsl = b_width_log2_lookup[bsize];
   const int bs = (1 << bsl) / 4;
@@ -485,11 +486,10 @@ static void write_modes_sb(
     update_partition_context(xd, mi_row, mi_col, subsize, bsize);
 }
 
-static void write_modes(
-    VP9_COMP *cpi, MACROBLOCKD *const xd, const TileInfo *const tile,
-    vpx_writer *w, int tile_row, int tile_col,
-    unsigned int *const max_mv_magnitude,
-    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
+static void write_modes(VP9_COMP *cpi, MACROBLOCKD *const xd,
+                        const TileInfo *const tile, vpx_writer *w, int tile_row,
+                        int tile_col, unsigned int *const max_mv_magnitude,
+                        int interp_filter_selected[][SWITCHABLE]) {
   const VP9_COMMON *const cm = &cpi->common;
   int mi_row, mi_col, tile_sb_row;
   TOKENEXTRA *tok = NULL;
@@ -554,7 +554,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
   switch (cpi->sf.use_fast_coef_updates) {
     case TWO_LOOP: {
       /* dry run to see if there is any update at all needed */
-      int savings = 0;
+      int64_t savings = 0;
       int update[2] = { 0, 0 };
       for (i = 0; i < PLANE_TYPES; ++i) {
         for (j = 0; j < REF_TYPES; ++j) {
@@ -563,7 +563,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
               for (t = 0; t < entropy_nodes_update; ++t) {
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 const vpx_prob oldp = old_coef_probs[i][j][k][l][t];
-                int s;
+                int64_t s;
                 int u = 0;
                 if (t == PIVOT_NODE)
                   s = vp9_prob_diff_update_savings_search_model(
@@ -600,7 +600,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 vpx_prob *oldp = old_coef_probs[i][j][k][l] + t;
                 const vpx_prob upd = DIFF_UPDATE_PROB;
-                int s;
+                int64_t s;
                 int u = 0;
                 if (t == PIVOT_NODE)
                   s = vp9_prob_diff_update_savings_search_model(
@@ -636,7 +636,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
               for (t = 0; t < entropy_nodes_update; ++t) {
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 vpx_prob *oldp = old_coef_probs[i][j][k][l] + t;
-                int s;
+                int64_t s;
                 int u = 0;
 
                 if (t == PIVOT_NODE) {
@@ -963,21 +963,20 @@ void vp9_bitstream_encode_tiles_buffer_dealloc(VP9_COMP *const cpi) {
   }
 }
 
-static int encode_tiles_buffer_alloc(VP9_COMP *const cpi) {
+static void encode_tiles_buffer_alloc(VP9_COMP *const cpi) {
+  VP9_COMMON *const cm = &cpi->common;
   int i;
   const size_t worker_data_size =
       cpi->num_workers * sizeof(*cpi->vp9_bitstream_worker_data);
-  cpi->vp9_bitstream_worker_data = vpx_memalign(16, worker_data_size);
+  CHECK_MEM_ERROR(cm, cpi->vp9_bitstream_worker_data,
+                  vpx_memalign(16, worker_data_size));
   memset(cpi->vp9_bitstream_worker_data, 0, worker_data_size);
-  if (!cpi->vp9_bitstream_worker_data) return 1;
   for (i = 1; i < cpi->num_workers; ++i) {
     cpi->vp9_bitstream_worker_data[i].dest_size =
         cpi->oxcf.width * cpi->oxcf.height;
-    cpi->vp9_bitstream_worker_data[i].dest =
-        vpx_malloc(cpi->vp9_bitstream_worker_data[i].dest_size);
-    if (!cpi->vp9_bitstream_worker_data[i].dest) return 1;
+    CHECK_MEM_ERROR(cm, cpi->vp9_bitstream_worker_data[i].dest,
+                    vpx_malloc(cpi->vp9_bitstream_worker_data[i].dest_size));
   }
-  return 0;
 }
 
 static size_t encode_tiles_mt(VP9_COMP *cpi, uint8_t *data_ptr) {
@@ -992,7 +991,7 @@ static size_t encode_tiles_mt(VP9_COMP *cpi, uint8_t *data_ptr) {
       cpi->vp9_bitstream_worker_data[1].dest_size >
           (cpi->oxcf.width * cpi->oxcf.height)) {
     vp9_bitstream_encode_tiles_buffer_dealloc(cpi);
-    if (encode_tiles_buffer_alloc(cpi)) return 0;
+    encode_tiles_buffer_alloc(cpi);
   }
 
   while (tile_col < tile_cols) {

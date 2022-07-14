@@ -160,7 +160,7 @@ static void calc_prob(vp8_prob *p, const unsigned int ct[2]) {
   const unsigned int tot = ct[0] + ct[1];
 
   if (tot) {
-    const vp8_prob x = ((ct[0] * 255) / tot) & -2;
+    const vp8_prob x = ((ct[0] * 255) / tot) & ~1u;
     *p = x ? x : 1;
   }
 }
@@ -205,8 +205,11 @@ static void write_component_probs(vp8_writer *const w,
   (void)rc;
   vp8_copy_array(Pnew, default_mvc, MVPcount);
 
-  vp8_zero(is_short_ct) vp8_zero(sign_ct) vp8_zero(bit_ct) vp8_zero(short_ct)
-      vp8_zero(short_bct)
+  vp8_zero(is_short_ct);
+  vp8_zero(sign_ct);
+  vp8_zero(bit_ct);
+  vp8_zero(short_ct);
+  vp8_zero(short_bct);
 
   /* j=0 */
   {

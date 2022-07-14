@@ -69,12 +69,12 @@
 #else  // !(__mips == 64)
 #define LD(psrc)                                            \
   ({                                                        \
-    const uint8_t *psrc_m = (const uint8_t *)(psrc);        \
+    const uint8_t *psrc_ld = (const uint8_t *)(psrc);       \
     uint32_t val0_m, val1_m;                                \
     uint64_t val_m = 0;                                     \
                                                             \
-    val0_m = LW(psrc_m);                                    \
-    val1_m = LW(psrc_m + 4);                                \
+    val0_m = LW(psrc_ld);                                   \
+    val1_m = LW(psrc_ld + 4);                               \
                                                             \
     val_m = (uint64_t)(val1_m);                             \
     val_m = (uint64_t)((val_m << 32) & 0xFFFFFFFF00000000); \

@@ -48,11 +48,9 @@ struct IntraPredTestMem {
     for (int i = 0; i < kBPS; ++i) left[i] = rnd.Rand16() & mask;
     for (int i = -1; i < kBPS; ++i) above[i] = rnd.Rand16() & mask;
 
-    // some code assumes the top row has been extended:
-    // d45/d63 C-code, for instance, but not the assembly.
-    // TODO(jzern): this style of extension isn't strictly necessary.
+    // d45/d63 require the top row to be extended.
     ASSERT_LE(block_size, kBPS);
-    for (int i = block_size; i < 2 * kBPS; ++i) {
+    for (int i = block_size; i < 2 * block_size; ++i) {
       above[i] = above[block_size - 1];
     }
   }

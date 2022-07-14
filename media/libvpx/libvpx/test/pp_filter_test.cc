@@ -115,7 +115,7 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckFilterOutput) {
   }
 
   vpx_free(flimits_);
-};
+}
 
 TEST_P(VpxPostProcDownAndAcrossMbRowTest, CheckCvsAssembly) {
   // Size of the underlying data block that will be filtered.
@@ -214,7 +214,7 @@ TEST_P(VpxPostProcDownAndAcrossMbRowTest, DISABLED_Speed) {
   PrintMedian("16x16");
 
   vpx_free(flimits_);
-};
+}
 
 class VpxMbPostProcAcrossIpTest
     : public AbstractBench,

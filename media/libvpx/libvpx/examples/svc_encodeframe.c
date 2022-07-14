@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define VPX_DISABLE_CTRL_TYPECHECKS 1
+#include "../tools_common.h"
 #include "./vpx_config.h"
 #include "./svc_context.h"
 #include "vpx/vp8cx.h"
@@ -95,8 +96,9 @@ static const SvcInternal_t *get_const_svc_internal(const SvcContext *svc_ctx) {
   return (const SvcInternal_t *)svc_ctx->internal;
 }
 
-static int svc_log(SvcContext *svc_ctx, SVC_LOG_LEVEL level, const char *fmt,
-                   ...) {
+static VPX_TOOLS_FORMAT_PRINTF(3, 4) int svc_log(SvcContext *svc_ctx,
+                                                 SVC_LOG_LEVEL level,
+                                                 const char *fmt, ...) {
   char buf[512];
   int retval = 0;
   va_list ap;
@@ -264,7 +266,7 @@ static vpx_codec_err_t parse_options(SvcContext *svc_ctx, const char *options) {
   if (alt_ref_enabled > REF_FRAMES - svc_ctx->spatial_layers) {
     svc_log(svc_ctx, SVC_LOG_ERROR,
             "svc: auto alt ref: Maxinum %d(REF_FRAMES - layers) layers could"
-            "enabled auto alt reference frame, but % layers are enabled\n",
+            "enabled auto alt reference frame, but %d layers are enabled\n",
             REF_FRAMES - svc_ctx->spatial_layers, alt_ref_enabled);
     res = VPX_CODEC_INVALID_PARAM;
   }
@@ -456,10 +458,11 @@ vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
     svc_ctx->temporal_layers = VPX_TS_MAX_LAYERS;
 
   if (svc_ctx->temporal_layers * svc_ctx->spatial_layers > VPX_MAX_LAYERS) {
-    svc_log(svc_ctx, SVC_LOG_ERROR,
-            "spatial layers * temporal layers exceeds the maximum number of "
-            "allowed layers of %d\n",
-            svc_ctx->spatial_layers * svc_ctx->temporal_layers, VPX_MAX_LAYERS);
+    svc_log(
+        svc_ctx, SVC_LOG_ERROR,
+        "spatial layers * temporal layers (%d) exceeds the maximum number of "
+        "allowed layers of %d\n",
+        svc_ctx->spatial_layers * svc_ctx->temporal_layers, VPX_MAX_LAYERS);
     return VPX_CODEC_INVALID_PARAM;
   }
   res = assign_layer_bitrates(svc_ctx, enc_cfg);

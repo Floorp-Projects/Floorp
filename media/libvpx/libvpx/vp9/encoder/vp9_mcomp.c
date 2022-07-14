@@ -159,59 +159,63 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
 
 #if CONFIG_VP9_HIGHBITDEPTH
 /* checks if (r, c) has better score than previous best */
-#define CHECK_BETTER(v, r, c)                                                \
-  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
-    int64_t tmpmse;                                                          \
-    const MV mv = { r, c };                                                  \
-    const MV ref_mv = { rr, rc };                                            \
-    if (second_pred == NULL) {                                               \
-      thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z,  \
-                         src_stride, &sse);                                  \
-    } else {                                                                 \
-      thismse = vfp->svaf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, \
-                          src_stride, &sse, second_pred);                    \
-    }                                                                        \
-    tmpmse = thismse;                                                        \
-    tmpmse += mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit);     \
-    if (tmpmse >= INT_MAX) {                                                 \
-      v = INT_MAX;                                                           \
-    } else if ((v = (uint32_t)tmpmse) < besterr) {                           \
-      besterr = v;                                                           \
-      br = r;                                                                \
-      bc = c;                                                                \
-      *distortion = thismse;                                                 \
-      *sse1 = sse;                                                           \
-    }                                                                        \
-  } else {                                                                   \
-    v = INT_MAX;                                                             \
-  }
+#define CHECK_BETTER(v, r, c)                                                  \
+  do {                                                                         \
+    if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
+      int64_t tmpmse;                                                          \
+      const MV mv = { r, c };                                                  \
+      const MV ref_mv = { rr, rc };                                            \
+      if (second_pred == NULL) {                                               \
+        thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z,  \
+                           src_stride, &sse);                                  \
+      } else {                                                                 \
+        thismse = vfp->svaf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, \
+                            src_stride, &sse, second_pred);                    \
+      }                                                                        \
+      tmpmse = thismse;                                                        \
+      tmpmse += mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit);     \
+      if (tmpmse >= INT_MAX) {                                                 \
+        v = INT_MAX;                                                           \
+      } else if ((v = (uint32_t)tmpmse) < besterr) {                           \
+        besterr = v;                                                           \
+        br = r;                                                                \
+        bc = c;                                                                \
+        *distortion = thismse;                                                 \
+        *sse1 = sse;                                                           \
+      }                                                                        \
+    } else {                                                                   \
+      v = INT_MAX;                                                             \
+    }                                                                          \
+  } while (0)
 #else
 /* checks if (r, c) has better score than previous best */
-#define CHECK_BETTER(v, r, c)                                                \
-  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
-    const MV mv = { r, c };                                                  \
-    const MV ref_mv = { rr, rc };                                            \
-    if (second_pred == NULL)                                                 \
-      thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z,  \
-                         src_stride, &sse);                                  \
-    else                                                                     \
-      thismse = vfp->svaf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, \
-                          src_stride, &sse, second_pred);                    \
-    if ((v = mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit) +     \
-             thismse) < besterr) {                                           \
-      besterr = v;                                                           \
-      br = r;                                                                \
-      bc = c;                                                                \
-      *distortion = thismse;                                                 \
-      *sse1 = sse;                                                           \
-    }                                                                        \
-  } else {                                                                   \
-    v = INT_MAX;                                                             \
-  }
+#define CHECK_BETTER(v, r, c)                                                  \
+  do {                                                                         \
+    if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
+      const MV mv = { r, c };                                                  \
+      const MV ref_mv = { rr, rc };                                            \
+      if (second_pred == NULL)                                                 \
+        thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z,  \
+                           src_stride, &sse);                                  \
+      else                                                                     \
+        thismse = vfp->svaf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, \
+                            src_stride, &sse, second_pred);                    \
+      if ((v = mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit) +     \
+               thismse) < besterr) {                                           \
+        besterr = v;                                                           \
+        br = r;                                                                \
+        bc = c;                                                                \
+        *distortion = thismse;                                                 \
+        *sse1 = sse;                                                           \
+      }                                                                        \
+    } else {                                                                   \
+      v = INT_MAX;                                                             \
+    }                                                                          \
+  } while (0)
 
 #endif
 #define FIRST_LEVEL_CHECKS                                       \
-  {                                                              \
+  do {                                                           \
     unsigned int left, right, up, down, diag;                    \
     CHECK_BETTER(left, tr, tc - hstep);                          \
     CHECK_BETTER(right, tr, tc + hstep);                         \
@@ -224,10 +228,10 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
       case 2: CHECK_BETTER(diag, tr + hstep, tc - hstep); break; \
       case 3: CHECK_BETTER(diag, tr + hstep, tc + hstep); break; \
     }                                                            \
-  }
+  } while (0)
 
 #define SECOND_LEVEL_CHECKS                                       \
-  {                                                               \
+  do {                                                            \
     int kr, kc;                                                   \
     unsigned int second;                                          \
     if (tr != br && tc != bc) {                                   \
@@ -256,7 +260,7 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
         case 3: CHECK_BETTER(second, tr + kr, tc - hstep); break; \
       }                                                           \
     }                                                             \
-  }
+  } while (0)
 
 #define SETUP_SUBPEL_SEARCH                                                 \
   const uint8_t *const z = x->plane[0].src.buf;                             \
@@ -290,7 +294,7 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
   maxr = subpel_mv_limits.row_max;                                          \
                                                                             \
   bestmv->row *= 8;                                                         \
-  bestmv->col *= 8;
+  bestmv->col *= 8
 
 static unsigned int setup_center_error(
     const MACROBLOCKD *xd, const MV *bestmv, const MV *ref_mv,
@@ -678,48 +682,52 @@ static int accurate_sub_pel_search(
 // TODO(yunqing): this part can be further refactored.
 #if CONFIG_VP9_HIGHBITDEPTH
 /* checks if (r, c) has better score than previous best */
-#define CHECK_BETTER1(v, r, c)                                                 \
-  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                      \
-    int64_t tmpmse;                                                            \
-    const MV mv = { r, c };                                                    \
-    const MV ref_mv = { rr, rc };                                              \
-    thismse =                                                                  \
-        accurate_sub_pel_search(xd, &mv, x->me_sf, kernel, vfp, z, src_stride, \
-                                y, y_stride, second_pred, w, h, &sse);         \
-    tmpmse = thismse;                                                          \
-    tmpmse += mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit);       \
-    if (tmpmse >= INT_MAX) {                                                   \
-      v = INT_MAX;                                                             \
-    } else if ((v = (uint32_t)tmpmse) < besterr) {                             \
-      besterr = v;                                                             \
-      br = r;                                                                  \
-      bc = c;                                                                  \
-      *distortion = thismse;                                                   \
-      *sse1 = sse;                                                             \
-    }                                                                          \
-  } else {                                                                     \
-    v = INT_MAX;                                                               \
-  }
+#define CHECK_BETTER1(v, r, c)                                                \
+  do {                                                                        \
+    if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                   \
+      int64_t tmpmse;                                                         \
+      const MV mv = { r, c };                                                 \
+      const MV ref_mv = { rr, rc };                                           \
+      thismse = accurate_sub_pel_search(xd, &mv, x->me_sf, kernel, vfp, z,    \
+                                        src_stride, y, y_stride, second_pred, \
+                                        w, h, &sse);                          \
+      tmpmse = thismse;                                                       \
+      tmpmse += mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit);    \
+      if (tmpmse >= INT_MAX) {                                                \
+        v = INT_MAX;                                                          \
+      } else if ((v = (uint32_t)tmpmse) < besterr) {                          \
+        besterr = v;                                                          \
+        br = r;                                                               \
+        bc = c;                                                               \
+        *distortion = thismse;                                                \
+        *sse1 = sse;                                                          \
+      }                                                                       \
+    } else {                                                                  \
+      v = INT_MAX;                                                            \
+    }                                                                         \
+  } while (0)
 #else
 /* checks if (r, c) has better score than previous best */
-#define CHECK_BETTER1(v, r, c)                                                 \
-  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                      \
-    const MV mv = { r, c };                                                    \
-    const MV ref_mv = { rr, rc };                                              \
-    thismse =                                                                  \
-        accurate_sub_pel_search(xd, &mv, x->me_sf, kernel, vfp, z, src_stride, \
-                                y, y_stride, second_pred, w, h, &sse);         \
-    if ((v = mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit) +       \
-             thismse) < besterr) {                                             \
-      besterr = v;                                                             \
-      br = r;                                                                  \
-      bc = c;                                                                  \
-      *distortion = thismse;                                                   \
-      *sse1 = sse;                                                             \
-    }                                                                          \
-  } else {                                                                     \
-    v = INT_MAX;                                                               \
-  }
+#define CHECK_BETTER1(v, r, c)                                                \
+  do {                                                                        \
+    if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                   \
+      const MV mv = { r, c };                                                 \
+      const MV ref_mv = { rr, rc };                                           \
+      thismse = accurate_sub_pel_search(xd, &mv, x->me_sf, kernel, vfp, z,    \
+                                        src_stride, y, y_stride, second_pred, \
+                                        w, h, &sse);                          \
+      if ((v = mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit) +    \
+               thismse) < besterr) {                                          \
+        besterr = v;                                                          \
+        br = r;                                                               \
+        bc = c;                                                               \
+        *distortion = thismse;                                                \
+        *sse1 = sse;                                                          \
+      }                                                                       \
+    } else {                                                                  \
+      v = INT_MAX;                                                            \
+    }                                                                         \
+  } while (0)
 
 #endif
 
@@ -1788,29 +1796,6 @@ static int64_t exhaustive_mesh_search_single_step(
   end_col = VPXMIN(center_mv->col + range, mv_limits->col_max);
   for (r = start_row; r <= end_row; r += 1) {
     c = start_col;
-    // sdx8f may not be available some block size
-    if (fn_ptr->sdx8f) {
-      while (c + 7 <= end_col) {
-        unsigned int sads[8];
-        const MV mv = { r, c };
-        const uint8_t *buf = get_buf_from_mv(pre, &mv);
-        fn_ptr->sdx8f(src->buf, src->stride, buf, pre->stride, sads);
-
-        for (i = 0; i < 8; ++i) {
-          int64_t sad = (int64_t)sads[i] << LOG2_PRECISION;
-          if (sad < best_sad) {
-            const MV mv = { r, c + i };
-            sad += lambda *
-                   vp9_nb_mvs_inconsistency(&mv, nb_full_mvs, full_mv_num);
-            if (sad < best_sad) {
-              best_sad = sad;
-              *best_mv = mv;
-            }
-          }
-        }
-        c += 8;
-      }
-    }
     while (c + 3 <= end_col) {
       unsigned int sads[4];
       const uint8_t *addrs[4];
@@ -2962,7 +2947,7 @@ int vp9_full_pixel_search(const VP9_COMP *const cpi, const MACROBLOCK *const x,
   (void)sse;           \
   (void)thismse;       \
   (void)cost_list;     \
-  (void)use_accurate_subpel_search;
+  (void)use_accurate_subpel_search
 
 // Return the maximum MV.
 uint32_t vp9_return_max_sub_pixel_mv(

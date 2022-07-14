@@ -38,8 +38,8 @@
 
 // GOOGLETEST_CM0001 DO NOT DELETE
 
-#ifndef GTEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
-#define GTEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
+#ifndef GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
+#define GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
 
 #ifdef __BORLANDC__
 // string.h is not guaranteed to provide strcpy on C++ Builder.
@@ -149,6 +149,9 @@ class GTEST_API_ String {
   // Formats an int value as "%02d".
   static std::string FormatIntWidth2(int value);  // "%02d" for width == 2
 
+  // Formats an int value to given width with leading zeros.
+  static std::string FormatIntWidthN(int value, int width);
+
   // Formats an int value as "%X".
   static std::string FormatHexInt(int value);
 
@@ -169,4 +172,4 @@ GTEST_API_ std::string StringStreamToString(::std::stringstream* stream);
 }  // namespace internal
 }  // namespace testing
 
-#endif  // GTEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_
+#endif  // GOOGLETEST_INCLUDE_GTEST_INTERNAL_GTEST_STRING_H_

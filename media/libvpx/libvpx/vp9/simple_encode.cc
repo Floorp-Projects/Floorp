@@ -110,6 +110,7 @@ static VP9_COMP *init_encoder(const VP9EncoderConfig *oxcf,
                               vpx_img_fmt_t img_fmt) {
   VP9_COMP *cpi;
   BufferPool *buffer_pool = (BufferPool *)vpx_calloc(1, sizeof(*buffer_pool));
+  if (!buffer_pool) return NULL;
   vp9_initialize_enc();
   cpi = vp9_create_compressor(oxcf, buffer_pool);
   vp9_update_compressor_with_img_fmt(cpi, img_fmt);
@@ -782,11 +783,12 @@ static void UpdateEncodeConfig(const EncodeConfig &config,
 
 static VP9EncoderConfig GetEncodeConfig(
     int frame_width, int frame_height, vpx_rational_t frame_rate,
-    int target_bitrate, int encode_speed, vpx_enc_pass enc_pass,
+    int target_bitrate, int encode_speed, int target_level,
+    vpx_enc_pass enc_pass,
     const std::vector<EncodeConfig> &encode_config_list) {
-  VP9EncoderConfig oxcf =
-      vp9_get_encoder_config(frame_width, frame_height, frame_rate,
-                             target_bitrate, encode_speed, enc_pass);
+  VP9EncoderConfig oxcf = vp9_get_encoder_config(
+      frame_width, frame_height, frame_rate, target_bitrate, encode_speed,
+      target_level, enc_pass);
   for (const auto &config : encode_config_list) {
     UpdateEncodeConfig(config, &oxcf);
   }
@@ -799,7 +801,7 @@ static VP9EncoderConfig GetEncodeConfig(
 
 SimpleEncode::SimpleEncode(int frame_width, int frame_height,
                            int frame_rate_num, int frame_rate_den,
-                           int target_bitrate, int num_frames,
+                           int target_bitrate, int num_frames, int target_level,
                            const char *infile_path, const char *outfile_path) {
   impl_ptr_ = std::unique_ptr<EncodeImpl>(new EncodeImpl());
   frame_width_ = frame_width;
@@ -809,6 +811,7 @@ SimpleEncode::SimpleEncode(int frame_width, int frame_height,
   target_bitrate_ = target_bitrate;
   num_frames_ = num_frames;
   encode_speed_ = 0;
+  target_level_ = target_level;
 
   frame_coding_index_ = 0;
   show_frame_count_ = 0;
@@ -860,9 +863,9 @@ StatusCode SimpleEncode::DumpEncodeConfigs(int pass, FILE *fp) {
   }
   const vpx_rational_t frame_rate =
       make_vpx_rational(frame_rate_num_, frame_rate_den_);
-  const VP9EncoderConfig oxcf =
-      GetEncodeConfig(frame_width_, frame_height_, frame_rate, target_bitrate_,
-                      encode_speed_, enc_pass, impl_ptr_->encode_config_list);
+  const VP9EncoderConfig oxcf = GetEncodeConfig(
+      frame_width_, frame_height_, frame_rate, target_bitrate_, encode_speed_,
+      target_level_, enc_pass, impl_ptr_->encode_config_list);
   vp9_dump_encoder_config(&oxcf, fp);
   return StatusOk;
 }
@@ -872,7 +875,7 @@ void SimpleEncode::ComputeFirstPassStats() {
       make_vpx_rational(frame_rate_num_, frame_rate_den_);
   const VP9EncoderConfig oxcf = GetEncodeConfig(
       frame_width_, frame_height_, frame_rate, target_bitrate_, encode_speed_,
-      VPX_RC_FIRST_PASS, impl_ptr_->encode_config_list);
+      target_level_, VPX_RC_FIRST_PASS, impl_ptr_->encode_config_list);
   impl_ptr_->cpi = init_encoder(&oxcf, impl_ptr_->img_fmt);
   struct lookahead_ctx *lookahead = impl_ptr_->cpi->lookahead;
   int i;
@@ -1038,7 +1041,7 @@ void SimpleEncode::StartEncode() {
       make_vpx_rational(frame_rate_num_, frame_rate_den_);
   VP9EncoderConfig oxcf = GetEncodeConfig(
       frame_width_, frame_height_, frame_rate, target_bitrate_, encode_speed_,
-      VPX_RC_LAST_PASS, impl_ptr_->encode_config_list);
+      target_level_, VPX_RC_LAST_PASS, impl_ptr_->encode_config_list);
 
   vpx_fixed_buf_t stats;
   stats.buf = GetVectorData(impl_ptr_->first_pass_stats);
@@ -1266,7 +1269,7 @@ int SimpleEncode::GetCodingFrameNum() const {
       make_vpx_rational(frame_rate_num_, frame_rate_den_);
   const VP9EncoderConfig oxcf = GetEncodeConfig(
       frame_width_, frame_height_, frame_rate, target_bitrate_, encode_speed_,
-      VPX_RC_LAST_PASS, impl_ptr_->encode_config_list);
+      target_level_, VPX_RC_LAST_PASS, impl_ptr_->encode_config_list);
   FRAME_INFO frame_info = vp9_get_frame_info(&oxcf);
   fps_init_first_pass_info(&twopass.first_pass_info,
                            GetVectorData(impl_ptr_->first_pass_stats),
@@ -1285,7 +1288,7 @@ std::vector<int> SimpleEncode::ComputeKeyFrameMap() const {
       make_vpx_rational(frame_rate_num_, frame_rate_den_);
   const VP9EncoderConfig oxcf = GetEncodeConfig(
       frame_width_, frame_height_, frame_rate, target_bitrate_, encode_speed_,
-      VPX_RC_LAST_PASS, impl_ptr_->encode_config_list);
+      target_level_, VPX_RC_LAST_PASS, impl_ptr_->encode_config_list);
   TWO_PASS twopass;
   fps_init_first_pass_info(&twopass.first_pass_info,
                            GetVectorData(impl_ptr_->first_pass_stats),

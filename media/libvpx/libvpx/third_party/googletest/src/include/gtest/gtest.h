@@ -49,8 +49,8 @@
 
 // GOOGLETEST_CM0001 DO NOT DELETE
 
-#ifndef GTEST_INCLUDE_GTEST_GTEST_H_
-#define GTEST_INCLUDE_GTEST_GTEST_H_
+#ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+#define GOOGLETEST_INCLUDE_GTEST_GTEST_H_
 
 #include <cstddef>
 #include <limits>
@@ -101,6 +101,10 @@ GTEST_DECLARE_bool_(catch_exceptions);
 // to let Google Test decide.
 GTEST_DECLARE_string_(color);
 
+// This flag controls whether the test runner should continue execution past
+// first failure.
+GTEST_DECLARE_bool_(fail_fast);
+
 // This flag sets up the filter to select by name using a glob pattern
 // the tests to run. If the filter is not given all tests are executed.
 GTEST_DECLARE_string_(filter);
@@ -116,6 +120,9 @@ GTEST_DECLARE_bool_(list_tests);
 // This flag controls whether Google Test emits a detailed XML report to a file
 // in addition to its normal textual output.
 GTEST_DECLARE_string_(output);
+
+// This flags control whether Google Test prints only test failures.
+GTEST_DECLARE_bool_(brief);
 
 // This flags control whether Google Test prints the elapsed time for each
 // test.
@@ -411,10 +418,10 @@ class GTEST_API_ Test {
   // The d'tor is virtual as we intend to inherit from Test.
   virtual ~Test();
 
-  // Sets up the stuff shared by all tests in this test case.
+  // Sets up the stuff shared by all tests in this test suite.
   //
   // Google Test will call Foo::SetUpTestSuite() before running the first
-  // test in test case Foo.  Hence a sub-class can define its own
+  // test in test suite Foo.  Hence a sub-class can define its own
   // SetUpTestSuite() method to shadow the one defined in the super
   // class.
   static void SetUpTestSuite() {}
@@ -422,12 +429,13 @@ class GTEST_API_ Test {
   // Tears down the stuff shared by all tests in this test suite.
   //
   // Google Test will call Foo::TearDownTestSuite() after running the last
-  // test in test case Foo.  Hence a sub-class can define its own
+  // test in test suite Foo.  Hence a sub-class can define its own
   // TearDownTestSuite() method to shadow the one defined in the super
   // class.
   static void TearDownTestSuite() {}
 
-  // Legacy API is deprecated but still available
+  // Legacy API is deprecated but still available. Use SetUpTestSuite and
+  // TearDownTestSuite instead.
 #ifndef GTEST_REMOVE_LEGACY_TEST_CASEAPI_
   static void TearDownTestCase() {}
   static void SetUpTestCase() {}
@@ -665,7 +673,7 @@ class GTEST_API_ TestResult {
 
   // Protects mutable state of the property vector and of owned
   // properties, whose values may be updated.
-  internal::Mutex test_properites_mutex_;
+  internal::Mutex test_properties_mutex_;
 
   // The vector of TestPartResults
   std::vector<TestPartResult> test_part_results_;
@@ -794,6 +802,9 @@ class GTEST_API_ TestInfo {
   // Creates the test object, runs it, records its result, and then
   // deletes it.
   void Run();
+
+  // Skip and records the test result for this object.
+  void Skip();
 
   static void ClearTestResult(TestInfo* test_info) {
     test_info->result_.Clear();
@@ -942,6 +953,9 @@ class GTEST_API_ TestSuite {
 
   // Runs every test in this TestSuite.
   void Run();
+
+  // Skips the execution of tests under this TestSuite
+  void Skip();
 
   // Runs SetUpTestSuite() for this TestSuite.  This wrapper is needed
   // for catching exceptions thrown from SetUpTestSuite().
@@ -1535,14 +1549,6 @@ AssertionResult CmpHelperEQ(const char* lhs_expression,
   return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
 }
 
-// With this overloaded version, we allow anonymous enums to be used
-// in {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums
-// can be implicitly cast to BiggestInt.
-GTEST_API_ AssertionResult CmpHelperEQ(const char* lhs_expression,
-                                       const char* rhs_expression,
-                                       BiggestInt lhs,
-                                       BiggestInt rhs);
-
 class EqHelper {
  public:
   // This templatized version is for the general case.
@@ -1599,11 +1605,6 @@ AssertionResult CmpHelperOpFailure(const char* expr1, const char* expr2,
 // ASSERT_?? and EXPECT_??.  It is here just to avoid copy-and-paste
 // of similar code.
 //
-// For each templatized helper function, we also define an overloaded
-// version for BiggestInt in order to reduce code bloat and allow
-// anonymous enums to be used with {ASSERT|EXPECT}_?? when compiled
-// with gcc 4.
-//
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
 #define GTEST_IMPL_CMP_HELPER_(op_name, op)\
@@ -1615,22 +1616,20 @@ AssertionResult CmpHelper##op_name(const char* expr1, const char* expr2, \
   } else {\
     return CmpHelperOpFailure(expr1, expr2, val1, val2, #op);\
   }\
-}\
-GTEST_API_ AssertionResult CmpHelper##op_name(\
-    const char* expr1, const char* expr2, BiggestInt val1, BiggestInt val2)
+}
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
 // Implements the helper function for {ASSERT|EXPECT}_NE
-GTEST_IMPL_CMP_HELPER_(NE, !=);
+GTEST_IMPL_CMP_HELPER_(NE, !=)
 // Implements the helper function for {ASSERT|EXPECT}_LE
-GTEST_IMPL_CMP_HELPER_(LE, <=);
+GTEST_IMPL_CMP_HELPER_(LE, <=)
 // Implements the helper function for {ASSERT|EXPECT}_LT
-GTEST_IMPL_CMP_HELPER_(LT, <);
+GTEST_IMPL_CMP_HELPER_(LT, <)
 // Implements the helper function for {ASSERT|EXPECT}_GE
-GTEST_IMPL_CMP_HELPER_(GE, >=);
+GTEST_IMPL_CMP_HELPER_(GE, >=)
 // Implements the helper function for {ASSERT|EXPECT}_GT
-GTEST_IMPL_CMP_HELPER_(GT, >);
+GTEST_IMPL_CMP_HELPER_(GT, >)
 
 #undef GTEST_IMPL_CMP_HELPER_
 
@@ -1807,12 +1806,6 @@ class GTEST_API_ AssertHelper {
   GTEST_DISALLOW_COPY_AND_ASSIGN_(AssertHelper);
 };
 
-enum GTestColor { COLOR_DEFAULT, COLOR_RED, COLOR_GREEN, COLOR_YELLOW };
-
-GTEST_API_ GTEST_ATTRIBUTE_PRINTF_(2, 3) void ColoredPrintf(GTestColor color,
-                                                            const char* fmt,
-                                                            ...);
-
 }  // namespace internal
 
 // The pure interface class that all value-parameterized tests inherit from.
@@ -1969,18 +1962,37 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 // Boolean assertions. Condition can be either a Boolean expression or an
 // AssertionResult. For more information on how to use AssertionResult with
 // these macros see comments on that class.
-#define EXPECT_TRUE(condition) \
+#define GTEST_EXPECT_TRUE(condition) \
   GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
                       GTEST_NONFATAL_FAILURE_)
-#define EXPECT_FALSE(condition) \
+#define GTEST_EXPECT_FALSE(condition) \
   GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
                       GTEST_NONFATAL_FAILURE_)
-#define ASSERT_TRUE(condition) \
+#define GTEST_ASSERT_TRUE(condition) \
   GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
                       GTEST_FATAL_FAILURE_)
-#define ASSERT_FALSE(condition) \
+#define GTEST_ASSERT_FALSE(condition) \
   GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
                       GTEST_FATAL_FAILURE_)
+
+// Define these macros to 1 to omit the definition of the corresponding
+// EXPECT or ASSERT, which clashes with some users' own code.
+
+#if !GTEST_DONT_DEFINE_EXPECT_TRUE
+#define EXPECT_TRUE(condition) GTEST_EXPECT_TRUE(condition)
+#endif
+
+#if !GTEST_DONT_DEFINE_EXPECT_FALSE
+#define EXPECT_FALSE(condition) GTEST_EXPECT_FALSE(condition)
+#endif
+
+#if !GTEST_DONT_DEFINE_ASSERT_TRUE
+#define ASSERT_TRUE(condition) GTEST_ASSERT_TRUE(condition)
+#endif
+
+#if !GTEST_DONT_DEFINE_ASSERT_FALSE
+#define ASSERT_FALSE(condition) GTEST_ASSERT_FALSE(condition)
+#endif
 
 // Macros for testing equalities and inequalities.
 //
@@ -2480,4 +2492,4 @@ inline int RUN_ALL_TESTS() {
 
 GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 
-#endif  // GTEST_INCLUDE_GTEST_GTEST_H_
+#endif  // GOOGLETEST_INCLUDE_GTEST_GTEST_H_

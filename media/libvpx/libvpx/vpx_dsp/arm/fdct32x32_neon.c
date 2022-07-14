@@ -153,7 +153,7 @@ static INLINE void load(const int16_t *a, int stride, int16x8_t *b) {
   do {                                        \
     store_s16q_to_tran_low(dest, src[index]); \
     dest += 8;                                \
-  } while (0);
+  } while (0)
 
 // Store 32 16x8 values, assuming stride == 32.
 // Slight twist: store horizontally in blocks of 8.

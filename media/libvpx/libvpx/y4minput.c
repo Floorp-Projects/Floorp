@@ -1087,9 +1087,15 @@ int y4m_input_open(y4m_input *y4m_ctx, FILE *file, char *skip_buffer,
     y4m_ctx->dst_buf = (unsigned char *)malloc(y4m_ctx->dst_buf_sz);
   else
     y4m_ctx->dst_buf = (unsigned char *)malloc(2 * y4m_ctx->dst_buf_sz);
+  if (!y4m_ctx->dst_buf) return -1;
 
-  if (y4m_ctx->aux_buf_sz > 0)
+  if (y4m_ctx->aux_buf_sz > 0) {
     y4m_ctx->aux_buf = (unsigned char *)malloc(y4m_ctx->aux_buf_sz);
+    if (!y4m_ctx->aux_buf) {
+      free(y4m_ctx->dst_buf);
+      return -1;
+    }
+  }
   return 0;
 }
 

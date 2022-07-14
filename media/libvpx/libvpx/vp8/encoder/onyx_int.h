@@ -549,7 +549,6 @@ typedef struct VP8_COMP {
   unsigned char *partition_d_end[MAX_PARTITIONS];
 
   fractional_mv_step_fp *find_fractional_mv_step;
-  vp8_full_search_fn_t full_search_sad;
   vp8_refining_search_fn_t refining_search_sad;
   vp8_diamond_search_fn_t diamond_search_sad;
   vp8_variance_fn_ptr_t fn_ptr[BLOCK_MAX_SEGMENTS];
@@ -702,12 +701,22 @@ typedef struct VP8_COMP {
   int use_roi_static_threshold;
 
   int ext_refresh_frame_flags_pending;
+
+  // Always update correction factor used for rate control after each frame for
+  // realtime encoding.
+  int rt_always_update_correction_factor;
 } VP8_COMP;
 
 void vp8_initialize_enc(void);
 
 void vp8_alloc_compressor_data(VP8_COMP *cpi);
 int vp8_reverse_trans(int x);
+void vp8_init_temporal_layer_context(VP8_COMP *cpi, VP8_CONFIG *oxcf,
+                                     const int layer,
+                                     double prev_layer_framerate);
+void vp8_update_layer_contexts(VP8_COMP *cpi);
+void vp8_save_layer_context(VP8_COMP *cpi);
+void vp8_restore_layer_context(VP8_COMP *cpi, const int layer);
 void vp8_new_framerate(VP8_COMP *cpi, double framerate);
 void vp8_loopfilter_frame(VP8_COMP *cpi, VP8_COMMON *cm);
 

@@ -674,8 +674,8 @@ TEST_P(YUVTemporalFilterTest, DISABLED_Speed) {
          v_count);                                                            \
   }
 
-WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_c, 10);
-WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_c, 12);
+WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_c, 10)
+WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_c, 12)
 
 INSTANTIATE_TEST_SUITE_P(
     C, YUVTemporalFilterTest,
@@ -683,8 +683,8 @@ INSTANTIATE_TEST_SUITE_P(
         TemporalFilterWithBd(&wrap_vp9_highbd_apply_temporal_filter_c_10, 10),
         TemporalFilterWithBd(&wrap_vp9_highbd_apply_temporal_filter_c_12, 12)));
 #if HAVE_SSE4_1
-WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_sse4_1, 10);
-WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_sse4_1, 12);
+WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_sse4_1, 10)
+WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_sse4_1, 12)
 
 INSTANTIATE_TEST_SUITE_P(
     SSE4_1, YUVTemporalFilterTest,

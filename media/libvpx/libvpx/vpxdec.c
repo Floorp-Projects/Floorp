@@ -581,7 +581,10 @@ static int main_loop(int argc, const char **argv_) {
   /* Parse command line */
   exec_name = argv_[0];
   argv = argv_dup(argc - 1, argv_ + 1);
-
+  if (!argv) {
+    fprintf(stderr, "Error allocating argument list\n");
+    return EXIT_FAILURE;
+  }
   for (argi = argj = argv; (*argj = *argi); argi += arg.argv_step) {
     memset(&arg, 0, sizeof(arg));
     arg.argv_step = 1;
@@ -815,6 +818,10 @@ static int main_loop(int argc, const char **argv_) {
     ext_fb_list.num_external_frame_buffers = num_external_frame_buffers;
     ext_fb_list.ext_fb = (struct ExternalFrameBuffer *)calloc(
         num_external_frame_buffers, sizeof(*ext_fb_list.ext_fb));
+    if (!ext_fb_list.ext_fb) {
+      fprintf(stderr, "Failed to allocate ExternalFrameBuffer\n");
+      goto fail;
+    }
     if (vpx_codec_set_frame_buffer_functions(&decoder, get_vp9_frame_buffer,
                                              release_vp9_frame_buffer,
                                              &ext_fb_list)) {
@@ -930,6 +937,11 @@ static int main_loop(int argc, const char **argv_) {
           }
           scaled_img =
               vpx_img_alloc(NULL, img->fmt, render_width, render_height, 16);
+          if (!scaled_img) {
+            fprintf(stderr, "Failed to allocate scaled image (%d x %d)\n",
+                    render_width, render_height);
+            goto fail;
+          }
           scaled_img->bit_depth = img->bit_depth;
         }
 
@@ -966,6 +978,10 @@ static int main_loop(int argc, const char **argv_) {
         if (!img_shifted) {
           img_shifted =
               vpx_img_alloc(NULL, shifted_fmt, img->d_w, img->d_h, 16);
+          if (!img_shifted) {
+            fprintf(stderr, "Failed to allocate image\n");
+            goto fail;
+          }
           img_shifted->bit_depth = output_bit_depth;
         }
         if (output_bit_depth > img->bit_depth) {
@@ -1110,6 +1126,10 @@ int main(int argc, const char **argv_) {
   int error = 0;
 
   argv = argv_dup(argc - 1, argv_ + 1);
+  if (!argv) {
+    fprintf(stderr, "Error allocating argument list\n");
+    return EXIT_FAILURE;
+  }
   for (argi = argj = argv; (*argj = *argi); argi += arg.argv_step) {
     memset(&arg, 0, sizeof(arg));
     arg.argv_step = 1;

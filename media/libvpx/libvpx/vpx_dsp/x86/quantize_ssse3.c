@@ -18,8 +18,8 @@
 #include "vpx_dsp/x86/quantize_ssse3.h"
 
 void vpx_quantize_b_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                          int skip_block, const int16_t *zbin_ptr,
-                          const int16_t *round_ptr, const int16_t *quant_ptr,
+                          const int16_t *zbin_ptr, const int16_t *round_ptr,
+                          const int16_t *quant_ptr,
                           const int16_t *quant_shift_ptr,
                           tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                           const int16_t *dequant_ptr, uint16_t *eob_ptr,
@@ -34,8 +34,6 @@ void vpx_quantize_b_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   __m128i eob, eob0;
 
   (void)scan;
-  (void)skip_block;
-  assert(!skip_block);
 
   load_b_values(zbin_ptr, &zbin, round_ptr, &round, quant_ptr, &quant,
                 dequant_ptr, &dequant, quant_shift_ptr, &shift);
@@ -111,7 +109,7 @@ void vpx_quantize_b_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
 }
 
 void vpx_quantize_b_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                                int skip_block, const int16_t *zbin_ptr,
+                                const int16_t *zbin_ptr,
                                 const int16_t *round_ptr,
                                 const int16_t *quant_ptr,
                                 const int16_t *quant_shift_ptr,
@@ -131,8 +129,6 @@ void vpx_quantize_b_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
 
   (void)scan;
   (void)n_coeffs;
-  (void)skip_block;
-  assert(!skip_block);
 
   // Setup global values.
   // The 32x32 halves zbin and round.

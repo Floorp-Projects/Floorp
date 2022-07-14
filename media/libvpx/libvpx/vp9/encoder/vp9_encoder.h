@@ -1196,6 +1196,13 @@ static INLINE int frame_is_kf_gf_arf(const VP9_COMP *cpi) {
          (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref);
 }
 
+static INLINE int ref_frame_to_flag(int8_t ref_frame) {
+  static const int kVp9RefFlagList[4] = { 0, VP9_LAST_FLAG, VP9_GOLD_FLAG,
+                                          VP9_ALT_FLAG };
+  assert(ref_frame >= LAST_FRAME && ref_frame <= ALTREF_FRAME);
+  return kVp9RefFlagList[ref_frame];
+}
+
 static INLINE int get_ref_frame_map_idx(const VP9_COMP *cpi,
                                         MV_REFERENCE_FRAME ref_frame) {
   if (ref_frame == LAST_FRAME) {

@@ -47,18 +47,15 @@ static INLINE __m256i scan_eob_256(const __m256i *iscan_ptr,
 }
 
 void vp9_quantize_fp_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                          int skip_block, const int16_t *round_ptr,
-                          const int16_t *quant_ptr, tran_low_t *qcoeff_ptr,
-                          tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                          uint16_t *eob_ptr, const int16_t *scan,
-                          const int16_t *iscan) {
+                          const int16_t *round_ptr, const int16_t *quant_ptr,
+                          tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                          const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                          const int16_t *scan, const int16_t *iscan) {
   __m128i eob;
   __m256i round256, quant256, dequant256;
   __m256i eob256, thr256;
 
   (void)scan;
-  (void)skip_block;
-  assert(!skip_block);
 
   coeff_ptr += n_coeffs;
   iscan += n_coeffs;

@@ -567,7 +567,7 @@ void vp8_first_pass(VP8_COMP *cpi) {
       vp8_copy_mem16x16(x->src.y_buffer, x->src.y_stride, x->thismb, 16);
 
       /* do intra 16x16 prediction */
-      this_error = vp8_encode_intra(cpi, x, use_dc_pred);
+      this_error = vp8_encode_intra(x, use_dc_pred);
 
       /* "intrapenalty" below deals with situations where the intra
        * and inter error scores are very low (eg a plain black frame)
@@ -1631,7 +1631,6 @@ static void define_gf_group(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame) {
   double this_frame_mv_in_out = 0.0;
   double mv_in_out_accumulator = 0.0;
   double abs_mv_in_out_accumulator = 0.0;
-  double mod_err_per_mb_accumulator = 0.0;
 
   int max_bits = frame_max_bits(cpi); /* Max for a single frame */
 
@@ -1681,9 +1680,6 @@ static void define_gf_group(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame) {
     mod_frame_err = calculate_modified_err(cpi, this_frame);
 
     gf_group_err += mod_frame_err;
-
-    mod_err_per_mb_accumulator +=
-        mod_frame_err / DOUBLE_DIVIDE_CHECK((double)cpi->common.MBs);
 
     if (EOF == input_stats(cpi, &next_frame)) break;
 

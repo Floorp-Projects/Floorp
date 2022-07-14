@@ -969,12 +969,12 @@ filter8_1dfunction vpx_filter_block1d4_h2_avg_ssse3;
 //                                   const InterpKernel *filter, int x0_q4,
 //                                   int32_t x_step_q4, int y0_q4,
 //                                   int y_step_q4, int w, int h);
-FUN_CONV_1D(horiz, x0_q4, x_step_q4, h, src, , avx2, 0);
+FUN_CONV_1D(horiz, x0_q4, x_step_q4, h, src, , avx2, 0)
 FUN_CONV_1D(vert, y0_q4, y_step_q4, v, src - src_stride * (num_taps / 2 - 1), ,
-            avx2, 0);
-FUN_CONV_1D(avg_horiz, x0_q4, x_step_q4, h, src, avg_, avx2, 1);
+            avx2, 0)
+FUN_CONV_1D(avg_horiz, x0_q4, x_step_q4, h, src, avg_, avx2, 1)
 FUN_CONV_1D(avg_vert, y0_q4, y_step_q4, v,
-            src - src_stride * (num_taps / 2 - 1), avg_, avx2, 1);
+            src - src_stride * (num_taps / 2 - 1), avg_, avx2, 1)
 
 // void vpx_convolve8_avx2(const uint8_t *src, ptrdiff_t src_stride,
 //                          uint8_t *dst, ptrdiff_t dst_stride,
@@ -986,6 +986,6 @@ FUN_CONV_1D(avg_vert, y0_q4, y_step_q4, v,
 //                              const InterpKernel *filter, int x0_q4,
 //                              int32_t x_step_q4, int y0_q4, int y_step_q4,
 //                              int w, int h);
-FUN_CONV_2D(, avx2, 0);
-FUN_CONV_2D(avg_, avx2, 1);
+FUN_CONV_2D(, avx2, 0)
+FUN_CONV_2D(avg_, avx2, 1)
 #endif  // HAVE_AX2 && HAVE_SSSE3

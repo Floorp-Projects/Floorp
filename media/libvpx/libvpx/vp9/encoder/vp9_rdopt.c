@@ -3315,8 +3315,6 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
   int_mv single_newmv[MAX_REF_FRAMES] = { { 0 } };
   INTERP_FILTER single_inter_filter[MB_MODE_COUNT][MAX_REF_FRAMES];
   int single_skippable[MB_MODE_COUNT][MAX_REF_FRAMES];
-  static const int flag_list[4] = { 0, VP9_LAST_FLAG, VP9_GOLD_FLAG,
-                                    VP9_ALT_FLAG };
   int64_t best_rd = best_rd_so_far;
   int64_t best_pred_diff[REFERENCE_MODES];
   int64_t best_pred_rd[REFERENCE_MODES];
@@ -3392,7 +3390,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
 
   for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
     x->pred_mv_sad[ref_frame] = INT_MAX;
-    if ((cpi->ref_frame_flags & flag_list[ref_frame]) &&
+    if ((cpi->ref_frame_flags & ref_frame_to_flag(ref_frame)) &&
         !(is_rect_partition && (ctx->skip_ref_frame_mask & (1 << ref_frame)))) {
       assert(get_ref_frame_buffer(cpi, ref_frame) != NULL);
       setup_buffer_inter(cpi, x, ref_frame, bsize, mi_row, mi_col,
@@ -3403,7 +3401,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
   }
 
   for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
-    if (!(cpi->ref_frame_flags & flag_list[ref_frame])) {
+    if (!(cpi->ref_frame_flags & ref_frame_to_flag(ref_frame))) {
       // Skip checking missing references in both single and compound reference
       // modes. Note that a mode will be skipped if both reference frames
       // are masked out.
@@ -3472,7 +3470,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
   }
 
   mode_skip_mask[INTRA_FRAME] |=
-      ~(sf->intra_y_mode_mask[max_txsize_lookup[bsize]]);
+      (uint16_t) ~(sf->intra_y_mode_mask[max_txsize_lookup[bsize]]);
 
   for (i = 0; i <= LAST_NEW_MV_INDEX; ++i) mode_threshold[i] = 0;
 
@@ -3609,7 +3607,8 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
         continue;
 
       // Skip compound inter modes if ARF is not available.
-      if (!(cpi->ref_frame_flags & flag_list[second_ref_frame])) continue;
+      if (!(cpi->ref_frame_flags & ref_frame_to_flag(second_ref_frame)))
+        continue;
 
       // Do not allow compound prediction if the segment level reference frame
       // feature is in use as in this case there can only be one reference.
@@ -4140,8 +4139,6 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
   int comp_pred, i;
   int_mv frame_mv[MB_MODE_COUNT][MAX_REF_FRAMES];
   struct buf_2d yv12_mb[4][MAX_MB_PLANE];
-  static const int flag_list[4] = { 0, VP9_LAST_FLAG, VP9_GOLD_FLAG,
-                                    VP9_ALT_FLAG };
   int64_t best_rd = best_rd_so_far;
   int64_t best_yrd = best_rd_so_far;  // FIXME(rbultje) more precise
   int64_t best_pred_diff[REFERENCE_MODES];
@@ -4191,7 +4188,7 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
   rd_cost->rate = INT_MAX;
 
   for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ref_frame++) {
-    if (cpi->ref_frame_flags & flag_list[ref_frame]) {
+    if (cpi->ref_frame_flags & ref_frame_to_flag(ref_frame)) {
       setup_buffer_inter(cpi, x, ref_frame, bsize, mi_row, mi_col,
                          frame_mv[NEARESTMV], frame_mv[NEARMV], yv12_mb);
     } else {
@@ -4276,7 +4273,8 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
           cm->ref_frame_sign_bias[second_ref_frame])
         continue;
 
-      if (!(cpi->ref_frame_flags & flag_list[second_ref_frame])) continue;
+      if (!(cpi->ref_frame_flags & ref_frame_to_flag(second_ref_frame)))
+        continue;
       // Do not allow compound prediction if the segment level reference frame
       // feature is in use as in this case there can only be one reference.
       if (segfeature_active(seg, segment_id, SEG_LVL_REF_FRAME)) continue;

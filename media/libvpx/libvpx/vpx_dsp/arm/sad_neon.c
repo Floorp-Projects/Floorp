@@ -110,7 +110,7 @@ static INLINE uint16x8_t sad8x_avg(const uint8_t *src_ptr, int src_stride,
   return abs;
 }
 
-#define sad8xN(n)                                                              \
+#define SAD8XN(n)                                                              \
   uint32_t vpx_sad8x##n##_neon(const uint8_t *src_ptr, int src_stride,         \
                                const uint8_t *ref_ptr, int ref_stride) {       \
     const uint16x8_t abs = sad8x(src_ptr, src_stride, ref_ptr, ref_stride, n); \
@@ -125,9 +125,9 @@ static INLINE uint16x8_t sad8x_avg(const uint8_t *src_ptr, int src_stride,
     return horizontal_add_uint16x8(abs);                                       \
   }
 
-sad8xN(4);
-sad8xN(8);
-sad8xN(16);
+SAD8XN(4)
+SAD8XN(8)
+SAD8XN(16)
 
 static INLINE uint16x8_t sad16x(const uint8_t *src_ptr, int src_stride,
                                 const uint8_t *ref_ptr, int ref_stride,
@@ -167,7 +167,7 @@ static INLINE uint16x8_t sad16x_avg(const uint8_t *src_ptr, int src_stride,
   return abs;
 }
 
-#define sad16xN(n)                                                            \
+#define SAD16XN(n)                                                            \
   uint32_t vpx_sad16x##n##_neon(const uint8_t *src_ptr, int src_stride,       \
                                 const uint8_t *ref_ptr, int ref_stride) {     \
     const uint16x8_t abs =                                                    \
@@ -183,9 +183,9 @@ static INLINE uint16x8_t sad16x_avg(const uint8_t *src_ptr, int src_stride,
     return horizontal_add_uint16x8(abs);                                      \
   }
 
-sad16xN(8);
-sad16xN(16);
-sad16xN(32);
+SAD16XN(8)
+SAD16XN(16)
+SAD16XN(32)
 
 static INLINE uint16x8_t sad32x(const uint8_t *src_ptr, int src_stride,
                                 const uint8_t *ref_ptr, int ref_stride,
@@ -235,7 +235,7 @@ static INLINE uint16x8_t sad32x_avg(const uint8_t *src_ptr, int src_stride,
   return abs;
 }
 
-#define sad32xN(n)                                                            \
+#define SAD32XN(n)                                                            \
   uint32_t vpx_sad32x##n##_neon(const uint8_t *src_ptr, int src_stride,       \
                                 const uint8_t *ref_ptr, int ref_stride) {     \
     const uint16x8_t abs =                                                    \
@@ -251,9 +251,9 @@ static INLINE uint16x8_t sad32x_avg(const uint8_t *src_ptr, int src_stride,
     return horizontal_add_uint16x8(abs);                                      \
   }
 
-sad32xN(16);
-sad32xN(32);
-sad32xN(64);
+SAD32XN(16)
+SAD32XN(32)
+SAD32XN(64)
 
 static INLINE uint32x4_t sad64x(const uint8_t *src_ptr, int src_stride,
                                 const uint8_t *ref_ptr, int ref_stride,
@@ -333,7 +333,7 @@ static INLINE uint32x4_t sad64x_avg(const uint8_t *src_ptr, int src_stride,
   }
 }
 
-#define sad64xN(n)                                                            \
+#define SAD64XN(n)                                                            \
   uint32_t vpx_sad64x##n##_neon(const uint8_t *src_ptr, int src_stride,       \
                                 const uint8_t *ref_ptr, int ref_stride) {     \
     const uint32x4_t abs =                                                    \
@@ -349,5 +349,5 @@ static INLINE uint32x4_t sad64x_avg(const uint8_t *src_ptr, int src_stride,
     return horizontal_add_uint32x4(abs);                                      \
   }
 
-sad64xN(32);
-sad64xN(64);
+SAD64XN(32)
+SAD64XN(64)
