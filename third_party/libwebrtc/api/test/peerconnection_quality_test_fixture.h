@@ -127,7 +127,12 @@ class PeerConnectionE2EQualityTestFixture {
     std::vector<std::string> slides_yuv_file_names;
   };
 
-  // Config for Vp8 simulcast or Vp9 SVC testing.
+  // Config for Vp8 simulcast or non-standard Vp9 SVC testing.
+  //
+  // To configure standard SVC setting, use `scalability_mode` in the
+  // `encoding_params` array.
+  // This configures Vp9 SVC by requesting simulcast layers, the request is
+  // internally converted to a request for SVC layers.
   //
   // SVC support is limited:
   // During SVC testing there is no SFU, so framework will try to emulate SFU
@@ -256,6 +261,14 @@ class PeerConnectionE2EQualityTestFixture {
     // but only on non-lossy networks. See more in documentation to
     // VideoSimulcastConfig.
     absl::optional<VideoSimulcastConfig> simulcast_config;
+    // Encoding parameters for both singlecast and per simulcast layer.
+    // If singlecast is used, if not empty, a single value can be provided.
+    // If simulcast is used, if not empty, `encoding_params` size have to be
+    // equal to `simulcast_config.simulcast_streams_count`. Will be used to set
+    // transceiver send encoding params for each layer.
+    // RtpEncodingParameters::rid may be changed by fixture implementation to
+    // ensure signaling correctness.
+    std::vector<RtpEncodingParameters> encoding_params;
     // Count of temporal layers for video stream. This value will be set into
     // each RtpEncodingParameters of RtpParameters of corresponding
     // RtpSenderInterface for this video stream.
