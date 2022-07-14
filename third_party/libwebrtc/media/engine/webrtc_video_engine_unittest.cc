@@ -7068,6 +7068,42 @@ TEST_F(WebRtcVideoChannelTest,
             stream->GetVideoStreams()[0].max_bitrate_bps);
 }
 
+TEST_F(WebRtcVideoChannelTest, SetsCorrectMaxBitrateForCommonResolutions) {
+  FakeVideoSendStream* stream = AddSendStream();
+  webrtc::test::FrameForwarder frame_forwarder;
+  VideoOptions options;
+  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, &options, &frame_forwarder));
+  channel_->SetSend(true);
+
+  auto rtp_parameters = channel_->GetRtpSendParameters(last_ssrc_);
+  auto result = channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters);
+  ASSERT_TRUE(result.ok());
+
+  struct ResolutionBitratePairing {
+    int width;
+    int height;
+    int bitrate_kbps;
+  };
+  std::vector<ResolutionBitratePairing> resolutions = {
+      {.width = 320, .height = 240, .bitrate_kbps = 600},
+      {.width = 640, .height = 480, .bitrate_kbps = 1600},
+      {.width = 960, .height = 540, .bitrate_kbps = 2000},
+      {.width = 1280, .height = 720, .bitrate_kbps = 2500},
+      {.width = 1920, .height = 1080, .bitrate_kbps = 3300},
+      {.width = 3840, .height = 2190, .bitrate_kbps = 5600}};
+  for (const ResolutionBitratePairing& resolution : resolutions) {
+    FakeFrameSource frame_source(resolution.width, resolution.height,
+                                 rtc::kNumMicrosecsPerSec / 30);
+    frame_forwarder.IncomingCapturedFrame(frame_source.GetFrame());
+
+    ASSERT_EQ(1UL, stream->GetVideoStreams().size());
+    EXPECT_EQ(resolution.bitrate_kbps * 1000,
+              stream->GetVideoStreams()[0].max_bitrate_bps);
+  }
+
+  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+}
+
 TEST_F(WebRtcVideoChannelTest, SetMaxFramerateOneStream) {
   FakeVideoSendStream* stream = AddSendStream();
 
