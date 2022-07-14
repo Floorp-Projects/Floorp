@@ -28,7 +28,6 @@
 #include "common_audio/wav_file.h"
 #include "modules/audio_processing/test/protobuf_utils.h"
 #include "modules/audio_processing/test/test_utils.h"
-#include "rtc_base/format_macros.h"
 #include "rtc_base/ignore_wundef.h"
 #include "rtc_base/strings/string_builder.h"
 
@@ -480,14 +479,11 @@ int do_main(int argc, char* argv[]) {
       fprintf(settings_file, "  Reverse sample rate: %d\n",
               reverse_sample_rate);
       num_input_channels = msg.num_input_channels();
-      fprintf(settings_file, "  Input channels: %" RTC_PRIuS "\n",
-              num_input_channels);
+      fprintf(settings_file, "  Input channels: %zu\n", num_input_channels);
       num_output_channels = msg.num_output_channels();
-      fprintf(settings_file, "  Output channels: %" RTC_PRIuS "\n",
-              num_output_channels);
+      fprintf(settings_file, "  Output channels: %zu\n", num_output_channels);
       num_reverse_channels = msg.num_reverse_channels();
-      fprintf(settings_file, "  Reverse channels: %" RTC_PRIuS "\n",
-              num_reverse_channels);
+      fprintf(settings_file, "  Reverse channels: %zu\n", num_reverse_channels);
       if (msg.has_timestamp_ms()) {
         const int64_t timestamp = msg.timestamp_ms();
         fprintf(settings_file, "  Timestamp in millisecond: %" PRId64 "\n",

@@ -18,7 +18,6 @@
 
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/format_macros.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/system/arch.h"
 
@@ -290,15 +289,15 @@ class PcapReader : public RtpFileReaderImpl {
     }
 
     printf("Total packets in file: %d\n", total_packet_count);
-    printf("Total RTP/RTCP packets: %" RTC_PRIuS "\n", packets_.size());
+    printf("Total RTP/RTCP packets: %zu\n", packets_.size());
 
     for (SsrcMapIterator mit = packets_by_ssrc_.begin();
          mit != packets_by_ssrc_.end(); ++mit) {
       uint32_t ssrc = mit->first;
       const std::vector<uint32_t>& packet_indices = mit->second;
       int pt = packets_[packet_indices[0]].payload_type;
-      printf("SSRC: %08x, %" RTC_PRIuS " packets, pt=%d\n", ssrc,
-             packet_indices.size(), pt);
+      printf("SSRC: %08x, %zu packets, pt=%d\n", ssrc, packet_indices.size(),
+             pt);
     }
 
     // TODO(solenberg): Better validation of identified SSRC streams.

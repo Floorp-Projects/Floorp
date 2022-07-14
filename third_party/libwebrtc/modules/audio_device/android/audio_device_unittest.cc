@@ -29,7 +29,6 @@
 #include "modules/audio_device/include/mock_audio_transport.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/event.h"
-#include "rtc_base/format_macros.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
 #include "test/gmock.h"
@@ -187,7 +186,7 @@ class FifoAudioStream : public AudioStreamInterface {
     const size_t size = fifo_->size();
     if (size > largest_size_) {
       largest_size_ = size;
-      PRINTD("(%" RTC_PRIuS ")", largest_size_);
+      PRINTD("(%zu)", largest_size_);
     }
     total_written_elements_ += size;
   }
@@ -532,13 +531,12 @@ class AudioDeviceTest : public ::testing::Test {
 #ifdef ENABLE_PRINTF
     PRINT("file name: %s\n", file_name.c_str());
     const size_t bytes = test::GetFileSize(file_name);
-    PRINT("file size: %" RTC_PRIuS " [bytes]\n", bytes);
-    PRINT("file size: %" RTC_PRIuS " [samples]\n", bytes / kBytesPerSample);
+    PRINT("file size: %zu [bytes]\n", bytes);
+    PRINT("file size: %zu [samples]\n", bytes / kBytesPerSample);
     const int seconds =
         static_cast<int>(bytes / (sample_rate * kBytesPerSample));
     PRINT("file size: %d [secs]\n", seconds);
-    PRINT("file size: %" RTC_PRIuS " [callbacks]\n",
-          seconds * kNumCallbacksPerSecond);
+    PRINT("file size: %zu [callbacks]\n", seconds * kNumCallbacksPerSecond);
 #endif
     return file_name;
   }
