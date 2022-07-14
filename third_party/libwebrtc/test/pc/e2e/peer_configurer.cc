@@ -65,21 +65,27 @@ PeerParamsPreprocessor::PeerParamsPreprocessor()
 
 void PeerParamsPreprocessor::SetDefaultValuesForMissingParams(
     PeerConfigurerImpl& peer) {
-  auto* p = peer.params();
-  peer_names_provider.MaybeSetName(p->name);
-  DefaultNamesProvider video_stream_names_provider(*p->name +
+  Params* params = peer.params();
+  ConfigurableParams* configurable_params = peer.configurable_params();
+  peer_names_provider.MaybeSetName(params->name);
+  DefaultNamesProvider video_stream_names_provider(*params->name +
                                                    "_auto_video_stream_label_");
-  for (VideoConfig& video_config : p->video_configs) {
-    video_stream_names_provider.MaybeSetName(video_config.stream_label);
+  for (size_t i = 0; i < configurable_params->video_configs.size(); ++i) {
+    video_stream_names_provider.MaybeSetName(
+        configurable_params->video_configs[i].stream_label);
+    // TODO(titovartem): remove when downstream will migrate on new API.
+    params->video_configs[i].stream_label =
+        configurable_params->video_configs[i].stream_label;
   }
-  if (p->audio_config) {
+  if (params->audio_config) {
     DefaultNamesProvider audio_stream_names_provider(
-        *p->name + "_auto_audio_stream_label_");
-    audio_stream_names_provider.MaybeSetName(p->audio_config->stream_label);
+        *params->name + "_auto_audio_stream_label_");
+    audio_stream_names_provider.MaybeSetName(
+        params->audio_config->stream_label);
   }
 
-  if (p->video_codecs.empty()) {
-    p->video_codecs.push_back(
+  if (params->video_codecs.empty()) {
+    params->video_codecs.push_back(
         PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
             cricket::kVp8CodecName));
   }
@@ -100,11 +106,12 @@ void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
   if (p.audio_config) {
     media_streams_count++;
   }
-  media_streams_count += p.video_configs.size();
+  media_streams_count += peer.configurable_params().video_configs.size();
 
   // Validate that all video stream labels are unique and sync groups are
   // valid.
-  for (const VideoConfig& video_config : p.video_configs) {
+  for (const VideoConfig& video_config :
+       peer.configurable_params().video_configs) {
     RTC_CHECK(video_config.stream_label);
     bool inserted =
         video_labels.insert(video_config.stream_label.value()).second;

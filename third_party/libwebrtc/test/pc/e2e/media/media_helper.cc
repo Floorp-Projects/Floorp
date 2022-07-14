@@ -52,9 +52,10 @@ std::vector<rtc::scoped_refptr<TestVideoCapturerVideoTrackSource>>
 MediaHelper::MaybeAddVideo(TestPeer* peer) {
   // Params here valid because of pre-run validation.
   const Params& params = peer->params();
+  const ConfigurableParams& configurable_params = peer->configurable_params();
   std::vector<rtc::scoped_refptr<TestVideoCapturerVideoTrackSource>> out;
-  for (size_t i = 0; i < params.video_configs.size(); ++i) {
-    auto video_config = params.video_configs[i];
+  for (size_t i = 0; i < configurable_params.video_configs.size(); ++i) {
+    const VideoConfig& video_config = configurable_params.video_configs[i];
     // Setup input video source into peer connection.
     std::unique_ptr<test::TestVideoCapturer> capturer = CreateVideoCapturer(
         video_config, peer->ReleaseVideoSource(i),

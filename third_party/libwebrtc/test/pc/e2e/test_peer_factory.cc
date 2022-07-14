@@ -306,11 +306,15 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
   std::unique_ptr<InjectableComponents> components =
       configurer->ReleaseComponents();
   std::unique_ptr<Params> params = configurer->ReleaseParams();
+  std::unique_ptr<ConfigurableParams> configurable_params =
+      configurer->ReleaseConfigurableParams();
   std::vector<PeerConfigurerImpl::VideoSource> video_sources =
       configurer->ReleaseVideoSources();
   RTC_DCHECK(components);
   RTC_DCHECK(params);
-  RTC_DCHECK_EQ(params->video_configs.size(), video_sources.size());
+  RTC_DCHECK(configurable_params);
+  RTC_DCHECK_EQ(configurable_params->video_configs.size(),
+                video_sources.size());
   SetMandatoryEntities(components.get(), time_controller_);
   params->rtc_configuration.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
@@ -329,7 +333,8 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
           components->pcf_dependencies->task_queue_factory.get());
   WrapVideoEncoderFactory(
       params->name.value(), params->video_encoder_bitrate_multiplier,
-      CalculateRequiredSpatialIndexPerStream(params->video_configs),
+      CalculateRequiredSpatialIndexPerStream(
+          configurable_params->video_configs),
       components->pcf_dependencies.get(), video_analyzer_helper_);
   WrapVideoDecoderFactory(params->name.value(),
                           components->pcf_dependencies.get(),
@@ -363,8 +368,8 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
 
   return absl::WrapUnique(new TestPeer(
       peer_connection_factory, peer_connection, std::move(observer),
-      std::move(params), std::move(video_sources), audio_processing,
-      std::move(worker_thread)));
+      std::move(*params), std::move(*configurable_params),
+      std::move(video_sources), audio_processing, std::move(worker_thread)));
 }
 
 }  // namespace webrtc_pc_e2e
