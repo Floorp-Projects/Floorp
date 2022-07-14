@@ -28,7 +28,6 @@
 #include "modules/pacing/pacing_controller.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -41,7 +40,7 @@ class RoundRobinPacketQueue : public PacingController::PacketQueue {
             std::unique_ptr<RtpPacketToSend> packet) override;
   std::unique_ptr<RtpPacketToSend> Pop() override;
 
-  size_t SizeInPackets() const override;
+  int SizeInPackets() const override;
   DataSize SizeInPayloadBytes() const override;
   Timestamp LeadingAudioPacketEnqueueTime() const override;
   Timestamp OldestEnqueueTime() const override;
@@ -142,7 +141,7 @@ class RoundRobinPacketQueue : public PacingController::PacketQueue {
   int64_t enqueue_count_;
 
   bool paused_;
-  size_t size_packets_;
+  int size_packets_;
   DataSize size_;
   DataSize max_size_;
   TimeDelta queue_time_sum_;

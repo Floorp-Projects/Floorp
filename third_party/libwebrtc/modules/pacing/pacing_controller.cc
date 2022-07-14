@@ -18,6 +18,7 @@
 #include "absl/strings/match.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
+#include "modules/pacing/prioritized_packet_queue.h"
 #include "modules/pacing/round_robin_packet_queue.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -53,6 +54,15 @@ TimeDelta GetDynamicPaddingTarget(const FieldTrialsView& field_trials) {
   ParseFieldTrial({&padding_target},
                   field_trials.Lookup("WebRTC-Pacer-DynamicPaddingTarget"));
   return padding_target.Get();
+}
+
+std::unique_ptr<PacingController::PacketQueue> CreatePacketQueue(
+    const FieldTrialsView& field_trials,
+    Timestamp creation_time) {
+  if (field_trials.IsEnabled("WebRTC-Pacer-UsePrioritizedPacketQueue")) {
+    return std::make_unique<PrioritizedPacketQueue>(creation_time);
+  }
+  return std::make_unique<RoundRobinPacketQueue>(creation_time);
 }
 
 }  // namespace
@@ -98,8 +108,7 @@ PacingController::PacingController(Clock* clock,
       last_process_time_(clock->CurrentTime()),
       last_send_time_(last_process_time_),
       seen_first_packet_(false),
-      packet_queue_(
-          std::make_unique<RoundRobinPacketQueue>(last_process_time_)),
+      packet_queue_(CreatePacketQueue(field_trials_, last_process_time_)),
       congested_(false),
       queue_time_limit_(kMaxExpectedQueueLength),
       account_for_audio_(false),
@@ -237,7 +246,7 @@ TimeDelta PacingController::ExpectedQueueTime() const {
 }
 
 size_t PacingController::QueueSizePackets() const {
-  return packet_queue_->SizeInPackets();
+  return rtc::checked_cast<size_t>(packet_queue_->SizeInPackets());
 }
 
 DataSize PacingController::QueueSizeData() const {
