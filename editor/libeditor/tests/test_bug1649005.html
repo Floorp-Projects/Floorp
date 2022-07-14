@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1649005
   <link rel="stylesheet" href="/tests/SimpleTest/test.css">
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script>
-  /** Test for bug 1649005 **/
+  /** Test for bug 1649005, bug 1779343 **/
   window.addEventListener("DOMContentLoaded", (event) => {
     SimpleTest.waitForExplicitFinish();
     SimpleTest.waitForFocus(function() {
@@ -21,10 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1649005
       is(document.body.textContent, "", "Initial body check");
       editor.rewrap(false);
       is(document.body.textContent, "", "Initial body check after rewrap");
-      
+
       document.body.innerHTML = "&gt;abc<br/>&gt;def<br/>&gt;ghi";
       editor.rewrap(true);
       is(document.body.textContent, "> abc def ghi", "Rewrapped");
+
+      document.body.innerHTML = "&gt; ";
+      editor.rewrap(true);
+      is(document.body.textContent, "> ", "Rewrapped half-empty string");
 
       SimpleTest.finish();
     });
