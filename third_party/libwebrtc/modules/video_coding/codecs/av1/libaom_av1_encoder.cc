@@ -66,7 +66,8 @@ aom_superblock_size_t GetSuperblockSize(int width, int height, int threads) {
 
 class LibaomAv1Encoder final : public VideoEncoder {
  public:
-  LibaomAv1Encoder();
+  explicit LibaomAv1Encoder(
+      const absl::optional<LibaomAv1EncoderAuxConfig>& aux_config);
   ~LibaomAv1Encoder();
 
   int InitEncode(const VideoCodec* codec_settings,
@@ -111,6 +112,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   bool rates_configured_;
   absl::optional<aom_svc_params_t> svc_params_;
   VideoCodec encoder_settings_;
+  absl::optional<LibaomAv1EncoderAuxConfig> aux_config_;
   aom_image_t* frame_for_encode_;
   aom_codec_ctx_t ctx_;
   aom_codec_enc_cfg_t cfg_;
@@ -142,9 +144,11 @@ int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-LibaomAv1Encoder::LibaomAv1Encoder()
+LibaomAv1Encoder::LibaomAv1Encoder(
+    const absl::optional<LibaomAv1EncoderAuxConfig>& aux_config)
     : inited_(false),
       rates_configured_(false),
+      aux_config_(aux_config),
       frame_for_encode_(nullptr),
       encoded_image_callback_(nullptr) {}
 
@@ -325,36 +329,46 @@ bool LibaomAv1Encoder::SetEncoderControlParameters(int param_id,
 // Only positive speeds, range for real-time coding currently is: 6 - 8.
 // Lower means slower/better quality, higher means fastest/lower quality.
 int LibaomAv1Encoder::GetCpuSpeed(int width, int height) {
-  // For smaller resolutions, use lower speed setting (get some coding gain at
-  // the cost of increased encoding complexity).
-  switch (encoder_settings_.GetVideoEncoderComplexity()) {
-    case VideoCodecComplexity::kComplexityHigh:
-      if (width * height <= 320 * 180)
-        return 8;
-      else if (width * height <= 640 * 360)
-        return 9;
-      else
+  if (aux_config_) {
+    if (auto it = aux_config_->max_pixel_count_to_cpu_speed.lower_bound(width *
+                                                                        height);
+        it != aux_config_->max_pixel_count_to_cpu_speed.end()) {
+      return it->second;
+    }
+
+    return 10;
+  } else {
+    // For smaller resolutions, use lower speed setting (get some coding gain at
+    // the cost of increased encoding complexity).
+    switch (encoder_settings_.GetVideoEncoderComplexity()) {
+      case VideoCodecComplexity::kComplexityHigh:
+        if (width * height <= 320 * 180)
+          return 8;
+        else if (width * height <= 640 * 360)
+          return 9;
+        else
+          return 10;
+      case VideoCodecComplexity::kComplexityHigher:
+        if (width * height <= 320 * 180)
+          return 7;
+        else if (width * height <= 640 * 360)
+          return 8;
+        else if (width * height <= 1280 * 720)
+          return 9;
+        else
+          return 10;
+      case VideoCodecComplexity::kComplexityMax:
+        if (width * height <= 320 * 180)
+          return 6;
+        else if (width * height <= 640 * 360)
+          return 7;
+        else if (width * height <= 1280 * 720)
+          return 8;
+        else
+          return 9;
+      default:
         return 10;
-    case VideoCodecComplexity::kComplexityHigher:
-      if (width * height <= 320 * 180)
-        return 7;
-      else if (width * height <= 640 * 360)
-        return 8;
-      else if (width * height <= 1280 * 720)
-        return 9;
-      else
-        return 10;
-    case VideoCodecComplexity::kComplexityMax:
-      if (width * height <= 320 * 180)
-        return 6;
-      else if (width * height <= 640 * 360)
-        return 7;
-      else if (width * height <= 1280 * 720)
-        return 8;
-      else
-        return 9;
-    default:
-      return 10;
+    }
   }
 }
 
@@ -793,7 +807,12 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
 }  // namespace
 
 std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder() {
-  return std::make_unique<LibaomAv1Encoder>();
+  return std::make_unique<LibaomAv1Encoder>(absl::nullopt);
+}
+
+std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder(
+    const LibaomAv1EncoderAuxConfig& aux_config) {
+  return std::make_unique<LibaomAv1Encoder>(aux_config);
 }
 
 }  // namespace webrtc
