@@ -16,9 +16,9 @@
   preview/originControls.ftl                       (../components/extensions/originControls.ftl)
 #ifdef NIGHTLY_BUILD
   preview/firefoxView.ftl                          (../components/firefoxview/firefoxView.ftl)
+#endif
   preview/colorwaycloset.ftl                       (../components/colorways/colorwaycloset.ftl)
   preview/colorways.ftl                            (../components/colorways/colorways.ftl)
-#endif
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:

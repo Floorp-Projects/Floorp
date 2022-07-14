@@ -31,6 +31,7 @@ DIRS += [
     "aboutlogins",
     "attribution",
     "contextualidentity",
+    "colorways",
     "customizableui",
     "doh",
     "downloads",
@@ -64,7 +65,6 @@ DIRS += ["build"]
 
 if CONFIG["NIGHTLY_BUILD"]:
     DIRS += [
-        "colorways",
         "firefoxview",
     ]
 
