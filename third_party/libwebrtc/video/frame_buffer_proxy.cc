@@ -582,14 +582,10 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
     DecodeSynchronizer* decode_sync,
     const FieldTrialsView& field_trials) {
   switch (ParseFrameBufferFieldTrial(field_trials)) {
-    case FrameBufferArm::kFrameBuffer3: {
-      auto scheduler =
-          std::make_unique<TaskQueueFrameDecodeScheduler>(clock, worker_queue);
-      return std::make_unique<FrameBuffer3Proxy>(
-          clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
-          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
-          field_trials);
-    }
+    case FrameBufferArm::kFrameBuffer2:
+      return std::make_unique<FrameBuffer2Proxy>(
+          clock, timing, stats_proxy, decode_queue, receiver,
+          max_wait_for_keyframe, max_wait_for_frame, field_trials);
     case FrameBufferArm::kSyncDecode: {
       std::unique_ptr<FrameDecodeScheduler> scheduler;
       if (decode_sync) {
@@ -607,12 +603,16 @@ std::unique_ptr<FrameBufferProxy> FrameBufferProxy::CreateFromFieldTrial(
           max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
           field_trials);
     }
-    case FrameBufferArm::kFrameBuffer2:
+    case FrameBufferArm::kFrameBuffer3:
       ABSL_FALLTHROUGH_INTENDED;
-    default:
-      return std::make_unique<FrameBuffer2Proxy>(
-          clock, timing, stats_proxy, decode_queue, receiver,
-          max_wait_for_keyframe, max_wait_for_frame, field_trials);
+    default: {
+      auto scheduler =
+          std::make_unique<TaskQueueFrameDecodeScheduler>(clock, worker_queue);
+      return std::make_unique<FrameBuffer3Proxy>(
+          clock, worker_queue, timing, stats_proxy, decode_queue, receiver,
+          max_wait_for_keyframe, max_wait_for_frame, std::move(scheduler),
+          field_trials);
+    }
   }
 }
 
