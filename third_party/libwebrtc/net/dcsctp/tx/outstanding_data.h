@@ -171,7 +171,7 @@ class OutstandingData {
 
     // Prepares the item to be retransmitted. Sets it as outstanding and
     // clears all nack counters.
-    void Retransmit();
+    void MarkAsRetransmitted();
 
     // Marks this item as abandoned.
     void Abandon();
@@ -179,10 +179,12 @@ class OutstandingData {
     bool is_outstanding() const { return ack_state_ == AckState::kUnacked; }
     bool is_acked() const { return ack_state_ == AckState::kAcked; }
     bool is_nacked() const { return ack_state_ == AckState::kNacked; }
-    bool is_abandoned() const { return is_abandoned_; }
+    bool is_abandoned() const { return lifecycle_ == Lifecycle::kAbandoned; }
 
     // Indicates if this chunk should be retransmitted.
-    bool should_be_retransmitted() const { return should_be_retransmitted_; }
+    bool should_be_retransmitted() const {
+      return lifecycle_ == Lifecycle::kToBeRetransmitted;
+    }
     // Indicates if this chunk has ever been retransmitted.
     bool has_been_retransmitted() const { return num_retransmissions_ > 0; }
 
@@ -191,18 +193,28 @@ class OutstandingData {
     bool has_expired(TimeMs now) const;
 
    private:
-    enum class AckState {
-      kUnacked,
-      kAcked,
-      kNacked,
+    enum class Lifecycle {
+      // The chunk is alive (sent, received, etc)
+      kActive,
+      // The chunk is scheduled to be retransmitted, and will then transition to
+      // become active.
+      kToBeRetransmitted,
+      // The chunk has been abandoned. This is a terminal state.
+      kAbandoned
     };
+    enum class AckState {
+      // The chunk is in-flight.
+      kUnacked,
+      // The chunk has been received and acknowledged.
+      kAcked,
+      // The chunk has been nacked and is possibly lost.
+      kNacked
+    };
+    // Indicates the life cycle status of this chunk.
+    Lifecycle lifecycle_ = Lifecycle::kActive;
     // Indicates the presence of this chunk, if it's in flight (Unacked), has
-    // been received (Acked) or is lost (Nacked).
+    // been received (Acked) or is possibly lost (Nacked).
     AckState ack_state_ = AckState::kUnacked;
-    // Indicates if this chunk has been abandoned, which is a terminal state.
-    bool is_abandoned_ = false;
-    // Indicates if this chunk should be retransmitted.
-    bool should_be_retransmitted_ = false;
 
     // The number of times the DATA chunk has been nacked (by having received a
     // SACK which doesn't include it). Will be cleared on retransmissions.
