@@ -1,0 +1,104 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"] += [
+    "crowdin.yml",
+    "manifest.json",
+
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ja"] += [
+    "_locales/ja/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]  
+
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["background"] += [
+    "background/background.js",
+    "background/textToSpeech.js",
+    "background/translationCache.js",
+    "background/translationService.js",
+]    
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"] += [
+    "contentScript/checkScriptIsInjected.js",
+    "contentScript/deepl.js",
+    "contentScript/pageTranslator.js",
+    "contentScript/popupMobile.js",
+    "contentScript/showOriginal.js",
+    "contentScript/showTranslated.js",
+    "contentScript/translateSelected.js",
+]    
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"]["css"] += [
+    "contentScript/css/popupMobile.css",
+    "contentScript/css/showOriginal.css",
+    "contentScript/css/showTranslated.css",
+    "contentScript/css/translateSelected.css",
+]  
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["icons"] += [
+    "icons/btn_donate_LG.webp",
+    "icons/coinpayments.png",
+    "icons/google-translate-32.png",
+    "icons/icon-128.png",
+    "icons/icon-16.png",
+    "icons/icon-32.png",
+    "icons/icon-64.png",
+    "icons/patreon.png",
+    "icons/pixel.gif",
+    "icons/swap-32.png",
+    "icons/yandex-translate-32.png",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["lib"] += [
+    "lib/config.js",
+    "lib/i18n.js",
+    "lib/languages.js",
+    "lib/platformInfo.js",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["options"] += [
+    "options/options.css",
+    "options/options.html",
+    "options/options.js",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["popup"] += [
+    "popup/detect-pdf.js",
+    "popup/old-popup.css",
+    "popup/old-popup.html",
+    "popup/old-popup.js",
+    "popup/popup-change-language.html",
+    "popup/popup-change-language.js",
+    "popup/popup-translate-document.html",
+    "popup/popup-translate-document.js",     
+    "popup/popup-translate-text.html",
+    "popup/popup-translate-text.js",   
+    "popup/popup.css",
+    "popup/popup.html",
+    "popup/popup.js", 
+
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["w3css"]["4"] += [
+    "w3css/4/w3.css",
+]  
+
+
+
+
+
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "translate")

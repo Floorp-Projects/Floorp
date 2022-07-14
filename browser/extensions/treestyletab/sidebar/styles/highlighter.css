@@ -1,0 +1,94 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+:root {
+  --tab-highlighter: var(--browser-tab-highlighter, Highlight);
+  --tab-highlighter-inactive: var(--grey-10-a20);
+  --tab-highlighter-size: calc(var(--favicon-size) / 8);
+  --tab-highlighter-animation: 0.25s cubic-bezier(0.07, 0.95, 0, 1);
+}
+
+.highlighter::before,
+tab-item:not(.faviconized).subtree-collapsed.some-descendants-highlighted .highlighter::after,
+tab-item:not(.faviconized).subtree-collapsed.all-descendants-highlighted .highlighter::after {
+  content: "";
+  opacity: 0;
+  position: absolute;
+}
+
+:root.animation .highlighter::before,
+:root.animation .highlighter::after {
+  transition: opacity var(--tab-highlighter-animation),
+              transform var(--tab-highlighter-animation),
+              width var(--tab-highlighter-animation);
+}
+
+tab-item:not(.active):not(.bundled-active):not(.highlighted):hover .highlighter::before,
+tab-item:not(.active):not(.bundled-active):not(.highlighted):not(.faviconized):hover .highlighter::after {
+  background: var(--tab-highlighter-inactive);
+}
+tab-item.active .highlighter::before,
+tab-item.bundled-active .highlighter::before,
+tab-item.highlighted .highlighter::before,
+tab-item:not(.faviconized).bundled-active .highlighter::after,
+tab-item:not(.faviconized).highlighted .highlighter::after {
+  background: var(--tab-highlighter);
+}
+
+tab-item:not(.faviconized) .highlighter::before,
+tab-item:not(.faviconized) .highlighter::after {
+  bottom: 0;
+  top: 0;
+  transform: scaleY(0);
+  width: var(--tab-highlighter-size);
+}
+:root.left tab-item:not(.faviconized) .highlighter::before,
+:root.left tab-item:not(.faviconized) .highlighter::after {
+  left: 0;
+}
+:root.right tab-item:not(.faviconized) .highlighter::before,
+:root.right tab-item:not(.faviconized) .highlighter::after {
+  right: 0;
+}
+tab-item:not(.faviconized):hover .highlighter::before,
+tab-item:not(.faviconized):hover .highlighter::after,
+tab-item.active:not(.faviconized) .highlighter::before,
+tab-item.active:not(.faviconized) .highlighter::after,
+tab-item.bundled-active:not(.faviconized) .highlighter::before,
+tab-item.bundled-active:not(.faviconized) .highlighter::after,
+tab-item.highlighted:not(.faviconized) .highlighter::before,
+tab-item.highlighted:not(.faviconized) .highlighter::after {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+tab-item.faviconized .highlighter::before {
+  height: var(--tab-highlighter-size);
+  left: 0;
+  right: 0;
+  top: 0;
+  transform: scaleX(0);
+}
+tab-item.faviconized:hover .highlighter::before,
+tab-item.active.faviconized .highlighter::before,
+tab-item.bundled-active.faviconized .highlighter::before,
+tab-item.highlighted.faviconized .highlighter::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+
+tab-item.bundled-active:not(.highlighted) .highlighter::before {
+  opacity: 0.4;
+}
+
+tab-item[data-child-ids].subtree-collapsed.highlighted.some-descendants-highlighted .highlighter::after {
+  opacity: 0.5;
+}
+
+tab-item[data-child-ids].subtree-collapsed.highlighted.all-descendants-highlighted .highlighter::after {
+  opacity: 1;
+}

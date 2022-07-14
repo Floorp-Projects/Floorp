@@ -1,0 +1,27 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+/*
+ Global styles for extensions page from chrome://browser/content/extension.css
+ They are applied to sidebar contents automatically but not provided for
+ in-page contents, so we manually define them here.
+*/
+html,
+body {
+  box-sizing: border-box;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  font: caption;
+  font-weight: normal; /* This is required to cancel unexpected bold weight produced by the "caption" system font name on Windows 7 Classic theme. See also: https://github.com/piroor/treestyletab/issues/2636 */
+  margin: 0;
+  padding: 0;
+  -moz-user-select: none;
+}
+body * {
+  box-sizing: border-box;
+  text-align: start;
+}

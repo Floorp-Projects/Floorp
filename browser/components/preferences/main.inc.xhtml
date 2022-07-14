@@ -59,7 +59,7 @@
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
-    <label><html:h2 data-l10n-id="tabs-group-header"/></label>
+   <label><html:h2 data-l10n-id="tabs-group-header"/></label> 
 
     <checkbox id="ctrlTabRecentlyUsedOrder" data-l10n-id="ctrl-tab-recently-used-order"
               preference="browser.ctrlTab.sortByRecentlyUsed"/>
@@ -78,8 +78,7 @@
 
 #ifndef XP_WIN
     <checkbox id="warnOnQuitKey" preference="browser.warnOnQuitShortcut"/>
-#endif
-
+#endif 
 #ifdef XP_WIN
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
               preference="browser.taskbar.previews.enable"/>
@@ -116,6 +115,32 @@
         </hbox>
       </hbox>
     </vbox>
+  <hbox>
+    <description data-l10n-id="enable-multitab"></description>
+    <checkbox preference="floorp.enable.multitab" class="needeboot"/>
+  </hbox>
+</groupbox>
+
+<groupbox data-category="paneGeneral" hidden="true">
+  <label><html:h2 data-l10n-id="tabbar-preference"/></label>
+   <radiogroup preference="floorp.browser.tabbar.settings">
+
+     <radio value="1" class="tabbar"  data-l10n-id="None-mode"/>
+
+     <radio value="2" class="tabbar"  data-l10n-id="hide-horizontality-tabs"/>
+  
+     <radio value="3" class="tabbar"  data-l10n-id="verticalTab-setting"/>
+   
+     <radio value="4" class="tabbar"  data-l10n-id="move-tabbar-position"/>
+
+     <radio value="5" class="tabbar"  data-l10n-id="enable-classic-menu"/>
+
+    </radiogroup>
+    <label><html:h2 id="treestyletab" data-l10n-id="treestyletabSettings-l10"/></label>
+    <hbox>
+    <description data-l10n-id="treestyletab-Settings"></description>
+    <checkbox id="treestyletabSettings"  preference="floorp.Tree-type.verticaltab.optimization"/>
+    </hbox>
 </groupbox>
 
 <hbox id="languageAndAppearanceCategory"
@@ -124,6 +149,79 @@
       data-category="paneGeneral">
   <html:h1 data-l10n-id="language-and-appearance-header"/>
 </hbox>
+
+<!--デザイン設定 -->
+ <groupbox id="SystemThemeGroup" data-category="paneGeneral" hidden="true">
+    <label><html:h2 data-l10n-id="ui-preference"/></label>
+    <description data-l10n-id="preferences-browser-appearance-description"/>
+    <radiogroup  preference="floorp.browser.user.interface">
+     <radio value="1" class="themes"  data-l10n-id="firefox-proton"/>
+      <label>
+        <div id="proton"></div>  
+      </label>
+    
+      <radio value="2" class="themes" data-l10n-id="firefox-proton-fix"/>
+      <label>
+        <div id="proton-fix"></div>  
+      </label>
+    
+      <radio value="3" class="themes" data-l10n-id="firefox-photon"/>
+      <label>
+        <div id="photon"></div>    
+      </label>
+
+      <radio value="7" class="themes" data-l10n-id="waterfox-lepton"/>
+      <label>
+        <div id="lepton"></div>    
+      </label>
+    
+      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
+      <label>
+        <div id="floorplegacy"></div>  
+      </label>
+
+      
+      <div id="Windows-only">
+      <radio value="5" class="themes" data-l10n-id="floorp-fluentUI"/>
+      <label>
+        <div id="fluentui"></div> 
+      </label>
+      </div>
+
+      <div id="Linux-only">
+ <!--only linux-->
+      <radio value="6" class="themes" data-l10n-id="floorp-gnomeUI"/>
+      <label>
+        <div id="gnomeUI"></div> 
+      </label>
+      </div>
+
+    </radiogroup>
+
+  <label><html:h2 data-l10n-id="other-preference"/></label>
+
+  <hbox>
+    <description data-l10n-id="classic-menu-mode"></description>
+    <checkbox preference="floorp.legacy.menu.mode" />
+  </hbox>
+  <hbox>
+    <description data-l10n-id="material-effect"></description>
+    <checkbox preference="floorp.material.effect.enable"/>
+    <label class="learnMore" is="text-link" href="https://support.ablaze.one/floorp/452/" data-l10n-id="do-not-track-learn-more"></label>
+  </hbox>
+
+    <label>
+      <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
+    </label>
+    <label>
+    <description data-l10n-id="system-color-settings"></description>
+    </label>
+    <radiogroup id="SystemThemeColorGroup">
+      <radio value="1"  data-l10n-id="system-theme-dark"/>
+      <radio value="0"  data-l10n-id="system-theme-light"/>
+      <radio value="-1" data-l10n-id="system-theme-auto"/>
+    </radiogroup>
+ </groupbox>
 
 <!-- Website appearance -->
 <groupbox id="webAppearanceGroup" data-category="paneGeneral" hidden="true">
@@ -172,6 +270,23 @@
       <html:a id="web-appearance-manage-themes-link" class="text-link" data-l10n-name="themes-link" href="about:addons" target="_blank" />
     </html:div>
   </html:div>
+</groupbox>
+
+<groupbox id="browser-appearance" data-category="paneGeneral" hidden="true">
+<label><html:h2 data-l10n-id="bookmarks-bar-settings"/></label>
+  <hbox>
+    <description data-l10n-id="bookmarks-focus-mode"></description>
+    <checkbox      preference="floorp.bookmarks.bar.focus.mode"/>
+  </hbox>
+  <hbox>
+    <description data-l10n-id="bookmarks-bottom-mode"></description>
+    <checkbox      preference="floorp.bookmarks.fakestatus.mode"/>
+  </hbox>
+<html:h2 data-l10n-id="operation-settings"/>
+    <hbox>
+     <description data-l10n-id="Mouse-side-button"></description>
+     <checkbox id="MouseSideButton" preference="floorp.optimized.msbutton.ope"/>
+    </hbox>
 </groupbox>
 
 <!-- Colors -->
@@ -487,8 +602,6 @@
       <description id="updateAppInfo">
         <html:a id="releasenotes" target="_blank" data-l10n-name="learn-more" class="learnMore text-link" hidden="true"/>
       </description>
-      <description id="distribution" class="text-blurb" hidden="true"/>
-      <description id="distributionId" class="text-blurb" hidden="true"/>
     </vbox>
 #ifdef MOZ_UPDATER
     <spacer flex="1"/>
@@ -738,6 +851,20 @@
             preference="media.hardwaremediakeys.enabled"/>
     <label id="mediaControlLearnMore" class="learnMore" data-l10n-id="browsing-media-control-learn-more" is="text-link"/>
   </hbox>
+  <hbox>
+    <description data-l10n-id="Search-positon-top"></description>
+    <checkbox preference="floorp.search.top.mode"/>
+  </hbox>
+  <hbox>
+    <description data-l10n-id="allow-auto-restart"></description>
+    <checkbox preference="floorp.enable.auto.restart" />
+  </hbox>
+  <hbox>
+     <description data-l10n-id="enable-userscript"></description>
+     <checkbox preference="toolkit.legacyUserProfileCustomizations.script" class="needeboot"/>
+     <label class="learnMore" is="text-link" href="https://support.ablaze.one/floorp/530/" data-l10n-id="do-not-track-learn-more"></label>
+    </hbox>
+    <description class="indent tip-caption" data-l10n-id="about-legacy-components"/>
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"
             class="tail-with-learn-more"
@@ -807,4 +934,5 @@
     </hbox>
   </hbox>
 </groupbox>
+ 
 </html:template>

@@ -184,6 +184,60 @@ Preferences.addAll([
   { id: "network.http.windows-sso.enabled", type: "bool" },
 ]);
 
+async function ublockaddonstatus(){
+  const addon = await AddonManager.getAddonByID("uBlock0@raymondhill.net");
+  if(addon!=null){
+    var addontag= document.createElement("style");
+    addontag.setAttribute("id", "uBlockOrigin");
+    addontag.innerText = `
+    .uBlockOrigin{
+      display:none !important;
+    }`;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",addontag);
+  }
+}
+ublockaddonstatus()
+
+async function PrivacyBadgeraddonstatus(){
+  const addon = await AddonManager.getAddonByID("jid1-MnnxcxisBPnSXQ@jetpack");
+  if(addon!=null){
+    var addontag = document.createElement("style");
+    addontag.setAttribute("id", "PrivacyBadger");
+    addontag.innerText = `
+    .PrivacyBadger{
+      display:none !important;
+    }`;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",addontag);
+  }
+}
+PrivacyBadgeraddonstatus()
+
+async function DDGaddonstatus(){
+  const addon = await AddonManager.getAddonByID("jid1-ZAdIEUB7XOzOJw@jetpack");
+  if(addon!=null){
+    var addontag = document.createElement("style");
+    addontag.setAttribute("id", "DuckDuckGo");
+    addontag.innerText = `
+    .DuckDuckGo{
+      display:none !important;
+    }`;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",addontag);
+  }
+}
+DDGaddonstatus()
+
+window.setTimeout(function getaddonsstatus(){
+  const DDGTag = document.getElementById("DuckDuckGo") != null
+  const PBTag = document.getElementById("PrivacyBadger") != null
+  const UBTag = document.getElementById("uBlockOrigin") != null
+
+  if(DDGTag === PBTag === UBTag === true){
+    document.getElementById("blockmoretrackers").style.display ="none";
+  }
+}
+, 1500)
+
+
 // Study opt out
 if (AppConstants.MOZ_DATA_REPORTING) {
   Preferences.addAll([

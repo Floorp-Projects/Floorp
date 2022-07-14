@@ -12,4 +12,10 @@ DIRS += [
     "report-site-issue",
     "pictureinpicture",
     "search-detection",
+    "translate",
+    "treestyletab",
+    "undo-closed-tab",
+    "official-site-ua",
+    "multitabs",
+    "floorp-system",
 ]

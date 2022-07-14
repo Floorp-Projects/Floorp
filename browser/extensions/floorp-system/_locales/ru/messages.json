@@ -1,0 +1,43 @@
+{
+  "extensionName": {
+    "message": "Уведомление об обновлении Floorp",
+    "description": "Name of the extension."
+  },
+
+  "SetExN": {
+      "message": "color"
+  },
+
+  "SetSavN": {
+    "message": "Save"
+  },
+    "scan-code": {
+      "message": "Сканируйте QR-код"
+    },
+    "save-code": {
+      "message": "Сохранить код"
+    },
+  "extensionDescription": {
+    "message": "Это программа обновления для Floorp.",
+    "description": "This is an updater for Floorp."
+  },
+
+  "notificationTitle": {
+    "message": "Уведомление об обновлении",
+    "description": "Title"
+  },
+  "notificationContent": {
+    "message": "Вышла последняя версия Floorp!\nНажмите, чтобы загрузить программу установки.\nТекущая версия:$OLD$\nПоследняя версия:$NEW$",
+    "description": "Tells the user which link they clicked.",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  }
+}

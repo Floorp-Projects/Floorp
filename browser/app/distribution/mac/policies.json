@@ -1,0 +1,14 @@
+{
+    "policies": {
+        "DisableFirefoxStudies": true,
+        "DisableTelemetry": true,
+        "NoDefaultBookmarks": true,
+        "OverridePostUpdatePage": "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/",
+        "OverrideFirstRunPage": " https://floorp.ablaze.one/welcome/ | https://blog.ablaze.one/category/ablaze/ablaze-project/floorp | https://blog.ablaze.one/1932/2022-06-22/",
+        "Extensions": {
+            "Install": [
+               "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+            ]
+        }
+    }
+}

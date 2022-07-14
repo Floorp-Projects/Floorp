@@ -1,0 +1,61 @@
+{
+  "extensionName": {
+    "message": "Floorp System add-on",
+    "description": "Name of the extension."
+  },
+  "action":{
+    "message":"Check for update",
+    "description":"Browser action の名前"
+  },
+  "scan-code": {
+    "message": "Scan the QR code"
+  },
+  "save-code": {
+    "message": "Save the QR code"
+  },
+  "SetExN": {
+      "message": "color"
+  },
+
+  "SetSavN": {
+    "message": "Save"
+  },
+
+  "extensionDescription": {
+    "message": "This is an updater for Floorp.",
+    "description": "This is an updater for Floorp."
+  },
+
+  "notificationTitle": {
+    "message": "Update notification",
+    "description": "Title"
+  },
+  "notificationContent": {
+    "message": "The latest version of Floorp has been released!\nClick to download the installer.\nCurrent Version:$OLD$\nLatest Version:$NEW$",
+    "description": "Tells the user which link they clicked.",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  },
+  "notificationContent-last": {
+    "message": "The Floorp you are using is the latest version.\n No update is required.\nThank you for using Floorp browser.",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  }
+}

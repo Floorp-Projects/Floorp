@@ -2,65 +2,86 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<!-- More From Mozilla panel -->
-
+<!-- More From Ablaze panel -->
 <script src="chrome://browser/content/preferences/moreFromMozilla.js"/>
-<html:template xmlns="http://www.w3.org/1999/xhtml" id="template-paneMoreFromMozilla">
-  <div id="moreFromMozillaCategory-header"
+<html:template id="template-paneMoreFromMozilla">
+  <vbox id="moreFromMozillaCategory-header"
     class="subcategory"
     data-hidden-from-search="true"
     hidden="true"
     data-category="paneMoreFromMozilla">
-    <h1 class="title" data-l10n-id="more-from-moz-title" />
-    <p class="subtitle" data-l10n-id="more-from-moz-subtitle" />
-  </div>
-  <div id="moreFromMozillaCategory"
+    <html:h1 class="title" data-l10n-id="about-ablaze" />
+    <html:p class="subtitle" data-l10n-id="about-ablaze-sub" />
+    <description class="text-blurb" id="contributeDesc" data-l10n-id="ablaze-twitter">
+            <label is="text-link" href="https://twitter.com/Ablaze_MIRAI" data-l10n-name="ablaze-twitter-id"/>
+            <label is="text-link" href="https://github.com/Ablaze-MIRAI" data-l10n-name="ablaze-github-id"/>
+            <label is="text-link" href="https://alexandriteos.org/" data-l10n-name="alexandriteos-url"/>
+    </description>
+    <html:h1 class="title" id="floorp-header" data-l10n-id="about-floorp" />
+    <html:p class="subtitle" data-l10n-id="about-floorp-sub" />
+    <description class="text-blurb" id="contributeDesc" data-l10n-id="floorp-twitter">
+            <label is="text-link" href="https://twitter.com/Floorp_Browser" data-l10n-name="floorp-twitter-id"/>
+            <label is="text-link" href="https://github.com/Floorp-Projects" data-l10n-name="floorp-github-id"/>
+            <label is="text-link" href="https://floorp.ablaze.one/" data-l10n-name="floorp-official-url"/>
+    </description>
+    <html:h1  class="title" id="floorp-header"  data-l10n-id="about-legacy"/>
+    <html:p class="subtitle" data-l10n-id="about-floorp-sub-sub" id="floorp-legacy-sub-sub"/>
+    <html:p class="subtitle" data-l10n-id="about-floorp-legacy-sub" id="floorp-legacy-s" />
+    <description class="text-blurb" id="contributeDesc" data-l10n-id="floorp-legacy-links">
+            <label is="text-link" href="https://mozilla.org/firefox" data-l10n-name="firefox-url"/>
+            <label is="text-link" href="https://github.com/Floorp-Projects/About-Floorp-Projects" data-l10n-name="github-floorp"/>
+    </description>
+  </vbox>
+
+  <!-- More From Ablaze panel finish -->
+  <groupbox id="moreFromMozillaCategory"
     data-category="paneMoreFromMozilla"
     hidden="true"
     data-hidden-from-search="true">
-  </div>
+  </groupbox>
+</html:template>
+<html:template id="simple">
+  <html:div class="mozilla-product-item simple">
+    <hbox>
+      <label>
+        <html:h2 class="product-title" />
+      </label>
+    </hbox>
+    <hbox>
+      <html:p class="description" />
+      <html:a class="text-link wants-telemetry" hidden="true" />
+    </hbox>
+    <html:div>
+      <button class="primary small-button" hidden="true" />
+    </html:div>
+    <html:div class="qr-code-box" hidden="true">
+      <label class="qr-code-title-label">
+        <html:h3 class="qr-code-box-title" />
+      </label>
+      <html:img class="qr-code-box-image" role="presentation" />
+      <html:a class="wants-telemetry qr-code-button text-link" target="_blank"/>
+    </html:div>
+  </html:div>
 </html:template>
 
-<html:template xmlns="http://www.w3.org/1999/xhtml" id="simple">
-  <article class="mozilla-product-item simple">
-
-    <div>
-      <h2 class="product-title" />
-      <div class="product-description-box">
-        <div class="description" />
-        <a class="text-link" hidden="true" />
-      </div>
-    </div>
-
-    <button type="button" class="primary small-button" hidden="true" />
-
-    <div class="qr-code-box" hidden="true">
-      <h3 class="qr-code-box-title" />
-      <img class="qr-code-box-image" />
-      <a class="qr-code-link text-link" target="_blank" />
-    </div>
-
-  </article>
-</html:template>
-
-<html:template xmlns="http://www.w3.org/1999/xhtml" id="advanced">
-  <div class="mozilla-product-item advanced">
-    <div class="product-img">
-      <div class="product-info" flex="1">
-        <h2 class="product-title" />
-        <p class="description" />
-        <a class="text-link" hidden="true" />
-        <div>
-          <button type="button" class="primary small-button" hidden="true"/>
-        </div>
-      </div>
-      <div class="qr-code-box" hidden="true">
-        <div class="qr-code-top-box">
-          <h3 class="qr-code-box-title" />
-          <img class="qr-code-box-image" role="presentation" />
-        </div>
-        <a class="qr-code-link text-link" target="_blank" />
-      </div>
-    </div>
-  </div>
+<html:template id="advanced">
+  <vbox class="mozilla-product-item advanced">
+    <hbox class="product-img">
+      <vbox class="product-info" flex="1">
+        <label>
+          <html:h2 class="product-title" />
+        </label>
+        <html:p class="description" />
+        <html:a class="text-link wants-telemetry" hidden="true" />
+        <html:div><button class="primary small-button" hidden="true"/></html:div>
+      </vbox>
+      <html:div class="qr-code-box" hidden="true">
+        <html:div class="qr-code-top-box">
+          <html:h3 class="qr-code-box-title" />
+          <html:img class="qr-code-box-image" role="presentation" />
+        </html:div>
+        <html:a class="qr-code-button text-link wants-telemetry" target="_blank" />
+      </html:div>
+    </hbox>
+  </vbox>
 </html:template>

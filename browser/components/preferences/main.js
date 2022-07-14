@@ -192,6 +192,35 @@ if (AppConstants.MOZ_UPDATER) {
   }
 }
 
+// Floorp 固有の Preference from 8.7.2
+
+Preferences.addAll([
+  { id: "floorp.optimized.msbutton.ope", type: "bool" },
+  { id: "floorp.hide.tabbrowser-tab.enable", type: "bool" },
+  { id: "floorp.optimized.verticaltab", type: "bool" },
+  { id: "floorp.horizontal.tab.position.shift", type: "bool" },
+  { id: "floorp.Tree-type.verticaltab.optimization", type: "bool" },
+  { id: "floorp.bookmarks.bar.focus.mode", type: "bool" },
+  { id: "floorp.material.effect.enable", type: "bool" },
+
+  { id: "enable.floorp.update", type: "bool" },
+  { id: "enable.floorp.updater.latest", type: "bool" },
+
+  { id: "ui.systemUsesDarkTheme", type: "int" },
+  { id: "floorp.browser.user.interface", type: "int"},
+  { id: "floorp.browser.tabbar.settings", type:"int"},
+
+  { id: "floorp.bookmarks.fakestatus.mode", type:"bool"},
+  { id: "floorp.search.top.mode", type:"bool"},
+  { id: "floorp.legacy.menu.mode", type:"bool"},
+  { id: "floorp.enable.auto.restart", type:"bool"},
+  { id: "floorp.enable.multitab", type:"bool"},
+  { id: "toolkit.legacyUserProfileCustomizations.script", type:"bool"},
+
+]);
+
+// Floorp の設定項目終わり
+
 XPCOMUtils.defineLazyGetter(this, "gHasWinPackageId", () => {
   let hasWinPackageId = false;
   try {
@@ -522,6 +551,40 @@ var gMainPane = {
       link.setAttribute("href", mediaControlLearnMoreUrl);
     }
 
+    // Floorp 固有の設定
+    this.SetSystemThemeColor();
+    setEventListener("SystemThemeGroup", "command", event => {
+      this.checkUpdateSystemThemeColor(event.target.value);
+    });
+
+        const needreboot = document.getElementsByClassName("needeboot");
+        for(let i = 0; i < needreboot.length; i++) {
+          needreboot[i].addEventListener("click",
+  
+          function()
+          {
+            if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)){
+            (async() => {
+              let userConfirm = await confirmRestartPrompt(null)
+              if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+                Services.startup.quit(
+                  Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+                );
+              }
+            })()
+          }
+          else {
+            window.setTimeout(function(){
+              Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+            }, 500);
+          }
+         }
+  
+            ,false);
+        }
+
+        //fininsh
+
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
 
@@ -702,7 +765,7 @@ var gMainPane = {
           );
           wrk.open(
             wrk.ROOT_KEY_LOCAL_MACHINE,
-            "SOFTWARE\\Mozilla\\MaintenanceService",
+            "SOFTWARE\\Ablaze\\MaintenanceService",
             wrk.ACCESS_READ | wrk.WOW64_64
           );
           installed = wrk.readIntValue("Installed");
@@ -2070,6 +2133,26 @@ var gMainPane = {
       um.cleanupReadyUpdate();
       um.cleanupDownloadingUpdate();
     }
+  },
+
+  async SetSystemThemeColor() {
+    let radiogroup = document.getElementById("SystemThemeColorGroup");
+    radiogroup.disabled = true;
+    radiogroup.value = Services.prefs.getIntPref("ui.systemUsesDarkTheme", -1);
+    radiogroup.disabled = false;
+  },
+  async checkUpdateSystemThemeColor(value) {
+    switch (value) {
+      case "1":
+        Services.prefs.setIntPref("ui.systemUsesDarkTheme", 1);
+        break;
+      case "0":
+        Services.prefs.setIntPref("ui.systemUsesDarkTheme", 0);
+        break;
+      case "-1":
+        Services.prefs.clearUserPref("ui.systemUsesDarkTheme");
+        break;
+      }
   },
 
   /**

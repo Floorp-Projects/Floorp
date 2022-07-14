@@ -9,6 +9,9 @@
 ## These are short descriptions for individual policies, to be displayed
 ## in the documentation section in about:policies.
 
+from-policy-notice = These policy settings are set by { -brand-short-name } for Firefox modification. They are not restrictions on users by default. Please do not worry.
+
+
 policy-3rdparty = Set policies that WebExtensions can access via chrome.storage.managed.
 
 policy-AllowedDomainsForApps = Define domains allowed to access Google Workspace.
@@ -115,7 +118,7 @@ policy-ExtensionSettings = Manage all aspects of extension installation.
 
 policy-ExtensionUpdate = Enable or disable automatic extension updates.
 
-policy-FirefoxHome = Configure Firefox Home.
+policy-FirefoxHome = Configure Floorp Home.
 
 policy-FlashPlugin = Allow or deny usage of the Flash plugin.
 
