@@ -1303,6 +1303,7 @@ if (rtc_include_tests) {
       "../../system_wrappers",
       "../../system_wrappers:field_trial",
       "../../system_wrappers:metrics",
+      "../../test:fake_encoded_frame",
       "../../test:fake_video_codecs",
       "../../test:field_trial",
       "../../test:fileutils",

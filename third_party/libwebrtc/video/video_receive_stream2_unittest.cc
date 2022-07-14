@@ -34,6 +34,7 @@
 #include "rtc_base/event.h"
 #include "system_wrappers/include/clock.h"
 #include "test/fake_decoder.h"
+#include "test/fake_encoded_frame.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
@@ -58,19 +59,6 @@ using ::testing::SizeIs;
 using ::testing::WithoutArgs;
 
 constexpr int kDefaultTimeOutMs = 50;
-
-class FrameObjectFake : public EncodedFrame {
- public:
-  void SetPayloadType(uint8_t payload_type) { _payloadType = payload_type; }
-
-  void SetRotation(const VideoRotation& rotation) { rotation_ = rotation; }
-
-  void SetNtpTime(int64_t ntp_time_ms) { ntp_time_ms_ = ntp_time_ms; }
-
-  int64_t ReceivedTime() const override { return 0; }
-
-  int64_t RenderTime() const override { return _renderTimeMs; }
-};
 
 }  // namespace
 
@@ -159,8 +147,8 @@ TEST_F(VideoReceiveStream2Test, CreateFrameFromH264FmtpSpropAndIdr) {
 
 TEST_F(VideoReceiveStream2Test, PlayoutDelay) {
   const VideoPlayoutDelay kPlayoutDelayMs = {123, 321};
-  std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
-  test_frame->SetId(0);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame =
+      test::FakeFrameBuilder().Id(0).AsLast().Build();
   test_frame->SetPlayoutDelay(kPlayoutDelayMs);
 
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
@@ -196,8 +184,8 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMaxValue) {
       timing_->GetTimings().max_playout_delay;
   const VideoPlayoutDelay kPlayoutDelayMs = {123, -1};
 
-  std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
-  test_frame->SetId(0);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame =
+      test::FakeFrameBuilder().Id(0).AsLast().Build();
   test_frame->SetPlayoutDelay(kPlayoutDelayMs);
 
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
@@ -214,8 +202,8 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
       timing_->GetTimings().min_playout_delay;
   const VideoPlayoutDelay kPlayoutDelayMs = {-1, 321};
 
-  std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
-  test_frame->SetId(0);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame =
+      test::FakeFrameBuilder().Id(0).AsLast().Build();
   test_frame->SetPlayoutDelay(kPlayoutDelayMs);
 
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
@@ -229,21 +217,21 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
 
 TEST_F(VideoReceiveStream2Test, MaxCompositionDelayNotSetByDefault) {
   // Default with no playout delay set.
-  std::unique_ptr<FrameObjectFake> test_frame0(new FrameObjectFake());
-  test_frame0->SetId(0);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame0 =
+      test::FakeFrameBuilder().Id(0).AsLast().Build();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame0));
   EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
 
   // Max composition delay not set for playout delay 0,0.
-  std::unique_ptr<FrameObjectFake> test_frame1(new FrameObjectFake());
-  test_frame1->SetId(1);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame1 =
+      test::FakeFrameBuilder().Id(1).AsLast().Build();
   test_frame1->SetPlayoutDelay({0, 0});
   video_receive_stream_->OnCompleteFrame(std::move(test_frame1));
   EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
 
   // Max composition delay not set for playout delay X,Y, where X,Y>0.
-  std::unique_ptr<FrameObjectFake> test_frame2(new FrameObjectFake());
-  test_frame2->SetId(2);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame2 =
+      test::FakeFrameBuilder().Id(2).AsLast().Build();
   test_frame2->SetPlayoutDelay({10, 30});
   video_receive_stream_->OnCompleteFrame(std::move(test_frame2));
   EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
@@ -253,8 +241,8 @@ TEST_F(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
   // Max composition delay set if playout delay X,Y, where X=0,Y>0.
   const VideoPlayoutDelay kPlayoutDelayMs = {0, 50};
   const int kExpectedMaxCompositionDelayInFrames = 3;  // ~50 ms at 60 fps.
-  std::unique_ptr<FrameObjectFake> test_frame(new FrameObjectFake());
-  test_frame->SetId(0);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame =
+      test::FakeFrameBuilder().Id(0).AsLast().Build();
   test_frame->SetPlayoutDelay(kPlayoutDelayMs);
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
   EXPECT_EQ(kExpectedMaxCompositionDelayInFrames,
@@ -321,24 +309,29 @@ class VideoReceiveStream2TestWithFakeDecoder : public ::testing::Test {
 };
 
 TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesNtpTime) {
-  const int64_t kNtpTimestamp = 12345;
-  auto test_frame = std::make_unique<FrameObjectFake>();
-  test_frame->SetPayloadType(99);
-  test_frame->SetId(0);
-  test_frame->SetNtpTime(kNtpTimestamp);
+  const Timestamp kNtpTimestamp = Timestamp::Millis(12345);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame =
+      test::FakeFrameBuilder()
+          .Id(0)
+          .PayloadType(99)
+          .NtpTime(kNtpTimestamp)
+          .AsLast()
+          .Build();
 
   video_receive_stream_->Start();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
   EXPECT_TRUE(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOutMs));
-  EXPECT_EQ(kNtpTimestamp, fake_renderer_.ntp_time_ms());
+  EXPECT_EQ(kNtpTimestamp.ms(), fake_renderer_.ntp_time_ms());
 }
 
 TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesRotation) {
   const webrtc::VideoRotation kRotation = webrtc::kVideoRotation_180;
-  auto test_frame = std::make_unique<FrameObjectFake>();
-  test_frame->SetPayloadType(99);
-  test_frame->SetId(0);
-  test_frame->SetRotation(kRotation);
+  std::unique_ptr<test::FakeEncodedFrame> test_frame = test::FakeFrameBuilder()
+                                                           .Id(0)
+                                                           .PayloadType(99)
+                                                           .Rotation(kRotation)
+                                                           .AsLast()
+                                                           .Build();
 
   video_receive_stream_->Start();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
@@ -348,11 +341,13 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesRotation) {
 }
 
 TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesPacketInfos) {
-  auto test_frame = std::make_unique<FrameObjectFake>();
-  test_frame->SetPayloadType(99);
-  test_frame->SetId(0);
   RtpPacketInfos packet_infos = CreatePacketInfos(3);
-  test_frame->SetPacketInfos(packet_infos);
+  auto test_frame = test::FakeFrameBuilder()
+                        .Id(0)
+                        .PayloadType(99)
+                        .PacketInfos(packet_infos)
+                        .AsLast()
+                        .Build();
 
   video_receive_stream_->Start();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
@@ -367,9 +362,8 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder, RenderedFrameUpdatesGetSources) {
   constexpr uint32_t kRtpTimestamp = 12345;
 
   // Prepare one video frame with per-packet information.
-  auto test_frame = std::make_unique<FrameObjectFake>();
-  test_frame->SetPayloadType(99);
-  test_frame->SetId(0);
+  auto test_frame =
+      test::FakeFrameBuilder().Id(0).PayloadType(99).AsLast().Build();
   RtpPacketInfos packet_infos;
   {
     RtpPacketInfos::vector_type infos;
@@ -439,22 +433,21 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder, RenderedFrameUpdatesGetSources) {
   }
 }
 
-std::unique_ptr<FrameObjectFake> MakeFrameWithResolution(
+std::unique_ptr<test::FakeEncodedFrame> MakeFrameWithResolution(
     VideoFrameType frame_type,
     int picture_id,
     int width,
     int height) {
-  auto frame = std::make_unique<FrameObjectFake>();
-  frame->SetPayloadType(99);
-  frame->SetId(picture_id);
+  auto frame =
+      test::FakeFrameBuilder().Id(picture_id).PayloadType(99).AsLast().Build();
   frame->SetFrameType(frame_type);
   frame->_encodedWidth = width;
   frame->_encodedHeight = height;
   return frame;
 }
 
-std::unique_ptr<FrameObjectFake> MakeFrame(VideoFrameType frame_type,
-                                           int picture_id) {
+std::unique_ptr<test::FakeEncodedFrame> MakeFrame(VideoFrameType frame_type,
+                                                  int picture_id) {
   return MakeFrameWithResolution(frame_type, picture_id, 320, 240);
 }
 
