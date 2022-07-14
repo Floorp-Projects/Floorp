@@ -620,6 +620,9 @@ if (rtc_include_tests) {
       if (is_mac || is_ios) {
         deps += [ "../test:video_test_mac" ]
       }
+      if (is_win) {
+        deps += [ "../rtc_base/win:scoped_com_initializer" ]
+      }
     }
 
     rtc_library("video_full_stack_tests") {
