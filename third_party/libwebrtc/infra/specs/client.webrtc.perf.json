@@ -400,7 +400,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Mac-10.12.6",
+              "os": "Mac",
               "pool": "WebRTC-perf"
             }
           ],
@@ -435,7 +435,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Mac-10.12.6",
+              "os": "Mac",
               "pool": "WebRTC-perf"
             }
           ],

@@ -136,7 +136,7 @@
   'mac': {
     'swarming': {
       'dimensions': {
-        'os': 'Mac'
+        'os': 'Mac',
       }
     }
   },
