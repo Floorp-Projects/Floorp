@@ -281,7 +281,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
                      PacketBufferMaxSize(field_trials_)),
       reference_finder_(std::make_unique<RtpFrameReferenceFinder>()),
       has_received_frame_(false),
-      frames_decryptable_(false),
+      frames_decryptable_(true),
       absolute_capture_time_interpolator_(clock) {
   constexpr bool remb_candidate = true;
   if (packet_router_)
