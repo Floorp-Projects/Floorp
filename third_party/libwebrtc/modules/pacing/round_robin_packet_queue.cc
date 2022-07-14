@@ -182,7 +182,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
     return rtp_packet;
   }
 
-  RTC_DCHECK_GT(size_packets_, 0u);
+  RTC_DCHECK_GT(size_packets_, 0);
   Stream* stream = GetHighestPriorityStream();
   const QueuedPacket& queued_packet = stream->packet_queue.top();
 
@@ -231,7 +231,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
   return rtp_packet;
 }
 
-size_t RoundRobinPacketQueue::SizeInPackets() const {
+int RoundRobinPacketQueue::SizeInPackets() const {
   return size_packets_;
 }
 
@@ -280,7 +280,7 @@ void RoundRobinPacketQueue::UpdateAverageQueueTime(Timestamp now) {
   if (paused_) {
     pause_time_sum_ += delta;
   } else {
-    queue_time_sum_ += TimeDelta::Micros(delta.us() * size_packets_);
+    queue_time_sum_ += delta * size_packets_;
   }
 
   time_last_updated_ = now;

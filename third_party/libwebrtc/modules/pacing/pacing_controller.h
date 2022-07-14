@@ -71,7 +71,7 @@ class PacingController {
                       std::unique_ptr<RtpPacketToSend> packet) = 0;
     virtual std::unique_ptr<RtpPacketToSend> Pop() = 0;
 
-    virtual size_t SizeInPackets() const = 0;
+    virtual int SizeInPackets() const = 0;
     bool Empty() const { return SizeInPackets() == 0; }
     virtual DataSize SizeInPayloadBytes() const = 0;
 
@@ -88,6 +88,7 @@ class PacingController {
     // Average queue time for the packets currently in the queue.
     // The queuing time is calculated from Push() to the last UpdateQueueTime()
     // call - with any time spent in a paused state subtracted.
+    // Returns TimeDelta::Zero() for an empty queue.
     virtual TimeDelta AverageQueueTime() const = 0;
 
     // Called during packet processing or when pause stats changes. Since the
