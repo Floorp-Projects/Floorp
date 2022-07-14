@@ -423,6 +423,14 @@ add_task(async function testSyncedTabsSidebarContextMenu() {
   let tabMenuItems = [
     ["menuitem#syncedTabsOpenSelected", { hidden: false }],
     ["menuitem#syncedTabsOpenSelectedInTab", { hidden: false }],
+    [
+      "menu#syncedTabsOpenSelectedInContainerTab",
+      {
+        hidden:
+          !Services.prefs.getBoolPref("privacy.userContext.enabled", false) ||
+          PrivateBrowsingUtils.isWindowPrivate(window),
+      },
+    ],
     ["menuitem#syncedTabsOpenSelectedInWindow", { hidden: false }],
     ["menuitem#syncedTabsOpenSelectedInPrivateWindow", { hidden: false }],
     ["menuseparator", { hidden: false }],
@@ -446,6 +454,7 @@ add_task(async function testSyncedTabsSidebarContextMenu() {
   let sidebarMenuItems = [
     ["menuitem#syncedTabsOpenSelected", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInTab", { hidden: true }],
+    ["menu#syncedTabsOpenSelectedInContainerTab", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInWindow", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInPrivateWindow", { hidden: true }],
     ["menuseparator", { hidden: true }],
@@ -469,6 +478,7 @@ add_task(async function testSyncedTabsSidebarContextMenu() {
   let menuItems = [
     ["menuitem#syncedTabsOpenSelected", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInTab", { hidden: true }],
+    ["menu#syncedTabsOpenSelectedInContainerTab", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInWindow", { hidden: true }],
     ["menuitem#syncedTabsOpenSelectedInPrivateWindow", { hidden: true }],
     ["menuseparator", { hidden: true }],
@@ -567,18 +577,20 @@ async function testContextMenu(
     isClosed,
     "Showing the context menu shouldn't toggle the tab list"
   );
-  checkChildren(contextMenu, menuSelectors);
-
-  let promisePopupHidden = BrowserTestUtils.waitForEvent(
-    contextMenu,
-    "popuphidden"
-  );
-  contextMenu.hidePopup();
-  await promisePopupHidden;
+  let menuitemClicked = await checkChildren(contextMenu, menuSelectors);
+  if (!menuitemClicked) {
+    let promisePopupHidden = BrowserTestUtils.waitForEvent(
+      contextMenu,
+      "popuphidden"
+    );
+    contextMenu.hidePopup();
+    await promisePopupHidden;
+  }
 }
 
 function checkChildren(node, selectors) {
   is(node.children.length, selectors.length, "Menu item count doesn't match");
+  let containerMenuShown;
   for (let index = 0; index < node.children.length; index++) {
     let child = node.children[index];
     let [selector, props] = [].concat(selectors[index]);
@@ -589,5 +601,52 @@ function checkChildren(node, selectors) {
         is(child[prop], props[prop], `${prop} value at ${index} should match`);
       });
     }
+    if (
+      selector === "menu#syncedTabsOpenSelectedInContainerTab" &&
+      !props.hidden
+    ) {
+      containerMenuShown = child;
+    }
   }
+  if (containerMenuShown) {
+    return testContainerMenu(containerMenuShown);
+  }
+  return false;
+}
+
+async function testContainerMenu(menu) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.userContext.enabled", true]],
+  });
+  let menupopup = menu.getElementsByTagName("menupopup")[0];
+  let menupopupShown = BrowserTestUtils.waitForEvent(menupopup, "popupshown");
+  menu.openMenu(true);
+  await menupopupShown;
+  let shown = [1, 2, 3, 4];
+  let hidden = [0];
+  for (let id of shown) {
+    ok(
+      menupopup.querySelector(`menuitem[data-usercontextid="${id}"]`),
+      `User context id ${id} should exist`
+    );
+  }
+  for (let id of hidden) {
+    ok(
+      !menupopup.querySelector(`menuitem[data-usercontextid="${id}"]`),
+      `User context id ${id} shouldn't exist`
+    );
+  }
+  const newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+  menupopup.activateItem(
+    menupopup.querySelector(
+      `menuitem[data-usercontextid="${shown[shown.length - 1]}"]`
+    )
+  );
+  let newTab = await newTabPromise;
+  ok(
+    newTab.hasAttribute("usercontextid"),
+    `Tab with usercontextid = ${shown[shown.length - 1]} should be opened`
+  );
+  registerCleanupFunction(() => BrowserTestUtils.removeTab(newTab));
+  return true;
 }
