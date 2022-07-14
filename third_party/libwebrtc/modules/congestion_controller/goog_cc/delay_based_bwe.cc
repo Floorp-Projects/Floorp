@@ -193,7 +193,8 @@ void DelayBasedBwe::IncomingPacketFeedback(const PacketResult& packet_feedback,
       packet_feedback.sent_packet.send_time, packet_feedback.receive_time,
       at_time, packet_size.bytes(), &send_delta, &recv_delta, &size_delta);
 
-  delay_detector_for_packet->Update(recv_delta.ms(), send_delta.ms(),
+  delay_detector_for_packet->Update(recv_delta.ms<double>(),
+                                    send_delta.ms<double>(),
                                     packet_feedback.sent_packet.send_time.ms(),
                                     packet_feedback.receive_time.ms(),
                                     packet_size.bytes(), calculated_deltas);

@@ -179,10 +179,17 @@ void DelayBasedBweTest::IncomingFeedback(int64_t arrival_time_ms,
                                          size_t payload_size,
                                          const PacedPacketInfo& pacing_info) {
   RTC_CHECK_GE(arrival_time_ms + arrival_time_offset_ms_, 0);
+  IncomingFeedback(Timestamp::Millis(arrival_time_ms + arrival_time_offset_ms_),
+                   Timestamp::Millis(send_time_ms), payload_size, pacing_info);
+}
+
+void DelayBasedBweTest::IncomingFeedback(Timestamp receive_time,
+                                         Timestamp send_time,
+                                         size_t payload_size,
+                                         const PacedPacketInfo& pacing_info) {
   PacketResult packet;
-  packet.receive_time =
-      Timestamp::Millis(arrival_time_ms + arrival_time_offset_ms_);
-  packet.sent_packet.send_time = Timestamp::Millis(send_time_ms);
+  packet.receive_time = receive_time;
+  packet.sent_packet.send_time = send_time;
   packet.sent_packet.size = DataSize::Bytes(payload_size);
   packet.sent_packet.pacing_info = pacing_info;
   if (packet.sent_packet.pacing_info.probe_cluster_id !=

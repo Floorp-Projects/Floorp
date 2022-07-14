@@ -214,6 +214,41 @@ TEST_F(DelayBasedBweTest, TestInitialOveruse) {
               15000);
 }
 
+TEST_F(DelayBasedBweTest, TestTimestampPrecisionHandling) {
+  // This test does some basic checks to make sure that timestamps with higher
+  // than millisecond precision are handled properly and do not cause any
+  // problems in the estimator. Specifically, previously reported in
+  // webrtc:14023 and described in more details there, the rounding to the
+  // nearest milliseconds caused discrepancy in the accumulated delay. This lead
+  // to false-positive overuse detection.
+  // Technical details of the test:
+  // Send times(ms): 0.000,  9.725, 20.000, 29.725, 40.000, 49.725, ...
+  // Recv times(ms): 0.500, 10.000, 20.500, 30.000, 40.500, 50.000, ...
+  // Send deltas(ms):   9.750,  10.250,  9.750, 10.250,  9.750, ...
+  // Recv deltas(ms):   9.500,  10.500,  9.500, 10.500,  9.500, ...
+  // There is no delay building up between the send times and the receive times,
+  // therefore this case should never lead to an overuse detection. However, if
+  // the time deltas were accidentally rounded to the nearest milliseconds, then
+  // all the send deltas would be equal to 10ms while some recv deltas would
+  // round up to 11ms which would lead in a false illusion of delay build up.
+  uint32_t last_bitrate = bitrate_observer_.latest_bitrate();
+  for (int i = 0; i < 1000; ++i) {
+    clock_.AdvanceTimeMicroseconds(500);
+    IncomingFeedback(clock_.CurrentTime(),
+                     clock_.CurrentTime() - TimeDelta::Micros(500), 1000,
+                     PacedPacketInfo());
+    clock_.AdvanceTimeMicroseconds(9500);
+    IncomingFeedback(clock_.CurrentTime(),
+                     clock_.CurrentTime() - TimeDelta::Micros(250), 1000,
+                     PacedPacketInfo());
+    clock_.AdvanceTimeMicroseconds(10000);
+
+    // The bitrate should never decrease in this test.
+    EXPECT_LE(last_bitrate, bitrate_observer_.latest_bitrate());
+    last_bitrate = bitrate_observer_.latest_bitrate();
+  }
+}
+
 class DelayBasedBweTestWithBackoffTimeoutExperiment : public DelayBasedBweTest {
  public:
   DelayBasedBweTestWithBackoffTimeoutExperiment()
