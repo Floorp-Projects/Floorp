@@ -2176,8 +2176,8 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
       continue;
     }
 
-    nsRegion visible(item->GetClippedBounds(aBuilder));
-    visible.And(visible, item->GetPaintRect(aBuilder, aCtx));
+    nsRect visible = item->GetClippedBounds(aBuilder);
+    visible = visible.Intersect(item->GetPaintRect(aBuilder, aCtx));
     if (visible.IsEmpty()) {
       continue;
     }
@@ -2185,7 +2185,7 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     DisplayItemClip currentClip = item->GetClip();
     if (currentClip.HasClip()) {
       aCtx->Save();
-      if (currentClip.IsRectClippedByRoundedCorner(visible.GetBounds())) {
+      if (currentClip.IsRectClippedByRoundedCorner(visible)) {
         currentClip.ApplyTo(aCtx, aAppUnitsPerDevPixel);
       } else {
         currentClip.ApplyRectTo(aCtx, aAppUnitsPerDevPixel);
