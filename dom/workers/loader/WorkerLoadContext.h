@@ -27,12 +27,44 @@ namespace workerinternals::loader {
 class CacheCreator;
 }
 
+/*
+ * WorkerScriptLoadContext (for all workers)
+ *
+ * LoadContexts augment the loading of a ScriptLoadRequest. They
+ * describe how a ScriptLoadRequests loading and evaluation needs to be
+ * augmented, based on the information provided by the loading context. The
+ * WorkerLoadContext has the following generic fields applied to all worker
+ * ScriptLoadRequests (and primarily used for error handling):
+ *
+ *    * mURI
+ *        Set at worker creation, used when throwing an error.
+ *    * mLoadResult
+ *        Used to store the result of a load. In particular, it is used for
+ *        error handling when a load fails (for example, a malformed URI).
+ *    * mMutedErrorFlag
+ *        Set when we finish loading a script, and used to determine whether a
+ *        given error is thrown or muted.
+ *
+ * The rest of the fields on this class focus on enabling the ServiceWorker
+ * usecase, in particular -- using the Cache API to store the worker so that
+ * in the case of (for example) a page refresh, the service worker itself is
+ * persisted so that it can do other work. For more details see the
+ * CacheLoadHandler.h file.
+ *
+ */
+
 class WorkerLoadContext : public JS::loader::LoadContextBase {
  public:
   explicit WorkerLoadContext();
 
   ~WorkerLoadContext() = default;
 
+  /* These fields are used by all workers */
+  Maybe<bool> mMutedErrorFlag;
+  nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
+
+  /* These fields are only used by service workers */
+  /* TODO: Split out a ServiceWorkerLoadContext */
   // This full URL string is populated only if this object is used in a
   // ServiceWorker.
   nsString mFullURL;
@@ -46,8 +78,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   // The reader stream the cache entry should be filled from, for those cases
   // when we're going to have an mCachePromise.
   nsCOMPtr<nsIInputStream> mCacheReadStream;
-
-  nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
 
   RefPtr<workerinternals::loader::CacheCreator> mCacheCreator;
 
@@ -79,8 +109,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   };
 
   CacheStatus mCacheStatus = Uncached;
-
-  Maybe<bool> mMutedErrorFlag;
 
   bool IsAwaitingPromise() const { return bool(mCachePromise); }
 };
