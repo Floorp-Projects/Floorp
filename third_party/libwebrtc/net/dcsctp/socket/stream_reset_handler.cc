@@ -176,10 +176,10 @@ void StreamResetHandler::HandleResetOutgoing(
                          << "Reset outgoing streams with req_seq_nbr="
                          << *req->request_sequence_number();
 
+    last_processed_req_seq_nbr_ = req->request_sequence_number();
     result = reassembly_queue_->ResetStreams(
         *req, data_tracker_->last_cumulative_acked_tsn());
     if (result == ResponseResult::kSuccessPerformed) {
-      last_processed_req_seq_nbr_ = req->request_sequence_number();
       ctx_->callbacks().OnIncomingStreamsReset(req->stream_ids());
     }
     responses.push_back(ReconfigurationResponseParameter(
