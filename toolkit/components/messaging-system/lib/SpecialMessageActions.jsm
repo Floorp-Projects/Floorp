@@ -375,6 +375,17 @@ const SpecialMessageActions = {
       case "SET_PREF":
         this.setPref(action.data.pref);
         break;
+      case "MULTI_ACTION":
+        await Promise.all(
+          action.data.actions.map(async action => {
+            try {
+              await this.handleAction(action, browser);
+            } catch (err) {
+              throw new Error(`Error in MULTI_ACTION event: ${err.message}`);
+            }
+          })
+        );
+        break;
       default:
         throw new Error(
           `Special message action with type ${action.type} is unsupported.`

@@ -486,6 +486,27 @@
           "required": ["data", "type"],
           "additionalProperties": false,
           "description": "Sets prefs from special message actions"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "A special message action definition"
+                }
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": ["MULTI_ACTION"]
+            }
+          },
+          "required": ["data", "type"],
+          "additionalProperties": false,
+          "description": "Runs multiple actions"
         }
       ]
     }

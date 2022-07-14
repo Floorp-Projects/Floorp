@@ -275,3 +275,32 @@ Prefs that can be changed with this action are:
   }
 }
 ```
+
+### `MULTI_ACTION`
+
+Action for running multiple actions. Actions should be included in an array of actions.
+
+* args:
+```ts
+{
+  actions: Array<UserAction>
+}
+```
+
+* example:
+```json
+{
+  "button_action": "MULTI_ACTION",
+  "button_action_args": {
+    "actions": [
+      {
+        "type": "OPEN_URL",
+        "args": "https://www.example.com"
+      },
+      {
+        "type": "OPEN_AWESOME_BAR"
+      }
+    ]
+  }
+}
+```
