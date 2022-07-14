@@ -2377,10 +2377,13 @@ dom.contentprocess:
   buildID_mismatch_false_positive:
     bug_numbers:
       - 1651133
+      - 1730045
+      - 1754658
+      - 1777404
     description: >
       The number of times a process crashed early but we could verify it was not
       because of buildID mismatch between the parent and the content processes.
-    expires: "105"
+    expires: "113"
     kind: uint
     notification_emails:
       - alissy@mozilla.com
