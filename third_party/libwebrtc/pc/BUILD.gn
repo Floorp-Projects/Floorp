@@ -118,6 +118,19 @@ rtc_source_set("channel_interface") {
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
+rtc_source_set("channel_factory_interface") {
+  visibility = [ ":*" ]
+  sources = [ "channel_factory_interface.h" ]
+  deps = [
+    "../api:audio_options_api",
+    "../api/crypto:options",
+    "../api/video:video_bitrate_allocator_factory",
+    "../call:call_interfaces",
+    "../media:rtc_media_base",
+    "../media:rtc_media_config",
+  ]
+}
+
 rtc_source_set("channel_manager") {
   visibility = [ ":*" ]
   sources = [
@@ -126,6 +139,7 @@ rtc_source_set("channel_manager") {
   ]
   deps = [
     ":channel",
+    ":channel_factory_interface",
     ":channel_interface",
     ":session_description",
     "../api:audio_options_api",
@@ -1611,6 +1625,7 @@ rtc_library("rtp_transmission_manager") {
   deps = [
     ":audio_rtp_receiver",
     ":channel",
+    ":channel_interface",
     ":channel_manager",
     ":rtp_receiver",
     ":rtp_receiver_proxy",

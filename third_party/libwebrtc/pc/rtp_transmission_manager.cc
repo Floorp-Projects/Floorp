@@ -17,7 +17,7 @@
 #include "api/peer_connection_interface.h"
 #include "api/rtp_transceiver_direction.h"
 #include "pc/audio_rtp_receiver.h"
-#include "pc/channel.h"
+#include "pc/channel_interface.h"
 #include "pc/stats_collector_interface.h"
 #include "pc/video_rtp_receiver.h"
 #include "rtc_base/checks.h"
@@ -81,10 +81,9 @@ cricket::VoiceMediaChannel* RtpTransmissionManager::voice_media_channel()
     const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsUnifiedPlan());
-  auto* voice_channel = static_cast<cricket::VoiceChannel*>(
-      GetAudioTransceiver()->internal()->channel());
+  auto* voice_channel = GetAudioTransceiver()->internal()->channel();
   if (voice_channel) {
-    return voice_channel->media_channel();
+    return voice_channel->voice_media_channel();
   } else {
     return nullptr;
   }
@@ -94,10 +93,9 @@ cricket::VideoMediaChannel* RtpTransmissionManager::video_media_channel()
     const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsUnifiedPlan());
-  auto* video_channel = static_cast<cricket::VideoChannel*>(
-      GetVideoTransceiver()->internal()->channel());
+  auto* video_channel = GetVideoTransceiver()->internal()->channel();
   if (video_channel) {
-    return video_channel->media_channel();
+    return video_channel->video_media_channel();
   } else {
     return nullptr;
   }
