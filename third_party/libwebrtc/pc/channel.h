@@ -83,7 +83,7 @@ class BaseChannel : public ChannelInterface,
               rtc::Thread* network_thread,
               rtc::Thread* signaling_thread,
               std::unique_ptr<MediaChannel> media_channel,
-              const std::string& mid,
+              absl::string_view mid,
               bool srtp_required,
               webrtc::CryptoOptions crypto_options,
               rtc::UniqueRandomIdGenerator* ssrc_generator);
@@ -361,7 +361,7 @@ class VoiceChannel : public BaseChannel {
                rtc::Thread* network_thread,
                rtc::Thread* signaling_thread,
                std::unique_ptr<VoiceMediaChannel> channel,
-               const std::string& mid,
+               absl::string_view mid,
                bool srtp_required,
                webrtc::CryptoOptions crypto_options,
                rtc::UniqueRandomIdGenerator* ssrc_generator);
@@ -407,7 +407,7 @@ class VideoChannel : public BaseChannel {
                rtc::Thread* network_thread,
                rtc::Thread* signaling_thread,
                std::unique_ptr<VideoMediaChannel> media_channel,
-               const std::string& mid,
+               absl::string_view mid,
                bool srtp_required,
                webrtc::CryptoOptions crypto_options,
                rtc::UniqueRandomIdGenerator* ssrc_generator);

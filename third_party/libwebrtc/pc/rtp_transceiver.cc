@@ -17,10 +17,12 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "api/peer_connection_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
+#include "pc/channel.h"
 #include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
 #include "pc/session_description.h"
@@ -157,7 +159,51 @@ RtpTransceiver::~RtpTransceiver() {
     StopInternal();
   }
 
-  RTC_CHECK(!channel_) << "Missing call to SetChannel(nullptr)?";
+  RTC_CHECK(!channel_) << "Missing call to ClearChannel?";
+}
+
+RTCError RtpTransceiver::CreateChannel(
+    absl::string_view mid,
+    Call* call_ptr,
+    const cricket::MediaConfig& media_config,
+    bool srtp_required,
+    CryptoOptions crypto_options,
+    const cricket::AudioOptions& audio_options,
+    const cricket::VideoOptions& video_options,
+    VideoBitrateAllocatorFactory* video_bitrate_allocator_factory,
+    std::function<RtpTransportInternal*(absl::string_view)> transport_lookup) {
+  RTC_DCHECK_RUN_ON(thread_);
+  if (!channel_manager_->media_engine()) {
+    // TODO(hta): Must be a better way
+    return RTCError(RTCErrorType::INTERNAL_ERROR,
+                    "No media engine for mid=" + std::string(mid));
+  }
+  std::unique_ptr<cricket::ChannelInterface> new_channel;
+  if (media_type() == cricket::MEDIA_TYPE_AUDIO) {
+    // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
+    // the worker thread. We shouldn't be using the `call_ptr_` hack here but
+    // simply be on the worker thread and use `call_` (update upstream code).
+    new_channel = channel_manager_->CreateVoiceChannel(
+        call_ptr, media_config, mid, srtp_required, crypto_options,
+        audio_options);
+
+  } else {
+    RTC_DCHECK_EQ(cricket::MEDIA_TYPE_VIDEO, media_type());
+
+    // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
+    // the worker thread. We shouldn't be using the `call_ptr_` hack here but
+    // simply be on the worker thread and use `call_` (update upstream code).
+    new_channel = channel_manager_->CreateVideoChannel(
+        call_ptr, media_config, mid, srtp_required, crypto_options,
+        video_options, video_bitrate_allocator_factory);
+  }
+  if (!new_channel) {
+    // TODO(hta): Must be a better way
+    return RTCError(RTCErrorType::INTERNAL_ERROR,
+                    "Failed to create channel for mid=" + std::string(mid));
+  }
+  SetChannel(std::move(new_channel), transport_lookup);
+  return RTCError::OK();
 }
 
 void RtpTransceiver::SetChannel(

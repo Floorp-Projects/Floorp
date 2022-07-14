@@ -152,7 +152,7 @@ ChannelManager::GetSupportedVideoRtpHeaderExtensions() const {
 std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(
     webrtc::Call* call,
     const MediaConfig& media_config,
-    const std::string& mid,
+    absl::string_view mid,
     bool srtp_required,
     const webrtc::CryptoOptions& crypto_options,
     const AudioOptions& options) {
@@ -188,7 +188,7 @@ std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(
 std::unique_ptr<VideoChannel> ChannelManager::CreateVideoChannel(
     webrtc::Call* call,
     const MediaConfig& media_config,
-    const std::string& mid,
+    absl::string_view mid,
     bool srtp_required,
     const webrtc::CryptoOptions& crypto_options,
     const VideoOptions& options,

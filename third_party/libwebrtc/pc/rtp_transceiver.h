@@ -20,6 +20,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/audio_options.h"
 #include "api/jsep.h"
 #include "api/media_types.h"
 #include "api/rtc_error.h"
@@ -30,6 +31,8 @@
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/video/video_bitrate_allocator_factory.h"
+#include "media/base/media_channel.h"
 #include "pc/channel_interface.h"
 #include "pc/channel_manager.h"
 #include "pc/proxy.h"
@@ -44,6 +47,8 @@
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
+
+class PeerConnectionSdpMethods;
 
 // Implementation of the public RtpTransceiverInterface.
 //
@@ -66,10 +71,8 @@ namespace webrtc {
 // with this m= section. Since the transceiver, senders, and receivers are
 // reference counted and can be referenced from JavaScript (in Chromium), these
 // objects must be ready to live for an arbitrary amount of time. The
-// BaseChannel is not reference counted and is owned by the ChannelManager, so
-// the PeerConnection must take care of creating/deleting the BaseChannel and
-// setting the channel reference in the transceiver to null when it has been
-// deleted.
+// BaseChannel is not reference counted, so
+// the PeerConnection must take care of creating/deleting the BaseChannel.
 //
 // The RtpTransceiver is specialized to either audio or video according to the
 // MediaType specified in the constructor. Audio RtpTransceivers will have
@@ -101,6 +104,18 @@ class RtpTransceiver : public RtpTransceiverInterface,
   // Returns the Voice/VideoChannel set for this transceiver. May be null if
   // the transceiver is not in the currently set local/remote description.
   cricket::ChannelInterface* channel() const { return channel_.get(); }
+
+  // Creates the Voice/VideoChannel and sets it.
+  RTCError CreateChannel(
+      absl::string_view mid,
+      Call* call_ptr,
+      const cricket::MediaConfig& media_config,
+      bool srtp_required,
+      CryptoOptions crypto_options,
+      const cricket::AudioOptions& audio_options,
+      const cricket::VideoOptions& video_options,
+      VideoBitrateAllocatorFactory* video_bitrate_allocator_factory,
+      std::function<RtpTransportInternal*(absl::string_view)> transport_lookup);
 
   // Sets the Voice/VideoChannel. The caller must pass in the correct channel
   // implementation based on the type of the transceiver.  The call must
