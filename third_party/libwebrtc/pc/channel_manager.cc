@@ -31,7 +31,6 @@ std::unique_ptr<ChannelManager> ChannelManager::Create(
     bool enable_rtx,
     rtc::Thread* worker_thread,
     rtc::Thread* network_thread) {
-  RTC_CHECK(media_engine);
   RTC_DCHECK(network_thread);
   RTC_DCHECK(worker_thread);
 
@@ -52,11 +51,12 @@ ChannelManager::ChannelManager(
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(network_thread_);
-  RTC_CHECK(media_engine_);
 
-  // TODO(tommi): Change VoiceEngine to do ctor time initialization so that
-  // this isn't necessary.
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] { media_engine_->Init(); });
+  if (media_engine_) {
+    // TODO(tommi): Change VoiceEngine to do ctor time initialization so that
+    // this isn't necessary.
+    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] { media_engine_->Init(); });
+  }
 }
 
 ChannelManager::~ChannelManager() {
@@ -71,8 +71,27 @@ ChannelManager::~ChannelManager() {
   });
 }
 
+void ChannelManager::GetSupportedAudioSendCodecs(
+    std::vector<AudioCodec>* codecs) const {
+  if (!media_engine_) {
+    return;
+  }
+  *codecs = media_engine_->voice().send_codecs();
+}
+
+void ChannelManager::GetSupportedAudioReceiveCodecs(
+    std::vector<AudioCodec>* codecs) const {
+  if (!media_engine_) {
+    return;
+  }
+  *codecs = media_engine_->voice().recv_codecs();
+}
+
 void ChannelManager::GetSupportedVideoSendCodecs(
     std::vector<VideoCodec>* codecs) const {
+  if (!media_engine_) {
+    return;
+  }
   codecs->clear();
 
   std::vector<VideoCodec> video_codecs = media_engine_->video().send_codecs();
@@ -87,6 +106,9 @@ void ChannelManager::GetSupportedVideoSendCodecs(
 
 void ChannelManager::GetSupportedVideoReceiveCodecs(
     std::vector<VideoCodec>* codecs) const {
+  if (!media_engine_) {
+    return;
+  }
   codecs->clear();
 
   std::vector<VideoCodec> video_codecs = media_engine_->video().recv_codecs();
@@ -101,12 +123,30 @@ void ChannelManager::GetSupportedVideoReceiveCodecs(
 
 RtpHeaderExtensions ChannelManager::GetDefaultEnabledAudioRtpHeaderExtensions()
     const {
+  if (!media_engine_)
+    return {};
   return GetDefaultEnabledRtpHeaderExtensions(media_engine_->voice());
+}
+
+std::vector<webrtc::RtpHeaderExtensionCapability>
+ChannelManager::GetSupportedAudioRtpHeaderExtensions() const {
+  if (!media_engine_)
+    return {};
+  return media_engine_->voice().GetRtpHeaderExtensions();
 }
 
 RtpHeaderExtensions ChannelManager::GetDefaultEnabledVideoRtpHeaderExtensions()
     const {
+  if (!media_engine_)
+    return {};
   return GetDefaultEnabledRtpHeaderExtensions(media_engine_->video());
+}
+
+std::vector<webrtc::RtpHeaderExtensionCapability>
+ChannelManager::GetSupportedVideoRtpHeaderExtensions() const {
+  if (!media_engine_)
+    return {};
+  return media_engine_->video().GetRtpHeaderExtensions();
 }
 
 std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(

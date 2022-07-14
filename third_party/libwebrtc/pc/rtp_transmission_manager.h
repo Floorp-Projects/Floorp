@@ -244,8 +244,6 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
   PeerConnectionObserver* Observer() const;
   void OnNegotiationNeeded();
 
-  cricket::MediaEngineInterface* media_engine() const;
-
   TransceiverList transceivers_;
 
   // These lists store sender info seen in local/remote descriptions.

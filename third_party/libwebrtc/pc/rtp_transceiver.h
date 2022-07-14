@@ -47,7 +47,6 @@
 
 namespace cricket {
 class ChannelManager;
-class MediaEngineInterface;
 }
 
 namespace webrtc {
@@ -339,7 +338,6 @@ class RtpTransceiver : public RtpTransceiverInterface,
       RTC_GUARDED_BY(thread_);
 
   const std::function<void()> on_negotiation_needed_;
-  cricket::MediaEngineInterface* media_engine() const;
 };
 
 BEGIN_PRIMARY_PROXY_MAP(RtpTransceiver)
