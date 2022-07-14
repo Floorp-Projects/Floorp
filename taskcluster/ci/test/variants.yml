@@ -114,7 +114,6 @@ xorigin:
         mozharness:
             extra-options:
                 - "--enable-xorigin-tests"
-                - "--setpref=privacy.partition.always_partition_third_party_non_cookie_storage=false"
 
 conditioned_profile:
     description: "{description} with conditioned profile"
