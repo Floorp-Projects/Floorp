@@ -11,6 +11,7 @@
 #include "video/video_receive_stream2.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <ostream>
@@ -20,12 +21,15 @@
 
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
+#include "api/metronome/test/fake_metronome.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/mock_video_decoder.h"
 #include "api/test/mock_video_decoder_factory.h"
 #include "api/test/time_controller.h"
 #include "api/test/video/function_video_decoder_factory.h"
+#include "api/units/frequency.h"
 #include "api/units/time_delta.h"
+#include "api/video/encoded_image.h"
 #include "api/video/recordable_encoded_frame.h"
 #include "api/video/test/video_frame_matchers.h"
 #include "api/video/video_frame.h"
@@ -40,6 +44,7 @@
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "rtc_base/event.h"
+#include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/clock.h"
 #include "test/fake_decoder.h"
 #include "test/fake_encoded_frame.h"
@@ -69,6 +74,10 @@ void PrintTo(const RecordableEncodedFrame& value, std::ostream* os) {
       << " resolution=" << ::testing::PrintToString(value.resolution()) << ")";
 }
 
+}  // namespace webrtc
+
+namespace webrtc {
+
 namespace {
 
 using test::video_frame_matchers::NtpTimestamp;
@@ -82,6 +91,7 @@ using ::testing::Field;
 using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::IsEmpty;
+using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SizeIs;
@@ -90,26 +100,44 @@ using ::testing::WithoutArgs;
 auto RenderedFrameWith(::testing::Matcher<VideoFrame> m) {
   return Optional(m);
 }
+auto RenderedFrame() {
+  return RenderedFrameWith(_);
+}
+testing::Matcher<absl::optional<VideoFrame>> DidNotReceiveFrame() {
+  return Eq(absl::nullopt);
+}
 
 constexpr TimeDelta kDefaultTimeOut = TimeDelta::Millis(50);
 constexpr int kDefaultNumCpuCores = 2;
 
 constexpr Timestamp kStartTime = Timestamp::Millis(1'337'000);
+constexpr Frequency k30Fps = Frequency::Hertz(30);
+constexpr TimeDelta k30FpsDelay = 1 / k30Fps;
+constexpr Frequency kRtpTimestampHz = Frequency::KiloHertz(90);
+constexpr uint32_t k30FpsRtpTimestampDelta = kRtpTimestampHz / k30Fps;
+constexpr uint32_t kFirstRtpTimestamp = 90000;
 
 class FakeVideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  explicit FakeVideoRenderer(test::RunLoop* loop) : loop_(loop) {}
+  explicit FakeVideoRenderer(TimeController* time_controller,
+                             test::RunLoop* loop)
+      : time_controller_(time_controller), loop_(loop) {}
   ~FakeVideoRenderer() override = default;
 
   void OnFrame(const webrtc::VideoFrame& frame) override {
     last_frame_ = frame;
-    frame_wait_.Set();
   }
 
-  absl::optional<webrtc::VideoFrame> WaitForRenderedFrame(TimeDelta wait) {
+  absl::optional<webrtc::VideoFrame> WaitForFrame(TimeDelta timeout) {
     if (!last_frame_) {
       loop_->Flush();
-      frame_wait_.Wait(wait.ms());
+      time_controller_->AdvanceTime(TimeDelta::Zero());
+      time_controller_->Wait(
+          [this] {
+            loop_->Flush();
+            return last_frame_.has_value();
+          },
+          timeout);
     }
     absl::optional<webrtc::VideoFrame> ret = std::move(last_frame_);
     last_frame_.reset();
@@ -118,26 +146,53 @@ class FakeVideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
 
  private:
   absl::optional<webrtc::VideoFrame> last_frame_;
+  TimeController* const time_controller_;
   test::RunLoop* const loop_;
-  rtc::Event frame_wait_;
 };
 
 MATCHER_P2(Resolution, w, h, "") {
   return arg.resolution().width == w && arg.resolution().height == h;
 }
 
+MATCHER_P(Id, id, "") {
+  return arg.id() == id;
+}
+
+// Rtp timestamp for in order frame at 30fps.
+uint32_t RtpTimestampForFrame(int id) {
+  return kFirstRtpTimestamp + id * k30FpsRtpTimestampDelta;
+}
+
+// Receive time for in order frame at 30fps.
+Timestamp ReceiveTimeForFrame(int id) {
+  return kStartTime + id * k30FpsDelay;
+}
+
 }  // namespace
 
-class VideoReceiveStream2Test : public ::testing::Test {
+class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
  public:
+  auto DefaultDecodeAction() {
+    return testing::Invoke(&fake_decoder_, &test::FakeDecoder::Decode);
+  }
+
+  bool UseMetronome() const { return GetParam(); }
+
   VideoReceiveStream2Test()
       : time_controller_(kStartTime),
         clock_(time_controller_.GetClock()),
         config_(&mock_transport_, &mock_h264_decoder_factory_),
         call_stats_(clock_, loop_.task_queue()),
-        fake_renderer_(&loop_),
-        h264_decoder_factory_(&mock_h264_video_decoder_) {
-    fake_call_.SetFieldTrial("WebRTC-FrameBuffer3/arm:FrameBuffer3/");
+        fake_renderer_(&time_controller_, &loop_),
+        fake_metronome_(time_controller_.GetTaskQueueFactory(),
+                        TimeDelta::Millis(16)),
+        decode_sync_(clock_, &fake_metronome_, loop_.task_queue()),
+        h264_decoder_factory_(&mock_decoder_) {
+    if (UseMetronome()) {
+      fake_call_.SetFieldTrial("WebRTC-FrameBuffer3/arm:SyncDecoding/");
+    } else {
+      fake_call_.SetFieldTrial("WebRTC-FrameBuffer3/arm:FrameBuffer3/");
+    }
 
     // By default, mock decoder factory is backed by VideoDecoderProxyFactory.
     ON_CALL(mock_h264_decoder_factory_, CreateVideoDecoder)
@@ -146,23 +201,25 @@ class VideoReceiveStream2Test : public ::testing::Test {
             &test::VideoDecoderProxyFactory::CreateVideoDecoder));
 
     // By default, mock decode will wrap the fake decoder.
-    ON_CALL(mock_h264_video_decoder_, Configure)
+    ON_CALL(mock_decoder_, Configure)
         .WillByDefault(
             testing::Invoke(&fake_decoder_, &test::FakeDecoder::Configure));
-    ON_CALL(mock_h264_video_decoder_, Decode)
-        .WillByDefault(
-            testing::Invoke(&fake_decoder_, &test::FakeDecoder::Decode));
-    ON_CALL(mock_h264_video_decoder_, RegisterDecodeCompleteCallback)
+    ON_CALL(mock_decoder_, Decode).WillByDefault(DefaultDecodeAction());
+    ON_CALL(mock_decoder_, RegisterDecodeCompleteCallback)
         .WillByDefault(testing::Invoke(
             &fake_decoder_,
             &test::FakeDecoder::RegisterDecodeCompleteCallback));
-    ON_CALL(mock_h264_video_decoder_, Release)
+    ON_CALL(mock_decoder_, Release)
         .WillByDefault(
             testing::Invoke(&fake_decoder_, &test::FakeDecoder::Release));
   }
   ~VideoReceiveStream2Test() override {
-    if (video_receive_stream_)
+    if (video_receive_stream_) {
+      video_receive_stream_->Stop();
       video_receive_stream_->UnregisterFromTransport();
+    }
+    fake_metronome_.Stop();
+    time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
   void SetUp() override {
@@ -195,7 +252,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
             time_controller_.GetTaskQueueFactory(), &fake_call_,
             kDefaultNumCpuCores, &packet_router_, config_.Copy(), &call_stats_,
             clock_, absl::WrapUnique(timing_), &nack_periodic_processor_,
-            nullptr);
+            GetParam() ? &decode_sync_ : nullptr);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
     if (state)
@@ -211,7 +268,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
   testing::NiceMock<MockVideoDecoderFactory> mock_h264_decoder_factory_;
   VideoReceiveStream::Config config_;
   internal::CallStats call_stats_;
-  testing::NiceMock<MockVideoDecoder> mock_h264_video_decoder_;
+  testing::NiceMock<MockVideoDecoder> mock_decoder_;
   FakeVideoRenderer fake_renderer_;
   cricket::FakeCall fake_call_;
   MockTransport mock_transport_;
@@ -219,13 +276,15 @@ class VideoReceiveStream2Test : public ::testing::Test {
   RtpStreamReceiverController rtp_stream_receiver_controller_;
   std::unique_ptr<webrtc::internal::VideoReceiveStream2> video_receive_stream_;
   VCMTiming* timing_;
+  test::FakeMetronome fake_metronome_;
+  DecodeSynchronizer decode_sync_;
 
  private:
   test::VideoDecoderProxyFactory h264_decoder_factory_;
   test::FakeDecoder fake_decoder_;
 };
 
-TEST_F(VideoReceiveStream2Test, CreateFrameFromH264FmtpSpropAndIdr) {
+TEST_P(VideoReceiveStream2Test, CreateFrameFromH264FmtpSpropAndIdr) {
   constexpr uint8_t idr_nalu[] = {0x05, 0xFF, 0xFF, 0xFF};
   RtpPacketToSend rtppacket(nullptr);
   uint8_t* payload = rtppacket.AllocatePayload(sizeof(idr_nalu));
@@ -235,18 +294,18 @@ TEST_F(VideoReceiveStream2Test, CreateFrameFromH264FmtpSpropAndIdr) {
   rtppacket.SetPayloadType(99);
   rtppacket.SetSequenceNumber(1);
   rtppacket.SetTimestamp(0);
-  EXPECT_CALL(mock_h264_video_decoder_, RegisterDecodeCompleteCallback(_));
+  EXPECT_CALL(mock_decoder_, RegisterDecodeCompleteCallback(_));
   video_receive_stream_->Start();
-  EXPECT_CALL(mock_h264_video_decoder_, Decode(_, false, _));
+  EXPECT_CALL(mock_decoder_, Decode(_, false, _));
   RtpPacketReceived parsed_packet;
   ASSERT_TRUE(parsed_packet.Parse(rtppacket.data(), rtppacket.size()));
   rtp_stream_receiver_controller_.OnRtpPacket(parsed_packet);
-  EXPECT_CALL(mock_h264_video_decoder_, Release());
+  EXPECT_CALL(mock_decoder_, Release());
 
   time_controller_.AdvanceTime(TimeDelta::Zero());
 }
 
-TEST_F(VideoReceiveStream2Test, PlayoutDelay) {
+TEST_P(VideoReceiveStream2Test, PlayoutDelay) {
   const VideoPlayoutDelay kPlayoutDelayMs = {123, 321};
   std::unique_ptr<test::FakeEncodedFrame> test_frame =
       test::FakeFrameBuilder().Id(0).AsLast().Build();
@@ -280,7 +339,7 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelay) {
   EXPECT_EQ(123, timings.min_playout_delay.ms());
 }
 
-TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMaxValue) {
+TEST_P(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMaxValue) {
   const TimeDelta default_max_playout_latency =
       timing_->GetTimings().max_playout_delay;
   const VideoPlayoutDelay kPlayoutDelayMs = {123, -1};
@@ -298,7 +357,7 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMaxValue) {
   EXPECT_EQ(default_max_playout_latency, timings.max_playout_delay);
 }
 
-TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
+TEST_P(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
   const TimeDelta default_min_playout_latency =
       timing_->GetTimings().min_playout_delay;
   const VideoPlayoutDelay kPlayoutDelayMs = {-1, 321};
@@ -316,7 +375,7 @@ TEST_F(VideoReceiveStream2Test, PlayoutDelayPreservesDefaultMinValue) {
   EXPECT_EQ(default_min_playout_latency, timings.min_playout_delay);
 }
 
-TEST_F(VideoReceiveStream2Test, MaxCompositionDelayNotSetByDefault) {
+TEST_P(VideoReceiveStream2Test, MaxCompositionDelayNotSetByDefault) {
   // Default with no playout delay set.
   std::unique_ptr<test::FakeEncodedFrame> test_frame0 =
       test::FakeFrameBuilder().Id(0).AsLast().Build();
@@ -338,7 +397,7 @@ TEST_F(VideoReceiveStream2Test, MaxCompositionDelayNotSetByDefault) {
   EXPECT_FALSE(timing_->MaxCompositionDelayInFrames());
 }
 
-TEST_F(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
+TEST_P(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
   // Max composition delay set if playout delay X,Y, where X=0,Y>0.
   const VideoPlayoutDelay kPlayoutDelayMs = {0, 50};
   const int kExpectedMaxCompositionDelayInFrames = 3;  // ~50 ms at 60 fps.
@@ -350,7 +409,7 @@ TEST_F(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
             timing_->MaxCompositionDelayInFrames());
 }
 
-TEST_F(VideoReceiveStream2Test, LazyDecoderCreation) {
+TEST_P(VideoReceiveStream2Test, LazyDecoderCreation) {
   constexpr uint8_t idr_nalu[] = {0x05, 0xFF, 0xFF, 0xFF};
   RtpPacketToSend rtppacket(nullptr);
   uint8_t* payload = rtppacket.AllocatePayload(sizeof(idr_nalu));
@@ -379,22 +438,22 @@ TEST_F(VideoReceiveStream2Test, LazyDecoderCreation) {
                   testing::Field(&SdpVideoFormat::name, testing::Eq("H264"))))
       .Times(1);
   rtc::Event init_decode_event;
-  EXPECT_CALL(mock_h264_video_decoder_, Configure).WillOnce(WithoutArgs([&] {
+  EXPECT_CALL(mock_decoder_, Configure).WillOnce(WithoutArgs([&] {
     init_decode_event.Set();
     return true;
   }));
-  EXPECT_CALL(mock_h264_video_decoder_, RegisterDecodeCompleteCallback(_));
-  EXPECT_CALL(mock_h264_video_decoder_, Decode(_, false, _));
+  EXPECT_CALL(mock_decoder_, RegisterDecodeCompleteCallback(_));
+  EXPECT_CALL(mock_decoder_, Decode(_, false, _));
   RtpPacketReceived parsed_packet;
   ASSERT_TRUE(parsed_packet.Parse(rtppacket.data(), rtppacket.size()));
   rtp_stream_receiver_controller_.OnRtpPacket(parsed_packet);
-  EXPECT_CALL(mock_h264_video_decoder_, Release());
+  EXPECT_CALL(mock_decoder_, Release());
 
   // Make sure the decoder thread had a chance to run.
   init_decode_event.Wait(kDefaultTimeOut.ms());
 }
 
-TEST_F(VideoReceiveStream2Test, PassesNtpTime) {
+TEST_P(VideoReceiveStream2Test, PassesNtpTime) {
   const Timestamp kNtpTimestamp = Timestamp::Millis(12345);
   std::unique_ptr<test::FakeEncodedFrame> test_frame =
       test::FakeFrameBuilder()
@@ -406,11 +465,11 @@ TEST_F(VideoReceiveStream2Test, PassesNtpTime) {
 
   video_receive_stream_->Start();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut),
               RenderedFrameWith(NtpTimestamp(kNtpTimestamp)));
 }
 
-TEST_F(VideoReceiveStream2Test, PassesRotation) {
+TEST_P(VideoReceiveStream2Test, PassesRotation) {
   const webrtc::VideoRotation kRotation = webrtc::kVideoRotation_180;
   std::unique_ptr<test::FakeEncodedFrame> test_frame = test::FakeFrameBuilder()
                                                            .Id(0)
@@ -421,11 +480,11 @@ TEST_F(VideoReceiveStream2Test, PassesRotation) {
 
   video_receive_stream_->Start();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut),
               RenderedFrameWith(Rotation(kRotation)));
 }
 
-TEST_F(VideoReceiveStream2Test, PassesPacketInfos) {
+TEST_P(VideoReceiveStream2Test, PassesPacketInfos) {
   RtpPacketInfos packet_infos = CreatePacketInfos(3);
   auto test_frame = test::FakeFrameBuilder()
                         .Id(0)
@@ -436,11 +495,11 @@ TEST_F(VideoReceiveStream2Test, PassesPacketInfos) {
 
   video_receive_stream_->Start();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut),
               RenderedFrameWith(PacketInfos(ElementsAreArray(packet_infos))));
 }
 
-TEST_F(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
+TEST_P(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
   constexpr uint32_t kSsrc = 1111;
   constexpr uint32_t kCsrc = 9001;
   constexpr uint32_t kRtpTimestamp = 12345;
@@ -481,7 +540,7 @@ TEST_F(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
   int64_t timestamp_ms_min = clock_->TimeInMilliseconds();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
   // Verify that the per-packet information is passed to the renderer.
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut),
               RenderedFrameWith(PacketInfos(ElementsAreArray(packet_infos))));
   int64_t timestamp_ms_max = clock_->TimeInMilliseconds();
 
@@ -534,7 +593,7 @@ std::unique_ptr<test::FakeEncodedFrame> MakeFrame(VideoFrameType frame_type,
   return MakeFrameWithResolution(frame_type, picture_id, 320, 240);
 }
 
-TEST_F(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
+TEST_P(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->Start();
   // Expect a keyframe request to be generated
@@ -544,11 +603,11 @@ TEST_F(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
       VideoReceiveStream::RecordingState(callback.AsStdFunction()), true);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameKey, 0));
-  EXPECT_TRUE(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut));
+  EXPECT_TRUE(fake_renderer_.WaitForFrame(kDefaultTimeOut));
   video_receive_stream_->Stop();
 }
 
-TEST_F(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
+TEST_P(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->Start();
   // Expect a key frame request over RTCP.
@@ -563,7 +622,7 @@ TEST_F(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
   video_receive_stream_->Stop();
 }
 
-TEST_F(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
+TEST_P(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   // Recreate receive stream with shorter delay to test rtx.
   TimeDelta rtx_delay = TimeDelta::Millis(50);
   config_.rtp.nack.rtp_history_ms = rtx_delay.ms();
@@ -575,12 +634,12 @@ TEST_F(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   video_receive_stream_->GenerateKeyFrame();
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameDelta, 0));
-  fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut);
+  fake_renderer_.WaitForFrame(kDefaultTimeOut);
   time_controller_.AdvanceTime(tick);
   loop_.Flush();
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameDelta, 1));
-  fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut);
+  fake_renderer_.WaitForFrame(kDefaultTimeOut);
   time_controller_.AdvanceTime(TimeDelta::Zero());
   testing::Mock::VerifyAndClearExpectations(&mock_transport_);
 
@@ -590,8 +649,7 @@ TEST_F(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   time_controller_.AdvanceTime(tick);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameDelta, 2));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
   loop_.Flush();
   testing::Mock::VerifyAndClearExpectations(&mock_transport_);
 
@@ -600,17 +658,15 @@ TEST_F(VideoReceiveStream2Test, RequestsKeyFramesUntilKeyFrameReceived) {
   EXPECT_CALL(mock_transport_, SendRtcp).Times(0);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameKey, 3));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
   time_controller_.AdvanceTime(2 * tick);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameDelta, 4));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
   loop_.Flush();
 }
 
-TEST_F(VideoReceiveStream2Test,
+TEST_P(VideoReceiveStream2Test,
        DispatchesEncodedFrameSequenceStartingWithKeyframeWithoutResolution) {
   video_receive_stream_->Start();
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
@@ -625,17 +681,15 @@ TEST_F(VideoReceiveStream2Test,
 
   video_receive_stream_->OnCompleteFrame(
       MakeFrameWithResolution(VideoFrameType::kVideoFrameKey, 0, 0, 0));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
   video_receive_stream_->OnCompleteFrame(
       MakeFrameWithResolution(VideoFrameType::kVideoFrameDelta, 1, 0, 0));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
 
   video_receive_stream_->Stop();
 }
 
-TEST_F(VideoReceiveStream2Test,
+TEST_P(VideoReceiveStream2Test,
        DispatchesEncodedFrameSequenceStartingWithKeyframeWithResolution) {
   video_receive_stream_->Start();
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
@@ -649,14 +703,305 @@ TEST_F(VideoReceiveStream2Test,
 
   video_receive_stream_->OnCompleteFrame(
       MakeFrameWithResolution(VideoFrameType::kVideoFrameKey, 0, 1080, 720));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
   video_receive_stream_->OnCompleteFrame(
       MakeFrameWithResolution(VideoFrameType::kVideoFrameDelta, 1, 0, 0));
-  EXPECT_THAT(fake_renderer_.WaitForRenderedFrame(kDefaultTimeOut),
-              RenderedFrameWith(_));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut), RenderedFrame());
 
   video_receive_stream_->Stop();
 }
+
+TEST_P(VideoReceiveStream2Test, DependantFramesAreScheduled) {
+  video_receive_stream_->Start();
+
+  auto key_frame = test::FakeFrameBuilder()
+                       .Id(0)
+                       .PayloadType(99)
+                       .Time(kFirstRtpTimestamp)
+                       .ReceivedTime(kStartTime)
+                       .AsLast()
+                       .Build();
+  auto delta_frame = test::FakeFrameBuilder()
+                         .Id(1)
+                         .PayloadType(99)
+                         .Time(RtpTimestampForFrame(1))
+                         .ReceivedTime(ReceiveTimeForFrame(1))
+                         .Refs({0})
+                         .AsLast()
+                         .Build();
+
+  // Expect frames are decoded in order.
+  InSequence seq;
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(kFirstRtpTimestamp), _, _));
+  EXPECT_CALL(mock_decoder_, Decode(test::RtpTimestamp(kFirstRtpTimestamp +
+                                                       k30FpsRtpTimestampDelta),
+                                    _, _))
+      .Times(1);
+  video_receive_stream_->OnCompleteFrame(std::move(key_frame));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+
+  time_controller_.AdvanceTime(k30FpsDelay);
+  video_receive_stream_->OnCompleteFrame(std::move(delta_frame));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), RenderedFrame());
+
+  video_receive_stream_->Stop();
+}
+
+TEST_P(VideoReceiveStream2Test, FramesScheduledInOrder) {
+  video_receive_stream_->Start();
+
+  auto key_frame = test::FakeFrameBuilder()
+                       .Id(0)
+                       .PayloadType(99)
+                       .Time(kFirstRtpTimestamp)
+                       .AsLast()
+                       .Build();
+  auto delta_frame1 = test::FakeFrameBuilder()
+                          .Id(1)
+                          .PayloadType(99)
+                          .Time(RtpTimestampForFrame(1))
+                          .Refs({0})
+                          .AsLast()
+                          .Build();
+  auto delta_frame2 = test::FakeFrameBuilder()
+                          .Id(2)
+                          .PayloadType(99)
+                          .Time(RtpTimestampForFrame(2))
+                          .Refs({1})
+                          .AsLast()
+                          .Build();
+
+  // Expect frames are decoded in order despite delta_frame1 arriving first.
+  InSequence seq;
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(kFirstRtpTimestamp), _, _))
+      .Times(1);
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(RtpTimestampForFrame(1)), _, _))
+      .Times(1);
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(RtpTimestampForFrame(2)), _, _))
+      .Times(1);
+  key_frame->SetReceivedTime(clock_->CurrentTime().ms());
+  video_receive_stream_->OnCompleteFrame(std::move(key_frame));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+
+  delta_frame2->SetReceivedTime(clock_->CurrentTime().ms());
+  video_receive_stream_->OnCompleteFrame(std::move(delta_frame2));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), DidNotReceiveFrame());
+  // `delta_frame1` arrives late.
+  delta_frame1->SetReceivedTime(clock_->CurrentTime().ms());
+  video_receive_stream_->OnCompleteFrame(std::move(delta_frame1));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), RenderedFrame());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay * 2), RenderedFrame());
+  video_receive_stream_->Stop();
+}
+
+TEST_P(VideoReceiveStream2Test, WaitsforAllSpatialLayers) {
+  video_receive_stream_->Start();
+  auto sl0 = test::FakeFrameBuilder()
+                 .Id(0)
+                 .PayloadType(99)
+                 .Time(kFirstRtpTimestamp)
+                 .ReceivedTime(kStartTime)
+                 .Build();
+  auto sl1 = test::FakeFrameBuilder()
+                 .Id(1)
+                 .PayloadType(99)
+                 .ReceivedTime(kStartTime)
+                 .Time(kFirstRtpTimestamp)
+                 .Refs({0})
+                 .Build();
+  auto sl2 = test::FakeFrameBuilder()
+                 .Id(2)
+                 .PayloadType(99)
+                 .ReceivedTime(kStartTime)
+                 .Time(kFirstRtpTimestamp)
+                 .Refs({0, 1})
+                 .AsLast()
+                 .Build();
+
+  // No decodes should be called until `sl2` is received.
+  EXPECT_CALL(mock_decoder_, Decode).Times(0);
+  sl0->SetReceivedTime(clock_->CurrentTime().ms());
+  video_receive_stream_->OnCompleteFrame(std::move(sl0));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()),
+              DidNotReceiveFrame());
+  video_receive_stream_->OnCompleteFrame(std::move(sl1));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()),
+              DidNotReceiveFrame());
+  // When `sl2` arrives decode should happen.
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(kFirstRtpTimestamp), _, _))
+      .Times(1);
+  video_receive_stream_->OnCompleteFrame(std::move(sl2));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+  video_receive_stream_->Stop();
+}
+
+TEST_P(VideoReceiveStream2Test, FramesFastForwardOnSystemHalt) {
+  video_receive_stream_->Start();
+
+  // The frame structure looks like this,
+  //   F1
+  //   /
+  // F0 --> F2
+  //
+  // In this case we will have a system halt simulated. By the time the system
+  // resumes, F1 will be old and so F2 should be decoded.
+  auto key_frame = test::FakeFrameBuilder()
+                       .Id(0)
+                       .PayloadType(99)
+                       .Time(kFirstRtpTimestamp)
+                       .AsLast()
+                       .Build();
+  auto ffwd_frame = test::FakeFrameBuilder()
+                        .Id(1)
+                        .PayloadType(99)
+                        .Time(RtpTimestampForFrame(1))
+                        .Refs({0})
+                        .AsLast()
+                        .Build();
+  auto rendered_frame = test::FakeFrameBuilder()
+                            .Id(2)
+                            .PayloadType(99)
+                            .Time(RtpTimestampForFrame(2))
+                            .Refs({0})
+                            .AsLast()
+                            .Build();
+  InSequence seq;
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(kFirstRtpTimestamp), _, _))
+      .WillOnce(testing::DoAll(testing::Invoke([&] {
+                                 // System halt will be simulated in the decode.
+                                 time_controller_.AdvanceTime(k30FpsDelay * 2);
+                               }),
+                               DefaultDecodeAction()));
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(RtpTimestampForFrame(2)), _, _));
+  video_receive_stream_->OnCompleteFrame(std::move(key_frame));
+  video_receive_stream_->OnCompleteFrame(std::move(ffwd_frame));
+  video_receive_stream_->OnCompleteFrame(std::move(rendered_frame));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+
+  // Check stats show correct dropped frames.
+  auto stats = video_receive_stream_->GetStats();
+  EXPECT_EQ(stats.frames_dropped, 1u);
+
+  video_receive_stream_->Stop();
+}
+
+TEST_P(VideoReceiveStream2Test, BetterFrameInsertedWhileWaitingToDecodeFrame) {
+  video_receive_stream_->Start();
+
+  auto key_frame = test::FakeFrameBuilder()
+                       .Id(0)
+                       .PayloadType(99)
+                       .Time(kFirstRtpTimestamp)
+                       .ReceivedTime(ReceiveTimeForFrame(0))
+                       .AsLast()
+                       .Build();
+  auto f1 = test::FakeFrameBuilder()
+                .Id(1)
+                .PayloadType(99)
+                .Time(RtpTimestampForFrame(1))
+                .ReceivedTime(ReceiveTimeForFrame(1))
+                .Refs({0})
+                .AsLast()
+                .Build();
+  auto f2 = test::FakeFrameBuilder()
+                .Id(2)
+                .PayloadType(99)
+                .Time(RtpTimestampForFrame(2))
+                .ReceivedTime(ReceiveTimeForFrame(2))
+                .Refs({0})
+                .AsLast()
+                .Build();
+
+  video_receive_stream_->OnCompleteFrame(std::move(key_frame));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+
+  InSequence seq;
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(RtpTimestampForFrame(1)), _, _))
+      .Times(1);
+  EXPECT_CALL(mock_decoder_,
+              Decode(test::RtpTimestamp(RtpTimestampForFrame(2)), _, _))
+      .Times(1);
+  // Simulate f1 arriving after f2 but before f2 is decoded.
+  video_receive_stream_->OnCompleteFrame(std::move(f2));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), DidNotReceiveFrame());
+  video_receive_stream_->OnCompleteFrame(std::move(f1));
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), RenderedFrame());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), RenderedFrame());
+
+  video_receive_stream_->Stop();
+}
+
+// Note: This test takes a long time (~10s) to run if the fake metronome is
+// active. Since the test needs to wait for the timestamp to rollover, it has a
+// fake delay of around 6.5 hours. Even though time is simulated, this will be
+// around 1,500,000 metronome tick invocations.
+TEST_P(VideoReceiveStream2Test, RtpTimestampWrapAround) {
+  video_receive_stream_->Start();
+
+  constexpr uint32_t kBaseRtp = std::numeric_limits<uint32_t>::max() / 2;
+  video_receive_stream_->OnCompleteFrame(
+      test::FakeFrameBuilder()
+          .Id(0)
+          .PayloadType(99)
+          .Time(kBaseRtp)
+          .ReceivedTime(clock_->CurrentTime())
+          .AsLast()
+          .Build());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+  time_controller_.AdvanceTime(k30FpsDelay);
+  video_receive_stream_->OnCompleteFrame(
+      test::FakeFrameBuilder()
+          .Id(1)
+          .PayloadType(99)
+          .Time(kBaseRtp + k30FpsRtpTimestampDelta)
+          .ReceivedTime(clock_->CurrentTime())
+          .AsLast()
+          .Build());
+  EXPECT_THAT(fake_renderer_.WaitForFrame(k30FpsDelay), RenderedFrame());
+
+  // Pause stream so that RTP timestamp wraps around.
+  constexpr uint32_t kLastRtp = kBaseRtp + k30FpsRtpTimestampDelta;
+  constexpr uint32_t kWrapAroundRtp =
+      kLastRtp + std::numeric_limits<uint32_t>::max() / 2 + 1;
+  // Pause for corresponding delay such that RTP timestamp would increase this
+  // much at 30fps.
+  constexpr TimeDelta kWrapAroundDelay =
+      (std::numeric_limits<uint32_t>::max() / 2 + 1) / kRtpTimestampHz;
+
+  time_controller_.AdvanceTime(kWrapAroundDelay);
+  video_receive_stream_->OnCompleteFrame(
+      test::FakeFrameBuilder()
+          .Id(2)
+          .PayloadType(99)
+          .Time(kWrapAroundRtp)
+          .ReceivedTime(clock_->CurrentTime())
+          .AsLast()
+          .Build());
+  EXPECT_CALL(mock_decoder_, Decode(test::RtpTimestamp(kWrapAroundRtp), _, _))
+      .Times(1);
+  EXPECT_THAT(fake_renderer_.WaitForFrame(TimeDelta::Zero()), RenderedFrame());
+
+  video_receive_stream_->Stop();
+}
+
+INSTANTIATE_TEST_SUITE_P(VideoReceiveStream2Test,
+                         VideoReceiveStream2Test,
+                         testing::Bool(),
+                         [](const auto& test_param_info) {
+                           rtc::StringBuilder ss;
+                           ss << (test_param_info.param
+                                      ? "ScheduleDecodesWithMetronome"
+                                      : "ScheduleDecodesWithPostTask");
+                           return ss.Release();
+                         });
 
 }  // namespace webrtc

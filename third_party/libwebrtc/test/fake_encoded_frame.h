@@ -17,6 +17,7 @@
 
 #include "api/rtp_packet_infos.h"
 #include "api/video/encoded_frame.h"
+#include "api/video/encoded_image.h"
 #include "api/video/video_rotation.h"
 #include "test/gmock.h"
 
@@ -46,6 +47,10 @@ MATCHER_P(WithId, id, "") {
 
 MATCHER_P(FrameWithSize, id, "") {
   return ::testing::Matches(::testing::Eq(id))(arg.size());
+}
+
+MATCHER_P(RtpTimestamp, ts, "") {
+  return ts == arg.Timestamp();
 }
 
 class FakeFrameBuilder {
