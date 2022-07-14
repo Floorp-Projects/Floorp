@@ -159,9 +159,9 @@
       },
     },
     'ios_simulator_tests': {
-      # TODO(bugs.webrtc.org/12244): Some tests are skipped on iOS simulator
-      # platforms because they fail or they are flaky.
-      #'apprtcmobile_tests': {'mixins': ['xcode_parallelization']},
+      'apprtcmobile_tests': {
+        'mixins': ['xcode_parallelization']
+      },
       'audio_decoder_unittests': {},
       'common_audio_unittests': {},
       'common_video_unittests': {},
