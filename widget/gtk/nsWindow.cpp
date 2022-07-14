@@ -580,7 +580,7 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource = nullptr;
   }
   mWaylandVsyncDispatcher = nullptr;
-  g_clear_pointer(&mXdgToken, xdg_activation_token_v1_destroy);
+  MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy);
 #endif
 
   if (mCompositorPauseTimeoutID) {
@@ -2820,7 +2820,7 @@ guint32 nsWindow::GetLastUserInputTime() {
 #ifdef MOZ_WAYLAND
 void nsWindow::FocusWaylandWindow(const char* aTokenID) {
   auto releaseToken = mozilla::MakeScopeExit(
-      [&]() { g_clear_pointer(&mXdgToken, xdg_activation_token_v1_destroy); });
+      [&]() { MozClearPointer(mXdgToken, xdg_activation_token_v1_destroy); });
 
   LOG("nsWindow::SetFocusWayland");
   if (IsDestroyed()) {
@@ -2897,7 +2897,7 @@ void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
       focusSerial, wl_proxy_get_id((struct wl_proxy*)KeymapWrapper::GetSeat()));
 
   // Store activation token at activated window for further release.
-  g_clear_pointer(&aWindow->mXdgToken, xdg_activation_token_v1_destroy);
+  MozClearPointer(aWindow->mXdgToken, xdg_activation_token_v1_destroy);
   aWindow->mXdgToken = xdg_activation_v1_get_activation_token(xdg_activation);
 
   // Addref aWindow to avoid potential release untill we get token_done
