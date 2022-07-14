@@ -99,6 +99,24 @@ static bool GetPrefSetDefaultBrowserUserChoice() {
       .valueOr(false);
 }
 
+static bool SetNeverShowNotificationAgain() {
+  // Unprefixed because, if someone asks not to be shown the message again, they
+  // don't want to say that once per installation.
+  return !RegistrySetValueBool(IsPrefixed::Unprefixed,
+                               L"NeverShowNotificationAgain", true)
+              .isErr();
+}
+
+static bool GetNeverShowNotificationAgain() {
+  // We only ever store a true value, so no value stored is equivalent to false.
+  // But, on error, err on the side of caution rather than potentially showing
+  // a message to someone who asked never to see on again.
+  return RegistryGetValueBool(IsPrefixed::Unprefixed,
+                              L"NeverShowNotificationAgain")
+      .unwrapOr(mozilla::Some(true))
+      .valueOr(false);
+}
+
 struct ToastStrings {
   mozilla::UniquePtr<wchar_t[]> text1;
   mozilla::UniquePtr<wchar_t[]> text2;
@@ -379,6 +397,9 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
         // SetFollowupNotificationRequestTime, there will be no followup
         // notification.
         activitiesPerformed.action = NotificationAction::DismissedByButton;
+        if (!mIsLocalizedNotification) {
+          SetNeverShowNotificationAgain();
+        }
       }
     } else if ((actionIndex == 1 && !mIsLocalizedNotification) ||
                (actionIndex == 0 && mIsLocalizedNotification)) {
@@ -612,6 +633,11 @@ NotificationActivities MaybeShowNotification(
   if (!mozilla::IsWin10OrLater()) {
     // Notifications aren't shown in versions prior to Windows 10 because the
     // notification API we want isn't available.
+    return activitiesPerformed;
+  }
+
+  bool neverShowNotificationAgain = GetNeverShowNotificationAgain();
+  if (neverShowNotificationAgain) {
     return activitiesPerformed;
   }
 
