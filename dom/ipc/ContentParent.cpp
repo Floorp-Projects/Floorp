@@ -1632,9 +1632,14 @@ void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
 /*static */
 void ContentParent::BroadcastMediaCodecsSupportedUpdate(
     RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported) {
-  sCodecsSupported[aLocation] = aSupported;
+  // Merge incoming codec support with existing support list
+  media::MCSInfo::AddSupport(aSupported);
+  auto support = media::MCSInfo::GetSupport();
+
+  // Update processes
+  sCodecsSupported[aLocation] = support;
   for (auto* cp : AllProcesses(eAll)) {
-    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
+    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, support);
   }
 }
 
