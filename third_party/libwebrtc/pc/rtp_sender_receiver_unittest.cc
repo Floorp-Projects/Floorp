@@ -181,9 +181,6 @@ class RtpSenderReceiverTest
 
     voice_channel_->SetRtpTransport(nullptr);
     video_channel_->SetRtpTransport(nullptr);
-
-    channel_manager_->DestroyChannel(voice_channel_);
-    channel_manager_->DestroyChannel(video_channel_);
   }
 
   std::unique_ptr<webrtc::RtpTransportInternal> CreateDtlsSrtpTransport() {
@@ -533,8 +530,8 @@ class RtpSenderReceiverTest
   cricket::FakeMediaEngine* media_engine_;
   std::unique_ptr<cricket::ChannelManager> channel_manager_;
   cricket::FakeCall fake_call_;
-  cricket::VoiceChannel* voice_channel_;
-  cricket::VideoChannel* video_channel_;
+  std::unique_ptr<cricket::VoiceChannel> voice_channel_;
+  std::unique_ptr<cricket::VideoChannel> video_channel_;
   cricket::FakeVoiceMediaChannel* voice_media_channel_;
   cricket::FakeVideoMediaChannel* video_media_channel_;
   rtc::scoped_refptr<AudioRtpSender> audio_rtp_sender_;

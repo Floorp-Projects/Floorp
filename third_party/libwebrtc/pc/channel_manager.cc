@@ -63,8 +63,6 @@ ChannelManager::~ChannelManager() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
     RTC_DCHECK_RUN_ON(worker_thread_);
-    RTC_DCHECK(voice_channels_.empty());
-    RTC_DCHECK(video_channels_.empty());
     // While `media_engine_` is const throughout the ChannelManager's lifetime,
     // it requires destruction to happen on the worker thread. Instead of
     // marking the pointer as non-const, we live with this const_cast<> in the
@@ -151,7 +149,7 @@ ChannelManager::GetSupportedVideoRtpHeaderExtensions() const {
   return media_engine_->video().GetRtpHeaderExtensions();
 }
 
-VoiceChannel* ChannelManager::CreateVoiceChannel(
+std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(
     webrtc::Call* call,
     const MediaConfig& media_config,
     const std::string& mid,
@@ -164,10 +162,11 @@ VoiceChannel* ChannelManager::CreateVoiceChannel(
   // PeerConnection and add the expectation that we're already on the right
   // thread.
   if (!worker_thread_->IsCurrent()) {
-    return worker_thread_->Invoke<VoiceChannel*>(RTC_FROM_HERE, [&] {
-      return CreateVoiceChannel(call, media_config, mid, srtp_required,
-                                crypto_options, options);
-    });
+    return worker_thread_->Invoke<std::unique_ptr<VoiceChannel>>(
+        RTC_FROM_HERE, [&] {
+          return CreateVoiceChannel(call, media_config, mid, srtp_required,
+                                    crypto_options, options);
+        });
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
@@ -183,19 +182,10 @@ VoiceChannel* ChannelManager::CreateVoiceChannel(
       absl::WrapUnique(media_channel), mid, srtp_required, crypto_options,
       &ssrc_generator_);
 
-  VoiceChannel* voice_channel_ptr = voice_channel.get();
-  voice_channels_.push_back(std::move(voice_channel));
-  return voice_channel_ptr;
+  return voice_channel;
 }
 
-void ChannelManager::DestroyVoiceChannel(VoiceChannel* channel) {
-  TRACE_EVENT0("webrtc", "ChannelManager::DestroyVoiceChannel");
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  voice_channels_.erase(absl::c_find_if(
-      voice_channels_, [&](const auto& p) { return p.get() == channel; }));
-}
-
-VideoChannel* ChannelManager::CreateVideoChannel(
+std::unique_ptr<VideoChannel> ChannelManager::CreateVideoChannel(
     webrtc::Call* call,
     const MediaConfig& media_config,
     const std::string& mid,
@@ -209,11 +199,12 @@ VideoChannel* ChannelManager::CreateVideoChannel(
   // PeerConnection and add the expectation that we're already on the right
   // thread.
   if (!worker_thread_->IsCurrent()) {
-    return worker_thread_->Invoke<VideoChannel*>(RTC_FROM_HERE, [&] {
-      return CreateVideoChannel(call, media_config, mid, srtp_required,
-                                crypto_options, options,
-                                video_bitrate_allocator_factory);
-    });
+    return worker_thread_->Invoke<std::unique_ptr<VideoChannel>>(
+        RTC_FROM_HERE, [&] {
+          return CreateVideoChannel(call, media_config, mid, srtp_required,
+                                    crypto_options, options,
+                                    video_bitrate_allocator_factory);
+        });
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
@@ -230,37 +221,7 @@ VideoChannel* ChannelManager::CreateVideoChannel(
       absl::WrapUnique(media_channel), mid, srtp_required, crypto_options,
       &ssrc_generator_);
 
-  VideoChannel* video_channel_ptr = video_channel.get();
-  video_channels_.push_back(std::move(video_channel));
-  return video_channel_ptr;
-}
-
-void ChannelManager::DestroyVideoChannel(VideoChannel* channel) {
-  TRACE_EVENT0("webrtc", "ChannelManager::DestroyVideoChannel");
-  RTC_DCHECK_RUN_ON(worker_thread_);
-
-  video_channels_.erase(absl::c_find_if(
-      video_channels_, [&](const auto& p) { return p.get() == channel; }));
-}
-
-void ChannelManager::DestroyChannel(ChannelInterface* channel) {
-  RTC_DCHECK(channel);
-
-  if (!worker_thread_->IsCurrent()) {
-    // TODO(tommi): Do this asynchronously when we have a way to make sure that
-    // the call to DestroyChannel runs before ~Call() runs, which today happens
-    // inside an Invoke from the signaling thread in PeerConnectin::Close().
-    worker_thread_->Invoke<void>(RTC_FROM_HERE,
-                                 [&] { DestroyChannel(channel); });
-    return;
-  }
-
-  if (channel->media_type() == MEDIA_TYPE_AUDIO) {
-    DestroyVoiceChannel(static_cast<VoiceChannel*>(channel));
-  } else {
-    RTC_DCHECK_EQ(channel->media_type(), MEDIA_TYPE_VIDEO);
-    DestroyVideoChannel(static_cast<VideoChannel*>(channel));
-  }
+  return video_channel;
 }
 
 bool ChannelManager::StartAecDump(webrtc::FileWrapper file,

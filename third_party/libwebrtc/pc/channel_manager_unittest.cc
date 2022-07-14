@@ -69,19 +69,20 @@ class ChannelManagerTest : public ::testing::Test {
 
   void TestCreateDestroyChannels(webrtc::RtpTransportInternal* rtp_transport) {
     RTC_DCHECK_RUN_ON(worker_);
-    cricket::VoiceChannel* voice_channel = cm_->CreateVoiceChannel(
-        &fake_call_, cricket::MediaConfig(), cricket::CN_AUDIO,
-        kDefaultSrtpRequired, webrtc::CryptoOptions(), AudioOptions());
+    std::unique_ptr<cricket::VoiceChannel> voice_channel =
+        cm_->CreateVoiceChannel(&fake_call_, cricket::MediaConfig(),
+                                cricket::CN_AUDIO, kDefaultSrtpRequired,
+                                webrtc::CryptoOptions(), AudioOptions());
     ASSERT_TRUE(voice_channel != nullptr);
 
-    cricket::VideoChannel* video_channel = cm_->CreateVideoChannel(
-        &fake_call_, cricket::MediaConfig(), cricket::CN_VIDEO,
-        kDefaultSrtpRequired, webrtc::CryptoOptions(), VideoOptions(),
-        video_bitrate_allocator_factory_.get());
+    std::unique_ptr<cricket::VideoChannel> video_channel =
+        cm_->CreateVideoChannel(&fake_call_, cricket::MediaConfig(),
+                                cricket::CN_VIDEO, kDefaultSrtpRequired,
+                                webrtc::CryptoOptions(), VideoOptions(),
+                                video_bitrate_allocator_factory_.get());
     ASSERT_TRUE(video_channel != nullptr);
-
-    cm_->DestroyChannel(video_channel);
-    cm_->DestroyChannel(voice_channel);
+    // Destruction is tested by having the owning pointers
+    // go out of scope.
   }
 
   std::unique_ptr<rtc::Thread> network_;
