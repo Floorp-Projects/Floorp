@@ -513,7 +513,10 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual bool DoAction(uint8_t aIndex) const override;
 
-  virtual KeyBinding AccessKey() const override;
+  /**
+   * Return access key, such as Alt+D.
+   */
+  virtual KeyBinding AccessKey() const;
 
   /**
    * Return global keyboard shortcut for default action, such as Ctrl+O for
@@ -1072,6 +1075,60 @@ NS_DEFINE_STATIC_IID_ACCESSOR(LocalAccessible, NS_ACCESSIBLE_IMPL_IID)
 inline LocalAccessible* Accessible::AsLocal() {
   return IsLocal() ? static_cast<LocalAccessible*>(this) : nullptr;
 }
+
+/**
+ * Represent key binding associated with accessible (such as access key and
+ * global keyboard shortcuts).
+ */
+class KeyBinding {
+ public:
+  /**
+   * Modifier mask values.
+   */
+  static const uint32_t kShift = 1;
+  static const uint32_t kControl = 2;
+  static const uint32_t kAlt = 4;
+  static const uint32_t kMeta = 8;
+  static const uint32_t kOS = 16;
+
+  static uint32_t AccelModifier();
+
+  KeyBinding() : mKey(0), mModifierMask(0) {}
+  KeyBinding(uint32_t aKey, uint32_t aModifierMask)
+      : mKey(aKey), mModifierMask(aModifierMask) {}
+
+  inline bool IsEmpty() const { return !mKey; }
+  inline uint32_t Key() const { return mKey; }
+  inline uint32_t ModifierMask() const { return mModifierMask; }
+
+  enum Format { ePlatformFormat, eAtkFormat };
+
+  /**
+   * Return formatted string for this key binding depending on the given format.
+   */
+  inline void ToString(nsAString& aValue,
+                       Format aFormat = ePlatformFormat) const {
+    aValue.Truncate();
+    AppendToString(aValue, aFormat);
+  }
+  inline void AppendToString(nsAString& aValue,
+                             Format aFormat = ePlatformFormat) const {
+    if (mKey) {
+      if (aFormat == ePlatformFormat) {
+        ToPlatformFormat(aValue);
+      } else {
+        ToAtkFormat(aValue);
+      }
+    }
+  }
+
+ private:
+  void ToPlatformFormat(nsAString& aValue) const;
+  void ToAtkFormat(nsAString& aValue) const;
+
+  uint32_t mKey;
+  uint32_t mModifierMask;
+};
 
 }  // namespace a11y
 }  // namespace mozilla

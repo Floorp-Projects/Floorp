@@ -9,11 +9,9 @@
 #include "LocalAccessible-inl.h"
 #include "nsMai.h"
 #include "mozilla/Likely.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "RemoteAccessible.h"
 #include "nsString.h"
 
-using namespace mozilla;
 using namespace mozilla::a11y;
 
 extern "C" {
@@ -60,15 +58,14 @@ static const gchar* getActionNameCB(AtkAction* aAction, gint aActionIndex) {
 }
 
 static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aAction));
-  if (!acc) {
-    return nullptr;
-  }
   nsAutoString keyBindingsStr;
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  AccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (acc) {
     AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+    proxy->AtkKeyBinding(keyBindingsStr);
   } else {
-    acc->AsRemote()->AtkKeyBinding(keyBindingsStr);
+    return nullptr;
   }
 
   return AccessibleWrap::ReturnString(keyBindingsStr);
