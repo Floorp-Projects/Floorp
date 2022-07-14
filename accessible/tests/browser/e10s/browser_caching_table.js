@@ -205,6 +205,7 @@ addAccessibleTask(
   `
 <table id="layout"><tr><td>a</td></tr></table>
 <table id="data"><tr><th>a</th></tr></table>
+<table id="mutate"><tr><td>a</td><td>b</td></tr></table>
   `,
   async function(browser, docAcc) {
     const layout = findAccessibleChildByID(docAcc, "layout", [
@@ -213,6 +214,21 @@ addAccessibleTask(
     testAttrs(layout, { "layout-guess": "true" }, true);
     const data = findAccessibleChildByID(docAcc, "data", [nsIAccessibleTable]);
     testAbsentAttrs(data, { "layout-guess": "true" });
+    const mutate = findAccessibleChildByID(docAcc, "mutate");
+    testAttrs(mutate, { "layout-guess": "true" }, true);
+    info("mutate: Adding 5 rows");
+    let reordered = waitForEvent(EVENT_REORDER, mutate);
+    await invokeContentTask(browser, [], () => {
+      const frag = content.document.createDocumentFragment();
+      for (let r = 0; r < 6; ++r) {
+        const tr = content.document.createElement("tr");
+        tr.innerHTML = "<td>a</td><td>b</td>";
+        frag.append(tr);
+      }
+      content.document.getElementById("mutate").tBodies[0].append(frag);
+    });
+    await reordered;
+    testAbsentAttrs(mutate, { "layout-guess": "true" });
   },
   {
     chrome: true,
