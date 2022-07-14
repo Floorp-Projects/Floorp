@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ScriptLoadContext.h"
+#include "mozilla/dom/ScriptLoadInfo.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -134,6 +135,11 @@ mozilla::loader::ComponentLoadContext*
 ScriptLoadRequest::GetComponentLoadContext() {
   MOZ_ASSERT(mLoadContext);
   return mLoadContext->AsComponentContext();
+}
+
+mozilla::dom::ScriptLoadInfo* ScriptLoadRequest::GetWorkerLoadContext() {
+  MOZ_ASSERT(mLoadContext);
+  return mLoadContext->AsWorkerContext();
 }
 
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {

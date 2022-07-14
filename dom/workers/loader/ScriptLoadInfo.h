@@ -13,6 +13,7 @@
 #include "mozilla/dom/Promise.h"
 #include "js/loader/ScriptKind.h"
 #include "js/loader/ScriptLoadRequest.h"
+#include "js/loader/LoadContextBase.h"
 
 class nsIReferrerInfo;
 class nsIURI;
@@ -26,9 +27,9 @@ namespace workerinternals::loader {
 class CacheCreator;
 }
 
-class ScriptLoadInfo : public JS::loader::ScriptLoadRequest {
+class ScriptLoadInfo : public JS::loader::LoadContextBase {
  public:
-  ScriptLoadInfo(nsIURI* aURI, JS::loader::ScriptFetchOptions* aFetchOptions);
+  explicit ScriptLoadInfo(const nsString& aURL);
 
   ~ScriptLoadInfo();
 

@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/loader/ComponentModuleLoader.h"
+#include "mozilla/dom/ScriptLoadInfo.h"
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ScriptLoadRequest.h"
 
@@ -51,6 +52,11 @@ mozilla::dom::ScriptLoadContext* LoadContextBase::AsWindowContext() {
 mozilla::loader::ComponentLoadContext* LoadContextBase::AsComponentContext() {
   MOZ_ASSERT(IsComponentContext());
   return static_cast<mozilla::loader::ComponentLoadContext*>(this);
+}
+
+mozilla::dom::ScriptLoadInfo* LoadContextBase::AsWorkerContext() {
+  MOZ_ASSERT(IsWorkerContext());
+  return static_cast<mozilla::dom::ScriptLoadInfo*>(this);
 }
 
 }  // namespace JS::loader

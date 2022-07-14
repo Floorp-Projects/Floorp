@@ -78,7 +78,8 @@ class CacheLoadHandler final : public PromiseNativeHandler,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-  CacheLoadHandler(WorkerPrivate* aWorkerPrivate, ScriptLoadInfo* aRequest,
+  CacheLoadHandler(WorkerPrivate* aWorkerPrivate,
+                   JS::loader::ScriptLoadRequest* aRequest,
                    bool aIsWorkerScript, WorkerScriptLoader* aLoader);
 
   void Fail(nsresult aRv);
@@ -102,7 +103,7 @@ class CacheLoadHandler final : public PromiseNativeHandler,
                                  const nsACString& aReferrerPolicyHeaderValue);
   void DataReceived();
 
-  ScriptLoadInfo* mRequest;
+  ScriptLoadInfo* mLoadContext;
   const RefPtr<WorkerScriptLoader> mLoader;
   WorkerPrivate* const mWorkerPrivate;
   const bool mIsWorkerScript;
@@ -193,11 +194,8 @@ class CachePromiseHandler final : public PromiseNativeHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  CachePromiseHandler(WorkerScriptLoader* aLoader, ScriptLoadInfo* aRequest)
-      : mLoader(aLoader), mRequest(aRequest) {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(mLoader);
-  }
+  CachePromiseHandler(WorkerScriptLoader* aLoader,
+                      JS::loader::ScriptLoadRequest* aRequest);
 
   virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                 ErrorResult& aRv) override;
@@ -209,7 +207,7 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   ~CachePromiseHandler() { AssertIsOnMainThread(); }
 
   RefPtr<WorkerScriptLoader> mLoader;
-  ScriptLoadInfo* mRequest;
+  ScriptLoadInfo* mLoadContext;
 };
 
 }  // namespace workerinternals::loader
