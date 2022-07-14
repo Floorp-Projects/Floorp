@@ -73,7 +73,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
 
   cricket::FakeVideoRenderer *video_renderer = new cricket::FakeVideoRenderer();
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(video_renderer, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -105,7 +105,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
 
   cricket::FakeVideoRenderer *video_renderer = new cricket::FakeVideoRenderer();
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(video_renderer, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(912, 514, 30);
@@ -135,7 +135,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
 
   cricket::FakeVideoRenderer *video_renderer = new cricket::FakeVideoRenderer();
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(video_renderer, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -188,7 +188,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -224,7 +224,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -260,7 +260,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -305,7 +305,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(480, 270, 30);
@@ -349,7 +349,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -393,7 +393,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -426,7 +426,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);
@@ -458,7 +458,7 @@ class ObjCCallbackVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
   });
 
   const rtc::VideoSinkWants video_sink_wants;
-  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source;
+  rtc::VideoSourceInterface<webrtc::VideoFrame> *video_source_interface = _video_source.get();
   video_source_interface->AddOrUpdateSink(&callback_video_sink, video_sink_wants);
 
   _video_source->OnOutputFormatRequest(640, 360, 30);

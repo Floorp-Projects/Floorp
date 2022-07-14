@@ -25,7 +25,8 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> ObjCToNativeVideoCapturer(
   rtc::scoped_refptr<webrtc::ObjCVideoTrackSource> objc_video_track_source =
       rtc::make_ref_counted<webrtc::ObjCVideoTrackSource>(adapter);
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> video_source =
-      webrtc::CreateVideoTrackSourceProxy(signaling_thread, worker_thread, objc_video_track_source);
+      webrtc::CreateVideoTrackSourceProxy(
+          signaling_thread, worker_thread, objc_video_track_source.get());
 
   objc_video_capturer.delegate = adapter;
 

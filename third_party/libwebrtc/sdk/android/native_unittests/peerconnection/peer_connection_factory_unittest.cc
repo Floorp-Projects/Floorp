@@ -67,7 +67,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> CreateTestPCF(
   RTC_LOG(LS_INFO) << "Media engine created: " << pcf_deps.media_engine.get();
 
   auto factory = CreateModularPeerConnectionFactory(std::move(pcf_deps));
-  RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << factory;
+  RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << factory.get();
   RTC_CHECK(factory) << "Failed to create the peer connection factory; "
                         "WebRTC/libjingle init likely failed on this device";
 

@@ -30,8 +30,7 @@
   NSParameterAssert(trackId.length);
   std::string nativeId = [NSString stdStringForString:trackId];
   rtc::scoped_refptr<webrtc::VideoTrackInterface> track =
-      factory.nativeFactory->CreateVideoTrack(nativeId,
-                                              source.nativeVideoSource);
+      factory.nativeFactory->CreateVideoTrack(nativeId, source.nativeVideoSource.get());
   if (self = [self initWithFactory:factory nativeTrack:track type:RTCMediaStreamTrackTypeVideo]) {
     _source = source;
   }

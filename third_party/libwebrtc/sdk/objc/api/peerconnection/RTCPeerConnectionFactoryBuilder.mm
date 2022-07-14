@@ -38,7 +38,7 @@
                           nativeAudioDecoderFactory:_audioDecoderFactory
                           nativeVideoEncoderFactory:std::move(_videoEncoderFactory)
                           nativeVideoDecoderFactory:std::move(_videoDecoderFactory)
-                                  audioDeviceModule:_audioDeviceModule
+                                  audioDeviceModule:_audioDeviceModule.get()
                               audioProcessingModule:_audioProcessingModule];
 }
 
