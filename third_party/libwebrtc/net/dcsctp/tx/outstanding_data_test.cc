@@ -28,6 +28,7 @@ using ::testing::MockFunction;
 using State = ::dcsctp::OutstandingData::State;
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::IsEmpty;
 using ::testing::Pair;
 using ::testing::Return;
 using ::testing::StrictMock;
@@ -203,8 +204,9 @@ TEST_F(OutstandingDataTest, NacksThreeTimesResultsInRetransmission) {
                           Pair(TSN(12), State::kAcked),              //
                           Pair(TSN(13), State::kAcked)));
 
-  EXPECT_THAT(buf_.GetChunksToBeRetransmitted(1000),
+  EXPECT_THAT(buf_.GetChunksToBeFastRetransmitted(1000),
               ElementsAre(Pair(TSN(10), _)));
+  EXPECT_THAT(buf_.GetChunksToBeRetransmitted(1000), IsEmpty());
 }
 
 TEST_F(OutstandingDataTest, NacksThreeTimesResultsInAbandoning) {
@@ -446,8 +448,9 @@ TEST_F(OutstandingDataTest, MustRetransmitBeforeGettingNackedAgain) {
   EXPECT_TRUE(buf_.has_data_to_be_retransmitted());
 
   // Now it's retransmitted.
-  EXPECT_THAT(buf_.GetChunksToBeRetransmitted(1000),
+  EXPECT_THAT(buf_.GetChunksToBeFastRetransmitted(1000),
               ElementsAre(Pair(TSN(10), _)));
+  EXPECT_THAT(buf_.GetChunksToBeRetransmitted(1000), IsEmpty());
 
   // And obviously lost, as it will get NACKed and abandoned.
   std::vector<SackChunk::GapAckBlock> gab7 = {SackChunk::GapAckBlock(2, 8)};

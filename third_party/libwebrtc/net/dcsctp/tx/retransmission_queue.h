@@ -229,8 +229,6 @@ class RetransmissionQueue {
   // If set, fast recovery is enabled until this TSN has been cumulative
   // acked.
   absl::optional<UnwrappedTSN> fast_recovery_exit_tsn_ = absl::nullopt;
-  // Indicates if the congestion algorithm is in fast retransmit.
-  bool is_in_fast_retransmit_ = false;
 
   // The send queue.
   SendQueue& send_queue_;
