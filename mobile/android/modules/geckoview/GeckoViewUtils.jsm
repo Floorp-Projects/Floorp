@@ -7,6 +7,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { clearTimeout, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 const lazy = {};
 
@@ -323,6 +326,54 @@ var GeckoViewUtils = {
       }
     } catch (e) {}
     return null;
+  },
+
+  /**
+   * Return promise for waiting for finishing PanZoomState.
+   *
+   * @param aWindow a DOM window.
+   * @return promise
+   */
+  waitForPanZoomState(aWindow) {
+    return new Promise((resolve, reject) => {
+      if (
+        !aWindow?.windowUtils.asyncPanZoomEnabled ||
+        !Services.prefs.getBoolPref("apz.zoom-to-focused-input.enabled")
+      ) {
+        // No zoomToFocusedInput.
+        resolve();
+        return;
+      }
+
+      let timerId = 0;
+
+      const panZoomState = (aSubject, aTopic, aData) => {
+        if (timerId != 0) {
+          // aWindow may be dead object now.
+          try {
+            clearTimeout(timerId);
+          } catch (e) {}
+          timerId = 0;
+        }
+
+        if (aData === "NOTHING") {
+          Services.obs.removeObserver(panZoomState, "PanZoom:StateChange");
+          resolve();
+        }
+      };
+
+      Services.obs.addObserver(panZoomState, "PanZoom:StateChange");
+
+      // "GeckoView:ZoomToInput" has the timeout as 500ms when window isn't
+      // resized (it means on-screen-keyboard is already shown).
+      // So after up to 500ms, APZ event is sent. So we need to wait for more
+      // 500ms.
+      timerId = setTimeout(() => {
+        // PanZoom state isn't changed. zoomToFocusedInput will return error.
+        Services.obs.removeObserver(panZoomState, "PanZoom:StateChange");
+        reject();
+      }, 600);
+    });
   },
 
   /**
