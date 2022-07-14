@@ -39,7 +39,7 @@ class MOZ_STACK_CLASS BaseIter {
   void* Context() const { return mContext; }
 
  protected:
-  BaseIter(JSContext* cx, JS::HandleObject object, void* context = nullptr)
+  BaseIter(JSContext* cx, JS::Handle<JSObject*> object, void* context = nullptr)
       : mCx(cx), mObject(object), mContext(context) {}
 
   const SelfType& Self() const { return *static_cast<const SelfType*>(this); }
@@ -47,7 +47,7 @@ class MOZ_STACK_CLASS BaseIter {
 
   JSContext* mCx;
 
-  JS::HandleObject mObject;
+  JS::Handle<JSObject*> mObject;
 
   void* mContext;
 };
@@ -63,7 +63,7 @@ class MOZ_STACK_CLASS BaseIterElem {
   uint32_t Length() const { return mIter.Length(); }
 
   JS::Value Value() {
-    JS::RootedValue value(mIter.mCx, JS::UndefinedValue());
+    JS::Rooted<JS::Value> value(mIter.mCx, JS::UndefinedValue());
 
     auto& self = Self();
     if (!self.GetValue(&value)) {
@@ -112,7 +112,8 @@ class MOZ_STACK_CLASS PropertyIter
   friend class BaseIterElem<PropertyIterElem, PropertyIter>;
 
  public:
-  PropertyIter(JSContext* cx, JS::HandleObject object, void* context = nullptr)
+  PropertyIter(JSContext* cx, JS::Handle<JSObject*> object,
+               void* context = nullptr)
       : BaseIter(cx, object, context), mIds(cx, JS::IdVector(cx)) {
     if (!JS_Enumerate(cx, object, &mIds)) {
       JS_ClearPendingException(cx);
@@ -167,7 +168,7 @@ class MOZ_STACK_CLASS PropertyIterElem
   JSContext* Cx() { return mIter.mCx; }
 
  protected:
-  bool GetValue(JS::MutableHandleValue value) {
+  bool GetValue(JS::MutableHandle<JS::Value> value) {
     MOZ_ASSERT(mIndex < Length());
     JS::Rooted<jsid> id(mIter.mCx, Id());
 
@@ -187,7 +188,7 @@ class MOZ_STACK_CLASS ArrayIter : public BaseIter<ArrayIter, ArrayIterElem> {
   friend class BaseIterElem<ArrayIterElem, ArrayIter>;
 
  public:
-  ArrayIter(JSContext* cx, JS::HandleObject object)
+  ArrayIter(JSContext* cx, JS::Handle<JSObject*> object)
       : BaseIter(cx, object), mLength(0) {
     bool isArray;
     if (!JS::IsArrayObject(cx, object, &isArray) || !isArray) {
@@ -217,7 +218,7 @@ class MOZ_STACK_CLASS ArrayIterElem
       : BaseIterElem(other.mIter, other.mIndex) {}
 
  protected:
-  bool GetValue(JS::MutableHandleValue value) {
+  bool GetValue(JS::MutableHandle<JS::Value> value) {
     MOZ_ASSERT(mIndex < Length());
     return JS_GetElement(mIter.mCx, mIter.mObject, mIndex, value);
   }

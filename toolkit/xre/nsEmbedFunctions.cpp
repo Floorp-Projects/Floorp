@@ -926,7 +926,7 @@ TestShellParent* GetOrCreateTestShellParent() {
 
 bool XRE_SendTestShellCommand(JSContext* aCx, JSString* aCommand,
                               JS::Value* aCallback) {
-  JS::RootedString cmd(aCx, aCommand);
+  JS::Rooted<JSString*> cmd(aCx, aCommand);
   TestShellParent* tsp = GetOrCreateTestShellParent();
   NS_ENSURE_TRUE(tsp, false);
 

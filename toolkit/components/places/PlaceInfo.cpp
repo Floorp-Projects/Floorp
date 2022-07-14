@@ -97,7 +97,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
   nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
   for (VisitsArray::size_type idx = 0; idx < mVisits.Length(); idx++) {
-    JS::RootedObject jsobj(aContext);
+    JS::Rooted<JSObject*> jsobj(aContext);
     nsresult rv = xpc->WrapNative(aContext, global, mVisits[idx],
                                   NS_GET_IID(mozIVisitInfo), jsobj.address());
     NS_ENSURE_SUCCESS(rv, rv);

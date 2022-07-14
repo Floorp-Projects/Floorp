@@ -160,19 +160,19 @@ nsresult NimbusFeatures::GetExperimentSlug(const nsACString& aFeatureId,
   if (JS_ParseJSON(cx, prefValue.BeginReading(), prefValue.Length(), &json) &&
       json.isObject()) {
     JS::Rooted<JSObject*> experimentJSON(cx, json.toObjectOrNull());
-    JS::RootedValue expSlugValue(cx);
+    JS::Rooted<JS::Value> expSlugValue(cx);
     if (!JS_GetProperty(cx, experimentJSON, "slug", &expSlugValue)) {
       return NS_ERROR_UNEXPECTED;
     }
     AssignJSString(cx, aExperimentSlug, expSlugValue.toString());
 
-    JS::RootedValue branchJSON(cx);
+    JS::Rooted<JS::Value> branchJSON(cx);
     if (!JS_GetProperty(cx, experimentJSON, "branch", &branchJSON) &&
         !branchJSON.isObject()) {
       return NS_ERROR_UNEXPECTED;
     }
     JS::Rooted<JSObject*> branchObj(cx, branchJSON.toObjectOrNull());
-    JS::RootedValue branchSlugValue(cx);
+    JS::Rooted<JS::Value> branchSlugValue(cx);
     if (!JS_GetProperty(cx, branchObj, "slug", &branchSlugValue)) {
       return NS_ERROR_UNEXPECTED;
     }
