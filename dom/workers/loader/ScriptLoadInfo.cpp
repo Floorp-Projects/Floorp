@@ -10,12 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-ScriptLoadInfo::ScriptLoadInfo(nsIURI* aURI,
-                               JS::loader::ScriptFetchOptions* aFetchOptions)
-    : JS::loader::ScriptLoadRequest(JS::loader::ScriptKind::eClassic, aURI,
-                                    aFetchOptions, SRIMetadata(),
-                                    nullptr, /* = aReferrer */
-                                    nullptr /* = aLoadContext*/) {
+ScriptLoadInfo::ScriptLoadInfo(const nsString& aURL)
+    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker), mURL(aURL) {
   MOZ_ASSERT(mScriptIsUTF8 == false, "set by member initializer");
   MOZ_ASSERT(mScriptLength == 0, "set by member initializer");
   mScript.mUTF16 = nullptr;

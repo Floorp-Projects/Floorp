@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_scriptloader_h__
 #define mozilla_dom_workers_scriptloader_h__
 
-#include "mozilla/dom/ScriptLoadInfo.h"
+#include "js/loader/ScriptLoadRequest.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
@@ -67,7 +67,7 @@ class NetworkLoadHandler;
  *    | new WorkerScriptLoader(..) |
  *    +----------------------------+
  *                |
- *                | Create the loader, along with the scriptLoadInfos
+ *                | Create the loader, along with the ScriptLoadRequests
  *                | call DispatchLoadScripts()
  *                | Create ScriptLoaderRunnable
  *                |
@@ -164,9 +164,9 @@ class WorkerScriptLoader final : public nsINamed {
  protected:
   nsIURI* GetBaseURI();
 
-  void MaybeExecuteFinishedScripts(ScriptLoadInfo* aRequest);
+  void MaybeExecuteFinishedScripts(ScriptLoadRequest* aRequest);
 
-  void MaybeMoveToLoadedList(ScriptLoadInfo* aRequest);
+  void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
   bool StoreCSP();
 
@@ -176,7 +176,7 @@ class WorkerScriptLoader final : public nsINamed {
     return mLoadingRequests.isEmpty() && mLoadedRequests.isEmpty();
   }
 
-  nsresult OnStreamComplete(ScriptLoadInfo* aRequest, nsresult aStatus);
+  nsresult OnStreamComplete(ScriptLoadRequest* aRequest, nsresult aStatus);
 
   // Are we loading the primary script, which is not a Debugger Script?
   bool IsMainWorkerScript() const {
@@ -200,7 +200,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   nsresult LoadScripts();
 
-  nsresult LoadScript(ScriptLoadInfo* aRequest);
+  nsresult LoadScript(ScriptLoadRequest* aRequest);
 
   void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                             bool aResult, bool aMutedError);
@@ -214,11 +214,11 @@ class WorkerScriptLoader final : public nsINamed {
     return NS_OK;
   }
 
-  void LoadingFinished(ScriptLoadInfo* aRequest, nsresult aRv);
+  void LoadingFinished(ScriptLoadRequest* aRequest, nsresult aRv);
 
-  void DispatchMaybeMoveToLoadedList(ScriptLoadInfo* aRequest);
+  void DispatchMaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
-  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo* aRequest);
+  bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
 };
