@@ -382,10 +382,7 @@ var SessionStartup = {
           this.willRestore() &&
             this._initialState &&
             this._initialState.windows &&
-            (!this.willRestoreAsCrashed()
-              ? this._initialState.windows.filter(w => !w._maybeDontRestoreTabs)
-              : this._initialState.windows
-            ).some(w => w.tabs.some(t => !t.pinned))
+            this._initialState.windows.some(w => w.tabs.some(t => !t.pinned))
         );
       });
     });
