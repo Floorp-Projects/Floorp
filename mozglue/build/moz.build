@@ -78,13 +78,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"]:
         "arm.h",
         "mips.h",
         "ppc.h",
-        "SSE.h",
     ]
-
-    if CONFIG["CPU_ARCH"].startswith("x86"):
-        SOURCES += [
-            "SSE.cpp",
-        ]
 
     if CONFIG["CPU_ARCH"] == "arm":
         SOURCES += [
