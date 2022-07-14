@@ -175,9 +175,9 @@
       'sdk_framework_unittests': {
         'mixins': ['xcode_parallelization']
       },
-      # TODO(bugs.webrtc.org/12244): Some tests are skipped on iOS simulator
-      # platforms because they fail or they are flaky.
-      #'sdk_unittests': {'mixins': ['xcode_parallelization']},
+      'sdk_unittests': {
+        'mixins': ['xcode_parallelization']
+      },
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
