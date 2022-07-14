@@ -410,8 +410,6 @@ class VideoChannel : public BaseChannel {
     return cricket::MEDIA_TYPE_VIDEO;
   }
 
-  void FillBitrateInfo(BandwidthEstimationInfo* bwe_info);
-
  private:
   // overrides from BaseChannel
   void UpdateMediaSendRecvState_w() RTC_RUN_ON(worker_thread()) override;
