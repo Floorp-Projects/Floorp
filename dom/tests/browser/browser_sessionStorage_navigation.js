@@ -22,6 +22,15 @@ add_task(async function() {
         `cross-origin site and then navigating back`
     );
 
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "privacy.partition.always_partition_third_party_non_cookie_storage",
+          false,
+        ],
+      ],
+    });
+
     BrowserTestUtils.loadURI(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser);
 
