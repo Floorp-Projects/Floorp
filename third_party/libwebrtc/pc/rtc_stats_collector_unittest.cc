@@ -2449,6 +2449,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   rtp_transport_channel_stats.ice_transport_stats.packets_received = 4;
   rtp_transport_channel_stats.ice_transport_stats
       .selected_candidate_pair_changes = 1;
+  rtp_transport_channel_stats.ice_transport_stats.ice_local_username_fragment =
+      "thelocalufrag";
   pc_->SetTransportStats(kTransportName, {rtp_transport_channel_stats});
 
   // Get stats without RTCP, an active connection or certificates.
@@ -2466,6 +2468,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   expected_rtp_transport.dtls_role = RTCDtlsRole::kUnknown;
   expected_rtp_transport.selected_candidate_pair_changes = 1;
   expected_rtp_transport.ice_role = RTCIceRole::kUnknown;
+  expected_rtp_transport.ice_local_username_fragment = "thelocalufrag";
 
   ASSERT_TRUE(report->Get(expected_rtp_transport.id()));
   EXPECT_EQ(
@@ -2491,6 +2494,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   rtcp_transport_channel_stats.ice_transport_stats.packets_sent = 1;
   rtcp_transport_channel_stats.ice_transport_stats.bytes_received = 42;
   rtcp_transport_channel_stats.ice_transport_stats.packets_received = 4;
+  rtcp_transport_channel_stats.ice_transport_stats.ice_local_username_fragment =
+      "thelocalufrag";
   pc_->SetTransportStats(kTransportName, {rtp_transport_channel_stats,
                                           rtcp_transport_channel_stats});
 
@@ -2509,6 +2514,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
   expected_rtcp_transport.dtls_role = RTCDtlsRole::kUnknown;
   expected_rtcp_transport.selected_candidate_pair_changes = 0;
   expected_rtcp_transport.ice_role = RTCIceRole::kUnknown;
+  expected_rtcp_transport.ice_local_username_fragment = "thelocalufrag";
 
   expected_rtp_transport.rtcp_transport_stats_id = expected_rtcp_transport.id();
   ASSERT_TRUE(report->Get(expected_rtp_transport.id()));
@@ -2610,6 +2616,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStatsWithCrypto) {
   rtp_transport_channel_stats.dtls_role = rtc::SSL_CLIENT;
   rtp_transport_channel_stats.ice_transport_stats.ice_role =
       cricket::ICEROLE_CONTROLLING;
+  rtp_transport_channel_stats.ice_transport_stats.ice_local_username_fragment =
+      "thelocalufrag";
   // 0x2F is TLS_RSA_WITH_AES_128_CBC_SHA according to IANA
   rtp_transport_channel_stats.ssl_cipher_suite = 0x2F;
   rtp_transport_channel_stats.srtp_crypto_suite = rtc::kSrtpAes128CmSha1_80;
@@ -2629,10 +2637,11 @@ TEST_F(RTCStatsCollectorTest, CollectRTCTransportStatsWithCrypto) {
   expected_rtp_transport.bytes_received = 0;
   expected_rtp_transport.packets_sent = 0;
   expected_rtp_transport.packets_received = 0;
+  expected_rtp_transport.ice_role = RTCIceRole::kControlling;
+  expected_rtp_transport.ice_local_username_fragment = "thelocalufrag";
   // Crypto parameters
   expected_rtp_transport.tls_version = "0203";
   expected_rtp_transport.dtls_role = RTCDtlsRole::kClient;
-  expected_rtp_transport.ice_role = RTCIceRole::kControlling;
   expected_rtp_transport.dtls_cipher = "TLS_RSA_WITH_AES_128_CBC_SHA";
   expected_rtp_transport.srtp_cipher = "AES_CM_128_HMAC_SHA1_80";
 

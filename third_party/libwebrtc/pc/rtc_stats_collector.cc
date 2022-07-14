@@ -2116,6 +2116,8 @@ void RTCStatsCollector::ProduceTransportStats_n(
           channel_stats.ice_transport_stats.selected_candidate_pair_changes;
       transport_stats->ice_role =
           IceRoleToRTCIceRole(channel_stats.ice_transport_stats.ice_role);
+      transport_stats->ice_local_username_fragment =
+          channel_stats.ice_transport_stats.ice_local_username_fragment;
       for (const cricket::ConnectionInfo& info :
            channel_stats.ice_transport_stats.connection_infos) {
         if (info.best_connection) {

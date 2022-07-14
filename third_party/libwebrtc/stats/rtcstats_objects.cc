@@ -1098,7 +1098,8 @@ WEBRTC_RTCSTATS_IMPL(RTCTransportStats, RTCStats, "transport",
     &dtls_role,
     &srtp_cipher,
     &selected_candidate_pair_changes,
-    &ice_role)
+    &ice_role,
+    &ice_local_username_fragment)
 // clang-format on
 
 RTCTransportStats::RTCTransportStats(const std::string& id,
@@ -1121,7 +1122,8 @@ RTCTransportStats::RTCTransportStats(std::string&& id, int64_t timestamp_us)
       dtls_role("dtlsRole"),
       srtp_cipher("srtpCipher"),
       selected_candidate_pair_changes("selectedCandidatePairChanges"),
-      ice_role("iceRole") {}
+      ice_role("iceRole"),
+      ice_local_username_fragment("iceLocalUsernameFragment") {}
 
 RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
     : RTCStats(other.id(), other.timestamp_us()),
@@ -1139,7 +1141,8 @@ RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
       dtls_role(other.dtls_role),
       srtp_cipher(other.srtp_cipher),
       selected_candidate_pair_changes(other.selected_candidate_pair_changes),
-      ice_role(other.ice_role) {}
+      ice_role(other.ice_role),
+      ice_local_username_fragment(other.ice_local_username_fragment) {}
 
 RTCTransportStats::~RTCTransportStats() {}
 
