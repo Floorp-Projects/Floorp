@@ -191,7 +191,7 @@ nsresult nsMathMLmmultiscriptsFrame::PlaceMultiScript(
   nscoord xHeight = fm->XHeight();
 
   nscoord oneDevPixel = fm->AppUnitsPerDevPixel();
-  gfxFont* mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
+  RefPtr<gfxFont> mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
   // scriptspace from TeX for extra spacing after sup/subscript
   nscoord scriptSpace;
   if (mathFont) {

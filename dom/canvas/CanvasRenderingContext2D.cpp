@@ -4245,9 +4245,9 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
 
   processor.mFontgrp
       ->UpdateUserFonts();  // ensure user font generation is current
+  RefPtr<gfxFont> font = processor.mFontgrp->GetFirstValidFont();
   const gfxFont::Metrics& fontMetrics =
-      processor.mFontgrp->GetFirstValidFont()->GetMetrics(
-          nsFontMetrics::eHorizontal);
+      font->GetMetrics(nsFontMetrics::eHorizontal);
 
   // calls bidi algo twice since it needs the full text width and the
   // bounding boxes before rendering anything

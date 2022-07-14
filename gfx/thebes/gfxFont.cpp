@@ -231,9 +231,9 @@ bool gfxFontCache::HashEntry::KeyEquals(const KeyTypePointer aKey) const {
            aKey->mUnicodeRangeMap->Equals(fontUnicodeRangeMap)));
 }
 
-gfxFont* gfxFontCache::Lookup(const gfxFontEntry* aFontEntry,
-                              const gfxFontStyle* aStyle,
-                              const gfxCharacterMap* aUnicodeRangeMap) {
+already_AddRefed<gfxFont> gfxFontCache::Lookup(
+    const gfxFontEntry* aFontEntry, const gfxFontStyle* aStyle,
+    const gfxCharacterMap* aUnicodeRangeMap) {
   MutexAutoLock lock(mMutex);
 
   Key key(aFontEntry, aStyle, aUnicodeRangeMap);
@@ -241,11 +241,19 @@ gfxFont* gfxFontCache::Lookup(const gfxFontEntry* aFontEntry,
 
   Telemetry::Accumulate(Telemetry::FONT_CACHE_HIT, entry != nullptr);
 
-  return entry ? entry->mFont : nullptr;
+  if (!entry) {
+    return nullptr;
+  }
+
+  RefPtr<gfxFont> font = entry->mFont;
+  if (font->GetExpirationState()->IsTracked()) {
+    RemoveObjectLocked(font, lock);
+  }
+  return font.forget();
 }
 
 void gfxFontCache::AddNew(gfxFont* aFont) {
-  gfxFont* oldFont;
+  nsTArray<gfxFont*> discard;
   {
     MutexAutoLock lock(mMutex);
 
@@ -255,28 +263,53 @@ void gfxFontCache::AddNew(gfxFont* aFont) {
     if (!entry) {
       return;
     }
-    oldFont = entry->mFont;
+    gfxFont* oldFont = entry->mFont;
     entry->mFont = aFont;
     // Assert that we can find the entry we just put in (this fails if the key
     // has a NaN float value in it, e.g. 'sizeAdjust').
     MOZ_ASSERT(entry == mFonts.GetEntry(key));
-  }
 
-  // If someone's asked us to replace an existing font entry, then that's a
-  // bit weird, but let it happen, and expire the old font if it's not used.
-  if (oldFont && oldFont->GetExpirationState()->IsTracked()) {
-    // if oldFont == aFont, recount should be > 0,
-    // so we shouldn't be here.
-    NS_ASSERTION(aFont != oldFont, "new font is tracked for expiry!");
-    NotifyExpired(oldFont);
+    // If someone's asked us to replace an existing font entry, then that's a
+    // bit weird, but let it happen, and expire the old font if it's not used.
+    if (oldFont && oldFont->GetExpirationState()->IsTracked()) {
+      // if oldFont == aFont, recount should be > 0,
+      // so we shouldn't be here.
+      NS_ASSERTION(aFont != oldFont, "new font is tracked for expiry!");
+      NotifyExpiredLocked(oldFont, lock);
+      discard = std::move(mTrackerDiscard);
+    }
   }
+  DestroyDiscard(discard);
 }
 
 void gfxFontCache::NotifyReleased(gfxFont* aFont) {
-  if (NS_FAILED(AddObject(aFont))) {
+  nsTArray<gfxFont*> discard;
+  {
+    MutexAutoLock lock(mMutex);
+
+    // Ensure nothing pulled a strong reference out of the cache during the last
+    // release. The only raw reference remaining should be in this cache, so
+    // if it remains zero while we hold the lock, we know it is safe to add it
+    // to the tracker.
+    //
+    // We may also be racing to reinsert the font into the cache, given another
+    // thread could have not only done the lookup, but also released it before
+    // we were able to process the first zero count release. If it is already
+    // tracked, then we have nothing to do.
+    if (aFont->GetRefCount() > 0 || aFont->GetExpirationState()->IsTracked()) {
+      return;
+    }
+
+    if (NS_SUCCEEDED(AddObjectLocked(aFont, lock))) {
+      return;
+    }
+
     // We couldn't track it for some reason. Kill it now.
-    DestroyFont(aFont);
+    DestroyFontLocked(aFont);
+    discard = std::move(mTrackerDiscard);
   }
+
+  DestroyDiscard(discard);
   // Note that we might have fonts that aren't in the hashtable, perhaps because
   // of OOM adding to the hashtable or because someone did an AddNew where
   // we already had a font. These fonts are added to the expiration tracker
@@ -285,15 +318,17 @@ void gfxFontCache::NotifyReleased(gfxFont* aFont) {
 }
 
 void gfxFontCache::NotifyExpiredLocked(gfxFont* aFont, const AutoLock& aLock) {
-  aFont->ClearCachedWords();
   RemoveObjectLocked(aFont, aLock);
   DestroyFontLocked(aFont);
 }
 
-void gfxFontCache::NotifyExpired(gfxFont* aFont) {
-  aFont->ClearCachedWords();
-  RemoveObject(aFont);
-  DestroyFont(aFont);
+void gfxFontCache::NotifyHandlerEnd() {
+  nsTArray<gfxFont*> discard;
+  {
+    MutexAutoLock lock(mMutex);
+    discard = std::move(mTrackerDiscard);
+  }
+  DestroyDiscard(discard);
 }
 
 void gfxFontCache::DestroyFontLocked(gfxFont* aFont) {
@@ -305,23 +340,38 @@ void gfxFontCache::DestroyFontLocked(gfxFont* aFont) {
   }
   NS_ASSERTION(aFont->GetRefCount() == 0,
                "Destroying with non-zero ref count!");
-  MutexAutoUnlock unlock(mMutex);
-  delete aFont;
+  mTrackerDiscard.AppendElement(aFont);
 }
 
-void gfxFontCache::DestroyFont(gfxFont* aFont) {
+void gfxFontCache::DestroyDiscard(nsTArray<gfxFont*>& aDiscard) {
+  for (auto* font : aDiscard) {
+    NS_ASSERTION(font->GetRefCount() == 0,
+                 "Destroying with non-zero ref count!");
+    font->ClearCachedWords();
+    delete font;
+  }
+  aDiscard.Clear();
+}
+
+void gfxFontCache::Flush() {
+  nsTArray<gfxFont*> discard;
   {
     MutexAutoLock lock(mMutex);
-    Key key(aFont->GetFontEntry(), aFont->GetStyle(),
-            aFont->GetUnicodeRangeMap());
-    HashEntry* entry = mFonts.GetEntry(key);
-    if (entry && entry->mFont == aFont) {
-      mFonts.RemoveEntry(entry);
-    }
+    mFonts.Clear();
+    AgeAllGenerationsLocked(lock);
+    discard = std::move(mTrackerDiscard);
   }
-  NS_ASSERTION(aFont->GetRefCount() == 0,
-               "Destroying with non-zero ref count!");
-  delete aFont;
+  DestroyDiscard(discard);
+}
+
+void gfxFontCache::AgeAllGenerations() {
+  nsTArray<gfxFont*> discard;
+  {
+    MutexAutoLock lock(mMutex);
+    AgeAllGenerationsLocked(lock);
+    discard = std::move(mTrackerDiscard);
+  }
+  DestroyDiscard(discard);
 }
 
 /*static*/
@@ -3581,7 +3631,7 @@ bool gfxFont::InitFakeSmallCapsRun(
                               aSyntheticUpper);
 }
 
-gfxFont* gfxFont::GetSmallCapsFont() const {
+already_AddRefed<gfxFont> gfxFont::GetSmallCapsFont() const {
   gfxFontStyle style(*GetStyle());
   style.size *= SMALL_CAPS_SCALE_FACTOR;
   style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
@@ -3589,7 +3639,8 @@ gfxFont* gfxFont::GetSmallCapsFont() const {
   return fe->FindOrMakeFont(&style, mUnicodeRangeMap);
 }
 
-gfxFont* gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel) const {
+already_AddRefed<gfxFont> gfxFont::GetSubSuperscriptFont(
+    int32_t aAppUnitsPerDevPixel) const {
   gfxFontStyle style(*GetStyle());
   style.AdjustForSubSuperscript(aAppUnitsPerDevPixel);
   gfxFontEntry* fe = GetFontEntry();

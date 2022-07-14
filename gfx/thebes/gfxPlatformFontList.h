@@ -275,11 +275,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily>>& aFamilyArray);
 
-  gfxFont* SystemFindFontForChar(nsPresContext* aPresContext, uint32_t aCh,
-                                 uint32_t aNextCh, Script aRunScript,
-                                 eFontPresentation aPresentation,
-                                 const gfxFontStyle* aStyle,
-                                 FontVisibility* aVisibility);
+  already_AddRefed<gfxFont> SystemFindFontForChar(
+      nsPresContext* aPresContext, uint32_t aCh, uint32_t aNextCh,
+      Script aRunScript, eFontPresentation aPresentation,
+      const gfxFontStyle* aStyle, FontVisibility* aVisibility);
 
   // Flags to control optional behaviors in FindAndAddFamilies. The sense
   // of the bit flags have been chosen such that the default parameter of
@@ -787,19 +786,20 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   }
 
   // returns default font for a given character, null otherwise
-  gfxFont* CommonFontFallback(nsPresContext* aPresContext, uint32_t aCh,
-                              uint32_t aNextCh, Script aRunScript,
-                              eFontPresentation aPresentation,
-                              const gfxFontStyle* aMatchStyle,
-                              FontFamily& aMatchedFamily) REQUIRES(mLock);
+  already_AddRefed<gfxFont> CommonFontFallback(nsPresContext* aPresContext,
+                                               uint32_t aCh, uint32_t aNextCh,
+                                               Script aRunScript,
+                                               eFontPresentation aPresentation,
+                                               const gfxFontStyle* aMatchStyle,
+                                               FontFamily& aMatchedFamily)
+      REQUIRES(mLock);
 
   // Search fonts system-wide for a given character, null if not found.
-  gfxFont* GlobalFontFallback(nsPresContext* aPresContext, uint32_t aCh,
-                              uint32_t aNextCh, Script aRunScript,
-                              eFontPresentation aPresentation,
-                              const gfxFontStyle* aMatchStyle,
-                              uint32_t& aCmapCount, FontFamily& aMatchedFamily)
-      REQUIRES(mLock);
+  already_AddRefed<gfxFont> GlobalFontFallback(
+      nsPresContext* aPresContext, uint32_t aCh, uint32_t aNextCh,
+      Script aRunScript, eFontPresentation aPresentation,
+      const gfxFontStyle* aMatchStyle, uint32_t& aCmapCount,
+      FontFamily& aMatchedFamily) REQUIRES(mLock);
 
   // Platform-specific implementation of global font fallback, if any;
   // this may return nullptr in which case the default cmap-based fallback
