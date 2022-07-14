@@ -16,6 +16,8 @@ var {
   callFunctionWithAsyncStack,
 } = require("devtools/shared/platform/stack");
 
+loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
+
 loader.lazyRequireGetter(
   this,
   "FileUtils",
@@ -665,12 +667,14 @@ function mainThreadFetch(
           ex.name === "NS_BASE_STREAM_CLOSED" &&
           uri instanceof Ci.nsIFileURL
         ) {
-          // Empty files cause NS_BASE_STREAM_CLOSED exception. Use IOUtils to
+          // Empty files cause NS_BASE_STREAM_CLOSED exception. Use OS.File to
           // differentiate between empty files and other errors (bug 1170864).
           // This can be removed when bug 982654 is fixed.
 
           uri.QueryInterface(Ci.nsIFileURL);
-          const result = IOUtils.read(uri.file.path).then(bytes => {
+          // Bug 1779574: IOUtils is not available in non-parent processes.
+          // eslint-disable-next-line mozilla/reject-osfile
+          const result = OS.File.read(uri.file.path).then(bytes => {
             // Convert the bytearray to a String.
             const decoder = new TextDecoder();
             const content = decoder.decode(bytes);
