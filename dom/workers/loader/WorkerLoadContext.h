@@ -60,7 +60,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
 
   RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
 
-  bool mLoadingFinished = false;
   bool mExecutionScheduled = false;
   bool mExecutionResult = false;
 
@@ -90,7 +89,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
 
   Maybe<bool> mMutedErrorFlag;
 
-  bool Finished() const { return mLoadingFinished && !mCachePromise; }
+  bool Finished() const { return mRequest->IsReadyToRun() && !mCachePromise; }
 };
 
 }  // namespace mozilla::dom
