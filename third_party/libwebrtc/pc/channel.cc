@@ -969,12 +969,6 @@ void VideoChannel::UpdateMediaSendRecvState_w() {
                    << ToString();
 }
 
-void VideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
-  RTC_DCHECK_RUN_ON(worker_thread());
-  VideoMediaChannel* mc = media_channel();
-  mc->FillBitrateInfo(bwe_info);
-}
-
 bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
                                      SdpType type,
                                      std::string& error_desc) {

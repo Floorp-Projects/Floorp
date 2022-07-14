@@ -37,7 +37,6 @@
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
-#include "pc/channel.h"
 #include "pc/channel_interface.h"
 #include "pc/data_channel_utils.h"
 #include "pc/rtp_receiver.h"
@@ -1035,21 +1034,21 @@ void StatsCollector::ExtractBweInfo() {
   // Fill in target encoder bitrate, actual encoder bitrate, rtx bitrate, etc.
   // TODO(holmer): Also fill this in for audio.
   auto transceivers = pc_->GetTransceiversInternal();
-  std::vector<cricket::VideoChannel*> video_channels;
+  std::vector<cricket::VideoMediaChannel*> video_media_channels;
   for (const auto& transceiver : transceivers) {
     if (transceiver->media_type() != cricket::MEDIA_TYPE_VIDEO) {
       continue;
     }
-    auto* video_channel =
-        static_cast<cricket::VideoChannel*>(transceiver->internal()->channel());
+    auto* video_channel = transceiver->internal()->channel();
     if (video_channel) {
-      video_channels.push_back(video_channel);
+      video_media_channels.push_back(static_cast<cricket::VideoMediaChannel*>(
+          video_channel->media_channel()));
     }
   }
 
-  if (!video_channels.empty()) {
+  if (!video_media_channels.empty()) {
     pc_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&] {
-      for (const auto& channel : video_channels) {
+      for (const auto& channel : video_media_channels) {
         channel->FillBitrateInfo(&bwe_info);
       }
     });
