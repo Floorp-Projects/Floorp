@@ -899,7 +899,6 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   NS_ASSERTION(loadContext->mExecutionScheduled, "Should be scheduled!");
-  NS_ASSERTION(!loadContext->mExecutionResult, "Should not have executed yet!");
 
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();
@@ -954,7 +953,6 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     mRv.StealExceptionFromJSContext(aCx);
     return false;
   }
-  loadContext->mExecutionResult = true;
   return true;
 }
 

@@ -61,7 +61,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
 
   bool mExecutionScheduled = false;
-  bool mExecutionResult = false;
 
   Maybe<nsString> mSourceMapURL;
 
