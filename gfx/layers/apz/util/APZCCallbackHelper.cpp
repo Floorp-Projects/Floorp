@@ -129,7 +129,9 @@ static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
   // request because we'll clobber that one, which is bad.
   bool scrollInProgress = APZCCallbackHelper::IsScrollInProgress(aFrame);
   if (!scrollInProgress) {
-    aFrame->ScrollToCSSPixelsForApz(targetScrollPosition);
+    ScrollSnapTargetIds snapTargetIds = aRequest.GetLastSnapTargetIds();
+    aFrame->ScrollToCSSPixelsForApz(targetScrollPosition,
+                                    std::move(snapTargetIds));
     geckoScrollPosition = CSSPoint::FromAppUnits(aFrame->GetScrollPosition());
     aSuccessOut = true;
   }
@@ -387,7 +389,9 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
         nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
     CSSPoint currentScrollPosition =
         CSSPoint::FromAppUnits(sf->GetScrollPosition());
-    sf->ScrollToCSSPixelsForApz(currentScrollPosition);
+    ScrollSnapTargetIds snapTargetIds = aRequest.GetLastSnapTargetIds();
+    sf->ScrollToCSSPixelsForApz(currentScrollPosition,
+                                std::move(snapTargetIds));
   }
 
   // Do this as late as possible since scrolling can flush layout. It also
