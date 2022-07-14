@@ -863,8 +863,6 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo* aLoadInfo) {
     }
   }
 
-  aLoadInfo->mChannel.swap(channel);
-
   return NS_OK;
 }
 
@@ -909,7 +907,6 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
                                         ScriptLoadInfo* aLoadInfo) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  NS_ASSERTION(!aLoadInfo->mChannel, "Should no longer have a channel!");
   NS_ASSERTION(aLoadInfo->mExecutionScheduled, "Should be scheduled!");
   NS_ASSERTION(!aLoadInfo->mExecutionResult, "Should not have executed yet!");
 

@@ -120,6 +120,7 @@ class WorkerScriptLoader final : public nsINamed {
   friend class ScriptExecutorRunnable;
   friend class CachePromiseHandler;
   friend class CacheLoadHandler;
+  friend class CacheCreator;
   friend class NetworkLoadHandler;
 
   WorkerPrivate* const mWorkerPrivate;
