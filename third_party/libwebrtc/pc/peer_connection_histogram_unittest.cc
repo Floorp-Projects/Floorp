@@ -107,7 +107,7 @@ class ObserverForUsageHistogramTest : public MockPeerConnectionObserver {
     candidate_target_ = other;
   }
 
-  bool HaveDataChannel() { return last_datachannel_; }
+  bool HaveDataChannel() { return last_datachannel_ != nullptr; }
 
   absl::optional<int> interesting_usage_detected() {
     return interesting_usage_detected_;

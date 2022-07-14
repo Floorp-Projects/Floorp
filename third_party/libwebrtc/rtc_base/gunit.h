@@ -31,11 +31,11 @@
 #define WAIT_(ex, timeout, res)                                   \
   do {                                                            \
     int64_t start = rtc::SystemTimeMillis();                      \
-    res = (ex);                                                   \
+    res = (ex) && true;                                           \
     while (!res && rtc::SystemTimeMillis() < start + (timeout)) { \
       rtc::Thread::Current()->ProcessMessages(0);                 \
       rtc::Thread::Current()->SleepMs(1);                         \
-      res = (ex);                                                 \
+      res = (ex) && true;                                         \
     }                                                             \
   } while (0)
 
