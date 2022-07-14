@@ -94,7 +94,8 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
 
   int max_framerate = 0;
 
-  absl::optional<std::string> scalability_mode = streams[0].scalability_mode;
+  absl::optional<ScalabilityMode> scalability_mode =
+      streams[0].scalability_mode;
   for (size_t i = 0; i < streams.size(); ++i) {
     SpatialLayer* sim_stream = &video_codec.simulcastStream[i];
     RTC_DCHECK_GT(streams[i].width, 0);

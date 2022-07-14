@@ -19,6 +19,7 @@
 #include "api/array_view.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "modules/video_coding/svc/scalability_structure_test_helpers.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "test/gmock.h"
@@ -47,6 +48,13 @@ struct SvcTestParam {
     return os << param.name;
   }
 
+  ScalabilityMode GetScalabilityMode() const {
+    absl::optional<ScalabilityMode> scalability_mode =
+        ScalabilityModeFromString(name);
+    RTC_CHECK(scalability_mode.has_value());
+    return *scalability_mode;
+  }
+
   std::string name;
   int num_temporal_units;
 };
@@ -56,9 +64,9 @@ class ScalabilityStructureTest : public TestWithParam<SvcTestParam> {};
 TEST_P(ScalabilityStructureTest,
        StaticConfigMatchesConfigReturnedByController) {
   std::unique_ptr<ScalableVideoController> controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   absl::optional<ScalableVideoController::StreamLayersConfig> static_config =
-      ScalabilityStructureConfig(GetParam().name);
+      ScalabilityStructureConfig(GetParam().GetScalabilityMode());
   ASSERT_THAT(controller, NotNull());
   ASSERT_NE(static_config, absl::nullopt);
   ScalableVideoController::StreamLayersConfig config =
@@ -78,7 +86,8 @@ TEST_P(ScalabilityStructureTest,
 TEST_P(ScalabilityStructureTest,
        NumberOfDecodeTargetsAndChainsAreInRangeAndConsistent) {
   FrameDependencyStructure structure =
-      CreateScalabilityStructure(GetParam().name)->DependencyStructure();
+      CreateScalabilityStructure(GetParam().GetScalabilityMode())
+          ->DependencyStructure();
   EXPECT_GT(structure.num_decode_targets, 0);
   EXPECT_LE(structure.num_decode_targets,
             DependencyDescriptor::kMaxDecodeTargets);
@@ -97,7 +106,8 @@ TEST_P(ScalabilityStructureTest,
 
 TEST_P(ScalabilityStructureTest, TemplatesAreSortedByLayerId) {
   FrameDependencyStructure structure =
-      CreateScalabilityStructure(GetParam().name)->DependencyStructure();
+      CreateScalabilityStructure(GetParam().GetScalabilityMode())
+          ->DependencyStructure();
   ASSERT_THAT(structure.templates, Not(IsEmpty()));
   const auto& first_templates = structure.templates.front();
   EXPECT_EQ(first_templates.spatial_id, 0);
@@ -128,7 +138,8 @@ TEST_P(ScalabilityStructureTest, TemplatesAreSortedByLayerId) {
 
 TEST_P(ScalabilityStructureTest, TemplatesMatchNumberOfDecodeTargetsAndChains) {
   FrameDependencyStructure structure =
-      CreateScalabilityStructure(GetParam().name)->DependencyStructure();
+      CreateScalabilityStructure(GetParam().GetScalabilityMode())
+          ->DependencyStructure();
   EXPECT_THAT(
       structure.templates,
       Each(AllOf(Field(&FrameDependencyTemplate::decode_target_indications,
@@ -139,7 +150,7 @@ TEST_P(ScalabilityStructureTest, TemplatesMatchNumberOfDecodeTargetsAndChains) {
 
 TEST_P(ScalabilityStructureTest, FrameInfoMatchesFrameDependencyStructure) {
   std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   FrameDependencyStructure structure = svc_controller->DependencyStructure();
   std::vector<GenericFrameInfo> frame_infos =
       ScalabilityStructureWrapper(*svc_controller)
@@ -158,7 +169,7 @@ TEST_P(ScalabilityStructureTest, FrameInfoMatchesFrameDependencyStructure) {
 
 TEST_P(ScalabilityStructureTest, ThereIsAPerfectTemplateForEachFrame) {
   std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   FrameDependencyStructure structure = svc_controller->DependencyStructure();
   std::vector<GenericFrameInfo> frame_infos =
       ScalabilityStructureWrapper(*svc_controller)
@@ -171,7 +182,7 @@ TEST_P(ScalabilityStructureTest, ThereIsAPerfectTemplateForEachFrame) {
 
 TEST_P(ScalabilityStructureTest, FrameDependsOnSameOrLowerLayer) {
   std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   std::vector<GenericFrameInfo> frame_infos =
       ScalabilityStructureWrapper(*svc_controller)
           .GenerateFrames(GetParam().num_temporal_units);
@@ -192,7 +203,7 @@ TEST_P(ScalabilityStructureTest, FrameDependsOnSameOrLowerLayer) {
 
 TEST_P(ScalabilityStructureTest, NoFrameDependsOnDiscardableOrNotPresent) {
   std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   std::vector<GenericFrameInfo> frame_infos =
       ScalabilityStructureWrapper(*svc_controller)
           .GenerateFrames(GetParam().num_temporal_units);
@@ -224,7 +235,7 @@ TEST_P(ScalabilityStructureTest, NoFrameDependsOnDiscardableOrNotPresent) {
 
 TEST_P(ScalabilityStructureTest, NoFrameDependsThroughSwitchIndication) {
   std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   FrameDependencyStructure structure = svc_controller->DependencyStructure();
   std::vector<GenericFrameInfo> frame_infos =
       ScalabilityStructureWrapper(*svc_controller)
@@ -277,7 +288,7 @@ TEST_P(ScalabilityStructureTest, NoFrameDependsThroughSwitchIndication) {
 
 TEST_P(ScalabilityStructureTest, ProduceNoFrameForDisabledLayers) {
   std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
+      CreateScalabilityStructure(GetParam().GetScalabilityMode());
   ScalableVideoController::StreamLayersConfig structure =
       svc_controller->StreamConfig();
 

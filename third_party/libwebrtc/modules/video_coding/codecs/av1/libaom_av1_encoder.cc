@@ -169,15 +169,16 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     RTC_LOG(LS_WARNING) << "Simulcast is not implemented by LibaomAv1Encoder.";
     return result;
   }
-  absl::string_view scalability_mode = encoder_settings_.ScalabilityMode();
-  if (scalability_mode.empty()) {
+  absl::optional<ScalabilityMode> scalability_mode =
+      encoder_settings_.GetScalabilityMode();
+  if (!scalability_mode.has_value()) {
     RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
-    scalability_mode = "L1T1";
+    scalability_mode = ScalabilityMode::kL1T1;
   }
-  svc_controller_ = CreateScalabilityStructure(scalability_mode);
+  svc_controller_ = CreateScalabilityStructure(*scalability_mode);
   if (svc_controller_ == nullptr) {
     RTC_LOG(LS_WARNING) << "Failed to set scalability mode "
-                        << scalability_mode;
+                        << static_cast<int>(*scalability_mode);
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 

@@ -107,6 +107,7 @@ rtc_library("libaom_av1_encoder_if_supported") {
   sources = [ "libaom_av1_encoder_supported.cc" ]
   deps = [
     "../../../../api/video_codecs:video_codecs_api",
+    "../../svc:scalability_mode_util",
     "../../svc:scalability_structures",
     "../../svc:scalable_video_controller",
   ]
@@ -147,6 +148,7 @@ if (rtc_include_tests) {
         "../../../../api/units:data_size",
         "../../../../api/units:time_delta",
         "../../../../api/video:video_frame",
+        "../../svc:scalability_mode_util",
         "../../svc:scalability_structures",
         "../../svc:scalable_video_controller",
       ]
