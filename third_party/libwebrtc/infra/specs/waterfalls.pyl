@@ -339,32 +339,6 @@
     },
   },
   {
-    'name': 'internal.tryserver.webrtc',
-    'mixins': [],
-    'machines': {
-      'ios_arm64_dbg': {
-        'mixins': [
-          'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
-          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
-        ],
-        'test_suites': {
-          'isolated_scripts': 'ios_device_tests',
-        },
-      },
-      'ios_arm64_rel': {
-        'mixins': [
-          'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
-          'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
-        ],
-        'test_suites': {
-          'isolated_scripts': 'ios_device_tests',
-        },
-      },
-    },
-  },
-  {
     'name': 'tryserver.webrtc',
     'mixins': [],
     'machines': {
