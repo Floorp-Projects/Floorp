@@ -612,13 +612,13 @@ webrtc_fuzzer_test("frame_buffer2_fuzzer") {
   ]
 }
 
-webrtc_fuzzer_test("frame_buffer3_fuzzer") {
-  sources = [ "frame_buffer3_fuzzer.cc" ]
+webrtc_fuzzer_test("frame_buffer_fuzzer") {
+  sources = [ "frame_buffer_fuzzer.cc" ]
   deps = [
     ":fuzz_data_helper",
     "../../api:array_view",
     "../../api/video:encoded_frame",
-    "../../modules/video_coding:frame_buffer",
+    "../../api/video:frame_buffer",
     "../../rtc_base:rtc_numerics",
     "../../test:scoped_key_value_config",
   ]
@@ -632,9 +632,7 @@ webrtc_fuzzer_test("field_trial_fuzzer") {
 
 webrtc_fuzzer_test("string_to_number_fuzzer") {
   sources = [ "string_to_number_fuzzer.cc" ]
-  deps = [
-    "../../rtc_base:stringutils",
-  ]
+  deps = [ "../../rtc_base:stringutils" ]
   seed_corpus = "corpora/string_to_number-corpus"
 }
 
@@ -670,9 +668,7 @@ webrtc_fuzzer_test("ssl_certificate_fuzzer") {
 
 webrtc_fuzzer_test("vp8_replay_fuzzer") {
   sources = [ "vp8_replay_fuzzer.cc" ]
-  deps = [
-    "utils:rtp_replayer",
-  ]
+  deps = [ "utils:rtp_replayer" ]
   seed_corpus = "corpora/rtpdump-corpus/vp8"
 }
 
@@ -703,8 +699,6 @@ if (rtc_build_libvpx) {
 
 webrtc_fuzzer_test("vp9_replay_fuzzer") {
   sources = [ "vp9_replay_fuzzer.cc" ]
-  deps = [
-    "utils:rtp_replayer",
-  ]
+  deps = [ "utils:rtp_replayer" ]
   seed_corpus = "corpora/rtpdump-corpus/vp9"
 }

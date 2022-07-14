@@ -1219,6 +1219,7 @@ if (rtc_include_tests) {
       "units:time_delta",
       "units:timestamp",
       "units:units_unittests",
+      "video:frame_buffer_unittest",
       "video:rtp_video_frame_assembler_unittests",
       "video:video_unittests",
     ]

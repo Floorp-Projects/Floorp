@@ -19,9 +19,9 @@
 #include "api/sequence_checker.h"
 #include "api/units/data_size.h"
 #include "api/video/encoded_frame.h"
+#include "api/video/frame_buffer.h"
 #include "api/video/video_content_type.h"
 #include "modules/video_coding/frame_buffer2.h"
-#include "modules/video_coding/frame_buffer3.h"
 #include "modules/video_coding/frame_helpers.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -175,7 +175,7 @@ Timestamp ReceiveTime(const EncodedFrame& frame) {
 }
 
 // Encapsulates use of the new frame buffer for use in VideoReceiveStream. This
-// behaves the same as the FrameBuffer2Proxy but uses frame_buffer3 instead.
+// behaves the same as the FrameBuffer2Proxy but uses frame_buffer instead.
 // Responsibilities from frame_buffer2, like stats, jitter and frame timing
 // accounting are moved into this pro
 class FrameBuffer3Proxy : public FrameBufferProxy {
