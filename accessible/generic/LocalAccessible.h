@@ -513,10 +513,7 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual bool DoAction(uint8_t aIndex) const override;
 
-  /**
-   * Return access key, such as Alt+D.
-   */
-  virtual KeyBinding AccessKey() const;
+  virtual KeyBinding AccessKey() const override;
 
   /**
    * Return global keyboard shortcut for default action, such as Ctrl+O for

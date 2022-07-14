@@ -211,3 +211,55 @@ addAccessibleTask(
     remoteIframe: !isWinNoCache,
   }
 );
+
+/**
+ * Test access key.
+ */
+addAccessibleTask(
+  `
+<button id="noKey">noKey</button>
+<button id="key" accesskey="a">key</button>
+  `,
+  async function(browser, docAcc) {
+    const noKey = findAccessibleChildByID(docAcc, "noKey");
+    is(noKey.accessKey, "", "noKey has no accesskey");
+    const key = findAccessibleChildByID(docAcc, "key");
+    is(key.accessKey, MAC ? "⌃⌥a" : "Alt+Shift+a", "key has correct accesskey");
+
+    info("Changing accesskey");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("key").accessKey = "b";
+    });
+    await untilCacheIs(
+      () => key.accessKey,
+      MAC ? "⌃⌥b" : "Alt+Shift+b",
+      "Correct accesskey after change"
+    );
+
+    info("Removing accesskey");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("key").removeAttribute("accesskey");
+    });
+    await untilCacheIs(
+      () => key.accessKey,
+      "",
+      "Empty accesskey after removal"
+    );
+
+    info("Adding accesskey");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("key").accessKey = "c";
+    });
+    await untilCacheIs(
+      () => key.accessKey,
+      MAC ? "⌃⌥c" : "Alt+Shift+c",
+      "Correct accesskey after addition"
+    );
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+    remoteIframe: !isWinNoCache,
+  }
+);
