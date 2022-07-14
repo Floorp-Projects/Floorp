@@ -1826,7 +1826,7 @@ static bool HasTerminalNewline(const nsTextFrame* aFrame) {
 static gfxFont::Metrics GetFirstFontMetrics(gfxFontGroup* aFontGroup,
                                             bool aVerticalMetrics) {
   if (!aFontGroup) return gfxFont::Metrics();
-  RefPtr<gfxFont> font = aFontGroup->GetFirstValidFont();
+  gfxFont* font = aFontGroup->GetFirstValidFont();
   return font->GetMetrics(aVerticalMetrics ? nsFontMetrics::eVertical
                                            : nsFontMetrics::eHorizontal);
 }
@@ -5646,11 +5646,10 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
     bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
     nsFontMetrics* fontMetrics = aProvider.GetFontMetrics();
-    RefPtr<gfxFont> font =
-        fontMetrics->GetThebesFontGroup()->GetFirstValidFont();
     const gfxFont::Metrics& metrics =
-        font->GetMetrics(useVerticalMetrics ? nsFontMetrics::eVertical
-                                            : nsFontMetrics::eHorizontal);
+        fontMetrics->GetThebesFontGroup()->GetFirstValidFont()->GetMetrics(
+            useVerticalMetrics ? nsFontMetrics::eVertical
+                               : nsFontMetrics::eHorizontal);
 
     params.defaultLineThickness = metrics.underlineSize;
     params.lineSize.height = ComputeDecorationLineThickness(
@@ -6584,8 +6583,7 @@ void nsTextFrame::PaintTextSelectionDecorations(
     }
   }
 
-  RefPtr<gfxFont> firstFont =
-      aParams.provider->GetFontGroup()->GetFirstValidFont();
+  gfxFont* firstFont = aParams.provider->GetFontGroup()->GetFirstValidFont();
   bool verticalRun = mTextRun->IsVertical();
   bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
   bool rightUnderline = useVerticalMetrics && IsUnderlineRight(*Style());
@@ -7548,7 +7546,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   nsRect givenRect = aRect;
 
   gfxFontGroup* fontGroup = GetInflatedFontGroupForFrame(this);
-  RefPtr<gfxFont> firstFont = fontGroup->GetFirstValidFont();
+  gfxFont* firstFont = fontGroup->GetFirstValidFont();
   WritingMode wm = GetWritingMode();
   bool verticalRun = wm.IsVertical();
   bool useVerticalMetrics = verticalRun && !wm.IsSideways();

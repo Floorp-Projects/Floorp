@@ -950,7 +950,7 @@ void gfxPlatformFontList::GetFontFamilyList(
   }
 }
 
-already_AddRefed<gfxFont> gfxPlatformFontList::SystemFindFontForChar(
+gfxFont* gfxPlatformFontList::SystemFindFontForChar(
     nsPresContext* aPresContext, uint32_t aCh, uint32_t aNextCh,
     Script aRunScript, eFontPresentation aPresentation,
     const gfxFontStyle* aStyle, FontVisibility* aVisibility) {
@@ -991,17 +991,17 @@ already_AddRefed<gfxFont> gfxPlatformFontList::SystemFindFontForChar(
   // search commonly available fonts
   bool common = true;
   FontFamily fallbackFamily;
-  RefPtr<gfxFont> candidate =
+  gfxFont* candidate =
       CommonFontFallback(aPresContext, aCh, aNextCh, aRunScript, aPresentation,
                          aStyle, fallbackFamily);
-  RefPtr<gfxFont> font;
+  gfxFont* font = nullptr;
   if (candidate) {
     if (aPresentation == eFontPresentation::Any) {
-      font = std::move(candidate);
+      font = candidate;
     } else {
       bool hasColorGlyph = candidate->HasColorGlyphFor(aCh, aNextCh);
       if (hasColorGlyph == PrefersColor(aPresentation)) {
-        font = std::move(candidate);
+        font = candidate;
       }
     }
   }
@@ -1018,7 +1018,10 @@ already_AddRefed<gfxFont> gfxPlatformFontList::SystemFindFontForChar(
     if (font && aPresentation != eFontPresentation::Any && candidate) {
       bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
       if (hasColorGlyph != PrefersColor(aPresentation)) {
-        font = std::move(candidate);
+        // We're discarding `font` and using `candidate` instead, so ensure
+        // `font` is known to the global cache expiration tracker.
+        RefPtr<gfxFont> autoRefDeref(font);
+        font = candidate;
       }
     }
   }
@@ -1063,12 +1066,12 @@ already_AddRefed<gfxFont> gfxPlatformFontList::SystemFindFontForChar(
   Telemetry::Accumulate(Telemetry::SYSTEM_FONT_FALLBACK_SCRIPT,
                         int(aRunScript) + 1);
 
-  return font.forget();
+  return font;
 }
 
 #define NUM_FALLBACK_FONTS 8
 
-already_AddRefed<gfxFont> gfxPlatformFontList::CommonFontFallback(
+gfxFont* gfxPlatformFontList::CommonFontFallback(
     nsPresContext* aPresContext, uint32_t aCh, uint32_t aNextCh,
     Script aRunScript, eFontPresentation aPresentation,
     const gfxFontStyle* aMatchStyle, FontFamily& aMatchedFamily) {
@@ -1082,20 +1085,19 @@ already_AddRefed<gfxFont> gfxPlatformFontList::CommonFontFallback(
   // If a color-emoji presentation is requested, we will check any font found
   // to see if it can provide this; if not, we'll remember it as a possible
   // candidate but search the remainder of the list for a better choice.
-  RefPtr<gfxFont> candidateFont;
+  gfxFont* candidateFont = nullptr;
   FontFamily candidateFamily;
-  auto check = [&](gfxFontEntry* aFontEntry,
-                   FontFamily aFamily) -> already_AddRefed<gfxFont> {
-    RefPtr<gfxFont> font = aFontEntry->FindOrMakeFont(aMatchStyle);
+  auto check = [&](gfxFontEntry* aFontEntry, FontFamily aFamily) -> gfxFont* {
+    gfxFont* font = aFontEntry->FindOrMakeFont(aMatchStyle);
     if (aPresentation < eFontPresentation::EmojiDefault ||
         font->HasColorGlyphFor(aCh, aNextCh)) {
       aMatchedFamily = aFamily;
-      return font.forget();
+      return font;
     }
     // We want a color glyph but this font only has monochrome; remember it
     // (unless we already have a candidate) but continue to search.
     if (!candidateFont) {
-      candidateFont = std::move(font);
+      candidateFont = font;
       candidateFamily = aFamily;
     }
     return nullptr;
@@ -1112,9 +1114,12 @@ already_AddRefed<gfxFont> gfxPlatformFontList::CommonFontFallback(
       // always do a potential sync initialization of the family?
       family->SearchAllFontsForChar(SharedFontList(), &data);
       if (data.mBestMatch) {
-        RefPtr<gfxFont> font = check(data.mBestMatch, FontFamily(family));
+        gfxFont* font = check(data.mBestMatch, FontFamily(family));
         if (font) {
-          return font.forget();
+          // Twiddle the refcount of any stored candidate (that we're not going
+          // to return after all) so that the cache gets a chance to drop it.
+          RefPtr<gfxFont> autoRefDeref(candidateFont);
+          return font;
         }
       }
     }
@@ -1127,9 +1132,10 @@ already_AddRefed<gfxFont> gfxPlatformFontList::CommonFontFallback(
       }
       fallback->FindFontForChar(&data);
       if (data.mBestMatch) {
-        RefPtr<gfxFont> font = check(data.mBestMatch, FontFamily(fallback));
+        gfxFont* font = check(data.mBestMatch, FontFamily(fallback));
         if (font) {
-          return font.forget();
+          RefPtr<gfxFont> autoRefDeref(candidateFont);
+          return font;
         }
       }
     }
@@ -1140,13 +1146,13 @@ already_AddRefed<gfxFont> gfxPlatformFontList::CommonFontFallback(
   // found.
   if (candidateFont) {
     aMatchedFamily = candidateFamily;
-    return candidateFont.forget();
+    return candidateFont;
   }
 
   return nullptr;
 }
 
-already_AddRefed<gfxFont> gfxPlatformFontList::GlobalFontFallback(
+gfxFont* gfxPlatformFontList::GlobalFontFallback(
     nsPresContext* aPresContext, uint32_t aCh, uint32_t aNextCh,
     Script aRunScript, eFontPresentation aPresentation,
     const gfxFontStyle* aMatchStyle, uint32_t& aCmapCount,
@@ -1162,28 +1168,32 @@ already_AddRefed<gfxFont> gfxPlatformFontList::GlobalFontFallback(
     if (fe) {
       if (aMatchedFamily.mIsShared) {
         if (IsVisibleToCSS(*aMatchedFamily.mShared, level)) {
-          RefPtr<gfxFont> font = fe->FindOrMakeFont(aMatchStyle);
+          gfxFont* font = fe->FindOrMakeFont(aMatchStyle);
           if (font) {
             if (aPresentation == eFontPresentation::Any) {
-              return font.forget();
+              return font;
             }
             bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
             if (hasColorGlyph == PrefersColor(aPresentation)) {
-              return font.forget();
+              return font;
             }
+            // If we don't use this font, we need to touch its refcount
+            // to trigger gfxFontCache expiration tracking.
+            RefPtr<gfxFont> autoRefDeref(font);
           }
         }
       } else {
         if (IsVisibleToCSS(*aMatchedFamily.mUnshared, level)) {
-          RefPtr<gfxFont> font = fe->FindOrMakeFont(aMatchStyle);
+          gfxFont* font = fe->FindOrMakeFont(aMatchStyle);
           if (font) {
             if (aPresentation == eFontPresentation::Any) {
-              return font.forget();
+              return font;
             }
             bool hasColorGlyph = font->HasColorGlyphFor(aCh, aNextCh);
             if (hasColorGlyph == PrefersColor(aPresentation)) {
-              return font.forget();
+              return font;
             }
+            RefPtr<gfxFont> autoRefDeref(font);
           }
         }
       }
