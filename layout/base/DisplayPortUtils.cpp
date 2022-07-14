@@ -187,36 +187,21 @@ CSSPoint DisplayPortMargins::ComputeAsyncTranslation(
   return mVisualOffset - asyncLayoutViewport.TopLeft();
 }
 
-static nsRect ApplyRectMultiplier(nsRect aRect, float aMultiplier) {
-  if (aMultiplier == 1.0f) {
-    return aRect;
-  }
-  float newWidth = aRect.width * aMultiplier;
-  float newHeight = aRect.height * aMultiplier;
-  float newX = aRect.x - ((newWidth - aRect.width) / 2.0f);
-  float newY = aRect.y - ((newHeight - aRect.height) / 2.0f);
-  // Rounding doesn't matter too much here, do a round-in
-  return nsRect(ceil(newX), ceil(newY), floor(newWidth), floor(newHeight));
-}
-
 static nsRect GetDisplayPortFromRectData(nsIContent* aContent,
-                                         DisplayPortPropertyData* aRectData,
-                                         float aMultiplier) {
+                                         DisplayPortPropertyData* aRectData) {
   // In the case where the displayport is set as a rect, we assume it is
   // already aligned and clamped as necessary. The burden to do that is
   // on the setter of the displayport. In practice very few places set the
-  // displayport directly as a rect (mostly tests). We still do need to
-  // expand it by the multiplier though.
-  return ApplyRectMultiplier(aRectData->mRect, aMultiplier);
+  // displayport directly as a rect (mostly tests).
+  return aRectData->mRect;
 }
 
 static nsRect GetDisplayPortFromMarginsData(
     nsIContent* aContent, DisplayPortMarginsPropertyData* aMarginsData,
-    float aMultiplier, const DisplayPortOptions& aOptions) {
+    const DisplayPortOptions& aOptions) {
   // In the case where the displayport is set via margins, we apply the margins
   // to a base rect. Then we align the expanded rect based on the alignment
-  // requested, further expand the rect by the multiplier, and finally, clamp it
-  // to the size of the scrollable rect.
+  // requested, and finally, clamp it to the size of the scrollable rect.
 
   nsRect base;
   if (nsRect* baseData = static_cast<nsRect*>(
@@ -230,9 +215,7 @@ static nsRect GetDisplayPortFromMarginsData(
   nsIFrame* frame = nsLayoutUtils::GetScrollFrameFromContent(aContent);
   if (!frame) {
     // Turns out we can't really compute it. Oops. We still should return
-    // something sane. Note that since we can't clamp the rect without a
-    // frame, we don't apply the multiplier either as it can cause the result
-    // to leak outside the scrollable area.
+    // something sane.
     NS_WARNING(
         "Attempting to get a displayport from a content with no primary "
         "frame!");
@@ -346,13 +329,6 @@ static nsRect GetDisplayPortFromMarginsData(
   // Convert the aligned rect back into app units.
   nsRect result = LayoutDeviceRect::ToAppUnits(screenRect / res, auPerDevPixel);
 
-  // If we have non-zero margins, expand the displayport for the low-res buffer
-  // if that's what we're drawing. If we have zero margins, we want the
-  // displayport to reflect the scrollport.
-  if (margins != ScreenMargin()) {
-    result = ApplyRectMultiplier(result, aMultiplier);
-  }
-
   // Make sure the displayport remains within the scrollable rect.
   result = result.MoveInsideAndClamp(expandedScrollableRect - scrollPos);
 
@@ -421,7 +397,6 @@ static void TranslateFromScrollPortToScrollFrame(nsIContent* aContent,
 }
 
 static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
-                               float aMultiplier,
                                const DisplayPortOptions& aOptions) {
   DisplayPortPropertyData* rectData = nullptr;
   DisplayPortMarginsPropertyData* marginsData = nullptr;
@@ -453,7 +428,7 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
 
   nsRect result;
   if (rectData) {
-    result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
+    result = GetDisplayPortFromRectData(aContent, rectData);
   } else if (isDisplayportSuppressed ||
              nsLayoutUtils::ShouldDisableApzForElement(aContent) ||
              aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
@@ -464,11 +439,9 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
     // and those are only meant to be recorded when the margins are stored.
     DisplayPortMarginsPropertyData noMargins = *marginsData;
     noMargins.mMargins.mMargins = ScreenMargin();
-    result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier,
-                                           aOptions);
+    result = GetDisplayPortFromMarginsData(aContent, &noMargins, aOptions);
   } else {
-    result = GetDisplayPortFromMarginsData(aContent, marginsData, aMultiplier,
-                                           aOptions);
+    result = GetDisplayPortFromMarginsData(aContent, marginsData, aOptions);
   }
 
   if (aOptions.mRelativeTo == DisplayportRelativeTo::ScrollFrame) {
@@ -481,7 +454,7 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
 
 bool DisplayPortUtils::GetDisplayPort(nsIContent* aContent, nsRect* aResult,
                                       const DisplayPortOptions& aOptions) {
-  return GetDisplayPortImpl(aContent, aResult, 1.0f, aOptions);
+  return GetDisplayPortImpl(aContent, aResult, aOptions);
 }
 
 bool DisplayPortUtils::HasDisplayPort(nsIContent* aContent) {
@@ -552,7 +525,7 @@ bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
                                                           nsRect* aResult) {
   MOZ_ASSERT(aResult);
   return GetDisplayPortImpl(
-      aContent, aResult, 1.0f,
+      aContent, aResult,
       DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 }
 
