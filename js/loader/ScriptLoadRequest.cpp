@@ -43,9 +43,7 @@ ScriptFetchOptions::ScriptFetchOptions(
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
       mTriggeringPrincipal(aTriggeringPrincipal),
-      mElement(aElement) {
-  MOZ_ASSERT(mTriggeringPrincipal);
-}
+      mElement(aElement) {}
 
 ScriptFetchOptions::~ScriptFetchOptions() = default;
 
