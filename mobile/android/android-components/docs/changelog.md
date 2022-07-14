@@ -15,6 +15,9 @@ permalink: /changelog/
   * `SyncStatus` can now be `LoggedOut`.
   * `SyncStoreSupport` will update the `SyncStore` with `LoggedOut` when observed.
 
+* **browser-toolbar**
+  * 🚒 Bug fixed [issue #12497](https://github.com/mozilla-mobile/android-components/issues/12497) - Set the same margin to toolbar background for display as for edit
+  * 
 * **feature-recentlyclosed**
   * 🚒 Bug fixed [issue #12470](https://github.com/mozilla-mobile/android-components/issues/12470) - Set autoMirrored to true to fix RTL issues
 
