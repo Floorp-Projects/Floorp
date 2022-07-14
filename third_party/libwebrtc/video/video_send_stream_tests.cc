@@ -39,6 +39,7 @@
 #include "modules/video_coding/codecs/interface/common_constants.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "rtc_base/experiments/alr_experiment.h"
@@ -3383,7 +3384,7 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
         vp9_settings_.interLayerPred = params_.inter_layer_pred;
       } else {
         encoder_config->simulcast_layers[0].scalability_mode =
-            params_.scalability_mode;
+            ScalabilityModeFromString(params_.scalability_mode);
       }
     }
 

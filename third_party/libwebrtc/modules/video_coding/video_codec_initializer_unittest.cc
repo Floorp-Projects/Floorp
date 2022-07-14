@@ -430,7 +430,7 @@ TEST_F(VideoCodecInitializerTest, Av1SingleSpatialLayerBitratesAreConsistent) {
   VideoEncoderConfig config;
   config.codec_type = VideoCodecType::kVideoCodecAV1;
   std::vector<VideoStream> streams = {DefaultStream()};
-  streams[0].scalability_mode = "L1T2";
+  streams[0].scalability_mode = ScalabilityMode::kL1T2;
 
   VideoCodec codec;
   EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
@@ -445,7 +445,7 @@ TEST_F(VideoCodecInitializerTest, Av1TwoSpatialLayersBitratesAreConsistent) {
   VideoEncoderConfig config;
   config.codec_type = VideoCodecType::kVideoCodecAV1;
   std::vector<VideoStream> streams = {DefaultStream()};
-  streams[0].scalability_mode = "L2T2";
+  streams[0].scalability_mode = ScalabilityMode::kL2T2;
 
   VideoCodec codec;
   EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
@@ -465,7 +465,7 @@ TEST_F(VideoCodecInitializerTest, Av1TwoSpatialLayersActiveByDefault) {
   VideoEncoderConfig config;
   config.codec_type = VideoCodecType::kVideoCodecAV1;
   std::vector<VideoStream> streams = {DefaultStream()};
-  streams[0].scalability_mode = "L2T2";
+  streams[0].scalability_mode = ScalabilityMode::kL2T2;
   config.spatial_layers = {};
 
   VideoCodec codec;
@@ -479,7 +479,7 @@ TEST_F(VideoCodecInitializerTest, Av1TwoSpatialLayersOneDeactivated) {
   VideoEncoderConfig config;
   config.codec_type = VideoCodecType::kVideoCodecAV1;
   std::vector<VideoStream> streams = {DefaultStream()};
-  streams[0].scalability_mode = "L2T2";
+  streams[0].scalability_mode = ScalabilityMode::kL2T2;
   config.spatial_layers.resize(2);
   config.spatial_layers[0].active = true;
   config.spatial_layers[1].active = false;

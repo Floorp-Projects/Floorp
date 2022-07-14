@@ -10,6 +10,7 @@
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder_supported.h"
 
 #include "modules/video_coding/svc/create_scalability_structure.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 
 #if defined(RTC_USE_LIBAOM_AV1_ENCODER)
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"  // nogncheck
@@ -21,11 +22,14 @@ const bool kIsLibaomAv1EncoderSupported = true;
 std::unique_ptr<VideoEncoder> CreateLibaomAv1EncoderIfSupported() {
   return CreateLibaomAv1Encoder();
 }
-bool LibaomAv1EncoderSupportsScalabilityMode(
-    absl::string_view scalability_mode) {
+bool LibaomAv1EncoderSupportsScalabilityMode(absl::string_view mode_string) {
+  absl::optional<ScalabilityMode> scalability_mode =
+      ScalabilityModeFromString(mode_string);
+
   // For libaom AV1, the scalability mode is supported if we can create the
   // scalability structure.
-  return ScalabilityStructureConfig(scalability_mode) != absl::nullopt;
+  return scalability_mode.has_value() &&
+         ScalabilityStructureConfig(*scalability_mode) != absl::nullopt;
 }
 #else
 const bool kIsLibaomAv1EncoderSupported = false;

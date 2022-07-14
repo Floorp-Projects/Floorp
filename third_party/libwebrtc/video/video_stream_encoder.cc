@@ -159,7 +159,8 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
     }
   }
 
-  if (new_send_codec.ScalabilityMode() != prev_send_codec.ScalabilityMode()) {
+  if (new_send_codec.GetScalabilityMode() !=
+      prev_send_codec.GetScalabilityMode()) {
     return true;
   }
 

@@ -17,22 +17,10 @@
 namespace webrtc {
 namespace {
 
-TEST(Av1SvcConfigTest, RequireScalabilityMode) {
+TEST(Av1SvcConfigTest, TreatsEmptyAsL1T1) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
 
-  video_codec.SetScalabilityMode("Unknown");
-  EXPECT_FALSE(SetAv1SvcConfig(video_codec));
-
-  video_codec.SetScalabilityMode("L1T1");
-  EXPECT_TRUE(SetAv1SvcConfig(video_codec));
-}
-
-TEST(Av1SvcConfigTest, TreatsEmptyAsNone) {
-  VideoCodec video_codec;
-  video_codec.codecType = kVideoCodecAV1;
-
-  video_codec.SetScalabilityMode("");
   EXPECT_TRUE(SetAv1SvcConfig(video_codec));
 
   EXPECT_TRUE(video_codec.spatialLayers[0].active);
@@ -43,7 +31,7 @@ TEST(Av1SvcConfigTest, TreatsEmptyAsNone) {
 TEST(Av1SvcConfigTest, SetsActiveSpatialLayersFromScalabilityMode) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
-  video_codec.SetScalabilityMode("L2T1");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL2T1);
 
   EXPECT_TRUE(SetAv1SvcConfig(video_codec));
 
@@ -55,7 +43,7 @@ TEST(Av1SvcConfigTest, SetsActiveSpatialLayersFromScalabilityMode) {
 TEST(Av1SvcConfigTest, ConfiguresDobuleResolutionRatioFromScalabilityMode) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
-  video_codec.SetScalabilityMode("L2T1");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL2T1);
   video_codec.width = 1200;
   video_codec.height = 800;
 
@@ -71,7 +59,7 @@ TEST(Av1SvcConfigTest, ConfiguresSmallResolutionRatioFromScalabilityMode) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
   // h mode uses 1.5:1 ratio
-  video_codec.SetScalabilityMode("L2T1h");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL2T1h);
   video_codec.width = 1500;
   video_codec.height = 900;
 
@@ -87,7 +75,7 @@ TEST(Av1SvcConfigTest, CopiesFramrate) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
   // h mode uses 1.5:1 ratio
-  video_codec.SetScalabilityMode("L2T1");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL2T1);
   video_codec.maxFramerate = 27;
 
   EXPECT_TRUE(SetAv1SvcConfig(video_codec));
@@ -99,7 +87,7 @@ TEST(Av1SvcConfigTest, CopiesFramrate) {
 TEST(Av1SvcConfigTest, SetsNumberOfTemporalLayers) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
-  video_codec.SetScalabilityMode("L1T3");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL1T3);
 
   EXPECT_TRUE(SetAv1SvcConfig(video_codec));
 
@@ -109,7 +97,7 @@ TEST(Av1SvcConfigTest, SetsNumberOfTemporalLayers) {
 TEST(Av1SvcConfigTest, CopiesMinMaxBitrateForSingleSpatialLayer) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
-  video_codec.SetScalabilityMode("L1T3");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL1T3);
   video_codec.minBitrate = 100;
   video_codec.maxBitrate = 500;
 
@@ -126,7 +114,7 @@ TEST(Av1SvcConfigTest, CopiesMinMaxBitrateForSingleSpatialLayer) {
 TEST(Av1SvcConfigTest, SetsBitratesForMultipleSpatialLayers) {
   VideoCodec video_codec;
   video_codec.codecType = kVideoCodecAV1;
-  video_codec.SetScalabilityMode("L3T3");
+  video_codec.SetScalabilityMode(ScalabilityMode::kL3T3);
 
   EXPECT_TRUE(SetAv1SvcConfig(video_codec));
 

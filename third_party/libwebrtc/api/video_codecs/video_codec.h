@@ -19,6 +19,7 @@
 #include "absl/strings/string_view.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_codec_type.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/spatial_layer.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -106,11 +107,13 @@ class RTC_EXPORT VideoCodec {
 
   // Scalability mode as described in
   // https://www.w3.org/TR/webrtc-svc/#scalabilitymodes*
-  // or value 'NONE' to indicate no scalability.
-  absl::string_view ScalabilityMode() const { return scalability_mode_; }
-  void SetScalabilityMode(absl::string_view scalability_mode) {
-    scalability_mode_ = std::string(scalability_mode);
+  absl::optional<ScalabilityMode> GetScalabilityMode() const {
+    return scalability_mode_;
   }
+  void SetScalabilityMode(ScalabilityMode scalability_mode) {
+    scalability_mode_ = scalability_mode;
+  }
+  void UnsetScalabilityMode() { scalability_mode_ = absl::nullopt; }
 
   VideoCodecComplexity GetVideoEncoderComplexity() const;
   void SetVideoEncoderComplexity(VideoCodecComplexity complexity_setting);
@@ -174,7 +177,7 @@ class RTC_EXPORT VideoCodec {
   // TODO(hta): Consider replacing the union with a pointer type.
   // This will allow removing the VideoCodec* types from this file.
   VideoCodecUnion codec_specific_;
-  std::string scalability_mode_;
+  absl::optional<ScalabilityMode> scalability_mode_;
   // 'complexity_' indicates the CPU capability of the client. It's used to
   // determine encoder CPU complexity (e.g., cpu_used for VP8, VP9. and AV1).
   absl::optional<VideoCodecComplexity> complexity_;
