@@ -424,6 +424,7 @@ if (rtc_build_dcsctp) {
       "../rtc_base:socket",
       "../rtc_base:stringutils",
       "../rtc_base:threading",
+      "../rtc_base/containers:flat_set",
       "../rtc_base/task_utils:pending_task_safety_flag",
       "../rtc_base/task_utils:to_queued_task",
       "../rtc_base/third_party/sigslot:sigslot",
@@ -693,6 +694,16 @@ if (rtc_include_tests) {
 
       if (is_ios) {
         deps += [ ":rtc_media_unittests_bundle_data" ]
+      }
+
+      if (rtc_build_dcsctp) {
+        sources += [ "sctp/dcsctp_transport_unittest.cc" ]
+        deps += [
+          ":rtc_data_dcsctp_transport",
+          "../net/dcsctp/public:factory",
+          "../net/dcsctp/public:mocks",
+          "../net/dcsctp/public:socket",
+        ]
       }
     }
   }
