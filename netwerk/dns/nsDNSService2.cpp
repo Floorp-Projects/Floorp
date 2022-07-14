@@ -1101,8 +1101,9 @@ nsDNSService::AsyncResolve(const nsACString& aHostname,
                            nsIDNSService::ResolveType aType, uint32_t flags,
                            nsIDNSAdditionalInfo* aInfo,
                            nsIDNSListener* listener, nsIEventTarget* target_,
-                           JS::HandleValue aOriginAttributes, JSContext* aCx,
-                           uint8_t aArgc, nsICancelable** result) {
+                           JS::Handle<JS::Value> aOriginAttributes,
+                           JSContext* aCx, uint8_t aArgc,
+                           nsICancelable** result) {
   OriginAttributes attrs;
 
   if (aArgc == 1) {
@@ -1140,7 +1141,7 @@ nsDNSService::CancelAsyncResolve(const nsACString& aHostname,
                                  nsIDNSService::ResolveType aType,
                                  uint32_t aFlags, nsIDNSAdditionalInfo* aInfo,
                                  nsIDNSListener* aListener, nsresult aReason,
-                                 JS::HandleValue aOriginAttributes,
+                                 JS::Handle<JS::Value> aOriginAttributes,
                                  JSContext* aCx, uint8_t aArgc) {
   OriginAttributes attrs;
 
@@ -1165,7 +1166,7 @@ nsDNSService::CancelAsyncResolveNative(
 
 NS_IMETHODIMP
 nsDNSService::Resolve(const nsACString& aHostname, uint32_t flags,
-                      JS::HandleValue aOriginAttributes, JSContext* aCx,
+                      JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx,
                       uint8_t aArgc, nsIDNSRecord** result) {
   OriginAttributes attrs;
 

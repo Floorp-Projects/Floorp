@@ -3344,7 +3344,7 @@ WebSocketChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
 
 NS_IMETHODIMP
 WebSocketChannel::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
-                            JS::HandleValue aOriginAttributes,
+                            JS::Handle<JS::Value> aOriginAttributes,
                             uint64_t aInnerWindowID,
                             nsIWebSocketListener* aListener,
                             nsISupports* aContext, JSContext* aCx) {

@@ -95,9 +95,9 @@ class WebSocketChannel : public BaseWebSocketChannel,
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
   NS_IMETHOD AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
-                       JS::HandleValue aOriginAttributes, uint64_t aWindowID,
-                       nsIWebSocketListener* aListener, nsISupports* aContext,
-                       JSContext* aCx) override;
+                       JS::Handle<JS::Value> aOriginAttributes,
+                       uint64_t aWindowID, nsIWebSocketListener* aListener,
+                       nsISupports* aContext, JSContext* aCx) override;
   NS_IMETHOD AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
                              const OriginAttributes& aOriginAttributes,
                              uint64_t aWindowID,

@@ -187,8 +187,9 @@ ChildDNSService::AsyncResolve(const nsACString& hostname,
                               nsIDNSService::ResolveType aType, uint32_t flags,
                               nsIDNSAdditionalInfo* aInfo,
                               nsIDNSListener* listener, nsIEventTarget* target_,
-                              JS::HandleValue aOriginAttributes, JSContext* aCx,
-                              uint8_t aArgc, nsICancelable** result) {
+                              JS::Handle<JS::Value> aOriginAttributes,
+                              JSContext* aCx, uint8_t aArgc,
+                              nsICancelable** result) {
   OriginAttributes attrs;
 
   if (aArgc == 1) {
@@ -227,7 +228,7 @@ ChildDNSService::CancelAsyncResolve(const nsACString& aHostname,
                                     uint32_t aFlags,
                                     nsIDNSAdditionalInfo* aInfo,
                                     nsIDNSListener* aListener, nsresult aReason,
-                                    JS::HandleValue aOriginAttributes,
+                                    JS::Handle<JS::Value> aOriginAttributes,
                                     JSContext* aCx, uint8_t aArgc) {
   OriginAttributes attrs;
 
@@ -252,8 +253,8 @@ ChildDNSService::CancelAsyncResolveNative(
 
 NS_IMETHODIMP
 ChildDNSService::Resolve(const nsACString& hostname, uint32_t flags,
-                         JS::HandleValue aOriginAttributes, JSContext* aCx,
-                         uint8_t aArgc, nsIDNSRecord** result) {
+                         JS::Handle<JS::Value> aOriginAttributes,
+                         JSContext* aCx, uint8_t aArgc, nsIDNSRecord** result) {
   // not planning to ever support this, since sync IPDL is evil.
   return NS_ERROR_NOT_AVAILABLE;
 }

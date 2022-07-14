@@ -1537,7 +1537,7 @@ LoadInfo::GetRedirects(JSContext* aCx, JS::MutableHandle<JS::Value> aRedirects,
   nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
   for (size_t idx = 0; idx < aArray.Length(); idx++) {
-    JS::RootedObject jsobj(aCx);
+    JS::Rooted<JSObject*> jsobj(aCx);
     nsresult rv =
         xpc->WrapNative(aCx, global, aArray[idx],
                         NS_GET_IID(nsIRedirectHistoryEntry), jsobj.address());
