@@ -510,6 +510,49 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
     }
   }
 
+  // This tests that we give up after 12 DTLS resends.
+  void TestHandshakeTimeout() {
+    rtc::ScopedFakeClock clock;
+    int64_t time_start = clock.TimeNanos();
+    webrtc::TimeDelta time_increment = webrtc::TimeDelta::Millis(1000);
+    server_ssl_->SetMode(dtls_ ? rtc::SSL_MODE_DTLS : rtc::SSL_MODE_TLS);
+    client_ssl_->SetMode(dtls_ ? rtc::SSL_MODE_DTLS : rtc::SSL_MODE_TLS);
+
+    if (!dtls_) {
+      // Make sure we simulate a reliable network for TLS.
+      // This is just a check to make sure that people don't write wrong
+      // tests.
+      RTC_CHECK_EQ(1460, mtu_);
+      RTC_CHECK(!loss_);
+      RTC_CHECK(!lose_first_packet_);
+    }
+
+    if (!identities_set_)
+      SetPeerIdentitiesByDigest(true, true);
+
+    // Start the handshake
+    int rv;
+
+    server_ssl_->SetServerRole();
+    rv = server_ssl_->StartSSL();
+    ASSERT_EQ(0, rv);
+
+    rv = client_ssl_->StartSSL();
+    ASSERT_EQ(0, rv);
+
+    // Now wait for the handshake to timeout (or fail after an hour of simulated
+    // time).
+    while (client_ssl_->GetState() == rtc::SS_OPENING &&
+           (rtc::TimeDiff(clock.TimeNanos(), time_start) <
+            3600 * rtc::kNumNanosecsPerSec)) {
+      EXPECT_TRUE_WAIT(!((client_ssl_->GetState() == rtc::SS_OPEN) &&
+                         (server_ssl_->GetState() == rtc::SS_OPEN)),
+                       1000);
+      clock.AdvanceTime(time_increment);
+    }
+    RTC_CHECK_EQ(client_ssl_->GetState(), rtc::SS_CLOSED);
+  }
+
   // This tests that the handshake can complete before the identity is verified,
   // and the identity will be verified after the fact. It also verifies that
   // packets can't be read or written before the identity has been verified.
@@ -1215,6 +1258,12 @@ TEST_P(SSLStreamAdapterTestDTLS, DISABLED_TestDTLSConnectWithSmallMtu) {
   SetMtu(700);
   SetHandshakeWait(20000);
   TestHandshake();
+}
+
+// Test a handshake with total loss and timing out.
+TEST_P(SSLStreamAdapterTestDTLS, TestDTLSConnectTimeout) {
+  SetLoss(100);
+  TestHandshakeTimeout();
 }
 
 // Test transfer -- trivial
