@@ -334,14 +334,9 @@ xpcAccessible::GetKeyboardShortcut(nsAString& aKeyBinding) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
   if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-#if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    proxy->KeyboardShortcut().ToString(aKeyBinding);
-#endif
-  } else {
-    Intl()->KeyboardShortcut().ToString(aKeyBinding);
   }
+  Intl()->KeyboardShortcut().ToString(aKeyBinding);
   return NS_OK;
 }
 
