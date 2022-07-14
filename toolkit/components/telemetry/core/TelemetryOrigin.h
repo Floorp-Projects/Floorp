@@ -28,10 +28,10 @@ nsresult RecordOrigin(mozilla::Telemetry::OriginMetricID aId,
 
 // JS API Endpoints.
 nsresult GetOriginSnapshot(bool aClear, JSContext* aCx,
-                           JS::MutableHandleValue aResult);
+                           JS::MutableHandle<JS::Value> aResult);
 
 nsresult GetEncodedOriginSnapshot(bool aClear, JSContext* aCx,
-                                  JS::MutableHandleValue aSnapshot);
+                                  JS::MutableHandle<JS::Value> aSnapshot);
 
 // Only to be used for testing.
 void ClearOrigins();
