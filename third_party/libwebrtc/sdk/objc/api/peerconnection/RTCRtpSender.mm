@@ -52,7 +52,7 @@
 }
 
 - (void)setTrack:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track {
-  if (!_nativeRtpSender->SetTrack(track.nativeTrack)) {
+  if (!_nativeRtpSender->SetTrack(track.nativeTrack.get())) {
     RTCLogError(@"RTC_OBJC_TYPE(RTCRtpSender)(%p): Failed to set track %@", self, track);
   }
 }

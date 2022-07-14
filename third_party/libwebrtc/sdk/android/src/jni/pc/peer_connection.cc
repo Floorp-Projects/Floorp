@@ -391,8 +391,9 @@ void PeerConnectionObserverJni::OnAddStream(
 void PeerConnectionObserverJni::OnRemoveStream(
     rtc::scoped_refptr<MediaStreamInterface> stream) {
   JNIEnv* env = AttachCurrentThreadIfNeeded();
-  NativeToJavaStreamsMap::iterator it = remote_streams_.find(stream);
-  RTC_CHECK(it != remote_streams_.end()) << "unexpected stream: " << stream;
+  NativeToJavaStreamsMap::iterator it = remote_streams_.find(stream.get());
+  RTC_CHECK(it != remote_streams_.end())
+      << "unexpected stream: " << stream.get();
   Java_Observer_onRemoveStream(env, j_observer_global_,
                                it->second.j_media_stream());
   remote_streams_.erase(it);
@@ -447,7 +448,7 @@ void PeerConnectionObserverJni::OnTrack(
 JavaMediaStream& PeerConnectionObserverJni::GetOrCreateJavaStream(
     JNIEnv* env,
     const rtc::scoped_refptr<MediaStreamInterface>& stream) {
-  NativeToJavaStreamsMap::iterator it = remote_streams_.find(stream);
+  NativeToJavaStreamsMap::iterator it = remote_streams_.find(stream.get());
   if (it == remote_streams_.end()) {
     it = remote_streams_
              .emplace(std::piecewise_construct,
@@ -579,7 +580,7 @@ static void JNI_PeerConnection_CreateOffer(
       jni, j_observer, std::move(constraints));
   PeerConnectionInterface::RTCOfferAnswerOptions options;
   CopyConstraintsIntoOfferAnswerOptions(observer->constraints(), &options);
-  ExtractNativePC(jni, j_pc)->CreateOffer(observer, options);
+  ExtractNativePC(jni, j_pc)->CreateOffer(observer.get(), options);
 }
 
 static void JNI_PeerConnection_CreateAnswer(
@@ -593,7 +594,7 @@ static void JNI_PeerConnection_CreateAnswer(
       jni, j_observer, std::move(constraints));
   PeerConnectionInterface::RTCOfferAnswerOptions options;
   CopyConstraintsIntoOfferAnswerOptions(observer->constraints(), &options);
-  ExtractNativePC(jni, j_pc)->CreateAnswer(observer, options);
+  ExtractNativePC(jni, j_pc)->CreateAnswer(observer.get(), options);
 }
 
 static void JNI_PeerConnection_SetLocalDescriptionAutomatically(
@@ -827,7 +828,8 @@ static jboolean JNI_PeerConnection_OldGetStats(
     jlong native_track) {
   auto observer = rtc::make_ref_counted<StatsObserverJni>(jni, j_observer);
   return ExtractNativePC(jni, j_pc)->GetStats(
-      observer, reinterpret_cast<MediaStreamTrackInterface*>(native_track),
+      observer.get(),
+      reinterpret_cast<MediaStreamTrackInterface*>(native_track),
       PeerConnectionInterface::kStatsOutputLevelStandard);
 }
 
@@ -837,7 +839,7 @@ static void JNI_PeerConnection_NewGetStats(
     const JavaParamRef<jobject>& j_callback) {
   auto callback =
       rtc::make_ref_counted<RTCStatsCollectorCallbackWrapper>(jni, j_callback);
-  ExtractNativePC(jni, j_pc)->GetStats(callback);
+  ExtractNativePC(jni, j_pc)->GetStats(callback.get());
 }
 
 static jboolean JNI_PeerConnection_SetBitrate(
