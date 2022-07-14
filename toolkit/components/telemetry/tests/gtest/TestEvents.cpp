@@ -61,7 +61,7 @@ TEST_F(TelemetryTestFixture, RecordEventNative) {
   Telemetry::RecordEvent(Telemetry::EventID::TelemetryTest_Test2_Object2,
                          mozilla::Some(valueLong), mozilla::Some(longish));
 
-  JS::RootedValue eventsSnapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> eventsSnapshot(cx.GetJSContext());
   GetEventSnapshot(cx.GetJSContext(), &eventsSnapshot);
 
   ASSERT_TRUE(!EventPresent(cx.GetJSContext(), eventsSnapshot, category, method,
@@ -79,11 +79,11 @@ TEST_F(TelemetryTestFixture, RecordEventNative) {
 
   // Ensure that the truncations happened appropriately.
   JSContext* aCx = cx.GetJSContext();
-  JS::RootedObject arrayObj(aCx, &eventsSnapshot.toObject());
+  JS::Rooted<JSObject*> arrayObj(aCx, &eventsSnapshot.toObject());
   JS::Rooted<JS::Value> eventRecord(aCx);
   ASSERT_TRUE(JS_GetElement(aCx, arrayObj, 2, &eventRecord))
   << "Must be able to get record.";
-  JS::RootedObject recordArray(aCx, &eventRecord.toObject());
+  JS::Rooted<JSObject*> recordArray(aCx, &eventRecord.toObject());
   uint32_t recordLength;
   ASSERT_TRUE(JS::GetArrayLength(aCx, recordArray, &recordLength))
   << "Event record array must have length.";
@@ -104,7 +104,7 @@ TEST_F(TelemetryTestFixture, RecordEventNative) {
   JS::Rooted<JS::Value> obj(aCx);
   ASSERT_TRUE(JS_GetElement(aCx, recordArray, 5, &obj))
   << "Must be able to get extra.";
-  JS::RootedObject extraObj(aCx, &obj.toObject());
+  JS::Rooted<JSObject*> extraObj(aCx, &obj.toObject());
   JS::Rooted<JS::Value> extraVal(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, extraObj, extraKey.get(), &extraVal))
   << "Must be able to get the extra key's value.";

@@ -14,22 +14,24 @@ using mozilla::Telemetry::ProcessID;
 namespace TelemetryTestHelpers {
 
 void CheckUintScalar(const char* aName, JSContext* aCx,
-                     JS::HandleValue aSnapshot, uint32_t expectedValue);
+                     JS::Handle<JS::Value> aSnapshot, uint32_t expectedValue);
 
 void CheckBoolScalar(const char* aName, JSContext* aCx,
-                     JS::HandleValue aSnapshot, bool expectedValue);
+                     JS::Handle<JS::Value> aSnapshot, bool expectedValue);
 
 void CheckStringScalar(const char* aName, JSContext* aCx,
-                       JS::HandleValue aSnapshot, const char* expectedValue);
+                       JS::Handle<JS::Value> aSnapshot,
+                       const char* expectedValue);
 
 void CheckKeyedUintScalar(const char* aName, const char* aKey, JSContext* aCx,
-                          JS::HandleValue aSnapshot, uint32_t expectedValue);
+                          JS::Handle<JS::Value> aSnapshot,
+                          uint32_t expectedValue);
 
 void CheckKeyedBoolScalar(const char* aName, const char* aKey, JSContext* aCx,
-                          JS::HandleValue aSnapshot, bool expectedValue);
+                          JS::Handle<JS::Value> aSnapshot, bool expectedValue);
 
 void CheckNumberOfProperties(const char* aName, JSContext* aCx,
-                             JS::HandleValue aSnapshot,
+                             JS::Handle<JS::Value> aSnapshot,
                              uint32_t expectedNumProperties);
 
 bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
@@ -52,14 +54,14 @@ void GetScalarsSnapshot(bool aKeyed, JSContext* aCx,
 void GetAndClearHistogram(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
                           const nsACString& name, bool is_keyed);
 
-void GetProperty(JSContext* cx, const char* name, JS::HandleValue valueIn,
-                 JS::MutableHandleValue valueOut);
+void GetProperty(JSContext* cx, const char* name, JS::Handle<JS::Value> valueIn,
+                 JS::MutableHandle<JS::Value> valueOut);
 
-void GetElement(JSContext* cx, uint32_t index, JS::HandleValue valueIn,
-                JS::MutableHandleValue valueOut);
+void GetElement(JSContext* cx, uint32_t index, JS::Handle<JS::Value> valueIn,
+                JS::MutableHandle<JS::Value> valueOut);
 
 void GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
-                  const char* name, JS::MutableHandleValue valueOut,
+                  const char* name, JS::MutableHandle<JS::Value> valueOut,
                   bool is_keyed);
 
 void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
