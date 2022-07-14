@@ -111,10 +111,9 @@ TEST(FrameBuffer3Test, NextDecodable) {
   FrameBuffer buffer(/*max_frame_slots=*/10, /*max_decode_history=*/100,
                      field_trials);
 
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(),
-              Eq(absl::nullopt));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo(), Eq(absl::nullopt));
   buffer.InsertFrame(test::FakeFrameBuilder().Time(10).Id(1).AsLast().Build());
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(), Eq(10U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->next_rtp_timestamp, Eq(10U));
 }
 
 TEST(FrameBuffer3Test, AdvanceNextDecodableOnExtraction) {
@@ -126,14 +125,14 @@ TEST(FrameBuffer3Test, AdvanceNextDecodableOnExtraction) {
   buffer.InsertFrame(test::FakeFrameBuilder().Time(20).Id(2).AsLast().Build());
   buffer.InsertFrame(
       test::FakeFrameBuilder().Time(30).Id(3).Refs({2}).AsLast().Build());
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(), Eq(10U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->next_rtp_timestamp, Eq(10U));
 
   EXPECT_THAT(buffer.ExtractNextDecodableTemporalUnit(),
               ElementsAre(FrameWithId(1)));
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(), Eq(20U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->next_rtp_timestamp, Eq(20U));
   EXPECT_THAT(buffer.ExtractNextDecodableTemporalUnit(),
               ElementsAre(FrameWithId(2)));
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(), Eq(30U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->next_rtp_timestamp, Eq(30U));
   EXPECT_THAT(buffer.ExtractNextDecodableTemporalUnit(),
               ElementsAre(FrameWithId(3)));
 }
@@ -148,11 +147,11 @@ TEST(FrameBuffer3Test, AdvanceLastDecodableOnExtraction) {
       test::FakeFrameBuilder().Time(20).Id(2).Refs({1}).AsLast().Build());
   buffer.InsertFrame(
       test::FakeFrameBuilder().Time(30).Id(3).Refs({1}).AsLast().Build());
-  EXPECT_THAT(buffer.LastDecodableTemporalUnitRtpTimestamp(), Eq(10U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->last_rtp_timestamp, Eq(10U));
 
   EXPECT_THAT(buffer.ExtractNextDecodableTemporalUnit(),
               ElementsAre(FrameWithId(1)));
-  EXPECT_THAT(buffer.LastDecodableTemporalUnitRtpTimestamp(), Eq(30U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->last_rtp_timestamp, Eq(30U));
 }
 
 TEST(FrameBuffer3Test, FrameUpdatesNextDecodable) {
@@ -161,10 +160,10 @@ TEST(FrameBuffer3Test, FrameUpdatesNextDecodable) {
                      field_trials);
 
   buffer.InsertFrame(test::FakeFrameBuilder().Time(20).Id(2).AsLast().Build());
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(), Eq(20U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->next_rtp_timestamp, Eq(20U));
 
   buffer.InsertFrame(test::FakeFrameBuilder().Time(10).Id(1).AsLast().Build());
-  EXPECT_THAT(buffer.NextDecodableTemporalUnitRtpTimestamp(), Eq(10U));
+  EXPECT_THAT(buffer.DecodableTemporalUnitsInfo()->next_rtp_timestamp, Eq(10U));
 }
 
 TEST(FrameBuffer3Test, KeyframeClearsFullBuffer) {

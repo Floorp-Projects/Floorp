@@ -11,9 +11,6 @@
 #include "modules/video_coding/frame_buffer3.h"
 
 #include <algorithm>
-#include <iterator>
-#include <queue>
-#include <utility>
 
 #include "absl/algorithm/container.h"
 #include "absl/container/inlined_vector.h"
@@ -52,7 +49,7 @@ int64_t GetFrameId(const FrameIteratorT& it) {
 }
 
 template <typename FrameIteratorT>
-int64_t GetTimestamp(const FrameIteratorT& it) {
+uint32_t GetTimestamp(const FrameIteratorT& it) {
   return it->second.encoded_frame->Timestamp();
 }
 
@@ -158,17 +155,9 @@ absl::optional<int64_t> FrameBuffer::LastContinuousTemporalUnitFrameId() const {
   return last_continuous_temporal_unit_frame_id_;
 }
 
-absl::optional<uint32_t> FrameBuffer::NextDecodableTemporalUnitRtpTimestamp()
-    const {
-  if (!next_decodable_temporal_unit_) {
-    return absl::nullopt;
-  }
-  return GetTimestamp(next_decodable_temporal_unit_->first_frame);
-}
-
-absl::optional<uint32_t> FrameBuffer::LastDecodableTemporalUnitRtpTimestamp()
-    const {
-  return last_decodable_temporal_unit_timestamp_;
+absl::optional<FrameBuffer::DecodabilityInfo>
+FrameBuffer::DecodableTemporalUnitsInfo() const {
+  return decodable_temporal_units_info_;
 }
 
 int FrameBuffer::GetTotalNumberOfContinuousTemporalUnits() const {
@@ -221,7 +210,7 @@ void FrameBuffer::PropagateContinuity(const FrameIterator& frame_it) {
 
 void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
   next_decodable_temporal_unit_.reset();
-  last_decodable_temporal_unit_timestamp_.reset();
+  decodable_temporal_units_info_.reset();
 
   if (!last_continuous_temporal_unit_frame_id_) {
     return;
@@ -230,6 +219,7 @@ void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
   FrameIterator first_frame_it = frames_.begin();
   FrameIterator last_frame_it = frames_.begin();
   absl::InlinedVector<int64_t, 4> frames_in_temporal_unit;
+  uint32_t last_decodable_temporal_unit_timestamp;
   for (auto frame_it = frames_.begin(); frame_it != frames_.end();) {
     if (GetFrameId(frame_it) > *last_continuous_temporal_unit_frame_id_) {
       break;
@@ -264,16 +254,23 @@ void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
           next_decodable_temporal_unit_ = {first_frame_it, last_frame_it};
         }
 
-        last_decodable_temporal_unit_timestamp_ = GetTimestamp(first_frame_it);
+        last_decodable_temporal_unit_timestamp = GetTimestamp(first_frame_it);
       }
     }
+  }
+
+  if (next_decodable_temporal_unit_) {
+    decodable_temporal_units_info_ = {
+        .next_rtp_timestamp =
+            GetTimestamp(next_decodable_temporal_unit_->first_frame),
+        .last_rtp_timestamp = last_decodable_temporal_unit_timestamp};
   }
 }
 
 void FrameBuffer::Clear() {
   frames_.clear();
   next_decodable_temporal_unit_.reset();
-  last_decodable_temporal_unit_timestamp_.reset();
+  decodable_temporal_units_info_.reset();
   last_continuous_frame_id_.reset();
   last_continuous_temporal_unit_frame_id_.reset();
   decoded_frame_history_.Clear();
