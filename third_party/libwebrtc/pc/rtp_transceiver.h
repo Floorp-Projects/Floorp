@@ -107,18 +107,19 @@ class RtpTransceiver : public RtpTransceiverInterface,
   // furthermore be made on the signaling thread.
   //
   // `channel`: The channel instance to be associated with the transceiver.
-  //     When a valid pointer is passed for `channel`, the state of the object
+  //     This must be a valid pointer.
+  //     The state of the object
   //     is expected to be newly constructed and not initalized for network
   //     activity (see next parameter for more).
   //
   //     NOTE: For all practical purposes, the ownership of the channel
   //     object should be considered to lie with the transceiver until
-  //     `SetChannel()` is called again with nullptr set as the new channel.
+  //     `ClearChannel()` is called.
   //     Moving forward, this parameter will change to either be a
   //     std::unique_ptr<> or the full construction of the channel object will
   //     be moved to happen within the context of the transceiver class.
   //
-  // `transport_lookup`: When `channel` points to a valid channel object, this
+  // `transport_lookup`: This
   //     callback function will be used to look up the `RtpTransport` object
   //     to associate with the channel via `BaseChannel::SetRtpTransport`.
   //     The lookup function will be called on the network thread, synchronously
@@ -130,6 +131,7 @@ class RtpTransceiver : public RtpTransceiverInterface,
   //     synchronously to the network thread from the signaling thread.
   //     The callback allows us to combine the transport lookup with network
   //     state initialization of the channel object.
+  // ClearChannel() must be used before calling SetChannel() again.
   void SetChannel(cricket::ChannelInterface* channel,
                   std::function<RtpTransportInternal*(const std::string&)>
                       transport_lookup);
@@ -280,8 +282,10 @@ class RtpTransceiver : public RtpTransceiverInterface,
  private:
   void OnFirstPacketReceived();
   void StopSendingAndReceiving();
-  // Delete a channel. Used by SetChannel and ClearChannel.
-  void DeleteChannel(cricket::ChannelInterface* channel_to_delete);
+  // Delete a channel, and ensure that references to its media channel
+  // are updated before deleting it.
+  void PushNewMediaChannelAndDeleteChannel(
+      cricket::ChannelInterface* channel_to_delete);
 
   // Enforce that this object is created, used and destroyed on one thread.
   TaskQueueBase* const thread_;
