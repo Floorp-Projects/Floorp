@@ -16,8 +16,10 @@
 #include <utility>
 
 #include "absl/types/optional.h"
+#include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_frame.h"
+#include "api/video/video_frame_type.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 
 namespace webrtc {
@@ -53,7 +55,10 @@ struct FrameStats {
   Timestamp rendered_time = Timestamp::MinusInfinity();
   Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
 
-  int64_t encoded_image_size = 0;
+  VideoFrameType encoded_frame_type = VideoFrameType::kEmptyFrame;
+  DataSize encoded_image_size = DataSize::Bytes(0);
+  VideoFrameType pre_decoded_frame_type = VideoFrameType::kEmptyFrame;
+  DataSize pre_decoded_image_size = DataSize::Bytes(0);
   uint32_t target_encode_bitrate = 0;
 
   absl::optional<int> rendered_frame_width = absl::nullopt;

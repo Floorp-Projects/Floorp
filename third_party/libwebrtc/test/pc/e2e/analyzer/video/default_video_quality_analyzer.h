@@ -22,9 +22,11 @@
 #include "api/array_view.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/test/video_quality_analyzer_interface.h"
+#include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_frame.h"
+#include "api/video/video_frame_type.h"
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -179,6 +181,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     Timestamp rendered_time = Timestamp::MinusInfinity();
     Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
 
+    // Type and encoded size of received frame.
+    VideoFrameType frame_type = VideoFrameType::kEmptyFrame;
+    DataSize encoded_image_size = DataSize::Bytes(0);
+
     absl::optional<int> rendered_frame_width = absl::nullopt;
     absl::optional<int> rendered_frame_height = absl::nullopt;
 
@@ -217,7 +223,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     void SetPreEncodeTime(webrtc::Timestamp time) { pre_encode_time_ = time; }
 
     void OnFrameEncoded(webrtc::Timestamp time,
-                        int64_t encoded_image_size,
+                        VideoFrameType frame_type,
+                        DataSize encoded_image_size,
                         uint32_t target_encode_bitrate,
                         StreamCodecInfo used_encoder);
 
@@ -225,7 +232,9 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
     void OnFramePreDecode(size_t peer,
                           webrtc::Timestamp received_time,
-                          webrtc::Timestamp decode_start_time);
+                          webrtc::Timestamp decode_start_time,
+                          VideoFrameType frame_type,
+                          DataSize encoded_image_size);
 
     bool HasReceivedTime(size_t peer) const;
 
@@ -267,7 +276,9 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     Timestamp captured_time_;
     Timestamp pre_encode_time_ = Timestamp::MinusInfinity();
     Timestamp encoded_time_ = Timestamp::MinusInfinity();
-    int64_t encoded_image_size_ = 0;
+    // Type and encoded size of sent frame.
+    VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
+    DataSize encoded_image_size_ = DataSize::Bytes(0);
     uint32_t target_encode_bitrate_ = 0;
     // Can be not set if frame was dropped by encoder.
     absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
