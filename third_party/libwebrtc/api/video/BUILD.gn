@@ -394,10 +394,10 @@ rtc_library("frame_buffer_unittest") {
   deps = [
     ":frame_buffer",
     "../../api/video:encoded_frame",
-    "../../test:fake_encoded_frame",
-    "../../test:field_trial",
-    "../../test:scoped_key_value_config",
-    "../../test:test_support",
+    #"../../test:fake_encoded_frame",
+    #"../../test:field_trial",
+    #"../../test:scoped_key_value_config",
+    #"../../test:test_support",
   ]
 }
 
