@@ -133,11 +133,6 @@
       'iOS64 Perf': 'ios_internal_pure_release_bot_arm64',
       'iOS64 Release': 'ios_internal_release_bot_arm64',
     },
-    'internal.tryserver.webrtc': {
-      'ios_arm64_dbg': 'ios_internal_debug_bot_arm64',
-      'ios_arm64_perf': 'ios_internal_pure_release_bot_arm64',
-      'ios_arm64_rel': 'ios_internal_release_bot_arm64',
-    },
     'tryserver.webrtc': {
       # Android
       'android_arm64_dbg': 'android_release_bot_arm64',
