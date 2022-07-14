@@ -168,6 +168,10 @@ class WorkerScriptLoader final : public nsINamed {
 
   bool ProcessPendingRequests(JSContext* aCx);
 
+  bool AllScriptsExecuted() {
+    return mLoadingRequests.IsEmpty() && mLoadedRequests.IsEmpty();
+  }
+
   nsresult OnStreamComplete(ScriptLoadInfo* aLoadInfo, nsresult aStatus);
 
   // Are we loading the primary script, which is not a Debugger Script?
