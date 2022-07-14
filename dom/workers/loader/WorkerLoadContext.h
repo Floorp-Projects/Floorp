@@ -60,8 +60,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
 
   RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
 
-  bool mExecutionScheduled = false;
-
   Maybe<nsString> mSourceMapURL;
 
   enum CacheStatus {
@@ -88,7 +86,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
 
   Maybe<bool> mMutedErrorFlag;
 
-  bool Finished() const { return mRequest->IsReadyToRun() && !mCachePromise; }
+  bool IsAwaitingPromise() const { return bool(mCachePromise); }
 };
 
 }  // namespace mozilla::dom

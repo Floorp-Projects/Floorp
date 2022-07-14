@@ -530,7 +530,6 @@ void WorkerScriptLoader::LoadingFinished(ScriptLoadRequest* aRequest,
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   loadContext->mLoadResult = aRv;
-  aRequest->SetReady();
 
   if (IsMainWorkerScript() && NS_SUCCEEDED(aRv)) {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->PrincipalURIMatchesScriptURL());
@@ -546,7 +545,7 @@ void WorkerScriptLoader::MaybeExecuteFinishedScripts(
   // We execute the last step if we don't have a pending operation with the
   // cache and the loading is completed.
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
-  if (loadContext->Finished()) {
+  if (!loadContext->IsAwaitingPromise()) {
     loadContext->ClearCacheCreator();
     DispatchMaybeMoveToLoadedList(aRequest);
   }
@@ -554,13 +553,11 @@ void WorkerScriptLoader::MaybeExecuteFinishedScripts(
 
 void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
-  MOZ_ASSERT(!loadContext->mExecutionScheduled);
-  loadContext->mExecutionScheduled = true;
+  aRequest->SetReady();
 
   while (!mLoadingRequests.isEmpty()) {
     ScriptLoadRequest* request = mLoadingRequests.getFirst();
-    if (!request->GetWorkerLoadContext()->mExecutionScheduled) {
+    if (!request->IsReadyToRun()) {
       break;
     }
 
@@ -898,7 +895,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
-  NS_ASSERTION(loadContext->mExecutionScheduled, "Should be scheduled!");
+  NS_ASSERTION(aRequest->IsReadyToRun(), "Should be scheduled!");
 
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();
