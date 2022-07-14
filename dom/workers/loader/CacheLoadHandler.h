@@ -158,7 +158,7 @@ class CacheCreator final : public PromiseNativeHandler {
     return mSandboxGlobalObject;
   }
 
-  void DeleteCache();
+  void DeleteCache(nsresult aReason);
 
  private:
   ~CacheCreator() = default;

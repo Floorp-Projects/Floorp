@@ -133,7 +133,7 @@ class WorkerScriptLoader final : public nsINamed {
   Maybe<ServiceWorkerDescriptor> mController;
   const bool mIsMainScript;
   WorkerScriptType mWorkerScriptType;
-  bool mCanceledMainThread;
+  Maybe<nsresult> mCancelMainThread;
   ErrorResult& mRv;
   bool mExecutionAborted = false;
   bool mMutedErrorFlag = false;
@@ -186,11 +186,11 @@ class WorkerScriptLoader final : public nsINamed {
 
   CacheCreator* GetCacheCreator() { return mCacheCreator; }
 
-  bool IsCancelled() { return mCanceledMainThread; }
+  bool IsCancelled() { return mCancelMainThread.isSome(); }
 
   void CancelMainThread(nsresult aCancelResult);
 
-  void DeleteCache();
+  void DeleteCache(nsresult aReason);
 
   nsresult LoadScripts();
 

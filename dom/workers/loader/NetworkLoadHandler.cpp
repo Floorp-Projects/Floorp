@@ -64,6 +64,10 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 
   mLoadInfo->mChannel = nullptr;
 
+  if (mLoader->mCancelMainThread.isSome()) {
+    return mLoader->mCancelMainThread.ref();
+  }
+
   if (NS_FAILED(aStatus)) {
     return aStatus;
   }

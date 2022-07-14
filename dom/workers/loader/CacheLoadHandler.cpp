@@ -70,7 +70,7 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
 
   // This will delete the cache object and will call LoadingFinished() with an
   // error for each ongoing operation.
-  mLoader->DeleteCache();
+  mLoader->DeleteCache(NS_ERROR_FAILURE);
 }
 
 CacheCreator::CacheCreator(WorkerPrivate* aWorkerPrivate)
@@ -196,7 +196,7 @@ void CacheCreator::ResolvedCallback(JSContext* aCx,
   }
 }
 
-void CacheCreator::DeleteCache() {
+void CacheCreator::DeleteCache(nsresult aReason) {
   AssertIsOnMainThread();
 
   // This is called when the load is canceled which can occur before
@@ -249,15 +249,10 @@ void CacheLoadHandler::Fail(nsresult aRv) {
 
   mLoadInfo->mCacheStatus = ScriptLoadInfo::Cancel;
 
-  // Stop if the load was aborted on the main thread.
-  // Can't use Finished() because mCachePromise may still be true.
-  if (mLoadInfo->mLoadingFinished) {
-    MOZ_ASSERT(!mLoadInfo->mChannel);
-    MOZ_ASSERT_IF(mLoadInfo->mCachePromise,
-                  mLoadInfo->mCacheStatus == ScriptLoadInfo::WritingToCache ||
-                      mLoadInfo->mCacheStatus == ScriptLoadInfo::Cancel);
-    return;
+  if (mLoadInfo->mCachePromise) {
+    mLoadInfo->mCachePromise->MaybeReject(aRv);
   }
+  mLoadInfo->mCachePromise = nullptr;
 
   mLoader->LoadingFinished(mLoadInfo, aRv);
 }

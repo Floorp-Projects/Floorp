@@ -471,7 +471,7 @@ WorkerScriptLoader::WorkerScriptLoader(
       mController(aController),
       mIsMainScript(aIsMainScript),
       mWorkerScriptType(aWorkerScriptType),
-      mCanceledMainThread(false),
+      mCancelMainThread(Nothing()),
       mRv(aRv) {
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
@@ -608,54 +608,26 @@ nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadInfo* aLoadInfo,
 void WorkerScriptLoader::CancelMainThread(nsresult aCancelResult) {
   AssertIsOnMainThread();
 
-  if (mCanceledMainThread) {
+  if (IsCancelled()) {
     return;
   }
 
-  mCanceledMainThread = true;
+  mCancelMainThread = Some(aCancelResult);
 
   if (mCacheCreator) {
     MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-    DeleteCache();
+    DeleteCache(aCancelResult);
   }
-
-  // Cancel all the channels that were already opened.
-  for (ScriptLoadInfo* loadInfo : mLoadingRequests) {
-    // If promise or channel is non-null, their failures will lead to
-    // LoadingFinished being called.
-    bool callLoadingFinished = true;
-
-    if (loadInfo->mCachePromise) {
-      MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-      loadInfo->mCachePromise->MaybeReject(aCancelResult);
-      loadInfo->mCachePromise = nullptr;
-      callLoadingFinished = false;
-    }
-
-    if (loadInfo->mChannel) {
-      if (NS_SUCCEEDED(loadInfo->mChannel->Cancel(aCancelResult))) {
-        callLoadingFinished = false;
-      } else {
-        NS_WARNING("Failed to cancel channel!");
-      }
-    }
-
-    if (callLoadingFinished && !loadInfo->Finished()) {
-      LoadingFinished(loadInfo, aCancelResult);
-    }
-  }
-
-  DispatchProcessPendingRequests();
 }
 
-void WorkerScriptLoader::DeleteCache() {
+void WorkerScriptLoader::DeleteCache(nsresult aReason) {
   AssertIsOnMainThread();
 
   if (!mCacheCreator) {
     return;
   }
 
-  mCacheCreator->DeleteCache();
+  mCacheCreator->DeleteCache(aReason);
   mCacheCreator = nullptr;
 }
 
