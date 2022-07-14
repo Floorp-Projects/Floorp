@@ -129,6 +129,7 @@ class WorkerScriptLoader final : public nsINamed {
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   nsTArrayView<ScriptLoadInfo> mLoadInfos;
   nsTArray<ScriptLoadInfo*> mLoadingRequests;
+  nsTArray<ScriptLoadInfo*> mLoadedRequests;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
   const bool mIsMainScript;
@@ -161,10 +162,11 @@ class WorkerScriptLoader final : public nsINamed {
 
   void MaybeExecuteFinishedScripts(ScriptLoadInfo* aLoadInfo);
 
+  bool MaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo);
+
   bool StoreCSP();
 
-  bool ProcessPendingRequests(JSContext* aCx,
-                              nsTArray<ScriptLoadInfo*>&& aLoadInfosToExecute);
+  bool ProcessPendingRequests(JSContext* aCx);
 
   nsresult OnStreamComplete(ScriptLoadInfo* aLoadInfo, nsresult aStatus);
 
@@ -206,7 +208,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   void LoadingFinished(ScriptLoadInfo* aLoadInfo, nsresult aRv);
 
-  void DispatchProcessPendingRequests();
+  void DispatchMaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo);
 
   bool EvaluateScript(JSContext* aCx, ScriptLoadInfo* aLoadInfo);
 
