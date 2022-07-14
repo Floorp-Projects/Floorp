@@ -235,9 +235,11 @@ if (!build_with_chromium) {
         "../../../pc:peerconnection_wrapper",
         "../../../rtc_base:logging",
         "../../../rtc_base:refcount",
+        "../../../rtc_base/synchronization:mutex",
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:variant",
       ]
     }

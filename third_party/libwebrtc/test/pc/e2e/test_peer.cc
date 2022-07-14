@@ -13,12 +13,18 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/scoped_refptr.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
+
+using VideoSubscription = ::webrtc::webrtc_pc_e2e::
+    PeerConnectionE2EQualityTestFixture::VideoSubscription;
+using VideoConfig =
+    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 class SetRemoteDescriptionCallback
     : public webrtc::SetRemoteDescriptionObserverInterface {
@@ -38,6 +44,36 @@ class SetRemoteDescriptionCallback
 };
 
 }  // namespace
+
+ConfigurableParams TestPeer::configurable_params() const {
+  MutexLock lock(&mutex_);
+  return configurable_params_;
+}
+
+void TestPeer::AddVideoConfig(VideoConfig config) {
+  MutexLock lock(&mutex_);
+  configurable_params_.video_configs.push_back(std::move(config));
+}
+
+void TestPeer::RemoveVideoConfig(absl::string_view stream_label) {
+  MutexLock lock(&mutex_);
+  bool config_removed = false;
+  for (auto it = configurable_params_.video_configs.begin();
+       it != configurable_params_.video_configs.end(); ++it) {
+    if (*it->stream_label == stream_label) {
+      configurable_params_.video_configs.erase(it);
+      config_removed = true;
+      break;
+    }
+  }
+  RTC_CHECK(config_removed) << *params_.name << ": No video config with label ["
+                            << stream_label << "] was found";
+}
+
+void TestPeer::SetVideoSubscription(VideoSubscription subscription) {
+  MutexLock lock(&mutex_);
+  configurable_params_.video_subscription = std::move(subscription);
+}
 
 bool TestPeer::SetRemoteDescription(
     std::unique_ptr<SessionDescriptionInterface> desc,

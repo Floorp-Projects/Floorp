@@ -233,10 +233,10 @@ class PeerConnectionE2EQualityTestFixture {
           stream_label(std::move(stream_label)) {}
 
     // Video stream width.
-    const size_t width;
+    size_t width;
     // Video stream height.
-    const size_t height;
-    const int32_t fps;
+    size_t height;
+    int32_t fps;
     VideoResolution GetResolution() const {
       return VideoResolution(width, height, fps);
     }
