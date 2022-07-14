@@ -924,8 +924,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   MOZ_ASSERT(loadContext->mMutedErrorFlag.isSome());
   options.setMutedErrors(loadContext->mMutedErrorFlag.valueOr(true));
 
-  if (loadContext->mSourceMapURL) {
-    options.setSourceMapURL(loadContext->mSourceMapURL->get());
+  if (aRequest->mSourceMapURL) {
+    options.setSourceMapURL(aRequest->mSourceMapURL->get());
   }
 
   // Our ErrorResult still shouldn't be a failure.

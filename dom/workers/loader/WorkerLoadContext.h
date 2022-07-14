@@ -60,8 +60,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
 
   RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
 
-  Maybe<nsString> mSourceMapURL;
-
   enum CacheStatus {
     // By default a normal script is just loaded from the network. But for
     // ServiceWorkers, we have to check if the cache contains the script and
