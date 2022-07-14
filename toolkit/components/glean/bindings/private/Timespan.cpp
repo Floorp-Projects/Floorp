@@ -109,7 +109,7 @@ GleanTimespan::SetRaw(uint32_t aDuration) {
 
 NS_IMETHODIMP
 GleanTimespan::TestGetValue(const nsACString& aStorageName,
-                            JS::MutableHandleValue aResult) {
+                            JS::MutableHandle<JS::Value> aResult) {
   auto result = mTimespan.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

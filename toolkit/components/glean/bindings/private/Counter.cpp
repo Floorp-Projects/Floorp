@@ -60,7 +60,7 @@ GleanCounter::Add(int32_t aAmount) {
 
 NS_IMETHODIMP
 GleanCounter::TestGetValue(const nsACString& aStorageName,
-                           JS::MutableHandleValue aResult) {
+                           JS::MutableHandle<JS::Value> aResult) {
   auto result = mCounter.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

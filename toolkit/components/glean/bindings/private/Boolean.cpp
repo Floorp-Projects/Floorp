@@ -58,7 +58,7 @@ GleanBoolean::Set(bool aValue) {
 
 NS_IMETHODIMP
 GleanBoolean::TestGetValue(const nsACString& aStorageName,
-                           JS::MutableHandleValue aResult) {
+                           JS::MutableHandle<JS::Value> aResult) {
   auto result = mBoolean.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

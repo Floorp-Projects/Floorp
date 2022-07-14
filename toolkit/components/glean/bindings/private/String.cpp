@@ -55,7 +55,7 @@ GleanString::Set(const nsACString& aValue) {
 
 NS_IMETHODIMP
 GleanString::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                          JS::MutableHandleValue aResult) {
+                          JS::MutableHandle<JS::Value> aResult) {
   auto result = mString.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

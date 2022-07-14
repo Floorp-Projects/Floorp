@@ -55,7 +55,7 @@ GleanUrl::Set(const nsACString& aValue) {
 
 NS_IMETHODIMP
 GleanUrl::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                       JS::MutableHandleValue aResult) {
+                       JS::MutableHandle<JS::Value> aResult) {
   auto result = mUrl.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

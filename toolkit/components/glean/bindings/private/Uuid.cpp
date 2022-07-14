@@ -67,7 +67,7 @@ GleanUuid::GenerateAndSet() {
 
 NS_IMETHODIMP
 GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                        JS::MutableHandleValue aResult) {
+                        JS::MutableHandle<JS::Value> aResult) {
   auto result = mUuid.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

@@ -54,7 +54,7 @@ GleanQuantity::Set(int64_t aValue) {
 
 NS_IMETHODIMP
 GleanQuantity::TestGetValue(const nsACString& aPingName,
-                            JS::MutableHandleValue aResult) {
+                            JS::MutableHandle<JS::Value> aResult) {
   auto result = mQuantity.TestGetValue(aPingName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());
