@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
+add_task(async function() {
   // Test basic import.
   let ns = ChromeUtils.importESModule("resource://test/es6module.js");
   Assert.equal(ns.loadCount, 1);
@@ -11,6 +11,12 @@ function run_test() {
   let ns2 = ChromeUtils.importESModule("resource://test/es6module.js");
   Assert.equal(ns.loadCount, 1);
   Assert.equal(ns, ns2);
+
+  // Test imports with absolute and relative URIs return the same thing.
+  let ns3 = ChromeUtils.importESModule("resource://test/es6module_absolute.js");
+  let ns4 = ChromeUtils.importESModule("resource://test/es6module_absolute2.js");
+  Assert.ok(ns3.absoluteX === ns3.relativeX);
+  Assert.ok(ns3.absoluteX === ns4.x);
 
   // Test load failure.
   testFailure("resource://test/es6module_not_found.js", {
@@ -48,6 +54,14 @@ function run_test() {
     stack: "testFailure",
     lineNumber: 1,
     columnNumber: 5,
+  });
+
+  // Test import error.
+  testFailure("resource://test/es6module_import_error.js", {
+    type: "SyntaxError",
+    fileName: "resource://test/es6module_import_error.js",
+    lineNumber: 1,
+    columnNumber: 9,
   });
 
   // Test execution failure.
@@ -91,7 +105,18 @@ function run_test() {
     lineNumber: 1,
     columnNumber: 0,
   });
-}
+
+  // Test dynamic import is not supported.
+  ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import.js");
+  const e = await ns.result;
+  checkException(e, {
+    type: "Error",
+    message: "not supported",
+    fileName: "resource://test/es6module_dynamic_import.js",
+    lineNumber: 5,
+    columnNumber: 1,
+  });
+});
 
 function testFailure(url, expected) {
   let threw = false;
@@ -110,8 +135,14 @@ function testFailure(url, expected) {
     exception = e;
   }
 
-  Assert.ok(threw);
+  Assert.ok(threw, "Error should be thrown");
 
+  checkException(exception, expected, importLine, importColumn);
+
+  return exception;
+}
+
+function checkException(exception, expected, importLine, importColumn) {
   if ("type" in expected) {
     Assert.equal(exception.constructor.name, expected.type, "error type");
   }
@@ -141,6 +172,4 @@ function testFailure(url, expected) {
     }
     Assert.equal(exception.columnNumber, expectedColumn, "columnNumber");
   }
-
-  return exception;
 }
