@@ -48,13 +48,13 @@ class FakeNetworkManager : public NetworkManagerBase,
     AddInterface(iface, "test" + rtc::ToString(next_index_++));
   }
 
-  void AddInterface(const SocketAddress& iface, const std::string& if_name) {
+  void AddInterface(const SocketAddress& iface, absl::string_view if_name) {
     AddInterface(iface, if_name, ADAPTER_TYPE_UNKNOWN);
   }
 
   void AddInterface(
       const SocketAddress& iface,
-      const std::string& if_name,
+      absl::string_view if_name,
       AdapterType type,
       absl::optional<AdapterType> underlying_vpn_adapter_type = absl::nullopt) {
     SocketAddress address(if_name, 0);
