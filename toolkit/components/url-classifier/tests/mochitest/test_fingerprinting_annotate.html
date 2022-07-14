@@ -21,6 +21,7 @@ runTests(SpecialPowers.Ci.nsIClassifiedChannel.CLASSIFIED_FINGERPRINTING,
            ["urlclassifier.features.socialtracking.annotate.blacklistHosts", ""],
            ["urlclassifier.features.socialtracking.annotate.blacklistTables", ""],
            ["privacy.trackingprotection.socialtracking.enabled", false],
+           ["privacy.trackingprotection.emailtracking.enabled", false],
          ],
          true /* a tracking resource */);
 SimpleTest.waitForExplicitFinish();
