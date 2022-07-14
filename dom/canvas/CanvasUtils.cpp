@@ -252,7 +252,11 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement* aCanvasElement,
   // No need to do a security check if the image used CORS for the load
   if (CORSUsed) return;
 
-  MOZ_ASSERT(aPrincipal, "Must have a principal here");
+  if (NS_WARN_IF(!aPrincipal)) {
+    MOZ_ASSERT_UNREACHABLE("Must have a principal here");
+    aCanvasElement->SetWriteOnly();
+    return;
+  }
 
   if (aCanvasElement->NodePrincipal()->Subsumes(aPrincipal)) {
     // This canvas has access to that image anyway
