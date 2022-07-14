@@ -410,7 +410,7 @@ bool TextAttrsMgr::FontFamilyTextAttr::GetFontFamily(nsIFrame* aFrame,
       nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
 
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
-  gfxFont* font = fontGroup->GetFirstValidFont();
+  RefPtr<gfxFont> font = fontGroup->GetFirstValidFont();
   gfxFontEntry* fontEntry = font->GetFontEntry();
   aFamily.Append(NS_ConvertUTF8toUTF16(fontEntry->FamilyName()));
   return true;
@@ -551,7 +551,7 @@ FontWeight TextAttrsMgr::FontWeightTextAttr::GetFontWeight(nsIFrame* aFrame) {
       nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
 
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
-  gfxFont* font = fontGroup->GetFirstValidFont();
+  RefPtr<gfxFont> font = fontGroup->GetFirstValidFont();
 
   // When there doesn't exist a bold font in the family and so the rendering of
   // a non-bold font face is changed so that the user sees what looks like a

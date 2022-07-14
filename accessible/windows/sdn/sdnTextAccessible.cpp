@@ -142,9 +142,9 @@ sdnTextAccessible::get_fontFamily(BSTR __RPC_FAR* aFontFamily) {
   if (!frame) return E_FAIL;
 
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForFrame(frame, 1.0f);
+  RefPtr<gfxFont> font = fm->GetThebesFontGroup()->GetFirstValidFont();
 
-  const nsCString& name =
-      fm->GetThebesFontGroup()->GetFirstValidFont()->GetName();
+  const nsCString& name = font->GetName();
   if (name.IsEmpty()) return S_FALSE;
 
   NS_ConvertUTF8toUTF16 str(name);
