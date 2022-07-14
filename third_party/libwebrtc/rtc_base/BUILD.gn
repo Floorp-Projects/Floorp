@@ -80,33 +80,6 @@ rtc_source_set("callback_list") {
 # the old concept of rtc_base and rtc_base_approved.
 rtc_source_set("rtc_base_approved") {
   visibility = [ "*" ]
-
-  if (is_win) {
-    sources = [
-      "win/get_activation_factory.cc",
-      "win/get_activation_factory.h",
-      "win/hstring.cc",
-      "win/hstring.h",
-      "win/scoped_com_initializer.cc",
-      "win/scoped_com_initializer.h",
-      "win/windows_version.cc",
-      "win/windows_version.h",
-    ]
-    deps = [
-      ":checks",
-      ":logging",
-      ":stringutils",
-    ]
-    data_deps = [ "//build/win:runtime_libs" ]
-  }
-
-  # These files add a dependency on the Win10 SDK v10.0.10240.
-  if (rtc_enable_win_wgc) {
-    sources += [
-      "win/create_direct3d_device.cc",
-      "win/create_direct3d_device.h",
-    ]
-  }
 }
 
 rtc_source_set("buffer") {
@@ -853,8 +826,8 @@ rtc_library("net_helpers") {
   }
   if (is_win) {
     deps += [
-      ":rtc_base_approved",
       ":win32",
+      "win:windows_version",
     ]
   }
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
@@ -1585,9 +1558,6 @@ if (rtc_include_tests) {
         "virtual_socket_unittest.cc",
         "zero_memory_unittest.cc",
       ]
-      if (is_win) {
-        sources += [ "win/windows_version_unittest.cc" ]
-      }
       deps = [
         ":atomicops",
         ":bit_buffer",
@@ -1662,6 +1632,10 @@ if (rtc_include_tests) {
         "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",
       ]
+
+      if (is_win) {
+        deps += [ "win:windows_version_unittest" ]
+      }
     }
 
     rtc_library("rtc_task_queue_unittests") {
