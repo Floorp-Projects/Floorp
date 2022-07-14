@@ -55,6 +55,11 @@ class ReceiveStream {
   // delivery thread.
   virtual void SetRtpExtensions(std::vector<RtpExtension> extensions) = 0;
 
+  // Access the currently set rtp extensions. Must be called on the packet
+  // delivery thread.
+  // TODO(tommi): Consider using `RtpHeaderExtensionMap` instead.
+  virtual const std::vector<RtpExtension>& GetRtpExtensions() const = 0;
+
   // Called on the packet delivery thread since some members of the config may
   // change mid-stream (e.g. the local ssrc). All mutation must also happen on
   // the packet delivery thread. Return value can be assumed to

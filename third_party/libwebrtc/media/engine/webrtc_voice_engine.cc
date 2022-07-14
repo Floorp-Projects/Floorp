@@ -1262,9 +1262,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
   webrtc::RtpParameters GetRtpParameters() const {
     webrtc::RtpParameters rtp_parameters;
     rtp_parameters.encodings.emplace_back();
-    const auto& config = stream_->rtp_config();
     rtp_parameters.encodings[0].ssrc = stream_->remote_ssrc();
-    rtp_parameters.header_extensions = config.extensions;
+    rtp_parameters.header_extensions = stream_->GetRtpExtensions();
     return rtp_parameters;
   }
 

@@ -489,6 +489,12 @@ void VideoReceiveStream2::SetRtpExtensions(
   c.rtp.extensions = std::move(extensions);
 }
 
+const std::vector<RtpExtension>& VideoReceiveStream2::GetRtpExtensions() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  // TODO(tommi): return the state held by `rtp_video_stream_receiver_`.
+  return config_.rtp.extensions;
+}
+
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
     const Decoder& decoder) {
   TRACE_EVENT0("webrtc",

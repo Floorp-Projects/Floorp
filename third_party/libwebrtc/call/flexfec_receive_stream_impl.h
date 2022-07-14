@@ -60,6 +60,7 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   // ReceiveStream impl.
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
+  const std::vector<RtpExtension>& GetRtpExtensions() const override;
   const RtpConfig& rtp_config() const override { return config_.rtp; }
   uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
 

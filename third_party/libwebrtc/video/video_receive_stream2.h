@@ -135,6 +135,7 @@ class VideoReceiveStream2
   void Stop() override;
 
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
+  const std::vector<RtpExtension>& GetRtpExtensions() const override;
 
   const RtpConfig& rtp_config() const override { return rtp(); }
 
