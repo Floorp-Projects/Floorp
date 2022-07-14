@@ -456,7 +456,8 @@ void TabListener::UpdateSessionStore(bool aIsFlush) {
     return;
   }
 
-  JS::RootedValue key(jsapi.cx(), context->Canonical()->Top()->PermanentKey());
+  JS::Rooted<JS::Value> key(jsapi.cx(),
+                            context->Canonical()->Top()->PermanentKey());
 
   nsresult rv = funcs->UpdateSessionStore(
       mOwnerContent, context, key, mEpoch,

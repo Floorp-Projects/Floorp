@@ -76,10 +76,10 @@ void SessionStoreScrollData::GetChildren(
 }
 
 void SessionStoreScrollData::ToJSON(JSContext* aCx,
-                                    JS::MutableHandleObject aRetval) {
-  JS::RootedObject self(aCx);
+                                    JS::MutableHandle<JSObject*> aRetval) {
+  JS::Rooted<JSObject*> self(aCx);
   {
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     if (!GetOrCreateDOMReflector(aCx, this, &value)) {
       return;
     }
@@ -87,7 +87,7 @@ void SessionStoreScrollData::ToJSON(JSContext* aCx,
     self.set(value.toObjectOrNull());
   }
 
-  JS::RootedObject result(aCx, JS_NewPlainObject(aCx));
+  JS::Rooted<JSObject*> result(aCx, JS_NewPlainObject(aCx));
 
   if (!IsEmpty()) {
     if (HasData(mScroll)) {

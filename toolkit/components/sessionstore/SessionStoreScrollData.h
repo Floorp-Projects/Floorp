@@ -39,7 +39,7 @@ class SessionStoreScrollData final : public nsISupports,
 
   void GetChildren(Nullable<ChildrenArray>& aChildren) const;
 
-  void ToJSON(JSContext* aCx, JS::MutableHandleObject aRetval);
+  void ToJSON(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval);
 
   void Update(const CollectedType& aUpdate);
 
