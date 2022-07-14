@@ -263,8 +263,6 @@ static void RejectShuttingDown(Promise* aPromise) {
                   IOUtils::IOError(NS_ERROR_ABORT).WithMessage(SHUTDOWN_ERROR));
 }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-
 static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
                                                       nsCString& reason) {
   if (MOZ_LIKELY(XRE_IsParentProcess())) {
@@ -298,7 +296,6 @@ static void AssertParentProcessWithCallerLocation(GlobalObject& aGlobal) {
     MOZ_CRASH_UNSAFE_PRINTF("%s", reason.get());
   }
 }
-#endif
 
 // IOUtils implementation
 /* static */
@@ -309,9 +306,7 @@ template <typename Fn>
 already_AddRefed<Promise> IOUtils::WithPromiseAndState(GlobalObject& aGlobal,
                                                        ErrorResult& aError,
                                                        Fn aFn) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   AssertParentProcessWithCallerLocation(aGlobal);
-#endif
 
   RefPtr<Promise> promise = CreateJSPromise(aGlobal, aError);
   if (!promise) {
