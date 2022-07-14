@@ -31,8 +31,8 @@ size_t OutstandingData::GetSerializedChunkSize(const Data& data) const {
 }
 
 void OutstandingData::Item::Ack() {
+  lifecycle_ = Lifecycle::kActive;
   ack_state_ = AckState::kAcked;
-  should_be_retransmitted_ = false;
 }
 
 OutstandingData::Item::NackAction OutstandingData::Item::Nack(
@@ -43,7 +43,7 @@ OutstandingData::Item::NackAction OutstandingData::Item::Nack(
       (retransmit_now || nack_count_ >= kNumberOfNacksForRetransmission)) {
     // Nacked enough times - it's considered lost.
     if (num_retransmissions_ < *max_retransmissions_) {
-      should_be_retransmitted_ = true;
+      lifecycle_ = Lifecycle::kToBeRetransmitted;
       return NackAction::kRetransmit;
     }
     Abandon();
@@ -52,17 +52,16 @@ OutstandingData::Item::NackAction OutstandingData::Item::Nack(
   return NackAction::kNothing;
 }
 
-void OutstandingData::Item::Retransmit() {
+void OutstandingData::Item::MarkAsRetransmitted() {
+  lifecycle_ = Lifecycle::kActive;
   ack_state_ = AckState::kUnacked;
-  should_be_retransmitted_ = false;
 
   nack_count_ = 0;
   ++num_retransmissions_;
 }
 
 void OutstandingData::Item::Abandon() {
-  is_abandoned_ = true;
-  should_be_retransmitted_ = false;
+  lifecycle_ = Lifecycle::kAbandoned;
 }
 
 bool OutstandingData::Item::has_expired(TimeMs now) const {
@@ -295,7 +294,7 @@ std::vector<std::pair<TSN, Data>> OutstandingData::GetChunksToBeRetransmitted(
 
     size_t serialized_size = GetSerializedChunkSize(item.data());
     if (serialized_size <= max_size) {
-      item.Retransmit();
+      item.MarkAsRetransmitted();
       result.emplace_back(tsn.Wrap(), item.data().Clone());
       max_size -= serialized_size;
       outstanding_bytes_ += serialized_size;
