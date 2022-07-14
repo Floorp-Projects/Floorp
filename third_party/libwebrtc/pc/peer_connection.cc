@@ -2141,16 +2141,6 @@ void PeerConnection::StopRtcEventLog_w() {
   }
 }
 
-cricket::ChannelInterface* PeerConnection::GetChannel(const std::string& mid) {
-  for (const auto& transceiver : rtp_manager()->transceivers()->UnsafeList()) {
-    cricket::ChannelInterface* channel = transceiver->internal()->channel();
-    if (channel && channel->mid() == mid) {
-      return channel;
-    }
-  }
-  return nullptr;
-}
-
 bool PeerConnection::GetSctpSslRole(rtc::SSLRole* role) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (!local_description() || !remote_description()) {
@@ -2864,9 +2854,11 @@ bool PeerConnection::OnTransportChanged(
     DataChannelTransportInterface* data_channel_transport) {
   RTC_DCHECK_RUN_ON(network_thread());
   bool ret = true;
-  auto base_channel = GetChannel(mid);
-  if (base_channel) {
-    ret = base_channel->SetRtpTransport(rtp_transport);
+  for (const auto& transceiver : rtp_manager()->transceivers()->UnsafeList()) {
+    cricket::ChannelInterface* channel = transceiver->internal()->channel();
+    if (channel && channel->mid() == mid) {
+      ret = channel->SetRtpTransport(rtp_transport);
+    }
   }
 
   if (mid == sctp_mid_n_) {
