@@ -56,6 +56,7 @@ RTC_NORETURN void rtc_FatalMessage(const char* file, int line, const char* msg);
 
 #include "absl/meta/type_traits.h"
 #include "absl/strings/string_view.h"
+#include "api/scoped_refptr.h"
 #include "rtc_base/numerics/safe_compare.h"
 #include "rtc_base/system/inline.h"
 #include "rtc_base/system/rtc_export.h"
@@ -190,6 +191,12 @@ inline Val<CheckArgType::kStringView, const absl::string_view*> MakeVal(
 
 inline Val<CheckArgType::kVoidP, const void*> MakeVal(const void* x) {
   return {x};
+}
+
+template <typename T>
+inline Val<CheckArgType::kVoidP, const void*> MakeVal(
+    const rtc::scoped_refptr<T>& p) {
+  return {p.get()};
 }
 
 // The enum class types are not implicitly convertible to arithmetic types.

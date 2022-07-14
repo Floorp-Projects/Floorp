@@ -587,6 +587,7 @@ rtc_library("checks") {
   ]
   deps = [
     ":safe_compare",
+    "../api:scoped_refptr",
     "system:inline",
     "system:rtc_export",
   ]
