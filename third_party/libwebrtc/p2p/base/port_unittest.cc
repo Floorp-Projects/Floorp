@@ -274,7 +274,11 @@ class TestChannel : public sigslot::has_slots<> {
         [this](PortInterface* port) { OnSrcPortDestroyed(port); });
   }
 
-  ~TestChannel() { Stop(); }
+  ~TestChannel() {
+    if (conn_) {
+      conn_->SignalDestroyed.disconnect(this);
+    }
+  }
 
   int complete_count() { return complete_count_; }
   Connection* conn() { return conn_; }
@@ -283,7 +287,6 @@ class TestChannel : public sigslot::has_slots<> {
 
   void Start() { port_->PrepareAddress(); }
   void CreateConnection(const Candidate& remote_candidate) {
-    RTC_DCHECK(!conn_);
     conn_ = port_->CreateConnection(remote_candidate, Port::ORIGIN_MESSAGE);
     IceMode remote_ice_mode =
         (ice_mode_ == ICEMODE_FULL) ? ICEMODE_LITE : ICEMODE_FULL;
@@ -295,7 +298,6 @@ class TestChannel : public sigslot::has_slots<> {
                                      &TestChannel::OnConnectionReadyToSend);
     connection_ready_to_send_ = false;
   }
-
   void OnConnectionStateChange(Connection* conn) {
     if (conn->write_state() == Connection::STATE_WRITABLE) {
       conn->set_use_candidate_attr(true);
@@ -303,10 +305,6 @@ class TestChannel : public sigslot::has_slots<> {
     }
   }
   void AcceptConnection(const Candidate& remote_candidate) {
-    if (conn_) {
-      conn_->SignalDestroyed.disconnect(this);
-      conn_ = nullptr;
-    }
     ASSERT_TRUE(remote_request_.get() != NULL);
     Candidate c = remote_candidate;
     c.set_address(remote_address_);
@@ -319,7 +317,8 @@ class TestChannel : public sigslot::has_slots<> {
   void Ping(int64_t now) { conn_->Ping(now); }
   void Stop() {
     if (conn_) {
-      port_->DestroyConnection(conn_);
+      conn_->SignalDestroyed.disconnect(this);
+      conn_->Destroy();
       conn_ = nullptr;
     }
   }
@@ -359,7 +358,7 @@ class TestChannel : public sigslot::has_slots<> {
   void OnDestroyed(Connection* conn) {
     ASSERT_EQ(conn_, conn);
     RTC_LOG(LS_INFO) << "OnDestroy connection " << conn << " deleted";
-    conn_ = nullptr;
+    conn_ = NULL;
     // When the connection is destroyed, also clear these fields so future
     // connections are possible.
     remote_request_.reset();
@@ -678,7 +677,7 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
 
     // Speed up destroying ch2's connection such that the test is ready to
     // accept a new connection from ch1 before ch1's connection destroys itself.
-    ch2->Stop();
+    ch2->conn()->Destroy();
     EXPECT_TRUE_WAIT(ch2->conn() == NULL, kDefaultTimeout);
   }
 
