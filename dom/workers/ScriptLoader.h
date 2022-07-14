@@ -129,7 +129,6 @@ class WorkerScriptLoader final : public nsINamed {
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   nsTArrayView<ScriptLoadInfo> mLoadInfos;
   nsTArray<ScriptLoadInfo*> mLoadingRequests;
-  RefPtr<CacheCreator> mCacheCreator;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
   const bool mIsMainScript;
@@ -160,7 +159,7 @@ class WorkerScriptLoader final : public nsINamed {
  protected:
   nsIURI* GetBaseURI();
 
-  void MaybeExecuteFinishedScripts(const ScriptLoadInfo* aLoadInfo);
+  void MaybeExecuteFinishedScripts(ScriptLoadInfo* aLoadInfo);
 
   bool StoreCSP();
 
@@ -185,13 +184,9 @@ class WorkerScriptLoader final : public nsINamed {
 
   Maybe<ServiceWorkerDescriptor>& GetController() { return mController; }
 
-  CacheCreator* GetCacheCreator() { return mCacheCreator; }
-
   bool IsCancelled() { return mCancelMainThread.isSome(); }
 
   void CancelMainThread(nsresult aCancelResult);
-
-  void DeleteCache(nsresult aReason);
 
   nsresult LoadScripts();
 

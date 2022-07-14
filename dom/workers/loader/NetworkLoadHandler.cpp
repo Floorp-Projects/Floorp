@@ -270,7 +270,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
 
   // If one load info cancels or hits an error, it can race with the start
   // callback coming from another load info.
-  if (mLoader->IsCancelled() || !mLoader->GetCacheCreator()) {
+  if (mLoader->IsCancelled()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -330,7 +330,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   ir->Headers()->FillResponseHeaders(channel);
 
   RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
-      mLoader->GetCacheCreator()->Global(), std::move(ir), nullptr);
+      mLoadInfo->GetCacheCreator()->Global(), std::move(ir), nullptr);
 
   mozilla::dom::RequestOrUSVString request;
 
@@ -343,7 +343,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   jsapi.Init();
 
   ErrorResult error;
-  RefPtr<Promise> cachePromise = mLoader->GetCacheCreator()->Cache_()->Put(
+  RefPtr<Promise> cachePromise = mLoadInfo->GetCacheCreator()->Cache_()->Put(
       jsapi.cx(), request, *response, error);
   error.WouldReportJSException();
   if (NS_WARN_IF(error.Failed())) {

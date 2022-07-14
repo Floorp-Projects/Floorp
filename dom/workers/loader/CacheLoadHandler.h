@@ -22,14 +22,17 @@
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/WorkerCommon.h"
 
-#include "mozilla/dom/ScriptLoadInfo.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 
 using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
-namespace mozilla::dom::workerinternals::loader {
+namespace mozilla::dom {
+
+class ScriptLoadInfo;
+
+namespace workerinternals::loader {
 
 /*
  * [DOMDOC] CacheLoadHandler for Workers
@@ -209,6 +212,7 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   ScriptLoadInfo* mLoadInfo;
 };
 
-}  // namespace mozilla::dom::workerinternals::loader
+}  // namespace workerinternals::loader
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_CacheLoadHandler_h__ */
