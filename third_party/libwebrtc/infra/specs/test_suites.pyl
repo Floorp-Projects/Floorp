@@ -35,26 +35,36 @@
       'common_video_unittests': {},
       'dcsctp_unittests': {},
       'modules_tests': {
-        'mixins': ['shards-2'],
+        'swarming': {
+          'shards': 2
+        },
       },
       'modules_unittests': {
-        'mixins': ['shards-6'],
+        'swarming': {
+          'shards': 6
+        },
       },
       'peerconnection_unittests': {
-        'mixins': ['shards-4'],
+        'swarming': {
+          'shards': 4
+        },
       },
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
       'rtc_unittests': {
-        'mixins': ['shards-6'],
+        'swarming': {
+          'shards': 6
+        },
       },
       'slow_peer_connection_unittests': {},
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
       'video_engine_tests': {
-        'mixins': ['shards-4'],
+        'swarming': {
+          'shards': 4
+        },
       },
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
@@ -86,26 +96,36 @@
         'args': ['--quick']
       },
       'modules_tests': {
-        'mixins': ['shards-2'],
+        'swarming': {
+          'shards': 2
+        },
       },
       'modules_unittests': {
-        'mixins': ['shards-6'],
+        'swarming': {
+          'shards': 6
+        },
       },
       'peerconnection_unittests': {
-        'mixins': ['shards-4'],
+        'swarming': {
+          'shards': 4
+        },
       },
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
       'rtc_unittests': {
-        'mixins': ['shards-6'],
+        'swarming': {
+          'shards': 6
+        },
       },
       'slow_peer_connection_unittests': {},
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
       'video_engine_tests': {
-        'mixins': ['shards-4'],
+        'swarming': {
+          'shards': 4
+        },
       },
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
@@ -116,15 +136,13 @@
       'common_audio_unittests': {},
       'common_video_unittests': {},
       'modules_tests': {
-        'mixins': ['shards-2', 'timeout-2h'],
+        'mixins': ['timeout-2h'],
         'args': [
           # Some tests exceed the default 180 seconds readline timeout.
           '--readline-timeout=1200',
         ]
       },
-      'modules_unittests': {
-        'mixins': ['shards-6'],
-      },
+      'modules_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
       # TODO(bugs.webrtc.org/11362): Real XCTests fail to start on devices.
@@ -134,9 +152,7 @@
       'test_support_unittests': {},
       'tools_unittests': {},
       'video_capture_tests': {},
-      'video_engine_tests': {
-        'mixins': ['shards-4'],
-      },
+      'video_engine_tests': {},
     },
     'ios_perf_tests': {
       'webrtc_perf_tests': {
@@ -152,18 +168,12 @@
       'common_audio_unittests': {},
       'common_video_unittests': {},
       'dcsctp_unittests': {},
-      'modules_tests': {
-        'mixins': ['shards-2'],
-      },
-      'modules_unittests': {
-        'mixins': ['shards-6'],
-      },
+      'modules_tests': {},
+      'modules_unittests': {},
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
       'rtc_stats_unittests': {},
-      'rtc_unittests': {
-        'mixins': ['shards-6'],
-      },
+      'rtc_unittests': {},
       'sdk_framework_unittests': {
         'mixins': ['xcode_parallelization']
       },
@@ -174,9 +184,7 @@
       'test_support_unittests': {},
       'tools_unittests': {},
       'video_capture_tests': {},
-      'video_engine_tests': {
-        'mixins': ['shards-4'],
-      },
+      'video_engine_tests': {},
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
