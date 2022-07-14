@@ -256,7 +256,8 @@ bool StreamFilter::IsAllowedInContext(JSContext* aCx, JSObject* /* unused */) {
                                              nsGkAtoms::webRequestBlocking);
 }
 
-JSObject* StreamFilter::WrapObject(JSContext* aCx, HandleObject aGivenProto) {
+JSObject* StreamFilter::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
   return StreamFilter_Binding::Wrap(aCx, this, aGivenProto);
 }
 

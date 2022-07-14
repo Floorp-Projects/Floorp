@@ -92,8 +92,8 @@ ExtensionAPIRequest::ExtensionAPIRequest(
 
 void ExtensionAPIRequest::Init(Maybe<dom::ClientInfo>& aSWClientInfo,
                                const uint64_t aSWDescriptorId,
-                               JS::HandleValue aRequestArgs,
-                               JS::HandleValue aCallerStack) {
+                               JS::Handle<JS::Value> aRequestArgs,
+                               JS::Handle<JS::Value> aCallerStack) {
   MOZ_ASSERT(NS_IsMainThread());
   mSWClientInfo = aSWClientInfo;
   mSWDescriptorId = aSWDescriptorId;

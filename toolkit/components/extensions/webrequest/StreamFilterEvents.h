@@ -43,7 +43,7 @@ class StreamFilterDataEvent : public dom::Event {
     return Constructor(target, aType, aParam);
   }
 
-  void GetData(JSContext* aCx, JS::MutableHandleObject aResult) {
+  void GetData(JSContext* aCx, JS::MutableHandle<JSObject*> aResult) {
     aResult.set(mData);
   }
 

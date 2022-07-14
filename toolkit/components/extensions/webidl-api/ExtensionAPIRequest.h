@@ -65,8 +65,8 @@ class ExtensionAPIRequest : public mozIExtensionAPIRequest {
       const ExtensionAPIRequestTarget& aRequestTarget);
 
   void Init(Maybe<dom::ClientInfo>& aSWClientInfo,
-            const uint64_t aSWDescriptorId, JS::HandleValue aRequestArgs,
-            JS::HandleValue aCallerStack);
+            const uint64_t aSWDescriptorId, JS::Handle<JS::Value> aRequestArgs,
+            JS::Handle<JS::Value> aCallerStack);
 
   static bool ShouldHaveResult(const APIRequestType& aRequestType) {
     switch (aRequestType) {

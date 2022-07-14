@@ -42,7 +42,8 @@ class ExtensionAPIRequestForwarder {
   using APIRequestType = mozIExtensionAPIRequest::RequestType;
   using APIResultType = mozIExtensionAPIRequestResult::ResultType;
 
-  static nsresult JSArrayToSequence(JSContext* aCx, JS::HandleValue aJSValue,
+  static nsresult JSArrayToSequence(JSContext* aCx,
+                                    JS::Handle<JS::Value> aJSValue,
                                     dom::Sequence<JS::Value>& aResult);
 
   static void ThrowUnexpectedError(JSContext* aCx, ErrorResult& aRv);
@@ -72,19 +73,19 @@ class ExtensionAPIRequestForwarder {
 
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
            const dom::Sequence<JS::Value>& aArgs,
-           JS::MutableHandleValue aRetVal, ErrorResult& aRv);
+           JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
            const dom::Sequence<JS::Value>& aArgs,
-           ExtensionEventListener* aListener, JS::MutableHandleValue aRetVal,
-           ErrorResult& aRv);
+           ExtensionEventListener* aListener,
+           JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
            const dom::Sequence<JS::Value>& aArgs,
            const RefPtr<dom::Promise>& aPromiseRetval, ErrorResult& aRv);
 
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
-           JS::MutableHandleValue aRetVal, ErrorResult& aRv);
+           JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
   void SetSerializedCallerStack(
       UniquePtr<dom::SerializedStackHolder> aCallerStack);
@@ -158,7 +159,7 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
 
   bool MainThreadRun() override;
 
-  void ReadResult(JSContext* aCx, JS::MutableHandleValue aResult,
+  void ReadResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                   ErrorResult& aRv);
 
   Maybe<mozIExtensionAPIRequestResult::ResultType> GetResultType() {
@@ -167,18 +168,19 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
 
  protected:
   virtual bool ProcessHandlerResult(JSContext* aCx,
-                                    JS::MutableHandleValue aRetval);
+                                    JS::MutableHandle<JS::Value> aRetval);
 
   already_AddRefed<WebExtensionPolicy> GetWebExtensionPolicy();
   already_AddRefed<ExtensionAPIRequest> CreateAPIRequest(JSContext* aCx);
 
   void SerializeCallerStack(JSContext* aCx);
-  void DeserializeCallerStack(JSContext* aCx, JS::MutableHandleValue aRetval);
+  void DeserializeCallerStack(JSContext* aCx,
+                              JS::MutableHandle<JS::Value> aRetval);
   void SerializeArgs(JSContext* aCx, const dom::Sequence<JS::Value>& aArgs,
                      ErrorResult& aRv);
   nsresult DeserializeArgs(JSContext* aCx, JS::MutableHandle<JS::Value> aArgs);
 
-  bool HandleAPIRequest(JSContext* aCx, JS::MutableHandleValue aRetval);
+  bool HandleAPIRequest(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 
   Maybe<mozIExtensionAPIRequestResult::ResultType> mResultType;
   Maybe<UniquePtr<dom::StructuredCloneHolder>> mResultHolder;

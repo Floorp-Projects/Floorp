@@ -472,7 +472,7 @@ bool MatchPattern::Overlaps(const MatchPattern& aPattern) const {
 }
 
 JSObject* MatchPattern::WrapObject(JSContext* aCx,
-                                   JS::HandleObject aGivenProto) {
+                                   JS::Handle<JSObject*> aGivenProto) {
   return MatchPattern_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -603,7 +603,7 @@ bool MatchPatternSet::OverlapsAll(const MatchPatternSet& aPatternSet) const {
 }
 
 JSObject* MatchPatternSet::WrapObject(JSContext* aCx,
-                                      JS::HandleObject aGivenProto) {
+                                      JS::Handle<JSObject*> aGivenProto) {
   return MatchPatternSet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -706,8 +706,8 @@ bool MatchGlob::Matches(const nsAString& aString) const {
 
     JSAutoRealm ar(cx, mRegExp);
 
-    JS::RootedObject regexp(cx, mRegExp);
-    JS::RootedValue result(cx);
+    JS::Rooted<JSObject*> regexp(cx, mRegExp);
+    JS::Rooted<JS::Value> result(cx);
 
     nsString input(aString);
 
@@ -727,7 +727,8 @@ bool MatchGlob::Matches(const nsAString& aString) const {
   return mPathLiteral == aString;
 }
 
-JSObject* MatchGlob::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) {
+JSObject* MatchGlob::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return MatchGlob_Binding::Wrap(aCx, this, aGivenProto);
 }
 

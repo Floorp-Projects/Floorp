@@ -439,7 +439,8 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
           aCx, js::NewFunctionWithReserved(aCx, SendResponseCallback::Call,
                                            /* nargs */ 1, 0, "sendResponse"));
       sendResponseObj = JS_GetFunctionObject(sendResponseFn);
-      JS::RootedValue sendResponseValue(aCx, JS::ObjectValue(*sendResponseObj));
+      JS::Rooted<JS::Value> sendResponseValue(
+          aCx, JS::ObjectValue(*sendResponseObj));
 
       // Create a SendResponseCallback instance that keeps a reference
       // to the promise to resolve when the static SendReponseCallback::Call
@@ -593,7 +594,7 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
     return;
   }
 
-  JS::RootedValue retval(aCx, aValue);
+  JS::Rooted<JS::Value> retval(aCx, aValue);
 
   if (retval.isObject()) {
     // Try to serialize the result as an ClonedErrorHolder,
@@ -603,7 +604,7 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
     RefPtr<dom::ClonedErrorHolder> ceh =
         dom::ClonedErrorHolder::Create(aCx, errObj, rv);
     if (!rv.Failed() && ceh) {
-      JS::RootedObject obj(aCx);
+      JS::Rooted<JSObject*> obj(aCx);
       // Note: `ToJSValue` cannot be used because ClonedErrorHolder isn't
       // wrapped cached.
       Unused << NS_WARN_IF(!ceh->WrapObject(aCx, nullptr, &obj));

@@ -538,7 +538,7 @@ void WebExtensionPolicy::Localize(const nsAString& aInput,
 }
 
 JSObject* WebExtensionPolicy::WrapObject(JSContext* aCx,
-                                         JS::HandleObject aGivenProto) {
+                                         JS::Handle<JSObject*> aGivenProto) {
   return WebExtensionPolicy_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -568,7 +568,7 @@ bool WebExtensionPolicy::CanAccessWindow(
 }
 
 void WebExtensionPolicy::GetReadyPromise(
-    JSContext* aCx, JS::MutableHandleObject aResult) const {
+    JSContext* aCx, JS::MutableHandle<JSObject*> aResult) const {
   if (mReadyPromise) {
     aResult.set(mReadyPromise->PromiseObj());
   } else {
@@ -816,12 +816,12 @@ void MozDocumentMatcher::GetOriginAttributesPatterns(
 }
 
 JSObject* MozDocumentMatcher::WrapObject(JSContext* aCx,
-                                         JS::HandleObject aGivenProto) {
+                                         JS::Handle<JSObject*> aGivenProto) {
   return MozDocumentMatcher_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-JSObject* WebExtensionContentScript::WrapObject(JSContext* aCx,
-                                                JS::HandleObject aGivenProto) {
+JSObject* WebExtensionContentScript::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return WebExtensionContentScript_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -883,7 +883,7 @@ void DocumentObserver::NotifyMatch(MozDocumentMatcher& aMatcher,
 }
 
 JSObject* DocumentObserver::WrapObject(JSContext* aCx,
-                                       JS::HandleObject aGivenProto) {
+                                       JS::Handle<JSObject*> aGivenProto) {
   return MozDocumentObserver_Binding::Wrap(aCx, this, aGivenProto);
 }
 
