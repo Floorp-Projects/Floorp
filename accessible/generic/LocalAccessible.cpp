@@ -1467,6 +1467,10 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     SendCache(CacheDomain::GroupInfo, CacheUpdateType::Update);
     return;
   }
+
+  if (aAttribute == nsGkAtoms::accesskey) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
+  }
 }
 
 void LocalAccessible::ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
@@ -3515,6 +3519,13 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
       }
+    }
+
+    KeyBinding accessKey = AccessKey();
+    if (!accessKey.IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::accesskey, accessKey.Serialize());
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::accesskey, DeleteEntry());
     }
   }
 
