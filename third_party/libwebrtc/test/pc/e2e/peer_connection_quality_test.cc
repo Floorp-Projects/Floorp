@@ -486,6 +486,9 @@ void PeerConnectionE2EQualityTest::SetupCallOnSignalingThread(
           if (!video_config.simulcast_config->encoding_params.empty()) {
             enc_params = video_config.simulcast_config->encoding_params[i];
           }
+          if (!video_config.encoding_params.empty()) {
+            enc_params = video_config.encoding_params[i];
+          }
           // We need to be sure, that all rids will be unique with all mids.
           enc_params.rid = std::to_string(alice_transceivers_counter) + "000" +
                            std::to_string(i);
@@ -495,6 +498,9 @@ void PeerConnectionE2EQualityTest::SetupCallOnSignalingThread(
     } else {
       transceiver_params.direction = RtpTransceiverDirection::kSendRecv;
       RtpEncodingParameters enc_params;
+      if (video_config.encoding_params.size() == 1) {
+        enc_params = video_config.encoding_params[0];
+      }
       enc_params.max_bitrate_bps = video_config.max_encode_bitrate_bps;
       enc_params.min_bitrate_bps = video_config.min_encode_bitrate_bps;
       transceiver_params.send_encodings.push_back(enc_params);

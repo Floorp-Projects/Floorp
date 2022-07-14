@@ -322,20 +322,19 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_ChangeNetworkConditions) {
 TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Screenshare) {
   std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
       network_links = CreateNetwork();
-  AddPeer(
-      network_links.first, [](PeerConfigurer* alice) {
-        VideoConfig screenshare(320, 180, 30);
-        screenshare.stream_label = "alice-screenshare";
-        screenshare.content_hint = VideoTrackInterface::ContentHint::kText;
-        ScreenShareConfig screen_share_config =
-            ScreenShareConfig(TimeDelta::Seconds(2));
-        screen_share_config.scrolling_params = ScrollingParams(
-            TimeDelta::Millis(1800), kDefaultSlidesWidth, kDefaultSlidesHeight);
-        auto screen_share_frame_generator =
-            CreateScreenShareFrameGenerator(screenshare, screen_share_config);
-        alice->AddVideoConfig(std::move(screenshare),
-                              std::move(screen_share_frame_generator));
-      });
+  AddPeer(network_links.first, [](PeerConfigurer* alice) {
+    VideoConfig screenshare(320, 180, 30);
+    screenshare.stream_label = "alice-screenshare";
+    screenshare.content_hint = VideoTrackInterface::ContentHint::kText;
+    ScreenShareConfig screen_share_config =
+        ScreenShareConfig(TimeDelta::Seconds(2));
+    screen_share_config.scrolling_params = ScrollingParams(
+        TimeDelta::Millis(1800), kDefaultSlidesWidth, kDefaultSlidesHeight);
+    auto screen_share_frame_generator =
+        CreateScreenShareFrameGenerator(screenshare, screen_share_config);
+    alice->AddVideoConfig(std::move(screenshare),
+                          std::move(screen_share_frame_generator));
+  });
   AddPeer(network_links.second, [](PeerConfigurer* bob) {});
   RunAndCheckEachVideoStreamReceivedFrames(RunParams(TimeDelta::Seconds(2)));
 }
@@ -444,8 +443,10 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_HighBitrate) {
     alice->SetBitrateSettings(bitrate_settings);
     VideoConfig video(800, 600, 15);
     video.stream_label = "alice-video";
-    video.min_encode_bitrate_bps = 500'000;
-    video.max_encode_bitrate_bps = 3'000'000;
+    RtpEncodingParameters encoding_parameters;
+    encoding_parameters.min_bitrate_bps = 500'000;
+    encoding_parameters.max_bitrate_bps = 3'000'000;
+    video.encoding_params.push_back(std::move(encoding_parameters));
     alice->AddVideoConfig(std::move(video));
 
     AudioConfig audio;
