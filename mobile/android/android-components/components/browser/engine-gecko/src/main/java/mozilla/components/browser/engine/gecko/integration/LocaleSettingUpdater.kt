@@ -44,7 +44,7 @@ class LocaleSettingUpdater(
     override fun findValue(): Array<String> {
         val localeList = LocaleList.getAdjustedDefault()
         return arrayOfNulls<Unit>(localeList.size())
-            .mapIndexedNotNull { i, _ -> localeList.get(i).toLanguageTag() }
+            .mapIndexedNotNull { i, _ -> localeList.get(i)?.toLanguageTag() }
             .toTypedArray()
     }
 }

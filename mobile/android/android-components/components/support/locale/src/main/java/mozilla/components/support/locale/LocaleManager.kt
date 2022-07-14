@@ -74,7 +74,7 @@ object LocaleManager {
      */
     fun getSystemDefault(): Locale {
         val config = Resources.getSystem().configuration
-        return ConfigurationCompat.getLocales(config).get(0)
+        return ConfigurationCompat.getLocales(config).get(0) ?: Locale.getDefault()
     }
 
     internal fun updateResources(baseContext: Context): Context {
