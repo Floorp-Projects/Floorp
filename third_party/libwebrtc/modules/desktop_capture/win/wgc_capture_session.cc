@@ -12,7 +12,9 @@
 
 #include <windows.graphics.capture.interop.h>
 #include <windows.graphics.directX.direct3d11.interop.h>
-#include <wrl.h>
+#include <windows.graphics.h>
+#include <wrl/client.h>
+#include <wrl/event.h>
 
 #include <memory>
 #include <utility>
@@ -93,8 +95,11 @@ void RecordGetFrameResult(GetFrameResult error) {
 }  // namespace
 
 WgcCaptureSession::WgcCaptureSession(ComPtr<ID3D11Device> d3d11_device,
-                                     ComPtr<WGC::IGraphicsCaptureItem> item)
-    : d3d11_device_(std::move(d3d11_device)), item_(std::move(item)) {}
+                                     ComPtr<WGC::IGraphicsCaptureItem> item,
+                                     ABI::Windows::Graphics::SizeInt32 size)
+    : d3d11_device_(std::move(d3d11_device)),
+      item_(std::move(item)),
+      size_(size) {}
 WgcCaptureSession::~WgcCaptureSession() = default;
 
 HRESULT WgcCaptureSession::StartCapture() {
@@ -162,18 +167,8 @@ HRESULT WgcCaptureSession::StartCapture() {
     return hr;
   }
 
-  ABI::Windows::Graphics::SizeInt32 item_size;
-  hr = item_.Get()->get_Size(&item_size);
-  if (FAILED(hr)) {
-    RecordStartCaptureResult(StartCaptureResult::kGetItemSizeFailed);
-    return hr;
-  }
-
-  previous_size_ = item_size;
-
-  hr = frame_pool_statics2->CreateFreeThreaded(direct3d_device_.Get(),
-                                               kPixelFormat, kNumBuffers,
-                                               item_size, &frame_pool_);
+  hr = frame_pool_statics2->CreateFreeThreaded(
+      direct3d_device_.Get(), kPixelFormat, kNumBuffers, size_, &frame_pool_);
   if (FAILED(hr)) {
     RecordStartCaptureResult(StartCaptureResult::kCreateFreeThreadedFailed);
     return hr;
@@ -272,8 +267,7 @@ HRESULT WgcCaptureSession::GetFrame(
   // If the size changed, we must resize `mapped_texture_` and `frame_pool_` to
   // fit the new size. This must be done before `CopySubresourceRegion` so that
   // the textures are the same size.
-  if (previous_size_.Height != new_size.Height ||
-      previous_size_.Width != new_size.Width) {
+  if (size_.Height != new_size.Height || size_.Width != new_size.Width) {
     hr = CreateMappedTexture(texture_2D, new_size.Width, new_size.Height);
     if (FAILED(hr)) {
       RecordGetFrameResult(GetFrameResult::kResizeMappedTextureFailed);
@@ -291,8 +285,8 @@ HRESULT WgcCaptureSession::GetFrame(
   // If the size has changed since the last capture, we must be sure to use
   // the smaller dimensions. Otherwise we might overrun our buffer, or
   // read stale data from the last frame.
-  int image_height = std::min(previous_size_.Height, new_size.Height);
-  int image_width = std::min(previous_size_.Width, new_size.Width);
+  int image_height = std::min(size_.Height, new_size.Height);
+  int image_width = std::min(size_.Width, new_size.Width);
 
   D3D11_BOX copy_region;
   copy_region.left = 0;
@@ -337,7 +331,7 @@ HRESULT WgcCaptureSession::GetFrame(
   *output_frame = std::make_unique<WgcDesktopFrame>(size, row_data_length,
                                                     std::move(image_data));
 
-  previous_size_ = new_size;
+  size_ = new_size;
   RecordGetFrameResult(GetFrameResult::kSuccess);
   return hr;
 }
