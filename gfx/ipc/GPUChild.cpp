@@ -326,7 +326,7 @@ mozilla::ipc::IPCResult GPUChild::RecvBHRThreadHang(
 }
 
 mozilla::ipc::IPCResult GPUChild::RecvUpdateMediaCodecsSupported(
-    const media::MediaCodecsSupported& aSupported) {
+    const PDMFactory::MediaCodecsSupported& aSupported) {
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
       RemoteDecodeIn::GpuProcess, aSupported);
   return IPC_OK();

@@ -18,7 +18,7 @@ include protocol PSandboxTesting;
 include "mozilla/ipc/ByteBufUtils.h";
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
-using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
+using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
 
 #if defined(XP_WIN)
 [MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
