@@ -137,7 +137,7 @@ class ScriptPreloader : public nsIObserver,
   bool Active() const { return mCacheInitialized && !mStartupFinished; }
 
  private:
-  Result<Ok, nsresult> InitCacheInternal(JS::HandleObject scope = nullptr);
+  Result<Ok, nsresult> InitCacheInternal(JS::Handle<JSObject*> scope = nullptr);
   already_AddRefed<JS::Stencil> GetCachedStencilInternal(
       JSContext* cx, const JS::DecodeOptions& options, const nsCString& path);
 
@@ -452,7 +452,7 @@ class ScriptPreloader : public nsIObserver,
   already_AddRefed<JS::Stencil> WaitForCachedStencil(
       JSContext* cx, const JS::DecodeOptions& options, CachedStencil* script);
 
-  void DecodeNextBatch(size_t chunkSize, JS::HandleObject scope = nullptr);
+  void DecodeNextBatch(size_t chunkSize, JS::Handle<JSObject*> scope = nullptr);
 
   static void OffThreadDecodeCallback(JS::OffThreadToken* token, void* context);
   void FinishOffThreadDecode(JS::OffThreadToken* token);
