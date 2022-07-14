@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '6d7878cb332dfb840ab36b88657cd76426a3423f',
+  'chromium_revision': '2c71305f8d0b6398575a02ad0db1da1e8595f2a8',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,30 +23,30 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@82612663023d5ef1d1716cd7c27977ed06bb7fdd',
+    'https://chromium.googlesource.com/chromium/src/base@1936293b591431d26e66314b0d3615babaf051b3',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@87b04ad66530e4a571cef36d6e71ef737d23a887',
+    'https://chromium.googlesource.com/chromium/src/build@c393df7e73ab1976890f5e8aeb7cc6820aa72604',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@f0d740e4e2f803e39dfd5d8d11f7d87bdf489514',
+    'https://chromium.googlesource.com/chromium/src/buildtools@113378f9b3aff02ba827411ea1b7ad462cffae02',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@ac2b722342d815f73b7b68bf1abe056887c61f5d',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@78c796fee8a3608f0b7a2bc90de371f05edd4a1e',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@b926234b2f9a8359bfb841682216a32a55467064',
+    'https://chromium.googlesource.com/chromium/src/testing@4a2f544bfaf626f209bfdda6aefd23fb6e70b3cf',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@9bef587db200ea3c546341be56f5299e1fd7ad8d',
+    'https://chromium.googlesource.com/chromium/src/third_party@98d31af5e30537e2efc83265a54f9d845c6d10ec',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-amd64',
-        'version': 'git_revision:ecec350e71ea4600f7bde967854e083fbc53a37f',
+        'version': 'git_revision:48b013c9d9debc0f5fc1dd71a257b3c38c5acb43',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:ecec350e71ea4600f7bde967854e083fbc53a37f',
+        'version': 'git_revision:48b013c9d9debc0f5fc1dd71a257b3c38c5acb43',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:ecec350e71ea4600f7bde967854e083fbc53a37f',
+        'version': 'git_revision:48b013c9d9debc0f5fc1dd71a257b3c38c5acb43',
       }
     ],
     'dep_type': 'cipd',
@@ -78,9 +78,9 @@ deps = {
   'src/buildtools/third_party/libc++/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@79a2e924d96e2fc1e4b937c42efd08898fa472d7',
   'src/buildtools/third_party/libc++abi/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@a53022fa7e65cca3139ff2eed008bbe108812c55',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@c055932162c3d9e3b790c573c07189f6930ceeda',
   'src/buildtools/third_party/libunwind/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@43a7a256a0f1871845e190c8191daa2917c2b8e2',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@d8a47466e35c62c83847d609b4acef64c5bfe56e',
 
   'src/third_party/android_system_sdk': {
       'packages': [
@@ -138,7 +138,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@381db68adc980da8e158f53405d25495c65aa8b2',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@8a87603683bda769d437e48cc1a7494a2e237ead',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@32b2d1d52612e47531df9289e3f5fdd5447507dd',
   'src/third_party/findbugs': {
@@ -214,13 +214,13 @@ deps = {
   'src/third_party/dav1d/libdav1d':
     'https://chromium.googlesource.com/external/github.com/videolan/dav1d.git@87f9a81cd770e49394a45deca7a3df41243de00b',
   'src/third_party/libaom/source/libaom':
-    'https://aomedia.googlesource.com/aom.git@e24a83a72b507b93a94f299f0eead1213dbac214',
+    'https://aomedia.googlesource.com/aom.git@7977bb492ace778d35d75014f1b70405990bb158',
   'src/third_party/libunwindstack': {
       'url': 'https://chromium.googlesource.com/chromium/src/third_party/libunwindstack.git@6868358481bb1e5e20d155c1084dc436c88b5e6b',
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@2f647cd61036e8a21ec146e6e3a270da498ff8fb',
+    'https://android.googlesource.com/platform/external/perfetto.git@b384c7aa6bb8ac202e0cf0d5da0ec7d602b44b8b',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@665f6a3065555317e75915af2561cf9b776e50b6',
   'src/third_party/libyuv':
@@ -275,7 +275,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@8ca1cca79eb9969251444a26a1f39bf9978c5adb',
+    'https://chromium.googlesource.com/chromium/src/tools@fc36b66b3172e4510f0052b4c65a3f1e9108968f',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -363,7 +363,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'k4t_4yTm03LpWgvtVabkki_hjYZ0-R6vK2R68XEEKFwC',
+          'version': 'W49waog_dod6ZGkIni6NUwsPyX_eRgTIRv3f0sszUcQC',
       },
     ],
     'condition': 'checkout_android',
@@ -987,7 +987,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_auth',
-              'version': 'version:2@17.0.0.cr1',
+              'version': 'version:2@20.1.0.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -998,7 +998,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_auth_api_phone',
-              'version': 'version:2@17.5.0.cr1',
+              'version': 'version:2@18.0.1.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1009,7 +1009,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_auth_base',
-              'version': 'version:2@17.0.0.cr1',
+              'version': 'version:2@18.0.2.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1020,7 +1020,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_base',
-              'version': 'version:2@17.5.0.cr1',
+              'version': 'version:2@18.0.1.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1031,7 +1031,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_basement',
-              'version': 'version:2@17.5.0.cr1',
+              'version': 'version:2@18.0.1.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1130,7 +1130,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_instantapps',
-              'version': 'version:2@17.0.0.cr1',
+              'version': 'version:2@18.0.1.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1141,7 +1141,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_location',
-              'version': 'version:2@17.0.0.cr1',
+              'version': 'version:2@19.0.1.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1185,7 +1185,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_tasks',
-              'version': 'version:2@17.2.0.cr1',
+              'version': 'version:2@18.0.1.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1196,7 +1196,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_vision',
-              'version': 'version:2@18.0.0.cr1',
+              'version': 'version:2@20.1.3.cr1',
           },
       ],
       'condition': 'checkout_android',
@@ -1207,7 +1207,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/com_google_android_gms_play_services_vision_common',
-              'version': 'version:2@18.0.0.cr1',
+              'version': 'version:2@19.1.3.cr1',
           },
       ],
       'condition': 'checkout_android',
