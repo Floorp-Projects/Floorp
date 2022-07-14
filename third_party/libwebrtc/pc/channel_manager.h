@@ -26,6 +26,7 @@
 #include "media/base/media_channel.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
+#include "pc/channel_factory_interface.h"
 #include "pc/channel_interface.h"
 #include "pc/session_description.h"
 #include "rtc_base/system/file_wrapper.h"
