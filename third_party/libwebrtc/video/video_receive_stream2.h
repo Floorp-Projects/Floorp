@@ -17,6 +17,7 @@
 
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/recordable_encoded_frame.h"
 #include "call/call.h"
@@ -53,7 +54,7 @@ class CallStats;
 // Utility struct for grabbing metadata from a VideoFrame and processing it
 // asynchronously without needing the actual frame data.
 // Additionally the caller can bundle information from the current clock
-// when the metadata is captured, for accurate reporting and not needeing
+// when the metadata is captured, for accurate reporting and not needing
 // multiple calls to clock->Now().
 struct VideoFrameMetaData {
   VideoFrameMetaData(const webrtc::VideoFrame& frame, Timestamp now)
@@ -86,9 +87,6 @@ class VideoReceiveStream2
       public CallStatsObserver,
       public FrameSchedulingReceiver {
  public:
-  // The default number of milliseconds to pass before re-requesting a key frame
-  // to be sent.
-  static constexpr int kMaxWaitForKeyFrameMs = 200;
   // The maximum number of buffered encoded frames when encoded output is
   // configured.
   static constexpr size_t kBufferedEncodedFramesMaxSize = 60;
@@ -189,21 +187,20 @@ class VideoReceiveStream2
   void OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) override;
   void OnDecodableFrameTimeout(TimeDelta wait_time) override;
   void CreateAndRegisterExternalDecoder(const Decoder& decoder);
-  int64_t GetMaxWaitMs() const RTC_RUN_ON(decode_queue_);
+  TimeDelta GetMaxWait() const RTC_RUN_ON(decode_queue_);
   void HandleEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
-  void HandleFrameBufferTimeout(int64_t now_ms, int64_t wait_ms)
+  void HandleFrameBufferTimeout(Timestamp now, TimeDelta wait)
       RTC_RUN_ON(packet_sequence_checker_);
   void UpdatePlayoutDelays() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_sequence_checker_);
-  void RequestKeyFrame(int64_t timestamp_ms)
-      RTC_RUN_ON(packet_sequence_checker_);
+  void RequestKeyFrame(Timestamp now) RTC_RUN_ON(packet_sequence_checker_);
   void HandleKeyFrameGeneration(bool received_frame_is_keyframe,
-                                int64_t now_ms,
+                                Timestamp now,
                                 bool always_request_key_frame,
                                 bool keyframe_request_is_due)
       RTC_RUN_ON(packet_sequence_checker_);
-  bool IsReceivingKeyFrame(int64_t timestamp_ms) const
+  bool IsReceivingKeyFrame(Timestamp timestamp) const
       RTC_RUN_ON(packet_sequence_checker_);
   int DecodeAndMaybeDispatchEncodedFrame(std::unique_ptr<EncodedFrame> frame)
       RTC_RUN_ON(decode_queue_);
@@ -266,31 +263,32 @@ class VideoReceiveStream2
   // If we have successfully decoded any frame.
   bool frame_decoded_ RTC_GUARDED_BY(decode_queue_) = false;
 
-  int64_t last_keyframe_request_ms_ RTC_GUARDED_BY(decode_queue_) = 0;
-  int64_t last_complete_frame_time_ms_
-      RTC_GUARDED_BY(worker_sequence_checker_) = 0;
+  absl::optional<Timestamp> last_keyframe_request_
+      RTC_GUARDED_BY(decode_queue_);
+  absl::optional<Timestamp> last_complete_frame_time_
+      RTC_GUARDED_BY(worker_sequence_checker_);
 
   // Keyframe request intervals are configurable through field trials.
-  const int max_wait_for_keyframe_ms_;
-  const int max_wait_for_frame_ms_;
+  const TimeDelta max_wait_for_keyframe_;
+  const TimeDelta max_wait_for_frame_;
 
   // All of them tries to change current min_playout_delay on `timing_` but
   // source of the change request is different in each case. Among them the
   // biggest delay is used. -1 means use default value from the `timing_`.
   //
   // Minimum delay as decided by the RTP playout delay extension.
-  int frame_minimum_playout_delay_ms_ RTC_GUARDED_BY(worker_sequence_checker_) =
-      -1;
+  absl::optional<TimeDelta> frame_minimum_playout_delay_
+      RTC_GUARDED_BY(worker_sequence_checker_);
   // Minimum delay as decided by the setLatency function in "webrtc/api".
-  int base_minimum_playout_delay_ms_ RTC_GUARDED_BY(worker_sequence_checker_) =
-      -1;
+  absl::optional<TimeDelta> base_minimum_playout_delay_
+      RTC_GUARDED_BY(worker_sequence_checker_);
   // Minimum delay as decided by the A/V synchronization feature.
-  int syncable_minimum_playout_delay_ms_
-      RTC_GUARDED_BY(worker_sequence_checker_) = -1;
+  absl::optional<TimeDelta> syncable_minimum_playout_delay_
+      RTC_GUARDED_BY(worker_sequence_checker_);
 
   // Maximum delay as decided by the RTP playout delay extension.
-  int frame_maximum_playout_delay_ms_ RTC_GUARDED_BY(worker_sequence_checker_) =
-      -1;
+  absl::optional<TimeDelta> frame_maximum_playout_delay_
+      RTC_GUARDED_BY(worker_sequence_checker_);
 
   // Function that is triggered with encoded frames, if not empty.
   std::function<void(const RecordableEncodedFrame&)>

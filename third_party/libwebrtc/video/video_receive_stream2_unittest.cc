@@ -483,7 +483,7 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder,
 }
 
 class VideoReceiveStream2TestWithSimulatedClock
-    : public ::testing::TestWithParam<std::tuple<int, bool>> {
+    : public ::testing::TestWithParam<std::tuple<TimeDelta, bool>> {
  public:
   class FakeRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
    public:
@@ -531,7 +531,7 @@ class VideoReceiveStream2TestWithSimulatedClock
     VideoReceiveStream::Config config(transport, decoder_factory);
     config.rtp.remote_ssrc = 1111;
     config.rtp.local_ssrc = 2222;
-    config.rtp.nack.rtp_history_ms = std::get<0>(GetParam());  // rtx-time.
+    config.rtp.nack.rtp_history_ms = std::get<0>(GetParam()).ms();  // rtx-time.
     config.renderer = renderer;
     VideoReceiveStream::Decoder fake_decoder;
     fake_decoder.payload_type = 99;
@@ -606,7 +606,7 @@ class VideoReceiveStream2TestWithSimulatedClock
 
 TEST_P(VideoReceiveStream2TestWithSimulatedClock,
        RequestsKeyFramesUntilKeyFrameReceived) {
-  auto tick = TimeDelta::Millis(std::get<0>(GetParam()) / 2);
+  auto tick = std::get<0>(GetParam()) / 2;
   bool sent_rtcp = false;
   EXPECT_CALL(mock_transport_, SendRtcp)
       .Times(1)
@@ -711,10 +711,9 @@ TEST_P(VideoReceiveStream2TestWithSimulatedClock,
 INSTANTIATE_TEST_SUITE_P(
     RtxTime,
     VideoReceiveStream2TestWithSimulatedClock,
-    ::testing::Combine(
-        ::testing::Values(internal::VideoReceiveStream2::kMaxWaitForKeyFrameMs,
-                          50 /*ms*/),
-        ::testing::Bool()));
+    ::testing::Combine(::testing::Values(TimeDelta::Millis(200),
+                                         TimeDelta::Millis(50)),
+                       ::testing::Bool()));
 
 class VideoReceiveStream2TestWithLazyDecoderCreation : public ::testing::Test {
  public:
