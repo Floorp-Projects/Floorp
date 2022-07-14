@@ -72,8 +72,8 @@ function test() {
 
     is(
       privateWin.gBrowser.tabs[0].label,
-      "Private Browsing",
-      "New tabs in the private browsing windows should have 'Private Browsing' as the title."
+      "New Private Tab",
+      "New tabs in the private browsing windows should have 'New Private Tab' as the title."
     );
 
     privateWin.close();

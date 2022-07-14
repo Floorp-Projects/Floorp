@@ -1000,7 +1000,7 @@
       // Normal tab title is used also in the permanent private browsing mode.
       return PrivateBrowsingUtils.isWindowPrivate(window) &&
         !Services.prefs.getBoolPref("browser.privatebrowsing.autostart")
-        ? "tabs.emptyPrivateTabTitle"
+        ? "tabs.emptyPrivateTabTitle2"
         : "tabs.emptyTabTitle";
     }
 
