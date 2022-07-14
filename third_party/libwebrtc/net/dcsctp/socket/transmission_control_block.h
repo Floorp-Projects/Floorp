@@ -183,6 +183,8 @@ class TransmissionControlBlock : public Context {
 
   bool has_cookie_echo_chunk() const { return cookie_echo_chunk_.has_value(); }
 
+  void MaybeSendFastRetransmit();
+
   // Fills `builder` (which may already be filled with control chunks) with
   // other control and data chunks, and sends packets as much as can be
   // allowed by the congestion control algorithm.

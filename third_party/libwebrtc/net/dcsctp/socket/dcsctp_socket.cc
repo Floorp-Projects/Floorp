@@ -1391,6 +1391,17 @@ void DcSctpSocket::HandleSack(const CommonHeader& header,
 
     if (tcb_->retransmission_queue().HandleSack(now, sack)) {
       MaybeSendShutdownOrAck();
+      // Receiving an ACK may make the socket go into fast recovery mode.
+      // https://datatracker.ietf.org/doc/html/rfc4960#section-7.2.4
+      // "Determine how many of the earliest (i.e., lowest TSN) DATA chunks
+      // marked for retransmission will fit into a single packet, subject to
+      // constraint of the path MTU of the destination transport address to
+      // which the packet is being sent.  Call this value K. Retransmit those K
+      // DATA chunks in a single packet.  When a Fast Retransmit is being
+      // performed, the sender SHOULD ignore the value of cwnd and SHOULD NOT
+      // delay retransmission for this single packet."
+      tcb_->MaybeSendFastRetransmit();
+
       // Receiving an ACK will decrease outstanding bytes (maybe now below
       // cwnd?) or indicate packet loss that may result in sending FORWARD-TSN.
       tcb_->SendBufferedPackets(now);

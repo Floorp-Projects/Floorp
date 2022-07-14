@@ -74,6 +74,16 @@ class RetransmissionQueue {
   // Handles an expired retransmission timer.
   void HandleT3RtxTimerExpiry();
 
+  bool has_data_to_be_fast_retransmitted() const {
+    return outstanding_data_.has_data_to_be_fast_retransmitted();
+  }
+
+  // Returns a list of chunks to "fast retransmit" that would fit in one SCTP
+  // packet with `bytes_in_packet` bytes available. The current value
+  // of `cwnd` is ignored.
+  std::vector<std::pair<TSN, Data>> GetChunksForFastRetransmit(
+      size_t bytes_in_packet);
+
   // Returns a list of chunks to send that would fit in one SCTP packet with
   // `bytes_remaining_in_packet` bytes available. This may be further limited by
   // the congestion control windows. Note that `ShouldSendForwardTSN` must be

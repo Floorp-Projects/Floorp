@@ -110,8 +110,9 @@ void OutstandingData::AckChunk(AckInfo& ack_info,
       --outstanding_items_;
     }
     if (iter->second.should_be_retransmitted()) {
+      RTC_DCHECK(to_be_fast_retransmitted_.find(iter->first) ==
+                 to_be_fast_retransmitted_.end());
       to_be_retransmitted_.erase(iter->first);
-      to_be_fast_retransmitted_.erase(iter->first);
     }
     iter->second.Ack();
     ack_info.highest_tsn_acked =
