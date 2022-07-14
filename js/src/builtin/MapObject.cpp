@@ -579,12 +579,16 @@ class js::OrderedHashTableRef : public gc::BufferableRef {
         reinterpret_cast<typename ObjectT::UnbarrieredTable*>(realTable);
     NurseryKeysVector* keys = GetNurseryKeys(object);
     MOZ_ASSERT(keys);
-    for (Value& key : *keys) {
-      Value prior = key;
+    for (Value key : *keys) {
       MOZ_ASSERT(unbarrieredTable->hash(key) ==
                  realTable->hash(*reinterpret_cast<HashableValue*>(&key)));
-      TraceManuallyBarrieredEdge(trc, &key, "ordered hash table key");
-      unbarrieredTable->rekeyOneEntry(prior, key);
+      // Note: we use a lambda to avoid tenuring keys that have been removed
+      // from the Map or Set.
+      unbarrieredTable->rekeyOneEntry(key, [trc](const Value& prior) {
+        Value key = prior;
+        TraceManuallyBarrieredEdge(trc, &key, "ordered hash table key");
+        return key;
+      });
     }
     DeleteNurseryKeys(object);
   }

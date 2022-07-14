@@ -94,20 +94,13 @@
 
 const BINDGEN_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand};
+use fs_err::{self as fs, File};
 use serde::{Deserialize, Serialize};
-use std::convert::TryInto;
 use std::io::prelude::*;
-use std::{
-    collections::HashMap,
-    env,
-    ffi::OsString,
-    fs::File,
-    path::{Path, PathBuf},
-    process::Command,
-    str::FromStr,
-};
+use std::{collections::HashMap, env, process::Command, str::FromStr};
 
 pub mod backend;
 pub mod bindings;
@@ -135,12 +128,12 @@ pub trait BindingGeneratorConfig: for<'de> Deserialize<'de> {
 
 fn load_bindings_config<BC: BindingGeneratorConfig>(
     ci: &ComponentInterface,
-    udl_file: &Path,
-    config_file_override: Option<&Path>,
+    crate_root: &Utf8Path,
+    config_file_override: Option<&Utf8Path>,
 ) -> Result<BC> {
     // Load the config from the TOML value, falling back to an empty map if it doesn't exist
     let mut config_map: toml::value::Table =
-        match load_bindings_config_toml::<BC>(udl_file, config_file_override)? {
+        match load_bindings_config_toml::<BC>(crate_root, config_file_override)? {
             Some(value) => value
                 .try_into()
                 .context("Bindings config must be a TOML table")?,
@@ -148,7 +141,7 @@ fn load_bindings_config<BC: BindingGeneratorConfig>(
         };
 
     // Update it with the defaults from the component interface
-    for (key, value) in BC::get_config_defaults(ci).into_iter() {
+    for (key, value) in BC::get_config_defaults(ci) {
         config_map.entry(key).or_insert(value);
     }
 
@@ -192,22 +185,22 @@ impl<'de> Deserialize<'de> for EmptyBindingGeneratorConfig {
 // If there is an error parsing the file then Err will be returned. If the file is missing or the
 // entry for the bindings is missing, then Ok(None) will be returned.
 fn load_bindings_config_toml<BC: BindingGeneratorConfig>(
-    udl_file: &Path,
-    config_file_override: Option<&Path>,
+    crate_root: &Utf8Path,
+    config_file_override: Option<&Utf8Path>,
 ) -> Result<Option<toml::Value>> {
     let config_path = match config_file_override {
         Some(cfg) => cfg.to_owned(),
-        None => guess_crate_root(udl_file)?.join("uniffi.toml"),
+        None => crate_root.join("uniffi.toml"),
     };
 
     if !config_path.exists() {
         return Ok(None);
     }
 
-    let contents = slurp_file(&config_path)
-        .with_context(|| format!("Failed to read config file from {:?}", config_path))?;
+    let contents = fs::read_to_string(&config_path)
+        .with_context(|| format!("Failed to read config file from {}", config_path))?;
     let full_config = toml::Value::from_str(&contents)
-        .with_context(|| format!("Failed to parse config file {:?}", config_path))?;
+        .with_context(|| format!("Failed to parse config file {}", config_path))?;
 
     Ok(full_config
         .get("bindings")
@@ -233,7 +226,7 @@ pub trait BindingGenerator: Sized {
         &self,
         ci: ComponentInterface,
         config: Self::Config,
-        out_dir: &Path,
+        out_dir: &Utf8Path,
     ) -> anyhow::Result<()>;
 }
 
@@ -253,47 +246,39 @@ pub trait BindingGenerator: Sized {
 /// - `out_dir_override`: The path to write the bindings to. If [`None`], it will be the path to the parent directory of the `udl_file`
 pub fn generate_external_bindings(
     binding_generator: impl BindingGenerator,
-    udl_file: impl AsRef<Path>,
-    config_file_override: Option<impl AsRef<Path>>,
-    out_dir_override: Option<impl AsRef<Path>>,
+    udl_file: impl AsRef<Utf8Path>,
+    config_file_override: Option<impl AsRef<Utf8Path>>,
+    out_dir_override: Option<impl AsRef<Utf8Path>>,
 ) -> Result<()> {
     let out_dir_override = out_dir_override.as_ref().map(|p| p.as_ref());
     let config_file_override = config_file_override.as_ref().map(|p| p.as_ref());
+
+    let crate_root = guess_crate_root(udl_file.as_ref())?;
     let out_dir = get_out_dir(udl_file.as_ref(), out_dir_override)?;
     let component = parse_udl(udl_file.as_ref()).context("Error parsing UDL")?;
-    let bindings_config =
-        load_bindings_config(&component, udl_file.as_ref(), config_file_override)?;
-    binding_generator.write_bindings(component, bindings_config, out_dir.as_path())
+    let bindings_config = load_bindings_config(&component, crate_root, config_file_override)?;
+    binding_generator.write_bindings(component, bindings_config, &out_dir)
 }
 
 // Generate the infrastructural Rust code for implementing the UDL interface,
 // such as the `extern "C"` function definitions and record data types.
-pub fn generate_component_scaffolding<P: AsRef<Path>>(
-    udl_file: P,
-    config_file_override: Option<P>,
-    out_dir_override: Option<P>,
+pub fn generate_component_scaffolding(
+    udl_file: &Utf8Path,
+    config_file_override: Option<&Utf8Path>,
+    out_dir_override: Option<&Utf8Path>,
     format_code: bool,
 ) -> Result<()> {
-    let config_file_override = config_file_override.as_ref().map(|p| p.as_ref());
-    let out_dir_override = out_dir_override.as_ref().map(|p| p.as_ref());
-    let udl_file = udl_file.as_ref();
     let component = parse_udl(udl_file)?;
     let _config = get_config(
         &component,
         guess_crate_root(udl_file)?,
         config_file_override,
     );
-    let mut filename = Path::new(&udl_file)
-        .file_stem()
-        .ok_or_else(|| anyhow!("not a file"))?
-        .to_os_string();
-    filename.push(".uniffi.rs");
-    let mut out_dir = get_out_dir(udl_file, out_dir_override)?;
-    out_dir.push(filename);
-    let mut f =
-        File::create(&out_dir).map_err(|e| anyhow!("Failed to create output file: {:?}", e))?;
-    write!(f, "{}", RustScaffolding::new(&component))
-        .map_err(|e| anyhow!("Failed to write output file: {:?}", e))?;
+    let file_stem = udl_file.file_stem().context("not a file")?;
+    let filename = format!("{}.uniffi.rs", file_stem);
+    let out_dir = get_out_dir(udl_file, out_dir_override)?.join(filename);
+    let mut f = File::create(&out_dir)?;
+    write!(f, "{}", RustScaffolding::new(&component)).context("Failed to write output file")?;
     if format_code {
         Command::new("rustfmt").arg(&out_dir).status()?;
     }
@@ -302,17 +287,13 @@ pub fn generate_component_scaffolding<P: AsRef<Path>>(
 
 // Generate the bindings in the target languages that call the scaffolding
 // Rust code.
-pub fn generate_bindings<P: AsRef<Path>>(
-    udl_file: P,
-    config_file_override: Option<P>,
+pub fn generate_bindings(
+    udl_file: &Utf8Path,
+    config_file_override: Option<&Utf8Path>,
     target_languages: Vec<&str>,
-    out_dir_override: Option<P>,
+    out_dir_override: Option<&Utf8Path>,
     try_format_code: bool,
 ) -> Result<()> {
-    let out_dir_override = out_dir_override.as_ref().map(|p| p.as_ref());
-    let config_file_override = config_file_override.as_ref().map(|p| p.as_ref());
-    let udl_file = udl_file.as_ref();
-
     let component = parse_udl(udl_file)?;
     let config = get_config(
         &component,
@@ -334,11 +315,11 @@ pub fn generate_bindings<P: AsRef<Path>>(
 
 // Run tests against the foreign language bindings (generated and compiled at the same time).
 // Note that the cdylib we're testing against must be built already.
-pub fn run_tests<P: AsRef<Path>>(
-    cdylib_dir: P,
-    udl_files: &[&str],
-    test_scripts: Vec<&str>,
-    config_file_override: Option<P>,
+pub fn run_tests(
+    cdylib_dir: impl AsRef<Utf8Path>,
+    udl_files: &[impl AsRef<Utf8Path>],
+    test_scripts: &[impl AsRef<Utf8Path>],
+    config_file_override: Option<&Utf8Path>,
 ) -> Result<()> {
     // XXX - this is just for tests, so one config_file_override for all .udl files doesn't really
     // make sense, so we don't let tests do this.
@@ -347,15 +328,15 @@ pub fn run_tests<P: AsRef<Path>>(
     assert!(udl_files.len() == 1 || config_file_override.is_none());
 
     let cdylib_dir = cdylib_dir.as_ref();
-    let config_file_override = config_file_override.as_ref().map(|p| p.as_ref());
 
     // Group the test scripts by language first.
-    let mut language_tests: HashMap<TargetLanguage, Vec<String>> = HashMap::new();
+    let mut language_tests: HashMap<TargetLanguage, Vec<_>> = HashMap::new();
 
     for test_script in test_scripts {
-        let lang: TargetLanguage = PathBuf::from(test_script)
+        let test_script = test_script.as_ref();
+        let lang: TargetLanguage = test_script
             .extension()
-            .ok_or_else(|| anyhow!("File has no extension!"))?
+            .context("File has no extension!")?
             .try_into()?;
         language_tests
             .entry(lang)
@@ -365,11 +346,12 @@ pub fn run_tests<P: AsRef<Path>>(
 
     for (lang, test_scripts) in language_tests {
         for udl_file in udl_files {
-            let crate_root = guess_crate_root(Path::new(udl_file))?;
-            let component = parse_udl(Path::new(udl_file))?;
+            let udl_file = udl_file.as_ref();
+            let crate_root = guess_crate_root(udl_file)?;
+            let component = parse_udl(udl_file)?;
             let config = get_config(&component, crate_root, config_file_override)?;
-            bindings::write_bindings(&config.bindings, &component, &cdylib_dir, lang, true)?;
-            bindings::compile_bindings(&config.bindings, &component, &cdylib_dir, lang)?;
+            bindings::write_bindings(&config.bindings, &component, cdylib_dir, lang, true)?;
+            bindings::compile_bindings(&config.bindings, &component, cdylib_dir, lang)?;
         }
         for test_script in test_scripts {
             bindings::run_script(cdylib_dir, &test_script, lang)?;
@@ -383,12 +365,12 @@ pub fn run_tests<P: AsRef<Path>>(
 /// For now, we assume that the UDL file is in `./src/something.udl` relative
 /// to the crate root. We might consider something more sophisticated in
 /// future.
-fn guess_crate_root(udl_file: &Path) -> Result<&Path> {
+fn guess_crate_root(udl_file: &Utf8Path) -> Result<&Utf8Path> {
     let path_guess = udl_file
         .parent()
-        .ok_or_else(|| anyhow!("UDL file has no parent folder!"))?
+        .context("UDL file has no parent folder!")?
         .parent()
-        .ok_or_else(|| anyhow!("UDL file has no grand-parent folder!"))?;
+        .context("UDL file has no grand-parent folder!")?;
     if !path_guess.join("Cargo.toml").is_file() {
         bail!("UDL file does not appear to be inside a crate")
     }
@@ -397,55 +379,47 @@ fn guess_crate_root(udl_file: &Path) -> Result<&Path> {
 
 fn get_config(
     component: &ComponentInterface,
-    crate_root: &Path,
-    config_file_override: Option<&Path>,
+    crate_root: &Utf8Path,
+    config_file_override: Option<&Utf8Path>,
 ) -> Result<Config> {
     let default_config: Config = component.into();
 
-    let config_file: Option<PathBuf> = match config_file_override {
-        Some(cfg) => Some(PathBuf::from(cfg)),
-        None => crate_root.join("uniffi.toml").canonicalize().ok(),
+    let config_file = match config_file_override {
+        Some(cfg) => Some(cfg.to_owned()),
+        None => crate_root.join("uniffi.toml").canonicalize_utf8().ok(),
     };
 
     match config_file {
         Some(path) => {
-            let contents = slurp_file(&path)
-                .with_context(|| format!("Failed to read config file from {:?}", &path))?;
+            let contents = fs::read_to_string(&path)
+                .with_context(|| format!("Failed to read config file from {}", &path))?;
             let loaded_config: Config = toml::de::from_str(&contents)
-                .with_context(|| format!("Failed to generate config from file {:?}", &path))?;
+                .with_context(|| format!("Failed to generate config from file {}", &path))?;
             Ok(loaded_config.merge_with(&default_config))
         }
         None => Ok(default_config),
     }
 }
 
-fn get_out_dir(udl_file: &Path, out_dir_override: Option<&Path>) -> Result<PathBuf> {
+fn get_out_dir(udl_file: &Utf8Path, out_dir_override: Option<&Utf8Path>) -> Result<Utf8PathBuf> {
     Ok(match out_dir_override {
         Some(s) => {
             // Create the directory if it doesn't exist yet.
-            std::fs::create_dir_all(&s)?;
-            s.canonicalize()
-                .map_err(|e| anyhow!("Unable to find out-dir: {:?}", e))?
+            fs::create_dir_all(&s)?;
+            s.canonicalize_utf8().context("Unable to find out-dir")?
         }
         None => udl_file
             .parent()
-            .ok_or_else(|| anyhow!("File has no parent directory"))?
+            .context("File has no parent directory")?
             .to_owned(),
     })
 }
 
-fn parse_udl(udl_file: &Path) -> Result<ComponentInterface> {
-    let udl =
-        slurp_file(udl_file).map_err(|_| anyhow!("Failed to read UDL from {:?}", &udl_file))?;
+fn parse_udl(udl_file: &Utf8Path) -> Result<ComponentInterface> {
+    let udl = fs::read_to_string(udl_file)
+        .with_context(|| format!("Failed to read UDL from {}", &udl_file))?;
     udl.parse::<interface::ComponentInterface>()
-        .map_err(|e| anyhow!("Failed to parse UDL: {}", e))
-}
-
-fn slurp_file(file_name: &Path) -> Result<String> {
-    let mut contents = String::new();
-    let mut f = File::open(file_name)?;
-    f.read_to_string(&mut contents)?;
-    Ok(contents)
+        .context("Failed to parse UDL")
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -495,11 +469,12 @@ impl<V: Clone> MergeWith for HashMap<String, V> {
     }
 }
 
-// structs to help our cmdline parsing.
+// structs to help our cmdline parsing. Note that docstrings below form part
+// of the "help" output.
+/// Scaffolding and bindings generator for Rust
 #[derive(Parser)]
 #[clap(name = "uniffi-bindgen")]
 #[clap(version = clap::crate_version!())]
-#[clap(about = "Scaffolding and bindings generator for Rust")]
 #[clap(propagate_version = true)]
 struct Cli {
     #[clap(subcommand)]
@@ -508,78 +483,60 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    #[clap(name = "generate", about = "Generate foreign language bindings")]
+    /// Generate foreign language bindings
     Generate {
+        /// Foreign language(s) for which to build bindings.
         #[clap(long, short, possible_values = &["kotlin", "python", "swift", "ruby"])]
-        #[clap(help = "Foreign language(s) for which to build bindings.")]
         language: Vec<String>,
 
-        #[clap(
-            long,
-            short,
-            help = "Directory in which to write generated files. Default is same folder as .udl file."
-        )]
-        out_dir: Option<OsString>,
+        /// Directory in which to write generated files. Default is same folder as .udl file.
+        #[clap(long, short)]
+        out_dir: Option<Utf8PathBuf>,
 
-        #[clap(long, short, help = "Do not try to format the generated bindings.")]
+        /// Do not try to format the generated bindings.
+        #[clap(long, short)]
         no_format: bool,
 
-        #[clap(
-            long,
-            short,
-            help = "Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location."
-        )]
-        config: Option<OsString>,
+        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
+        #[clap(long, short)]
+        config: Option<Utf8PathBuf>,
 
-        #[clap(help = "Path to the UDL file.")]
-        udl_file: OsString,
+        /// Path to the UDL file.
+        udl_file: Utf8PathBuf,
     },
 
-    #[clap(name = "scaffolding", about = "Generate Rust scaffolding code")]
+    /// Generate Rust scaffolding code
     Scaffolding {
-        #[clap(
-            long,
-            short,
-            help = "Directory in which to write generated files. Default is same folder as .udl file."
-        )]
-        out_dir: Option<OsString>,
+        /// Directory in which to write generated files. Default is same folder as .udl file.
+        #[clap(long, short)]
+        out_dir: Option<Utf8PathBuf>,
 
-        #[clap(
-            long,
-            short,
-            help = "Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location."
-        )]
-        config: Option<OsString>,
+        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
+        #[clap(long, short)]
+        config: Option<Utf8PathBuf>,
 
-        #[clap(long, short, help = "Do not try to format the generated bindings.")]
+        /// Do not try to format the generated bindings.
+        #[clap(long, short)]
         no_format: bool,
 
-        #[clap(help = "Path to the UDL file.")]
-        udl_file: OsString,
+        /// Path to the UDL file.
+        udl_file: Utf8PathBuf,
     },
 
-    #[clap(
-        name = "test",
-        about = "Run test scripts against foreign language bindings."
-    )]
+    /// Run test scripts against foreign language bindings.
     Test {
-        #[clap(
-            help = "Path to the directory containing the cdylib the scripts will be testing against."
-        )]
-        cdylib_dir: OsString,
+        /// Path to the directory containing the cdylib the scripts will be testing against.
+        cdylib_dir: Utf8PathBuf,
 
-        #[clap(help = "Path to the UDL file.")]
-        udl_file: OsString,
+        /// Path to the UDL file.
+        udl_file: Utf8PathBuf,
 
-        #[clap(help = "Foreign language(s) test scripts to run.")]
-        test_scripts: Vec<String>,
+        /// Foreign language(s) test scripts to run.
+        test_scripts: Vec<Utf8PathBuf>,
 
-        #[clap(
-            long,
-            short,
-            help = "Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location."
-        )]
-        config: Option<OsString>,
+        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
+        #[clap(long, short)]
+        config: Option<Utf8PathBuf>,
     },
 }
 
@@ -594,9 +551,9 @@ pub fn run_main() -> Result<()> {
             udl_file,
         } => crate::generate_bindings(
             udl_file,
-            config.as_ref(),
+            config.as_deref(),
             language.iter().map(String::as_str).collect(),
-            out_dir.as_ref(),
+            out_dir.as_deref(),
             !no_format,
         ),
         Commands::Scaffolding {
@@ -606,8 +563,8 @@ pub fn run_main() -> Result<()> {
             udl_file,
         } => crate::generate_component_scaffolding(
             udl_file,
-            config.as_ref(),
-            out_dir.as_ref(),
+            config.as_deref(),
+            out_dir.as_deref(),
             !no_format,
         ),
         Commands::Test {
@@ -615,14 +572,20 @@ pub fn run_main() -> Result<()> {
             udl_file,
             test_scripts,
             config,
-        } => crate::run_tests(
-            cdylib_dir,
-            &[&udl_file.to_string_lossy()], // XXX - kinda defeats the purpose of OsString?
-            test_scripts.iter().map(String::as_str).collect(),
-            config.as_ref(),
-        ),
+        } => crate::run_tests(cdylib_dir, &[udl_file], test_scripts, config.as_deref()),
     }?;
     Ok(())
+}
+
+// FIXME(HACK):
+// Include the askama config file into the build.
+// That way cargo tracks the file and other tools relying on file tracking see it as well.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1774585
+// In the future askama should handle that itself by using the `track_path::path` API,
+// see https://github.com/rust-lang/rust/pull/84029
+#[allow(dead_code)]
+mod __unused {
+    const _: &[u8] = include_bytes!("../askama.toml");
 }
 
 #[cfg(test)]
@@ -632,7 +595,7 @@ mod test {
     #[test]
     fn test_guessing_of_crate_root_directory_from_udl_file() {
         // When running this test, this will be the ./uniffi_bindgen directory.
-        let this_crate_root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+        let this_crate_root = Utf8PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
 
         let example_crate_root = this_crate_root
             .parent()

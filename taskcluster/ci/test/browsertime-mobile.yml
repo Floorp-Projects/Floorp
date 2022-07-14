@@ -109,32 +109,6 @@ browsertime-tp6m:
                     default: []
             default: []
 
-browsertime-tp6m-g5:
-    <<: *tp6m-defaults
-    raptor:
-        apps: [geckoview, fenix, chrome-m, refbrow]
-        run-visual-metrics: true
-        test: tp6m
-        subtests:
-            - [google-maps, gmaps]
-            - [google-search-restaurants, gsearch-r]
-            - instagram
-            - imdb
-            - reddit
-            - sina
-            - [stackoverflow, stacko]
-            - web-de
-            - wikipedia
-            - youtube
-    run-on-projects:
-        by-app:
-            geckoview:
-                by-test-platform:
-                    android-hw-(g5|a51).*shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta, mozilla-release]
-                    default: []
-            default: []
-
 browsertime-tp6m-essential:
     <<: *tp6m-defaults
     raptor:

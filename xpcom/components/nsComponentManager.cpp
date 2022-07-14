@@ -205,9 +205,7 @@ class MOZ_STACK_CLASS EntryWrapper final {
    * Returns the description string for the module this entry belongs to.
    * Currently always returns "<unknown module>".
    */
-  nsCString ModuleDescription() {
-    return "<unknown module>"_ns;
-  }
+  nsCString ModuleDescription() { return "<unknown module>"_ns; }
 
  private:
   Variant<nsFactoryEntry*, const StaticModule*> mEntry;
@@ -441,7 +439,7 @@ nsresult nsComponentManagerImpl::Init() {
   mStatus = NORMAL;
 
   MOZ_ASSERT(!XRE_IsContentProcess() ||
-             CONTRACTID_HASHTABLE_INITIAL_LENGTH <= 8 ||
+                 CONTRACTID_HASHTABLE_INITIAL_LENGTH <= 8 ||
                  mFactories.Count() > CONTRACTID_HASHTABLE_INITIAL_LENGTH / 3,
              "Initial component hashtable size is too large");
 
@@ -1353,8 +1351,7 @@ size_t nsComponentManagerImpl::SizeOfIncludingThis(
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFactoryEntry::nsFactoryEntry(const nsCID& aCID, nsIFactory* aFactory)
-    : mCID(aCID), mFactory(aFactory) {
-}
+    : mCID(aCID), mFactory(aFactory) {}
 
 already_AddRefed<nsIFactory> nsFactoryEntry::GetFactory() {
   nsComponentManagerImpl::gComponentManager->mLock.AssertNotCurrentThreadOwns();

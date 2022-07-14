@@ -15,7 +15,7 @@
 #include "WebGLTypes.h"
 
 #ifdef MOZ_WAYLAND
-#include "mozilla/widget/DMABufSurface.h"
+#  include "mozilla/widget/DMABufSurface.h"
 #endif
 
 namespace mozilla {

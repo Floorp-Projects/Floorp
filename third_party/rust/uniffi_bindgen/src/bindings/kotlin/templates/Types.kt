@@ -7,7 +7,7 @@
 {%- let contains_object_references = ci.item_contains_object_references(type_) %}
 
 {#
- # Map `Type` instances to a `Box<dyn CodeType>` for that type.
+ # Map `Type` instances to an include statement for that type.
  #
  # There is a companion match in `KotlinCodeOracle::create_code_type()` which performs a similar function for the
  # Rust code.

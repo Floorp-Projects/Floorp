@@ -2176,8 +2176,8 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
       continue;
     }
 
-    nsRegion visible(item->GetClippedBounds(aBuilder));
-    visible.And(visible, item->GetPaintRect(aBuilder, aCtx));
+    nsRect visible = item->GetClippedBounds(aBuilder);
+    visible = visible.Intersect(item->GetPaintRect(aBuilder, aCtx));
     if (visible.IsEmpty()) {
       continue;
     }
@@ -2185,7 +2185,7 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     DisplayItemClip currentClip = item->GetClip();
     if (currentClip.HasClip()) {
       aCtx->Save();
-      if (currentClip.IsRectClippedByRoundedCorner(visible.GetBounds())) {
+      if (currentClip.IsRectClippedByRoundedCorner(visible)) {
         currentClip.ApplyTo(aCtx, aAppUnitsPerDevPixel);
       } else {
         currentClip.ApplyRectTo(aCtx, aAppUnitsPerDevPixel);
@@ -8400,8 +8400,7 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
   auto filterChain = mStyle ? mStyle->StyleEffects()->mFilters.AsSpan()
                             : mFrame->StyleEffects()->mFilters.AsSpan();
   SVGIntegrationUtils::PaintFilter(
-      params,
-      filterChain,
+      params, filterChain,
       [&](gfxContext& aContext, nsIFrame* aTarget, const gfxMatrix& aTransform,
           const nsIntRect* aDirtyRect, imgDrawingParams& aImgParams) {
         gfxContextMatrixAutoSaveRestore autoSR(&aContext);

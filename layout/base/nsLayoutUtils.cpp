@@ -6378,11 +6378,14 @@ static ImgDrawResult DrawImageInternal(
     if (!aSVGContext) {
       // Use the default viewport.
       fallbackContext.emplace(Some(params.svgViewportSize));
+    } else if (!aSVGContext->GetViewportSize()) {
+      fallbackContext = aSVGContext;
+      fallbackContext->SetViewportSize(Some(params.svgViewportSize));
     }
 
     result = aImage->Draw(&aContext, params.size, params.region,
                           imgIContainer::FRAME_CURRENT, aSamplingFilter,
-                          aSVGContext ? aSVGContext : fallbackContext,
+                          fallbackContext ? fallbackContext : aSVGContext,
                           aImageFlags, aOpacity);
   }
 

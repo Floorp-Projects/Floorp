@@ -1579,7 +1579,10 @@ static bool GatherAvailableModuleAncestors(
 
     // Step 1.a. If execList does not contain m and
     //           m.[[CycleRoot]].[[EvaluationError]] is empty, then:
-    if (!m->getCycleRoot()->hadEvaluationError() &&
+    //
+    // Note: we also check whether m.[[EvaluationError]] is empty since an error
+    // in synchronous execution can prevent the CycleRoot field from being set.
+    if (!m->hadEvaluationError() && !m->getCycleRoot()->hadEvaluationError() &&
         !ContainsElement(execList, m)) {
       // Step 1.a.i. Assert: m.[[Status]] is evaluating-async.
       MOZ_ASSERT(m->status() == ModuleStatus::EvaluatingAsync);

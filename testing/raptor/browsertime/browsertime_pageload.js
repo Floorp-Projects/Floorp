@@ -341,6 +341,7 @@ module.exports = async function(context, commands) {
   let page_cycle_delay = context.options.browsertime.page_cycle_delay;
   let post_startup_delay = context.options.browsertime.post_startup_delay;
   let chimera_mode = context.options.browsertime.chimera;
+  let test_bytecode_cache = context.options.browsertime.test_bytecode_cache;
   let login_required = context.options.browsertime.loginRequired;
   let live_site = context.options.browsertime.liveSite;
   let test_name = context.options.browsertime.testName;
@@ -399,7 +400,8 @@ module.exports = async function(context, commands) {
     await commands.measure.start(test_url);
 
     // Wait 20 seconds to populate bytecode cache
-    if (chimera_mode && !cached) {
+    if (test_bytecode_cache == "true" && chimera_mode == "true" && !cached) {
+      context.log.info("Waiting 20s to populate bytecode cache...");
       await commands.wait.byTime(20000);
       cached = true;
     }

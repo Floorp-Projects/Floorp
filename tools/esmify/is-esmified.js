@@ -14,6 +14,20 @@ const _path = require("path");
 const uri_map = JSON.parse(
   fs.readFileSync(_path.resolve(__dirname, "./map.json"))
 );
+const esm_uri_map = generateESMURIMap(uri_map);
+
+function generateESMURIMap(jsm_map) {
+  const esm_map = {};
+
+  for (let [uri, jsms] of Object.entries(jsm_map)) {
+    if (typeof jsms === "string") {
+      jsms = [jsms];
+    }
+    esm_map[esmify(uri)] = jsms.map(esmify);
+  }
+
+  return esm_map;
+}
 
 function esmify(path) {
   return path.replace(/\.(jsm|js|jsm\.js)$/, ".sys.mjs");
@@ -57,4 +71,12 @@ function isESMified(resourceURI, files) {
   return isESMified_memo[resourceURI].result;
 }
 
+function getESMFiles(resourceURI) {
+  if (resourceURI in esm_uri_map) {
+    return esm_uri_map[resourceURI];
+  }
+  return [];
+}
+
 exports.isESMified = isESMified;
+exports.getESMFiles = getESMFiles;

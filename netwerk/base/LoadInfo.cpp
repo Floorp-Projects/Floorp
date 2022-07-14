@@ -759,6 +759,28 @@ void LoadInfo::ComputeIsThirdPartyContext(dom::WindowGlobalParent* aGlobal) {
 
 NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
 
+#ifdef EARLY_BETA_OR_EARLIER
+void LoadInfo::ReleaseMembers() {
+  Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "LoadInfo::ReleasePrincipalAnUrl",
+      [loadinPrinciple{std::move(mLoadingPrincipal)},
+       principalToInherit{std::move(mPrincipalToInherit)},
+       topLevelPrincipal{std::move(mTopLevelPrincipal)},
+       resultPrincipalURI{std::move(mResultPrincipalURI)},
+       unstrippedURI{std::move(mUnstrippedURI)}]() {}));
+
+  Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "LoadInfo::ReleaseOther",
+      [cspEventListener{std::move(mCSPEventListener)},
+       performanceStorage{std::move(mPerformanceStorage)},
+       cspToInherit{std::move(mCspToInherit)}]() {}));
+
+  Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "LoadInfo::ReleaseCookieJarSettings",
+      [cookieJarSettings{std::move(mCookieJarSettings)}]() {}));
+}
+
+#else
 void LoadInfo::ReleaseMembers() {
   mCSPEventListener = nullptr;
   mCookieJarSettings = nullptr;
@@ -772,6 +794,7 @@ void LoadInfo::ReleaseMembers() {
   mUnstrippedURI = nullptr;
   mAncestorPrincipals.Clear();
 }
+#endif
 
 LoadInfo::~LoadInfo() { ReleaseMembers(); }
 

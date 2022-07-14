@@ -12,7 +12,6 @@
 #include "nss.h"
 #include "ssl.h"
 
-
 #include "sdp/RsdparsaSdpParser.h"
 #include "sdp/SipccSdpParser.h"
 #include "sdp/SdpMediaSection.h"

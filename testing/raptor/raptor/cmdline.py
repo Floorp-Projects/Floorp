@@ -365,6 +365,16 @@ def create_parser(mach_interface=False):
         help="Whether to use webextension to execute pageload tests "
         "(WebExtension is being deprecated).",
     )
+    add_arg(
+        "--test-bytecode-cache",
+        dest="test_bytecode_cache",
+        default=False,
+        action="store_true",
+        help="If set, the pageload test will set the preference "
+        "`dom.script_loader.bytecode_cache.strategy=-1` and wait 20 seconds after "
+        "the first cold pageload to populate the bytecode cache before running "
+        "a warm pageload test. Only available if `--chimera` is also provided.",
+    )
 
     # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
     add_arg(
@@ -511,7 +521,10 @@ def verify_options(parser, args):
         args.page_cycles = 2
         # Create bytecode cache at the first cold load, so that the next warm load uses it.
         # This is applicable for chimera mode only
-        args.extra_prefs.append("dom.script_loader.bytecode_cache.strategy=-1")
+        if args.test_bytecode_cache:
+            args.extra_prefs.append("dom.script_loader.bytecode_cache.strategy=-1")
+    elif args.test_bytecode_cache:
+        parser.error("--test-bytecode-cache can only be used in --chimera mode")
 
     # if running on a desktop browser make sure the binary exists
     if args.app in DESKTOP_APPS:

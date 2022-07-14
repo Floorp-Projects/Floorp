@@ -289,6 +289,8 @@ class Browsertime(Perftest):
             # running browsertime test in chimera mode
             "--browsertime.chimera",
             "true" if self.config["chimera"] else "false",
+            "--browsertime.test_bytecode_cache",
+            "true" if self.config["test_bytecode_cache"] else "false",
             "--firefox.perfStats",
             test.get("perfstats", "false"),
         ]

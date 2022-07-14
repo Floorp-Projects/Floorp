@@ -1,0 +1,10 @@
+[package]
+name = "dap_ffi"
+version = "0.1.0"
+edition = "2021"
+authors = [
+	"Simon Friedberger <simon@mozilla.com>",
+]
+license = "MPL-2.0"
+
+[dependencies]
