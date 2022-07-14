@@ -131,6 +131,8 @@ struct ConfigHelper {
           EXPECT_THAT(codecs, ::testing::IsEmpty());
         }));
     EXPECT_CALL(*channel_receive_, SetSourceTracker(_));
+    EXPECT_CALL(*channel_receive_, GetLocalSsrc())
+        .WillRepeatedly(Return(kLocalSsrc));
 
     stream_config_.rtp.local_ssrc = kLocalSsrc;
     stream_config_.rtp.remote_ssrc = kRemoteSsrc;

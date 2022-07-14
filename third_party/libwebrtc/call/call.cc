@@ -998,8 +998,9 @@ void Call::DestroyAudioReceiveStream(
   audio_receive_stream->UnregisterFromTransport();
 
   uint32_t ssrc = audio_receive_stream->remote_ssrc();
-  const AudioReceiveStream::Config& config = audio_receive_stream->config();
-  receive_side_cc_.GetRemoteBitrateEstimator(UseSendSideBwe(config.rtp))
+  receive_side_cc_
+      .GetRemoteBitrateEstimator(
+          UseSendSideBwe(audio_receive_stream->rtp_config()))
       ->RemoveStream(ssrc);
 
   audio_receive_streams_.erase(audio_receive_stream);
@@ -1007,7 +1008,7 @@ void Call::DestroyAudioReceiveStream(
   // After calling erase(), call ConfigureSync. This will clear associated
   // video streams or associate them with a different audio stream if one exists
   // for this sync_group.
-  ConfigureSync(audio_receive_stream->config().sync_group);
+  ConfigureSync(audio_receive_stream->sync_group());
 
   UnregisterReceiveStream(ssrc);
 
@@ -1460,7 +1461,7 @@ AudioReceiveStream* Call::FindAudioStreamForSyncGroup(
   RTC_DCHECK_RUN_ON(&receive_11993_checker_);
   if (!sync_group.empty()) {
     for (AudioReceiveStream* stream : audio_receive_streams_) {
-      if (stream->config().sync_group == sync_group)
+      if (stream->sync_group() == sync_group)
         return stream;
     }
   }
