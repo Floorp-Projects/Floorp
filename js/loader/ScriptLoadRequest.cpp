@@ -137,7 +137,7 @@ ScriptLoadRequest::GetComponentLoadContext() {
   return mLoadContext->AsComponentContext();
 }
 
-mozilla::dom::ScriptLoadInfo* ScriptLoadRequest::GetWorkerLoadContext() {
+mozilla::dom::WorkerLoadContext* ScriptLoadRequest::GetWorkerLoadContext() {
   MOZ_ASSERT(mLoadContext);
   return mLoadContext->AsWorkerContext();
 }

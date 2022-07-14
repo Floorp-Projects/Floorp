@@ -357,7 +357,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   cachePromise->AppendNativeHandler(promiseHandler);
 
   mLoadContext->mCachePromise.swap(cachePromise);
-  mLoadContext->mCacheStatus = ScriptLoadInfo::WritingToCache;
+  mLoadContext->mCacheStatus = WorkerLoadContext::WritingToCache;
 
   return NS_OK;
 }

@@ -30,7 +30,7 @@ using mozilla::ipc::PrincipalInfo;
 
 namespace mozilla::dom {
 
-class ScriptLoadInfo;
+class WorkerLoadContext;
 
 namespace workerinternals::loader {
 
@@ -103,7 +103,7 @@ class CacheLoadHandler final : public PromiseNativeHandler,
                                  const nsACString& aReferrerPolicyHeaderValue);
   void DataReceived();
 
-  ScriptLoadInfo* mLoadContext;
+  WorkerLoadContext* mLoadContext;
   const RefPtr<WorkerScriptLoader> mLoader;
   WorkerPrivate* const mWorkerPrivate;
   const bool mIsWorkerScript;
@@ -207,7 +207,7 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   ~CachePromiseHandler() { AssertIsOnMainThread(); }
 
   RefPtr<WorkerScriptLoader> mLoader;
-  ScriptLoadInfo* mLoadContext;
+  WorkerLoadContext* mLoadContext;
 };
 
 }  // namespace workerinternals::loader

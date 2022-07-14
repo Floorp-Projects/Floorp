@@ -68,7 +68,7 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
 
   RefPtr<WorkerScriptLoader> mLoader;
   WorkerPrivate* const mWorkerPrivate;
-  ScriptLoadInfo* mLoadContext;
+  WorkerLoadContext* mLoadContext;
 };
 
 }  // namespace mozilla::dom::workerinternals::loader

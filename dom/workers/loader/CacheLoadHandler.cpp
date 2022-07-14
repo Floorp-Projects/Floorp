@@ -6,7 +6,7 @@
 
 #include "CacheLoadHandler.h"
 #include "ScriptResponseHeaderProcessor.h"  // ScriptResponseHeaderProcessor
-#include "WorkerLoadContext.h"              // ScriptLoadInfo
+#include "WorkerLoadContext.h"              // WorkerLoadContext
 
 #include "nsIPrincipal.h"
 
@@ -52,13 +52,13 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
   AssertIsOnMainThread();
   // May already have been canceled by CacheLoadHandler::Fail from
   // CancelMainThread.
-  MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::WritingToCache ||
-             mLoadContext->mCacheStatus == ScriptLoadInfo::Cancel);
-  MOZ_ASSERT_IF(mLoadContext->mCacheStatus == ScriptLoadInfo::Cancel,
+  MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::WritingToCache ||
+             mLoadContext->mCacheStatus == WorkerLoadContext::Cancel);
+  MOZ_ASSERT_IF(mLoadContext->mCacheStatus == WorkerLoadContext::Cancel,
                 !mLoadContext->mCachePromise);
 
   if (mLoadContext->mCachePromise) {
-    mLoadContext->mCacheStatus = ScriptLoadInfo::Cached;
+    mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
     mLoadContext->mCachePromise = nullptr;
     mLoader->MaybeExecuteFinishedScripts(mLoadContext->mRequest);
   }
@@ -70,9 +70,9 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
   AssertIsOnMainThread();
   // May already have been canceled by CacheLoadHandler::Fail from
   // CancelMainThread.
-  MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::WritingToCache ||
-             mLoadContext->mCacheStatus == ScriptLoadInfo::Cancel);
-  mLoadContext->mCacheStatus = ScriptLoadInfo::Cancel;
+  MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::WritingToCache ||
+             mLoadContext->mCacheStatus == WorkerLoadContext::Cancel);
+  mLoadContext->mCacheStatus = WorkerLoadContext::Cancel;
 
   mLoadContext->mCachePromise = nullptr;
 
@@ -250,12 +250,13 @@ void CacheLoadHandler::Fail(nsresult aRv) {
   mFailed = true;
 
   if (mPump) {
-    MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::ReadingFromCache);
+    MOZ_ASSERT(mLoadContext->mCacheStatus ==
+               WorkerLoadContext::ReadingFromCache);
     mPump->Cancel(aRv);
     mPump = nullptr;
   }
 
-  mLoadContext->mCacheStatus = ScriptLoadInfo::Cancel;
+  mLoadContext->mCacheStatus = WorkerLoadContext::Cancel;
 
   if (mLoadContext->mCachePromise) {
     mLoadContext->mCachePromise->MaybeReject(aRv);
@@ -311,7 +312,7 @@ void CacheLoadHandler::RejectedCallback(JSContext* aCx,
                                         JS::Handle<JS::Value> aValue,
                                         ErrorResult& aRv) {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::Uncached);
+  MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::Uncached);
   Fail(NS_ERROR_FAILURE);
 }
 
@@ -324,7 +325,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::Uncached);
+  MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::Uncached);
 
   nsresult rv;
 
@@ -346,7 +347,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
       return;
     }
 
-    mLoadContext->mCacheStatus = ScriptLoadInfo::ToBeCached;
+    mLoadContext->mCacheStatus = WorkerLoadContext::ToBeCached;
     rv = mLoader->LoadScript(mLoadContext->mRequest);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(rv);
@@ -395,7 +396,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   }
 
   if (!inputStream) {
-    mLoadContext->mCacheStatus = ScriptLoadInfo::Cached;
+    mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
     nsresult rv = DataReceivedFromCache(
         (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
         mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
@@ -438,7 +439,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
     }
   }
 
-  mLoadContext->mCacheStatus = ScriptLoadInfo::ReadingFromCache;
+  mLoadContext->mCacheStatus = WorkerLoadContext::ReadingFromCache;
 }
 
 NS_IMETHODIMP
@@ -451,14 +452,15 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
   mPump = nullptr;
 
   if (NS_FAILED(aStatus)) {
-    MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::ReadingFromCache ||
-               mLoadContext->mCacheStatus == ScriptLoadInfo::Cancel);
+    MOZ_ASSERT(mLoadContext->mCacheStatus ==
+                   WorkerLoadContext::ReadingFromCache ||
+               mLoadContext->mCacheStatus == WorkerLoadContext::Cancel);
     Fail(aStatus);
     return NS_OK;
   }
 
-  MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::ReadingFromCache);
-  mLoadContext->mCacheStatus = ScriptLoadInfo::Cached;
+  MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::ReadingFromCache);
+  mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
 
   MOZ_ASSERT(mPrincipalInfo);
   nsresult rv = DataReceivedFromCache(
@@ -480,7 +482,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
     return mLoader->mCancelMainThread.ref();
   }
 
-  MOZ_ASSERT(mLoadContext->mCacheStatus == ScriptLoadInfo::Cached);
+  MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::Cached);
 
   auto responsePrincipalOrErr = PrincipalInfoToPrincipal(*aPrincipalInfo);
   MOZ_DIAGNOSTIC_ASSERT(responsePrincipalOrErr.isOk());

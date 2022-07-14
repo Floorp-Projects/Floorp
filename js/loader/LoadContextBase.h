@@ -12,7 +12,7 @@
 
 namespace mozilla::dom {
 class ScriptLoadContext;
-class ScriptLoadInfo;
+class WorkerLoadContext;
 }  // namespace mozilla::dom
 
 namespace mozilla::loader {
@@ -65,7 +65,7 @@ class LoadContextBase : public nsISupports {
   mozilla::loader::ComponentLoadContext* AsComponentContext();
 
   bool IsWorkerContext() const { return mKind == ContextKind::Worker; }
-  mozilla::dom::ScriptLoadInfo* AsWorkerContext();
+  mozilla::dom::WorkerLoadContext* AsWorkerContext();
 
   RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 };
