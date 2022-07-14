@@ -558,12 +558,11 @@ class OrderedHashTable {
       return;
     }
 
-    Data* entry = lookup(current, prepareHash(current));
-    if (!entry) {
-      return;
-    }
+    HashNumber currentHash = prepareHash(current);
+    Data* entry = lookup(current, currentHash);
+    MOZ_ASSERT(entry);
 
-    HashNumber oldHash = prepareHash(current) >> hashShift;
+    HashNumber oldHash = currentHash >> hashShift;
     HashNumber newHash = prepareHash(newKey) >> hashShift;
 
     entry->element = element;
@@ -845,11 +844,13 @@ class OrderedHashMap {
 
   HashNumber hash(const Key& key) const { return impl.prepareHash(key); }
 
-  void rekeyOneEntry(const Key& current, const Key& newKey) {
+  template <typename GetNewKey>
+  void rekeyOneEntry(const Key& current, const GetNewKey& getNewKey) {
     const Entry* e = get(current);
     if (!e) {
       return;
     }
+    Key newKey = getNewKey(current);
     return impl.rekeyOneEntry(current, newKey, Entry(newKey, e->value));
   }
 
@@ -916,7 +917,12 @@ class OrderedHashSet {
 
   HashNumber hash(const T& value) const { return impl.prepareHash(value); }
 
-  void rekeyOneEntry(const T& current, const T& newKey) {
+  template <typename GetNewKey>
+  void rekeyOneEntry(const T& current, const GetNewKey& getNewKey) {
+    if (!has(current)) {
+      return;
+    }
+    T newKey = getNewKey(current);
     return impl.rekeyOneEntry(current, newKey, newKey);
   }
 
