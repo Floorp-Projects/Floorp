@@ -377,6 +377,7 @@ rtc_source_set("media_session") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:stringutils",
+    "../rtc_base/memory:always_valid_pointer",
     "../rtc_base/third_party/base64",
   ]
   absl_deps = [

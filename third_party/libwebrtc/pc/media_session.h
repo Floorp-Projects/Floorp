@@ -34,6 +34,7 @@
 #include "pc/media_protocol_names.h"
 #include "pc/session_description.h"
 #include "pc/simulcast_description.h"
+#include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/unique_id_generator.h"
 
 namespace webrtc {
@@ -328,6 +329,10 @@ class MediaSessionDescriptionFactory {
 
   void ComputeVideoCodecsIntersectionAndUnion();
 
+  rtc::UniqueRandomIdGenerator* ssrc_generator() const {
+    return ssrc_generator_.get();
+  }
+
   bool is_unified_plan_ = false;
   AudioCodecs audio_send_codecs_;
   AudioCodecs audio_recv_codecs_;
@@ -341,8 +346,9 @@ class MediaSessionDescriptionFactory {
   VideoCodecs video_sendrecv_codecs_;
   // Union of send and recv.
   VideoCodecs all_video_codecs_;
-  // This object is not owned by the channel so it must outlive it.
-  rtc::UniqueRandomIdGenerator* const ssrc_generator_;
+  // This object may or may not be owned by this class.
+  webrtc::AlwaysValidPointer<rtc::UniqueRandomIdGenerator> const
+      ssrc_generator_;
   bool enable_encrypted_rtp_header_extensions_ = false;
   // TODO(zhihuang): Rename secure_ to sdec_policy_; rename the related getter
   // and setter.

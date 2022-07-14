@@ -120,6 +120,8 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
     return context_->field_trials();
   }
 
+  cricket::MediaEngineInterface* media_engine() const;
+
  protected:
   // Constructor used by the static Create() method. Modifies the dependencies.
   PeerConnectionFactory(rtc::scoped_refptr<ConnectionContext> context,

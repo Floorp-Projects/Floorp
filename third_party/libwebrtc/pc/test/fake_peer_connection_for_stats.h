@@ -415,7 +415,10 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   class TestChannelManager : public cricket::ChannelManager {
    public:
     TestChannelManager(rtc::Thread* worker, rtc::Thread* network)
-        : cricket::ChannelManager(nullptr, true, worker, network) {}
+        : cricket::ChannelManager(std::make_unique<cricket::FakeMediaEngine>(),
+                                  true,
+                                  worker,
+                                  network) {}
   };
 
   rtc::Thread* const network_thread_;
