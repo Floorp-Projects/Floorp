@@ -246,11 +246,17 @@ std::vector<std::unique_ptr<PacketBuffer::Packet>> PacketBuffer::FindFrames(
       bool is_h264_keyframe = false;
       int idr_width = -1;
       int idr_height = -1;
+      bool full_frame_found = false;
       while (true) {
         ++tested_packets;
 
-        if (!is_h264 && buffer_[start_index]->is_first_packet_in_frame())
-          break;
+        if (!is_h264) {
+          if (buffer_[start_index] == nullptr ||
+              buffer_[start_index]->is_first_packet_in_frame()) {
+            full_frame_found = buffer_[start_index] != nullptr;
+            break;
+          }
+        }
 
         if (is_h264) {
           const auto* h264_header = absl::get_if<RTPVideoHeaderH264>(
@@ -340,22 +346,24 @@ std::vector<std::unique_ptr<PacketBuffer::Packet>> PacketBuffer::FindFrames(
         }
       }
 
-      const uint16_t end_seq_num = seq_num + 1;
-      // Use uint16_t type to handle sequence number wrap around case.
-      uint16_t num_packets = end_seq_num - start_seq_num;
-      found_frames.reserve(found_frames.size() + num_packets);
-      for (uint16_t i = start_seq_num; i != end_seq_num; ++i) {
-        std::unique_ptr<Packet>& packet = buffer_[i % buffer_.size()];
-        RTC_DCHECK(packet);
-        RTC_DCHECK_EQ(i, packet->seq_num);
-        // Ensure frame boundary flags are properly set.
-        packet->video_header.is_first_packet_in_frame = (i == start_seq_num);
-        packet->video_header.is_last_packet_in_frame = (i == seq_num);
-        found_frames.push_back(std::move(packet));
-      }
+      if (is_h264 || full_frame_found) {
+        const uint16_t end_seq_num = seq_num + 1;
+        // Use uint16_t type to handle sequence number wrap around case.
+        uint16_t num_packets = end_seq_num - start_seq_num;
+        found_frames.reserve(found_frames.size() + num_packets);
+        for (uint16_t i = start_seq_num; i != end_seq_num; ++i) {
+          std::unique_ptr<Packet>& packet = buffer_[i % buffer_.size()];
+          RTC_DCHECK(packet);
+          RTC_DCHECK_EQ(i, packet->seq_num);
+          // Ensure frame boundary flags are properly set.
+          packet->video_header.is_first_packet_in_frame = (i == start_seq_num);
+          packet->video_header.is_last_packet_in_frame = (i == seq_num);
+          found_frames.push_back(std::move(packet));
+        }
 
-      missing_packets_.erase(missing_packets_.begin(),
-                             missing_packets_.upper_bound(seq_num));
+        missing_packets_.erase(missing_packets_.begin(),
+                               missing_packets_.upper_bound(seq_num));
+      }
     }
     ++seq_num;
   }
