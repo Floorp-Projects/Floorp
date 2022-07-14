@@ -136,8 +136,7 @@ class VideoReceiveStream2
 
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   const std::vector<RtpExtension>& GetRtpExtensions() const override;
-
-  const RtpConfig& rtp_config() const override { return rtp(); }
+  bool transport_cc() const override { return rtp().transport_cc; }
 
   webrtc::VideoReceiveStream::Stats GetStats() const override;
 

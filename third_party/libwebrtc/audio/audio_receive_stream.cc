@@ -213,6 +213,11 @@ void AudioReceiveStream::Stop() {
   audio_state()->RemoveReceivingStream(this);
 }
 
+bool AudioReceiveStream::transport_cc() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return config_.rtp.transport_cc;
+}
+
 bool AudioReceiveStream::IsRunning() const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   return playing_;

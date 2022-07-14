@@ -80,7 +80,7 @@ bool SendPeriodicFeedback(const std::vector<RtpExtension>& extensions) {
 }
 
 bool UseSendSideBwe(const ReceiveStream* stream) {
-  if (!stream->rtp_config().transport_cc)
+  if (!stream->transport_cc())
     return false;
   for (const auto& extension : stream->GetRtpExtensions()) {
     if (extension.uri == RtpExtension::kTransportSequenceNumberUri ||
