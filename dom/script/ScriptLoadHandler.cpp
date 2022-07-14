@@ -51,26 +51,10 @@ namespace mozilla::dom {
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
-ScriptLoadHandler::ScriptLoadHandler(
-    ScriptLoader* aScriptLoader, JS::loader::ScriptLoadRequest* aRequest,
-    UniquePtr<SRICheckDataVerifier>&& aSRIDataVerifier)
-    : mScriptLoader(aScriptLoader),
-      mRequest(aRequest),
-      mSRIDataVerifier(std::move(aSRIDataVerifier)),
-      mSRIStatus(NS_OK),
-      mDecoder() {
-  MOZ_ASSERT(mRequest->IsUnknownDataType());
-  MOZ_ASSERT(mRequest->IsFetching());
-}
-
-ScriptLoadHandler::~ScriptLoadHandler() = default;
-
-NS_IMPL_ISUPPORTS(ScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
-
 template <typename Unit>
-nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
-                                                uint32_t aDataLength,
-                                                bool aEndOfStream) {
+nsresult ScriptDecoder::DecodeRawDataHelper(
+    JS::loader::ScriptLoadRequest* aRequest, const uint8_t* aData,
+    uint32_t aDataLength, bool aEndOfStream) {
   CheckedInt<size_t> needed =
       ScriptDecoding<Unit>::MaxBufferLength(mDecoder, aDataLength);
   if (!needed.isValid()) {
@@ -79,7 +63,7 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
 
   // Reference to the script source buffer which we will update.
   JS::loader::ScriptLoadRequest::ScriptTextBuffer<Unit>& scriptText =
-      mRequest->ScriptText<Unit>();
+      aRequest->ScriptText<Unit>();
 
   uint32_t haveRead = scriptText.length();
 
@@ -99,20 +83,37 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
   MOZ_ASSERT(haveRead <= capacity.value(),
              "mDecoder produced more data than expected");
   MOZ_ALWAYS_TRUE(scriptText.resize(haveRead));
-  mRequest->mScriptTextLength = scriptText.length();
+  aRequest->mScriptTextLength = scriptText.length();
 
   return NS_OK;
 }
 
-nsresult ScriptLoadHandler::DecodeRawData(const uint8_t* aData,
-                                          uint32_t aDataLength,
-                                          bool aEndOfStream) {
-  if (mRequest->IsUTF16Text()) {
-    return DecodeRawDataHelper<char16_t>(aData, aDataLength, aEndOfStream);
+nsresult ScriptDecoder::DecodeRawData(JS::loader::ScriptLoadRequest* aRequest,
+                                      const uint8_t* aData,
+                                      uint32_t aDataLength, bool aEndOfStream) {
+  if (aRequest->IsUTF16Text()) {
+    return DecodeRawDataHelper<char16_t>(aRequest, aData, aDataLength,
+                                         aEndOfStream);
   }
 
-  return DecodeRawDataHelper<Utf8Unit>(aData, aDataLength, aEndOfStream);
+  return DecodeRawDataHelper<Utf8Unit>(aRequest, aData, aDataLength,
+                                       aEndOfStream);
 }
+
+ScriptLoadHandler::ScriptLoadHandler(
+    ScriptLoader* aScriptLoader, JS::loader::ScriptLoadRequest* aRequest,
+    UniquePtr<SRICheckDataVerifier>&& aSRIDataVerifier)
+    : mScriptLoader(aScriptLoader),
+      mRequest(aRequest),
+      mSRIDataVerifier(std::move(aSRIDataVerifier)),
+      mSRIStatus(NS_OK) {
+  MOZ_ASSERT(aRequest->IsUnknownDataType());
+  MOZ_ASSERT(aRequest->IsFetching());
+}
+
+ScriptLoadHandler::~ScriptLoadHandler() = default;
+
+NS_IMPL_ISUPPORTS(ScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
 
 NS_IMETHODIMP
 ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
@@ -155,7 +156,8 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
 
     // Decoder has already been initialized. -- trying to decode all loaded
     // bytes.
-    rv = DecodeRawData(aData, aDataLength, /* aEndOfStream = */ false);
+    rv =
+        DecodeRawData(mRequest, aData, aDataLength, /* aEndOfStream = */ false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If SRI is required for this load, appending new bytes to the hash.
@@ -373,7 +375,8 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       DebugOnly<bool> encoderSet =
           EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
       MOZ_ASSERT(encoderSet);
-      rv = DecodeRawData(aData, aDataLength, /* aEndOfStream = */ true);
+      rv = DecodeRawData(mRequest, aData, aDataLength,
+                         /* aEndOfStream = */ true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       LOG(("ScriptLoadRequest (%p): Source length in code units = %u",
