@@ -29,11 +29,36 @@ class AlwaysValidPointer {
     RTC_DCHECK(pointer_);
   }
 
-  template <typename... Args>
-  AlwaysValidPointer(Interface* pointer, Args... args)
-      : owned_instance_(
-            pointer ? nullptr : std::make_unique<Default>(std::move(args...))),
+  template <typename Arg,
+            typename std::enable_if<!(std::is_invocable<Arg>::value),
+                                    bool>::type = true>
+  AlwaysValidPointer(Interface* pointer, Arg arg)
+      : owned_instance_(pointer ? nullptr
+                                : std::make_unique<Default>(std::move(arg))),
         pointer_(pointer ? pointer : owned_instance_.get()) {
+    RTC_DCHECK(pointer_);
+  }
+
+  // Multiple arguments
+  template <typename Arg1, typename... Args>
+  AlwaysValidPointer(Interface* pointer, Arg1 arg1, Args... args)
+      : owned_instance_(pointer
+                            ? nullptr
+                            : std::make_unique<Default>(std::move(arg1),
+                                                        std::move(args...))),
+        pointer_(pointer ? pointer : owned_instance_.get()) {
+    RTC_DCHECK(pointer_);
+  }
+
+  // Create a pointer by
+  // a) using |pointer|, without taking ownership
+  // b) calling |function| and taking ownership of the result
+  template <typename Func,
+            typename std::enable_if<std::is_invocable<Func>::value,
+                                    bool>::type = true>
+  AlwaysValidPointer(Interface* pointer, Func function)
+      : owned_instance_(pointer ? nullptr : function()),
+        pointer_(owned_instance_ ? owned_instance_.get() : pointer) {
     RTC_DCHECK(pointer_);
   }
 
