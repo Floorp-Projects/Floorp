@@ -73,6 +73,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "ACTIVE_THEME_ID",
+  "extensions.activeThemeID"
+);
+
 const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -3679,6 +3685,31 @@ class ColorwayClosetCard extends HTMLElement {
     if (this.childElementCount === 0) {
       this.render();
     }
+
+    AddonManagerListenerHandler.addListener(this);
+  }
+
+  disconnectedCallback() {
+    AddonManagerListenerHandler.removeListener(this);
+  }
+
+  onEnabled(addon) {
+    if (addon.type !== "theme") {
+      return;
+    }
+
+    // Listen for changes to actively selected theme.
+    // Update button label for Colorway Closet card, according to
+    // whether or not a colorway theme is currently enabled.
+    const isCurrentThemeColorway = BuiltInThemes.isMonochromaticTheme(addon.id);
+    let colorwaysButton = document.querySelector("[action='open-colorways']");
+
+    document.l10n.setAttributes(
+      colorwaysButton,
+      isCurrentThemeColorway
+        ? "theme-colorways-button-colorway-enabled"
+        : "theme-colorways-button"
+    );
   }
 
   render() {
@@ -3743,6 +3774,17 @@ class ColorwayClosetCard extends HTMLElement {
       );
 
       let colorwaysButton = card.querySelector("[action='open-colorways']");
+      const isCurrentThemeColorway = BuiltInThemes.isMonochromaticTheme(
+        ACTIVE_THEME_ID
+      );
+
+      document.l10n.setAttributes(
+        colorwaysButton,
+        isCurrentThemeColorway
+          ? "theme-colorways-button-colorway-enabled"
+          : "theme-colorways-button"
+      );
+
       colorwaysButton.hidden = false;
       colorwaysButton.onclick = () => {
         ColorwayClosetOpener.openModal();
