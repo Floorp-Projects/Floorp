@@ -254,8 +254,7 @@ class ContentParent final : public PContentParent,
   static void BroadcastThemeUpdate(widget::ThemeChangeKind);
 
   static void BroadcastMediaCodecsSupportedUpdate(
-      RemoteDecodeIn aLocation,
-      const PDMFactory::MediaCodecsSupported& aSupported);
+      RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported);
 
   const nsACString& GetRemoteType() const override;
 
