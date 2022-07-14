@@ -68,7 +68,7 @@ class AccessibleWrap : public LocalAccessible {
     return returnedString.get();
   }
 
-  static void GetKeyBinding(LocalAccessible* aAccessible, nsAString& aResult);
+  static void GetKeyBinding(Accessible* aAccessible, nsAString& aResult);
 
   static Accessible* GetColumnHeader(TableAccessibleBase* aAccessible,
                                      int32_t aColIdx);

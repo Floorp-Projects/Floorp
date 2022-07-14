@@ -1350,20 +1350,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAccessKey(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvKeyboardShortcut(
-    const uint64_t& aID, uint32_t* aKey, uint32_t* aModifierMask) {
-  *aKey = 0;
-  *aModifierMask = 0;
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    KeyBinding kb = acc->KeyboardShortcut();
-    *aKey = kb.Key();
-    *aModifierMask = kb.ModifierMask();
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAtkKeyBinding(
     const uint64_t& aID, nsString* aResult) {
 #ifdef MOZ_ACCESSIBILITY_ATK

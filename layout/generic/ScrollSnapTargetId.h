@@ -8,6 +8,7 @@
 #include <cstdint>
 #include "nsPoint.h"
 #include "nsTArray.h"
+#include "Units.h"
 
 namespace mozilla {
 
@@ -20,10 +21,18 @@ enum class ScrollSnapTargetId : uintptr_t {
 struct ScrollSnapTargetIds {
   CopyableTArray<ScrollSnapTargetId> mIdsOnX;
   CopyableTArray<ScrollSnapTargetId> mIdsOnY;
+  bool operator==(const ScrollSnapTargetIds& aOther) const {
+    return mIdsOnX == aOther.mIdsOnX && mIdsOnY == aOther.mIdsOnY;
+  }
 };
 
 struct SnapTarget {
   nsPoint mPosition;
+  ScrollSnapTargetIds mTargetIds;
+};
+
+struct CSSSnapTarget {
+  CSSPoint mPosition;
   ScrollSnapTargetIds mTargetIds;
 };
 

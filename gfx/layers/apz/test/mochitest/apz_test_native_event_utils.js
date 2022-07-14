@@ -77,6 +77,18 @@ function nativeArrowDownKey() {
   );
 }
 
+function nativeArrowUpKey() {
+  switch (getPlatform()) {
+    case "windows":
+      return WIN_VK_UP;
+    case "mac":
+      return MAC_VK_UpArrow;
+  }
+  throw new Error(
+    "Native key events not supported on platform " + getPlatform()
+  );
+}
+
 // Given an event target which may be a window or an element, get the associated window.
 function windowForTarget(aTarget) {
   if (aTarget.Window && aTarget instanceof aTarget.Window) {

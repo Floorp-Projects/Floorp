@@ -52,7 +52,6 @@
 
 #include "nsDeckFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsIStringBundle.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsTextFrame.h"
@@ -1467,6 +1466,10 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       aAttribute == nsGkAtoms::aria_posinset) {
     SendCache(CacheDomain::GroupInfo, CacheUpdateType::Update);
     return;
+  }
+
+  if (aAttribute == nsGkAtoms::accesskey) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Actions);
   }
 }
 
@@ -3517,6 +3520,13 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
       }
     }
+
+    KeyBinding accessKey = AccessKey();
+    if (!accessKey.IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::accesskey, accessKey.Serialize());
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::accesskey, DeleteEntry());
+    }
   }
 
   if (aCacheDomain & CacheDomain::Style) {
@@ -3791,86 +3801,6 @@ void LocalAccessible::StaticAsserts() const {
   static_assert(
       eLastContextFlag <= (1 << kContextFlagsBits) - 1,
       "LocalAccessible::mContextFlags was oversized by eLastContextFlag!");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// KeyBinding class
-
-// static
-uint32_t KeyBinding::AccelModifier() {
-  switch (WidgetInputEvent::AccelModifier()) {
-    case MODIFIER_ALT:
-      return kAlt;
-    case MODIFIER_CONTROL:
-      return kControl;
-    case MODIFIER_META:
-      return kMeta;
-    case MODIFIER_OS:
-      return kOS;
-    default:
-      MOZ_CRASH("Handle the new result of WidgetInputEvent::AccelModifier()");
-      return 0;
-  }
-}
-
-void KeyBinding::ToPlatformFormat(nsAString& aValue) const {
-  nsCOMPtr<nsIStringBundle> keyStringBundle;
-  nsCOMPtr<nsIStringBundleService> stringBundleService =
-      mozilla::components::StringBundle::Service();
-  if (stringBundleService) {
-    stringBundleService->CreateBundle(
-        "chrome://global-platform/locale/platformKeys.properties",
-        getter_AddRefs(keyStringBundle));
-  }
-
-  if (!keyStringBundle) return;
-
-  nsAutoString separator;
-  keyStringBundle->GetStringFromName("MODIFIER_SEPARATOR", separator);
-
-  nsAutoString modifierName;
-  if (mModifierMask & kControl) {
-    keyStringBundle->GetStringFromName("VK_CONTROL", modifierName);
-
-    aValue.Append(modifierName);
-    aValue.Append(separator);
-  }
-
-  if (mModifierMask & kAlt) {
-    keyStringBundle->GetStringFromName("VK_ALT", modifierName);
-
-    aValue.Append(modifierName);
-    aValue.Append(separator);
-  }
-
-  if (mModifierMask & kShift) {
-    keyStringBundle->GetStringFromName("VK_SHIFT", modifierName);
-
-    aValue.Append(modifierName);
-    aValue.Append(separator);
-  }
-
-  if (mModifierMask & kMeta) {
-    keyStringBundle->GetStringFromName("VK_META", modifierName);
-
-    aValue.Append(modifierName);
-    aValue.Append(separator);
-  }
-
-  aValue.Append(mKey);
-}
-
-void KeyBinding::ToAtkFormat(nsAString& aValue) const {
-  nsAutoString modifierName;
-  if (mModifierMask & kControl) aValue.AppendLiteral("<Control>");
-
-  if (mModifierMask & kAlt) aValue.AppendLiteral("<Alt>");
-
-  if (mModifierMask & kShift) aValue.AppendLiteral("<Shift>");
-
-  if (mModifierMask & kMeta) aValue.AppendLiteral("<Meta>");
-
-  aValue.Append(mKey);
 }
 
 TableAccessibleBase* LocalAccessible::AsTableBase() {
