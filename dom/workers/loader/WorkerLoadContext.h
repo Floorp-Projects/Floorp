@@ -31,7 +31,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
  public:
   explicit WorkerLoadContext(const nsString& aURL);
 
-  ~WorkerLoadContext();
+  ~WorkerLoadContext() = default;
 
   nsString mURL;
 
@@ -51,18 +51,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
 
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
 
-  // If |mScriptIsUTF8|, then |mUTF8| is active, otherwise |mUTF16| is active.
-  union {
-    char16_t* mUTF16;
-    Utf8Unit* mUTF8;
-  } mScript;
-  size_t mScriptLength = 0;  // in code units
-  bool mScriptIsUTF8 = false;
-
-  bool ScriptTextIsNull() const {
-    return mScriptIsUTF8 ? mScript.mUTF8 == nullptr : mScript.mUTF16 == nullptr;
-  }
-
   RefPtr<workerinternals::loader::CacheCreator> mCacheCreator;
 
   void ClearCacheCreator();
@@ -71,24 +59,6 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
       RefPtr<workerinternals::loader::CacheCreator> aCacheCreator);
 
   RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
-
-  void InitUTF8Script() {
-    MOZ_ASSERT(ScriptTextIsNull());
-    MOZ_ASSERT(mScriptLength == 0);
-
-    mScriptIsUTF8 = true;
-    mScript.mUTF8 = nullptr;
-    mScriptLength = 0;
-  }
-
-  void InitUTF16Script() {
-    MOZ_ASSERT(ScriptTextIsNull());
-    MOZ_ASSERT(mScriptLength == 0);
-
-    mScriptIsUTF8 = false;
-    mScript.mUTF16 = nullptr;
-    mScriptLength = 0;
-  }
 
   bool mLoadingFinished = false;
   bool mExecutionScheduled = false;

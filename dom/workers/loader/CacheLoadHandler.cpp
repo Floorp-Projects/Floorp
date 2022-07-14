@@ -17,6 +17,7 @@
 #include "nsNetUtil.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/Response.h"
@@ -237,6 +238,10 @@ CacheLoadHandler::CacheLoadHandler(WorkerPrivate* aWorkerPrivate,
   MOZ_ASSERT(mMainThreadEventTarget);
   mBaseURI = mLoader->GetBaseURI();
   AssertIsOnMainThread();
+
+  // Worker scripts are always decoded as UTF-8 per spec.
+  mDecoder = MakeUnique<ScriptDecoder>(UTF_8_ENCODING,
+                                       ScriptDecoder::BOMHandling::Remove);
 }
 
 void CacheLoadHandler::Fail(nsresult aRv) {
@@ -476,6 +481,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
     const nsACString& aCSPReportOnlyHeaderValue,
     const nsACString& aReferrerPolicyHeaderValue) {
   AssertIsOnMainThread();
+
   if (mLoader->IsCancelled()) {
     mLoadContext->GetCacheCreator()->DeleteCache(
         mLoader->mCancelMainThread.ref());
@@ -502,21 +508,24 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
   // May be null.
   Document* parentDoc = mWorkerPrivate->GetDocument();
 
-  MOZ_ASSERT(mLoadContext->ScriptTextIsNull());
-
+  // Use the regular ScriptDecoder Decoder for this grunt work! Should be just
+  // fine because we're running on the main thread.
   nsresult rv;
-  if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
-    mLoadContext->InitUTF8Script();
-    rv = ScriptLoader::ConvertToUTF8(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                     parentDoc, mLoadContext->mScript.mUTF8,
-                                     mLoadContext->mScriptLength);
-  } else {
-    mLoadContext->InitUTF16Script();
-    rv = ScriptLoader::ConvertToUTF16(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                      parentDoc, mLoadContext->mScript.mUTF16,
-                                      mLoadContext->mScriptLength);
+
+  // Set the Source type to "text" for decoding.
+  mLoadContext->mRequest->SetTextSource();
+
+  rv = mDecoder->DecodeRawData(mLoadContext->mRequest, aString, aStringLen,
+                               /* aEndOfStream = */ true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mLoadContext->mRequest->ScriptTextLength()) {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
+                                    parentDoc, nsContentUtils::eDOM_PROPERTIES,
+                                    "EmptyWorkerSourceWarning");
   }
-  if (NS_SUCCEEDED(rv) && mLoader->IsMainWorkerScript()) {
+
+  if (mLoader->IsMainWorkerScript()) {
     nsCOMPtr<nsIURI> finalURI;
     rv = NS_NewURI(getter_AddRefs(finalURI), mLoadContext->mFullURL);
     if (NS_SUCCEEDED(rv)) {

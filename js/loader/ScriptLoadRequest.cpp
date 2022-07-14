@@ -157,6 +157,20 @@ void ScriptLoadRequest::SetBytecode() {
   mDataType = DataType::eBytecode;
 }
 
+bool ScriptLoadRequest::IsUTF8ParsingEnabled() {
+  if (HasLoadContext()) {
+    if (mLoadContext->IsWindowContext()) {
+      return mozilla::StaticPrefs::
+          dom_script_loader_external_scripts_utf8_parsing_enabled();
+    }
+    if (mLoadContext->IsWorkerContext()) {
+      return mozilla::StaticPrefs::
+          dom_worker_script_loader_utf8_parsing_enabled();
+    }
+  }
+  return false;
+}
+
 void ScriptLoadRequest::ClearScriptSource() {
   if (IsTextSource()) {
     ClearScriptText();

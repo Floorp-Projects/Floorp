@@ -11,18 +11,8 @@ namespace mozilla {
 namespace dom {
 
 WorkerLoadContext::WorkerLoadContext(const nsString& aURL)
-    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker), mURL(aURL) {
-  MOZ_ASSERT(mScriptIsUTF8 == false, "set by member initializer");
-  MOZ_ASSERT(mScriptLength == 0, "set by member initializer");
-  mScript.mUTF16 = nullptr;
-}
-
-WorkerLoadContext::~WorkerLoadContext() {
-  if (void* data = mScriptIsUTF8 ? static_cast<void*>(mScript.mUTF8)
-                                 : static_cast<void*>(mScript.mUTF16)) {
-    js_free(data);
-  }
-}
+    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker),
+      mURL(aURL) {}
 
 void WorkerLoadContext::SetCacheCreator(
     RefPtr<workerinternals::loader::CacheCreator> aCacheCreator) {

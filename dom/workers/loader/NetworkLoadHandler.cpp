@@ -15,6 +15,7 @@
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
 
+#include "mozilla/Encoding.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
@@ -41,6 +42,10 @@ NetworkLoadHandler::NetworkLoadHandler(WorkerScriptLoader* aLoader,
       mWorkerPrivate(aLoader->mWorkerPrivate),
       mLoadContext(aRequest->GetWorkerLoadContext()) {
   MOZ_ASSERT(mLoader);
+
+  // Worker scripts are always decoded as UTF-8 per spec.
+  mDecoder = MakeUnique<ScriptDecoder>(UTF_8_ENCODING,
+                                       ScriptDecoder::BOMHandling::Remove);
 }
 
 NS_IMETHODIMP
@@ -144,30 +149,16 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   // May be null.
   Document* parentDoc = mWorkerPrivate->GetDocument();
 
-  // Use the regular ScriptLoader for this grunt work! Should be just fine
-  // because we're running on the main thread.
-  // Worker scripts are always decoded as UTF-8 per spec. Passing null for a
-  // channel and UTF-8 for the hint will always interpret |aString| as UTF-8.
-  if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
-    mLoadContext->InitUTF8Script();
-    rv = ScriptLoader::ConvertToUTF8(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                     parentDoc, mLoadContext->mScript.mUTF8,
-                                     mLoadContext->mScriptLength);
-  } else {
-    mLoadContext->InitUTF16Script();
-    rv = ScriptLoader::ConvertToUTF16(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                      parentDoc, mLoadContext->mScript.mUTF16,
-                                      mLoadContext->mScriptLength);
-  }
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  // Set the Source type to "text" for decoding.
+  mLoadContext->mRequest->SetTextSource();
 
-  if (mLoadContext->ScriptTextIsNull()) {
-    if (mLoadContext->mScriptLength != 0) {
-      return NS_ERROR_FAILURE;
-    }
+  // Use the regular ScriptDecoder Decoder for this grunt work! Should be just
+  // fine because we're running on the main thread.
+  rv = mDecoder->DecodeRawData(mLoadContext->mRequest, aString, aStringLen,
+                               /* aEndOfStream = */ true);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!mLoadContext->mRequest->ScriptTextLength()) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "DOM"_ns,
                                     parentDoc, nsContentUtils::eDOM_PROPERTIES,
                                     "EmptyWorkerSourceWarning");

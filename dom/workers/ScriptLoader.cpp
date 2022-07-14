@@ -429,24 +429,13 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
 template <typename Unit>
 static bool EvaluateSourceBuffer(JSContext* aCx,
                                  const JS::CompileOptions& aOptions,
-                                 Unit*& aScriptData, size_t aScriptLength) {
+                                 JS::SourceText<Unit>& aSourceBuffer) {
   static_assert(std::is_same<Unit, char16_t>::value ||
                     std::is_same<Unit, Utf8Unit>::value,
                 "inferred units must be UTF-8 or UTF-16");
 
-  // Transfer script data to a local variable.
-  Unit* script = nullptr;
-  std::swap(script, aScriptData);
-
-  // Transfer the local to appropriate |SourceText|.
-  JS::SourceText<Unit> srcBuf;
-  if (!srcBuf.init(aCx, script, aScriptLength,
-                   JS::SourceOwnership::TakeOwnership)) {
-    return false;
-  }
-
   JS::Rooted<JS::Value> unused(aCx);
-  return Evaluate(aCx, aOptions, srcBuf, &unused);
+  return Evaluate(aCx, aOptions, aSourceBuffer, &unused);
 }
 
 WorkerScriptLoader::WorkerScriptLoader(
@@ -948,19 +937,21 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   // Our ErrorResult still shouldn't be a failure.
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
 
-  // Transfer script length to a local variable, encoding-agnostically.
-  size_t scriptLength = 0;
-  std::swap(scriptLength, loadContext->mScriptLength);
+  // Get the source text.
+  ScriptLoadRequest::MaybeSourceText maybeSource;
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  if (NS_FAILED(rv)) {
+    mRv.StealExceptionFromJSContext(aCx);
+    return false;
+  }
 
-  // This transfers script data out of the active arm of
-  // |loadContext->mScript|.
   bool successfullyEvaluated =
-      loadContext->mScriptIsUTF8
-          ? EvaluateSourceBuffer(aCx, options, loadContext->mScript.mUTF8,
-                                 scriptLength)
-          : EvaluateSourceBuffer(aCx, options, loadContext->mScript.mUTF16,
-                                 scriptLength);
-  MOZ_ASSERT(loadContext->ScriptTextIsNull());
+      aRequest->IsUTF8Text()
+          ? EvaluateSourceBuffer(aCx, options,
+                                 maybeSource.ref<JS::SourceText<Utf8Unit>>())
+          : EvaluateSourceBuffer(aCx, options,
+                                 maybeSource.ref<JS::SourceText<char16_t>>());
+
   if (!successfullyEvaluated) {
     mRv.StealExceptionFromJSContext(aCx);
     return false;

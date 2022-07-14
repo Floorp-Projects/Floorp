@@ -25,6 +25,7 @@ EXPORTS.mozilla.dom += [
     "ScriptElement.h",
     "ScriptLoadContext.h",
     "ScriptLoader.h",
+    "ScriptLoadHandler.h",
     "ScriptSettings.h",
     "ScriptTrace.h",
     "ShadowRealmGlobalScope.h",
