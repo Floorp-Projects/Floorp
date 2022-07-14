@@ -59,6 +59,11 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
     return false;
   }
 
+  if (aNewStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
+    StopAnimationsForElement(aElement, aPseudoType);
+    return false;
+  }
+
   CSSTransitionCollection* collection =
       CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
   return DoUpdateTransitions(*aNewStyle.StyleUIReset(), aElement, aPseudoType,
