@@ -1,6 +1,132 @@
 {
   "data": [
     {
+      "schema": 1657673315354,
+      "derHash": "1gTwFIol2TurV304cFy6rixEd95+tR2GoPayZYQBPXo=",
+      "subject": "CN=Thawte G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjEzMDEGA1UEAxMqVGhhd3RlIEc1IFRMUyBDTiBFQ0MgUC0zODQgU0hBMzg0IDIwMjIgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3129242e85cdf0f309e258648b1644d453f871ce619308f47cbf52fb63efabc7",
+        "size": 1244,
+        "filename": "OJlQ9mdtsB5vrqQ648dNZZGkd5CgwQhqLYav-0L7PzY=.pem",
+        "location": "security-state-staging/intermediates/590b4b4e-10b8-46d4-b352-5badc01a1fef.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OJlQ9mdtsB5vrqQ648dNZZGkd5CgwQhqLYav+0L7PzY=",
+      "crlite_enrolled": false,
+      "id": "27e46e16-a6cd-4328-810e-bbfd6f6cda46",
+      "last_modified": 1657673823452
+    },
+    {
+      "schema": 1657673317285,
+      "derHash": "kV7I3MI3+pMssCRamW/zpxFVCkZCFP11EvIlqmCAYcg=",
+      "subject": "CN=DigiCert G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE1MDMGA1UEAxMsRGlnaUNlcnQgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1fb03123d91ae87c93b92fe243f54a0a2bef16ebd20fd7929d508c587216e450",
+        "size": 1248,
+        "filename": "R3PZqaW3zCxxaQ5bSQKCTasFBA4J5Cnc9fLzxRf0_bs=.pem",
+        "location": "security-state-staging/intermediates/dc178a9d-41d4-43e0-b432-a4241b65e4dc.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "R3PZqaW3zCxxaQ5bSQKCTasFBA4J5Cnc9fLzxRf0/bs=",
+      "crlite_enrolled": false,
+      "id": "ab257771-7ba0-4d9a-82f4-c57bc9689748",
+      "last_modified": 1657673823443
+    },
+    {
+      "schema": 1657673313115,
+      "derHash": "q373BbC42yKRwryNyfaa2DRaPMVD24zcSai0GSgt6iI=",
+      "subject": "CN=DigiCert G5 TLS CN RSA4096 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjEzMDEGA1UEAxMqRGlnaUNlcnQgRzUgVExTIENOIFJTQTQwOTYgU0hBMzg0IDIwMjIgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "75314f6a9a6c8cab0a538f33f85a9899fe32efa8ba2411045fd4e1490b813572",
+        "size": 2393,
+        "filename": "wbQtVyDhsJDZ7ZTgMHcNj5L1XL3nQo_qsShPSxHiGlg=.pem",
+        "location": "security-state-staging/intermediates/7d18b322-587b-4da8-b437-277da1ed32eb.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "wbQtVyDhsJDZ7ZTgMHcNj5L1XL3nQo/qsShPSxHiGlg=",
+      "crlite_enrolled": false,
+      "id": "a00a96bc-01aa-427d-a44a-46bb9ede86eb",
+      "last_modified": 1657673823434
+    },
+    {
+      "schema": 1657673312034,
+      "derHash": "5Duq14t4+e6mkD5W9FbewkvZZIwTrgLi3heh+E89CAc=",
+      "subject": "CN=GeoTrust G5 TLS CN ECC P-384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MF0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE1MDMGA1UEAxMsR2VvVHJ1c3QgRzUgVExTIENOIEVDQyBQLTM4NCBTSEEzODQgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d4c1f4983ff6e6192de0acc76728fb52393bf92a90670487d4f3b63f1852ee17",
+        "size": 1248,
+        "filename": "5zJ7jFc2gNMH1N9rX_DHOV3JCnG-ukw0EkslpYXr-fM=.pem",
+        "location": "security-state-staging/intermediates/a77313bc-afed-4e76-b175-842d33665225.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5zJ7jFc2gNMH1N9rX/DHOV3JCnG+ukw0EkslpYXr+fM=",
+      "crlite_enrolled": false,
+      "id": "0f02ee9b-1f97-4776-a939-78091f93ea63",
+      "last_modified": 1657673823425
+    },
+    {
+      "schema": 1657673316324,
+      "derHash": "K20Zn341yMZ+C7qCn5KZHPMUZiZeEfowvRn8W2w2FRw=",
+      "subject": "CN=GeoTrust G5 TLS CN RSA4096 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjEzMDEGA1UEAxMqR2VvVHJ1c3QgRzUgVExTIENOIFJTQTQwOTYgU0hBMzg0IDIwMjIgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ddb561a05fdd0b1dd429bc3c3c50e0a3805423d5b279916f9ffb3d4ff59bc5b4",
+        "size": 2393,
+        "filename": "HHoUjrAj1XP5vnU44w9Pu7YgFS_u0QD7hTHolzugvKQ=.pem",
+        "location": "security-state-staging/intermediates/cb70ae36-1854-4bda-922f-ee1120bc9050.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "HHoUjrAj1XP5vnU44w9Pu7YgFS/u0QD7hTHolzugvKQ=",
+      "crlite_enrolled": false,
+      "id": "3f839c5b-ebd1-4e42-9cbe-54203b19af29",
+      "last_modified": 1657673823416
+    },
+    {
+      "schema": 1657673314428,
+      "derHash": "Honj0nAtPxc13OfamVYWAFNKBkVKlIdNB4DQRDyvQVE=",
+      "subject": "CN=Thawte G5 TLS CN RSA4096 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MFkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjExMC8GA1UEAxMoVGhhd3RlIEc1IFRMUyBDTiBSU0E0MDk2IFNIQTM4NCAyMDIyIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4e176dd6e8181e4dc2b1cbad5e566815a70ec2668675335f58b4f586eacfa6a1",
+        "size": 2389,
+        "filename": "8S2WQvlz04IQBZ9zLQRNo9VXRswtrQL75271G7UZlK4=.pem",
+        "location": "security-state-staging/intermediates/8eec4898-0567-46bf-aa86-2f2e3a4151f4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8S2WQvlz04IQBZ9zLQRNo9VXRswtrQL75271G7UZlK4=",
+      "crlite_enrolled": false,
+      "id": "2bcd4ea3-7fd9-4719-9830-8b7a610d018e",
+      "last_modified": 1657673823406
+    },
+    {
+      "schema": 1657328224342,
+      "derHash": "MGv4CZY2pE//te7c5uMMDzbH1D9syloso6txZo81MyA=",
+      "subject": "SERIALNUMBER=G63287510,CN=ANF Secure Server CA,OU=ANF Autoridad intermedia tecnicos,O=ANF Autoridad de Certificacion,C=ES",
+      "subjectDN": "MIGVMRIwEAYDVQQFEwlHNjMyODc1MTAxCzAJBgNVBAYTAkVTMScwJQYDVQQKEx5BTkYgQXV0b3JpZGFkIGRlIENlcnRpZmljYWNpb24xKjAoBgNVBAsTIUFORiBBdXRvcmlkYWQgaW50ZXJtZWRpYSB0ZWNuaWNvczEdMBsGA1UEAxMUQU5GIFNlY3VyZSBTZXJ2ZXIgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "94f2679da6fc663782dece4baeb031bb22bd3de9a11c9b24ed20b914260e0d4c",
+        "size": 2645,
+        "filename": "uiEcUi6rH4hr3LVqMdSOFpFfUPBYYzPvgxeYIKOOeGk=.pem",
+        "location": "security-state-staging/intermediates/39894355-15d9-4bf9-aa00-9b376067ec88.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uiEcUi6rH4hr3LVqMdSOFpFfUPBYYzPvgxeYIKOOeGk=",
+      "crlite_enrolled": false,
+      "id": "bc4939de-dfcf-4dba-ba83-ac8dada019cc",
+      "last_modified": 1657544223180
+    },
+    {
       "schema": 1657327855850,
       "derHash": "l6BzlXxYEnJXV2cvIiaQZVoUB9cQEe38iy+txRKJEdo=",
       "subject": "CN=DigiCert G5 TLS ECC SHA384 2021 CA1,O=DigiCert\\, Inc.,C=US",
@@ -6659,24 +6785,6 @@
       "crlite_enrolled": true,
       "id": "7b545696-9069-4460-9c39-f452b104bfe1",
       "last_modified": 1645579198385
-    },
-    {
-      "schema": 1645578808760,
-      "derHash": "MGv4CZY2pE//te7c5uMMDzbH1D9syloso6txZo81MyA=",
-      "subject": "SERIALNUMBER=G63287510,CN=ANF Secure Server CA,OU=ANF Autoridad intermedia tecnicos,O=ANF Autoridad de Certificacion,C=ES",
-      "subjectDN": "MIGVMRIwEAYDVQQFEwlHNjMyODc1MTAxCzAJBgNVBAYTAkVTMScwJQYDVQQKEx5BTkYgQXV0b3JpZGFkIGRlIENlcnRpZmljYWNpb24xKjAoBgNVBAsTIUFORiBBdXRvcmlkYWQgaW50ZXJtZWRpYSB0ZWNuaWNvczEdMBsGA1UEAxMUQU5GIFNlY3VyZSBTZXJ2ZXIgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "94f2679da6fc663782dece4baeb031bb22bd3de9a11c9b24ed20b914260e0d4c",
-        "size": 2645,
-        "filename": "uiEcUi6rH4hr3LVqMdSOFpFfUPBYYzPvgxeYIKOOeGk=.pem",
-        "location": "security-state-staging/intermediates/39894355-15d9-4bf9-aa00-9b376067ec88.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "uiEcUi6rH4hr3LVqMdSOFpFfUPBYYzPvgxeYIKOOeGk=",
-      "crlite_enrolled": true,
-      "id": "bc4939de-dfcf-4dba-ba83-ac8dada019cc",
-      "last_modified": 1645579198372
     },
     {
       "schema": 1645578788075,
@@ -25255,5 +25363,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1657328223872
+  "timestamp": 1657673823452
 }
