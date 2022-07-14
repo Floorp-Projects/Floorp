@@ -110,7 +110,7 @@
       'Perf Android64 (O Pixel2)': 'release_bot_x64',
       'Perf Linux Trusty': 'release_bot_x64',
       'Perf Linux Bionic': 'release_bot_x64',
-      'Perf Mac 10.11': 'release_bot_x64',
+      'Perf Mac 11': 'release_bot_x64',
       'Perf Win7': 'release_bot_x64',
     },
 
