@@ -13,7 +13,6 @@ lucicfg.check_version("1.30.9")
 WEBRTC_GIT = "https://webrtc.googlesource.com/src"
 WEBRTC_GERRIT = "https://webrtc-review.googlesource.com/src"
 WEBRTC_TROOPER_EMAIL = "webrtc-troopers-robots@google.com"
-WEBRTC_IOS_XCODE_VERSION = "12a7209"
 WEBRTC_XCODE13 = "13c100"
 DEFAULT_CPU = "x86-64"
 
@@ -662,15 +661,6 @@ mac_builder, mac_try_job = normal_builder_factory(
 
 ios_builder, ios_try_job = normal_builder_factory(
     dimensions = {"os": "Mac-11"},
-    properties = {"xcode_build_version": WEBRTC_IOS_XCODE_VERSION},
-    caches = [swarming.cache(
-        name = "xcode_ios_" + WEBRTC_IOS_XCODE_VERSION,
-        path = "xcode_ios_" + WEBRTC_IOS_XCODE_VERSION + ".app",
-    )],
-)
-
-ios_builder_macos11, ios_try_job_macos11 = normal_builder_factory(
-    dimensions = {"os": "Mac-11"},
     properties = {"xcode_build_version": WEBRTC_XCODE13},
     caches = [swarming.cache(
         name = "xcode_ios_" + WEBRTC_XCODE13,
@@ -718,8 +708,8 @@ ios_builder("iOS64 Sim Debug (iOS 13)", "iOS|x64|13")
 ios_try_job("ios_sim_x64_dbg_ios13")
 ios_builder("iOS64 Sim Debug (iOS 12)", "iOS|x64|12")
 ios_try_job("ios_sim_x64_dbg_ios12")
-ios_builder_macos11("iOS API Framework Builder", "iOS|fat|size", recipe = "ios_api_framework", prioritized = True)
-ios_try_job_macos11("ios_api_framework", recipe = "ios_api_framework")
+ios_builder("iOS API Framework Builder", "iOS|fat|size", recipe = "ios_api_framework", prioritized = True)
+ios_try_job("ios_api_framework", recipe = "ios_api_framework")
 
 linux_builder("Linux32 Debug", "Linux|x86|dbg")
 linux_try_job("linux_x86_dbg")
