@@ -398,9 +398,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvAccessKey(
       const uint64_t& aID, uint32_t* aKey, uint32_t* aModifierMask) override;
 
-  virtual mozilla::ipc::IPCResult RecvKeyboardShortcut(
-      const uint64_t& aID, uint32_t* aKey, uint32_t* aModifierMask) override;
-
   virtual mozilla::ipc::IPCResult RecvAtkKeyBinding(const uint64_t& aID,
                                                     nsString* aResult) override;
 
