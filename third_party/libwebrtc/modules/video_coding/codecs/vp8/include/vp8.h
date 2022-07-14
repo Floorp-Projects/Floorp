@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
-#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/vp8_frame_buffer_controller.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -40,7 +39,6 @@ class VP8Encoder {
 
   static std::unique_ptr<VideoEncoder> Create();
   static std::unique_ptr<VideoEncoder> Create(Settings settings);
-  static bool SupportsScalabilityMode(ScalabilityMode scalability_mode);
 
   ABSL_DEPRECATED("")
   static std::unique_ptr<VideoEncoder> Create(

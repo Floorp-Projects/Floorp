@@ -20,6 +20,7 @@
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder_supported.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp8/vp8_scalability.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/logging.h"
@@ -73,7 +74,7 @@ VideoEncoderFactory::CodecSupport InternalEncoderFactory::QueryCodecSupport(
       return kUnsupported;
     }
     if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName)) {
-      if (!VP8Encoder::SupportsScalabilityMode(*scalability_mode)) {
+      if (!VP8SupportsScalabilityMode(*scalability_mode)) {
         return kUnsupported;
       }
     } else if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName)) {
