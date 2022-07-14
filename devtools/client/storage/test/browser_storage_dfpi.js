@@ -33,6 +33,11 @@ add_task(async function() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
   );
 
+  await pushPref(
+    "privacy.partition.always_partition_third_party_non_cookie_storage",
+    false
+  );
+
   registerCleanupFunction(SiteDataTestUtils.clear);
 
   // `Services.qms.listOrigins()` may or contain results created by other tests.
