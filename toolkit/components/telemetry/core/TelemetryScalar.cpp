@@ -2508,8 +2508,8 @@ void TelemetryScalar::SetCanRecordExtended(bool b) {
  * @return NS_OK (always) so that the JS API call doesn't throw. In case of
  * errors, a warning level message is printed in the browser console.
  */
-nsresult TelemetryScalar::Add(const nsACString& aName, JS::HandleValue aVal,
-                              JSContext* aCx) {
+nsresult TelemetryScalar::Add(const nsACString& aName,
+                              JS::Handle<JS::Value> aVal, JSContext* aCx) {
   // Unpack the aVal to nsIVariant. This uses the JS context.
   nsCOMPtr<nsIVariant> unpackedVal;
   nsresult rv = nsContentUtils::XPConnect()->JSToVariant(
@@ -2545,7 +2545,7 @@ nsresult TelemetryScalar::Add(const nsACString& aName, JS::HandleValue aVal,
  * errors, a warning level message is printed in the browser console.
  */
 nsresult TelemetryScalar::Add(const nsACString& aName, const nsAString& aKey,
-                              JS::HandleValue aVal, JSContext* aCx) {
+                              JS::Handle<JS::Value> aVal, JSContext* aCx) {
   // Unpack the aVal to nsIVariant. This uses the JS context.
   nsCOMPtr<nsIVariant> unpackedVal;
   nsresult rv = nsContentUtils::XPConnect()->JSToVariant(
@@ -2670,8 +2670,8 @@ void TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId,
  * @return NS_OK (always) so that the JS API call doesn't throw. In case of
  * errors, a warning level message is printed in the browser console.
  */
-nsresult TelemetryScalar::Set(const nsACString& aName, JS::HandleValue aVal,
-                              JSContext* aCx) {
+nsresult TelemetryScalar::Set(const nsACString& aName,
+                              JS::Handle<JS::Value> aVal, JSContext* aCx) {
   // Unpack the aVal to nsIVariant. This uses the JS context.
   nsCOMPtr<nsIVariant> unpackedVal;
   nsresult rv = nsContentUtils::XPConnect()->JSToVariant(
@@ -2707,7 +2707,7 @@ nsresult TelemetryScalar::Set(const nsACString& aName, JS::HandleValue aVal,
  * errors, a warning level message is printed in the browser console.
  */
 nsresult TelemetryScalar::Set(const nsACString& aName, const nsAString& aKey,
-                              JS::HandleValue aVal, JSContext* aCx) {
+                              JS::Handle<JS::Value> aVal, JSContext* aCx) {
   // Unpack the aVal to nsIVariant. This uses the JS context.
   nsCOMPtr<nsIVariant> unpackedVal;
   nsresult rv = nsContentUtils::XPConnect()->JSToVariant(
@@ -2970,7 +2970,8 @@ void TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId,
  * errors, a warning level message is printed in the browser console.
  */
 nsresult TelemetryScalar::SetMaximum(const nsACString& aName,
-                                     JS::HandleValue aVal, JSContext* aCx) {
+                                     JS::Handle<JS::Value> aVal,
+                                     JSContext* aCx) {
   // Unpack the aVal to nsIVariant. This uses the JS context.
   nsCOMPtr<nsIVariant> unpackedVal;
   nsresult rv = nsContentUtils::XPConnect()->JSToVariant(
@@ -3007,7 +3008,8 @@ nsresult TelemetryScalar::SetMaximum(const nsACString& aName,
  */
 nsresult TelemetryScalar::SetMaximum(const nsACString& aName,
                                      const nsAString& aKey,
-                                     JS::HandleValue aVal, JSContext* aCx) {
+                                     JS::Handle<JS::Value> aVal,
+                                     JSContext* aCx) {
   // Unpack the aVal to nsIVariant. This uses the JS context.
   nsCOMPtr<nsIVariant> unpackedVal;
   nsresult rv = nsContentUtils::XPConnect()->JSToVariant(
@@ -3170,7 +3172,7 @@ nsresult TelemetryScalar::CreateSnapshots(unsigned int aDataset,
 
     // Create the object that will hold the scalars for this process and add it
     // to the returned root object.
-    JS::RootedObject processObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> processObj(aCx, JS_NewPlainObject(aCx));
     if (!processObj || !JS_DefineProperty(aCx, root_obj, processName,
                                           processObj, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
@@ -3247,7 +3249,7 @@ nsresult TelemetryScalar::CreateKeyedSnapshots(
 
     // Create the object that will hold the scalars for this process and add it
     // to the returned root object.
-    JS::RootedObject processObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> processObj(aCx, JS_NewPlainObject(aCx));
     if (!processObj || !JS_DefineProperty(aCx, root_obj, processName,
                                           processObj, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
@@ -3265,7 +3267,7 @@ nsresult TelemetryScalar::CreateKeyedSnapshots(
 
       // Go through each keyed scalar and create a keyed scalar object.
       // This object will hold the values for all the keyed scalar keys.
-      JS::RootedObject keyedScalarObj(aCx, JS_NewPlainObject(aCx));
+      JS::Rooted<JSObject*> keyedScalarObj(aCx, JS_NewPlainObject(aCx));
 
       // Define a property for each scalar key, then add it to the keyed scalar
       // object.
@@ -3319,7 +3321,7 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
     return NS_ERROR_INVALID_ARG;
   }
 
-  JS::RootedObject obj(cx, &aScalarData.toObject());
+  JS::Rooted<JSObject*> obj(cx, &aScalarData.toObject());
   JS::Rooted<JS::IdVector> scalarPropertyIds(cx, JS::IdVector(cx));
   if (!JS_Enumerate(cx, obj, &scalarPropertyIds)) {
     return NS_ERROR_FAILURE;
@@ -3348,12 +3350,12 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
     nsPrintfCString fullName("%s.%s", PromiseFlatCString(aCategoryName).get(),
                              NS_ConvertUTF16toUTF8(scalarName).get());
 
-    JS::RootedValue value(cx);
+    JS::Rooted<JS::Value> value(cx);
     if (!JS_GetPropertyById(cx, obj, scalarPropertyIds[i], &value) ||
         !value.isObject()) {
       return NS_ERROR_FAILURE;
     }
-    JS::RootedObject scalarDef(cx, &value.toObject());
+    JS::Rooted<JSObject*> scalarDef(cx, &value.toObject());
 
     // Get the scalar's kind.
     if (!JS_GetProperty(cx, scalarDef, "kind", &value) || !value.isInt32()) {
@@ -3412,7 +3414,7 @@ nsresult TelemetryScalar::RegisterScalars(const nsACString& aCategoryName,
         return NS_ERROR_FAILURE;
       }
 
-      JS::RootedObject arrayObj(cx, &value.toObject());
+      JS::Rooted<JSObject*> arrayObj(cx, &value.toObject());
       uint32_t storesLength = 0;
       if (!JS::GetArrayLength(cx, arrayObj, &storesLength)) {
         JS_ReportErrorASCII(cx,
@@ -3878,8 +3880,8 @@ nsresult TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter& aWriter) {
  * @returns NS_OK if loading was performed, an error code explaining the
  *          failure reason otherwise.
  */
-nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
-                                                      JS::HandleValue aData) {
+nsresult TelemetryScalar::DeserializePersistedScalars(
+    JSContext* aCx, JS::Handle<JS::Value> aData) {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only load scalars in the parent process");
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_FAILURE;
@@ -3895,7 +3897,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
   // Before updating the scalars, we need to get the data out of the JS
   // wrappers. We can't hold the scalars mutex while handling JS stuff.
   // Build a <scalar name, value> map.
-  JS::RootedObject scalarDataObj(aCx, &aData.toObject());
+  JS::Rooted<JSObject*> scalarDataObj(aCx, &aData.toObject());
   JS::Rooted<JS::IdVector> processes(aCx, JS::IdVector(aCx));
   if (!JS_Enumerate(aCx, scalarDataObj, &processes)) {
     // We can't even enumerate the processes in the loaded data, so
@@ -3908,7 +3910,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
   // from the serialized JSON, even in case of light data corruptions: if, for
   // example, the data for a single process is corrupted or is in an unexpected
   // form, we press on and attempt to load the data for the other processes.
-  JS::RootedId process(aCx);
+  JS::Rooted<JS::PropertyKey> process(aCx);
   for (auto& processVal : processes) {
     // This is required as JS API calls require an Handle<jsid> and not a
     // plain jsid.
@@ -3932,7 +3934,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
     }
 
     // And its probes.
-    JS::RootedValue processData(aCx);
+    JS::Rooted<JS::Value> processData(aCx);
     if (!JS_GetPropertyById(aCx, scalarDataObj, process, &processData)) {
       JS_ClearPendingException(aCx);
       continue;
@@ -3946,14 +3948,14 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
     }
 
     // Iterate through each scalar.
-    JS::RootedObject processDataObj(aCx, &processData.toObject());
+    JS::Rooted<JSObject*> processDataObj(aCx, &processData.toObject());
     JS::Rooted<JS::IdVector> scalars(aCx, JS::IdVector(aCx));
     if (!JS_Enumerate(aCx, processDataObj, &scalars)) {
       JS_ClearPendingException(aCx);
       continue;
     }
 
-    JS::RootedId scalar(aCx);
+    JS::Rooted<JS::PropertyKey> scalar(aCx);
     for (auto& scalarVal : scalars) {
       scalar = scalarVal;
       // Get the scalar name.
@@ -3964,7 +3966,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
       }
 
       // Get the scalar value as a JS value.
-      JS::RootedValue scalarValue(aCx);
+      JS::Rooted<JS::Value> scalarValue(aCx);
       if (!JS_GetPropertyById(aCx, processDataObj, scalar, &scalarValue)) {
         JS_ClearPendingException(aCx);
         continue;
@@ -4021,7 +4023,7 @@ nsresult TelemetryScalar::DeserializePersistedScalars(JSContext* aCx,
  *          failure reason otherwise.
  */
 nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
-    JSContext* aCx, JS::HandleValue aData) {
+    JSContext* aCx, JS::Handle<JS::Value> aData) {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only load scalars in the parent process");
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_FAILURE;
@@ -4038,7 +4040,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
   // Before updating the keyed scalars, we need to get the data out of the JS
   // wrappers. We can't hold the scalars mutex while handling JS stuff.
   // Build a <scalar name, value> map.
-  JS::RootedObject scalarDataObj(aCx, &aData.toObject());
+  JS::Rooted<JSObject*> scalarDataObj(aCx, &aData.toObject());
   JS::Rooted<JS::IdVector> processes(aCx, JS::IdVector(aCx));
   if (!JS_Enumerate(aCx, scalarDataObj, &processes)) {
     // We can't even enumerate the processes in the loaded data, so
@@ -4051,7 +4053,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
   // from the serialized JSON, even in case of light data corruptions: if, for
   // example, the data for a single process is corrupted or is in an unexpected
   // form, we press on and attempt to load the data for the other processes.
-  JS::RootedId process(aCx);
+  JS::Rooted<JS::PropertyKey> process(aCx);
   for (auto& processVal : processes) {
     process = processVal;
     // Get the process name.
@@ -4073,7 +4075,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
     }
 
     // And its probes.
-    JS::RootedValue processData(aCx);
+    JS::Rooted<JS::Value> processData(aCx);
     if (!JS_GetPropertyById(aCx, scalarDataObj, process, &processData)) {
       JS_ClearPendingException(aCx);
       continue;
@@ -4087,14 +4089,14 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
     }
 
     // Iterate through each keyed scalar.
-    JS::RootedObject processDataObj(aCx, &processData.toObject());
+    JS::Rooted<JSObject*> processDataObj(aCx, &processData.toObject());
     JS::Rooted<JS::IdVector> keyedScalars(aCx, JS::IdVector(aCx));
     if (!JS_Enumerate(aCx, processDataObj, &keyedScalars)) {
       JS_ClearPendingException(aCx);
       continue;
     }
 
-    JS::RootedId keyedScalar(aCx);
+    JS::Rooted<JS::PropertyKey> keyedScalar(aCx);
     for (auto& keyedScalarVal : keyedScalars) {
       keyedScalar = keyedScalarVal;
       // Get the scalar name.
@@ -4105,7 +4107,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
       }
 
       // Get the data for this keyed scalar.
-      JS::RootedValue keyedScalarData(aCx);
+      JS::Rooted<JS::Value> keyedScalarData(aCx);
       if (!JS_GetPropertyById(aCx, processDataObj, keyedScalar,
                               &keyedScalarData)) {
         JS_ClearPendingException(aCx);
@@ -4119,14 +4121,15 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
       }
 
       // Get the keys in the keyed scalar.
-      JS::RootedObject keyedScalarDataObj(aCx, &keyedScalarData.toObject());
+      JS::Rooted<JSObject*> keyedScalarDataObj(aCx,
+                                               &keyedScalarData.toObject());
       JS::Rooted<JS::IdVector> keys(aCx, JS::IdVector(aCx));
       if (!JS_Enumerate(aCx, keyedScalarDataObj, &keys)) {
         JS_ClearPendingException(aCx);
         continue;
       }
 
-      JS::RootedId key(aCx);
+      JS::Rooted<JS::PropertyKey> key(aCx);
       for (auto keyVal : keys) {
         key = keyVal;
         // Get the process name.
@@ -4137,7 +4140,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
         }
 
         // Get the scalar value as a JS value.
-        JS::RootedValue scalarValue(aCx);
+        JS::Rooted<JS::Value> scalarValue(aCx);
         if (!JS_GetPropertyById(aCx, keyedScalarDataObj, key, &scalarValue)) {
           JS_ClearPendingException(aCx);
           continue;

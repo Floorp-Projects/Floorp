@@ -155,43 +155,47 @@ class Timers final : public BackgroundHangAnnotator {
                 bool aCreate = true);
 
   TimerKeys* Get(JSContext* aCx, const nsAString& aHistogram,
-                 JS::HandleObject aObj, bool aCreate = true);
+                 JS::Handle<JSObject*> aObj, bool aCreate = true);
 
-  Timer* Get(JSContext* aCx, const nsAString& aHistogram, JS::HandleObject aObj,
-             const nsAString& aKey, bool aCreate = true);
+  Timer* Get(JSContext* aCx, const nsAString& aHistogram,
+             JS::Handle<JSObject*> aObj, const nsAString& aKey,
+             bool aCreate = true);
 
   already_AddRefed<Timer> GetAndDelete(JSContext* aCx,
                                        const nsAString& aHistogram,
-                                       JS::HandleObject aObj,
+                                       JS::Handle<JSObject*> aObj,
                                        const nsAString& aKey);
 
   bool Delete(JSContext* aCx, const nsAString& aHistogram,
-              JS::HandleObject aObj, const nsAString& aKey);
+              JS::Handle<JSObject*> aObj, const nsAString& aKey);
 
   int32_t TimeElapsed(JSContext* aCx, const nsAString& aHistogram,
-                      JS::HandleObject aObj, const nsAString& aKey,
+                      JS::Handle<JSObject*> aObj, const nsAString& aKey,
                       bool aCanceledOkay = false);
 
-  bool Start(JSContext* aCx, const nsAString& aHistogram, JS::HandleObject aObj,
-             const nsAString& aKey, bool aInSeconds = false);
+  bool Start(JSContext* aCx, const nsAString& aHistogram,
+             JS::Handle<JSObject*> aObj, const nsAString& aKey,
+             bool aInSeconds = false);
 
   int32_t Finish(JSContext* aCx, const nsAString& aHistogram,
-                 JS::HandleObject aObj, const nsAString& aKey,
+                 JS::Handle<JSObject*> aObj, const nsAString& aKey,
                  bool aCanceledOkay = false);
 
   bool& SuppressErrors() { return mSuppressErrors; }
 
   bool StartUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
-                            const nsACString& aValue, JS::HandleObject aObj);
+                            const nsACString& aValue,
+                            JS::Handle<JSObject*> aObj);
   bool RunningUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
-                              JS::HandleObject aObj);
+                              JS::Handle<JSObject*> aObj);
   bool UpdateUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
-                             const nsACString& aValue, JS::HandleObject aObj);
+                             const nsACString& aValue,
+                             JS::Handle<JSObject*> aObj);
   bool FinishUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
-                             JS::HandleObject aObj,
+                             JS::Handle<JSObject*> aObj,
                              const dom::Optional<nsACString>& aAdditionalText);
   bool CancelUserInteraction(JSContext* aCx, const nsAString& aUserInteraction,
-                             JS::HandleObject aObj);
+                             JS::Handle<JSObject*> aObj);
 
   void AnnotateHang(BackgroundHangAnnotations& aAnnotations) final;
 
@@ -240,8 +244,8 @@ JSObject* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
                       bool aCreate) {
   JSAutoRealm ar(aCx, mTimers);
 
-  JS::RootedValue histogram(aCx);
-  JS::RootedValue objs(aCx);
+  JS::Rooted<JS::Value> histogram(aCx);
+  JS::Rooted<JS::Value> objs(aCx);
 
   if (!xpc::NonVoidStringToJsval(aCx, aHistogram, &histogram) ||
       !JS::MapGet(aCx, mTimers, histogram, &objs)) {
@@ -260,23 +264,23 @@ JSObject* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
 }
 
 TimerKeys* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
-                       JS::HandleObject aObj, bool aCreate) {
+                       JS::Handle<JSObject*> aObj, bool aCreate) {
   JSAutoRealm ar(aCx, mTimers);
 
-  JS::RootedObject objs(aCx, Get(aCx, aHistogram, aCreate));
+  JS::Rooted<JSObject*> objs(aCx, Get(aCx, aHistogram, aCreate));
   if (!objs) {
     return nullptr;
   }
 
   // If no object is passed, use mTimers as a stand-in for a null object
   // (which cannot be used as a weak map key).
-  JS::RootedObject obj(aCx, aObj ? aObj : mTimers);
+  JS::Rooted<JSObject*> obj(aCx, aObj ? aObj : mTimers);
   if (!JS_WrapObject(aCx, &obj)) {
     return nullptr;
   }
 
   RefPtr<TimerKeys> keys;
-  JS::RootedValue keysObj(aCx);
+  JS::Rooted<JS::Value> keysObj(aCx);
   if (!JS::GetWeakMapEntry(aCx, objs, obj, &keysObj)) {
     return nullptr;
   }
@@ -295,7 +299,8 @@ TimerKeys* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
 }
 
 Timer* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
-                   JS::HandleObject aObj, const nsAString& aKey, bool aCreate) {
+                   JS::Handle<JSObject*> aObj, const nsAString& aKey,
+                   bool aCreate) {
   if (RefPtr<TimerKeys> keys = Get(aCx, aHistogram, aObj, aCreate)) {
     return keys->Get(aKey, aCreate);
   }
@@ -304,7 +309,7 @@ Timer* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
 
 already_AddRefed<Timer> Timers::GetAndDelete(JSContext* aCx,
                                              const nsAString& aHistogram,
-                                             JS::HandleObject aObj,
+                                             JS::Handle<JSObject*> aObj,
                                              const nsAString& aKey) {
   if (RefPtr<TimerKeys> keys = Get(aCx, aHistogram, aObj, false)) {
     return keys->GetAndDelete(aKey);
@@ -313,7 +318,7 @@ already_AddRefed<Timer> Timers::GetAndDelete(JSContext* aCx,
 }
 
 bool Timers::Delete(JSContext* aCx, const nsAString& aHistogram,
-                    JS::HandleObject aObj, const nsAString& aKey) {
+                    JS::Handle<JSObject*> aObj, const nsAString& aKey) {
   if (RefPtr<TimerKeys> keys = Get(aCx, aHistogram, aObj, false)) {
     return keys->Delete(aKey);
   }
@@ -321,7 +326,7 @@ bool Timers::Delete(JSContext* aCx, const nsAString& aHistogram,
 }
 
 int32_t Timers::TimeElapsed(JSContext* aCx, const nsAString& aHistogram,
-                            JS::HandleObject aObj, const nsAString& aKey,
+                            JS::Handle<JSObject*> aObj, const nsAString& aKey,
                             bool aCanceledOkay) {
   RefPtr<Timer> timer = Get(aCx, aHistogram, aObj, aKey, false);
   if (!timer) {
@@ -339,7 +344,7 @@ int32_t Timers::TimeElapsed(JSContext* aCx, const nsAString& aHistogram,
 }
 
 bool Timers::Start(JSContext* aCx, const nsAString& aHistogram,
-                   JS::HandleObject aObj, const nsAString& aKey,
+                   JS::Handle<JSObject*> aObj, const nsAString& aKey,
                    bool aInSeconds) {
   if (RefPtr<Timer> timer = Get(aCx, aHistogram, aObj, aKey)) {
     if (timer->Started()) {
@@ -359,7 +364,7 @@ bool Timers::Start(JSContext* aCx, const nsAString& aHistogram,
 }
 
 int32_t Timers::Finish(JSContext* aCx, const nsAString& aHistogram,
-                       JS::HandleObject aObj, const nsAString& aKey,
+                       JS::Handle<JSObject*> aObj, const nsAString& aKey,
                        bool aCanceledOkay) {
   RefPtr<Timer> timer = GetAndDelete(aCx, aHistogram, aObj, aKey);
   if (!timer) {
@@ -405,7 +410,7 @@ int32_t Timers::Finish(JSContext* aCx, const nsAString& aHistogram,
 bool Timers::StartUserInteraction(JSContext* aCx,
                                   const nsAString& aUserInteraction,
                                   const nsACString& aValue,
-                                  JS::HandleObject aObj) {
+                                  JS::Handle<JSObject*> aObj) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Ensure that this ID maps to a UserInteraction that can be recorded
@@ -462,7 +467,7 @@ bool Timers::StartUserInteraction(JSContext* aCx,
 
 bool Timers::RunningUserInteraction(JSContext* aCx,
                                     const nsAString& aUserInteraction,
-                                    JS::HandleObject aObj) {
+                                    JS::Handle<JSObject*> aObj) {
   if (RefPtr<Timer> timer =
           Get(aCx, aUserInteraction, aObj, VoidString(), false /* aCreate */)) {
     return timer->Started();
@@ -473,7 +478,7 @@ bool Timers::RunningUserInteraction(JSContext* aCx,
 bool Timers::UpdateUserInteraction(JSContext* aCx,
                                    const nsAString& aUserInteraction,
                                    const nsACString& aValue,
-                                   JS::HandleObject aObj) {
+                                   JS::Handle<JSObject*> aObj) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Ensure that this ID maps to a UserInteraction that can be recorded
@@ -504,7 +509,8 @@ bool Timers::UpdateUserInteraction(JSContext* aCx,
 }
 
 bool Timers::FinishUserInteraction(
-    JSContext* aCx, const nsAString& aUserInteraction, JS::HandleObject aObj,
+    JSContext* aCx, const nsAString& aUserInteraction,
+    JS::Handle<JSObject*> aObj,
     const dom::Optional<nsACString>& aAdditionalText) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -556,7 +562,7 @@ bool Timers::FinishUserInteraction(
 
 bool Timers::CancelUserInteraction(JSContext* aCx,
                                    const nsAString& aUserInteraction,
-                                   JS::HandleObject aObj) {
+                                   JS::Handle<JSObject*> aObj) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Ensure that this ID maps to a UserInteraction that can be recorded

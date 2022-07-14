@@ -96,14 +96,17 @@ nsresult GetKeyedHistogramById(const nsACString& name, JSContext* cx,
 const char* GetHistogramName(mozilla::Telemetry::HistogramID id);
 
 nsresult CreateHistogramSnapshots(JSContext* aCx,
-                                  JS::MutableHandleValue aResult,
+                                  JS::MutableHandle<JS::Value> aResult,
                                   const nsACString& aStore,
                                   unsigned int aDataset, bool aClearSubsession,
                                   bool aFilterTest = false);
 
-nsresult GetKeyedHistogramSnapshots(
-    JSContext* aCx, JS::MutableHandleValue aResult, const nsACString& aStore,
-    unsigned int aDataset, bool aClearSubsession, bool aFilterTest = false);
+nsresult GetKeyedHistogramSnapshots(JSContext* aCx,
+                                    JS::MutableHandle<JS::Value> aResult,
+                                    const nsACString& aStore,
+                                    unsigned int aDataset,
+                                    bool aClearSubsession,
+                                    bool aFilterTest = false);
 
 size_t GetHistogramSizesOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
@@ -112,8 +115,9 @@ size_t GetHistogramSizesOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 // on the disk and vice-versa.
 nsresult SerializeHistograms(mozilla::JSONWriter& aWriter);
 nsresult SerializeKeyedHistograms(mozilla::JSONWriter& aWriter);
-nsresult DeserializeHistograms(JSContext* aCx, JS::HandleValue aData);
-nsresult DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue aData);
+nsresult DeserializeHistograms(JSContext* aCx, JS::Handle<JS::Value> aData);
+nsresult DeserializeKeyedHistograms(JSContext* aCx,
+                                    JS::Handle<JS::Value> aData);
 
 }  // namespace TelemetryHistogram
 

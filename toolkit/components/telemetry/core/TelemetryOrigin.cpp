@@ -398,8 +398,8 @@ nsresult TelemetryOrigin::RecordOrigin(OriginMetricID aId,
   return NS_OK;
 }
 
-nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
-                                            JS::MutableHandleValue aResult) {
+nsresult TelemetryOrigin::GetOriginSnapshot(
+    bool aClear, JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
   if (NS_WARN_IF(!XRE_IsParentProcess())) {
     return NS_ERROR_FAILURE;
   }
@@ -434,7 +434,7 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
   }
   aResult.setObject(*rootObj);
   for (const auto& entry : copy) {
-    JS::RootedObject originsObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> originsObj(aCx, JS_NewPlainObject(aCx));
     if (NS_WARN_IF(!originsObj)) {
       return NS_ERROR_FAILURE;
     }
@@ -458,7 +458,7 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
 }
 
 nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
-    bool aClear, JSContext* aCx, JS::MutableHandleValue aSnapshot) {
+    bool aClear, JSContext* aCx, JS::MutableHandle<JS::Value> aSnapshot) {
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_FAILURE;
   }
@@ -529,25 +529,25 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
   //   },
   // }, ...]
 
-  JS::RootedObject prioDataArray(aCx,
-                                 JS::NewArrayObject(aCx, prioData.Length()));
+  JS::Rooted<JSObject*> prioDataArray(
+      aCx, JS::NewArrayObject(aCx, prioData.Length()));
   if (NS_WARN_IF(!prioDataArray)) {
     return NS_ERROR_FAILURE;
   }
   uint32_t i = 0;
   for (auto& prioDatum : prioData) {
-    JS::RootedObject prioDatumObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> prioDatumObj(aCx, JS_NewPlainObject(aCx));
     if (NS_WARN_IF(!prioDatumObj)) {
       return NS_ERROR_FAILURE;
     }
     JSString* encoding = ToJSString(aCx, prioDatum.first);
-    JS::RootedString rootedEncoding(aCx, encoding);
+    JS::Rooted<JSString*> rootedEncoding(aCx, encoding);
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioDatumObj, "encoding",
                                       rootedEncoding, JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
 
-    JS::RootedObject prioObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> prioObj(aCx, JS_NewPlainObject(aCx));
     if (NS_WARN_IF(!prioObj)) {
       return NS_ERROR_FAILURE;
     }
@@ -556,12 +556,14 @@ nsresult TelemetryOrigin::GetEncodedOriginSnapshot(
       return NS_ERROR_FAILURE;
     }
 
-    JS::RootedString aRootStr(aCx, ToJSString(aCx, prioDatum.second.first));
+    JS::Rooted<JSString*> aRootStr(aCx,
+                                   ToJSString(aCx, prioDatum.second.first));
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "a", aRootStr,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
-    JS::RootedString bRootStr(aCx, ToJSString(aCx, prioDatum.second.second));
+    JS::Rooted<JSString*> bRootStr(aCx,
+                                   ToJSString(aCx, prioDatum.second.second));
     if (NS_WARN_IF(!JS_DefineProperty(aCx, prioObj, "b", bRootStr,
                                       JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;

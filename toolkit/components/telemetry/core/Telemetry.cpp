@@ -573,7 +573,7 @@ NS_IMETHODIMP
 TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
                                         bool aClearStore, bool aFilterTest,
                                         JSContext* aCx,
-                                        JS::MutableHandleValue aResult) {
+                                        JS::MutableHandle<JS::Value> aResult) {
   constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
@@ -584,10 +584,9 @@ TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
-                                             bool aClearStore, bool aFilterTest,
-                                             JSContext* aCx,
-                                             JS::MutableHandleValue aResult) {
+TelemetryImpl::GetSnapshotForKeyedHistograms(
+    const nsACString& aStoreName, bool aClearStore, bool aFilterTest,
+    JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
   constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
@@ -599,7 +598,7 @@ TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
 
 NS_IMETHODIMP
 TelemetryImpl::GetCategoricalLabels(JSContext* aCx,
-                                    JS::MutableHandleValue aResult) {
+                                    JS::MutableHandle<JS::Value> aResult) {
   return TelemetryHistogram::GetCategoricalHistogramLabels(aCx, aResult);
 }
 
@@ -607,7 +606,7 @@ NS_IMETHODIMP
 TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
                                      bool aClearStore, bool aFilterTest,
                                      JSContext* aCx,
-                                     JS::MutableHandleValue aResult) {
+                                     JS::MutableHandle<JS::Value> aResult) {
   constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
@@ -618,10 +617,9 @@ TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
-                                          bool aClearStore, bool aFilterTest,
-                                          JSContext* aCx,
-                                          JS::MutableHandleValue aResult) {
+TelemetryImpl::GetSnapshotForKeyedScalars(
+    const nsACString& aStoreName, bool aClearStore, bool aFilterTest,
+    JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
   constexpr auto defaultStore = "main"_ns;
   unsigned int dataset = mCanRecordExtended
                              ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
@@ -707,7 +705,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
 
     JSContext* cx = jsapi.cx();
 
-    JS::RootedObject moduleArray(cx, JS::NewArrayObject(cx, 0));
+    JS::Rooted<JSObject*> moduleArray(cx, JS::NewArrayObject(cx, 0));
     if (!moduleArray) {
       mPromise->MaybeReject(NS_ERROR_FAILURE);
       return NS_OK;
@@ -716,14 +714,14 @@ class GetLoadedModulesResultRunnable final : public Runnable {
     for (unsigned int i = 0, n = mRawModules.GetSize(); i != n; i++) {
       const SharedLibrary& info = mRawModules.GetEntry(i);
 
-      JS::RootedObject moduleObj(cx, JS_NewPlainObject(cx));
+      JS::Rooted<JSObject*> moduleObj(cx, JS_NewPlainObject(cx));
       if (!moduleObj) {
         mPromise->MaybeReject(NS_ERROR_FAILURE);
         return NS_OK;
       }
 
       // Module name.
-      JS::RootedString moduleName(
+      JS::Rooted<JSString*> moduleName(
           cx, JS_NewUCStringCopyZ(cx, info.GetModuleName().get()));
       if (!moduleName || !JS_DefineProperty(cx, moduleObj, "name", moduleName,
                                             JSPROP_ENUMERATE)) {
@@ -732,10 +730,10 @@ class GetLoadedModulesResultRunnable final : public Runnable {
       }
 
       // Module debug name.
-      JS::RootedValue moduleDebugName(cx);
+      JS::Rooted<JS::Value> moduleDebugName(cx);
 
       if (!info.GetDebugName().IsEmpty()) {
-        JS::RootedString str_moduleDebugName(
+        JS::Rooted<JSString*> str_moduleDebugName(
             cx, JS_NewUCStringCopyZ(cx, info.GetDebugName().get()));
         if (!str_moduleDebugName) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
@@ -753,10 +751,10 @@ class GetLoadedModulesResultRunnable final : public Runnable {
       }
 
       // Module Breakpad identifier.
-      JS::RootedValue id(cx);
+      JS::Rooted<JS::Value> id(cx);
 
       if (!info.GetBreakpadId().IsEmpty()) {
-        JS::RootedString str_id(
+        JS::Rooted<JSString*> str_id(
             cx, JS_NewStringCopyZ(cx, info.GetBreakpadId().get()));
         if (!str_id) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
@@ -773,10 +771,10 @@ class GetLoadedModulesResultRunnable final : public Runnable {
       }
 
       // Module version.
-      JS::RootedValue version(cx);
+      JS::Rooted<JS::Value> version(cx);
 
       if (!info.GetVersion().IsEmpty()) {
-        JS::RootedString v(
+        JS::Rooted<JSString*> v(
             cx, JS_NewStringCopyZ(cx, info.GetVersion().BeginReading()));
         if (!v) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
@@ -796,13 +794,13 @@ class GetLoadedModulesResultRunnable final : public Runnable {
 #  if defined(XP_WIN)
       // Cert Subject.
       if (auto subject = mCertSubjects.Lookup(info.GetModulePath())) {
-        JS::RootedString jsOrg(cx, ToJSString(cx, *subject));
+        JS::Rooted<JSString*> jsOrg(cx, ToJSString(cx, *subject));
         if (!jsOrg) {
           mPromise->MaybeReject(NS_ERROR_FAILURE);
           return NS_OK;
         }
 
-        JS::RootedValue certSubject(cx);
+        JS::Rooted<JS::Value> certSubject(cx);
         certSubject.setString(jsOrg);
 
         if (!JS_DefineProperty(cx, moduleObj, "certSubject", certSubject,
@@ -1486,7 +1484,8 @@ bool TelemetryImpl::CanRecordPrereleaseData() { return CanRecordExtended(); }
 NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter)
 
 NS_IMETHODIMP
-TelemetryImpl::GetFileIOReports(JSContext* cx, JS::MutableHandleValue ret) {
+TelemetryImpl::GetFileIOReports(JSContext* cx,
+                                JS::MutableHandle<JS::Value> ret) {
   if (sTelemetryIOObserver) {
     JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
     if (!obj) {
@@ -1537,39 +1536,40 @@ TelemetryImpl::MsSystemNow(double* aResult) {
 // Telemetry Scalars IDL Implementation
 
 NS_IMETHODIMP
-TelemetryImpl::ScalarAdd(const nsACString& aName, JS::HandleValue aVal,
+TelemetryImpl::ScalarAdd(const nsACString& aName, JS::Handle<JS::Value> aVal,
                          JSContext* aCx) {
   return TelemetryScalar::Add(aName, aVal, aCx);
 }
 
 NS_IMETHODIMP
-TelemetryImpl::ScalarSet(const nsACString& aName, JS::HandleValue aVal,
+TelemetryImpl::ScalarSet(const nsACString& aName, JS::Handle<JS::Value> aVal,
                          JSContext* aCx) {
   return TelemetryScalar::Set(aName, aVal, aCx);
 }
 
 NS_IMETHODIMP
-TelemetryImpl::ScalarSetMaximum(const nsACString& aName, JS::HandleValue aVal,
-                                JSContext* aCx) {
+TelemetryImpl::ScalarSetMaximum(const nsACString& aName,
+                                JS::Handle<JS::Value> aVal, JSContext* aCx) {
   return TelemetryScalar::SetMaximum(aName, aVal, aCx);
 }
 
 NS_IMETHODIMP
 TelemetryImpl::KeyedScalarAdd(const nsACString& aName, const nsAString& aKey,
-                              JS::HandleValue aVal, JSContext* aCx) {
+                              JS::Handle<JS::Value> aVal, JSContext* aCx) {
   return TelemetryScalar::Add(aName, aKey, aVal, aCx);
 }
 
 NS_IMETHODIMP
 TelemetryImpl::KeyedScalarSet(const nsACString& aName, const nsAString& aKey,
-                              JS::HandleValue aVal, JSContext* aCx) {
+                              JS::Handle<JS::Value> aVal, JSContext* aCx) {
   return TelemetryScalar::Set(aName, aKey, aVal, aCx);
 }
 
 NS_IMETHODIMP
 TelemetryImpl::KeyedScalarSetMaximum(const nsACString& aName,
                                      const nsAString& aKey,
-                                     JS::HandleValue aVal, JSContext* aCx) {
+                                     JS::Handle<JS::Value> aVal,
+                                     JSContext* aCx) {
   return TelemetryScalar::SetMaximum(aName, aKey, aVal, aCx);
 }
 
@@ -1599,8 +1599,9 @@ TelemetryImpl::ClearScalars() {
 NS_IMETHODIMP
 TelemetryImpl::RecordEvent(const nsACString& aCategory,
                            const nsACString& aMethod, const nsACString& aObject,
-                           JS::HandleValue aValue, JS::HandleValue aExtra,
-                           JSContext* aCx, uint8_t optional_argc) {
+                           JS::Handle<JS::Value> aValue,
+                           JS::Handle<JS::Value> aExtra, JSContext* aCx,
+                           uint8_t optional_argc) {
   return TelemetryEvent::RecordEvent(aCategory, aMethod, aObject, aValue,
                                      aExtra, aCx, optional_argc);
 }
@@ -1609,7 +1610,7 @@ NS_IMETHODIMP
 TelemetryImpl::SnapshotEvents(uint32_t aDataset, bool aClear,
                               uint32_t aEventLimit, JSContext* aCx,
                               uint8_t optional_argc,
-                              JS::MutableHandleValue aResult) {
+                              JS::MutableHandle<JS::Value> aResult) {
   return TelemetryEvent::CreateSnapshots(aDataset, aClear, aEventLimit, aCx,
                                          optional_argc, aResult);
 }
@@ -1642,7 +1643,7 @@ TelemetryImpl::SetEventRecordingEnabled(const nsACString& aCategory,
 
 NS_IMETHODIMP
 TelemetryImpl::GetOriginSnapshot(bool aClear, JSContext* aCx,
-                                 JS::MutableHandleValue aResult) {
+                                 JS::MutableHandle<JS::Value> aResult) {
   return TelemetryOrigin::GetOriginSnapshot(aClear, aCx, aResult);
 }
 
@@ -1665,7 +1666,7 @@ TelemetryImpl::GetEncodedOriginSnapshot(bool aClear, JSContext* aCx,
 
   // TODO: Put this all on a Worker Thread
 
-  JS::RootedValue snapshot(aCx);
+  JS::Rooted<JS::Value> snapshot(aCx);
   nsresult rv;
   rv = TelemetryOrigin::GetEncodedOriginSnapshot(aClear, aCx, &snapshot);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1723,7 +1724,8 @@ TelemetryImpl::GatherMemory(JSContext* aCx, Promise** aResult) {
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetAllStores(JSContext* aCx, JS::MutableHandleValue aResult) {
+TelemetryImpl::GetAllStores(JSContext* aCx,
+                            JS::MutableHandle<JS::Value> aResult) {
   StringHashSet stores;
   nsresult rv;
 
@@ -1742,7 +1744,7 @@ TelemetryImpl::GetAllStores(JSContext* aCx, JS::MutableHandleValue aResult) {
   }
 
   for (const auto& value : stores) {
-    JS::RootedValue store(aCx);
+    JS::Rooted<JS::Value> store(aCx);
 
     store.setString(ToJSString(aCx, value));
     if (!allStores.append(store)) {

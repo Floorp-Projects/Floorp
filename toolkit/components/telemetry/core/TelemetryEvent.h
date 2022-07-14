@@ -43,8 +43,8 @@ void RecordEventNative(
 
 // JS API Endpoints.
 nsresult RecordEvent(const nsACString& aCategory, const nsACString& aMethod,
-                     const nsACString& aObject, JS::HandleValue aValue,
-                     JS::HandleValue aExtra, JSContext* aCx,
+                     const nsACString& aObject, JS::Handle<JS::Value> aValue,
+                     JS::Handle<JS::Value> aExtra, JSContext* aCx,
                      uint8_t optional_argc);
 
 void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled);
@@ -54,7 +54,7 @@ nsresult RegisterEvents(const nsACString& aCategory,
 
 nsresult CreateSnapshots(uint32_t aDataset, bool aClear, uint32_t aEventLimit,
                          JSContext* aCx, uint8_t optional_argc,
-                         JS::MutableHandleValue aResult);
+                         JS::MutableHandle<JS::Value> aResult);
 
 // Record events from child processes.
 nsresult RecordChildEvents(
