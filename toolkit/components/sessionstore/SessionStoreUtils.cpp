@@ -1716,10 +1716,10 @@ nsresult SessionStoreUtils::ConstructSessionStorageValues(
 }
 
 /* static */
-bool SessionStoreUtils::CopyProperty(JSContext* aCx, JS::HandleObject aDst,
-                                     JS::HandleObject aSrc,
+bool SessionStoreUtils::CopyProperty(JSContext* aCx, JS::Handle<JSObject*> aDst,
+                                     JS::Handle<JSObject*> aSrc,
                                      const nsAString& aName) {
-  JS::RootedId name(aCx);
+  JS::Rooted<JS::PropertyKey> name(aCx);
   const char16_t* data;
   size_t length = aName.GetData(&data);
 
@@ -1732,7 +1732,7 @@ bool SessionStoreUtils::CopyProperty(JSContext* aCx, JS::HandleObject aDst,
     return true;
   }
 
-  JS::RootedValue value(aCx);
+  JS::Rooted<JS::Value> value(aCx);
   if (!JS_GetPropertyById(aCx, aSrc, name, &value)) {
     return false;
   }

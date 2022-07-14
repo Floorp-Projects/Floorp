@@ -99,10 +99,10 @@ void SessionStoreFormData::GetChildren(
 }
 
 void SessionStoreFormData::ToJSON(JSContext* aCx,
-                                  JS::MutableHandleObject aRetval) {
-  JS::RootedObject self(aCx);
+                                  JS::MutableHandle<JSObject*> aRetval) {
+  JS::Rooted<JSObject*> self(aCx);
   {
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     if (!GetOrCreateDOMReflector(aCx, this, &value)) {
       return;
     }

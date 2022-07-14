@@ -77,7 +77,8 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
     return;
   }
 
-  JS::RootedValue key(jsapi.cx(), aBrowsingContext->Top()->PermanentKey());
+  JS::Rooted<JS::Value> key(jsapi.cx(),
+                            aBrowsingContext->Top()->PermanentKey());
 
   Unused << funcs->UpdateSessionStore(nullptr, aBrowsingContext, key, aEpoch,
                                       aNeedCollectSHistory, update);
