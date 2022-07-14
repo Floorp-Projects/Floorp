@@ -164,7 +164,7 @@ class WorkerScriptLoader final : public nsINamed {
   bool StoreCSP();
 
   bool ProcessPendingRequests(JSContext* aCx,
-                              const Span<ScriptLoadInfo> aLoadInfosToExecute);
+                              nsTArray<ScriptLoadInfo*>&& aLoadInfosToExecute);
 
   nsresult OnStreamComplete(ScriptLoadInfo* aLoadInfo, nsresult aStatus);
 
