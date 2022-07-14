@@ -4,22 +4,39 @@
 
 :root {
   height: 100%;
+  --body-columns: 1fr;
+  --body-rows: 40px 2fr 1fr 40px;
+  --colorway-name-font-size: 1.5em;
+  --figure-height: 200px;
+  --figure-width: 200px;
+}
+
+@media (min-width: 800px) {
+  :root {
+    --body-columns: 24px repeat(2, 1fr);
+    --body-rows: 64px 1fr 64px;
+    --colorway-name-font-size: 2.5em;
+    --customization-panel-column: 3;
+    --customization-panel-padding-inline: 24px;
+    --figure-column: 2;
+    --figure-height: 288px;
+    --figure-row: 2;
+    --figure-width: 288px;
+    --header-column: 2/4;
+  }
+
+  #colorway-name,
+  #modal-buttons {
+    margin-block: 4rem 0;
+  }
 }
 
 body {
   height: 100%;
   display: grid;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: 75px auto 60px;
-  grid-template-areas:
-    "title title"
-    "figure main"
-    "footer footer";
-}
-
-body > header {
-  grid-area: title;
-  margin: 2em 2em 0;
+  grid-template-columns: var(--body-columns);
+  grid-template-rows: var(--body-rows);
+  padding: 0 24px;
 }
 
 fieldset {
@@ -28,17 +45,29 @@ fieldset {
   padding: 0;
 }
 
+body > header {
+  grid-row: 1;
+  margin-top: 1em;
+  grid-column: var(--header-column);
+}
+
 figure {
-  grid-area: figure;
   margin: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
+  grid-column: var(--figure-column);
+  grid-row: var(--figure-row);
 }
 
 figure > img {
-  max-width: 288px;
-  max-height: 288px;
+  margin-block-start: 3em;
+  max-width: var(--figure-height);
+  max-height: var(--figure-width);
+}
+
+#colorway-customization-panel {
+  padding-inline: var(--customization-panel-padding-inline);
+  grid-column: var(--customization-panel-column);
 }
 
 #collection-title {
@@ -68,7 +97,6 @@ figure > img {
 }
 
 #homepage-reset-container:not([hidden]) {
-  grid-area: footer;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
@@ -95,7 +123,7 @@ figure > img {
 
 #colorway-selector {
   display: flex;
-  flex-direction: row;
+  justify-content: center;
 }
 
 #colorway-selector > input[type="radio"],
@@ -128,26 +156,13 @@ figure > img {
   background-color: unset;
 }
 
-#colorway-customization-panel {
-  grid-area: main;
-  padding-inline: 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#colorway-name,
-#modal-buttons {
-  margin-block: 4rem 0;
-}
-
 #colorway-description,
 #colorway-intensities {
-  margin-block: 2rem 0;
+  margin-block: 2rem;
 }
 
 #colorway-name {
-  font-size: 2.5em;
+  font-size: var(--colorway-name-font-size);
 }
 
 #colorway-description {
