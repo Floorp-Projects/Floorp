@@ -22,7 +22,6 @@
 #include "api/sequence_checker.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
-#include "media/base/media_engine.h"
 #include "pc/channel.h"
 #include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
@@ -563,6 +562,7 @@ void RtpTransceiver::StopTransceiverProcedure() {
 RTCError RtpTransceiver::SetCodecPreferences(
     rtc::ArrayView<RtpCodecCapability> codec_capabilities) {
   RTC_DCHECK(unified_plan_);
+
   // 3. If codecs is an empty list, set transceiver's [[PreferredCodecs]] slot
   // to codecs and abort these steps.
   if (codec_capabilities.empty()) {
@@ -581,14 +581,15 @@ RTCError RtpTransceiver::SetCodecPreferences(
   RTCError result;
   if (media_type_ == cricket::MEDIA_TYPE_AUDIO) {
     std::vector<cricket::AudioCodec> recv_codecs, send_codecs;
-    recv_codecs = media_engine()->voice().recv_codecs();
-    send_codecs = media_engine()->voice().send_codecs();
+    channel_manager_->GetSupportedAudioReceiveCodecs(&recv_codecs);
+    channel_manager_->GetSupportedAudioSendCodecs(&send_codecs);
 
     result = VerifyCodecPreferences(codecs, send_codecs, recv_codecs);
   } else if (media_type_ == cricket::MEDIA_TYPE_VIDEO) {
     std::vector<cricket::VideoCodec> recv_codecs, send_codecs;
     channel_manager_->GetSupportedVideoReceiveCodecs(&recv_codecs);
     channel_manager_->GetSupportedVideoSendCodecs(&send_codecs);
+
     result = VerifyCodecPreferences(codecs, send_codecs, recv_codecs);
   }
 
@@ -669,10 +670,6 @@ void RtpTransceiver::OnNegotiationUpdate(
 
 void RtpTransceiver::SetPeerConnectionClosed() {
   is_pc_closed_ = true;
-}
-
-cricket::MediaEngineInterface* RtpTransceiver::media_engine() const {
-  return channel_manager_->media_engine();
 }
 
 }  // namespace webrtc

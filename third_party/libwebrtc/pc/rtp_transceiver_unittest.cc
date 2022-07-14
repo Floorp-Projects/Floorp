@@ -126,7 +126,7 @@ class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
                 rtc::Thread::Current(),
                 receiver_),
             &channel_manager_,
-            channel_manager_.media_engine()->voice().GetRtpHeaderExtensions(),
+            channel_manager_.GetSupportedAudioRtpHeaderExtensions(),
             /* on_negotiation_needed= */ [] {})) {}
 
   static rtc::scoped_refptr<MockRtpReceiverInternal> MockReceiver() {
