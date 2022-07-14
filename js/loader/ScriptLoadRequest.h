@@ -342,8 +342,10 @@ class ScriptLoadRequest
 
   const nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
-  nsAutoCString
-      mURL;  // Keep the URI's filename alive during off thread parsing.
+
+  // Keep the URI's filename alive during off thread parsing.
+  // Also used by workers to report on errors while loading.
+  nsAutoCString mURL;
 
   // The base URL used for resolving relative module imports.
   nsCOMPtr<nsIURI> mBaseURL;

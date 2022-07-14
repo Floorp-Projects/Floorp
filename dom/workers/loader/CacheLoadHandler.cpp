@@ -276,8 +276,8 @@ void CacheLoadHandler::Load(Cache* aCache) {
   MOZ_ASSERT(aCache);
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv =
-      NS_NewURI(getter_AddRefs(uri), mLoadContext->mURL, nullptr, mBaseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), mLoadContext->mRequest->mURL,
+                          nullptr, mBaseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
     return;

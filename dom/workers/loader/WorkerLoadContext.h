@@ -29,11 +29,9 @@ class CacheCreator;
 
 class WorkerLoadContext : public JS::loader::LoadContextBase {
  public:
-  explicit WorkerLoadContext(const nsString& aURL);
+  explicit WorkerLoadContext();
 
   ~WorkerLoadContext() = default;
-
-  nsString mURL;
 
   // This full URL string is populated only if this object is used in a
   // ServiceWorker.

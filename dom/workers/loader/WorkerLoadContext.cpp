@@ -10,9 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-WorkerLoadContext::WorkerLoadContext(const nsString& aURL)
-    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker),
-      mURL(aURL) {}
+WorkerLoadContext::WorkerLoadContext()
+    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker) {}
 
 void WorkerLoadContext::SetCacheCreator(
     RefPtr<workerinternals::loader::CacheCreator> aCacheCreator) {

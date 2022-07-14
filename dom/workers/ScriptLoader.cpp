@@ -460,7 +460,7 @@ WorkerScriptLoader::WorkerScriptLoader(
   MOZ_ASSERT_IF(aIsMainScript, aScriptURLs.Length() == 1);
 
   for (const nsString& aScriptURL : aScriptURLs) {
-    RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext(aScriptURL);
+    RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext();
 
     // Create ScriptLoadRequests for this WorkerScriptLoader
     ReferrerPolicy aReferrerPolicy = mWorkerPrivate->GetReferrerPolicy();
@@ -487,6 +487,8 @@ WorkerScriptLoader::WorkerScriptLoader(
                               SRIMetadata(), nullptr, /* = aReferrer */
                               loadContext);
 
+    // Set the mURL, it will be used for error handling and debugging.
+    request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
     mLoadingRequests.AppendElement(request);
   }
 }
@@ -900,8 +902,8 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
   MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
   mRv.MightThrowJSException();
   if (NS_FAILED(loadContext->mLoadResult)) {
-    workerinternals::ReportLoadError(mRv, loadContext->mLoadResult,
-                                     loadContext->mURL);
+    nsAutoString url = NS_ConvertUTF8toUTF16(aRequest->mURL);
+    workerinternals::ReportLoadError(mRv, loadContext->mLoadResult, url);
     return false;
   }
 
@@ -916,10 +918,9 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     mWorkerPrivate->ExecutionReady();
   }
 
-  NS_ConvertUTF16toUTF8 filename(loadContext->mURL);
-
   JS::CompileOptions options(aCx);
-  options.setFileAndLine(filename.get(), 1).setNoScriptRval(true);
+  // The full URL shouldn't be exposed to the debugger. See Bug 1634872
+  options.setFileAndLine(aRequest->mURL.get(), 1).setNoScriptRval(true);
 
   MOZ_ASSERT(loadContext->mMutedErrorFlag.isSome());
   options.setMutedErrors(loadContext->mMutedErrorFlag.valueOr(true));
