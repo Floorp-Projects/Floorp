@@ -48,6 +48,12 @@ void FileRotatingLogSink::OnLogMessage(absl::string_view message) {
   stream_->Write(message.data(), message.size());
 }
 
+void FileRotatingLogSink::OnLogMessage(const std::string& message,
+                                       LoggingSeverity sev,
+                                       const char* tag) {
+  OnLogMessage(absl::string_view(message), sev, tag);
+}
+
 void FileRotatingLogSink::OnLogMessage(absl::string_view message,
                                        LoggingSeverity sev,
                                        const char* tag) {
