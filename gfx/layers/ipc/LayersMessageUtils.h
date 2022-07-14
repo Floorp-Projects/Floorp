@@ -481,8 +481,58 @@ struct ParamTraits<mozilla::ScrollGeneration<T>>
     : PlainOldDataSerializer<mozilla::ScrollGeneration<T>> {};
 
 template <>
-struct ParamTraits<mozilla::ScrollPositionUpdate>
-    : PlainOldDataSerializer<mozilla::ScrollPositionUpdate> {};
+struct ParamTraits<mozilla::ScrollUpdateType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::ScrollUpdateType, mozilla::ScrollUpdateType::Absolute,
+          mozilla::ScrollUpdateType::PureRelative> {};
+
+template <>
+struct ParamTraits<mozilla::ScrollMode>
+    : public ContiguousEnumSerializerInclusive<mozilla::ScrollMode,
+                                               mozilla::ScrollMode::Instant,
+                                               mozilla::ScrollMode::Normal> {};
+
+template <>
+struct ParamTraits<mozilla::ScrollOrigin>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::ScrollOrigin, mozilla::ScrollOrigin::None,
+          mozilla::ScrollOrigin::Scrollbars> {};
+
+template <>
+struct ParamTraits<mozilla::ScrollTriggeredByScript>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::ScrollTriggeredByScript,
+          mozilla::ScrollTriggeredByScript::No,
+          mozilla::ScrollTriggeredByScript::Yes> {};
+
+template <>
+struct ParamTraits<mozilla::ScrollPositionUpdate> {
+  typedef mozilla::ScrollPositionUpdate paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mScrollGeneration);
+    WriteParam(aWriter, aParam.mType);
+    WriteParam(aWriter, aParam.mScrollMode);
+    WriteParam(aWriter, aParam.mScrollOrigin);
+    WriteParam(aWriter, aParam.mDestination);
+    WriteParam(aWriter, aParam.mSource);
+    WriteParam(aWriter, aParam.mDelta);
+    WriteParam(aWriter, aParam.mTriggeredByScript);
+    WriteParam(aWriter, aParam.mSnapTargetIds);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mScrollGeneration) &&
+           ReadParam(aReader, &aResult->mType) &&
+           ReadParam(aReader, &aResult->mScrollMode) &&
+           ReadParam(aReader, &aResult->mScrollOrigin) &&
+           ReadParam(aReader, &aResult->mDestination) &&
+           ReadParam(aReader, &aResult->mSource) &&
+           ReadParam(aReader, &aResult->mDelta) &&
+           ReadParam(aReader, &aResult->mTriggeredByScript) &&
+           ReadParam(aReader, &aResult->mSnapTargetIds);
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::layers::ScrollMetadata>
