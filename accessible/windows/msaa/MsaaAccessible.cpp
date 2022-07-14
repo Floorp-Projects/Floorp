@@ -1231,12 +1231,12 @@ MsaaAccessible::get_accKeyboardShortcut(
                                                pszKeyboardShortcut);
   }
 
-  LocalAccessible* localAcc = LocalAcc();
-  if (!localAcc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+  KeyBinding keyBinding = mAcc->AccessKey();
+  if (keyBinding.IsEmpty()) {
+    if (LocalAccessible* localAcc = mAcc->AsLocal()) {
+      keyBinding = localAcc->KeyboardShortcut();
+    }
   }
-  KeyBinding keyBinding = localAcc->AccessKey();
-  if (keyBinding.IsEmpty()) keyBinding = localAcc->KeyboardShortcut();
 
   nsAutoString shortcut;
   keyBinding.ToString(shortcut);
