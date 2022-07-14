@@ -82,6 +82,14 @@ using mozilla::ipc::PrincipalInfo;
 namespace mozilla::dom::workerinternals {
 namespace {
 
+ScriptLoadInfo* AsWorkerRequest(JS::loader::ScriptLoadRequest* req) {
+  return static_cast<ScriptLoadInfo*>(req);
+}
+
+JS::loader::ScriptLoadRequest* AsScriptRequest(ScriptLoadInfo* aLoadInfo) {
+  return static_cast<JS::loader::ScriptLoadRequest*>(aLoadInfo);
+}
+
 nsresult ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
                       const mozilla::Encoding* aDocumentEncoding,
                       nsIURI** aResult) {
@@ -258,19 +266,10 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   clientInfo = global->GetClientInfo();
   controller = global->GetController();
 
-  nsTArray<ScriptLoadInfo> aLoadInfos =
-      TransformIntoNewArray(aScriptURLs, [](const auto& scriptURL) {
-        ScriptLoadInfo res;
-        res.mURL = scriptURL;
-        return res;
-      });
-
   RefPtr<loader::WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
-      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
-      std::move(aLoadInfos), aDocumentEncoding, clientInfo, controller,
-      aIsMainScript, aWorkerScriptType, aRv);
-
-  NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
+      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget, aScriptURLs,
+      aDocumentEncoding, clientInfo, controller, aIsMainScript,
+      aWorkerScriptType, aRv);
 
   RefPtr<StrongWorkerRef> workerRef =
       StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [loader]() {
@@ -459,7 +458,7 @@ static bool EvaluateSourceBuffer(JSContext* aCx,
 WorkerScriptLoader::WorkerScriptLoader(
     WorkerPrivate* aWorkerPrivate,
     UniquePtr<SerializedStackHolder> aOriginStack,
-    nsIEventTarget* aSyncLoopTarget, nsTArray<ScriptLoadInfo> aLoadInfos,
+    nsIEventTarget* aSyncLoopTarget, const nsTArray<nsString>& aScriptURLs,
     const mozilla::Encoding* aDocumentEncoding,
     const Maybe<ClientInfo>& aClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController, bool aIsMainScript,
@@ -467,7 +466,6 @@ WorkerScriptLoader::WorkerScriptLoader(
     : mWorkerPrivate(aWorkerPrivate),
       mOriginStack(std::move(aOriginStack)),
       mSyncLoopTarget(aSyncLoopTarget),
-      mLoadInfos(std::move(aLoadInfos)),
       mClientInfo(aClientInfo),
       mController(aController),
       mIsMainScript(aIsMainScript),
@@ -476,22 +474,30 @@ WorkerScriptLoader::WorkerScriptLoader(
       mRv(aRv) {
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
-  MOZ_ASSERT_IF(aIsMainScript, mLoadInfos.Length() == 1);
+  MOZ_ASSERT_IF(aIsMainScript, aScriptURLs.Length() == 1);
 
-  for (ScriptLoadInfo& loadInfo : mLoadInfos) {
+  for (const nsString& aScriptURL : aScriptURLs) {
+    // Create ScriptLoadRequests for this WorkerScriptLoader
+    ReferrerPolicy aReferrerPolicy = mWorkerPrivate->GetReferrerPolicy();
+
     // Only top level workers' main script use the document charset for the
     // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
     MOZ_ASSERT_IF(bool(aDocumentEncoding),
                   aIsMainScript && !aWorkerPrivate->GetParent());
-    nsresult rv = ConstructURI(loadInfo.mURL, GetBaseURI(), aDocumentEncoding,
-                               getter_AddRefs(loadInfo.mURI));
+    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+    nsCOMPtr<nsIURI> aURI;
+    nsresult rv = ConstructURI(aScriptURL, baseURI, aDocumentEncoding,
+                               getter_AddRefs(aURI));
+    RefPtr<ScriptFetchOptions> fetchOptions =
+        new ScriptFetchOptions(CORSMode::CORS_NONE, aReferrerPolicy, nullptr);
+    RefPtr<ScriptLoadInfo> request = new ScriptLoadInfo(aURI, fetchOptions);
+    request->mURL = aScriptURL;
+
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      loadInfo.mLoadResult = rv;
+      request->mLoadResult = rv;
     }
 
-    // Build up our list of references here. This will be removed once
-    // we move to ScriptLoadRequestList.
-    mLoadingRequests.AppendElement(&loadInfo);
+    mLoadingRequests.AppendElement(request);
   }
 }
 
@@ -555,21 +561,20 @@ void WorkerScriptLoader::MaybeExecuteFinishedScripts(
   }
 }
 
-bool WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo) {
+void WorkerScriptLoader::MaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo) {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!aLoadInfo->mExecutionScheduled);
   aLoadInfo->mExecutionScheduled = true;
 
-  while (mLoadingRequests.Length() > 0) {
-    if (!mLoadingRequests[0]->mExecutionScheduled) {
+  while (!mLoadingRequests.isEmpty()) {
+    ScriptLoadRequest* request = mLoadingRequests.getFirst();
+    if (!AsWorkerRequest(request)->mExecutionScheduled) {
       break;
     }
-    ScriptLoadInfo* loadInfo = mLoadingRequests[0];
-    mLoadedRequests.AppendElement(loadInfo);
-    mLoadingRequests.RemoveElementAt(0);
-  }
 
-  return true;
+    RefPtr<ScriptLoadRequest> req = mLoadingRequests.Steal(request);
+    mLoadedRequests.AppendElement(req);
+  }
 }
 
 bool WorkerScriptLoader::StoreCSP() {
@@ -595,7 +600,7 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
   mWorkerPrivate->AssertIsOnWorkerThread();
   // Don't run if something else has already failed.
   if (mExecutionAborted) {
-    mLoadedRequests.Clear();
+    mLoadedRequests.CancelRequestsAndClear();
     return true;
   }
 
@@ -608,8 +613,9 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   MOZ_ASSERT(global);
 
-  while (mLoadedRequests.Length()) {
-    ScriptLoadInfo* loadInfo = mLoadedRequests[0];
+  while (!mLoadedRequests.isEmpty()) {
+    RefPtr<ScriptLoadRequest> req = mLoadedRequests.StealFirst();
+    ScriptLoadInfo* loadInfo = AsWorkerRequest(req);
     // We don't have a ProcessRequest method (like we do on the DOM), as there
     // isn't much processing that we need to do per request that isn't related
     // to evaluation (the processsing done for the DOM is handled in
@@ -619,10 +625,9 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
     if (!EvaluateScript(aCx, loadInfo)) {
       mExecutionAborted = true;
       mMutedErrorFlag = loadInfo->mMutedErrorFlag.valueOr(true);
-      mLoadedRequests.Clear();
+      mLoadedRequests.CancelRequestsAndClear();
       break;
     }
-    mLoadedRequests.RemoveElement(loadInfo);
   }
 
   return true;
@@ -661,7 +666,9 @@ nsresult WorkerScriptLoader::LoadScripts() {
   }
 
   if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
-    for (ScriptLoadInfo* loadInfo : mLoadingRequests) {
+    for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
+         req = req->getNext()) {
+      ScriptLoadInfo* loadInfo = AsWorkerRequest(req);
       nsresult rv = LoadScript(loadInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         LoadingFinished(loadInfo, rv);
@@ -674,7 +681,9 @@ nsresult WorkerScriptLoader::LoadScripts() {
 
   RefPtr<CacheCreator> cacheCreator = new CacheCreator(mWorkerPrivate);
 
-  for (ScriptLoadInfo* loadInfo : mLoadingRequests) {
+  for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
+       req = req->getNext()) {
+    ScriptLoadInfo* loadInfo = AsWorkerRequest(req);
     loadInfo->SetCacheCreator(cacheCreator);
     loadInfo->GetCacheCreator()->AddLoader(
         MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerPrivate, loadInfo,
@@ -773,12 +782,14 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadInfo* aLoadInfo) {
               ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
     }
 
-    rv = ChannelFromScriptURL(
-        principal, parentDoc, mWorkerPrivate, loadGroup, ios, secMan,
-        aLoadInfo->mURI, mClientInfo, mController, IsMainWorkerScript(),
-        mWorkerScriptType, mWorkerPrivate->ContentPolicyType(), loadFlags,
-        mWorkerPrivate->CookieJarSettings(), referrerInfo,
-        getter_AddRefs(channel));
+    ScriptLoadRequest* req = AsScriptRequest(aLoadInfo);
+
+    rv = ChannelFromScriptURL(principal, parentDoc, mWorkerPrivate, loadGroup,
+                              ios, secMan, req->mURI, mClientInfo, mController,
+                              IsMainWorkerScript(), mWorkerScriptType,
+                              mWorkerPrivate->ContentPolicyType(), loadFlags,
+                              mWorkerPrivate->CookieJarSettings(), referrerInfo,
+                              getter_AddRefs(channel));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

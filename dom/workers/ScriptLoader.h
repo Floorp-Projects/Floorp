@@ -123,13 +123,16 @@ class WorkerScriptLoader final : public nsINamed {
   friend class CacheCreator;
   friend class NetworkLoadHandler;
 
+  using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
+  using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
+  using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
+
   WorkerPrivate* const mWorkerPrivate;
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
-  nsTArrayView<ScriptLoadInfo> mLoadInfos;
-  nsTArray<ScriptLoadInfo*> mLoadingRequests;
-  nsTArray<ScriptLoadInfo*> mLoadedRequests;
+  JS::loader::ScriptLoadRequestList mLoadingRequests;
+  JS::loader::ScriptLoadRequestList mLoadedRequests;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
   const bool mIsMainScript;
@@ -145,7 +148,7 @@ class WorkerScriptLoader final : public nsINamed {
   WorkerScriptLoader(WorkerPrivate* aWorkerPrivate,
                      UniquePtr<SerializedStackHolder> aOriginStack,
                      nsIEventTarget* aSyncLoopTarget,
-                     nsTArray<ScriptLoadInfo> aLoadInfos,
+                     const nsTArray<nsString>& aScriptURLs,
                      const mozilla::Encoding* aDocumentEncoding,
                      const Maybe<ClientInfo>& aClientInfo,
                      const Maybe<ServiceWorkerDescriptor>& aController,
@@ -163,14 +166,14 @@ class WorkerScriptLoader final : public nsINamed {
 
   void MaybeExecuteFinishedScripts(ScriptLoadInfo* aLoadInfo);
 
-  bool MaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo);
+  void MaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo);
 
   bool StoreCSP();
 
   bool ProcessPendingRequests(JSContext* aCx);
 
   bool AllScriptsExecuted() {
-    return mLoadingRequests.IsEmpty() && mLoadedRequests.IsEmpty();
+    return mLoadingRequests.isEmpty() && mLoadedRequests.isEmpty();
   }
 
   nsresult OnStreamComplete(ScriptLoadInfo* aLoadInfo, nsresult aStatus);

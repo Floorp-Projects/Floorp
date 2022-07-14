@@ -26,14 +26,13 @@ namespace workerinternals::loader {
 class CacheCreator;
 }
 
-class ScriptLoadInfo {
+class ScriptLoadInfo : public JS::loader::ScriptLoadRequest {
  public:
-  ScriptLoadInfo();
+  ScriptLoadInfo(nsIURI* aURI, JS::loader::ScriptFetchOptions* aFetchOptions);
 
   ~ScriptLoadInfo();
 
   nsString mURL;
-  nsCOMPtr<nsIURI> mURI;
 
   // This full URL string is populated only if this object is used in a
   // ServiceWorker.
