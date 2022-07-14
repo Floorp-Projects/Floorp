@@ -210,6 +210,20 @@ const char* IceCandidatePairStateToRTCStatsIceCandidatePairState(
   }
 }
 
+const char* IceRoleToRTCIceRole(cricket::IceRole role) {
+  switch (role) {
+    case cricket::IceRole::ICEROLE_UNKNOWN:
+      return RTCIceRole::kUnknown;
+    case cricket::IceRole::ICEROLE_CONTROLLED:
+      return RTCIceRole::kControlled;
+    case cricket::IceRole::ICEROLE_CONTROLLING:
+      return RTCIceRole::kControlling;
+    default:
+      RTC_DCHECK_NOTREACHED();
+      return nullptr;
+  }
+}
+
 const char* DtlsTransportStateToRTCDtlsTransportState(
     DtlsTransportState state) {
   switch (state) {
@@ -2100,6 +2114,8 @@ void RTCStatsCollector::ProduceTransportStats_n(
           DtlsTransportStateToRTCDtlsTransportState(channel_stats.dtls_state);
       transport_stats->selected_candidate_pair_changes =
           channel_stats.ice_transport_stats.selected_candidate_pair_changes;
+      transport_stats->ice_role =
+          IceRoleToRTCIceRole(channel_stats.ice_transport_stats.ice_role);
       for (const cricket::ConnectionInfo& info :
            channel_stats.ice_transport_stats.connection_infos) {
         if (info.best_connection) {

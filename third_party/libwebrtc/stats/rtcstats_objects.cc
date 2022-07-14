@@ -67,6 +67,11 @@ const char* const RTCDtlsRole::kUnknown = "unknown";
 const char* const RTCDtlsRole::kClient = "client";
 const char* const RTCDtlsRole::kServer = "server";
 
+// https://www.w3.org/TR/webrtc/#rtcicerole
+const char* const RTCIceRole::kUnknown = "unknown";
+const char* const RTCIceRole::kControlled = "controlled";
+const char* const RTCIceRole::kControlling = "controlling";
+
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(RTCCertificateStats, RTCStats, "certificate",
     &fingerprint,
@@ -1092,7 +1097,8 @@ WEBRTC_RTCSTATS_IMPL(RTCTransportStats, RTCStats, "transport",
     &dtls_cipher,
     &dtls_role,
     &srtp_cipher,
-    &selected_candidate_pair_changes)
+    &selected_candidate_pair_changes,
+    &ice_role)
 // clang-format on
 
 RTCTransportStats::RTCTransportStats(const std::string& id,
@@ -1114,7 +1120,8 @@ RTCTransportStats::RTCTransportStats(std::string&& id, int64_t timestamp_us)
       dtls_cipher("dtlsCipher"),
       dtls_role("dtlsRole"),
       srtp_cipher("srtpCipher"),
-      selected_candidate_pair_changes("selectedCandidatePairChanges") {}
+      selected_candidate_pair_changes("selectedCandidatePairChanges"),
+      ice_role("iceRole") {}
 
 RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
     : RTCStats(other.id(), other.timestamp_us()),
@@ -1131,7 +1138,8 @@ RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
       dtls_cipher(other.dtls_cipher),
       dtls_role(other.dtls_role),
       srtp_cipher(other.srtp_cipher),
-      selected_candidate_pair_changes(other.selected_candidate_pair_changes) {}
+      selected_candidate_pair_changes(other.selected_candidate_pair_changes),
+      ice_role(other.ice_role) {}
 
 RTCTransportStats::~RTCTransportStats() {}
 
