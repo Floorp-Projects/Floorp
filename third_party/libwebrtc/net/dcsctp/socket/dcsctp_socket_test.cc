@@ -2341,6 +2341,32 @@ TEST(DcSctpSocketTest, CloseStreamsWithPendingRequest) {
   absl::optional<DcSctpMessage> msg6 = z.cb.ConsumeReceivedMessage();
   ASSERT_TRUE(msg6.has_value());
   EXPECT_EQ(msg6->stream_id(), StreamID(3));
-}  // namespace
+}
+
+TEST(DcSctpSocketTest, ReconnectSocketWithPendingStreamReset) {
+  // This is an issue found by fuzzing, and doesn't really make sense in WebRTC
+  // data channels as a SCTP connection is never ever closed and then
+  // reconnected. SCTP connections are closed when the peer connection is
+  // deleted, and then it doesn't do more with SCTP.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  ConnectSockets(a, z);
+
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(1)}));
+
+  // EXPECT_CALL(a.cb, OnAborted).Times(1);
+  EXPECT_CALL(z.cb, OnAborted).Times(1);
+  a.socket.Close();
+
+  EXPECT_EQ(a.socket.state(), SocketState::kClosed);
+
+  EXPECT_CALL(a.cb, OnConnected).Times(1);
+  EXPECT_CALL(z.cb, OnConnected).Times(1);
+  a.socket.Connect();
+  ExchangeMessages(a, z);
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(2)}));
+}
+
 }  // namespace
 }  // namespace dcsctp
