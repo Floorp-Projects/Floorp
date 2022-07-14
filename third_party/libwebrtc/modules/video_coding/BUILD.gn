@@ -670,7 +670,6 @@ rtc_library("webrtc_vp8") {
     "../../api/video:encoded_image",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
-    "../../api/video_codecs:scalability_mode",
     "../../api/video_codecs:video_codecs_api",
     "../../api/video_codecs:vp8_temporal_layers_factory",
     "../../common_video",
@@ -699,6 +698,14 @@ rtc_library("webrtc_vp8") {
     "/media/libyuv",
     "/media/libyuv/libyuv/include",
   ]
+}
+
+rtc_source_set("webrtc_vp8_scalability") {
+  sources = [
+    "codecs/vp8/vp8_scalability.cc",
+    "codecs/vp8/vp8_scalability.h",
+  ]
+  deps = [ "../../api/video_codecs:scalability_mode" ]
 }
 
 rtc_library("webrtc_vp8_temporal_layers") {

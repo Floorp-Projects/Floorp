@@ -214,6 +214,7 @@ rtc_library("rtc_internal_video_codecs") {
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_multiplex",
     "../modules/video_coding:webrtc_vp8",
+    "../modules/video_coding:webrtc_vp8_scalability",
     "../modules/video_coding:webrtc_vp9",
     "../modules/video_coding/codecs/av1:av1_svc_config",
     "../modules/video_coding/codecs/av1:libaom_av1_decoder",
