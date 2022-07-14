@@ -105,8 +105,6 @@ class scoped_refptr {
 
   T* get() const { return ptr_; }
   explicit operator bool() const { return ptr_ != nullptr; }
-  // TODO(bugs.webrtc.org/13464): Delete this conversion operator.
-  operator T*() const { return ptr_; }
   T& operator*() const { return *ptr_; }
   T* operator->() const { return ptr_; }
 
@@ -192,6 +190,25 @@ bool operator==(std::nullptr_t, const rtc::scoped_refptr<T>& a) {
 template <typename T>
 bool operator!=(std::nullptr_t, const rtc::scoped_refptr<T>& a) {
   return !(a == nullptr);
+}
+
+// Comparison with raw pointer.
+template <typename T, typename U>
+bool operator==(const rtc::scoped_refptr<T>& a, const U* b) {
+  return a.get() == b;
+}
+template <typename T, typename U>
+bool operator!=(const rtc::scoped_refptr<T>& a, const U* b) {
+  return !(a == b);
+}
+
+template <typename T, typename U>
+bool operator==(const T* a, const rtc::scoped_refptr<U>& b) {
+  return a == b.get();
+}
+template <typename T, typename U>
+bool operator!=(const T* a, const rtc::scoped_refptr<U>& b) {
+  return !(a == b);
 }
 
 // Ordered comparison, needed for use as a std::map key.

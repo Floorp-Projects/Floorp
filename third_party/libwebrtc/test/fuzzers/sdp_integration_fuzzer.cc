@@ -27,22 +27,21 @@ class FuzzerTest : public PeerConnectionIntegrationBaseTest {
     // generated are discarded.
 
     auto srd_observer =
-        rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
+        rtc::make_ref_counted<FakeSetRemoteDescriptionObserver>();
 
     SdpParseError error;
     std::unique_ptr<SessionDescriptionInterface> sdp(
         CreateSessionDescription("offer", std::string(message), &error));
-    // Note: This form of SRD takes ownership of the description.
-    caller()->pc()->SetRemoteDescription(srd_observer, sdp.release());
+    caller()->pc()->SetRemoteDescription(std::move(sdp), srd_observer);
     // Wait a short time for observer to be called. Timeout is short
     // because the fuzzer should be trying many branches.
     EXPECT_TRUE_WAIT(srd_observer->called(), 100);
 
     // If set-remote-description was successful, try to answer.
     auto sld_observer =
-        rtc::make_ref_counted<MockSetSessionDescriptionObserver>();
-    if (srd_observer->result()) {
-      caller()->pc()->SetLocalDescription(sld_observer.get());
+        rtc::make_ref_counted<FakeSetLocalDescriptionObserver>();
+    if (srd_observer->error().ok()) {
+      caller()->pc()->SetLocalDescription(sld_observer);
       EXPECT_TRUE_WAIT(sld_observer->called(), 100);
     }
     // If there is an EXPECT failure, die here.
