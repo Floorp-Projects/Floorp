@@ -155,7 +155,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
 
   ~FakePeerConnectionForStats() {
     for (auto transceiver : transceivers_) {
-      transceiver->internal()->SetChannel(nullptr, nullptr);
+      transceiver->internal()->ClearChannel();
     }
   }
 

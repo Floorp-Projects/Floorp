@@ -2924,7 +2924,7 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     }
 
     RTC_DCHECK(transceiver->internal()->mid().has_value());
-    transceiver->internal()->SetChannel(nullptr, nullptr);
+    transceiver->internal()->ClearChannel();
 
     if (signaling_state() == PeerConnectionInterface::kHaveRemoteOffer &&
         transceiver->receiver()) {
@@ -3609,7 +3609,7 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiverChannel(
   cricket::ChannelInterface* channel = transceiver->internal()->channel();
   if (content.rejected) {
     if (channel) {
-      transceiver->internal()->SetChannel(nullptr, nullptr);
+      transceiver->internal()->ClearChannel();
     }
   } else {
     if (!channel) {
@@ -4607,14 +4607,12 @@ void SdpOfferAnswerHandler::RemoveUnusedChannels(
   // voice channel.
   const cricket::ContentInfo* video_info = cricket::GetFirstVideoContent(desc);
   if (!video_info || video_info->rejected) {
-    rtp_manager()->GetVideoTransceiver()->internal()->SetChannel(nullptr,
-                                                                 nullptr);
+    rtp_manager()->GetVideoTransceiver()->internal()->ClearChannel();
   }
 
   const cricket::ContentInfo* audio_info = cricket::GetFirstAudioContent(desc);
   if (!audio_info || audio_info->rejected) {
-    rtp_manager()->GetAudioTransceiver()->internal()->SetChannel(nullptr,
-                                                                 nullptr);
+    rtp_manager()->GetAudioTransceiver()->internal()->ClearChannel();
   }
 
   const cricket::ContentInfo* data_info = cricket::GetFirstDataContent(desc);
@@ -4923,12 +4921,12 @@ void SdpOfferAnswerHandler::DestroyAllChannels() {
 
   for (const auto& transceiver : list) {
     if (transceiver->media_type() == cricket::MEDIA_TYPE_VIDEO) {
-      transceiver->internal()->SetChannel(nullptr, nullptr);
+      transceiver->internal()->ClearChannel();
     }
   }
   for (const auto& transceiver : list) {
     if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
-      transceiver->internal()->SetChannel(nullptr, nullptr);
+      transceiver->internal()->ClearChannel();
     }
   }
 
