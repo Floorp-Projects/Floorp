@@ -50,7 +50,7 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
     // Payload type for FlexFEC.
     int payload_type = -1;
 
-    RtpConfig rtp;
+    ReceiveStreamRtpConfig rtp;
 
     // Vector containing a single element, corresponding to the SSRC of the
     // media stream being protected by this FlexFEC stream. The vector MUST have

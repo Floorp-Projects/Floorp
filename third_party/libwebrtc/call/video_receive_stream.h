@@ -183,7 +183,7 @@ class VideoReceiveStream : public MediaReceiveStream {
     VideoDecoderFactory* decoder_factory = nullptr;
 
     // Receive-stream specific RTP settings.
-    struct Rtp : public RtpConfig {
+    struct Rtp : public ReceiveStreamRtpConfig {
       Rtp();
       Rtp(const Rtp&);
       ~Rtp();

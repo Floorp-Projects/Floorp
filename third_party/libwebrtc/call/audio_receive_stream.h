@@ -109,7 +109,7 @@ class AudioReceiveStream : public MediaReceiveStream {
     std::string ToString() const;
 
     // Receive-stream specific RTP settings.
-    struct Rtp : public RtpConfig {
+    struct Rtp : public ReceiveStreamRtpConfig {
       Rtp();
       ~Rtp();
 
