@@ -216,7 +216,7 @@ nsUDPMessage::GetOutputStream(nsIOutputStream** aOutputStream) {
 }
 
 NS_IMETHODIMP
-nsUDPMessage::GetRawData(JSContext* cx, JS::MutableHandleValue aRawData) {
+nsUDPMessage::GetRawData(JSContext* cx, JS::MutableHandle<JS::Value> aRawData) {
   if (!mJsobj) {
     mJsobj =
         dom::Uint8Array::Create(cx, nullptr, mData.Length(), mData.Elements());
@@ -368,7 +368,8 @@ UDPMessageProxy::GetData(nsACString& aData) {
 FallibleTArray<uint8_t>& UDPMessageProxy::GetDataAsTArray() { return mData; }
 
 NS_IMETHODIMP
-UDPMessageProxy::GetRawData(JSContext* cx, JS::MutableHandleValue aRawData) {
+UDPMessageProxy::GetRawData(JSContext* cx,
+                            JS::MutableHandle<JS::Value> aRawData) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

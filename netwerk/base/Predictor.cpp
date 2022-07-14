@@ -466,7 +466,7 @@ nsresult Predictor::Create(const nsIID& aIID, void** aResult) {
 NS_IMETHODIMP
 Predictor::Predict(nsIURI* targetURI, nsIURI* sourceURI,
                    PredictorPredictReason reason,
-                   JS::HandleValue originAttributes,
+                   JS::Handle<JS::Value> originAttributes,
                    nsINetworkPredictorVerifier* verifier, JSContext* aCx) {
   OriginAttributes attrs;
 
@@ -1217,8 +1217,8 @@ bool Predictor::WouldRedirect(nsICacheEntry* entry, uint32_t loadCount,
 
 NS_IMETHODIMP
 Predictor::Learn(nsIURI* targetURI, nsIURI* sourceURI,
-                 PredictorLearnReason reason, JS::HandleValue originAttributes,
-                 JSContext* aCx) {
+                 PredictorLearnReason reason,
+                 JS::Handle<JS::Value> originAttributes, JSContext* aCx) {
   OriginAttributes attrs;
 
   if (!originAttributes.isObject() || !attrs.Init(aCx, originAttributes)) {

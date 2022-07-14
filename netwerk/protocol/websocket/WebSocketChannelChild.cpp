@@ -450,7 +450,7 @@ void WebSocketChannelChild::SetupNeckoTarget() {
 
 NS_IMETHODIMP
 WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
-                                 JS::HandleValue aOriginAttributes,
+                                 JS::Handle<JS::Value> aOriginAttributes,
                                  uint64_t aInnerWindowID,
                                  nsIWebSocketListener* aListener,
                                  nsISupports* aContext, JSContext* aCx) {

@@ -315,7 +315,7 @@ static bool PACDnsResolve(JSContext* cx, unsigned int argc, JS::Value* vp) {
     return true;
   }
 
-  JS::RootedString arg1(cx);
+  JS::Rooted<JSString*> arg1(cx);
   arg1 = args[0].toString();
 
   nsAutoJSString hostName;
@@ -661,8 +661,8 @@ nsresult ProxyAutoConfig::GetProxyForURI(const nsCString& aTestURI,
     }
   }
 
-  JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, clensedURI.get()));
-  JS::RootedString hostString(cx, JS_NewStringCopyZ(cx, aTestHost.get()));
+  JS::Rooted<JSString*> uriString(cx, JS_NewStringCopyZ(cx, clensedURI.get()));
+  JS::Rooted<JSString*> hostString(cx, JS_NewStringCopyZ(cx, aTestHost.get()));
 
   if (uriString && hostString) {
     JS::RootedValueArray<2> args(cx);
@@ -778,7 +778,7 @@ bool ProxyAutoConfig::MyIPAddress(const JS::CallArgs& aArgs) {
   nsAutoCString remoteDottedDecimal;
   nsAutoCString localDottedDecimal;
   JSContext* cx = mJSContext->Context();
-  JS::RootedValue v(cx);
+  JS::Rooted<JS::Value> v(cx);
   JS::Rooted<JSObject*> global(cx, mJSContext->Global());
 
   bool useMultihomedDNS =

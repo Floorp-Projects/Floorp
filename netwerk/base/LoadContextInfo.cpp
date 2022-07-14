@@ -76,10 +76,9 @@ NS_IMETHODIMP LoadContextInfoFactory::GetAnonymous(
   return NS_OK;
 }
 
-NS_IMETHODIMP LoadContextInfoFactory::Custom(bool aAnonymous,
-                                             JS::HandleValue aOriginAttributes,
-                                             JSContext* cx,
-                                             nsILoadContextInfo** _retval) {
+NS_IMETHODIMP LoadContextInfoFactory::Custom(
+    bool aAnonymous, JS::Handle<JS::Value> aOriginAttributes, JSContext* cx,
+    nsILoadContextInfo** _retval) {
   OriginAttributes attrs;
   bool status = attrs.Init(cx, aOriginAttributes);
   NS_ENSURE_TRUE(status, NS_ERROR_FAILURE);
