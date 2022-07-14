@@ -169,7 +169,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   void HandleInterruptionEnd();
   void HandleValidRouteChange();
   void HandleCanPlayOrRecordChange(bool can_play_or_record);
-  void HandleSampleRateChange(float sample_rate);
+  void HandleSampleRateChange();
   void HandlePlayoutGlitchDetected();
   void HandleOutputVolumeChange();
 
