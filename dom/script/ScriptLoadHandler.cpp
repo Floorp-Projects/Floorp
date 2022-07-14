@@ -51,6 +51,16 @@ namespace mozilla::dom {
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(ScriptLoader::gScriptLoaderLog, mozilla::LogLevel::Debug)
 
+ScriptDecoder::ScriptDecoder(const Encoding* aEncoding,
+                             ScriptDecoder::BOMHandling handleBOM) {
+  if (handleBOM == BOMHandling::Ignore) {
+    mDecoder = aEncoding->NewDecoderWithoutBOMHandling();
+  } else {
+    mDecoder = aEncoding->NewDecoderWithBOMRemoval();
+  }
+  MOZ_ASSERT(mDecoder);
+}
+
 template <typename Unit>
 nsresult ScriptDecoder::DecodeRawDataHelper(
     JS::loader::ScriptLoadRequest* aRequest, const uint8_t* aData,
@@ -156,8 +166,8 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
 
     // Decoder has already been initialized. -- trying to decode all loaded
     // bytes.
-    rv =
-        DecodeRawData(mRequest, aData, aDataLength, /* aEndOfStream = */ false);
+    rv = mDecoder->DecodeRawData(mRequest, aData, aDataLength,
+                                 /* aEndOfStream = */ false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If SRI is required for this load, appending new bytes to the hash.
@@ -192,7 +202,8 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
 
   // JavaScript modules are always UTF-8.
   if (mRequest->IsModuleRequest()) {
-    mDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
+    mDecoder = MakeUnique<ScriptDecoder>(UTF_8_ENCODING,
+                                         ScriptDecoder::BOMHandling::Remove);
     return true;
   }
 
@@ -207,7 +218,8 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   const Encoding* encoding;
   std::tie(encoding, std::ignore) = Encoding::ForBOM(Span(aData, aDataLength));
   if (encoding) {
-    mDecoder = encoding->NewDecoderWithBOMRemoval();
+    mDecoder =
+        MakeUnique<ScriptDecoder>(encoding, ScriptDecoder::BOMHandling::Remove);
     return true;
   }
 
@@ -223,7 +235,8 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
     nsAutoCString label;
     if (NS_SUCCEEDED(channel->GetContentCharset(label)) &&
         (encoding = Encoding::ForLabel(label))) {
-      mDecoder = encoding->NewDecoderWithoutBOMHandling();
+      mDecoder = MakeUnique<ScriptDecoder>(encoding,
+                                           ScriptDecoder::BOMHandling::Ignore);
       return true;
     }
   }
@@ -245,21 +258,24 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   }
 
   if ((encoding = Encoding::ForLabel(hintCharset))) {
-    mDecoder = encoding->NewDecoderWithoutBOMHandling();
+    mDecoder =
+        MakeUnique<ScriptDecoder>(encoding, ScriptDecoder::BOMHandling::Ignore);
     return true;
   }
 
   // Get the charset from the charset of the document.
   if (mScriptLoader->mDocument) {
     encoding = mScriptLoader->mDocument->GetDocumentCharacterSet();
-    mDecoder = encoding->NewDecoderWithoutBOMHandling();
+    mDecoder =
+        MakeUnique<ScriptDecoder>(encoding, ScriptDecoder::BOMHandling::Ignore);
     return true;
   }
 
   // Curiously, there are various callers that don't pass aDocument. The
   // fallback in the old code was ISO-8859-1, which behaved like
   // windows-1252.
-  mDecoder = WINDOWS_1252_ENCODING->NewDecoderWithoutBOMHandling();
+  mDecoder = MakeUnique<ScriptDecoder>(WINDOWS_1252_ENCODING,
+                                       ScriptDecoder::BOMHandling::Ignore);
   return true;
 }
 
@@ -375,8 +391,8 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       DebugOnly<bool> encoderSet =
           EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
       MOZ_ASSERT(encoderSet);
-      rv = DecodeRawData(mRequest, aData, aDataLength,
-                         /* aEndOfStream = */ true);
+      rv = mDecoder->DecodeRawData(mRequest, aData, aDataLength,
+                                   /* aEndOfStream = */ true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       LOG(("ScriptLoadRequest (%p): Source length in code units = %u",
