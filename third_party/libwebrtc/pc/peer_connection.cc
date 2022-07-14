@@ -42,7 +42,6 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel.h"
 #include "p2p/base/transport_info.h"
-#include "pc/channel.h"
 #include "pc/ice_server_parsing.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_receiver_proxy.h"
@@ -1559,10 +1558,10 @@ RTCError PeerConnection::SetConfiguration(
       if (transceiver->media_type() != cricket::MEDIA_TYPE_VIDEO)
         continue;
 
-      auto* video_channel = static_cast<cricket::VideoChannel*>(
-          transceiver->internal()->channel());
+      auto* video_channel = transceiver->internal()->channel();
       if (video_channel)
-        channels.push_back(video_channel->media_channel());
+        channels.push_back(static_cast<cricket::VideoMediaChannel*>(
+            video_channel->media_channel()));
     }
 
     worker_thread()->Invoke<void>(
