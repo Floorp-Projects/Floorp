@@ -88,10 +88,17 @@ class KeyBinding {
   KeyBinding() : mKey(0), mModifierMask(0) {}
   KeyBinding(uint32_t aKey, uint32_t aModifierMask)
       : mKey(aKey), mModifierMask(aModifierMask) {}
+  explicit KeyBinding(uint64_t aSerialized) : mSerialized(aSerialized) {}
 
   inline bool IsEmpty() const { return !mKey; }
   inline uint32_t Key() const { return mKey; }
   inline uint32_t ModifierMask() const { return mModifierMask; }
+
+  /**
+   * Serialize this KeyBinding to a uint64_t for use in the parent process
+   * cache. This is simpler than custom IPDL serialization for this simple case.
+   */
+  uint64_t Serialize() { return mSerialized; }
 
   enum Format { ePlatformFormat, eAtkFormat };
 
@@ -118,8 +125,13 @@ class KeyBinding {
   void ToPlatformFormat(nsAString& aValue) const;
   void ToAtkFormat(nsAString& aValue) const;
 
-  uint32_t mKey;
-  uint32_t mModifierMask;
+  union {
+    struct {
+      uint32_t mKey;
+      uint32_t mModifierMask;
+    };
+    uint64_t mSerialized;
+  };
 };
 
 class Accessible {
