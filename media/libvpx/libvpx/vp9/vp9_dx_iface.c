@@ -201,7 +201,7 @@ static vpx_codec_err_t update_error_state(
   return error->error_code;
 }
 
-static void init_buffer_callbacks(vpx_codec_alg_priv_t *ctx) {
+static vpx_codec_err_t init_buffer_callbacks(vpx_codec_alg_priv_t *ctx) {
   VP9_COMMON *const cm = &ctx->pbi->common;
   BufferPool *const pool = cm->buffer_pool;
 
@@ -217,12 +217,16 @@ static void init_buffer_callbacks(vpx_codec_alg_priv_t *ctx) {
     pool->get_fb_cb = vp9_get_frame_buffer;
     pool->release_fb_cb = vp9_release_frame_buffer;
 
-    if (vp9_alloc_internal_frame_buffers(&pool->int_frame_buffers))
+    if (vp9_alloc_internal_frame_buffers(&pool->int_frame_buffers)) {
       vpx_internal_error(&cm->error, VPX_CODEC_MEM_ERROR,
                          "Failed to initialize internal frame buffers");
+      return VPX_CODEC_MEM_ERROR;
+    }
 
     pool->cb_priv = &pool->int_frame_buffers;
   }
+
+  return VPX_CODEC_OK;
 }
 
 static void set_default_ppflags(vp8_postproc_cfg_t *cfg) {
@@ -278,9 +282,7 @@ static vpx_codec_err_t init_decoder(vpx_codec_alg_priv_t *ctx) {
   if (!ctx->postproc_cfg_set && (ctx->base.init_flags & VPX_CODEC_USE_POSTPROC))
     set_default_ppflags(&ctx->postproc_cfg);
 
-  init_buffer_callbacks(ctx);
-
-  return VPX_CODEC_OK;
+  return init_buffer_callbacks(ctx);
 }
 
 static INLINE void check_resync(vpx_codec_alg_priv_t *const ctx,

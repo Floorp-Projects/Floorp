@@ -18,8 +18,8 @@
 #include "vpx_dsp/x86/quantize_sse2.h"
 
 void vpx_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                         int skip_block, const int16_t *zbin_ptr,
-                         const int16_t *round_ptr, const int16_t *quant_ptr,
+                         const int16_t *zbin_ptr, const int16_t *round_ptr,
+                         const int16_t *quant_ptr,
                          const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
                          tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
                          uint16_t *eob_ptr, const int16_t *scan,
@@ -34,8 +34,6 @@ void vpx_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   __m128i eob, eob0;
 
   (void)scan;
-  (void)skip_block;
-  assert(!skip_block);
 
   // Setup global values.
   load_b_values(zbin_ptr, &zbin, round_ptr, &round, quant_ptr, &quant,

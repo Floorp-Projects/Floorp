@@ -43,11 +43,10 @@ static INLINE void calculate_dqcoeff_and_store(const int16x8_t qcoeff,
 }
 
 void vp9_quantize_fp_neon(const tran_low_t *coeff_ptr, intptr_t count,
-                          int skip_block, const int16_t *round_ptr,
-                          const int16_t *quant_ptr, tran_low_t *qcoeff_ptr,
-                          tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                          uint16_t *eob_ptr, const int16_t *scan,
-                          const int16_t *iscan) {
+                          const int16_t *round_ptr, const int16_t *quant_ptr,
+                          tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                          const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                          const int16_t *scan, const int16_t *iscan) {
   // Quantization pass: All coefficients with index >= zero_flag are
   // skippable. Note: zero_flag can be zero.
   int i;
@@ -59,8 +58,6 @@ void vp9_quantize_fp_neon(const tran_low_t *coeff_ptr, intptr_t count,
   int16x8_t v_dequant = vmovq_n_s16(dequant_ptr[1]);
 
   (void)scan;
-  (void)skip_block;
-  assert(!skip_block);
 
   // adjust for dc
   v_round = vsetq_lane_s16(round_ptr[0], v_round, 0);
@@ -138,7 +135,7 @@ static INLINE int32x4_t extract_sign_bit(int32x4_t a) {
 }
 
 void vp9_quantize_fp_32x32_neon(const tran_low_t *coeff_ptr, intptr_t count,
-                                int skip_block, const int16_t *round_ptr,
+                                const int16_t *round_ptr,
                                 const int16_t *quant_ptr,
                                 tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                 const int16_t *dequant_ptr, uint16_t *eob_ptr,
@@ -167,8 +164,6 @@ void vp9_quantize_fp_32x32_neon(const tran_low_t *coeff_ptr, intptr_t count,
   uint16x8_t eob_max;
   (void)scan;
   (void)count;
-  (void)skip_block;
-  assert(!skip_block);
 
   // coeff * quant_ptr[]) >> 15
   qcoeff = vqdmulhq_s16(qcoeff, quant);

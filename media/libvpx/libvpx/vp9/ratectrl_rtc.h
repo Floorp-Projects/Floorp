@@ -22,28 +22,14 @@
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_firstpass.h"
 #include "vp9/vp9_cx_iface.h"
+#include "vpx/internal/vpx_ratectrl_rtc.h"
 #include "vpx_mem/vpx_mem.h"
 
 namespace libvpx {
 
-struct VP9RateControlRtcConfig {
+struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
  public:
   VP9RateControlRtcConfig() {
-    width = 1280;
-    height = 720;
-    max_quantizer = 63;
-    min_quantizer = 2;
-    target_bandwidth = 1000;
-    buf_initial_sz = 600;
-    buf_optimal_sz = 600;
-    buf_sz = 1000;
-    undershoot_pct = overshoot_pct = 50;
-    max_intra_bitrate_pct = 50;
-    max_inter_bitrate_pct = 0;
-    framerate = 30.0;
-    ss_number_layers = ts_number_layers = 1;
-    rc_mode = VPX_CBR;
-    aq_mode = 0;
     vp9_zero(max_quantizers);
     vp9_zero(min_quantizers);
     vp9_zero(scaling_factor_den);
@@ -52,26 +38,10 @@ struct VP9RateControlRtcConfig {
     vp9_zero(ts_rate_decimator);
     scaling_factor_num[0] = 1;
     scaling_factor_den[0] = 1;
-    layer_target_bitrate[0] = static_cast<int>(target_bandwidth);
     max_quantizers[0] = max_quantizer;
     min_quantizers[0] = min_quantizer;
-    ts_rate_decimator[0] = 1;
   }
 
-  int width;
-  int height;
-  // 0-63
-  int max_quantizer;
-  int min_quantizer;
-  int64_t target_bandwidth;
-  int64_t buf_initial_sz;
-  int64_t buf_optimal_sz;
-  int64_t buf_sz;
-  int undershoot_pct;
-  int overshoot_pct;
-  int max_intra_bitrate_pct;
-  int max_inter_bitrate_pct;
-  double framerate;
   // Number of spatial layers
   int ss_number_layers;
   // Number of temporal layers
@@ -80,11 +50,6 @@ struct VP9RateControlRtcConfig {
   int min_quantizers[VPX_MAX_LAYERS];
   int scaling_factor_num[VPX_SS_MAX_LAYERS];
   int scaling_factor_den[VPX_SS_MAX_LAYERS];
-  int layer_target_bitrate[VPX_MAX_LAYERS];
-  int ts_rate_decimator[VPX_TS_MAX_LAYERS];
-  // vbr, cbr
-  enum vpx_rc_mode rc_mode;
-  int aq_mode;
 };
 
 struct VP9FrameParamsQpRTC {
@@ -94,7 +59,7 @@ struct VP9FrameParamsQpRTC {
 };
 
 // This interface allows using VP9 real-time rate control without initializing
-// the encoder. To use this interface, you need to link with libvp9rc.a.
+// the encoder. To use this interface, you need to link with libvpxrc.a.
 //
 // #include "vp9/ratectrl_rtc.h"
 // VP9RateControlRTC rc_api;

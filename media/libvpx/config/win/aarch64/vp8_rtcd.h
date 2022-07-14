@@ -96,9 +96,6 @@ void vp8_fast_quantize_b_c(struct block *, struct blockd *);
 void vp8_fast_quantize_b_neon(struct block *, struct blockd *);
 #define vp8_fast_quantize_b vp8_fast_quantize_b_neon
 
-int vp8_full_search_sad_c(struct macroblock *x, struct block *b, struct blockd *d, union int_mv *ref_mv, int sad_per_bit, int distance, struct variance_vtable *fn_ptr, int *mvcost[2], union int_mv *center_mv);
-#define vp8_full_search_sad vp8_full_search_sad_c
-
 void vp8_loop_filter_bh_c(unsigned char *y_ptr, unsigned char *u_ptr, unsigned char *v_ptr, int y_stride, int uv_stride, struct loop_filter_info *lfi);
 void vp8_loop_filter_bh_neon(unsigned char *y_ptr, unsigned char *u_ptr, unsigned char *v_ptr, int y_stride, int uv_stride, struct loop_filter_info *lfi);
 #define vp8_loop_filter_bh vp8_loop_filter_bh_neon

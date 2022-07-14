@@ -97,7 +97,7 @@ static void var_filter_block2d_bil_w16(const uint8_t *src_ptr,
 
 // 4xM filter writes an extra row to fdata because it processes two rows at a
 // time.
-#define sub_pixel_varianceNxM(n, m)                                         \
+#define SUB_PIXEL_VARIANCENXM(n, m)                                         \
   uint32_t vpx_sub_pixel_variance##n##x##m##_neon(                          \
       const uint8_t *src_ptr, int src_stride, int x_offset, int y_offset,   \
       const uint8_t *ref_ptr, int ref_stride, uint32_t *sse) {              \
@@ -123,23 +123,23 @@ static void var_filter_block2d_bil_w16(const uint8_t *src_ptr,
     return vpx_variance##n##x##m(temp1, n, ref_ptr, ref_stride, sse);       \
   }
 
-sub_pixel_varianceNxM(4, 4);
-sub_pixel_varianceNxM(4, 8);
-sub_pixel_varianceNxM(8, 4);
-sub_pixel_varianceNxM(8, 8);
-sub_pixel_varianceNxM(8, 16);
-sub_pixel_varianceNxM(16, 8);
-sub_pixel_varianceNxM(16, 16);
-sub_pixel_varianceNxM(16, 32);
-sub_pixel_varianceNxM(32, 16);
-sub_pixel_varianceNxM(32, 32);
-sub_pixel_varianceNxM(32, 64);
-sub_pixel_varianceNxM(64, 32);
-sub_pixel_varianceNxM(64, 64);
+SUB_PIXEL_VARIANCENXM(4, 4)
+SUB_PIXEL_VARIANCENXM(4, 8)
+SUB_PIXEL_VARIANCENXM(8, 4)
+SUB_PIXEL_VARIANCENXM(8, 8)
+SUB_PIXEL_VARIANCENXM(8, 16)
+SUB_PIXEL_VARIANCENXM(16, 8)
+SUB_PIXEL_VARIANCENXM(16, 16)
+SUB_PIXEL_VARIANCENXM(16, 32)
+SUB_PIXEL_VARIANCENXM(32, 16)
+SUB_PIXEL_VARIANCENXM(32, 32)
+SUB_PIXEL_VARIANCENXM(32, 64)
+SUB_PIXEL_VARIANCENXM(64, 32)
+SUB_PIXEL_VARIANCENXM(64, 64)
 
 // 4xM filter writes an extra row to fdata because it processes two rows at a
 // time.
-#define sub_pixel_avg_varianceNxM(n, m)                                     \
+#define SUB_PIXEL_AVG_VARIANCENXM(n, m)                                     \
   uint32_t vpx_sub_pixel_avg_variance##n##x##m##_neon(                      \
       const uint8_t *src_ptr, int src_stride, int x_offset, int y_offset,   \
       const uint8_t *ref_ptr, int ref_stride, uint32_t *sse,                \
@@ -169,16 +169,16 @@ sub_pixel_varianceNxM(64, 64);
     return vpx_variance##n##x##m(temp0, n, ref_ptr, ref_stride, sse);       \
   }
 
-sub_pixel_avg_varianceNxM(4, 4);
-sub_pixel_avg_varianceNxM(4, 8);
-sub_pixel_avg_varianceNxM(8, 4);
-sub_pixel_avg_varianceNxM(8, 8);
-sub_pixel_avg_varianceNxM(8, 16);
-sub_pixel_avg_varianceNxM(16, 8);
-sub_pixel_avg_varianceNxM(16, 16);
-sub_pixel_avg_varianceNxM(16, 32);
-sub_pixel_avg_varianceNxM(32, 16);
-sub_pixel_avg_varianceNxM(32, 32);
-sub_pixel_avg_varianceNxM(32, 64);
-sub_pixel_avg_varianceNxM(64, 32);
-sub_pixel_avg_varianceNxM(64, 64);
+SUB_PIXEL_AVG_VARIANCENXM(4, 4)
+SUB_PIXEL_AVG_VARIANCENXM(4, 8)
+SUB_PIXEL_AVG_VARIANCENXM(8, 4)
+SUB_PIXEL_AVG_VARIANCENXM(8, 8)
+SUB_PIXEL_AVG_VARIANCENXM(8, 16)
+SUB_PIXEL_AVG_VARIANCENXM(16, 8)
+SUB_PIXEL_AVG_VARIANCENXM(16, 16)
+SUB_PIXEL_AVG_VARIANCENXM(16, 32)
+SUB_PIXEL_AVG_VARIANCENXM(32, 16)
+SUB_PIXEL_AVG_VARIANCENXM(32, 32)
+SUB_PIXEL_AVG_VARIANCENXM(32, 64)
+SUB_PIXEL_AVG_VARIANCENXM(64, 32)
+SUB_PIXEL_AVG_VARIANCENXM(64, 64)

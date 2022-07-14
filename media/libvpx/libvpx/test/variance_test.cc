@@ -596,6 +596,7 @@ class SubpelVarianceTest
  protected:
   void RefTest();
   void ExtremeRefTest();
+  void SpeedTest();
 
   ACMRandom rnd_;
   uint8_t *src_;
@@ -681,6 +682,37 @@ void SubpelVarianceTest<SubpelVarianceFunctionType>::ExtremeRefTest() {
   }
 }
 
+template <typename SubpelVarianceFunctionType>
+void SubpelVarianceTest<SubpelVarianceFunctionType>::SpeedTest() {
+  // The only interesting points are 0, 4, and anything else. To make the loops
+  // simple we will use 0, 2 and 4.
+  for (int x = 0; x <= 4; x += 2) {
+    for (int y = 0; y <= 4; y += 2) {
+      if (!use_high_bit_depth()) {
+        memset(src_, 25, block_size());
+        memset(ref_, 50, block_size());
+#if CONFIG_VP9_HIGHBITDEPTH
+      } else {
+        vpx_memset16(CONVERT_TO_SHORTPTR(src_), 25, block_size());
+        vpx_memset16(CONVERT_TO_SHORTPTR(ref_), 50, block_size());
+#endif  // CONFIG_VP9_HIGHBITDEPTH
+      }
+      unsigned int sse;
+      vpx_usec_timer timer;
+      vpx_usec_timer_start(&timer);
+      for (int i = 0; i < 1000000000 / block_size(); ++i) {
+        const uint32_t variance =
+            params_.func(ref_, width() + 1, x, y, src_, width(), &sse);
+        (void)variance;
+      }
+      vpx_usec_timer_mark(&timer);
+      const int elapsed_time = static_cast<int>(vpx_usec_timer_elapsed(&timer));
+      printf("SubpelVariance %dx%d xoffset: %d yoffset: %d time: %5d ms\n",
+             width(), height(), x, y, elapsed_time / 1000);
+    }
+  }
+}
+
 template <>
 void SubpelVarianceTest<vpx_subp_avg_variance_fn_t>::RefTest() {
   for (int x = 0; x < 8; ++x) {
@@ -736,6 +768,7 @@ TEST_P(SumOfSquaresTest, Const) { ConstTest(); }
 TEST_P(SumOfSquaresTest, Ref) { RefTest(); }
 TEST_P(VpxSubpelVarianceTest, Ref) { RefTest(); }
 TEST_P(VpxSubpelVarianceTest, ExtremeRef) { ExtremeRefTest(); }
+TEST_P(VpxSubpelVarianceTest, DISABLED_Speed) { SpeedTest(); }
 TEST_P(VpxSubpelAvgVarianceTest, Ref) { RefTest(); }
 
 INSTANTIATE_TEST_SUITE_P(C, SumOfSquaresTest,
@@ -1616,4 +1649,27 @@ INSTANTIATE_TEST_SUITE_P(
         SubpelAvgVarianceParams(2, 3, &vpx_sub_pixel_avg_variance4x8_mmi, 0),
         SubpelAvgVarianceParams(2, 2, &vpx_sub_pixel_avg_variance4x4_mmi, 0)));
 #endif  // HAVE_MMI
+
+#if HAVE_LSX
+INSTANTIATE_TEST_SUITE_P(LSX, VpxMseTest,
+                         ::testing::Values(MseParams(4, 4, &vpx_mse16x16_lsx)));
+
+INSTANTIATE_TEST_SUITE_P(
+    LSX, VpxVarianceTest,
+    ::testing::Values(VarianceParams(6, 6, &vpx_variance64x64_lsx),
+                      VarianceParams(5, 5, &vpx_variance32x32_lsx),
+                      VarianceParams(4, 4, &vpx_variance16x16_lsx),
+                      VarianceParams(3, 3, &vpx_variance8x8_lsx)));
+
+INSTANTIATE_TEST_SUITE_P(
+    LSX, VpxSubpelVarianceTest,
+    ::testing::Values(
+        SubpelVarianceParams(3, 3, &vpx_sub_pixel_variance8x8_lsx, 0),
+        SubpelVarianceParams(4, 4, &vpx_sub_pixel_variance16x16_lsx, 0),
+        SubpelVarianceParams(5, 5, &vpx_sub_pixel_variance32x32_lsx, 0)));
+
+INSTANTIATE_TEST_SUITE_P(LSX, VpxSubpelAvgVarianceTest,
+                         ::testing::Values(SubpelAvgVarianceParams(
+                             6, 6, &vpx_sub_pixel_avg_variance64x64_lsx, 0)));
+#endif
 }  // namespace

@@ -56,8 +56,6 @@ typedef void (*SadMxNx8Func)(const uint8_t *src_ptr, int src_stride,
                              const uint8_t *ref_ptr, int ref_stride,
                              unsigned int *sad_array);
 
-typedef TestParams<SadMxNx8Func> SadMxNx8Param;
-
 using libvpx_test::ACMRandom;
 
 namespace {
@@ -264,30 +262,6 @@ class SADTestBase : public ::testing::TestWithParam<ParamType> {
 
   ACMRandom rnd_;
   ParamType params_;
-};
-
-class SADx8Test : public SADTestBase<SadMxNx8Param> {
- public:
-  SADx8Test() : SADTestBase(GetParam()) {}
-
- protected:
-  void SADs(unsigned int *results) const {
-    const uint8_t *reference = GetReferenceFromOffset(0);
-
-    ASM_REGISTER_STATE_CHECK(params_.func(
-        source_data_, source_stride_, reference, reference_stride_, results));
-  }
-
-  void CheckSADs() const {
-    uint32_t reference_sad;
-    DECLARE_ALIGNED(kDataAlignment, uint32_t, exp_sad[8]);
-
-    SADs(exp_sad);
-    for (int offset = 0; offset < 8; ++offset) {
-      reference_sad = ReferenceSAD(offset);
-      EXPECT_EQ(reference_sad, exp_sad[offset]) << "offset " << offset;
-    }
-  }
 };
 
 class SADx4Test : public SADTestBase<SadMxNx4Param> {
@@ -564,13 +538,6 @@ TEST_P(SADx4Test, DISABLED_Speed) {
   reference_stride_ = tmp_stride;
 }
 
-TEST_P(SADx8Test, Regular) {
-  FillRandomWH(source_data_, source_stride_, params_.width, params_.height);
-  FillRandomWH(GetReferenceFromOffset(0), reference_stride_, params_.width + 8,
-               params_.height);
-  CheckSADs();
-}
-
 //------------------------------------------------------------------------------
 // C functions
 const SadMxNParam c_tests[] = {
@@ -746,24 +713,6 @@ const SadMxNx4Param x4d_c_tests[] = {
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_SUITE_P(C, SADx4Test, ::testing::ValuesIn(x4d_c_tests));
-
-// TODO(angiebird): implement the marked-down sad functions
-const SadMxNx8Param x8_c_tests[] = {
-  // SadMxNx8Param(64, 64, &vpx_sad64x64x8_c),
-  // SadMxNx8Param(64, 32, &vpx_sad64x32x8_c),
-  // SadMxNx8Param(32, 64, &vpx_sad32x64x8_c),
-  SadMxNx8Param(32, 32, &vpx_sad32x32x8_c),
-  // SadMxNx8Param(32, 16, &vpx_sad32x16x8_c),
-  // SadMxNx8Param(16, 32, &vpx_sad16x32x8_c),
-  SadMxNx8Param(16, 16, &vpx_sad16x16x8_c),
-  SadMxNx8Param(16, 8, &vpx_sad16x8x8_c),
-  SadMxNx8Param(8, 16, &vpx_sad8x16x8_c),
-  SadMxNx8Param(8, 8, &vpx_sad8x8x8_c),
-  // SadMxNx8Param(8, 4, &vpx_sad8x4x8_c),
-  // SadMxNx8Param(4, 8, &vpx_sad4x8x8_c),
-  SadMxNx8Param(4, 4, &vpx_sad4x4x8_c),
-};
-INSTANTIATE_TEST_SUITE_P(C, SADx8Test, ::testing::ValuesIn(x8_c_tests));
 
 //------------------------------------------------------------------------------
 // ARM functions
@@ -992,18 +941,6 @@ INSTANTIATE_TEST_SUITE_P(SSE2, SADx4Test, ::testing::ValuesIn(x4d_sse2_tests));
 // Only functions are x3, which do not have tests.
 #endif  // HAVE_SSSE3
 
-#if HAVE_SSE4_1
-const SadMxNx8Param x8_sse4_1_tests[] = {
-  SadMxNx8Param(16, 16, &vpx_sad16x16x8_sse4_1),
-  SadMxNx8Param(16, 8, &vpx_sad16x8x8_sse4_1),
-  SadMxNx8Param(8, 16, &vpx_sad8x16x8_sse4_1),
-  SadMxNx8Param(8, 8, &vpx_sad8x8x8_sse4_1),
-  SadMxNx8Param(4, 4, &vpx_sad4x4x8_sse4_1),
-};
-INSTANTIATE_TEST_SUITE_P(SSE4_1, SADx8Test,
-                         ::testing::ValuesIn(x8_sse4_1_tests));
-#endif  // HAVE_SSE4_1
-
 #if HAVE_AVX2
 const SadMxNParam avx2_tests[] = {
   SadMxNParam(64, 64, &vpx_sad64x64_avx2),
@@ -1029,11 +966,6 @@ const SadMxNx4Param x4d_avx2_tests[] = {
 };
 INSTANTIATE_TEST_SUITE_P(AVX2, SADx4Test, ::testing::ValuesIn(x4d_avx2_tests));
 
-const SadMxNx8Param x8_avx2_tests[] = {
-  // SadMxNx8Param(64, 64, &vpx_sad64x64x8_c),
-  SadMxNx8Param(32, 32, &vpx_sad32x32x8_avx2),
-};
-INSTANTIATE_TEST_SUITE_P(AVX2, SADx8Test, ::testing::ValuesIn(x8_avx2_tests));
 #endif  // HAVE_AVX2
 
 #if HAVE_AVX512
@@ -1196,4 +1128,33 @@ const SadMxNx4Param x4d_mmi_tests[] = {
 };
 INSTANTIATE_TEST_SUITE_P(MMI, SADx4Test, ::testing::ValuesIn(x4d_mmi_tests));
 #endif  // HAVE_MMI
+
+//------------------------------------------------------------------------------
+// loongarch functions
+#if HAVE_LSX
+const SadMxNParam lsx_tests[] = {
+  SadMxNParam(64, 64, &vpx_sad64x64_lsx),
+  SadMxNParam(32, 32, &vpx_sad32x32_lsx),
+  SadMxNParam(16, 16, &vpx_sad16x16_lsx),
+  SadMxNParam(8, 8, &vpx_sad8x8_lsx),
+};
+INSTANTIATE_TEST_SUITE_P(LSX, SADTest, ::testing::ValuesIn(lsx_tests));
+
+const SadMxNAvgParam avg_lsx_tests[] = {
+  SadMxNAvgParam(64, 64, &vpx_sad64x64_avg_lsx),
+  SadMxNAvgParam(32, 32, &vpx_sad32x32_avg_lsx),
+};
+INSTANTIATE_TEST_SUITE_P(LSX, SADavgTest, ::testing::ValuesIn(avg_lsx_tests));
+
+const SadMxNx4Param x4d_lsx_tests[] = {
+  SadMxNx4Param(64, 64, &vpx_sad64x64x4d_lsx),
+  SadMxNx4Param(64, 32, &vpx_sad64x32x4d_lsx),
+  SadMxNx4Param(32, 64, &vpx_sad32x64x4d_lsx),
+  SadMxNx4Param(32, 32, &vpx_sad32x32x4d_lsx),
+  SadMxNx4Param(16, 16, &vpx_sad16x16x4d_lsx),
+  SadMxNx4Param(8, 8, &vpx_sad8x8x4d_lsx),
+};
+INSTANTIATE_TEST_SUITE_P(LSX, SADx4Test, ::testing::ValuesIn(x4d_lsx_tests));
+#endif  // HAVE_LSX
+
 }  // namespace

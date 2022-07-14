@@ -578,6 +578,8 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
   }
 }
 
+// TODO(https://crbug.com/webm/1642): This causes a segfault in
+// init_encode_frame_mb_context().
 TEST_P(ResizeRealtimeTest, DISABLED_TestExternalResizeSmallerWidthBiggerSize) {
   ResizingVideoSource video;
   video.flag_codec_ = true;
@@ -794,6 +796,8 @@ TEST_P(ResizeCspTest, TestResizeCspWorks) {
 }
 
 VP8_INSTANTIATE_TEST_SUITE(ResizeTest, ONE_PASS_TEST_MODES);
+// TODO(https://crbug.com/webm/1768): VP9 should use ONE_PASS_TEST_MODES for
+// the ResizeTest instantiation after segfault is fixed.
 VP9_INSTANTIATE_TEST_SUITE(ResizeTest,
                            ::testing::Values(::libvpx_test::kRealTime));
 VP9_INSTANTIATE_TEST_SUITE(ResizeInternalTest,

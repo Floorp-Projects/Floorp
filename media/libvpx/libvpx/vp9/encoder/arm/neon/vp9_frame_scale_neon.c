@@ -710,8 +710,8 @@ void vp9_scale_and_extend_frame_neon(const YV12_BUFFER_CONFIG *src,
   const int src_h = src->y_crop_height;
   const int dst_w = dst->y_crop_width;
   const int dst_h = dst->y_crop_height;
-  const int dst_uv_w = dst_w / 2;
-  const int dst_uv_h = dst_h / 2;
+  const int dst_uv_w = dst->uv_crop_width;
+  const int dst_uv_h = dst->uv_crop_height;
   int scaled = 0;
 
   // phase_scaler is usually 0 or 8.

@@ -1449,6 +1449,19 @@ INSTANTIATE_TEST_SUITE_P(MSA, ConvolveTest,
                          ::testing::ValuesIn(kArrayConvolve8_msa));
 #endif  // HAVE_MSA
 
+#if HAVE_LSX
+const ConvolveFunctions convolve8_lsx(
+    vpx_convolve_copy_lsx, vpx_convolve_avg_lsx, vpx_convolve8_horiz_lsx,
+    vpx_convolve8_avg_horiz_lsx, vpx_convolve8_vert_lsx,
+    vpx_convolve8_avg_vert_lsx, vpx_convolve8_lsx, vpx_convolve8_avg_lsx,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c, vpx_scaled_vert_c,
+    vpx_scaled_avg_vert_c, vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
+
+const ConvolveParam kArrayConvolve8_lsx[] = { ALL_SIZES(convolve8_lsx) };
+INSTANTIATE_TEST_SUITE_P(LSX, ConvolveTest,
+                         ::testing::ValuesIn(kArrayConvolve8_lsx));
+#endif  // HAVE_LSX
+
 #if HAVE_VSX
 const ConvolveFunctions convolve8_vsx(
     vpx_convolve_copy_vsx, vpx_convolve_avg_vsx, vpx_convolve8_horiz_vsx,

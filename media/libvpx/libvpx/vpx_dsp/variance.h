@@ -59,8 +59,6 @@ typedef struct variance_vtable {
   vpx_sad_fn_t sdf;
   vpx_variance_fn_t vf;
   vpx_subpixvariance_fn_t svf;
-  vpx_sad_multi_fn_t sdx3f;
-  vpx_sad_multi_fn_t sdx8f;
   vpx_sad_multi_d_fn_t sdx4df;
 #if VPX_ARCH_X86 || VPX_ARCH_X86_64
   vp8_copy32xn_fn_t copymem;
@@ -76,7 +74,6 @@ typedef struct vp9_variance_vtable {
   vpx_subpixvariance_fn_t svf;
   vpx_subp_avg_variance_fn_t svaf;
   vpx_sad_multi_d_fn_t sdx4df;
-  vpx_sad_multi_fn_t sdx8f;
 } vp9_variance_fn_ptr_t;
 #endif  // CONFIG_VP9
 

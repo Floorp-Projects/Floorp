@@ -74,9 +74,9 @@ static void setup_decoding_thread_data(VP8D_COMP *pbi, MACROBLOCKD *xd,
     memcpy(mbd->dequant_y2, xd->dequant_y2, sizeof(xd->dequant_y2));
     memcpy(mbd->dequant_uv, xd->dequant_uv, sizeof(xd->dequant_uv));
 
-    mbd->fullpixel_mask = 0xffffffff;
+    mbd->fullpixel_mask = ~0;
 
-    if (pc->full_pixel) mbd->fullpixel_mask = 0xfffffff8;
+    if (pc->full_pixel) mbd->fullpixel_mask = ~7;
   }
 
   for (i = 0; i < pc->mb_rows; ++i)

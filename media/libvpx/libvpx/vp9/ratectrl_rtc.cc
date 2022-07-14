@@ -25,7 +25,10 @@ std::unique_ptr<VP9RateControlRTC> VP9RateControlRTC::Create(
                                                 VP9RateControlRTC());
   if (!rc_api) return nullptr;
   rc_api->cpi_ = static_cast<VP9_COMP *>(vpx_memalign(32, sizeof(*cpi_)));
-  if (!rc_api->cpi_) return nullptr;
+  if (!rc_api->cpi_) {
+    rc_api.reset();
+    return nullptr;
+  }
   vp9_zero(*rc_api->cpi_);
 
   rc_api->InitRateControl(cfg);
@@ -34,6 +37,10 @@ std::unique_ptr<VP9RateControlRTC> VP9RateControlRTC::Create(
     cpi->segmentation_map = static_cast<uint8_t *>(
         vpx_calloc(cpi->common.mi_rows * cpi->common.mi_cols,
                    sizeof(*cpi->segmentation_map)));
+    if (!cpi->segmentation_map) {
+      rc_api.reset();
+      return nullptr;
+    }
     cpi->cyclic_refresh =
         vp9_cyclic_refresh_alloc(cpi->common.mi_rows, cpi->common.mi_cols);
     cpi->cyclic_refresh->content_mode = 0;
@@ -105,7 +112,7 @@ void VP9RateControlRTC::UpdateRateControl(
   cpi_->framerate = rc_cfg.framerate;
   cpi_->svc.number_spatial_layers = rc_cfg.ss_number_layers;
   cpi_->svc.number_temporal_layers = rc_cfg.ts_number_layers;
-
+  vp9_set_mb_mi(cm, cm->width, cm->height);
   for (int sl = 0; sl < cpi_->svc.number_spatial_layers; ++sl) {
     for (int tl = 0; tl < cpi_->svc.number_temporal_layers; ++tl) {
       const int layer =

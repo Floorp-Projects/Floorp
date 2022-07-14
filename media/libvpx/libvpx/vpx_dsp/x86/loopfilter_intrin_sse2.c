@@ -211,21 +211,21 @@ void vpx_lpf_vertical_4_sse2(uint8_t *s, int pitch, const uint8_t *blimit,
   // 00 10 20 30 01 11 21 31  02 12 22 32 03 13 23 33
   ps1ps0 = _mm_unpacklo_epi8(ps1ps0, x0);
 
-  storeu_uint32(s + 0 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
+  storeu_int32(s + 0 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
   ps1ps0 = _mm_srli_si128(ps1ps0, 4);
-  storeu_uint32(s + 1 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
+  storeu_int32(s + 1 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
   ps1ps0 = _mm_srli_si128(ps1ps0, 4);
-  storeu_uint32(s + 2 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
+  storeu_int32(s + 2 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
   ps1ps0 = _mm_srli_si128(ps1ps0, 4);
-  storeu_uint32(s + 3 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
+  storeu_int32(s + 3 * pitch - 2, _mm_cvtsi128_si32(ps1ps0));
 
-  storeu_uint32(s + 4 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
+  storeu_int32(s + 4 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
   qs1qs0 = _mm_srli_si128(qs1qs0, 4);
-  storeu_uint32(s + 5 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
+  storeu_int32(s + 5 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
   qs1qs0 = _mm_srli_si128(qs1qs0, 4);
-  storeu_uint32(s + 6 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
+  storeu_int32(s + 6 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
   qs1qs0 = _mm_srli_si128(qs1qs0, 4);
-  storeu_uint32(s + 7 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
+  storeu_int32(s + 7 * pitch - 2, _mm_cvtsi128_si32(qs1qs0));
 }
 
 void vpx_lpf_horizontal_16_sse2(unsigned char *s, int pitch,

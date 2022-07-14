@@ -285,6 +285,13 @@ INSTANTIATE_TEST_SUITE_P(
                       HadamardFuncWithSize(&vpx_hadamard_16x16_vsx, 16)));
 #endif  // HAVE_VSX
 
+#if HAVE_LSX
+INSTANTIATE_TEST_SUITE_P(
+    LSX, HadamardLowbdTest,
+    ::testing::Values(HadamardFuncWithSize(&vpx_hadamard_8x8_lsx, 8),
+                      HadamardFuncWithSize(&vpx_hadamard_16x16_lsx, 16)));
+#endif  // HAVE_LSX
+
 #if CONFIG_VP9_HIGHBITDEPTH
 class HadamardHighbdTest : public HadamardTestBase {
  protected:

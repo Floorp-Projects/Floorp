@@ -39,16 +39,20 @@ int64_t vp9_block_error_fp_neon(const tran_low_t *coeff, const tran_low_t *dqcoe
 RTCD_EXTERN int64_t (*vp9_block_error_fp)(const tran_low_t *coeff, const tran_low_t *dqcoeff, int block_size);
 
 int vp9_diamond_search_sad_c(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
-#define vp9_diamond_search_sad vp9_diamond_search_sad_c
+int vp9_diamond_search_sad_neon(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
+RTCD_EXTERN int (*vp9_diamond_search_sad)(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
 
 void vp9_fht16x16_c(const int16_t *input, tran_low_t *output, int stride, int tx_type);
-#define vp9_fht16x16 vp9_fht16x16_c
+void vp9_fht16x16_neon(const int16_t *input, tran_low_t *output, int stride, int tx_type);
+RTCD_EXTERN void (*vp9_fht16x16)(const int16_t *input, tran_low_t *output, int stride, int tx_type);
 
 void vp9_fht4x4_c(const int16_t *input, tran_low_t *output, int stride, int tx_type);
-#define vp9_fht4x4 vp9_fht4x4_c
+void vp9_fht4x4_neon(const int16_t *input, tran_low_t *output, int stride, int tx_type);
+RTCD_EXTERN void (*vp9_fht4x4)(const int16_t *input, tran_low_t *output, int stride, int tx_type);
 
 void vp9_fht8x8_c(const int16_t *input, tran_low_t *output, int stride, int tx_type);
-#define vp9_fht8x8 vp9_fht8x8_c
+void vp9_fht8x8_neon(const int16_t *input, tran_low_t *output, int stride, int tx_type);
+RTCD_EXTERN void (*vp9_fht8x8)(const int16_t *input, tran_low_t *output, int stride, int tx_type);
 
 void vp9_fwht4x4_c(const int16_t *input, tran_low_t *output, int stride);
 #define vp9_fwht4x4 vp9_fwht4x4_c
@@ -65,13 +69,13 @@ void vp9_iht8x8_64_add_c(const tran_low_t *input, uint8_t *dest, int stride, int
 void vp9_iht8x8_64_add_neon(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
 RTCD_EXTERN void (*vp9_iht8x8_64_add)(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
 
-void vp9_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-void vp9_quantize_fp_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-RTCD_EXTERN void (*vp9_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_quantize_fp_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+RTCD_EXTERN void (*vp9_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 
-void vp9_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-void vp9_quantize_fp_32x32_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-RTCD_EXTERN void (*vp9_quantize_fp_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_quantize_fp_32x32_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+RTCD_EXTERN void (*vp9_quantize_fp_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 
 void vp9_scale_and_extend_frame_c(const struct yv12_buffer_config *src, struct yv12_buffer_config *dst, INTERP_FILTER filter_type, int phase_scaler);
 void vp9_scale_and_extend_frame_neon(const struct yv12_buffer_config *src, struct yv12_buffer_config *dst, INTERP_FILTER filter_type, int phase_scaler);
@@ -91,6 +95,14 @@ static void setup_rtcd_internal(void)
 
     vp9_block_error_fp = vp9_block_error_fp_c;
     if (flags & HAS_NEON) vp9_block_error_fp = vp9_block_error_fp_neon;
+    vp9_diamond_search_sad = vp9_diamond_search_sad_c;
+    if (flags & HAS_NEON) vp9_diamond_search_sad = vp9_diamond_search_sad_neon;
+    vp9_fht16x16 = vp9_fht16x16_c;
+    if (flags & HAS_NEON) vp9_fht16x16 = vp9_fht16x16_neon;
+    vp9_fht4x4 = vp9_fht4x4_c;
+    if (flags & HAS_NEON) vp9_fht4x4 = vp9_fht4x4_neon;
+    vp9_fht8x8 = vp9_fht8x8_c;
+    if (flags & HAS_NEON) vp9_fht8x8 = vp9_fht8x8_neon;
     vp9_iht16x16_256_add = vp9_iht16x16_256_add_c;
     if (flags & HAS_NEON) vp9_iht16x16_256_add = vp9_iht16x16_256_add_neon;
     vp9_iht4x4_16_add = vp9_iht4x4_16_add_c;

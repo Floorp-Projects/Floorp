@@ -36,8 +36,8 @@ unsigned int vpx_get_mb_ss_sse2(const int16_t *src_ptr) {
 }
 
 static INLINE __m128i load4x2_sse2(const uint8_t *const p, const int stride) {
-  const __m128i p0 = _mm_cvtsi32_si128(loadu_uint32(p + 0 * stride));
-  const __m128i p1 = _mm_cvtsi32_si128(loadu_uint32(p + 1 * stride));
+  const __m128i p0 = _mm_cvtsi32_si128(loadu_int32(p + 0 * stride));
+  const __m128i p1 = _mm_cvtsi32_si128(loadu_int32(p + 1 * stride));
   const __m128i p01 = _mm_unpacklo_epi32(p0, p1);
   return _mm_unpacklo_epi8(p01, _mm_setzero_si128());
 }
@@ -471,23 +471,23 @@ DECLS(ssse3, ssse3);
            (unsigned int)(cast_prod(cast se * se) >> (wlog2 + hlog2));    \
   }
 
-#define FNS(opt1, opt2)                              \
-  FN(64, 64, 16, 6, 6, opt1, (int64_t), (int64_t));  \
-  FN(64, 32, 16, 6, 5, opt1, (int64_t), (int64_t));  \
-  FN(32, 64, 16, 5, 6, opt1, (int64_t), (int64_t));  \
-  FN(32, 32, 16, 5, 5, opt1, (int64_t), (int64_t));  \
-  FN(32, 16, 16, 5, 4, opt1, (int64_t), (int64_t));  \
-  FN(16, 32, 16, 4, 5, opt1, (int64_t), (int64_t));  \
-  FN(16, 16, 16, 4, 4, opt1, (uint32_t), (int64_t)); \
-  FN(16, 8, 16, 4, 3, opt1, (int32_t), (int32_t));   \
-  FN(8, 16, 8, 3, 4, opt1, (int32_t), (int32_t));    \
-  FN(8, 8, 8, 3, 3, opt1, (int32_t), (int32_t));     \
-  FN(8, 4, 8, 3, 2, opt1, (int32_t), (int32_t));     \
-  FN(4, 8, 4, 2, 3, opt1, (int32_t), (int32_t));     \
+#define FNS(opt1, opt2)                             \
+  FN(64, 64, 16, 6, 6, opt1, (int64_t), (int64_t))  \
+  FN(64, 32, 16, 6, 5, opt1, (int64_t), (int64_t))  \
+  FN(32, 64, 16, 5, 6, opt1, (int64_t), (int64_t))  \
+  FN(32, 32, 16, 5, 5, opt1, (int64_t), (int64_t))  \
+  FN(32, 16, 16, 5, 4, opt1, (int64_t), (int64_t))  \
+  FN(16, 32, 16, 4, 5, opt1, (int64_t), (int64_t))  \
+  FN(16, 16, 16, 4, 4, opt1, (uint32_t), (int64_t)) \
+  FN(16, 8, 16, 4, 3, opt1, (int32_t), (int32_t))   \
+  FN(8, 16, 8, 3, 4, opt1, (int32_t), (int32_t))    \
+  FN(8, 8, 8, 3, 3, opt1, (int32_t), (int32_t))     \
+  FN(8, 4, 8, 3, 2, opt1, (int32_t), (int32_t))     \
+  FN(4, 8, 4, 2, 3, opt1, (int32_t), (int32_t))     \
   FN(4, 4, 4, 2, 2, opt1, (int32_t), (int32_t))
 
-FNS(sse2, sse2);
-FNS(ssse3, ssse3);
+FNS(sse2, sse2)
+FNS(ssse3, ssse3)
 
 #undef FNS
 #undef FN
@@ -543,23 +543,23 @@ DECLS(ssse3, ssse3);
            (unsigned int)(cast_prod(cast se * se) >> (wlog2 + hlog2));    \
   }
 
-#define FNS(opt1, opt2)                              \
-  FN(64, 64, 16, 6, 6, opt1, (int64_t), (int64_t));  \
-  FN(64, 32, 16, 6, 5, opt1, (int64_t), (int64_t));  \
-  FN(32, 64, 16, 5, 6, opt1, (int64_t), (int64_t));  \
-  FN(32, 32, 16, 5, 5, opt1, (int64_t), (int64_t));  \
-  FN(32, 16, 16, 5, 4, opt1, (int64_t), (int64_t));  \
-  FN(16, 32, 16, 4, 5, opt1, (int64_t), (int64_t));  \
-  FN(16, 16, 16, 4, 4, opt1, (uint32_t), (int64_t)); \
-  FN(16, 8, 16, 4, 3, opt1, (uint32_t), (int32_t));  \
-  FN(8, 16, 8, 3, 4, opt1, (uint32_t), (int32_t));   \
-  FN(8, 8, 8, 3, 3, opt1, (uint32_t), (int32_t));    \
-  FN(8, 4, 8, 3, 2, opt1, (uint32_t), (int32_t));    \
-  FN(4, 8, 4, 2, 3, opt1, (uint32_t), (int32_t));    \
+#define FNS(opt1, opt2)                             \
+  FN(64, 64, 16, 6, 6, opt1, (int64_t), (int64_t))  \
+  FN(64, 32, 16, 6, 5, opt1, (int64_t), (int64_t))  \
+  FN(32, 64, 16, 5, 6, opt1, (int64_t), (int64_t))  \
+  FN(32, 32, 16, 5, 5, opt1, (int64_t), (int64_t))  \
+  FN(32, 16, 16, 5, 4, opt1, (int64_t), (int64_t))  \
+  FN(16, 32, 16, 4, 5, opt1, (int64_t), (int64_t))  \
+  FN(16, 16, 16, 4, 4, opt1, (uint32_t), (int64_t)) \
+  FN(16, 8, 16, 4, 3, opt1, (uint32_t), (int32_t))  \
+  FN(8, 16, 8, 3, 4, opt1, (uint32_t), (int32_t))   \
+  FN(8, 8, 8, 3, 3, opt1, (uint32_t), (int32_t))    \
+  FN(8, 4, 8, 3, 2, opt1, (uint32_t), (int32_t))    \
+  FN(4, 8, 4, 2, 3, opt1, (uint32_t), (int32_t))    \
   FN(4, 4, 4, 2, 2, opt1, (uint32_t), (int32_t))
 
-FNS(sse2, sse);
-FNS(ssse3, ssse3);
+FNS(sse2, sse)
+FNS(ssse3, ssse3)
 
 #undef FNS
 #undef FN

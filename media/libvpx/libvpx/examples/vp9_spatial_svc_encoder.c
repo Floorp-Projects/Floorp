@@ -222,6 +222,10 @@ static void parse_command_line(int argc, const char **argv_,
 
   // process command line options
   argv = argv_dup(argc - 1, argv_ + 1);
+  if (!argv) {
+    fprintf(stderr, "Error allocating argument list\n");
+    exit(EXIT_FAILURE);
+  }
   for (argi = argj = argv; (*argj = *argi); argi += arg.argv_step) {
     arg.argv_step = 1;
 
@@ -357,6 +361,8 @@ static void parse_command_line(int argc, const char **argv_,
   if (app_input->input_ctx.file_type == FILE_TYPE_Y4M) {
     enc_cfg->g_w = app_input->input_ctx.width;
     enc_cfg->g_h = app_input->input_ctx.height;
+    enc_cfg->g_timebase.den = app_input->input_ctx.framerate.numerator;
+    enc_cfg->g_timebase.num = app_input->input_ctx.framerate.denominator;
   }
 
   if (enc_cfg->g_w < 16 || enc_cfg->g_w % 2 || enc_cfg->g_h < 16 ||
@@ -579,7 +585,8 @@ static void set_frame_flags_bypass_mode_ex0(
       ref_frame_config->alt_fb_idx[sl] = 0;
     } else if (tl == 1) {
       ref_frame_config->lst_fb_idx[sl] = sl;
-      ref_frame_config->gld_fb_idx[sl] = num_spatial_layers + sl - 1;
+      ref_frame_config->gld_fb_idx[sl] =
+          (sl == 0) ? 0 : num_spatial_layers + sl - 1;
       ref_frame_config->alt_fb_idx[sl] = num_spatial_layers + sl;
     }
     // Set the reference and update flags.

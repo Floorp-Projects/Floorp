@@ -183,4 +183,9 @@ INSTANTIATE_TEST_SUITE_P(NEON, AvgPredTest,
 INSTANTIATE_TEST_SUITE_P(VSX, AvgPredTest,
                          ::testing::Values(&vpx_comp_avg_pred_vsx));
 #endif  // HAVE_VSX
+
+#if HAVE_LSX
+INSTANTIATE_TEST_SUITE_P(LSX, AvgPredTest,
+                         ::testing::Values(&vpx_comp_avg_pred_lsx));
+#endif  // HAVE_LSX
 }  // namespace

@@ -45,4 +45,8 @@ vpx_codec_err_t vp9_extrc_update_encodeframe_result(
     const YV12_BUFFER_CONFIG *coded_frame, uint32_t bit_depth,
     uint32_t input_bit_depth, const int actual_encoding_qindex);
 
+vpx_codec_err_t vp9_extrc_get_gop_decision(
+    EXT_RATECTRL *ext_ratectrl, const vpx_rc_gop_info_t *const gop_info,
+    vpx_rc_gop_decision_t *gop_decision);
+
 #endif  // VPX_VP9_ENCODER_VP9_EXT_RATECTRL_H_

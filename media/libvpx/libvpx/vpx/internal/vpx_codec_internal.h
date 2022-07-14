@@ -435,9 +435,21 @@ struct vpx_internal_error_info {
 #endif
 #endif
 
+// Tells the compiler to perform `printf` format string checking if the
+// compiler supports it; see the 'format' attribute in
+// <https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html>.
+#define LIBVPX_FORMAT_PRINTF(string_index, first_to_check)
+#if defined(__has_attribute)
+#if __has_attribute(format)
+#undef LIBVPX_FORMAT_PRINTF
+#define LIBVPX_FORMAT_PRINTF(string_index, first_to_check) \
+  __attribute__((__format__(__printf__, string_index, first_to_check)))
+#endif
+#endif
+
 void vpx_internal_error(struct vpx_internal_error_info *info,
-                        vpx_codec_err_t error, const char *fmt,
-                        ...) CLANG_ANALYZER_NORETURN;
+                        vpx_codec_err_t error, const char *fmt, ...)
+    LIBVPX_FORMAT_PRINTF(3, 4) CLANG_ANALYZER_NORETURN;
 
 #ifdef __cplusplus
 }  // extern "C"

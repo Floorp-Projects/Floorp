@@ -83,6 +83,7 @@ const char *arg_next(struct arg *arg) {
 
 char **argv_dup(int argc, const char **argv) {
   char **new_argv = malloc((argc + 1) * sizeof(*argv));
+  if (!new_argv) return NULL;
 
   memcpy(new_argv, argv, argc * sizeof(*argv));
   new_argv[argc] = NULL;

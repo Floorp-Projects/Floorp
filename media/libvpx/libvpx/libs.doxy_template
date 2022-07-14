@@ -654,12 +654,6 @@ VERBATIM_HEADERS       = YES
 
 ALPHABETICAL_INDEX     = NO
 
-# If the alphabetical index is enabled (see ALPHABETICAL_INDEX) then
-# the COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns
-# in which this list will be split (can be a number in the range [1..20])
-
-COLS_IN_ALPHA_INDEX    = 5
-
 # In case all classes in a project start with a common prefix, all
 # classes will be put under the same header in the alphabetical index.
 # The IGNORE_PREFIX tag can be used to specify one or more prefixes that
@@ -1099,11 +1093,6 @@ ALLEXTERNALS           = NO
 
 EXTERNAL_GROUPS        = YES
 
-# The PERL_PATH should be the absolute path and name of the perl script
-# interpreter (i.e. the result of `which perl').
-
-PERL_PATH              = /usr/bin/perl
-
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
@@ -1116,14 +1105,6 @@ PERL_PATH              = /usr/bin/perl
 # powerful graphs.
 
 CLASS_DIAGRAMS         = YES
-
-# You can define message sequence charts within doxygen comments using the \msc
-# command. Doxygen will then run the mscgen tool (see http://www.mcternan.me.uk/mscgen/) to
-# produce the chart and insert it in the documentation. The MSCGEN_PATH tag allows you to
-# specify the directory where the mscgen tool resides. If left empty the tool is assumed to
-# be found in the default search path.
-
-MSCGEN_PATH            =
 
 # If set to YES, the inheritance and collaboration graphs will hide
 # inheritance and usage relations if the target is undocumented

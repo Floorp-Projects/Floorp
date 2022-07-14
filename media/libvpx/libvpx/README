@@ -1,4 +1,4 @@
-README - 08 March 2021
+v1.12.0 Torrent Duck
 
 Welcome to the WebM VP8/VP9 Codec SDK!
 
@@ -103,6 +103,7 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     x86-win32-vs14
     x86-win32-vs15
     x86-win32-vs16
+    x86-win32-vs17
     x86_64-android-gcc
     x86_64-darwin9-gcc
     x86_64-darwin10-gcc
@@ -124,6 +125,7 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     x86_64-win64-vs14
     x86_64-win64-vs15
     x86_64-win64-vs16
+    x86_64-win64-vs17
     generic-gnu
 
   The generic-gnu target, in conjunction with the CROSS environment variable,

@@ -71,17 +71,17 @@
     return res;                                                               \
   }
 
-#define FSAD64  \
-  FSAD64_H(64); \
-  FSAD64_H(32);
+#define FSAD64 \
+  FSAD64_H(64) \
+  FSAD64_H(32)
 
-#define FSAD32  \
-  FSAD32_H(64); \
-  FSAD32_H(32); \
-  FSAD32_H(16);
+#define FSAD32 \
+  FSAD32_H(64) \
+  FSAD32_H(32) \
+  FSAD32_H(16)
 
-FSAD64;
-FSAD32;
+FSAD64
+FSAD32
 
 #undef FSAD64
 #undef FSAD32
@@ -160,17 +160,17 @@ FSAD32;
     return res;                                                               \
   }
 
-#define FSADAVG64  \
-  FSADAVG64_H(64); \
-  FSADAVG64_H(32);
+#define FSADAVG64 \
+  FSADAVG64_H(64) \
+  FSADAVG64_H(32)
 
-#define FSADAVG32  \
-  FSADAVG32_H(64); \
-  FSADAVG32_H(32); \
-  FSADAVG32_H(16);
+#define FSADAVG32 \
+  FSADAVG32_H(64) \
+  FSADAVG32_H(32) \
+  FSADAVG32_H(16)
 
-FSADAVG64;
-FSADAVG32;
+FSADAVG64
+FSADAVG32
 
 #undef FSADAVG64
 #undef FSADAVG32

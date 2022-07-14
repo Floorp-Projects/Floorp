@@ -366,28 +366,28 @@ void vp9_xform_quant_fp(MACROBLOCK *x, int plane, int block, int row, int col,
     switch (tx_size) {
       case TX_32X32:
         highbd_fdct32x32(x->use_lp32x32fdct, src_diff, coeff, diff_stride);
-        vp9_highbd_quantize_fp_32x32(coeff, 1024, x->skip_block, p->round_fp,
-                                     p->quant_fp, qcoeff, dqcoeff, pd->dequant,
-                                     eob, scan_order->scan, scan_order->iscan);
+        vp9_highbd_quantize_fp_32x32(coeff, 1024, p->round_fp, p->quant_fp,
+                                     qcoeff, dqcoeff, pd->dequant, eob,
+                                     scan_order->scan, scan_order->iscan);
         break;
       case TX_16X16:
         vpx_highbd_fdct16x16(src_diff, coeff, diff_stride);
-        vp9_highbd_quantize_fp(coeff, 256, x->skip_block, p->round_fp,
-                               p->quant_fp, qcoeff, dqcoeff, pd->dequant, eob,
-                               scan_order->scan, scan_order->iscan);
+        vp9_highbd_quantize_fp(coeff, 256, p->round_fp, p->quant_fp, qcoeff,
+                               dqcoeff, pd->dequant, eob, scan_order->scan,
+                               scan_order->iscan);
         break;
       case TX_8X8:
         vpx_highbd_fdct8x8(src_diff, coeff, diff_stride);
-        vp9_highbd_quantize_fp(coeff, 64, x->skip_block, p->round_fp,
-                               p->quant_fp, qcoeff, dqcoeff, pd->dequant, eob,
-                               scan_order->scan, scan_order->iscan);
+        vp9_highbd_quantize_fp(coeff, 64, p->round_fp, p->quant_fp, qcoeff,
+                               dqcoeff, pd->dequant, eob, scan_order->scan,
+                               scan_order->iscan);
         break;
       default:
         assert(tx_size == TX_4X4);
         x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-        vp9_highbd_quantize_fp(coeff, 16, x->skip_block, p->round_fp,
-                               p->quant_fp, qcoeff, dqcoeff, pd->dequant, eob,
-                               scan_order->scan, scan_order->iscan);
+        vp9_highbd_quantize_fp(coeff, 16, p->round_fp, p->quant_fp, qcoeff,
+                               dqcoeff, pd->dequant, eob, scan_order->scan,
+                               scan_order->iscan);
         break;
     }
     return;
@@ -397,29 +397,26 @@ void vp9_xform_quant_fp(MACROBLOCK *x, int plane, int block, int row, int col,
   switch (tx_size) {
     case TX_32X32:
       fdct32x32(x->use_lp32x32fdct, src_diff, coeff, diff_stride);
-      vp9_quantize_fp_32x32(coeff, 1024, x->skip_block, p->round_fp,
-                            p->quant_fp, qcoeff, dqcoeff, pd->dequant, eob,
-                            scan_order->scan, scan_order->iscan);
+      vp9_quantize_fp_32x32(coeff, 1024, p->round_fp, p->quant_fp, qcoeff,
+                            dqcoeff, pd->dequant, eob, scan_order->scan,
+                            scan_order->iscan);
       break;
     case TX_16X16:
       vpx_fdct16x16(src_diff, coeff, diff_stride);
-      vp9_quantize_fp(coeff, 256, x->skip_block, p->round_fp, p->quant_fp,
-                      qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
-                      scan_order->iscan);
+      vp9_quantize_fp(coeff, 256, p->round_fp, p->quant_fp, qcoeff, dqcoeff,
+                      pd->dequant, eob, scan_order->scan, scan_order->iscan);
       break;
     case TX_8X8:
       vpx_fdct8x8(src_diff, coeff, diff_stride);
-      vp9_quantize_fp(coeff, 64, x->skip_block, p->round_fp, p->quant_fp,
-                      qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
-                      scan_order->iscan);
+      vp9_quantize_fp(coeff, 64, p->round_fp, p->quant_fp, qcoeff, dqcoeff,
+                      pd->dequant, eob, scan_order->scan, scan_order->iscan);
 
       break;
     default:
       assert(tx_size == TX_4X4);
       x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-      vp9_quantize_fp(coeff, 16, x->skip_block, p->round_fp, p->quant_fp,
-                      qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
-                      scan_order->iscan);
+      vp9_quantize_fp(coeff, 16, p->round_fp, p->quant_fp, qcoeff, dqcoeff,
+                      pd->dequant, eob, scan_order->scan, scan_order->iscan);
       break;
   }
 }
@@ -444,28 +441,24 @@ void vp9_xform_quant_dc(MACROBLOCK *x, int plane, int block, int row, int col,
     switch (tx_size) {
       case TX_32X32:
         vpx_highbd_fdct32x32_1(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_dc_32x32(coeff, x->skip_block, p->round,
-                                     p->quant_fp[0], qcoeff, dqcoeff,
-                                     pd->dequant[0], eob);
+        vpx_highbd_quantize_dc_32x32(coeff, p->round, p->quant_fp[0], qcoeff,
+                                     dqcoeff, pd->dequant[0], eob);
         break;
       case TX_16X16:
         vpx_highbd_fdct16x16_1(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_dc(coeff, 256, x->skip_block, p->round,
-                               p->quant_fp[0], qcoeff, dqcoeff, pd->dequant[0],
-                               eob);
+        vpx_highbd_quantize_dc(coeff, 256, p->round, p->quant_fp[0], qcoeff,
+                               dqcoeff, pd->dequant[0], eob);
         break;
       case TX_8X8:
         vpx_highbd_fdct8x8_1(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_dc(coeff, 64, x->skip_block, p->round,
-                               p->quant_fp[0], qcoeff, dqcoeff, pd->dequant[0],
-                               eob);
+        vpx_highbd_quantize_dc(coeff, 64, p->round, p->quant_fp[0], qcoeff,
+                               dqcoeff, pd->dequant[0], eob);
         break;
       default:
         assert(tx_size == TX_4X4);
         x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_dc(coeff, 16, x->skip_block, p->round,
-                               p->quant_fp[0], qcoeff, dqcoeff, pd->dequant[0],
-                               eob);
+        vpx_highbd_quantize_dc(coeff, 16, p->round, p->quant_fp[0], qcoeff,
+                               dqcoeff, pd->dequant[0], eob);
         break;
     }
     return;
@@ -475,24 +468,24 @@ void vp9_xform_quant_dc(MACROBLOCK *x, int plane, int block, int row, int col,
   switch (tx_size) {
     case TX_32X32:
       vpx_fdct32x32_1(src_diff, coeff, diff_stride);
-      vpx_quantize_dc_32x32(coeff, x->skip_block, p->round, p->quant_fp[0],
-                            qcoeff, dqcoeff, pd->dequant[0], eob);
+      vpx_quantize_dc_32x32(coeff, p->round, p->quant_fp[0], qcoeff, dqcoeff,
+                            pd->dequant[0], eob);
       break;
     case TX_16X16:
       vpx_fdct16x16_1(src_diff, coeff, diff_stride);
-      vpx_quantize_dc(coeff, 256, x->skip_block, p->round, p->quant_fp[0],
-                      qcoeff, dqcoeff, pd->dequant[0], eob);
+      vpx_quantize_dc(coeff, 256, p->round, p->quant_fp[0], qcoeff, dqcoeff,
+                      pd->dequant[0], eob);
       break;
     case TX_8X8:
       vpx_fdct8x8_1(src_diff, coeff, diff_stride);
-      vpx_quantize_dc(coeff, 64, x->skip_block, p->round, p->quant_fp[0],
-                      qcoeff, dqcoeff, pd->dequant[0], eob);
+      vpx_quantize_dc(coeff, 64, p->round, p->quant_fp[0], qcoeff, dqcoeff,
+                      pd->dequant[0], eob);
       break;
     default:
       assert(tx_size == TX_4X4);
       x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-      vpx_quantize_dc(coeff, 16, x->skip_block, p->round, p->quant_fp[0],
-                      qcoeff, dqcoeff, pd->dequant[0], eob);
+      vpx_quantize_dc(coeff, 16, p->round, p->quant_fp[0], qcoeff, dqcoeff,
+                      pd->dequant[0], eob);
       break;
   }
 }
@@ -518,32 +511,28 @@ void vp9_xform_quant(MACROBLOCK *x, int plane, int block, int row, int col,
     switch (tx_size) {
       case TX_32X32:
         highbd_fdct32x32(x->use_lp32x32fdct, src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_b_32x32(coeff, 1024, x->skip_block, p->zbin,
-                                    p->round, p->quant, p->quant_shift, qcoeff,
-                                    dqcoeff, pd->dequant, eob, scan_order->scan,
-                                    scan_order->iscan);
+        vpx_highbd_quantize_b_32x32(
+            coeff, 1024, p->zbin, p->round, p->quant, p->quant_shift, qcoeff,
+            dqcoeff, pd->dequant, eob, scan_order->scan, scan_order->iscan);
         break;
       case TX_16X16:
         vpx_highbd_fdct16x16(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_b(coeff, 256, x->skip_block, p->zbin, p->round,
-                              p->quant, p->quant_shift, qcoeff, dqcoeff,
-                              pd->dequant, eob, scan_order->scan,
-                              scan_order->iscan);
+        vpx_highbd_quantize_b(coeff, 256, p->zbin, p->round, p->quant,
+                              p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                              scan_order->scan, scan_order->iscan);
         break;
       case TX_8X8:
         vpx_highbd_fdct8x8(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_b(coeff, 64, x->skip_block, p->zbin, p->round,
-                              p->quant, p->quant_shift, qcoeff, dqcoeff,
-                              pd->dequant, eob, scan_order->scan,
-                              scan_order->iscan);
+        vpx_highbd_quantize_b(coeff, 64, p->zbin, p->round, p->quant,
+                              p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                              scan_order->scan, scan_order->iscan);
         break;
       default:
         assert(tx_size == TX_4X4);
         x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-        vpx_highbd_quantize_b(coeff, 16, x->skip_block, p->zbin, p->round,
-                              p->quant, p->quant_shift, qcoeff, dqcoeff,
-                              pd->dequant, eob, scan_order->scan,
-                              scan_order->iscan);
+        vpx_highbd_quantize_b(coeff, 16, p->zbin, p->round, p->quant,
+                              p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                              scan_order->scan, scan_order->iscan);
         break;
     }
     return;
@@ -553,29 +542,28 @@ void vp9_xform_quant(MACROBLOCK *x, int plane, int block, int row, int col,
   switch (tx_size) {
     case TX_32X32:
       fdct32x32(x->use_lp32x32fdct, src_diff, coeff, diff_stride);
-      vpx_quantize_b_32x32(coeff, 1024, x->skip_block, p->zbin, p->round,
-                           p->quant, p->quant_shift, qcoeff, dqcoeff,
-                           pd->dequant, eob, scan_order->scan,
-                           scan_order->iscan);
+      vpx_quantize_b_32x32(coeff, 1024, p->zbin, p->round, p->quant,
+                           p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                           scan_order->scan, scan_order->iscan);
       break;
     case TX_16X16:
       vpx_fdct16x16(src_diff, coeff, diff_stride);
-      vpx_quantize_b(coeff, 256, x->skip_block, p->zbin, p->round, p->quant,
-                     p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                     scan_order->scan, scan_order->iscan);
+      vpx_quantize_b(coeff, 256, p->zbin, p->round, p->quant, p->quant_shift,
+                     qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
+                     scan_order->iscan);
       break;
     case TX_8X8:
       vpx_fdct8x8(src_diff, coeff, diff_stride);
-      vpx_quantize_b(coeff, 64, x->skip_block, p->zbin, p->round, p->quant,
-                     p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                     scan_order->scan, scan_order->iscan);
+      vpx_quantize_b(coeff, 64, p->zbin, p->round, p->quant, p->quant_shift,
+                     qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
+                     scan_order->iscan);
       break;
     default:
       assert(tx_size == TX_4X4);
       x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-      vpx_quantize_b(coeff, 16, x->skip_block, p->zbin, p->round, p->quant,
-                     p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                     scan_order->scan, scan_order->iscan);
+      vpx_quantize_b(coeff, 16, p->zbin, p->round, p->quant, p->quant_shift,
+                     qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
+                     scan_order->iscan);
       break;
   }
 }
@@ -869,10 +857,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
           vpx_highbd_subtract_block(32, 32, src_diff, diff_stride, src,
                                     src_stride, dst, dst_stride, xd->bd);
           highbd_fdct32x32(x->use_lp32x32fdct, src_diff, coeff, diff_stride);
-          vpx_highbd_quantize_b_32x32(coeff, 1024, x->skip_block, p->zbin,
-                                      p->round, p->quant, p->quant_shift,
-                                      qcoeff, dqcoeff, pd->dequant, eob,
-                                      scan_order->scan, scan_order->iscan);
+          vpx_highbd_quantize_b_32x32(
+              coeff, 1024, p->zbin, p->round, p->quant, p->quant_shift, qcoeff,
+              dqcoeff, pd->dequant, eob, scan_order->scan, scan_order->iscan);
         }
         if (args->enable_coeff_opt && !x->skip_recode) {
           *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -889,10 +876,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
             vpx_highbd_fdct16x16(src_diff, coeff, diff_stride);
           else
             vp9_highbd_fht16x16(src_diff, coeff, diff_stride, tx_type);
-          vpx_highbd_quantize_b(coeff, 256, x->skip_block, p->zbin, p->round,
-                                p->quant, p->quant_shift, qcoeff, dqcoeff,
-                                pd->dequant, eob, scan_order->scan,
-                                scan_order->iscan);
+          vpx_highbd_quantize_b(coeff, 256, p->zbin, p->round, p->quant,
+                                p->quant_shift, qcoeff, dqcoeff, pd->dequant,
+                                eob, scan_order->scan, scan_order->iscan);
         }
         if (args->enable_coeff_opt && !x->skip_recode) {
           *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -910,10 +896,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
             vpx_highbd_fdct8x8(src_diff, coeff, diff_stride);
           else
             vp9_highbd_fht8x8(src_diff, coeff, diff_stride, tx_type);
-          vpx_highbd_quantize_b(coeff, 64, x->skip_block, p->zbin, p->round,
-                                p->quant, p->quant_shift, qcoeff, dqcoeff,
-                                pd->dequant, eob, scan_order->scan,
-                                scan_order->iscan);
+          vpx_highbd_quantize_b(coeff, 64, p->zbin, p->round, p->quant,
+                                p->quant_shift, qcoeff, dqcoeff, pd->dequant,
+                                eob, scan_order->scan, scan_order->iscan);
         }
         if (args->enable_coeff_opt && !x->skip_recode) {
           *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -932,10 +917,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
             vp9_highbd_fht4x4(src_diff, coeff, diff_stride, tx_type);
           else
             x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-          vpx_highbd_quantize_b(coeff, 16, x->skip_block, p->zbin, p->round,
-                                p->quant, p->quant_shift, qcoeff, dqcoeff,
-                                pd->dequant, eob, scan_order->scan,
-                                scan_order->iscan);
+          vpx_highbd_quantize_b(coeff, 16, p->zbin, p->round, p->quant,
+                                p->quant_shift, qcoeff, dqcoeff, pd->dequant,
+                                eob, scan_order->scan, scan_order->iscan);
         }
         if (args->enable_coeff_opt && !x->skip_recode) {
           *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -964,10 +948,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
         vpx_subtract_block(32, 32, src_diff, diff_stride, src, src_stride, dst,
                            dst_stride);
         fdct32x32(x->use_lp32x32fdct, src_diff, coeff, diff_stride);
-        vpx_quantize_b_32x32(coeff, 1024, x->skip_block, p->zbin, p->round,
-                             p->quant, p->quant_shift, qcoeff, dqcoeff,
-                             pd->dequant, eob, scan_order->scan,
-                             scan_order->iscan);
+        vpx_quantize_b_32x32(coeff, 1024, p->zbin, p->round, p->quant,
+                             p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
+                             scan_order->scan, scan_order->iscan);
       }
       if (args->enable_coeff_opt && !x->skip_recode) {
         *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -980,9 +963,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
         vpx_subtract_block(16, 16, src_diff, diff_stride, src, src_stride, dst,
                            dst_stride);
         vp9_fht16x16(src_diff, coeff, diff_stride, tx_type);
-        vpx_quantize_b(coeff, 256, x->skip_block, p->zbin, p->round, p->quant,
-                       p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                       scan_order->scan, scan_order->iscan);
+        vpx_quantize_b(coeff, 256, p->zbin, p->round, p->quant, p->quant_shift,
+                       qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
+                       scan_order->iscan);
       }
       if (args->enable_coeff_opt && !x->skip_recode) {
         *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -995,9 +978,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
         vpx_subtract_block(8, 8, src_diff, diff_stride, src, src_stride, dst,
                            dst_stride);
         vp9_fht8x8(src_diff, coeff, diff_stride, tx_type);
-        vpx_quantize_b(coeff, 64, x->skip_block, p->zbin, p->round, p->quant,
-                       p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                       scan_order->scan, scan_order->iscan);
+        vpx_quantize_b(coeff, 64, p->zbin, p->round, p->quant, p->quant_shift,
+                       qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
+                       scan_order->iscan);
       }
       if (args->enable_coeff_opt && !x->skip_recode) {
         *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
@@ -1014,9 +997,9 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
           vp9_fht4x4(src_diff, coeff, diff_stride, tx_type);
         else
           x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-        vpx_quantize_b(coeff, 16, x->skip_block, p->zbin, p->round, p->quant,
-                       p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                       scan_order->scan, scan_order->iscan);
+        vpx_quantize_b(coeff, 16, p->zbin, p->round, p->quant, p->quant_shift,
+                       qcoeff, dqcoeff, pd->dequant, eob, scan_order->scan,
+                       scan_order->iscan);
       }
       if (args->enable_coeff_opt && !x->skip_recode) {
         *a = *l = vp9_optimize_b(x, plane, block, tx_size, entropy_ctx) > 0;
