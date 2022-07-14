@@ -170,7 +170,7 @@ class ProviderQuickActions extends UrlbarProvider {
       viewUpdate[`image-${i}`] = {
         attributes: { src: data.icon || DEFAULT_ICON },
       };
-      viewUpdate[`label-${i}`] = { attributes: { "data-l10n-id": data.label } };
+      viewUpdate[`label-${i}`] = { l10n: { id: data.label, cacheable: true } };
     });
     return viewUpdate;
   }

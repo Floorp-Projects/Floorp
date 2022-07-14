@@ -1727,6 +1727,9 @@ class UrlbarView {
         node.style[styleName] = value;
       }
       if (update.l10n) {
+        if (update.l10n.cacheable) {
+          await this._l10nCache.ensureAll([update.l10n]);
+        }
         this._setElementL10n(node, {
           id: update.l10n.id,
           args: update.l10n.args || undefined,
