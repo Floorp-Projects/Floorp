@@ -111,10 +111,24 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   // Check for failure to load script source and abort.
   bool threwException = jsapi.HasException();
   if (NS_FAILED(rv) && !threwException) {
+    nsAutoCString uri;
+    nsresult rv2 = aRequest->mURI->GetSpec(uri);
+    NS_ENSURE_SUCCESS(rv2, rv2);
+
+    JS_ReportErrorUTF8(cx, "Failed to load %s", PromiseFlatCString(uri).get());
+
+    // Remember the error for MaybeReportLoadError.
+    if (!mLoadException.initialized()) {
+      mLoadException.init(cx);
+    }
+    if (!jsapi.StealException(&mLoadException)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     return rv;
   }
 
-  // Otherwise remember the results so we can report them later.
+  // Otherwise remember the results in this context so we can report them later.
   ComponentLoadContext* context = aRequest->GetComponentLoadContext();
   context->mRv = rv;
   if (threwException) {
@@ -152,6 +166,20 @@ nsresult ComponentModuleLoader::CompileFetchedModule(
   MOZ_ASSERT(bool(aModuleOut) == NS_SUCCEEDED(rv));
 
   return rv;
+}
+
+void ComponentModuleLoader::MaybeReportLoadError(JSContext* aCx) {
+  if (JS_IsExceptionPending(aCx)) {
+    // Do not override.
+    return;
+  }
+
+  if (mLoadException.isUndefined()) {
+    return;
+  }
+
+  JS_SetPendingException(aCx, mLoadException);
+  mLoadException = JS::UndefinedValue();
 }
 
 void ComponentModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}

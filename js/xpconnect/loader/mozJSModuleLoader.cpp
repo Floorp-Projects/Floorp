@@ -1526,6 +1526,12 @@ nsresult mozJSModuleLoader::TryFallbackToImportESModule(
 
   JS::RootedObject moduleNamespace(aCx);
   nsresult rv = ImportESModule(aCx, mjsLocation, &moduleNamespace);
+  if (rv == NS_ERROR_FILE_NOT_FOUND) {
+    // The error for ESModule shouldn't be exposed if the file does not exist.
+    if (JS_IsExceptionPending(aCx)) {
+      JS_ClearPendingException(aCx);
+    }
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::RootedObject globalProxy(aCx);
@@ -1647,15 +1653,24 @@ nsresult mozJSModuleLoader::ImportESModule(
       /* aIsDynamicImport = */ false, mModuleLoader, visitedSet, nullptr);
 
   rv = request->StartModuleLoad();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mModuleLoader->MaybeReportLoadError(aCx);
+    return rv;
+  }
 
   rv = mModuleLoader->ProcessRequests();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mModuleLoader->MaybeReportLoadError(aCx);
+    return rv;
+  }
 
   MOZ_ASSERT(request->IsReadyToRun());
   if (!request->mModuleScript) {
+    mModuleLoader->MaybeReportLoadError(aCx);
     return NS_ERROR_FAILURE;
   }
+
+  // All modules are loaded. MaybeReportLoadError isn't necessary from here.
 
   if (!request->InstantiateModuleGraph()) {
     return NS_ERROR_FAILURE;

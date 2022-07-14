@@ -13,10 +13,24 @@ function run_test() {
   Assert.equal(ns, ns2);
 
   // Test load failure.
-  testFailure("resource://test/es6module_not_found.js");
+  testFailure("resource://test/es6module_not_found.js", {
+    type: "Error",
+    message: "Failed to load resource://test/es6module_not_found.js",
+    fileName: "test_import_es6_modules.js",
+    stack: "testFailure",
+    lineNumber: "*",
+    columnNumber: "*",
+  });
 
   // Test load failure in import.
-  testFailure("resource://test/es6module_missing_import.js");
+  testFailure("resource://test/es6module_missing_import.js", {
+    type: "Error",
+    message: "Failed to load resource://test/es6module_not_found2.js",
+    fileName: "test_import_es6_modules.js",
+    stack: "testFailure",
+    lineNumber: "*",
+    columnNumber: "*",
+  });
 
   // Test parse error.
   testFailure("resource://test/es6module_parse_error.js", {
@@ -82,7 +96,14 @@ function run_test() {
 function testFailure(url, expected) {
   let threw = false;
   let exception;
+  let importLine, importColumn;
   try {
+    // Get the line/column for ChromeUtils.importESModule.
+    // lineNumber/columnNumber value with "*" in `expected` points the
+    // line/column.
+    let e = new Error();
+    importLine = e.lineNumber + 3;
+    importColumn = 17;
     ChromeUtils.importESModule(url);
   } catch (e) {
     threw = true;
@@ -91,25 +112,34 @@ function testFailure(url, expected) {
 
   Assert.ok(threw);
 
-  if (expected) {
-    if ("type" in expected) {
-      Assert.equal(exception.constructor.name, expected.type, "error type");
+  if ("type" in expected) {
+    Assert.equal(exception.constructor.name, expected.type, "error type");
+  }
+  if ("message" in expected) {
+    Assert.ok(exception.message.includes(expected.message),
+              `Message "${exception.message}" should contain "${expected.message}"`);
+  }
+  if ("stack" in expected) {
+    Assert.ok(exception.stack.includes(expected.stack),
+              `Stack "${exception.stack}" should contain "${expected.stack}"`);
+  }
+  if ("fileName" in expected) {
+    Assert.ok(exception.fileName.includes(expected.fileName),
+              `fileName "${exception.fileName}" should contain "${expected.fileName}"`);
+  }
+  if ("lineNumber" in expected) {
+    let expectedLine = expected.lineNumber;
+    if (expectedLine === "*") {
+      expectedLine = importLine;
     }
-    if ("message" in expected) {
-      Assert.ok(exception.message.includes(expected.message), "message");
+    Assert.equal(exception.lineNumber, expectedLine, "lineNumber");
+  }
+  if ("columnNumber" in expected) {
+    let expectedColumn = expected.columnNumber;
+    if (expectedColumn === "*") {
+      expectedColumn = importColumn;
     }
-    if ("stack" in expected) {
-      Assert.ok(exception.stack.includes(expected.stack), "stack");
-    }
-    if ("fileName" in expected) {
-      Assert.equal(exception.fileName, expected.fileName, "fileName");
-    }
-    if ("lineNumber" in expected) {
-      Assert.equal(exception.lineNumber, expected.lineNumber, "lineNumber");
-    }
-    if ("columnNumber" in expected) {
-      Assert.equal(exception.columnNumber, expected.columnNumber, "columnNumber");
-    }
+    Assert.equal(exception.columnNumber, expectedColumn, "columnNumber");
   }
 
   return exception;
