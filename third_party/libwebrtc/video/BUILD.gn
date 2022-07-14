@@ -72,6 +72,7 @@ rtc_library("video") {
     "../api/crypto:options",
     "../api/rtc_event_log",
     "../api/task_queue",
+    "../api/units:frequency",
     "../api/units:time_delta",
     "../api/units:timestamp",
     "../api/video:encoded_image",

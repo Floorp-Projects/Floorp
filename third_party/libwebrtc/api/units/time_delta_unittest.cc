@@ -28,10 +28,12 @@ TEST(TimeDeltaTest, ConstExpr) {
 
   static_assert(kTimeDeltaPlusInf > kTimeDeltaZero, "");
 
+  constexpr TimeDelta kTimeDeltaMinutes = TimeDelta::Minutes(kValue);
   constexpr TimeDelta kTimeDeltaSeconds = TimeDelta::Seconds(kValue);
   constexpr TimeDelta kTimeDeltaMs = TimeDelta::Millis(kValue);
   constexpr TimeDelta kTimeDeltaUs = TimeDelta::Micros(kValue);
 
+  static_assert(kTimeDeltaMinutes.seconds_or(0) == kValue * 60, "");
   static_assert(kTimeDeltaSeconds.seconds_or(0) == kValue, "");
   static_assert(kTimeDeltaMs.ms_or(0) == kValue, "");
   static_assert(kTimeDeltaUs.us_or(0) == kValue, "");
@@ -54,10 +56,12 @@ TEST(TimeDeltaTest, GetDifferentPrefix) {
   EXPECT_EQ(TimeDelta::Micros(kValue).seconds(), kValue / 1000000);
   EXPECT_EQ(TimeDelta::Millis(kValue).seconds(), kValue / 1000);
   EXPECT_EQ(TimeDelta::Micros(kValue).ms(), kValue / 1000);
+  EXPECT_EQ(TimeDelta::Minutes(kValue / 60).seconds(), kValue);
 
   EXPECT_EQ(TimeDelta::Millis(kValue).us(), kValue * 1000);
   EXPECT_EQ(TimeDelta::Seconds(kValue).ms(), kValue * 1000);
   EXPECT_EQ(TimeDelta::Seconds(kValue).us(), kValue * 1000000);
+  EXPECT_EQ(TimeDelta::Minutes(kValue / 60).seconds(), kValue);
 }
 
 TEST(TimeDeltaTest, IdentityChecks) {
