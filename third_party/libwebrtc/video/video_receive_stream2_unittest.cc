@@ -68,6 +68,7 @@ using ::testing::SizeIs;
 using ::testing::WithoutArgs;
 
 constexpr int kDefaultTimeOutMs = 50;
+constexpr int kDefaultNumCpuCores = 2;
 
 }  // namespace
 
@@ -81,10 +82,25 @@ class VideoReceiveStream2Test : public ::testing::Test {
     fake_call_.SetFieldTrial("WebRTC-FrameBuffer3/arm:FrameBuffer3/");
 
     // By default, mock decoder factory is backed by VideoDecoderProxyFactory.
-    ON_CALL(mock_h264_decoder_factory_, CreateVideoDecoder(_))
+    ON_CALL(mock_h264_decoder_factory_, CreateVideoDecoder)
         .WillByDefault(testing::Invoke(
             &h264_decoder_factory_,
             &test::VideoDecoderProxyFactory::CreateVideoDecoder));
+
+    // By default, mock decode will wrap the fake decoder.
+    ON_CALL(mock_h264_video_decoder_, Configure)
+        .WillByDefault(
+            testing::Invoke(&fake_decoder_, &test::FakeDecoder::Configure));
+    ON_CALL(mock_h264_video_decoder_, Decode)
+        .WillByDefault(
+            testing::Invoke(&fake_decoder_, &test::FakeDecoder::Decode));
+    ON_CALL(mock_h264_video_decoder_, RegisterDecodeCompleteCallback)
+        .WillByDefault(testing::Invoke(
+            &fake_decoder_,
+            &test::FakeDecoder::RegisterDecodeCompleteCallback));
+    ON_CALL(mock_h264_video_decoder_, Release)
+        .WillByDefault(
+            testing::Invoke(&fake_decoder_, &test::FakeDecoder::Release));
   }
   ~VideoReceiveStream2Test() override {
     if (video_receive_stream_)
@@ -92,7 +108,6 @@ class VideoReceiveStream2Test : public ::testing::Test {
   }
 
   void SetUp() override {
-    constexpr int kDefaultNumCpuCores = 2;
     config_.rtp.remote_ssrc = 1111;
     config_.rtp.local_ssrc = 2222;
     config_.renderer = &fake_renderer_;
@@ -108,8 +123,16 @@ class VideoReceiveStream2Test : public ::testing::Test {
     config_.decoders = {h265_decoder, h264_decoder};
 
     clock_ = Clock::GetRealTimeClock();
-    timing_ = new VCMTiming(clock_, fake_call_.trials());
 
+    ReCreateReceiveStream(VideoReceiveStream::RecordingState());
+  }
+
+  void ReCreateReceiveStream(VideoReceiveStream::RecordingState state) {
+    if (video_receive_stream_) {
+      video_receive_stream_->UnregisterFromTransport();
+      video_receive_stream_ = nullptr;
+    }
+    timing_ = new VCMTiming(clock_, fake_call_.trials());
     video_receive_stream_ =
         std::make_unique<webrtc::internal::VideoReceiveStream2>(
             task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
@@ -117,6 +140,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
             absl::WrapUnique(timing_), &nack_periodic_processor_, nullptr);
     video_receive_stream_->RegisterWithTransport(
         &rtp_stream_receiver_controller_);
+    video_receive_stream_->SetAndGetRecordingState(std::move(state), false);
   }
 
  protected:
@@ -138,6 +162,7 @@ class VideoReceiveStream2Test : public ::testing::Test {
 
  private:
   test::VideoDecoderProxyFactory h264_decoder_factory_;
+  test::FakeDecoder fake_decoder_;
 };
 
 TEST_F(VideoReceiveStream2Test, CreateFrameFromH264FmtpSpropAndIdr) {
@@ -314,66 +339,7 @@ TEST_F(VideoReceiveStream2Test, LazyDecoderCreation) {
   init_decode_event.Wait(kDefaultTimeOutMs);
 }
 
-class VideoReceiveStream2TestWithFakeDecoder : public ::testing::Test {
- public:
-  VideoReceiveStream2TestWithFakeDecoder()
-      : fake_decoder_factory_(
-            []() { return std::make_unique<test::FakeDecoder>(); }),
-        task_queue_factory_(CreateDefaultTaskQueueFactory()),
-        config_(&mock_transport_, &fake_decoder_factory_),
-        call_stats_(Clock::GetRealTimeClock(), loop_.task_queue()) {}
-  ~VideoReceiveStream2TestWithFakeDecoder() override {
-    if (video_receive_stream_)
-      video_receive_stream_->UnregisterFromTransport();
-  }
-
-  void SetUp() override {
-    config_.rtp.remote_ssrc = 1111;
-    config_.rtp.local_ssrc = 2222;
-    config_.renderer = &fake_renderer_;
-    VideoReceiveStream::Decoder fake_decoder;
-    fake_decoder.payload_type = 99;
-    fake_decoder.video_format = SdpVideoFormat("VP8");
-    config_.decoders.push_back(fake_decoder);
-    clock_ = Clock::GetRealTimeClock();
-    ReCreateReceiveStream(VideoReceiveStream::RecordingState());
-  }
-
-  void ReCreateReceiveStream(VideoReceiveStream::RecordingState state) {
-    constexpr int kDefaultNumCpuCores = 2;
-    if (video_receive_stream_) {
-      video_receive_stream_->UnregisterFromTransport();
-      video_receive_stream_ = nullptr;
-    }
-    timing_ = new VCMTiming(clock_, fake_call_.trials());
-    video_receive_stream_ =
-        std::make_unique<webrtc::internal::VideoReceiveStream2>(
-            task_queue_factory_.get(), &fake_call_, kDefaultNumCpuCores,
-            &packet_router_, config_.Copy(), &call_stats_, clock_,
-            absl::WrapUnique(timing_), &nack_periodic_processor_, nullptr);
-    video_receive_stream_->RegisterWithTransport(
-        &rtp_stream_receiver_controller_);
-    video_receive_stream_->SetAndGetRecordingState(std::move(state), false);
-  }
-
- protected:
-  test::RunLoop loop_;
-  test::FunctionVideoDecoderFactory fake_decoder_factory_;
-  const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
-  NackPeriodicProcessor nack_periodic_processor_;
-  VideoReceiveStream::Config config_;
-  internal::CallStats call_stats_;
-  cricket::FakeVideoRenderer fake_renderer_;
-  MockTransport mock_transport_;
-  PacketRouter packet_router_;
-  RtpStreamReceiverController rtp_stream_receiver_controller_;
-  cricket::FakeCall fake_call_;
-  std::unique_ptr<webrtc::internal::VideoReceiveStream2> video_receive_stream_;
-  Clock* clock_;
-  VCMTiming* timing_;
-};
-
-TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesNtpTime) {
+TEST_F(VideoReceiveStream2Test, PassesNtpTime) {
   const Timestamp kNtpTimestamp = Timestamp::Millis(12345);
   std::unique_ptr<test::FakeEncodedFrame> test_frame =
       test::FakeFrameBuilder()
@@ -389,7 +355,7 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesNtpTime) {
   EXPECT_EQ(kNtpTimestamp.ms(), fake_renderer_.ntp_time_ms());
 }
 
-TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesRotation) {
+TEST_F(VideoReceiveStream2Test, PassesRotation) {
   const webrtc::VideoRotation kRotation = webrtc::kVideoRotation_180;
   std::unique_ptr<test::FakeEncodedFrame> test_frame = test::FakeFrameBuilder()
                                                            .Id(0)
@@ -405,7 +371,7 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesRotation) {
   EXPECT_EQ(kRotation, fake_renderer_.rotation());
 }
 
-TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesPacketInfos) {
+TEST_F(VideoReceiveStream2Test, PassesPacketInfos) {
   RtpPacketInfos packet_infos = CreatePacketInfos(3);
   auto test_frame = test::FakeFrameBuilder()
                         .Id(0)
@@ -421,7 +387,7 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder, PassesPacketInfos) {
   EXPECT_THAT(fake_renderer_.packet_infos(), ElementsAreArray(packet_infos));
 }
 
-TEST_F(VideoReceiveStream2TestWithFakeDecoder, RenderedFrameUpdatesGetSources) {
+TEST_F(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
   constexpr uint32_t kSsrc = 1111;
   constexpr uint32_t kCsrc = 9001;
   constexpr uint32_t kRtpTimestamp = 12345;
@@ -516,8 +482,7 @@ std::unique_ptr<test::FakeEncodedFrame> MakeFrame(VideoFrameType frame_type,
   return MakeFrameWithResolution(frame_type, picture_id, 320, 240);
 }
 
-TEST_F(VideoReceiveStream2TestWithFakeDecoder,
-       PassesFrameWhenEncodedFramesCallbackSet) {
+TEST_F(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->Start();
   // Expect a keyframe request to be generated
@@ -531,8 +496,7 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder,
   video_receive_stream_->Stop();
 }
 
-TEST_F(VideoReceiveStream2TestWithFakeDecoder,
-       MovesEncodedFrameDispatchStateWhenReCreating) {
+TEST_F(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->Start();
   // Expect a key frame request over RTCP.
