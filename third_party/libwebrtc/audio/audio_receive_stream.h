@@ -134,7 +134,10 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
     return config_.rtp.remote_ssrc;
   }
 
-  const webrtc::AudioReceiveStream::Config& config() const;
+  // Returns a reference to the currently set sync group of the stream.
+  // Must be called on the packet delivery thread.
+  const std::string& sync_group() const;
+
   const AudioSendStream* GetAssociatedSendStreamForTesting() const;
 
   // TODO(tommi): Remove this method.
