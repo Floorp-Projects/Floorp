@@ -70,87 +70,98 @@ var settings = [
   },
 ];
 
+const allBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL;
+const foreignBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN;
+const trackerBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER;
+
 var testCases = [
   {
     behavior: BEHAVIOR_ACCEPT, // 0
-    hasStorageAccess: [
-      true /* same-origin non-tracker */,
-      true /* 3rd-party non-tracker */,
-      true /* 3rd-party non-tracker with permission */,
-      true /* 3rd-party tracker */,
-      true /* 3rd-party tracker with permission */,
-      true /* same-site tracker */,
-      true /* same-origin tracker */,
+    cases: [
+      [true] /* same-origin non-tracker */,
+      [true] /* 3rd-party non-tracker */,
+      [true] /* 3rd-party non-tracker with permission */,
+      [true] /* 3rd-party tracker */,
+      [true] /* 3rd-party tracker with permission */,
+      [true] /* same-site tracker */,
+      [true] /* same-origin tracker */,
     ],
   },
   {
     behavior: BEHAVIOR_REJECT_FOREIGN, // 1
-    hasStorageAccess: [
-      true /* same-origin non-tracker */,
-      false /* 3rd-party non-tracker */,
-      SpecialPowers.Services.prefs.getBoolPref(
-        "network.cookie.rejectForeignWithExceptions.enabled"
-      ) /* 3rd-party tracker with permission */,
-      false /* 3rd-party tracker */,
-      SpecialPowers.Services.prefs.getBoolPref(
-        "network.cookie.rejectForeignWithExceptions.enabled"
-      ) /* 3rd-party non-tracker with permission */,
-      true /* same-site tracker */,
-      true /* same-origin tracker */,
+    cases: [
+      [true] /* same-origin non-tracker */,
+      [false, foreignBlocked] /* 3rd-party non-tracker */,
+      [
+        SpecialPowers.Services.prefs.getBoolPref(
+          "network.cookie.rejectForeignWithExceptions.enabled"
+        ),
+        foreignBlocked,
+      ] /* 3rd-party tracker with permission */,
+      [false, foreignBlocked] /* 3rd-party tracker */,
+      [
+        SpecialPowers.Services.prefs.getBoolPref(
+          "network.cookie.rejectForeignWithExceptions.enabled"
+        ),
+        foreignBlocked,
+      ] /* 3rd-party non-tracker with permission */,
+      [true] /* same-site tracker */,
+      [true] /* same-origin tracker */,
     ],
   },
   {
     behavior: BEHAVIOR_REJECT, // 2
-    hasStorageAccess: [
-      false /* same-origin non-tracker */,
-      false /* 3rd-party non-tracker */,
-      false /* 3rd-party non-tracker with permission */,
-      false /* 3rd-party tracker */,
-      false /* 3rd-party tracker with permission */,
-      false /* same-site tracker */,
-      false /* same-origin tracker */,
+    cases: [
+      [false, allBlocked] /* same-origin non-tracker */,
+      [false, allBlocked] /* 3rd-party non-tracker */,
+      [false, allBlocked] /* 3rd-party non-tracker with permission */,
+      [false, allBlocked] /* 3rd-party tracker */,
+      [false, allBlocked] /* 3rd-party tracker with permission */,
+      [false, allBlocked] /* same-site tracker */,
+      [false, allBlocked] /* same-origin tracker */,
     ],
   },
   {
     behavior: BEHAVIOR_LIMIT_FOREIGN, // 3
-    hasStorageAccess: [
-      true /* same-origin non-tracker */,
-      false /* 3rd-party non-tracker */,
-      false /* 3rd-party non-tracker with permission */,
-      false /* 3rd-party tracker */,
-      false /* 3rd-party tracker with permission */,
-      true /* same-site tracker */,
-      true /* same-origin tracker */,
+    cases: [
+      [true] /* same-origin non-tracker */,
+      [false, foreignBlocked] /* 3rd-party non-tracker */,
+      [false, foreignBlocked] /* 3rd-party non-tracker with permission */,
+      [false, foreignBlocked] /* 3rd-party tracker */,
+      [false, foreignBlocked] /* 3rd-party tracker with permission */,
+      [true] /* same-site tracker */,
+      [true] /* same-origin tracker */,
     ],
   },
   {
     behavior: BEHAVIOR_REJECT_TRACKER, // 4
-    hasStorageAccess: [
-      true /* same-origin non-tracker */,
-      true /* 3rd-party non-tracker */,
-      true /* 3rd-party non-tracker with permission */,
-      false /* 3rd-party tracker */,
-      true /* 3rd-party tracker with permission */,
-      true /* same-site tracker */,
-      true /* same-origin tracker */,
+    cases: [
+      [true] /* same-origin non-tracker */,
+      [true] /* 3rd-party non-tracker */,
+      [true] /* 3rd-party non-tracker with permission */,
+      [false, trackerBlocked] /* 3rd-party tracker */,
+      [true] /* 3rd-party tracker with permission */,
+      [true] /* same-site tracker */,
+      [true] /* same-origin tracker */,
     ],
   },
   {
     behavior: BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, // 5
-    hasStorageAccess: [
-      true /* same-origin non-tracker */,
-      false /* 3rd-party non-tracker */,
-      true /* 3rd-party non-tracker with permission */,
-      false /* 3rd-party tracker */,
-      true /* 3rd-party tracker with permission */,
-      true /* same-site tracker */,
-      true /* same-origin tracker */,
+    cases: [
+      [true] /* same-origin non-tracker */,
+      [false] /* 3rd-party non-tracker */,
+      [true] /* 3rd-party non-tracker with permission */,
+      [false, trackerBlocked] /* 3rd-party tracker */,
+      [true] /* 3rd-party tracker with permission */,
+      [true] /* same-site tracker */,
+      [true] /* same-origin tracker */,
     ],
   },
 ];
 
 (function() {
   settings.forEach(setting => {
+    ok(true, JSON.stringify(setting));
     if (setting.setup) {
       add_task(async _ => {
         setting.setup();
@@ -158,7 +169,10 @@ var testCases = [
     }
 
     testCases.forEach(test => {
-      let callback = test.hasStorageAccess[settings.indexOf(setting)]
+      let [hasStorageAccess, expectedBlockingNotifications] = test.cases[
+        settings.indexOf(setting)
+      ];
+      let callback = hasStorageAccess
         ? async _ => {
             /* import-globals-from storageAccessAPIHelpers.js */
             await hasStorageAccessInitially();
@@ -176,10 +190,10 @@ var testCases = [
         extraPrefs: [
           [
             "privacy.partition.always_partition_third_party_non_cookie_storage",
-            false,
+            true,
           ],
         ],
-        expectedBlockingNotifications: 0,
+        expectedBlockingNotifications,
         runInPrivateWindow: false,
         iframeSandbox: null,
         accessRemoval: null,

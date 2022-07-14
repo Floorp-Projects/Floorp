@@ -26,15 +26,10 @@ AntiTracking.runTest(
       );
     });
   },
-  [
-    [
-      "privacy.partition.always_partition_third_party_non_cookie_storage",
-      false,
-    ],
-  ], // extra prefs
+  [["privacy.partition.always_partition_third_party_non_cookie_storage", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  0, // no blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expected blocking notifications
   false, // run in normal window
   null, // no iframe sandbox
   "navigate-topframe", // access removal type

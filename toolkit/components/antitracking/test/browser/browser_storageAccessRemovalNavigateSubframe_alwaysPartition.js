@@ -1,7 +1,7 @@
 /* import-globals-from antitracking_head.js */
 
 AntiTracking.runTest(
-  "Storage Access is removed when topframe navigates",
+  "Storage Access is removed when subframe navigates",
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
@@ -26,21 +26,18 @@ AntiTracking.runTest(
       );
     });
   },
-  [
-    [
-      "privacy.partition.always_partition_third_party_non_cookie_storage",
-      false,
-    ],
-  ], // extra prefs
+  [["privacy.partition.always_partition_third_party_non_cookie_storage", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
-  0, // no blocking notifications
+  Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER, // expected blocking notifications
   false, // run in normal window
   null, // no iframe sandbox
-  "navigate-topframe", // access removal type
+  "navigate-subframe", // access removal type
   // after-removal callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    await noStorageAccessInitially();
+    // TODO: this is just a temporarily fixed, we should update the testcase
+    //       in Bug 1649399
+    await hasStorageAccessInitially();
   }
 );
