@@ -24,6 +24,11 @@ const WIN_URL =
 
 
 add_task(async function test_webRequest_redirect_cors_bypass() {
+  // disable third-party storage isolation so the test works as expected
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
