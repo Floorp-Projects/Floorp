@@ -123,6 +123,12 @@ interface nsIClassifiedChannel : nsISupports
     CLASSIFIED_SOCIALTRACKING_TWITTER = 0x1000,
 
     /**
+     * The following are about email tracking.
+     */
+    CLASSIFIED_EMAILTRACKING = 0x2000,
+    CLASSIFIED_EMAILTRACKING_CONTENT = 0x4000,
+
+    /**
      * This is exposed to help to identify tracking classification using the
      * basic lists.
      */
