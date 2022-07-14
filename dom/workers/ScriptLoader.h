@@ -127,6 +127,7 @@ class WorkerScriptLoader final : public nsINamed {
   nsString mOriginStackJSON;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   nsTArrayView<ScriptLoadInfo> mLoadInfos;
+  nsTArray<ScriptLoadInfo*> mLoadingRequests;
   RefPtr<CacheCreator> mCacheCreator;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
