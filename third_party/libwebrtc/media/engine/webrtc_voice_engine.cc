@@ -1244,7 +1244,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
 
     RTC_LOG(LS_ERROR) << "Failed to SetBaseMinimumPlayoutDelayMs"
                          " on AudioReceiveStream on SSRC="
-                      << stream_->rtp_config().remote_ssrc
+                      << stream_->remote_ssrc()
                       << " with delay_ms=" << delay_ms;
     return false;
   }
@@ -1263,7 +1263,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     webrtc::RtpParameters rtp_parameters;
     rtp_parameters.encodings.emplace_back();
     const auto& config = stream_->rtp_config();
-    rtp_parameters.encodings[0].ssrc = config.remote_ssrc;
+    rtp_parameters.encodings[0].ssrc = stream_->remote_ssrc();
     rtp_parameters.header_extensions = config.extensions;
     return rtp_parameters;
   }

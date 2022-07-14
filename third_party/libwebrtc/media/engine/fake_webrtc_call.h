@@ -113,6 +113,7 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   const webrtc::ReceiveStream::RtpConfig& rtp_config() const override {
     return config_.rtp;
   }
+  uint32_t remote_ssrc() const override { return config_.rtp.remote_ssrc; }
   void Start() override { started_ = true; }
   void Stop() override { started_ = false; }
   bool IsRunning() const override { return started_; }
@@ -303,6 +304,8 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
   }
 
   const webrtc::FlexfecReceiveStream::Config& GetConfig() const;
+
+  uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
 
  private:
   webrtc::FlexfecReceiveStream::Stats GetStats() const override;

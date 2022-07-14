@@ -204,7 +204,10 @@ FlexfecReceiveStreamImpl::Stats FlexfecReceiveStreamImpl::GetStats() const {
 void FlexfecReceiveStreamImpl::SetRtpExtensions(
     std::vector<RtpExtension> extensions) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  config_.rtp.extensions = std::move(extensions);
+  // TODO(tommi): Remove this cast once header extensions are managed outside
+  // of the config struct.
+  const_cast<std::vector<RtpExtension>&>(config_.rtp.extensions) =
+      std::move(extensions);
 }
 
 }  // namespace webrtc
