@@ -51,6 +51,13 @@
       document.getElementById("text").setAttribute("type", "password");
       await events;
 
+      msg = "Add aria-label to a span";
+      ok(!isAccessible("span2"), "span2 has no accessible");
+      events = waitForOrderedEvents(
+        [[EVENT_SHOW, "span2"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("span2").setAttribute("aria-label", "label");
+      await events;
+
       SimpleTest.finish();
     }
 
@@ -78,6 +85,7 @@
     <div id="div3" role="listbox">list</div>
     <input type="password" id="password"/>
     <input type="text" id="text"/>
+    <span id="span2"></span>
   </div>
 
   <div id="eventdump"></div>
