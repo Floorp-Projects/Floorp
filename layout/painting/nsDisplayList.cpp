@@ -8400,8 +8400,7 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
   auto filterChain = mStyle ? mStyle->StyleEffects()->mFilters.AsSpan()
                             : mFrame->StyleEffects()->mFilters.AsSpan();
   SVGIntegrationUtils::PaintFilter(
-      params,
-      filterChain,
+      params, filterChain,
       [&](gfxContext& aContext, nsIFrame* aTarget, const gfxMatrix& aTransform,
           const nsIntRect* aDirtyRect, imgDrawingParams& aImgParams) {
         gfxContextMatrixAutoSaveRestore autoSR(&aContext);
