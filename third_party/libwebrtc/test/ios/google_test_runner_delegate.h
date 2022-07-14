@@ -12,8 +12,8 @@
 #define TEST_IOS_GOOGLE_TEST_RUNNER_DELEGATE_H_
 
 // Copied from Chromium base/test/ios/google_test_runner_delegate.h
-// The WebRTC test cannot depend on //base, but this protocol is required
-// to run iOS Unittest, so it is a workaround for the dependency.
+// to avoid the //base dependency. This protocol is required
+// to run iOS Unittest.
 @protocol GoogleTestRunnerDelegate
 
 // Returns YES if this delegate supports running GoogleTests via a call to
