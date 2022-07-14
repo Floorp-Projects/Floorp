@@ -58,7 +58,7 @@ GleanMemoryDistribution::Accumulate(uint64_t aSample) {
 NS_IMETHODIMP
 GleanMemoryDistribution::TestGetValue(const nsACString& aPingName,
                                       JSContext* aCx,
-                                      JS::MutableHandleValue aResult) {
+                                      JS::MutableHandle<JS::Value> aResult) {
   auto result = mMemoryDist.TestGetValue(aPingName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());
@@ -70,7 +70,7 @@ GleanMemoryDistribution::TestGetValue(const nsACString& aPingName,
   } else {
     // Build return value of the form:
     // { sum: #, values: {bucket1: count1, ...} }
-    JS::RootedObject root(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> root(aCx, JS_NewPlainObject(aCx));
     if (!root) {
       return NS_ERROR_FAILURE;
     }
@@ -79,7 +79,7 @@ GleanMemoryDistribution::TestGetValue(const nsACString& aPingName,
                            JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
-    JS::RootedObject valuesObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> valuesObj(aCx, JS_NewPlainObject(aCx));
     if (!valuesObj ||
         !JS_DefineProperty(aCx, root, "values", valuesObj, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;

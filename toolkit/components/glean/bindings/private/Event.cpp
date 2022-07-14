@@ -21,7 +21,7 @@ NS_IMPL_CLASSINFO(GleanEvent, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanEvent, nsIGleanEvent)
 
 NS_IMETHODIMP
-GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
+GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
   if (aExtra.isNullOrUndefined()) {
     mEvent.Record();
     return NS_OK;
@@ -37,7 +37,7 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
   nsTArray<nsCString> extraValues;
   CopyableTArray<Telemetry::EventExtraEntry> telExtras;
 
-  JS::RootedObject obj(aCx, &aExtra.toObject());
+  JS::Rooted<JSObject*> obj(aCx, &aExtra.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
   if (!JS_Enumerate(aCx, obj, &ids)) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
@@ -101,7 +101,7 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
 
 NS_IMETHODIMP
 GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                         JS::MutableHandleValue aResult) {
+                         JS::MutableHandle<JS::Value> aResult) {
   auto resEvents = mEvent.TestGetValue(aStorageName);
   if (resEvents.isErr()) {
     aResult.set(JS::UndefinedValue());
@@ -118,7 +118,7 @@ GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
   auto events = optEvents.extract();
 
   auto count = events.Length();
-  JS::RootedObject eventArray(aCx, JS::NewArrayObject(aCx, count));
+  JS::Rooted<JSObject*> eventArray(aCx, JS::NewArrayObject(aCx, count));
   if (NS_WARN_IF(!eventArray)) {
     return NS_ERROR_FAILURE;
   }
@@ -126,7 +126,7 @@ GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
   for (size_t i = 0; i < count; i++) {
     auto* value = &events[i];
 
-    JS::RootedObject eventObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> eventObj(aCx, JS_NewPlainObject(aCx));
     if (NS_WARN_IF(!eventObj)) {
       return NS_ERROR_FAILURE;
     }
@@ -151,7 +151,7 @@ GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
       return NS_ERROR_FAILURE;
     }
 
-    JS::RootedObject extraObj(aCx, JS_NewPlainObject(aCx));
+    JS::Rooted<JSObject*> extraObj(aCx, JS_NewPlainObject(aCx));
     if (!JS_DefineProperty(aCx, eventObj, "extra", extraObj,
                            JSPROP_ENUMERATE)) {
       NS_WARNING("Failed to define extra for event object.");

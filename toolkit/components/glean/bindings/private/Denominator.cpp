@@ -50,7 +50,7 @@ GleanDenominator::Add(int32_t aAmount) {
 
 NS_IMETHODIMP
 GleanDenominator::TestGetValue(const nsACString& aStorageName,
-                               JS::MutableHandleValue aResult) {
+                               JS::MutableHandle<JS::Value> aResult) {
   auto result = mDenominator.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());

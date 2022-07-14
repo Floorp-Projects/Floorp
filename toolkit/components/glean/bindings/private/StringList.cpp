@@ -70,7 +70,7 @@ GleanStringList::Set(const nsTArray<nsCString>& aValue) {
 
 NS_IMETHODIMP
 GleanStringList::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                              JS::MutableHandleValue aResult) {
+                              JS::MutableHandle<JS::Value> aResult) {
   auto result = mStringList.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());
