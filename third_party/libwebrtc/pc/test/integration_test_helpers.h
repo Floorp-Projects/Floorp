@@ -426,7 +426,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     return data_channels_.back().get();
   }
   // Return all data channels.
-  const std::vector<rtc::scoped_refptr<DataChannelInterface>>& data_channels() {
+  std::vector<rtc::scoped_refptr<DataChannelInterface>>& data_channels() {
     return data_channels_;
   }
 
@@ -435,6 +435,10 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
       return nullptr;
     }
     return data_observers_.back().get();
+  }
+
+  std::vector<std::unique_ptr<MockDataChannelObserver>>& data_observers() {
+    return data_observers_;
   }
 
   int audio_frames_received() const {

@@ -482,6 +482,69 @@ TEST_P(DataChannelIntegrationTest, StressTestUnorderedSctpDataChannel) {
   EXPECT_EQ(sent_messages, callee_received_messages);
 }
 
+// Repeatedly open and close data channels on a peer connection to check that
+// the channels are properly negotiated and SCTP stream IDs properly recycled.
+TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannel) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+
+  int channel_id = 0;
+  const size_t kChannelCount = 8;
+  const size_t kIterations = 10;
+  bool has_negotiated = false;
+
+  webrtc::DataChannelInit init;
+  for (size_t repeats = 0; repeats < kIterations; ++repeats) {
+    RTC_LOG(LS_INFO) << "Iteration " << (repeats + 1) << "/" << kIterations;
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      rtc::StringBuilder sb;
+      sb << "channel-" << channel_id++;
+      caller()->CreateDataChannel(sb.Release(), &init);
+    }
+    ASSERT_EQ(caller()->data_channels().size(), kChannelCount);
+
+    if (!has_negotiated) {
+      caller()->CreateAndSetAndSignalOffer();
+      ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+      has_negotiated = true;
+    }
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      EXPECT_EQ_WAIT(caller()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kOpen, kDefaultTimeout);
+      RTC_LOG(LS_INFO) << "Caller Channel "
+                       << caller()->data_channels()[i]->label() << " with id "
+                       << caller()->data_channels()[i]->id() << " is open.";
+    }
+    ASSERT_EQ_WAIT(callee()->data_channels().size(), kChannelCount,
+                   kDefaultTimeout);
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      EXPECT_EQ_WAIT(callee()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kOpen, kDefaultTimeout);
+      RTC_LOG(LS_INFO) << "Callee Channel "
+                       << callee()->data_channels()[i]->label() << " with id "
+                       << callee()->data_channels()[i]->id() << " is open.";
+    }
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      caller()->data_channels()[i]->Close();
+    }
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      EXPECT_EQ_WAIT(caller()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kClosed, kDefaultTimeout);
+      EXPECT_EQ_WAIT(callee()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kClosed, kDefaultTimeout);
+    }
+
+    caller()->data_channels().clear();
+    caller()->data_observers().clear();
+    callee()->data_channels().clear();
+    callee()->data_observers().clear();
+  }
+}
+
 // This test sets up a call between two parties with audio, and video. When
 // audio and video are setup and flowing, an SCTP data channel is negotiated.
 TEST_P(DataChannelIntegrationTest, AddSctpDataChannelInSubsequentOffer) {
@@ -512,10 +575,10 @@ TEST_P(DataChannelIntegrationTest, AddSctpDataChannelInSubsequentOffer) {
                  kDefaultTimeout);
 }
 
-// Set up a connection initially just using SCTP data channels, later upgrading
-// to audio/video, ensuring frames are received end-to-end. Effectively the
-// inverse of the test above.
-// This was broken in M57; see https://crbug.com/711243
+// Set up a connection initially just using SCTP data channels, later
+// upgrading to audio/video, ensuring frames are received end-to-end.
+// Effectively the inverse of the test above. This was broken in M57; see
+// https://crbug.com/711243
 TEST_P(DataChannelIntegrationTest, SctpDataChannelToAudioVideoUpgrade) {
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
@@ -573,8 +636,8 @@ TEST_P(DataChannelIntegrationTest,
                  kDefaultTimeout);
 }
 
-// Test that after closing PeerConnections, they stop sending any packets (ICE,
-// DTLS, RTP...).
+// Test that after closing PeerConnections, they stop sending any packets
+// (ICE, DTLS, RTP...).
 TEST_P(DataChannelIntegrationTest, ClosingConnectionStopsPacketFlow) {
   // Set up audio/video/data, wait for some frames to be received.
   ASSERT_TRUE(CreatePeerConnectionWrappers());
@@ -629,9 +692,8 @@ TEST_P(DataChannelIntegrationTest, DtlsRoleIsSetNormally) {
                 ->Information()
                 .role(),
             DtlsTransportTlsRole::kClient);
-  // ID should be assigned according to the odd/even rule based on role; client
-  // gets even numbers, server gets odd ones.
-  // RFC 8832 section 6.
+  // ID should be assigned according to the odd/even rule based on role;
+  // client gets even numbers, server gets odd ones. RFC 8832 section 6.
   // TODO(hta): Test multiple channels.
   EXPECT_EQ(caller()->data_channel()->id(), 1);
 }
@@ -667,9 +729,8 @@ TEST_P(DataChannelIntegrationTest, DtlsRoleIsSetWhenReversed) {
                 ->Information()
                 .role(),
             DtlsTransportTlsRole::kServer);
-  // ID should be assigned according to the odd/even rule based on role; client
-  // gets even numbers, server gets odd ones.
-  // RFC 8832 section 6.
+  // ID should be assigned according to the odd/even rule based on role;
+  // client gets even numbers, server gets odd ones. RFC 8832 section 6.
   // TODO(hta): Test multiple channels.
   EXPECT_EQ(caller()->data_channel()->id(), 0);
 }
@@ -712,9 +773,8 @@ TEST_P(DataChannelIntegrationTest,
                 ->Information()
                 .role(),
             DtlsTransportTlsRole::kServer);
-  // ID should be assigned according to the odd/even rule based on role; client
-  // gets even numbers, server gets odd ones.
-  // RFC 8832 section 6.
+  // ID should be assigned according to the odd/even rule based on role;
+  // client gets even numbers, server gets odd ones. RFC 8832 section 6.
   ASSERT_EQ(caller()->data_channels().size(), 2U);
   ASSERT_EQ(callee()->data_channels().size(), 2U);
   EXPECT_EQ(caller()->data_channels()[0]->id(), 0);
