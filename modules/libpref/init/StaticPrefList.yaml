@@ -12754,6 +12754,13 @@
   value: false
   mirror: always
 
+# This pref controls whether the `prefers-color-scheme` value of SVG images
+# reacts to the embedder `color-scheme` in content.
+- name: svg.embedder-prefers-color-scheme.content.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Enables the 'context-fill' and 'context-stroke' keywords for particular
 # domains. We expect this list to be Mozilla-controlled properties, since the
 # 'context-*' keywords are not part of any spec. We expect to remove this
