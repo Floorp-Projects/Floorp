@@ -49,6 +49,7 @@ struct IceTransportStats {
   uint64_t packets_received = 0;
 
   IceRole ice_role = ICEROLE_UNKNOWN;
+  std::string ice_local_username_fragment;
 };
 
 typedef std::vector<Candidate> Candidates;

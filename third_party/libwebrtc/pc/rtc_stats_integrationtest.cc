@@ -1144,6 +1144,7 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsPositive<uint32_t>(
         transport.selected_candidate_pair_changes);
     verifier.TestMemberIsDefined(transport.ice_role);
+    verifier.TestMemberIsDefined(transport.ice_local_username_fragment);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 
