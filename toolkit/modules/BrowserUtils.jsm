@@ -31,6 +31,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
+XPCOMUtils.defineLazyGetter(lazy, "gLocalization", () => {
+  return new Localization(["toolkit/global/browser-utils.ftl"], true);
+});
+
 function stringPrefToSet(prefVal) {
   return new Set(
     prefVal
@@ -147,6 +151,78 @@ var BrowserUtils = {
       };
       Services.obs.addObserver(observer, topic);
     });
+  },
+
+  formatURIStringForDisplay(uriString) {
+    try {
+      return this.formatURIForDisplay(Services.io.newURI(uriString));
+    } catch (ex) {
+      return uriString;
+    }
+  },
+
+  formatURIForDisplay(uri) {
+    switch (uri.scheme) {
+      case "view-source":
+        let innerURI = uri.spec.substring("view-source:".length);
+        return this.formatURIStringForDisplay(innerURI);
+      case "http":
+      // Fall through.
+      case "https":
+        let host = uri.displayHostPort;
+        if (host.startsWith("www.")) {
+          host = Services.eTLD.getSchemelessSite(uri);
+        }
+        return host;
+      case "about":
+        return "about:" + uri.filePath;
+      case "blob":
+        try {
+          let url = new URL(uri.specIgnoringRef);
+          // _If_ we find a non-null origin, report that.
+          if (url.origin && url.origin != "null") {
+            return this.formatURIStringForDisplay(url.origin);
+          }
+          // otherwise, fall through...
+        } catch (ex) {
+          Cu.reportError(
+            "Invalid blob URI passed to formatURIForDisplay: " + ex
+          );
+        }
+      /* For blob URIs without an origin, fall through and use the data URI
+       * logic (shows just "(data)", localized). */
+      case "data":
+        return lazy.gLocalization.formatValueSync("browser-utils-url-data");
+      case "chrome":
+      case "resource":
+      case "jar":
+      case "file":
+      default:
+        try {
+          let url = uri.QueryInterface(Ci.nsIURL);
+          // Just the filename if we have one:
+          if (url.fileName) {
+            return url.fileName;
+          }
+          // We won't get a filename for a path that looks like:
+          // /foo/bar/baz/
+          // So try the directory name:
+          if (url.directory) {
+            let parts = url.directory.split("/");
+            // Pop off any empty bits at the end:
+            let last;
+            while (!last && parts.length) {
+              last = parts.pop();
+            }
+            if (last) {
+              return last;
+            }
+          }
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+    }
+    return uri.asciiHost || uri.spec;
   },
 
   isShareableURL(url) {

@@ -5,6 +5,11 @@
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
+  "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
   "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm"
 );
@@ -13,24 +18,7 @@ ChromeUtils.defineModuleGetter(
 export const nowThresholdMs = 91000;
 
 export function formatURIForDisplay(uriString) {
-  // TODO: Bug 1764816: Make sure we handle file:///, jar:, blob, IP4/IP6 etc. addresses
-  let uri;
-  try {
-    uri = Services.io.newURI(uriString);
-  } catch (ex) {
-    return uriString;
-  }
-  if (!uri.asciiHost) {
-    return uriString;
-  }
-  let displayHost;
-  try {
-    // This might fail if it's an IP address or doesn't have more than 1 part
-    displayHost = Services.eTLD.getBaseDomain(uri);
-  } catch (ex) {
-    return uri.displayHostPort;
-  }
-  return displayHost.length ? displayHost : uriString;
+  return lazy.BrowserUtils.formatURIStringForDisplay(uriString);
 }
 
 export function convertTimestamp(timestamp, fluentStrings) {

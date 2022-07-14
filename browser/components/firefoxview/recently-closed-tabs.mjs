@@ -183,6 +183,7 @@ class RecentlyClosedTabsList extends HTMLElement {
 
     if (targetURI) {
       url.textContent = formatURIForDisplay(targetURI);
+      url.title = targetURI;
       url.classList.add("closed-tab-li-url");
     }
 
