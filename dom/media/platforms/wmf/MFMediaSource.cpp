@@ -51,7 +51,7 @@ HRESULT MFMediaSource::RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
           MFMediaEngineVideoStream::Create(streamId++, *aVideo, this);
       if (!mVideoStream) {
         NS_WARNING("Failed to create video stream");
-      return E_FAIL;
+        return E_FAIL;
       }
       mVideoStreamEndedListener = mVideoStream->EndedEvent().Connect(
           mTaskQueue, this, &MFMediaSource::HandleStreamEnded);
