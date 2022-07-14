@@ -1009,12 +1009,26 @@ rtc_source_set("data_channel_controller") {
   ]
 }
 
+rtc_source_set("peer_connection_sdp_methods") {
+  visibility = [ ":*" ]
+  sources = [ "peer_connection_sdp_methods.h" ]
+  deps = [
+    ":jsep_transport_controller",
+    ":peer_connection_message_handler",
+    ":sctp_data_channel",
+    ":usage_pattern",
+    "../api:libjingle_peerconnection_api",
+    "../call:call_interfaces",
+  ]
+}
+
 rtc_source_set("peer_connection_internal") {
   visibility = [ ":*" ]
   sources = [ "peer_connection_internal.h" ]
   deps = [
     ":jsep_transport_controller",
     ":peer_connection_message_handler",
+    ":peer_connection_sdp_methods",
     ":rtp_transceiver",
     ":rtp_transmission_manager",
     ":sctp_data_channel",
@@ -1022,6 +1036,7 @@ rtc_source_set("peer_connection_internal") {
     "../call:call_interfaces",
   ]
 }
+
 rtc_source_set("rtc_stats_collector") {
   visibility = [
     ":*",
@@ -1133,6 +1148,7 @@ rtc_source_set("sdp_offer_answer") {
     ":webrtc_session_description_factory",
     "../api:array_view",
     "../api:audio_options_api",
+    "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
     "../api:rtc_error",
@@ -1579,8 +1595,10 @@ rtc_library("rtp_transceiver") {
     "rtp_transceiver.h",
   ]
   deps = [
+    ":channel",
     ":channel_interface",
     ":channel_manager",
+    ":peer_connection_sdp_methods",
     ":proxy",
     ":rtp_media_utils",
     ":rtp_parameters_conversion",
@@ -1591,6 +1609,7 @@ rtc_library("rtp_transceiver") {
     ":rtp_transport_internal",
     ":session_description",
     "../api:array_view",
+    "../api:audio_options_api",
     "../api:libjingle_peerconnection_api",
     "../api:rtc_error",
     "../api:rtp_parameters",
@@ -1598,6 +1617,7 @@ rtc_library("rtp_transceiver") {
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/task_queue",
+    "../api/video:video_bitrate_allocator_factory",
     "../media:rtc_media_base",
     "../rtc_base:checks",
     "../rtc_base:location",

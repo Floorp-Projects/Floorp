@@ -31,7 +31,7 @@ class ChannelFactoryInterface {
   virtual std::unique_ptr<VideoChannel> CreateVideoChannel(
       webrtc::Call* call,
       const MediaConfig& media_config,
-      const std::string& mid,
+      absl::string_view mid,
       bool srtp_required,
       const webrtc::CryptoOptions& crypto_options,
       const VideoOptions& options,
@@ -41,7 +41,7 @@ class ChannelFactoryInterface {
   virtual std::unique_ptr<VoiceChannel> CreateVoiceChannel(
       webrtc::Call* call,
       const MediaConfig& media_config,
-      const std::string& mid,
+      absl::string_view mid,
       bool srtp_required,
       const webrtc::CryptoOptions& crypto_options,
       const AudioOptions& options) = 0;
