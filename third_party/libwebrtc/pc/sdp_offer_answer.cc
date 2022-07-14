@@ -1952,6 +1952,13 @@ void SdpOfferAnswerHandler::ApplyRemoteDescriptionUpdateTransceiverState(
     const MediaContentDescription* media_desc = content->media_description();
     RtpTransceiverDirection local_direction =
         RtpTransceiverDirectionReversed(media_desc->direction());
+    // Remember the previous remote streams if this is a remote offer. This
+    // makes it possible to rollback modifications to the streams.
+    if (sdp_type == SdpType::kOffer) {
+      transceivers()
+          ->StableState(transceiver_ext)
+          ->SetRemoteStreamIds(transceiver->receiver()->stream_ids());
+    }
     // Roughly the same as steps 2.2.8.6 of section 4.4.1.6 "Set the
     // RTCSessionDescription: Set the associated remote streams given
     // transceiver.[[Receiver]], msids, addList, and removeList".
@@ -1962,9 +1969,6 @@ void SdpOfferAnswerHandler::ApplyRemoteDescriptionUpdateTransceiverState(
         // The remote description has signaled the stream IDs.
         stream_ids = media_desc->streams()[0].stream_ids();
       }
-      transceivers()
-          ->StableState(transceiver_ext)
-          ->SetRemoteStreamIdsIfUnset(transceiver->receiver()->stream_ids());
 
       RTC_LOG(LS_INFO) << "Processing the MSIDs for MID=" << content->name
                        << " (" << GetStreamIdsString(stream_ids) << ").";
@@ -1994,6 +1998,14 @@ void SdpOfferAnswerHandler::ApplyRemoteDescriptionUpdateTransceiverState(
                                   &removed_streams);
     }
     // 2.2.8.1.10: Set transceiver's [[FiredDirection]] slot to direction.
+    if (sdp_type == SdpType::kOffer) {
+      // Remember the previous fired direction if this is a remote offer. This
+      // makes it possible to rollback modifications to [[FiredDirection]],
+      // which is necessary for "ontrack" to fire in or after rollback.
+      transceivers()
+          ->StableState(transceiver_ext)
+          ->SetFiredDirection(transceiver->fired_direction());
+    }
     transceiver->set_fired_direction(local_direction);
     // 2.2.8.1.11: If description is of type "answer" or "pranswer", then run
     // the following steps:
@@ -2899,6 +2911,8 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
   }
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(IsUnifiedPlan());
+  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>>
+      now_receiving_transceivers;
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> all_added_streams;
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> all_removed_streams;
   std::vector<rtc::scoped_refptr<RtpReceiverInterface>> removed_receivers;
@@ -2906,6 +2920,22 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
   for (auto&& transceivers_stable_state_pair : transceivers()->StableStates()) {
     auto transceiver = transceivers_stable_state_pair.first;
     auto state = transceivers_stable_state_pair.second;
+
+    if (state.did_set_fired_direction()) {
+      // If this rollback triggers going from not receiving to receving again,
+      // we need to fire "ontrack".
+      bool previously_fired_direction_is_recv =
+          transceiver->fired_direction().has_value() &&
+          RtpTransceiverDirectionHasRecv(*transceiver->fired_direction());
+      bool currently_fired_direction_is_recv =
+          state.fired_direction().has_value() &&
+          RtpTransceiverDirectionHasRecv(state.fired_direction().value());
+      if (!previously_fired_direction_is_recv &&
+          currently_fired_direction_is_recv) {
+        now_receiving_transceivers.push_back(transceiver);
+      }
+      transceiver->internal()->set_fired_direction(state.fired_direction());
+    }
 
     if (state.remote_stream_ids()) {
       std::vector<rtc::scoped_refptr<MediaStreamInterface>> added_streams;
@@ -2922,6 +2952,10 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
         continue;
       }
     }
+
+    // Due to the above `continue` statement, the below code only runs if there
+    // is a change in mid association (has_m_section), if the transceiver was
+    // newly created (newly_created) or if remote streams were not set.
 
     RTC_DCHECK(transceiver->internal()->mid().has_value());
     transceiver->internal()->ClearChannel();
@@ -2957,6 +2991,11 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
   ChangeSignalingState(PeerConnectionInterface::kStable);
 
   // Once all processing has finished, fire off callbacks.
+  for (const auto& transceiver : now_receiving_transceivers) {
+    pc_->Observer()->OnTrack(transceiver);
+    pc_->Observer()->OnAddTrack(transceiver->receiver(),
+                                transceiver->receiver()->streams());
+  }
   for (const auto& receiver : removed_receivers) {
     pc_->Observer()->OnRemoveTrack(receiver);
   }

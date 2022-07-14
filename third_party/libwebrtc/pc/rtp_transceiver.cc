@@ -375,7 +375,8 @@ void RtpTransceiver::set_current_direction(RtpTransceiverDirection direction) {
   }
 }
 
-void RtpTransceiver::set_fired_direction(RtpTransceiverDirection direction) {
+void RtpTransceiver::set_fired_direction(
+    absl::optional<RtpTransceiverDirection> direction) {
   fired_direction_ = direction;
 }
 

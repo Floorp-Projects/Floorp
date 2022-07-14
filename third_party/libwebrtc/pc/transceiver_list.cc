@@ -31,7 +31,7 @@ void TransceiverStableState::SetMSectionIfUnset(
   }
 }
 
-void TransceiverStableState::SetRemoteStreamIdsIfUnset(
+void TransceiverStableState::SetRemoteStreamIds(
     const std::vector<std::string>& ids) {
   if (!remote_stream_ids_.has_value()) {
     remote_stream_ids_ = ids;
