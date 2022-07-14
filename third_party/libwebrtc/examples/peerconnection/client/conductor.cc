@@ -369,7 +369,7 @@ void Conductor::OnMessageFromPeer(int peer_id, const std::string& message) {
     }
     RTC_LOG(LS_INFO) << " Received session description :" << message;
     peer_connection_->SetRemoteDescription(
-        DummySetSessionDescriptionObserver::Create(),
+        DummySetSessionDescriptionObserver::Create().get(),
         session_description.release());
     if (type == webrtc::SdpType::kOffer) {
       peer_connection_->CreateAnswer(
@@ -456,8 +456,9 @@ void Conductor::AddTracks() {
 
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
       peer_connection_factory_->CreateAudioTrack(
-          kAudioLabel, peer_connection_factory_->CreateAudioSource(
-                           cricket::AudioOptions())));
+          kAudioLabel,
+          peer_connection_factory_->CreateAudioSource(cricket::AudioOptions())
+              .get()));
   auto result_or_error = peer_connection_->AddTrack(audio_track, {kStreamId});
   if (!result_or_error.ok()) {
     RTC_LOG(LS_ERROR) << "Failed to add audio track to PeerConnection: "
@@ -468,8 +469,9 @@ void Conductor::AddTracks() {
       CapturerTrackSource::Create();
   if (video_device) {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
-        peer_connection_factory_->CreateVideoTrack(kVideoLabel, video_device));
-    main_wnd_->StartLocalRenderer(video_track_);
+        peer_connection_factory_->CreateVideoTrack(kVideoLabel,
+                                                   video_device.get()));
+    main_wnd_->StartLocalRenderer(video_track_.get());
 
     result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
     if (!result_or_error.ok()) {
@@ -563,7 +565,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
 
 void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
   peer_connection_->SetLocalDescription(
-      DummySetSessionDescriptionObserver::Create(), desc);
+      DummySetSessionDescriptionObserver::Create().get(), desc);
 
   std::string sdp;
   desc->ToString(&sdp);
@@ -574,7 +576,7 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
     std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
         webrtc::CreateSessionDescription(webrtc::SdpType::kAnswer, sdp);
     peer_connection_->SetRemoteDescription(
-        DummySetSessionDescriptionObserver::Create(),
+        DummySetSessionDescriptionObserver::Create().get(),
         session_description.release());
     return;
   }

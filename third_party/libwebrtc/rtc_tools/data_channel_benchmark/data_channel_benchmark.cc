@@ -173,7 +173,7 @@ int RunServer() {
               peer_connection->CreateDataChannelOrError("benchmark", nullptr);
           auto data_channel = dc_or_error.MoveValue();
           auto data_channel_observer =
-              std::make_unique<DataChannelObserverImpl>(data_channel);
+              std::make_unique<DataChannelObserverImpl>(data_channel.get());
           data_channel->RegisterObserver(data_channel_observer.get());
           absl::Cleanup unregister_observer(
               [data_channel] { data_channel->UnregisterObserver(); });

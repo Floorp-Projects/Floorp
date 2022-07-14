@@ -112,7 +112,7 @@ class SimplePeerConnection : public webrtc::PeerConnectionObserver,
   std::unique_ptr<VideoObserver> local_video_observer_;
   std::unique_ptr<VideoObserver> remote_video_observer_;
 
-  webrtc::MediaStreamInterface* remote_stream_ = nullptr;
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> remote_stream_ = nullptr;
   webrtc::PeerConnectionInterface::RTCConfiguration config_;
 
   LOCALDATACHANNELREADY_CALLBACK OnLocalDataChannelReady = nullptr;

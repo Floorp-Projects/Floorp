@@ -79,7 +79,7 @@ std::string VideoEncoderConfig::ToString() const {
       break;
   }
   ss << ", encoder_specific_settings: ";
-  ss << (encoder_specific_settings != NULL ? "(ptr)" : "NULL");
+  ss << (encoder_specific_settings != nullptr ? "(ptr)" : "NULL");
 
   ss << ", min_transmit_bitrate_bps: " << min_transmit_bitrate_bps;
   ss << '}';

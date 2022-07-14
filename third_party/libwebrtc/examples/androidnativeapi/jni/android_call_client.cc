@@ -170,7 +170,7 @@ void AndroidCallClient::CreatePeerConnectionFactory() {
   RTC_LOG(LS_INFO) << "Media engine created: " << pcf_deps.media_engine.get();
 
   pcf_ = CreateModularPeerConnectionFactory(std::move(pcf_deps));
-  RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << pcf_;
+  RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << pcf_.get();
 }
 
 void AndroidCallClient::CreatePeerConnection() {
@@ -184,13 +184,13 @@ void AndroidCallClient::CreatePeerConnection() {
   webrtc::PeerConnectionDependencies deps(pc_observer_.get());
   pc_ = pcf_->CreatePeerConnectionOrError(config, std::move(deps)).MoveValue();
 
-  RTC_LOG(LS_INFO) << "PeerConnection created: " << pc_;
+  RTC_LOG(LS_INFO) << "PeerConnection created: " << pc_.get();
 
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> local_video_track =
-      pcf_->CreateVideoTrack("video", video_source_);
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> local_video_track(
+      pcf_->CreateVideoTrack("video", video_source_.get()));
   local_video_track->AddOrUpdateSink(local_sink_.get(), rtc::VideoSinkWants());
   pc_->AddTransceiver(local_video_track);
-  RTC_LOG(LS_INFO) << "Local video sink set up: " << local_video_track;
+  RTC_LOG(LS_INFO) << "Local video sink set up: " << local_video_track.get();
 
   for (const rtc::scoped_refptr<webrtc::RtpTransceiverInterface>& tranceiver :
        pc_->GetTransceivers()) {
@@ -200,7 +200,7 @@ void AndroidCallClient::CreatePeerConnection() {
         track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
       static_cast<webrtc::VideoTrackInterface*>(track.get())
           ->AddOrUpdateSink(remote_sink_.get(), rtc::VideoSinkWants());
-      RTC_LOG(LS_INFO) << "Remote video sink set up: " << track;
+      RTC_LOG(LS_INFO) << "Remote video sink set up: " << track.get();
       break;
     }
   }
@@ -208,7 +208,7 @@ void AndroidCallClient::CreatePeerConnection() {
 
 void AndroidCallClient::Connect() {
   webrtc::MutexLock lock(&pc_mutex_);
-  pc_->CreateOffer(rtc::make_ref_counted<CreateOfferObserver>(pc_),
+  pc_->CreateOffer(rtc::make_ref_counted<CreateOfferObserver>(pc_).get(),
                    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 
@@ -258,7 +258,7 @@ void CreateOfferObserver::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
 
   // Ownership of desc was transferred to us, now we transfer it forward.
   pc_->SetLocalDescription(
-      rtc::make_ref_counted<SetLocalSessionDescriptionObserver>(), desc);
+      rtc::make_ref_counted<SetLocalSessionDescriptionObserver>().get(), desc);
 
   // Generate a fake answer.
   std::unique_ptr<webrtc::SessionDescriptionInterface> answer(
