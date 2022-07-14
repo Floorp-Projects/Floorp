@@ -100,7 +100,7 @@ TEST_P(VideoCodecTestAv1, Hd) {
       {13, 3, 0, 1, 0.3, 0.1, 0, 1}};
 
   std::vector<QualityThresholds> quality_thresholds = {
-      {35.9, 31.55, 0.925, 0.865}};
+      {35.9, 31.5, 0.925, 0.865}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
 }
