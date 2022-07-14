@@ -128,16 +128,12 @@ class PeerConfigurerImpl final
       PeerConnectionE2EQualityTestFixture::VideoConfig config) override {
     video_sources_.push_back(
         CreateSquareFrameGenerator(config, /*type=*/absl::nullopt));
-    // TODO(titovartem): remove when downstream will migrate on new API.
-    params_->video_configs.push_back(config);
     configurable_params_->video_configs.push_back(std::move(config));
     return this;
   }
   PeerConfigurer* AddVideoConfig(
       PeerConnectionE2EQualityTestFixture::VideoConfig config,
       std::unique_ptr<test::FrameGeneratorInterface> generator) override {
-    // TODO(titovartem): remove when downstream will migrate on new API.
-    params_->video_configs.push_back(config);
     configurable_params_->video_configs.push_back(std::move(config));
     video_sources_.push_back(std::move(generator));
     return this;
@@ -146,8 +142,6 @@ class PeerConfigurerImpl final
       PeerConnectionE2EQualityTestFixture::VideoConfig config,
       PeerConnectionE2EQualityTestFixture::CapturingDeviceIndex index)
       override {
-    // TODO(titovartem): remove when downstream will migrate on new API.
-    params_->video_configs.push_back(config);
     configurable_params_->video_configs.push_back(std::move(config));
     video_sources_.push_back(index);
     return this;
@@ -155,8 +149,6 @@ class PeerConfigurerImpl final
   PeerConfigurer* SetVideoSubscription(
       PeerConnectionE2EQualityTestFixture::VideoSubscription subscription)
       override {
-    // TODO(titovartem): remove when downstream will migrate on new API.
-    params_->video_subscription = subscription;
     configurable_params_->video_subscription = std::move(subscription);
     return this;
   }
