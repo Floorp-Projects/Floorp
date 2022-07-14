@@ -15,7 +15,6 @@
 #include "common_audio/resampler/include/push_resampler.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/format_macros.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -140,7 +139,7 @@ float ComputeSNR(const AudioFrame& ref_frame,
       best_delay = delay;
     }
   }
-  printf("SNR=%.1f dB at delay=%" RTC_PRIuS "\n", best_snr, best_delay);
+  printf("SNR=%.1f dB at delay=%zu\n", best_snr, best_delay);
   return best_snr;
 }
 

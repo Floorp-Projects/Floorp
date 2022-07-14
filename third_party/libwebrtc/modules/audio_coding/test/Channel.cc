@@ -10,10 +10,8 @@
 
 #include "modules/audio_coding/test/Channel.h"
 
-
 #include <iostream>
 
-#include "rtc_base/format_macros.h"
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {

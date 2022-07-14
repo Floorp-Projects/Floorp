@@ -9,6 +9,8 @@
  */
 #include "video/video_analyzer.h"
 
+#include <inttypes.h>
+
 #include <algorithm>
 #include <utility>
 
@@ -20,7 +22,6 @@
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/cpu_time.h"
-#include "rtc_base/format_macros.h"
 #include "rtc_base/memory_usage.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -854,7 +855,7 @@ void VideoAnalyzer::PrintSamplesToFile() {
   });
 
   fprintf(out, "%s\n", graph_title_.c_str());
-  fprintf(out, "%" RTC_PRIuS "\n", samples_.size());
+  fprintf(out, "%zu\n", samples_.size());
   fprintf(out,
           "dropped "
           "input_time_ms "
@@ -867,8 +868,7 @@ void VideoAnalyzer::PrintSamplesToFile() {
           "encode_time_ms\n");
   for (const Sample& sample : samples_) {
     fprintf(out,
-            "%d %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %" RTC_PRIuS
-            " %lf %lf\n",
+            "%d %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %zu %lf %lf\n",
             sample.dropped, sample.input_time_ms, sample.send_time_ms,
             sample.recv_time_ms, sample.render_time_ms,
             sample.encoded_frame_size, sample.psnr, sample.ssim);
