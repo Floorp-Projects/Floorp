@@ -99,12 +99,10 @@ EXPORTS.mozilla = [
     "SegmentedVector.h",
     "SHA1.h",
     "SharedLibrary.h",
-    "SIMD.h",
     "SmallPointerArray.h",
     "Span.h",
     "SplayTree.h",
     "SPSCQueue.h",
-    "SSE.h",
     "StaticAnalysisFunctions.h",
     "TaggedAnonymousMemory.h",
     "Tainting.h",
@@ -177,17 +175,11 @@ UNIFIED_SOURCES += [
     "Poison.cpp",
     "RandomNum.cpp",
     "SHA1.cpp",
-    "SIMD.cpp",
     "TaggedAnonymousMemory.cpp",
     "UniquePtrExtensions.cpp",
     "Unused.cpp",
     "Utf8.cpp",
 ]
-
-if CONFIG["CPU_ARCH"].startswith("x86"):
-    SOURCES += [
-        "SSE.cpp",
-    ]
 
 if CONFIG["MOZ_BUILD_APP"] not in (
     "memory",
