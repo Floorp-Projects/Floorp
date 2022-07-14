@@ -321,7 +321,7 @@ class VideoFrameConverter {
 
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
               ("VideoFrameConverter %p: Sending a black video frame", this));
-      webrtc::I420Buffer::SetBlack(buffer);
+      webrtc::I420Buffer::SetBlack(buffer.get());
 
       VideoFrameConverted(webrtc::VideoFrame::Builder()
                               .set_video_frame_buffer(buffer)

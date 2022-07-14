@@ -471,7 +471,7 @@ void MediaEngineWebRTCMicrophoneSource::GetSettings(
 }
 
 AudioInputProcessing::AudioInputProcessing(uint32_t aMaxChannelCount)
-    : mAudioProcessing(AudioProcessingBuilder().Create()),
+    : mAudioProcessing(AudioProcessingBuilder().Create().release()),
       mRequestedInputChannelCount(aMaxChannelCount),
       mSkipProcessing(false),
       mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100),
