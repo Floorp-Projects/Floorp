@@ -923,7 +923,6 @@ public class PeerConnectionEndToEndTest {
     answeringExpectations.expectStateChange(DataChannel.State.CLOSING);
     offeringExpectations.expectStateChange(DataChannel.State.CLOSED);
     answeringExpectations.expectStateChange(DataChannel.State.CLOSED);
-    answeringExpectations.dataChannel.close();
     offeringExpectations.dataChannel.close();
     assertTrue(offeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
     assertTrue(answeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
@@ -1094,7 +1093,6 @@ public class PeerConnectionEndToEndTest {
     answeringExpectations.expectStateChange(DataChannel.State.CLOSING);
     offeringExpectations.expectStateChange(DataChannel.State.CLOSED);
     answeringExpectations.expectStateChange(DataChannel.State.CLOSED);
-    answeringExpectations.dataChannel.close();
     offeringExpectations.dataChannel.close();
     assertTrue(offeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
     assertTrue(answeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
