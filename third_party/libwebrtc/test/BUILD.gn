@@ -1123,4 +1123,19 @@ rtc_library("call_config_utils") {
     "../rtc_base:rtc_json",
   ]
 }
+
+rtc_library("fake_encoded_frame") {
+  testonly = true
+  sources = [
+    "fake_encoded_frame.cc",
+    "fake_encoded_frame.h",
+  ]
+  deps = [
+    ":test_support",
+    "../api:rtp_packet_info",
+    "../api/video:encoded_frame",
+    "../api/video:video_rtp_headers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
 }
