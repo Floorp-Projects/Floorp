@@ -427,8 +427,6 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
                        bool aRunResult) override;
 
   nsresult Cancel() override;
-
-  bool AllScriptsExecutable() const;
 };
 
 template <typename Unit>
@@ -949,7 +947,7 @@ void WorkerScriptLoader::ShutdownScriptLoader(JSContext* aCx,
                                               bool aResult, bool aMutedError) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  // TODO: replace this call MOZ_ASSERT(AllScriptsExecutable());
+  MOZ_ASSERT(AllScriptsExecuted());
 
   if (IsMainWorkerScript()) {
     aWorkerPrivate->SetLoadingWorkerScript(false);
@@ -1065,7 +1063,7 @@ void ScriptExecutorRunnable::PostRun(JSContext* aCx,
 
   MOZ_ASSERT(!JS_IsExceptionPending(aCx), "Who left an exception on there?");
 
-  if (AllScriptsExecutable()) {
+  if (mScriptLoader.AllScriptsExecuted()) {
     // The only way we can get here with an aborted execution but without
     // mScriptLoader.mRv being a failure is if we're loading the main worker
     // script and GetOrCreateGlobalScope() fails.  In that case we would have
@@ -1085,16 +1083,11 @@ nsresult ScriptExecutorRunnable::Cancel() {
   nsresult rv = MainThreadWorkerSyncRunnable::Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (AllScriptsExecutable()) {
+  if (mScriptLoader.AllScriptsExecuted()) {
     mScriptLoader.ShutdownScriptLoader(mWorkerPrivate->GetJSContext(),
                                        mWorkerPrivate, false, false);
   }
   return NS_OK;
-}
-
-bool ScriptExecutorRunnable::AllScriptsExecutable() const {
-  return mScriptLoader.mLoadingRequests.IsEmpty() &&
-         mScriptLoader.mLoadedRequests.IsEmpty();
 }
 
 } /* namespace loader */
