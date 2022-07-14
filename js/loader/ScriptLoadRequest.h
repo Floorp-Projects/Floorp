@@ -104,14 +104,17 @@ class ScriptFetchOptions {
   const enum mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
   /*
-   *  Used to determine CSP
+   *  Used to determine CSP and if we are on the About page.
+   *  Only used in DOM content scripts.
+   *  TODO: Move to ScriptLoadContext
    */
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   /*
-   *      Represents fields populated by DOM elements (nonce, parser metadata)
-   *      Leave this field as a nullptr for any fetch that requires the
-   *      default classic script options.
-   *      (https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options)
+   *  Represents fields populated by DOM elements (nonce, parser metadata)
+   *  Leave this field as a nullptr for any fetch that requires the
+   *  default classic script options.
+   *  (https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options)
+   *  TODO: extract necessary fields rather than passing this object
    */
   nsCOMPtr<mozilla::dom::Element> mElement;
 };
