@@ -406,13 +406,13 @@ NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   WorkerScriptLoader& mScriptLoader;
-  const Span<ScriptLoadInfo> mLoadInfosToExecute;
+  nsTArray<ScriptLoadInfo*> mLoadInfosToExecute;
   const bool mAllScriptsExecutable;
 
  public:
   ScriptExecutorRunnable(WorkerScriptLoader& aScriptLoader,
                          nsIEventTarget* aSyncLoopTarget,
-                         Span<ScriptLoadInfo> aLoadInfosToExecute,
+                         nsTArray<ScriptLoadInfo*>&& aLoadInfosToExecute,
                          bool aAllScriptsExecutable);
 
  private:
@@ -562,7 +562,7 @@ bool WorkerScriptLoader::StoreCSP() {
 }
 
 bool WorkerScriptLoader::ProcessPendingRequests(
-    JSContext* aCx, const Span<ScriptLoadInfo> aLoadInfosToExecute) {
+    JSContext* aCx, nsTArray<ScriptLoadInfo*>&& aLoadInfosToExecute) {
   mWorkerPrivate->AssertIsOnWorkerThread();
   // Don't run if something else has already failed.
   if (mExecutionAborted) {
@@ -578,7 +578,7 @@ bool WorkerScriptLoader::ProcessPendingRequests(
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   MOZ_ASSERT(global);
 
-  for (ScriptLoadInfo& loadInfo : aLoadInfosToExecute) {
+  for (ScriptLoadInfo* loadInfo : aLoadInfosToExecute) {
     // We don't have a ProcessRequest method (like we do on the DOM), as there
     // isn't much processing that we need to do per request that isn't related
     // to evaluation (the processsing done for the DOM is handled in
@@ -588,9 +588,9 @@ bool WorkerScriptLoader::ProcessPendingRequests(
     if (mExecutionAborted) {
       break;
     }
-    if (!EvaluateScript(aCx, &loadInfo)) {
+    if (!EvaluateScript(aCx, loadInfo)) {
       mExecutionAborted = true;
-      mMutedErrorFlag = loadInfo.mMutedErrorFlag.valueOr(true);
+      mMutedErrorFlag = loadInfo->mMutedErrorFlag.valueOr(true);
     }
   }
 
@@ -903,53 +903,30 @@ void WorkerScriptLoader::DispatchProcessPendingRequests() {
     mWorkerPrivate->WorkerScriptLoaded();
   }
 
-  const auto begin = mLoadInfos.begin();
-  const auto end = mLoadInfos.end();
-  using Iterator = decltype(begin);
-  const auto maybeRangeToExecute =
-      [begin, end]() -> Maybe<std::pair<Iterator, Iterator>> {
-    // firstItToExecute is the first loadInfo where mExecutionScheduled is
-    // unset.
-    auto firstItToExecute =
-        std::find_if(begin, end, [](const ScriptLoadInfo& loadInfo) {
-          return !loadInfo.mExecutionScheduled;
-        });
+  nsTArray<ScriptLoadInfo*> loadedScripts;
 
-    if (firstItToExecute == end) {
-      return Nothing();
+  while (mLoadingRequests.Length() > 0) {
+    if (!mLoadingRequests[0]->Finished()) {
+      break;
     }
+    ScriptLoadInfo* loadInfo = mLoadingRequests[0];
+    // We can execute this one.
+    loadInfo->mExecutionScheduled = true;
 
-    // firstItUnexecutable is the first loadInfo that is not yet finished.
-    // Update mExecutionScheduled on the ones we're about to schedule for
-    // execution.
-    const auto firstItUnexecutable =
-        std::find_if(firstItToExecute, end, [](ScriptLoadInfo& loadInfo) {
-          if (!loadInfo.Finished()) {
-            return true;
-          }
-
-          // We can execute this one.
-          loadInfo.mExecutionScheduled = true;
-
-          return false;
-        });
-
-    return firstItUnexecutable == firstItToExecute
-               ? Nothing()
-               : Some(std::pair(firstItToExecute, firstItUnexecutable));
-  }();
+    mLoadingRequests.RemoveElement(loadInfo);
+    loadedScripts.AppendElement(loadInfo);
+  }
 
   // If there are no unexecutable load infos, we can unuse things before the
   // execution of the scripts and the stopping of the sync loop.
-  if (maybeRangeToExecute) {
-    if (maybeRangeToExecute->second == end) {
+  if (loadedScripts.Length()) {
+    if (mLoadingRequests.IsEmpty()) {
       mCacheCreator = nullptr;
     }
 
     RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
-        *this, mSyncLoopTarget,
-        Span{maybeRangeToExecute->first, maybeRangeToExecute->second},
-        /* aAllScriptsExecutable = */ end == maybeRangeToExecute->second);
+        *this, mSyncLoopTarget, std::move(loadedScripts),
+        /* aAllScriptsExecutable = */ mLoadingRequests.IsEmpty());
     if (!runnable->Dispatch()) {
       MOZ_ASSERT(false, "This should never fail!");
     }
@@ -1090,11 +1067,11 @@ NS_IMPL_ISUPPORTS(WorkerScriptLoader, nsINamed)
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader& aScriptLoader, nsIEventTarget* aSyncLoopTarget,
-    Span<ScriptLoadInfo> aLoadInfosToExecute, bool aAllScriptsExecutable)
+    nsTArray<ScriptLoadInfo*>&& aLoadInfosToExecute, bool aAllScriptsExecutable)
     : MainThreadWorkerSyncRunnable(aScriptLoader.mWorkerPrivate,
                                    aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
-      mLoadInfosToExecute(aLoadInfosToExecute),
+      mLoadInfosToExecute(std::move(aLoadInfosToExecute)),
       mAllScriptsExecutable(aAllScriptsExecutable) {}
 
 bool ScriptExecutorRunnable::IsDebuggerRunnable() const {
@@ -1124,7 +1101,8 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       mScriptLoader.mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  return mScriptLoader.ProcessPendingRequests(aCx, mLoadInfosToExecute);
+  return mScriptLoader.ProcessPendingRequests(aCx,
+                                              std::move(mLoadInfosToExecute));
 }
 
 void ScriptExecutorRunnable::PostRun(JSContext* aCx,
