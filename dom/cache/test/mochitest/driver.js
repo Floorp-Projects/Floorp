@@ -34,6 +34,10 @@ function runTests(testFile, order) {
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.testing.enabled", true],
         ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        [
+          "privacy.partition.always_partition_third_party_non_cookie_storage",
+          false,
+        ],
       ],
     });
   }

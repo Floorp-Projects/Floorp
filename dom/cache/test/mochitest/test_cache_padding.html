@@ -87,7 +87,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   "set": [["dom.caches.enabled", true],
           ["dom.caches.testing.enabled", true],
-          ["dom.quotaManager.testing", true]],
+          ["dom.quotaManager.testing", true],
+          ["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
 }, async function() {
   // This test is mainly to verify we only generate different padding size for
   // the opaque response which is comming from netwrok.
