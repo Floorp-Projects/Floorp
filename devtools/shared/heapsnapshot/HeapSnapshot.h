@@ -144,18 +144,20 @@ class HeapSnapshot final : public nsISupports, public nsWrapperCache {
     return Some(JS::ubi::Node(const_cast<DeserializedNode*>(&*p)));
   }
 
-  void TakeCensus(JSContext* cx, JS::HandleObject options,
-                  JS::MutableHandleValue rval, ErrorResult& rv);
+  void TakeCensus(JSContext* cx, JS::Handle<JSObject*> options,
+                  JS::MutableHandle<JS::Value> rval, ErrorResult& rv);
 
-  void DescribeNode(JSContext* cx, JS::HandleObject breakdown, uint64_t nodeId,
-                    JS::MutableHandleValue rval, ErrorResult& rv);
+  void DescribeNode(JSContext* cx, JS::Handle<JSObject*> breakdown,
+                    uint64_t nodeId, JS::MutableHandle<JS::Value> rval,
+                    ErrorResult& rv);
 
   already_AddRefed<DominatorTree> ComputeDominatorTree(ErrorResult& rv);
 
   void ComputeShortestPaths(JSContext* cx, uint64_t start,
                             const dom::Sequence<uint64_t>& targets,
                             uint64_t maxNumPaths,
-                            JS::MutableHandleObject results, ErrorResult& rv);
+                            JS::MutableHandle<JSObject*> results,
+                            ErrorResult& rv);
 
   dom::Nullable<uint64_t> GetCreationTime() {
     static const uint64_t maxTime = uint64_t(1) << 53;

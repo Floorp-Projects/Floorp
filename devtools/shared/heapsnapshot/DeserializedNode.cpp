@@ -115,7 +115,7 @@ StackFrame ConcreteStackFrame<DeserializedStackFrame>::parent() const {
 }
 
 bool ConcreteStackFrame<DeserializedStackFrame>::constructSavedFrameStack(
-    JSContext* cx, MutableHandleObject outSavedFrameStack) const {
+    JSContext* cx, JS::MutableHandle<JSObject*> outSavedFrameStack) const {
   StackFrame f(&get());
   return ConstructSavedFrameStackSlow(cx, f, outSavedFrameStack);
 }

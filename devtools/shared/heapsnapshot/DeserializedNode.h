@@ -298,7 +298,8 @@ class ConcreteStackFrame<DeserializedStackFrame> : public BaseStackFrame {
 
   StackFrame parent() const override;
   bool constructSavedFrameStack(
-      JSContext* cx, MutableHandleObject outSavedFrameStack) const override;
+      JSContext* cx,
+      JS::MutableHandle<JSObject*> outSavedFrameStack) const override;
 };
 
 }  // namespace ubi

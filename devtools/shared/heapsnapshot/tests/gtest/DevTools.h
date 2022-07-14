@@ -32,7 +32,7 @@ struct DevTools : public ::testing::Test {
   JSContext* cx;
   JS::Compartment* compartment;
   JS::Zone* zone;
-  JS::PersistentRootedObject global;
+  JS::PersistentRooted<JSObject*> global;
 
   DevTools() : _initialized(false), cx(nullptr) {}
 
