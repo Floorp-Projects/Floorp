@@ -176,8 +176,6 @@ rtc_source_set("video_legacy") {
     "rtp_video_stream_receiver.h",
     "video_quality_observer.cc",
     "video_quality_observer.h",
-    "video_stream_decoder.cc",
-    "video_stream_decoder.h",
   ]
   deps = [
     ":frame_dumping_decoder",
