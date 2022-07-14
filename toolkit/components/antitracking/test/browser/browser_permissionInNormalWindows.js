@@ -95,12 +95,7 @@ AntiTracking.runTest(
       );
     });
   },
-  [
-    [
-      "privacy.partition.always_partition_third_party_non_cookie_storage",
-      false,
-    ],
-  ], // extra prefs
+  null, // no extra prefs
   true, // run the window.open() test
   true, // run the user interaction test
   0, // don't expect blocking notifications

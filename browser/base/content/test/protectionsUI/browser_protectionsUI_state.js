@@ -16,8 +16,6 @@
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
-const APS_PREF =
-  "privacy.partition.always_partition_third_party_non_cookie_storage";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 const BENIGN_PAGE =
@@ -274,8 +272,6 @@ async function testContentBlocking(tab) {
 }
 
 add_task(async function testNormalBrowsing() {
-  await SpecialPowers.pushPrefEnv({ set: [[APS_PREF, false]] });
-
   await UrlClassifierTestUtils.addTestTrackers();
 
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
@@ -314,10 +310,7 @@ add_task(async function testNormalBrowsing() {
 
 add_task(async function testPrivateBrowsing() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.security.https_first_pbm", false],
-      [APS_PREF, false],
-    ],
+    set: [["dom.security.https_first_pbm", false]],
   });
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
@@ -358,8 +351,6 @@ add_task(async function testPrivateBrowsing() {
 });
 
 add_task(async function testThirdPartyCookies() {
-  await SpecialPowers.pushPrefEnv({ set: [[APS_PREF, false]] });
-
   await UrlClassifierTestUtils.addTestTrackers();
   gTrackingPageURL = COOKIE_PAGE;
 

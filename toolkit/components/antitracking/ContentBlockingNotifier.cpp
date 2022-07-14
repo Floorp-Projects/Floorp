@@ -215,26 +215,25 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
 void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
                              uint32_t aRejectedReason) {
   MOZ_ASSERT(aChannel && aURI);
-  uint64_t windowID = nsContentUtils::GetInnerWindowID(aChannel);
-  if (!windowID) {
-    // Get the window ID from the target BrowsingContext
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-    RefPtr<dom::BrowsingContext> targetBrowsingContext;
-    loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBrowsingContext));
+  // Get the window ID from the target BrowsingContext
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-    if (!targetBrowsingContext) {
-      return;
-    }
+  RefPtr<dom::BrowsingContext> targetBrowsingContext;
+  loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBrowsingContext));
 
-    WindowContext* windowContext =
-        targetBrowsingContext->GetCurrentWindowContext();
-    if (!windowContext) {
-      return;
-    }
-
-    windowID = windowContext->InnerWindowId();
+  if (!targetBrowsingContext) {
+    return;
   }
+
+  WindowContext* windowContext =
+      targetBrowsingContext->GetCurrentWindowContext();
+  if (!windowContext) {
+    return;
+  }
+
+  uint64_t windowID = windowContext->InnerWindowId();
+
   ReportBlockingToConsole(windowID, aURI, aRejectedReason);
 }
 
