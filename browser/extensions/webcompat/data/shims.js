@@ -662,6 +662,7 @@ const AVAILABLE_SHIMS = [
     requestStorageAccessForRedirect: [
       ["*://web.powerva.microsoft.com/*", "*://login.microsoftonline.com/*"],
       ["*://teams.microsoft.com/*", "*://login.microsoftonline.com/*"],
+      ["*://*.teams.microsoft.us/*", "*://login.microsoftonline.us/*"],
     ],
     contentScripts: [
       {
@@ -669,6 +670,7 @@ const AVAILABLE_SHIMS = [
         matches: [
           "*://web.powerva.microsoft.com/*",
           "*://teams.microsoft.com/*",
+          "*://*.teams.microsoft.us/*",
         ],
         runAt: "document_start",
       },
