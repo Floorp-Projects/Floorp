@@ -481,10 +481,7 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
 
 bool DisplayPortUtils::GetDisplayPort(nsIContent* aContent, nsRect* aResult,
                                       const DisplayPortOptions& aOptions) {
-  float multiplier = StaticPrefs::layers_low_precision_buffer()
-                         ? 1.0f / StaticPrefs::layers_low_precision_resolution()
-                         : 1.0f;
-  return GetDisplayPortImpl(aContent, aResult, multiplier, aOptions);
+  return GetDisplayPortImpl(aContent, aResult, 1.0f, aOptions);
 }
 
 bool DisplayPortUtils::HasDisplayPort(nsIContent* aContent) {
