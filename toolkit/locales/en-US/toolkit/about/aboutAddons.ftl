@@ -362,7 +362,10 @@ theme-disabled-heading2 = Saved Themes
 theme-monochromatic-heading = Colorways
 theme-monochromatic-subheading = Vibrant new colorways from { -brand-product-name }. Available for a limited time.
 
+# Refers to the button label for the colorways card when a user does not have a colorway theme enabled.
 theme-colorways-button = Try Colorways
+# Refers to the button label for the colorways card when a user has a colorway theme enabled.
+theme-colorways-button-colorway-enabled = Change Colorway
 # Variables:
 #   $expiryDate (string) - date on which the colorway collection expires.
 colorway-collection-expiry-date-span = Expires { DATETIME($expiryDate, month: "long", day: "numeric") }
