@@ -910,11 +910,10 @@ nsresult nsBaseDragService::DrawDragForImage(
     RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     if (!ctx) return NS_ERROR_FAILURE;
 
-    ImgDrawResult res =
-        imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
-                           imgIContainer::FRAME_CURRENT, SamplingFilter::GOOD,
-                           /* no SVGImageContext */ Nothing(),
-                           imgIContainer::FLAG_SYNC_DECODE, 1.0);
+    ImgDrawResult res = imgContainer->Draw(
+        ctx, destSize, ImageRegion::Create(destSize),
+        imgIContainer::FRAME_CURRENT, SamplingFilter::GOOD, SVGImageContext(),
+        imgIContainer::FLAG_SYNC_DECODE, 1.0);
     if (res == ImgDrawResult::BAD_IMAGE || res == ImgDrawResult::BAD_ARGS ||
         res == ImgDrawResult::NOT_SUPPORTED) {
       return NS_ERROR_FAILURE;

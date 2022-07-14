@@ -433,52 +433,50 @@ class imgMemoryReporter final : public nsIMemoryReporter {
         surfacePathPrefix.AppendLiteral("]");
       }
 
-      if (counter.Key().SVGContext()) {
-        const SVGImageContext& context = counter.Key().SVGContext().ref();
-        surfacePathPrefix.AppendLiteral(", svgContext:[ ");
-        if (context.GetViewportSize()) {
-          const CSSIntSize& size = context.GetViewportSize().ref();
-          surfacePathPrefix.AppendLiteral("viewport=(");
-          surfacePathPrefix.AppendInt(size.width);
-          surfacePathPrefix.AppendLiteral("x");
-          surfacePathPrefix.AppendInt(size.height);
-          surfacePathPrefix.AppendLiteral(") ");
-        }
-        if (context.GetPreserveAspectRatio()) {
-          nsAutoString aspect;
-          context.GetPreserveAspectRatio()->ToString(aspect);
-          surfacePathPrefix.AppendLiteral("preserveAspectRatio=(");
-          LossyAppendUTF16toASCII(aspect, surfacePathPrefix);
-          surfacePathPrefix.AppendLiteral(") ");
-        }
-        if (auto scheme = context.GetColorScheme()) {
-          surfacePathPrefix.AppendLiteral("colorScheme=");
-          surfacePathPrefix.AppendInt(int32_t(*scheme));
-          surfacePathPrefix.AppendLiteral(" ");
-        }
-        if (context.GetContextPaint()) {
-          const SVGEmbeddingContextPaint* paint = context.GetContextPaint();
-          surfacePathPrefix.AppendLiteral("contextPaint=(");
-          if (paint->GetFill()) {
-            surfacePathPrefix.AppendLiteral(" fill=");
-            surfacePathPrefix.AppendInt(paint->GetFill()->ToABGR(), 16);
-          }
-          if (paint->GetFillOpacity() != 1.0) {
-            surfacePathPrefix.AppendLiteral(" fillOpa=");
-            surfacePathPrefix.AppendFloat(paint->GetFillOpacity());
-          }
-          if (paint->GetStroke()) {
-            surfacePathPrefix.AppendLiteral(" stroke=");
-            surfacePathPrefix.AppendInt(paint->GetStroke()->ToABGR(), 16);
-          }
-          if (paint->GetStrokeOpacity() != 1.0) {
-            surfacePathPrefix.AppendLiteral(" strokeOpa=");
-            surfacePathPrefix.AppendFloat(paint->GetStrokeOpacity());
-          }
-          surfacePathPrefix.AppendLiteral(" ) ");
-        }
-        surfacePathPrefix.AppendLiteral("]");
+      const SVGImageContext& context = counter.Key().SVGContext();
+      surfacePathPrefix.AppendLiteral(", svgContext:[ ");
+      if (context.GetViewportSize()) {
+        const CSSIntSize& size = context.GetViewportSize().ref();
+        surfacePathPrefix.AppendLiteral("viewport=(");
+        surfacePathPrefix.AppendInt(size.width);
+        surfacePathPrefix.AppendLiteral("x");
+        surfacePathPrefix.AppendInt(size.height);
+        surfacePathPrefix.AppendLiteral(") ");
       }
+      if (context.GetPreserveAspectRatio()) {
+        nsAutoString aspect;
+        context.GetPreserveAspectRatio()->ToString(aspect);
+        surfacePathPrefix.AppendLiteral("preserveAspectRatio=(");
+        LossyAppendUTF16toASCII(aspect, surfacePathPrefix);
+        surfacePathPrefix.AppendLiteral(") ");
+      }
+      if (auto scheme = context.GetColorScheme()) {
+        surfacePathPrefix.AppendLiteral("colorScheme=");
+        surfacePathPrefix.AppendInt(int32_t(*scheme));
+        surfacePathPrefix.AppendLiteral(" ");
+      }
+      if (context.GetContextPaint()) {
+        const SVGEmbeddingContextPaint* paint = context.GetContextPaint();
+        surfacePathPrefix.AppendLiteral("contextPaint=(");
+        if (paint->GetFill()) {
+          surfacePathPrefix.AppendLiteral(" fill=");
+          surfacePathPrefix.AppendInt(paint->GetFill()->ToABGR(), 16);
+        }
+        if (paint->GetFillOpacity() != 1.0) {
+          surfacePathPrefix.AppendLiteral(" fillOpa=");
+          surfacePathPrefix.AppendFloat(paint->GetFillOpacity());
+        }
+        if (paint->GetStroke()) {
+          surfacePathPrefix.AppendLiteral(" stroke=");
+          surfacePathPrefix.AppendInt(paint->GetStroke()->ToABGR(), 16);
+        }
+        if (paint->GetStrokeOpacity() != 1.0) {
+          surfacePathPrefix.AppendLiteral(" strokeOpa=");
+          surfacePathPrefix.AppendFloat(paint->GetStrokeOpacity());
+        }
+        surfacePathPrefix.AppendLiteral(" ) ");
+      }
+      surfacePathPrefix.AppendLiteral("]");
 
       surfacePathPrefix.AppendLiteral(")/");
 

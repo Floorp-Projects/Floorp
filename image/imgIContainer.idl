@@ -77,7 +77,7 @@ native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
 native Orientation(mozilla::image::Orientation);
 native ImageResolution(mozilla::image::Resolution);
 [ref] native TimeStamp(mozilla::TimeStamp);
-[ref] native MaybeSVGImageContext(mozilla::Maybe<mozilla::SVGImageContext>);
+[ref] native SVGImageContext(mozilla::SVGImageContext);
 [ref] native MaybeImageIntRegion(mozilla::Maybe<mozilla::image::ImageIntRegion>);
 native TempRefSourceSurface(already_AddRefed<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
@@ -354,7 +354,7 @@ interface imgIContainer : nsISupports
    */
   [noscript, notxpcom] ImgDrawResult getImageProvider(in WindowRenderer aRenderer,
                                                       [const] in nsIntSize aSize,
-                                                      [const] in MaybeSVGImageContext aSVGContext,
+                                                      [const] in SVGImageContext aSVGContext,
                                                       [const] in MaybeImageIntRegion aRegion,
                                                       in uint32_t aFlags,
                                                       out WebRenderImageProvider aProvider);
@@ -470,7 +470,7 @@ interface imgIContainer : nsISupports
        [const] in ImageRegion aRegion,
        in uint32_t aWhichFrame,
        in SamplingFilter aSamplingFilter,
-       [const] in MaybeSVGImageContext aSVGContext,
+       [const] in SVGImageContext aSVGContext,
        in uint32_t aFlags,
        in float aOpacity);
 

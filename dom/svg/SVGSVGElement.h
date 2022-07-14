@@ -252,18 +252,17 @@ class MOZ_RAII AutoSVGTimeSetRestore {
 
 class MOZ_RAII AutoPreserveAspectRatioOverride {
  public:
-  AutoPreserveAspectRatioOverride(const Maybe<SVGImageContext>& aSVGContext,
+  AutoPreserveAspectRatioOverride(const SVGImageContext& aSVGContext,
                                   dom::SVGSVGElement* aRootElem)
       : mRootElem(aRootElem), mDidOverride(false) {
     MOZ_ASSERT(mRootElem, "No SVG/Symbol node to manage?");
 
-    if (aSVGContext.isSome() &&
-        aSVGContext->GetPreserveAspectRatio().isSome()) {
+    if (aSVGContext.GetPreserveAspectRatio().isSome()) {
       // Override preserveAspectRatio in our helper document.
       // XXXdholbert We should technically be overriding the helper doc's clip
       // and overflow properties here, too. See bug 272288 comment 36.
       mRootElem->SetImageOverridePreserveAspectRatio(
-          *aSVGContext->GetPreserveAspectRatio());
+          *aSVGContext.GetPreserveAspectRatio());
       mDidOverride = true;
     }
   }

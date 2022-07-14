@@ -20,7 +20,6 @@ using std::swap;
 namespace mozilla {
 
 using namespace gfx;
-using layers::ImageContainer;
 
 namespace image {
 
@@ -158,7 +157,7 @@ OrientedImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 NS_IMETHODIMP_(ImgDrawResult)
 OrientedImage::GetImageProvider(WindowRenderer* aRenderer,
                                 const gfx::IntSize& aSize,
-                                const Maybe<SVGImageContext>& aSVGContext,
+                                const SVGImageContext& aSVGContext,
                                 const Maybe<ImageIntRegion>& aRegion,
                                 uint32_t aFlags,
                                 WebRenderImageProvider** aProvider) {
@@ -262,7 +261,7 @@ NS_IMETHODIMP_(ImgDrawResult)
 OrientedImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
                     const ImageRegion& aRegion, uint32_t aWhichFrame,
                     SamplingFilter aSamplingFilter,
-                    const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
+                    const SVGImageContext& aSVGContext, uint32_t aFlags,
                     float aOpacity) {
   if (mOrientation.IsIdentity()) {
     return InnerImage()->Draw(aContext, aSize, aRegion, aWhichFrame,
@@ -301,7 +300,7 @@ OrientedImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   };
 
   return InnerImage()->Draw(aContext, size, region, aWhichFrame,
-                            aSamplingFilter, aSVGContext.map(orientViewport),
+                            aSamplingFilter, orientViewport(aSVGContext),
                             aFlags, aOpacity);
 }
 

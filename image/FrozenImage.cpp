@@ -62,7 +62,7 @@ FrozenImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 NS_IMETHODIMP_(ImgDrawResult)
 FrozenImage::GetImageProvider(WindowRenderer* aRenderer,
                               const gfx::IntSize& aSize,
-                              const Maybe<SVGImageContext>& aSVGContext,
+                              const SVGImageContext& aSVGContext,
                               const Maybe<ImageIntRegion>& aRegion,
                               uint32_t aFlags,
                               WebRenderImageProvider** aProvider) {
@@ -84,7 +84,7 @@ FrozenImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
                   const ImageRegion& aRegion,
                   uint32_t /* aWhichFrame - ignored */,
                   SamplingFilter aSamplingFilter,
-                  const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
+                  const SVGImageContext& aSVGContext, uint32_t aFlags,
                   float aOpacity) {
   return InnerImage()->Draw(aContext, aSize, aRegion, FRAME_FIRST,
                             aSamplingFilter, aSVGContext, aFlags, aOpacity);

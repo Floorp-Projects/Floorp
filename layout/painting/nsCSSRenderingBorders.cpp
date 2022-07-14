@@ -3634,7 +3634,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       LayoutDeviceRect imageRect = LayoutDeviceRect::FromAppUnits(
           nsRect(nsPoint(), mImageRenderer.GetSize()), appUnitsPerDevPixel);
 
-      Maybe<SVGImageContext> svgContext;
+      SVGImageContext svgContext;
       Maybe<ImageIntRegion> region;
       gfx::IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(

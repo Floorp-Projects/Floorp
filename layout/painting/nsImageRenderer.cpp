@@ -619,8 +619,7 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
           nsPresContext::AppUnitsToIntCSSPixels(aDest.width),
           nsPresContext::AppUnitsToIntCSSPixels(aDest.height)};
 
-      Maybe<SVGImageContext> svgContext(
-          Some(SVGImageContext(Some(destCSSSize))));
+      SVGImageContext svgContext(Some(destCSSSize));
       Maybe<ImageIntRegion> region;
 
       const int32_t appUnitsPerDevPixel =
@@ -965,7 +964,7 @@ ImgDrawResult nsImageRenderer::DrawBorderImageComponent(
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
       ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
           aRenderingContext, aPresContext, subImage, samplingFilter, aFill,
-          aDirtyRect, /* no SVGImageContext */ Nothing(), drawFlags);
+          aDirtyRect, SVGImageContext(), drawFlags);
 
       if (!mImage->IsComplete()) {
         result &= ImgDrawResult::SUCCESS_NOT_COMPLETE;
@@ -1034,7 +1033,7 @@ ImgDrawResult nsImageRenderer::DrawShapeImage(nsPresContext* aPresContext,
     // closest pixel in the image.
     return nsLayoutUtils::DrawSingleImage(
         aRenderingContext, aPresContext, mImageContainer, SamplingFilter::POINT,
-        dest, dest, Nothing(), drawFlags);
+        dest, dest, SVGImageContext(), drawFlags);
   }
 
   if (mImage->IsGradient()) {

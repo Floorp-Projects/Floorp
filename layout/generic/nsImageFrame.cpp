@@ -1703,7 +1703,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
       result = nsLayoutUtils::DrawSingleImage(
           aRenderingContext, PresContext(), imgCon,
           nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
-          /* no SVGImageContext */ Nothing(), aFlags);
+          SVGImageContext(), aFlags);
     }
 
     // If we could not draw the icon, just draw some graffiti in the mean time.
@@ -1882,7 +1882,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
       const int32_t factor = PresContext()->AppUnitsPerDevPixel();
       LayoutDeviceRect destRect(LayoutDeviceRect::FromAppUnits(dest, factor));
 
-      Maybe<SVGImageContext> svgContext;
+      SVGImageContext svgContext;
       Maybe<ImageIntRegion> region;
       IntSize decodeSize =
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
@@ -2139,7 +2139,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
   LayoutDeviceRect destRect(
       LayoutDeviceRect::FromAppUnits(GetDestRect(), factor));
 
-  Maybe<SVGImageContext> svgContext;
+  SVGImageContext svgContext;
   Maybe<ImageIntRegion> region;
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
       mImage, mFrame, destRect, destRect, aSc, flags, svgContext, region);
@@ -2237,7 +2237,7 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
       constraintRect, mIntrinsicSize, mIntrinsicRatio, StylePosition(),
       &anchorPoint);
 
-  Maybe<SVGImageContext> svgContext;
+  SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
   ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
