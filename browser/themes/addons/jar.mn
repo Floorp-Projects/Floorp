@@ -16,6 +16,14 @@ browser.jar:
   content/builtin-themes/light                     (light/*.css)
   content/builtin-themes/light/manifest.json       (light/manifest.json)
 
+  content/builtin-themes/photon                    (photon/*.svg)
+  content/builtin-themes/photon                    (photon/*.css)
+  content/builtin-themes/photon/manifest.json      (photon/manifest.json)
+
+  content/builtin-themes/material                  (material/*.svg)
+  content/builtin-themes/material                  (material/*.css)
+  content/builtin-themes/material/manifest.json    (material/manifest.json)
+
   content/builtin-themes/monochromatic/lush/soft                          (monochromatic/lush/soft/*.svg)
   content/builtin-themes/monochromatic/lush/soft/manifest.json            (monochromatic/lush/soft/manifest.json)
   content/builtin-themes/monochromatic/lush/balanced                      (monochromatic/lush/balanced/*.svg)

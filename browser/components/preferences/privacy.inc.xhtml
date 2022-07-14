@@ -337,6 +337,24 @@
     </vbox>
   </vbox>
 </groupbox>
+<groupbox data-category="panePrivacy" hidden="true">
+   <label><html:h2 data-l10n-id="block-more-tracker"/></label>
+   <description  data-l10n-id="block-tracker"/>
+
+   <label><html:h3 class="uBlockOrigin" data-l10n-id="uBlock-Origin"/></label>
+   <vbox class="uBlockOrigin" id="ContentBlockBox">
+     <image id="uBlockOriginImg"/>
+     <description id="AddonRecommend" data-l10n-id="about-uboori"/>
+     <label class="AMOURL" id="AMO-UO" is="text-link" href="https://support.ablaze.one/floorp/452/" data-l10n-id="view-at-AMO"></label>
+   </vbox>
+
+   <label><html:h3 class="PrivacyBadger" data-l10n-id="Privacy-Badger"/></label>
+   <vbox class="PrivacyBadger" id="ContentBlockBox">
+     <image id="PrivacyBadgerImg"/>
+     <description id="AddonRecommend" data-l10n-id="about-PBadger"/>
+     <label class="AMOURL" is="text-link" href="https://support.ablaze.one/floorp/452/" data-l10n-id="view-at-AMO"></label>
+   </vbox>
+ </groupbox>
 
 <!-- Site Data -->
 <groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">

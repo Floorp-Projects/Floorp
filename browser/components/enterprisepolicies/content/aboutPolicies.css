@@ -168,3 +168,8 @@ tbody.collapsible td {
 .inactive-service-message {
   padding: 1rem;
 }
+
+#Notice-from-floorp{
+  position: relative;
+  left: 110px;
+}

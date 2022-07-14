@@ -1,0 +1,62 @@
+{
+  "extensionName": {
+    "message": "Floorp システムアドオン",
+    "description": "拡張機能の名前です。"
+  },
+    "scan-code": {
+      "message": "QR コードをスキャンしてください"
+    },
+    "save-code": {
+      "message": "コードを保存"
+    },
+  "action":{
+    "message":"アップデートを確認する",
+    "description":"Browser action の名前"
+  },
+  "SetExN": {
+    "message": "色"
+  },
+
+  "SetSavN": {
+    "message": "保存"
+  },
+
+  "extensionDescription": {
+    "message": "Floorp のアップデートや機能をまとめたものです。",
+    "description": "Floorpのアップデーターです。"
+  },
+
+  "notificationTitle": {
+    "message": "アップデートの通知",
+    "description": "タイトル"
+  },
+
+  "notificationContent": {
+    "message": "Floorpの最新バージョンがリリースされました。\nクリックしてインストーラーをダウンロードできます。\n現在のバージョン:$OLD$\n最新のバージョン:$NEW$",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  },
+  "notificationContent-last": {
+    "message": "ご利用中の Floorp は最新版です。\n アップデートの必要はありません。\n Floorp のご利用ありがとうございます。",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  }
+}

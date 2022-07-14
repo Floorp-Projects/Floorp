@@ -167,3 +167,7 @@ for icon in ("firefox", "document", "newwindow", "newtab", "pbmode", "document_p
         CONFIG["MOZ_BRANDING_DIRECTORY"],
         icon,
     )
+
+DIRS += [
+    "distribution",
+]

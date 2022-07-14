@@ -27,6 +27,7 @@ with Files("controlcenter/**"):
 
 
 DIRS += [
+    "aboutcontributor",
     "about",
     "aboutlogins",
     "attribution",
@@ -34,6 +35,7 @@ DIRS += [
     "customizableui",
     "doh",
     "downloads",
+    "aboutdino",
     "enterprisepolicies",
     "extensions",
     "pagedata",

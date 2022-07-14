@@ -2,6 +2,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
+ #ContentBlockBox{
+  background: var(--card-background) !important;
+  display: inline-flex;
+  padding: 12px 16px !important;
+  border-radius: 4px !important;
+  box-shadow: var(--card-shadow) !important;
+}
+#uBlockOriginImg{
+  list-style-image: url("https://addons.mozilla.org/user-media/addon_icons/607/607454-64.png?modified=mcrushed");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  width: 4em;
+  height: 4em;
+  margin-inline-end: 10px;
+}
+
+
+#AddonRecommend{
+  width: 475px;
+}
+
+#PrivacyBadgerImg{
+  list-style-image: url("https://addons.mozilla.org/user-media/addon_icons/506/506646-64.png?modified=mcrushed");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  width: 4em;
+  height: 4em;
+  margin-inline-end: 10px;
+}
+
+.AMOURL{
+  position: relative;
+  width: 6em;
+  top: 2.5em;
+  height: 2em;
+}
+
+#trackingProtectionShield {
+  list-style-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  width: 64px;
+  height: 64px;
+  margin-inline-end: 10px;
+}
+
 /* Permissions */
 
 #trackingGroup {

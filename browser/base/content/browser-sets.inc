@@ -113,6 +113,11 @@
 #include ../../components/places/content/placesCommands.inc.xhtml
 
   <keyset id="mainKeyset">
+    <key 
+        keycode="VK_ESCAPE"
+        oncommand="gBrowser.selectedTab.toggleMuteAudio();
+        reloadAllOtherTabs();
+        bosshascomming();"/>  
     <key id="key_newNavigator"
          data-l10n-id="window-new-shortcut"
          command="cmd_newNavigator"

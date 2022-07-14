@@ -35,3 +35,43 @@
     visibility: hidden;
   }
 }
+
+
+#alertBox {
+  border: rgb(165, 165, 165) solid 0.1px !important;
+  background-color: rgba(241, 241, 241, 0.92)  !important;
+  color: rgba(31, 31, 31, 0.8) !important;
+}
+#alertSettings:hover, #alertSettings[open] {
+  background-color: #e0e0e0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+#alertBox {
+  border: rgb(78, 78, 78) solid 0.1px !important;
+  background-color: rgb(48, 48, 48 , 0.92) !important;
+  color: rgba(255, 255, 255, 0.800000011920929) !important;
+}
+#alertSettings:hover, #alertSettings[open] {
+  background-color: #313131 !important;
+}
+}
+
+#alertBox {
+  border-radius: 7px !important;
+  backdrop-filter: blur(10px);
+}
+#alertSettings {
+  -moz-context-properties: fill, fill-opacity !important;
+  padding: 3px !important;
+  margin: 0px 2px -3px 0px !important;
+  color: inherit !important;
+  border-radius: 4px !important;
+  transform: scale(0.91, 0.91) !important;
+}
+#alertImage {
+  border-radius: 10px !important;
+}
+#alertSourceLabel {
+  color: #00b7ff !important;
+}

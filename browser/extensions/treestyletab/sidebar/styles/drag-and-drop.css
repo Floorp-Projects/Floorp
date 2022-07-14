@@ -1,0 +1,151 @@
+@charset "UTF-8";
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+:root {
+  --tab-dropmarker-size: 0.15em;
+  --tab-dropmarker: -moz-fieldtext;
+}
+
+tab-item.dragging {
+  opacity: 0.5 !important;
+}
+
+tab-item[data-drop-position="self"] {
+  outline: var(--tab-dropmarker-size) solid var(--tab-dropmarker) !important;
+  outline-offset: calc(0px - var(--tab-dropmarker-size));
+  -moz-outline-radius: calc(var(--tab-dropmarker-size) * 2);
+}
+
+tab-item[data-drop-position]:not([data-drop-position="self"])::before {
+  content: "";
+  display: block;
+  max-height: var(--tab-dropmarker-size);
+  min-height: var(--tab-dropmarker-size);
+  background: var(--tab-dropmarker) !important;
+  border-radius: var(--tab-dropmarker-size);
+  overflow: hidden;
+  position: absolute;
+  z-index: var(--tab-drop-marker-z-index);
+}
+tab-item[data-drop-position]:not([data-drop-position="self"]).faviconized::before {
+  max-height: none;
+  max-width: var(--tab-dropmarker-size);
+  min-height: 0;
+  min-width: var(--tab-dropmarker-size);
+}
+
+tab-item:not(.faviconized)[data-drop-position="before"]::before {
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+tab-item:not(.faviconized)[data-drop-position="after"]::before {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+tab-item.faviconized[data-drop-position="before"]::before {
+  bottom: 0;
+  left: 0;
+  top: 0;
+}
+
+tab-item.faviconized[data-drop-position="after"]::before {
+  bottom: 0;
+  right: 0;
+  top: 0;
+}
+
+
+tab-item-drop-blocker {
+  display: none;
+  min-height: calc(var(--favicon-size) / 5);
+  min-width: calc(var(--favicon-size) / 5);
+  position: fixed;
+  z-index: var(--blocking-ui-z-index);
+}
+
+:root.debug tab-item-drop-blocker {
+  background: rgba(255, 0, 0, 0.5);
+}
+
+:roottab-item-dragging tab-item-drop-blocker,
+:root.link-dragging tab-item-drop-blocker {
+  display: block;
+}
+
+tab-item-drop-blocker#tab-drop-blocker-top {
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+tab-item-drop-blocker#tab-drop-blocker-right {
+  bottom: 0;
+  right: 0;
+  top: 0;
+}
+
+tab-item-drop-blocker#tab-drop-blocker-bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+tab-item-drop-blocker#tab-drop-blocker-left {
+  bottom: 0;
+  left: 0;
+  top: 0;
+}
+
+
+/* notification message */
+
+#tab-drag-notification {
+  background: var(--tab-surface, var(--bg-color));
+  bottom: 0;
+  color: var(--tab-text);
+  font-size: var(--svg-small-icon-size);
+  height: calc(var(--svg-small-icon-size) * 1.5);
+  left: 0;
+  line-height: 1;
+  opacity: 0;
+  overflow: hidden;
+  padding: calc(var(--svg-small-icon-size) * 0.25) 0;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity var(--collapse-animation);
+  right: 0;
+  z-index: var(--notification-ui-z-index);
+}
+
+#tab-drag-notification.shown {
+  opacity: 0.85;
+}
+#tab-drag-notification.shown:hover {
+  opacity: 1;
+}
+
+#tab-drag-notification::before {
+  content: "";
+  display: inline-block;
+  white-space: nowrap;
+}
+
+#tab-drag-notification.shown > span,
+#tab-drag-notification.hiding > span {
+  position: absolute;
+  white-space: nowrap;
+  animation: marquee linear 20s infinite;
+}
+
+@keyframes marquee {
+    0% { left: 100%; transform: translate(0); }
+  100% { left: 0;    transform: translate(-100%); }
+}

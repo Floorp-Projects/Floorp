@@ -86,6 +86,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "chromium",
       "chromium-360se",
       "canary",
+      "vivaldi",
     ];
   }
   if (AppConstants.platform == "macosx") {
@@ -98,6 +99,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "chromium-edge-beta",
       "chromium",
       "canary",
+      "vivaldi",
     ];
   }
   if (AppConstants.XP_UNIX) {
@@ -108,6 +110,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "chrome-beta",
       "chrome-dev",
       "chromium",
+      "vivaldi",
     ];
   }
   return [];
@@ -778,6 +781,8 @@ var MigrationUtils = Object.seal({
       Chrome: "chrome", // OS X
       Chromium: "chromium", // Windows, OS X
       "Chromium Web Browser": "chromium", // Linux
+      "Vivaldi Web Browser": "vivaldi", // Windows, Linux
+      Vivaldi: "vivaldi", // OS X
       "360\u5b89\u5168\u6d4f\u89c8\u5668": "chromium-360se",
     };
 
@@ -809,7 +814,7 @@ var MigrationUtils = Object.seal({
         key = gPreviousDefaultBrowserKey;
       } else {
         // We didn't have a saved value, so check the registry.
-        const kRegPath = "Software\\Mozilla\\Firefox";
+        const kRegPath = "Software\\Ablaze\\Floorp";
         let oldDefault = WindowsRegistry.readRegKey(
           Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
           kRegPath,
@@ -1269,6 +1274,7 @@ var MigrationUtils = Object.seal({
     "chromium-edge": 10,
     "chromium-edge-beta": 10,
     brave: 11,
+    vivalldi: 12,
   },
   getSourceIdForTelemetry(sourceName) {
     return this._sourceNameToIdMapping[sourceName] || 0;

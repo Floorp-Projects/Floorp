@@ -14,11 +14,23 @@
 <script type="text/javascript">
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Services.scriptloader.loadSubScript("chrome://browser/content/browser.js", this);
-Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/editMenuOverlay.js", this);
+
+Services.scriptloader.loadSubScript("chrome://browser/content/browser.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
+
+//Floorp JavaScript
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-UI-custom.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-startup.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
+
+//shortcutkey
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this)
+
 if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
 }

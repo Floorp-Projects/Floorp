@@ -72,10 +72,12 @@ close-button =
 
 feature-enable-requires-restart = { -brand-short-name } must restart to enable this feature.
 feature-disable-requires-restart = { -brand-short-name } must restart to disable this feature.
+feature-requires-restart = A reboot is required to change the settings
 should-restart-title = Restart { -brand-short-name }
 should-restart-ok = Restart { -brand-short-name } now
 cancel-no-restart-button = Cancel
 restart-later = Restart Later
+feature-change-requires-restart = { -brand-short-name } must restart to change this feature.
 
 ## Extension Control Notifications
 ##
@@ -636,7 +638,7 @@ home-restore-defaults =
 # "Firefox" should be treated as a brand and kept in English,
 # while "Home" and "(Default)" can be localized.
 home-mode-choice-default =
-    .label = Firefox Home (Default)
+    .label = Floorp Home (Default)
 
 home-mode-choice-custom =
     .label = Custom URLs…
@@ -663,10 +665,10 @@ choose-bookmark =
     .label = Use Bookmark…
     .accesskey = B
 
-## Home Section - Firefox Home Content Customization
+## Home Section - Floorp Home Content Customization
 
-home-prefs-content-header = Firefox Home Content
-home-prefs-content-description = Choose what content you want on your Firefox Home screen.
+home-prefs-content-header = Floorp Home Content
+home-prefs-content-description = Choose what content you want on your Floorp Home screen.
 
 home-prefs-search-header =
     .label = Web Search
@@ -1413,3 +1415,110 @@ httpsonly-radio-disabled =
 desktop-folder-name = Desktop
 downloads-folder-name = Downloads
 choose-download-folder-title = Choose Download Folder:
+
+# Variables:
+#   $service-name (String) - Name of a cloud storage provider like Dropbox, Google Drive, etc...
+save-files-to-cloud-storage =
+    .label = Save files to { $service-name }
+
+# Floorp の固有設定。Firefox のソースコードではありません。from 8.7.2
+
+notice-from-floorp-projects = Floorp Administration Notice
+
+floorp-preference = Experimet Preferences
+browser-design-settings = Tab Bar Settings
+
+auto-reboot =If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
+enable-multitab = Enable multi-level tabs 
+operation-settings = Browser Operation Settings
+Mouse-side-button = Browser optimized for mouse operation with side buttons
+
+tabbar-preference = Tabbar
+
+None-mode = 
+ .label= Normal mode
+
+hide-horizontality-tabs = 
+ .label= Hide horizontality tabber
+
+verticalTab-setting = 
+ .label = Browser optimized for vertical tabs
+
+move-tabbar-position =
+ .label = Move the tab bar position to below the bookmark
+
+enable-classic-menu = 
+ .label = Classic menu button (Not compatible with Linux Gnome UI)
+
+treestyletabSettings-l10 = Tree Style vertical tab settings
+treestyletab-Settings = Expand when mouse focus
+
+bookmarks-bar-settings = Bookmark Bar Settings
+bookmarks-focus-mode = Show the bookmark bar when the mouse is focused on the toolbar
+bookmarks-bottom-mode = Bookmark bar at the bottom of the browser
+
+material-effect = Allow Mica for everyone to modify the browser design
+other-preference = Other Preferences
+
+enable-userscript = Enable legacy components
+about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
+
+Search-positon-top = Display the search bar at the top of the page
+classic-menu-mode = Use classic style menus (May not be compatible)
+allow-auto-restart = Automatic restart when settings are changed that require a restart
+
+## updater has been removed at version 10.
+
+## system theme color
+
+system-color-settings = Both light and dark modes are available for this theme, and the design can be specified.
+preferences-theme-appearance-header = Setting the system theme
+
+system-theme-dark =
+ .label = Enforce dark mode
+
+system-theme-light = 
+ .label = Enforce light mode
+ 
+system-theme-auto =  
+ .label = Default mode
+
+## user interface prefernces
+
+ui-preference = Browser appearance
+preferences-browser-appearance-description = You can choose from a selection of great designs written by Floorp third parties. Some designs may not be compatible with your configuration.
+
+firefox-proton =
+ .label = Firefox modern Proton UI
+
+firefox-proton-fix =
+ .label = Firefox Proton FIX UI
+
+firefox-photon = 
+ .label = Firefox Legacy Photon UI
+ 
+floorp-legacy =  
+ .label = Floorp Legacy material UI 
+
+floorp-fluentUI =
+ .label = fluentUI
+
+floorp-gnomeUI =
+ .label = Gnome Theme
+ 
+waterfox-lepton =
+ .label = Firefox Lepton UI
+
+## Privacyhub
+
+privacy-hub-header = Privacy Hub
+
+block-tracker = Block more Trackers Trackers Track users in a Place that is Invisible to Them. Learn How to Block Further
+block-more-tracker = Block more Trackers and Ads 
+
+view-at-AMO = View at AMO
+uBlock-Origin = uBlock Origin
+about-uboori = uBlock Origin blocks ads, extensive trackers, and additional dangerous sites.
+
+Privacy-Badger = Privacy Badger
+about-PBadger = Privacy Badger automatically learns to block hidden trackers and blocks trackers based on it.

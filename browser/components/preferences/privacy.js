@@ -184,6 +184,20 @@ Preferences.addAll([
   { id: "network.http.windows-sso.enabled", type: "bool" },
 ]);
 
+async function addonstatus(){
+  const uBlock = await AddonManager.getAddonByID("uBlock0@raymondhill.net");
+  console.log(uBlock)
+  if(uBlock!=null){
+    var Tag = document.createElement('style');
+    Tag.innerText = `
+    .uBlockOrigin{
+      display:none !important;
+    }`;
+    document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+  }
+}
+addonstatus()
+
 // Study opt out
 if (AppConstants.MOZ_DATA_REPORTING) {
   Preferences.addAll([
