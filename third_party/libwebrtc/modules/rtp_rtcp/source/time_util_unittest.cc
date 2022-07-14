@@ -95,20 +95,4 @@ TEST(TimeUtilTest, SaturatedToCompactNtp) {
       5'515, 16);
 }
 
-TEST(TimeUtilTest, ToNtpUnits) {
-  EXPECT_EQ(ToNtpUnits(TimeDelta::Zero()), 0);
-  EXPECT_EQ(ToNtpUnits(TimeDelta::Seconds(1)), int64_t{1} << 32);
-  EXPECT_EQ(ToNtpUnits(TimeDelta::Seconds(-1)), -(int64_t{1} << 32));
-
-  EXPECT_EQ(ToNtpUnits(TimeDelta::Millis(500)), int64_t{1} << 31);
-  EXPECT_EQ(ToNtpUnits(TimeDelta::Millis(-1'500)), -(int64_t{3} << 31));
-
-  // Smallest TimeDelta that can be converted without precision loss.
-  EXPECT_EQ(ToNtpUnits(TimeDelta::Micros(15'625)), int64_t{1} << 26);
-
-  // 1 us ~= 4'294.97 NTP units. ToNtpUnits makes no rounding promises.
-  EXPECT_GE(ToNtpUnits(TimeDelta::Micros(1)), 4'294);
-  EXPECT_LE(ToNtpUnits(TimeDelta::Micros(1)), 4'295);
-}
-
 }  // namespace webrtc
