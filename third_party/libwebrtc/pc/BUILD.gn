@@ -956,6 +956,7 @@ rtc_library("connection_context") {
     "../rtc_base:socket_server",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
+    "../rtc_base/memory:always_valid_pointer",
     "../rtc_base/task_utils:to_queued_task",
   ]
 }

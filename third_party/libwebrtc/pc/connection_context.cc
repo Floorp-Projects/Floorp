@@ -43,18 +43,6 @@ rtc::Thread* MaybeStartNetworkThread(
   return thread_holder.get();
 }
 
-rtc::Thread* MaybeStartWorkerThread(
-    rtc::Thread* old_thread,
-    std::unique_ptr<rtc::Thread>& thread_holder) {
-  if (old_thread) {
-    return old_thread;
-  }
-  thread_holder = rtc::Thread::Create();
-  thread_holder->SetName("pc_worker_thread", nullptr);
-  thread_holder->Start();
-  return thread_holder.get();
-}
-
 rtc::Thread* MaybeWrapThread(rtc::Thread* signaling_thread,
                              bool& wraps_current_thread) {
   wraps_current_thread = false;
@@ -99,8 +87,13 @@ ConnectionContext::ConnectionContext(
     : network_thread_(MaybeStartNetworkThread(dependencies->network_thread,
                                               owned_socket_factory_,
                                               owned_network_thread_)),
-      worker_thread_(MaybeStartWorkerThread(dependencies->worker_thread,
-                                            owned_worker_thread_)),
+      worker_thread_(dependencies->worker_thread,
+                     []() {
+                       auto thread_holder = rtc::Thread::Create();
+                       thread_holder->SetName("pc_worker_thread", nullptr);
+                       thread_holder->Start();
+                       return thread_holder;
+                     }),
       signaling_thread_(MaybeWrapThread(dependencies->signaling_thread,
                                         wraps_current_thread_)),
       trials_(dependencies->trials ? std::move(dependencies->trials)
@@ -112,7 +105,7 @@ ConnectionContext::ConnectionContext(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
                                  network_thread(),
                                  *trials_.get())) {
-  signaling_thread_->AllowInvokesToThread(worker_thread_);
+  signaling_thread_->AllowInvokesToThread(worker_thread());
   signaling_thread_->AllowInvokesToThread(network_thread_);
   worker_thread_->AllowInvokesToThread(network_thread_);
   if (network_thread_->IsCurrent()) {

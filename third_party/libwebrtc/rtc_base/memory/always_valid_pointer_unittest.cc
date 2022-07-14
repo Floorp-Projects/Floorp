@@ -84,4 +84,10 @@ TEST(AlwaysValidPointerTest, TakeOverOwnershipDoesNotForwardDefaultArguments) {
   EXPECT_EQ(*str2, "anka");
 }
 
+TEST(AlwaysValidPointerTest, DefaultToLambda) {
+  AlwaysValidPointer<std::string> ptr(
+      nullptr, []() { return std::make_unique<std::string>("onkel skrue"); });
+  EXPECT_EQ(*ptr, "onkel skrue");
+}
+
 }  // namespace webrtc
