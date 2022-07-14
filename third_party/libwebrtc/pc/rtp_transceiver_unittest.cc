@@ -75,14 +75,15 @@ TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
   EXPECT_CALL(channel2, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
 
+  // Clear the current channel - required to allow SetChannel()
+  EXPECT_CALL(channel1, SetFirstPacketReceivedCallback(_));
+  EXPECT_CALL(cm, DestroyChannel(&channel1)).WillRepeatedly(testing::Return());
+  transceiver->ClearChannel();
   // Channel can no longer be set, so this call should be a no-op.
   transceiver->SetChannel(&channel2,
                           [](const std::string&) { return nullptr; });
-  EXPECT_EQ(&channel1, transceiver->channel());
+  EXPECT_EQ(nullptr, transceiver->channel());
 
-  // Clear the current channel before `transceiver` goes out of scope.
-  EXPECT_CALL(channel1, SetFirstPacketReceivedCallback(_));
-  EXPECT_CALL(cm, DestroyChannel(&channel1)).WillRepeatedly(testing::Return());
   transceiver->ClearChannel();
 }
 
