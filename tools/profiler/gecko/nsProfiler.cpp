@@ -278,7 +278,7 @@ struct StringWriteFunc : public JSONWriteFunc {
 NS_IMETHODIMP
 nsProfiler::GetSharedLibraries(JSContext* aCx,
                                JS::MutableHandle<JS::Value> aResult) {
-  JS::RootedValue val(aCx);
+  JS::Rooted<JS::Value> val(aCx);
   {
     nsString buffer;
     JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
@@ -289,7 +289,7 @@ nsProfiler::GetSharedLibraries(JSContext* aCx,
                                  static_cast<const char16_t*>(buffer.get()),
                                  buffer.Length(), &val));
   }
-  JS::RootedObject obj(aCx, &val.toObject());
+  JS::Rooted<JSObject*> obj(aCx, &val.toObject());
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
@@ -300,7 +300,7 @@ nsProfiler::GetSharedLibraries(JSContext* aCx,
 NS_IMETHODIMP
 nsProfiler::GetActiveConfiguration(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aResult) {
-  JS::RootedValue jsValue(aCx);
+  JS::Rooted<JS::Value> jsValue(aCx);
   {
     nsString buffer;
     JSONWriter writer(MakeUnique<StringWriteFunc>(buffer));
@@ -312,7 +312,7 @@ nsProfiler::GetActiveConfiguration(JSContext* aCx,
   if (jsValue.isNull()) {
     aResult.setNull();
   } else {
-    JS::RootedObject obj(aCx, &jsValue.toObject());
+    JS::Rooted<JSObject*> obj(aCx, &jsValue.toObject());
     if (!obj) {
       return NS_ERROR_FAILURE;
     }
@@ -338,7 +338,7 @@ nsProfiler::GetProfileData(double aSinceTime, JSContext* aCx,
   NS_ConvertUTF8toUTF16 js_string(nsDependentCString(profile.get()));
   auto profile16 = static_cast<const char16_t*>(js_string.get());
 
-  JS::RootedValue val(aCx);
+  JS::Rooted<JS::Value> val(aCx);
   MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, profile16, js_string.Length(), &val));
 
   aResult.set(val);

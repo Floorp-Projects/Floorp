@@ -267,7 +267,7 @@ nsStyleSheetService::PreloadSheet(nsIURI* aSheetURI, uint32_t aSheetType,
 NS_IMETHODIMP
 nsStyleSheetService::PreloadSheetAsync(nsIURI* aSheetURI, uint32_t aSheetType,
                                        JSContext* aCx,
-                                       JS::MutableHandleValue aRval) {
+                                       JS::MutableHandle<JS::Value> aRval) {
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
   css::SheetParsingMode parsingMode;

@@ -353,7 +353,7 @@ nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
 
 NS_IMETHODIMP
 nsSiteSecurityService::ResetState(nsIURI* aURI,
-                                  JS::HandleValue aOriginAttributes,
+                                  JS::Handle<JS::Value> aOriginAttributes,
                                   JSContext* aCx, uint8_t aArgc) {
   if (!aURI) {
     return NS_ERROR_INVALID_ARG;
@@ -406,7 +406,7 @@ bool nsSiteSecurityService::HostIsIPAddress(const nsCString& hostname) {
 NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeaderScriptable(
     nsIURI* aSourceURI, const nsACString& aHeader,
-    nsITransportSecurityInfo* aSecInfo, JS::HandleValue aOriginAttributes,
+    nsITransportSecurityInfo* aSecInfo, JS::Handle<JS::Value> aOriginAttributes,
     uint64_t* aMaxAge, bool* aIncludeSubdomains, uint32_t* aFailureResult,
     JSContext* aCx, uint8_t aArgc) {
   OriginAttributes originAttributes;
@@ -636,10 +636,9 @@ nsresult nsSiteSecurityService::ProcessSTSHeader(
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::IsSecureURIScriptable(nsIURI* aURI,
-                                             JS::HandleValue aOriginAttributes,
-                                             JSContext* aCx, uint8_t aArgc,
-                                             bool* aResult) {
+nsSiteSecurityService::IsSecureURIScriptable(
+    nsIURI* aURI, JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx,
+    uint8_t aArgc, bool* aResult) {
   OriginAttributes originAttributes;
   if (aArgc > 0) {
     if (!aOriginAttributes.isObject() ||
