@@ -34,6 +34,9 @@ namespace webrtc_pc_e2e {
 class TestPeer final {
  public:
   const Params& params() const { return params_; }
+  ConfigurableParams configurable_params() const {
+    return configurable_params_;
+  }
 
   // TODO(titovartem): delete when downstreams will migrate to the new method.
   const Params& params2() const { return params_; }
@@ -143,13 +146,15 @@ class TestPeer final {
   TestPeer(rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory,
            rtc::scoped_refptr<PeerConnectionInterface> pc,
            std::unique_ptr<MockPeerConnectionObserver> observer,
-           std::unique_ptr<Params> params,
+           Params params,
+           ConfigurableParams configurable_params,
            std::vector<PeerConfigurerImpl::VideoSource> video_sources,
            rtc::scoped_refptr<AudioProcessing> audio_processing,
            std::unique_ptr<rtc::Thread> worker_thread);
 
  private:
   Params params_;
+  ConfigurableParams configurable_params_;
   // Keeps ownership of worker thread. It has to be destroyed after `wrapper_`.
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<PeerConnectionWrapper> wrapper_;
