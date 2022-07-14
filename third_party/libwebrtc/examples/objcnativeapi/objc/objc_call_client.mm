@@ -50,10 +50,9 @@ class SetRemoteSessionDescriptionObserver : public webrtc::SetRemoteDescriptionO
   void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override;
 };
 
-class SetLocalSessionDescriptionObserver : public webrtc::SetSessionDescriptionObserver {
+class SetLocalSessionDescriptionObserver : public webrtc::SetLocalDescriptionObserverInterface {
  public:
-  void OnSuccess() override;
-  void OnFailure(webrtc::RTCError error) override;
+  void OnSetLocalDescriptionComplete(webrtc::RTCError error) override;
 };
 
 }  // namespace
@@ -134,7 +133,7 @@ void ObjCCallClient::CreatePeerConnectionFactory() {
   dependencies.event_log_factory =
       std::make_unique<webrtc::RtcEventLogFactory>(dependencies.task_queue_factory.get());
   pcf_ = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
-  RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << pcf_;
+  RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << pcf_.get();
 }
 
 void ObjCCallClient::CreatePeerConnection() {
@@ -147,12 +146,12 @@ void ObjCCallClient::CreatePeerConnection() {
   pcf_->SetOptions(options);
   webrtc::PeerConnectionDependencies pc_dependencies(pc_observer_.get());
   pc_ = pcf_->CreatePeerConnectionOrError(config, std::move(pc_dependencies)).MoveValue();
-  RTC_LOG(LS_INFO) << "PeerConnection created: " << pc_;
+  RTC_LOG(LS_INFO) << "PeerConnection created: " << pc_.get();
 
   rtc::scoped_refptr<webrtc::VideoTrackInterface> local_video_track =
-      pcf_->CreateVideoTrack("video", video_source_);
+      pcf_->CreateVideoTrack("video", video_source_.get());
   pc_->AddTransceiver(local_video_track);
-  RTC_LOG(LS_INFO) << "Local video sink set up: " << local_video_track;
+  RTC_LOG(LS_INFO) << "Local video sink set up: " << local_video_track.get();
 
   for (const rtc::scoped_refptr<webrtc::RtpTransceiverInterface>& tranceiver :
        pc_->GetTransceivers()) {
@@ -160,7 +159,7 @@ void ObjCCallClient::CreatePeerConnection() {
     if (track && track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
       static_cast<webrtc::VideoTrackInterface*>(track.get())
           ->AddOrUpdateSink(remote_sink_.get(), rtc::VideoSinkWants());
-      RTC_LOG(LS_INFO) << "Remote video sink set up: " << track;
+      RTC_LOG(LS_INFO) << "Remote video sink set up: " << track.get();
       break;
     }
   }
@@ -168,7 +167,7 @@ void ObjCCallClient::CreatePeerConnection() {
 
 void ObjCCallClient::Connect() {
   webrtc::MutexLock lock(&pc_mutex_);
-  pc_->CreateOffer(rtc::make_ref_counted<CreateOfferObserver>(pc_),
+  pc_->CreateOffer(rtc::make_ref_counted<CreateOfferObserver>(pc_).get(),
                    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 
@@ -214,7 +213,8 @@ void CreateOfferObserver::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
   RTC_LOG(LS_INFO) << "Created offer: " << sdp;
 
   // Ownership of desc was transferred to us, now we transfer it forward.
-  pc_->SetLocalDescription(rtc::make_ref_counted<SetLocalSessionDescriptionObserver>(), desc);
+  pc_->SetLocalDescription(absl::WrapUnique(desc),
+                           rtc::make_ref_counted<SetLocalSessionDescriptionObserver>());
 
   // Generate a fake answer.
   std::unique_ptr<webrtc::SessionDescriptionInterface> answer(
@@ -231,12 +231,8 @@ void SetRemoteSessionDescriptionObserver::OnSetRemoteDescriptionComplete(webrtc:
   RTC_LOG(LS_INFO) << "Set remote description: " << error.message();
 }
 
-void SetLocalSessionDescriptionObserver::OnSuccess() {
-  RTC_LOG(LS_INFO) << "Set local description success!";
-}
-
-void SetLocalSessionDescriptionObserver::OnFailure(webrtc::RTCError error) {
-  RTC_LOG(LS_INFO) << "Set local description failure: " << error.message();
+void SetLocalSessionDescriptionObserver::OnSetLocalDescriptionComplete(webrtc::RTCError error) {
+  RTC_LOG(LS_INFO) << "Set local description: " << error.message();
 }
 
 }  // namespace webrtc_examples
