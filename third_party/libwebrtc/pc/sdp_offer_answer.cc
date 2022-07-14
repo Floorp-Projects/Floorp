@@ -39,6 +39,7 @@
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_description_factory.h"
 #include "p2p/base/transport_info.h"
+#include "pc/channel.h"
 #include "pc/channel_interface.h"
 #include "pc/dtls_transport.h"
 #include "pc/media_stream.h"
