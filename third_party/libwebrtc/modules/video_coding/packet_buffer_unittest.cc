@@ -291,6 +291,13 @@ TEST_F(PacketBufferTest, ClearSinglePacket) {
       Insert(seq_num + kMaxSize, kDeltaFrame, kFirst, kLast).buffer_cleared);
 }
 
+TEST_F(PacketBufferTest, ClearPacketBeforeFullyReceivedFrame) {
+  Insert(0, kKeyFrame, kFirst, kNotLast);
+  Insert(1, kKeyFrame, kNotFirst, kNotLast);
+  packet_buffer_.ClearTo(0);
+  EXPECT_THAT(Insert(2, kKeyFrame, kNotFirst, kLast).packets, IsEmpty());
+}
+
 TEST_F(PacketBufferTest, ClearFullBuffer) {
   for (int i = 0; i < kMaxSize; ++i)
     Insert(i, kDeltaFrame, kFirst, kLast);
