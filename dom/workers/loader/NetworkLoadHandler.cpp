@@ -36,7 +36,7 @@ NS_IMPL_ISUPPORTS(NetworkLoadHandler, nsIStreamLoaderObserver,
                   nsIRequestObserver)
 
 NetworkLoadHandler::NetworkLoadHandler(WorkerScriptLoader* aLoader,
-                                       ScriptLoadInfo& aLoadInfo)
+                                       ScriptLoadInfo* aLoadInfo)
     : mLoader(aLoader),
       mWorkerPrivate(aLoader->mWorkerPrivate),
       mLoadInfo(aLoadInfo) {
@@ -58,11 +58,11 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
                                                      const uint8_t* aString) {
   AssertIsOnMainThread();
 
-  if (!mLoadInfo.mChannel) {
+  if (!mLoadInfo->mChannel) {
     return NS_BINDING_ABORTED;
   }
 
-  mLoadInfo.mChannel = nullptr;
+  mLoadInfo->mChannel = nullptr;
 
   if (NS_FAILED(aStatus)) {
     return aStatus;
@@ -111,8 +111,8 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   // same-origin checks on them so we should be able to see their errors.
   // Note that for data: url, where we allow it through the same-origin check
   // but then give it a different origin.
-  mLoadInfo.mMutedErrorFlag.emplace(!mLoader->IsMainWorkerScript() &&
-                                    !principal->Subsumes(channelPrincipal));
+  mLoadInfo->mMutedErrorFlag.emplace(!mLoader->IsMainWorkerScript() &&
+                                     !principal->Subsumes(channelPrincipal));
 
   // Make sure we're not seeing the result of a 404 or something by checking
   // the 'requestSucceeded' attribute on the http channel.
@@ -139,7 +139,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 
     nsAutoCString sourceMapURL;
     if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {
-      mLoadInfo.mSourceMapURL = Some(NS_ConvertUTF8toUTF16(sourceMapURL));
+      mLoadInfo->mSourceMapURL = Some(NS_ConvertUTF8toUTF16(sourceMapURL));
     }
   }
 
@@ -151,22 +151,22 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   // Worker scripts are always decoded as UTF-8 per spec. Passing null for a
   // channel and UTF-8 for the hint will always interpret |aString| as UTF-8.
   if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
-    mLoadInfo.InitUTF8Script();
+    mLoadInfo->InitUTF8Script();
     rv = ScriptLoader::ConvertToUTF8(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                     parentDoc, mLoadInfo.mScript.mUTF8,
-                                     mLoadInfo.mScriptLength);
+                                     parentDoc, mLoadInfo->mScript.mUTF8,
+                                     mLoadInfo->mScriptLength);
   } else {
-    mLoadInfo.InitUTF16Script();
+    mLoadInfo->InitUTF16Script();
     rv = ScriptLoader::ConvertToUTF16(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                      parentDoc, mLoadInfo.mScript.mUTF16,
-                                      mLoadInfo.mScriptLength);
+                                      parentDoc, mLoadInfo->mScript.mUTF16,
+                                      mLoadInfo->mScriptLength);
   }
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (mLoadInfo.ScriptTextIsNull()) {
-    if (mLoadInfo.mScriptLength != 0) {
+  if (mLoadInfo->ScriptTextIsNull()) {
+    if (mLoadInfo->mScriptLength != 0) {
       return NS_ERROR_FAILURE;
     }
 
@@ -188,7 +188,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     if (!filename.IsEmpty()) {
       // This will help callers figure out what their script url resolved to
       // in case of errors.
-      mLoadInfo.mURL.Assign(NS_ConvertUTF8toUTF16(filename));
+      mLoadInfo->mURL.Assign(NS_ConvertUTF8toUTF16(filename));
     }
   }
 
@@ -297,7 +297,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
       ServiceWorkerManager::LocalizeAndReportToAllClients(
           scope, "ServiceWorkerRegisterMimeTypeError2",
           nsTArray<nsString>{NS_ConvertUTF8toUTF16(scope),
-                             NS_ConvertUTF8toUTF16(mimeType), mLoadInfo.mURL});
+                             NS_ConvertUTF8toUTF16(mimeType), mLoadInfo->mURL});
 
       return NS_ERROR_DOM_NETWORK_ERR;
     }
@@ -306,17 +306,17 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   // Note that importScripts() can redirect.  In theory the main
   // script could also encounter an internal redirect, but currently
   // the assert does not allow that.
-  MOZ_ASSERT_IF(mLoader->IsMainScript(), channel == mLoadInfo.mChannel);
-  mLoadInfo.mChannel = channel;
+  MOZ_ASSERT_IF(mLoader->IsMainScript(), channel == mLoadInfo->mChannel);
+  mLoadInfo->mChannel = channel;
 
   // We synthesize the result code, but its never exposed to content.
   SafeRefPtr<mozilla::dom::InternalResponse> ir =
       MakeSafeRefPtr<mozilla::dom::InternalResponse>(200, "OK"_ns);
-  ir->SetBody(mLoadInfo.mCacheReadStream, InternalResponse::UNKNOWN_BODY_SIZE);
+  ir->SetBody(mLoadInfo->mCacheReadStream, InternalResponse::UNKNOWN_BODY_SIZE);
 
   // Drop our reference to the stream now that we've passed it along, so it
   // doesn't hang around once the cache is done with it and keep data alive.
-  mLoadInfo.mCacheReadStream = nullptr;
+  mLoadInfo->mCacheReadStream = nullptr;
 
   // Set the channel info of the channel on the response so that it's
   // saved in the cache.
@@ -335,15 +335,15 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   MOZ_TRY(PrincipalToPrincipalInfo(channelPrincipal, principalInfo.get()));
 
   ir->SetPrincipalInfo(std::move(principalInfo));
-  ir->Headers()->FillResponseHeaders(mLoadInfo.mChannel);
+  ir->Headers()->FillResponseHeaders(mLoadInfo->mChannel);
 
   RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
       mLoader->GetCacheCreator()->Global(), std::move(ir), nullptr);
 
   mozilla::dom::RequestOrUSVString request;
 
-  MOZ_ASSERT(!mLoadInfo.mFullURL.IsEmpty());
-  request.SetAsUSVString().ShareOrDependUpon(mLoadInfo.mFullURL);
+  MOZ_ASSERT(!mLoadInfo->mFullURL.IsEmpty());
+  request.SetAsUSVString().ShareOrDependUpon(mLoadInfo->mFullURL);
 
   // This JSContext will not end up executing JS code because here there are
   // no ReadableStreams involved.
@@ -362,8 +362,8 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
       new CachePromiseHandler(mLoader, mLoadInfo);
   cachePromise->AppendNativeHandler(promiseHandler);
 
-  mLoadInfo.mCachePromise.swap(cachePromise);
-  mLoadInfo.mCacheStatus = ScriptLoadInfo::WritingToCache;
+  mLoadInfo->mCachePromise.swap(cachePromise);
+  mLoadInfo->mCacheStatus = ScriptLoadInfo::WritingToCache;
 
   return NS_OK;
 }

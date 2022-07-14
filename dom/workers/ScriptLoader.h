@@ -158,14 +158,14 @@ class WorkerScriptLoader final : public nsINamed {
  protected:
   nsIURI* GetBaseURI();
 
-  void MaybeExecuteFinishedScripts(const ScriptLoadInfo& aLoadInfo);
+  void MaybeExecuteFinishedScripts(const ScriptLoadInfo* aLoadInfo);
 
   bool StoreCSP();
 
   bool ProcessPendingRequests(JSContext* aCx,
                               const Span<ScriptLoadInfo> aLoadInfosToExecute);
 
-  nsresult OnStreamComplete(ScriptLoadInfo& aLoadInfo, nsresult aStatus);
+  nsresult OnStreamComplete(ScriptLoadInfo* aLoadInfo, nsresult aStatus);
 
   // Are we loading the primary script, which is not a Debugger Script?
   bool IsMainWorkerScript() const {
@@ -193,7 +193,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   nsresult LoadScripts();
 
-  nsresult LoadScript(ScriptLoadInfo& aLoadInfo);
+  nsresult LoadScript(ScriptLoadInfo* aLoadInfo);
 
   void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                             bool aResult, bool aMutedError);
@@ -207,11 +207,11 @@ class WorkerScriptLoader final : public nsINamed {
     return NS_OK;
   }
 
-  void LoadingFinished(ScriptLoadInfo& aLoadInfo, nsresult aRv);
+  void LoadingFinished(ScriptLoadInfo* aLoadInfo, nsresult aRv);
 
   void DispatchProcessPendingRequests();
 
-  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo& aLoadInfo);
+  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo* aLoadInfo);
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
 };
