@@ -1136,6 +1136,7 @@ class RTCStatsReportVerifier {
                                      RTCCertificateStats::kType);
     verifier.TestMemberIsDefined(transport.tls_version);
     verifier.TestMemberIsDefined(transport.dtls_cipher);
+    verifier.TestMemberIsDefined(transport.dtls_role);
     verifier.TestMemberIsDefined(transport.srtp_cipher);
     verifier.TestMemberIsPositive<uint32_t>(
         transport.selected_candidate_pair_changes);
