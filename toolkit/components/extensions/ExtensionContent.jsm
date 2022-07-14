@@ -669,8 +669,6 @@ class UserScript extends Script {
   }
 
   async inject(context) {
-    const { extension } = context;
-
     DocumentManager.lazyInit();
 
     let scripts = this.getCompiledScripts(context);
@@ -691,42 +689,29 @@ class UserScript extends Script {
       context.executeAPIScript(apiScript);
     }
 
-    // The evaluations below may throw, in which case the promise will be
-    // automatically rejected.
-    lazy.ExtensionTelemetry.userScriptInjection.stopwatchStart(
-      extension,
-      context
-    );
-    try {
-      let userScriptSandbox = this.sandboxes.get(context);
+    let userScriptSandbox = this.sandboxes.get(context);
 
-      context.callOnClose({
-        close: () => {
-          // Destroy the userScript sandbox when the related ContentScriptContextChild instance
-          // is being closed.
-          this.sandboxes.delete(context);
-          Cu.nukeSandbox(userScriptSandbox);
-        },
-      });
+    context.callOnClose({
+      close: () => {
+        // Destroy the userScript sandbox when the related ContentScriptContextChild instance
+        // is being closed.
+        this.sandboxes.delete(context);
+        Cu.nukeSandbox(userScriptSandbox);
+      },
+    });
 
-      // Notify listeners subscribed to the userScripts.onBeforeScript API event,
-      // to allow extension API script to provide its custom APIs to the userScript.
-      if (apiScript) {
-        context.userScriptsEvents.emit(
-          "on-before-script",
-          this.scriptMetadata,
-          userScriptSandbox
-        );
-      }
-
-      for (let script of sandboxScripts) {
-        script.executeInGlobal(userScriptSandbox);
-      }
-    } finally {
-      lazy.ExtensionTelemetry.userScriptInjection.stopwatchFinish(
-        extension,
-        context
+    // Notify listeners subscribed to the userScripts.onBeforeScript API event,
+    // to allow extension API script to provide its custom APIs to the userScript.
+    if (apiScript) {
+      context.userScriptsEvents.emit(
+        "on-before-script",
+        this.scriptMetadata,
+        userScriptSandbox
       );
+    }
+
+    for (let script of sandboxScripts) {
+      script.executeInGlobal(userScriptSandbox);
     }
   }
 
