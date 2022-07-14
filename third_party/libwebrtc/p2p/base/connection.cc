@@ -843,18 +843,18 @@ bool Connection::Shutdown() {
 
   RTC_DLOG(LS_VERBOSE) << ToString() << ": Connection destroyed";
 
+  LogCandidatePairConfig(webrtc::IceCandidatePairConfigType::kDestroyed);
+
+  // Reset the `port_` after logging since information required for logging
+  // needs access to `port_`.
+  port_.reset();
+
   // Fire the 'destroyed' event before deleting the object. This is done
   // intentionally to avoid a situation whereby the signal might have dangling
   // pointers to objects that have been deleted by the time the async task
   // that deletes the connection object runs.
   SignalDestroyed(this);
   SignalDestroyed.disconnect_all();
-
-  LogCandidatePairConfig(webrtc::IceCandidatePairConfigType::kDestroyed);
-
-  // Reset the `port_` after logging and firing the destroyed signal since
-  // information required for logging needs access to `port_`.
-  port_.reset();
 
   return true;
 }
