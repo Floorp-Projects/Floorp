@@ -7086,7 +7086,7 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromOffscreenCanvas(
     result.mAlphaType = gfxAlphaType::Opaque;
     RefPtr<DrawTarget> ref =
         aTarget ? aTarget
-                : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+                : gfxPlatform::ThreadLocalScreenReferenceDrawTarget();
     if (ref->CanCreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8)) {
       RefPtr<DrawTarget> dt =
           ref->CreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8);

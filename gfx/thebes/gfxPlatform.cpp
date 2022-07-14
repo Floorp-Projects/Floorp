@@ -50,6 +50,7 @@
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
+#include "gfxPlatformWorker.h"
 
 #include "gfxBlur.h"
 #include "gfxEnv.h"
@@ -2262,10 +2263,26 @@ mozilla::LogModule* gfxPlatform::GetLog(eGfxLog aWhichLog) {
 }
 
 RefPtr<mozilla::gfx::DrawTarget> gfxPlatform::ScreenReferenceDrawTarget() {
+  MOZ_ASSERT_IF(XRE_IsContentProcess(), NS_IsMainThread());
   return (mScreenReferenceDrawTarget)
              ? mScreenReferenceDrawTarget
              : gPlatform->CreateOffscreenContentDrawTarget(
                    IntSize(1, 1), SurfaceFormat::B8G8R8A8, true);
+}
+
+/* static */ RefPtr<mozilla::gfx::DrawTarget>
+gfxPlatform::ThreadLocalScreenReferenceDrawTarget() {
+  if (NS_IsMainThread() && gPlatform) {
+    return gPlatform->ScreenReferenceDrawTarget();
+  }
+
+  gfxPlatformWorker* platformWorker = gfxPlatformWorker::Get();
+  if (platformWorker) {
+    return platformWorker->ScreenReferenceDrawTarget();
+  }
+
+  return Factory::CreateDrawTarget(BackendType::SKIA, IntSize(1, 1),
+                                   SurfaceFormat::B8G8R8A8);
 }
 
 mozilla::gfx::SurfaceFormat gfxPlatform::Optimal2DFormatForContent(
