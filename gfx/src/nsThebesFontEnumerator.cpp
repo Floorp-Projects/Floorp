@@ -133,16 +133,15 @@ class EnumerateFontsTask final : public Runnable {
 };
 
 NS_IMETHODIMP
-nsThebesFontEnumerator::EnumerateAllFontsAsync(JSContext* aCx,
-                                               JS::MutableHandleValue aRval) {
+nsThebesFontEnumerator::EnumerateAllFontsAsync(
+    JSContext* aCx, JS::MutableHandle<JS::Value> aRval) {
   return EnumerateFontsAsync(nullptr, nullptr, aCx, aRval);
 }
 
 NS_IMETHODIMP
-nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
-                                            const char* aGeneric,
-                                            JSContext* aCx,
-                                            JS::MutableHandleValue aRval) {
+nsThebesFontEnumerator::EnumerateFontsAsync(
+    const char* aLangGroup, const char* aGeneric, JSContext* aCx,
+    JS::MutableHandle<JS::Value> aRval) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
