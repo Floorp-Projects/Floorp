@@ -229,11 +229,13 @@ class ScriptLoadRequest
     mDataType = DataType::eUnknown;
     mScriptData.reset();
   }
+
+  bool IsUTF8ParsingEnabled();
+
   void SetTextSource() {
     MOZ_ASSERT(IsUnknownDataType());
     mDataType = DataType::eTextSource;
-    if (mozilla::StaticPrefs::
-            dom_script_loader_external_scripts_utf8_parsing_enabled()) {
+    if (IsUTF8ParsingEnabled()) {
       mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
     } else {
       mScriptData.emplace(VariantType<ScriptTextBuffer<char16_t>>());
