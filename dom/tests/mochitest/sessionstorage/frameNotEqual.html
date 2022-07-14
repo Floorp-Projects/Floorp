@@ -5,23 +5,29 @@
 <script type="text/javascript" src="interOriginSlave.js"></script>
 <script type="text/javascript">
 
+var aps = document.location.hash.includes("aps");
+var xorigin = document.location.hash.includes("xorigin");
+var sameOrigin = document.location.origin === "http://mochi.test:8888";
+
 var currentStep = 2;
 
 function doStep()
 {
+  var expect = (!xorigin && aps && sameOrigin) ? 2 : 0;
   switch (currentStep)
   {
     case 2:
-      is(sessionStorage.length, 0, "Num of items is 0");
+      is(sessionStorage.length, expect, `Num of items is ${expect}`);
 
       sessionStorage.setItem("C", "3");
+
       is(sessionStorage.getItem("C"), "3", "C is 3 in the slave");
-      is(sessionStorage.length, 1, "Num of items is 1");
+      is(sessionStorage.length, expect + 1, `Num of items is ${expect + 1}`);
       break;
 
     case 4:
       is(sessionStorage.getItem("C"), "3", "C is 3 in the slave");
-      is(sessionStorage.length, 1, "Num of items is 1");
+      is(sessionStorage.length, expect + 1, `Num of items is ${expect + 1}`);
       break;
 
     case 6:
