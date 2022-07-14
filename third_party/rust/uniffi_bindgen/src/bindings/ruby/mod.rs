@@ -2,18 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{
-    env,
-    ffi::OsString,
-    fs::File,
-    io::Write,
-    path::{Path, PathBuf},
-    process::Command,
-};
+use std::{env, io::Write, process::Command};
 
 use anyhow::{bail, Context, Result};
+use fs_err::File;
 
 pub mod gen_ruby;
+use camino::Utf8Path;
 pub use gen_ruby::{Config, RubyWrapper};
 
 use super::super::interface::ComponentInterface;
@@ -23,23 +18,18 @@ use super::super::interface::ComponentInterface;
 pub fn write_bindings(
     config: &Config,
     ci: &ComponentInterface,
-    out_dir: &Path,
+    out_dir: &Utf8Path,
     try_format_code: bool,
 ) -> Result<()> {
-    let mut rb_file = PathBuf::from(out_dir);
-    rb_file.push(format!("{}.rb", ci.namespace()));
-    let mut f = File::create(&rb_file).context("Failed to create .rb file for bindings")?;
+    let rb_file = out_dir.join(format!("{}.rb", ci.namespace()));
+    let mut f = File::create(&rb_file)?;
     write!(f, "{}", generate_ruby_bindings(config, ci)?)?;
 
     if try_format_code {
-        if let Err(e) = Command::new("rubocop")
-            .arg("-A")
-            .arg(rb_file.to_str().unwrap())
-            .output()
-        {
+        if let Err(e) = Command::new("rubocop").arg("-A").arg(&rb_file).output() {
             println!(
                 "Warning: Unable to auto-format {} using rubocop: {:?}",
-                rb_file.file_name().unwrap().to_str().unwrap(),
+                rb_file.file_name().unwrap(),
                 e
             )
         }
@@ -54,16 +44,17 @@ pub fn generate_ruby_bindings(config: &Config, ci: &ComponentInterface) -> Resul
     use askama::Template;
     RubyWrapper::new(config.clone(), ci)
         .render()
-        .map_err(|_| anyhow::anyhow!("failed to render ruby bindings"))
+        .context("failed to render ruby bindings")
 }
 
 /// Execute the specifed ruby script, with environment based on the generated
 /// artifacts in the given output directory.
-pub fn run_script(out_dir: &Path, script_file: &Path) -> Result<()> {
+pub fn run_script(out_dir: &Utf8Path, script_file: &Utf8Path) -> Result<()> {
     let mut cmd = Command::new("ruby");
     // This helps ruby find the generated .rb wrapper for rust component.
-    let rubypath = env::var_os("RUBYLIB").unwrap_or_else(|| OsString::from(""));
-    let rubypath = env::join_paths(env::split_paths(&rubypath).chain(vec![out_dir.to_path_buf()]))?;
+    let rubypath = env::var_os("RUBYLIB").unwrap_or_default();
+    let rubypath =
+        env::join_paths(env::split_paths(&rubypath).chain(vec![out_dir.as_std_path().to_owned()]))?;
 
     cmd.env("RUBYLIB", rubypath);
     // We should now be able to execute the tests successfully.

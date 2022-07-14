@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "weedle2"
-version = "2.0.1"
+version = "3.0.0"
 authors = [
     "Sharad Chand <sharad.d.chand@gmail.com>",
     "Jan-Erik Rediger <jrediger@mozilla.com>",
@@ -24,6 +24,7 @@ documentation = "https://docs.rs/weedle2"
 readme = "./README.md"
 license = "MIT"
 repository = "https://github.com/mozilla/uniffi-rs"
+resolver = "2"
 
 [lib]
 name = "weedle"
@@ -32,6 +33,6 @@ name = "weedle"
 version = "2.7.0"
 
 [dependencies.nom]
-version = "5.0.0"
+version = "6.0.0"
 features = ["std"]
 default-features = false
