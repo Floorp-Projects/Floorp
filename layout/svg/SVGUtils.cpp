@@ -804,17 +804,19 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
 }
 
 bool SVGUtils::HitTestClip(nsIFrame* aFrame, const gfxPoint& aPoint) {
-  // If the clip-path property references non-existent or invalid clipPath
-  // element(s) we ignore it.
-  SVGClipPathFrame* clipPathFrame;
-  SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame);
-  if (clipPathFrame) {
-    return clipPathFrame->PointIsInsideClipPath(aFrame, aPoint);
+  const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
+  if (!svgReset->HasClipPath()) {
+    return true;
   }
-  if (aFrame->StyleSVGReset()->HasClipPath()) {
-    return CSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
+  if (svgReset->mClipPath.IsUrl()) {
+    // If the clip-path property references non-existent or invalid clipPath
+    // element(s) we ignore it.
+    SVGClipPathFrame* clipPathFrame;
+    SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame);
+    return !clipPathFrame ||
+           clipPathFrame->PointIsInsideClipPath(aFrame, aPoint);
   }
-  return true;
+  return CSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
 }
 
 nsIFrame* SVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,

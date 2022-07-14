@@ -26,7 +26,7 @@ trait UniffiCustomTypeConverter {
 pub struct FfiConverterType{{ name }};
 
 unsafe impl uniffi::FfiConverter for FfiConverterType{{ name }} {
-    type RustType = {{ name }};
+    type RustType = r#{{ name }};
     type FfiType = {{ FFIType::from(builtin).borrow()|type_ffi }};
 
     fn lower(obj: {{ name }} ) -> Self::FfiType {
@@ -34,14 +34,14 @@ unsafe impl uniffi::FfiConverter for FfiConverterType{{ name }} {
     }
 
     fn try_lift(v: Self::FfiType) -> uniffi::Result<{{ name }}> {
-        <{{ name }} as UniffiCustomTypeConverter>::into_custom(<{{ builtin|type_rs }} as uniffi::FfiConverter>::try_lift(v)?)
+        <r#{{ name }} as UniffiCustomTypeConverter>::into_custom(<{{ builtin|type_rs }} as uniffi::FfiConverter>::try_lift(v)?)
     }
 
     fn write(obj: {{ name }}, buf: &mut Vec<u8>) {
         <{{ builtin|type_rs }} as uniffi::FfiConverter>::write(<{{ name }} as UniffiCustomTypeConverter>::from_custom(obj), buf);
     }
 
-    fn try_read(buf: &mut &[u8]) -> uniffi::Result<{{ name }}> {
+    fn try_read(buf: &mut &[u8]) -> uniffi::Result<r#{{ name }}> {
         <{{ name }} as UniffiCustomTypeConverter>::into_custom(<{{ builtin|type_rs }} as uniffi::FfiConverter>::try_read(buf)?)
     }
 }

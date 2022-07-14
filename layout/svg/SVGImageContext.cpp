@@ -9,8 +9,8 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxUtils.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
@@ -36,7 +36,8 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
     return;
   }
 
-  if (aPresContext.Document()->IsDocumentURISchemeChrome()) {
+  if (StaticPrefs::svg_embedder_prefers_color_scheme_content_enabled() ||
+      aPresContext.Document()->IsDocumentURISchemeChrome()) {
     if (!aContext) {
       aContext.emplace();
     }

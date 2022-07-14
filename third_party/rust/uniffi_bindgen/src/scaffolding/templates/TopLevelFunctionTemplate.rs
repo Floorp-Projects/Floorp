@@ -6,7 +6,7 @@
 #}
 #[doc(hidden)]
 #[no_mangle]
-pub extern "C" fn {{ func.ffi_func().name() }}(
+pub extern "C" fn r#{{ func.ffi_func().name() }}(
     {% call rs::arg_list_ffi_decl(func.ffi_func()) %}
 ) {% call rs::return_signature(func) %} {
     // If the provided function does not match the signature specified in the UDL

@@ -12,7 +12,7 @@ pub struct {{ e.type_().borrow()|ffi_converter_name }};
 
 #[doc(hidden)]
 impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name }} {
-    type RustType = {{ e.name() }};
+    type RustType = r#{{ e.name() }};
 
     {% if e.is_flat() %}
 
@@ -20,12 +20,12 @@ impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name
     // as the error message in the foreign language.
 
 
-    fn write(obj: {{ e.name() }}, buf: &mut std::vec::Vec<u8>) {
+    fn write(obj: r#{{ e.name() }}, buf: &mut std::vec::Vec<u8>) {
         use uniffi::deps::bytes::BufMut;
         let msg = obj.to_string();
         match obj {
             {%- for variant in e.variants() %}
-            {{ e.name() }}::{{ variant.name() }}{..} => {
+            r#{{ e.name() }}::r#{{ variant.name() }}{..} => {
                 buf.put_i32({{ loop.index }});
                 <String as uniffi::FfiConverter>::write(msg, buf);
             },
@@ -33,7 +33,7 @@ impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name
         };
     }
 
-    fn try_read(_buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<{{ e.name() }}> {
+    fn try_read(_buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<r#{{ e.name() }}> {
         // It's not currently possible to send errors from the foreign language *into* Rust.
         panic!("try_read not supported for flat errors");
     }
@@ -47,30 +47,30 @@ impl uniffi::RustBufferFfiConverter for {{ e.type_().borrow()|ffi_converter_name
     // the Rust enum has fields and they're just not listed. In that case we use the `Variant{..}`
     // syntax to match the variant while ignoring its fields.
 
-    fn write(obj: {{ e.name() }}, buf: &mut std::vec::Vec<u8>) {
+    fn write(obj: r#{{ e.name() }}, buf: &mut std::vec::Vec<u8>) {
         use uniffi::deps::bytes::BufMut;
         match obj {
             {%- for variant in e.variants() %}
-            {{ e.name() }}::{{ variant.name() }}{% if variant.has_fields() %} { {% for field in variant.fields() %}{{ field.name() }}, {%- endfor %} }{% else %}{..}{% endif %} => {
+            r#{{ e.name() }}::r#{{ variant.name() }}{% if variant.has_fields() %} { {% for field in variant.fields() %}r#{{ field.name() }}, {%- endfor %} }{% else %}{..}{% endif %} => {
                 buf.put_i32({{ loop.index }});
                 {% for field in variant.fields() -%}
-                {{ field.type_().borrow()|ffi_converter }}::write({{ field.name() }}, buf);
+                {{ field.type_().borrow()|ffi_converter }}::write(r#{{ field.name() }}, buf);
                 {%- endfor %}
             },
             {%- endfor %}
         };
     }
 
-    fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<{{ e.name() }}> {
+    fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<r#{{ e.name() }}> {
         // It's not currently supported to send errors from the foreign language *into* Rust,
         // but this is what the supporting code might look like...
         use uniffi::deps::bytes::Buf;
         uniffi::check_remaining(buf, 4)?;
         Ok(match buf.get_i32() {
             {%- for variant in e.variants() %}
-            {{ loop.index }} => {{ e.name() }}::{{ variant.name() }}{% if variant.has_fields() %} {
+            {{ loop.index }} => r#{{ e.name() }}::r#{{ variant.name() }}{% if variant.has_fields() %} {
                 {% for field in variant.fields() %}
-                {{ field.name() }}: {{ field.type_().borrow()|ffi_converter }}::try_read(buf)?,
+                r#{{ field.name() }}: {{ field.type_().borrow()|ffi_converter }}::try_read(buf)?,
                 {%- endfor %}
             }{% endif %},
             {%- endfor %}

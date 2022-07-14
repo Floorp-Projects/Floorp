@@ -8,7 +8,10 @@
 /* global require, __dirname, process */
 
 const _path = require("path");
-const { isESMified } = require(_path.resolve(__dirname, "./is-esmified.js"));
+const { isESMified, getESMFiles } = require(_path.resolve(
+  __dirname,
+  "./is-esmified.js"
+));
 
 /* global module */
 
@@ -28,6 +31,22 @@ function isESMifiedAndTarget(resourceURI) {
   }
 
   if ("ESMIFY_TARGET_PREFIX" in process.env) {
+    const targetPrefix = process.env.ESMIFY_TARGET_PREFIX;
+    for (const esm of files) {
+      if (esm.startsWith(targetPrefix)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+function isTargetESM(resourceURI) {
+  if ("ESMIFY_TARGET_PREFIX" in process.env) {
+    const files = getESMFiles(resourceURI);
     const targetPrefix = process.env.ESMIFY_TARGET_PREFIX;
     for (const esm of files) {
       if (esm.startsWith(targetPrefix)) {
@@ -68,6 +87,11 @@ function isImportCall(node) {
   return ["Cu.import", "ChromeUtils.import"].includes(s);
 }
 
+function isImportESModuleCall(node) {
+  const s = calleeToString(node.callee);
+  return ["ChromeUtils.importESModule"].includes(s);
+}
+
 function isLazyGetterCall(node) {
   const s = calleeToString(node.callee);
   return [
@@ -98,7 +122,9 @@ function isString(node) {
   return node.type === "Literal" && typeof node.value === "string";
 }
 
-function tryReplacingWithStatciImport(
+// Replace `ChromeUtils.import`, `Cu.import`, and `ChromeUtils.importESModule`
+// with static import if it's at the top-level of system ESM file.
+function tryReplacingWithStaticImport(
   jscodeshift,
   inputFile,
   path,
@@ -109,6 +135,7 @@ function tryReplacingWithStatciImport(
     return false;
   }
 
+  // Check if it's at the top-level.
   if (path.parent.node.type !== "VariableDeclarator") {
     return false;
   }
@@ -132,8 +159,8 @@ function tryReplacingWithStatciImport(
 
   const resourceURI = resourceURINode.value;
 
+  // Collect imported symbols.
   const specs = [];
-
   if (path.parent.node.id.type === "Identifier") {
     specs.push(jscodeshift.importNamespaceSpecifier(path.parent.node.id));
   } else if (path.parent.node.id.type === "ObjectPattern") {
@@ -150,6 +177,8 @@ function tryReplacingWithStatciImport(
     return false;
   }
 
+  // If this is `ChromeUtils.import` or `Cu.import`, replace the extension.
+  // no-op for `ChromeUtils.importESModule`.
   resourceURINode.value = esmify(resourceURI);
 
   const e = jscodeshift.importDeclaration(specs, resourceURINode);
@@ -183,12 +212,37 @@ function replaceImportCall(inputFile, jscodeshift, path) {
   }
 
   if (
-    !tryReplacingWithStatciImport(jscodeshift, inputFile, path, resourceURINode)
+    !tryReplacingWithStaticImport(jscodeshift, inputFile, path, resourceURINode)
   ) {
     path.node.callee.object.name = "ChromeUtils";
     path.node.callee.property.name = "importESModule";
     resourceURINode.value = esmify(resourceURI);
   }
+}
+
+function replaceImportESModuleCall(inputFile, jscodeshift, path) {
+  if (path.node.arguments.length !== 1) {
+    warnForPath(
+      inputFile,
+      path,
+      `importESModule call should have only one argument`
+    );
+    return;
+  }
+
+  const resourceURINode = path.node.arguments[0];
+  if (!isString(resourceURINode)) {
+    warnForPath(inputFile, path, `resource URI should be a string`);
+    return;
+  }
+
+  const resourceURI = resourceURINode.value;
+  if (!isTargetESM(resourceURI)) {
+    return;
+  }
+
+  // If this cannot be replaced with static import, do nothing.
+  tryReplacingWithStaticImport(jscodeshift, inputFile, path, resourceURINode);
 }
 
 function replaceLazyGetterCall(inputFile, jscodeshift, path) {
@@ -366,6 +420,8 @@ function doTranslate(inputFile, jscodeshift, root) {
   root.find(jscodeshift.CallExpression).forEach(path => {
     if (isImportCall(path.node)) {
       replaceImportCall(inputFile, jscodeshift, path);
+    } else if (isImportESModuleCall(path.node)) {
+      replaceImportESModuleCall(inputFile, jscodeshift, path);
     } else if (isLazyGetterCall(path.node)) {
       replaceLazyGetterCall(inputFile, jscodeshift, path);
     } else if (isLazyGettersCall(path.node)) {

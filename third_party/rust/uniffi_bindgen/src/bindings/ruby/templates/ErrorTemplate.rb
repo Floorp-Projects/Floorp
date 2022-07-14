@@ -19,7 +19,7 @@ end
 CALL_SUCCESS = 0
 CALL_ERROR = 1
 CALL_PANIC = 2
-{%- for e in ci.iter_error_definitions() %}
+{%- for e in ci.error_definitions() %}
 {% if e.is_flat() %}
 class {{ e.name()|class_name_rb }}
     {%- for variant in e.variants() %}
@@ -47,7 +47,7 @@ end
 
 # Map error modules to the RustBuffer method name that reads them
 ERROR_MODULE_TO_READER_METHOD = {
-{%- for e in ci.iter_error_definitions() %}
+{%- for e in ci.error_definitions() %}
 {%- let typ=ci.get_type(e.name()).unwrap() %}
 {%- let canonical_type_name = typ.canonical_name().borrow()|class_name_rb %}
   {{ e.name()|class_name_rb }} => :read{{ canonical_type_name }},

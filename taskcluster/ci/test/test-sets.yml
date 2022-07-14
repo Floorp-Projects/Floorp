@@ -82,6 +82,7 @@ talos-ref-hw:
 browsertime:
     - browsertime-tp6
     - browsertime-tp6-essential
+    - browsertime-tp6-bytecode
     - browsertime-tp6-live
     - browsertime-tp6-live-sheriffed
     - browsertime-benchmark
@@ -444,18 +445,6 @@ android-hw-aarch64-raptor-cpu-memory-power:
 
 android-hw-browsertime-power:
     - browsertime-power
-
-android-hw-browsertime-a51:
-    - browsertime-tp6m-essential
-    - browsertime-speedometer-mobile
-    - browsertime-youtube-playback-mobile
-    - browsertime-unity-webgl-mobile
-    - browsertime-tp6m
-    - browsertime-tp6m-live
-
-android-hw-browsertime-g5:
-    - browsertime-tp6m-g5  # second half of tests
-    - browsertime-tp6m-live
 
 android-hw-browsertime:
     - browsertime-tp6m
