@@ -164,9 +164,9 @@ class WorkerScriptLoader final : public nsINamed {
  protected:
   nsIURI* GetBaseURI();
 
-  void MaybeExecuteFinishedScripts(ScriptLoadInfo* aLoadInfo);
+  void MaybeExecuteFinishedScripts(ScriptLoadInfo* aRequest);
 
-  void MaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo);
+  void MaybeMoveToLoadedList(ScriptLoadInfo* aRequest);
 
   bool StoreCSP();
 
@@ -176,7 +176,7 @@ class WorkerScriptLoader final : public nsINamed {
     return mLoadingRequests.isEmpty() && mLoadedRequests.isEmpty();
   }
 
-  nsresult OnStreamComplete(ScriptLoadInfo* aLoadInfo, nsresult aStatus);
+  nsresult OnStreamComplete(ScriptLoadInfo* aRequest, nsresult aStatus);
 
   // Are we loading the primary script, which is not a Debugger Script?
   bool IsMainWorkerScript() const {
@@ -200,7 +200,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   nsresult LoadScripts();
 
-  nsresult LoadScript(ScriptLoadInfo* aLoadInfo);
+  nsresult LoadScript(ScriptLoadInfo* aRequest);
 
   void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                             bool aResult, bool aMutedError);
@@ -214,11 +214,11 @@ class WorkerScriptLoader final : public nsINamed {
     return NS_OK;
   }
 
-  void LoadingFinished(ScriptLoadInfo* aLoadInfo, nsresult aRv);
+  void LoadingFinished(ScriptLoadInfo* aRequest, nsresult aRv);
 
-  void DispatchMaybeMoveToLoadedList(ScriptLoadInfo* aLoadInfo);
+  void DispatchMaybeMoveToLoadedList(ScriptLoadInfo* aRequest);
 
-  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo* aLoadInfo);
+  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo* aRequest);
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
 };
