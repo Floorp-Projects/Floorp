@@ -546,7 +546,7 @@ void AudioDeviceIOS::HandleValidRouteChange() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_OBJC_TYPE(RTCAudioSession)* session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
   RTCLog(@"%@", session);
-  HandleSampleRateChange(session.sampleRate);
+  HandleSampleRateChange();
 }
 
 void AudioDeviceIOS::HandleCanPlayOrRecordChange(bool can_play_or_record) {
@@ -554,13 +554,13 @@ void AudioDeviceIOS::HandleCanPlayOrRecordChange(bool can_play_or_record) {
   UpdateAudioUnit(can_play_or_record);
 }
 
-void AudioDeviceIOS::HandleSampleRateChange(float sample_rate) {
+void AudioDeviceIOS::HandleSampleRateChange() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTCLog(@"Handling sample rate change to %f.", sample_rate);
+  RTCLog(@"Handling sample rate change.");
 
   // Don't do anything if we're interrupted.
   if (is_interrupted_) {
-    RTCLog(@"Ignoring sample rate change to %f due to interruption.", sample_rate);
+    RTCLog(@"Ignoring sample rate change due to interruption.");
     return;
   }
 
@@ -573,31 +573,30 @@ void AudioDeviceIOS::HandleSampleRateChange(float sample_rate) {
   // The audio unit is already initialized or started.
   // Check to see if the sample rate or buffer size has changed.
   RTC_OBJC_TYPE(RTCAudioSession)* session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
-  const double session_sample_rate = session.sampleRate;
+  const double new_sample_rate = session.sampleRate;
   const NSTimeInterval session_buffer_duration = session.IOBufferDuration;
-  const size_t session_frames_per_buffer =
-      static_cast<size_t>(session_sample_rate * session_buffer_duration + .5);
+  const size_t new_frames_per_buffer =
+      static_cast<size_t>(new_sample_rate * session_buffer_duration + .5);
   const double current_sample_rate = playout_parameters_.sample_rate();
   const size_t current_frames_per_buffer = playout_parameters_.frames_per_buffer();
-  RTCLog(@"Handling playout sample rate change to: %f\n"
+  RTCLog(@"Handling playout sample rate change:\n"
           "  Session sample rate: %f frames_per_buffer: %lu\n"
           "  ADM sample rate: %f frames_per_buffer: %lu",
-         sample_rate,
-         session_sample_rate,
-         (unsigned long)session_frames_per_buffer,
+         new_sample_rate,
+         (unsigned long)new_frames_per_buffer,
          current_sample_rate,
          (unsigned long)current_frames_per_buffer);
 
   // Sample rate and buffer size are the same, no work to do.
-  if (std::abs(current_sample_rate - session_sample_rate) <= DBL_EPSILON &&
-      current_frames_per_buffer == session_frames_per_buffer) {
+  if (std::abs(current_sample_rate - new_sample_rate) <= DBL_EPSILON &&
+      current_frames_per_buffer == new_frames_per_buffer) {
     RTCLog(@"Ignoring sample rate change since audio parameters are intact.");
     return;
   }
 
   // Extra sanity check to ensure that the new sample rate is valid.
-  if (session_sample_rate <= 0.0) {
-    RTCLogError(@"Sample rate is invalid: %f", session_sample_rate);
+  if (new_sample_rate <= 0.0) {
+    RTCLogError(@"Sample rate is invalid: %f", new_sample_rate);
     return;
   }
 
@@ -619,9 +618,9 @@ void AudioDeviceIOS::HandleSampleRateChange(float sample_rate) {
   SetupAudioBuffersForActiveAudioSession();
 
   // Initialize the audio unit again with the new sample rate.
-  RTC_DCHECK_EQ(playout_parameters_.sample_rate(), session_sample_rate);
-  if (!audio_unit_->Initialize(session_sample_rate)) {
-    RTCLogError(@"Failed to initialize the audio unit with sample rate: %f", session_sample_rate);
+  if (!audio_unit_->Initialize(playout_parameters_.sample_rate())) {
+    RTCLogError(@"Failed to initialize the audio unit with sample rate: %d",
+                playout_parameters_.sample_rate());
     return;
   }
 
@@ -631,8 +630,8 @@ void AudioDeviceIOS::HandleSampleRateChange(float sample_rate) {
     if (result != noErr) {
       RTC_OBJC_TYPE(RTCAudioSession)* session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
       [session notifyAudioUnitStartFailedWithError:result];
-      RTCLogError(@"Failed to start audio unit with sample rate: %f, reason %d",
-                  session_sample_rate,
+      RTCLogError(@"Failed to start audio unit with sample rate: %d, reason %d",
+                  playout_parameters_.sample_rate(),
                   result);
       return;
     }
