@@ -8,14 +8,12 @@
 #define mozilla_dom_workers_ScriptLoadInfo_h__
 
 #include "nsIInputStream.h"
-#include "nsIChannel.h"
 #include "nsIRequest.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/Promise.h"
 #include "js/loader/ScriptKind.h"
 #include "js/loader/ScriptLoadRequest.h"
 
-class nsIChannel;
 class nsIReferrerInfo;
 class nsIURI;
 
@@ -54,7 +52,6 @@ struct ScriptLoadInfo {
   // when we're going to have an mCachePromise.
   nsCOMPtr<nsIInputStream> mCacheReadStream;
 
-  nsCOMPtr<nsIChannel> mChannel;
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
 
   // If |mScriptIsUTF8|, then |mUTF8| is active, otherwise |mUTF16| is active.
@@ -117,9 +114,7 @@ struct ScriptLoadInfo {
 
   Maybe<bool> mMutedErrorFlag;
 
-  bool Finished() const {
-    return mLoadingFinished && !mCachePromise && !mChannel;
-  }
+  bool Finished() const { return mLoadingFinished && !mCachePromise; }
 };
 
 }  // namespace mozilla::dom
