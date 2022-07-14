@@ -343,30 +343,24 @@ bool IsCodecDisabledForSimulcast(const std::string& codec_name,
   return false;
 }
 
-// Calculates some reasonable max bitrate thresholds based on resolution.
+// The selected thresholds for QVGA and VGA corresponded to a QP around 10.
+// The change in QP declined above the selected bitrates.
 static int GetMaxDefaultVideoBitrateKbps(int width,
                                          int height,
                                          bool is_screenshare) {
-  double pixel_count = width * height;
-  // This expression uses a rectangular hyperbola plus a small exponential
-  // correction function, with parameters selected so the curve fits well to
-  // values expected for common resolutions.
-  //
-  // Some examples:
-  //  320x240 => 600
-  //  640x480 => 1600
-  //  960x540 => 2000
-  //  1280x720 => 2500
-  //  1920x1080 => 3300
-  double max_kbps = (3000 * pixel_count) / (310000 + pixel_count) +
-                    0.0003 * std::pow(pixel_count, 1.005);
-  // Round to nearest 100kbps.
-  int max_bitrate_kbps =
-      100 * std::max(1, static_cast<int>(std::round(max_kbps / 100)));
-
+  int max_bitrate;
+  if (width * height <= 320 * 240) {
+    max_bitrate = 600;
+  } else if (width * height <= 640 * 480) {
+    max_bitrate = 1700;
+  } else if (width * height <= 960 * 540) {
+    max_bitrate = 2000;
+  } else {
+    max_bitrate = 2500;
+  }
   if (is_screenshare)
-    max_bitrate_kbps = std::max(max_bitrate_kbps, 1200);
-  return max_bitrate_kbps;
+    max_bitrate = std::max(max_bitrate, 1200);
+  return max_bitrate;
 }
 
 // Returns its smallest positive argument. If neither argument is positive,
