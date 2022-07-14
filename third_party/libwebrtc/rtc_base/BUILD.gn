@@ -80,85 +80,9 @@ rtc_source_set("callback_list") {
 # the old concept of rtc_base and rtc_base_approved.
 rtc_source_set("rtc_base_approved") {
   visibility = [ "*" ]
-  deps = [
-    ":atomicops",
-    ":bit_buffer",
-    ":buffer",
-    ":buffer_queue",
-    ":byte_buffer",
-    ":byte_order",
-    ":checks",
-    ":copy_on_write_buffer",
-    ":event_tracer",
-    ":histogram_percentile_counter",
-    ":location",
-    ":logging",
-    ":macromagic",
-    ":mod_ops",
-    ":moving_max_counter",
-    ":one_time_event",
-    ":platform_thread",
-    ":platform_thread_types",
-    ":race_checker",
-    ":random",
-    ":rate_statistics",
-    ":rate_tracker",
-    ":refcount",
-    ":rtc_event",
-    ":safe_conversions",
-    ":sample_counter",
-    ":stringutils",
-    ":strong_alias",
-    ":swap_queue",
-    ":timestamp_aligner",
-    ":timeutils",
-    ":type_traits",
-    ":zero_memory",
-    ":zero_memory",
-    "../api:array_view",
-    "../api:scoped_refptr",
-    "../api:sequence_checker",
-    "synchronization:mutex",
-    "system:arch",
-    "system:no_unique_address",
-    "system:rtc_export",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/numeric:bits",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-  public_deps = []  # no-presubmit-check TODO(webrtc:8603)
-
-  sources = [
-    "bit_buffer.h",  # Transitional, use :bit_buffer
-    "buffer.h",  # Transitional, use :buffer
-    "buffer_queue.h",  # Transitional, use :buffer_queue
-    "byte_buffer.h",  # Transitional, use :byte_buffer
-    "byte_order.h",  # Transitional, use :byte_order
-    "copy_on_write_buffer.h",  # Transitional, use :copy_on_write_buffer
-    "event_tracer.h",  # Transitional, use :event_tracer
-    "location.h",  # Transitional, use :location
-    "numerics/histogram_percentile_counter.h",  # Transitional, use
-                                                # :histogram_percentile_counter
-    "numerics/mod_ops.h",  # Transitional, use :mod_ops
-    "numerics/moving_max_counter.h",  # Transitional, use :moving_max_counter
-    "numerics/sample_counter.h",  # Transitional, use :sample_counter
-    "one_time_event.h",  # Transitional, use :one_time_event
-    "race_checker.h",  # Transitional, use :race_checker
-    "random.h",  # Transitional, use :random
-    "rate_statistics.h",  # Transitional, use :rate_statistics
-    "rate_tracker.h",  # Transitional, use :rate_tracker
-    "strong_alias.h",  # Transitional, use :strong_alias
-    "swap_queue.h",  # Transitional, use :swap_queue
-    "timestamp_aligner.h",  # Transitional, use :timestamp_aligner
-    "trace_event.h",  # Transitional, use :event_tracer
-    "zero_memory.h",  # Transitional, use :zero_memory
-  ]
 
   if (is_win) {
-    sources += [
+    sources = [
       "win/get_activation_factory.cc",
       "win/get_activation_factory.h",
       "win/hstring.cc",
@@ -167,6 +91,11 @@ rtc_source_set("rtc_base_approved") {
       "win/scoped_com_initializer.h",
       "win/windows_version.cc",
       "win/windows_version.h",
+    ]
+    deps = [
+      ":checks",
+      ":logging",
+      ":stringutils",
     ]
     data_deps = [ "//build/win:runtime_libs" ]
   }
@@ -177,21 +106,6 @@ rtc_source_set("rtc_base_approved") {
       "win/create_direct3d_device.cc",
       "win/create_direct3d_device.h",
     ]
-  }
-
-  if (is_nacl) {
-    public_deps +=  # no-presubmit-check TODO(webrtc:8603)
-        [ "//native_client_sdk/src/libraries/nacl_io" ]
-  }
-
-  if (is_android) {
-    libs = [ "log" ]
-  }
-
-  if (build_with_chromium) {
-    # Remove when the dependency has been propagated to Chromium
-    public_deps +=  # no-presubmit-check TODO(webrtc:8603)
-        [ ":timestamp_aligner" ]
   }
 }
 
