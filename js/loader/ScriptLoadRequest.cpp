@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ScriptLoadContext.h"
-#include "mozilla/dom/ScriptLoadInfo.h"
+#include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/StaticPrefs_dom.h"

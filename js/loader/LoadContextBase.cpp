@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/loader/ComponentModuleLoader.h"
-#include "mozilla/dom/ScriptLoadInfo.h"
+#include "mozilla/dom/WorkerLoadContext.h"
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ScriptLoadRequest.h"
 

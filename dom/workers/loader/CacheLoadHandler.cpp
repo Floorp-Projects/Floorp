@@ -6,7 +6,7 @@
 
 #include "CacheLoadHandler.h"
 #include "ScriptResponseHeaderProcessor.h"  // ScriptResponseHeaderProcessor
-#include "ScriptLoadInfo.h"                 // ScriptLoadInfo
+#include "WorkerLoadContext.h"              // ScriptLoadInfo
 
 #include "nsIPrincipal.h"
 
