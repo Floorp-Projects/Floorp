@@ -32,6 +32,7 @@ Here's the format of the ping data, with example values for each property:
       notification_type: <string>, // ex. "initial" or "followup"
       notification_shown: <string>, // ex. "shown", or "not-shown", or "error"
       notification_action: <string>, // ex. "no-action" or "make-firefox-default-button"
+      notification_not_shown_reason: <string>, // ex. "user-request" or "no-default-browser-transition"
       previous_notification_action: <string>, // Same possible values as notification_action
     }
 
@@ -80,6 +81,16 @@ Whether a notification was shown or not. Possible value include "shown", "not-sh
 The action that the user took in response to the notification. Possible values currently include "dismissed-by-timeout", "dismissed-to-action-center", "dismissed-by-button", "dismissed-by-application-hidden", "remind-me-later", "make-firefox-default-button", "toast-clicked", "no-action".
 
 Many of the values correspond to buttons on the notification and should be pretty self explanatory, but a few are less so. The action "no-action" will be used if and only if the value of ``notification_shown`` is not "shown" to indicate that no action was taken because no notification was displayed. The action "dismissed-to-action-center" will be used if the user clicks the arrow in the top right corner of the notification to dismiss it to the action center. The action "dismissed-by-application-hidden" is provided because that is a method of dismissal that the notification API could give but, in practice, should never be seen. The action "dismissed-by-timeout" indicates that the user did not interact with the notification and it timed out.
+
+``notification_not_shown_reason``
+---------------------------------
+Assuming that a notification was not shown, this value will explain why it is not shown. For example, if it wasn't shown because the user clicked "Don't ask again", this value will be "user-request". If a notification was shown, this value will be set to "not-applicable".
+
+One of the possible values is "no-value-set". This is essentially an internal error indicating that the relevant code never actually set a reason for not showing a notification. Hopefully this value will never actually be sent.
+
+During normal operation, this value is expected to initially always be "no-default-browser-transition". Then, if we do see the conditions where we would show a notification, this will be "not-applicable" for that ping. Supposing that the user clicks "Remind me later", the next pings will probably have a value of "not-time-for-followup". After the followup is shown, the value will change to "no-followup-scheduled".
+
+There is also a value of "followup-suppressed" that will be sent if we never showed the followup because the user independently changed the browser back to Firefox before the followup notification was shown.
 
 ``previous_notification_action``
 --------------------------------

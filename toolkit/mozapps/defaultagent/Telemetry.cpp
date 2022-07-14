@@ -169,6 +169,7 @@ static mozilla::WindowsError SendPing(
     const std::string defaultPdf, const std::string osVersion,
     const std::string osLocale, const std::string notificationType,
     const std::string notificationShown, const std::string notificationAction,
+    const std::string notificationNotShownReason,
     const std::string prevNotificationAction) {
   // Fill in the ping JSON object.
   Json::Value ping;
@@ -182,6 +183,7 @@ static mozilla::WindowsError SendPing(
   ping["notification_type"] = notificationType;
   ping["notification_shown"] = notificationShown;
   ping["notification_action"] = notificationAction;
+  ping["notification_not_shown_reason"] = notificationNotShownReason;
   ping["previous_notification_action"] = prevNotificationAction;
 
   // Stringify the JSON.
@@ -325,6 +327,9 @@ static TelemetryFieldResult GetAndUpdatePreviousDefaultBrowser(
 // for the next time the ping is sent.
 // The values passed will only be cached if actions were actually taken
 // (i.e. not when notificationShown == "not-shown")
+// Because of this, we know that any data that we store will have a
+// notificationNotShownReason of NotApplicable. Thus, we don't have to actually
+// store that value.
 HRESULT MaybeCache(Cache& cache, const std::string& notificationType,
                    const std::string& notificationShown,
                    const std::string& notificationAction,
@@ -356,6 +361,7 @@ HRESULT MaybeCache(Cache& cache, const std::string& notificationType,
 HRESULT MaybeSwapForCached(Cache& cache, std::string& notificationType,
                            std::string& notificationShown,
                            std::string& notificationAction,
+                           std::string& notificationNotShownReason,
                            std::string& prevNotificationAction) {
   Cache::MaybeEntryResult result = cache.Dequeue();
   if (result.isErr()) {
@@ -373,6 +379,11 @@ HRESULT MaybeSwapForCached(Cache& cache, std::string& notificationType,
   notificationType = maybeEntry.value().notificationType;
   notificationShown = maybeEntry.value().notificationShown;
   notificationAction = maybeEntry.value().notificationAction;
+  // MaybeCache only stores data in the cache if we showed a notification. Which
+  // means that we know that any stored ping will have a
+  // notificationNotShownReason of NotApplicable.
+  notificationNotShownReason = GetStringForNotificationNotShownReason(
+      NotificationNotShownReason::NotApplicable);
   if (maybeEntry.value().prevNotificationAction.isSome()) {
     prevNotificationAction = maybeEntry.value().prevNotificationAction.value();
   } else {
@@ -436,6 +447,9 @@ HRESULT SendDefaultBrowserPing(
       GetStringForNotificationShown(activitiesPerformed.shown);
   std::string notificationAction =
       GetStringForNotificationAction(activitiesPerformed.action);
+  std::string notificationNotShownReason =
+      GetStringForNotificationNotShownReason(
+          activitiesPerformed.notShownReason);
 
   TelemetryFieldResult osVersionResult = GetOSVersion();
   if (osVersionResult.isErr()) {
@@ -490,7 +504,8 @@ HRESULT SendDefaultBrowserPing(
   }
 
   hr = MaybeSwapForCached(cache, notificationType, notificationShown,
-                          notificationAction, prevNotificationAction);
+                          notificationAction, notificationNotShownReason,
+                          prevNotificationAction);
   if (FAILED(hr)) {
     return hr;
   }
@@ -508,6 +523,7 @@ HRESULT SendDefaultBrowserPing(
 
   return SendPing(currentDefaultBrowser, previousDefaultBrowser,
                   currentDefaultPdf, osVersion, osLocale, notificationType,
-                  notificationShown, notificationAction, prevNotificationAction)
+                  notificationShown, notificationAction,
+                  notificationNotShownReason, prevNotificationAction)
       .AsHResult();
 }
