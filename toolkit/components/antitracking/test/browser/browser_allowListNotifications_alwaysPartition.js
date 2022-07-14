@@ -17,7 +17,7 @@ add_task(async function() {
       ["privacy.trackingprotection.annotate_channels", true],
       [
         "privacy.partition.always_partition_third_party_non_cookie_storage",
-        false,
+        true,
       ],
     ],
   });
@@ -98,12 +98,9 @@ add_task(async function() {
     }
   );
 
-  let expectTrackerFound = item => {
-    is(
-      item[0],
-      Ci.nsIWebProgressListener.STATE_LOADED_LEVEL_1_TRACKING_CONTENT,
-      "Correct blocking type reported"
-    );
+  const nsIWPL = Ci.nsIWebProgressListener;
+  let expectTrackerFound = (item, expect) => {
+    is(item[0], expect, "Correct blocking type reported");
     is(item[1], true, "Correct blocking status reported");
     ok(item[2] >= 1, "Correct repeat count reported");
   };
@@ -116,8 +113,12 @@ add_task(async function() {
       "Correct tracker origin must be reported"
     );
     let originLog = log[trackerOrigin];
-    is(originLog.length, 1, "We should have 1 entry in the compressed log");
-    expectTrackerFound(originLog[0]);
+
+    is(originLog.length, 1, "We should have one entry in the compressed log");
+    expectTrackerFound(
+      originLog[0],
+      nsIWPL.STATE_LOADED_LEVEL_1_TRACKING_CONTENT
+    );
   }
 
   gProtectionsHandler.enableForCurrentPage();

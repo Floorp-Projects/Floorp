@@ -7,18 +7,17 @@
 
 "use strict";
 
+const trackerBlocked = Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER;
+
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-const APS_PREF =
-  "privacy.partition.always_partition_third_party_non_cookie_storage";
 
 const COLLECTION_NAME = "anti-tracking-url-decoration";
 const PREF_NAME = "privacy.restrict3rdpartystorage.url_decorations";
@@ -26,6 +25,9 @@ const TOKEN_1 = "fooBar";
 const TOKEN_2 = "foobaz";
 const TOKEN_3 = "fooqux";
 const TOKEN_4 = "bazqux";
+
+const APS_PREF =
+  "privacy.partition.always_partition_third_party_non_cookie_storage";
 
 const token_1 = TOKEN_1.toLowerCase();
 
@@ -149,9 +151,9 @@ AntiTracking._createTask({
   extraPrefs: [
     ["network.http.referer.defaultPolicy", 3], // Ensure we don't downgrade because of the default policy.
     ["network.http.referer.defaultPolicy.trackers", 3],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ],
-  expectedBlockingNotifications: 0,
+  expectedBlockingNotifications: trackerBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
@@ -180,9 +182,9 @@ AntiTracking._createTask({
   },
   extraPrefs: [
     ["network.http.referer.defaultPolicy.trackers", 2],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ],
-  expectedBlockingNotifications: 0,
+  expectedBlockingNotifications: trackerBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
@@ -212,9 +214,9 @@ AntiTracking._createTask({
   extraPrefs: [
     ["network.http.referer.defaultPolicy", 3], // Ensure we don't downgrade because of the default policy.
     ["network.http.referer.defaultPolicy.trackers", 3],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ],
-  expectedBlockingNotifications: 0,
+  expectedBlockingNotifications: trackerBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
@@ -243,9 +245,9 @@ AntiTracking._createTask({
   },
   extraPrefs: [
     ["network.http.referer.defaultPolicy.trackers", 2],
-    [APS_PREF, false],
+    [APS_PREF, true],
   ],
-  expectedBlockingNotifications: 0,
+  expectedBlockingNotifications: trackerBlocked,
   runInPrivateWindow: false,
   iframeSandbox: null,
   accessRemoval: null,
