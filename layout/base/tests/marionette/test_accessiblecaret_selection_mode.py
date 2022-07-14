@@ -31,7 +31,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     _input_size_id = "input-size"
     _textarea_id = "textarea"
     _textarea2_id = "textarea2"
-    _textarea_disabled_id = "textarea-disabled"
     _textarea_one_line_id = "textarea-one-line"
     _textarea_rtl_id = "textarea-rtl"
     _contenteditable_id = "contenteditable"
@@ -171,7 +170,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
-    @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
@@ -195,7 +193,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
-    @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
@@ -229,7 +226,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
-    @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
@@ -267,7 +263,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
-    @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
@@ -400,7 +395,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
-    @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
