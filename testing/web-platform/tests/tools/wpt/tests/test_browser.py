@@ -1,13 +1,16 @@
 # mypy: allow-untyped-defs
 
 import logging
+import os
 import inspect
+import requests
 import subprocess
 import sys
 from unittest import mock
 
 import pytest
 
+from packaging.specifiers import SpecifierSet
 from tools.wpt import browser
 
 
@@ -192,6 +195,38 @@ def test_safari_version_errors(mocked_check_output):
     mocked_check_output.return_value = b'dummy'
     mocked_check_output.side_effect = subprocess.CalledProcessError(1, 'cmd')
     assert safari.version(webdriver_binary="safaridriver") is None
+
+@pytest.fixture
+def safari_downloads_page_stp_section():
+    file_path = os.path.join(
+        os.path.dirname(__file__),
+        'safari_downloads_page_stp_section.html')
+    with open(file_path) as fp:
+        return fp.read()
+
+@mock.patch('tools.wpt.browser.get')
+def test_safari_find_downloads_stp(mocked_get, safari_downloads_page_stp_section):
+    safari = browser.Safari(logger)
+
+    # Setup mock
+    response = requests.models.Response()
+    response.status_code = 200
+    response._content = str.encode(safari_downloads_page_stp_section)
+    mocked_get.return_value = response
+
+    downloads = safari._find_downloads()
+
+    # STP section has two downloads.
+    # 1 for Beta Mac OS and 1 for the stable Mac OS
+    assert len(downloads) == 2
+
+    # First section is for beta OS version
+    assert downloads[0][0] == SpecifierSet("==13.*")
+    assert "13.0" in downloads[0][0]
+
+    # Second section is for the stable OS version
+    assert downloads[1][0] == SpecifierSet("~=12.3")
+    assert "12.4" in downloads[1][0]
 
 
 @mock.patch('subprocess.check_output')
