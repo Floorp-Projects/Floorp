@@ -15,6 +15,7 @@ treeherder:
         'A': 'Android Gradle tests'
         'Bpgo': 'Profile-guided optimization builds'
         'Btime': 'Browsertime performance tests on Firefox'
+        'Btime-cache': 'Browsertime performance tests on Firefox with populated bytecode cache.'
         'Btime-1proc': 'Browsertime performance tests on Firefox without e10s'
         'Btime-fis': 'Browsertime performance tests on Firefox with fission enabled'
         'Btime-Prof': 'Browsertime performance tests on Firefox with Gecko Profiling'
