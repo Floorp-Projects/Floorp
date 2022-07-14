@@ -63,9 +63,9 @@ namespace webrtc {
 namespace test {
 
 #if defined(WEBRTC_WIN)
-const absl::string_view kPathDelimiter = "\\";
+ABSL_CONST_INIT const absl::string_view kPathDelimiter = "\\";
 #else
-const absl::string_view kPathDelimiter = "/";
+ABSL_CONST_INIT const absl::string_view kPathDelimiter = "/";
 #endif
 
 std::string DirName(absl::string_view path) {

@@ -363,7 +363,7 @@ namespace webrtc {
 namespace metrics {
 
 // Time that should have elapsed for stats that are gathered once per call.
-enum { kMinRunTimeInSeconds = 10 };
+constexpr int kMinRunTimeInSeconds = 10;
 
 class Histogram;
 

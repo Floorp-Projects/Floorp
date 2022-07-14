@@ -18,7 +18,7 @@
 
 namespace webrtc {
 #if defined(RTC_USE_LIBAOM_AV1_ENCODER)
-const bool kIsLibaomAv1EncoderSupported = true;
+ABSL_CONST_INIT const bool kIsLibaomAv1EncoderSupported = true;
 std::unique_ptr<VideoEncoder> CreateLibaomAv1EncoderIfSupported() {
   return CreateLibaomAv1Encoder();
 }
