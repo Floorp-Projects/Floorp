@@ -938,25 +938,6 @@ class Foo {
   const RefCounted* GetFirst() const { return mArray.SafeElementAt(0); }
 };
 
-TEST(TArray, ArrayView)
-{
-  const nsTArray<int> expected = {1, 2, 3, 4, 5};
-  const nsTArrayView<int> view(expected.Clone());
-
-  nsTArray<int> fromSpan;
-  fromSpan.AppendElements(view.AsSpan());
-  EXPECT_EQ(expected, fromSpan);
-
-  for (auto& element : view) {
-    element++;
-  }
-
-  int i = 2;
-  for (const auto& element : view) {
-    EXPECT_EQ(i++, element);
-  }
-}
-
 TEST(TArray, StableSort)
 {
   const nsTArray<std::pair<int, int>> expected = {

@@ -3222,44 +3222,6 @@ Span(nsTArray_Impl<E, Alloc>&) -> Span<E>;
 template <typename E, class Alloc>
 Span(const nsTArray_Impl<E, Alloc>&) -> Span<const E>;
 
-// Provides a view on a nsTArray through which the existing array elements can
-// be accessed in a non-const way, but the array itself cannot be modified, so
-// that references to elements are guaranteed to be stable.
-template <typename E>
-class nsTArrayView {
- public:
-  using element_type = E;
-  using pointer = element_type*;
-  using reference = element_type&;
-  using index_type = typename Span<element_type>::index_type;
-  using size_type = typename Span<element_type>::index_type;
-
-  explicit nsTArrayView(nsTArray<element_type> aArray)
-      : mArray(std::move(aArray)), mSpan(mArray) {}
-
-  element_type& operator[](index_type aIndex) { return mSpan[aIndex]; }
-
-  const element_type& operator[](index_type aIndex) const {
-    return mSpan[aIndex];
-  }
-
-  size_type Length() const { return mSpan.Length(); }
-
-  auto begin() { return mSpan.begin(); }
-  auto end() { return mSpan.end(); }
-  auto begin() const { return mSpan.begin(); }
-  auto end() const { return mSpan.end(); }
-  auto cbegin() const { return mSpan.cbegin(); }
-  auto cend() const { return mSpan.cend(); }
-
-  Span<element_type> AsSpan() { return mSpan; }
-  Span<const element_type> AsSpan() const { return mSpan; }
-
- private:
-  nsTArray<element_type> mArray;
-  const Span<element_type> mSpan;
-};
-
 template <typename Range, typename = std::enable_if_t<std::is_same_v<
                               typename std::iterator_traits<
                                   typename Range::iterator>::iterator_category,
