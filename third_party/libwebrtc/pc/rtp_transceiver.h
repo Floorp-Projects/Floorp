@@ -34,7 +34,6 @@
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "media/base/media_channel.h"
 #include "pc/channel_interface.h"
-#include "pc/channel_manager.h"
 #include "pc/proxy.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_receiver_proxy.h"
@@ -45,6 +44,10 @@
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
+
+namespace cricket {
+class ChannelManager;
+}
 
 namespace webrtc {
 

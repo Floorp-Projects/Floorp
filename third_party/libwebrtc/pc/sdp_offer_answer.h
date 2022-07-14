@@ -41,7 +41,6 @@
 #include "media/base/media_channel.h"
 #include "media/base/stream_params.h"
 #include "p2p/base/port_allocator.h"
-#include "pc/channel_manager.h"
 #include "pc/connection_context.h"
 #include "pc/data_channel_controller.h"
 #include "pc/jsep_transport_controller.h"
@@ -64,6 +63,10 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
 #include "rtc_base/weak_ptr.h"
+
+namespace cricket {
+class ChannelManager;
+}
 
 namespace webrtc {
 

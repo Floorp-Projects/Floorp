@@ -20,6 +20,7 @@
 #include "api/rtp_parameters.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/media_engine.h"
+#include "pc/channel_manager.h"
 #include "pc/test/mock_channel_interface.h"
 #include "pc/test/mock_rtp_receiver_internal.h"
 #include "pc/test/mock_rtp_sender_internal.h"

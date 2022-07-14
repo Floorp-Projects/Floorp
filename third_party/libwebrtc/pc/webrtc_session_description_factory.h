@@ -23,7 +23,6 @@
 #include "api/scoped_refptr.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_description_factory.h"
-#include "pc/channel_manager.h"
 #include "pc/media_session.h"
 #include "pc/sdp_state_provider.h"
 #include "rtc_base/message_handler.h"

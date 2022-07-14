@@ -42,6 +42,7 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel.h"
 #include "p2p/base/transport_info.h"
+#include "pc/channel_manager.h"
 #include "pc/ice_server_parsing.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_receiver_proxy.h"
@@ -1674,10 +1675,6 @@ void PeerConnection::AddAdaptationResource(
     return;
   }
   call_->AddAdaptationResource(resource);
-}
-
-cricket::ChannelManager* PeerConnection::channel_manager() {
-  return context_->channel_manager();
 }
 
 bool PeerConnection::StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,

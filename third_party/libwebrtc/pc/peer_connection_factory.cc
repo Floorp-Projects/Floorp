@@ -33,6 +33,7 @@
 #include "p2p/base/port_allocator.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "pc/audio_track.h"
+#include "pc/channel_manager.h"
 #include "pc/local_audio_source.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
@@ -292,10 +293,6 @@ rtc::scoped_refptr<AudioTrackInterface> PeerConnectionFactory::CreateAudioTrack(
   rtc::scoped_refptr<AudioTrackInterface> track =
       AudioTrack::Create(id, rtc::scoped_refptr<AudioSourceInterface>(source));
   return AudioTrackProxy::Create(signaling_thread(), track);
-}
-
-cricket::ChannelManager* PeerConnectionFactory::channel_manager() {
-  return context_->channel_manager();
 }
 
 std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
