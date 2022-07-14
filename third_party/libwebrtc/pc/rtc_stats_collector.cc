@@ -2118,6 +2118,15 @@ void RTCStatsCollector::ProduceTransportStats_n(
         snprintf(bytes, sizeof(bytes), "%04X", channel_stats.ssl_version_bytes);
         transport_stats->tls_version = bytes;
       }
+
+      if (channel_stats.dtls_role) {
+        transport_stats->dtls_role = *channel_stats.dtls_role == rtc::SSL_CLIENT
+                                         ? webrtc::RTCDtlsRole::kClient
+                                         : webrtc::RTCDtlsRole::kServer;
+      } else {
+        transport_stats->dtls_role = webrtc::RTCDtlsRole::kUnknown;
+      }
+
       if (channel_stats.ssl_cipher_suite != rtc::kTlsNullWithNullNull &&
           rtc::SSLStreamAdapter::SslCipherSuiteToName(
               channel_stats.ssl_cipher_suite)

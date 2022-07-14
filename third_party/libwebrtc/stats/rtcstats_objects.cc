@@ -62,6 +62,11 @@ const char* const RTCQualityLimitationReason::kOther = "other";
 const char* const RTCContentType::kUnspecified = "unspecified";
 const char* const RTCContentType::kScreenshare = "screenshare";
 
+// https://w3c.github.io/webrtc-stats/#dom-rtcdtlsrole
+const char* const RTCDtlsRole::kUnknown = "unknown";
+const char* const RTCDtlsRole::kClient = "client";
+const char* const RTCDtlsRole::kServer = "server";
+
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(RTCCertificateStats, RTCStats, "certificate",
     &fingerprint,
@@ -1082,6 +1087,7 @@ WEBRTC_RTCSTATS_IMPL(RTCTransportStats, RTCStats, "transport",
     &remote_certificate_id,
     &tls_version,
     &dtls_cipher,
+    &dtls_role,
     &srtp_cipher,
     &selected_candidate_pair_changes)
 // clang-format on
@@ -1103,6 +1109,7 @@ RTCTransportStats::RTCTransportStats(std::string&& id, int64_t timestamp_us)
       remote_certificate_id("remoteCertificateId"),
       tls_version("tlsVersion"),
       dtls_cipher("dtlsCipher"),
+      dtls_role("dtlsRole"),
       srtp_cipher("srtpCipher"),
       selected_candidate_pair_changes("selectedCandidatePairChanges") {}
 
@@ -1119,6 +1126,7 @@ RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
       remote_certificate_id(other.remote_certificate_id),
       tls_version(other.tls_version),
       dtls_cipher(other.dtls_cipher),
+      dtls_role(other.dtls_role),
       srtp_cipher(other.srtp_cipher),
       selected_candidate_pair_changes(other.selected_candidate_pair_changes) {}
 
