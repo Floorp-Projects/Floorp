@@ -47,7 +47,7 @@ namespace cricket {
 class ChannelManager : public ChannelFactoryInterface {
  public:
   // Returns an initialized instance of ChannelManager.
-  // If media_engine is non-nullptr, then the returned ChannelManager instance
+  // `media_engine` cannot be null. The returned ChannelManager instance
   // will own that reference and media engine initialization
   static std::unique_ptr<ChannelManager> Create(
       std::unique_ptr<MediaEngineInterface> media_engine,
@@ -63,18 +63,11 @@ class ChannelManager : public ChannelFactoryInterface {
   MediaEngineInterface* media_engine() { return media_engine_.get(); }
   rtc::UniqueRandomIdGenerator& ssrc_generator() { return ssrc_generator_; }
 
-  // Retrieves the list of supported audio & video codec types.
-  // Can be called before starting the media engine.
-  void GetSupportedAudioSendCodecs(std::vector<AudioCodec>* codecs) const;
-  void GetSupportedAudioReceiveCodecs(std::vector<AudioCodec>* codecs) const;
+  // Retrieves the list of supported video codec types.
   void GetSupportedVideoSendCodecs(std::vector<VideoCodec>* codecs) const;
   void GetSupportedVideoReceiveCodecs(std::vector<VideoCodec>* codecs) const;
   RtpHeaderExtensions GetDefaultEnabledAudioRtpHeaderExtensions() const;
-  std::vector<webrtc::RtpHeaderExtensionCapability>
-  GetSupportedAudioRtpHeaderExtensions() const;
   RtpHeaderExtensions GetDefaultEnabledVideoRtpHeaderExtensions() const;
-  std::vector<webrtc::RtpHeaderExtensionCapability>
-  GetSupportedVideoRtpHeaderExtensions() const;
 
   // The operations below all occur on the worker thread.
   // The caller is responsible for ensuring that destruction happens
@@ -123,7 +116,7 @@ class ChannelManager : public ChannelFactoryInterface {
   void DestroyVideoChannel(VideoChannel* video_channel);
 
  private:
-  const std::unique_ptr<MediaEngineInterface> media_engine_;  // Nullable.
+  const std::unique_ptr<MediaEngineInterface> media_engine_;
   rtc::Thread* const signaling_thread_;
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;

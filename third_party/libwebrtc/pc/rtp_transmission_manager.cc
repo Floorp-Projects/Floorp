@@ -273,8 +273,8 @@ RtpTransmissionManager::CreateAndAddTransceiver(
       rtc::make_ref_counted<RtpTransceiver>(
           sender, receiver, channel_manager(),
           sender->media_type() == cricket::MEDIA_TYPE_AUDIO
-              ? channel_manager()->GetSupportedAudioRtpHeaderExtensions()
-              : channel_manager()->GetSupportedVideoRtpHeaderExtensions(),
+              ? media_engine()->voice().GetRtpHeaderExtensions()
+              : media_engine()->video().GetRtpHeaderExtensions(),
           [this_weak_ptr = weak_ptr_factory_.GetWeakPtr()]() {
             if (this_weak_ptr) {
               this_weak_ptr->OnNegotiationNeeded();
@@ -688,6 +688,10 @@ RtpTransmissionManager::FindReceiverById(const std::string& receiver_id) const {
     }
   }
   return nullptr;
+}
+
+cricket::MediaEngineInterface* RtpTransmissionManager::media_engine() const {
+  return channel_manager()->media_engine();
 }
 
 }  // namespace webrtc
