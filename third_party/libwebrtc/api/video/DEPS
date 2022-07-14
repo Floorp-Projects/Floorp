@@ -53,6 +53,10 @@ specific_include_rules = {
     "+modules/rtp_rtcp/source/rtp_packet_received.h",
   ],
 
+  "frame_buffer.h": [
+    "+modules/video_coding/utility/decoded_frames_history.h",
+  ],
+
   "video_frame_matchers\.h": [
     "+test/gmock.h",
   ],

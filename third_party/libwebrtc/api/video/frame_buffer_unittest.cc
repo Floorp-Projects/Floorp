@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "modules/video_coding/frame_buffer3.h"
+#include "api/video/frame_buffer.h"
 
 #include <vector>
 

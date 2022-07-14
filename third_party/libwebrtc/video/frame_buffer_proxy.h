@@ -33,8 +33,8 @@ class FrameSchedulingReceiver {
   virtual void OnDecodableFrameTimeout(TimeDelta wait_time) = 0;
 };
 
-// Temporary class to enable replacement of frame_buffer2 with frame_buffer3.
-// Once frame_buffer3 has shown to work with a field trial, frame_buffer2 will
+// Temporary class to enable replacement of frame_buffer2 with frame_buffer.
+// Once frame_buffer has shown to work with a field trial, frame_buffer2 will
 // be removed and this class should be directly integrated into
 // video_receive_stream2. bugs.webrtc.org/13343 tracks this integration.
 class FrameBufferProxy {

@@ -367,6 +367,40 @@ rtc_library("builtin_video_bitrate_allocator_factory") {
   absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
 }
 
+rtc_library("frame_buffer") {
+  sources = [
+    "frame_buffer.cc",
+    "frame_buffer.h",
+  ]
+  deps = [
+    "../../api:field_trials_view",
+    "../../api/units:timestamp",
+    "../../api/video:encoded_frame",
+    "../../modules/video_coding:video_coding_utility",
+    "../../rtc_base:logging",
+    "../../rtc_base:rtc_numerics",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("frame_buffer_unittest") {
+  testonly = true
+  sources = [ "frame_buffer_unittest.cc" ]
+
+  deps = [
+    ":frame_buffer",
+    "../../api/video:encoded_frame",
+    "../../test:fake_encoded_frame",
+    "../../test:field_trial",
+    "../../test:scoped_key_value_config",
+    "../../test:test_support",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("video_unittests") {
     testonly = true
