@@ -484,7 +484,7 @@ TEST_P(DataChannelIntegrationTest, StressTestUnorderedSctpDataChannel) {
 
 // Repeatedly open and close data channels on a peer connection to check that
 // the channels are properly negotiated and SCTP stream IDs properly recycled.
-TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannel) {
+TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannelNoDelay) {
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
 
@@ -511,7 +511,7 @@ TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannel) {
     }
 
     for (size_t i = 0; i < kChannelCount; ++i) {
-      EXPECT_EQ_WAIT(caller()->data_channels()[i]->state(),
+      ASSERT_EQ_WAIT(caller()->data_channels()[i]->state(),
                      DataChannelInterface::DataState::kOpen, kDefaultTimeout);
       RTC_LOG(LS_INFO) << "Caller Channel "
                        << caller()->data_channels()[i]->label() << " with id "
@@ -520,21 +520,106 @@ TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannel) {
     ASSERT_EQ_WAIT(callee()->data_channels().size(), kChannelCount,
                    kDefaultTimeout);
     for (size_t i = 0; i < kChannelCount; ++i) {
-      EXPECT_EQ_WAIT(callee()->data_channels()[i]->state(),
+      ASSERT_EQ_WAIT(callee()->data_channels()[i]->state(),
                      DataChannelInterface::DataState::kOpen, kDefaultTimeout);
       RTC_LOG(LS_INFO) << "Callee Channel "
                        << callee()->data_channels()[i]->label() << " with id "
                        << callee()->data_channels()[i]->id() << " is open.";
     }
 
+    // Closing from both sides to attempt creating races.
+    // A real application would likely only close from one side.
     for (size_t i = 0; i < kChannelCount; ++i) {
-      caller()->data_channels()[i]->Close();
+      if (i % 3 == 0) {
+        callee()->data_channels()[i]->Close();
+        caller()->data_channels()[i]->Close();
+      } else {
+        caller()->data_channels()[i]->Close();
+        callee()->data_channels()[i]->Close();
+      }
     }
 
     for (size_t i = 0; i < kChannelCount; ++i) {
-      EXPECT_EQ_WAIT(caller()->data_channels()[i]->state(),
+      ASSERT_EQ_WAIT(caller()->data_channels()[i]->state(),
                      DataChannelInterface::DataState::kClosed, kDefaultTimeout);
-      EXPECT_EQ_WAIT(callee()->data_channels()[i]->state(),
+      ASSERT_EQ_WAIT(callee()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kClosed, kDefaultTimeout);
+    }
+
+    caller()->data_channels().clear();
+    caller()->data_observers().clear();
+    callee()->data_channels().clear();
+    callee()->data_observers().clear();
+  }
+}
+
+// Repeatedly open and close data channels on a peer connection to check that
+// the channels are properly negotiated and SCTP stream IDs properly recycled.
+// Some delay is added for better coverage.
+TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannelWithDelay) {
+  // Simulate some network delay
+  virtual_socket_server()->set_delay_mean(20);
+  virtual_socket_server()->set_delay_stddev(5);
+  virtual_socket_server()->UpdateDelayDistribution();
+
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+
+  int channel_id = 0;
+  const size_t kChannelCount = 8;
+  const size_t kIterations = 10;
+  bool has_negotiated = false;
+
+  webrtc::DataChannelInit init;
+  for (size_t repeats = 0; repeats < kIterations; ++repeats) {
+    RTC_LOG(LS_INFO) << "Iteration " << (repeats + 1) << "/" << kIterations;
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      rtc::StringBuilder sb;
+      sb << "channel-" << channel_id++;
+      caller()->CreateDataChannel(sb.Release(), &init);
+    }
+    ASSERT_EQ(caller()->data_channels().size(), kChannelCount);
+
+    if (!has_negotiated) {
+      caller()->CreateAndSetAndSignalOffer();
+      ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+      has_negotiated = true;
+    }
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      ASSERT_EQ_WAIT(caller()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kOpen, kDefaultTimeout);
+      RTC_LOG(LS_INFO) << "Caller Channel "
+                       << caller()->data_channels()[i]->label() << " with id "
+                       << caller()->data_channels()[i]->id() << " is open.";
+    }
+    ASSERT_EQ_WAIT(callee()->data_channels().size(), kChannelCount,
+                   kDefaultTimeout);
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      ASSERT_EQ_WAIT(callee()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kOpen, kDefaultTimeout);
+      RTC_LOG(LS_INFO) << "Callee Channel "
+                       << callee()->data_channels()[i]->label() << " with id "
+                       << callee()->data_channels()[i]->id() << " is open.";
+    }
+
+    // Closing from both sides to attempt creating races.
+    // A real application would likely only close from one side.
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      if (i % 3 == 0) {
+        callee()->data_channels()[i]->Close();
+        caller()->data_channels()[i]->Close();
+      } else {
+        caller()->data_channels()[i]->Close();
+        callee()->data_channels()[i]->Close();
+      }
+    }
+
+    for (size_t i = 0; i < kChannelCount; ++i) {
+      ASSERT_EQ_WAIT(caller()->data_channels()[i]->state(),
+                     DataChannelInterface::DataState::kClosed, kDefaultTimeout);
+      ASSERT_EQ_WAIT(callee()->data_channels()[i]->state(),
                      DataChannelInterface::DataState::kClosed, kDefaultTimeout);
     }
 

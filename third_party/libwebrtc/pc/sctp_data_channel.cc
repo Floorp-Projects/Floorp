@@ -255,7 +255,7 @@ uint64_t SctpDataChannel::buffered_amount() const {
 
 void SctpDataChannel::Close() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (state_ == kClosed)
+  if (state_ == kClosing || state_ == kClosed)
     return;
   SetState(kClosing);
   // Will send queued data before beginning the underlying closing procedure.
