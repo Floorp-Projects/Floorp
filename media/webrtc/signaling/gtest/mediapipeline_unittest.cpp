@@ -4,7 +4,6 @@
 
 // Original author: ekr@rtfm.com
 
-
 #include "logging.h"
 #include "nss.h"
 #include "ssl.h"

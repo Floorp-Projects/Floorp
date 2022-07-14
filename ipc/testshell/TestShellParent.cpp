@@ -10,7 +10,6 @@
 
 #include "mozilla/dom/AutoEntryScript.h"
 
-
 using namespace mozilla;
 using mozilla::ipc::PTestShellCommandParent;
 using mozilla::ipc::TestShellCommandParent;
