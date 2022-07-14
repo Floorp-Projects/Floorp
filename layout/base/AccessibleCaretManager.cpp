@@ -820,23 +820,9 @@ already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection()
     return nullptr;
   }
 
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  MOZ_ASSERT(fm);
-
-  nsIContent* focusedContent = fm->GetFocusedElement();
-  if (!focusedContent) {
-    // For non-editable content
-    return mPresShell->FrameSelection();
-  }
-
-  nsIFrame* focusFrame = focusedContent->GetPrimaryFrame();
-  if (!focusFrame) {
-    return nullptr;
-  }
-
   // Prevent us from touching the nsFrameSelection associated with other
   // PresShell.
-  RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
+  RefPtr<nsFrameSelection> fs = mPresShell->GetLastFocusedFrameSelection();
   if (!fs || fs->GetPresShell() != mPresShell) {
     return nullptr;
   }
