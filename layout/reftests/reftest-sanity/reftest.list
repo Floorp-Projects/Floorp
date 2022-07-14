@@ -173,11 +173,7 @@ noautofuzz fails fuzzy-if(false,0-2,0-1) == fuzzy.html fuzzy-ref.html
 
 skip-if(!asyncPan||!browserIsRemote) == async-scroll-1a.html async-scroll-1-ref.html
 
-# Disable low-res painting for this test as it will cause more to
-# be drawn than we want.
-defaults pref(layers.low-precision-buffer,false)
 skip-if(!asyncPan||!browserIsRemote) != async-scroll-1b.html async-scroll-1-ref.html
-defaults
 
 skip-if(!asyncPan||!browserIsRemote) == async-scroll-1c.html async-scroll-1-ref.html
 
