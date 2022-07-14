@@ -22,19 +22,15 @@ namespace mozilla::dom {
 class ClientInfo;
 class WorkerPrivate;
 
-struct ScriptLoadInfo {
-  ScriptLoadInfo() {
-    MOZ_ASSERT(mScriptIsUTF8 == false, "set by member initializer");
-    MOZ_ASSERT(mScriptLength == 0, "set by member initializer");
-    mScript.mUTF16 = nullptr;
-  }
+namespace workerinternals::loader {
+class CacheCreator;
+}
 
-  ~ScriptLoadInfo() {
-    if (void* data = mScriptIsUTF8 ? static_cast<void*>(mScript.mUTF8)
-                                   : static_cast<void*>(mScript.mUTF16)) {
-      js_free(data);
-    }
-  }
+class ScriptLoadInfo {
+ public:
+  ScriptLoadInfo();
+
+  ~ScriptLoadInfo();
 
   nsString mURL;
 
@@ -65,6 +61,15 @@ struct ScriptLoadInfo {
   bool ScriptTextIsNull() const {
     return mScriptIsUTF8 ? mScript.mUTF8 == nullptr : mScript.mUTF16 == nullptr;
   }
+
+  RefPtr<workerinternals::loader::CacheCreator> mCacheCreator;
+
+  void ClearCacheCreator();
+
+  void SetCacheCreator(
+      RefPtr<workerinternals::loader::CacheCreator> aCacheCreator);
+
+  RefPtr<workerinternals::loader::CacheCreator> GetCacheCreator();
 
   void InitUTF8Script() {
     MOZ_ASSERT(ScriptTextIsNull());

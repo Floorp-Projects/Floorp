@@ -70,7 +70,7 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
 
   // This will delete the cache object and will call LoadingFinished() with an
   // error for each ongoing operation.
-  mLoader->DeleteCache(NS_ERROR_FAILURE);
+  mLoadInfo->GetCacheCreator()->DeleteCache(NS_ERROR_FAILURE);
 }
 
 CacheCreator::CacheCreator(WorkerPrivate* aWorkerPrivate)
@@ -466,6 +466,11 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
     const nsACString& aCSPReportOnlyHeaderValue,
     const nsACString& aReferrerPolicyHeaderValue) {
   AssertIsOnMainThread();
+  if (mLoader->IsCancelled()) {
+    mLoadInfo->GetCacheCreator()->DeleteCache(mLoader->mCancelMainThread.ref());
+    return mLoader->mCancelMainThread.ref();
+  }
+
   MOZ_ASSERT(mLoadInfo->mCacheStatus == ScriptLoadInfo::Cached);
 
   auto responsePrincipalOrErr = PrincipalInfoToPrincipal(*aPrincipalInfo);
