@@ -739,10 +739,7 @@ template("rtc_static_library") {
 # This template automatically switches the target type between source_set
 # and static_library.
 #
-# This should be the default target type for all the WebRTC targets with
-# one exception. Do not use this template for header only targets, in that case
-# rtc_source_set must be used in order to avoid build errors (e.g. libtool
-# complains if the output .a file is empty).
+# This should be the default target type for all the WebRTC targets.
 #
 # How does it work:
 # Since all files in a source_set are linked into a final binary, while files
@@ -754,7 +751,23 @@ template("rtc_static_library") {
 # For the same reason, testonly targets will always be expanded to
 # source_set in order to be sure that tests are present in the test binary.
 template("rtc_library") {
-  if (is_component_build || (defined(invoker.testonly) && invoker.testonly)) {
+  header_only = true
+  if (defined(invoker.sources)) {
+    non_header_sources = filter_exclude(invoker.sources,
+                                        [
+                                          "*.h",
+                                          "*.hh",
+                                          "*.inc",
+                                        ])
+    if (non_header_sources != []) {
+      header_only = false
+    }
+  }
+
+  # Header only libraries should use source_set as a static_library with no
+  # source files will cause issues with macOS libtool.
+  if (header_only || is_component_build ||
+      (defined(invoker.testonly) && invoker.testonly)) {
     target_type = "source_set"
   } else {
     target_type = "static_library"
