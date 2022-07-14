@@ -29,16 +29,16 @@ TEST_F(TelemetryTestFixture, AccumulateCountHistogram) {
   Telemetry::Accumulate("TELEMETRY_TEST_COUNT", kExpectedValue / 2);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, telemetryTestCountName, &snapshot,
                false);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), telemetryTestCountName, snapshot, &histogram);
 
   // Get "sum" property from histogram
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", histogram, &sum);
 
   // Check that the "sum" stored in the histogram matches with |kExpectedValue|
@@ -60,21 +60,21 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCountHistogram) {
                         kExpectedValue);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_COUNT",
                &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", snapshot,
               &histogram);
 
   // Get "sample" property from histogram
-  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> expectedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sample", histogram, &expectedKeyData);
 
   // Get "sum" property from keyed data
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", expectedKeyData, &sum);
 
   // Check that the sum stored in the histogram matches with |kExpectedValue|
@@ -87,8 +87,8 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCountHistogram) {
 TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
-  JS::RootedValue testHistogram(cx.GetJSContext());
-  JS::RootedValue rval(cx.GetJSContext());
+  JS::Rooted<JS::Value> testHistogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> rval(cx.GetJSContext());
 
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
                        "TELEMETRY_TEST_KEYED_KEYS"_ns, true);
@@ -103,22 +103,22 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram) {
   Telemetry::Accumulate("TELEMETRY_TEST_KEYED_KEYS", "CommonKey"_ns, 1);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_KEYS",
                &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_KEYS", snapshot,
               &histogram);
 
   // Get "testkey" property from histogram and check that it stores the correct
   // data.
-  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> expectedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "testkey", histogram, &expectedKeyData);
   ASSERT_TRUE(!expectedKeyData.isUndefined())
   << "Cannot find the expected key in the histogram data";
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", expectedKeyData, &sum);
   uint32_t uSum = 0;
   JS::ToUint32(cx.GetJSContext(), sum, &uSum);
@@ -142,7 +142,7 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram) {
   // attemtped twice, so we expect the count of
   // 'telemetry.accumulate_unknown_histogram_keys' to be 2
   const uint32_t expectedAccumulateUnknownCount = 2;
-  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
   CheckKeyedUintScalar("telemetry.accumulate_unknown_histogram_keys",
                        "TELEMETRY_TEST_KEYED_KEYS", cx.GetJSContext(),
@@ -168,22 +168,22 @@ TEST_F(TelemetryTestFixture, AccumulateCategoricalHistogram) {
                                    "CommonLabel"_ns);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_CATEGORICAL",
                &snapshot, false);
 
   // Get our histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_CATEGORICAL", snapshot,
               &histogram);
 
   // Get values object from histogram. Each entry in the object maps to a label
   // in the histogram.
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", histogram, &values);
 
   // Get the value for the label we care about
-  JS::RootedValue value(cx.GetJSContext());
+  JS::Rooted<JS::Value> value(cx.GetJSContext());
   GetElement(cx.GetJSContext(),
              static_cast<uint32_t>(
                  Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL::CommonLabel),
@@ -220,23 +220,23 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCategoricalHistogram) {
       Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::CommonLabel);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry,
                "TELEMETRY_TEST_KEYED_CATEGORICAL", &snapshot, true);
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_CATEGORICAL", snapshot,
               &histogram);
 
   // Check that the sample histogram contains the values we expect
-  JS::RootedValue sample(cx.GetJSContext());
+  JS::Rooted<JS::Value> sample(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sample", histogram, &sample);
   // Get values object from sample. Each entry in the object maps to a label in
   // the histogram.
-  JS::RootedValue sampleValues(cx.GetJSContext());
+  JS::Rooted<JS::Value> sampleValues(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", sample, &sampleValues);
   // Get the value for the label we care about
-  JS::RootedValue sampleValue(cx.GetJSContext());
+  JS::Rooted<JS::Value> sampleValue(cx.GetJSContext());
   GetElement(
       cx.GetJSContext(),
       static_cast<uint32_t>(
@@ -250,14 +250,14 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCategoricalHistogram) {
       << "The sample histogram is not returning expected value";
 
   // Check that the other-sample histogram contains the values we expect
-  JS::RootedValue otherSample(cx.GetJSContext());
+  JS::Rooted<JS::Value> otherSample(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "other-sample", histogram, &otherSample);
   // Get values object from the other-sample. Each entry in the object maps to a
   // label in the histogram.
-  JS::RootedValue otherValues(cx.GetJSContext());
+  JS::Rooted<JS::Value> otherValues(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", otherSample, &otherValues);
   // Get the value for the label we care about
-  JS::RootedValue otherValue(cx.GetJSContext());
+  JS::Rooted<JS::Value> otherValue(cx.GetJSContext());
   GetElement(
       cx.GetJSContext(),
       static_cast<uint32_t>(
@@ -284,16 +284,16 @@ TEST_F(TelemetryTestFixture, AccumulateCountHistogram_MultipleSamples) {
   Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_COUNT, samples);
 
   // Get a snapshot of all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_COUNT", &snapshot,
                false);
 
   // Get histogram from snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_COUNT", snapshot, &histogram);
 
   // Get "sum" from histogram
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", histogram, &sum);
 
   // Check that sum matches with aValue
@@ -316,21 +316,21 @@ TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_MultipleSamples) {
   Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_LINEAR, samples);
 
   // Get a snapshot of all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_LINEAR",
                &snapshot, false);
 
   // Get histogram from snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_LINEAR", snapshot, &histogram);
 
   // Get "values" object from histogram
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", histogram, &values);
 
   // Index 0 is only for values less than 'low'. Values within range start at
   // index 1
-  JS::RootedValue count(cx.GetJSContext());
+  JS::Rooted<JS::Value> count(cx.GetJSContext());
   const uint32_t index = 1;
   GetElement(cx.GetJSContext(), index, values, &count);
 
@@ -355,21 +355,21 @@ TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_DifferentSamples) {
   Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_LINEAR, samples);
 
   // Get a snapshot of all histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_LINEAR",
                &snapshot, false);
 
   // Get histogram from snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_LINEAR", snapshot, &histogram);
 
   // Get values object from histogram
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", histogram, &values);
 
   // Get values in first and last buckets
-  JS::RootedValue countFirst(cx.GetJSContext());
-  JS::RootedValue countLast(cx.GetJSContext());
+  JS::Rooted<JS::Value> countFirst(cx.GetJSContext());
+  JS::Rooted<JS::Value> countLast(cx.GetJSContext());
   const uint32_t firstIndex = 1;
   // Buckets are indexed by their start value
   const uint32_t lastIndex = INT32_MAX - 1;
@@ -395,7 +395,7 @@ TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_DifferentSamples) {
   // We accumulated two values that had to be clamped. We expect the count in
   // 'telemetry.accumulate_clamped_values' to be 2 (only one storage).
   const uint32_t expectedAccumulateClampedCount = 2;
-  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
   CheckKeyedUintScalar("telemetry.accumulate_clamped_values",
                        "TELEMETRY_TEST_LINEAR", cx.GetJSContext(),
@@ -416,21 +416,21 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCountHistogram_MultipleSamples) {
                         samples);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_COUNT",
                &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", snapshot,
               &histogram);
 
   // Get "sample" property from histogram
-  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> expectedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sample", histogram, &expectedKeyData);
 
   // Get "sum" property from keyed data
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", expectedKeyData, &sum);
 
   // Check that the sum stored in the histogram matches with |kExpectedSum|
@@ -454,28 +454,28 @@ TEST_F(TelemetryTestFixture, TestKeyedLinearHistogram_MultipleSamples) {
                         samples);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_LINEAR",
                &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_LINEAR", snapshot,
               &histogram);
 
   // Get "testkey" property from histogram.
-  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> expectedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "testkey", histogram, &expectedKeyData);
   ASSERT_TRUE(!expectedKeyData.isUndefined())
   << "Cannot find the expected key in the histogram data";
 
   // Get values object from 'testkey' histogram.
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", expectedKeyData, &values);
 
   // Get values in first and last buckets.
-  JS::RootedValue countFirst(cx.GetJSContext());
-  JS::RootedValue countLast(cx.GetJSContext());
+  JS::Rooted<JS::Value> countFirst(cx.GetJSContext());
+  JS::Rooted<JS::Value> countLast(cx.GetJSContext());
   const uint32_t firstIndex = 1;
   // Buckets are indexed by their start value
   const uint32_t lastIndex = 250000;
@@ -500,7 +500,7 @@ TEST_F(TelemetryTestFixture, TestKeyedLinearHistogram_MultipleSamples) {
   // We accumulated one keyed values that had to be clamped. We expect the
   // count in 'telemetry.accumulate_clamped_values' to be 1
   const uint32_t expectedAccumulateClampedCount = 1;
-  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
   CheckKeyedUintScalar("telemetry.accumulate_clamped_values",
                        "TELEMETRY_TEST_KEYED_LINEAR", cx.GetJSContext(),
@@ -523,23 +523,23 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram_MultipleSamples) {
                         samples);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_KEYS",
                &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_KEYS", snapshot,
               &histogram);
 
   // Get "testkey" property from histogram and check that it stores the correct
   // data.
-  JS::RootedValue testKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> testKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "testkey", histogram, &testKeyData);
   ASSERT_TRUE(!testKeyData.isUndefined())
   << "Cannot find the key 'testkey' in the histogram data";
 
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", testKeyData, &values);
 
   // Get values in buckets 0,1,2
@@ -547,9 +547,9 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram_MultipleSamples) {
   const uint32_t trueIndex = 1;
   const uint32_t otherIndex = 2;
 
-  JS::RootedValue countFalse(cx.GetJSContext());
-  JS::RootedValue countTrue(cx.GetJSContext());
-  JS::RootedValue countOther(cx.GetJSContext());
+  JS::Rooted<JS::Value> countFalse(cx.GetJSContext());
+  JS::Rooted<JS::Value> countTrue(cx.GetJSContext());
+  JS::Rooted<JS::Value> countOther(cx.GetJSContext());
 
   GetElement(cx.GetJSContext(), falseIndex, values, &countFalse);
   GetElement(cx.GetJSContext(), trueIndex, values, &countTrue);
@@ -580,7 +580,7 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram_MultipleSamples) {
   // 'allowed') key. Get "CommonKey" property from histogram and check that it
   // has no data. Since we accumulated no data to it, commonKeyData should be
   // undefined.
-  JS::RootedValue commonKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> commonKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "CommonKey", histogram, &commonKeyData);
   ASSERT_TRUE(commonKeyData.isUndefined())
   << "Found data in key 'CommonKey' even though we accumulated no data to "
@@ -589,7 +589,7 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram_MultipleSamples) {
   // Here we check that our function does not allow accumulation into unallowed
   // keys. Get 'not-allowed' property from histogram and check that this also
   // has no data. This should contain no data because this key is not allowed.
-  JS::RootedValue notAllowedKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> notAllowedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "not-allowed", histogram, &notAllowedKeyData);
   ASSERT_TRUE(notAllowedKeyData.isUndefined())
   << "Found data in key 'not-allowed' even though accumuling data to it is "
@@ -599,7 +599,7 @@ TEST_F(TelemetryTestFixture, TestKeyedKeysHistogram_MultipleSamples) {
   // attemtped once, so we expect the count of
   // 'telemetry.accumulate_unknown_histogram_keys' to be 1
   const uint32_t expectedAccumulateUnknownCount = 1;
-  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
   GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
   CheckKeyedUintScalar("telemetry.accumulate_unknown_histogram_keys",
                        "TELEMETRY_TEST_KEYED_KEYS", cx.GetJSContext(),
@@ -620,22 +620,22 @@ TEST_F(TelemetryTestFixture,
                                    labels);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_CATEGORICAL",
                &snapshot, false);
 
   // Get our histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_CATEGORICAL", snapshot,
               &histogram);
 
   // Get values object from histogram. Each entry in the object maps to a label
   // in the histogram.
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", histogram, &values);
 
   // Get the value for the label we care about
-  JS::RootedValue value(cx.GetJSContext());
+  JS::Rooted<JS::Value> value(cx.GetJSContext());
   GetElement(cx.GetJSContext(),
              static_cast<uint32_t>(
                  Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL::CommonLabel),
@@ -701,22 +701,22 @@ TEST_F(TelemetryTestFixture,
       Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL>(enumLabels);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_CATEGORICAL",
                &snapshot, false);
 
   // Get our histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_CATEGORICAL", snapshot,
               &histogram);
 
   // Get values object from histogram. Each entry in the object maps to a label
   // in the histogram.
-  JS::RootedValue values(cx.GetJSContext());
+  JS::Rooted<JS::Value> values(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", histogram, &values);
 
   // Get the value for the label we care about
-  JS::RootedValue value(cx.GetJSContext());
+  JS::Rooted<JS::Value> value(cx.GetJSContext());
   GetElement(cx.GetJSContext(),
              static_cast<uint32_t>(
                  Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL::CommonLabel),
@@ -747,27 +747,27 @@ TEST_F(TelemetryTestFixture,
   Telemetry::AccumulateCategoricalKeyed("sampleKey"_ns, enumLabels);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry,
                "TELEMETRY_TEST_KEYED_CATEGORICAL", &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_CATEGORICAL", snapshot,
               &histogram);
 
   // Check that the sampleKey histogram contains correct number of CommonLabel
   // samples
-  JS::RootedValue sample(cx.GetJSContext());
+  JS::Rooted<JS::Value> sample(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sampleKey", histogram, &sample);
 
   // Get values object from the sample. Each entry in the object maps to a label
   // in the histogram.
-  JS::RootedValue sampleKeyValues(cx.GetJSContext());
+  JS::Rooted<JS::Value> sampleKeyValues(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "values", sample, &sampleKeyValues);
 
   // Get the count of CommonLabel
-  JS::RootedValue commonLabelValue(cx.GetJSContext());
+  JS::Rooted<JS::Value> commonLabelValue(cx.GetJSContext());
   GetElement(
       cx.GetJSContext(),
       static_cast<uint32_t>(
@@ -784,7 +784,7 @@ TEST_F(TelemetryTestFixture,
 
   // Check that the sampleKey histogram contains the correct number of Label2
   // values Get the count of Label2
-  JS::RootedValue label2Value(cx.GetJSContext());
+  JS::Rooted<JS::Value> label2Value(cx.GetJSContext());
   GetElement(cx.GetJSContext(),
              static_cast<uint32_t>(
                  Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::Label2),
@@ -822,16 +822,16 @@ TEST_F(TelemetryTestFixture, AccumulateTimeDelta) {
                                  start);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_COUNT", &snapshot,
                false);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_COUNT", snapshot, &histogram);
 
   // Get "sum" property from histogram
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", histogram, &sum);
 
   // Check that the "sum" stored in the histogram matches with |kExpectedValue|
@@ -866,21 +866,21 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedTimeDelta) {
                                  "sample"_ns, start, start);
 
   // Get a snapshot for all the histograms
-  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
   GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_COUNT",
                &snapshot, true);
 
   // Get the histogram from the snapshot
-  JS::RootedValue histogram(cx.GetJSContext());
+  JS::Rooted<JS::Value> histogram(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", snapshot,
               &histogram);
 
   // Get "sample" property from histogram
-  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  JS::Rooted<JS::Value> expectedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sample", histogram, &expectedKeyData);
 
   // Get "sum" property from keyed data
-  JS::RootedValue sum(cx.GetJSContext());
+  JS::Rooted<JS::Value> sum(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "sum", expectedKeyData, &sum);
 
   // Check that the sum stored in the histogram matches with |kExpectedValue|

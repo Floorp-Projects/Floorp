@@ -50,20 +50,20 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
                           mozilla::ContentBlockingLog::kDummyOriginHash);
 
-  JS::RootedValue originSnapshot(aCx);
+  JS::Rooted<JS::Value> originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot);
 
   ASSERT_FALSE(originSnapshot.isNullOrUndefined())
   << "Origin snapshot must not be null/undefined.";
 
-  JS::RootedValue origins(aCx);
-  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
+  JS::Rooted<JS::Value> origins(aCx);
+  JS::Rooted<JSObject*> snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(
       JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
-  JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
+  JS::Rooted<JSObject*> originsObj(aCx, &origins.toObject());
+  JS::Rooted<JS::Value> count(aCx);
   ASSERT_TRUE(JS_GetProperty(
       aCx, originsObj, mozilla::ContentBlockingLog::kDummyOriginHash.get(),
       &count));
@@ -73,7 +73,7 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
   // Now test that the snapshot didn't clear things out.
   GetOriginSnapshot(aCx, &originSnapshot);
   ASSERT_FALSE(originSnapshot.isNullOrUndefined());
-  JS::RootedObject unemptySnapshotObj(aCx, &originSnapshot.toObject());
+  JS::Rooted<JSObject*> unemptySnapshotObj(aCx, &originSnapshot.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
   ASSERT_TRUE(JS_Enumerate(aCx, unemptySnapshotObj, &ids));
   ASSERT_GE(ids.length(), (unsigned)0) << "Returned object must not be empty.";
@@ -90,20 +90,20 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
                           kDoubleclickOrigin);
 
-  JS::RootedValue originSnapshot(aCx);
+  JS::Rooted<JS::Value> originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot, true /* aClear */);
 
   ASSERT_FALSE(originSnapshot.isNullOrUndefined())
   << "Origin snapshot must not be null/undefined.";
 
-  JS::RootedValue origins(aCx);
-  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
+  JS::Rooted<JS::Value> origins(aCx);
+  JS::Rooted<JSObject*> snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(
       JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
-  JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
+  JS::Rooted<JSObject*> originsObj(aCx, &origins.toObject());
+  JS::Rooted<JS::Value> count(aCx);
   ASSERT_TRUE(
       JS_GetProperty(aCx, originsObj, kDoubleclickOrigin.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
@@ -112,7 +112,7 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
   // Now check that snapshotting with clear actually cleared it.
   GetOriginSnapshot(aCx, &originSnapshot);
   ASSERT_FALSE(originSnapshot.isNullOrUndefined());
-  JS::RootedObject emptySnapshotObj(aCx, &originSnapshot.toObject());
+  JS::Rooted<JSObject*> emptySnapshotObj(aCx, &originSnapshot.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
   ASSERT_TRUE(JS_Enumerate(aCx, emptySnapshotObj, &ids));
   ASSERT_EQ(ids.length(), (unsigned)0) << "Returned object must be empty.";
@@ -138,20 +138,20 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceMixed) {
   ASSERT_EQ(2 * TelemetryOrigin::SizeOfPrioDatasPerMetric(),
             encodedStrings.Length());
 
-  JS::RootedValue originSnapshot(aCx);
+  JS::Rooted<JS::Value> originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot, true /* aClear */);
 
   ASSERT_FALSE(originSnapshot.isNullOrUndefined())
   << "Origin snapshot must not be null/undefined.";
 
-  JS::RootedValue origins(aCx);
-  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
+  JS::Rooted<JS::Value> origins(aCx);
+  JS::Rooted<JSObject*> snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(
       JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
-  JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
+  JS::Rooted<JSObject*> originsObj(aCx, &origins.toObject());
+  JS::Rooted<JS::Value> count(aCx);
   ASSERT_TRUE(
       JS_GetProperty(aCx, originsObj, kDoubleclickOrigin.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
@@ -166,20 +166,20 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
 
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, kUnknownOrigin1);
 
-  JS::RootedValue originSnapshot(aCx);
+  JS::Rooted<JS::Value> originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot);
 
   ASSERT_FALSE(originSnapshot.isNullOrUndefined())
   << "Origin snapshot must not be null/undefined.";
 
-  JS::RootedValue origins(aCx);
-  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
+  JS::Rooted<JS::Value> origins(aCx);
+  JS::Rooted<JSObject*> snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(
       JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
-  JS::RootedObject originsObj(aCx, &origins.toObject());
-  JS::RootedValue count(aCx);
+  JS::Rooted<JSObject*> originsObj(aCx, &origins.toObject());
+  JS::Rooted<JS::Value> count(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, originsObj, "__UNKNOWN__", &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
   << "Must have recorded the unknown origin exactly once.";
@@ -192,13 +192,13 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
   ASSERT_FALSE(originSnapshot.isNullOrUndefined())
   << "Origin snapshot must not be null/undefined.";
 
-  JS::RootedObject snapshotObj2(aCx, &originSnapshot.toObject());
+  JS::Rooted<JSObject*> snapshotObj2(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(
       JS_GetProperty(aCx, snapshotObj2, kTelemetryTest1Metric.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
-  JS::RootedObject originsObj2(aCx, &origins.toObject());
-  JS::RootedValue count2(aCx);
+  JS::Rooted<JSObject*> originsObj2(aCx, &origins.toObject());
+  JS::Rooted<JS::Value> count2(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, originsObj2, "__UNKNOWN__", &count2));
   ASSERT_TRUE(count2.isInt32() && count2.toInt32() == 1)
   << "Must have recorded the unknown origin exactly once.";
