@@ -177,10 +177,6 @@ criteria = "safe-to-deploy"
 version = "0.2.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.android_logger]]
-version = "0.10.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.anyhow]]
 version = "1.0.57"
 criteria = "safe-to-deploy"
@@ -1721,22 +1717,6 @@ criteria = "safe-to-deploy"
 version = "0.2.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.uniffi]]
-version = "0.18.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.uniffi_bindgen]]
-version = "0.18.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.uniffi_build]]
-version = "0.18.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.uniffi_macros]]
-version = "0.18.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.unix_path]]
 version = "1.0.1"
 criteria = "safe-to-run"
@@ -1791,10 +1771,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.webrtc-sdp]]
 version = "0.3.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.weedle2]]
-version = "2.0.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.wgpu-core]]
