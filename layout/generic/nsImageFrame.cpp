@@ -607,11 +607,9 @@ static nscoord ListImageDefaultLength(const nsImageFrame& aFrame) {
   auto* pc = aFrame.PresContext();
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetFontMetricsForComputedStyle(aFrame.Style(), pc);
-  auto emAU = fm->GetThebesFontGroup()
-                  ->GetFirstValidFont()
-                  ->GetMetrics(fm->Orientation())
-                  .emHeight *
-              pc->AppUnitsPerDevPixel();
+  RefPtr<gfxFont> font = fm->GetThebesFontGroup()->GetFirstValidFont();
+  auto emAU =
+      font->GetMetrics(fm->Orientation()).emHeight * pc->AppUnitsPerDevPixel();
   return std::max(NSToCoordRound(0.4f * emAU),
                   nsPresContext::CSSPixelsToAppUnits(1));
 }

@@ -159,8 +159,9 @@ void nsFontMetrics::Destroy() { mPresContext = nullptr; }
 
 static const gfxFont::Metrics& GetMetrics(
     nsFontMetrics* aFontMetrics, nsFontMetrics::FontOrientation aOrientation) {
-  return aFontMetrics->GetThebesFontGroup()->GetFirstValidFont()->GetMetrics(
-      aOrientation);
+  RefPtr<gfxFont> font =
+      aFontMetrics->GetThebesFontGroup()->GetFirstValidFont();
+  return font->GetMetrics(aOrientation);
 }
 
 static const gfxFont::Metrics& GetMetrics(nsFontMetrics* aFontMetrics) {

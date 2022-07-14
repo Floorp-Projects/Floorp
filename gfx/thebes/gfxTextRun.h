@@ -941,13 +941,13 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // Initiates userfont loads if userfont not loaded.
   // aGeneric: if non-null, returns the CSS generic type that was mapped to
   //           this font
-  gfxFont* GetFirstValidFont(
+  already_AddRefed<gfxFont> GetFirstValidFont(
       uint32_t aCh = 0x20, mozilla::StyleGenericFontFamily* aGeneric = nullptr);
 
   // Returns the first font in the font-group that has an OpenType MATH table,
   // or null if no such font is available. The GetMathConstant methods may be
   // called on the returned font.
-  gfxFont* GetFirstMathFont();
+  already_AddRefed<gfxFont> GetFirstMathFont();
 
   const gfxFontStyle* GetStyle() const { return &mStyle; }
 
@@ -1032,9 +1032,10 @@ class gfxFontGroup final : public gfxTextRunFactory {
   enum { UNDERLINE_OFFSET_NOT_SET = INT16_MAX };
   gfxFloat GetUnderlineOffset();
 
-  gfxFont* FindFontForChar(uint32_t ch, uint32_t prevCh, uint32_t aNextCh,
-                           Script aRunScript, gfxFont* aPrevMatchedFont,
-                           FontMatchType* aMatchType);
+  already_AddRefed<gfxFont> FindFontForChar(uint32_t ch, uint32_t prevCh,
+                                            uint32_t aNextCh, Script aRunScript,
+                                            gfxFont* aPrevMatchedFont,
+                                            FontMatchType* aMatchType);
 
   gfxUserFontSet* GetUserFontSet();
 
@@ -1118,12 +1119,12 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   // search through pref fonts for a character, return nullptr if no matching
   // pref font
-  gfxFont* WhichPrefFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
-                                     eFontPresentation aPresentation);
+  already_AddRefed<gfxFont> WhichPrefFontSupportsChar(
+      uint32_t aCh, uint32_t aNextCh, eFontPresentation aPresentation);
 
-  gfxFont* WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
-                                       Script aRunScript,
-                                       eFontPresentation aPresentation);
+  already_AddRefed<gfxFont> WhichSystemFontSupportsChar(
+      uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+      eFontPresentation aPresentation);
 
   template <typename T>
   void ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
@@ -1448,17 +1449,17 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // If *aLoading is true, a relevant resource is already being loaded so no
   // new download will be initiated; if a download is started, *aLoading will
   // be set to true on return.
-  gfxFont* GetFontAt(int32_t i, uint32_t aCh, bool* aLoading);
+  already_AddRefed<gfxFont> GetFontAt(int32_t i, uint32_t aCh, bool* aLoading);
 
   // Simplified version of GetFontAt() for use where we just need a font for
   // metrics, math layout tables, etc.
-  gfxFont* GetFontAt(int32_t i, uint32_t aCh = 0x20) {
+  already_AddRefed<gfxFont> GetFontAt(int32_t i, uint32_t aCh = 0x20) {
     bool loading = false;
     return GetFontAt(i, aCh, &loading);
   }
 
   // will always return a font or force a shutdown
-  gfxFont* GetDefaultFont();
+  already_AddRefed<gfxFont> GetDefaultFont();
 
   // Init this font group's font metrics. If there no bad fonts, you don't need
   // to call this. But if there are one or more bad fonts which have bad
@@ -1483,17 +1484,17 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // Helper for font-matching:
   // search all faces in a family for a fallback in cases where it's unclear
   // whether the family might have a font for a given character
-  gfxFont* FindFallbackFaceForChar(const FamilyFace& aFamily, uint32_t aCh,
-                                   uint32_t aNextCh,
-                                   eFontPresentation aPresentation);
+  already_AddRefed<gfxFont> FindFallbackFaceForChar(
+      const FamilyFace& aFamily, uint32_t aCh, uint32_t aNextCh,
+      eFontPresentation aPresentation);
 
-  gfxFont* FindFallbackFaceForChar(mozilla::fontlist::Family* aFamily,
-                                   uint32_t aCh, uint32_t aNextCh,
-                                   eFontPresentation aPresentation);
+  already_AddRefed<gfxFont> FindFallbackFaceForChar(
+      mozilla::fontlist::Family* aFamily, uint32_t aCh, uint32_t aNextCh,
+      eFontPresentation aPresentation);
 
-  gfxFont* FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh,
-                                   uint32_t aNextCh,
-                                   eFontPresentation aPresentation);
+  already_AddRefed<gfxFont> FindFallbackFaceForChar(
+      gfxFontFamily* aFamily, uint32_t aCh, uint32_t aNextCh,
+      eFontPresentation aPresentation);
 
   // helper methods for looking up fonts
 

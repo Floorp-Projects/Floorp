@@ -1384,9 +1384,8 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
 
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
       presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet);
-  const auto& metrics =
-      fm->GetThebesFontGroup()->GetFirstValidFont()->GetMetrics(
-          fm->Orientation());
+  RefPtr<gfxFont> font = fm->GetThebesFontGroup()->GetFirstValidFont();
+  const auto& metrics = font->GetMetrics(fm->Orientation());
 
   int32_t d2a = aPresContext->AppUnitsPerDevPixel();
   auto ToLength = [](nscoord aLen) {
