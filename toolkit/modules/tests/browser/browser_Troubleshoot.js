@@ -859,10 +859,6 @@ const SNAPSHOT_SCHEMA = {
             },
           },
         },
-        codecSupportInfo: {
-          required: false,
-          type: "string",
-        },
       },
     },
     accessibility: {
