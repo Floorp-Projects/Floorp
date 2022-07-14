@@ -83,7 +83,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   "set": [["dom.caches.enabled", true],
           ["dom.caches.testing.enabled", true],
-          ["dom.quotaManager.testing", true]],
+          ["dom.quotaManager.testing", true],
+          ["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
 }, async function() {
   // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
   // Acquire storage access permission here so that the Cache API is avaialable
