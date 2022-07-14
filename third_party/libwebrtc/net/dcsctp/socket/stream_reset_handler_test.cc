@@ -762,5 +762,37 @@ TEST_F(StreamResetHandlerTest, HandoverAfterHavingResetOneStream) {
   }
 }
 
+TEST_F(StreamResetHandlerTest, PerformCloseAfterOneFirstFailing) {
+  // Inject a stream reset on the first expected TSN (which hasn't been seen).
+  Parameters::Builder builder;
+  builder.Add(OutgoingSSNResetRequestParameter(
+      kPeerInitialReqSn, ReconfigRequestSN(3), kPeerInitialTsn, {StreamID(1)}));
+
+  // The socket is expected to say "in progress" as that TSN hasn't been seen.
+  std::vector<ReconfigurationResponseParameter> responses =
+      HandleAndCatchResponse(ReConfigChunk(builder.Build()));
+  EXPECT_THAT(responses, SizeIs(1));
+  EXPECT_EQ(responses[0].result(), ResponseResult::kInProgress);
+
+  // Let the socket receive the TSN.
+  DataGeneratorOptions opts;
+  opts.message_id = MID(0);
+  reasm_->Add(kPeerInitialTsn, gen_.Ordered({1, 2, 3, 4}, "BE", opts));
+  reasm_->MaybeResetStreamsDeferred(kPeerInitialTsn);
+  data_tracker_->Observe(kPeerInitialTsn);
+
+  // And emulate that time has passed, and the peer retries the stream reset,
+  // but now with an incremented request sequence number.
+  Parameters::Builder builder2;
+  builder2.Add(OutgoingSSNResetRequestParameter(
+      ReconfigRequestSN(*kPeerInitialReqSn + 1), ReconfigRequestSN(3),
+      kPeerInitialTsn, {StreamID(1)}));
+
+  // This is supposed to be handled well.
+  std::vector<ReconfigurationResponseParameter> responses2 =
+      HandleAndCatchResponse(ReConfigChunk(builder2.Build()));
+  EXPECT_THAT(responses2, SizeIs(1));
+  EXPECT_EQ(responses2[0].result(), ResponseResult::kSuccessPerformed);
+}
 }  // namespace
 }  // namespace dcsctp
