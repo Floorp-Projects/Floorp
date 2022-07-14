@@ -12,6 +12,11 @@ DIRS = [
     "pingsender",
 ]
 
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    EXPORTS.mozilla += ["!dap_ffi_generated.h"]
+
+    CbindgenHeader("dap_ffi_generated.h", inputs=["dap/ffi"])
+
 DEFINES["MOZ_APP_VERSION"] = '"%s"' % CONFIG["MOZ_APP_VERSION"]
 
 for var in ("MOZ_BACKGROUNDTASKS",):
@@ -40,6 +45,7 @@ BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 XPIDL_SOURCES += [
     "core/nsITelemetry.idl",
+    "dap/nsIDAPTelemetry.idl",
 ]
 
 XPIDL_MODULE = "telemetry"
@@ -52,6 +58,7 @@ EXPORTS.mozilla += [
     "core/ipc/TelemetryComms.h",
     "core/ipc/TelemetryIPC.h",
     "core/Telemetry.h",
+    "dap/DAPTelemetry.h",
     "other/CombinedStacks.h",
     "other/ProcessedStack.h",
     "TelemetryOriginEnums.h",
@@ -72,6 +79,7 @@ SOURCES += [
     "core/TelemetryOrigin.cpp",
     "core/TelemetryScalar.cpp",
     "core/TelemetryUserInteraction.cpp",
+    "dap/DAPTelemetry.cpp",
     "geckoview/streaming/GeckoViewStreamingTelemetry.cpp",
     "other/CombinedStacks.cpp",
     "other/ProcessedStack.cpp",
@@ -88,6 +96,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 XPCOM_MANIFESTS += [
     "components.conf",
     "core/components.conf",
+    "dap/components.conf",
 ]
 
 EXTRA_COMPONENTS += ["TelemetryStartup.manifest"]
