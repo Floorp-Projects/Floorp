@@ -27,8 +27,7 @@ struct LibvpxVp9EncoderTemplateAdapter {
     return VP9Encoder::Create();
   }
 
-  static bool IsScalabilityModeSupported(
-      const absl::string_view scalability_mode) {
+  static bool IsScalabilityModeSupported(ScalabilityMode scalability_mode) {
     return VP9Encoder::SupportsScalabilityMode(scalability_mode);
   }
 };

@@ -23,8 +23,12 @@ absl::optional<ScalabilityMode> ScalabilityModeFromString(
     return ScalabilityMode::kL1T1;
   if (mode_string == "L1T2")
     return ScalabilityMode::kL1T2;
+  if (mode_string == "L1T2h")
+    return ScalabilityMode::kL1T2h;
   if (mode_string == "L1T3")
     return ScalabilityMode::kL1T3;
+  if (mode_string == "L1T3h")
+    return ScalabilityMode::kL1T3h;
 
   if (mode_string == "L2T1")
     return ScalabilityMode::kL2T1;
@@ -35,17 +39,37 @@ absl::optional<ScalabilityMode> ScalabilityModeFromString(
 
   if (mode_string == "L2T2")
     return ScalabilityMode::kL2T2;
+  if (mode_string == "L2T2h")
+    return ScalabilityMode::kL2T2h;
   if (mode_string == "L2T2_KEY")
     return ScalabilityMode::kL2T2_KEY;
   if (mode_string == "L2T2_KEY_SHIFT")
     return ScalabilityMode::kL2T2_KEY_SHIFT;
+  if (mode_string == "L2T3")
+    return ScalabilityMode::kL2T3;
+  if (mode_string == "L2T3h")
+    return ScalabilityMode::kL2T3h;
   if (mode_string == "L2T3_KEY")
     return ScalabilityMode::kL2T3_KEY;
 
   if (mode_string == "L3T1")
     return ScalabilityMode::kL3T1;
+  if (mode_string == "L3T1h")
+    return ScalabilityMode::kL3T1h;
+  if (mode_string == "L3T1_KEY")
+    return ScalabilityMode::kL3T1_KEY;
+
+  if (mode_string == "L3T2")
+    return ScalabilityMode::kL3T2;
+  if (mode_string == "L3T2h")
+    return ScalabilityMode::kL3T2h;
+  if (mode_string == "L3T2_KEY")
+    return ScalabilityMode::kL3T2_KEY;
+
   if (mode_string == "L3T3")
     return ScalabilityMode::kL3T3;
+  if (mode_string == "L3T3h")
+    return ScalabilityMode::kL3T3h;
   if (mode_string == "L3T3_KEY")
     return ScalabilityMode::kL3T3_KEY;
 
@@ -63,8 +87,12 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
       return "L1T1";
     case ScalabilityMode::kL1T2:
       return "L1T2";
+    case ScalabilityMode::kL1T2h:
+      return "L1T2h";
     case ScalabilityMode::kL1T3:
       return "L1T3";
+    case ScalabilityMode::kL1T3h:
+      return "L1T3h";
     case ScalabilityMode::kL2T1:
       return "L2T1";
     case ScalabilityMode::kL2T1h:
@@ -73,16 +101,34 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
       return "L2T1_KEY";
     case ScalabilityMode::kL2T2:
       return "L2T2";
+    case ScalabilityMode::kL2T2h:
+      return "L2T2h";
     case ScalabilityMode::kL2T2_KEY:
       return "L2T2_KEY";
     case ScalabilityMode::kL2T2_KEY_SHIFT:
       return "L2T2_KEY_SHIFT";
+    case ScalabilityMode::kL2T3:
+      return "L2T3";
+    case ScalabilityMode::kL2T3h:
+      return "L2T3h";
     case ScalabilityMode::kL2T3_KEY:
       return "L2T3_KEY";
     case ScalabilityMode::kL3T1:
       return "L3T1";
+    case ScalabilityMode::kL3T1h:
+      return "L3T1h";
+    case ScalabilityMode::kL3T1_KEY:
+      return "L3T1_KEY";
+    case ScalabilityMode::kL3T2:
+      return "L3T2";
+    case ScalabilityMode::kL3T2h:
+      return "L3T2h";
+    case ScalabilityMode::kL3T2_KEY:
+      return "L3T2_KEY";
     case ScalabilityMode::kL3T3:
       return "L3T3";
+    case ScalabilityMode::kL3T3h:
+      return "L3T3h";
     case ScalabilityMode::kL3T3_KEY:
       return "L3T3_KEY";
     case ScalabilityMode::kS2T1:

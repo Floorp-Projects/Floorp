@@ -14,6 +14,8 @@
 
 namespace webrtc {
 
+bool LibaomAv1EncoderSupportsScalabilityMode(ScalabilityMode scalability_mode);
+
 // Fills `video_codec.spatialLayers` using other members.
 bool SetAv1SvcConfig(VideoCodec& video_codec);
 

@@ -18,6 +18,7 @@
 #include "absl/algorithm/container.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 
 namespace webrtc {
 // The VideoEncoderFactoryTemplate supports encoders implementations given as
@@ -35,7 +36,7 @@ namespace webrtc {
 //
 //   // Returns true if the encoder supports the given scalability mode.
 //   static bool
-//       IsScalabilityModeSupported(const absl::string_view scalability_mode);
+//       IsScalabilityModeSupported(ScalabilityMode scalability_mode);
 //
 // Note that the order of the template arguments matter as the factory will
 // query/return the first encoder implementation supporting the given
@@ -64,6 +65,18 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
   template <typename V>
   bool IsFormatSupported(const SdpVideoFormat& format) const {
     return absl::c_count(V::SupportedFormats(), format) > 0;
+  }
+
+  template <typename V>
+  bool IsScalabilityModeSupported(
+      const absl::optional<std::string>& scalability_mode_string) const {
+    if (!scalability_mode_string.has_value()) {
+      return true;
+    }
+    absl::optional<ScalabilityMode> scalability_mode =
+        ScalabilityModeFromString(*scalability_mode_string);
+    return scalability_mode.has_value() &&
+           V::IsScalabilityModeSupported(*scalability_mode);
   }
 
   template <typename V, typename... Vs>
@@ -99,8 +112,7 @@ class VideoEncoderFactoryTemplate : public VideoEncoderFactory {
       const SdpVideoFormat& format,
       const absl::optional<std::string>& scalability_mode) const {
     if (IsFormatSupported<V>(format)) {
-      return {.is_supported = !scalability_mode ||
-                              V::IsScalabilityModeSupported(*scalability_mode)};
+      return {.is_supported = IsScalabilityModeSupported<V>(scalability_mode)};
     }
 
     if constexpr (sizeof...(Vs) > 0) {
