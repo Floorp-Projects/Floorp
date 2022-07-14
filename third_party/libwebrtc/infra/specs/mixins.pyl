@@ -172,14 +172,6 @@
       }
     }
   },
-  'mac_12_x64': {
-    'swarming': {
-      'dimensions': {
-        'cpu': 'x86-64',
-        'os': 'Mac-12'
-      }
-    }
-  },
   'mac_toolchain': {
     'swarming': {
       'cipd_packages': [{
