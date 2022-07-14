@@ -3613,22 +3613,24 @@ RTCError SdpOfferAnswerHandler::UpdateTransceiverChannel(
     }
   } else {
     if (!channel) {
+      std::unique_ptr<cricket::ChannelInterface> new_channel;
       if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
-        channel = CreateVoiceChannel(content.name);
+        new_channel = CreateVoiceChannel(content.name);
       } else {
         RTC_DCHECK_EQ(cricket::MEDIA_TYPE_VIDEO, transceiver->media_type());
-        channel = CreateVideoChannel(content.name);
+        new_channel = CreateVideoChannel(content.name);
       }
-      if (!channel) {
+      if (!new_channel) {
         return RTCError(RTCErrorType::INTERNAL_ERROR,
                         "Failed to create channel for mid=" + content.name);
       }
       // Note: this is a thread hop; the lambda will be executed
       // on the network thread.
-      transceiver->internal()->SetChannel(channel, [&](const std::string& mid) {
-        RTC_DCHECK_RUN_ON(network_thread());
-        return transport_controller_n()->GetRtpTransport(mid);
-      });
+      transceiver->internal()->SetChannel(
+          std::move(new_channel), [&](const std::string& mid) {
+            RTC_DCHECK_RUN_ON(network_thread());
+            return transport_controller_n()->GetRtpTransport(mid);
+          });
     }
   }
   return RTCError::OK();
@@ -4801,13 +4803,14 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
   const cricket::ContentInfo* voice = cricket::GetFirstAudioContent(&desc);
   if (voice && !voice->rejected &&
       !rtp_manager()->GetAudioTransceiver()->internal()->channel()) {
-    cricket::VoiceChannel* voice_channel = CreateVoiceChannel(voice->name);
+    std::unique_ptr<cricket::VoiceChannel> voice_channel =
+        CreateVoiceChannel(voice->name);
     if (!voice_channel) {
       return RTCError(RTCErrorType::INTERNAL_ERROR,
                       "Failed to create voice channel.");
     }
     rtp_manager()->GetAudioTransceiver()->internal()->SetChannel(
-        voice_channel, [&](const std::string& mid) {
+        std::move(voice_channel), [&](const std::string& mid) {
           RTC_DCHECK_RUN_ON(network_thread());
           return transport_controller_n()->GetRtpTransport(mid);
         });
@@ -4816,13 +4819,14 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
   const cricket::ContentInfo* video = cricket::GetFirstVideoContent(&desc);
   if (video && !video->rejected &&
       !rtp_manager()->GetVideoTransceiver()->internal()->channel()) {
-    cricket::VideoChannel* video_channel = CreateVideoChannel(video->name);
+    std::unique_ptr<cricket::VideoChannel> video_channel =
+        CreateVideoChannel(video->name);
     if (!video_channel) {
       return RTCError(RTCErrorType::INTERNAL_ERROR,
                       "Failed to create video channel.");
     }
     rtp_manager()->GetVideoTransceiver()->internal()->SetChannel(
-        video_channel, [&](const std::string& mid) {
+        std::move(video_channel), [&](const std::string& mid) {
           RTC_DCHECK_RUN_ON(network_thread());
           return transport_controller_n()->GetRtpTransport(mid);
         });
@@ -4841,8 +4845,8 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
 }
 
 // TODO(steveanton): Perhaps this should be managed by the RtpTransceiver.
-cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
-    const std::string& mid) {
+std::unique_ptr<cricket::VoiceChannel>
+SdpOfferAnswerHandler::CreateVoiceChannel(const std::string& mid) {
   TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::CreateVoiceChannel");
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (!channel_manager()->media_engine())
@@ -4857,8 +4861,8 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
 }
 
 // TODO(steveanton): Perhaps this should be managed by the RtpTransceiver.
-cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
-    const std::string& mid) {
+std::unique_ptr<cricket::VideoChannel>
+SdpOfferAnswerHandler::CreateVideoChannel(const std::string& mid) {
   TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::CreateVideoChannel");
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (!channel_manager()->media_engine())
