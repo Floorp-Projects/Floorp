@@ -39,8 +39,8 @@ OutstandingData::Item::NackAction OutstandingData::Item::Nack(
     bool retransmit_now) {
   ack_state_ = AckState::kNacked;
   ++nack_count_;
-  if ((retransmit_now || nack_count_ >= kNumberOfNacksForRetransmission) &&
-      !is_abandoned_) {
+  if (!should_be_retransmitted() && !is_abandoned() &&
+      (retransmit_now || nack_count_ >= kNumberOfNacksForRetransmission)) {
     // Nacked enough times - it's considered lost.
     if (num_retransmissions_ < *max_retransmissions_) {
       should_be_retransmitted_ = true;
