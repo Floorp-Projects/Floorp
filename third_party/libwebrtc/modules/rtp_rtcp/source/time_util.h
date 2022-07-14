@@ -34,14 +34,6 @@ inline uint32_t CompactNtp(NtpTime ntp) {
 // Negative values converted to 0, Overlarge values converted to max uint32_t.
 uint32_t SaturatedToCompactNtp(TimeDelta delta);
 
-// Convert interval to the NTP time resolution (1/2^32 seconds ~= 0.2 ns).
-inline constexpr int64_t ToNtpUnits(TimeDelta delta) {
-  // For better precision `delta` is taken with best TimeDelta precision (us),
-  // then multiplaction and conversion to seconds are swapped to avoid float
-  // arithmetic.
-  return (delta.us() * (int64_t{1} << 32)) / 1'000'000;
-}
-
 // Converts interval from compact ntp (1/2^16 seconds) resolution to TimeDelta.
 // This interval can be up to ~9.1 hours (2^15 seconds).
 // Values close to 2^16 seconds are considered negative and are converted to
