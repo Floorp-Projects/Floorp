@@ -28,15 +28,17 @@
       ", origin_id INTEGER REFERENCES moz_origins(id)" \
       ")")
 
-#define CREATE_MOZ_HISTORYVISITS         \
-  nsLiteralCString(                      \
-      "CREATE TABLE moz_historyvisits (" \
-      "  id INTEGER PRIMARY KEY"         \
-      ", from_visit INTEGER"             \
-      ", place_id INTEGER"               \
-      ", visit_date INTEGER"             \
-      ", visit_type INTEGER"             \
-      ", session INTEGER"                \
+#define CREATE_MOZ_HISTORYVISITS            \
+  nsLiteralCString(                         \
+      "CREATE TABLE moz_historyvisits ("    \
+      "  id INTEGER PRIMARY KEY"            \
+      ", from_visit INTEGER"                \
+      ", place_id INTEGER"                  \
+      ", visit_date INTEGER"                \
+      ", visit_type INTEGER"                \
+      ", session INTEGER"                   \
+      ", source INTEGER DEFAULT 0 NOT NULL" \
+      ", triggeringPlaceId INTEGER"         \
       ")")
 
 #define CREATE_MOZ_INPUTHISTORY         \
