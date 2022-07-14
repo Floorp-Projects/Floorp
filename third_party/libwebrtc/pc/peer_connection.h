@@ -430,14 +430,16 @@ class PeerConnection : public PeerConnectionInternal,
       RTC_RUN_ON(network_thread());
   void TeardownDataChannelTransport_n() override RTC_RUN_ON(network_thread());
 
+  const FieldTrialsView& trials() const override { return *trials_; }
+
+  bool ConfiguredForMedia() const;
+
   // Functions made public for testing.
   void ReturnHistogramVeryQuicklyForTesting() {
     RTC_DCHECK_RUN_ON(signaling_thread());
     return_histogram_very_quickly_ = true;
   }
   void RequestUsagePatternReportForTesting();
-
-  const FieldTrialsView& trials() const override { return *trials_; }
 
  protected:
   // Available for rtc::scoped_refptr creation

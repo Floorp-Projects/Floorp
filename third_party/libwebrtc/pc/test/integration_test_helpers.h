@@ -735,7 +735,8 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
             rtc::Thread* worker_thread,
             std::unique_ptr<webrtc::FakeRtcEventLogFactory> event_log_factory,
             bool reset_encoder_factory,
-            bool reset_decoder_factory) {
+            bool reset_decoder_factory,
+            bool create_media_engine) {
     // There's an error in this test code if Init ends up being called twice.
     RTC_DCHECK(!peer_connection_);
     RTC_DCHECK(!peer_connection_factory_);
@@ -782,8 +783,10 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
 
     media_deps.trials = pc_factory_dependencies.trials.get();
 
-    pc_factory_dependencies.media_engine =
-        cricket::CreateMediaEngine(std::move(media_deps));
+    if (create_media_engine) {
+      pc_factory_dependencies.media_engine =
+          cricket::CreateMediaEngine(std::move(media_deps));
+    }
     pc_factory_dependencies.call_factory = webrtc::CreateCallFactory();
     if (event_log_factory) {
       event_log_factory_ = event_log_factory.get();
@@ -1435,7 +1438,8 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
       webrtc::PeerConnectionDependencies dependencies,
       std::unique_ptr<webrtc::FakeRtcEventLogFactory> event_log_factory,
       bool reset_encoder_factory,
-      bool reset_decoder_factory) {
+      bool reset_decoder_factory,
+      bool create_media_engine = true) {
     RTCConfiguration modified_config;
     if (config) {
       modified_config = *config;
@@ -1451,7 +1455,7 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
     if (!client->Init(options, &modified_config, std::move(dependencies),
                       network_thread_.get(), worker_thread_.get(),
                       std::move(event_log_factory), reset_encoder_factory,
-                      reset_decoder_factory)) {
+                      reset_decoder_factory, create_media_engine)) {
       return nullptr;
     }
     return client;
@@ -1587,6 +1591,22 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
         nullptr,
         /*reset_encoder_factory=*/caller_to_callee,
         /*reset_decoder_factory=*/!caller_to_callee);
+    return caller_ && callee_;
+  }
+
+  bool CreatePeerConnectionWrappersWithoutMediaEngine() {
+    caller_ = CreatePeerConnectionWrapper(
+        "Caller", nullptr, nullptr, webrtc::PeerConnectionDependencies(nullptr),
+        nullptr,
+        /*reset_encoder_factory=*/false,
+        /*reset_decoder_factory=*/false,
+        /*create_media_engine=*/false);
+    callee_ = CreatePeerConnectionWrapper(
+        "Callee", nullptr, nullptr, webrtc::PeerConnectionDependencies(nullptr),
+        nullptr,
+        /*reset_encoder_factory=*/false,
+        /*reset_decoder_factory=*/false,
+        /*create_media_engine=*/false);
     return caller_ && callee_;
   }
 
