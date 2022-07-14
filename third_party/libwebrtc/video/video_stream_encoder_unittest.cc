@@ -6918,10 +6918,10 @@ TEST_F(VideoStreamEncoderTest,
 TEST_F(VideoStreamEncoderTest, AcceptsFullHdAdaptedDownSimulcastFrames) {
   const int kFrameWidth = 1920;
   const int kFrameHeight = 1080;
-  // 3/4 of 1920.
-  const int kAdaptedFrameWidth = 1440;
-  // 3/4 of 1080 rounded down to multiple of 4.
-  const int kAdaptedFrameHeight = 808;
+  // 2/3 of 1920.
+  const int kAdaptedFrameWidth = 1280;
+  // 2/3 of 1080.
+  const int kAdaptedFrameHeight = 720;
   const int kFramerate = 24;
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
