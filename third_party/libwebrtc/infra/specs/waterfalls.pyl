@@ -280,11 +280,11 @@
           'isolated_scripts': 'desktop_perf_tests',
         },
       },
-      'Perf Mac 10.11': {
+      'Perf Mac 11': {
         'os_type':
         'mac',
         'mixins': [
-          'mac', 'x86-64', 'perf-pool', 'timeout-3h',
+          'mac11', 'x86-64', 'perf-pool', 'timeout-3h',
           'resultdb-gtest-json-format'
         ],
         'test_suites': {

@@ -374,7 +374,7 @@
       }
     ]
   },
-  "Perf Mac 10.11": {
+  "Perf Mac 11": {
     "isolated_scripts": [
       {
         "args": [
@@ -400,7 +400,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-perf"
             }
           ],
@@ -435,7 +435,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-perf"
             }
           ],
