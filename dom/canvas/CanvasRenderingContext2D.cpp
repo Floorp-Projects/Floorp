@@ -4224,8 +4224,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
 
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
   processor.mPt = gfx::Point(aX, aY);
-  processor.mDrawTarget =
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  processor.mDrawTarget = gfxPlatform::ThreadLocalScreenReferenceDrawTarget();
 
   // If we don't have a target then we don't have a transform. A target won't
   // be needed in the case where we're measuring the text size. This allows
@@ -5985,17 +5984,15 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CanvasPath, Release)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPath, mParent)
 
 CanvasPath::CanvasPath(nsISupports* aParent) : mParent(aParent) {
-  mPathBuilder = gfxPlatform::GetPlatform()
-                     ->ScreenReferenceDrawTarget()
-                     ->CreatePathBuilder();
+  mPathBuilder =
+      gfxPlatform::ThreadLocalScreenReferenceDrawTarget()->CreatePathBuilder();
 }
 
 CanvasPath::CanvasPath(nsISupports* aParent,
                        already_AddRefed<PathBuilder> aPathBuilder)
     : mParent(aParent), mPathBuilder(aPathBuilder) {
   if (!mPathBuilder) {
-    mPathBuilder = gfxPlatform::GetPlatform()
-                       ->ScreenReferenceDrawTarget()
+    mPathBuilder = gfxPlatform::ThreadLocalScreenReferenceDrawTarget()
                        ->CreatePathBuilder();
   }
 }
@@ -6013,9 +6010,10 @@ already_AddRefed<CanvasPath> CanvasPath::Constructor(
 
 already_AddRefed<CanvasPath> CanvasPath::Constructor(
     const GlobalObject& aGlobal, CanvasPath& aCanvasPath) {
-  RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(
-      CanvasWindingRule::Nonzero,
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
+  RefPtr<gfx::DrawTarget> drawTarget =
+      gfxPlatform::ThreadLocalScreenReferenceDrawTarget();
+  RefPtr<gfx::Path> tempPath =
+      aCanvasPath.GetPath(CanvasWindingRule::Nonzero, drawTarget.get());
 
   RefPtr<CanvasPath> path =
       new CanvasPath(aGlobal.GetAsSupports(), tempPath->CopyToBuilder());
@@ -6177,9 +6175,10 @@ void CanvasPath::BezierTo(const gfx::Point& aCP1, const gfx::Point& aCP2,
 
 void CanvasPath::AddPath(CanvasPath& aCanvasPath, const DOMMatrix2DInit& aInit,
                          ErrorResult& aError) {
-  RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(
-      CanvasWindingRule::Nonzero,
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
+  RefPtr<gfx::DrawTarget> drawTarget =
+      gfxPlatform::ThreadLocalScreenReferenceDrawTarget();
+  RefPtr<gfx::Path> tempPath =
+      aCanvasPath.GetPath(CanvasWindingRule::Nonzero, drawTarget.get());
 
   RefPtr<DOMMatrixReadOnly> matrix =
       DOMMatrixReadOnly::FromMatrix(GetParentObject(), aInit, aError);
