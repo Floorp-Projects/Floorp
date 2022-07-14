@@ -840,13 +840,6 @@ KeyBinding RemoteAccessible::AccessKey() {
   return KeyBinding(key, modifierMask);
 }
 
-KeyBinding RemoteAccessible::KeyboardShortcut() {
-  uint32_t key = 0;
-  uint32_t modifierMask = 0;
-  Unused << mDoc->SendKeyboardShortcut(mID, &key, &modifierMask);
-  return KeyBinding(key, modifierMask);
-}
-
 void RemoteAccessible::AtkKeyBinding(nsString& aBinding) {
   Unused << mDoc->SendAtkKeyBinding(mID, &aBinding);
 }
