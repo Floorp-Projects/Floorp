@@ -294,6 +294,8 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       rv = NS_ERROR_FILE_IS_LOCKED;
       break;
     case ERROR_NOT_ENOUGH_MEMORY:
+      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
+    case ERROR_NO_SYSTEM_RESOURCES:
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     case ERROR_DIR_NOT_EMPTY:
