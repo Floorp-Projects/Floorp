@@ -3675,6 +3675,13 @@ TEST_P(PeerConnectionIntegrationTest, NewTracksDoNotCauseNewCandidates) {
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
 }
 
+TEST_P(PeerConnectionIntegrationTest, MediaCallWithoutMediaEngineFails) {
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
+  // AddTrack should fail.
+  EXPECT_FALSE(
+      caller()->pc()->AddTrack(caller()->CreateLocalAudioTrack(), {}).ok());
+}
+
 INSTANTIATE_TEST_SUITE_P(
     PeerConnectionIntegrationTest,
     PeerConnectionIntegrationInteropTest,

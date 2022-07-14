@@ -202,7 +202,7 @@ TEST_P(DataChannelIntegrationTest, EndToEndCallWithSctpDataChannel) {
 // data channel only, and sends messages of various sizes.
 TEST_P(DataChannelIntegrationTest,
        EndToEndCallWithSctpDataChannelVariousSizes) {
-  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
   ConnectFakeSignaling();
   // Expect that data channel created on caller side will show up for callee as
   // well.
@@ -241,7 +241,7 @@ TEST_P(DataChannelIntegrationTest,
 // data channel only, and sends empty messages
 TEST_P(DataChannelIntegrationTest,
        EndToEndCallWithSctpDataChannelEmptyMessages) {
-  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
   ConnectFakeSignaling();
   // Expect that data channel created on caller side will show up for callee as
   // well.
@@ -291,7 +291,7 @@ TEST_P(DataChannelIntegrationTest,
   // this test does not use TURN.
   const size_t kLowestSafePayloadSizeLimit = 1225;
 
-  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
   ConnectFakeSignaling();
   // Expect that data channel created on caller side will show up for callee as
   // well.
@@ -328,7 +328,7 @@ TEST_P(DataChannelIntegrationTest, EndToEndCallWithSctpDataChannelHarmfulMtu) {
   // The size of the smallest message that fails to be delivered.
   const size_t kMessageSizeThatIsNotDelivered = 1157;
 
-  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
   ConnectFakeSignaling();
   caller()->CreateDataChannel();
   caller()->CreateAndSetAndSignalOffer();
@@ -429,7 +429,7 @@ TEST_P(DataChannelIntegrationTest, StressTestUnorderedSctpDataChannel) {
   virtual_socket_server()->set_delay_stddev(5);
   virtual_socket_server()->UpdateDelayDistribution();
   // Normal procedure, but with unordered data channel config.
-  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
   ConnectFakeSignaling();
   webrtc::DataChannelInit init;
   init.ordered = false;
