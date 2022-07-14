@@ -476,6 +476,12 @@ WorkerScriptLoader::WorkerScriptLoader(
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
   MOZ_ASSERT_IF(aIsMainScript, mLoadInfos.Length() == 1);
+
+  for (ScriptLoadInfo& loadInfo : mLoadInfos) {
+    // Build up our list of references here. This will be removed once
+    // we move to ScriptLoadRequestList.
+    mLoadingRequests.AppendElement(&loadInfo);
+  }
 }
 
 bool WorkerScriptLoader::DispatchLoadScripts() {
@@ -614,28 +620,28 @@ void WorkerScriptLoader::CancelMainThread(nsresult aCancelResult) {
   }
 
   // Cancel all the channels that were already opened.
-  for (ScriptLoadInfo& loadInfo : mLoadInfos) {
+  for (ScriptLoadInfo* loadInfo : mLoadingRequests) {
     // If promise or channel is non-null, their failures will lead to
     // LoadingFinished being called.
     bool callLoadingFinished = true;
 
-    if (loadInfo.mCachePromise) {
+    if (loadInfo->mCachePromise) {
       MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-      loadInfo.mCachePromise->MaybeReject(aCancelResult);
-      loadInfo.mCachePromise = nullptr;
+      loadInfo->mCachePromise->MaybeReject(aCancelResult);
+      loadInfo->mCachePromise = nullptr;
       callLoadingFinished = false;
     }
 
-    if (loadInfo.mChannel) {
-      if (NS_SUCCEEDED(loadInfo.mChannel->Cancel(aCancelResult))) {
+    if (loadInfo->mChannel) {
+      if (NS_SUCCEEDED(loadInfo->mChannel->Cancel(aCancelResult))) {
         callLoadingFinished = false;
       } else {
         NS_WARNING("Failed to cancel channel!");
       }
     }
 
-    if (callLoadingFinished && !loadInfo.Finished()) {
-      LoadingFinished(&loadInfo, aCancelResult);
+    if (callLoadingFinished && !loadInfo->Finished()) {
+      LoadingFinished(loadInfo, aCancelResult);
     }
   }
 
@@ -668,10 +674,10 @@ nsresult WorkerScriptLoader::LoadScripts() {
   }
 
   if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
-    for (ScriptLoadInfo& loadInfo : mLoadInfos) {
-      nsresult rv = LoadScript(&loadInfo);
+    for (ScriptLoadInfo* loadInfo : mLoadingRequests) {
+      nsresult rv = LoadScript(loadInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        LoadingFinished(&loadInfo, rv);
+        LoadingFinished(loadInfo, rv);
         return rv;
       }
     }
@@ -682,9 +688,9 @@ nsresult WorkerScriptLoader::LoadScripts() {
   MOZ_ASSERT(!mCacheCreator);
   mCacheCreator = new CacheCreator(mWorkerPrivate);
 
-  for (ScriptLoadInfo& loadInfo : mLoadInfos) {
+  for (ScriptLoadInfo* loadInfo : mLoadingRequests) {
     mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheLoadHandler>>(
-        mWorkerPrivate, &loadInfo, IsMainWorkerScript(), this));
+        mWorkerPrivate, loadInfo, IsMainWorkerScript(), this));
   }
 
   // The worker may have a null principal on first load, but in that case its
