@@ -92,7 +92,7 @@ class APZTestData {
   }
 
   // Convert this object to a JS representation.
-  bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext) const;
+  bool ToJS(JS::MutableHandle<JS::Value> aOutValue, JSContext* aContext) const;
 
   // Use dummy derived structures wrapping the typedefs to work around a type
   // name length limit in MSVC.

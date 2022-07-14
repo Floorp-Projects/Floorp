@@ -118,7 +118,7 @@ class MockGfxInfo final : public nsIGfxInfo {
   }
 
   NS_IMETHOD GetMonitors(JSContext* cx,
-                         JS::MutableHandleValue _retval) override {
+                         JS::MutableHandle<JS::Value> _retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD GetFailures(nsTArray<int32_t>& indices,

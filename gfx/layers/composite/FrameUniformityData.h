@@ -21,7 +21,7 @@ class FrameUniformityData {
   friend struct IPC::ParamTraits<FrameUniformityData>;
 
  public:
-  bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext);
+  bool ToJS(JS::MutableHandle<JS::Value> aOutValue, JSContext* aContext);
   // Contains the calculated frame uniformities
   std::map<uintptr_t, float> mUniformities;
 };
