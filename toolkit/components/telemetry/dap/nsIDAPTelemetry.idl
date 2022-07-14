@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(58a4c579-d2dd-46b7-9c3b-6881a1c36c6a)]
+interface nsIDAPTelemetry : nsISupports {
+
+  // A dummy function for testing the code integration.
+  void Test();
+
+};
