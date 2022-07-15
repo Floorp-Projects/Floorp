@@ -135,20 +135,6 @@ void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
         RTC_CHECK_LT(*video_config.simulcast_config->target_spatial_index,
                      video_config.simulcast_config->simulcast_streams_count);
       }
-      RTC_CHECK(!video_config.max_encode_bitrate_bps)
-          << "Setting max encode bitrate is not implemented for simulcast.";
-      RTC_CHECK(!video_config.min_encode_bitrate_bps)
-          << "Setting min encode bitrate is not implemented for simulcast.";
-      RTC_CHECK(video_config.simulcast_config->encoding_params.empty() ||
-                video_config.encoding_params.empty())
-          << "Can't provide |encoding_params| in both |simulcast_config| and "
-             "|video_config|.";
-      if (!video_config.simulcast_config->encoding_params.empty()) {
-        RTC_CHECK_EQ(video_config.simulcast_config->simulcast_streams_count,
-                     video_config.simulcast_config->encoding_params.size())
-            << "|encoding_params| have to be specified for each simulcast "
-            << "stream in |simulcast_config|.";
-      }
       if (!video_config.encoding_params.empty()) {
         RTC_CHECK_EQ(video_config.simulcast_config->simulcast_streams_count,
                      video_config.encoding_params.size())

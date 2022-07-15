@@ -483,9 +483,6 @@ void PeerConnectionE2EQualityTest::SetupCallOnSignalingThread(
         for (int i = 0;
              i < video_config.simulcast_config->simulcast_streams_count; ++i) {
           RtpEncodingParameters enc_params;
-          if (!video_config.simulcast_config->encoding_params.empty()) {
-            enc_params = video_config.simulcast_config->encoding_params[i];
-          }
           if (!video_config.encoding_params.empty()) {
             enc_params = video_config.encoding_params[i];
           }
@@ -501,8 +498,6 @@ void PeerConnectionE2EQualityTest::SetupCallOnSignalingThread(
       if (video_config.encoding_params.size() == 1) {
         enc_params = video_config.encoding_params[0];
       }
-      enc_params.max_bitrate_bps = video_config.max_encode_bitrate_bps;
-      enc_params.min_bitrate_bps = video_config.min_encode_bitrate_bps;
       transceiver_params.send_encodings.push_back(enc_params);
 
       alice_video_transceivers_non_simulcast_counter++;
