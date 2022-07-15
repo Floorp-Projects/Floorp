@@ -415,7 +415,7 @@ nsresult nsHttpHandler::Init() {
   LOG(("> app-name = %s\n", mAppName.get()));
   LOG(("> app-version = %s\n", mAppVersion.get()));
   LOG(("> compat-firefox = %s\n", mCompatFirefox.get()));
-  LOG(("> user-agent = %s\n", UserAgent().get()));
+  LOG(("> user-agent = %s\n", UserAgent(false).get()));
 #endif
 
   // Startup the http category
@@ -537,11 +537,12 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 
 nsresult nsHttpHandler::AddStandardRequestHeaders(
     nsHttpRequestHead* request, bool isSecure,
-    ExtContentPolicyType aContentPolicyType) {
+    ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting) {
   nsresult rv;
 
   // Add the "User-Agent" header
-  rv = request->SetHeader(nsHttp::User_Agent, UserAgent(), false,
+  rv = request->SetHeader(nsHttp::User_Agent,
+                          UserAgent(aShouldResistFingerprinting), false,
                           nsHttpHeaderArray::eVarietyRequestDefault);
   if (NS_FAILED(rv)) return rv;
 
@@ -711,9 +712,8 @@ nsresult nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
 // nsHttpHandler <private>
 //-----------------------------------------------------------------------------
 
-const nsCString& nsHttpHandler::UserAgent() {
-  if (nsContentUtils::ShouldResistFingerprinting() &&
-      !mSpoofedUserAgent.IsEmpty()) {
+const nsCString& nsHttpHandler::UserAgent(bool aShouldResistFingerprinting) {
+  if (aShouldResistFingerprinting && !mSpoofedUserAgent.IsEmpty()) {
     LOG(("using spoofed userAgent : %s\n", mSpoofedUserAgent.get()));
     return mSpoofedUserAgent;
   }
@@ -1969,7 +1969,13 @@ nsresult nsHttpHandler::CreateTRRServiceChannel(
 
 NS_IMETHODIMP
 nsHttpHandler::GetUserAgent(nsACString& value) {
-  value = UserAgent();
+  value = UserAgent(false);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpHandler::GetRfpUserAgent(nsACString& value) {
+  value = UserAgent(true);
   return NS_OK;
 }
 
