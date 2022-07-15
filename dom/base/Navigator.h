@@ -145,7 +145,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
                                 bool aUsePrefOverriddenValue);
 
   static nsresult GetUserAgent(nsPIDOMWindowInner* aWindow,
-                               Document* aCallerDoc, bool aIsCallerChrome,
+                               Document* aCallerDoc,
+                               Maybe<bool> aShouldResistFingerprinting,
                                nsAString& aUserAgent);
 
   // Clears the platform cache by calling:
