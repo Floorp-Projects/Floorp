@@ -117,13 +117,14 @@ class VideoReceiveStream2
   // network thread.
   void UnregisterFromTransport();
 
-  // Convenience getters for parts of the receive stream's config.
-  // The accessors must be called on the packet delivery thread in accordance
-  // to documentation for RtpConfig (see receive_stream.h), the returned
-  // values should not be cached and should just be used within the calling
-  // context as some values might change.
-  const Config::Rtp& rtp() const;
+  // Accessor for the a/v sync group. This value may change and the caller
+  // must be on the packet delivery thread.
   const std::string& sync_group() const;
+
+  // Getters for const remote SSRC values that won't change throughout the
+  // object's lifetime.
+  uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
+  uint32_t rtx_ssrc() const { return config_.rtp.rtx_ssrc; }
 
   void SignalNetworkState(NetworkState state);
   bool DeliverRtcp(const uint8_t* packet, size_t length);
@@ -136,7 +137,7 @@ class VideoReceiveStream2
 
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   const std::vector<RtpExtension>& GetRtpExtensions() const override;
-  bool transport_cc() const override { return rtp().transport_cc; }
+  bool transport_cc() const override { return config_.rtp.transport_cc; }
 
   webrtc::VideoReceiveStream::Stats GetStats() const override;
 
