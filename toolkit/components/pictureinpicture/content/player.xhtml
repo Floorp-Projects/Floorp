@@ -27,6 +27,9 @@
     </xul:commandset>
 
     <xul:keyset>
+      <xul:key id="closeShortcut" keycode="VK_W" modifiers="accel"/>
+      <xul:key id="muteShortcut" keycode="↓" modifiers="accel"/>
+      <xul:key id="unMuteShortcut" keycode="↑" modifiers="accel"/>
 #ifndef XP_MACOSX
       <xul:key data-l10n-id="picture-in-picture-toggle-shortcut" command="View:PictureInPicture" modifiers="accel,shift"/>
       <xul:key data-l10n-id="picture-in-picture-toggle-shortcut-alt" command="View:PictureInPicture" modifiers="accel,shift"/>
@@ -45,18 +48,18 @@
 #ifdef XP_MACOSX
               mac="true"
 #endif
-              data-l10n-id="pictureinpicture-close"
+              data-l10n-id="pictureinpicture-close-cmd"
               tabindex="3"/>
       <div id="controls-bottom">
-        <button id="unpip" class="control-item" data-l10n-id="pictureinpicture-unpip" tabindex="2"></button>
+        <button id="unpip" class="control-item" data-l10n-id="pictureinpicture-unpip-cmd" tabindex="2"></button>
         <div class="gap"></div>
         <button id="playpause" class="control-item" tabindex="1"
-                data-l10n-id="pictureinpicture-pause"/>
+                data-l10n-id="pictureinpicture-pause-cmd"/>
         <div class="gap" hidden="true"></div>
         <button id="audio" class="control-item" hidden="true" tabindex="1"
-                data-l10n-id="pictureinpicture-mute"/>
+                data-l10n-id="pictureinpicture-mute-cmd"/>
         <div class="gap subtitles" hidden="true"></div>
-        <button id="closed-caption" class="control-item closed-caption subtitles" hidden="true" tabindex="1"></button>
+        <button id="closed-caption" class="control-item closed-caption subtitles" hidden="true" data-l10n-id="pictureinpicture-subtitles-cmd" tabindex="1"></button>
         <div id="settings" class="hide">
           <div class="panel">
             <div class="box">
