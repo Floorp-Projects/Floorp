@@ -832,7 +832,7 @@ already_AddRefed<gfx::Path> SVGContentUtils::GetPath(
   }
 
   RefPtr<DrawTarget> drawTarget =
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+      gfxPlatform::ThreadLocalScreenReferenceDrawTarget();
   RefPtr<PathBuilder> builder =
       drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
 
