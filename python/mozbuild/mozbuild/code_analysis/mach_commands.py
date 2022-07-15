@@ -986,7 +986,7 @@ def _create_temp_compilation_db(command_context):
             file = item + ".cpp"
             element = {}
             element["directory"] = director
-            element["command"] = "cpp " + file
+            element["command"] = "cpp -std=c++17 " + file
             element["file"] = mozpath.join(director, file)
             compile_commands.append(element)
 
