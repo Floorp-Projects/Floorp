@@ -12,7 +12,7 @@
 
 [Exposed=(Window,Worker)]
 interface IDBDatabase : EventTarget {
-    readonly    attribute DOMString          name;
+    [Constant] readonly attribute DOMString name;
     readonly    attribute unsigned long long version;
 
     readonly    attribute DOMStringList      objectStoreNames;

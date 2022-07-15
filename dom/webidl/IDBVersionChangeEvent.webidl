@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBVersionChangeEvent
+ * https://w3c.github.io/IndexedDB/#idbversionchangeevent
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -20,7 +20,7 @@ interface IDBVersionChangeEvent : Event {
     constructor(DOMString type,
                 optional IDBVersionChangeEventInit eventInitDict = {});
 
-    readonly    attribute unsigned long long  oldVersion;
-    readonly    attribute unsigned long long? newVersion;
+    [Constant] readonly attribute unsigned long long oldVersion;
+    [Constant] readonly attribute unsigned long long? newVersion;
 };
 
