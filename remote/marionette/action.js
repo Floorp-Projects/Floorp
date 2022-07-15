@@ -124,7 +124,7 @@ action.State = class {
    * @return {Iterator} Iterator over [id, input source].
    */
   *inputSourcesByType(type) {
-    for (let [id, inputSource] of this.inputStateMap) {
+    for (const [id, inputSource] of this.inputStateMap) {
       if (inputSource.type === type) {
         yield [id, inputSource];
       }
@@ -148,7 +148,7 @@ action.State = class {
       // Reserve pointer ids 0 and 1 for mouse pointers
       const idValues = Array.from(this.pointerIdMap.values());
       if (type === "mouse") {
-        for (let mouseId of [0, 1]) {
+        for (const mouseId of [0, 1]) {
           if (!idValues.includes(mouseId)) {
             pointerId = mouseId;
             break;
@@ -1428,7 +1428,7 @@ async function moveOverTime(startCoords, targetCoords, duration, callback) {
 }
 
 const actionTypes = new Map();
-for (let cls of [
+for (const cls of [
   KeyDownAction,
   KeyUpAction,
   PauseAction,
@@ -1612,7 +1612,7 @@ action.Chain = class extends Array {
   dispatch(state, win) {
     let i = 1;
     const chainEvents = (async () => {
-      for (let tickActions of this) {
+      for (const tickActions of this) {
         lazy.logger.trace(`Dispatching tick ${i++}/${this.length}`);
         await tickActions.dispatch(state, win);
       }
@@ -1635,7 +1635,7 @@ action.Chain = class extends Array {
     );
 
     const actionsByTick = new this();
-    for (let actionSequence of actions) {
+    for (const actionSequence of actions) {
       const inputSourceActions = Sequence.fromJSON(state, actionSequence);
       for (let i = 0; i < inputSourceActions.length; i++) {
         // new tick
@@ -1660,7 +1660,7 @@ class TickActions extends Array {
    */
   getDuration() {
     let max = 0;
-    for (let action of this) {
+    for (const action of this) {
       if (action.affectsWallClockTime && action.duration) {
         max = Math.max(action.duration, max);
       }
@@ -1765,7 +1765,7 @@ class Sequence extends Array {
     InputSource.fromJSON(state, actionSequence);
 
     const sequence = new this();
-    for (let actionItem of actions) {
+    for (const actionItem of actions) {
       sequence.push(Action.fromJSON(type, id, actionItem));
     }
 
@@ -1837,7 +1837,7 @@ class PointerEventData extends InputEventData {
   update(state, inputSource) {
     // set modifier properties based on whether any corresponding keys are
     // pressed on any key input source
-    for (let [, otherInputSource] of state.inputSourcesByType("key")) {
+    for (const [, otherInputSource] of state.inputSourcesByType("key")) {
       this.altKey = otherInputSource.alt || this.altKey;
       this.ctrlKey = otherInputSource.ctrl || this.ctrlKey;
       this.metaKey = otherInputSource.meta || this.metaKey;
