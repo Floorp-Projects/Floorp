@@ -371,30 +371,29 @@ add_task(async function setupRFPExemptions() {
     set: [
       ["privacy.resistFingerprinting", true],
       ["privacy.resistFingerprinting.testGranularityMask", 4],
-      ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
+      [
+        "privacy.resistFingerprinting.exemptedDomains",
+        "example.net, mochi.test",
+      ],
     ],
   });
 
-  let spoofedGeckoTrail = SPOOFED_UA_GECKO_TRAIL[AppConstants.platform];
-
-  let spoofedUserAgentNavigator = `Mozilla/5.0 (${
-    SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
-  }; rv:${spoofedVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${spoofedVersion}.0`;
-
-  let spoofedUserAgentHeader = `Mozilla/5.0 (${
-    SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
-  }; rv:${spoofedVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${spoofedVersion}.0`;
+  let defaultUserAgent = `Mozilla/5.0 (${
+    DEFAULT_UA_OS[AppConstants.platform]
+  }; rv:${appVersion}.0) Gecko/${
+    DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
+  } Firefox/${appVersion}.0`;
 
   expectedResults = {
-    testDesc: "spoofed",
-    appVersion: SPOOFED_APPVERSION[AppConstants.platform],
+    testDesc: "RFP Exempted Domain",
+    appVersion: DEFAULT_APPVERSION[AppConstants.platform],
     hardwareConcurrency: navigator.hardwareConcurrency,
     mimeTypesLength: 2,
-    oscpu: SPOOFED_OSCPU[AppConstants.platform],
-    platform: SPOOFED_PLATFORM[AppConstants.platform],
+    oscpu: DEFAULT_OSCPU[AppConstants.platform],
+    platform: DEFAULT_PLATFORM[AppConstants.platform],
     pluginsLength: 5,
-    userAgentNavigator: spoofedUserAgentNavigator,
-    userAgentHeader: spoofedUserAgentHeader,
+    userAgentNavigator: defaultUserAgent,
+    userAgentHeader: defaultUserAgent,
   };
 
   await testNavigator();
