@@ -281,6 +281,9 @@ class RelativeUnit : public UnitBase<Unit_T> {
   constexpr Unit_T operator*(int32_t scalar) const {
     return UnitBase<Unit_T>::FromValue(this->ToValue() * scalar);
   }
+  constexpr Unit_T operator*(size_t scalar) const {
+    return UnitBase<Unit_T>::FromValue(this->ToValue() * scalar);
+  }
 
  protected:
   using UnitBase<Unit_T>::UnitBase;
@@ -298,6 +301,11 @@ template <class Unit_T>
 inline constexpr Unit_T operator*(int32_t scalar, RelativeUnit<Unit_T> other) {
   return other * scalar;
 }
+template <class Unit_T>
+inline constexpr Unit_T operator*(size_t scalar, RelativeUnit<Unit_T> other) {
+  return other * scalar;
+}
+
 template <class Unit_T>
 inline constexpr Unit_T operator-(RelativeUnit<Unit_T> other) {
   if (other.IsPlusInfinity())
