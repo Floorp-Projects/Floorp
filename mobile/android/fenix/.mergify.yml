@@ -24,9 +24,18 @@ pull_request_rules:
         rebase_fallback: none
   - name: L10N - Auto Merge
     conditions:
-      - author=mozilla-l10n-automation-bot
-      - status-success=pr-complete
-      - files~=(strings.xml|l10n.toml)
+      - and:
+        - files~=(strings.xml|l10n.toml)
+        - or:
+          - and:
+            - author=mozilla-l10n-automation-bot
+            - base=main
+            - status-success=pr-complete
+          - and:
+            - author=github-actions[bot]
+            - base~=releases[_/].*
+            # Taskcluster doesn't run when PRs are created by github-actions[bot]
+            # because it's not considered a collaborator.
     actions:
       review:
         type: APPROVE
