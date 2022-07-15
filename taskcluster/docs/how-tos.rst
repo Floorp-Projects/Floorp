@@ -72,7 +72,7 @@ Changing Test Characteristics
 
 First, find the test description.  This will be in
 ``taskcluster/ci/*/tests.yml``, for the appropriate kind (consult
-:doc:`kinds`).  You will find a YAML stanza for each test suite, and each
+:ref:`kinds`).  You will find a YAML stanza for each test suite, and each
 stanza defines the test's characteristics.  For example, the ``chunks``
 property gives the number of chunks to run.  This can be specified as a simple
 integer if all platforms have the same chunk count, or it can be keyed by test
@@ -99,7 +99,7 @@ Adding a Test Suite
 ...................
 
 To add a new test suite, you will need to know the proper mozharness invocation
-for that suite, and which kind it fits into (consult :doc:`kinds`).
+for that suite, and which kind it fits into (consult :ref:`kinds`).
 
 Add a new stanza to ``taskcluster/ci/<kind>/tests.yml``, copying from the other
 stanzas in that file.  The meanings should be clear, but authoritative
@@ -203,7 +203,7 @@ dependency relationships for your tasks are complex.
 Custom Transforms
 `````````````````
 
-Most loaders apply a series of ":doc:`transforms <transforms>`" that start with
+Most loaders apply a series of ":ref:`transforms`" that start with
 an initial human-friendly description of a task and end with a task definition
 suitable for insertion into a Taskcluster queue.
 

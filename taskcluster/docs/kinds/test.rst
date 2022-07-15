@@ -19,14 +19,13 @@ named in ``kind.yml``:
    sets, in which case the union of those sets is used.
 
  * Each named test is looked up in the file named by ``tests.yml`` to find a
-   test description.  This test description indicates what the test does, how
+   test description. This test description indicates what the test does, how
    it is reported to treeherder, and how to perform the test, all in a
    platform-independent fashion.
 
- * Each test description is converted into one or more tasks.  This is
+ * Each test description is converted into one or more tasks. This is
    performed by a sequence of transforms defined in the ``transforms`` key in
-   ``kind.yml``.  See :doc:`transforms`: for more information on these
-   transforms.
+   ``kind.yml``.  See :ref:`transforms` for more information.
 
  * The resulting tasks become a part of the task graph.
 
@@ -35,7 +34,6 @@ named in ``kind.yml``:
     This process generates *all* test jobs, regardless of tree or try syntax.
     It is up to a later stages of the task-graph generation (the target set and
     optimization) to select the tests that will actually be performed.
-
 
 Variants
 --------
