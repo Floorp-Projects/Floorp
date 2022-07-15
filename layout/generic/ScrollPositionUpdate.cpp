@@ -59,7 +59,8 @@ ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
     ScrollOrigin aOrigin, nsPoint aDestination,
-    ScrollTriggeredByScript aTriggeredByScript) {
+    ScrollTriggeredByScript aTriggeredByScript,
+    UniquePtr<ScrollSnapTargetIds> aSnapTargetIds) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
@@ -70,6 +71,9 @@ ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
   ret.mScrollOrigin = aOrigin;
   ret.mDestination = CSSPoint::FromAppUnits(aDestination);
   ret.mTriggeredByScript = aTriggeredByScript;
+  if (aSnapTargetIds) {
+    ret.mSnapTargetIds = *aSnapTargetIds;
+  }
   return ret;
 }
 
