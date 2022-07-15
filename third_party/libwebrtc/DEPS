@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '6d6259fea9a26e14fcbda0e1c4d9809df313e609',
+  'chromium_revision': 'ed828a5477ef02c6f6ef0672784f72bd118baec3',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,7 +23,7 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@88efeaa992015cfdcdf5f270232bd34fc2e611c2',
+    'https://chromium.googlesource.com/chromium/src/base@27f8abf71a6c56dce6dc891331ad2de661d79654',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@1c34f36484f43be915b48b090527d87356c72ce8',
   'src/buildtools':
@@ -34,19 +34,19 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@089038786720104dad743a8ae7cc126793aa4e54',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@769482653f2d532d88586c6be24f122a0f87b328',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@e2bae8d6343d03f03aedb11945eef9107fe0107c',
+    'https://chromium.googlesource.com/chromium/src/testing@b363f6a41fd61f836250bab0d3203203acafaabf',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@25e5903bcd3706d121f4caff21eac7cbde1dd77c',
+    'https://chromium.googlesource.com/chromium/src/third_party@871459b1cfba558ba0ccec2d93cb4ba39df535ff',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-amd64',
-        'version': 'git_revision:bf4e17dc67b2a2007475415e3f9e1d1cf32f6e35',
+        'version': 'git_revision:578a7fe4c3c6b0bc2ae1fd2e37f14857d09895bf',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:bf4e17dc67b2a2007475415e3f9e1d1cf32f6e35',
+        'version': 'git_revision:578a7fe4c3c6b0bc2ae1fd2e37f14857d09895bf',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:bf4e17dc67b2a2007475415e3f9e1d1cf32f6e35',
+        'version': 'git_revision:578a7fe4c3c6b0bc2ae1fd2e37f14857d09895bf',
       }
     ],
     'dep_type': 'cipd',
@@ -220,7 +220,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@a942004e951f2d6ccd726fc6ee4e62e5f08c2e62',
+    'https://android.googlesource.com/platform/external/perfetto.git@fbdedcfb33db2b18f8679550a31e2a062f466dab',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@cb1abee1455ac7e552da271ac64c71d117caaa77',
   'src/third_party/libyuv':
@@ -275,7 +275,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@4ef2956fcb61a9e1ebd61e6823223a74e3a37bcb',
+    'https://chromium.googlesource.com/chromium/src/tools@1288a08a71f1218d977481cd26cf874a77a1fe56',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -363,7 +363,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'vZNvIbZD3QeeHd82_9LRcLzoETy5YzBKbA7bV5MXBBAC',
+          'version': 'N11h90BOkwT_ErtH-6ZmLb5ptpWC7xllgXt3TDEphj0C',
       },
     ],
     'condition': 'checkout_android',
