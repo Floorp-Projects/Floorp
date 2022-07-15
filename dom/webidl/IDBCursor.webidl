@@ -21,12 +21,8 @@ interface IDBCursor {
     [BinaryName="getDirection"]
     readonly    attribute IDBCursorDirection           direction;
 
-    [Throws]
-    readonly    attribute any                          key;
-
-    [Throws]
-    readonly    attribute any                          primaryKey;
-
+    [Pure, Throws] readonly attribute any key;
+    [Pure, Throws] readonly attribute any primaryKey;
     [SameObject] readonly attribute IDBRequest request;
 
     [Throws]
@@ -44,6 +40,5 @@ interface IDBCursor {
 
 [Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
 interface IDBCursorWithValue : IDBCursor {
-    [Throws]
-    readonly    attribute any value;
+    [Pure, Throws] readonly attribute any value;
 };
