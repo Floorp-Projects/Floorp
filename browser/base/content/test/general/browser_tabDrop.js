@@ -30,7 +30,7 @@ add_task(async function test_setup() {
 });
 
 add_task(async function single_url() {
-  await dropText("mochi.test/first", ["https://www.mochi.test/first"]);
+  await dropText("mochi.test/first", ["http://mochi.test/first"]);
 });
 add_task(async function single_javascript() {
   await dropText("javascript:'bad'", []);
@@ -42,20 +42,20 @@ add_task(async function single_search() {
   await dropText("search this", [ANY_URL]);
 });
 add_task(async function single_url2() {
-  await dropText("mochi.test/second", ["https://www.mochi.test/second"]);
+  await dropText("mochi.test/second", ["http://mochi.test/second"]);
 });
 add_task(async function single_data_url() {
   await dropText("data:text/html,bad", []);
 });
 add_task(async function single_url3() {
-  await dropText("mochi.test/third", ["https://www.mochi.test/third"]);
+  await dropText("mochi.test/third", ["http://mochi.test/third"]);
 });
 
 // Single text/plain item, with multiple links.
 add_task(async function multiple_urls() {
   await dropText("mochi.test/1\nmochi.test/2", [
-    "https://www.mochi.test/1",
-    "https://www.mochi.test/2",
+    "http://mochi.test/1",
+    "http://mochi.test/2",
   ]);
 });
 add_task(async function multiple_urls_javascript() {
@@ -72,11 +72,7 @@ add_task(async function multiple_items_single_and_multiple_links() {
       [{ type: "text/plain", data: "mochi.test/5" }],
       [{ type: "text/plain", data: "mochi.test/6\nmochi.test/7" }],
     ],
-    [
-      "https://www.mochi.test/5",
-      "https://www.mochi.test/6",
-      "https://www.mochi.test/7",
-    ]
+    ["http://mochi.test/5", "http://mochi.test/6", "http://mochi.test/7"]
   );
 });
 
@@ -92,7 +88,7 @@ add_task(async function single_moz_url_multiple_links() {
         },
       ],
     ],
-    ["https://www.mochi.test/8", "https://www.mochi.test/9"]
+    ["http://mochi.test/8", "http://mochi.test/9"]
   );
 });
 
@@ -105,7 +101,7 @@ add_task(async function single_item_multiple_types() {
         { type: "text/x-moz-url", data: "mochi.test/11\nTITLE11" },
       ],
     ],
-    ["https://www.mochi.test/11"]
+    ["http://mochi.test/11"]
   );
 });
 
@@ -116,11 +112,11 @@ add_task(async function multiple_tabs_under_max() {
     urls.push("mochi.test/multi" + i);
   }
   await dropText(urls.join("\n"), [
-    "https://www.mochi.test/multi0",
-    "https://www.mochi.test/multi1",
-    "https://www.mochi.test/multi2",
-    "https://www.mochi.test/multi3",
-    "https://www.mochi.test/multi4",
+    "http://mochi.test/multi0",
+    "http://mochi.test/multi1",
+    "http://mochi.test/multi2",
+    "http://mochi.test/multi3",
+    "http://mochi.test/multi4",
   ]);
 });
 add_task(async function multiple_tabs_over_max_accept() {
@@ -133,11 +129,11 @@ add_task(async function multiple_tabs_over_max_accept() {
     urls.push("mochi.test/accept" + i);
   }
   await dropText(urls.join("\n"), [
-    "https://www.mochi.test/accept0",
-    "https://www.mochi.test/accept1",
-    "https://www.mochi.test/accept2",
-    "https://www.mochi.test/accept3",
-    "https://www.mochi.test/accept4",
+    "http://mochi.test/accept0",
+    "http://mochi.test/accept1",
+    "http://mochi.test/accept2",
+    "http://mochi.test/accept3",
+    "http://mochi.test/accept4",
   ]);
 
   await confirmPromise;
