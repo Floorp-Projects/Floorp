@@ -98,15 +98,7 @@ class nsCSSProps {
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
   static const nsCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
- private:
-  static const Flags kFlagsTable[eCSSProperty_COUNT_with_aliases];
-
- public:
-  static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
-               "out of range");
-    return (kFlagsTable[aProperty] & aFlags) == aFlags;
-  }
+  static bool PropHasFlags(nsCSSPropertyID aProperty, Flags aFlags);
 
   static nsCSSPropertyID Physicalize(nsCSSPropertyID aProperty,
                                      const mozilla::ComputedStyle& aStyle) {
