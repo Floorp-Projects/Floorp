@@ -97,6 +97,7 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
                              frame_decryptor) override {}
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
   const std::vector<webrtc::RtpExtension>& GetRtpExtensions() const override;
+  webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
   int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
   uint32_t remote_ssrc() const override { return 0; }
@@ -181,7 +182,7 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStream {
 
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions)
       override {}
-  const std::vector<webrtc::RtpExtension>& GetRtpExtensions() const override;
+  webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
   virtual ~MockVideoReceiveStream() {}
 
@@ -248,7 +249,7 @@ class MockCall : public webrtc::Call {
   }
 
   webrtc::FlexfecReceiveStream* CreateFlexfecReceiveStream(
-      const webrtc::FlexfecReceiveStream::Config& config) override {
+      const webrtc::FlexfecReceiveStream::Config config) override {
     return nullptr;
   }
 
