@@ -68,6 +68,14 @@ async function setup(isXOrigin) {
   // first-party access to the storage estimate. Without this, it is
   // isolated and this test will always fail
   if (isXOrigin) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "privacy.partition.always_partition_third_party_non_cookie_storage",
+          false,
+        ],
+      ],
+    });
     SpecialPowers.wrap(document).notifyUserGestureActivation();
     await SpecialPowers.addPermission(
       "storageAccessAPI",
