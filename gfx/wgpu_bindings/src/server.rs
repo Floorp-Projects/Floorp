@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
-    wgpu_string, identity::IdentityRecyclerFactory, AdapterInformation, ByteBuf,
+    identity::IdentityRecyclerFactory, wgpu_string, AdapterInformation, ByteBuf,
     CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, TextureAction,
 };
 
-use nsstring::{nsString, nsACString, nsCString};
+use nsstring::{nsACString, nsCString, nsString};
 
-use wgc::{gfx_select, id};
 use wgc::pipeline::CreateShaderModuleError;
+use wgc::{gfx_select, id};
 
+use std::borrow::Cow;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::{error::Error, os::raw::c_char, ptr, slice};
-use std::borrow::Cow;
 
 /// We limit the size of buffer allocations for stability reason.
 /// We can reconsider this limit in the future. Note that some drivers (mesa for example),
@@ -236,7 +236,10 @@ impl ShaderModuleCompilationMessage {
             let start = location.offset as usize;
             let end = start + location.length as usize;
             self.utf16_offset = source[0..start].chars().map(|c| c.len_utf16() as u64).sum();
-            self.utf16_length = source[start..end].chars().map(|c| c.len_utf16() as u64).sum();
+            self.utf16_length = source[start..end]
+                .chars()
+                .map(|c| c.len_utf16() as u64)
+                .sum();
         }
 
         let error_string = error.to_string();
@@ -270,7 +273,7 @@ pub extern "C" fn wgpu_server_device_create_shader_module(
     module_id: id::ShaderModuleId,
     label: Option<&nsACString>,
     code: &nsCString,
-    out_message: &mut ShaderModuleCompilationMessage
+    out_message: &mut ShaderModuleCompilationMessage,
 ) -> bool {
     let utf8_label = label.map(|utf16| utf16.to_string());
     let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
@@ -409,7 +412,10 @@ impl Global {
         match action {
             DeviceAction::CreateTexture(id, desc) => {
                 let max = MAX_TEXTURE_EXTENT;
-                if desc.size.width > max || desc.size.height > max || desc.size.depth_or_array_layers > max {
+                if desc.size.width > max
+                    || desc.size.height > max
+                    || desc.size.depth_or_array_layers > max
+                {
                     gfx_select!(self_id => self.create_texture_error(id, desc.label));
                     error_buf.init_str("Out of memory");
                     return;
