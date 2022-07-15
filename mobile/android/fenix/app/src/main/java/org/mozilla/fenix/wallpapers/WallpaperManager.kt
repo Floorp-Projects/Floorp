@@ -19,6 +19,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.utils.Settings
 import java.io.File
@@ -30,6 +32,7 @@ import java.util.Date
 @Suppress("TooManyFunctions")
 class WallpaperManager(
     private val settings: Settings,
+    private val appStore: AppStore,
     private val downloader: WallpaperDownloader,
     private val fileManager: WallpaperFileManager,
     private val currentLocale: String,
@@ -40,10 +43,14 @@ class WallpaperManager(
     val wallpapers = allWallpapers
         .filter(::filterExpiredRemoteWallpapers)
         .filter(::filterPromotionalWallpapers)
+        .also {
+            appStore.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(it))
+        }
 
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
         set(value) {
             settings.currentWallpaper = value.name
+            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(value))
             field = value
         }
 
@@ -96,6 +103,8 @@ class WallpaperManager(
             values.first()
         } else {
             values[index]
+        }.also {
+            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
         }
     }
 
@@ -122,6 +131,8 @@ class WallpaperManager(
             wallpapers.find { it.name == currentWallpaper }
                 ?: fileManager.lookupExpiredWallpaper(currentWallpaper)
                 ?: defaultWallpaper
+        }.also {
+            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
         }
     }
 

@@ -8,10 +8,12 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.utils.Settings
 import java.util.Calendar
 import java.util.Date
@@ -30,18 +32,22 @@ class WallpaperManagerTest {
         every { clean(any(), any()) } just runs
     }
 
+    private val appStore = AppStore()
+
     @Test
-    fun `WHEN wallpaper set THEN current wallpaper updated in settings`() {
+    fun `WHEN wallpaper set THEN current wallpaper updated in settings and dispatched to store`() {
         val currentCaptureSlot = slot<String>()
         every { mockSettings.currentWallpaper } returns ""
         every { mockSettings.currentWallpaper = capture(currentCaptureSlot) } just runs
 
         val updatedName = "new name"
         val updatedWallpaper = Wallpaper.Local.Firefox(updatedName, drawableId = 0)
-        val wallpaperManager = WallpaperManager(mockSettings, mockk(), mockFileManager, "en-US", listOf())
+        val wallpaperManager = WallpaperManager(mockSettings, appStore, mockk(), mockFileManager, "en-US", listOf())
         wallpaperManager.currentWallpaper = updatedWallpaper
 
         assertEquals(updatedWallpaper.name, currentCaptureSlot.captured)
+        appStore.waitUntilIdle()
+        assertEquals(updatedWallpaper, appStore.state.wallpaperState.currentWallpaper)
     }
 
     @Test
@@ -52,6 +58,7 @@ class WallpaperManagerTest {
         }
         val wallpaperManager = WallpaperManager(
             mockSettings,
+            appStore,
             mockDownloader,
             mockFileManager,
             "en-US",
@@ -72,6 +79,7 @@ class WallpaperManagerTest {
         }
         val wallpaperManager = WallpaperManager(
             mockSettings,
+            appStore,
             mockDownloader,
             mockFileManager,
             "en-CA",
@@ -94,6 +102,7 @@ class WallpaperManagerTest {
         val fakeRemoteWallpapers = fakePromoWallpapers + fakeNonPromoWallpapers
         val wallpaperManager = WallpaperManager(
             mockSettings,
+            appStore,
             mockDownloader,
             mockFileManager,
             "en-CA",
@@ -116,6 +125,7 @@ class WallpaperManagerTest {
         val activeRemoteWallpaper = makeFakeRemoteWallpaper(TimeRelation.LATER, "expired")
         val wallpaperManager = WallpaperManager(
             mockSettings,
+            appStore,
             mockDownloader,
             mockFileManager,
             "en-US",
@@ -137,6 +147,7 @@ class WallpaperManagerTest {
 
         val wallpaperManager = WallpaperManager(
             mockSettings,
+            appStore,
             mockDownloader,
             mockFileManager,
             "en-US",
@@ -157,6 +168,7 @@ class WallpaperManagerTest {
 
         val wallpaperManager = WallpaperManager(
             mockSettings,
+            appStore,
             mockDownloader,
             mockFileManager,
             "en-US",
@@ -191,6 +203,21 @@ class WallpaperManagerTest {
         val result = WallpaperManager.isDefaultTheCurrentWallpaper(mockSettings)
 
         assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN manager initialized THEN available wallpapers are dispatched to store`() {
+        every { mockSettings.currentWallpaper } returns WallpaperManager.defaultWallpaper.name
+        val wallpaperManager = WallpaperManager(
+            mockSettings,
+            appStore,
+            mockDownloader,
+            mockFileManager,
+            "en-US",
+        )
+
+        appStore.waitUntilIdle()
+        assertEquals(wallpaperManager.wallpapers, appStore.state.wallpaperState.availableWallpapers)
     }
 
     private enum class TimeRelation {

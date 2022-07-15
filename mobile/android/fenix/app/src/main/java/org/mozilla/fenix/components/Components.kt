@@ -168,6 +168,7 @@ class Components(private val context: Context) {
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             WallpaperManager(
                 settings,
+                appStore,
                 WallpaperDownloader(context, core.client),
                 WallpaperFileManager(context.filesDir),
                 currentLocale

@@ -21,6 +21,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.library.history.PendingDeletionHistory
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.gleanplumb.MessagingState
+import org.mozilla.fenix.wallpapers.Wallpaper
 
 /**
  * [Action] implementation related to [AppStore].
@@ -145,5 +146,20 @@ sealed class AppAction : Action {
          * Indicates the given [message] was dismissed.
          */
         data class MessageDismissed(val message: Message) : MessagingAction()
+    }
+
+    /**
+     * [Action]s related to interactions with the wallpapers feature.
+     */
+    sealed class WallpaperAction : AppAction() {
+        /**
+         * Indicates that a different [wallpaper] was selected.
+         */
+        data class UpdateCurrentWallpaper(val wallpaper: Wallpaper) : WallpaperAction()
+
+        /**
+         * Indicates that the list of potential wallpapers has changed.
+         */
+        data class UpdateAvailableWallpapers(val wallpapers: List<Wallpaper>) : WallpaperAction()
     }
 }

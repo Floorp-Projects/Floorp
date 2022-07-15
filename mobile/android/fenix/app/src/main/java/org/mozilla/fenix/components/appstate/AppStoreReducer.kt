@@ -202,6 +202,14 @@ internal object AppStoreReducer {
 
         is AppAction.UndoPendingDeletionSet ->
             state.copy(pendingDeletionHistoryItems = state.pendingDeletionHistoryItems - action.historyItems)
+        is AppAction.WallpaperAction.UpdateCurrentWallpaper ->
+            state.copy(
+                wallpaperState = state.wallpaperState.copy(currentWallpaper = action.wallpaper)
+            )
+        is AppAction.WallpaperAction.UpdateAvailableWallpapers ->
+            state.copy(
+                wallpaperState = state.wallpaperState.copy(availableWallpapers = action.wallpapers)
+            )
     }
 }
 

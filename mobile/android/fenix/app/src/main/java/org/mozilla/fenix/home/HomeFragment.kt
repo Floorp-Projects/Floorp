@@ -46,7 +46,10 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.selector.findTab
@@ -66,6 +69,7 @@ import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.lib.state.ext.flow
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
@@ -390,6 +394,7 @@ class HomeFragment : Fragment() {
         binding.root.doOnPreDraw {
             requireComponents.appStore.dispatch(AppAction.UpdateFirstFrameDrawn(drawn = true))
         }
+
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
         requireComponents.core.engine.profiler?.addMarker(
             MarkersFragmentLifecycleCallbacks.MARKER_NAME, profilerStartTime, "HomeFragment.onCreateView",
@@ -401,7 +406,6 @@ class HomeFragment : Fragment() {
         super.onConfigurationChanged(newConfig)
 
         getMenuButton()?.dismissMenu()
-        displayWallpaperIfEnabled()
     }
 
     /**
@@ -958,12 +962,20 @@ class HomeFragment : Fragment() {
 
     private fun displayWallpaperIfEnabled() {
         if (shouldEnableWallpaper()) {
-            val wallpaperManger = requireComponents.wallpaperManager
-            // We only want to update the wallpaper when it's different from the default one
-            // as the default is applied already on xml by default.
-            if (wallpaperManger.currentWallpaper != WallpaperManager.defaultWallpaper) {
-                wallpaperManger.updateWallpaper(binding.wallpaperImageView, wallpaperManger.currentWallpaper)
-            }
+            requireComponents.appStore.flow()
+                .ifChanged { state -> state.wallpaperState.currentWallpaper }
+                .onEach { state ->
+                    // We only want to update the wallpaper when it's different from the default one
+                    // as the default is applied already on xml by default.
+                    val currentWallpaper = state.wallpaperState.currentWallpaper
+                    if (currentWallpaper != WallpaperManager.defaultWallpaper) {
+                        requireComponents.wallpaperManager.updateWallpaper(
+                            binding.wallpaperImageView,
+                            currentWallpaper
+                        )
+                    }
+                }
+                .launchIn(viewLifecycleOwner.lifecycleScope)
         }
     }
 
