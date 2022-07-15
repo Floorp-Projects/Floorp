@@ -1361,36 +1361,6 @@ bool BrowserParent::DeallocPFilePickerParent(PFilePickerParent* actor) {
   return true;
 }
 
-IPCResult BrowserParent::RecvIndexedDBPermissionRequest(
-    nsIPrincipal* aPrincipal, IndexedDBPermissionRequestResolver&& aResolve) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
-  if (!principal) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (NS_WARN_IF(!mFrameElement)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<indexedDB::PermissionRequestHelper> actor =
-      new indexedDB::PermissionRequestHelper(mFrameElement, principal,
-                                             aResolve);
-
-  mozilla::Result permissionOrErr = actor->PromptIfNeeded();
-  if (permissionOrErr.isErr()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (permissionOrErr.inspect() !=
-      indexedDB::PermissionRequestBase::kPermissionPrompt) {
-    aResolve(permissionOrErr.inspect());
-  }
-
-  return IPC_OK();
-}
-
 already_AddRefed<PSessionStoreParent>
 BrowserParent::AllocPSessionStoreParent() {
   RefPtr<BrowserSessionStore> sessionStore =
