@@ -129,7 +129,8 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
   MOZ_ASSERT(NS_IsMainThread());
 
   bool shouldResistFingerprinting =
-      nsContentUtils::ShouldResistFingerprinting(aPrincipal);
+      nsContentUtils::ShouldResistFingerprinting_dangerous(
+          aPrincipal, "We are constructing CookieJarSettings here.");
 
   if (aPrincipal && aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0) {
     return Create(ePrivate, shouldResistFingerprinting);
