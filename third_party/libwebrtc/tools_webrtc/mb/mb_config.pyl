@@ -78,6 +78,7 @@
       'Mac64 Debug': 'debug_bot_x64',
       'Mac64 Release': 'release_bot_x64',
       'MacARM64 M1 Release': 'release_bot_arm64',
+      'MacArm64 Builder': 'release_bot_arm64',
 
       # Windows
       'Win (more configs)': {
@@ -126,6 +127,7 @@
       'Perf Linux Bionic': 'release_bot_x64',
       'Perf Linux Trusty': 'release_bot_x64',
       'Perf Mac 11': 'release_bot_x64',
+      'Perf Mac M1 Arm64 12': 'release_bot_arm64',
       'Perf Win7': 'release_bot_x64',
     },
     'internal.client.webrtc': {
@@ -270,7 +272,6 @@
     ],
     'ios_release_bot_arm64':
     ['ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'xctest'],
-
     'libfuzzer_asan_release_bot_x64': [
       'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
       'pure_release_bot', 'x64'

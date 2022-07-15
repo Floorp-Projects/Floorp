@@ -157,11 +157,10 @@
       }
     }
   },
-  'mac-m1': {
+  'mac-m1-cpu': {
     'swarming': {
       'dimensions': {
-        'cpu': 'arm64-64-Apple_M1',
-        'os': 'Mac'
+        'cpu': 'arm64-64-Apple_M1'
       }
     }
   },
@@ -169,6 +168,14 @@
     'swarming': {
       'dimensions': {
         'os': 'Mac-11'
+      }
+    }
+  },
+  'mac_12_beta_arm64': {
+    'swarming': {
+      'dimensions': {
+        'cpu': 'arm64',
+        'os': 'Mac-12'
       }
     }
   },
