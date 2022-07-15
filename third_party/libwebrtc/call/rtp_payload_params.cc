@@ -398,6 +398,15 @@ void RtpPayloadParams::Vp8ToGeneric(const CodecSpecificInfoVP8& vp8_info,
   generic.spatial_index = spatial_index;
   generic.temporal_index = temporal_index;
 
+  // Generate decode target indications.
+  RTC_DCHECK_LT(temporal_index, kMaxTemporalStreams);
+  generic.decode_target_indications.resize(kMaxTemporalStreams);
+  auto it = std::fill_n(generic.decode_target_indications.begin(),
+                        temporal_index, DecodeTargetIndication::kNotPresent);
+  std::fill(it, generic.decode_target_indications.end(),
+            DecodeTargetIndication::kSwitch);
+
+  // Frame dependencies.
   if (vp8_info.useExplicitDependencies) {
     SetDependenciesVp8New(vp8_info, shared_frame_id, is_keyframe,
                           vp8_header.layerSync, &generic);
@@ -405,6 +414,15 @@ void RtpPayloadParams::Vp8ToGeneric(const CodecSpecificInfoVP8& vp8_info,
     SetDependenciesVp8Deprecated(vp8_info, shared_frame_id, is_keyframe,
                                  spatial_index, temporal_index,
                                  vp8_header.layerSync, &generic);
+  }
+
+  // Calculate chains.
+  generic.chain_diffs = {
+      (is_keyframe || chain_last_frame_id_[0] < 0)
+          ? 0
+          : static_cast<int>(shared_frame_id - chain_last_frame_id_[0])};
+  if (temporal_index == 0) {
+    chain_last_frame_id_[0] = shared_frame_id;
   }
 }
 

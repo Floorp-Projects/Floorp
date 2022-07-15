@@ -583,12 +583,23 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   }
 
   if (IsFirstFrameOfACodedVideoSequence(encoded_image, codec_specific_info)) {
-    // If encoder adapter produce FrameDependencyStructure, pass it so that
-    // dependency descriptor rtp header extension can be used.
-    // If not supported, disable using dependency descriptor by passing nullptr.
+    // In order to use the dependency descriptor RTP header extension:
+    //  - Pass along any `FrameDependencyStructure` templates produced by the
+    //    encoder adapter.
+    //  - If none were produced the `RtpPayloadParams::*ToGeneric` for the
+    //    particular codec have simulated a dependency structure, so provide a
+    //    minimal set of templates.
+    //  - Otherwise, don't pass along any templates at all which will disable
+    //    the generation of a dependency descriptor.
     RTPSenderVideo& sender_video = *rtp_streams_[stream_index].sender_video;
     if (codec_specific_info && codec_specific_info->template_structure) {
       sender_video.SetVideoStructure(&*codec_specific_info->template_structure);
+    } else if (codec_specific_info &&
+               codec_specific_info->codecType == kVideoCodecVP8) {
+      FrameDependencyStructure structure =
+          RtpPayloadParams::MinimalisticStructure(/*num_spatial_layers=*/1,
+                                                  kMaxTemporalStreams);
+      sender_video.SetVideoStructure(&structure);
     } else if (codec_specific_info &&
                codec_specific_info->codecType == kVideoCodecVP9) {
       const CodecSpecificInfoVP9& vp9 = codec_specific_info->codecSpecific.VP9;
