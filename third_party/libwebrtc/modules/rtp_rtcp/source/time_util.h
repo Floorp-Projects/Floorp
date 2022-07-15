@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include "api/units/time_delta.h"
+#include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
@@ -35,11 +36,14 @@ inline uint32_t CompactNtp(NtpTime ntp) {
 uint32_t SaturatedToCompactNtp(TimeDelta delta);
 
 // Convert interval to the NTP time resolution (1/2^32 seconds ~= 0.2 ns).
+// For deltas with absolute value larger than 35 minutes result is unspecified.
 inline constexpr int64_t ToNtpUnits(TimeDelta delta) {
   // For better precision `delta` is taken with best TimeDelta precision (us),
   // then multiplaction and conversion to seconds are swapped to avoid float
   // arithmetic.
-  return (delta.us() * (int64_t{1} << 32)) / 1'000'000;
+  // 2^31 us ~= 35.8 minutes.
+  return (rtc::saturated_cast<int32_t>(delta.us()) * (int64_t{1} << 32)) /
+         1'000'000;
 }
 
 // Converts interval from compact ntp (1/2^16 seconds) resolution to TimeDelta.
