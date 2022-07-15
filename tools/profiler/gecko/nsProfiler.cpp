@@ -384,7 +384,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
             JSContext* cx = jsapi.cx();
 
             // Now parse the JSON so that we resolve with a JS Object.
-            JS::Rooted<JS::Value> val(cx);
+            JS::RootedValue val(cx);
             {
               NS_ConvertUTF8toUTF16 js_string(aResult);
               if (!JS_ParseJSON(cx,
@@ -393,7 +393,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
                 if (!jsapi.HasException()) {
                   promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
                 } else {
-                  JS::Rooted<JS::Value> exn(cx);
+                  JS::RootedValue exn(cx);
                   DebugOnly<bool> gotException = jsapi.StealException(&exn);
                   MOZ_ASSERT(gotException);
 
@@ -452,7 +452,7 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
                 cx, aResult.Length(),
                 reinterpret_cast<const uint8_t*>(aResult.Data()));
             if (typedArray) {
-              JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*typedArray));
+              JS::RootedValue val(cx, JS::ObjectValue(*typedArray));
               promise->MaybeResolve(val);
             } else {
               promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
@@ -554,7 +554,7 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
             JSObject* typedArray = dom::ArrayBuffer::Create(
                 cx, outBuff.Length(), outBuff.Elements());
             if (typedArray) {
-              JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*typedArray));
+              JS::RootedValue val(cx, JS::ObjectValue(*typedArray));
               promise->MaybeResolve(val);
             } else {
               promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
@@ -658,18 +658,18 @@ nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
 
             JSContext* cx = jsapi.cx();
 
-            JS::Rooted<JSObject*> addrsArray(
+            JS::RootedObject addrsArray(
                 cx, dom::Uint32Array::Create(cx, aSymbolTable.mAddrs.Length(),
                                              aSymbolTable.mAddrs.Elements()));
-            JS::Rooted<JSObject*> indexArray(
+            JS::RootedObject indexArray(
                 cx, dom::Uint32Array::Create(cx, aSymbolTable.mIndex.Length(),
                                              aSymbolTable.mIndex.Elements()));
-            JS::Rooted<JSObject*> bufferArray(
+            JS::RootedObject bufferArray(
                 cx, dom::Uint8Array::Create(cx, aSymbolTable.mBuffer.Length(),
                                             aSymbolTable.mBuffer.Elements()));
 
             if (addrsArray && indexArray && bufferArray) {
-              JS::Rooted<JSObject*> tuple(cx, JS::NewArrayObject(cx, 3));
+              JS::RootedObject tuple(cx, JS::NewArrayObject(cx, 3));
               JS_SetElement(cx, tuple, 0, addrsArray);
               JS_SetElement(cx, tuple, 1, indexArray);
               JS_SetElement(cx, tuple, 2, bufferArray);
