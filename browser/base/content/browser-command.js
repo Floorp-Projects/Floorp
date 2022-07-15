@@ -41,3 +41,10 @@ function bosshascomming() {
       notification.hidden = true;
     }
   }
+
+  function OpenChromeDirectory() {
+    let currProfDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    let profileDir = currProfDir.path;
+    let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
+    new nsLocalFile(profileDir,).reveal();
+  }

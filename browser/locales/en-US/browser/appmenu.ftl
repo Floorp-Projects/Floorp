@@ -281,3 +281,7 @@ appmenu-customizetoolbar =
 appmenu-developer-tools-subheader = Browser tools
 appmenu-developer-tools-extensions =
     .label = Extensions for developers
+
+## Floorp panel
+open-profile-dir = 
+    .label = Open Profile Directory
