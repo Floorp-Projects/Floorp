@@ -174,28 +174,6 @@ bool tokenize_first(absl::string_view source,
   return true;
 }
 
-std::string join(const std::vector<std::string>& source, char delimiter) {
-  if (source.size() == 0) {
-    return std::string();
-  }
-  // Find length of the string to be returned to pre-allocate memory.
-  size_t source_string_length = 0;
-  for (size_t i = 0; i < source.size(); ++i) {
-    source_string_length += source[i].length();
-  }
-
-  // Build the joined string.
-  std::string joined_string;
-  joined_string.reserve(source_string_length + source.size() - 1);
-  for (size_t i = 0; i < source.size(); ++i) {
-    if (i != 0) {
-      joined_string += delimiter;
-    }
-    joined_string += source[i];
-  }
-  return joined_string;
-}
-
 std::vector<absl::string_view> split(absl::string_view source, char delimiter) {
   std::vector<absl::string_view> fields;
   size_t last = 0;
