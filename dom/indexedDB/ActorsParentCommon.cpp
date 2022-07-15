@@ -403,7 +403,7 @@ GetStructuredCloneReadInfoFromExternalBlob(
   QM_TRY(OkIf(index < files.Length()), Err(NS_ERROR_UNEXPECTED),
          [](const auto&) { MOZ_ASSERT(false, "Bad index value!"); });
 
-  if (IndexedDatabaseManager::PreprocessingEnabled()) {
+  if (StaticPrefs::dom_indexedDB_preprocessing()) {
     return StructuredCloneReadInfoParent{
         JSStructuredCloneData{JS::StructuredCloneScope::DifferentProcess},
         std::move(files), true};
