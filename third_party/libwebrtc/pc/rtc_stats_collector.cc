@@ -243,6 +243,28 @@ const char* DtlsTransportStateToRTCDtlsTransportState(
   }
 }
 
+const char* IceTransportStateToRTCIceTransportState(IceTransportState state) {
+  switch (state) {
+    case IceTransportState::kNew:
+      return RTCIceTransportState::kNew;
+    case IceTransportState::kChecking:
+      return RTCIceTransportState::kChecking;
+    case IceTransportState::kConnected:
+      return RTCIceTransportState::kConnected;
+    case IceTransportState::kCompleted:
+      return RTCIceTransportState::kCompleted;
+    case IceTransportState::kFailed:
+      return RTCIceTransportState::kFailed;
+    case IceTransportState::kDisconnected:
+      return RTCIceTransportState::kDisconnected;
+    case IceTransportState::kClosed:
+      return RTCIceTransportState::kClosed;
+    default:
+      RTC_CHECK_NOTREACHED();
+      return nullptr;
+  }
+}
+
 const char* NetworkTypeToStatsType(rtc::AdapterType type) {
   switch (type) {
     case rtc::ADAPTER_TYPE_CELLULAR:
@@ -2118,6 +2140,8 @@ void RTCStatsCollector::ProduceTransportStats_n(
           IceRoleToRTCIceRole(channel_stats.ice_transport_stats.ice_role);
       transport_stats->ice_local_username_fragment =
           channel_stats.ice_transport_stats.ice_local_username_fragment;
+      transport_stats->ice_state = IceTransportStateToRTCIceTransportState(
+          channel_stats.ice_transport_stats.ice_state);
       for (const cricket::ConnectionInfo& info :
            channel_stats.ice_transport_stats.connection_infos) {
         if (info.best_connection) {

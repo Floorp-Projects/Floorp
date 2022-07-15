@@ -72,6 +72,15 @@ const char* const RTCIceRole::kUnknown = "unknown";
 const char* const RTCIceRole::kControlled = "controlled";
 const char* const RTCIceRole::kControlling = "controlling";
 
+// https://www.w3.org/TR/webrtc/#dom-rtcicetransportstate
+const char* const RTCIceTransportState::kNew = "new";
+const char* const RTCIceTransportState::kChecking = "checking";
+const char* const RTCIceTransportState::kConnected = "connected";
+const char* const RTCIceTransportState::kCompleted = "completed";
+const char* const RTCIceTransportState::kDisconnected = "disconnected";
+const char* const RTCIceTransportState::kFailed = "failed";
+const char* const RTCIceTransportState::kClosed = "closed";
+
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(RTCCertificateStats, RTCStats, "certificate",
     &fingerprint,
@@ -1099,7 +1108,8 @@ WEBRTC_RTCSTATS_IMPL(RTCTransportStats, RTCStats, "transport",
     &srtp_cipher,
     &selected_candidate_pair_changes,
     &ice_role,
-    &ice_local_username_fragment)
+    &ice_local_username_fragment,
+    &ice_state)
 // clang-format on
 
 RTCTransportStats::RTCTransportStats(const std::string& id,
@@ -1123,7 +1133,8 @@ RTCTransportStats::RTCTransportStats(std::string&& id, int64_t timestamp_us)
       srtp_cipher("srtpCipher"),
       selected_candidate_pair_changes("selectedCandidatePairChanges"),
       ice_role("iceRole"),
-      ice_local_username_fragment("iceLocalUsernameFragment") {}
+      ice_local_username_fragment("iceLocalUsernameFragment"),
+      ice_state("iceState") {}
 
 RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
     : RTCStats(other.id(), other.timestamp_us()),
@@ -1142,7 +1153,8 @@ RTCTransportStats::RTCTransportStats(const RTCTransportStats& other)
       srtp_cipher(other.srtp_cipher),
       selected_candidate_pair_changes(other.selected_candidate_pair_changes),
       ice_role(other.ice_role),
-      ice_local_username_fragment(other.ice_local_username_fragment) {}
+      ice_local_username_fragment(other.ice_local_username_fragment),
+      ice_state(other.ice_state) {}
 
 RTCTransportStats::~RTCTransportStats() {}
 
