@@ -9,6 +9,7 @@
 // List of Features
 #include "UrlClassifierFeatureCryptominingAnnotation.h"
 #include "UrlClassifierFeatureCryptominingProtection.h"
+#include "UrlClassifierFeatureEmailTrackingProtection.h"
 #include "UrlClassifierFeatureFingerprintingAnnotation.h"
 #include "UrlClassifierFeatureFingerprintingProtection.h"
 #include "UrlClassifierFeatureLoginReputation.h"
@@ -34,6 +35,7 @@ void UrlClassifierFeatureFactory::Shutdown() {
 
   UrlClassifierFeatureCryptominingAnnotation::MaybeShutdown();
   UrlClassifierFeatureCryptominingProtection::MaybeShutdown();
+  UrlClassifierFeatureEmailTrackingProtection::MaybeShutdown();
   UrlClassifierFeatureFingerprintingAnnotation::MaybeShutdown();
   UrlClassifierFeatureFingerprintingProtection::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
@@ -57,6 +59,12 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
   // 1 feature classifies the channel, we call ::ProcessChannel() following this
   // feature order, and this could produce different results with a different
   // feature ordering.
+
+  // Email Tracking Protection
+  feature = UrlClassifierFeatureEmailTrackingProtection::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
 
   // Cryptomining Protection
   feature = UrlClassifierFeatureCryptominingProtection::MaybeCreate(aChannel);
@@ -140,6 +148,13 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
     return feature.forget();
   }
 
+  // Email Tracking Protection
+  feature =
+      UrlClassifierFeatureEmailTrackingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
   // Fingerprinting Annotation
   feature =
       UrlClassifierFeatureFingerprintingAnnotation::GetIfNameMatches(aName);
@@ -211,6 +226,12 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
 
   // Cryptomining Protection
   name.Assign(UrlClassifierFeatureCryptominingProtection::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Email Tracking Protection
+  name.Assign(UrlClassifierFeatureEmailTrackingProtection::Name());
   if (!name.IsEmpty()) {
     aArray.AppendElement(name);
   }
