@@ -50,6 +50,8 @@ class HistoryListItemViewHolder(
 
     /**
      * Displays the data of the given history record.
+     *
+     * @param item Data associated with the view.
      * @param timeGroup used to form headers for different time frames, like today, yesterday, etc.
      * @param showTopContent enables the Recent tab button.
      * @param mode switches between editing and regular modes.
