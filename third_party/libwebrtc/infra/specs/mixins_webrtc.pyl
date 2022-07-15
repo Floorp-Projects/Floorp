@@ -140,11 +140,10 @@
       }
     }
   },
-  'mac-m1': {
+  'mac-m1-cpu': {
     'swarming': {
       'dimensions': {
         'cpu': 'arm64-64-Apple_M1',
-        'os': 'Mac',
       }
     }
   },

@@ -10739,7 +10739,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10761,7 +10761,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10783,7 +10783,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10805,7 +10805,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10830,7 +10830,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10852,7 +10852,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -10875,7 +10875,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -10898,7 +10898,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -10921,7 +10921,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10943,7 +10943,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10965,7 +10965,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -10987,7 +10987,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -11010,7 +11010,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11032,7 +11032,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11054,7 +11054,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11076,7 +11076,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11098,7 +11098,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -11121,7 +11121,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11143,7 +11143,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11630,7 +11630,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11652,7 +11652,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11674,7 +11674,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11696,7 +11696,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11721,7 +11721,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11743,7 +11743,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -11766,7 +11766,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -11789,7 +11789,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -11812,7 +11812,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11834,7 +11834,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11856,7 +11856,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11878,7 +11878,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -11901,7 +11901,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11923,7 +11923,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11945,7 +11945,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11967,7 +11967,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -11989,7 +11989,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ],
@@ -12012,7 +12012,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -12034,7 +12034,7 @@
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
-              "os": "Mac",
+              "os": "Mac-11",
               "pool": "WebRTC-baremetal-try"
             }
           ]
