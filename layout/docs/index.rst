@@ -11,3 +11,4 @@ contains general information about layout and the layout team at Mozilla.
    :maxdepth: 1
 
    AccessibleCaret
+   Reftest
