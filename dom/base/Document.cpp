@@ -6477,7 +6477,7 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  StorageAccess storageAccess = StorageAllowedForDocument(this);
+  StorageAccess storageAccess = CookieAllowedForDocument(this);
   if (storageAccess == StorageAccess::eDeny) {
     return;
   }
@@ -6516,7 +6516,7 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& aRv) {
     return;
   }
 
-  StorageAccess storageAccess = StorageAllowedForDocument(this);
+  StorageAccess storageAccess = CookieAllowedForDocument(this);
   if (storageAccess == StorageAccess::eDeny) {
     return;
   }
@@ -12056,6 +12056,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetChromeXHRDocURI(mChromeXHRDocURI);
   clone->SetPrincipals(NodePrincipal(), mPartitionedPrincipal);
   clone->mActiveStoragePrincipal = mActiveStoragePrincipal;
+  clone->mActiveCookiePrincipal = mActiveCookiePrincipal;
   // NOTE(emilio): Intentionally setting this to the GetDocBaseURI rather than
   // just mDocumentBaseURI, so that srcdoc iframes get the right base URI even
   // when printed standalone via window.print() (where there won't be a parent
@@ -17802,6 +17803,11 @@ bool Document::HasStorageAccessPermissionGrantedByAllowList() {
 }
 
 nsIPrincipal* Document::EffectiveStoragePrincipal() const {
+  if (!StaticPrefs::
+          privacy_partition_always_partition_third_party_non_cookie_storage()) {
+    return EffectiveCookiePrincipal();
+  }
+
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (!inner) {
     return NodePrincipal();
@@ -17812,11 +17818,51 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
     return mActiveStoragePrincipal;
   }
 
+  // Calling StorageAllowedForDocument will notify the ContentBlockLog. This
+  // loads TrackingDBService.jsm, which in turn pulls in osfile.jsm, making us
+  // fail // browser/base/content/test/performance/browser_startup.js. To avoid
+  // that, we short-circuit the check here by allowing storage access to system
+  // and addon principles, avoiding the test-failure.
+  nsIPrincipal* principal = NodePrincipal();
+  if (principal && (principal->IsSystemPrincipal() ||
+                    principal->GetIsAddonOrExpandedAddonPrincipal())) {
+    return mActiveStoragePrincipal = NodePrincipal();
+  }
+
+  auto cookieJarSettings = const_cast<Document*>(this)->CookieJarSettings();
+  if (cookieJarSettings->GetIsOnContentBlockingAllowList()) {
+    return mActiveStoragePrincipal = NodePrincipal();
+  }
+
+  StorageAccess storageAccess = StorageAllowedForDocument(this);
+  if (!ShouldPartitionStorage(storageAccess) ||
+      !StoragePartitioningEnabled(storageAccess, cookieJarSettings)) {
+    return mActiveStoragePrincipal = NodePrincipal();
+  }
+
+  Unused << NS_WARN_IF(NS_FAILED(StoragePrincipalHelper::GetPrincipal(
+      nsGlobalWindowInner::Cast(inner),
+      StoragePrincipalHelper::eForeignPartitionedPrincipal,
+      getter_AddRefs(mActiveStoragePrincipal))));
+  return mActiveStoragePrincipal;
+}
+
+nsIPrincipal* Document::EffectiveCookiePrincipal() const {
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (!inner) {
+    return NodePrincipal();
+  }
+
+  // Return our cached storage principal if one exists.
+  if (mActiveCookiePrincipal) {
+    return mActiveCookiePrincipal;
+  }
+
   // We use the lower-level ContentBlocking API here to ensure this
   // check doesn't send notifications.
   uint32_t rejectedReason = 0;
   if (ShouldAllowAccessFor(inner, GetDocumentURI(), &rejectedReason)) {
-    return mActiveStoragePrincipal = NodePrincipal();
+    return mActiveCookiePrincipal = NodePrincipal();
   }
 
   // Let's use the storage principal only if we need to partition the cookie
@@ -17825,10 +17871,10 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   if (ShouldPartitionStorage(rejectedReason) &&
       !StoragePartitioningEnabled(
           rejectedReason, const_cast<Document*>(this)->CookieJarSettings())) {
-    return mActiveStoragePrincipal = NodePrincipal();
+    return mActiveCookiePrincipal = NodePrincipal();
   }
 
-  return mActiveStoragePrincipal = mPartitionedPrincipal;
+  return mActiveCookiePrincipal = mPartitionedPrincipal;
 }
 
 nsIPrincipal* Document::GetPrincipalForPrefBasedHacks() const {
