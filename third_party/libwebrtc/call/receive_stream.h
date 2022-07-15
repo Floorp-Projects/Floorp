@@ -18,6 +18,7 @@
 #include "api/media_types.h"
 #include "api/scoped_refptr.h"
 #include "api/transport/rtp/rtp_source.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 
 namespace webrtc {
 
@@ -56,11 +57,7 @@ class ReceiveStream {
   // Set/change the rtp header extensions. Must be called on the packet
   // delivery thread.
   virtual void SetRtpExtensions(std::vector<RtpExtension> extensions) = 0;
-
-  // Access the currently set rtp extensions. Must be called on the packet
-  // delivery thread.
-  // TODO(tommi): Consider using `RtpHeaderExtensionMap` instead.
-  virtual const std::vector<RtpExtension>& GetRtpExtensions() const = 0;
+  virtual RtpHeaderExtensionMap GetRtpExtensionMap() const = 0;
 
   // Returns a bool for whether feedback for send side bandwidth estimation is
   // enabled. See

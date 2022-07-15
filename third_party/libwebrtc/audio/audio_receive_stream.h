@@ -96,6 +96,7 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
                              frame_decryptor) override;
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   const std::vector<RtpExtension>& GetRtpExtensions() const override;
+  RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
   webrtc::AudioReceiveStream::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;

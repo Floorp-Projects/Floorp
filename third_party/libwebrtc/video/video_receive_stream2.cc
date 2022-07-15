@@ -483,10 +483,9 @@ void VideoReceiveStream2::SetRtpExtensions(
   c.rtp.extensions = std::move(extensions);
 }
 
-const std::vector<RtpExtension>& VideoReceiveStream2::GetRtpExtensions() const {
+RtpHeaderExtensionMap VideoReceiveStream2::GetRtpExtensionMap() const {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  // TODO(tommi): return the state held by `rtp_video_stream_receiver_`.
-  return config_.rtp.extensions;
+  return rtp_video_stream_receiver_.GetRtpExtensions();
 }
 
 void VideoReceiveStream2::CreateAndRegisterExternalDecoder(

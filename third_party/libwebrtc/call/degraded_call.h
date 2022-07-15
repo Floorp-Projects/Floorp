@@ -78,7 +78,7 @@ class DegradedCall : public Call, private PacketReceiver {
   void DestroyVideoReceiveStream(VideoReceiveStream* receive_stream) override;
 
   FlexfecReceiveStream* CreateFlexfecReceiveStream(
-      const FlexfecReceiveStream::Config& config) override;
+      const FlexfecReceiveStream::Config config) override;
   void DestroyFlexfecReceiveStream(
       FlexfecReceiveStream* receive_stream) override;
 
