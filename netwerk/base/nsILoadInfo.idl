@@ -1326,6 +1326,7 @@ interface nsILoadInfo : nsISupports
   const uint32_t BLOCKING_REASON_CLASSIFY_CRYPTOMINING_URI = 2007;
   const uint32_t BLOCKING_REASON_CLASSIFY_FINGERPRINTING_URI = 2008;
   const uint32_t BLOCKING_REASON_CLASSIFY_SOCIALTRACKING_URI = 2009;
+  const uint32_t BLOCKING_REASON_CLASSIFY_EMAILTRACKING_URI = 2010;
   const uint32_t BLOCKING_REASON_MIXED_BLOCKED = 3001;
   // The general reason comes from nsCSPContext::permitsInternal(),
   // which is way too generic to distinguish an exact reason.
