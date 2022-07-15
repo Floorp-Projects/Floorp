@@ -39,9 +39,7 @@ class FontFaceSet final : public DOMEventTargetHelper {
 
   static bool IsEnabled();
 
-  static bool IsEnabled(JSContext* aCx, JSObject* aObj) {
-    return IsEnabled();
-  }
+  static bool IsEnabled(JSContext* aCx, JSObject* aObj) { return IsEnabled(); }
 
   static already_AddRefed<FontFaceSet> CreateForDocument(
       dom::Document* aDocument);

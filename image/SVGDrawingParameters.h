@@ -25,8 +25,8 @@ struct SVGDrawingParameters {
   SVGDrawingParameters(gfxContext* aContext, const nsIntSize& aRasterSize,
                        const nsIntSize& aDrawSize, const ImageRegion& aRegion,
                        SamplingFilter aSamplingFilter,
-                       const SVGImageContext& aSVGContext,
-                       float aAnimationTime, uint32_t aFlags, float aOpacity)
+                       const SVGImageContext& aSVGContext, float aAnimationTime,
+                       uint32_t aFlags, float aOpacity)
       : context(aContext),
         size(aRasterSize),
         drawSize(aDrawSize),

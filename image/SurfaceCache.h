@@ -96,12 +96,11 @@ class SurfaceKey {
 
   friend SurfaceKey RasterSurfaceKey(const IntSize&, SurfaceFlags,
                                      PlaybackType);
-  friend SurfaceKey VectorSurfaceKey(const IntSize&,
-                                     const SVGImageContext&);
+  friend SurfaceKey VectorSurfaceKey(const IntSize&, const SVGImageContext&);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
                                      const Maybe<ImageIntRegion>&,
-                                     const SVGImageContext&,
-                                     SurfaceFlags, PlaybackType);
+                                     const SVGImageContext&, SurfaceFlags,
+                                     PlaybackType);
 
   IntSize mSize;
   Maybe<ImageIntRegion> mRegion;

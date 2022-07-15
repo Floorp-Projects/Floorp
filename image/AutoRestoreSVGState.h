@@ -27,8 +27,7 @@ class MOZ_STACK_CLASS AutoRestoreSVGState final {
       : AutoRestoreSVGState(aParams.svgContext, aParams.animationTime,
                             aSVGDocumentWrapper, aContextPaint) {}
 
-  AutoRestoreSVGState(const SVGImageContext& aSVGContext,
-                      float aAnimationTime,
+  AutoRestoreSVGState(const SVGImageContext& aSVGContext, float aAnimationTime,
                       SVGDocumentWrapper* aSVGDocumentWrapper,
                       bool aContextPaint)
       : mIsDrawing(aSVGDocumentWrapper->mIsDrawing),
