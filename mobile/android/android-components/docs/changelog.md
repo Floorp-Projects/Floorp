@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **browser-awesomebar**:
+  * 🚒 Bug fixed [issue #12469](https://github.com/mozilla-mobile/android-components/issues/12469) Cancel previous queries from the application-services persistence layer before new suggestions requests.
+
 * **service-firefox-accounts**
   * `SyncStatus` can now be `LoggedOut`.
   * `SyncStoreSupport` will update the `SyncStore` with `LoggedOut` when observed.

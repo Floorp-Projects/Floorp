@@ -181,5 +181,13 @@ class HistoryDelegateTest {
         override fun cleanup() {
             fail()
         }
+
+        override fun cancelWrites() {
+            fail()
+        }
+
+        override fun cancelReads() {
+            fail()
+        }
     }
 }

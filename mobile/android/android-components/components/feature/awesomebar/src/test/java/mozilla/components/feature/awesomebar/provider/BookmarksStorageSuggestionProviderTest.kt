@@ -20,8 +20,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.util.UUID
@@ -43,6 +46,28 @@ class BookmarksStorageSuggestionProviderTest {
 
         val suggestions = provider.onInputChanged("")
         assertTrue(suggestions.isEmpty())
+    }
+
+    @Test
+    fun `Provider cleanups all previous read operations when text is empty`() = runTest {
+        val provider = BookmarksStorageSuggestionProvider(mock(), mock())
+
+        provider.onInputChanged("")
+
+        verify(provider.bookmarksStorage).cancelReads()
+    }
+
+    @Test
+    fun `Provider cleanups all previous read operations when text is not empty`() = runTest {
+        val storage = spy(bookmarks)
+        val provider = BookmarksStorageSuggestionProvider(storage, mock())
+        storage.addItem("Mobile", newItem.url!!, newItem.title!!, null)
+        val orderVerifier = inOrder(storage)
+
+        provider.onInputChanged("moz")
+
+        orderVerifier.verify(provider.bookmarksStorage).cancelReads()
+        orderVerifier.verify(provider.bookmarksStorage).searchBookmarks(eq("moz"), anyInt())
     }
 
     @Test
@@ -223,6 +248,15 @@ class BookmarksStorageSuggestionProviderTest {
         override fun cleanup() {
             // "Not needed for the test"
             throw NotImplementedError()
+        }
+
+        override fun cancelWrites() {
+            // "Not needed for the test"
+            throw NotImplementedError()
+        }
+
+        override fun cancelReads() {
+            // no-op
         }
     }
 }

@@ -5,6 +5,7 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.graphics.drawable.Drawable
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -34,7 +35,7 @@ private const val BOOKMARKS_SUGGESTION_LIMIT = 20
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  */
 class BookmarksStorageSuggestionProvider(
-    private val bookmarksStorage: BookmarksStorage,
+    @get:VisibleForTesting internal val bookmarksStorage: BookmarksStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     private val indicatorIcon: Drawable? = null,
@@ -49,6 +50,8 @@ class BookmarksStorageSuggestionProvider(
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
+        bookmarksStorage.cancelReads()
+
         if (text.isEmpty()) {
             return emptyList()
         }

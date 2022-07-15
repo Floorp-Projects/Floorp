@@ -61,11 +61,13 @@ class CombinedHistorySuggestionProvider(
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> = coroutineScope {
+        historyStorage.cancelReads()
+        historyMetadataStorage.cancelReads()
+
         if (text.isBlank()) {
             return@coroutineScope emptyList()
         }
 
-        // Do both queries in parallel to optimize for speed.
         val metadataSuggestionsAsync = async {
             historyMetadataStorage
                 .queryHistoryMetadata(text, maxNumberOfSuggestions)

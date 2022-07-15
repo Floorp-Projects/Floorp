@@ -30,14 +30,16 @@ abstract class PlacesStorage(
     context: Context,
     val crashReporter: CrashReporting? = null
 ) : Storage, SyncableStore {
-    internal val writeScope by lazy {
+    internal var writeScope =
         CoroutineScope(
             Executors.newSingleThreadExecutor(
                 NamedThreadFactory("PlacesStorageWriteScope")
             ).asCoroutineDispatcher()
         )
-    }
-    internal val readScope by lazy { CoroutineScope(Dispatchers.IO) }
+        @VisibleForTesting internal set
+
+    internal var readScope = CoroutineScope(Dispatchers.IO)
+        @VisibleForTesting internal set
     private val storageDir by lazy { context.filesDir }
 
     abstract val logger: Logger
@@ -48,8 +50,8 @@ abstract class PlacesStorage(
         RustPlacesConnection
     }
 
-    internal val writer: PlacesWriterConnection by lazy { places.writer() }
-    internal val reader: PlacesReaderConnection by lazy { places.reader() }
+    internal open val writer: PlacesWriterConnection by lazy { places.writer() }
+    internal open val reader: PlacesReaderConnection by lazy { places.reader() }
 
     override suspend fun warmUp() {
         logElapsedTime(logger, "Warming up places storage") {
@@ -67,13 +69,55 @@ abstract class PlacesStorage(
         }
     }
 
-    /**
-     * Cleans up background work and database connections
-     */
+    @Deprecated(
+        "Use `cancelWrites` and `cancelReads` to get a similar functionality. " +
+            "See https://github.com/mozilla-mobile/android-components/issues/7348 for a description of the issues " +
+            "for when using this method"
+    )
     override fun cleanup() {
         writeScope.coroutineContext.cancelChildren()
         readScope.coroutineContext.cancelChildren()
         places.close()
+    }
+
+    override fun cancelWrites() {
+        interruptCurrentWrites()
+        writeScope.coroutineContext.cancelChildren()
+    }
+
+    override fun cancelReads() {
+        interruptCurrentReads()
+        readScope.coroutineContext.cancelChildren()
+    }
+
+    /**
+     * Stop all current write operations.
+     * Allows immediately dismissing all write operations and clearing the write queue.
+     */
+    internal fun interruptCurrentWrites() {
+        try {
+            writer.interrupt()
+        } catch (e: PlacesException.OperationInterrupted) {
+            logger.debug("Ignoring expected OperationInterrupted exception for explicit writer interrupt call", e)
+        } catch (e: PlacesException) {
+            crashReporter?.submitCaughtException(e)
+            logger.warn("Ignoring PlacesException while interrupting writes", e)
+        }
+    }
+
+    /**
+     * Stop all current read queries.
+     * Allows avoiding having to wait for stale queries responses and clears the queries queue.
+     */
+    internal fun interruptCurrentReads() {
+        try {
+            reader.interrupt()
+        } catch (e: PlacesException.OperationInterrupted) {
+            logger.debug("Ignoring expected OperationInterrupted exception for explicit reader interrupt call", e)
+        } catch (e: PlacesException) {
+            crashReporter?.submitCaughtException(e)
+            logger.warn("Ignoring PlacesException while interrupting reads", e)
+        }
     }
 
     /**

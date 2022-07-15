@@ -38,11 +38,11 @@ const val DEFAULT_METADATA_SUGGESTION_LIMIT = 5
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  */
 class HistoryMetadataSuggestionProvider(
-    private val historyStorage: HistoryMetadataStorage,
+    @get:VisibleForTesting internal val historyStorage: HistoryMetadataStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_METADATA_SUGGESTION_LIMIT,
+    @get:VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_METADATA_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
@@ -53,6 +53,8 @@ class HistoryMetadataSuggestionProvider(
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
+        historyStorage.cancelReads()
+
         if (text.isNullOrBlank()) {
             return emptyList()
         }

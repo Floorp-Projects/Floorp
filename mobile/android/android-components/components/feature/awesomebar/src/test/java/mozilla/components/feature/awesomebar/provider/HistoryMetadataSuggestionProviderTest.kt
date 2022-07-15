@@ -17,6 +17,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -27,6 +28,7 @@ import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -54,6 +56,28 @@ class HistoryMetadataSuggestionProviderTest {
 
         val suggestions = provider.onInputChanged("")
         assertTrue(suggestions.isEmpty())
+    }
+
+    @Test
+    fun `provider cleanups all previous read operations when text is empty`() = runTest {
+        val provider = HistoryMetadataSuggestionProvider(mock(), mock())
+
+        provider.onInputChanged("")
+
+        verify(provider.historyStorage).cancelReads()
+    }
+
+    @Test
+    fun `provider cleanups all previous read operations when text is not empty`() = runTest {
+        val storage: HistoryMetadataStorage = mock()
+        doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
+        val provider = HistoryMetadataSuggestionProvider(storage, mock())
+        val orderVerifier = inOrder(storage)
+
+        provider.onInputChanged("moz")
+
+        orderVerifier.verify(provider.historyStorage).cancelReads()
+        orderVerifier.verify(provider.historyStorage).queryHistoryMetadata(eq("moz"), anyInt())
     }
 
     @Test

@@ -42,6 +42,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @After
+    @Suppress("DEPRECATION")
     fun cleanup() = runTestOnMain {
         bookmarks.cleanup()
     }

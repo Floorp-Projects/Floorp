@@ -20,8 +20,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
@@ -50,6 +52,18 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
+    fun `WHEN onInputChanged is called with empty text THEN cancel all previous read operations`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        val provider = CombinedHistorySuggestionProvider(history, metadata, mock())
+
+        provider.onInputChanged("")
+
+        verify(history).cancelReads()
+        verify(metadata).cancelReads()
+    }
+
+    @Test
     fun `GIVEN more suggestions asked than metadata items exist WHEN user changes input THEN return a combined list of suggestions`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
@@ -62,6 +76,23 @@ class CombinedHistorySuggestionProviderTest {
         assertEquals(2, result.size)
         assertEquals("http://www.mozilla.com", result[0].description)
         assertEquals("http://www.mozilla.com/firefox/", result[1].description)
+    }
+
+    @Test
+    fun `WHEN onInputChanged is called with non empty text THEN cancel all previous read operations`() = runTest {
+        val storage: HistoryMetadataStorage = mock()
+        doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
+        val history: HistoryStorage = mock()
+        doReturn(emptyList<SearchResult>()).`when`(history).getSuggestions(eq("moz"), anyInt())
+        val provider = CombinedHistorySuggestionProvider(history, storage, mock())
+        val orderVerifier = Mockito.inOrder(storage, history)
+
+        provider.onInputChanged("moz")
+
+        orderVerifier.verify(history).cancelReads()
+        orderVerifier.verify(storage).cancelReads()
+        orderVerifier.verify(storage).queryHistoryMetadata(eq("moz"), anyInt())
+        orderVerifier.verify(history).getSuggestions(eq("moz"), anyInt())
     }
 
     @Test

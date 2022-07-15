@@ -56,6 +56,7 @@ class PlacesHistoryStorageTest {
     }
 
     @After
+    @Suppress("DEPRECATION")
     fun cleanup() = runTestOnMain {
         history.cleanup()
     }

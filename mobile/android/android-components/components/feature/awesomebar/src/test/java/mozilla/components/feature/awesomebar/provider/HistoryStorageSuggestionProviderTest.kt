@@ -24,9 +24,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -46,6 +49,29 @@ class HistoryStorageSuggestionProviderTest {
 
         val suggestions = provider.onInputChanged("")
         assertTrue(suggestions.isEmpty())
+    }
+
+    @Test
+    fun `provider cleanups all previous read operations when text is empty`() = runTest {
+        val provider = HistoryStorageSuggestionProvider(mock(), mock())
+
+        provider.onInputChanged("")
+
+        verify(provider.historyStorage).cancelReads()
+    }
+
+    @Test
+    fun `provider cleanups all previous read operations when text is not empty`() = runTest {
+        val history: HistoryStorage = mock()
+        doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10)))
+            .`when`(history).getSuggestions(anyString(), anyInt())
+        val provider = HistoryStorageSuggestionProvider(history, mock())
+        val orderVerifier = inOrder(history)
+
+        provider.onInputChanged("moz")
+
+        orderVerifier.verify(provider.historyStorage).cancelReads()
+        orderVerifier.verify(provider.historyStorage).getSuggestions(eq("moz"), anyInt())
     }
 
     @Test

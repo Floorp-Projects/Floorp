@@ -110,7 +110,7 @@ data class HistoryHighlightWeights(
 /**
  * An interface for interacting with a storage that manages [HistoryMetadata].
  */
-interface HistoryMetadataStorage {
+interface HistoryMetadataStorage : Cancellable {
     /**
      * Returns the most recent [HistoryMetadata] for the provided [url].
      *

@@ -38,11 +38,11 @@ const val DEFAULT_HISTORY_SUGGESTION_LIMIT = 20
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
  */
 class HistoryStorageSuggestionProvider(
-    private val historyStorage: HistoryStorage,
+    @get:VisibleForTesting internal val historyStorage: HistoryStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal var maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT,
+    @get:VisibleForTesting internal var maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {
@@ -54,6 +54,8 @@ class HistoryStorageSuggestionProvider(
     }
 
     override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
+        historyStorage.cancelReads()
+
         if (text.isEmpty()) {
             return emptyList()
         }
