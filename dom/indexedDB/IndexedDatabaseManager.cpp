@@ -123,13 +123,9 @@ const int32_t kDefaultMaxPreloadExtraRecords = 64;
 
 #define IDB_PREF_BRANCH_ROOT "dom.indexedDB."
 
-const char kTestingPref[] = IDB_PREF_BRANCH_ROOT "testing";
-const char kPrefExperimental[] = IDB_PREF_BRANCH_ROOT "experimental";
-const char kPrefFileHandle[] = "dom.fileHandle.enabled";
 const char kDataThresholdPref[] = IDB_PREF_BRANCH_ROOT "dataThreshold";
 const char kPrefMaxSerilizedMsgSize[] =
     IDB_PREF_BRANCH_ROOT "maxSerializedMsgSize";
-const char kPreprocessingPref[] = IDB_PREF_BRANCH_ROOT "preprocessing";
 const char kPrefMaxPreloadExtraRecords[] =
     IDB_PREF_BRANCH_ROOT "maxPreloadExtraRecords";
 
@@ -148,20 +144,9 @@ StaticRefPtr<IndexedDatabaseManager> gDBManager;
 
 Atomic<bool> gInitialized(false);
 Atomic<bool> gClosed(false);
-Atomic<bool> gTestingMode(false);
-Atomic<bool> gExperimentalFeaturesEnabled(false);
-Atomic<bool> gFileHandleEnabled(false);
 Atomic<int32_t> gDataThresholdBytes(0);
 Atomic<int32_t> gMaxSerializedMsgSize(0);
-Atomic<bool> gPreprocessingEnabled(false);
 Atomic<int32_t> gMaxPreloadExtraRecords(0);
-
-void AtomicBoolPrefChangedCallback(const char* aPrefName, void* aBool) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBool);
-
-  *static_cast<Atomic<bool>*>(aBool) = Preferences::GetBool(aPrefName);
-}
 
 void DataThresholdPrefChangedCallback(const char* aPrefName, void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -273,14 +258,6 @@ IndexedDatabaseManager* IndexedDatabaseManager::Get() {
 nsresult IndexedDatabaseManager::Init() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
-                                       kTestingPref, &gTestingMode);
-  Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
-                                       kPrefExperimental,
-                                       &gExperimentalFeaturesEnabled);
-  Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
-                                       kPrefFileHandle, &gFileHandleEnabled);
-
   // By default IndexedDB uses SQLite with PRAGMA synchronous = NORMAL. This
   // guarantees (unlike synchronous = OFF) atomicity and consistency, but not
   // necessarily durability in situations such as power loss. This preference
@@ -303,10 +280,6 @@ nsresult IndexedDatabaseManager::Init() {
 
   Preferences::RegisterCallbackAndCall(MaxSerializedMsgSizePrefChangeCallback,
                                        kPrefMaxSerilizedMsgSize);
-
-  Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
-                                       kPreprocessingPref,
-                                       &gPreprocessingEnabled);
 
   Preferences::RegisterCallbackAndCall(MaxPreloadExtraRecordsPrefChangeCallback,
                                        kPrefMaxPreloadExtraRecords);
@@ -340,14 +313,6 @@ void IndexedDatabaseManager::Destroy() {
     NS_ERROR("Shutdown more than once?!");
   }
 
-  Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback, kTestingPref,
-                                  &gTestingMode);
-  Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
-                                  kPrefExperimental,
-                                  &gExperimentalFeaturesEnabled);
-  Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
-                                  kPrefFileHandle, &gFileHandleEnabled);
-
   Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
                                   kPrefLoggingDetails);
 
@@ -362,9 +327,6 @@ void IndexedDatabaseManager::Destroy() {
 
   Preferences::UnregisterCallback(MaxSerializedMsgSizePrefChangeCallback,
                                   kPrefMaxSerilizedMsgSize);
-
-  Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
-                                  kPreprocessingPref, &gPreprocessingEnabled);
 
   delete this;
 }
@@ -461,10 +423,7 @@ mozilla::LogModule* IndexedDatabaseManager::GetLoggingModule() {
 
 // static
 bool IndexedDatabaseManager::InTestingMode() {
-  MOZ_ASSERT(gDBManager,
-             "InTestingMode() called before indexedDB has been initialized!");
-
-  return gTestingMode;
+  return StaticPrefs::dom_indexedDB_testing();
 }
 
 // static
@@ -477,49 +436,18 @@ bool IndexedDatabaseManager::FullSynchronous() {
 
 // static
 bool IndexedDatabaseManager::ExperimentalFeaturesEnabled() {
-  if (NS_IsMainThread()) {
-    if (NS_WARN_IF(!GetOrCreate())) {
-      return false;
-    }
-  } else {
-    MOZ_ASSERT(Get(),
-               "ExperimentalFeaturesEnabled() called off the main thread "
-               "before indexedDB has been initialized!");
-  }
-
-  return gExperimentalFeaturesEnabled;
+  return StaticPrefs::dom_indexedDB_experimental();
 }
 
 // static
 bool IndexedDatabaseManager::ExperimentalFeaturesEnabled(JSContext* aCx,
                                                          JSObject* aGlobal) {
-  // If, in the child process, properties of the global object are enumerated
-  // before the chrome registry (and thus the value of |intl.accept_languages|)
-  // is ready, calling IndexedDatabaseManager::Init will permanently break
-  // that preference. We can retrieve gExperimentalFeaturesEnabled without
-  // actually going through IndexedDatabaseManager.
-  // See Bug 1198093 comment 14 for detailed explanation.
-  MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
-  if (!strcmp(JS::GetClass(aGlobal)->name, "BackstagePass")) {
-    MOZ_ASSERT(NS_IsMainThread());
-    static bool featureRetrieved = false;
-    if (!featureRetrieved) {
-      gExperimentalFeaturesEnabled = Preferences::GetBool(kPrefExperimental);
-      featureRetrieved = true;
-    }
-    return gExperimentalFeaturesEnabled;
-  }
-
   return ExperimentalFeaturesEnabled();
 }
 
 // static
 bool IndexedDatabaseManager::IsFileHandleEnabled() {
-  MOZ_ASSERT(gDBManager,
-             "IsFileHandleEnabled() called before indexedDB has been "
-             "initialized!");
-
-  return gFileHandleEnabled;
+  return StaticPrefs::dom_fileHandle_enabled();
 }
 
 // static
@@ -542,11 +470,7 @@ uint32_t IndexedDatabaseManager::MaxSerializedMsgSize() {
 
 // static
 bool IndexedDatabaseManager::PreprocessingEnabled() {
-  MOZ_ASSERT(gDBManager,
-             "PreprocessingEnabled() called before indexedDB has been "
-             "initialized!");
-
-  return gPreprocessingEnabled;
+  return StaticPrefs::dom_indexedDB_preprocessing();
 }
 
 // static
