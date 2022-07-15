@@ -14,6 +14,10 @@ AntiTracking.runTest(
       let chromeScript = SpecialPowers.loadChromeScript(_ => {
         // eslint-disable-next-line no-undef
         addMessageListener("go", _ => {
+          const { Services } = ChromeUtils.import(
+            "resource://gre/modules/Services.jsm"
+          );
+
           function ok(what, msg) {
             // eslint-disable-next-line no-undef
             sendAsyncMessage("ok", { what: !!what, msg });
@@ -95,14 +99,13 @@ AntiTracking.runTest(
       );
     });
   },
-  [
-    [
-      "privacy.partition.always_partition_third_party_non_cookie_storage",
-      false,
-    ],
-  ], // extra prefs
+  [["privacy.partition.always_partition_third_party_non_cookie_storage", true]], // extra prefs
   true, // run the window.open() test
   true, // run the user interaction test
-  0, // don't expect blocking notifications
+  [
+    // expected blocking notifications
+    Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
+    Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL,
+  ],
   false
 ); // run in normal windows
