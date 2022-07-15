@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
-#define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
+#ifndef MODULES_VIDEO_CAPTURE_LINUX_VIDEO_CAPTURE_V4L2_H_
+#define MODULES_VIDEO_CAPTURE_LINUX_VIDEO_CAPTURE_V4L2_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -62,4 +62,4 @@ class VideoCaptureModuleV4L2 : public VideoCaptureImpl {
 }  // namespace videocapturemodule
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
+#endif  // MODULES_VIDEO_CAPTURE_LINUX_VIDEO_CAPTURE_V4L2_H_

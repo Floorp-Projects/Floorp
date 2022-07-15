@@ -69,9 +69,11 @@ if (!build_with_chromium) {
     if (is_linux || is_bsd || is_chromeos) {
       sources = [
         "linux/device_info_linux.cc",
-        "linux/device_info_linux.h",
+        "linux/device_info_v4l2.cc",
+        "linux/device_info_v4l2.h",
         "linux/video_capture_linux.cc",
-        "linux/video_capture_linux.h",
+        "linux/video_capture_v4l2.cc",
+        "linux/video_capture_v4l2.h",
       ]
       deps += [ "../../media:rtc_media_base" ]
     }
