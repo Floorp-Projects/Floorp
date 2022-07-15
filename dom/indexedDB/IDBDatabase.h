@@ -220,8 +220,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   virtual void LastRelease() override;
 
-  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
-
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
