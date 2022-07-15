@@ -64,7 +64,9 @@
           "enum": [
             "FOCUS",
             "RALLY",
-            "VPN"
+            "VPN",
+            "PIN",
+            "OTHER"
           ]
         },
         "promoSectionStyle": {

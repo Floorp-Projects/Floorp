@@ -63,7 +63,7 @@ add_task(async function test_PanelTestProvider() {
   // through schema validation.
   Assert.strictEqual(
     messages.length,
-    16,
+    17,
     "PanelTestProvider should have the correct number of messages"
   );
 
@@ -115,8 +115,8 @@ add_task(async function test_PanelTestProvider() {
 
   Assert.strictEqual(
     messages.filter(m => m.template === "pb_newtab").length,
-    1,
-    "There is one pb_newtab message"
+    2,
+    "There are two pb_newtab messages"
   );
 });
 
