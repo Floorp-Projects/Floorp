@@ -22,6 +22,7 @@ runTests(SpecialPowers.Ci.nsIClassifiedChannel.CLASSIFIED_SOCIALTRACKING,
            ["urlclassifier.features.cryptomining.annotate.blacklistTables", ""],
            ["privacy.trackingprotection.cryptomining.enabled", false],
            ["privacy.trackingprotection.socialtracking.enabled", true],
+           ["privacy.trackingprotection.emailtracking.enabled", false],
          ],
          false /* a tracking resource */);
 SimpleTest.waitForExplicitFinish();
