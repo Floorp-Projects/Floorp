@@ -1149,15 +1149,14 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
   // thread.
   receive_stream->RegisterWithTransport(&video_receiver_controller_);
 
-  const webrtc::VideoReceiveStream::Config::Rtp& rtp = receive_stream->rtp();
-  if (rtp.rtx_ssrc) {
+  if (receive_stream->rtx_ssrc()) {
     // We record identical config for the rtx stream as for the main
     // stream. Since the transport_send_cc negotiation is per payload
     // type, we may get an incorrect value for the rtx stream, but
     // that is unlikely to matter in practice.
-    RegisterReceiveStream(rtp.rtx_ssrc, receive_stream);
+    RegisterReceiveStream(receive_stream->rtx_ssrc(), receive_stream);
   }
-  RegisterReceiveStream(rtp.remote_ssrc, receive_stream);
+  RegisterReceiveStream(receive_stream->remote_ssrc(), receive_stream);
   video_receive_streams_.insert(receive_stream);
 
   ConfigureSync(receive_stream->sync_group());
@@ -1177,22 +1176,19 @@ void Call::DestroyVideoReceiveStream(
   // TODO(bugs.webrtc.org/11993): Unregister on the network thread.
   receive_stream_impl->UnregisterFromTransport();
 
-  // TODO(tommi): Remove `rtp()` accessor.
-  const webrtc::VideoReceiveStream::Config::Rtp& rtp =
-      receive_stream_impl->rtp();
-
   // Remove all ssrcs pointing to a receive stream. As RTX retransmits on a
   // separate SSRC there can be either one or two.
-  UnregisterReceiveStream(rtp.remote_ssrc);
-  if (rtp.rtx_ssrc) {
-    UnregisterReceiveStream(rtp.rtx_ssrc);
+  UnregisterReceiveStream(receive_stream_impl->remote_ssrc());
+
+  if (receive_stream_impl->rtx_ssrc()) {
+    UnregisterReceiveStream(receive_stream_impl->rtx_ssrc());
   }
   video_receive_streams_.erase(receive_stream_impl);
   ConfigureSync(receive_stream_impl->sync_group());
 
   receive_side_cc_
       .GetRemoteBitrateEstimator(UseSendSideBwe(receive_stream_impl))
-      ->RemoveStream(rtp.remote_ssrc);
+      ->RemoveStream(receive_stream_impl->remote_ssrc());
 
   UpdateAggregateNetworkState();
   delete receive_stream_impl;
