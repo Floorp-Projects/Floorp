@@ -9,9 +9,6 @@ import android.view.View
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import mozilla.components.concept.engine.EngineView.InputResult.INPUT_RESULT_HANDLED
-import mozilla.components.concept.engine.EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT
-import mozilla.components.concept.engine.EngineView.InputResult.INPUT_RESULT_UNHANDLED
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 
 /**
@@ -96,6 +93,7 @@ interface EngineView {
      * @return [InputResult] indicating how user's last [android.view.MotionEvent] was handled.
      */
     @Deprecated("Not enough data about how the touch was handled", ReplaceWith("getInputResultDetail()"))
+    @Suppress("DEPRECATION")
     fun getInputResult(): InputResult = InputResult.INPUT_RESULT_UNHANDLED
 
     /**
@@ -145,6 +143,7 @@ interface EngineView {
      * @see [INPUT_RESULT_HANDLED_CONTENT]
      */
     @Deprecated("Not enough data about how the touch was handled", ReplaceWith("InputResultDetail"))
+    @Suppress("DEPRECATION")
     enum class InputResult(val value: Int) {
         /**
          * Last [android.view.MotionEvent] was not handled by neither us nor the webpage.
