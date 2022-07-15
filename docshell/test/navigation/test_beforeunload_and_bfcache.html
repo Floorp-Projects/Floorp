@@ -76,7 +76,11 @@
     SpecialPowers.wrap(document).notifyUserGestureActivation();
     SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() => {
       SpecialPowers.wrap(document).requestStorageAccess().then(() => {
-        executeTest();
+        SpecialPowers.pushPrefEnv({
+          set: [["privacy.partition.always_partition_third_party_non_cookie_storage", false]]
+        }).then(() => {
+          executeTest();
+        });
       });
     });
   } else {

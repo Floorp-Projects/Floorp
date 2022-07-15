@@ -2530,14 +2530,15 @@ void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
 }
 
 void ScrollFrameHelper::ScrollToCSSPixelsForApz(
-    const CSSPoint& aScrollPosition) {
+    const CSSPoint& aScrollPosition, ScrollSnapTargetIds&& aLastSnapTargetIds) {
   nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
   nscoord halfRange = nsPresContext::CSSPixelsToAppUnits(1000);
   nsRect range(pt.x - halfRange, pt.y - halfRange, 2 * halfRange - 1,
                2 * halfRange - 1);
   ScrollToWithOrigin(
       pt, &range,
-      ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Apz});
+      ScrollOperationParams{ScrollMode::Instant, ScrollOrigin::Apz,
+                            std::move(aLastSnapTargetIds)});
   // 'this' might be destroyed here
 }
 
@@ -2633,7 +2634,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
       if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll()) {
         ApzSmoothScrollTo(mDestination, aParams.mOrigin,
-                          aParams.mTriggeredByScript);
+                          aParams.mTriggeredByScript, std::move(snapTargetIds));
         return;
       }
 
@@ -8040,6 +8041,11 @@ bool ScrollFrameHelper::IsLastSnappedTarget(const nsIFrame* aFrame) const {
 }
 
 void ScrollFrameHelper::TryResnap() {
+  // If there's any async scroll is running, don't clobber the scroll.
+  if (!ScrollAnimationState().isEmpty()) {
+    return;
+  }
+
   if (auto snapTarget = GetSnapPointForResnap()) {
     // We are going to re-snap so that we need to clobber scroll anchoring.
     mAnchor.UserScrolled();
@@ -8180,7 +8186,8 @@ void ScrollFrameHelper::AsyncScrollbarDragRejected() {
 
 void ScrollFrameHelper::ApzSmoothScrollTo(
     const nsPoint& aDestination, ScrollOrigin aOrigin,
-    ScrollTriggeredByScript aTriggeredByScript) {
+    ScrollTriggeredByScript aTriggeredByScript,
+    UniquePtr<ScrollSnapTargetIds> aSnapTargetIds) {
   if (mApzSmoothScrollDestination == Some(aDestination)) {
     // If we already sent APZ a smooth-scroll request to this
     // destination (i.e. it was the last request
@@ -8202,7 +8209,7 @@ void ScrollFrameHelper::ApzSmoothScrollTo(
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
   mApzSmoothScrollDestination = Some(aDestination);
   AppendScrollUpdate(ScrollPositionUpdate::NewSmoothScroll(
-      aOrigin, aDestination, aTriggeredByScript));
+      aOrigin, aDestination, aTriggeredByScript, std::move(aSnapTargetIds)));
 
   nsIContent* content = mOuter->GetContent();
   if (!DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(content)) {
@@ -8253,12 +8260,13 @@ bool ScrollFrameHelper::SmoothScrollVisual(
   //     smooth scroll destination to send to APZ.
   mDestination = GetVisualScrollRange().ClampPoint(aVisualViewportOffset);
 
+  UniquePtr<ScrollSnapTargetIds> snapTargetIds;
   // Perform the scroll.
   ApzSmoothScrollTo(mDestination,
                     aUpdateType == FrameMetrics::eRestore
                         ? ScrollOrigin::Restore
                         : ScrollOrigin::Other,
-                    ScrollTriggeredByScript::No);
+                    ScrollTriggeredByScript::No, std::move(snapTargetIds));
   return true;
 }
 

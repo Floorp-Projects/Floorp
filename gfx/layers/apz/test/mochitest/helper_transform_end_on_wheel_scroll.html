@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+html, body { margin: 0; }
+
+body {
+  height: 10000px;
+}
+</style>
+
+<script>
+async function test() {
+  let transformEndPromise = promiseTransformEnd();
+  await promiseMoveMouseAndScrollWheelOver(document.documentElement, 100, 100);
+
+  await transformEndPromise;
+  ok(true, "Got an APZ:TransformEnd ");
+}
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>

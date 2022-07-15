@@ -239,7 +239,7 @@ reftest.Runner = class {
 
   async abort() {
     if (this.reftestWin && this.reftestWin != this.parentWindow) {
-      this.driver.closeChromeWindow();
+      await this.driver.closeChromeWindow();
       let parentHandle = lazy.windowManager.getWindowProperties(
         this.parentWindow
       );

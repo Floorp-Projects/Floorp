@@ -700,12 +700,6 @@ using AtomicByteCount = mozilla::Atomic<size_t, mozilla::ReleaseAcquire>;
  */
 class HeapSize {
   /*
-   * An instance that contains our parent's heap usage, or null if this is the
-   * top-level usage container.
-   */
-  HeapSize* const parent_;
-
-  /*
    * The number of bytes in use. For GC heaps this is approximate to the nearest
    * ArenaSize. It is atomic because it is updated by both the active and GC
    * helper threads.
@@ -720,7 +714,10 @@ class HeapSize {
   AtomicByteCount retainedBytes_;
 
  public:
-  explicit HeapSize(HeapSize* parent) : parent_(parent), bytes_(0) {}
+  explicit HeapSize() {
+    MOZ_ASSERT(bytes_ == 0);
+    MOZ_ASSERT(retainedBytes_ == 0);
+  }
 
   size_t bytes() const { return bytes_; }
   size_t retainedBytes() const { return retainedBytes_; }
@@ -737,9 +734,6 @@ class HeapSize {
     mozilla::DebugOnly<size_t> initialBytes(bytes_);
     MOZ_ASSERT(initialBytes + nbytes > initialBytes);
     bytes_ += nbytes;
-    if (parent_) {
-      parent_->addBytes(nbytes);
-    }
   }
   void removeBytes(size_t nbytes, bool updateRetainedSize) {
     if (updateRetainedSize) {
@@ -748,9 +742,33 @@ class HeapSize {
     }
     MOZ_ASSERT(bytes_ >= nbytes);
     bytes_ -= nbytes;
-    if (parent_) {
-      parent_->removeBytes(nbytes, updateRetainedSize);
-    }
+  }
+};
+
+/*
+ * Like HeapSize, but also updates a 'parent' HeapSize. Used for per-zone heap
+ * size data that also updates a runtime-wide parent.
+ */
+class HeapSizeChild : public HeapSize {
+ public:
+  void addGCArena(HeapSize& parent) {
+    HeapSize::addGCArena();
+    parent.addGCArena();
+  }
+
+  void removeGCArena(HeapSize& parent) {
+    HeapSize::removeGCArena();
+    parent.removeGCArena();
+  }
+
+  void addBytes(size_t nbytes, HeapSize& parent) {
+    HeapSize::addBytes(nbytes);
+    parent.addBytes(nbytes);
+  }
+
+  void removeBytes(size_t nbytes, bool updateRetainedSize, HeapSize& parent) {
+    HeapSize::removeBytes(nbytes, updateRetainedSize);
+    parent.removeBytes(nbytes, updateRetainedSize);
   }
 };
 

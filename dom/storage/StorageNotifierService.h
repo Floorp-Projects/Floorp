@@ -35,6 +35,8 @@ class StorageNotificationObserver {
 
   virtual bool IsPrivateBrowsing() const = 0;
 
+  virtual nsIPrincipal* GetEffectiveCookiePrincipal() const = 0;
+
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() const = 0;
 
   virtual nsIEventTarget* GetEventTarget() const = 0;
