@@ -2142,6 +2142,23 @@ inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
            PromiseFlatCString(list).get()));
 }
 
+inline bool CookieJarSettingsSaysShouldResistFingerprinting(
+    nsILoadInfo* aLoadInfo) {
+  // If the loadinfo's CookieJarSettings says that we _should_ resist
+  // fingerprinting we can always believe it. (This is the (*) rule from
+  // CookieJarSettings.h)
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called CookieJarSettingsSaysShouldResistFingerprinting but the "
+             "loadinfo's CookieJarSettings couldn't be retrieved"));
+    return true;
+  }
+  return cookieJarSettings->GetShouldResistFingerprinting();
+}
+
 // These constants are used for privacy.resistFingerprinting.testGranularityMask
 const unsigned int sWebExtensionExemptMask = 0x01;
 const unsigned int sNonPBMExemptMask = 0x02;
@@ -2215,26 +2232,12 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
     // cases. but it will be performed inside the ShouldRFP(nsILoadInfo) as
     // well, so we put into this conditional to avoid doing it twice in that
     // case.
-
-    // If the loadinfo's CookieJarSettings says that we _should_ resist
-    // fingerprinting we can always believe it. (This is the (*) rule from
-    // CookieJarSettings.h)
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-    nsresult rv =
-        loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-              ("Called nsContentUtils::ShouldResistFingerprinting(nsIChannel* "
-               "aChannel) but the channel's loadinfo's CookieJarSettings "
-               "couldn't be retrieved"));
-      return true;
-    }
-    if (cookieJarSettings->GetShouldResistFingerprinting()) {
+    if (CookieJarSettingsSaysShouldResistFingerprinting(loadInfo)) {
       return true;
     }
 
     nsCOMPtr<nsIURI> channelURI;
-    rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     MOZ_ASSERT(
         NS_SUCCEEDED(rv),
         "Failed to get URI in "
@@ -2335,20 +2338,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* aLoadInfo) {
     return false;
   }
 
-  // If the loadinfo's CookieJarSettings says that we _should_ resist
-  // fingerprinting we can always believe it. (This is the (*) rule from
-  // CookieJarSettings.h)
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  nsresult rv =
-      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(nsIChannel* "
-             "aChannel) but the channel's loadinfo's CookieJarSettings "
-             "couldn't be retrieved"));
-    return true;
-  }
-  if (cookieJarSettings->GetShouldResistFingerprinting()) {
+  if (CookieJarSettingsSaysShouldResistFingerprinting(aLoadInfo)) {
     return true;
   }
 
