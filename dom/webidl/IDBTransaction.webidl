@@ -12,7 +12,7 @@ enum IDBTransactionMode {
     "readonly",
     "readwrite",
     // The "readwriteflush" mode is only available when the
-    // |IndexedDatabaseManager::ExperimentalFeaturesEnabled()| function returns
+    // |dom.indexedDB.experimental| pref returns
     // true. This mode is not yet part of the standard.
     "readwriteflush",
     "cleanup",
