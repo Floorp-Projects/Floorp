@@ -2524,6 +2524,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":data_channel_controller",
       ":pc_test_utils",
       ":peer_connection_internal",
+      ":sctp_data_channel",
       "../test:test_support",
     ]
   }
@@ -2671,7 +2672,7 @@ if (rtc_include_tests && !build_with_chromium) {
     sources = [
       "test/fake_audio_capture_module.cc",
       "test/fake_audio_capture_module.h",
-      "test/fake_data_channel_provider.h",
+      "test/fake_data_channel_controller.h",
       "test/fake_peer_connection_base.h",
       "test/fake_peer_connection_for_stats.h",
       "test/fake_periodic_video_source.h",

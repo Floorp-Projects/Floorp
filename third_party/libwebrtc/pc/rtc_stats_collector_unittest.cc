@@ -50,7 +50,7 @@
 #include "p2p/base/port.h"
 #include "pc/media_stream.h"
 #include "pc/stream_collection.h"
-#include "pc/test/fake_data_channel_provider.h"
+#include "pc/test/fake_data_channel_controller.h"
 #include "pc/test/fake_peer_connection_for_stats.h"
 #include "pc/test/mock_data_channel.h"
 #include "pc/test/mock_rtp_receiver_internal.h"
@@ -1649,13 +1649,13 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
   }
 
   // TODO(bugs.webrtc.org/11547): Supply a separate network thread.
-  FakeDataChannelProvider provider;
+  FakeDataChannelController controller;
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_a = SctpDataChannel::Create(
-      &provider, "DummyChannelA", InternalDataChannelInit(),
+      &controller, "DummyChannelA", InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());
   pc_->SignalSctpDataChannelCreated()(dummy_channel_a.get());
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_b = SctpDataChannel::Create(
-      &provider, "DummyChannelB", InternalDataChannelInit(),
+      &controller, "DummyChannelB", InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());
   pc_->SignalSctpDataChannelCreated()(dummy_channel_b.get());
 

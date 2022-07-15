@@ -22,6 +22,15 @@
 
 namespace webrtc {
 
+DataChannelController::~DataChannelController() {
+  // Since channels may have multiple owners, we cannot guarantee that
+  // they will be deallocated before destroying the controller.
+  // Therefore, detach them from the controller.
+  for (auto channel : sctp_data_channels_) {
+    channel->DetachFromController();
+  }
+}
+
 bool DataChannelController::HasDataChannels() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   return !sctp_data_channels_.empty();
