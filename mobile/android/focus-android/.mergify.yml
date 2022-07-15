@@ -17,6 +17,28 @@ queue_rules:
       - status-success=ui-test-x86-debug
       - status-success=ui-test-x86-nightly
 pull_request_rules:
+  - name: L10N - Auto Merge
+    conditions:
+      - and:
+        - files~=(strings.xml|l10n.toml)
+        - or:
+          - and:
+            - author=mozilla-l10n-automation-bot
+            - base=main
+            - status-success=pr-complete
+          - and:
+            - author=github-actions[bot]
+            - base~=releases[_/].*
+            # Taskcluster doesn't run when PRs are created by github-actions[bot]
+            # because it's not considered a collaborator.
+    actions:
+      review:
+        type: APPROVE
+        message: LGTM 😎
+      queue:
+        method: rebase
+        name: default
+        rebase_fallback: none
   - name: Needs landing - Rebase
     conditions:
       - base=main
