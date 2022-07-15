@@ -1,31 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-     Entitlements to apply to the .app bundle and main browser process
-     executable during codesigning of production channel builds.
+     Entitlements to apply to the main browser process executable during
+     codesigning of production channel builds.
 -->
 <plist version="1.0">
   <dict>
-    <!-- Firefox does not use MAP_JIT for executable mappings -->
-    <key>com.apple.security.cs.allow-jit</key><false/>
-
     <!-- Firefox needs to create executable pages (without MAP_JIT) -->
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
 
-    <!-- Code paged in from disk should match the signature at page in-time -->
-    <key>com.apple.security.cs.disable-executable-page-protection</key><false/>
-
     <!-- Allow loading third party libraries. Needed for Flash and CDMs -->
     <key>com.apple.security.cs.disable-library-validation</key><true/>
-
-    <!-- Don't allow dyld environment variables -->
-    <key>com.apple.security.cs.allow-dyld-environment-variables</key><false/>
-
-    <!-- Don't allow debugging of the executable. Debuggers will be prevented
-         from attaching to running executables. Notarization does not permit
-         access to get-task-allow (as documented by Apple) so this must be
-         disabled on notarized builds. -->
-    <key>com.apple.security.get-task-allow</key><false/>
 
     <!-- Firefox needs to access the microphone on sites the user allows -->
     <key>com.apple.security.device.audio-input</key><true/>
