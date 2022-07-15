@@ -129,8 +129,6 @@ const char kPrefFileHandle[] = "dom.fileHandle.enabled";
 const char kDataThresholdPref[] = IDB_PREF_BRANCH_ROOT "dataThreshold";
 const char kPrefMaxSerilizedMsgSize[] =
     IDB_PREF_BRANCH_ROOT "maxSerializedMsgSize";
-const char kPrefErrorEventToSelfError[] =
-    IDB_PREF_BRANCH_ROOT "errorEventToSelfError";
 const char kPreprocessingPref[] = IDB_PREF_BRANCH_ROOT "preprocessing";
 const char kPrefMaxPreloadExtraRecords[] =
     IDB_PREF_BRANCH_ROOT "maxPreloadExtraRecords";
@@ -153,7 +151,6 @@ Atomic<bool> gClosed(false);
 Atomic<bool> gTestingMode(false);
 Atomic<bool> gExperimentalFeaturesEnabled(false);
 Atomic<bool> gFileHandleEnabled(false);
-Atomic<bool> gPrefErrorEventToSelfError(false);
 Atomic<int32_t> gDataThresholdBytes(0);
 Atomic<int32_t> gMaxSerializedMsgSize(0);
 Atomic<bool> gPreprocessingEnabled(false);
@@ -283,9 +280,6 @@ nsresult IndexedDatabaseManager::Init() {
                                        &gExperimentalFeaturesEnabled);
   Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
                                        kPrefFileHandle, &gFileHandleEnabled);
-  Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
-                                       kPrefErrorEventToSelfError,
-                                       &gPrefErrorEventToSelfError);
 
   // By default IndexedDB uses SQLite with PRAGMA synchronous = NORMAL. This
   // guarantees (unlike synchronous = OFF) atomicity and consistency, but not
@@ -353,9 +347,6 @@ void IndexedDatabaseManager::Destroy() {
                                   &gExperimentalFeaturesEnabled);
   Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
                                   kPrefFileHandle, &gFileHandleEnabled);
-  Preferences::UnregisterCallback(AtomicBoolPrefChangedCallback,
-                                  kPrefErrorEventToSelfError,
-                                  &gPrefErrorEventToSelfError);
 
   Preferences::UnregisterCallback(LoggingModePrefChangedCallback,
                                   kPrefLoggingDetails);
@@ -376,109 +367,6 @@ void IndexedDatabaseManager::Destroy() {
                                   kPreprocessingPref, &gPreprocessingEnabled);
 
   delete this;
-}
-
-// static
-nsresult IndexedDatabaseManager::CommonPostHandleEvent(
-    EventChainPostVisitor& aVisitor, const IDBFactory& aFactory) {
-  MOZ_ASSERT(aVisitor.mDOMEvent);
-
-  if (!gPrefErrorEventToSelfError) {
-    return NS_OK;
-  }
-
-  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
-    return NS_OK;
-  }
-
-  if (!aVisitor.mDOMEvent->IsTrusted()) {
-    return NS_OK;
-  }
-
-  nsAutoString type;
-  aVisitor.mDOMEvent->GetType(type);
-
-  MOZ_ASSERT(nsDependentString(kErrorEventType).EqualsLiteral("error"));
-  if (!type.EqualsLiteral("error")) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<EventTarget> eventTarget = aVisitor.mDOMEvent->GetTarget();
-  MOZ_ASSERT(eventTarget);
-
-  // Only mess with events that were originally targeted to an IDBRequest.
-  RefPtr<IDBRequest> request;
-  if (NS_FAILED(eventTarget->QueryInterface(
-          NS_GET_IID(mozilla::dom::detail::PrivateIDBRequest),
-          getter_AddRefs(request))) ||
-      !request) {
-    return NS_OK;
-  }
-
-  RefPtr<DOMException> error = request->GetErrorAfterResult();
-
-  nsString errorName;
-  if (error) {
-    error->GetName(errorName);
-  }
-
-  RootedDictionary<ErrorEventInit> init(RootingCx());
-  request->GetCallerLocation(init.mFilename, &init.mLineno, &init.mColno);
-
-  init.mMessage = errorName;
-  init.mCancelable = true;
-  init.mBubbles = true;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIDOMWindow> window =
-        do_QueryInterface(eventTarget->GetOwnerGlobal());
-    if (window) {
-      nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-      MOZ_ASSERT(sgo);
-
-      if (NS_WARN_IF(!sgo->HandleScriptError(init, &status))) {
-        status = nsEventStatus_eIgnore;
-      }
-    } else {
-      // We don't fire error events at any global for non-window JS on the main
-      // thread.
-    }
-  } else {
-    // Not on the main thread, must be in a worker.
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-
-    RefPtr<WorkerGlobalScope> globalScope = workerPrivate->GlobalScope();
-    MOZ_ASSERT(globalScope);
-
-    RefPtr<ErrorEvent> errorEvent = ErrorEvent::Constructor(
-        globalScope, nsDependentString(kErrorEventType), init);
-    MOZ_ASSERT(errorEvent);
-
-    errorEvent->SetTrusted(true);
-
-    RefPtr<EventTarget> target = static_cast<EventTarget*>(globalScope.get());
-
-    if (NS_WARN_IF(NS_FAILED(EventDispatcher::DispatchDOMEvent(
-            target,
-            /* aWidgetEvent */ nullptr, errorEvent,
-            /* aPresContext */ nullptr, &status)))) {
-      status = nsEventStatus_eIgnore;
-    }
-  }
-
-  if (status == nsEventStatus_eConsumeNoDefault) {
-    return NS_OK;
-  }
-
-  // Log the error to the error console.
-  ScriptErrorHelper::Dump(errorName, init.mFilename, init.mLineno, init.mColno,
-                          nsIScriptError::errorFlag, aFactory.IsChrome(),
-                          aFactory.InnerWindowID());
-
-  return NS_OK;
 }
 
 // static
