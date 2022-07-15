@@ -7,10 +7,10 @@ package mozilla.components.support.base.feature
 import android.content.Intent
 import android.view.View
 import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 
 /**
  * Wrapper for [LifecycleAwareFeature] instances that keep a strong references to a [View]. This wrapper is helpful
@@ -56,7 +56,7 @@ import androidx.lifecycle.OnLifecycleEvent
  */
 class ViewBoundFeatureWrapper<T : LifecycleAwareFeature>() {
     private var feature: T? = null
-    private var owner: LifecycleOwner? = null
+    internal var owner: LifecycleOwner? = null
     private var view: View? = null
 
     private var viewBinding: ViewBinding<T>? = null
@@ -209,19 +209,16 @@ internal class ViewBinding<T : LifecycleAwareFeature>(
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal class LifecycleBinding<T : LifecycleAwareFeature>(
     private val wrapper: ViewBoundFeatureWrapper<T>
-) : LifecycleObserver {
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun start() {
+) : DefaultLifecycleObserver {
+    override fun onStart(owner: LifecycleOwner) {
         wrapper.start()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun stop() {
+    override fun onStop(owner: LifecycleOwner) {
         wrapper.stop()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun destroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         wrapper.clear()
     }
 }

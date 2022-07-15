@@ -49,7 +49,11 @@ class StoreExtensionsKtTest {
 
     @Test
     fun `Observer will not get registered if lifecycle is already destroyed`() = runTestOnMain {
-        val owner = MockedLifecycleOwner(Lifecycle.State.DESTROYED)
+        val owner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+
+        // We cannot set initial DESTROYED state for LifecycleRegistry
+        // so we simulate lifecycle getting destroyed.
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
 
         val store = Store(
             TestState(counter = 23),
@@ -194,7 +198,11 @@ class StoreExtensionsKtTest {
     @Test(expected = IllegalArgumentException::class)
     @ExperimentalCoroutinesApi // Channel
     fun `Creating channel throws if lifecycle is already DESTROYED`() {
-        val owner = MockedLifecycleOwner(Lifecycle.State.DESTROYED)
+        val owner = MockedLifecycleOwner(Lifecycle.State.STARTED)
+
+        // We cannot set initial DESTROYED state for LifecycleRegistry
+        // so we simulate lifecycle getting destroyed.
+        owner.lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
 
         val store = Store(
             TestState(counter = 23),

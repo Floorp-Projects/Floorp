@@ -127,7 +127,7 @@ class ViewBoundFeatureWrapperTest {
         verify(feature, never()).start()
         assertFalse(feature.started)
 
-        lifecycle.observer!!.start()
+        lifecycle.observer!!.onStart(wrapper.owner!!)
 
         verify(feature).start()
         assertTrue(feature.started)
@@ -152,7 +152,7 @@ class ViewBoundFeatureWrapperTest {
         verify(feature, never()).stop()
         assertFalse(feature.started)
 
-        lifecycle.observer!!.stop()
+        lifecycle.observer!!.onStop(wrapper.owner!!)
 
         verify(feature).stop()
         assertFalse(feature.started)
@@ -303,7 +303,7 @@ class ViewBoundFeatureWrapperTest {
             view = mock()
         )
 
-        lifecycle.observer!!.start()
+        lifecycle.observer!!.onStart(wrapper.owner!!)
 
         verify(feature, never()).stop()
 
@@ -327,8 +327,8 @@ class ViewBoundFeatureWrapperTest {
             view = mock()
         )
 
-        lifecycle.observer!!.start()
-        lifecycle.observer!!.stop()
+        lifecycle.observer!!.onStart(wrapper.owner!!)
+        lifecycle.observer!!.onStop(wrapper.owner!!)
 
         reset(feature)
 
@@ -413,7 +413,7 @@ class ViewBoundFeatureWrapperTest {
 
         verify(wrapper, never()).clear()
 
-        lifecycle.observer!!.destroy()
+        lifecycle.observer!!.onDestroy(wrapper.owner!!)
 
         verify(wrapper).clear()
     }

@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import android.widget.FrameLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -39,22 +40,22 @@ class EngineViewTest {
         val engineView = spy(createDummyEngineView(testContext))
         val observer = LifecycleObserver(engineView)
 
-        observer.onCreate()
+        observer.onCreate(mock())
         verify(engineView).onCreate()
 
-        observer.onDestroy()
+        observer.onDestroy(mock())
         verify(engineView).onDestroy()
 
-        observer.onStart()
+        observer.onStart(mock())
         verify(engineView).onStart()
 
-        observer.onStop()
+        observer.onStop(mock())
         verify(engineView).onStop()
 
-        observer.onPause()
+        observer.onPause(mock())
         verify(engineView).onPause()
 
-        observer.onResume()
+        observer.onResume(mock())
         verify(engineView).onResume()
     }
 
