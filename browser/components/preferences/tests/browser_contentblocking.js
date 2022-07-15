@@ -20,6 +20,7 @@ const REFERRER_TOP_PREF =
   "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation";
 const OCSP_PREF = "privacy.partition.network_state.ocsp_cache";
 const QUERY_PARAM_STRIP_PREF = "privacy.query_stripping.enabled";
+const QUERY_PARAM_STRIP_PBM_PREF = "privacy.query_stripping.enabled.pbmode";
 const PREF_TEST_NOTIFICATIONS =
   "browser.safebrowsing.test-notifications.enabled";
 const STRICT_PREF = "browser.contentblocking.features.strict";
@@ -324,6 +325,7 @@ add_task(async function testContentBlockingStandardCategory() {
     [REFERRER_TOP_PREF]: null,
     [OCSP_PREF]: null,
     [QUERY_PARAM_STRIP_PREF]: null,
+    [QUERY_PARAM_STRIP_PBM_PREF]: null,
   };
 
   for (let pref in prefs) {
@@ -372,6 +374,10 @@ add_task(async function testContentBlockingStandardCategory() {
   Services.prefs.setBoolPref(
     QUERY_PARAM_STRIP_PREF,
     !Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PREF)
+  );
+  Services.prefs.setBoolPref(
+    QUERY_PARAM_STRIP_PBM_PREF,
+    !Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PBM_PREF)
   );
 
   for (let pref in prefs) {
@@ -438,6 +444,7 @@ add_task(async function testContentBlockingStrictCategory() {
   Services.prefs.setBoolPref(REFERRER_TOP_PREF, false);
   Services.prefs.setBoolPref(OCSP_PREF, false);
   Services.prefs.setBoolPref(QUERY_PARAM_STRIP_PREF, false);
+  Services.prefs.setBoolPref(QUERY_PARAM_STRIP_PBM_PREF, false);
   Services.prefs.setIntPref(
     NCB_PREF,
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
@@ -602,6 +609,20 @@ add_task(async function testContentBlockingStrictCategory() {
           `${QUERY_PARAM_STRIP_PREF} has been set to false`
         );
         break;
+      case "qpsPBM":
+        is(
+          Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PBM_PREF),
+          true,
+          `${QUERY_PARAM_STRIP_PBM_PREF} has been set to true`
+        );
+        break;
+      case "-qpsPBM":
+        is(
+          Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PBM_PREF),
+          false,
+          `${QUERY_PARAM_STRIP_PBM_PREF} has been set to false`
+        );
+        break;
       case "cookieBehavior0":
         is(
           Services.prefs.getIntPref(NCB_PREF),
@@ -709,6 +730,7 @@ add_task(async function testContentBlockingCustomCategory() {
     REFERRER_TOP_PREF,
     OCSP_PREF,
     QUERY_PARAM_STRIP_PREF,
+    QUERY_PARAM_STRIP_PBM_PREF,
   ];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -759,6 +781,7 @@ add_task(async function testContentBlockingCustomCategory() {
     REFERRER_TOP_PREF,
     OCSP_PREF,
     QUERY_PARAM_STRIP_PREF,
+    QUERY_PARAM_STRIP_PBM_PREF,
   ]) {
     Services.prefs.setBoolPref(pref, !Services.prefs.getBoolPref(pref));
     await TestUtils.waitForCondition(
