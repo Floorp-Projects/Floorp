@@ -5635,14 +5635,15 @@
         }
         case "sizemodechange":
         case "occlusionstatechange":
-          if (aEvent.target == window && !this._switcher) {
-            this.selectedBrowser.preserveLayers(
+          if (aEvent.target == window) {
+            const inactive =
               window.windowState == window.STATE_MINIMIZED ||
-                window.isFullyOccluded
-            );
-            this.selectedBrowser.docShellIsActive = this.shouldActivateDocShell(
-              this.selectedBrowser
-            );
+              window.isFullyOccluded;
+            window.browsingContext.isActive = !inactive;
+            if (!this._switcher) {
+              this.selectedBrowser.preserveLayers(inactive);
+              this.selectedBrowser.docShellIsActive = !inactive;
+            }
           }
           break;
       }
