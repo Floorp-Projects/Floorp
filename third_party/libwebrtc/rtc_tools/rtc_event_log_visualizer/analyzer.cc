@@ -1242,11 +1242,11 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
     return std::numeric_limits<int64_t>::max();
   };
 
-  RateStatistics acked_bitrate(750, 8000);
+  RateStatistics raw_acked_bitrate(750, 8000);
   test::ExplicitKeyValueConfig throughput_config(
       "WebRTC-Bwe-RobustThroughputEstimatorSettings/"
-      "enabled:true,reduce_bias:true,assume_shared_link:false,initial_packets:"
-      "10,min_packets:25,window_duration:750ms,unacked_weight:0.5/");
+      "enabled:true,required_packets:10,"
+      "window_packets:25,window_duration:1000ms,unacked_weight:1.0/");
   std::unique_ptr<AcknowledgedBitrateEstimatorInterface>
       robust_throughput_estimator(
           AcknowledgedBitrateEstimatorInterface::Create(&throughput_config));
@@ -1305,7 +1305,6 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
       auto feedback_msg = transport_feedback.ProcessTransportFeedback(
           rtcp_iterator->transport_feedback,
           Timestamp::Millis(clock.TimeInMilliseconds()));
-      absl::optional<uint32_t> bitrate_bps;
       if (feedback_msg) {
         observer.Update(goog_cc->OnTransportPacketsFeedback(*feedback_msg));
         std::vector<PacketResult> feedback =
@@ -1315,24 +1314,30 @@ void EventLogAnalyzer::CreateSendSideBweSimulationGraph(Plot* plot) {
               feedback);
           robust_throughput_estimator->IncomingPacketFeedbackVector(feedback);
           for (const PacketResult& packet : feedback) {
-            acked_bitrate.Update(packet.sent_packet.size.bytes(),
-                                 packet.receive_time.ms());
+            raw_acked_bitrate.Update(packet.sent_packet.size.bytes(),
+                                     packet.receive_time.ms());
           }
-          bitrate_bps = acked_bitrate.Rate(feedback.back().receive_time.ms());
+          absl::optional<uint32_t> raw_bitrate_bps =
+              raw_acked_bitrate.Rate(feedback.back().receive_time.ms());
+          float x = config_.GetCallTimeSec(clock.CurrentTime());
+          if (raw_bitrate_bps) {
+            float y = raw_bitrate_bps.value() / 1000;
+            acked_time_series.points.emplace_back(x, y);
+          }
+          absl::optional<DataRate> robust_estimate =
+              robust_throughput_estimator->bitrate();
+          if (robust_estimate) {
+            float y = robust_estimate.value().kbps();
+            robust_time_series.points.emplace_back(x, y);
+          }
+          absl::optional<DataRate> acked_estimate =
+              acknowledged_bitrate_estimator->bitrate();
+          if (acked_estimate) {
+            float y = acked_estimate.value().kbps();
+            acked_estimate_time_series.points.emplace_back(x, y);
+          }
         }
       }
-
-      float x = config_.GetCallTimeSec(clock.CurrentTime());
-      float y = bitrate_bps.value_or(0) / 1000;
-      acked_time_series.points.emplace_back(x, y);
-      y = robust_throughput_estimator->bitrate()
-              .value_or(DataRate::Zero())
-              .kbps();
-      robust_time_series.points.emplace_back(x, y);
-      y = acknowledged_bitrate_estimator->bitrate()
-              .value_or(DataRate::Zero())
-              .kbps();
-      acked_estimate_time_series.points.emplace_back(x, y);
       ++rtcp_iterator;
     }
     if (clock.TimeInMicroseconds() >= NextProcessTime()) {
