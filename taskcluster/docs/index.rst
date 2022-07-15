@@ -69,13 +69,11 @@ becoming a task-graph expert, check out the :doc:`how-to section <how-tos>`.
 
     taskgraph
     mach
-    loading
-    transforms
-    optimization
+    transforms/index
+    optimization/index
     docker-images
     cron
     try
-    actions
     release-promotion
     versioncontrol
     config

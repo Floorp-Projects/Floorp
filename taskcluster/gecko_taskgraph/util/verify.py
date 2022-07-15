@@ -94,7 +94,7 @@ def verify_run_using():
     from gecko_taskgraph.transforms.job import registry
 
     verify_docs(
-        filename="transforms.rst",
+        filename="transforms/job.rst",
         identifiers=registry.keys(),
         appearing_as="inline-literal",
     )
