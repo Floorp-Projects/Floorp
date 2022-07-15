@@ -38,12 +38,7 @@ protocol PBackgroundIDBFactoryRequest
 child:
   async __delete__(FactoryRequestResponse response);
 
-  async PermissionChallenge(PrincipalInfo principalInfo);
-
   async Blocked(uint64_t currentVersion);
-
-parent:
-  async PermissionRetry();
 };
 
 } // namespace indexedDB

@@ -8,9 +8,9 @@
 #define mozilla_dom_indexeddb_actorsparent_h__
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/dom/indexedDB/PermissionRequestBase.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/RefPtr.h"
+#include "nsIPermissionManager.h"
 
 class nsIPrincipal;
 
@@ -26,6 +26,12 @@ class Client;
 }  // namespace quota
 
 namespace indexedDB {
+
+enum class PermissionValue {
+  kPermissionAllowed = nsIPermissionManager::ALLOW_ACTION,
+  kPermissionDenied = nsIPermissionManager::DENY_ACTION,
+  kPermissionPrompt = nsIPermissionManager::PROMPT_ACTION
+};
 
 class LoggingInfo;
 class PBackgroundIDBFactoryParent;
@@ -49,23 +55,6 @@ bool RecvFlushPendingFileDeletions();
 RefPtr<mozilla::dom::quota::Client> CreateQuotaClient();
 
 FileHandleThreadPool* GetFileHandleThreadPool();
-
-class PermissionRequestHelper final : public PermissionRequestBase {
- public:
-  PermissionRequestHelper(
-      Element* aOwnerElement, nsIPrincipal* aPrincipal,
-      PBrowserParent::IndexedDBPermissionRequestResolver& aResolver)
-      : PermissionRequestBase(aOwnerElement, aPrincipal),
-        mResolver(aResolver) {}
-
- protected:
-  ~PermissionRequestHelper() override = default;
-
- private:
-  PBrowserParent::IndexedDBPermissionRequestResolver mResolver;
-
-  void OnPromptComplete(PermissionValue aPermissionValue) override;
-};
 
 }  // namespace indexedDB
 }  // namespace mozilla::dom
