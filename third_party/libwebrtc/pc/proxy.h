@@ -94,7 +94,7 @@ class ScopedTrace {
   ~ScopedTrace();
 
  private:
-  const char* const class_and_method_name_;
+  [[maybe_unused]] const char* const class_and_method_name_;
 };
 }  // namespace proxy_internal
 
