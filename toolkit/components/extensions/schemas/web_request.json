@@ -352,7 +352,8 @@
         "id": "UrlClassificationFlags",
         "type": "string",
         "enum": ["fingerprinting", "fingerprinting_content", "cryptomining", "cryptomining_content",
-                 "tracking", "tracking_ad", "tracking_analytics", "tracking_social", "tracking_content",
+                 "emailtracking", "emailtracking_content", "tracking", "tracking_ad",
+                 "tracking_analytics", "tracking_social", "tracking_content",
                  "any_basic_tracking", "any_strict_tracking", "any_social_tracking"],
         "description": "Tracking flags that match our internal tracking classification"
       },
