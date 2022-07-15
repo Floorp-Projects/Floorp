@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script>
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+  	let cross_origin_domain = event.data[1];
+    var result = {};
+
+    result.appCodeName = navigator.appCodeName;
+    result.appName = navigator.appName;
+    result.appVersion = navigator.appVersion;
+    result.platform = navigator.platform;
+    result.userAgent = navigator.userAgent;
+    result.product = navigator.product;
+    result.productSub = navigator.productSub;
+    result.vendor = navigator.vendor;
+    result.vendorSub = navigator.vendorSub;
+    result.mimeTypesLength = navigator.mimeTypes.length;
+    result.pluginsLength = navigator.plugins.length;
+    result.oscpu = navigator.oscpu;
+    result.hardwareConcurrency = navigator.hardwareConcurrency;
+    result.userAgentHTTPHeader = "unknown";
+
+    let worker = new SharedWorker("file_navigator_iframe_worker.sjs");
+    let worker_result = await new Promise(resolve => {
+      worker.port.onmessage = function(e) {
+        resolve(e.data);
+      };
+    });
+
+    result.worker_appCodeName = worker_result.appCodeName;
+    result.worker_appName = worker_result.appName;
+    result.worker_appVersion = worker_result.appVersion;
+    result.worker_platform = worker_result.platform;
+    result.worker_userAgent = worker_result.userAgent;
+    result.worker_product = worker_result.product;
+    result.worker_hardwareConcurrency = worker_result.hardwareConcurrency;
+
+    var one = fetch("browser_navigator_header.sjs?")
+    .then((response) => { return response.text(); })
+    .then((content) => {
+      result.userAgentHTTPHeader = content;
+    });
+
+    var two = fetch(`https://${cross_origin_domain}/browser/browser/components/resistfingerprinting/test/browser/browser_navigator_header.sjs?`)
+    .then((response) => { return response.text(); })
+    .then((content) => {
+      result.framee_crossOrigin_userAgentHTTPHeader = content;
+    });
+
+    Promise.all([one, two]).then((values) => {
+      parent.postMessage(result, "*")
+    });
+  }
+});
+</script>
