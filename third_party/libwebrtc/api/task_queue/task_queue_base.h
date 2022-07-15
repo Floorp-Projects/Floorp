@@ -130,7 +130,7 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   bool IsCurrent() const { return Current() == this; }
 
  protected:
-  class CurrentTaskQueueSetter {
+  class RTC_EXPORT CurrentTaskQueueSetter {
    public:
     explicit CurrentTaskQueueSetter(TaskQueueBase* task_queue);
     CurrentTaskQueueSetter(const CurrentTaskQueueSetter&) = delete;
