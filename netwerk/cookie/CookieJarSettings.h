@@ -121,11 +121,13 @@ class CookieJarSettings final : public nsICookieJarSettings {
   NS_DECL_NSICOOKIEJARSETTINGS
   NS_DECL_NSISERIALIZABLE
 
-  static already_AddRefed<nsICookieJarSettings> GetBlockingAll();
+  static already_AddRefed<nsICookieJarSettings> GetBlockingAll(
+      bool aShouldResistFingerprinting);
 
   enum CreateMode { eRegular, ePrivate };
 
-  static already_AddRefed<nsICookieJarSettings> Create(CreateMode aMode);
+  static already_AddRefed<nsICookieJarSettings> Create(
+      CreateMode aMode, bool aShouldResistFingerprinting);
 
   static already_AddRefed<nsICookieJarSettings> Create(
       nsIPrincipal* aPrincipal);
@@ -136,7 +138,8 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   static already_AddRefed<nsICookieJarSettings> Create(
       uint32_t aCookieBehavior, const nsAString& aPartitionKey,
-      bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList);
+      bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList,
+      bool aShouldResistFingerprinting);
 
   static CookieJarSettings* Cast(nsICookieJarSettings* aCS) {
     return static_cast<CookieJarSettings*>(aCS);
@@ -184,7 +187,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
   };
 
   CookieJarSettings(uint32_t aCookieBehavior, bool aIsFirstPartyIsolated,
-                    State aState);
+                    bool aShouldResistFingerprinting, State aState);
   ~CookieJarSettings();
 
   uint32_t mCookieBehavior;

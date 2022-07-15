@@ -429,15 +429,19 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
 already_AddRefed<nsICookieJarSettings> CookieCommons::GetCookieJarSettings(
     nsIChannel* aChannel) {
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  bool shouldResistFingerprinting =
+      nsContentUtils::ShouldResistFingerprinting(aChannel);
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     nsresult rv =
         loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      cookieJarSettings = CookieJarSettings::GetBlockingAll();
+      cookieJarSettings =
+          CookieJarSettings::GetBlockingAll(shouldResistFingerprinting);
     }
   } else {
-    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular);
+    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular,
+                                                  shouldResistFingerprinting);
   }
 
   MOZ_ASSERT(cookieJarSettings);

@@ -4978,7 +4978,10 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (mDoc) {
     cookieJarSettings = mDoc->CookieJarSettings();
   } else {
-    cookieJarSettings = net::CookieJarSettings::GetBlockingAll();
+    bool shouldResistFingerprinting =
+        nsContentUtils::ShouldResistFingerprinting(this->GetExtantDoc());
+    cookieJarSettings =
+        net::CookieJarSettings::GetBlockingAll(shouldResistFingerprinting);
   }
 
   // Note that this behavior is observable: if we grant storage permission to a

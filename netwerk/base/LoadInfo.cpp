@@ -64,11 +64,11 @@ static nsContentPolicyType InternalContentPolicyTypeForFrame(
 }
 
 /* static */ already_AddRefed<LoadInfo> LoadInfo::CreateForDocument(
-    dom::CanonicalBrowsingContext* aBrowsingContext,
+    dom::CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURI,
     nsIPrincipal* aTriggeringPrincipal,
     const OriginAttributes& aOriginAttributes, nsSecurityFlags aSecurityFlags,
     uint32_t aSandboxFlags) {
-  return MakeAndAddRef<LoadInfo>(aBrowsingContext, aTriggeringPrincipal,
+  return MakeAndAddRef<LoadInfo>(aBrowsingContext, aURI, aTriggeringPrincipal,
                                  aOriginAttributes, aSecurityFlags,
                                  aSandboxFlags);
 }
@@ -310,7 +310,7 @@ LoadInfo::LoadInfo(
  * This constructor should only be used for TYPE_DOCUMENT loads, since they
  * have a null loadingNode and loadingPrincipal.
  */
-LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
+LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow, nsIURI* aURI,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsISupports* aContextForTopLevelLoad,
                    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
@@ -365,12 +365,17 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   // for the documents' loadInfo. Note that for any other loadInfos,
   // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
   bool isPrivate = mOriginAttributes.mPrivateBrowsingId > 0;
+  bool shouldResistFingerprinting =
+      nsContentUtils::ShouldResistFingerprinting_dangerous(
+          aURI, mOriginAttributes,
+          "We are creating CookieJarSettings, so we can't have one already.");
   mCookieJarSettings = CookieJarSettings::Create(
-      isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular);
+      isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular,
+      shouldResistFingerprinting);
 }
 
 LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
-                   nsIPrincipal* aTriggeringPrincipal,
+                   nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
                    const OriginAttributes& aOriginAttributes,
                    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : mTriggeringPrincipal(aTriggeringPrincipal),
@@ -407,8 +412,13 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
   // for the documents' loadInfo. Note that for any other loadInfos,
   // cookieBehavior will be BEHAVIOR_REJECT for security reasons.
   bool isPrivate = mOriginAttributes.mPrivateBrowsingId > 0;
+  bool shouldResistFingerprinting =
+      nsContentUtils::ShouldResistFingerprinting_dangerous(
+          aURI, mOriginAttributes,
+          "We are creating CookieJarSettings, so we can't have one already.");
   mCookieJarSettings = CookieJarSettings::Create(
-      isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular);
+      isPrivate ? CookieJarSettings::ePrivate : CookieJarSettings::eRegular,
+      shouldResistFingerprinting);
 }
 
 LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
@@ -1000,10 +1010,13 @@ LoadInfo::GetCookiePolicy(uint32_t* aResult) {
 namespace {
 
 already_AddRefed<nsICookieJarSettings> CreateCookieJarSettings(
-    nsContentPolicyType aContentPolicyType, bool aIsPrivate) {
+    nsContentPolicyType aContentPolicyType, bool aIsPrivate,
+    bool shouldResistFingerprinting) {
   if (StaticPrefs::network_cookieJarSettings_unblocked_for_testing()) {
-    return aIsPrivate ? CookieJarSettings::Create(CookieJarSettings::ePrivate)
-                      : CookieJarSettings::Create(CookieJarSettings::eRegular);
+    return aIsPrivate ? CookieJarSettings::Create(CookieJarSettings::ePrivate,
+                                                  shouldResistFingerprinting)
+                      : CookieJarSettings::Create(CookieJarSettings::eRegular,
+                                                  shouldResistFingerprinting);
   }
 
   // These contentPolictTypes require a real CookieJarSettings because favicon
@@ -1011,11 +1024,13 @@ already_AddRefed<nsICookieJarSettings> CreateCookieJarSettings(
   // send/receive cookies.
   if (aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON ||
       aContentPolicyType == nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
-    return aIsPrivate ? CookieJarSettings::Create(CookieJarSettings::ePrivate)
-                      : CookieJarSettings::Create(CookieJarSettings::eRegular);
+    return aIsPrivate ? CookieJarSettings::Create(CookieJarSettings::ePrivate,
+                                                  shouldResistFingerprinting)
+                      : CookieJarSettings::Create(CookieJarSettings::eRegular,
+                                                  shouldResistFingerprinting);
   }
 
-  return CookieJarSettings::GetBlockingAll();
+  return CookieJarSettings::GetBlockingAll(shouldResistFingerprinting);
 }
 
 }  // namespace
@@ -1024,8 +1039,12 @@ NS_IMETHODIMP
 LoadInfo::GetCookieJarSettings(nsICookieJarSettings** aCookieJarSettings) {
   if (!mCookieJarSettings) {
     bool isPrivate = mOriginAttributes.mPrivateBrowsingId > 0;
-    mCookieJarSettings =
-        CreateCookieJarSettings(mInternalContentPolicyType, isPrivate);
+    nsCOMPtr<nsIPrincipal> loadingPrincipal;
+    Unused << this->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
+    bool shouldResistFingerprinting =
+        nsContentUtils::ShouldResistFingerprinting(loadingPrincipal);
+    mCookieJarSettings = CreateCookieJarSettings(
+        mInternalContentPolicyType, isPrivate, shouldResistFingerprinting);
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings = mCookieJarSettings;
