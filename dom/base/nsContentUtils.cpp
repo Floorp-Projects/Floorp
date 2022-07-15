@@ -2177,6 +2177,8 @@ inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
 const unsigned int sWebExtensionExemptMask = 0x01;
 const unsigned int sNonPBMExemptMask = 0x02;
 const unsigned int sSpecificDomainsExemptMask = 0x04;
+const char* kExemptedDomainsPrefName =
+    "privacy.resistFingerprinting.exemptedDomains";
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
@@ -2191,24 +2193,10 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
     return true;
   }
 
+  // Case 1: Top Level Load
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-
-  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-      sNonPBMExemptMask) {
-    // if non-PBM exempt mask is true, exempt non-PBM channels.
-    if (loadInfo->GetOriginAttributes().mPrivateBrowsingId == 0) {
-      return false;
-    }
-  }
-
-  bool isExemptDomain = false;
-  const char* exemptedDomainsPrefName =
-      "privacy.resistFingerprinting.exemptedDomains";
-
   if (loadInfo->GetExternalContentPolicyType() ==
       ExtContentPolicy::TYPE_DOCUMENT) {
-    // Case 1: Top Level Load
-
     nsCOMPtr<nsIURI> channelURI;
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     MOZ_ASSERT(
@@ -2220,42 +2208,62 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
       return true;
     }
 
-    // Exclude internal schemes
-    if (channelURI->SchemeIs("about") || channelURI->SchemeIs("chrome") ||
-        channelURI->SchemeIs("resource") ||
-        channelURI->SchemeIs("view-source")) {
-      return false;
-    }
-
-    if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-        sWebExtensionExemptMask) {
-      if (channelURI->SchemeIs("web-extension")) {
-        return false;
-      }
-    }
-
-    if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-        sSpecificDomainsExemptMask) {
-      nsAutoCString list;
-      Preferences::GetCString(exemptedDomainsPrefName, list);
-      ToLowerCase(list);
-      isExemptDomain = IsURIInList(channelURI, list);
-
-      if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
-                       mozilla::LogLevel::Debug)) {
-        nsAutoCString url;
-        channelURI->GetHost(url);
-        LogDomainAndPrefList(exemptedDomainsPrefName, url, isExemptDomain);
-      }
-    }
-
-    return !isExemptDomain;
+    return ShouldResistFingerprinting_dangerous(
+        channelURI, loadInfo->GetOriginAttributes(), "Internal Call");
   }
 
   // Case 2: Subresource Load
   MOZ_ASSERT(BasePrincipal::Cast(loadInfo->GetLoadingPrincipal())
                  ->OriginAttributesRef() == loadInfo->GetOriginAttributes());
   return ShouldResistFingerprinting(loadInfo->GetLoadingPrincipal());
+}
+
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting_dangerous(
+    nsIURI* aURI, const mozilla::OriginAttributes& aOriginAttributes,
+    const char* aJustification) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
+    return false;
+  }
+
+  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+      sNonPBMExemptMask) {
+    // if non-PBM exempt mask is true, exempt non-PBM channels.
+    if (aOriginAttributes.mPrivateBrowsingId == 0) {
+      return false;
+    }
+  }
+
+  bool isExemptDomain = false;
+  // Exclude internal schemes
+  if (aURI->SchemeIs("about") || aURI->SchemeIs("chrome") ||
+      aURI->SchemeIs("resource") || aURI->SchemeIs("view-source")) {
+    return false;
+  }
+
+  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+      sWebExtensionExemptMask) {
+    if (aURI->SchemeIs("web-extension")) {
+      return false;
+    }
+  }
+
+  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+      sSpecificDomainsExemptMask) {
+    nsAutoCString list;
+    Preferences::GetCString(kExemptedDomainsPrefName, list);
+    ToLowerCase(list);
+    isExemptDomain = IsURIInList(aURI, list);
+
+    if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
+                     mozilla::LogLevel::Debug)) {
+      nsAutoCString url;
+      aURI->GetHost(url);
+      LogDomainAndPrefList(kExemptedDomainsPrefName, url, isExemptDomain);
+    }
+  }
+
+  return !isExemptDomain;
 }
 
 /* static */
@@ -2289,18 +2297,15 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
   }
 
   bool isExemptDomain = false;
-  const char* exemptedDomainsPrefName =
-      "privacy.resistFingerprinting.exemptedDomains";
-
   if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
       sSpecificDomainsExemptMask) {
-    aPrincipal->IsURIInPrefList(exemptedDomainsPrefName, &isExemptDomain);
+    aPrincipal->IsURIInPrefList(kExemptedDomainsPrefName, &isExemptDomain);
 
     if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
                      mozilla::LogLevel::Debug)) {
       nsAutoCString origin;
       aPrincipal->GetAsciiOrigin(origin);
-      LogDomainAndPrefList(exemptedDomainsPrefName, origin, isExemptDomain);
+      LogDomainAndPrefList(kExemptedDomainsPrefName, origin, isExemptDomain);
     }
   }
 
