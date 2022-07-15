@@ -1824,7 +1824,8 @@ void nsHttpConnection::SetInSpdyTunnel(bool arg) {
 // static
 nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
                                              nsHttpRequestHead* request,
-                                             nsACString& result, bool h2ws) {
+                                             nsACString& result, bool h2ws,
+                                             bool aShouldResistFingerprinting) {
   result.Truncate();
   if (!trans->ConnectionInfo()) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1850,7 +1851,8 @@ nsresult nsHttpConnection::MakeConnectString(nsAHttpTransaction* trans,
   } else {
     request->SetRequestURI(result);
   }
-  rv = request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+  rv = request->SetHeader(nsHttp::User_Agent,
+                          gHttpHandler->UserAgent(aShouldResistFingerprinting));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // a CONNECT is always persistent
@@ -2451,7 +2453,8 @@ nsresult nsHttpConnection::SetupProxyConnectStream() {
 
   nsAutoCString buf;
   nsHttpRequestHead request;
-  nsresult rv = MakeConnectString(mTransaction, &request, buf, false);
+  nsresult rv = MakeConnectString(mTransaction, &request, buf, false,
+                                  mTransactionCaps & NS_HTTP_USE_RFP);
   if (NS_FAILED(rv)) {
     return rv;
   }

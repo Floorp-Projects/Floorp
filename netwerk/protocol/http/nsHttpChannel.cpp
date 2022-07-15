@@ -1134,6 +1134,10 @@ nsresult nsHttpChannel::SetupTransaction() {
     mCaps |= NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
   }
 
+  if (nsContentUtils::ShouldResistFingerprinting(this)) {
+    mCaps |= NS_HTTP_USE_RFP;
+  }
+
   // Use the URI path if not proxying (transparent proxying such as proxy
   // CONNECT does not count here). Also figure out what HTTP version to use.
   nsAutoCString buf, path;
