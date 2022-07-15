@@ -139,6 +139,16 @@ class MapObject : public NativeObject {
   [[nodiscard]] static bool iterator(JSContext* cx, IteratorKind kind,
                                      HandleObject obj, MutableHandleValue iter);
 
+  // OrderedHashMap with the same memory layout as ValueMap but without wrappers
+  // that perform post barriers. Used when the owning JS object is in the
+  // nursery.
+  using PreBarrieredTable =
+      OrderedHashMap<HashableValue, PreBarriered<Value>, HashableValue::Hasher,
+                     CellAllocPolicy>;
+
+  // OrderedHashMap with the same memory layout as ValueMap but without any
+  // wrappers that perform barriers. Used when updating the nursery allocated
+  // keys map during minor GC.
   using UnbarrieredTable =
       OrderedHashMap<Value, Value, UnbarrieredHashPolicy, CellAllocPolicy>;
   friend class OrderedHashTableRef<MapObject>;
@@ -163,6 +173,11 @@ class MapObject : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec staticProperties[];
+
+  static inline bool setWithHashableKey(JSContext* cx, MapObject* obj,
+                                        ValueMap* table,
+                                        Handle<HashableValue> key,
+                                        Handle<Value> value);
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 

@@ -636,10 +636,16 @@ this.AntiTracking = {
       }
 
       let cookieBlocked = 0;
+      let { expectedBlockingNotifications } = options;
+      if (!Array.isArray(expectedBlockingNotifications)) {
+        expectedBlockingNotifications = [expectedBlockingNotifications];
+      }
       let listener = {
         onContentBlockingEvent(webProgress, request, event) {
-          if (event & options.expectedBlockingNotifications) {
-            ++cookieBlocked;
+          for (const notification of expectedBlockingNotifications) {
+            if (event & notification) {
+              ++cookieBlocked;
+            }
           }
         },
       };
@@ -890,25 +896,34 @@ this.AntiTracking = {
           return false;
         }
       });
-      let expectedCategory = "";
       // When changing this list, please make sure to update the corresponding
       // code in ReportBlockingToConsole().
-      switch (options.expectedBlockingNotifications) {
-        case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION:
-          expectedCategory = "cookieBlockedPermission";
-          break;
-        case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER:
-          expectedCategory = "cookieBlockedTracker";
-          break;
-        case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL:
-          expectedCategory = "cookieBlockedAll";
-          break;
-        case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN:
-          expectedCategory = "cookieBlockedForeign";
-          break;
+      let expectedCategories = [];
+      let rawExpectedCategories = options.expectedBlockingNotifications;
+      if (!Array.isArray(rawExpectedCategories)) {
+        // if given a single value to match, expect each message to match it
+        rawExpectedCategories = Array(allMessages.length).fill(
+          rawExpectedCategories
+        );
+      }
+      for (let category of rawExpectedCategories) {
+        switch (category) {
+          case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION:
+            expectedCategories.push("cookieBlockedPermission");
+            break;
+          case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER:
+            expectedCategories.push("cookieBlockedTracker");
+            break;
+          case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL:
+            expectedCategories.push("cookieBlockedAll");
+            break;
+          case Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN:
+            expectedCategories.push("cookieBlockedForeign");
+            break;
+        }
       }
 
-      if (expectedCategory == "") {
+      if (!expectedCategories.length) {
         is(allMessages.length, 0, "No console messages should be generated");
       } else {
         ok(!!allMessages.length, "Some console message should be generated");
@@ -924,8 +939,8 @@ this.AntiTracking = {
       for (let msg of allMessages) {
         is(
           msg.category,
-          expectedCategory,
-          "Message should be of expected category"
+          expectedCategories[index],
+          `Message ${index} should be of expected category`
         );
 
         if (options.errorMessageDomains) {
@@ -947,6 +962,10 @@ this.AntiTracking = {
 
       win.gBrowser.removeProgressListener(listener);
 
+      if (!!cookieBlocked != !!options.expectedBlockingNotifications) {
+        ok(false, JSON.stringify(cookieBlocked));
+        ok(false, JSON.stringify(options.expectedBlockingNotifications));
+      }
       is(
         !!cookieBlocked,
         !!options.expectedBlockingNotifications,

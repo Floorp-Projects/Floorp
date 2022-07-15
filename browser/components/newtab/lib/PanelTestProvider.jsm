@@ -661,6 +661,67 @@ const MESSAGES = () => [
     targeting: "region != 'CN' && !hasActiveEnterprisePolicies",
     frequency: { lifetime: 3 },
   },
+  {
+    id: "PB_NEWTAB_PIN_PROMO",
+    template: "pb_newtab",
+    groups: ["pbNewtab"],
+    content: {
+      infoBody: "fluent:about-private-browsing-info-description-simplified",
+      infoEnabled: true,
+      infoIcon: "chrome://global/skin/icons/indicator-private-browsing.svg",
+      infoLinkText: "fluent:about-private-browsing-learn-more-link",
+      infoTitle: "",
+      infoTitleEnabled: false,
+      promoEnabled: true,
+      promoType: "PIN",
+      promoHeader: "Private browsing freedom in one click",
+      promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
+      promoLinkText: "Pin To Taskbar",
+      promoLinkType: "button",
+      promoSectionStyle: "below-search",
+      promoTitle:
+        "No saved cookies or history, right from your desktop. Browse like no one’s watching.",
+      promoTitleEnabled: true,
+      promoButton: {
+        action: {
+          type: "MULTI_ACTION",
+          data: {
+            actions: [
+              {
+                type: "SET_PREF",
+                data: {
+                  pref: {
+                    name:
+                      "browser.privacySegmentation.windowSeparation.enabled",
+                    value: true,
+                  },
+                },
+              },
+              {
+                type: "PIN_FIREFOX_TO_TASKBAR",
+              },
+              {
+                type: "OPEN_ABOUT_PAGE",
+                data: { args: "privatebrowsing", where: "current" },
+              },
+            ],
+          },
+        },
+      },
+    },
+    priority: 2,
+    frequency: {
+      custom: [
+        {
+          cap: 3,
+          period: 604800000, // Max 3 per week
+        },
+      ],
+      lifetime: 12,
+    },
+    targeting:
+      "region != 'CN' && !hasActiveEnterprisePolicies && doesAppNeedPin",
+  },
 ];
 
 const PanelTestProvider = {

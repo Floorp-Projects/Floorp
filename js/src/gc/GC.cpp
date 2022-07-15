@@ -389,7 +389,7 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(!arena->onDelayedMarkingList());
   MOZ_ASSERT(TlsGCContext.get()->isFinalizing());
 
-  arena->zone->gcHeapSize.removeGCArena();
+  arena->zone->gcHeapSize.removeGCArena(heapSize);
   arena->release(lock);
   arena->chunk()->releaseArena(this, arena, lock);
 }
@@ -404,7 +404,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       marker(rt),
       barrierTracer(rt),
       sweepingTracer(rt),
-      heapSize(nullptr),
       fullGCRequested(false),
       helperThreadRatio(TuningDefaults::HelperThreadRatio),
       maxHelperThreads(TuningDefaults::MaxHelperThreads),

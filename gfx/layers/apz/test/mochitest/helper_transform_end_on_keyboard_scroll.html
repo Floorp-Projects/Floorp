@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+html, body { margin: 0; }
+
+body {
+  height: 10000px;
+}
+</style>
+
+<script>
+async function test() {
+  // Send a native key event which doesn't cause any scroll, so that now
+  // subsequent native key events will be able to be handled by APZ.  See bug
+  // 1774519 about what happens without this event.
+  const UpArrowKeyCode = nativeArrowUpKey();
+  await new Promise(resolve => {
+    synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US,
+      UpArrowKeyCode, {}  /* no modifier */,
+      "", "", resolve); });
+
+  // On test verify runs there's still a race condition where the next key event
+  // isn't handled by APZ since the focus sequence number hasn't yet been
+  // reflected to APZ, so we explicitly flush APZ state here.
+  await promiseApzFlushedRepaints();
+
+  const transformEndPromise = promiseTransformEnd();
+  const DownArrowKeyCode = nativeArrowDownKey();
+  await new Promise(resolve => {
+    synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US,
+      DownArrowKeyCode, {}  /* no modifier */,
+      "", "", resolve); });
+  await transformEndPromise;
+  ok(true, "Got an APZ:TransformEnd ");
+}
+
+function isOnChaosMode() {
+  const env = SpecialPowers.Cc["@mozilla.org/process/environment;1"]
+                           .getService(SpecialPowers.Ci.nsIEnvironment);
+  return env.get("MOZ_CHAOSMODE");
+}
+
+if ((getPlatform() == "mac" || getPlatform() == "windows") &&
+    !isOnChaosMode()) {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+} else {
+  ok(true, "Skipping test because native key events are not supported on " +
+     getPlatform());
+  subtestDone();
+}
+</script>

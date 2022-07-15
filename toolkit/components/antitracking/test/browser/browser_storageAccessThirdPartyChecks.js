@@ -1,5 +1,8 @@
 /* import-globals-from antitracking_head.js */
 
+const APS_PREF =
+  "privacy.partition.always_partition_third_party_non_cookie_storage";
+
 AntiTracking._createTask({
   name:
     "Test that after a storage access grant we have full first-party access",
@@ -37,7 +40,7 @@ AntiTracking._createTask({
 
     await runChecks("image");
   },
-  extraPrefs: null,
+  extraPrefs: [[APS_PREF, false]],
   expectedBlockingNotifications:
     Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
   runInPrivateWindow: false,
@@ -71,7 +74,10 @@ AntiTracking._createTask({
 
     await callRequestStorageAccess(null, true);
   },
-  extraPrefs: [["network.cookie.rejectForeignWithExceptions.enabled", false]],
+  extraPrefs: [
+    ["network.cookie.rejectForeignWithExceptions.enabled", false],
+    [APS_PREF, false],
+  ],
   expectedBlockingNotifications: 0,
   runInPrivateWindow: false,
   iframeSandbox: null,
@@ -102,6 +108,7 @@ AntiTracking._createTask({
 
     await callRequestStorageAccess(null, true);
   },
+  extraPrefs: [[APS_PREF, false]],
   expectedBlockingNotifications: 0,
   runInPrivateWindow: false,
   iframeSandbox: null,
@@ -132,6 +139,7 @@ AntiTracking._createTask({
 
     await callRequestStorageAccess(null, true);
   },
+  extraPrefs: [[APS_PREF, false]],
   expectedBlockingNotifications: 0,
   runInPrivateWindow: false,
   iframeSandbox: null,

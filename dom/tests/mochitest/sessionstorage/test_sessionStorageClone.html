@@ -35,6 +35,10 @@ async function doNextTest()
     await SpecialPowers.wrap(document).requestStorageAccess();
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
+  });
+
   // We must perform the first step of the test
   // to prepare the land.
   currentStep = 1;

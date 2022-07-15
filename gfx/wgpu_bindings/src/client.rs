@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
-    wgpu_string, cow_label, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction, DropAction,
-    ImplicitLayout, QueueWriteAction, RawString, TextureAction,
+    cow_label, wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction,
+    DropAction, ImplicitLayout, QueueWriteAction, RawString, TextureAction,
 };
 
 use wgc::{hub::IdentityManager, id};
@@ -109,11 +109,13 @@ impl FragmentState<'_> {
     fn to_wgpu(&self) -> wgc::pipeline::FragmentState {
         let color_targets = make_slice(self.targets, self.targets_length)
             .iter()
-            .map(|ct| Some(wgt::ColorTargetState {
-                format: ct.format,
-                blend: ct.blend.cloned(),
-                write_mask: ct.write_mask,
-            }))
+            .map(|ct| {
+                Some(wgt::ColorTargetState {
+                    format: ct.format,
+                    blend: ct.blend.cloned(),
+                    write_mask: ct.write_mask,
+                })
+            })
             .collect();
         wgc::pipeline::FragmentState {
             stage: self.stage.to_wgpu(),
@@ -681,9 +683,7 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_compute_pass(
 
     let pass = wgc::command::ComputePass::new(
         encoder_id,
-        &wgc::command::ComputePassDescriptor {
-            label: label,
-        },
+        &wgc::command::ComputePassDescriptor { label: label },
     );
     Box::into_raw(Box::new(pass))
 }
@@ -717,10 +717,11 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
 ) -> *mut wgc::command::RenderPass {
     let label = wgpu_string(desc.label);
 
-    let color_attachments: Vec<_> = make_slice(desc.color_attachments, desc.color_attachments_length)
-        .iter()
-        .map(|format| Some(format.clone()))
-        .collect();
+    let color_attachments: Vec<_> =
+        make_slice(desc.color_attachments, desc.color_attachments_length)
+            .iter()
+            .map(|format| Some(format.clone()))
+            .collect();
     let pass = wgc::command::RenderPass::new(
         encoder_id,
         &wgc::command::RenderPassDescriptor {
@@ -1057,11 +1058,7 @@ pub unsafe extern "C" fn wgpu_command_encoder_copy_texture_to_texture(
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_command_encoder_push_debug_group(
-    marker: &nsACString,
-    bb: &mut ByteBuf,
-) {
-
+pub extern "C" fn wgpu_command_encoder_push_debug_group(marker: &nsACString, bb: &mut ByteBuf) {
     let string = marker.to_string();
     let action = CommandEncoderAction::PushDebugGroup(string);
     *bb = make_byte_buf(&action);

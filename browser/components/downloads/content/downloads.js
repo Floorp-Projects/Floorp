@@ -42,11 +42,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "DownloadsSubview",
-  "resource:///modules/DownloadsSubview.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );

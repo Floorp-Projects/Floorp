@@ -306,7 +306,7 @@ add_test(function test_computePointerDestinationPointer() {
 });
 
 add_test(function test_processPointerAction() {
-  for (let pointerType of ["mouse" /*"touch"*/]) {
+  for (let pointerType of ["mouse", "touch"]) {
     const actionItems = [
       {
         duration: 2000,
@@ -626,7 +626,7 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
     id: "7",
     actions: mouseActionItems,
     parameters: {
-      pointerType: "mouse", // TODO "touch"
+      pointerType: "mouse",
     },
   };
   const keyActionItems = [

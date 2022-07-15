@@ -25,7 +25,28 @@ add_task(async function testInitialBlock() {
 });
 
 add_task(async function testDifferentSitePermission() {
-  await setPreferences();
+  await setPreferences(/*alwaysPartitionStorage*/ false);
+
+  await openPageAndRunCode(
+    TEST_TOP_PAGE_7,
+    getExpectPopupAndClick("accept"),
+    TEST_3RD_PARTY_PAGE,
+    requestStorageAccessAndExpectSuccess
+  );
+
+  await openPageAndRunCode(
+    TEST_TOP_PAGE,
+    getExpectPopupAndClick("reject"),
+    TEST_3RD_PARTY_PAGE,
+    requestStorageAccessAndExpectFailure
+  );
+
+  await cleanUpData();
+  await SpecialPowers.flushPrefEnv();
+});
+
+add_task(async function testDifferentSitePermissionAPS() {
+  await setPreferences(/*alwaysPartitionStorage*/ true);
 
   await openPageAndRunCode(
     TEST_TOP_PAGE_7,

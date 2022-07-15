@@ -147,7 +147,7 @@ impl WrStackingContextClip {
                 } else {
                     Some(ClipChainId(id, pipeline_id))
                 }
-            }
+            },
         }
     }
 }
