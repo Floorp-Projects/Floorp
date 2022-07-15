@@ -18,7 +18,6 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -108,7 +107,6 @@ class BaselinePingTest {
         return null
     }
 
-    @Ignore("Intermittent: https://github.com/mozilla-mobile/android-components/issues/12359")
     @Test
     fun validateBaselinePing() {
         // Wait for the app to be idle/ready.

@@ -14,7 +14,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.glean.testing.GleanTestLocalServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +30,6 @@ class MainActivityTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
-    @Ignore("Intermittent: https://github.com/mozilla-mobile/android-components/issues/12311")
     @Test
     fun checkGleanClickData() {
         // We don't reset the storage in this test as the GleanTestRule does not
