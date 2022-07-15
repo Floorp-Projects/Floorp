@@ -1771,11 +1771,8 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Get file ref count info for given database and file id.
-   *
    */
-  [implicit_jscontext]
   boolean getFileReferences(in AString aDatabaseName, in long long aId,
-                            [optional] in jsval aOptions,
                             [optional] out long aRefCnt,
                             [optional] out long aDBRefCnt);
 
