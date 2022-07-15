@@ -62,6 +62,7 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.androidx_lifecycle_viewmodel
 
     api project(":concept-base")
     // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
