@@ -31,6 +31,7 @@
 #include "js/Wrapper.h"               // for UncheckedUnwrap
 #include "vm/ArrayObject.h"           // for ArrayObject
 #include "vm/BytecodeUtil.h"          // for GET_JUMP_OFFSET
+#include "vm/EnvironmentObject.h"     // for EnvironmentCoordinateNameSlow
 #include "vm/GlobalObject.h"          // for GlobalObject
 #include "vm/JSContext.h"             // for JSContext, ReportValueError
 #include "vm/JSFunction.h"            // for JSFunction
@@ -586,6 +587,28 @@ static bool EnsureScriptOffsetIsValid(JSContext* cx, JSScript* script,
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_DEBUG_BAD_OFFSET);
   return false;
+}
+
+static bool EnsureBreakpointIsAllowed(JSContext* cx, JSScript* script,
+                                      size_t offset) {
+  // Disallow breakpoint for `JSOp::SetAliasedVar` after `JSOp::Generator`.
+  // Those 2 instructions are supposed to be atomic, and nothing should happen
+  // in between them.
+  //
+  // Hitting a breakpoint there breaks the assumption around the existence of
+  // the frame's `GeneratorInfo`.
+  // (see `DebugAPI::slowPathOnNewGenerator` and `DebuggerFrame::create`)
+  jsbytecode* pc = script->offsetToPC(offset);
+  if (JSOp(*pc) == JSOp::SetAliasedVar) {
+    PropertyName* name = EnvironmentCoordinateNameSlow(script, pc);
+    if (name == cx->names().dotGenerator) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEBUG_BREAKPOINT_NOT_ALLOWED);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 template <bool OnlyOffsets>
@@ -1952,6 +1975,10 @@ struct DebuggerScript::SetBreakpointMatcher {
     }
 
     if (!EnsureScriptOffsetIsValid(cx_, script, offset_)) {
+      return false;
+    }
+
+    if (!EnsureBreakpointIsAllowed(cx_, script, offset_)) {
       return false;
     }
 
