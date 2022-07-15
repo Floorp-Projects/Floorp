@@ -8,23 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef PC_TEST_FAKE_DATA_CHANNEL_PROVIDER_H_
-#define PC_TEST_FAKE_DATA_CHANNEL_PROVIDER_H_
+#ifndef PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_
+#define PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_
 
 #include <set>
 
 #include "pc/sctp_data_channel.h"
 #include "rtc_base/checks.h"
 
-class FakeDataChannelProvider
-    : public webrtc::SctpDataChannelProviderInterface {
+class FakeDataChannelController
+    : public webrtc::SctpDataChannelControllerInterface {
  public:
-  FakeDataChannelProvider()
+  FakeDataChannelController()
       : send_blocked_(false),
         transport_available_(false),
         ready_to_send_(false),
         transport_error_(false) {}
-  virtual ~FakeDataChannelProvider() {}
+  virtual ~FakeDataChannelController() {}
 
   bool SendData(int sid,
                 const webrtc::SendDataParams& params,
@@ -157,4 +157,4 @@ class FakeDataChannelProvider
   std::set<uint32_t> send_ssrcs_;
   std::set<uint32_t> recv_ssrcs_;
 };
-#endif  // PC_TEST_FAKE_DATA_CHANNEL_PROVIDER_H_
+#endif  // PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_

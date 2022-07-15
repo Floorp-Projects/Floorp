@@ -22,7 +22,7 @@
 #include "pc/channel.h"
 #include "pc/channel_manager.h"
 #include "pc/stream_collection.h"
-#include "pc/test/fake_data_channel_provider.h"
+#include "pc/test/fake_data_channel_controller.h"
 #include "pc/test/fake_peer_connection_base.h"
 
 namespace webrtc {
@@ -250,7 +250,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   void AddSctpDataChannel(const std::string& label,
                           const InternalDataChannelInit& init) {
     // TODO(bugs.webrtc.org/11547): Supply a separate network thread.
-    AddSctpDataChannel(SctpDataChannel::Create(&data_channel_provider_, label,
+    AddSctpDataChannel(SctpDataChannel::Create(&data_channel_controller_, label,
                                                init, rtc::Thread::Current(),
                                                rtc::Thread::Current()));
   }
@@ -431,7 +431,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
       rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
       transceivers_;
 
-  FakeDataChannelProvider data_channel_provider_;
+  FakeDataChannelController data_channel_controller_;
 
   std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_;
 
