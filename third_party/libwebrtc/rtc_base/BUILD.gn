@@ -183,6 +183,7 @@ rtc_library("copy_on_write_buffer") {
     "../api:scoped_refptr",
     "system:rtc_export",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("event_tracer") {
