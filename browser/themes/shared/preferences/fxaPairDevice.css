@@ -3,11 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #fxaPairDeviceDialog {
-  padding: 0.5em;
+  padding-bottom: 2em;
+}
+
+#pairTitle {
+  font-size: 2.1rem;
+  font-weight: bold;
+  padding-top: 12px;
+  text-align: center;
 }
 
 .pairHeading {
-  padding-bottom: 1em;
+  font-size: 1.08em;
 }
 
 .menu-icon {
@@ -18,13 +25,19 @@
   fill: currentColor;
 }
 
+#qrCodeDisplay {
+ padding: 30px 64px 0;
+}
+
 #qrWrapper {
   position: relative;
+  padding-inline-end: 18px;
+  padding-top: 28px;
 }
 
 #qrContainer {
-  height: 300px;
-  width: 300px;
+  height: 200px;
+  width: 200px;
   background-size: contain;
   image-rendering: -moz-crisp-edges;
   transition: filter 250ms cubic-bezier(.07,.95,0,1);
