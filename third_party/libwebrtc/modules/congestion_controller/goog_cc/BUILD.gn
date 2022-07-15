@@ -162,6 +162,7 @@ rtc_library("loss_based_bwe_v2") {
     "../../../api/units:timestamp",
     "../../../rtc_base:logging",
     "../../../rtc_base/experiments:field_trial_parser",
+    "../../remote_bitrate_estimator",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
