@@ -474,5 +474,50 @@ TEST_F(OutstandingDataTest, MustRetransmitBeforeGettingNackedAgain) {
   EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
 }
 
+TEST_F(OutstandingDataTest, CanAbandonChunksMarkedForFastRetransmit) {
+  // This test is a bit convoluted, and can't really happen with a well behaving
+  // client, but this was found by fuzzers. This test will verify that a message
+  // that was both marked as "to be fast retransmitted" and "abandoned" at the
+  // same time doesn't cause any consistency issues.
+
+  // Add chunks 10-14, but chunk 11 has zero retransmissions. When chunk 10 and
+  // 11 are NACKed three times, chunk 10 will be marked for retransmission, but
+  // chunk 11 will be abandoned, which also abandons chunk 10, as it's part of
+  // the same message.
+  buf_.Insert(gen_.Ordered({1}, "B"), MaxRetransmits::NoLimit(), kNow,
+              TimeMs::InfiniteFuture());  // 10
+  buf_.Insert(gen_.Ordered({1}, ""), MaxRetransmits(0), kNow,
+              TimeMs::InfiniteFuture());  // 11
+  buf_.Insert(gen_.Ordered({1}, ""), MaxRetransmits::NoLimit(), kNow,
+              TimeMs::InfiniteFuture());  // 12
+  buf_.Insert(gen_.Ordered({1}, ""), MaxRetransmits::NoLimit(), kNow,
+              TimeMs::InfiniteFuture());  // 13
+  buf_.Insert(gen_.Ordered({1}, "E"), MaxRetransmits::NoLimit(), kNow,
+              TimeMs::InfiniteFuture());  // 13
+
+  // ACK 9, 12
+  std::vector<SackChunk::GapAckBlock> gab1 = {SackChunk::GapAckBlock(3, 3)};
+  EXPECT_FALSE(
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab1, false).has_packet_loss);
+  EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
+
+  // ACK 9, 12, 13
+  std::vector<SackChunk::GapAckBlock> gab2 = {SackChunk::GapAckBlock(3, 4)};
+  EXPECT_FALSE(
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab2, false).has_packet_loss);
+  EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
+
+  EXPECT_CALL(on_discard_, Call(IsUnordered(false), StreamID(1), MID(42)))
+      .WillOnce(Return(false));
+
+  // ACK 9, 12, 13, 14
+  std::vector<SackChunk::GapAckBlock> gab3 = {SackChunk::GapAckBlock(3, 5)};
+  OutstandingData::AckInfo ack =
+      buf_.HandleSack(unwrapper_.Unwrap(TSN(9)), gab3, false);
+  EXPECT_TRUE(ack.has_packet_loss);
+  EXPECT_FALSE(buf_.has_data_to_be_retransmitted());
+  EXPECT_THAT(buf_.GetChunksToBeFastRetransmitted(1000), IsEmpty());
+  EXPECT_THAT(buf_.GetChunksToBeRetransmitted(1000), IsEmpty());
+}
 }  // namespace
 }  // namespace dcsctp
