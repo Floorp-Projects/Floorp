@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <utility>
 #include "ErrorList.h"
+#include "fs/FileSystemRequestHandler.h"
 #include "MainThreadUtils.h"
 #include "js/CallArgs.h"
 #include "js/TypeDecls.h"
@@ -754,13 +755,16 @@ already_AddRefed<Promise> StorageManager::Estimate(ErrorResult& aRv) {
 }
 
 already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-  if (aRv.Failed()) {
+  MOZ_ASSERT(mOwner);
+
+  RefPtr<Promise> promise = Promise::Create(mOwner, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(promise);
 
+  fs::FileSystemRequestHandler{}.GetRoot(promise);
   return promise.forget();
 }
 
