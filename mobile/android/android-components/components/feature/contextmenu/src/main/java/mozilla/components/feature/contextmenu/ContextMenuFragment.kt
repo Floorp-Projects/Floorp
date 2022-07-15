@@ -144,7 +144,7 @@ class ContextMenuFragment : DialogFragment() {
 }
 
 /**
- * RecyclerView adapter for displayig the context menu.
+ * RecyclerView adapter for displaying the context menu.
  */
 internal class ContextMenuAdapter(
     private val fragment: ContextMenuFragment,
