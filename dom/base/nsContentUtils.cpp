@@ -2132,37 +2132,6 @@ bool nsContentUtils::ShouldResistFingerprinting(
 
 // Newer Should RFP Functions ----------------------------------
 
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
-  // See comment in header file for information about usage
-  return ShouldResistFingerprinting();
-}
-
-bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
-  if (!aDocShell) {
-    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(const "
-             "nsIDocShell* aDocShell) with NULL docshell"));
-    return ShouldResistFingerprinting();
-  }
-  return ShouldResistFingerprinting(aDocShell->GetDocument());
-}
-
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
-  if (!aDoc) {
-    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(const "
-             "Document* aDoc) with NULL document"));
-    return ShouldResistFingerprinting();
-  }
-  bool isChrome = nsContentUtils::IsChromeDoc(aDoc);
-  if (isChrome) {
-    return false;
-  }
-  return ShouldResistFingerprinting(aDoc->GetChannel());
-}
-
 inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
                                  nsAutoCString& url, bool isExemptDomain) {
   nsAutoCString list;
@@ -2180,6 +2149,41 @@ const unsigned int sSpecificDomainsExemptMask = 0x04;
 const char* kExemptedDomainsPrefName =
     "privacy.resistFingerprinting.exemptedDomains";
 
+// --------------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
+  // See comment in header file for information about usage
+  return ShouldResistFingerprinting();
+}
+
+// ----------------------------------------------------------------------
+bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
+  if (!aDocShell) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(const "
+             "nsIDocShell* aDocShell) with NULL docshell"));
+    return ShouldResistFingerprinting();
+  }
+  return ShouldResistFingerprinting(aDocShell->GetDocument());
+}
+
+// --------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
+  if (!aDoc) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(const "
+             "Document* aDoc) with NULL document"));
+    return ShouldResistFingerprinting();
+  }
+  bool isChrome = nsContentUtils::IsChromeDoc(aDoc);
+  if (isChrome) {
+    return false;
+  }
+  return ShouldResistFingerprinting(aDoc->GetChannel());
+}
+
+// ----------------------------------------------------------------------
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
   if (!ShouldResistFingerprinting("Legacy quick-check")) {
@@ -2201,30 +2205,34 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
     return true;
   }
 
-  // If the loadinfo's CookieJarSettings says that we _should_ resist
-  // fingerprinting we can always believe it. (This is the (*) rule from
-  // CookieJarSettings.h)
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  nsresult rv =
-      loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
-            ("Called nsContentUtils::ShouldResistFingerprinting(nsIChannel* "
-             "aChannel) but the channel's loadinfo's CookieJarSettings "
-             "couldn't be retrieved: %d",
-             rv));
-    return true;
-  }
-  if (cookieJarSettings->GetShouldResistFingerprinting()) {
-    return true;
-  }
-
   // Document types have no loading principal.  Subdocument types do have a
   // loading principal, but it is the loading principal of the parent document;
   // not the subdocument.
   auto contentType = loadInfo->GetExternalContentPolicyType();
   if (contentType == ExtContentPolicy::TYPE_DOCUMENT ||
       contentType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    // This cookie jar check is relevant to both document and non-document
+    // cases. but it will be performed inside the ShouldRFP(nsILoadInfo) as
+    // well, so we put into this conditional to avoid doing it twice in that
+    // case.
+
+    // If the loadinfo's CookieJarSettings says that we _should_ resist
+    // fingerprinting we can always believe it. (This is the (*) rule from
+    // CookieJarSettings.h)
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    nsresult rv =
+        loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+              ("Called nsContentUtils::ShouldResistFingerprinting(nsIChannel* "
+               "aChannel) but the channel's loadinfo's CookieJarSettings "
+               "couldn't be retrieved"));
+      return true;
+    }
+    if (cookieJarSettings->GetShouldResistFingerprinting()) {
+      return true;
+    }
+
     nsCOMPtr<nsIURI> channelURI;
     rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     MOZ_ASSERT(
@@ -2265,11 +2273,10 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
   }
 
   // Case 2: Subresource Load
-  MOZ_ASSERT(BasePrincipal::Cast(loadInfo->GetLoadingPrincipal())
-                 ->OriginAttributesRef() == loadInfo->GetOriginAttributes());
-  return ShouldResistFingerprinting(loadInfo->GetLoadingPrincipal());
+  return ShouldResistFingerprinting(loadInfo);
 }
 
+// ----------------------------------------------------------------------
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting_dangerous(
     nsIURI* aURI, const mozilla::OriginAttributes& aOriginAttributes,
@@ -2318,15 +2325,58 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   return !isExemptDomain;
 }
 
+// ----------------------------------------------------------------------
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
+bool nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* aLoadInfo) {
+  MOZ_ASSERT(aLoadInfo->GetExternalContentPolicyType() != ExtContentPolicy::TYPE_DOCUMENT &&
+             aLoadInfo->GetExternalContentPolicyType() != ExtContentPolicy::TYPE_SUBDOCUMENT);
+
   if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
 
+  // If the loadinfo's CookieJarSettings says that we _should_ resist
+  // fingerprinting we can always believe it. (This is the (*) rule from
+  // CookieJarSettings.h)
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(nsIChannel* "
+             "aChannel) but the channel's loadinfo's CookieJarSettings "
+             "couldn't be retrieved"));
+    return true;
+  }
+  if (cookieJarSettings->GetShouldResistFingerprinting()) {
+    return true;
+  }
+
+  // Because this function is only used for subresource loads, this
+  // will check the parent's principal
+  nsIPrincipal* principal = aLoadInfo->GetLoadingPrincipal();
+  MOZ_ASSERT(BasePrincipal::Cast(principal)->OriginAttributesRef() ==
+             aLoadInfo->GetOriginAttributes());
+  return ShouldResistFingerprinting_dangerous(principal, "Internal Call");
+}
+
+// ----------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting_dangerous(
+    nsIPrincipal* aPrincipal, const char* aJustification) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
+    return false;
+  }
+
+  if (!aPrincipal) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* "
+             "aChannel) but the loadinfo's loadingprincipal was NULL"));
+    return true;
+  }
+
   auto originAttributes =
       BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-
   if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
       sNonPBMExemptMask) {
     // if non-PBM exempt mask is true, exempt non-PBM channels.
@@ -2391,6 +2441,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
   return !isExemptDomain;
 }
 
+// ------------------------------------------------------------------
 /* static */
 void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
     int32_t aChromeWidth, int32_t aChromeHeight, int32_t aScreenWidth,

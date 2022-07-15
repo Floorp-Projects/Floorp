@@ -1042,7 +1042,9 @@ LoadInfo::GetCookieJarSettings(nsICookieJarSettings** aCookieJarSettings) {
     nsCOMPtr<nsIPrincipal> loadingPrincipal;
     Unused << this->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
     bool shouldResistFingerprinting =
-        nsContentUtils::ShouldResistFingerprinting(loadingPrincipal);
+        nsContentUtils::ShouldResistFingerprinting_dangerous(
+            loadingPrincipal,
+            "CookieJarSettings can't exist yet, we're creating it");
     mCookieJarSettings = CreateCookieJarSettings(
         mInternalContentPolicyType, isPrivate, shouldResistFingerprinting);
   }

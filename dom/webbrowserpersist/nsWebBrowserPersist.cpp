@@ -1347,7 +1347,12 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     // loading principal in the download channel, so we treat it as a loading
     // principal also.
     bool shouldResistFingerprinting =
-        nsContentUtils::ShouldResistFingerprinting(aTriggeringPrincipal);
+        nsContentUtils::ShouldResistFingerprinting_dangerous(
+            aTriggeringPrincipal,
+            "We are creating a new CookieJar Settings, so none exists "
+            "currently. Although the variable is called 'triggering principal',"
+            "it is used as the loading principal in the download channel, so we"
+            "treat it as a loading principal also.");
     cookieJarSettings =
         aIsPrivate
             ? net::CookieJarSettings::Create(net::CookieJarSettings::ePrivate,
