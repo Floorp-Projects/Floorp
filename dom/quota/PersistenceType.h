@@ -10,9 +10,10 @@
 #include <cstdint>
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/StorageTypeBinding.h"
 #include "mozilla/fallible.h"
 #include "nsStringFwd.h"
+
+class nsIFile;
 
 namespace mozilla::dom::quota {
 
@@ -42,10 +43,6 @@ Maybe<PersistenceType> PersistenceTypeFromString(const nsACString& aString,
                                                  const fallible_t&);
 
 PersistenceType PersistenceTypeFromString(const nsACString& aString);
-
-StorageType PersistenceTypeToStorageType(PersistenceType aPersistenceType);
-
-PersistenceType PersistenceTypeFromStorageType(StorageType aStorageType);
 
 Maybe<PersistenceType> PersistenceTypeFromInt32(int32_t aInt32,
                                                 const fallible_t&);

@@ -27,10 +27,6 @@ function checkSitePermissions(uuid, expectedPermAction, assertMessage) {
       principal,
       "WebExtensions-unlimitedStorage"
     ),
-    indexedDB: Services.perms.testPermissionFromPrincipal(
-      principal,
-      "indexedDB"
-    ),
     persistentStorage: Services.perms.testPermissionFromPrincipal(
       principal,
       "persistent-storage"

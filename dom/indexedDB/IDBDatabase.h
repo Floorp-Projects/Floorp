@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
-#include "mozilla/dom/StorageTypeBinding.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -49,7 +48,6 @@ class PBackgroundIDBDatabaseFileChild;
 
 class IDBDatabase final : public DOMEventTargetHelper {
   using DatabaseSpec = mozilla::dom::indexedDB::DatabaseSpec;
-  using StorageType = mozilla::dom::StorageType;
   using PersistenceType = mozilla::dom::quota::PersistenceType;
 
   class Observer;
@@ -185,8 +183,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
       JSContext* aCx, const StringOrStringSequence& aStoreNames,
       IDBTransactionMode aMode, ErrorResult& aRv);
 
-  StorageType Storage() const;
-
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(close)
   IMPL_EVENT_HANDLER(error)
@@ -223,8 +219,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
   void DisconnectFromOwner() override;
 
   virtual void LastRelease() override;
-
-  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,

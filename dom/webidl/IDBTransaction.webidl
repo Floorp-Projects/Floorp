@@ -4,15 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransactionMode
+ * https://w3c.github.io/IndexedDB/#idbtransaction
+ * https://w3c.github.io/IndexedDB/#enumdef-idbtransactionmode
  */
 
 enum IDBTransactionMode {
     "readonly",
     "readwrite",
     // The "readwriteflush" mode is only available when the
-    // |IndexedDatabaseManager::ExperimentalFeaturesEnabled()| function returns
+    // |dom.indexedDB.experimental| pref returns
     // true. This mode is not yet part of the standard.
     "readwriteflush",
     "cleanup",
@@ -23,7 +23,7 @@ enum IDBTransactionMode {
 interface IDBTransaction : EventTarget {
     [Throws]
     readonly    attribute IDBTransactionMode mode;
-    readonly    attribute IDBDatabase        db;
+    [SameObject] readonly attribute IDBDatabase db;
 
     readonly    attribute DOMException?      error;
 

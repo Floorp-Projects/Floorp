@@ -10,14 +10,17 @@ let condition = {
   skip_if: () => !AppConstants.MOZ_BACKGROUNDTASKS,
 };
 
+// MOZ_APP_VENDOR is empty on Thunderbird.
+let vendor = AppConstants.MOZ_APP_NAME == "thunderbird" ? "" : "Mozilla";
+
 add_task(condition, async () => {
   let hash = xreDirProvider.getInstallHash();
 
-  let saltedPath = `saltSALT.MozillaBackgroundTask-${hash}-not_ephemeral_profile`;
+  let saltedPath = `saltSALT.${vendor}BackgroundTask-${hash}-not_ephemeral_profile`;
 
   // See note about ordering below.
   BACKGROUNDTASKS_PROFILE_DATA.backgroundTasksProfiles.splice(0, 0, {
-    name: `MozillaBackgroundTask-${hash}-not_ephemeral_profile`,
+    name: `${vendor}BackgroundTask-${hash}-not_ephemeral_profile`,
     path: saltedPath,
   });
 

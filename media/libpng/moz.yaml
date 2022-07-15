@@ -2,7 +2,7 @@ schema: 1
 
 bugzilla:
   product: "Core"
-  component: "ImageLib"
+  component: "Graphics: ImageLib"
 
 origin:
   name: "libpng"

@@ -483,7 +483,7 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
 
   if ((aMode == IDBTransactionMode::Readwriteflush ||
        aMode == IDBTransactionMode::Cleanup) &&
-      !IndexedDatabaseManager::ExperimentalFeaturesEnabled()) {
+      !StaticPrefs::dom_indexedDB_experimental()) {
     // Pretend that this mode doesn't exist. We don't have a way to annotate
     // certain enum values as depending on preferences so we just duplicate the
     // normal exception generation here.
@@ -630,13 +630,6 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
   }
 
   return AsRefPtr(std::move(transaction));
-}
-
-StorageType IDBDatabase::Storage() const {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mSpec);
-
-  return PersistenceTypeToStorageType(mSpec->metadata().persistenceType());
 }
 
 RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
@@ -1030,16 +1023,6 @@ void IDBDatabase::LastRelease() {
     mBackgroundActor->SendDeleteMeInternal();
     MOZ_ASSERT(!mBackgroundActor, "SendDeleteMeInternal should have cleared!");
   }
-}
-
-nsresult IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor) {
-  nsresult rv =
-      IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, *mFactory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
 }
 
 JSObject* IDBDatabase::WrapObject(JSContext* aCx,

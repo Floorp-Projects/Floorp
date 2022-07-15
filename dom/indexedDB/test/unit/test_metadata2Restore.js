@@ -6,26 +6,7 @@
 var testGenerator = testSteps();
 
 function* testSteps() {
-  Services.prefs.setBoolPref("dom.indexedDB.storageOption.enabled", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("dom.indexedDB.storageOption.enabled");
-  });
-
   const openParams = [
-    // This one lives in storage/permanent/chrome
-    // The .metadata-v2 file was intentionally removed for this origin directory
-    // to test restoring.
-    { dbName: "dbA", dbOptions: { version: 1, storage: "persistent" } },
-
-    // This one lives in storage/temporary/http+++localhost
-    // The .metadata-v2 file was intentionally removed for this origin directory
-    // to test restoring.
-    {
-      url: "http://localhost",
-      dbName: "dbB",
-      dbOptions: { version: 1, storage: "temporary" },
-    },
-
     // This one lives in storage/default/http+++localhost+81^userContextId=1
     // The .metadata-v2 file was intentionally removed for this origin directory
     // to test restoring.

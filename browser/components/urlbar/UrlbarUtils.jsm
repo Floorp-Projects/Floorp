@@ -936,10 +936,11 @@ var UrlbarUtils = {
   },
 
   /**
-   * Strips the prefix from a URL and returns the prefix and the remainder of the
-   * URL.  "Prefix" is defined to be the scheme and colon, plus, if present, two
-   * slashes.  If the given string is not actually a URL or it has a prefix
-   * we don't recognize, then an empty prefix and the string itself is returned.
+   * Strips the prefix from a URL and returns the prefix and the remainder of
+   * the URL. "Prefix" is defined to be the scheme and colon plus zero to two
+   * slashes (see `UrlbarTokenizer.REGEXP_PREFIX`). If the given string is not
+   * actually a URL or it has a prefix we don't recognize, then an empty prefix
+   * and the string itself is returned.
    *
    * @param   {string} str The possible URL to strip.
    * @returns {array} If `str` is a URL with a prefix we recognize,

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBIndexParameters
+ * https://w3c.github.io/IndexedDB/#index-interface
  */
 
 dictionary IDBIndexParameters {
@@ -20,10 +20,8 @@ dictionary IDBIndexParameters {
 
 [Exposed=(Window,Worker)]
 interface IDBIndex {
-    [SetterThrows]
-    attribute DOMString name;
-
-    readonly    attribute IDBObjectStore objectStore;
+    [SetterThrows] attribute DOMString name;
+    [SameObject] readonly attribute IDBObjectStore objectStore;
 
     [Throws]
     readonly    attribute any            keyPath;
@@ -34,35 +32,32 @@ interface IDBIndex {
     // <null>:   Not locale-aware, uses normal JS sorting.
     // <string>: Sorted based on the rules of the specified locale.
     //           Note: never returns "auto", only the current locale.
-    [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
+    [Pref="dom.indexedDB.experimental"]
     readonly attribute DOMString? locale;
 
-    [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
+    [Pref="dom.indexedDB.experimental"]
     readonly attribute boolean isAutoLocale;
 
-    [Throws]
-    IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
+    [NewObject, Throws] IDBRequest get(any query);
+    [NewObject, Throws] IDBRequest getKey(any query);
 
-    [Throws]
-    IDBRequest openKeyCursor (optional any range, optional IDBCursorDirection direction = "next");
-
-    [Throws]
-    IDBRequest get (any key);
-
-    [Throws]
-    IDBRequest getKey (any key);
-
-    [Throws]
-    IDBRequest count (optional any key);
-};
-
-partial interface IDBIndex {
     // If we decide to add use counters for the mozGetAll/mozGetAllKeys
     // functions, we'll need to pull them out into sepatate operations
     // with a BinaryName mapping to the same underlying implementation.
-    [Throws, Alias="mozGetAll"]
-    IDBRequest getAll (optional any key, optional [EnforceRange] unsigned long limit);
+    // See also bug 1577227.
+    [NewObject, Throws, Alias="mozGetAll"]
+    IDBRequest getAll(optional any query,
+                      optional [EnforceRange] unsigned long count);
+    [NewObject, Throws, Alias="mozGetAllKeys"]
+    IDBRequest getAllKeys(optional any query,
+                            optional [EnforceRange] unsigned long count);
 
-    [Throws, Alias="mozGetAllKeys"]
-    IDBRequest getAllKeys (optional any key, optional [EnforceRange] unsigned long limit);
+    [NewObject, Throws] IDBRequest count(optional any query);
+
+    [NewObject, Throws]
+    IDBRequest openCursor(optional any query,
+                          optional IDBCursorDirection direction = "next");
+    [NewObject, Throws]
+    IDBRequest openKeyCursor(optional any query,
+                             optional IDBCursorDirection direction = "next");
 };
