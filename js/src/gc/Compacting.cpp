@@ -885,7 +885,8 @@ void GCRuntime::clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
     // everything to new arenas, as that will already have allocated a similar
     // number of arenas. This only happens for collections triggered by GC zeal.
     bool allArenasRelocated = ShouldRelocateAllArenas(reason);
-    arena->zone->gcHeapSize.removeBytes(ArenaSize, !allArenasRelocated);
+    arena->zone->gcHeapSize.removeBytes(ArenaSize, !allArenasRelocated,
+                                        heapSize);
 
     // Release the arena but don't return it to the chunk yet.
     arena->release(lock);

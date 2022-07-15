@@ -166,7 +166,7 @@ class ZoneAllocator : public JS::shadow::Zone,
 
  public:
   // The size of allocated GC arenas in this zone.
-  gc::HeapSize gcHeapSize;
+  gc::HeapSizeChild gcHeapSize;
 
   // Threshold used to trigger GC based on GC heap size.
   gc::GCHeapThreshold gcHeapThreshold;
