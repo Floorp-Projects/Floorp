@@ -23,7 +23,7 @@ std::string getReplacement(std::string TypeName) {
 
 void JSHandleRootedTypedefChecker::check(
     const MatchFinder::MatchResult &Result) {
-  const char *Error = "The fully qualified types are preferred over the "
+  const char *Warning = "The fully qualified types are preferred over the "
                         "shorthand typedefs for JS::Handle/JS::Rooted types "
                         "outside SpiderMonkey.";
 
@@ -31,7 +31,7 @@ void JSHandleRootedTypedefChecker::check(
       Result.Nodes.getNodeAs<DeclaratorDecl>("declaratorDecl");
 
   std::string Replacement = getReplacement(Declarator->getType().getAsString());
-  diag(Declarator->getBeginLoc(), Error, DiagnosticIDs::Error)
+  diag(Declarator->getBeginLoc(), Warning, DiagnosticIDs::Warning)
       << FixItHint::CreateReplacement(
              Declarator->getTypeSourceInfo()->getTypeLoc().getSourceRange(),
              Replacement);
