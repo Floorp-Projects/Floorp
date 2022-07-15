@@ -11,19 +11,11 @@
 
   <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript">
-    // XXX This should be done in a task, but SimpleTest currently doesn't
-    //     support adding new tasks during a task execution.
-    async function init() {
-      const testSet = "dom/fs/test/common/test_basics.js";
+    add_task(async function test_1() {
+      const { test1 } = await require_module("dom/fs/test/common/test_basics.js");
 
-      const testCases = await require_module(testSet);
-
-      Object.values(testCases).forEach(testItem => {
-        add_task(testItem);
-      });
-    }
-
-    init();
+      await test1();
+    });
   </script>
 </head>
 
