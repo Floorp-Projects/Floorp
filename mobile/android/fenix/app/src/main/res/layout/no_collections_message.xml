@@ -36,7 +36,8 @@
         app:layout_constraintBottom_toBottomOf="@id/no_collections_header"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/no_collections_header"
-        app:srcCompat="@drawable/ic_close" />
+        app:srcCompat="@drawable/mozac_ic_close_20"
+        app:tint="?attr/textPrimary" />
 
     <TextView
         android:id="@+id/no_collections_description"
