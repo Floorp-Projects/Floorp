@@ -180,6 +180,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // Updates the rtp header extensions at runtime. Must be called on the
   // `packet_sequence_checker_` thread.
   void SetRtpExtensions(const std::vector<RtpExtension>& extensions);
+  const RtpHeaderExtensionMap& GetRtpExtensions() const;
 
   // Called by VideoReceiveStream when stats are updated.
   void UpdateRtt(int64_t max_rtt_ms);

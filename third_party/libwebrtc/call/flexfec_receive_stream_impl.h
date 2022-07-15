@@ -34,7 +34,7 @@ class RtpStreamReceiverInterface;
 class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
  public:
   FlexfecReceiveStreamImpl(Clock* clock,
-                           const Config& config,
+                           Config config,
                            RecoveredPacketReceiver* recovered_packet_receiver,
                            RtcpRttStats* rtt_stats);
   // Destruction happens on the worker thread. Prior to destruction the caller
@@ -60,7 +60,8 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   // ReceiveStream impl.
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
-  const std::vector<RtpExtension>& GetRtpExtensions() const override;
+  RtpHeaderExtensionMap GetRtpExtensionMap() const override;
+
   uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
   bool transport_cc() const override {
     RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
@@ -69,6 +70,8 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
  private:
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
+
+  RtpHeaderExtensionMap extension_map_;
 
   // Config. Mostly const, header extensions may change, which is an exception
   // case that's specifically handled in `SetRtpExtensions`, which must be

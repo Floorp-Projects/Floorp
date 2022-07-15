@@ -351,6 +351,7 @@ rtc_source_set("receive_stream_interface") {
     "../api:scoped_refptr",
     "../api/crypto:frame_decryptor_interface",
     "../api/transport/rtp:rtp_source",
+    "../modules/rtp_rtcp:rtp_rtcp_format",
   ]
 }
 

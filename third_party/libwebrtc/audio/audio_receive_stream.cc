@@ -277,6 +277,10 @@ const std::vector<RtpExtension>& AudioReceiveStream::GetRtpExtensions() const {
   return config_.rtp.extensions;
 }
 
+RtpHeaderExtensionMap AudioReceiveStream::GetRtpExtensionMap() const {
+  return RtpHeaderExtensionMap(config_.rtp.extensions);
+}
+
 webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);

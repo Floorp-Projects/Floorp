@@ -924,6 +924,11 @@ void RtpVideoStreamReceiver2::SetRtpExtensions(
   rtp_header_extensions_.Reset(extensions);
 }
 
+const RtpHeaderExtensionMap& RtpVideoStreamReceiver2::GetRtpExtensions() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return rtp_header_extensions_;
+}
+
 void RtpVideoStreamReceiver2::UpdateRtt(int64_t max_rtt_ms) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   if (nack_module_)
