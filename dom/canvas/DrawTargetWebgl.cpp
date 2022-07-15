@@ -219,6 +219,8 @@ DrawTargetWebgl::~DrawTargetWebgl() {
     if (mShmem.IsWritable()) {
       // Force any Skia snapshots to copy the shmem before it deallocs.
       mSkia->DetachAllSnapshots();
+      // Ensure we're done using the shmem before dealloc.
+      mSharedContext->WaitForShmem();
       auto* child = mSharedContext->mWebgl->GetChild();
       if (child && child->CanSend()) {
         child->DeallocShmem(mShmem);
