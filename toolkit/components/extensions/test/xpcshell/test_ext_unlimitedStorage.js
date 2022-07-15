@@ -14,7 +14,6 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 const STORAGE_SITE_PERMISSIONS = [
   "WebExtensions-unlimitedStorage",
-  "indexedDB",
   "persistent-storage",
 ];
 
@@ -66,7 +65,6 @@ add_task(async function test_unlimitedStorage_restored_on_app_startup() {
     principal,
     "WebExtensions-unlimitedStorage"
   );
-  Services.perms.removeFromPrincipal(principal, "indexedDB");
   Services.perms.removeFromPrincipal(principal, "persistent-storage");
 
   checkSitePermissions(principal, Services.perms.UNKNOWN_ACTION, "is not set");
