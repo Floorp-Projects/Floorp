@@ -344,9 +344,11 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
 nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
                              uint32_t proxyResolveFlags, nsIURI* proxyURI,
                              uint64_t channelId,
-                             ExtContentPolicyType aContentPolicyType) {
-  nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo, proxyResolveFlags,
-                                      proxyURI, channelId, aContentPolicyType);
+                             ExtContentPolicyType aContentPolicyType,
+                             nsILoadInfo* aLoadInfo) {
+  nsresult rv =
+      HttpBaseChannel::Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI,
+                            channelId, aContentPolicyType, aLoadInfo);
   if (NS_FAILED(rv)) return rv;
 
   LOG1(("nsHttpChannel::Init [this=%p]\n", this));
@@ -9518,13 +9520,12 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
 
   ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
 
-  nsresult rv = intercepted->Init(
-      mURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),
-      mProxyResolveFlags, mProxyURI, mChannelId, type);
-
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
-  intercepted->SetLoadInfo(redirectLoadInfo);
+
+  nsresult rv = intercepted->Init(
+      mURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),
+      mProxyResolveFlags, mProxyURI, mChannelId, type, redirectLoadInfo);
 
   rv = SetupReplacementChannel(mURI, intercepted, true,
                                nsIChannelEventSink::REDIRECT_INTERNAL);

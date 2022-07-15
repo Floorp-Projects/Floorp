@@ -1923,17 +1923,9 @@ nsresult nsHttpHandler::SetupChannelInternal(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI,
-                         channelId, aLoadInfo->GetExternalContentPolicyType());
+                         channelId, aLoadInfo->GetExternalContentPolicyType(),
+                         aLoadInfo);
   if (NS_FAILED(rv)) return rv;
-
-  // TRRServiceChannel doesn't need loadInfo.
-  if (aLoadInfo) {
-    // set the loadInfo on the new channel
-    rv = httpChannel->SetLoadInfo(aLoadInfo);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
 
   httpChannel.forget(result);
   return NS_OK;

@@ -280,11 +280,10 @@ nsresult InterceptedHttpChannel::RedirectForResponseURL(
   ExtContentPolicyType contentPolicyType =
       redirectLoadInfo->GetExternalContentPolicyType();
 
-  rv = newChannel->Init(
-      aResponseURI, mCaps, static_cast<nsProxyInfo*>(mProxyInfo.get()),
-      mProxyResolveFlags, mProxyURI, mChannelId, contentPolicyType);
-
-  newChannel->SetLoadInfo(redirectLoadInfo);
+  rv = newChannel->Init(aResponseURI, mCaps,
+                        static_cast<nsProxyInfo*>(mProxyInfo.get()),
+                        mProxyResolveFlags, mProxyURI, mChannelId,
+                        contentPolicyType, redirectLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Normally we don't propagate the LoadInfo's service worker tainting

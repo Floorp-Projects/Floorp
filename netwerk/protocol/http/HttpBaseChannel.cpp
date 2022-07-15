@@ -329,7 +329,8 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
                                nsProxyInfo* aProxyInfo,
                                uint32_t aProxyResolveFlags, nsIURI* aProxyURI,
                                uint64_t aChannelId,
-                               ExtContentPolicyType aContentPolicyType) {
+                               ExtContentPolicyType aContentPolicyType,
+                               nsILoadInfo* aLoadInfo) {
   LOG1(("HttpBaseChannel::Init [this=%p]\n", this));
 
   MOZ_ASSERT(aURI, "null uri");
@@ -341,6 +342,7 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   mProxyResolveFlags = aProxyResolveFlags;
   mProxyURI = aProxyURI;
   mChannelId = aChannelId;
+  mLoadInfo = aLoadInfo;
 
   // Construct connection info object
   nsAutoCString host;
