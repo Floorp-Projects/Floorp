@@ -50,7 +50,6 @@ EXPORTS.mozilla.dom.indexedDB += [
     "IDBResult.h",
     "Key.h",
     "KeyPath.h",
-    "PermissionRequestBase.h",
     "SerializationHelpers.h",
     "ThreadLocal.h",
 ]
@@ -77,7 +76,6 @@ UNIFIED_SOURCES += [
     "IndexedDatabaseManager.cpp",
     "IndexedDBCommon.cpp",
     "KeyPath.cpp",
-    "PermissionRequestBase.cpp",
     "ProfilerHelpers.cpp",
     "ReportInternalError.cpp",
     "SchemaUpgrades.cpp",

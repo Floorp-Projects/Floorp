@@ -825,7 +825,6 @@ WEBIDL_FILES = [
     "Storage.webidl",
     "StorageEvent.webidl",
     "StorageManager.webidl",
-    "StorageType.webidl",
     "StreamFilter.webidl",
     "StreamFilterDataEvent.webidl",
     "StructuredCloneTester.webidl",

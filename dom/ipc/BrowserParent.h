@@ -604,9 +604,6 @@ class BrowserParent final : public PBrowserParent,
 
   bool DeallocPFilePickerParent(PFilePickerParent* actor);
 
-  mozilla::ipc::IPCResult RecvIndexedDBPermissionRequest(
-      nsIPrincipal* aPrincipal, IndexedDBPermissionRequestResolver&& aResolve);
-
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
   void StartPersistence(CanonicalBrowsingContext* aContext,

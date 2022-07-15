@@ -10,6 +10,9 @@ let condition = {
   skip_if: () => !AppConstants.MOZ_BACKGROUNDTASKS,
 };
 
+// MOZ_APP_VENDOR is empty on Thunderbird.
+let vendor = AppConstants.MOZ_APP_NAME == "thunderbird" ? "" : "Mozilla";
+
 add_task(condition, async () => {
   let hash = xreDirProvider.getInstallHash();
 
@@ -42,17 +45,19 @@ add_task(condition, async () => {
 
   let saltedPath = profileData.backgroundTasksProfiles[0].path;
   Assert.ok(
-    saltedPath.endsWith(`.MozillaBackgroundTask-${hash}-not_ephemeral_profile`),
-    `${saltedPath} ends with ".MozillaBackgroundTask-${hash}-not_ephemeral_profile"`
+    saltedPath.endsWith(
+      `.${vendor}BackgroundTask-${hash}-not_ephemeral_profile`
+    ),
+    `${saltedPath} ends with ".${vendor}BackgroundTask-${hash}-not_ephemeral_profile"`
   );
   Assert.ok(
     !saltedPath.startsWith(
-      `.MozillaBackgroundTask-${hash}-not_ephemeral_profile`
+      `.${vendor}BackgroundTask-${hash}-not_ephemeral_profile`
     ),
     `${saltedPath} is really salted`
   );
   Assert.deepEqual(profileData.backgroundTasksProfiles[0], {
-    name: `MozillaBackgroundTask-${hash}-not_ephemeral_profile`,
+    name: `${vendor}BackgroundTask-${hash}-not_ephemeral_profile`,
     path: saltedPath,
   });
 

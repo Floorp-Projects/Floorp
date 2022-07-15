@@ -731,15 +731,16 @@ const TEST_DATA = [
     inputHistory: [{ uri: "http://example.com/test", input: "http:/" }],
     userInput: "http:/",
     expected: {
-      autofilled: "http://example.com/test",
-      completed: "http://example.com/test",
-      hasAutofillTitle: true,
       results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/test",
             title: "test visit for http://example.com/test",
-            heuristic: true,
           }),
       ],
     },
@@ -779,6 +780,27 @@ const TEST_DATA = [
           makeVisitResult(context, {
             uri: "http://example.com/test",
             title: "test visit for http://example.com/test",
+            heuristic: true,
+          }),
+      ],
+    },
+  },
+  {
+    description:
+      "Prefixed URL with www omitted for input history and 'http://e' for user input",
+    pref: true,
+    visitHistory: ["http://www.example.com/test"],
+    inputHistory: [{ uri: "http://www.example.com/test", input: "http://e" }],
+    userInput: "http://e",
+    expected: {
+      autofilled: "http://example.com/test",
+      completed: "http://www.example.com/test",
+      hasAutofillTitle: true,
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "http://www.example.com/test",
+            title: "test visit for http://www.example.com/test",
             heuristic: true,
           }),
       ],

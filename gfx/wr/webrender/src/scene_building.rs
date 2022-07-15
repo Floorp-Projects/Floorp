@@ -884,7 +884,7 @@ impl<'a> SceneBuilder<'a> {
                         continue 'outer;
                     }
                     _ => {
-                        self.build_item(item);
+                        self.build_item(item, bc.pipeline_id);
                     }
                 };
             }
@@ -1249,6 +1249,7 @@ impl<'a> SceneBuilder<'a> {
     fn build_item<'b>(
         &'b mut self,
         item: DisplayItemRef,
+        pipeline_id: PipelineId,
     ) {
         match *item.item() {
             DisplayItem::Image(ref info) => {
@@ -1390,7 +1391,11 @@ impl<'a> SceneBuilder<'a> {
                 };
 
                 // TODO(gw): Port internal API to be ClipChain based, rather than ClipId once all callers updated
-                let clip_id = ClipId::ClipChain(info.clip_chain_id);
+                let clip_id = if info.clip_chain_id == api::ClipChainId::INVALID {
+                    ClipId::root(pipeline_id)
+                } else {
+                    ClipId::ClipChain(info.clip_chain_id)
+                };
 
                 self.add_primitive_to_hit_testing_list(
                     &layout,
@@ -1706,7 +1711,7 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::ClipChain(ref info) => {
                 profile_scope!("clip_chain");
 
-                let parent = info.parent.map(|id| ClipId::ClipChain(id));
+                let parent = Some(info.parent.map_or(ClipId::root(pipeline_id), |id| ClipId::ClipChain(id)));
                 let mut clips: SmallVec<[SceneClipInstance; 4]> = SmallVec::new();
 
                 for clip_item in item.clip_chain_items() {
