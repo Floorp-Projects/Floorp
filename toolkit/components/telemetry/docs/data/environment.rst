@@ -379,6 +379,8 @@ Each key in the object is the name of a preference. A key's value depends on the
 
 The following is a partial list of `collected preferences <https://searchfox.org/mozilla-central/search?q=const+DEFAULT_ENVIRONMENT_PREFS&path=>`_.
 
+- ``browser.fixup.alternate.enabled``: Whether the browser should try to modify unknown hosts by adding a prefix (e.g. www) and a suffix (.com). Defaults to false.
+
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
 - ``browser.urlbar.autoFill``: The global preference for whether autofill in the urlbar is enabled. When false, all types of autofill are disabled.

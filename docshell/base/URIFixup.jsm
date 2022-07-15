@@ -70,7 +70,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "alternateEnabled",
   "browser.fixup.alternate.enabled",
-  true
+  false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -85,6 +85,7 @@ const {
   FIXUP_FLAGS_MAKE_ALTERNATE_URI,
   FIXUP_FLAG_PRIVATE_CONTEXT,
   FIXUP_FLAG_FIX_SCHEME_TYPOS,
+  FIXUP_FLAG_FORCE_ALTERNATE_URI,
 } = Ci.nsIURIFixup;
 
 const COMMON_PROTOCOLS = ["http", "https", "file"];
@@ -255,6 +256,9 @@ URIFixup.prototype = {
   },
   get FIXUP_FLAGS_MAKE_ALTERNATE_URI() {
     return FIXUP_FLAGS_MAKE_ALTERNATE_URI;
+  },
+  get FIXUP_FLAG_FORCE_ALTERNATE_URI() {
+    return FIXUP_FLAG_FORCE_ALTERNATE_URI;
   },
   get FIXUP_FLAG_PRIVATE_CONTEXT() {
     return FIXUP_FLAG_PRIVATE_CONTEXT;
@@ -743,9 +747,11 @@ function tryKeywordFixupForURIInfo(uriString, fixupInfo, isPrivateContext) {
  */
 function maybeSetAlternateFixedURI(info, fixupFlags) {
   let uri = info.fixedURI;
+  let canUseAlternate =
+    fixupFlags & FIXUP_FLAG_FORCE_ALTERNATE_URI ||
+    (lazy.alternateEnabled && fixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI);
   if (
-    !(fixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI) ||
-    !lazy.alternateEnabled ||
+    !canUseAlternate ||
     // Code only works for http. Not for any other protocol including https!
     !uri.schemeIs("http") ||
     // Security - URLs with user / password info should NOT be fixed up
