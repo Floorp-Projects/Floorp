@@ -284,8 +284,7 @@ void OutstandingData::AbandonAllFor(const Item& item) {
       RTC_DLOG(LS_VERBOSE) << "Marking chunk " << *tsn.Wrap()
                            << " as abandoned";
       if (other.should_be_retransmitted()) {
-        RTC_DCHECK(to_be_fast_retransmitted_.find(tsn) ==
-                   to_be_fast_retransmitted_.end());
+        to_be_fast_retransmitted_.erase(tsn);
         to_be_retransmitted_.erase(tsn);
       }
       other.Abandon();
