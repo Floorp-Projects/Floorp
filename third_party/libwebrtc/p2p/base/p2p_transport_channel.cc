@@ -1666,6 +1666,7 @@ bool P2PTransportChannel::GetStats(IceTransportStats* ice_transport_stats) {
 
   ice_transport_stats->ice_role = GetIceRole();
   ice_transport_stats->ice_local_username_fragment = ice_parameters_.ufrag;
+  ice_transport_stats->ice_state = ComputeIceTransportState();
 
   return true;
 }

@@ -50,6 +50,7 @@ struct IceTransportStats {
 
   IceRole ice_role = ICEROLE_UNKNOWN;
   std::string ice_local_username_fragment;
+  webrtc::IceTransportState ice_state = webrtc::IceTransportState::kNew;
 };
 
 typedef std::vector<Candidate> Candidates;
