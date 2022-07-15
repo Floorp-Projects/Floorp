@@ -184,6 +184,7 @@ Preferences.addAll([
   { id: "network.http.windows-sso.enabled", type: "bool" },
 ]);
 
+//addon recommend
 async function ublockaddonstatus(){
   const addon = await AddonManager.getAddonByID("uBlock0@raymondhill.net");
   if(addon!=null){
