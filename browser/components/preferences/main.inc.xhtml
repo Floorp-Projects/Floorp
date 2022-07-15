@@ -119,22 +119,24 @@
     <description data-l10n-id="enable-multitab"></description>
     <checkbox preference="floorp.enable.multitab" class="needeboot"/>
   </hbox>
+  <hbox>
+    <description data-l10n-id="enable-tab-scroll-change"></description>
+    <checkbox preference="toolkit.tabbox.switchByScrolling"/>
+  </hbox>
+  <hbox>
+    <description data-l10n-id="enable-doble-click-block"></description>
+    <checkbox preference="browser.tabs.closeTabByDblclick"/>
+  </hbox>
 </groupbox>
 
 <groupbox data-category="paneGeneral" hidden="true">
   <label><html:h2 data-l10n-id="tabbar-preference"/></label>
    <radiogroup preference="floorp.browser.tabbar.settings">
-
      <radio value="1" class="tabbar"  data-l10n-id="None-mode"/>
-
      <radio value="2" class="tabbar"  data-l10n-id="hide-horizontality-tabs"/>
-  
      <radio value="3" class="tabbar"  data-l10n-id="verticalTab-setting"/>
-   
      <radio value="4" class="tabbar"  data-l10n-id="move-tabbar-position"/>
-
      <radio value="5" class="tabbar"  data-l10n-id="enable-classic-menu"/>
-
     </radiogroup>
     <label><html:h2 id="treestyletab" data-l10n-id="treestyletabSettings-l10"/></label>
     <hbox>

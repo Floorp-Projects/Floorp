@@ -1430,6 +1430,8 @@ browser-design-settings = Tab Bar Settings
 
 auto-reboot =If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
 enable-multitab = Enable multi-level tabs 
+enable-tab-scroll-change = Switch Tabs by Scrolling
+enable-doble-click-block = Double-click to Close the Tab
 operation-settings = Browser Operation Settings
 Mouse-side-button = Browser optimized for mouse operation with side buttons
 
