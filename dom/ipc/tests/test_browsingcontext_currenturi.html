@@ -67,6 +67,9 @@ async function broadcastLoadTest(baseURI, callback) {
   // the iframe containing this page is isolated from first-party storage access,
   // which isolates BroadcastChannel communication.
   if (isXOrigin) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
+    });
     SpecialPowers.wrap(document).notifyUserGestureActivation();
     await SpecialPowers.addPermission(
       "storageAccessAPI",
