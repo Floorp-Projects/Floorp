@@ -253,25 +253,6 @@ const FEATURES = [
       );
     },
   },
-  {
-    name: "emailtracking-protection",
-    list: [
-      "urlclassifier.features.emailtracking.blocklistTables",
-      "urlclassifier.features.emailtracking.allowlistTables",
-    ],
-    enabled() {
-      return Services.prefs.getBoolPref(
-        "privacy.trackingprotection.emailtracking.enabled",
-        false
-      );
-    },
-    update() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.features.emailtracking.update",
-        this.enabled()
-      );
-    },
-  },
 ];
 
 var SafeBrowsing = {
