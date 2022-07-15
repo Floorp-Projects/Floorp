@@ -424,6 +424,26 @@ JSObject* MapIteratorObject::createResultPair(JSContext* cx) {
 
 /*** Map ********************************************************************/
 
+struct js::UnbarrieredHashPolicy {
+  using Lookup = Value;
+  static HashNumber hash(const Lookup& v,
+                         const mozilla::HashCodeScrambler& hcs) {
+    return HashValue(v, hcs);
+  }
+  static bool match(const Value& k, const Lookup& l) { return k == l; }
+  static bool isEmpty(const Value& v) { return v.isMagic(JS_HASH_KEY_EMPTY); }
+  static void makeEmpty(Value* vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
+};
+
+// ValueMap, MapObject::UnbarrieredTable and MapObject::PreBarrieredTable must
+// all have the same memory layout.
+static_assert(sizeof(ValueMap) == sizeof(MapObject::UnbarrieredTable));
+static_assert(sizeof(ValueMap::Entry) ==
+              sizeof(MapObject::UnbarrieredTable::Entry));
+static_assert(sizeof(ValueMap) == sizeof(MapObject::PreBarrieredTable));
+static_assert(sizeof(ValueMap::Entry) ==
+              sizeof(MapObject::PreBarrieredTable::Entry));
+
 const JSClassOps MapObject::classOps_ = {
     nullptr,   // addProperty
     nullptr,   // delProperty
@@ -524,17 +544,6 @@ void MapObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-struct js::UnbarrieredHashPolicy {
-  using Lookup = Value;
-  static HashNumber hash(const Lookup& v,
-                         const mozilla::HashCodeScrambler& hcs) {
-    return HashValue(v, hcs);
-  }
-  static bool match(const Value& k, const Lookup& l) { return k == l; }
-  static bool isEmpty(const Value& v) { return v.isMagic(JS_HASH_KEY_EMPTY); }
-  static void makeEmpty(Value* vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
-};
-
 using NurseryKeysVector = mozilla::Vector<Value, 0, SystemAllocPolicy>;
 
 template <typename TableObject>
@@ -602,10 +611,6 @@ template <typename ObjectT>
     return true;
   }
 
-  if (IsInsideNursery(obj)) {
-    return true;
-  }
-
   if (!IsInsideNursery(keyValue.toGCThing())) {
     return true;
   }
@@ -626,11 +631,16 @@ template <typename ObjectT>
 
 [[nodiscard]] inline static bool PostWriteBarrier(MapObject* map,
                                                   const Value& key) {
+  MOZ_ASSERT(!IsInsideNursery(map));
   return PostWriteBarrierImpl(map, key);
 }
 
 [[nodiscard]] inline static bool PostWriteBarrier(SetObject* set,
                                                   const Value& key) {
+  if (IsInsideNursery(set)) {
+    return true;
+  }
+
   return PostWriteBarrierImpl(set, key);
 }
 
@@ -653,8 +663,9 @@ bool MapObject::getKeysAndValuesInterleaved(
 
 bool MapObject::set(JSContext* cx, HandleObject obj, HandleValue k,
                     HandleValue v) {
-  ValueMap* map = obj->as<MapObject>().getData();
-  if (!map) {
+  MapObject* mapObject = &obj->as<MapObject>();
+  ValueMap* table = mapObject->getData();
+  if (!table) {
     return false;
   }
 
@@ -663,10 +674,28 @@ bool MapObject::set(JSContext* cx, HandleObject obj, HandleValue k,
     return false;
   }
 
-  if (!PostWriteBarrier(&obj->as<MapObject>(), key.value()) ||
-      !map->put(key, v)) {
-    ReportOutOfMemory(cx);
-    return false;
+  return setWithHashableKey(cx, mapObject, table, key, v);
+}
+
+/* static */
+inline bool MapObject::setWithHashableKey(JSContext* cx, MapObject* obj,
+                                          ValueMap* table,
+                                          Handle<HashableValue> key,
+                                          Handle<Value> value) {
+  bool needsPostBarriers = obj->isTenured();
+  if (needsPostBarriers) {
+    // Use the ValueMap representation which has post barriers.
+    if (!PostWriteBarrier(obj, key.value()) || !table->put(key, value)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  } else {
+    // Use the PreBarrieredTable representation which does not.
+    auto* preBarriedTable = reinterpret_cast<PreBarrieredTable*>(table);
+    if (!preBarriedTable->put(key, value)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
   }
 
   return true;
@@ -717,8 +746,19 @@ size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
 
 void MapObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   MOZ_ASSERT(gcx->onMainThread());
-  if (ValueMap* map = obj->as<MapObject>().getData()) {
-    gcx->delete_(obj, map, MemoryUse::MapObjectTable);
+  ValueMap* table = obj->as<MapObject>().getData();
+  if (!table) {
+    return;
+  }
+
+  bool needsPostBarriers = obj->isTenured();
+  if (needsPostBarriers) {
+    // Use the ValueMap representation which has post barriers.
+    gcx->delete_(obj, table, MemoryUse::MapObjectTable);
+  } else {
+    // Use the PreBarrieredTable representation which does not.
+    auto* preBarriedTable = reinterpret_cast<PreBarrieredTable*>(table);
+    gcx->delete_(obj, preBarriedTable, MemoryUse::MapObjectTable);
   }
 }
 
@@ -879,10 +919,8 @@ bool MapObject::set_impl(JSContext* cx, const CallArgs& args) {
 
   ValueMap& map = extract(args);
   ARG0_KEY(cx, args, key);
-  if (!PostWriteBarrier(&args.thisv().toObject().as<MapObject>(),
-                        key.value()) ||
-      !map.put(key, args.get(1))) {
-    ReportOutOfMemory(cx);
+  if (!setWithHashableKey(cx, &args.thisv().toObject().as<MapObject>(), &map,
+                          key, args.get(1))) {
     return false;
   }
 
