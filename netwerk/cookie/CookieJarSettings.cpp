@@ -161,7 +161,8 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior,
       mIsOnContentBlockingAllowList(false),
       mIsOnContentBlockingAllowListUpdated(false),
       mState(aState),
-      mToBeMerged(false) {
+      mToBeMerged(false),
+      mShouldResistFingerprinting(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(
       mIsFirstPartyIsolated,
@@ -198,6 +199,13 @@ CookieJarSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
 NS_IMETHODIMP
 CookieJarSettings::GetIsFirstPartyIsolated(bool* aIsFirstPartyIsolated) {
   *aIsFirstPartyIsolated = mIsFirstPartyIsolated;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieJarSettings::GetShouldResistFingerprinting(
+    bool* aShouldResistFingerprinting) {
+  *aShouldResistFingerprinting = mShouldResistFingerprinting;
   return NS_OK;
 }
 
@@ -347,6 +355,7 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   aData.isFixed() = mState == eFixed;
   aData.cookieBehavior() = mCookieBehavior;
   aData.isFirstPartyIsolated() = mIsFirstPartyIsolated;
+  aData.shouldResistFingerprinting() = mShouldResistFingerprinting;
   aData.isOnContentBlockingAllowList() = mIsOnContentBlockingAllowList;
   aData.partitionKey() = mPartitionKey;
 
@@ -408,6 +417,8 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
       aData.isOnContentBlockingAllowList();
   cookieJarSettings->mCookiePermissions = std::move(list);
   cookieJarSettings->mPartitionKey = aData.partitionKey();
+  cookieJarSettings->mShouldResistFingerprinting =
+      aData.shouldResistFingerprinting();
 
   cookieJarSettings.forget(aCookieJarSettings);
 }
@@ -453,6 +464,10 @@ void CookieJarSettings::Merge(const CookieJarSettingsArgs& aData) {
       mIsFirstPartyIsolated,
       mCookieBehavior !=
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+
+  if (aData.shouldResistFingerprinting()) {
+    mShouldResistFingerprinting = true;
+  }
 
   PermissionComparator comparator;
 
@@ -550,6 +565,11 @@ CookieJarSettings::Read(nsIObjectInputStream* aStream) {
     return rv;
   }
 
+  rv = aStream->ReadBoolean(&mShouldResistFingerprinting);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   bool isFixed;
   aStream->ReadBoolean(&isFixed);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -622,6 +642,11 @@ CookieJarSettings::Write(nsIObjectOutputStream* aStream) {
   }
 
   rv = aStream->WriteBoolean(mIsFirstPartyIsolated);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aStream->WriteBoolean(mShouldResistFingerprinting);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -30,6 +30,11 @@ interface nsICookieJarSettings : nsISerializable
   [infallible] readonly attribute boolean isFirstPartyIsolated;
 
   /**
+   * Resist Fingerprinting state at the loading of the document.
+   */
+  [infallible] readonly attribute boolean shouldResistFingerprinting;
+
+  /**
    * Whether our cookie behavior mandates rejecting third-party contexts.
    */
   [infallible] readonly attribute boolean rejectThirdPartyContexts;
