@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBObjectStore
+ * https://w3c.github.io/IndexedDB/#object-store-interface
  */
 
 dictionary IDBObjectStoreParameters {
@@ -21,31 +21,42 @@ interface IDBObjectStore {
     readonly    attribute any            keyPath;
 
     readonly    attribute DOMStringList  indexNames;
-    readonly    attribute IDBTransaction transaction;
+    [SameObject] readonly attribute IDBTransaction transaction;
     readonly    attribute boolean        autoIncrement;
 
-    [Throws]
+    [NewObject, Throws]
     IDBRequest put (any value, optional any key);
-
-    [Throws]
+    [NewObject, Throws]
     IDBRequest add (any value, optional any key);
-
-    [Throws]
+    [NewObject, Throws]
     IDBRequest delete (any key);
-
-    [Throws]
+    [NewObject, Throws]
+    IDBRequest clear ();
+    [NewObject, Throws]
     IDBRequest get (any key);
-
-    [Throws]
+    [NewObject, Throws]
     IDBRequest getKey (any key);
 
-    [Throws]
-    IDBRequest clear ();
+    // Success fires IDBTransactionEvent, result == array of values for given keys
+    // If we decide to add use a counter for the mozGetAll function, we'll need
+    // to pull it out into a sepatate operation with a BinaryName mapping to the
+    // same underlying implementation.
+    [NewObject, Throws, Alias="mozGetAll"]
+    IDBRequest getAll(optional any query,
+                      optional [EnforceRange] unsigned long count);
+    [NewObject, Throws]
+    IDBRequest getAllKeys(optional any query,
+                          optional [EnforceRange] unsigned long count);
 
-    [Throws]
+    [NewObject, Throws]
+    IDBRequest count(optional any key);
+
+    [NewObject, Throws]
     IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
-
-    [Throws]
+    [NewObject, Throws]
+    IDBRequest openKeyCursor(optional any query,
+                             optional IDBCursorDirection direction = "next");
+    [NewObject, Throws]
     IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters = {});
 
     [Throws]
@@ -53,22 +64,5 @@ interface IDBObjectStore {
 
     [Throws]
     void       deleteIndex (DOMString indexName);
-
-    [Throws]
-    IDBRequest count (optional any key);
 };
 
-partial interface IDBObjectStore {
-    // Success fires IDBTransactionEvent, result == array of values for given keys
-    // If we decide to add use a counter for the mozGetAll function, we'll need
-    // to pull it out into a sepatate operation with a BinaryName mapping to the
-    // same underlying implementation.
-    [Throws, Alias="mozGetAll"]
-    IDBRequest getAll (optional any key, optional [EnforceRange] unsigned long limit);
-
-    [Throws]
-    IDBRequest getAllKeys (optional any key, optional [EnforceRange] unsigned long limit);
-
-    [Throws]
-    IDBRequest openKeyCursor (optional any range, optional IDBCursorDirection direction = "next");
-};

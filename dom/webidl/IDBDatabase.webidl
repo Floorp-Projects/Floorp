@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBObjectStoreParameters
+ * https://w3c.github.io/IndexedDB/#database-interface
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -17,16 +17,15 @@ interface IDBDatabase : EventTarget {
 
     readonly    attribute DOMStringList      objectStoreNames;
 
-    [Throws]
-    IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters = {});
-
+    [NewObject, Throws]
+    IDBTransaction transaction((DOMString or sequence<DOMString>) storeNames,
+                               optional IDBTransactionMode mode = "readonly");
+    [NewObject, Throws]
+    IDBObjectStore createObjectStore(
+        DOMString name,
+        optional IDBObjectStoreParameters options = {});
     [Throws]
     void           deleteObjectStore (DOMString name);
-
-    [Throws]
-    IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames,
-                                optional IDBTransactionMode mode = "readonly");
-
     void           close ();
 
                 attribute EventHandler       onabort;
