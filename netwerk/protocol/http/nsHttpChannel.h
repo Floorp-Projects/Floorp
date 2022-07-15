@@ -123,10 +123,12 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   nsHttpChannel();
 
-  [[nodiscard]] virtual nsresult Init(
-      nsIURI* aURI, uint32_t aCaps, nsProxyInfo* aProxyInfo,
-      uint32_t aProxyResolveFlags, nsIURI* aProxyURI, uint64_t aChannelId,
-      ExtContentPolicyType aContentPolicyType) override;
+  [[nodiscard]] virtual nsresult Init(nsIURI* aURI, uint32_t aCaps,
+                                      nsProxyInfo* aProxyInfo,
+                                      uint32_t aProxyResolveFlags,
+                                      nsIURI* aProxyURI, uint64_t aChannelId,
+                                      ExtContentPolicyType aContentPolicyType,
+                                      nsILoadInfo* aLoadInfo) override;
 
   [[nodiscard]] nsresult OnPush(uint32_t aPushedStreamId,
                                 const nsACString& aUrl,
