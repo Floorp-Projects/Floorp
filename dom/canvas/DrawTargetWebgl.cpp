@@ -696,7 +696,7 @@ bool DrawTargetWebgl::SharedContext::ReadInto(uint8_t* aDstData,
   desc.packState.rowLength = aDstStride / 4;
 
   bool success = false;
-  if (mCurrentTarget->mShmem.IsWritable() &&
+  if (mCurrentTarget && mCurrentTarget->mShmem.IsWritable() &&
       aDstData == mCurrentTarget->mShmem.get<uint8_t>()) {
     success = mWebgl->DoReadPixels(desc, mCurrentTarget->mShmem);
   } else {
@@ -1257,7 +1257,7 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
     }
     int32_t stride = map.GetStride();
     int32_t bpp = BytesPerPixel(aFormat);
-    if (mCurrentTarget->mShmem.IsWritable() &&
+    if (mCurrentTarget && mCurrentTarget->mShmem.IsWritable() &&
         map.GetData() == mCurrentTarget->mShmem.get<uint8_t>()) {
       texDesc.sd = Some(layers::SurfaceDescriptorBuffer(
           layers::RGBDescriptor(mCurrentTarget->mSize, SurfaceFormat::R8G8B8A8),
