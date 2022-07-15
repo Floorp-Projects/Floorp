@@ -10,7 +10,6 @@ add_task(async function() {
   }
 
   ok(isActive(), "Docshell should be active when starting the test");
-  ok(!document.hidden, "Top level window should be visible");
 
   info("Calling window.minimize");
   let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
@@ -20,7 +19,6 @@ add_task(async function() {
   window.minimize();
   await promiseSizeModeChange;
   ok(!isActive(), "Docshell should be Inactive");
-  ok(document.hidden, "Top level window should be hidden");
 
   info("Calling window.restore");
   promiseSizeModeChange = BrowserTestUtils.waitForEvent(
@@ -45,5 +43,4 @@ add_task(async function() {
     await BrowserTestUtils.waitForEvent(window, "occlusionstatechange");
   }
   ok(isActive(), "Docshell should be active again");
-  ok(!document.hidden, "Top level window should be visible");
 });
