@@ -335,7 +335,7 @@ RefPtr<IDBOpenDBRequest> IDBOpenDBRequest::Create(
   aFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aGlobal);
 
-  bool fileHandleDisabled = !IndexedDatabaseManager::IsFileHandleEnabled();
+  bool fileHandleDisabled = !StaticPrefs::dom_fileHandle_enabled();
 
   RefPtr<IDBOpenDBRequest> request =
       new IDBOpenDBRequest(std::move(aFactory), aGlobal, fileHandleDisabled);

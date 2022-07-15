@@ -15001,7 +15001,7 @@ mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mFileInfo);
 
-  if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
+  if (NS_WARN_IF(!StaticPrefs::dom_indexedDB_testing())) {
     return IPC_FAIL(this, "IndexedDB must be in testing mode!");
   }
 
@@ -21310,8 +21310,8 @@ mozilla::ipc::IPCResult Utils::RecvGetFileReferences(
     return IPC_FAIL(this, "No QuotaManager active!");
   }
 
-  if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    return IPC_FAIL(this, "IndexedDatabaseManager is not InTestingMode!");
+  if (NS_WARN_IF(!StaticPrefs::dom_indexedDB_testing())) {
+    return IPC_FAIL(this, "IndexedDB is not in testing mode!");
   }
 
   if (NS_WARN_IF(!IsValidPersistenceType(aPersistenceType))) {

@@ -65,8 +65,6 @@ class IndexedDatabaseManager final {
   }
 #endif
 
-  static bool InTestingMode();
-
   static bool FullSynchronous();
 
   static LoggingMode GetLoggingMode()
@@ -87,17 +85,9 @@ class IndexedDatabaseManager final {
   }
 #endif
 
-  static bool ExperimentalFeaturesEnabled();
-
-  static bool ExperimentalFeaturesEnabled(JSContext* aCx, JSObject* aGlobal);
-
-  static bool IsFileHandleEnabled();
-
   static uint32_t DataThreshold();
 
   static uint32_t MaxSerializedMsgSize();
-
-  static bool PreprocessingEnabled();
 
   // The maximum number of extra entries to preload in an Cursor::OpenOp or
   // Cursor::ContinueOp.
