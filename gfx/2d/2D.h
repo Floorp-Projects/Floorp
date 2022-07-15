@@ -677,6 +677,8 @@ class SourceSurface : public SupportsThreadSafeWeakPtr<SourceSurface> {
       case SurfaceType::DATA_ALIGNED:
       case SurfaceType::DATA_SHARED_WRAPPER:
       case SurfaceType::DATA_MAPPED:
+      case SurfaceType::SKIA:
+      case SurfaceType::WEBGL:
         return true;
       default:
         return false;
