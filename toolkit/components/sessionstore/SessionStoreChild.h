@@ -9,6 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/PSessionStoreChild.h"
+#include "mozilla/dom/SessionStoreScrollData.h"
 #include "mozilla/dom/SessionStoreChangeListener.h"
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/RefPtr.h"
@@ -31,12 +32,14 @@ class SessionStoreChild final : public PSessionStoreChild {
   void SetOwnerContent(Element* aElement);
   void Stop();
   void UpdateEventTargets();
-  void UpdateSessionStore(bool aSessionHistoryUpdate = false);
+  void UpdateSessionStore(bool aSessionHistoryUpdate = false,
+                          const MaybeSessionStoreZoom& aZoom = Nothing());
   void FlushSessionStore();
   void UpdateSHistoryChanges();
 
   void SessionStoreUpdate(const Maybe<nsCString>& aDocShellCaps,
                           const Maybe<bool>& aPrivatedMode,
+                          const MaybeSessionStoreZoom& aZoom,
                           const bool aNeedCollectSHistory,
                           const uint32_t& aEpoch);
 
