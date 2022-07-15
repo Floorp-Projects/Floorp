@@ -2193,10 +2193,14 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
     return true;
   }
 
-  // Case 1: Top Level Load
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_DOCUMENT) {
+
+  // Document types have no loading principal.  Subdocument types do have a
+  // loading principal, but it is the loading principal of the parent document;
+  // not the subdocument.
+  auto contentType = loadInfo->GetExternalContentPolicyType();
+  if (contentType == ExtContentPolicy::TYPE_DOCUMENT ||
+      contentType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
     nsCOMPtr<nsIURI> channelURI;
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     MOZ_ASSERT(
@@ -2207,6 +2211,30 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
     if (NS_FAILED(rv)) {
       return true;
     }
+
+#if 0
+  if (loadInfo->GetExternalContentPolicyType() == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    nsCOMPtr<nsIURI> channelURI;
+    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    nsAutoCString channelSpec;
+    channelURI->GetSpec(channelSpec);
+
+    if (!loadInfo->GetLoadingPrincipal()) {
+        MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Sub Document Type.  FinalChannelURI is %s, Loading Principal is NULL\n",
+                channelSpec.get()));
+
+    } else {
+        nsAutoCString loadingPrincipalSpec;
+        loadInfo->GetLoadingPrincipal()->GetOrigin(loadingPrincipalSpec);
+
+        MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Sub Document Type.  FinalChannelURI is %s, Loading Principal Origin is %s\n",
+                channelSpec.get(), loadingPrincipalSpec.get()));
+    }
+  }
+
+#endif
 
     return ShouldResistFingerprinting_dangerous(
         channelURI, loadInfo->GetOriginAttributes(), "Internal Call");
