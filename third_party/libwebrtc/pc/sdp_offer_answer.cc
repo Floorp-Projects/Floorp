@@ -88,9 +88,6 @@ namespace webrtc {
 
 namespace {
 
-constexpr const char* kDefaultScreencastMinBitrateKillSwitch =
-    "WebRTC-DefaultScreencastMinBitrateKillSwitch";
-
 typedef webrtc::PeerConnectionInterface::RTCOfferAnswerOptions
     RTCOfferAnswerOptions;
 
@@ -1198,14 +1195,10 @@ void SdpOfferAnswerHandler::Initialize(
     PeerConnectionDependencies& dependencies,
     ConnectionContext* context) {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  // 100 kbps is used by default, but can be overriden by a non-standard
+  // RTCConfiguration value (not available on Web).
   video_options_.screencast_min_bitrate_kbps =
-      configuration.screencast_min_bitrate;
-  // Use 100 kbps as the default minimum screencast bitrate unless this path is
-  // kill-switched.
-  if (!video_options_.screencast_min_bitrate_kbps.has_value() &&
-      !pc_->trials().IsEnabled(kDefaultScreencastMinBitrateKillSwitch)) {
-    video_options_.screencast_min_bitrate_kbps = 100;
-  }
+      configuration.screencast_min_bitrate.value_or(100);
   audio_options_.combined_audio_video_bwe =
       configuration.combined_audio_video_bwe;
 
