@@ -46,7 +46,10 @@ browsertime-tp6:
                 chromium:
                     - .*shippable.*
                 default: []
-        max-run-time: 4000
+        max-run-time:
+            by-subtest:
+                imgur: 4800
+                default: 4000
         mozharness:
             extra-options:
                 by-test-platform:
