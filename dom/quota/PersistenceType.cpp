@@ -41,10 +41,6 @@ struct PersistenceTypeTraits<PERSISTENCE_TYPE_PERSISTENT> {
     return aString == kPersistentCString;
   }
 
-  static bool From(const StorageType aStorageType) {
-    return aStorageType == StorageType::Persistent;
-  }
-
   static bool From(const int32_t aInt32) { return aInt32 == 0; }
 
   static bool From(nsIFile& aFile) {
@@ -61,22 +57,12 @@ PersistenceTypeTraits<PERSISTENCE_TYPE_PERSISTENT>::To<nsLiteralCString>() {
 }
 
 template <>
-StorageType
-PersistenceTypeTraits<PERSISTENCE_TYPE_PERSISTENT>::To<StorageType>() {
-  return StorageType::Persistent;
-}
-
-template <>
 struct PersistenceTypeTraits<PERSISTENCE_TYPE_TEMPORARY> {
   template <typename T>
   static T To();
 
   static bool From(const nsACString& aString) {
     return aString == kTemporaryCString;
-  }
-
-  static bool From(const StorageType aStorageType) {
-    return aStorageType == StorageType::Temporary;
   }
 
   static bool From(const int32_t aInt32) { return aInt32 == 1; }
@@ -95,22 +81,12 @@ PersistenceTypeTraits<PERSISTENCE_TYPE_TEMPORARY>::To<nsLiteralCString>() {
 }
 
 template <>
-StorageType
-PersistenceTypeTraits<PERSISTENCE_TYPE_TEMPORARY>::To<StorageType>() {
-  return StorageType::Temporary;
-}
-
-template <>
 struct PersistenceTypeTraits<PERSISTENCE_TYPE_DEFAULT> {
   template <typename T>
   static T To();
 
   static bool From(const nsACString& aString) {
     return aString == kDefaultCString;
-  }
-
-  static bool From(const StorageType aStorageType) {
-    return aStorageType == StorageType::Default;
   }
 
   static bool From(const int32_t aInt32) { return aInt32 == 2; }
@@ -126,11 +102,6 @@ template <>
 nsLiteralCString
 PersistenceTypeTraits<PERSISTENCE_TYPE_DEFAULT>::To<nsLiteralCString>() {
   return kDefaultCString;
-}
-
-template <>
-StorageType PersistenceTypeTraits<PERSISTENCE_TYPE_DEFAULT>::To<StorageType>() {
-  return StorageType::Default;
 }
 
 template <typename T>
@@ -212,23 +183,6 @@ Maybe<PersistenceType> PersistenceTypeFromString(const nsACString& aString,
 
 PersistenceType PersistenceTypeFromString(const nsACString& aString) {
   const auto maybePersistenceType = TypeFrom_impl(aString);
-  if (maybePersistenceType.isNothing()) {
-    BadPersistenceType();
-  }
-  return maybePersistenceType.value();
-}
-
-StorageType PersistenceTypeToStorageType(
-    const PersistenceType aPersistenceType) {
-  const auto maybeStorageType = TypeTo_impl<StorageType>(aPersistenceType);
-  if (maybeStorageType.isNothing()) {
-    BadPersistenceType();
-  }
-  return maybeStorageType.value();
-}
-
-PersistenceType PersistenceTypeFromStorageType(const StorageType aStorageType) {
-  const auto maybePersistenceType = TypeFrom_impl(aStorageType);
   if (maybePersistenceType.isNothing()) {
     BadPersistenceType();
   }

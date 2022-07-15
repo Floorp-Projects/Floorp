@@ -9,16 +9,12 @@
 
     /* exported setup */
     function setup() {
-      createIndexedDB("idb1", "temporary");
-      createIndexedDB("idb1", "default");
-      createIndexedDB("idb1", "persistent");
-      createIndexedDB("idb2", "temporary");
-      createIndexedDB("idb2", "default");
-      createIndexedDB("idb2", "persistent");
+      createIndexedDB("idb1");
+      createIndexedDB("idb2");
     }
 
-    function createIndexedDB(name, storage) {
-      const open = indexedDB.open(name, {storage: storage});
+    function createIndexedDB(name) {
+      const open = indexedDB.open(name);
 
       open.onsuccess = function () {
         const db = open.result;
@@ -26,20 +22,16 @@
       };
     }
 
-    function deleteDB(dbName, storage) {
+    function deleteDB(dbName) {
       return new Promise(resolve => {
-        dump(`removing database ${dbName} (${storage}) from ${document.location}\n`);
-        indexedDB.deleteDatabase(dbName, { storage: storage }).onsuccess = resolve;
+        dump(`removing database ${dbName} from ${document.location}\n`);
+        indexedDB.deleteDatabase(dbName).onsuccess = resolve;
       });
     }
 
     window.clear = async function () {
-      await deleteDB("idb1", "temporary");
-      await deleteDB("idb1", "default");
-      await deleteDB("idb1", "persistent");
-      await deleteDB("idb2", "temporary");
-      await deleteDB("idb2", "default");
-      await deleteDB("idb2", "persistent");
+      await deleteDB("idb1");
+      await deleteDB("idb2");
 
       dump(`removed indexedDB data from ${document.location}\n`);
     };

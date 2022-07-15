@@ -2530,12 +2530,6 @@
 #endif
   mirror: always
 
-# Enable passing the "storage" option to indexedDB.open.
-- name: dom.indexedDB.storageOption.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Enable indexedDB in private browsing mode with encryption
 - name: dom.indexedDB.privateBrowsing.enabled
   type: RelaxedAtomicBool

@@ -632,13 +632,6 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
   return AsRefPtr(std::move(transaction));
 }
 
-StorageType IDBDatabase::Storage() const {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mSpec);
-
-  return PersistenceTypeToStorageType(mSpec->metadata().persistenceType());
-}
-
 RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
     JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
     ErrorResult& aRv) {

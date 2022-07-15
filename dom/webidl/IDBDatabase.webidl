@@ -36,9 +36,6 @@ interface IDBDatabase : EventTarget {
 };
 
 partial interface IDBDatabase {
-    [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
-    readonly    attribute StorageType        storage;
-
     [Exposed=Window, Throws,
      Deprecated="IDBDatabaseCreateMutableFile",
      Pref="dom.fileHandle.enabled"]
