@@ -4,8 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBRequest
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBRequestReadyState
+ * https://w3c.github.io/IndexedDB/#idbrequest
+ * https://w3c.github.io/IndexedDB/#enumdef-idbrequestreadystate
  */
 
 enum IDBRequestReadyState {

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBCursorDirection
+ * https://w3c.github.io/IndexedDB/#cursor-interface
  */
 
 enum IDBCursorDirection {
@@ -27,10 +27,7 @@ interface IDBCursor {
     [Throws]
     readonly    attribute any                          primaryKey;
 
-    readonly    attribute IDBRequest                   request;
-
-    [Throws]
-    IDBRequest update (any value);
+    [SameObject] readonly attribute IDBRequest request;
 
     [Throws]
     void       advance ([EnforceRange] unsigned long count);
@@ -41,8 +38,8 @@ interface IDBCursor {
     [Throws]
     void       continuePrimaryKey(any key, any primaryKey);
 
-    [Throws]
-    IDBRequest delete ();
+    [NewObject, Throws] IDBRequest update(any value);
+    [NewObject, Throws] IDBRequest delete();
 };
 
 [Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
