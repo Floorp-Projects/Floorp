@@ -82,6 +82,13 @@ class CDP {
 
     RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
 
+    // Starting CDP too early can cause issues with clients in not being able
+    // to find any available target. Also when closing the application while
+    // it's still starting up can cause shutdown hangs. As such CDP will be
+    // started when the initial application window has finished initializing.
+    logger.debug(`Waiting for initial application window`);
+    await this.agent.browserStartupFinished;
+
     this.agent.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
     this.targetList = new TargetList();
@@ -93,13 +100,6 @@ class CDP {
     });
 
     await this.targetList.watchForTargets();
-
-    // Starting CDP too early can cause issues with clients in not being able
-    // to find any available target. Also when closing the application while
-    // it's still starting up can cause shutdown hangs. As such CDP will be
-    // started when the initial application window has finished initializing.
-    logger.debug(`Waiting for initial application window`);
-    await this.agent.browserStartupFinished;
 
     Cu.printStderr(`DevTools listening on ${this.address}\n`);
 
