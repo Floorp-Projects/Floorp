@@ -2371,7 +2371,7 @@
 
 # Whether or not File Handle is enabled.
 - name: dom.fileHandle.enabled
-  type: RelaxedAtomicBool
+  type: bool
   value: false
   mirror: always
 
@@ -2540,24 +2540,6 @@
 - name: dom.indexedDB.hide_in_pbmode.enabled
   type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Whether or not indexedDB test mode is enabled.
-- name: dom.indexedDB.testing
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# Whether or not indexedDB experimental features are enabled.
-- name: dom.indexedDB.experimental
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# Whether or not indexedDB preprocessing is enabled.
-- name: dom.indexedDB.preprocessing
-  type: RelaxedAtomicBool
-  value: false
   mirror: always
 
 - name: dom.input_events.beforeinput.enabled

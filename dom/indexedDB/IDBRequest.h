@@ -271,6 +271,8 @@ class IDBOpenDBRequest final : public IDBRequest {
   void NoteComplete();
 
   // EventTarget
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+
   IMPL_EVENT_HANDLER(blocked);
   IMPL_EVENT_HANDLER(upgradeneeded);
 
