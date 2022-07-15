@@ -15,7 +15,6 @@ interface Principal;
 dictionary IDBOpenDBOptions
 {
   [EnforceRange] unsigned long long version;
-  StorageType storage;
 };
 
 /**
