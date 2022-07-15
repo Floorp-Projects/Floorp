@@ -73,6 +73,8 @@ struct RemoteWorkerData
 
   bool isThirdPartyContextToTopWindow;
 
+  bool shouldResistFingerprinting;
+
   OriginTrials originTrials;
 
   OptionalServiceWorkerData serviceWorkerData;
