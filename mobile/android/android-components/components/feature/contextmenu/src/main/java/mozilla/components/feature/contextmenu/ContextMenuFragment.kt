@@ -58,6 +58,7 @@ class ContextMenuFragment : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        @SuppressLint("UseGetLayoutInflater")
         val inflater = LayoutInflater.from(requireContext())
 
         val builder = AlertDialog.Builder(requireContext())
