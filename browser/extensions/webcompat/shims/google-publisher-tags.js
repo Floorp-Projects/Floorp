@@ -92,13 +92,11 @@ if (window.googletag?.apiReady === undefined) {
     }
 
     if (!creatives?.length) {
-      node.remove();
       return;
     }
 
     for (const creative of creatives) {
       if (usedCreatives.has(creative)) {
-        node.remove();
         return;
       }
     }
