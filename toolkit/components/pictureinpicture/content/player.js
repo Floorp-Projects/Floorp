@@ -5,9 +5,6 @@
 const { PictureInPicture } = ChromeUtils.import(
   "resource://gre/modules/PictureInPicture.jsm"
 );
-const { ShortcutUtils } = ChromeUtils.import(
-  "resource://gre/modules/ShortcutUtils.jsm"
-);
 const { DeferredTask } = ChromeUtils.import(
   "resource://gre/modules/DeferredTask.jsm"
 );
@@ -158,12 +155,6 @@ let Player = {
 
     let playPauseBtn = document.getElementById("playpause");
     playPauseBtn.focus({ focusVisible: false });
-
-    let closeButton = document.getElementById("close");
-    let closeShortcut = document.getElementById("closeShortcut");
-    document.l10n.setAttributes(closeButton, "pictureinpicture-close-cmd", {
-      shortcut: ShortcutUtils.prettifyShortcut(closeShortcut),
-    });
 
     // Set the specific remoteType and browsingContextGroupID to use for the
     // initial about:blank load. The combination of these two properties will
@@ -799,9 +790,7 @@ let Player = {
     this._isPlaying = isPlaying;
     this.controls.classList.toggle("playing", isPlaying);
     const playButton = document.getElementById("playpause");
-    let strId = isPlaying
-      ? `pictureinpicture-pause-cmd`
-      : `pictureinpicture-play-cmd`;
+    let strId = "pictureinpicture-" + (isPlaying ? "pause" : "play");
     document.l10n.setAttributes(playButton, strId);
   },
 
@@ -822,14 +811,8 @@ let Player = {
     this._isMuted = isMuted;
     this.controls.classList.toggle("muted", isMuted);
     const audioButton = document.getElementById("audio");
-    let strId = isMuted
-      ? `pictureinpicture-unmute-cmd`
-      : `pictureinpicture-mute-cmd`;
-    let shortcutId = isMuted ? "unMuteShortcut" : "muteShortcut";
-    let shortcut = document.getElementById(shortcutId);
-    document.l10n.setAttributes(audioButton, strId, {
-      shortcut: ShortcutUtils.prettifyShortcut(shortcut),
-    });
+    let strId = "pictureinpicture-" + (isMuted ? "unmute" : "mute");
+    document.l10n.setAttributes(audioButton, strId);
   },
 
   /**

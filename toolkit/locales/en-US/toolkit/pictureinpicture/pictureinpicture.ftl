@@ -4,36 +4,21 @@
 
 pictureinpicture-player-title = Picture-in-Picture
 
-## Variables:
-##   $shortcut (String) - Keyboard shortcut to execute the command.
-
-pictureinpicture-pause-cmd =
+pictureinpicture-pause =
   .aria-label = Pause
-  .title = Pause (Spacebar)
-pictureinpicture-play-cmd =
+pictureinpicture-play =
   .aria-label = Play
-  .title = Play (Spacebar)
 
-pictureinpicture-mute-cmd =
+pictureinpicture-mute =
   .aria-label = Mute
-  .title = Mute ({ $shortcut })
-pictureinpicture-unmute-cmd =
+pictureinpicture-unmute =
   .aria-label = Unmute
-  .title = Unmute ({ $shortcut })
 
-pictureinpicture-unpip-cmd =
+pictureinpicture-unpip =
   .aria-label = Send back to tab
-  .title = Back to tab
 
-pictureinpicture-close-cmd =
+pictureinpicture-close =
   .aria-label = Close
-  .title = Close ({ $shortcut })
-
-pictureinpicture-subtitles-cmd =
-  .aria-label = Subtitles
-  .title = Subtitles
-
-##
 
 pictureinpicture-subtitles-label = Subtitles
 
