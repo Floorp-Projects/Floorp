@@ -422,32 +422,11 @@ mozilla::LogModule* IndexedDatabaseManager::GetLoggingModule() {
 #endif  // DEBUG
 
 // static
-bool IndexedDatabaseManager::InTestingMode() {
-  return StaticPrefs::dom_indexedDB_testing();
-}
-
-// static
 bool IndexedDatabaseManager::FullSynchronous() {
   MOZ_ASSERT(gDBManager,
              "FullSynchronous() called before indexedDB has been initialized!");
 
   return sFullSynchronousMode;
-}
-
-// static
-bool IndexedDatabaseManager::ExperimentalFeaturesEnabled() {
-  return StaticPrefs::dom_indexedDB_experimental();
-}
-
-// static
-bool IndexedDatabaseManager::ExperimentalFeaturesEnabled(JSContext* aCx,
-                                                         JSObject* aGlobal) {
-  return ExperimentalFeaturesEnabled();
-}
-
-// static
-bool IndexedDatabaseManager::IsFileHandleEnabled() {
-  return StaticPrefs::dom_fileHandle_enabled();
 }
 
 // static
@@ -466,11 +445,6 @@ uint32_t IndexedDatabaseManager::MaxSerializedMsgSize() {
   MOZ_ASSERT(gMaxSerializedMsgSize > 0);
 
   return gMaxSerializedMsgSize;
-}
-
-// static
-bool IndexedDatabaseManager::PreprocessingEnabled() {
-  return StaticPrefs::dom_indexedDB_preprocessing();
 }
 
 // static
@@ -561,7 +535,7 @@ nsresult IndexedDatabaseManager::BlockAndGetFileReferences(
     int32_t* aDBRefCnt, bool* aResult) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (NS_WARN_IF(!InTestingMode())) {
+  if (NS_WARN_IF(!StaticPrefs::dom_indexedDB_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -599,7 +573,7 @@ nsresult IndexedDatabaseManager::BlockAndGetFileReferences(
 nsresult IndexedDatabaseManager::FlushPendingFileDeletions() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (NS_WARN_IF(!InTestingMode())) {
+  if (NS_WARN_IF(!StaticPrefs::dom_indexedDB_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
