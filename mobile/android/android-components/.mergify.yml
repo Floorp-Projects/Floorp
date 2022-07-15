@@ -24,7 +24,7 @@ pull_request_rules:
         rebase_fallback: none
   - name: L10N - Auto Merge
     conditions:
-      - author=mozilla-l10n-automation-bot
+      - author~=(mozilla-l10n-automation-bot|github-actions\[bot\])
       - status-success=complete-pr
       - files~=(strings.xml|l10n.toml)
     actions:

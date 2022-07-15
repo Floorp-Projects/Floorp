@@ -43,4 +43,3 @@ jobs:
           branch: automation/sync-strings-${{ steps.ac-version-for-fenix-beta.outputs.major-ac-version }}
           title: "Uplift Strings from main to releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0"
           body: "This (automated) PR sync strings from `main` to `releases/${{steps.ac-version-for-fenix-beta.outputs.major-ac-version}}.0`"
-          labels: "🕵️‍♀️ needs review"
