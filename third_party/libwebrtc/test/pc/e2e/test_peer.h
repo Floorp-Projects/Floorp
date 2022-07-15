@@ -68,7 +68,7 @@ class TestPeer final {
   void CreateOffer(
       rtc::scoped_refptr<CreateSessionDescriptionObserver> observer) {
     RTC_CHECK(wrapper_) << "TestPeer is already closed";
-    pc()->CreateOffer(observer.release(), params_.rtc_offer_answer_options);
+    pc()->CreateOffer(observer.get(), params_.rtc_offer_answer_options);
   }
   std::unique_ptr<SessionDescriptionInterface> CreateOffer() {
     RTC_CHECK(wrapper_) << "TestPeer is already closed";
