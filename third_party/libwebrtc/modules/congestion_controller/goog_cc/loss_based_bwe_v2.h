@@ -87,7 +87,9 @@ class LossBasedBweV2 {
     bool trendline_integration_enabled = false;
     double delay_based_limit_factor = 1.0;
     int trendline_window_size = 0;
-    bool backoff_when_overusing = false;
+    double max_increase_factor = 0.0;
+    TimeDelta delayed_increase_window = TimeDelta::Zero();
+    bool use_acked_bitrate_only_when_overusing = false;
   };
 
   struct Derivatives {
@@ -119,7 +121,7 @@ class LossBasedBweV2 {
   double GetAverageReportedLossRatio() const;
   std::vector<ChannelParameters> GetCandidates(
       DataRate delay_based_estimate) const;
-  DataRate GetCandidateBandwidthUpperBound() const;
+  DataRate GetCandidateBandwidthUpperBound(DataRate delay_based_estimate) const;
   Derivatives GetDerivatives(const ChannelParameters& channel_parameters) const;
   double GetFeasibleInherentLoss(
       const ChannelParameters& channel_parameters) const;
@@ -132,12 +134,9 @@ class LossBasedBweV2 {
 
   void CalculateTemporalWeights();
   void NewtonsMethodUpdate(ChannelParameters& channel_parameters) const;
-  // Returns true if either
-  // 1. At least one of states in the window is kBwOverusing, or
-  // 2. There are no kBwUnderusing states in the window.
-  bool TrendlineEsimateAllowBitrateDecrease() const;
 
-  // Returns false if there exists an overusing state in the window.
+  // Returns false if there exists a kBwOverusing or kBwUnderusing in the
+  // window.
   bool TrendlineEsimateAllowBitrateIncrease() const;
 
   // Returns true if there exists an overusing state in the window.
@@ -163,6 +162,9 @@ class LossBasedBweV2 {
   std::vector<double> instant_upper_bound_temporal_weights_;
   std::vector<double> temporal_weights_;
   std::deque<BandwidthUsage> delay_detector_states_;
+  Timestamp recovering_after_loss_timestamp_ = Timestamp::MinusInfinity();
+  DataRate bandwidth_limit_in_current_window_ = DataRate::PlusInfinity();
+  bool limited_due_to_loss_candidate_ = false;
 };
 
 }  // namespace webrtc
