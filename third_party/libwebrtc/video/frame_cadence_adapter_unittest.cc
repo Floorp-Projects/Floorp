@@ -902,6 +902,22 @@ TEST_F(FrameCadenceAdapterMetricsTest, RecordsMinLtMaxConstraintIfSetOnFrame) {
       ElementsAre(Pair(60 * 4.0 + 5.0 - 1, 1)));
 }
 
+TEST_F(FrameCadenceAdapterMetricsTest, RecordsTimeUntilFirstFrame) {
+  MockCallback callback;
+  test::ScopedKeyValueConfig no_field_trials;
+  auto adapter = CreateAdapter(no_field_trials, time_controller_.GetClock());
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 5.0});
+  time_controller_.AdvanceTime(TimeDelta::Millis(666));
+  adapter->OnFrame(CreateFrame());
+  DepleteTaskQueues();
+  EXPECT_THAT(
+      metrics::Samples("WebRTC.Screenshare.ZeroHz.TimeUntilFirstFrameMs"),
+      ElementsAre(Pair(666, 1)));
+}
+
 TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
   // This regression test must be performed in realtime because of limitations
   // in GlobalSimulatedTimeController.
