@@ -2348,6 +2348,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":channel",
       ":channel_interface",
       ":channel_manager",
+      ":data_channel_controller_unittest",
       ":dtls_srtp_transport",
       ":dtls_transport",
       ":dtmf_sender",
@@ -2516,6 +2517,17 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
   }
 
+  rtc_library("data_channel_controller_unittest") {
+    testonly = true
+    sources = [ "data_channel_controller_unittest.cc" ]
+    deps = [
+      ":data_channel_controller",
+      ":pc_test_utils",
+      ":peer_connection_internal",
+      "../test:test_support",
+    ]
+  }
+
   if (is_android) {
     rtc_library("android_black_magic") {
       # The android code uses hacky includes to ssl code. Having this in a
@@ -2670,6 +2682,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "test/frame_generator_capturer_video_track_source.h",
       "test/mock_channel_interface.h",
       "test/mock_data_channel.h",
+      "test/mock_peer_connection_internal.h",
       "test/mock_peer_connection_observers.h",
       "test/mock_rtp_receiver_internal.h",
       "test/mock_rtp_sender_internal.h",
