@@ -36,7 +36,7 @@ async function run_test_in_worker(script) {
 
 // XXX It would be nice if we could call add_setup here (xpcshell-test and
 //     browser-test support it.
-add_task(async function() {
+add_task(async function setup() {
   const { setStoragePrefs, clearStoragesForOrigin } = await import(
     "/tests/dom/quota/test/modules/StorageUtils.js"
   );
