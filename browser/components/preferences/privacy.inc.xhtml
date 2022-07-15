@@ -363,8 +363,37 @@
    </vbox>
  </groupbox>
 
- <groupbox id="blockmoretrackers" data-category="panePrivacy" hidden="true">
+ <groupbox id="fingerprint" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="fingerprint-header"/></label>
+  <description  data-l10n-id="block-fingerprint"/>
+  <label><html:h3 data-l10n-id="fingerprint-Protection"/></label>
+  <hbox>
+    <description data-l10n-id="enable-firefox-fingerprint-protections"></description>
+    <checkbox preference="privacy.resistFingerprinting"/>
+    <label class="learnMore" is="text-link" href="https://support.mozilla.org/kb/firefox-protection-against-fingerprinting" data-l10n-id="do-not-track-learn-more"></label>
+  </hbox>
+  <description class="indent tip-caption" data-l10n-id="about-firefox-fingerprint-protection"/>
+  <hbox>
+    <description data-l10n-id="html5-canvas-prompt-settings"></description>
+    <checkbox preference="privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts"/>
+  </hbox>
+  <description class="indent tip-caption" data-l10n-id="canvas-prompt"/>
+  <hbox>
+    <description data-l10n-id="disable-webgl"></description>
+    <checkbox preference="webgl.disabled"/>
+  </hbox>
+  <description class="indent tip-caption" data-l10n-id="about-webgl"/>
+  <hbox>
+    <description data-l10n-id="WebRTC"></description>
+    <checkbox preference="media.peerconnection.enabled"/>
+  </hbox>
+  <description class="indent tip-caption" data-l10n-id="WebRTC-connection"/>
+  <label><html:h3 class="CanvasBlocker" data-l10n-id="Canvas-Blocker"/></label>
+   <vbox class="CanvasBlocker ContentBlockBox">
+     <image id="CanvasBlockerImg"/>
+     <description id="AddonRecommend" data-l10n-id="about-CB"/>
+     <label class="AMOURL" is="text-link" href="https://addons.mozilla.org/ja/firefox/addon/duckduckgo-for-firefox" data-l10n-id="view-at-AMO"></label>
+   </vbox>
  </groupbox>
 
 <!-- Site Data -->

@@ -9,6 +9,15 @@
   border-radius: 4px !important;
   box-shadow: var(--card-shadow) !important;
 }
+#CanvasBlockerImg{
+  list-style-image: url("https://addons.mozilla.org/user-media/addon_icons/534/534930-64.png?modified=1581849561");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  width: 4em;
+  height: 4em;
+  margin-inline-end: 10px;
+}
 #DuckDuckGoImg{
   list-style-image: url("https://addons.mozilla.org/user-media/addon_icons/385/385621-64.png?modified=1656639410");
   -moz-context-properties: fill, fill-opacity;

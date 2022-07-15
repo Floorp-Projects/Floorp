@@ -1509,7 +1509,7 @@ floorp-gnomeUI =
 waterfox-lepton =
  .label = Firefox Lepton UI
 
-## Privacyhub
+## BlockMoreTracker
 
 privacy-hub-header = Privacy Hub
 
@@ -1525,3 +1525,19 @@ about-PBadger = Privacy Badger automatically learns to block hidden trackers and
 
 Duck-Duck-Go = DuckDuckGo Privacy Essentials
 about-DDG = It replaces the search engine with DuckDuckGo, blocks the tracker of the visited site, and evaluates that site.
+
+## Fingerprint
+
+fingerprint-header = Resist Fingerprint & IP address leak
+block-fingerprint = Fingerprinting is the process by which a website collects information such as your device information, profiles you, and collects personal information. This section provides settings to further reduce this collection beyond the default blocker
+enable-firefox-fingerprint-protections = Enable Strong Fingerprintes Protection by Firefox
+about-firefox-fingerprint-protection = Enabling protection by Firefox enables forced light mode, disabling of some APIs, etc.
+fingerprint-Protection = Fingerprint Protections
+html5-canvas-prompt-settings = Automatically approve access confirmation prompts for HTML5 image data
+canvas-prompt = By default, it does not prompt and automatically rejects
+disable-webgl = Disable WebGL
+about-webgl = WebGL is information used to render graphics, which may identify the GPU of the OS.
+Canvas-Blocker = Canvas Blocker
+about-CB = This add-on allows users to prevent websites from using some Javascript APIs to fingerprint them.
+WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
+WebRTC = Enable WebRTC Connetion

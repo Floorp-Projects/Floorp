@@ -182,6 +182,12 @@ Preferences.addAll([
 
   // Windows SSO
   { id: "network.http.windows-sso.enabled", type: "bool" },
+
+  //fingerprint & webRTC
+  { id: "privacy.resistFingerprinting", type: "bool"},
+  { id: "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", type: "bool"},
+  { id: "webgl.disabled", type: "bool"},
+  { id: "media.peerconnection.enabled", type: "bool"},
 ]);
 
 //addon recommend
@@ -232,12 +238,24 @@ window.setTimeout(function getaddonsstatus(){
   const PBTag = document.getElementById("PrivacyBadger") != null
   const UBTag = document.getElementById("uBlockOrigin") != null
 
-  if(DDGTag === PBTag === UBTag === true){
+  if(DDGTag===true&&PBTag===true&&UBTag===true){
     document.getElementById("blockmoretrackers").style.display ="none";
   }
 }
-, 1500)
+, 1000)
 
+async function CanvasBlockeraddonstatus(){
+  const addon = await AddonManager.getAddonByID("CanvasBlocker@kkapsner.de");
+  if(addon!=null){
+    var addontag = document.createElement("style");
+    addontag.innerText = `
+    .CanvasBlocker{
+      display:none !important;
+    }`;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",addontag);
+  }
+}
+CanvasBlockeraddonstatus()
 
 // Study opt out
 if (AppConstants.MOZ_DATA_REPORTING) {
