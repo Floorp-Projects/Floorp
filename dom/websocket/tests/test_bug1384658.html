@@ -40,6 +40,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   set: [
     ["network.cookie.cookieBehavior", 4],
+    // disable third-party storage isolation so the test works as expected
+    ["privacy.partition.always_partition_third_party_non_cookie_storage", false],
     ["dom.security.https_first", false]
   ],
 }, test_frameset);
