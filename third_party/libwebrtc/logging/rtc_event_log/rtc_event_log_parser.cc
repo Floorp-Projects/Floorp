@@ -38,6 +38,7 @@
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/numerics/sequence_number_util.h"
@@ -1637,7 +1638,8 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreParsedLegacyEvent(
       // Use RtpPacketReceived instead of more generic RtpPacket because former
       // has a buildin convertion to RTPHeader.
       RtpPacketReceived rtp_header;
-      RTC_PARSE_CHECK_OR_RETURN(rtp_header.Parse(rtp_packet.header()));
+      RTC_PARSE_CHECK_OR_RETURN(
+          rtp_header.Parse(rtc::CopyOnWriteBuffer(rtp_packet.header())));
 
       if (const RtpHeaderExtensionMap* extension_map = GetRtpHeaderExtensionMap(
               rtp_packet.incoming(), rtp_header.Ssrc())) {
