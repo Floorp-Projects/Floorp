@@ -34,7 +34,6 @@ pub fn wgpu_string(gecko_string: Option<&nsACString>) -> Option<Cow<str>> {
     gecko_string.map(|s| s.to_utf8())
 }
 
-
 #[repr(C)]
 pub struct ByteBuf {
     data: *const u8,
