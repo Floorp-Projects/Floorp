@@ -28,11 +28,16 @@ void MockAudioReceiveStream::SetRtpExtensions(
       std::move(extensions);
 }
 
-const std::vector<webrtc::RtpExtension>& MockAudioReceiveStream::GetRtpExtensions() const {
+const std::vector<webrtc::RtpExtension>&
+MockAudioReceiveStream::GetRtpExtensions() const {
   static std::vector<webrtc::RtpExtension> rtpExtensions;
   return rtpExtensions;
 }
 
+webrtc::RtpHeaderExtensionMap MockAudioReceiveStream::GetRtpExtensionMap()
+    const {
+  return webrtc::RtpHeaderExtensionMap();
+}
 
 void MockVideoSendStream::ReconfigureVideoEncoder(
     webrtc::VideoEncoderConfig config) {
@@ -40,9 +45,9 @@ void MockVideoSendStream::ReconfigureVideoEncoder(
       mozilla::Some(config.Copy());
 }
 
-const std::vector<webrtc::RtpExtension>& MockVideoReceiveStream::GetRtpExtensions() const {
-  static std::vector<webrtc::RtpExtension> rtpExtensions;
-  return rtpExtensions;
+webrtc::RtpHeaderExtensionMap MockVideoReceiveStream::GetRtpExtensionMap()
+    const {
+  return webrtc::RtpHeaderExtensionMap();
 }
 
 }  // namespace test
