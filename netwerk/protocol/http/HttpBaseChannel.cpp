@@ -375,8 +375,9 @@ nsresult HttpBaseChannel::Init(nsIURI* aURI, uint32_t aCaps,
   rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
   if (NS_FAILED(rv)) return rv;
 
-  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead, isHTTPS,
-                                               aContentPolicyType);
+  rv = gHttpHandler->AddStandardRequestHeaders(
+      &mRequestHead, isHTTPS, aContentPolicyType,
+      nsContentUtils::ShouldResistFingerprinting(this));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString type;
