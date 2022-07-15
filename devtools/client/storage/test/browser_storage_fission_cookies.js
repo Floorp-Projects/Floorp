@@ -9,7 +9,13 @@
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-    set: [["network.cookie.sameSite.laxByDefault", false]],
+    set: [
+      ["network.cookie.sameSite.laxByDefault", false],
+      [
+        "privacy.partition.always_partition_third_party_non_cookie_storage",
+        false,
+      ],
+    ],
   });
 
   const URL_IFRAME = buildURLWithContent(
