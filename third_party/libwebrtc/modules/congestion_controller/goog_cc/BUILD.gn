@@ -129,6 +129,8 @@ rtc_library("estimators") {
     "../../../api/rtc_event_log",
     "../../../api/transport:network_control",
     "../../../api/units:data_rate",
+    "../../../api/units:data_size",
+    "../../../api/units:time_delta",
     "../../../api/units:timestamp",
     "../../../logging:rtc_event_bwe",
     "../../../rtc_base:checks",
@@ -357,6 +359,7 @@ if (rtc_include_tests) {
         "../../pacing",
         "//testing/gmock",
       ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
     }
   }
 }
