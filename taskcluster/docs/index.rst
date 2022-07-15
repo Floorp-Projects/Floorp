@@ -55,7 +55,7 @@ will refer there when appropriate and expand on topics specific to ``gecko_taskg
 where necessary.
 
 If you are reading this with a particular goal in mind and would rather avoid
-becoming a task-graph expert, check out the :doc:`how-to section <how-tos>`.
+becoming a task-graph expert, check out the :doc:`how-to section <howto/index>`.
 
 .. _continuous integration: https://en.wikipedia.org/wiki/Continuous_integration
 .. _Taskcluster: https://taskcluster.net/
@@ -68,14 +68,12 @@ becoming a task-graph expert, check out the :doc:`how-to section <how-tos>`.
 .. toctree::
 
     taskgraph
-    mach
+    howto/index
     transforms/index
     optimization/index
-    docker-images
     cron
     try
     release-promotion
     versioncontrol
     config
-    how-tos
     reference
