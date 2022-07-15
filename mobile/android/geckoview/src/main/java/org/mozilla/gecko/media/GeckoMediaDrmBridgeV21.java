@@ -436,6 +436,13 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 LOGTAG,
                 "MediaDrm.EVENT_VENDOR_DEFINED, sessionId=" + new String(session.array(), UTF_8));
           break;
+        case MediaDrm.EVENT_SESSION_RECLAIMED:
+          if (DEBUG)
+            Log.d(
+                LOGTAG,
+                "MediaDrm.EVENT_SESSION_RECLAIMED, sessionId="
+                    + new String(session.array(), UTF_8));
+          break;
         default:
           if (DEBUG) Log.d(LOGTAG, "Invalid DRM event " + event);
           return;
