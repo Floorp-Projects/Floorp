@@ -283,7 +283,7 @@ var ChromeMigrationUtils = {
         "Chrome Beta": ["google-chrome-beta"],
         "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
-        Vivaldi: ["Vivaldi"],
+        Vivaldi: ["vivaldi"],
         // Canary is not available on Linux.
         // Edge is not available on Linux.
       },
