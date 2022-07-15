@@ -1025,16 +1025,6 @@ void IDBDatabase::LastRelease() {
   }
 }
 
-nsresult IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor) {
-  nsresult rv =
-      IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, *mFactory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 JSObject* IDBDatabase::WrapObject(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto) {
   return IDBDatabase_Binding::Wrap(aCx, this, aGivenProto);
