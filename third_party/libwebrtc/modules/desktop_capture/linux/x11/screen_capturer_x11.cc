@@ -350,10 +350,10 @@ bool ScreenCapturerX11::HandleXEvent(const XEvent& event) {
     XRRUpdateConfiguration(const_cast<XEvent*>(&event));
     UpdateMonitors();
     RTC_LOG(LS_INFO) << "XRandR screen change event received.";
-    return true;
+    return false;
   } else if (event.type == ConfigureNotify) {
     ScreenConfigurationChanged();
-    return true;
+    return false;
   }
   return false;
 }
