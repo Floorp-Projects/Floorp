@@ -63,7 +63,7 @@ class LoadInfo final : public nsILoadInfo {
 
   // Used for TYPE_DOCUMENT load.
   static already_AddRefed<LoadInfo> CreateForDocument(
-      dom::CanonicalBrowsingContext* aBrowsingContext,
+      dom::CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURI,
       nsIPrincipal* aTriggeringPrincipal,
       const OriginAttributes& aOriginAttributes, nsSecurityFlags aSecurityFlags,
       uint32_t aSandboxFlags);
@@ -94,14 +94,15 @@ class LoadInfo final : public nsILoadInfo {
   // Constructor used for TYPE_DOCUMENT loads which have a different
   // loadingContext than other loads. This ContextForTopLevelLoad is
   // only used for content policy checks.
-  LoadInfo(nsPIDOMWindowOuter* aOuterWindow, nsIPrincipal* aTriggeringPrincipal,
+  LoadInfo(nsPIDOMWindowOuter* aOuterWindow, nsIURI* aURI,
+           nsIPrincipal* aTriggeringPrincipal,
            nsISupports* aContextForTopLevelLoad, nsSecurityFlags aSecurityFlags,
            uint32_t aSandboxFlags);
 
  private:
   // Use factory function CreateForDocument
   // Used for TYPE_DOCUMENT load.
-  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
+  LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURI,
            nsIPrincipal* aTriggeringPrincipal,
            const OriginAttributes& aOriginAttributes,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);

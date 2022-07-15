@@ -84,16 +84,17 @@ class ReleaseCookiePermissions final : public Runnable {
 }  // namespace
 
 // static
-already_AddRefed<nsICookieJarSettings> CookieJarSettings::GetBlockingAll() {
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::GetBlockingAll(
+    bool aShouldResistFingerprinting) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sBlockinAll) {
     return do_AddRef(sBlockinAll);
   }
 
-  sBlockinAll =
-      new CookieJarSettings(nsICookieService::BEHAVIOR_REJECT,
-                            OriginAttributes::IsFirstPartyEnabled(), eFixed);
+  sBlockinAll = new CookieJarSettings(nsICookieService::BEHAVIOR_REJECT,
+                                      OriginAttributes::IsFirstPartyEnabled(),
+                                      aShouldResistFingerprinting, eFixed);
   ClearOnShutdown(&sBlockinAll);
 
   return do_AddRef(sBlockinAll);
@@ -101,7 +102,7 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::GetBlockingAll() {
 
 // static
 already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
-    CreateMode aMode) {
+    CreateMode aMode, bool aShouldResistFingerprinting) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<CookieJarSettings> cookieJarSettings;
@@ -111,7 +112,8 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
     case ePrivate:
       cookieJarSettings = new CookieJarSettings(
           nsICookieManager::GetCookieBehavior(aMode == ePrivate),
-          OriginAttributes::IsFirstPartyEnabled(), eProgressive);
+          OriginAttributes::IsFirstPartyEnabled(), aShouldResistFingerprinting,
+          eProgressive);
       break;
 
     default:
@@ -126,21 +128,26 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  bool shouldResistFingerprinting =
+      nsContentUtils::ShouldResistFingerprinting(aPrincipal);
+
   if (aPrincipal && aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0) {
-    return Create(ePrivate);
+    return Create(ePrivate, shouldResistFingerprinting);
   }
 
-  return Create(eRegular);
+  return Create(eRegular, shouldResistFingerprinting);
 }
 
 // static
 already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
     uint32_t aCookieBehavior, const nsAString& aPartitionKey,
-    bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList) {
+    bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList,
+    bool aShouldResistFingerprinting) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
-      aCookieBehavior, aIsFirstPartyIsolated, eProgressive);
+  RefPtr<CookieJarSettings> cookieJarSettings =
+      new CookieJarSettings(aCookieBehavior, aIsFirstPartyIsolated,
+                            aShouldResistFingerprinting, eProgressive);
   cookieJarSettings->mPartitionKey = aPartitionKey;
   cookieJarSettings->mIsOnContentBlockingAllowList =
       aIsOnContentBlockingAllowList;
@@ -151,18 +158,20 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
 // static
 already_AddRefed<nsICookieJarSettings> CookieJarSettings::CreateForXPCOM() {
   MOZ_ASSERT(NS_IsMainThread());
-  return Create(eRegular);
+  return Create(eRegular, /* shouldResistFingerprinting */ false);
 }
 
 CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior,
-                                     bool aIsFirstPartyIsolated, State aState)
+                                     bool aIsFirstPartyIsolated,
+                                     bool aShouldResistFingerprinting,
+                                     State aState)
     : mCookieBehavior(aCookieBehavior),
       mIsFirstPartyIsolated(aIsFirstPartyIsolated),
       mIsOnContentBlockingAllowList(false),
       mIsOnContentBlockingAllowListUpdated(false),
       mState(aState),
       mToBeMerged(false),
-      mShouldResistFingerprinting(false) {
+      mShouldResistFingerprinting(aShouldResistFingerprinting) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(
       mIsFirstPartyIsolated,
@@ -411,6 +420,7 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
 
   RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
       aData.cookieBehavior(), aData.isFirstPartyIsolated(),
+      aData.shouldResistFingerprinting(),
       aData.isFixed() ? eFixed : eProgressive);
 
   cookieJarSettings->mIsOnContentBlockingAllowList =
