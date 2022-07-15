@@ -802,7 +802,7 @@ bool DcSctpSocket::Dispatch(const CommonHeader& header,
       HandleIData(header, descriptor);
       break;
     case IForwardTsnChunk::kType:
-      HandleForwardTsn(header, descriptor);
+      HandleIForwardTsn(header, descriptor);
       break;
     default:
       return HandleUnrecognizedChunk(descriptor);
