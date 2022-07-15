@@ -4829,15 +4829,17 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
       }
     }
 
-    // If the document has the sandboxed origin flag set
-    // don't allow access to sessionStorage.
     if (!mDoc) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
+    // If the document's sandboxed origin flag is set, then accessing
+    // sessionStorage is prohibited.
     if (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      aError.ThrowSecurityError(
+          "Forbidden in a sandboxed document without the 'allow-same-origin' "
+          "flag.");
       return nullptr;
     }
 
@@ -4921,6 +4923,15 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
 
 Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (!Storage::StoragePrefIsEnabled()) {
+    return nullptr;
+  }
+
+  // If the document's sandboxed origin flag is set, then accessing localStorage
+  // is prohibited.
+  if (mDoc && mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
+    aError.ThrowSecurityError(
+        "Forbidden in a sandboxed document without the 'allow-same-origin' "
+        "flag.");
     return nullptr;
   }
 
