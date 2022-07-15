@@ -15,13 +15,11 @@
 
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
-#include "api/units/time_delta.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/timestamp_map.h"
 #include "modules/video_coding/timing.h"
-#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
@@ -64,8 +62,6 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
   Mutex lock_;
   VCMTimestampMap _timestampMap RTC_GUARDED_BY(lock_);
   int64_t ntp_offset_;
-  // Set by the field trial WebRTC-SlowDownDecoder to simulate a slow decoder.
-  FieldTrialOptional<TimeDelta> _extra_decode_time;
 };
 
 class VCMGenericDecoder {
