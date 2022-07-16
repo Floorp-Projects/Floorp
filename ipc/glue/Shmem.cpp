@@ -210,7 +210,7 @@ static void Unprotect(SharedMemory* aSegment) {
 // to touch the segment, it dies with SIGSEGV.
 //
 
-Shmem::Shmem(SharedMemory* aSegment, id_t aId)
+Shmem::Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId)
     : mSegment(aSegment), mData(nullptr), mSize(0) {
   MOZ_ASSERT(mSegment, "null segment");
   MOZ_ASSERT(aId != 0, "invalid ID");
@@ -259,7 +259,7 @@ void Shmem::AssertInvariants() const {
   Unused << checkMappingBack;
 }
 
-void Shmem::RevokeRights() {
+void Shmem::RevokeRights(PrivateIPDLCaller) {
   AssertInvariants();
 
   size_t pageSize = SharedMemory::SystemPageSize();
@@ -276,7 +276,8 @@ void Shmem::RevokeRights() {
 }
 
 // static
-already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(size_t aNBytes, bool aUnsafe,
+already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(PrivateIPDLCaller,
+                                                   size_t aNBytes, bool aUnsafe,
                                                    bool aProtect) {
   NS_ASSERTION(aNBytes <= UINT32_MAX, "Will truncate shmem segment size!");
   MOZ_ASSERT(!aProtect || !aUnsafe, "protect => !unsafe");
@@ -311,7 +312,8 @@ already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(size_t aNBytes, bool aUnsafe,
 
 // static
 already_AddRefed<Shmem::SharedMemory> Shmem::OpenExisting(
-    const IPC::Message& aDescriptor, id_t* aId, bool aProtect) {
+    PrivateIPDLCaller, const IPC::Message& aDescriptor, id_t* aId,
+    bool aProtect) {
   size_t size;
   size_t pageSize = SharedMemory::SystemPageSize();
   // |2*pageSize| is for the front and back sentinels
@@ -343,7 +345,7 @@ already_AddRefed<Shmem::SharedMemory> Shmem::OpenExisting(
 }
 
 // static
-void Shmem::Dealloc(SharedMemory* aSegment) {
+void Shmem::Dealloc(PrivateIPDLCaller, SharedMemory* aSegment) {
   if (!aSegment) return;
 
   size_t pageSize = SharedMemory::SystemPageSize();
@@ -363,7 +365,7 @@ void Shmem::Dealloc(SharedMemory* aSegment) {
 
 #else  // !defined(DEBUG)
 
-Shmem::Shmem(SharedMemory* aSegment, id_t aId)
+Shmem::Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId)
     : mSegment(aSegment), mData(aSegment->memory()), mSize(0), mId(aId) {
   mSize = static_cast<size_t>(*PtrToSize(mSegment));
   MOZ_RELEASE_ASSERT(mSegment->Size() - sizeof(uint32_t) >= mSize,
@@ -371,7 +373,8 @@ Shmem::Shmem(SharedMemory* aSegment, id_t aId)
 }
 
 // static
-already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(size_t aNBytes,
+already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(PrivateIPDLCaller,
+                                                   size_t aNBytes,
                                                    bool /*unused*/,
                                                    bool /*unused*/) {
   RefPtr<SharedMemory> segment = CreateSegment(aNBytes, sizeof(uint32_t));
@@ -386,7 +389,8 @@ already_AddRefed<Shmem::SharedMemory> Shmem::Alloc(size_t aNBytes,
 
 // static
 already_AddRefed<Shmem::SharedMemory> Shmem::OpenExisting(
-    const IPC::Message& aDescriptor, id_t* aId, bool /*unused*/) {
+    PrivateIPDLCaller, const IPC::Message& aDescriptor, id_t* aId,
+    bool /*unused*/) {
   size_t size;
   RefPtr<SharedMemory> segment =
       ReadSegment(aDescriptor, aId, &size, sizeof(uint32_t));
@@ -403,11 +407,14 @@ already_AddRefed<Shmem::SharedMemory> Shmem::OpenExisting(
 }
 
 // static
-void Shmem::Dealloc(SharedMemory* aSegment) { DestroySegment(aSegment); }
+void Shmem::Dealloc(PrivateIPDLCaller, SharedMemory* aSegment) {
+  DestroySegment(aSegment);
+}
 
 #endif  // if defined(DEBUG)
 
-UniquePtr<IPC::Message> Shmem::MkCreatedMessage(int32_t routingId) {
+UniquePtr<IPC::Message> Shmem::MkCreatedMessage(PrivateIPDLCaller,
+                                                int32_t routingId) {
   AssertInvariants();
 
   auto msg = MakeUnique<ShmemCreated>(routingId, mId, mSize);
@@ -420,7 +427,8 @@ UniquePtr<IPC::Message> Shmem::MkCreatedMessage(int32_t routingId) {
   return msg;
 }
 
-UniquePtr<IPC::Message> Shmem::MkDestroyedMessage(int32_t routingId) {
+UniquePtr<IPC::Message> Shmem::MkDestroyedMessage(PrivateIPDLCaller,
+                                                  int32_t routingId) {
   AssertInvariants();
   return MakeUnique<ShmemDestroyed>(routingId, mId);
 }
@@ -429,8 +437,8 @@ void IPDLParamTraits<Shmem>::Write(IPC::MessageWriter* aWriter,
                                    IProtocol* aActor, Shmem&& aParam) {
   WriteIPDLParam(aWriter, aActor, aParam.mId);
 
-  aParam.RevokeRights();
-  aParam.forget();
+  aParam.RevokeRights(Shmem::PrivateIPDLCaller());
+  aParam.forget(Shmem::PrivateIPDLCaller());
 }
 
 bool IPDLParamTraits<Shmem>::Read(IPC::MessageReader* aReader,
@@ -442,7 +450,7 @@ bool IPDLParamTraits<Shmem>::Read(IPC::MessageReader* aReader,
 
   Shmem::SharedMemory* rawmem = aActor->LookupSharedMemory(id);
   if (rawmem) {
-    *aResult = Shmem(rawmem, id);
+    *aResult = Shmem(Shmem::PrivateIPDLCaller(), rawmem, id);
     return true;
   }
   *aResult = Shmem();
