@@ -557,6 +557,10 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
 #else
       ALLOC(X, C*N, celt_norm);   /**< Interleaved normalised MDCTs */
 #endif
+      c=0; do {
+         OPUS_MOVE(decode_mem[c], decode_mem[c]+N,
+               DECODE_BUFFER_SIZE-N+(overlap>>1));
+      } while (++c<C);
 
       /* Energy decay */
       decay = loss_duration==0 ? QCONST16(1.5f, DB_SHIFT) : QCONST16(.5f, DB_SHIFT);
@@ -584,11 +588,6 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM)
          }
       }
       st->rng = seed;
-
-      c=0; do {
-         OPUS_MOVE(decode_mem[c], decode_mem[c]+N,
-               DECODE_BUFFER_SIZE-N+(overlap>>1));
-      } while (++c<C);
 
       celt_synthesis(mode, X, out_syn, oldBandE, start, effEnd, C, C, 0, LM, st->downsample, 0, st->arch);
    } else {

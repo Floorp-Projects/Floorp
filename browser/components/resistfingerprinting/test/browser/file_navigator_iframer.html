@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--
+Tests that an exempted iframe embedded in a non-exempted first party domain is not exempted.
+-->
+<meta charset="utf-8">
+<title></title>
+<script>
+function waitForMessage(aMsg, aOrigin) {
+  return new Promise(resolve => {
+    window.addEventListener("message", function listener(event) {
+      if (event.data == "ready" && event.origin == aOrigin) {
+        window.removeEventListener("message", listener);
+        resolve();
+      }
+    });
+  });
+}
+
+async function runTheTest(iframe_domain, cross_origin_domain) {
+  const iframes = document.querySelectorAll("iframe");
+  iframes[0].src = `https://${iframe_domain}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_iframee.html`;
+  await waitForMessage("ready", `https://${iframe_domain}`);
+
+  const promiseForRFPTest = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if(event.origin != `https://${iframe_domain}`) {
+        throw new Error(`origin should be ${iframe_domain}`);
+      }
+      resolve(event.data);
+    }, { once: true });
+  });
+  iframes[0].contentWindow.postMessage({0: "gimme", 1: cross_origin_domain}, "*");
+  var result = await promiseForRFPTest;
+
+  await fetch(`https://${cross_origin_domain}/browser/browser/components/resistfingerprinting/test/browser/browser_navigator_header.sjs?`)
+  .then((response) => { return response.text(); })
+  .then((content) => {
+    result.framer_crossOrigin_userAgentHTTPHeader = content;
+  });
+
+  return result;
+}
+</script>
+</head>
+<body>
+<iframe width=100></iframe>
+</body>
+</html>

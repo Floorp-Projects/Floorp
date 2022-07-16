@@ -12,6 +12,7 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIScrollableFrame.h"
+#include "nsLayoutUtils.h"
 #include <limits>
 
 namespace mozilla::dom {
@@ -113,18 +114,34 @@ static gfx::Size CalculateBoxSize(Element* aTarget,
     case ResizeObserverBoxOptions::Border_box:
       return CSSPixel::FromAppUnits(frame->GetSize()).ToUnknownSize();
     case ResizeObserverBoxOptions::Device_pixel_content_box: {
-      // This is a implementation-dependent for subpixel snapping algorithm.
-      // Gecko relies on LayoutDevicePixel to convert (and snap) the app units
-      // into device pixels in painting and gfx code, so here we simply
-      // convert it into dev pixels and round it.
-      //
-      // Note: This size must contain integer values.
-      // https://drafts.csswg.org/resize-observer/#dom-resizeobserverboxoptions-device-pixel-content-box
-      const LayoutDeviceIntSize snappedSize =
-          LayoutDevicePixel::FromAppUnitsRounded(
-              GetContentRectSize(*frame),
-              frame->PresContext()->AppUnitsPerDevPixel());
-      return gfx::Size(snappedSize.ToUnknownSize());
+      // Simply converting from app units to device units is insufficient - we
+      // need to take subpixel snapping into account. Subpixel snapping happens
+      // with respect to the reference frame, so do the dev pixel conversion
+      // with our rectangle positioned relative to the reference frame, then
+      // get the size from there.
+      const auto* referenceFrame = nsLayoutUtils::GetReferenceFrame(frame);
+      // GetOffsetToCrossDoc version handles <iframe>s in addition to normal
+      // cases. We don't expect this to tight loop for additional checks to
+      // matter.
+      const auto offset = frame->GetOffsetToCrossDoc(referenceFrame);
+      const auto contentSize = GetContentRectSize(*frame);
+      // Casting to double here is deliberate to minimize rounding error in
+      // upcoming operations.
+      const auto appUnitsPerDevPixel =
+          static_cast<double>(frame->PresContext()->AppUnitsPerDevPixel());
+      // Calculation here is a greatly simplified version of
+      // `NSRectToSnappedRect` as 1) we're not actually drawing (i.e. no draw
+      // target), and 2) transform does not need to be taken into account.
+      gfx::Rect rect{gfx::Float(offset.X() / appUnitsPerDevPixel),
+                     gfx::Float(offset.Y() / appUnitsPerDevPixel),
+                     gfx::Float(contentSize.Width() / appUnitsPerDevPixel),
+                     gfx::Float(contentSize.Height() / appUnitsPerDevPixel)};
+      gfx::Point tl = rect.TopLeft().Round();
+      gfx::Point br = rect.BottomRight().Round();
+
+      rect.SizeTo(gfx::Size(br.x - tl.x, br.y - tl.y));
+      rect.NudgeToIntegers();
+      return rect.Size().ToUnknownSize();
     }
     case ResizeObserverBoxOptions::Content_box:
     default:

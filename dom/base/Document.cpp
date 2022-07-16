@@ -17757,7 +17757,9 @@ nsICookieJarSettings* Document::CookieJarSettings() {
                   inProcessParent->CookieJarSettings()
                       ->GetIsFirstPartyIsolated(),
                   inProcessParent->CookieJarSettings()
-                      ->GetIsOnContentBlockingAllowList())
+                      ->GetIsOnContentBlockingAllowList(),
+                  inProcessParent->CookieJarSettings()
+                      ->GetShouldResistFingerprinting())
             : net::CookieJarSettings::Create(NodePrincipal());
 
     if (auto* wgc = GetWindowGlobalChild()) {

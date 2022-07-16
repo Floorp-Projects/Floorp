@@ -646,6 +646,20 @@ richlistitem[selected] .actionsMenu:focus-visible {
   user-select: none;
 }
 
+.fxaPairDeviceIcon {
+  background-image: url("chrome://browser/content/logos/fxa-logo.svg");
+  background-position: center center;
+  background-repeat: no-repeat;
+  position: relative;
+  height: 80px;
+  padding-top: 42px;
+  margin-top: -40px;
+}
+
+.fxaPairDeviceIcon .close-icon {
+  margin-top: 10px;
+  }
+
 .close-icon {
   border: none;
   background-color: transparent; /* override common.css, but keep hover/active states */

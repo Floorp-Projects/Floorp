@@ -135,20 +135,19 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   bool CanShare(const ShareData& aData);
   already_AddRefed<Promise> Share(const ShareData& aData, ErrorResult& aRv);
 
-  static void AppName(nsAString& aAppName, nsIPrincipal* aCallerPrincipal,
+  static void AppName(nsAString& aAppName, Document* aCallerDoc,
                       bool aUsePrefOverriddenValue);
 
-  static nsresult GetPlatform(nsAString& aPlatform,
-                              nsIPrincipal* aCallerPrincipal,
+  static nsresult GetPlatform(nsAString& aPlatform, Document* aCallerDoc,
                               bool aUsePrefOverriddenValue);
 
-  static nsresult GetAppVersion(nsAString& aAppVersion,
-                                nsIPrincipal* aCallerPrincipal,
+  static nsresult GetAppVersion(nsAString& aAppVersion, Document* aCallerDoc,
                                 bool aUsePrefOverriddenValue);
 
   static nsresult GetUserAgent(nsPIDOMWindowInner* aWindow,
-                               nsIPrincipal* aCallerPrincipal,
-                               bool aIsCallerChrome, nsAString& aUserAgent);
+                               Document* aCallerDoc,
+                               Maybe<bool> aShouldResistFingerprinting,
+                               nsAString& aUserAgent);
 
   // Clears the platform cache by calling:
   // Navigator_Binding::ClearCachedPlatformValue(this);

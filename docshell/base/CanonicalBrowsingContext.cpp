@@ -2445,7 +2445,7 @@ nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
 
 void CanonicalBrowsingContext::UpdateSessionStoreSessionStorage(
     const std::function<void()>& aDone) {
-  if constexpr (!SessionStoreUtils::NATIVE_LISTENER) {
+  if (!StaticPrefs::browser_sessionstore_collect_session_storage_AtStartup()) {
     aDone();
     return;
   }
@@ -2478,7 +2478,7 @@ void CanonicalBrowsingContext::UpdateSessionStoreForStorage(
 }
 
 void CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate() {
-  if constexpr (!SessionStoreUtils::NATIVE_LISTENER) {
+  if (!StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
     return;
   }
 

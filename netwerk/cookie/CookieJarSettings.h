@@ -121,11 +121,13 @@ class CookieJarSettings final : public nsICookieJarSettings {
   NS_DECL_NSICOOKIEJARSETTINGS
   NS_DECL_NSISERIALIZABLE
 
-  static already_AddRefed<nsICookieJarSettings> GetBlockingAll();
+  static already_AddRefed<nsICookieJarSettings> GetBlockingAll(
+      bool aShouldResistFingerprinting);
 
   enum CreateMode { eRegular, ePrivate };
 
-  static already_AddRefed<nsICookieJarSettings> Create(CreateMode aMode);
+  static already_AddRefed<nsICookieJarSettings> Create(
+      CreateMode aMode, bool aShouldResistFingerprinting);
 
   static already_AddRefed<nsICookieJarSettings> Create(
       nsIPrincipal* aPrincipal);
@@ -136,7 +138,8 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   static already_AddRefed<nsICookieJarSettings> Create(
       uint32_t aCookieBehavior, const nsAString& aPartitionKey,
-      bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList);
+      bool aIsFirstPartyIsolated, bool aIsOnContentBlockingAllowList,
+      bool aShouldResistFingerprinting);
 
   static CookieJarSettings* Cast(nsICookieJarSettings* aCS) {
     return static_cast<CookieJarSettings*>(aCS);
@@ -184,7 +187,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
   };
 
   CookieJarSettings(uint32_t aCookieBehavior, bool aIsFirstPartyIsolated,
-                    State aState);
+                    bool aShouldResistFingerprinting, State aState);
   ~CookieJarSettings();
 
   uint32_t mCookieBehavior;
@@ -197,6 +200,54 @@ class CookieJarSettings final : public nsICookieJarSettings {
   State mState;
 
   bool mToBeMerged;
+
+  // DO NOT USE THIS MEMBER TO CHECK IF YOU SHOULD RESIST FINGERPRINTING.
+  // USE THE nsContentUtils::ShouldResistFingerprinting() METHODS ONLY.
+  //
+  // As we move to fine-grained RFP control, we want to support per-domain
+  // exemptions from ResistFingerprinting. Specifically the behavior should be
+  // as such:
+  //
+  // Top-Level Document is on an Exempted Domain
+  //    - RFP is disabled.
+  //
+  // Top-Level Document on an Exempted Domain embedding a non-exempted
+  // cross-origin iframe
+  //    - RFP in the iframe is enabled (NOT exempted). (**)
+  //
+  // Top-Level Document on an Exempted Domain embedding an exempted cross-origin
+  // iframe
+  //    - RFP in the iframe is disabled (exempted).
+  //
+  // Top-Level Document on a Non-Exempted Domain
+  //    - RFP is enabled (NOT exempted).
+  //
+  // Top-Level Document on a Non-Exempted Domain embeds an exempted cross-origin
+  // iframe
+  //    - RFP in the iframe is enabled (NOT exempted). (*)
+  //
+  // Exempted Document (top-level or iframe) contacts any cross-origin domain
+  //   (exempted or non-exempted)
+  //    - RFP is disabled (exempted) for the request
+  //
+  // Non-Exempted Document (top-level or iframe) contacts any cross-origin
+  // domain
+  //   (exempted or non-exempted)
+  //    - RFP is enabled (NOT exempted) for the request
+  //
+  // This boolean on CookieJarSettings will enable us to apply the most
+  //   difficult rule, marked in (*). (It is difficult because the
+  //   subdocument's loadinfo will look like it should be exempted.)
+  // However if we trusted this member blindly, it would not correctly apply
+  //   the one marked with (**). (Because it would inherit an exemption into
+  //   a subdocument that should not be exempted.)
+  // To handle this case, we only trust a CookieJar's ShouldRFP value if it
+  //   says we should resist fingerprinting. If it says that we  _should not_,
+  //   we continue and check the channel's URI or LoadInfo and if
+  //   the domain specified there is not an exempted domain, enforce RFP anyway.
+  //   This all occurrs in the nscontentUtils::ShouldResistFingerprinting
+  //   functions which you should be using.
+  bool mShouldResistFingerprinting;
 };
 
 }  // namespace net

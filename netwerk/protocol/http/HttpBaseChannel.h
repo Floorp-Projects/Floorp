@@ -121,7 +121,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
                                       nsProxyInfo* aProxyInfo,
                                       uint32_t aProxyResolveFlags,
                                       nsIURI* aProxyURI, uint64_t aChannelId,
-                                      ExtContentPolicyType aContentPolicyType);
+                                      ExtContentPolicyType aContentPolicyType,
+                                      nsILoadInfo* aLoadInfo);
 
   // nsIRequest
   NS_IMETHOD GetName(nsACString& aName) override;

@@ -24,6 +24,11 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
     [must_use] readonly attribute ACString userAgent;
 
     /**
+     * Get the HTTP advertised user agent string.
+     */
+    [must_use] readonly attribute ACString rfpUserAgent;
+
+    /**
      * Get the application name.
      *
      * @return The name of this application (eg. "Mozilla").

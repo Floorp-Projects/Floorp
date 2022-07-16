@@ -14,14 +14,8 @@
 -->
 <plist version="1.0">
   <dict>
-    <!-- Firefox does not use MAP_JIT for executable mappings -->
-    <key>com.apple.security.cs.allow-jit</key><false/>
-
     <!-- Firefox needs to create executable pages (without MAP_JIT) -->
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
-
-    <!-- Code paged in from disk should match the signature at page-in time -->
-    <key>com.apple.security.cs.disable-executable-page-protection</key><false/>
 
     <!-- Allow loading third party libraries. Needed for Flash and CDMs -->
     <key>com.apple.security.cs.disable-library-validation</key><true/>

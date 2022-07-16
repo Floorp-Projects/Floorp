@@ -218,7 +218,8 @@ Http2ConnectTransaction::Http2ConnectTransaction(
     trans->RequestHead()->Exit();
   }
   DebugOnly<nsresult> rv = nsHttpConnection::MakeConnectString(
-      trans, mRequestHead, mConnectString, mIsWebsocket);
+      trans, mRequestHead, mConnectString, mIsWebsocket,
+      mCaps & NS_HTTP_USE_RFP);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   mDrivingTransaction = trans;
 }

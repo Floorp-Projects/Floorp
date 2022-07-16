@@ -234,9 +234,13 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
     nsCOMPtr<nsICookieJarSettings> cjs;
     Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
     if (!cjs) {
+      bool shouldResistFingerprinting =
+          nsContentUtils::ShouldResistFingerprinting(aChannel);
       cjs = aPrivateBrowsing
-                ? net::CookieJarSettings::Create(CookieJarSettings::ePrivate)
-                : net::CookieJarSettings::Create(CookieJarSettings::eRegular);
+                ? net::CookieJarSettings::Create(CookieJarSettings::ePrivate,
+                                                 shouldResistFingerprinting)
+                : net::CookieJarSettings::Create(CookieJarSettings::eRegular,
+                                                 shouldResistFingerprinting);
     }
 
     // We only check if the channel is isolated if it's in the parent process

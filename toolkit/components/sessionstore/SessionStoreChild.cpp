@@ -167,10 +167,12 @@ void SessionStoreChild::UpdateEventTargets() {
   }
 }
 
-void SessionStoreChild::UpdateSessionStore(bool aSessionHistoryUpdate) {
+void SessionStoreChild::UpdateSessionStore(bool aSessionHistoryUpdate,
+                                           const MaybeSessionStoreZoom& aZoom) {
   if (!mSessionStoreListener) {
     // This is the case when we're shutting down, and expect a final update.
-    SessionStoreUpdate(Nothing(), Nothing(), aSessionHistoryUpdate, 0);
+    SessionStoreUpdate(Nothing(), Nothing(), Nothing(), aSessionHistoryUpdate,
+                       0);
     return;
   }
 
@@ -187,7 +189,7 @@ void SessionStoreChild::UpdateSessionStore(bool aSessionHistoryUpdate) {
   }
 
   SessionStoreUpdate(
-      docShellCaps, privatedMode,
+      docShellCaps, privatedMode, aZoom,
       store->GetAndClearSHistoryChanged() || aSessionHistoryUpdate,
       mSessionStoreListener->GetEpoch());
 }
@@ -216,14 +218,15 @@ mozilla::ipc::IPCResult SessionStoreChild::RecvFlushTabState(
 
 void SessionStoreChild::SessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    const bool aNeedCollectSHistory, const uint32_t& aEpoch) {
+    const MaybeSessionStoreZoom& aZoom, const bool aNeedCollectSHistory,
+    const uint32_t& aEpoch) {
   if (XRE_IsContentProcess()) {
-    Unused << SendSessionStoreUpdate(aDocShellCaps, aPrivatedMode,
+    Unused << SendSessionStoreUpdate(aDocShellCaps, aPrivatedMode, aZoom,
                                      aNeedCollectSHistory, aEpoch);
   } else if (SessionStoreParent* sessionStoreParent =
                  static_cast<SessionStoreParent*>(
                      InProcessChild::ParentActorFor(this))) {
-    sessionStoreParent->SessionStoreUpdate(aDocShellCaps, aPrivatedMode,
+    sessionStoreParent->SessionStoreUpdate(aDocShellCaps, aPrivatedMode, aZoom,
                                            aNeedCollectSHistory, aEpoch);
   }
 }

@@ -2449,7 +2449,7 @@ class UrlbarInput {
     try {
       const info = Services.uriFixup.getFixupURIInfo(
         value,
-        Ci.nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI
+        Ci.nsIURIFixup.FIXUP_FLAG_FORCE_ALTERNATE_URI
       );
       value = info.fixedURI.spec;
     } catch (ex) {

@@ -1,5 +1,5 @@
-Optimization and SCHEDULES
-==========================
+Schedules Optimization Strategy
+===============================
 
 Most optimization of builds and tests is handled with ``SCHEDULES``.
 The concept is this: we allocate tasks into named components, and associate a set of such components to each file in the source tree.

@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<title>Test for Bug 1774135</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+  .split {
+    width: 299px;
+    display: flex;
+    background: red;  /* so we can see if it's visible. It should NOT be visible */
+  }
+  .split>* {
+    flex: 1 1 auto;
+    height: 50px;
+  }
+  .left {
+    background: pink;
+  }
+  .middle {
+    background: lightgreen;
+  }
+  .right {
+    background: lightblue;
+  }
+</style>
+<script>
+  function WidthTracker(observed) {
+    this._observer = new ResizeObserver(this._handleNotification.bind(this));
+    this._observed = observed;
+  }
+
+  WidthTracker.prototype = {
+    _handleNotification(entries) {
+      for (let entry of entries) {
+        this._elemToWidth.set(
+          entry.target,
+          entry.devicePixelContentBoxSize[0].inlineSize
+        );
+      }
+      for (let elem of this._observed) {
+        if (!this._elemToWidth.has(elem)) {
+          return;
+        }
+      }
+      // Note(dshin): Wait a tick - we need to let the resize observer loop exit
+      // and avoid resize loop error.
+      const resolve = this._resolve;
+      const result = new Map(this._elemToWidth);
+      this._observer.disconnect();
+      delete this._resolve;
+      delete this._elemToWidth;
+      window.requestAnimationFrame(function() {
+        resolve(result);
+      });
+    },
+    start() {
+      this._elemToWidth = new Map();
+      for (const elem of this._observed) {
+        this._observer.observe(elem);
+      }
+      return new Promise(res => { this._resolve = res; });
+    },
+  };
+  async function run_test(tracker, container, children, relativeZoom) {
+    SpecialPowers.setFullZoom(window, relativeZoom);
+    let result = await tracker.start(Array.from(children).concat([container]));
+    let observedChildrenWidths = 0;
+    for (const child of children) {
+      observedChildrenWidths += result.get(child);
+    }
+    let containerWidth = result.get(container);
+    is(observedChildrenWidths, containerWidth, "Combined widths of children == container width");
+  }
+
+  const originalZoom = SpecialPowers.getFullZoom(window);
+  let tracker;
+  let container;
+  let children;
+
+  const zoomsToTest = [
+    300,
+    240,
+    200,
+    170,
+    150,
+    133,
+    120,
+    110,
+    100,
+    90,
+    80,
+    67,
+    50,
+    30,
+  ];
+
+  add_task(async () => {
+    container = document.querySelector('.split');
+    children = document.querySelectorAll('.split>*');
+    tracker = new WidthTracker(Array.from(children).concat([container]));
+  });
+  for (let i = 0; i < zoomsToTest.length; ++i) {
+    let relativeZoom = originalZoom * zoomsToTest[i] / 100;
+    add_task(async () => { await run_test(tracker, container, children, relativeZoom); });
+  }
+  add_task(async () => { SpecialPowers.setFullZoom(window, originalZoom); });
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1774135">Mozilla Bug 1774135</a>
+<div class="split">
+  <div class="left"></div>
+  <div class="middle"></div>
+  <div class="right"></div>
+</div>

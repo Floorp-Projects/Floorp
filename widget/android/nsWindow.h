@@ -69,6 +69,8 @@ class nsWindow final : public nsBaseWidget {
       nsIPrincipal* aTriggeringPrincipal, bool aHasUserGesture,
       bool aIsTopLevel);
 
+  void OnUpdateSessionStore(mozilla::jni::Object::Param aBundle);
+
  private:
   // Unique ID given to each widget, used to map Surfaces to widgets
   // in the CompositorSurfaceManager.

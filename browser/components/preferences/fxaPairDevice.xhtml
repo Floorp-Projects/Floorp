@@ -14,24 +14,22 @@
         role="dialog"
         onload="gFxaPairDeviceDialog.init();"
         onunload="gFxaPairDeviceDialog.uninit()"
-        data-l10n-id="fxa-pair-device-dialog"
-        data-l10n-attrs="title, style">
+        data-l10n-id="fxa-pair-device-dialog-sync"
+        data-l10n-attrs="style">
 
   <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
     <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
     <html:link rel="localization" href="browser/preferences/fxaPairDevice.ftl"/>
   </linkset>
   <script src="chrome://browser/content/preferences/fxaPairDevice.js"/>
 
+  <description id="pairTitle" data-l10n-id="fxa-qrcode-pair-title">
+  </description>
   <vbox id="qrCodeDisplay">
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step1">
-      <html:a
-        id="connect-another-device-link"
-        data-l10n-name="connect-another-device"
-        class="text-link" target="_blank"/>
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step1">
     </description>
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step2"></description>
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step3">
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step2">
       <html:img
         src="chrome://browser/skin/preferences/ios-menu.svg"
         data-l10n-name="ios-menu-icon"
@@ -40,12 +38,8 @@
         src="chrome://browser/skin/preferences/android-menu.svg"
         data-l10n-name="android-menu-icon"
         class="menu-icon"/>
-      <html:img
-        src="chrome://global/skin/icons/settings.svg"
-        data-l10n-name="settings-icon"
-        class="menu-icon"/>
     </description>
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-step4"></description>
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step3"></description>
     <vbox>
       <vbox align="center" id="qrWrapper" pairing-status="loading">
         <box id="qrContainer"></box>

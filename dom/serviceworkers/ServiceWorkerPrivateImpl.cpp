@@ -249,6 +249,12 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
       /* referrerInfo */ nullptr,
 
       storageAccess, isThirdPartyContextToTopWindow,
+      nsContentUtils::ShouldResistFingerprinting_dangerous(
+          principal,
+          "Service Workers exist outside a Document or Channel; as a property "
+          "of the domain (and origin attributes). We don't have a "
+          "CookieJarSettings to perform the nested check, but we can rely on"
+          "the FPI/dFPI partition key check."),
       // Origin trials are associated to a window, so it doesn't make sense on
       // service workers.
       OriginTrials(), std::move(serviceWorkerData), regInfo->AgentClusterId(),
