@@ -41,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Нядаўнія закладкі</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Паказаць усе</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Паказаць усе захаваныя закладкі</string>
 
@@ -354,7 +352,9 @@
     <string name="preferences_customize">Уладкаванне</string>
 
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Сінхранізуйце закладкі, гісторыю і шмат іншага з уліковым запісам Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Сінхранізуйце закладкі, гісторыю і шмат іншага з уліковым запісам Firefox</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Увайсці, каб сінхранізаваць карткі, закладкі, паролі і іншае.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Уліковы запіс Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -527,8 +527,10 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Уключыць сінхранізацыю</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Уключыць сінхранізацыю</string>
 
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Сінхранізацыя і захаванне вашых дадзеных</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Увайдзіце, каб злучыцца зноў</string>
     <!-- Preference for removing FxA account -->
@@ -1078,8 +1080,6 @@
 
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Закладкі захаваны!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Дададзена да папулярных сайтаў</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Дададзены ў цэтлікі!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1715,10 +1715,6 @@
     <string name="no_site_exceptions">Няма выняткаў для сайта</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ці ўпэўнены Вы, што хочаце выдаліць гэту закладку?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Дадаць да папулярных сайтаў</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Выдаліць з папулярных сайтаў</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Дадаць у цэтлікі</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1797,12 +1793,8 @@
     <string name="synced_tabs_collapse_group">Згарнуць групу сінхранізаваных картак</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Дасягнуты ліміт папулярных сайтаў</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Дасягнуты ліміт цэтлікаў</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Каб дадаць новы топ-сайт, выдаліце якісь іншы. Націсніце  на сайт і ўтрымлівайце, пасля абярыце &quot;Выдаліць&quot;.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Каб дадаць новы цэтлік, выдаліце якісь іншы. Націсніце  на сайт і ўтрымлівайце, пасля абярыце &quot;Выдаліць&quot;.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1812,8 +1804,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Цэтлікі</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Назва</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Назва папулярнага сайта</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Назва цэтліка</string>
 	<!-- Button caption to confirm the renaming of the top site. -->

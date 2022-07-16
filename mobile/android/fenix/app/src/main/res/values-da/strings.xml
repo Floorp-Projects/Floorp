@@ -353,7 +353,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tilpas</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Synkroniser bogmærker, historik og mere med din Firefox-konto</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Synkroniser bogmærker, historik og mere med din Firefox-konto</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Log ind for at synkronisere dine faneblade, bogmærker, adgangskoder med mere.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-konto</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -524,7 +526,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Aktiver Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Aktiver Sync</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Synkroniser og gem dine data</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Log ind for at genoprette forbindelse</string>
     <!-- Preference for removing FxA account -->

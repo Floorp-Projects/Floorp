@@ -45,8 +45,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">最近的书签</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">显示全部</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">显示所有保存书签</string>
 
@@ -367,7 +365,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">定制</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">使用您的 Firefox 账户同步书签、历史记录等数据</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">使用您的 Firefox 账户同步书签、历史记录等数据</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">登录后即可同步标签页、书签、密码等数据。</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 账户</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -545,8 +545,10 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">开启同步</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">开启同步</string>
 
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">同步并保存您的数据</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">登录以重新连接</string>
     <!-- Preference for removing FxA account -->
@@ -1111,8 +1113,6 @@
     <string name="snackbar_tabs_closed">标签页已关闭</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">书签已保存！</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">已添加至常用网站!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">快捷方式已添加！</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1737,10 +1737,6 @@
     <string name="no_site_exceptions">无网站例外</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">您确定要删除此书签吗？</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">添加至常用网站</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">从常用网站移除</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">添加快捷方式</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1816,12 +1812,8 @@
     <string name="synced_tabs_collapse_group">折叠同步的标签页组</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">超出常用网站限制</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">超出快捷方式限制</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">若要添加新的常用站点，需先移除一个。请轻触并按住，然后选择移除。</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">请先移除现有的快捷方式才能再添加。长按网站，然后选择移除。</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1831,8 +1823,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">快捷方式</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">名称</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">常用网站名称</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">快捷方式名称</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
