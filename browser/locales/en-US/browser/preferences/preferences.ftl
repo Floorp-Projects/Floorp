@@ -1441,7 +1441,7 @@ None-mode =
  .label= Normal mode
 
 hide-horizontality-tabs = 
- .label= Hide horizontality tabber
+ .label= Hide horizontality tabbar
 
 verticalTab-setting = 
  .label = Browser optimized for vertical tabs
