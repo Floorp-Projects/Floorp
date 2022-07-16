@@ -5542,6 +5542,7 @@
     #appMenu-find-button2,
     #appMenu-more-button2,
     #appMenu-help-button2,
+    #openprofiledir
     #appMenu-quit-button2 {
       padding-top: var(--arrowpanel-menuitemblank-padding-block) !important;
       padding-bottom: var(--arrowpanel-menuitemblank-padding-block) !important;
@@ -5582,6 +5583,9 @@
   }
   #appMenu-print-button2 {
     list-style-image: url("chrome://global/skin/icons/print.svg");
+  }
+  #openprofiledir{
+    list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
   }
 
   @supports -moz-bool-pref("userChrome.icon.panel_full") {

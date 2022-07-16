@@ -12,7 +12,7 @@ function bosshascomming() {
     var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
     .getService(Components.interfaces.nsIPromptService);
   
-    let l10n = new Localization(["browser/aboutDialog.ftl"], true);
+    let l10n = new Localization(["browser/browser.ftl"], true);
     prompts.alert(null, l10n.formatValueSync("rest-mode"),
     l10n.formatValueSync("rest-mode-description"));
   
