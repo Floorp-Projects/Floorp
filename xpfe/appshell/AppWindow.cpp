@@ -3018,9 +3018,7 @@ static nsTArray<LoadNativeMenusListener> sLoadNativeMenusListeners;
 static void BeginLoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow);
 
 static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
-  if (gfxPlatform::IsHeadless()) {
-    return;
-  }
+  MOZ_ASSERT(!gfxPlatform::IsHeadless());
 
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
@@ -3191,15 +3189,17 @@ AppWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded
   // commands
   ///////////////////////////////
-  nsCOMPtr<nsIContentViewer> cv;
-  mDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-    RefPtr<Document> menubarDoc = cv->GetDocument();
-    if (menubarDoc) {
-      if (mIsHiddenWindow || sHiddenWindowLoadedNativeMenus) {
-        BeginLoadNativeMenus(menubarDoc, mWindow);
-      } else {
-        sLoadNativeMenusListeners.EmplaceBack(menubarDoc, mWindow);
+  if (!gfxPlatform::IsHeadless()) {
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) {
+      RefPtr<Document> menubarDoc = cv->GetDocument();
+      if (menubarDoc) {
+        if (mIsHiddenWindow || sHiddenWindowLoadedNativeMenus) {
+          BeginLoadNativeMenus(menubarDoc, mWindow);
+        } else {
+          sLoadNativeMenusListeners.EmplaceBack(menubarDoc, mWindow);
+        }
       }
     }
   }
