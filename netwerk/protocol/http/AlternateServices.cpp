@@ -748,11 +748,10 @@ class WellKnownChecker {
 
     if (NS_FAILED(gHttpHandler->NewChannelId(channelId)) ||
         NS_FAILED(chan->Init(uri, caps, nullptr, 0, nullptr, channelId,
-                             contentPolicyType)) ||
+                             contentPolicyType, loadInfo)) ||
         NS_FAILED(chan->SetAllowAltSvc(false)) ||
         NS_FAILED(chan->SetRedirectMode(
             nsIHttpChannelInternal::REDIRECT_MODE_ERROR)) ||
-        NS_FAILED(chan->SetLoadInfo(loadInfo)) ||
         NS_FAILED(chan->GetLoadFlags(&flags))) {
       return NS_ERROR_FAILURE;
     }

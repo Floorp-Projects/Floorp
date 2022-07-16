@@ -144,7 +144,7 @@ static auto CreateDocumentLoadInfo(CanonicalBrowsingContext* aBrowsingContext,
   } else {
     OriginAttributes attrs;
     aBrowsingContext->GetOriginAttributes(attrs);
-    loadInfo = LoadInfo::CreateForDocument(aBrowsingContext,
+    loadInfo = LoadInfo::CreateForDocument(aBrowsingContext, aLoadState->URI(),
                                            aLoadState->TriggeringPrincipal(),
                                            attrs, securityFlags, sandboxFlags);
   }

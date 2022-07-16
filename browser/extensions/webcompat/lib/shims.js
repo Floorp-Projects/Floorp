@@ -941,6 +941,10 @@ class Shims {
       // If this URL and content type isn't meant for this shim, don't apply it.
       match = shim.isTriggeredByURLAndType(url, type);
       if (match) {
+        if (!unblocked && match.onlyIfBlockedByETP) {
+          continue;
+        }
+
         // If the user has already opted in for this shim, all requests it covers
         // should be allowed; no need for a shim anymore.
         if (shim.hasUserOptedInAlready(topHost)) {

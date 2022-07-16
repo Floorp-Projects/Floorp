@@ -139,15 +139,8 @@ class SessionStoreUtils {
       const nsTArray<SSCacheCopy>& aValues,
       Record<nsCString, Record<nsString, nsString>>& aStorage);
 
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_THUNDERBIRD) || \
-    defined(MOZ_SUITE)
-  static constexpr bool NATIVE_LISTENER = false;
-#else
-  static constexpr bool NATIVE_LISTENER = true;
-#endif
-
-  static bool CopyProperty(JSContext* aCx, JS::Handle<JSObject*> aDst,
-                           JS::Handle<JSObject*> aSrc, const nsAString& aName);
+  static bool CopyProperty(JSContext* aCx, JS::HandleObject aDst,
+                           JS::HandleObject aSrc, const nsAString& aName);
 
   template <typename T>
   static bool CopyChildren(JSContext* aCx, JS::Handle<JSObject*> aDst,

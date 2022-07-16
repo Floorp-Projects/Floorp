@@ -42,7 +42,7 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   CopyUTF8toUTF16(safe_origin_spec, data.mURL);
   data.mCreationTime = TimeStamp::Now();
 
-  Navigator::GetUserAgent(nullptr, aPrincipal, false, data.mUserAgent);
+  Navigator::GetUserAgent(nullptr, nullptr, Nothing(), data.mUserAgent);
   data.mPrincipal = aPrincipal;
   data.mFailures = 0;
   data.mEndpointURL = endpoint_url;

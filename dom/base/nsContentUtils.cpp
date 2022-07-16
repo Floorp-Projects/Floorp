@@ -2114,6 +2114,8 @@ bool nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled(
          StaticPrefs::dom_element_transform_getters_enabled();
 }
 
+// Older Should RFP Functions ----------------------------------
+
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting() {
   return StaticPrefs::privacy_resistFingerprinting();
@@ -2128,13 +2130,61 @@ bool nsContentUtils::ShouldResistFingerprinting(
   return aGlobalObject->ShouldResistFingerprinting();
 }
 
+// Newer Should RFP Functions ----------------------------------
+
+inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
+                                 nsAutoCString& url, bool isExemptDomain) {
+  nsAutoCString list;
+  Preferences::GetCString(exemptedDomainsPrefName, list);
+  MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
+          ("Domain \"%s\" is %s the exempt list \"%s\"",
+           PromiseFlatCString(url).get(), isExemptDomain ? "in" : "NOT in",
+           PromiseFlatCString(list).get()));
+}
+
+inline bool CookieJarSettingsSaysShouldResistFingerprinting(
+    nsILoadInfo* aLoadInfo) {
+  // If the loadinfo's CookieJarSettings says that we _should_ resist
+  // fingerprinting we can always believe it. (This is the (*) rule from
+  // CookieJarSettings.h)
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called CookieJarSettingsSaysShouldResistFingerprinting but the "
+             "loadinfo's CookieJarSettings couldn't be retrieved"));
+    return true;
+  }
+  return cookieJarSettings->GetShouldResistFingerprinting();
+}
+
+// These constants are used for privacy.resistFingerprinting.testGranularityMask
+const unsigned int sWebExtensionExemptMask = 0x01;
+const unsigned int sNonPBMExemptMask = 0x02;
+const unsigned int sSpecificDomainsExemptMask = 0x04;
+const char* kExemptedDomainsPrefName =
+    "privacy.resistFingerprinting.exemptedDomains";
+
+// --------------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
+  // See comment in header file for information about usage
+  return ShouldResistFingerprinting();
+}
+
+// ----------------------------------------------------------------------
 bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
   if (!aDocShell) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(const "
+             "nsIDocShell* aDocShell) with NULL docshell"));
     return ShouldResistFingerprinting();
   }
   return ShouldResistFingerprinting(aDocShell->GetDocument());
 }
 
+// --------------------------------------------------------------------
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
   if (!aDoc) {
@@ -2150,36 +2200,7 @@ bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
   return ShouldResistFingerprinting(aDoc->GetChannel());
 }
 
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
-  if (!aPrincipal) {
-    return ShouldResistFingerprinting();
-  }
-  bool isChrome = aPrincipal->IsSystemPrincipal();
-  return !isChrome && ShouldResistFingerprinting();
-}
-
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
-  // See comment in header file for information about usage
-  return ShouldResistFingerprinting();
-}
-
-inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
-                                 nsAutoCString& url, bool isExemptDomain) {
-  nsAutoCString list;
-  Preferences::GetCString(exemptedDomainsPrefName, list);
-  MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
-          ("Domain \"%s\" is %s the exempt list \"%s\"",
-           PromiseFlatCString(url).get(), isExemptDomain ? "in" : "NOT in",
-           PromiseFlatCString(list).get()));
-}
-
-// These constants are used for privacy.resistFingerprinting.testGranularityMask
-const unsigned int sWebExtensionExemptMask = 0x01;
-const unsigned int sNonPBMExemptMask = 0x02;
-const unsigned int sSpecificDomainsExemptMask = 0x04;
-
+// ----------------------------------------------------------------------
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
   if (!ShouldResistFingerprinting("Legacy quick-check")) {
@@ -2194,22 +2215,26 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-
-  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-      sNonPBMExemptMask) {
-    // if non-PBM exempt mask is true, exempt non-PBM channels.
-    if (loadInfo->GetOriginAttributes().mPrivateBrowsingId == 0) {
-      return false;
-    }
+  if (!loadInfo) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(nsIChannel* "
+             "aChannel) but the channel's loadinfo was NULL"));
+    return true;
   }
 
-  bool isExemptDomain = false;
-  const char* exemptedDomainsPrefName =
-      "privacy.resistFingerprinting.exemptedDomains";
-
-  if (loadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_DOCUMENT) {
-    // Case 1: Top Level Load
+  // Document types have no loading principal.  Subdocument types do have a
+  // loading principal, but it is the loading principal of the parent document;
+  // not the subdocument.
+  auto contentType = loadInfo->GetExternalContentPolicyType();
+  if (contentType == ExtContentPolicy::TYPE_DOCUMENT ||
+      contentType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    // This cookie jar check is relevant to both document and non-document
+    // cases. but it will be performed inside the ShouldRFP(nsILoadInfo) as
+    // well, so we put into this conditional to avoid doing it twice in that
+    // case.
+    if (CookieJarSettingsSaysShouldResistFingerprinting(loadInfo)) {
+      return true;
+    }
 
     nsCOMPtr<nsIURI> channelURI;
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
@@ -2222,47 +2247,43 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
       return true;
     }
 
-    // Exclude internal schemes
-    if (channelURI->SchemeIs("about") || channelURI->SchemeIs("chrome") ||
-        channelURI->SchemeIs("resource") ||
-        channelURI->SchemeIs("view-source")) {
-      return false;
+#if 0
+  if (loadInfo->GetExternalContentPolicyType() == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    nsCOMPtr<nsIURI> channelURI;
+    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    nsAutoCString channelSpec;
+    channelURI->GetSpec(channelSpec);
+
+    if (!loadInfo->GetLoadingPrincipal()) {
+        MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Sub Document Type.  FinalChannelURI is %s, Loading Principal is NULL\n",
+                channelSpec.get()));
+
+    } else {
+        nsAutoCString loadingPrincipalSpec;
+        loadInfo->GetLoadingPrincipal()->GetOrigin(loadingPrincipalSpec);
+
+        MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Sub Document Type.  FinalChannelURI is %s, Loading Principal Origin is %s\n",
+                channelSpec.get(), loadingPrincipalSpec.get()));
     }
+  }
 
-    if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-        sWebExtensionExemptMask) {
-      if (channelURI->SchemeIs("web-extension")) {
-        return false;
-      }
-    }
+#endif
 
-    if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
-        sSpecificDomainsExemptMask) {
-      nsAutoCString list;
-      Preferences::GetCString(exemptedDomainsPrefName, list);
-      ToLowerCase(list);
-      isExemptDomain = IsURIInList(channelURI, list);
-
-      if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
-                       mozilla::LogLevel::Debug)) {
-        nsAutoCString url;
-        channelURI->GetHost(url);
-        LogDomainAndPrefList(exemptedDomainsPrefName, url, isExemptDomain);
-      }
-    }
-
-    return !isExemptDomain;
+    return ShouldResistFingerprinting_dangerous(
+        channelURI, loadInfo->GetOriginAttributes(), "Internal Call");
   }
 
   // Case 2: Subresource Load
-  return ShouldResistFingerprinting(loadInfo->GetLoadingPrincipal(),
-                                    loadInfo->GetOriginAttributes());
+  return ShouldResistFingerprinting(loadInfo);
 }
 
+// ----------------------------------------------------------------------
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    nsIPrincipal* aPrincipal,
-    const mozilla::OriginAttributes& aOriginAttributes) {
+bool nsContentUtils::ShouldResistFingerprinting_dangerous(
+    nsIURI* aURI, const mozilla::OriginAttributes& aOriginAttributes,
+    const char* aJustification) {
   if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
@@ -2271,6 +2292,85 @@ bool nsContentUtils::ShouldResistFingerprinting(
       sNonPBMExemptMask) {
     // if non-PBM exempt mask is true, exempt non-PBM channels.
     if (aOriginAttributes.mPrivateBrowsingId == 0) {
+      return false;
+    }
+  }
+
+  bool isExemptDomain = false;
+  // Exclude internal schemes
+  if (aURI->SchemeIs("about") || aURI->SchemeIs("chrome") ||
+      aURI->SchemeIs("resource") || aURI->SchemeIs("view-source")) {
+    return false;
+  }
+
+  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+      sWebExtensionExemptMask) {
+    if (aURI->SchemeIs("web-extension")) {
+      return false;
+    }
+  }
+
+  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+      sSpecificDomainsExemptMask) {
+    nsAutoCString list;
+    Preferences::GetCString(kExemptedDomainsPrefName, list);
+    ToLowerCase(list);
+    isExemptDomain = IsURIInList(aURI, list);
+
+    if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
+                     mozilla::LogLevel::Debug)) {
+      nsAutoCString url;
+      aURI->GetHost(url);
+      LogDomainAndPrefList(kExemptedDomainsPrefName, url, isExemptDomain);
+    }
+  }
+
+  return !isExemptDomain;
+}
+
+// ----------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* aLoadInfo) {
+  MOZ_ASSERT(aLoadInfo->GetExternalContentPolicyType() != ExtContentPolicy::TYPE_DOCUMENT &&
+             aLoadInfo->GetExternalContentPolicyType() != ExtContentPolicy::TYPE_SUBDOCUMENT);
+
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
+    return false;
+  }
+
+  if (CookieJarSettingsSaysShouldResistFingerprinting(aLoadInfo)) {
+    return true;
+  }
+
+  // Because this function is only used for subresource loads, this
+  // will check the parent's principal
+  nsIPrincipal* principal = aLoadInfo->GetLoadingPrincipal();
+  MOZ_ASSERT(BasePrincipal::Cast(principal)->OriginAttributesRef() ==
+             aLoadInfo->GetOriginAttributes());
+  return ShouldResistFingerprinting_dangerous(principal, "Internal Call");
+}
+
+// ----------------------------------------------------------------------
+/* static */
+bool nsContentUtils::ShouldResistFingerprinting_dangerous(
+    nsIPrincipal* aPrincipal, const char* aJustification) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
+    return false;
+  }
+
+  if (!aPrincipal) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
+            ("Called nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* "
+             "aChannel) but the loadinfo's loadingprincipal was NULL"));
+    return true;
+  }
+
+  auto originAttributes =
+      BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+  if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+      sNonPBMExemptMask) {
+    // if non-PBM exempt mask is true, exempt non-PBM channels.
+    if (originAttributes.mPrivateBrowsingId == 0) {
       return false;
     }
   }
@@ -2289,24 +2389,49 @@ bool nsContentUtils::ShouldResistFingerprinting(
   }
 
   bool isExemptDomain = false;
-  const char* exemptedDomainsPrefName =
-      "privacy.resistFingerprinting.exemptedDomains";
-
   if (StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
       sSpecificDomainsExemptMask) {
-    aPrincipal->IsURIInPrefList(exemptedDomainsPrefName, &isExemptDomain);
+    aPrincipal->IsURIInPrefList(kExemptedDomainsPrefName, &isExemptDomain);
 
     if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
                      mozilla::LogLevel::Debug)) {
       nsAutoCString origin;
       aPrincipal->GetAsciiOrigin(origin);
-      LogDomainAndPrefList(exemptedDomainsPrefName, origin, isExemptDomain);
+      LogDomainAndPrefList(kExemptedDomainsPrefName, origin, isExemptDomain);
+    }
+  }
+
+  // If we've gotten here we have (probably) passed the CookieJarSettings
+  // check that would tell us that if we _are_ a subdocument, then we are on
+  // an exempted top-level domain and we should see if we ourselves are
+  // exempted. But we may have gotten here because we directly called the
+  // _dangerous function and we haven't done that check, but we _were_
+  // instatiated from a state where we could have been partitioned.
+  // So perform this last-ditch check for that scenario.
+  // We arbitrarily use https as the scheme, but it doesn't matter.
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv;
+  if (isExemptDomain && StaticPrefs::privacy_firstparty_isolate() &&
+      !originAttributes.mFirstPartyDomain.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri),
+                   u"https://"_ns + originAttributes.mFirstPartyDomain);
+    if (!NS_FAILED(rv)) {
+      isExemptDomain =
+          nsContentUtils::IsURIInPrefList(uri, kExemptedDomainsPrefName);
+    }
+  } else if (isExemptDomain && !originAttributes.mPartitionKey.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri),
+                   u"https://"_ns + originAttributes.mPartitionKey);
+    if (!NS_FAILED(rv)) {
+      isExemptDomain =
+          nsContentUtils::IsURIInPrefList(uri, kExemptedDomainsPrefName);
     }
   }
 
   return !isExemptDomain;
 }
 
+// ------------------------------------------------------------------
 /* static */
 void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
     int32_t aChromeWidth, int32_t aChromeHeight, int32_t aScreenWidth,

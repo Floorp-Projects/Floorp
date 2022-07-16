@@ -388,8 +388,10 @@ bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
     cookieJarSettings = document->CookieJarSettings();
   } else {
     // If there was no document, we create one cookieJarSettings here in order
-    // to get the cookieBehavior.
-    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular);
+    // to get the cookieBehavior.  We don't need a real value for RFP because
+    // we are only using this object to check default cookie behavior.
+    cookieJarSettings = CookieJarSettings::Create(
+        CookieJarSettings::eRegular, /* shouldResistFingerpreinting */ false);
   }
 
   // We only support partitioned service workers when dFPI is enabled.

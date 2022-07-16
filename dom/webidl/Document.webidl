@@ -741,3 +741,10 @@ partial interface Document {
   [ChromeOnly]
   Wireframe? getWireframe(optional boolean aIncludeNodes = false);
 };
+
+partial interface Document {
+  // Returns true if the document is the current active document in a browsing
+  // context which isn't in bfcache.
+  [ChromeOnly]
+  boolean isActive();
+};

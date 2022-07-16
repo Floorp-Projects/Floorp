@@ -56,7 +56,7 @@ class SessionStoreChangeListener final : public nsINamed,
 
   void FlushSessionStore();
 
-  enum class Change { Input, Scroll, SessionHistory, WireFrame };
+  enum class Change { Input, Scroll, SessionHistory, WireFrame, Resize };
 
   static SessionStoreChangeListener* CollectSessionStoreData(
       WindowContext* aWindowContext, const EnumSet<Change>& aChanges);

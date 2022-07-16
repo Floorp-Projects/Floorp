@@ -6,73 +6,37 @@ However, learning how task-graphs are generated is probably not the work you
 are interested in doing.  This section should help you accomplish some of the
 more common changes to the task graph with minimal fuss.
 
-.. important::
+Taskgraph's documentation provides many relevant how-to guides:
 
-    If you cannot accomplish what you need with the information provided here,
-    please consider whether you can achieve your goal in a different way.
-    Perhaps something simpler would cost a bit more in compute time, but save
-    the much more expensive resource of developers' mental bandwidth.
-    Task-graph generation is already complex enough!
+.. note::
 
-    If you want to proceed, you may need to delve into the implementation of
-    task-graph generation.  The documentation and code are designed to help, as
-    are the authors - ``hg blame`` may help track down helpful people.
+   If you come across references to the ``taskgraph`` command, simply prepend
+   ``./mach`` to the command to make it work in ``mozilla-central``.
 
-    As you write your new transform or add a new kind, please consider the next
-    developer.  Where possible, make your change data-driven and general, so
-    that others can make a much smaller change.  Document the semantics of what
-    you are changing clearly, especially if it involves modifying a transform
-    schema.  And if you are adding complexity temporarily while making a
-    gradual transition, please open a new bug to remind yourself to remove the
-    complexity when the transition is complete.
+.. toctree::
 
-Hacking Task Graphs
--------------------
+   Run Taskgraph Locally <https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/run-locally.html>
+   Debug Taskgraph <https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/debugging.html>
+   Use Fetches <https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/use-fetches.html>
+   Use Docker Images <https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/docker.html>
+   Create Actions <https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/create-actions.html>
 
-The recommended process for changing task graphs is this:
+See Taskgraph's `how-to section`_ for even more guides!
 
-1. Run one of the ``mach taskgraph`` subcommands (see :doc:`mach`) to
-   generate a baseline against which to measure your changes.
-
-   .. code-block:: none
-
-       ./mach taskgraph tasks --json > old-tasks.json
-
-2. Make your modifications under ``taskcluster/``.
-
-3. Run the same ``mach taskgraph`` command, sending the output to a new file,
-   and use ``diff`` to compare the old and new files.  Make sure your changes
-   have the desired effect and no undesirable side-effects.  A plain unified
-   diff should be useful for most changes, but in some cases it may be helpful
-   to post-process the JSON to strip distracting changes.
-
-4. When you are satisfied with the changes, push them to try to ensure that the
-   modified tasks work as expected.
-
-Hacking Actions
-...............
-
-If you are working on an action task and wish to test it out locally, use the
-``./mach taskgraph test-action-callback`` command:
-
-   .. code-block:: none
-
-        ./mach taskgraph test-action-callback \
-            --task-id I4gu9KDmSZWu3KHx6ba6tw --task-group-id sMO4ybV9Qb2tmcI1sDHClQ \
-            --input input.yml hello_world_action
-
-This invocation will run the hello world callback with the given inputs and
-print any created tasks to stdout, rather than actually creating them.
+.. _how-to section: https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/index.html
 
 Common Changes
 --------------
+
+Additionally, here are some tips for common changes you wish to make within
+``mozilla-central``.
 
 Changing Test Characteristics
 .............................
 
 First, find the test description.  This will be in
 ``taskcluster/ci/*/tests.yml``, for the appropriate kind (consult
-:doc:`kinds`).  You will find a YAML stanza for each test suite, and each
+:ref:`kinds`).  You will find a YAML stanza for each test suite, and each
 stanza defines the test's characteristics.  For example, the ``chunks``
 property gives the number of chunks to run.  This can be specified as a simple
 integer if all platforms have the same chunk count, or it can be keyed by test
@@ -99,7 +63,7 @@ Adding a Test Suite
 ...................
 
 To add a new test suite, you will need to know the proper mozharness invocation
-for that suite, and which kind it fits into (consult :doc:`kinds`).
+for that suite, and which kind it fits into (consult :ref:`kinds`).
 
 Add a new stanza to ``taskcluster/ci/<kind>/tests.yml``, copying from the other
 stanzas in that file.  The meanings should be clear, but authoritative
@@ -203,7 +167,7 @@ dependency relationships for your tasks are complex.
 Custom Transforms
 `````````````````
 
-Most loaders apply a series of ":doc:`transforms <transforms>`" that start with
+Most loaders apply a series of ":ref:`transforms`" that start with
 an initial human-friendly description of a task and end with a task definition
 suitable for insertion into a Taskcluster queue.
 
@@ -237,9 +201,3 @@ better investment to modify your task to support invocation via mozharness or
 mach, instead.  If this is not possible, then adding a new file in
 ``taskcluster/gecko_taskgraph/transforms/jobs`` with a structure similar to its peers
 will make the new run-using option available for job descriptions.
-
-Something Else?
-...............
-
-If you make another change not described here that turns out to be simple or
-common, please include an update to this file in your patch.

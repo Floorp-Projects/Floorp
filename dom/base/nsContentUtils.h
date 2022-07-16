@@ -349,13 +349,22 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject);
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
-  static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
   // These functions are the new, nuanced functions
   static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
-  static bool ShouldResistFingerprinting(
-      nsIPrincipal* aPrincipal,
-      const mozilla::OriginAttributes& aOriginAttributes);
+  static bool ShouldResistFingerprinting(nsILoadInfo* aPrincipal);
+  // These functions are labeled as dangerous because they will do the wrong
+  // thing in _most_ cases. They should only be used if you don't have a fully
+  // constructed LoadInfo or Document.
+  // A constant string used as justification is required when calling them,
+  // it should explain why a Document, Channel, LoadInfo, or CookieJarSettings
+  // does not exist in this context.
+  // (see below for more on justification strings.)
+  static bool ShouldResistFingerprinting_dangerous(
+      nsIURI* aURI, const mozilla::OriginAttributes& aOriginAttributes,
+      const char* aJustification);
+  static bool ShouldResistFingerprinting_dangerous(nsIPrincipal* aPrincipal,
+                                                   const char* aJustification);
 
   /**
    * Implement a RFP function that only checks the pref, and does not take

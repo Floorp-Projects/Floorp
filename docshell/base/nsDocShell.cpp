@@ -5781,7 +5781,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
         }
       }
 
-      if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
+      if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
         if (IsForceReloadType(mLoadType)) {
           if (WindowContext* windowContext =
                   mBrowsingContext->GetCurrentWindowContext()) {
@@ -6525,7 +6525,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // incorrectly overrides session store data from the following load.
     return NS_OK;
   }
-  if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
+  if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
     if (WindowContext* windowContext =
             mBrowsingContext->GetCurrentWindowContext()) {
       using Change = SessionStoreChangeListener::Change;
@@ -8495,9 +8495,10 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
 
     // Ideally we should use the same loadinfo as within DoURILoad which
     // should match this one when both are applicable.
-    nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new LoadInfo(
-        mScriptGlobal, aLoadState->TriggeringPrincipal(), requestingContext,
-        nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK, 0);
+    nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+        new LoadInfo(mScriptGlobal, aLoadState->URI(),
+                     aLoadState->TriggeringPrincipal(), requestingContext,
+                     nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK, 0);
 
     // Since Content Policy checks are performed within docShell as well as
     // the ContentSecurityManager we need a reliable way to let certain
@@ -10423,7 +10424,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       aLoadState->GetLoadIdentifier());
   RefPtr<LoadInfo> loadInfo =
       (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT)
-          ? new LoadInfo(loadingWindow, aLoadState->TriggeringPrincipal(),
+          ? new LoadInfo(loadingWindow, aLoadState->URI(),
+                         aLoadState->TriggeringPrincipal(),
                          topLevelLoadingContext, securityFlags, sandboxFlags)
           : new LoadInfo(loadingPrincipal, aLoadState->TriggeringPrincipal(),
                          loadingNode, securityFlags, contentPolicyType,

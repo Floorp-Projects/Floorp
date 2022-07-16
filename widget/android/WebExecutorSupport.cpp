@@ -383,14 +383,18 @@ nsresult WebExecutorSupport::CreateStreamLoader(
     channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
   }
 
+  bool shouldResistFingerprinting =
+      nsContentUtils::ShouldResistFingerprinting(channel);
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   if (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_PRIVATE) {
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
     NS_ENSURE_TRUE(pbChannel, NS_ERROR_FAILURE);
     pbChannel->SetPrivate(true);
-    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::ePrivate);
+    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::ePrivate,
+                                                  shouldResistFingerprinting);
   } else {
-    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular);
+    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular,
+                                                  shouldResistFingerprinting);
   }
   MOZ_ASSERT(cookieJarSettings);
 

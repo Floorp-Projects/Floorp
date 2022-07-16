@@ -33,13 +33,6 @@ const MIN_PAIRING_LOADING_TIME_MS = 1000;
 var gFxaPairDeviceDialog = {
   init() {
     this._resetBackgroundQR();
-    FxAccounts.config
-      .promiseConnectDeviceURI("pairing-modal")
-      .then(connectURI => {
-        document
-          .getElementById("connect-another-device-link")
-          .setAttribute("href", connectURI);
-      });
     // We let the modal show itself before eventually showing a primary-password dialog later.
     Services.tm.dispatchToMainThread(() => this.startPairingFlow());
   },
@@ -60,6 +53,10 @@ var gFxaPairDeviceDialog = {
       if (!Weave.Utils.ensureMPUnlocked()) {
         throw new Error("Master-password locked.");
       }
+      // To keep consistent with our accounts.firefox.com counterpart
+      // we restyle the parent dialog this is contained in
+      this._styleParentDialog();
+
       const [, uri] = await Promise.all([
         new Promise(res => setTimeout(res, MIN_PAIRING_LOADING_TIME_MS)),
         FxAccountsPairingFlow.start({ emitter: this._emitter }),
@@ -74,6 +71,21 @@ var gFxaPairDeviceDialog = {
     } catch (e) {
       this.onError(e);
     }
+  },
+
+  _styleParentDialog() {
+    // Since the dialog title is in the above document, we can't query the
+    // document in this level and need to go up one
+    let dialogParent = window.parent.document;
+
+    // To allow the firefox icon to go over the dialog
+    let dialogBox = dialogParent.querySelector(".dialogBox");
+    dialogBox.style.overflow = "visible";
+    dialogBox.style.borderRadius = "12px";
+
+    let dialogTitle = dialogParent.querySelector(".dialogTitleBar");
+    dialogTitle.style.borderBottom = "none";
+    dialogTitle.classList.add("fxaPairDeviceIcon");
   },
 
   _resetBackgroundQR() {
