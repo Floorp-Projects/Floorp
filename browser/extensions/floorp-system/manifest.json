@@ -35,8 +35,15 @@
     "scripts": ["background-script.js"]
   },
 
-  "applications": {
-    "gecko": {
+  
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "css": ["webcompat/fix-youtube-comment.css"]
+    }
+  ],
+   "applications": {
+     "gecko": {
       "id": "floorp-system@floorp.ablaze.one"
     }
   }
