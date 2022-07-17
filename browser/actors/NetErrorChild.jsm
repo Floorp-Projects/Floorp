@@ -21,12 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsISerializationHelper"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UrlbarUtils",
-  "resource:///modules/UrlbarUtils.jsm"
-);
-
 class NetErrorChild extends RemotePageChild {
   actorCreated() {
     super.actorCreated();
@@ -38,7 +32,6 @@ class NetErrorChild extends RemotePageChild {
       "RPMGetInnerMostURI",
       "RPMAddToHistogram",
       "RPMRecordTelemetryEvent",
-      "RPMCheckAlternateHostAvailable",
       "RPMGetHttpResponseHeader",
     ];
     this.exportFunctions(exportableFunctions);
@@ -97,56 +90,6 @@ class NetErrorChild extends RemotePageChild {
 
   RPMRecordTelemetryEvent(category, event, object, value, extra) {
     Services.telemetry.recordEvent(category, event, object, value, extra);
-  }
-
-  RPMCheckAlternateHostAvailable() {
-    let host = this.contentWindow.location.host;
-    if (!lazy.UrlbarUtils.looksLikeSingleWordHost(host)) {
-      return;
-    }
-
-    let info = Services.uriFixup.forceHttpFixup(
-      this.contentWindow.location.href
-    );
-
-    if (!info.fixupCreatedAlternateURI) {
-      return;
-    }
-
-    let { displayHost, displaySpec, pathQueryRef } = info.fixedURI;
-
-    if (pathQueryRef.endsWith("/")) {
-      pathQueryRef = pathQueryRef.slice(0, pathQueryRef.length - 1);
-    }
-
-    let weakDoc = Cu.getWeakReference(this.contentWindow.document);
-    let onLookupCompleteListener = {
-      onLookupComplete(request, record, status) {
-        let doc = weakDoc.get();
-        if (!doc || !Components.isSuccessCode(status)) {
-          return;
-        }
-
-        let link = doc.createElement("a");
-        link.href = displaySpec;
-        link.setAttribute("data-l10n-name", "website");
-
-        let span = doc.createElement("span");
-        span.appendChild(link);
-        doc.l10n.setAttributes(span, "dns-not-found-with-suggestion", {
-          hostAndPath: displayHost + pathQueryRef,
-        });
-
-        doc.getElementById("errorShortDescText").textContent += " ";
-        doc.getElementById("errorShortDescText").appendChild(span);
-      },
-    };
-
-    Services.uriFixup.checkHost(
-      info.fixedURI,
-      onLookupCompleteListener,
-      this.document.nodePrincipal.originAttributes
-    );
   }
 
   // Get the header from the http response of the failed channel. This function

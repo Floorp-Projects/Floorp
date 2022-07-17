@@ -82,7 +82,6 @@ let RemotePageAccessManager = {
         "ReportBlockingError",
         "DisplayOfflineSupportPage",
       ],
-      RPMCheckAlternateHostAvailable: ["*"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
       RPMGetFormatURLPref: ["app.support.baseURL"],
