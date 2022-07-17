@@ -189,45 +189,45 @@
     <string name="mozac_browser_errorpages_unknown_host_title">Адрес не найден</string>
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
-      <p>Адрес (URL) не соответствует ни одному из известных сайтов и не может быть загружен.</p>
+      <p>Браузеру не удалось найти сервер по указанному адресу.</p>
       <ul>
-        <li>Проверьте, нет ли ошибки в адресе, например,
-          <strong>ww</strong>.test.ru вместо
-          <strong>www</strong>.test.ru</li>
-        <li>Если ни одна страница не загружается, проверьте соединение вашего устройства с мобильной или Wi-Fi сетью.</li>
+        <li>Проверьте, нет ли в адресе опечаток, например,
+          <strong>ww</strong>.example.com вместо
+          <strong>www</strong>.example.com.</li>
+        <li>Если вам не удаётся загрузить ни одну страницу, проверьте соединение своего устройства с мобильной или Wi-Fi сетью.</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Нет соединения с Интернетом</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
-    <string name="mozac_browser_errorpages_no_internet_message">Проверьте подключение к Интернету или попробуйте перезагрузить страницу позже.</string>
+    <string name="mozac_browser_errorpages_no_internet_message">Проверьте своё соединение с сетью или попробуйте перезагрузить страницу через некоторое время.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Перезагрузить</string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_malformed_uri_title">Некорректный адрес</string>
+    <string name="mozac_browser_errorpages_malformed_uri_title">Неправильный формат адреса</string>
 
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
-      <p>Синтаксис указанного адреса некорректен. Проверьте адрес на наличие ошибок и попробуйте снова.</p>
+      <p>Не удаётся распознать формат указанного адреса. Проверьте адрес на наличие ошибок и попробуйте снова.</p>
     ]]></string>
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Формат адреса неверен</string>
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Неправильный формат адреса</string>
     <!-- This string contains markup. The URL should not be localized. -->
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
       <ul>
-        <li>Адреса веб-сайтов обычно записываются в формате <strong>http://www.test.ru/</strong></li>
-        <li>Убедитесь, что вы используете слеши (например, <strong>/</strong>).</li>
+        <li>Веб-адреса обычно имеют вид <strong>http://www.example.com/</strong></li>
+        <li>Убедитесь, что вы используете обычную косую черту (т.е. <strong>/</strong>).</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Неизвестный протокол</string>
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
-      <p>Адрес начинается с протокола, неизвестного браузеру (вроде <q>wxyz://</q>), поэтому браузер не может соединиться с сайтом.</p>
+      <p>Адрес содержит неизвестный браузеру протокол (такой как <q>wxyz://</q>), поэтому браузер не может правильно установить соединение с сайтом.</p>
       <ul>
-        <li>Если вы соединяетесь с сайтом, на котором имеются мультимедиа или другие нетекстовые сервисы, проверьте требования сайта к необходимому программному обеспечению.</li>
-        <li>Некоторые протоколы могут потребовать установки стороннего программного обеспечения или плагинов для браузера перед тем, как браузер сможет их распознать.</li>
+        <li>Если вы пытаетесь открыть мультимедиа или другие нетекстовые сервисы, проверьте сайт на наличие особых требований.</li>
+        <li>Некоторые протоколы могут требовать установки стороннего программного обеспечения или плагинов для того, чтобы браузер мог их распознать.</li>
       </ul>
     ]]></string>
 
@@ -235,39 +235,39 @@
     <string name="mozac_browser_errorpages_file_not_found_title">Файл не найден</string>
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
       <ul>
-        <li>Возможно, файл был переименован, удалён или перемещён?</li>
-        <li>Проверьте, не допустили ли вы в имени файла орфографическую ошибку, неверно указали регистр или совершили какую-либо ещё ошибку в адресе.</li>
-        <li>Проверьте, имеется ли у вас достаточно прав для просмотра запрошенного файла.</li>
+        <li>Возможно, файл был переименован, удалён или перемещён.</li>
+        <li>Проверьте, не допустили ли вы ошибку при вводе адреса.</li>
+        <li>Убедитесь, что у вас достаточно прав для просмотра запрашиваемого файла.</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_access_denied_title">В доступе к файлу отказано</string>
+    <string name="mozac_browser_errorpages_file_access_denied_title">Отказано в доступе к файлу</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
       <ul>
-        <li>Возможно, что он был удалён или перемещён, или разрешения на файл не дают получить к нему доступ.</li>
+        <li>Возможно, файл был удалён, перемещён или у вас недостаточно прав для его просмотра.</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Прокси-сервер отказал в соединении</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Прокси-сервер отказал в установке соединения</string>
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
-      <p>Браузер настроен на использование прокси-сервера, однако прокси-сервер отказал в соединении.</p>
+      <p>В браузере настроено использование прокси-сервера, но прокси-сервер отказал в установке соединения.</p>
       <ul>
-        <li>Проверьте настройки прокси-сервера в браузере и попробуйте снова.</li>
-        <li>Проверьте, разрешает ли прокси-сервер соединения из этой сети.</li>
-        <li>Если у вас всё ещё имеются проблемы, проконсультируйтесь с вашим системным администратором или Интернет-провайдером.</li>
+        <li>Проверьте настройки прокси браузера и попробуйте снова.</li>
+        <li>Проверьте, разрешает ли служба прокси соединения из этой сети.</li>
+        <li>Проблема не исчезла? Обратитесь к своему системному администратору или Интернет-провайдеру за помощью.</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Прокси-сервер не найден</string>
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Браузер настроен на использование прокси-сервера, однако прокси-сервер не может быть найден.</p>
+      <p>В браузере настроено использование прокси-сервера, но прокси-сервер не удалось найти.</p>
       <ul>
-        <li>Проверьте настройки прокси-сервера в браузере и попробуйте снова.</li>
+        <li>Проверьте настройки прокси браузера и попробуйте снова.</li>
         <li>Проверьте, подключено ли ваше устройство к активной сети.</li>
-        <li>Если у вас всё ещё имеются проблемы, проконсультируйтесь с вашим системным администратором или Интернет-провайдером.</li>
+        <li>Проблема не исчезла? Обратитесь к своему системному администратору или Интернет-провайдеру за помощью.</li>
       </ul>
     ]]></string>
 
@@ -275,28 +275,28 @@
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Вредоносный сайт</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
-      <p>Имеется информация о том, что сайт %1$s используется для атак на устройства пользователей. В соответствии с вашими настройками безопасности он был заблокирован.</p>
+      <p>Есть информация, что сайт %1$s используется для атак на устройства пользователей, поэтому он был заблокирован в соответствии с вашими настройками защиты.</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Вредоносный сайт</string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Нежелательный сайт</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
-      <p>Имеется информация о том, что сайт %1$s используется для распространения вредоносных приложений. В соответствии с вашими настройками безопасности он был заблокирован.</p>
+      <p>Есть информация о том, что сайт %1$s используется для распространения нежелательного программного обеспечения, поэтому он был заблокирован в соответствии с вашими настройками защиты.</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Вредоносный сайт</string>
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Опасный сайт</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
-      <p>Имеется информация о том, что сайт %1$s представляет потенциальную опасность. В соответствии с вашими настройками безопасности он был заблокирован.</p>
+      <p>Есть информация о том, что сайт %1$s потенциально опасен, поэтому он был заблокирован в соответствии с вашими настройками защиты.</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Поддельный сайт</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
-      <p>Имеется информация о том, что веб-страница на %1$s является поддельным сайтом. В соответствии с вашими настройками безопасности она была заблокирована.</p>
+      <p>Есть информация о том, что эта веб-страница на %1$s — поддельная, поэтому она была заблокирована в соответствии с вашими настройками защиты.</p>
     ]]></string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
