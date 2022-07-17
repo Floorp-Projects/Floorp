@@ -7,7 +7,6 @@ browser.jar:
 
 # userScript
    content/userchromejs/chromecss.uc.js             (chromecss.uc.js)
-   content/userchromejs/sidebarautohide.uc.js       (sidebarautohide.uc.js)
 
 # Loader
    content/userchromejs/BootstrapLoader.jsm         (loader/BootstrapLoader.jsm)

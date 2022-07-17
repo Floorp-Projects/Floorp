@@ -15,10 +15,3 @@ var firefox = document.createElement('script');
 firefox.src = "chrome://userchromejs/content/chromecss.uc.js"; 
 document.head.appendChild(firefox); 
 }
-
-if (Services.prefs.getBoolPref("floorp", false)) {    
-var firefox = document.createElement('script');
-firefox.src = "chrome://userchromejs/content/sidebarautohide.uc.js"; 
-document.head.appendChild(firefox);
-firefox.setAttribute("id", "firefox");
-}
