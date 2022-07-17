@@ -35,6 +35,7 @@ module.exports = {
     RPMSendQuery: false,
     RPMAddMessageListener: false,
     RPMRecordTelemetryEvent: false,
+    RPMCheckAlternateHostAvailable: false,
     RPMAddToHistogram: false,
     RPMRemoveMessageListener: false,
     RPMGetHttpResponseHeader: false,

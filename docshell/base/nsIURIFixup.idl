@@ -8,6 +8,7 @@
 
 interface nsIURI;
 interface nsIInputStream;
+interface nsIDNSListener;
 webidl BrowsingContext;
 
 /**
@@ -148,6 +149,49 @@ interface nsIURIFixup : nsISupports
      */
     nsIURIFixupInfo keywordToURI(in AUTF8String aKeyword,
                                  [optional] in boolean aIsPrivateContext);
+
+    /**
+     * Given a uri-like string with a protocol, attempt to fix and convert it
+     * into an instance of nsIURIFixupInfo.
+     *
+     * Differently from getFixupURIInfo, this assumes the input string is an
+     * http/https uri, and can add a prefix and/or suffix to its hostname.
+     *
+     * The scheme will be changed to the scheme defined in
+     * "browser.fixup.alternate.protocol", which is by default, https.
+     *
+     * If the prefix and suffix of the host are missing, it will add them to
+     * the host using the preferences "browser.fixup.alternate.prefix" and
+     * "browser.fixup.alternate.suffix" as references.
+     *
+     * If a hostname suffix is present, but the URI doesn't contain a prefix,
+     * it will add the prefix via "browser.fixup.alternate.prefix"
+     *
+     * @param aUriString The URI to fixup and convert.
+     * @returns nsIURIFixupInfo
+     *                   A nsIURIFixupInfo object with the property fixedURI
+     *                   which contains the modified URI.
+     * @throws NS_ERROR_FAILURE
+     *                   If aUriString is undefined, or the scheme is not
+     *                   http/https.
+     */
+    nsIURIFixupInfo forceHttpFixup(in AUTF8String aUriString);
+
+    /**
+     * With the host associated with the URI, use nsIDNSService to determine
+     * if an IP address can be found for this host. This method will ignore checking
+     * hosts that are IP addresses. If the host does not contain any periods, depending
+     * on the browser.urlbar.dnsResolveFullyQualifiedNames preference value, a period
+     * may be appended in order to make it a fully qualified domain name.
+     *
+     * @param aURI The URI to parse and pass into the DNS lookup.
+     * @param aListener The listener when the result from the lookup is available.
+     * @param aOriginAttributes The originAttributes to pass the DNS lookup.
+     * @throws NS_ERROR_FAILURE if aURI does not have a displayHost or asciiHost.
+     */
+    void checkHost(in nsIURI aURI,
+                    in nsIDNSListener aListener,
+                    [optional] in jsval aOriginAttributes);
 
     /**
      * Returns true if the specified domain is known and false otherwise.
