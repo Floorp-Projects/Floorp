@@ -25,9 +25,6 @@
     display: -moz-inline-box;
     -moz-box-ordinal-group: 2;
     }
-    #tabbrowser-arrowscrollbox{
-      min-height: 3.5em !important;
-    }
     #fxa-manage-account-button vbox {
     margin-inline-start: 24px;
     }
