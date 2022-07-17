@@ -969,9 +969,23 @@ async function do_single_test_run(browserFixupAlternateEnabled = false) {
         couldDoKeywordLookup && expectKeywordLookup,
         "keyword lookup as expected"
       );
+
+      let expectProtocolChangeAfterAlternate = false;
+      // If alternativeURI was created, the protocol of the URI
+      // might have been changed to browser.fixup.alternate.protocol
+      // If the protocol is not the same as what was in expectedFixedURI,
+      // the protocol must've changed in the fixup process.
+      if (
+        makeAlternativeURI &&
+        alternativeURI != null &&
+        !expectedFixedURI.startsWith(URIInfo.fixedURI.scheme)
+      ) {
+        expectProtocolChangeAfterAlternate = true;
+      }
+
       Assert.equal(
         URIInfo.fixupChangedProtocol,
-        expectProtocolChange,
+        expectProtocolChange || expectProtocolChangeAfterAlternate,
         "protocol change as expected"
       );
       Assert.equal(

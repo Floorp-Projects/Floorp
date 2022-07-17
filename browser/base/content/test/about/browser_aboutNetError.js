@@ -8,11 +8,21 @@ const TLS10_PAGE = "https://tls1.example.com/";
 const TLS12_PAGE = "https://tls12.example.com/";
 const TRIPLEDES_PAGE = "https://3des.example.com/";
 
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "gDNSOverride",
+  "@mozilla.org/network/native-dns-override;1",
+  "nsINativeDNSResolverOverride"
+);
+
 // This includes all the cipher suite prefs we have.
 function resetPrefs() {
   Services.prefs.clearUserPref("security.tls.version.min");
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("security.tls.version.enable-deprecated");
+  Services.prefs.clearUserPref("browser.fixup.alternate.enabled");
 }
 
 add_task(async function resetToDefaultConfig() {
@@ -135,6 +145,65 @@ add_task(async function checkLearnMoreLink() {
     );
   });
 
+  resetPrefs();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// When a user tries going to a host without a suffix
+// and the term doesn't match a host and we are able to suggest a
+// valid correction, the page should show the correction.
+// e.g. http://example/example2 -> https://www.example.com/example2
+add_task(async function checkDomainCorrection() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.fixup.alternate.enabled", false]],
+  });
+  lazy.gDNSOverride.addIPOverride("www.example.com", "::1");
+
+  info("Try loading a URI that should result in an error page");
+  BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example/example2/",
+    false
+  );
+
+  info("Loading and waiting for the net error");
+  let browser = gBrowser.selectedBrowser;
+  let pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  await pageLoaded;
+
+  const baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+
+  await SpecialPowers.spawn(browser, [baseURL], async function(_baseURL) {
+    const doc = content.document;
+    ok(
+      doc.documentURI.startsWith("about:neterror"),
+      "Should be showing error page"
+    );
+
+    const errorNotice = doc.getElementById("errorShortDescText");
+    ok(ContentTaskUtils.is_visible(errorNotice), "Error text is visible");
+
+    // Wait for the domain suggestion to be resolved and for the text to update
+    await ContentTaskUtils.waitForCondition(() => {
+      let el = doc.getElementById("errorShortDescText");
+      if (el) {
+        return el.querySelector("a") && el.querySelector("a").textContent != "";
+      }
+      return false;
+    }, "Helper link has been set");
+
+    const link = doc.getElementById("errorShortDescText").querySelector("a");
+    is(
+      link.getAttribute("href"),
+      "https://www.example.com/example2/",
+      "Link was corrected"
+    );
+
+    const actualDataL10nID = link.getAttribute("data-l10n-name");
+    is(actualDataL10nID, "website", "Correct name is set");
+  });
+
+  lazy.gDNSOverride.clearHostOverride("www.example.com");
   resetPrefs();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
