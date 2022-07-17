@@ -1055,7 +1055,7 @@
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Accedi per sincronizzare</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Accedi a Sync</string>
+    <string name="sync_sign_in">Accedi per sincronizzare</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Invia a tutti i dispositivi</string>
     <!-- An option from the share dialog to reconnect to sync -->

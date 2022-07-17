@@ -716,7 +716,7 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Закрити всі вкладки</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
-    <string name="tab_tray_multiselect_menu_item_bookmark">Закласти</string>
+    <string name="tab_tray_multiselect_menu_item_bookmark">Додати до закладок</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Закрити</string>
     <!-- Content description for tabs tray multiselect share button -->
@@ -1326,11 +1326,11 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Стеження соціальних мереж</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">Обмежує можливість соціальних мереж відстежувати вашу діяльність в Інтернеті.</string>
+    <string name="etp_social_media_trackers_description">Обмежує можливість соціальних мереж стежити за вашою діяльністю в Інтернеті.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Куки стеження між сайтами</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Блокує файли куки, які рекламні мережі та аналітичні компанії використовують для збирання ваших даних перегляду на багатьох сайтах.</string>
+    <string name="etp_cookies_description">Блокує куки, які рекламні мережі та аналітичні компанії використовують для збору ваших даних перегляду на багатьох сайтах.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Криптомайнери</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1700,7 +1700,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Ви впевнені, що хочете видалити цей дозвіл для цього сайту?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
-    <string name="no_site_exceptions">Немає винятків для сайту</string>
+    <string name="no_site_exceptions">Немає винятків для сайтів</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ви впевнені, що хочете видалити цю закладку?</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
