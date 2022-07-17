@@ -48,13 +48,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIFileProtocolHandler"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gDNSService",
-  "@mozilla.org/network/dns-service;1",
-  "nsIDNSService"
-);
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "fixupSchemeTypos",
@@ -84,13 +77,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "alternateProtocol",
   "browser.fixup.alternate.protocol",
   "https"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "dnsResolveFullyQualifiedNames",
-  "browser.urlbar.dnsResolveFullyQualifiedNames",
-  "true"
 );
 
 const {
@@ -536,99 +522,6 @@ URIFixup.prototype = {
     return info;
   },
 
-  forceHttpFixup(uriString) {
-    if (!uriString) {
-      throw new Components.Exception(
-        "Should pass a non-null uri",
-        Cr.NS_ERROR_FAILURE
-      );
-    }
-
-    let info = new URIFixupInfo(uriString);
-    let { scheme, fixedSchemeUriString, fixupChangedProtocol } = extractScheme(
-      uriString,
-      FIXUP_FLAG_FIX_SCHEME_TYPOS
-    );
-
-    if (scheme != "http" && scheme != "https") {
-      throw new Components.Exception(
-        "Scheme should be either http or https",
-        Cr.NS_ERROR_FAILURE
-      );
-    }
-
-    info.fixupChangedProtocol = fixupChangedProtocol;
-    info.fixedURI = Services.io.newURI(fixedSchemeUriString);
-
-    let host = info.fixedURI.host;
-    if (host != "http" && host != "https" && host != "localhost") {
-      let modifiedHostname = maybeAddPrefixAndSuffix(host);
-      updateHostAndScheme(info, modifiedHostname);
-      info.preferredURI = info.fixedURI;
-    }
-
-    return info;
-  },
-
-  checkHost(uri, listener, originAttributes) {
-    let { displayHost, asciiHost } = uri;
-    if (!displayHost) {
-      throw new Components.Exception(
-        "URI must have displayHost",
-        Cr.NS_ERROR_FAILURE
-      );
-    }
-    if (!asciiHost) {
-      throw new Components.Exception(
-        "URI must have asciiHost",
-        Cr.NS_ERROR_FAILURE
-      );
-    }
-
-    let isIPv4Address = host => {
-      let parts = host.split(".");
-      if (parts.length != 4) {
-        return false;
-      }
-      return parts.every(part => {
-        let n = parseInt(part, 10);
-        return n >= 0 && n <= 255;
-      });
-    };
-
-    // Avoid showing fixup information if we're suggesting an IP. Note that
-    // decimal representations of IPs are normalized to a 'regular'
-    // dot-separated IP address by network code, but that only happens for
-    // numbers that don't overflow. Longer numbers do not get normalized,
-    // but still work to access IP addresses. So for instance,
-    // 1097347366913 (ff7f000001) gets resolved by using the final bytes,
-    // making it the same as 7f000001, which is 127.0.0.1 aka localhost.
-    // While 2130706433 would get normalized by network, 1097347366913
-    // does not, and we have to deal with both cases here:
-    if (isIPv4Address(asciiHost) || /^(?:\d+|0x[a-f0-9]+)$/i.test(asciiHost)) {
-      return;
-    }
-
-    // For dotless hostnames, we want to ensure this ends with a '.' but don't
-    // want the . showing up in the UI if we end up notifying the user, so we
-    // use a separate variable.
-    let lookupName = displayHost;
-    if (lazy.dnsResolveFullyQualifiedNames && !lookupName.includes(".")) {
-      lookupName += ".";
-    }
-
-    Services.obs.notifyObservers(null, "uri-fixup-check-dns");
-    lazy.gDNSService.asyncResolve(
-      lookupName,
-      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
-      0,
-      null,
-      listener,
-      Services.tm.mainThread,
-      originAttributes
-    );
-  },
-
   isDomainKnown,
 
   classID: Components.ID("{c6cf88b7-452e-47eb-bdc9-86e3561648ef}"),
@@ -879,13 +772,45 @@ function maybeSetAlternateFixedURI(info, fixupFlags) {
 
   // Get the prefix and suffix to stick onto the new hostname. By default these
   // are www. & .com but they could be any other value, e.g. www. & .org
-  let newHost = maybeAddPrefixAndSuffix(oldHost);
+  let prefix = Services.prefs.getCharPref(
+    "browser.fixup.alternate.prefix",
+    "www."
+  );
+  let suffix = Services.prefs.getCharPref(
+    "browser.fixup.alternate.suffix",
+    ".com"
+  );
 
-  if (newHost == oldHost) {
+  let newHost = "";
+  let numDots = (oldHost.match(/\./g) || []).length;
+  if (numDots == 0) {
+    newHost = prefix + oldHost + suffix;
+  } else if (numDots == 1) {
+    if (prefix && oldHost == prefix) {
+      newHost = oldHost + suffix;
+    } else if (suffix && !oldHost.startsWith(prefix)) {
+      newHost = prefix + oldHost;
+    }
+  }
+  if (!newHost) {
     return false;
   }
 
-  return updateHostAndScheme(info, newHost);
+  // Assign the new host string over the old one
+  try {
+    info.fixedURI = uri
+      .mutate()
+      .setScheme(lazy.alternateProtocol)
+      .setHost(newHost)
+      .finalize();
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_MALFORMED_URI) {
+      throw ex;
+    }
+    return false;
+  }
+  info.fixupCreatedAlternateURI = true;
+  return true;
 }
 
 /**
@@ -1200,78 +1125,4 @@ function isURILike(uriString, host) {
   }
 
   return lazy.portRegex.test(uriString);
-}
-
-/**
- * Add prefix and suffix to a hostname if both are missing.
- *
- * If the host does not start with the prefix, add the prefix to
- * the hostname.
- *
- * By default the prefix and suffix are www. and .com but they could
- * be any value e.g. www. and .org as they use the preferences
- * "browser.fixup.alternate.prefix" and "browser.fixup.alternative.suffix"
- *
- * If no changes were made, it returns an empty string.
- *
- * @param {string} oldHost.
- * @return {String} Fixed up hostname or an empty string.
- */
-function maybeAddPrefixAndSuffix(oldHost) {
-  let prefix = Services.prefs.getCharPref(
-    "browser.fixup.alternate.prefix",
-    "www."
-  );
-  let suffix = Services.prefs.getCharPref(
-    "browser.fixup.alternate.suffix",
-    ".com"
-  );
-  let newHost = "";
-  let numDots = (oldHost.match(/\./g) || []).length;
-  if (numDots == 0) {
-    newHost = prefix + oldHost + suffix;
-  } else if (numDots == 1) {
-    if (prefix && oldHost == prefix) {
-      newHost = oldHost + suffix;
-    } else if (suffix && !oldHost.startsWith(prefix)) {
-      newHost = prefix + oldHost;
-    }
-  }
-  return newHost ? newHost : oldHost;
-}
-
-/**
- * Given an instance of URIFixupInfo, update its fixedURI.
- *
- * First, change the protocol to the one stored in
- * "browser.fixup.alternate.protocol".
- *
- * Then, try to update fixedURI's host to newHost.
- *
- * @param {URIFixupInfo} info.
- * @param {string} newHost.
- * @return {boolean}
- *          True, if info was updated without any errors.
- *          False, if NS_ERROR_MALFORMED_URI error.
- * @throws If a non-NS_ERROR_MALFORMED_URI error occurs.
- */
-function updateHostAndScheme(info, newHost) {
-  let oldScheme = info.fixedURI.scheme;
-  try {
-    info.fixedURI = info.fixedURI
-      .mutate()
-      .setScheme(lazy.alternateProtocol)
-      .setHost(newHost)
-      .finalize();
-  } catch (ex) {
-    if (ex.result != Cr.NS_ERROR_MALFORMED_URI) {
-      throw ex;
-    }
-    return false;
-  }
-  if (oldScheme != info.fixedURI.scheme) {
-    info.fixupChangedProtocol = true;
-  }
-  info.fixupCreatedAlternateURI = true;
-  return true;
 }
