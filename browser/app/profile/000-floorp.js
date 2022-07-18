@@ -80,7 +80,7 @@ pref("browser.startup.page", 3);
 pref("browser.tabs.closeWindowWithLastTab", false);
 pref("general.config.obscure_value", 0);
 pref("floorp.enable.multitab", false);
-pref("font.name-list.sans-serif.ja", "Noto Sans JP, Meiryo, Yu Gothic, MS PGothic, MS Gothic, Yu Mincho, MS PMincho, MS Mincho")
+pref("font.name-list.sans-serif.ja", "Noto Sans JP, Meiryo, Yu Gothic, MS PGothic, MS Gothic, Yu Mincho, MS PMincho, MS Mincho");
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
 pref("datareporting.policy.dataSubmissionEnable", false, locked);
 pref("datareporting.healthreport.uploadEnabled", false, locked);
