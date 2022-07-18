@@ -313,6 +313,15 @@ def test_get_raptor_test_list_using_live_sites(create_args):
     assert test_list[0]["playback"] is None
 
 
+def test_get_raptor_test_list_using_collect_perfstats(create_args):
+    args = create_args(test="amazon", collect_perfstats=True, browser_cycles=1)
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]["name"] == "amazon"
+    assert test_list[0]["perfstats"] == "true"
+
+
 def test_get_raptor_test_list_override_page_cycles(create_args):
     args = create_args(test="amazon", page_cycles=99, browser_cycles=1)
 

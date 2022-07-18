@@ -579,6 +579,18 @@ class Raptor(
                     ),
                 },
             ],
+            [
+                ["--collect-perfstats"],
+                {
+                    "action": "store_true",
+                    "dest": "collect_perfstats",
+                    "default": False,
+                    "help": (
+                        "If set, the test will collect perfstats in addition to "
+                        "the regular metrics it gathers."
+                    ),
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -980,6 +992,8 @@ class Raptor(
             )
         if self.config.get("test_bytecode_cache", False):
             options.extend(["--test-bytecode-cache"])
+        if self.config.get("collect_perfstats", False):
+            options.extend(["--collect-perfstats"])
 
         if self.config.get("webext", False):
             options.extend(["--webext"])

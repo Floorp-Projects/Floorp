@@ -477,6 +477,14 @@ def create_parser(mach_interface=False):
         default=False,
         help="Clean the python virtualenv (remove, and rebuild) for Raptor before running tests.",
     )
+    add_arg(
+        "--collect-perfstats",
+        dest="collect_perfstats",
+        action="store_true",
+        default=False,
+        help="If set, the test will collect perfstats in addition to "
+        "the regular metrics it gathers.",
+    )
 
     add_logging_group(parser)
     return parser

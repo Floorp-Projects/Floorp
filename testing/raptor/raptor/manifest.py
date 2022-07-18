@@ -340,6 +340,9 @@ def get_raptor_test_list(args, oskey):
                 # subtest comes from matching test ini file name, so add it
                 tests_to_run.append(next_test)
 
+    if args.collect_perfstats:
+        next_test["perfstats"] = "true"
+
     # enable live sites if requested with --live-sites
     if args.live_sites:
         for next_test in tests_to_run:
