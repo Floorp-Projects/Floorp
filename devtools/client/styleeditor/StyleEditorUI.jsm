@@ -1286,13 +1286,13 @@ class StyleEditorUI extends EventEmitter {
       let inSource = false;
 
       for (const rule of rules) {
-        const { line, column, parentStyleSheet } = rule;
+        const { line, column } = rule;
 
         let location = {
           line: line,
           column: column,
           source: editor.styleSheet.href,
-          styleSheet: parentStyleSheet,
+          styleSheet: editor.styleSheet,
         };
         if (editor.styleSheet.isOriginalSource) {
           const styleSheet = editor.cssSheet;
