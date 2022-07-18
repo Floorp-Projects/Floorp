@@ -331,7 +331,7 @@ UniqueModuleSegment ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes,
                                        linkData);
 }
 
-bool ModuleSegment::initialize(const CodeTier& codeTier,
+bool ModuleSegment::initialize(IsTier2 isTier2, const CodeTier& codeTier,
                                const LinkData& linkData,
                                const Metadata& metadata,
                                const MetadataTier& metadataTier) {
@@ -339,11 +339,15 @@ bool ModuleSegment::initialize(const CodeTier& codeTier,
     return false;
   }
 
+  // Optimized compilation finishes on a background thread, so we must make sure
+  // to flush the icaches of all the executing threads.
+  FlushICacheSpec flushIcacheSpec = isTier2 == IsTier2::Tier2
+                                        ? FlushICacheSpec::AllThreads
+                                        : FlushICacheSpec::LocalThreadOnly;
+
   // Reprotect the whole region to avoid having separate RW and RX mappings.
-  // Flush the icache for all threads, as we may be on a background thread or
-  // the module may be posted to another thread.
   if (!ExecutableAllocator::makeExecutableAndFlushICache(
-          FlushICacheSpec::AllThreads, base(), RoundupCodeLength(length()))) {
+          flushIcacheSpec, base(), RoundupCodeLength(length()))) {
     return false;
   }
 
@@ -845,15 +849,15 @@ bool Metadata::getFuncName(NameContext ctx, uint32_t funcIndex,
   return AppendFunctionIndexName(funcIndex, name);
 }
 
-bool CodeTier::initialize(const Code& code, const LinkData& linkData,
-                          const Metadata& metadata) {
+bool CodeTier::initialize(IsTier2 isTier2, const Code& code,
+                          const LinkData& linkData, const Metadata& metadata) {
   MOZ_ASSERT(!initialized());
   code_ = &code;
 
   MOZ_ASSERT(lazyStubs_.readLock()->entryStubsEmpty());
 
   // See comments in CodeSegment::initialize() for why this must be last.
-  if (!segment_->initialize(*this, linkData, metadata, *metadata_)) {
+  if (!segment_->initialize(isTier2, *this, linkData, metadata, *metadata_)) {
     return false;
   }
 
@@ -942,7 +946,7 @@ Code::Code(UniqueCodeTier tier1, const Metadata& metadata,
 bool Code::initialize(const LinkData& linkData) {
   MOZ_ASSERT(!initialized());
 
-  if (!tier1_->initialize(*this, linkData, *metadata_)) {
+  if (!tier1_->initialize(IsTier2::NotTier2, *this, linkData, *metadata_)) {
     return false;
   }
 
@@ -956,7 +960,7 @@ bool Code::setAndBorrowTier2(UniqueCodeTier tier2, const LinkData& linkData,
   MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Optimized &&
                      tier1_->tier() == Tier::Baseline);
 
-  if (!tier2->initialize(*this, linkData, *metadata_)) {
+  if (!tier2->initialize(IsTier2::Tier2, *this, linkData, *metadata_)) {
     return false;
   }
 
