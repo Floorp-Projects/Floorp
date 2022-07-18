@@ -8,11 +8,11 @@
  */
 
 const { createToolboxStore } = require("devtools/client/framework/store");
-const actions = require("devtools/client/framework/actions/targets");
+const actions = require("devtools/shared/commands/target/actions/targets");
 const {
   getSelectedTarget,
   getToolboxTargets,
-} = require("devtools/client/framework/reducers/targets");
+} = require("devtools/shared/commands/target/selectors/targets");
 
 describe("Toolbox store - targets", () => {
   describe("registerTarget", () => {

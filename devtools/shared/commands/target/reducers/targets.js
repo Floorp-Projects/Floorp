@@ -14,8 +14,7 @@ const initialReducerState = {
   lastTargetRefresh: Date.now(),
 };
 
-exports.reducer = targetsReducer;
-function targetsReducer(state = initialReducerState, action) {
+function update(state = initialReducerState, action) {
   switch (action.type) {
     case "SELECT_TARGET": {
       const { targetActorID } = action;
@@ -68,19 +67,4 @@ function targetsReducer(state = initialReducerState, action) {
   }
   return state;
 }
-
-function getToolboxTargets(state) {
-  return state.targets.targets;
-}
-
-function getSelectedTarget(state) {
-  return state.targets.selected;
-}
-
-function getLastTargetRefresh(state) {
-  return state.targets.lastTargetRefresh;
-}
-
-exports.getToolboxTargets = getToolboxTargets;
-exports.getSelectedTarget = getSelectedTarget;
-exports.getLastTargetRefresh = getLastTargetRefresh;
+module.exports = update;

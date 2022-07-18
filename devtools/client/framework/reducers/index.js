@@ -6,5 +6,4 @@
 module.exports = {
   domMutationBreakpoints: require("devtools/client/framework/reducers/dom-mutation-breakpoints")
     .reducer,
-  targets: require("devtools/client/framework/reducers/targets").reducer,
 };
