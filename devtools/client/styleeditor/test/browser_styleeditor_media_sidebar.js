@@ -24,22 +24,17 @@ waitForExplicitFinish();
 add_task(async function() {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
-  is(ui.editors.length, 4, "correct number of editors");
+  is(ui.editors.length, 2, "correct number of editors");
 
   // Test first plain css editor
   const plainEditor = ui.editors[0];
   await openEditor(plainEditor);
   testPlainEditor(plainEditor);
 
-  // Test editor for inline sheet with @media rules
-  const inlineMediaEditor = ui.editors[3];
-  await openEditor(inlineMediaEditor);
-  await testInlineMediaEditor(ui, inlineMediaEditor);
-
   // Test editor with @media rules
   const mediaEditor = ui.editors[1];
   await openEditor(mediaEditor);
-  await testMediaEditor(ui, mediaEditor);
+  testMediaEditor(mediaEditor);
 
   // Test that sidebar hides when flipping pref
   await testShowHide(ui, mediaEditor);
@@ -65,62 +60,17 @@ function testPlainEditor(editor) {
   is(sidebar.hidden, true, "sidebar is hidden on editor without @media");
 }
 
-async function testInlineMediaEditor(ui, editor) {
-  const sidebar = editor.details.querySelector(".stylesheet-sidebar");
-  is(sidebar.hidden, false, "sidebar is showing on editor with @media");
-
-  const entries = sidebar.querySelectorAll(".media-rule-label");
-  is(entries.length, 1, "1 @media rules displayed in sidebar");
-
-  await testRule({
-    ui,
-    editor,
-    rule: entries[0],
-    conditionText: "screen",
-    matches: true,
-    line: 2,
-  });
-}
-
-async function testMediaEditor(ui, editor) {
+function testMediaEditor(editor) {
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
   const entries = [...sidebar.querySelectorAll(".media-rule-label")];
   is(entries.length, 4, "four @media rules displayed in sidebar");
 
-  await testRule({
-    ui,
-    editor,
-    rule: entries[0],
-    conditionText: LABELS[0],
-    matches: false,
-    line: LINE_NOS[0],
-  });
-  await testRule({
-    ui,
-    editor,
-    rule: entries[1],
-    conditionText: LABELS[1],
-    matches: true,
-    line: LINE_NOS[1],
-  });
-  await testRule({
-    ui,
-    editor,
-    rule: entries[2],
-    conditionText: LABELS[2],
-    matches: false,
-    line: LINE_NOS[2],
-  });
-  await testRule({
-    ui,
-    editor,
-    rule: entries[3],
-    conditionText: LABELS[3],
-    matches: false,
-    line: LINE_NOS[3],
-  });
+  testRule(entries[0], LABELS[0], false, LINE_NOS[0]);
+  testRule(entries[1], LABELS[1], true, LINE_NOS[1]);
+  testRule(entries[2], LABELS[2], false, LINE_NOS[2]);
+  testRule(entries[3], LABELS[3], false, LINE_NOS[3]);
 }
 
 function testMediaMatchChanged(editor) {
@@ -138,27 +88,27 @@ function testMediaMatchChanged(editor) {
   );
 }
 
-async function testShowHide(ui, editor) {
-  let sidebarChange = listenForMediaChange(ui);
+async function testShowHide(UI, editor) {
+  let sidebarChange = listenForMediaChange(UI);
   Services.prefs.setBoolPref(MEDIA_PREF, false);
   await sidebarChange;
 
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   is(sidebar.hidden, true, "sidebar is hidden after flipping pref");
 
-  sidebarChange = listenForMediaChange(ui);
+  sidebarChange = listenForMediaChange(UI);
   Services.prefs.clearUserPref(MEDIA_PREF);
   await sidebarChange;
 
   is(sidebar.hidden, false, "sidebar is showing after flipping pref back");
 }
 
-async function testMediaRuleAdded(ui, editor) {
+async function testMediaRuleAdded(UI, editor) {
   await editor.getSourceEditor();
   let text = editor.sourceEditor.getText();
   text += NEW_RULE;
 
-  const listChange = listenForMediaChange(ui);
+  const listChange = listenForMediaChange(UI);
   editor.sourceEditor.setText(text);
   await listChange;
 
@@ -166,34 +116,12 @@ async function testMediaRuleAdded(ui, editor) {
   const entries = [...sidebar.querySelectorAll(".media-rule-label")];
   is(entries.length, 5, "five @media rules after changing text");
 
-  await testRule({
-    ui,
-    editor,
-    rule: entries[4],
-    conditionText: LABELS[4],
-    matches: false,
-    line: LINE_NOS[4],
-  });
+  testRule(entries[4], LABELS[4], false, LINE_NOS[4]);
 }
 
-/**
- * Run assertion on given rule
- *
- * @param {Object} options
- * @param {StyleEditorUI} options.ui
- * @param {StyleSheetEditor} options.editor: The editor the rule is displayed in
- * @param {Element} options.rule: The rule element in the media sidebar
- * @param {String} options.conditionText: media query condition text
- * @param {Boolean} options.matches: Whether or not the document matches the rule
- * @param {Number} options.line: Line of the rule
- */
-async function testRule({ ui, editor, rule, conditionText, matches, line }) {
+function testRule(rule, text, matches, lineno) {
   const cond = rule.querySelector(".media-rule-condition");
-  is(
-    cond.textContent,
-    conditionText,
-    "media label is correct for " + conditionText
-  );
+  is(cond.textContent, text, "media label is correct for " + text);
 
   const matched = !cond.classList.contains("media-condition-unmatched");
   ok(
@@ -201,19 +129,8 @@ async function testRule({ ui, editor, rule, conditionText, matches, line }) {
     "media rule is " + (matches ? "matched" : "unmatched")
   );
 
-  const mediaRuleLine = rule.querySelector(".media-rule-line");
-  is(mediaRuleLine.textContent, ":" + line, "correct line number shown");
-
-  info(
-    "Check that clicking on the rule jumps to the expected position in the stylesheet"
-  );
-  rule.click();
-  await waitFor(
-    () =>
-      ui.selectedEditor == editor &&
-      editor.sourceEditor.getCursor().line == line - 1
-  );
-  ok(true, "Jumped to the expected location");
+  const line = rule.querySelector(".media-rule-line");
+  is(line.textContent, ":" + lineno, "correct line number shown");
 }
 
 /* Helpers */
@@ -224,9 +141,9 @@ function openEditor(editor) {
   return editor.getSourceEditor();
 }
 
-function listenForMediaChange(ui) {
+function listenForMediaChange(UI) {
   return new Promise(resolve => {
-    ui.once("media-list-changed", () => {
+    UI.once("media-list-changed", () => {
       resolve();
     });
   });
