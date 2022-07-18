@@ -1379,7 +1379,11 @@ impl<'a> SceneBuilder<'a> {
                 };
 
                 // TODO(gw): Port internal API to be ClipChain based, rather than ClipId once all callers updated
-                let clip_id = ClipId::ClipChain(info.clip_chain_id);
+                let clip_id = if info.clip_chain_id == api::ClipChainId::INVALID {
+                    ClipId::root(pipeline_id)
+                } else {
+                    ClipId::ClipChain(info.clip_chain_id)
+                };
 
                 self.add_primitive_to_hit_testing_list(
                     &layout,
