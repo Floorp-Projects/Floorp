@@ -504,10 +504,8 @@ void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
   if (aBuilder->UseHighQualityScaling())
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
 
-  ImgDrawResult result = static_cast<nsImageBoxFrame*>(mFrame)->PaintImage(
+  Unused << static_cast<nsImageBoxFrame*>(mFrame)->PaintImage(
       *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), flags);
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
 
 bool nsDisplayXULImage::CreateWebRenderCommands(
@@ -540,30 +538,7 @@ bool nsDisplayXULImage::CreateWebRenderCommands(
     return false;
   }
 
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   return true;
-}
-
-nsDisplayItemGeometry* nsDisplayXULImage::AllocateGeometry(
-    nsDisplayListBuilder* aBuilder) {
-  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
-void nsDisplayXULImage::ComputeInvalidationRegion(
-    nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
-    nsRegion* aInvalidRegion) const {
-  auto boxFrame = static_cast<nsImageBoxFrame*>(mFrame);
-  auto geometry =
-      static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() && boxFrame->mImageRequest &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
-
-  nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                                  aInvalidRegion);
 }
 
 bool nsImageBoxFrame::CanOptimizeToImageLayer() {

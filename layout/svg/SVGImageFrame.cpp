@@ -656,8 +656,6 @@ bool SVGImageFrame::CreateWebRenderCommands(
                                                    aBuilder, aResources,
                                                    destRect, clipRect);
     }
-
-    nsDisplayItemGenericImageGeometry::UpdateDrawResult(aItem, drawResult);
   }
 
   return true;
