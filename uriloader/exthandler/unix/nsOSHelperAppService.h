@@ -59,9 +59,6 @@ class nsOSHelperAppService : public nsExternalHelperAppService {
                                   const nsAString& aMajorType,
                                   const nsAString& aMinorType,
                                   nsACString& aUnEscapedCommand);
-  static nsresult GetFileLocation(const char* aPrefName,
-                                  const char* aEnvVarName,
-                                  nsAString& aFileLocation);
   static nsresult LookUpTypeAndDescription(const nsAString& aFileExtension,
                                            nsAString& aMajorType,
                                            nsAString& aMinorType,

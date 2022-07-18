@@ -14,6 +14,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -21,6 +23,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
 
+#include "ExternalHelperAppParent.h"
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIURI.h"
@@ -128,16 +131,17 @@ enum {
   NS_FOLDER_VALUE_CUSTOM = 2
 };
 
-LazyLogModule nsExternalHelperAppService::mLog("HelperAppService");
+LazyLogModule nsExternalHelperAppService::sLog("HelperAppService");
 
 // Using level 3 here because the OSHelperAppServices use a log level
 // of LogLevel::Debug (4), and we want less detailed output here
 // Using 3 instead of LogLevel::Warning because we don't output warnings
 #undef LOG
-#define LOG(args) \
-  MOZ_LOG(nsExternalHelperAppService::mLog, mozilla::LogLevel::Info, args)
+#define LOG(...)                                                     \
+  MOZ_LOG(nsExternalHelperAppService::sLog, mozilla::LogLevel::Info, \
+          (__VA_ARGS__))
 #define LOG_ENABLED() \
-  MOZ_LOG_TEST(nsExternalHelperAppService::mLog, mozilla::LogLevel::Info)
+  MOZ_LOG_TEST(nsExternalHelperAppService::sLog, mozilla::LogLevel::Info)
 
 static const char NEVER_ASK_FOR_SAVE_TO_DISK_PREF[] =
     "browser.helperApps.neverAsk.saveToDisk";
@@ -748,7 +752,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
   nsCOMPtr<nsIMIMEInfo> mimeInfo = ValidateFileNameForSaving(
       fileName, aMimeContentType, uri, nullptr, flags, allowURLExtension);
 
-  LOG(("Type/Ext lookup found 0x%p\n", mimeInfo.get()));
+  LOG("Type/Ext lookup found 0x%p\n", mimeInfo.get());
 
   // No mimeinfo -> we can't continue. probably OOM.
   if (!mimeInfo) {
@@ -1459,7 +1463,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel* aChannel) {
 
   rv = mSaver->EnableSignatureInfo();
   NS_ENSURE_SUCCESS(rv, rv);
-  LOG(("Enabled hashing and signature verification"));
+  LOG("Enabled hashing and signature verification");
 
   rv = mSaver->SetTarget(mTempFile, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1640,9 +1644,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
     rv = CreateFailedTransfer();
     if (NS_FAILED(rv)) {
-      LOG(
-          ("Failed to create transfer to report failure."
-           "Will fallback to prompter!"));
+      LOG("Failed to create transfer to report failure."
+          "Will fallback to prompter!");
     }
 
     mCanceled = true;
@@ -2044,12 +2047,12 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
   }
 
   MOZ_LOG(
-      nsExternalHelperAppService::mLog, LogLevel::Error,
+      nsExternalHelperAppService::sLog, LogLevel::Error,
       ("Error: %s, type=%i, listener=0x%p, transfer=0x%p, rv=0x%08" PRIX32 "\n",
        msgId, type, mDialogProgressListener.get(), mTransfer.get(),
        static_cast<uint32_t>(rv)));
 
-  MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Error,
+  MOZ_LOG(nsExternalHelperAppService::sLog, LogLevel::Error,
           ("       path='%s'\n", NS_ConvertUTF16toUTF8(path).get()));
 
   // Get properties file bundle and extract status string.
@@ -2081,7 +2084,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
           bundle->FormatStringFromName("title", strings, title);
 
           MOZ_LOG(
-              nsExternalHelperAppService::mLog, LogLevel::Debug,
+              nsExternalHelperAppService::sLog, LogLevel::Debug,
               ("mBrowsingContext=0x%p, prompter=0x%p, qi rv=0x%08" PRIX32
                ", title='%s', msg='%s'",
                mBrowsingContext.get(), prompter.get(),
@@ -2098,7 +2101,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
 
             prompter = do_GetInterface(window->GetDocShell(), &qiRv);
 
-            MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Debug,
+            MOZ_LOG(nsExternalHelperAppService::sLog, LogLevel::Debug,
                     ("No prompter from mBrowsingContext, using DocShell, "
                      "window=0x%p, docShell=0x%p, "
                      "prompter=0x%p, qi rv=0x%08" PRIX32,
@@ -2108,7 +2111,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
             // If we still don't have a prompter, there's nothing else we
             // can do so just return.
             if (!prompter) {
-              MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Error,
+              MOZ_LOG(nsExternalHelperAppService::sLog, LogLevel::Error,
                       ("No prompter from DocShell, no way to alert user"));
               return;
             }
@@ -2163,10 +2166,9 @@ nsExternalAppHandler::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest* request,
                                                   nsresult aStatus) {
-  LOG(
-      ("nsExternalAppHandler::OnStopRequest\n"
-       "  mCanceled=%d, mTransfer=0x%p, aStatus=0x%08" PRIX32 "\n",
-       mCanceled, mTransfer.get(), static_cast<uint32_t>(aStatus)));
+  LOG("nsExternalAppHandler::OnStopRequest\n"
+      "  mCanceled=%d, mTransfer=0x%p, aStatus=0x%08" PRIX32 "\n",
+      mCanceled, mTransfer.get(), static_cast<uint32_t>(aStatus));
 
   mStopRequestIssued = true;
 
@@ -2197,10 +2199,9 @@ nsExternalAppHandler::OnTargetChange(nsIBackgroundFileSaver* aSaver,
 NS_IMETHODIMP
 nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver* aSaver,
                                      nsresult aStatus) {
-  LOG(
-      ("nsExternalAppHandler::OnSaveComplete\n"
-       "  aSaver=0x%p, aStatus=0x%08" PRIX32 ", mCanceled=%d, mTransfer=0x%p\n",
-       aSaver, static_cast<uint32_t>(aStatus), mCanceled, mTransfer.get()));
+  LOG("nsExternalAppHandler::OnSaveComplete\n"
+      "  aSaver=0x%p, aStatus=0x%08" PRIX32 ", mCanceled=%d, mTransfer=0x%p\n",
+      aSaver, static_cast<uint32_t>(aStatus), mCanceled, mTransfer.get());
 
   if (!mCanceled) {
     // Save the hash and signature information
@@ -2219,8 +2220,8 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver* aSaver,
       nsCOMPtr<nsIMutableArray> redirectChain =
           do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
-      LOG(("nsExternalAppHandler: Got %zu redirects\n",
-           loadInfo->RedirectChain().Length()));
+      LOG("nsExternalAppHandler: Got %zu redirects\n",
+          loadInfo->RedirectChain().Length());
       for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
         redirectChain->AppendElement(entry);
       }
@@ -2261,7 +2262,7 @@ void nsExternalAppHandler::NotifyTransfer(nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread(), "Must notify on main thread");
   MOZ_ASSERT(mTransfer, "We must have an nsITransfer");
 
-  LOG(("Notifying progress listener"));
+  LOG("Notifying progress listener");
 
   if (NS_SUCCEEDED(aStatus)) {
     (void)mTransfer->SetSha256Hash(mHash);
@@ -2303,7 +2304,7 @@ NS_IMETHODIMP nsExternalAppHandler::GetSuggestedFileName(
 }
 
 nsresult nsExternalAppHandler::CreateTransfer() {
-  LOG(("nsExternalAppHandler::CreateTransfer"));
+  LOG("nsExternalAppHandler::CreateTransfer");
 
   MOZ_ASSERT(NS_IsMainThread(), "Must create transfer on main thread");
   // We are back from the helper app dialog (where the user chooses to save or
@@ -2784,9 +2785,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
              "Give me something to work with");
   MOZ_DIAGNOSTIC_ASSERT(aFileExt.FindChar('\0') == kNotFound,
                         "The extension should never contain null characters");
-  LOG(("Getting mimeinfo from type '%s' ext '%s'\n",
-       PromiseFlatCString(aMIMEType).get(),
-       PromiseFlatCString(aFileExt).get()));
+  LOG("Getting mimeinfo from type '%s' ext '%s'\n",
+      PromiseFlatCString(aMIMEType).get(), PromiseFlatCString(aFileExt).get());
 
   *_retval = nullptr;
 
@@ -2807,7 +2807,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     return rv;
   }
 
-  LOG(("OS gave back 0x%p - found: %i\n", *_retval, found));
+  LOG("OS gave back 0x%p - found: %i\n", *_retval, found);
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2825,8 +2825,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   if (!typeToUse.Equals(APPLICATION_OCTET_STREAM,
                         nsCaseInsensitiveCStringComparator)) {
     rv = FillMIMEInfoForMimeTypeFromExtras(typeToUse, !found, *_retval);
-    LOG(("Searched extras (by type), rv 0x%08" PRIX32 "\n",
-         static_cast<uint32_t>(rv)));
+    LOG("Searched extras (by type), rv 0x%08" PRIX32 "\n",
+        static_cast<uint32_t>(rv));
     trustMIMEType = NS_SUCCEEDED(rv);
     found = found || NS_SUCCEEDED(rv);
   }
@@ -2841,8 +2841,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     (void)handlerSvc->Exists(*_retval, &hasHandler);
     if (hasHandler) {
       rv = handlerSvc->FillHandlerInfo(*_retval, ""_ns);
-      LOG(("Data source: Via type: retval 0x%08" PRIx32 "\n",
-           static_cast<uint32_t>(rv)));
+      LOG("Data source: Via type: retval 0x%08" PRIx32 "\n",
+          static_cast<uint32_t>(rv));
       trustMIMEType = trustMIMEType || NS_SUCCEEDED(rv);
     } else {
       rv = NS_ERROR_NOT_AVAILABLE;
@@ -2855,8 +2855,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   // an extension in extras first:
   if (!found && !aFileExt.IsEmpty()) {
     rv = FillMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
-    LOG(("Searched extras (by ext), rv 0x%08" PRIX32 "\n",
-         static_cast<uint32_t>(rv)));
+    LOG("Searched extras (by ext), rv 0x%08" PRIX32 "\n",
+        static_cast<uint32_t>(rv));
   }
 
   // Then check the handler service - but only do so if we really do not know
@@ -2870,8 +2870,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
       // overideType. That's ok, it just results in some console noise.
       // (If there's no handler for the override type, it throws)
       rv = handlerSvc->FillHandlerInfo(*_retval, overrideType);
-      LOG(("Data source: Via ext: retval 0x%08" PRIx32 "\n",
-           static_cast<uint32_t>(rv)));
+      LOG("Data source: Via ext: retval 0x%08" PRIx32 "\n",
+          static_cast<uint32_t>(rv));
       found = found || NS_SUCCEEDED(rv);
     }
   }
@@ -2883,7 +2883,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     nsAutoCString desc(aFileExt);
     desc.AppendLiteral(" File");
     (*_retval)->SetDescription(NS_ConvertUTF8toUTF16(desc));
-    LOG(("Falling back to 'File' file description\n"));
+    LOG("Falling back to 'File' file description\n");
   }
 
   // Sometimes, OSes give us bad data. We have a set of forbidden extensions
@@ -2902,8 +2902,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   if (!aFileExt.IsEmpty()) {
     bool matches = false;
     (*_retval)->ExtensionExists(aFileExt, &matches);
-    LOG(("Extension '%s' matches mime info: %i\n",
-         PromiseFlatCString(aFileExt).get(), matches));
+    LOG("Extension '%s' matches mime info: %i\n",
+        PromiseFlatCString(aFileExt).get(), matches);
     if (matches) {
       nsAutoCString fileExt;
       ToLowerCase(aFileExt, fileExt);
@@ -2945,8 +2945,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     nsAutoCString type;
     (*_retval)->GetMIMEType(type);
 
-    LOG(("MIME Info Summary: Type '%s', Primary Ext '%s'\n", type.get(),
-         primaryExtension.get()));
+    LOG("MIME Info Summary: Type '%s', Primary Ext '%s'\n", type.get(),
+        primaryExtension.get());
   }
 
   return NS_OK;
