@@ -1118,6 +1118,13 @@ PdfStreamConverter.prototype = {
       contentDispositionFilename = aRequest.contentDispositionFilename;
     } catch (e) {}
 
+    if (
+      contentDispositionFilename &&
+      !/\.pdf$/i.test(contentDispositionFilename)
+    ) {
+      contentDispositionFilename += ".pdf";
+    }
+
     // Change the content type so we don't get stuck in a loop.
     aRequest.setProperty("contentType", aRequest.contentType);
     aRequest.contentType = "text/html";
