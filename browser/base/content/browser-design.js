@@ -108,10 +108,13 @@ break;
 Services.prefs.addObserver("floorp.browser.user.interface", function(){
 
 
- function recallurlbarsize(){
+ function URLbarrecalculation(){
           setTimeout(function() {
               gURLBar._updateLayoutBreakoutDimensions();
             }, 100);
+            setTimeout(function() {
+              gURLBar._updateLayoutBreakoutDimensions();
+            }, 500);
   }
   let ThemeCSS = {
     ProtonfixUI : `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
@@ -206,6 +209,6 @@ Services.prefs.addObserver("floorp.browser.user.interface", function(){
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
      break;
    } 
-   recallurlbarsize()
+   URLbarrecalculation()
  }   
 )
