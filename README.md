@@ -31,7 +31,7 @@
   <p align="center">
     Mozilla Firefox derivative, browser development project
     <br />
-    <a href="https://github.com/Floorp-Projects/about-floorp-projects">Explore the docs »</a>
+    <a href=".github/workflow.md">Explore the docs »</a>
     <br />
     <br />
     <a href="https://floorp.ablaze.one">official site</a>
