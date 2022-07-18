@@ -16,7 +16,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libpulse-devel",
         "rpmconf",
         "which",
-        "unzip",
     ]
 
     BROWSER_PACKAGES = [
