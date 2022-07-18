@@ -345,6 +345,7 @@ class HTTPCustomRequestPanel extends Component {
             {
               className: "auto-growing-textarea",
               "data-replicated-value": url,
+              title: url,
             },
             textarea({
               className: "http-custom-url-value",

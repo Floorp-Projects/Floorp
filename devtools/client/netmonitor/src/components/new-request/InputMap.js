@@ -101,6 +101,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": item.name,
+                title: item.name,
               },
               textarea({
                 className: "http-custom-input-name",
@@ -120,6 +121,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": item.value,
+                title: item.value,
               },
               textarea({
                 className: "http-custom-input-value",
@@ -162,6 +164,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": name,
+                title: value,
               },
               textarea({
                 className: "http-custom-input-name",
@@ -182,6 +185,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": value,
+                title: value,
               },
               textarea({
                 className: "http-custom-input-value",
