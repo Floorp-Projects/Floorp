@@ -18,10 +18,6 @@ function run_test() {
 
   const prefSvc = Services.prefs;
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-
   let noMailto = false;
   if (mozinfo.os == "win") {
     // Check mailto handler from registry.
@@ -457,7 +453,7 @@ function run_test() {
 
   // test mailcap entries with needsterminal are ignored on non-Windows non-Mac.
   if (mozinfo.os != "win" && mozinfo.os != "mac") {
-    env.set("PERSONAL_MAILCAP", do_get_file("mailcap").path);
+    prefSvc.setStringPref("helpers.private_mailcap_file", do_get_file("mailcap").path);
     handlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", null);
     Assert.equal(
       handlerInfo.preferredAction,
