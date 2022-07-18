@@ -107,6 +107,7 @@ def create_args():
         cold=False,
         live_sites=False,
         enable_marionette_trace=False,
+        collect_perfstats=False,
     )
 
     def inner(**kwargs):

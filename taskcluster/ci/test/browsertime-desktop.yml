@@ -151,6 +151,17 @@ browsertime-responsiveness:
 browsertime-tp6-essential:
     <<: *tp6-defaults
     <<: &tp6-essential-defaults
+        mozharness:
+            extra-options:
+                by-test-platform:
+                    windows10-64.*shippable.*-qr.*:
+                        - --chimera
+                        - --browsertime-no-ffwindowrecorder
+                        - --conditioned-profile=settled
+                        - --collect-perfstats
+                    default:
+                        - --chimera
+                        - --conditioned-profile=settled
         raptor:
             apps: [firefox, chrome, chromium]
             test: tp6
