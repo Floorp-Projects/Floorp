@@ -29,6 +29,7 @@ const TEST_COLORWAY_COLLECTION = {
 
 const SOFT_COLORWAY_THEME_ID = "mocktheme-soft-colorway@mozilla.org";
 const NO_INTENSITY_COLORWAY_THEME_ID = "mocktheme-colorway@mozilla.org";
+const OUTDATED_COLORWAY_THEME_ID = "outdatedtheme-colorway@mozilla.org";
 
 const EXPIRY_DATE_L10N_ID = "colorway-collection-expiry-date-span";
 const COLORWAY_DESCRIPTION_L10N_ID = "firefoxview-colorway-description";
@@ -82,9 +83,11 @@ add_setup(async function setup_tests() {
     set: [["browser.theme.colorway-closet", true]],
   });
   const tempThemes = await Promise.all(
-    [SOFT_COLORWAY_THEME_ID, NO_INTENSITY_COLORWAY_THEME_ID].map(
-      createTempTheme
-    )
+    [
+      SOFT_COLORWAY_THEME_ID,
+      NO_INTENSITY_COLORWAY_THEME_ID,
+      OUTDATED_COLORWAY_THEME_ID,
+    ].map(createTempTheme)
   );
   registerCleanupFunction(async () => {
     sandbox.restore();
@@ -269,6 +272,60 @@ add_task(async function active_colorway_without_intensity_test() {
           document.l10n.getAttributes(el.description).id,
           TEST_COLORWAY_COLLECTION.l10nId.title,
           "Collection name should be shown as the description"
+        );
+        const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
+        is(
+          expiryL10nAttributes.args.expiryDate,
+          TEST_COLORWAY_COLLECTION.expiry.getTime(),
+          "Correct expiry date should be shown"
+        );
+        is(
+          expiryL10nAttributes.id,
+          EXPIRY_DATE_L10N_ID,
+          "Correct expiry date format should be shown"
+        );
+      }
+    );
+  } finally {
+    await theme.disable();
+  }
+});
+
+add_task(async function active_colorway_is_outdated_test() {
+  const theme = await AddonManager.getAddonByID(OUTDATED_COLORWAY_THEME_ID);
+  await theme.enable();
+  try {
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        const el = getTestElements(document);
+        is(
+          el.noCollectionNotice,
+          null,
+          "No Active Colorway Collection Notice should be hidden"
+        );
+        ok(
+          BrowserTestUtils.is_visible(el.description),
+          "Description should be visible"
+        );
+        is(
+          el.figure.src,
+          TEST_COLLECTION_FIGURE_URL,
+          "Collection figure should be shown"
+        );
+        is(
+          document.l10n.getAttributes(el.title).id,
+          TEST_COLORWAY_COLLECTION.l10nId.title,
+          "Collection title should be shown"
+        );
+        is(
+          document.l10n.getAttributes(el.description).id,
+          TEST_COLORWAY_COLLECTION.l10nId.description,
+          "Collection description should be shown"
         );
         const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
         is(
