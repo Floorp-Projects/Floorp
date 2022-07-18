@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="simple.css"/>
   <link rel="stylesheet" href="media-rules.css"/>
+  <!-- This stylesheet is needed to ensure we cover the fix for Bug 1779043 -->
+  <style>
+    div {
+      color: salmon;
+    }
+  </style>
+  <style>
+    @media screen {
+      div {
+        outline: 1px solid tomato;
+      }
+    }
+  </style>
 </head>
 <body>
   <div>
