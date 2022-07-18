@@ -219,7 +219,7 @@ dependencies {
     implementation Dependencies.androidx_compose_constraint_layout
     implementation Dependencies.androidx_compose_runtime_livedata
     implementation Dependencies.androidx_core_ktx
-    implementation Dependencies.androidx_lifecycle_extensions
+    implementation Dependencies.androidx_lifecycle_process
     implementation Dependencies.androidx_palette
     implementation Dependencies.androidx_preferences
     implementation Dependencies.androidx_recyclerview
