@@ -206,6 +206,16 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
 
         return opened_windows
 
+    def _close_tab_shortcut(self):
+        self.marionette.actions.sequence("key", "keyboard_id").key_down(
+            self.accelKey
+        ).key_down("w").key_up("w").key_up(self.accelKey).perform()
+
+    def close_all_tabs_and_restart(self):
+        self.close_all_tabs()
+        self.marionette.quit(in_app=True, callback=self._close_tab_shortcut)
+        self.marionette.start_session()
+
     def simulate_os_shutdown(self):
         """Simulate an OS shutdown.
 
