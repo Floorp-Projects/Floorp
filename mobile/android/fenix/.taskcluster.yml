@@ -16,11 +16,14 @@ tasks:
                 $if: 'event.sender.login == "bors[bot]"'
                 then: 'skaspari+mozlando@mozilla.com'   # It must match what's in bors.toml
                 else:
-                    $if: 'tasks_for == "github-push"'
-                    then: '${event.pusher.email}'
+                    $if: 'event.sender.login == "github-actions[bot]"'
+                    then: 'github-actions[bot]@users.noreply.github.com'
                     else:
-                        $if: 'tasks_for == "github-pull-request"'
-                        then: '${event.pull_request.user.login}@users.noreply.github.com'
+                        $if: 'tasks_for == "github-push"'
+                        then: '${event.pusher.email}'
+                        else:
+                            $if: 'tasks_for == "github-pull-request"'
+                            then: '${event.pull_request.user.login}@users.noreply.github.com'
         baseRepoUrl:
             $if: 'tasks_for == "github-push"'
             then: '${event.repository.html_url}'
