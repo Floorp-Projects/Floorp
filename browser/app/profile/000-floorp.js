@@ -1,6 +1,6 @@
 pref("floorp.hide.tabbrowser-tab.enable", false);
-pref("floorp.optimized.msbutton.ope", false); 
-pref("floorp.optimized.verticaltab", false); 
+pref("floorp.optimized.msbutton.ope", false);
+pref("floorp.optimized.verticaltab", false);
 pref("floorp.horizontal.tab.position.shift", false);
 pref("floorp.Tree-type.verticaltab.optimization", false);
 pref("floorp.bookmarks.bar.focus.mode", false);
@@ -89,8 +89,8 @@ pref("svg.context-properties.content.enabled", true);
 pref("layout.css.color-mix.enabled", true);
 pref("layout.css.backdrop-filter.enabled", true);
 pref("browser.compactmode.show", true);
-pref("userChrome.tab.connect_to_window",          true); 
-pref("userChrome.tab.color_like_toolbar",         true); 
+pref("userChrome.tab.connect_to_window",          true);
+pref("userChrome.tab.color_like_toolbar",         true);
 pref("userChrome.tab.photon_like_padding",        true); // Photon
 
 // pref("userChrome.tab.dynamic_separtor",        true); // Original, Proton
