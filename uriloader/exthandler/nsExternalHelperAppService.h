@@ -125,6 +125,13 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
   // Internal method. Only called directly from tests.
   static nsresult EscapeURI(nsIURI* aURI, nsIURI** aResult);
 
+  /**
+   * Logging Module. Usage: set MOZ_LOG=HelperAppService:level, where level
+   * should be 2 for errors, 3 for debug messages from the cross- platform
+   * nsExternalHelperAppService, and 4 for os-specific debug messages.
+   */
+  static mozilla::LazyLogModule sLog;
+
  protected:
   virtual ~nsExternalHelperAppService();
 
@@ -166,13 +173,6 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
    * @return true if the extension was found, false otherwise.
    */
   bool GetTypeFromExtras(const nsACString& aExtension, nsACString& aMIMEType);
-
-  /**
-   * Logging Module. Usage: set MOZ_LOG=HelperAppService:level, where level
-   * should be 2 for errors, 3 for debug messages from the cross- platform
-   * nsExternalHelperAppService, and 4 for os-specific debug messages.
-   */
-  static mozilla::LazyLogModule mLog;
 
   // friend, so that it can access the nspr log module.
   friend class nsExternalAppHandler;
