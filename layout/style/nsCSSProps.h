@@ -185,9 +185,6 @@ class nsCSSProps {
     if (gPropertyEnabled[aProperty]) {
       return true;
     }
-    MOZ_ASSERT(aProperty < eCSSProperty_COUNT,
-               "gPropertyEnabled[aProperty] should have been true for alias "
-               "properties");
     if (aEnabled == EnabledState::IgnoreEnabledState) {
       return true;
     }
