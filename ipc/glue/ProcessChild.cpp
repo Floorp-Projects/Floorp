@@ -74,7 +74,7 @@ void ProcessChild::NotifiedImpendingShutdown() {
   sExpectingShutdown = true;
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::IPCShutdownState,
-      "NotifiedImpendingShutdown"_ns);
+      "NotifyImpendingShutdown received."_ns);
 }
 
 /* static */
