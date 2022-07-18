@@ -951,6 +951,7 @@ void gfxPlatform::Init() {
 #ifdef MOZ_ENABLE_FREETYPE
   SkInitCairoFT(gPlatform->FontHintingEnabled());
 #endif
+  gfxGradientCache::Init();
 
   InitLayersIPC();
 
