@@ -370,3 +370,6 @@ TEST_F(FOGFixture, TestCppUrlWorks) {
                    .value()
                    .get());
 }
+
+extern "C" void Rust_TestRustInGTest();
+TEST_F(FOGFixture, TestRustInGTest) { Rust_TestRustInGTest(); }
