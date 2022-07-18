@@ -83,7 +83,9 @@ class ColorwaysCard extends HTMLElement {
     await BuiltInThemes.ensureBuiltInThemes();
     this._selectedColorwayId =
       (await AddonManager.getAddonsByTypes(["theme"])).find(
-        theme => theme.isActive && BuiltInThemes.isMonochromaticTheme(theme.id)
+        theme =>
+          theme.isActive &&
+          BuiltInThemes.isColorwayFromCurrentCollection(theme.id)
       )?.id || null;
   }
 
