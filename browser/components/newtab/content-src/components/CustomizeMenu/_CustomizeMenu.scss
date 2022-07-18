@@ -250,6 +250,7 @@
       margin-inline-start: -2px;
       overflow: hidden;
       transition: height 250ms $customize-menu-expand-bezier;
+      height: 100%;
 
       &.shrink {
         height: 0;
