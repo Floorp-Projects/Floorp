@@ -18,6 +18,7 @@
 #include "js/GCAPI.h"
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 using namespace JS;
