@@ -8,6 +8,16 @@ const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
  * ChannelWrapper.webidl/cpp and the web_request.json schema file.
  */
 add_task(async function test_webrequest_url_classification_enum() {
+  // The startupCache is removed whenever the buildid changes by code that runs
+  // during Firefox startup but not during xpcshell startup, remove it by hand
+  // before running this test to avoid failures with --conditioned-profile
+  let file = PathUtils.join(
+    Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
+    "startupCache",
+    "webext.sc.lz4"
+  );
+  await IOUtils.remove(file, { ignoreAbsent: true });
+
   // use normalizeManifest to get the schema loaded.
   await ExtensionTestUtils.normalizeManifest({ permissions: ["webRequest"] });
 
