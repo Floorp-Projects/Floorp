@@ -33,9 +33,12 @@
 #include "nsXULAppAPI.h"
 #include "ContentHandlerService.h"
 #include "prenv.h"  // for PR_GetEnv()
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "nsMimeTypes.h"
+#include <mutex>
 
 using namespace mozilla;
 
@@ -154,33 +157,109 @@ static nsresult ParseMIMEType(const nsAString::const_iterator& aStart_iter,
   return NS_OK;
 }
 
-// static
-static nsresult GetFileLocation(const char* aPrefName, const char* aEnvVarName,
-                                nsAString& aFileLocation) {
-  LOG("-- GetFileLocation.  Pref: '%s'  EnvVar: '%s'\n", aPrefName,
-      aEnvVarName);
-  MOZ_ASSERT(aPrefName, "Null pref name passed; don't do that!");
+// TODO: We should consider not only caching the file location but maybe the
+// file contents too?
+enum class FileKind {
+  PrivateMimeTypes = 0,
+  GlobalMimeTypes,
+  PrivateMailCap,
+  GlobalMailCap,
 
-  aFileLocation.Truncate();
-  /* The lookup order is:
-     1) user pref
-     2) env var
-     3) pref
-  */
-  NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
+  Count,
+};
 
-  /*
-    If we have an env var we should check whether the pref is a user
-    pref.  If we do not, we don't care.
-  */
-  if (Preferences::HasUserValue(aPrefName) &&
-      NS_SUCCEEDED(Preferences::GetString(aPrefName, aFileLocation))) {
-    return NS_OK;
+struct FileLocationCache {
+  struct Entry {
+    bool mIsCached = false;
+    nsresult mResult = NS_OK;
+    nsString mLocation;
+
+    void Clear() { *this = {}; }
+  };
+
+  EnumeratedArray<FileKind, FileKind::Count, Entry> mEntries;
+
+  static const char* PrefFor(FileKind aKind) {
+    switch (aKind) {
+      case FileKind::GlobalMimeTypes:
+        return "helpers.global_mime_types_file";
+      case FileKind::PrivateMimeTypes:
+        return "helpers.private_mime_types_file";
+      case FileKind::GlobalMailCap:
+        return "helpers.global_mailcap_file";
+      case FileKind::PrivateMailCap:
+        return "helpers.private_mailcap_file";
+      case FileKind::Count:
+        break;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unknown file kind");
+    return "";
   }
 
-  if (aEnvVarName && *aEnvVarName) {
-    char* prefValue = PR_GetEnv(aEnvVarName);
-    if (prefValue && *prefValue) {
+  void Clear() {
+    for (auto& entry : mEntries) {
+      entry.Clear();
+    }
+  }
+
+  static void PrefChangeCallback(const char*, void*) { Get().Clear(); }
+
+  static FileLocationCache& Get() {
+    static FileLocationCache sCache;
+    static std::once_flag flag;
+    std::call_once(flag, [&] {
+      for (auto kind :
+           MakeEnumeratedRange(FileKind::PrivateMimeTypes, FileKind::Count)) {
+        Preferences::RegisterCallback(PrefChangeCallback,
+                                      nsDependentCString(PrefFor(kind)));
+      }
+      RunOnShutdown([] {
+        sCache.Clear();
+        for (auto kind :
+             MakeEnumeratedRange(FileKind::PrivateMimeTypes, FileKind::Count)) {
+          Preferences::UnregisterCallback(PrefChangeCallback,
+                                          nsDependentCString(PrefFor(kind)));
+        }
+      });
+    });
+    return sCache;
+  }
+
+  Entry& EntryFor(FileKind aKind) { return mEntries[aKind]; }
+};
+
+// The lookup order is:
+//    1) user pref
+//    2) env var (if any)
+//    3) pref
+static nsresult DoGetFileLocation(FileKind aKind, nsAString& aFileLocation) {
+  LOG("-- GetFileLocation(%d)\n", int(aKind));
+
+  aFileLocation.Truncate();
+
+  const char* envVar = [&]() -> const char* {
+    switch (aKind) {
+      case FileKind::PrivateMailCap:
+        return "PERSONAL_MAILCAP";
+      case FileKind::GlobalMailCap:
+        return "MAILCAP";
+      default:
+        return nullptr;
+    }
+  }();
+
+  const char* prefName = FileLocationCache::PrefFor(aKind);
+
+  if (envVar) {
+    // If we have an env var we should check whether the pref is a user pref. If
+    // we do not, we don't care.
+    if (Preferences::HasUserValue(prefName) &&
+        NS_SUCCEEDED(Preferences::GetString(prefName, aFileLocation))) {
+      return NS_OK;
+    }
+
+    char* envValue = PR_GetEnv(envVar);
+    if (envValue && *envValue) {
       // the pref is in the system charset and it's a filepath... The
       // natural way to do the charset conversion is by just initing
       // an nsIFile with the native path and asking it for the Unicode
@@ -189,17 +268,25 @@ static nsresult GetFileLocation(const char* aPrefName, const char* aEnvVarName,
       nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = file->InitWithNativePath(nsDependentCString(prefValue));
+      rv = file->InitWithNativePath(nsDependentCString(envValue));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = file->GetPath(aFileLocation);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      return NS_OK;
+      return file->GetPath(aFileLocation);
     }
   }
 
-  return Preferences::GetString(aPrefName, aFileLocation);
+  return Preferences::GetString(prefName, aFileLocation);
+}
+
+static nsresult GetFileLocation(FileKind aKind, nsAString& aFileLocation) {
+  MOZ_ASSERT(NS_IsMainThread());
+  auto& entry = FileLocationCache::Get().EntryFor(aKind);
+  if (!entry.mIsCached) {
+    entry.mIsCached = true;
+    entry.mResult = DoGetFileLocation(aKind, entry.mLocation);
+  }
+  aFileLocation = entry.mLocation;
+  return entry.mResult;
 }
 
 /* Get the mime.types file names from prefs and look up info in them
@@ -212,10 +299,9 @@ nsresult nsOSHelperAppService::LookUpTypeAndDescription(
       NS_LossyConvertUTF16toASCII(aFileExtension).get());
   nsAutoString mimeFileName;
 
-  const char* filenamePref = aUserData ? "helpers.private_mime_types_file"
-                                       : "helpers.global_mime_types_file";
-
-  nsresult rv = GetFileLocation(filenamePref, nullptr, mimeFileName);
+  auto kind =
+      aUserData ? FileKind::PrivateMimeTypes : FileKind::GlobalMimeTypes;
+  nsresult rv = GetFileLocation(kind, mimeFileName);
   if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
     rv = GetTypeAndDescriptionFromMimetypesFile(
         mimeFileName, aFileExtension, aMajorType, aMinorType, aDescription);
@@ -407,8 +493,7 @@ nsresult nsOSHelperAppService::LookUpExtensionsAndDescription(
       NS_LossyConvertUTF16toASCII(aMinorType).get());
   nsAutoString mimeFileName;
 
-  nsresult rv =
-      GetFileLocation("helpers.private_mime_types_file", nullptr, mimeFileName);
+  nsresult rv = GetFileLocation(FileKind::PrivateMimeTypes, mimeFileName);
   if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
     rv = GetExtensionsAndDescriptionFromMimetypesFile(
         mimeFileName, aMajorType, aMinorType, aFileExtensions, aDescription);
@@ -416,8 +501,7 @@ nsresult nsOSHelperAppService::LookUpExtensionsAndDescription(
     rv = NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_FAILED(rv) || aFileExtensions.IsEmpty()) {
-    rv = GetFileLocation("helpers.global_mime_types_file", nullptr,
-                         mimeFileName);
+    rv = GetFileLocation(FileKind::GlobalMimeTypes, mimeFileName);
     if (NS_SUCCEEDED(rv) && !mimeFileName.IsEmpty()) {
       rv = GetExtensionsAndDescriptionFromMimetypesFile(
           mimeFileName, aMajorType, aMinorType, aFileExtensions, aDescription);
@@ -803,20 +887,15 @@ nsresult nsOSHelperAppService::DoLookUpHandlerAndDescription(
       NS_LossyConvertUTF16toASCII(aMinorType).get());
   nsAutoString mailcapFileName;
 
-  const char* filenamePref = aUserData ? "helpers.private_mailcap_file"
-                                       : "helpers.global_mailcap_file";
-  const char* filenameEnvVar = aUserData ? "PERSONAL_MAILCAP" : "MAILCAP";
-
-  nsresult rv = GetFileLocation(filenamePref, filenameEnvVar, mailcapFileName);
-  if (NS_SUCCEEDED(rv) && !mailcapFileName.IsEmpty()) {
-    rv = GetHandlerAndDescriptionFromMailcapFile(mailcapFileName, aMajorType,
+  const auto kind =
+      aUserData ? FileKind::PrivateMailCap : FileKind::GlobalMailCap;
+  nsresult rv = GetFileLocation(kind, mailcapFileName);
+  if (NS_FAILED(rv) || mailcapFileName.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return GetHandlerAndDescriptionFromMailcapFile(mailcapFileName, aMajorType,
                                                  aMinorType, aHandler,
                                                  aDescription, aMozillaFlags);
-  } else {
-    rv = NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return rv;
 }
 
 // static
