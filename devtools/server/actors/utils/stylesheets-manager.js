@@ -603,7 +603,7 @@ class StyleSheetsManager extends EventEmitter {
         mediaText: rule.media.mediaText,
         conditionText: rule.conditionText,
         matches,
-        line: InspectorUtils.getRuleLine(rule),
+        line: InspectorUtils.getRelativeRuleLine(rule),
         column: InspectorUtils.getRuleColumn(rule),
       };
     });
