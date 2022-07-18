@@ -361,7 +361,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ਪਸੰਦੀਦਾ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">ਆਪਣੇ ਫਾਇਰਫਾਕਸ ਖਾਤੇ ਨਾਲ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਹੋਰ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ਆਪਣੇ ਫਾਇਰਫਾਕਸ ਖਾਤੇ ਨਾਲ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਹੋਰ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ, ਪਾਸਵਰਡਾ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">ਫਾਇਰਫਾਕਸ ਖਾਤਾ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -538,8 +540,10 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
 
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">ਆਪਣਾ ਡਾਟਾ ਸਿੰਕ ਕਰੋ ਤੇ ਸੰਭਾਲੋ</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ਮੁੜ-ਕਨੈਕਟ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
     <!-- Preference for removing FxA account -->
