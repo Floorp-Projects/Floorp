@@ -264,27 +264,6 @@ class nsDisplaymtdBorder final : public nsDisplayBorder {
   nsDisplaymtdBorder(nsDisplayListBuilder* aBuilder, nsMathMLmtdFrame* aFrame)
       : nsDisplayBorder(aBuilder, aFrame) {}
 
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-  }
-
-  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                 const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) const override {
-    auto geometry =
-        static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-    if (aBuilder->ShouldSyncDecodeImages() &&
-        geometry->ShouldInvalidateToSyncDecodeImages()) {
-      bool snap;
-      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-    }
-
-    nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                             aInvalidRegion);
-  }
-
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = true;
@@ -311,11 +290,9 @@ class nsDisplaymtdBorder final : public nsDisplayBorder {
                                  ? PaintBorderFlags::SyncDecodeImages
                                  : PaintBorderFlags();
 
-    ImgDrawResult result = nsCSSRendering::PaintBorderWithStyleBorder(
+    Unused << nsCSSRendering::PaintBorderWithStyleBorder(
         mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(aBuilder, aCtx),
         bounds, styleBorder, mFrame->Style(), flags, mFrame->GetSkipSides());
-
-    nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }
 
   bool CreateWebRenderCommands(

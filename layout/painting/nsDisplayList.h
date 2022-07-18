@@ -6067,12 +6067,9 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
 
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayFiltersGeometry(this, aBuilder);
+    return new nsDisplaySVGEffectGeometry(this, aBuilder);
   }
 
-  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                 const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) const override;
 #ifdef MOZ_DUMP_PAINTING
   void PrintEffects(nsACString& aTo);
 #endif

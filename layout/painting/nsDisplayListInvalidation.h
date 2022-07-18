@@ -58,8 +58,6 @@ class nsDisplayItemGeometry {
    */
   virtual void MoveBy(const nsPoint& aOffset) { mBounds.MoveBy(aOffset); }
 
-  virtual bool InvalidateForSyncDecodeImages() const { return false; }
-
   /**
    * Bounds of the display item
    */
@@ -86,90 +84,6 @@ bool ShouldSyncDecodeImages(nsDisplayListBuilder* aBuilder);
 
 nsDisplayItemGeometry* GetPreviousGeometry(nsDisplayItem*);
 
-/**
- * nsImageGeometryMixin is a mixin for geometry items that draw images.
- * Geometry items that include this mixin can track drawing results and use
- * that information to inform invalidation decisions.
- *
- * This mixin uses CRTP; its template parameter should be the type of the class
- * that is inheriting from it. See nsDisplayItemGenericImageGeometry for an
- * example.
- */
-template <typename T>
-class nsImageGeometryMixin {
- public:
-  nsImageGeometryMixin(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
-      : mLastDrawResult(mozilla::image::ImgDrawResult::NOT_READY),
-        mWaitingForPaint(false) {
-    // Transfer state from the previous version of this geometry item.
-    if (auto lastGeometry = static_cast<T*>(GetPreviousGeometry(aItem))) {
-      mLastDrawResult = lastGeometry->mLastDrawResult;
-      mWaitingForPaint = lastGeometry->mWaitingForPaint;
-    }
-
-    // If our display item is going to invalidate to trigger sync decoding of
-    // images, mark ourselves as waiting for a paint. If we actually get
-    // painted, UpdateDrawResult will get called, and we'll clear the flag.
-    if (ShouldSyncDecodeImages(aBuilder) &&
-        ShouldInvalidateToSyncDecodeImages()) {
-      mWaitingForPaint = true;
-    }
-  }
-
-  static void UpdateDrawResult(nsDisplayItem* aItem,
-                               mozilla::image::ImgDrawResult aResult) {
-    MOZ_ASSERT(aResult != mozilla::image::ImgDrawResult::NOT_SUPPORTED,
-               "ImgDrawResult::NOT_SUPPORTED should be handled already!");
-
-    if (auto lastGeometry = static_cast<T*>(GetPreviousGeometry(aItem))) {
-      lastGeometry->mLastDrawResult = aResult;
-      lastGeometry->mWaitingForPaint = false;
-    }
-  }
-
-  bool ShouldInvalidateToSyncDecodeImages() const {
-    if (mWaitingForPaint) {
-      // We previously invalidated for sync decoding and haven't gotten painted
-      // since them. This suggests that our display item is completely occluded
-      // and there's no point in invalidating again - and because the reftest
-      // harness takes a new snapshot every time we invalidate, doing so might
-      // lead to an invalidation loop if we're in a reftest.
-      return false;
-    }
-
-    if (mLastDrawResult == mozilla::image::ImgDrawResult::SUCCESS ||
-        mLastDrawResult == mozilla::image::ImgDrawResult::BAD_IMAGE) {
-      return false;
-    }
-
-    return false;
-  }
-
- private:
-  mozilla::image::ImgDrawResult mLastDrawResult;
-  bool mWaitingForPaint;
-};
-
-/**
- * nsDisplayItemGenericImageGeometry is a generic geometry item class that
- * includes nsImageGeometryMixin.
- *
- * This should be sufficient for most display items that draw images.
- */
-class nsDisplayItemGenericImageGeometry
-    : public nsDisplayItemGenericGeometry,
-      public nsImageGeometryMixin<nsDisplayItemGenericImageGeometry> {
- public:
-  nsDisplayItemGenericImageGeometry(nsDisplayItem* aItem,
-                                    nsDisplayListBuilder* aBuilder)
-      : nsDisplayItemGenericGeometry(aItem, aBuilder),
-        nsImageGeometryMixin(aItem, aBuilder) {}
-
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
-};
-
 class nsDisplayItemBoundsGeometry : public nsDisplayItemGeometry {
  public:
   nsDisplayItemBoundsGeometry(nsDisplayItem* aItem,
@@ -178,29 +92,17 @@ class nsDisplayItemBoundsGeometry : public nsDisplayItemGeometry {
   bool mHasRoundedCorners;
 };
 
-class nsDisplayBorderGeometry
-    : public nsDisplayItemGeometry,
-      public nsImageGeometryMixin<nsDisplayBorderGeometry> {
+class nsDisplayBorderGeometry : public nsDisplayItemGeometry {
  public:
   nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
-
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
 };
 
-class nsDisplayBackgroundGeometry
-    : public nsDisplayItemGeometry,
-      public nsImageGeometryMixin<nsDisplayBackgroundGeometry> {
+class nsDisplayBackgroundGeometry : public nsDisplayItemGeometry {
  public:
   nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem,
                               nsDisplayListBuilder* aBuilder);
 
   void MoveBy(const nsPoint& aOffset) override;
-
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
 
   nsRect mPositioningArea;
   nsRect mDestRect;
@@ -217,20 +119,13 @@ class nsDisplayThemedBackgroundGeometry : public nsDisplayItemGeometry {
   bool mWindowIsActive;
 };
 
-class nsDisplayTreeBodyGeometry
-    : public nsDisplayItemGenericGeometry,
-      public nsImageGeometryMixin<nsDisplayTreeBodyGeometry> {
+class nsDisplayTreeBodyGeometry : public nsDisplayItemGenericGeometry {
  public:
   nsDisplayTreeBodyGeometry(nsDisplayItem* aItem,
                             nsDisplayListBuilder* aBuilder,
                             bool aWindowIsActive)
       : nsDisplayItemGenericGeometry(aItem, aBuilder),
-        nsImageGeometryMixin(aItem, aBuilder),
         mWindowIsActive(aWindowIsActive) {}
-
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
 
   bool mWindowIsActive = false;
 };
@@ -283,43 +178,25 @@ class nsDisplaySVGEffectGeometry : public nsDisplayItemGeometry {
   bool mHandleOpacity;
 };
 
-class nsDisplayMasksAndClipPathsGeometry
-    : public nsDisplaySVGEffectGeometry,
-      public nsImageGeometryMixin<nsDisplayMasksAndClipPathsGeometry> {
+class nsDisplayMasksAndClipPathsGeometry : public nsDisplaySVGEffectGeometry {
  public:
   nsDisplayMasksAndClipPathsGeometry(nsDisplayMasksAndClipPaths* aItem,
                                      nsDisplayListBuilder* aBuilder);
 
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
-
   nsTArray<nsRect> mDestRects;
 };
 
-class nsDisplayFiltersGeometry
-    : public nsDisplaySVGEffectGeometry,
-      public nsImageGeometryMixin<nsDisplayFiltersGeometry> {
+class nsDisplayFiltersGeometry : public nsDisplaySVGEffectGeometry {
  public:
   nsDisplayFiltersGeometry(nsDisplayFilters* aItem,
                            nsDisplayListBuilder* aBuilder);
-
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
 };
 
-class nsDisplayTableItemGeometry
-    : public nsDisplayItemGenericGeometry,
-      public nsImageGeometryMixin<nsDisplayTableItemGeometry> {
+class nsDisplayTableItemGeometry : public nsDisplayItemGenericGeometry {
  public:
   nsDisplayTableItemGeometry(nsDisplayTableItem* aItem,
                              nsDisplayListBuilder* aBuilder,
                              const nsPoint& aFrameOffsetToViewport);
-
-  bool InvalidateForSyncDecodeImages() const override {
-    return ShouldInvalidateToSyncDecodeImages();
-  }
 
   nsPoint mFrameOffsetToViewport;
 };

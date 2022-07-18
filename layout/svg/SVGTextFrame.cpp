@@ -2703,7 +2703,7 @@ class DisplaySVGText final : public nsPaintedDisplayItem {
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
+    return new nsDisplayItemGenericGeometry(this, aBuilder);
   }
 
   virtual nsRect GetComponentAlphaBounds(
@@ -2749,7 +2749,6 @@ void DisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   gfxContext* ctx = aCtx;
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   static_cast<SVGTextFrame*>(mFrame)->PaintSVG(*ctx, tm, imgParams);
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
 // ---------------------------------------------------------------------

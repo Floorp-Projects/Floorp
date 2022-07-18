@@ -108,11 +108,6 @@ class nsDisplayGradient final : public nsPaintedDisplayItem {
   }
   ~nsDisplayGradient() final { MOZ_COUNT_DTOR(nsDisplayGradient); }
 
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) final {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-  }
-
   nsRect GetBounds(bool* aSnap) const {
     *aSnap = true;
     return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
@@ -150,7 +145,7 @@ void nsDisplayGradient::Paint(nsDisplayListBuilder* aBuilder,
         frame->PresContext(), *aCtx, dest, dest, dest.TopLeft(),
         GetPaintRect(aBuilder, aCtx), dest.Size(), /* aOpacity = */ 1.0f);
   }
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  Unused << result;
 }
 
 bool nsDisplayGradient::CreateWebRenderCommands(
@@ -177,7 +172,6 @@ bool nsDisplayGradient::CreateWebRenderCommands(
       return false;
     }
   }
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   return true;
 }
 
@@ -1547,27 +1541,6 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
   nsDisplayAltFeedback(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {}
 
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) final {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-  }
-
-  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                 const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) const final {
-    auto geometry =
-        static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-    if (aBuilder->ShouldSyncDecodeImages() &&
-        geometry->ShouldInvalidateToSyncDecodeImages()) {
-      bool snap;
-      aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-    }
-
-    nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                             aInvalidRegion);
-  }
-
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const final {
     *aSnap = false;
     return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
@@ -1579,10 +1552,8 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
     uint32_t flags = imgIContainer::FLAG_SYNC_DECODE;
 
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    ImgDrawResult result = f->DisplayAltFeedback(
-        *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), flags);
-
-    nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+    Unused << f->DisplayAltFeedback(*aCtx, GetPaintRect(aBuilder, aCtx),
+                                    ToReferenceFrame(), flags);
   }
 
   bool CreateWebRenderCommands(
@@ -2058,29 +2029,6 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
                             GetPaintRect(aBuilder, aCtx), mPrevImage, flags);
     }
   }
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
-}
-
-nsDisplayItemGeometry* nsDisplayImage::AllocateGeometry(
-    nsDisplayListBuilder* aBuilder) {
-  return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-}
-
-void nsDisplayImage::ComputeInvalidationRegion(
-    nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
-    nsRegion* aInvalidRegion) const {
-  auto geometry =
-      static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
-
-  nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                                  aInvalidRegion);
 }
 
 nsRect nsDisplayImage::GetDestRect() const {
@@ -2207,8 +2155,6 @@ bool nsDisplayImage::CreateWebRenderCommands(
   // help us. Hence we can ignore the return value from PushImage.
   aManager->CommandBuilder().PushImageProvider(
       this, provider, drawResult, aBuilder, aResources, destRect, destRect);
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
   return true;
 }
 
