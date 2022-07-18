@@ -483,6 +483,12 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">ברוכים הבאים אל %1$s!</string>
 
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">המקום בו גלישה בסתר פוגשת את הבלתי נראה</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">פרטיות שמתאימה לכל מצב</string>
+
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">התחלת גלישה</string>
 

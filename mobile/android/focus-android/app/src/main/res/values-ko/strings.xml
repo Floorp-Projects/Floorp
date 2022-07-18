@@ -510,8 +510,6 @@
     <string name="onboarding_history_title">이런 브라우징은 지금까지 없었다</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">탭 한 번으로 검색 기록과 쿠키가 지워지고 광고가 사용자를 따라다니는 것을 방지합니다.</string>
-
     <string name="onboarding_history_description2">탭 한 번으로 검색 기록과 쿠키가 지워지고 광고가 사용자를 따라다니는 것을 방지합니다.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -757,14 +755,23 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s 잠금 해제</string>
+    <string moz:removedIn="103" name="biometric_auth_title">%1$s 잠금 해제</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">잠금 해제</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">지문을 사용하여 확인</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">지문을 사용하여 현재 앱 세션을 계속할 수 있습니다.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">지문 센서를 터치해주세요.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">지문 센서를 터치해주세요.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">새 세션</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">새 세션</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -860,8 +867,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">새탭의 링크로 즉시 전환</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">안전한 브라우징</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">잠재적으로 위험한 사이트 및 사기성 사이트 차단</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -871,8 +876,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">HTTPS 전용 모드</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">보안 강화를 위해 HTTPS 를 사용하여 사이트에 자동 연결을 시도합니다. HTTPS 연결은 방문하시는 웹사이트에 대해 안전하고 암호화된 연결을 제공합니다.</string>
-
     <string name="preference_https_only_summary3">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
 
     <!-- Preference for exceptions tracking protection -->

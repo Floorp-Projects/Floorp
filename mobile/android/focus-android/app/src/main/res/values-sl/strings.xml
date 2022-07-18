@@ -512,8 +512,6 @@
     <string name="onboarding_history_title">Brskajte, kot da se nikoli ni zgodilo</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
-
     <string name="onboarding_history_description2">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -765,6 +763,12 @@
 
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Odkleni</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Potrdite s prstnim odtisom</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Za nadaljevanje trenutne seje aplikacije lahko uporabite svoj prstni odtis.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">Za nadaljevanje se dotaknite čitalnika prstnih odtisov.</string>

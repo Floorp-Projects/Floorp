@@ -512,7 +512,6 @@
     <string name="onboarding_history_title">მოინახულეთ გვერდები სრულიად ახლებურად</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">ერთი შეხებით წაშლის ისტორიასა და კვალს — ასევე, შეაჩერებს თვალთვალს სარეკლამოებისგან.</string>
     <string name="onboarding_history_description2">ერთი შეხებით წაშლის ისტორიასა და კვალს — ასევე, შეაჩერებს თვალთვალს სარეკლამოებისგან.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -760,14 +759,23 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">გაიხსნას %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">გაიხსნას %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">გახსნა</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">დაადასტურეთ თითის ანაბეჭდით</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">შეგიძლიათ, თითის ანაბეჭდის დამოწმებით განაგრძოთ გამოყენება.</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">შეახეთ თითი ანაბეჭდის აღმქმელს გასაგრძელებლად.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">შეახეთ თითი ანაბეჭდის აღმქმელს გასაგრძელებლად.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">ახალი სეანსი</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">ახალი სეანსი</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -863,8 +871,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">ბმულის ახალ ჩანართში გახსნისას, მაშინვე მასზე გადასვლა</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">უსაფრთხო თვალიერება</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">შესაძლო საფრთხის მქონე და თაღლითური საიტების შეზღუდვა</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -874,8 +880,6 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">მხოლოდ-HTTPS-რეჟიმი</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">თავადვე ეცდება დაუკავშირდეს საიტებს HTTPS-ით, მეტი უსაფრთხოებისთვის. HTTPS-კავშირებით მონაცემები გადაიცემა დაცულად, დაშიფრულად საიტზე, რომელსაც ეწვევით.</string>
-
     <string name="preference_https_only_summary3">თავადვე შეეცდება დაუკავშირდეს საიტებს დაშიფრული HTTPS-ოქმით, მეტი უსაფრთხოებისთვის.</string>
 
     <!-- Preference for exceptions tracking protection -->

@@ -512,8 +512,6 @@
     <string name="onboarding_history_title">浏览无痕迹</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
-
     <string name="onboarding_history_description2">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
 
     <!-- Onboarding: Protection Title -->
@@ -761,14 +759,17 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">解锁 %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">解锁 %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">解锁</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">触摸指纹传感器以继续。</string>
+    <string moz:removedIn="103" name="biometric_auth_description">触摸指纹传感器以继续。</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">新会话</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">新会话</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
