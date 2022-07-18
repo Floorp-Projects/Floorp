@@ -7,7 +7,13 @@
 const HANG_PAGE =
   "http://mochi.test:8888/browser/dom/ipc/tests/file_endless_js.html";
 
+function pushPref(name, val) {
+  return SpecialPowers.pushPrefEnv({ set: [[name, val]] });
+}
+
 add_task(async () => {
+  await pushPref("dom.abort_script_on_child_shutdown", true);
+
   let tabpromise = BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: HANG_PAGE,
