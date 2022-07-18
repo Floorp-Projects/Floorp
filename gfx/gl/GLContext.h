@@ -3569,8 +3569,10 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   RefPtr<GLContext> mSharedContext;
 
   // The thread id which this context was created.
-  const PlatformThreadId mOwningThreadId;
+ public:
+  PlatformThreadId mOwningThreadId;
 
+ protected:
   GLContextSymbols mSymbols = {};
 
   UniquePtr<GLBlitHelper> mBlitHelper;

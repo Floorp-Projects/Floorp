@@ -2098,6 +2098,7 @@ bool GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const {
 }
 
 bool GLContext::IsOwningThread() const {
+  if (!mOwningThreadId) return true;  // Free for all!
   return PlatformThread::CurrentId() == mOwningThreadId;
 }
 
@@ -2430,8 +2431,11 @@ bool GLContext::MakeCurrent(bool aForce) const {
     }
   }
   if (!IsOwningThread()) {
-    gfxCriticalError() << "MakeCurrent called on a thread other than the"
+    gfxCriticalError() << "MakeCurrent called on a thread other than its"
                        << " creating thread!";
+    if (gfxEnv::MOZ_GL_RELEASE_ASSERT_CONTEXT_OWNERSHIP()) {
+      MOZ_CRASH("MOZ_GL_RELEASE_ASSERT_CONTEXT_OWNERSHIP");
+    }
   }
   if (!MakeCurrentImpl()) return false;
 
