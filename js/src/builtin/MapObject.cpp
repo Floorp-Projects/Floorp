@@ -520,8 +520,8 @@ const JSPropertySpec MapObject::staticProperties[] = {
   return NativeDefineDataProperty(cx, nativeProto, iteratorId, entriesFn, 0);
 }
 
-template <class Range>
-static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
+template <class MutableRange>
+static void TraceKey(MutableRange& r, const HashableValue& key, JSTracer* trc) {
   HashableValue newKey = key.trace(trc);
 
   if (newKey.get() != key.get()) {
@@ -537,7 +537,7 @@ static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
 
 void MapObject::trace(JSTracer* trc, JSObject* obj) {
   if (ValueMap* map = obj->as<MapObject>().getData()) {
-    for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
+    for (auto r = map->mutableAll(); !r.empty(); r.popFront()) {
       TraceKey(r, r.front().key, trc);
       TraceEdge(trc, &r.front().value, "value");
     }
@@ -1417,7 +1417,7 @@ SetObject* SetObject::create(JSContext* cx,
 void SetObject::trace(JSTracer* trc, JSObject* obj) {
   SetObject* setobj = static_cast<SetObject*>(obj);
   if (ValueSet* set = setobj->getData()) {
-    for (ValueSet::Range r = set->all(); !r.empty(); r.popFront()) {
+    for (auto r = set->mutableAll(); !r.empty(); r.popFront()) {
       TraceKey(r, r.front(), trc);
     }
   }
