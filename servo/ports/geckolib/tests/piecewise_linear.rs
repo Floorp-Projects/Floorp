@@ -164,8 +164,8 @@ fn step() {
         .push(1.0, Some(1.0))
         .build();
     assert!(step.at(0.25).approx_eq(&0.0));
-    // At the discontinuity, take the left hand side value
-    assert!(step.at(0.5).approx_eq(&0.0));
+    // At the discontinuity, take the right hand side value
+    assert!(step.at(0.5).approx_eq(&1.0));
     assert!(step.at(0.75).approx_eq(&1.0));
 }
 
@@ -180,7 +180,7 @@ fn step_multiple_conflicting() {
         .push(1.0, Some(1.0))
         .build();
     assert!(step.at(0.25).approx_eq(&0.0));
-    assert!(step.at(0.5).approx_eq(&0.0));
+    assert!(step.at(0.5).approx_eq(&1.0));
     assert!(step.at(0.75).approx_eq(&1.0));
 }
 
@@ -194,7 +194,7 @@ fn always_monotonic() {
         .build();
     assert!(monotonic.at(0.25).approx_eq(&0.15));
     // A discontinuity at x = 0.5 from y = 0.3 to 0.4
-    assert!(monotonic.at(0.5).approx_eq(&0.3));
+    assert!(monotonic.at(0.5).approx_eq(&0.4));
     assert!(monotonic.at(0.6).approx_eq(&0.52));
 }
 
@@ -207,7 +207,7 @@ fn always_monotonic_flat() {
         .push(0.4, Some(0.15))
         .push(1.0, Some(1.0))
         .build();
-    assert!(monotonic.at(0.2).approx_eq(&0.2));
+    assert!(monotonic.at(0.2).approx_eq(&0.4));
     // A discontinuity at x = 0.2 from y = 0.2 to 0.4
     assert!(monotonic.at(0.3).approx_eq(&0.475));
 }
