@@ -3,8 +3,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-add_task(async function test_1() {
-  const { test1 } = await require_module("dom/fs/test/common/test_basics.js");
+add_task(async function init() {
+  const testSet = "dom/fs/test/common/test_basics.js";
 
-  await test1();
+  const testCases = await require_module(testSet);
+
+  Object.values(testCases).forEach(testItem => {
+    add_task(testItem);
+  });
 });
