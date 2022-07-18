@@ -1,3 +1,5 @@
+#filter dumbComments emptyLines substitution
+
 pref("floorp.hide.tabbrowser-tab.enable", false);
 pref("floorp.optimized.msbutton.ope", false);
 pref("floorp.optimized.verticaltab", false);
