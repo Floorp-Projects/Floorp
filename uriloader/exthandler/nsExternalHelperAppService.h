@@ -377,6 +377,12 @@ class nsExternalAppHandler final : public nsIStreamListener,
   bool mHandleInternally;
 
   /**
+   * True if any dialog (e.g. unknown content type or file picker) is shown —
+   * can stop downloads panel from opening, to avoid redundant interruptions.
+   */
+  bool mDialogShowing;
+
+  /**
    * One of the REASON_ constants from nsIHelperAppLauncherDialog. Indicates the
    * reason the dialog was shown (unknown content type, server requested it,
    * etc).
@@ -522,7 +528,7 @@ class nsExternalAppHandler final : public nsIStreamListener,
                         const nsString& path);
 
   /**
-   * Set in nsHelperDlgApp.js. This is always null after the user has chosen an
+   * Set in HelperAppDlg.jsm. This is always null after the user has chosen an
    * action.
    */
   nsCOMPtr<nsIWebProgressListener2> mDialogProgressListener;
