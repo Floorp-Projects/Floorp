@@ -88,7 +88,6 @@ TEST_F(TestFileSystemRequestHandler, isGetRootSuccessful) {
   // Promise should be rejected
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
-  mOPFSChild->ManualRelease();  // Otherwise leak
 }
 
 TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {

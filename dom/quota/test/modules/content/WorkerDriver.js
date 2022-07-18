@@ -20,11 +20,20 @@ export async function runTestInWorker(script) {
           ok(data.value, data.message);
           break;
 
+        case "is":
+          is(data.a, data.b, data.message);
+          break;
+
         case "info":
           info(data.message);
           break;
 
         case "finish":
+          resolve();
+          break;
+
+        case "failure":
+          ok(false, "Worker had a failure: " + data.message);
           resolve();
           break;
       }

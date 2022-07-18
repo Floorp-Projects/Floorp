@@ -191,12 +191,6 @@ class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
  public:
   NS_INLINE_DECL_REFCOUNTING(TestOriginPrivateFileSystemChild, override)
 
-  void ManualRelease() {
-    if (mRefCnt > 0u) {
-      --mRefCnt;
-    }
-  }
-
   MOCK_METHOD(
       void, SendGetDirectoryHandle,
       (const FileSystemGetHandleRequest& request,
