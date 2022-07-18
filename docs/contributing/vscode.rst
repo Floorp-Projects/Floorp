@@ -73,6 +73,9 @@ the terminal:
 
    ./mach ide vscode
 
+After that, subsequent `./mach build` invocations will automatically run
+the `Clangd` integration.
+
 If `VS Code` is already open with a previous configuration generated, please make sure to
 restart `VS Code` otherwise the new configuration will not be used, and the `compile_commands.json`
 needed by `clangd` server will not be refreshed. This is a known `bug <https://github.com/clangd/vscode-clangd/issues/42>`__
