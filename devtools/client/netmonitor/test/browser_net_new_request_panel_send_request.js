@@ -155,5 +155,17 @@ add_task(async function() {
     "The request has the right post body"
   );
 
+  info("Check that all growing textareas provide a title tooltip");
+  const textareas = [
+    ...document.querySelectorAll("#http-custom-headers .auto-growing-textarea"),
+  ];
+  for (const textarea of textareas) {
+    is(
+      textarea.title,
+      textarea.dataset.replicatedValue,
+      "Title tooltip is set to the expected value"
+    );
+  }
+
   await teardown(monitor);
 });
