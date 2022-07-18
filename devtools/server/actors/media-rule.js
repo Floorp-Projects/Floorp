@@ -35,7 +35,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 
     this._matchesChange = this._matchesChange.bind(this);
 
-    this.line = InspectorUtils.getRuleLine(mediaRule);
+    this.line = InspectorUtils.getRelativeRuleLine(mediaRule);
     this.column = InspectorUtils.getRuleColumn(mediaRule);
 
     try {
