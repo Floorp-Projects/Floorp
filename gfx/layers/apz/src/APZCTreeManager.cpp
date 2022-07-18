@@ -1713,9 +1713,21 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(
           return state.Finish(*this, std::move(aCallback));
         }
 
+        // Tap gesture events are not grouped into input blocks, and they're
+        // never queued in InputQueue, but processed right away. So, we only
+        // need to set |mTapGestureHitResult| for the duration of the
+        // InputQueue::ReceiveInputEvent() call.
+        {
+          RecursiveMutexAutoLock lock(mTreeLock);
+          mTapGestureHitResult =
+              mHitTester->CloneHitTestResult(lock, state.mHit);
+        }
+
         state.mResult = mInputQueue->ReceiveInputEvent(
             state.mHit.mTargetApzc,
             TargetConfirmationFlags{state.mHit.mHitResult}, tapInput);
+
+        mTapGestureHitResult = HitTestResult();
 
         // Update the out-parameters so they are what the caller expects.
         tapInput.mPoint = *untransformedPoint;
@@ -3232,11 +3244,16 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetZoomableTarget(
 Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
     const ScreenIntPoint& aPoint, AsyncPanZoomController* aApzc) {
   RecursiveMutexAutoLock lock(mTreeLock);
-  // TODO: We can get here when handling a touchpad double-tap-to-zoom
-  // in which case we are not in a touch gesture and shouldn't access
-  // mTouchBlockHitResult.
+  // TODO: The current check assumes that a touch gesture and a touchpad tap
+  // gesture can't both be active at the same time. If we turn on double-tap-
+  // to-zoom on a touchscreen platform like Windows or Linux, this assumption
+  // would no longer be valid, and we'd have to instead have TapGestureInput
+  // track and inform this function whether it was created from touch events.
+  const HitTestResult& hit = mInputQueue->GetCurrentTouchBlock()
+                                 ? mTouchBlockHitResult
+                                 : mTapGestureHitResult;
   AsyncTransformComponents components =
-      mTouchBlockHitResult.mFixedPosSides == SideBits::eNone
+      hit.mFixedPosSides == SideBits::eNone
           ? LayoutAndVisual
           : AsyncTransformComponents{AsyncTransformComponent::eVisual};
   ScreenToScreenMatrix4x4 transformScreenToGecko =
@@ -3245,15 +3262,13 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
   Maybe<ScreenIntPoint> geckoPoint =
       UntransformBy(transformScreenToGecko, aPoint);
   if (geckoPoint) {
-    if (mTouchBlockHitResult.mFixedPosSides != SideBits::eNone) {
+    if (hit.mFixedPosSides != SideBits::eNone) {
       MutexAutoLock mapLock(mMapLock);
       *geckoPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
-          GetCompositorFixedLayerMargins(mapLock),
-          mTouchBlockHitResult.mFixedPosSides, mGeckoFixedLayerMargins));
-    } else if (mTouchBlockHitResult.mNode &&
-               mTouchBlockHitResult.mNode->GetStickyPositionAnimationId()) {
-      SideBits sideBits =
-          SidesStuckToRootContent(mTouchBlockHitResult.mNode.Get(lock));
+          GetCompositorFixedLayerMargins(mapLock), hit.mFixedPosSides,
+          mGeckoFixedLayerMargins));
+    } else if (hit.mNode && hit.mNode->GetStickyPositionAnimationId()) {
+      SideBits sideBits = SidesStuckToRootContent(hit.mNode.Get(lock));
 
       MutexAutoLock mapLock(mMapLock);
       *geckoPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
