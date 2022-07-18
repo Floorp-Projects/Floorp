@@ -74,18 +74,16 @@ class InputMap extends Component {
     return div(
       {
         ref: this.listRef,
-        id: "http-custom-input-and-map-form",
+        className: "http-custom-input-and-map-form",
       },
       list.map((item, index) => {
         return div(
           {
             className: "tabpanel-summary-container http-custom-input",
-            id: "http-custom-name-and-value",
             key: index,
           },
           input({
             className: "tabpanel-summary-input-checkbox",
-            id: "http-custom-input-checkbox",
             name: `checked-${index}`,
             type: "checkbox",
             onChange: event => {
@@ -153,7 +151,6 @@ class InputMap extends Component {
           },
           input({
             className: "tabpanel-summary-input-checkbox",
-            id: "http-custom-input-checkbox",
             onChange: () => {},
             checked: true,
             type: "checkbox",
