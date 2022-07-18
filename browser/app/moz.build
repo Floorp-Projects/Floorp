@@ -28,6 +28,8 @@ with Files("profile/channel-prefs.js"):
     BUG_COMPONENT = ("Firefox", "Installer")
 with Files("profile/firefox.js"):
     BUG_COMPONENT = ("Firefox", "General")
+with Files("profile/000-floorp.js"):
+    BUG_COMPONENT = ("Firefox", "General")
 
 if CONFIG["MOZ_MACBUNDLE_NAME"]:
     DIRS += ["macbuild/Contents"]
