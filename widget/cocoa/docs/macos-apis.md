@@ -74,9 +74,10 @@ The exact procedure varies based on the type of API (enum, objc class, method, e
 but the general approach looks like this:
 
 ```objc++
-#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-@interface NSWindow (AutomaticWindowTabbing)
-@property (class) BOOL allowsAutomaticWindowTabbing API_AVAILABLE(macos(10.12));
+#if !defined(MAC_OS_VERSION_12_0) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_12_0
+@interface NSScreen (NSScreen12_0)
+// https://developer.apple.com/documentation/appkit/nsscreen/3882821-safeareainsets?language=objc&changes=latest_major
+@property(readonly) NSEdgeInsets safeAreaInsets;
 @end
 #endif
 ```
