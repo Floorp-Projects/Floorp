@@ -14,35 +14,60 @@
 
 /* globals cloneInto */
 
-if (!window.wrappedJSObject.serviceWorker) {
+(function() {
   const win = window.wrappedJSObject;
+  const emptyObj = new win.Object();
   const emptyArr = new win.Array();
   const emptyMsg = cloneInto({ message: "" }, window);
+  const noOpFn = cloneInto(function() {}, window, { cloneFunctions: true });
 
-  const idb = {
-    open: () => win.Promise.reject(emptyMsg),
-  };
+  if (!win.indexedDB) {
+    const idb = {
+      open: () => win.Promise.reject(emptyMsg),
+    };
 
-  const sw = {
-    addEventListener() {},
-    getRegistrations: () => win.Promise.resolve(emptyArr),
-    register: () => win.Promise.reject(emptyMsg),
-  };
-
-  Object.defineProperty(win, "indexedDB", {
-    value: cloneInto(idb, window, { cloneFunctions: true }),
-  });
-
-  Object.defineProperty(navigator.wrappedJSObject, "serviceWorker", {
-    value: cloneInto(sw, window, { cloneFunctions: true }),
-  });
-
-  if (!win.PushManager) {
-    Object.defineProperty(win, "PushManager", {
-      value: cloneInto({}, window, { cloneFunctions: true }),
+    Object.defineProperty(win, "indexedDB", {
+      value: cloneInto(idb, window, { cloneFunctions: true }),
     });
   }
 
+  // bug 1778993
+  for (const name of [
+    "IDBCursor",
+    "IDBDatabase",
+    "IDBIndex",
+    "IDBOpenDBRequest",
+    "IDBRequest",
+    "IDBTransaction",
+  ]) {
+    if (!win[name]) {
+      Object.defineProperty(win, name, { value: emptyObj });
+    }
+  }
+
+  if (!win.serviceWorker) {
+    const sw = {
+      addEventListener() {},
+      getRegistrations: () => win.Promise.resolve(emptyArr),
+      register: () => win.Promise.reject(emptyMsg),
+    };
+
+    Object.defineProperty(navigator.wrappedJSObject, "serviceWorker", {
+      value: cloneInto(sw, window, { cloneFunctions: true }),
+    });
+
+    // bug 1779536
+    Object.defineProperty(navigator.wrappedJSObject.serviceWorker, "ready", {
+      value: new win.Promise(noOpFn),
+    });
+  }
+
+  // bug 1750699
+  if (!win.PushManager) {
+    Object.defineProperty(win, "PushManager", { value: emptyObj });
+  }
+
+  // bug 1750699
   if (!win.PushSubscription) {
     const ps = {
       prototype: {
@@ -55,6 +80,7 @@ if (!window.wrappedJSObject.serviceWorker) {
     });
   }
 
+  // bug 1750699
   if (!win.ServiceWorkerRegistration) {
     const swr = {
       prototype: {
@@ -66,4 +92,4 @@ if (!window.wrappedJSObject.serviceWorker) {
       value: cloneInto(swr, window, { cloneFunctions: true }),
     });
   }
-}
+})();
