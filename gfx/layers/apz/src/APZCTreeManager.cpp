@@ -2046,23 +2046,8 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
           return;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
-        if (mTouchBlockHitResult.mFixedPosSides != SideBits::eNone) {
-          MutexAutoLock lock(mMapLock);
-          touchData.mScreenPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(lock),
-              mTouchBlockHitResult.mFixedPosSides, mGeckoFixedLayerMargins));
-        } else if (mTouchBlockHitResult.mNode &&
-                   mTouchBlockHitResult.mNode->GetStickyPositionAnimationId()) {
-          SideBits sideBits = SideBits::eNone;
-          {
-            RecursiveMutexAutoLock lock(mTreeLock);
-            sideBits =
-                SidesStuckToRootContent(mTouchBlockHitResult.mNode.Get(lock));
-          }
-          MutexAutoLock lock(mMapLock);
-          touchData.mScreenPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(lock), sideBits, ScreenMargin()));
-        }
+        AdjustEventPointForDynamicToolbar(touchData.mScreenPoint,
+                                          mTouchBlockHitResult);
       }
     }
   }
@@ -2075,6 +2060,25 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
     mTouchBlockHitResult = HitTestResult();
     mRetainedTouchIdentifier = -1;
     mInScrollbarTouchDrag = false;
+  }
+}
+
+void APZCTreeManager::AdjustEventPointForDynamicToolbar(
+    ScreenIntPoint& aEventPoint, const HitTestResult& aHit) {
+  if (aHit.mFixedPosSides != SideBits::eNone) {
+    MutexAutoLock lock(mMapLock);
+    aEventPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
+        GetCompositorFixedLayerMargins(lock), aHit.mFixedPosSides,
+        mGeckoFixedLayerMargins));
+  } else if (aHit.mNode && aHit.mNode->GetStickyPositionAnimationId()) {
+    SideBits sideBits = SideBits::eNone;
+    {
+      RecursiveMutexAutoLock lock(mTreeLock);
+      sideBits = SidesStuckToRootContent(mTouchBlockHitResult.mNode.Get(lock));
+    }
+    MutexAutoLock lock(mMapLock);
+    aEventPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
+        GetCompositorFixedLayerMargins(lock), sideBits, ScreenMargin()));
   }
 }
 
@@ -3262,18 +3266,7 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
   Maybe<ScreenIntPoint> geckoPoint =
       UntransformBy(transformScreenToGecko, aPoint);
   if (geckoPoint) {
-    if (hit.mFixedPosSides != SideBits::eNone) {
-      MutexAutoLock mapLock(mMapLock);
-      *geckoPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
-          GetCompositorFixedLayerMargins(mapLock), hit.mFixedPosSides,
-          mGeckoFixedLayerMargins));
-    } else if (hit.mNode && hit.mNode->GetStickyPositionAnimationId()) {
-      SideBits sideBits = SidesStuckToRootContent(hit.mNode.Get(lock));
-
-      MutexAutoLock mapLock(mMapLock);
-      *geckoPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
-          GetCompositorFixedLayerMargins(mapLock), sideBits, ScreenMargin()));
-    }
+    AdjustEventPointForDynamicToolbar(*geckoPoint, hit);
   }
   return geckoPoint;
 }
