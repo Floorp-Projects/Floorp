@@ -14,7 +14,7 @@ object Versions {
         const val appcompat = "1.3.0"
         const val arch = "2.1.0"
         const val browser = "1.3.0"
-        const val core = "1.3.2"
+        const val core = "1.8.0"
         const val compose = compose_version
         const val compose_constraint_layout = "1.0.1"
         const val constraint_layout = "2.1.4"
@@ -23,7 +23,7 @@ object Versions {
         const val recyclerview = "1.2.0"
         const val palette = "1.0.0"
         const val preferences = "1.1.1"
-        const val lifecycle = "2.2.0"
+        const val lifecycle = "2.5.1"
         const val saved_state = "1.2.0"
         const val splash_screen = "1.0.0"
     }
