@@ -10,11 +10,12 @@
 <!-- Before submitting the PR, please address each item -->
 - [ ] **QA Needed**
 
-### To download an APK when reviewing a PR:
-1. click on Show All Checks,
-2. click Details next to "Taskcluster (pull_request)" after it appears and then finishes with a green checkmark,
-3. click on the "Fenix - assemble" task, then click "Run Artifacts".
-4. the APK links should be on the left side of the screen, named for each CPU architecture
+### To download an APK when reviewing a PR (after all CI tasks finished running):
+1. Click on `Checks` at the top of the PR page.
+2. Click on the `firefoxci-taskcluster` group on the left to expand all tasks.
+3. Click on the `build-debug` task.
+4. Click on `View task in Taskcluster` in the new `DETAILS` section.
+5. The APK links should be on the right side of the screen, named for each CPU architecture.
 
 ### GitHub Automation
 <!-- Do not add anything below this line -->
