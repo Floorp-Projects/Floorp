@@ -113,12 +113,6 @@ class MacIOSurface final
   }
   YUVColorSpace GetYUVColorSpace() const { return mColorSpace; }
   bool IsFullRange() const {
-#  if !defined(MAC_OS_VERSION_10_13) || \
-      MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
-    enum : OSType{
-        kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
-    };
-#  endif
     OSType format = GetPixelFormat();
     return (format == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange ||
             format == kCVPixelFormatType_420YpCbCr10BiPlanarFullRange);
