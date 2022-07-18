@@ -12,6 +12,13 @@ const { isESMified, getESMFiles } = require(_path.resolve(
   __dirname,
   "./is-esmified.js"
 ));
+const {
+  isIdentifier,
+  isString,
+  warnForPath,
+  getPrevStatement,
+  getNextStatement,
+} = require(_path.resolve(__dirname, "./utils.js"));
 
 /* global module */
 
@@ -60,16 +67,6 @@ function isTargetESM(resourceURI) {
   return true;
 }
 
-function IsIdentifier(node, name) {
-  if (node.type !== "Identifier") {
-    return false;
-  }
-  if (node.name !== name) {
-    return false;
-  }
-  return true;
-}
-
 function calleeToString(node) {
   if (node.type === "Identifier") {
     return node.name;
@@ -105,21 +102,15 @@ function isLazyGettersCall(node) {
   return ["XPCOMUtils.defineLazyModuleGetters"].includes(s);
 }
 
-function warnForPath(inputFile, path, message) {
-  const loc = path.node.loc;
-  console.log(
-    `WARNING: ${inputFile}:${loc.start.line}:${loc.start.column} : ${message}`
-  );
+function isESModuleGettersCall(node) {
+  const s = calleeToString(node.callee);
+  return ["ChromeUtils.defineESModuleGetters"].includes(s);
 }
 
 const extPattern = /\.(jsm|js|jsm\.js)$/;
 
 function esmify(path) {
   return path.replace(extPattern, ".sys.mjs");
-}
-
-function isString(node) {
-  return node.type === "Literal" && typeof node.value === "string";
 }
 
 // Replace `ChromeUtils.import`, `Cu.import`, and `ChromeUtils.importESModule`
@@ -245,6 +236,100 @@ function replaceImportESModuleCall(inputFile, jscodeshift, path) {
   tryReplacingWithStaticImport(jscodeshift, inputFile, path, resourceURINode);
 }
 
+// Find `ChromeUtils.defineESModuleGetters` statement adjacent to `path` which
+// uses the same target object.
+function findDefineESModuleGettersStmt(path) {
+  // `path` must be top-level.
+  if (path.parent.node.type !== "ExpressionStatement") {
+    return null;
+  }
+
+  if (path.parent.parent.node.type !== "Program") {
+    return null;
+  }
+
+  // Get previous or next statement with ChromeUtils.defineESModuleGetters.
+  let callStmt;
+  const prev = getPrevStatement(path.parent);
+  if (
+    prev &&
+    prev.type === "ExpressionStatement" &&
+    prev.expression.type === "CallExpression" &&
+    isESModuleGettersCall(prev.expression)
+  ) {
+    callStmt = prev;
+  } else {
+    const next = getNextStatement(path.parent);
+    if (
+      next &&
+      next.type === "ExpressionStatement" &&
+      next.expression.type === "CallExpression" &&
+      isESModuleGettersCall(next.expression)
+    ) {
+      callStmt = next;
+    } else {
+      return null;
+    }
+  }
+
+  const call = callStmt.expression;
+
+  if (call.arguments.length !== 2) {
+    return null;
+  }
+
+  const modulesNode = call.arguments[1];
+  if (modulesNode.type !== "ObjectExpression") {
+    return null;
+  }
+
+  // Check if the target object is same.
+  if (
+    path.node.arguments[0].type === "ThisExpression" &&
+    call.arguments[0].type === "ThisExpression"
+  ) {
+    return callStmt;
+  }
+
+  if (
+    path.node.arguments[0].type === "Identifier" &&
+    call.arguments[0].type === "Identifier" &&
+    path.node.arguments[0].name === call.arguments[0].name
+  ) {
+    return callStmt;
+  }
+
+  return null;
+}
+
+function getPropKeyString(prop) {
+  if (prop.key.type === "Identifier") {
+    return prop.key.name;
+  }
+
+  if (prop.key.type === "Literal") {
+    return prop.key.value.toString();
+  }
+
+  return "";
+}
+
+function sortProps(obj) {
+  obj.properties.sort((a, b) => {
+    return getPropKeyString(a) < getPropKeyString(b) ? -1 : 1;
+  });
+}
+
+// Move comments above `nodeFrom` before `nodeTo`.
+function moveComments(nodeTo, nodeFrom) {
+  if (nodeTo.comments) {
+    nodeTo.comments = [...nodeTo.comments, ...nodeFrom.comments];
+  } else {
+    nodeTo.comments = nodeFrom.comments;
+  }
+  nodeFrom.comments = [];
+}
+
 function replaceLazyGetterCall(inputFile, jscodeshift, path) {
   if (path.node.arguments.length !== 3) {
     warnForPath(inputFile, path, `lazy getter call should have 3 arguments`);
@@ -273,15 +358,32 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
     return;
   }
 
-  path.node.callee.object.name = "ChromeUtils";
-  path.node.callee.property.name = "defineESModuleGetters";
-  resourceURINode.value = esmify(resourceURI);
-  path.node.arguments = [
-    path.node.arguments[0],
-    jscodeshift.objectExpression([
-      jscodeshift.property("init", nameNode, resourceURINode),
-    ]),
-  ];
+  const prop = jscodeshift.property(
+    "init",
+    jscodeshift.identifier(nameNode.value),
+    resourceURINode
+  );
+
+  const callStmt = findDefineESModuleGettersStmt(path);
+  if (callStmt) {
+    // Move a property to existing ChromeUtils.defineESModuleGetters call.
+
+    moveComments(callStmt, path.parent.node);
+    path.parent.prune();
+
+    callStmt.expression.arguments[1].properties.push(prop);
+    sortProps(callStmt.expression.arguments[1]);
+  } else {
+    // Convert this call into ChromeUtils.defineESModuleGetters.
+
+    path.node.callee.object.name = "ChromeUtils";
+    path.node.callee.property.name = "defineESModuleGetters";
+    resourceURINode.value = esmify(resourceURI);
+    path.node.arguments = [
+      path.node.arguments[0],
+      jscodeshift.objectExpression([prop]),
+    ];
+  }
 }
 
 function replaceLazyGettersCall(inputFile, jscodeshift, path) {
@@ -326,37 +428,59 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
     return;
   }
 
+  let callStmt = findDefineESModuleGettersStmt(path);
   if (jsmProps.length === 0) {
-    path.node.callee.object.name = "ChromeUtils";
-    path.node.callee.property.name = "defineESModuleGetters";
-    for (const prop of esmProps) {
-      const resourceURINode = prop.value;
-      resourceURINode.value = esmify(resourceURINode.value);
+    if (callStmt) {
+      // Move all properties to existing ChromeUtils.defineESModuleGetters call.
+
+      moveComments(callStmt, path.parent.node);
+      path.parent.prune();
+
+      for (const prop of esmProps) {
+        const resourceURINode = prop.value;
+        resourceURINode.value = esmify(resourceURINode.value);
+        callStmt.expression.arguments[1].properties.push(prop);
+      }
+      sortProps(callStmt.expression.arguments[1]);
+    } else {
+      // Convert this call into ChromeUtils.defineESModuleGetters.
+
+      path.node.callee.object.name = "ChromeUtils";
+      path.node.callee.property.name = "defineESModuleGetters";
+      for (const prop of esmProps) {
+        const resourceURINode = prop.value;
+        resourceURINode.value = esmify(resourceURINode.value);
+      }
     }
   } else {
+    // Move some properties to ChromeUtils.defineESModuleGetters.
+
     if (path.parent.node.type !== "ExpressionStatement") {
       warnForPath(inputFile, path, `lazy getters call in unexpected context`);
       return;
     }
 
+    if (!callStmt) {
+      callStmt = jscodeshift.expressionStatement(
+        jscodeshift.callExpression(
+          jscodeshift.memberExpression(
+            jscodeshift.identifier("ChromeUtils"),
+            jscodeshift.identifier("defineESModuleGetters")
+          ),
+          [path.node.arguments[0], jscodeshift.objectExpression([])]
+        )
+      );
+      path.parent.insertBefore(callStmt);
+    }
+
+    moveComments(callStmt, path.parent.node);
+
     for (const prop of esmProps) {
       const resourceURINode = prop.value;
       resourceURINode.value = esmify(resourceURINode.value);
+      callStmt.expression.arguments[1].properties.push(prop);
     }
-
-    const callStmt = jscodeshift.expressionStatement(
-      jscodeshift.callExpression(
-        jscodeshift.memberExpression(
-          jscodeshift.identifier("ChromeUtils"),
-          jscodeshift.identifier("defineESModuleGetters")
-        ),
-        [path.node.arguments[0], jscodeshift.objectExpression(esmProps)]
-      )
-    );
-
-    callStmt.comments = path.parent.node.comments;
-    path.parent.node.comments = [];
-    path.parent.insertBefore(callStmt);
+    sortProps(callStmt.expression.arguments[1]);
 
     path.node.arguments[1].properties = jsmProps;
   }
@@ -376,7 +500,7 @@ function getProp(obj, key) {
       continue;
     }
 
-    if (IsIdentifier(prop.key, key)) {
+    if (isIdentifier(prop.key, key)) {
       return prop;
     }
   }
