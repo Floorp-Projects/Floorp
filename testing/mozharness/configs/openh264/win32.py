@@ -48,5 +48,6 @@ config = {
             "{_VSPATH}/SDK/lib/10.0.17134.0/ucrt/x86;"
             "{_VSPATH}/SDK/lib/10.0.17134.0/um/x86;"
         ).format(_VSPATH=VSPATH),
+        "CFLAGS": ("-m32"),
     },
 }
