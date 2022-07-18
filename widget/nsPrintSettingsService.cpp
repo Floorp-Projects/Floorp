@@ -765,14 +765,24 @@ nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
 
   nsIPrintSettings* settings = *aPrintSettings;
 
-  nsAutoString printerName;
-  settings->GetPrinterName(printerName);
-  if (printerName.IsEmpty()) {
-    GetLastUsedPrinterName(printerName);
-    settings->SetPrinterName(printerName);
+  // For security reasons, we don't pass the printer name to content processes.
+  // Once bug 1776169 is fixed, we can just assert that this is the parent
+  // process.
+  bool usePrinterName = XRE_IsParentProcess();
+
+  if (usePrinterName) {
+    nsAutoString printerName;
+    settings->GetPrinterName(printerName);
+    if (printerName.IsEmpty()) {
+      GetLastUsedPrinterName(printerName);
+      settings->SetPrinterName(printerName);
+    }
+    InitPrintSettingsFromPrinter(printerName, settings);
   }
-  InitPrintSettingsFromPrinter(printerName, settings);
-  InitPrintSettingsFromPrefs(settings, true, nsIPrintSettings::kInitSaveAll);
+
+  InitPrintSettingsFromPrefs(settings, usePrinterName,
+                             nsIPrintSettings::kInitSaveAll);
+
   return NS_OK;
 }
 
@@ -785,6 +795,8 @@ nsPrintSettingsService::CreateNewPrintSettings(
 NS_IMETHODIMP
 nsPrintSettingsService::GetLastUsedPrinterName(
     nsAString& aLastUsedPrinterName) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   aLastUsedPrinterName.Truncate();
   Preferences::GetString(kPrinterName, aLastUsedPrinterName);
   return NS_OK;
