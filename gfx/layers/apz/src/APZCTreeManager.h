@@ -987,6 +987,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   /* Tracks the number of touch points we are tracking that are currently on
    * the screen. */
   TouchCounter mTouchCounter;
+  /* If a tap gesture event sent directly by widget code (rather than gesture
+   * detected from touch events by APZ) is being processed, this stores the
+   * result of hit testing for that tap gesture event.
+   */
+  HitTestResult mTapGestureHitResult;
   /* Stores the current mouse position in screen coordinates.
    */
   mutable DataMutex<ScreenPoint> mCurrentMousePosition;
