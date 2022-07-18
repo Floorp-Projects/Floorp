@@ -8,6 +8,7 @@
 
 #include "mozilla/Maybe.h"
 
+#include <stdio.h>
 #include <utility>
 
 #include "util/Text.h"
@@ -32,6 +33,16 @@ JS_PUBLIC_API BackEdge::Ptr BackEdge::clone() const {
 }
 
 #ifdef DEBUG
+
+static int32_t js_fputs(const char16_t* s, FILE* f) {
+  while (*s != 0) {
+    if (fputwc(wchar_t(*s), f) == static_cast<wint_t>(WEOF)) {
+      return WEOF;
+    }
+    s++;
+  }
+  return 1;
+}
 
 static void dumpNode(const JS::ubi::Node& node) {
   fprintf(stderr, "    %p ", (void*)node.identifier());

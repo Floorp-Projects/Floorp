@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -49,8 +48,6 @@ static MOZ_ALWAYS_INLINE size_t js_strnlen(const CharT* s, size_t maxlen) {
   }
   return maxlen;
 }
-
-extern int32_t js_fputs(const char16_t* s, FILE* f);
 
 namespace js {
 
