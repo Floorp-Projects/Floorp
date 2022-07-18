@@ -453,7 +453,10 @@ function run_test() {
 
   // test mailcap entries with needsterminal are ignored on non-Windows non-Mac.
   if (mozinfo.os != "win" && mozinfo.os != "mac") {
-    prefSvc.setStringPref("helpers.private_mailcap_file", do_get_file("mailcap").path);
+    prefSvc.setStringPref(
+      "helpers.private_mailcap_file",
+      do_get_file("mailcap").path
+    );
     handlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", null);
     Assert.equal(
       handlerInfo.preferredAction,
