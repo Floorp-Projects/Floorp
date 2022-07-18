@@ -11,12 +11,4 @@ const Assert = {
       message,
     });
   },
-  equal(a, b, message) {
-    postMessage({
-      op: "is",
-      a,
-      b,
-      message,
-    });
-  },
 };

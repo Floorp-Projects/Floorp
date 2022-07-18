@@ -313,9 +313,8 @@ void FileSystemRequestHandler::GetRoot(
   MOZ_ALWAYS_SUCCEEDS(
       POriginPrivateFileSystem::CreateEndpoints(&parentEp, &childEp));
 
-  RefPtr<OriginPrivateFileSystemChild> child = mChildFactory->Create();
   RefPtr<FileSystemActorHolder> actor =
-      MakeAndAddRef<FileSystemActorHolder>(child);
+      MakeAndAddRef<FileSystemActorHolder>(mChildFactory->Create().take());
   if (!childEp.Bind(actor->Actor()->AsBindable())) {
     aPromise->MaybeRejectWithUndefined();
     return;

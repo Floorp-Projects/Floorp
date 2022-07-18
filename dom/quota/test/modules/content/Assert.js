@@ -5,6 +5,7 @@
 
 // Just a wrapper around SimpleTest related functions for now.
 export const Assert = {
-  ok,
-  equal: is,
+  ok(value, message) {
+    ok(value, message);
+  },
 };
