@@ -26,6 +26,10 @@ this.DynamicFPIHelper = {
       await SpecialPowers.pushPrefEnv({
         set: [
           ["dom.storage_access.enabled", true],
+          [
+            "privacy.partition.always_partition_third_party_non_cookie_storage",
+            true,
+          ],
           ["privacy.trackingprotection.enabled", false],
           ["privacy.trackingprotection.pbmode.enabled", false],
           ["privacy.trackingprotection.annotate_channels", true],
