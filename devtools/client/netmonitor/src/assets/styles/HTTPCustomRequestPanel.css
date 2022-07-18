@@ -28,7 +28,7 @@
   width: 100%;
 }
 
-.auto-growing-textarea::after {
+.auto-growing-textarea:focus-within::after {
   content: attr(data-replicated-value) " ";
   white-space: pre-wrap;
   visibility: hidden;
@@ -38,10 +38,19 @@
 .auto-growing-textarea > textarea {
   resize: none;
   overflow: hidden;
+  /* Force the content in a single line */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* When editing a textarea, restore the multiline display */
+.auto-growing-textarea > textarea:focus {
+  text-overflow: unset;
+  white-space: unset;
 }
 
 .auto-growing-textarea > textarea,
-.auto-growing-textarea::after {
+.auto-growing-textarea:focus-within::after {
   grid-area: 1 / 1 / 2 / 2;
   border: 0;
   font-weight: normal;
