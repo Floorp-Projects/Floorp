@@ -10,6 +10,7 @@ const Cr = {
 function add_task(func) {
   if (!add_task.tasks) {
     add_task.tasks = [];
+    add_task.index = 0;
   }
 
   add_task.tasks.push(func);
@@ -20,17 +21,35 @@ addEventListener("message", async function onMessage(event) {
     postMessage({ op: "info", message });
   }
 
+  function executeSoon(callback) {
+    const channel = new MessageChannel();
+    channel.port1.postMessage("");
+    channel.port2.onmessage = function() {
+      callback();
+    };
+  }
+
+  function runNextTest() {
+    if (add_task.index < add_task.tasks.length) {
+      const task = add_task.tasks[add_task.index++];
+      info("add_task | Entering test " + task.name);
+      task()
+        .then(function() {
+          executeSoon(runNextTest);
+          info("add_task | Leaving test " + task.name);
+        })
+        .catch(function(ex) {
+          postMessage({ op: "failure", message: "" + ex });
+        });
+    } else {
+      postMessage({ op: "finish" });
+    }
+  }
+
   removeEventListener("message", onMessage);
 
   const data = event.data;
   importScripts(...data);
 
-  let task;
-  while ((task = add_task.tasks.shift())) {
-    info("add_task | Entering test " + task.name);
-    await task();
-    info("add_task | Leaving test " + task.name);
-  }
-
-  postMessage({ op: "finish" });
+  executeSoon(runNextTest);
 });
