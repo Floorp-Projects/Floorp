@@ -16,6 +16,27 @@ add_task(async function test_tempfilename() {
     };
     list.addView(view);
   });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
+  });
+
+  const MimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  const HandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+    Ci.nsIHandlerService
+  );
+  let mimeInfo = MimeSvc.getFromTypeAndExtension(
+    HandlerSvc.getTypeFromExtension("txt"),
+    "txt"
+  );
+  let existed = HandlerSvc.exists(mimeInfo);
+  mimeInfo.alwaysAskBeforeHandling = false;
+  mimeInfo.preferredAction = Ci.nsIHandlerInfo.saveToDisk;
+  HandlerSvc.store(mimeInfo);
+
   serveInterruptibleAsDownload();
   mustInterruptResponses();
   await BrowserTestUtils.withNewTab(
@@ -27,7 +48,21 @@ add_task(async function test_tempfilename() {
     },
     async () => {
       let download = await downloadStarted;
-      registerCleanupFunction(() => download.finalize());
+      registerCleanupFunction(async () => {
+        if (existed) {
+          HandlerSvc.store(mimeInfo);
+        } else {
+          HandlerSvc.remove(mimeInfo);
+        }
+        await download.finalize(true);
+        if (Services.appinfo.OS === "WINNT") {
+          // We need to make the file writable to delete it on Windows.
+          await IOUtils.setPermissions(download.target.path, 0o600);
+        }
+        await IOUtils.remove(download.target.path);
+        await download.finalize();
+        await list.removeFinished();
+      });
 
       let { partFilePath } = download.target;
       Assert.stringContains(
@@ -51,7 +86,6 @@ add_task(async function test_tempfilename() {
         !(await IOUtils.exists(download.target.partFilePath)),
         "Temp file should be gone."
       );
-      await IOUtils.remove(download.target.path);
     }
   );
 });
