@@ -384,20 +384,17 @@ const colorwayClosetEnabled = Services.prefs.getBoolPref(
 const ColorwayCollections = [
   {
     id: "life-in-color",
-    expiry: "2022-02-08",
+    expiry: "3000-02-08",
     l10nId: "colorway-collection-life-in-color",
   },
   {
     id: "true-colors",
-    expiry: "2022-05-03",
+    expiry: "3000-05-03",
     l10nId: "colorway-collection-true-colors",
   },
   {
     id: "independent-voices",
-    expiry:
-      colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
-        ? "2022-12-31"
-        : "1970-01-01",
+    expiry: "3000-05-03",
     l10nId: "colorway-collection-independent-voices",
   },
 ];
