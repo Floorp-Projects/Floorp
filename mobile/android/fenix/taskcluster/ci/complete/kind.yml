@@ -14,8 +14,15 @@ transforms:
     - taskgraph.transforms.code_review:transforms
     - taskgraph.transforms.task:transforms
 
+job-defaults:
+    worker-type: succeed
+
+
 jobs:
-    complete:
+    pr:
         description: PR Summary Task
         run-on-tasks-for: [github-pull-request]
-        worker-type: succeed
+
+    push:
+        description: Push Summary Task
+        run-on-tasks-for: [github-push]

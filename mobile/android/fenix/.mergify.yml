@@ -1,7 +1,7 @@
 queue_rules:
   - name: default
     conditions:
-      - status-success=pr-complete
+      - status-success=complete-pr
 pull_request_rules:
   - name: Resolve conflict
     conditions:
@@ -12,7 +12,7 @@ pull_request_rules:
   - name: MickeyMoz - Auto Merge
     conditions:
       - author=MickeyMoz
-      - status-success=pr-complete
+      - status-success=complete-pr
       - files~=(Gecko.kt|AndroidComponents.kt)
     actions:
       review:
@@ -30,7 +30,7 @@ pull_request_rules:
           - and:
             - author=mozilla-l10n-automation-bot
             - base=main
-            - status-success=pr-complete
+            - status-success=complete-pr
           - and:
             - author=github-actions[bot]
             - base~=releases[_/].*
@@ -104,7 +104,7 @@ pull_request_rules:
         force: false
   - name: Needs landing - Rebase
     conditions:
-      - check-success=pr-complete
+      - check-success=complete-pr
       - label=pr:needs-landing
       - "#approved-reviews-by>=1"
       - -draft
@@ -117,8 +117,8 @@ pull_request_rules:
         rebase_fallback: none
   - name: Needs landing - Squash
     conditions:
-      - check-success=pr-complete
-      - label=pr:needs-landing-squashed 
+      - check-success=complete-pr
+      - label=pr:needs-landing-squashed
       - "#approved-reviews-by>=1"
       - -draft
       - label!=pr:work-in-progress
