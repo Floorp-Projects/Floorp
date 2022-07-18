@@ -120,6 +120,21 @@ add_task(async function() {
   let win1 = await BrowserTestUtils.openNewBrowserWindow();
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
 
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  // (Prevents unexpected intermittent failures due to the popup page being
+  // potentially preloaded when the mouse is hovering the browserAction widget,
+  // See Bug 1748808).
+  //
+  // TODO(Bug 1780008): remove this workaround once we have landed a proper long
+  // term fix and a test case to explicitly cover it as part of Bug 1780008).
+  for (const win of [window, win1, win2]) {
+    EventUtils.synthesizeMouseAtCenter(
+      win.gURLBar.textbox,
+      { type: "mouseover" },
+      win
+    );
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary", // To automatically show sidebar on load.
     manifest: {
