@@ -365,6 +365,7 @@ imply_option("--build-backends", build_backend)
     "--help",
 )
 @imports("sys")
+@imports(_from="mozbuild.backend.clangd", _import="find_vscode_cmd")
 def build_backend_defaults(
     host,
     target,
@@ -395,6 +396,12 @@ def build_backend_defaults(
         and project not in ("mobile/android", "memory", "tools/update-programs")
     ):
         all_backends.append("VisualStudio")
+    if (
+        compile_environment
+        and find_vscode_cmd()
+        and project not in ("mobile/android", "memory", "tools/update-programs")
+    ):
+        all_backends.append("Clangd")
     return tuple(all_backends) or None
 
 
