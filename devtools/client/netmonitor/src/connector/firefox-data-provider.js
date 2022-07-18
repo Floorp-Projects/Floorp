@@ -39,6 +39,11 @@ class FirefoxDataProvider {
     this.commands = commands;
     this.actions = actions || {};
     this.actionsEnabled = true;
+
+    // Allow requesting of on-demand network data, this would be `false` when requests
+    // are cleared (as we clear also on the backend), and
+    this.requestDataEnabled = true;
+
     this.owner = owner;
 
     // This holds stacktraces infomation temporarily. Stacktrace resources
@@ -87,6 +92,7 @@ class FirefoxDataProvider {
     this.pendingRequests.clear();
     this.lazyRequestData.clear();
     this.stackTraceRequestInfoByActorID.clear();
+    this.requestDataEnabled = false;
   }
 
   /**
@@ -378,6 +384,10 @@ class FirefoxDataProvider {
   async onNetworkResourceAvailable(resource) {
     const { actor, stacktraceResourceId, cause } = resource;
 
+    if (!this.requestDataEnabled) {
+      this.requestDataEnabled = true;
+    }
+
     // Check if a stacktrace resource already exists for this network resource.
     if (this.stackTraces.has(stacktraceResourceId)) {
       const {
@@ -505,6 +515,11 @@ class FirefoxDataProvider {
    * @return {Promise} return a promise resolved when data is received.
    */
   requestData(actor, method) {
+    // if this is `false`, do not try to request data as requests on the backend
+    // might no longer exist (usually `false` after requests are cleared).
+    if (!this.requestDataEnabled) {
+      return Promise.resolve();
+    }
     // Key string used in `lazyRequestData`. We use this Map to prevent requesting
     // the same data twice at the same time.
     const key = `${actor}-${method}`;

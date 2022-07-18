@@ -69,6 +69,10 @@ class ChannelMap {
     this.finalizationGroup.unregister(entry.ref);
     return true;
   }
+
+  clear() {
+    this.refMap.clear();
+  }
 }
 
 exports.ChannelMap = ChannelMap;
