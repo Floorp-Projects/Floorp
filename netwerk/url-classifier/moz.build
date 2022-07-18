@@ -36,6 +36,7 @@ UNIFIED_SOURCES += [
     "UrlClassifierFeatureCryptominingAnnotation.cpp",
     "UrlClassifierFeatureCryptominingProtection.cpp",
     "UrlClassifierFeatureCustomTables.cpp",
+    "UrlClassifierFeatureEmailTrackingProtection.cpp",
     "UrlClassifierFeatureFactory.cpp",
     "UrlClassifierFeatureFingerprintingAnnotation.cpp",
     "UrlClassifierFeatureFingerprintingProtection.cpp",
