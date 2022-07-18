@@ -15,11 +15,11 @@ import mozilla.components.service.pocket.PocketStory
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.shouldShowRecentTabs
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
-import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.onboarding.JumpBackInCFRDialog
 import org.mozilla.fenix.utils.Settings
@@ -36,7 +36,7 @@ internal fun normalModeAdapterItems(
     recentBookmarks: List<RecentBookmark>,
     showCollectionsPlaceholder: Boolean,
     nimbusMessageCard: Message? = null,
-    recentTabs: List<RecentTab>,
+    showRecentTab: Boolean,
     recentVisits: List<RecentlyVisitedItem>,
     pocketStories: List<PocketStory>
 ): List<AdapterItem> {
@@ -54,7 +54,7 @@ internal fun normalModeAdapterItems(
         items.add(AdapterItem.TopSitePager(topSites))
     }
 
-    if (settings.showRecentTabsFeature && recentTabs.isNotEmpty()) {
+    if (showRecentTab) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.RecentTabsHeader)
         items.add(AdapterItem.RecentTabItem)
@@ -157,7 +157,7 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
         recentBookmarks,
         showCollectionPlaceholder,
         messaging.messageToShow,
-        recentTabs,
+        shouldShowRecentTabs(settings),
         recentHistory,
         pocketStories
     )

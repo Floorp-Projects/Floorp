@@ -15,7 +15,9 @@ import org.mozilla.fenix.home.blocklist.BlocklistHandler
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStory
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Total count of all stories to show irrespective of their type.
@@ -180,3 +182,12 @@ fun AppState.filterState(blocklistHandler: BlocklistHandler): AppState =
             recentHistory = recentHistory.filteredByBlocklist()
         )
     }
+
+/**
+ * Determines whether a recent tab section should be shown, based on user preference
+ * and the availability of local or Synced tabs.
+ */
+fun AppState.shouldShowRecentTabs(settings: Settings): Boolean {
+    val hasTab = recentTabs.isNotEmpty() || recentSyncedTabState is RecentSyncedTabState.Success
+    return settings.showRecentTabsFeature && hasTab
+}

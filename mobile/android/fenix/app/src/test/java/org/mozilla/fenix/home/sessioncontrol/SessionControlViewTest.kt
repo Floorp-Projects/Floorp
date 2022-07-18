@@ -138,7 +138,6 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf(RecentBookmark())
-        val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
 
@@ -156,7 +155,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             null,
-            recentTabs,
+            false,
             historyMetadata,
             pocketStories
         )
@@ -174,7 +173,6 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf(RecentBookmark())
-        val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
         val nimbusMessageCard: Message = mockk()
@@ -193,7 +191,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             nimbusMessageCard,
-            recentTabs,
+            false,
             historyMetadata,
             pocketStories
         )
@@ -208,7 +206,6 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val recentTabs = listOf<RecentTab.Tab>(mockk())
         val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
 
@@ -226,7 +223,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             null,
-            recentTabs,
+            true,
             historyMetadata,
             pocketStories
         )
@@ -244,7 +241,6 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = listOf(RecentHistoryGroup("title", emptyList()))
         val pocketStories = emptyList<PocketStory>()
 
@@ -262,7 +258,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             null,
-            recentTabs,
+            false,
             historyMetadata,
             pocketStories
         )
@@ -280,7 +276,6 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = listOf(PocketRecommendedStory("", "", "", "", "", 1, 1))
 
@@ -298,7 +293,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             null,
-            recentTabs,
+            false,
             historyMetadata,
             pocketStories
         )
@@ -317,7 +312,6 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val recentTabs = emptyList<RecentTab.Tab>()
         val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
 
@@ -335,7 +329,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             null,
-            recentTabs,
+            false,
             historyMetadata,
             pocketStories
         )
@@ -353,7 +347,6 @@ class SessionControlViewTest {
         val collections = listOf(collection)
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>(mockk())
-        val recentTabs = listOf<RecentTab.Tab>(mockk())
         val historyMetadata = listOf<RecentHistoryGroup>(mockk())
         val pocketStories = listOf<PocketStory>(mockk())
 
@@ -371,7 +364,7 @@ class SessionControlViewTest {
             recentBookmarks,
             false,
             null,
-            recentTabs,
+            true,
             historyMetadata,
             pocketStories
         )

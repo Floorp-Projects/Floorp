@@ -4,11 +4,13 @@
 
 package org.mozilla.fenix.ext
 
+import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -18,7 +20,9 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
@@ -510,6 +514,53 @@ class AppStateTest {
         val state = AppState(recentTabs = listOf(normalTab1, normalTab2))
 
         assertNull(state.recentSearchGroup)
+    }
+
+    @Test
+    fun `GIVEN recent tabs disabled in settings WHEN checking to show tabs THEN section should not be shown`() {
+        val settings = mockk<Settings> {
+            every { showRecentTabsFeature } returns false
+        }
+
+        val state = AppState()
+
+        Assert.assertFalse(state.shouldShowRecentTabs(settings))
+    }
+
+    @Test
+    fun `GIVEN only local tabs WHEN checking to show tabs THEN section should be shown`() {
+        val settings = mockk<Settings> {
+            every { showRecentTabsFeature } returns true
+        }
+
+        val state = AppState(recentTabs = listOf(mockk()))
+
+        assertTrue(state.shouldShowRecentTabs(settings))
+    }
+
+    @Test
+    fun `GIVEN only remote tabs WHEN checking to show tabs THEN section should be shown`() {
+        val settings = mockk<Settings> {
+            every { showRecentTabsFeature } returns true
+        }
+
+        val state = AppState(recentSyncedTabState = RecentSyncedTabState.Success(mockk()))
+
+        assertTrue(state.shouldShowRecentTabs(settings))
+    }
+
+    @Test
+    fun `GIVEN local and remote tabs WHEN checking to show tabs THEN section should be shown`() {
+        val settings = mockk<Settings> {
+            every { showRecentTabsFeature } returns true
+        }
+
+        val state = AppState(
+            recentTabs = listOf(mockk()),
+            recentSyncedTabState = RecentSyncedTabState.Success(mockk())
+        )
+
+        assertTrue(state.shouldShowRecentTabs(settings))
     }
 }
 
