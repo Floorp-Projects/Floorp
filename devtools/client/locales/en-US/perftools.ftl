@@ -146,6 +146,10 @@ perftools-presets-media-description2 = Preset for investigating audio and video 
 perftools-presets-networking-label = Networking
 perftools-presets-networking-description = Preset for investigating networking bugs in { -brand-shorter-name }.
 
+# "Power" is used in the sense of energy (electricity used by the computer).
+perftools-presets-power-label = Power
+perftools-presets-power-description = Preset for investigating power use bugs in { -brand-shorter-name }, with low overhead.
+
 perftools-presets-custom-label = Custom
 
 ##
