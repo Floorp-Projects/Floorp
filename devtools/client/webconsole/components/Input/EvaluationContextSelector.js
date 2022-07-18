@@ -14,11 +14,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const frameworkActions = require("devtools/client/framework/actions/index");
+const targetActions = require("devtools/shared/commands/target/actions/targets");
 const webconsoleActions = require("devtools/client/webconsole/actions/index");
 
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const targetSelectors = require("devtools/client/framework/reducers/targets");
+const targetSelectors = require("devtools/shared/commands/target/selectors/targets");
 
 loader.lazyGetter(this, "TARGET_TYPES", function() {
   return require("devtools/shared/commands/target/target-command").TYPES;
@@ -265,10 +265,10 @@ const toolboxConnected = connect(
     lastTargetRefresh: targetSelectors.getLastTargetRefresh(state),
   }),
   dispatch => ({
-    selectTarget: actorID => dispatch(frameworkActions.selectTarget(actorID)),
+    selectTarget: actorID => dispatch(targetActions.selectTarget(actorID)),
   }),
   undefined,
-  { storeKey: "toolbox-store" }
+  { storeKey: "target-store" }
 )(EvaluationContextSelector);
 
 module.exports = connect(

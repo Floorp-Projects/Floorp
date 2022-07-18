@@ -5,7 +5,6 @@
 DevToolsModules(
     "dom-mutation-breakpoints.js",
     "index.js",
-    "targets.js",
 )
 
 with Files("**"):
