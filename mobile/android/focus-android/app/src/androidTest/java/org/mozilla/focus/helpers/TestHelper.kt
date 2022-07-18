@@ -5,6 +5,7 @@ package org.mozilla.focus.helpers
 
 import android.annotation.TargetApi
 import android.app.PendingIntent
+import android.app.UiAutomation
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.ContentResolver
@@ -34,7 +35,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.web.sugar.Web
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import junit.framework.AssertionFailedError
@@ -46,13 +47,14 @@ import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.utils.IntentUtils
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 
 @Suppress("TooManyFunctions")
 object TestHelper {
     @JvmField
-    var mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    var mDevice = UiDevice.getInstance(getInstrumentation())
     const val waitingTime = DateUtils.SECOND_IN_MILLIS * 15
     const val pageLoadingTime = DateUtils.SECOND_IN_MILLIS * 25
     const val waitingTimeShort = DateUtils.SECOND_IN_MILLIS * 5
@@ -65,7 +67,7 @@ object TestHelper {
             .joinToString("")
 
     @JvmStatic
-    val getTargetContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    val getTargetContext: Context = getInstrumentation().targetContext
 
     @JvmStatic
     val packageName: String = getTargetContext.packageName
@@ -98,7 +100,7 @@ object TestHelper {
 
     fun isPackageInstalled(packageName: String): Boolean {
         return try {
-            val packageManager = InstrumentationRegistry.getInstrumentation().context.packageManager
+            val packageManager = getInstrumentation().context.packageManager
             packageManager.getApplicationInfo(packageName, 0).enabled
         } catch (exception: PackageManager.NameNotFoundException) {
             Log.d("TestLog", exception.message.toString())
@@ -171,7 +173,7 @@ object TestHelper {
     }
 
     fun verifyDownloadedFileOnStorage(fileName: String) {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = getInstrumentation().targetContext
         val resolver = context.contentResolver
         val fileUri = queryDownloadMediaStore(fileName)
 
@@ -190,7 +192,7 @@ object TestHelper {
      */
     @TargetApi(Build.VERSION_CODES.Q)
     private fun queryDownloadMediaStore(fileName: String): Uri? {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context = getInstrumentation().targetContext
         val resolver = context.contentResolver
         val queryProjection = arrayOf(MediaStore.Downloads._ID)
         val querySelection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
@@ -248,6 +250,11 @@ object TestHelper {
         }
     }
 
+    fun UiAutomation.executeShellCommandBlocking(command: String) {
+        val output = executeShellCommand(command)
+        FileInputStream(output.fileDescriptor).use { it.readBytes() }
+    }
+
     @JvmStatic
     fun pressEnterKey() {
         mDevice.pressKeyCode(KeyEvent.KEYCODE_ENTER)
@@ -269,7 +276,7 @@ object TestHelper {
         customMenuItemLabel: String = "",
         customActionButtonDescription: String = ""
     ): Intent {
-        val appContext = InstrumentationRegistry.getInstrumentation()
+        val appContext = getInstrumentation()
             .targetContext
             .applicationContext
         val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), IntentUtils.defaultIntentPendingFlags)
@@ -380,7 +387,7 @@ object TestHelper {
     @JvmStatic
     @Throws(IOException::class)
     fun readTestAsset(filename: String?): Buffer {
-        InstrumentationRegistry.getInstrumentation().getContext().assets.open(filename!!)
+        getInstrumentation().getContext().assets.open(filename!!)
             .use { stream -> return readStreamFile(stream) }
     }
 

@@ -4,8 +4,10 @@
 
 package org.mozilla.focus.activity
 
+import android.Manifest
 import android.content.Context
 import android.hardware.camera2.CameraManager
+import androidx.test.rule.GrantPermissionRule
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume
@@ -17,6 +19,7 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.MockLocationUpdatesRule
 import org.mozilla.focus.helpers.MockWebServerHelper
 import org.mozilla.focus.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.focus.helpers.TestAssetHelper.getMediaTestAsset
@@ -36,6 +39,14 @@ class SitePermissionsTest {
 
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+
+    @get:Rule
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    @get: Rule
+    val mockLocationUpdatesRule = MockLocationUpdatesRule()
 
     @Before
     fun setUp() {
@@ -213,21 +224,18 @@ class SitePermissionsTest {
         }
     }
 
-    @Ignore(
-        "Needs mocking location for Firebase " +
-            "- to do: https://github.com/mozilla-mobile/mobile-test-eng/issues/585"
-    )
     @SmokeTest
     @Test
     fun testLocationSharingAllowed() {
+        mockLocationUpdatesRule.setMockLocation()
+
         searchScreen {
         }.loadPage(permissionsPage) {
             clickGetLocationButton()
             verifyLocationPermissionPrompt(testPageSubstring)
             allowSitePermissionRequest()
-            grantAppPermission()
-            verifyPageContent("longitude")
-            verifyPageContent("latitude")
+            verifyPageContent("${mockLocationUpdatesRule.latitude}")
+            verifyPageContent("${mockLocationUpdatesRule.longitude}")
         }
     }
 
