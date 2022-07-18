@@ -40,24 +40,15 @@ fun AwesomeBar(
     onScroll: () -> Unit = {},
     profiler: Profiler? = null
 ) {
-    val mapTitlesToProviders = HashMap<String?, ArrayList<AwesomeBar.SuggestionProvider>>()
-    for (provider in providers) {
-        var groupedProviders: ArrayList<AwesomeBar.SuggestionProvider>? =
-            mapTitlesToProviders[provider.groupTitle()]
-        if (groupedProviders == null) {
-            groupedProviders = ArrayList()
-        }
-        groupedProviders.add(provider)
-        mapTitlesToProviders[provider.groupTitle()] = groupedProviders
-    }
-    val groups: ArrayList<AwesomeBar.SuggestionProviderGroup> = ArrayList()
-    for (item in mapTitlesToProviders) {
-        groups.add(
-            AwesomeBar.SuggestionProviderGroup(
-                providers = item.value,
-                title = item.key
-            )
-        )
+    val groups = remember(providers) {
+        providers
+            .groupBy { it.groupTitle() }
+            .map {
+                AwesomeBar.SuggestionProviderGroup(
+                    providers = it.value,
+                    title = it.key
+                )
+            }
     }
 
     AwesomeBar(
