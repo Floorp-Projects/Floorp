@@ -476,12 +476,24 @@ const TESTCASES = [
   },
   {
     description:
-      "An invalid credit card form due to non-autocomplete-attr cc-number only",
+      "A valid credit card form with non-autocomplete-attr cc-number only",
     document: `<form>
                <input id="cc-number" name="cc-number">
                </form>`,
-    sections: [[]],
-    validFieldDetails: [],
+    sections: [
+      [
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+      ],
+    ],
+    validFieldDetails: [
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+    ],
+    ids: ["cc-number"],
   },
   {
     description: "An invalid credit card form due to omitted cc-number.",
