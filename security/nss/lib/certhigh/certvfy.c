@@ -1913,15 +1913,19 @@ CERT_GetCertNicknameWithValidity(PLArenaPool *arena, CERTCertificate *cert,
 {
     SECCertTimeValidity validity;
     char *nickname = NULL, *tmpstr = NULL;
+    const char *srcNickname = cert->nickname;
+    if (!srcNickname) {
+        srcNickname = "{???}";
+    }
 
     validity = CERT_CheckCertValidTimes(cert, PR_Now(), PR_FALSE);
 
     /* if the cert is good, then just use the nickname directly */
     if (validity == secCertTimeValid) {
         if (arena == NULL) {
-            nickname = PORT_Strdup(cert->nickname);
+            nickname = PORT_Strdup(srcNickname);
         } else {
-            nickname = PORT_ArenaStrdup(arena, cert->nickname);
+            nickname = PORT_ArenaStrdup(arena, srcNickname);
         }
 
         if (nickname == NULL) {
@@ -1933,11 +1937,11 @@ CERT_GetCertNicknameWithValidity(PLArenaPool *arena, CERTCertificate *cert,
          * end
          */
         if (validity == secCertTimeExpired) {
-            tmpstr = PR_smprintf("%s%s", cert->nickname,
+            tmpstr = PR_smprintf("%s%s", srcNickname,
                                  expiredString);
         } else if (validity == secCertTimeNotValidYet) {
             /* not yet valid */
-            tmpstr = PR_smprintf("%s%s", cert->nickname,
+            tmpstr = PR_smprintf("%s%s", srcNickname,
                                  notYetGoodString);
         } else {
             /* undetermined */
