@@ -11780,8 +11780,8 @@ void CodeGenerator::visitInlineArgumentsSlice(LInlineArgumentsSlice* lir) {
   Label done;
   if (count.is<Register>()) {
     masm.branch32(Assembler::Equal, count.as<Register>(), Imm32(0), &done);
-  } else {
-    MOZ_ASSERT(count.as<int32_t>() > 0);
+  } else if (count.as<int32_t>() == 0) {
+    return;
   }
 
   auto getArg = [&](uint32_t i) {
