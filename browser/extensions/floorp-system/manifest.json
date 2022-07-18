@@ -39,7 +39,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "css": ["webcompat/fix-youtube-comment.css"]
+      "css": ["webcompat/fix-youtube-comment.css"], "js":["webcompat/fix-youtube-comment.js"]
     }
   ],
    "applications": {
