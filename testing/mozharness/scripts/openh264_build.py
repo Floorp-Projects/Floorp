@@ -224,12 +224,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             retval.append("OS=msvc")
             retval.append("CC=clang-cl")
             retval.append("CXX=clang-cl")
-            if self.config["arch"] == "x86":
-                retval.append("CFLAGS=-m32 -D_HAS_EXCEPTIONS=0")
-            elif self.config["arch"] == "aarch64":
-                retval.append(
-                    "CFLAGS=--target=aarch64-windows-msvc -D_HAS_EXCEPTIONS=0"
-                )
+            if self.config["arch"] == "aarch64":
                 retval.append("CXX_LINK_O=-nologo --target=aarch64-windows-msvc -Fe$@")
         else:
             retval.append("CC=clang")
