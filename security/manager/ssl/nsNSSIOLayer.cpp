@@ -452,7 +452,8 @@ void nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode) {
 
 void nsNSSSocketInfo::ClientAuthCertificateSelected(
     nsTArray<uint8_t>& certBytes, nsTArray<nsTArray<uint8_t>>& certChainBytes) {
-  MOZ_ASSERT(mFd);
+  // If mFd is nullptr, the connection has been closed already, so we don't
+  // need to do anything here.
   if (!mFd) {
     return;
   }
