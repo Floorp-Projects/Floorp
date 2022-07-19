@@ -155,7 +155,7 @@ Nullable<TimeDuration> DocumentTimeline::ToTimelineTime(
 void DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
   AnimationTimeline::NotifyAnimationUpdated(aAnimation);
 
-  if (!mIsObservingRefreshDriver) {
+  if (!mIsObservingRefreshDriver && !mAnimationOrder.isEmpty()) {
     nsRefreshDriver* refreshDriver = GetRefreshDriver();
     if (refreshDriver) {
       MOZ_ASSERT(isInList(),
@@ -245,8 +245,31 @@ void DocumentTimeline::NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver) {
 void DocumentTimeline::RemoveAnimation(Animation* aAnimation) {
   AnimationTimeline::RemoveAnimation(aAnimation);
 
-  if (mIsObservingRefreshDriver && mAnimations.IsEmpty()) {
+  if (!mIsObservingRefreshDriver || !mAnimationOrder.isEmpty()) {
+    return;
+  }
+
+  UnregisterFromRefreshDriver();
+}
+
+void DocumentTimeline::NotifyAnimationContentVisibilityChanged(
+    Animation* aAnimation, bool visible) {
+  AnimationTimeline::NotifyAnimationContentVisibilityChanged(aAnimation,
+                                                             visible);
+
+  if (mIsObservingRefreshDriver && mAnimationOrder.isEmpty()) {
     UnregisterFromRefreshDriver();
+  }
+
+  if (!mIsObservingRefreshDriver && !mAnimationOrder.isEmpty()) {
+    nsRefreshDriver* refreshDriver = GetRefreshDriver();
+    if (refreshDriver) {
+      MOZ_ASSERT(isInList(),
+                 "We should not register with the refresh driver if we are not"
+                 " in the document's list of timelines");
+
+      ObserveRefreshDriver(refreshDriver);
+    }
   }
 }
 

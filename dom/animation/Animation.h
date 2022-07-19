@@ -474,6 +474,11 @@ class Animation : public DOMEventTargetHelper,
         mPlaybackRate);
   }
 
+  void SetHiddenByContentVisibility(bool hidden);
+  bool IsHiddenByContentVisibility() const {
+    return mHiddenByContentVisibility;
+  }
+
  protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void CancelNoUpdate();
@@ -640,6 +645,8 @@ class Animation : public DOMEventTargetHelper,
 
   bool mFinishedAtLastComposeStyle = false;
   bool mWasReplaceableAtLastTick = false;
+
+  bool mHiddenByContentVisibility = false;
 
   // Indicates that the animation should be exposed in an element's
   // getAnimations() list.

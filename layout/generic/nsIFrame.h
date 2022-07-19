@@ -4705,6 +4705,8 @@ class nsIFrame : public nsQueryFrame {
   // Update mAllDescendantsAreInvisible flag for this frame and ancestors.
   void UpdateVisibleDescendantsState();
 
+  void UpdateAnimationVisibility();
+
   /**
    * If this returns true, the frame it's called on should get the
    * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly

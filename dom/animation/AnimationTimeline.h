@@ -98,6 +98,8 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   bool HasAnimations() const { return !mAnimations.IsEmpty(); }
 
   virtual void RemoveAnimation(Animation* aAnimation);
+  virtual void NotifyAnimationContentVisibilityChanged(Animation* aAnimation,
+                                                       bool visible);
 
   virtual Document* GetDocument() const = 0;
 
@@ -119,7 +121,8 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   // Animations observing this timeline
   //
   // We store them in (a) a hashset for quick lookup, and (b) an array
-  // to maintain a fixed sampling order.
+  // to maintain a fixed sampling order. Animations that are hidden by
+  // `content-visibility` are not sampled and will only be in the hashset.
   //
   // The hashset keeps a strong reference to each animation since
   // dealing with addref/release with LinkedList is difficult.

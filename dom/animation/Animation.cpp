@@ -1965,6 +1965,20 @@ bool Animation::IsInEffect() const {
   return GetEffect() && GetEffect()->IsInEffect();
 }
 
+void Animation::SetHiddenByContentVisibility(bool hidden) {
+  if (mHiddenByContentVisibility == hidden) {
+    return;
+  }
+
+  mHiddenByContentVisibility = hidden;
+
+  if (!GetTimeline()) {
+    return;
+  }
+
+  GetTimeline()->NotifyAnimationContentVisibilityChanged(this, !hidden);
+}
+
 StickyTimeDuration Animation::IntervalStartTime(
     const StickyTimeDuration& aActiveDuration) const {
   MOZ_ASSERT(AsCSSTransition() || AsCSSAnimation(),
