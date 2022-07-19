@@ -7,7 +7,7 @@ const kBaseURL = "https://example.com/";
 const kSearchEngineURL = `${kBaseURL}?q={searchTerms}&foo=myparams`;
 const kOverriddenEngineName = "Simple Engine";
 
-const whitelist = [
+const allowlist = [
   {
     thirdPartyId: "test@thirdparty.example.com",
     overridesId: "simple@search.mozilla.org",
@@ -70,7 +70,7 @@ const tests = [
       keyword: "MozSearch",
       search_url: kSearchEngineURL,
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kSearchEngineURL,
       },
@@ -91,7 +91,7 @@ const tests = [
       keyword: "MozSearch",
       search_url: kSearchEngineURL,
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kSearchEngineURL,
       },
@@ -112,7 +112,7 @@ const tests = [
       keyword: "MozSearch",
       search_url: kSearchEngineURL + "a",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kSearchEngineURL,
       },
@@ -133,7 +133,7 @@ const tests = [
       search_url: kBaseURL,
       search_url_get_params: "q={searchTerms}&enc=UTF-8",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kBaseURL,
         search_url_get_params: "q={searchTerms}&enc=UTF-8",
@@ -156,7 +156,7 @@ const tests = [
       search_url: kBaseURL,
       search_url_get_params: "q={searchTerms}&enc=UTF-8a",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kBaseURL,
         search_url_get_params: "q={searchTerms}&enc=UTF-8",
@@ -178,7 +178,7 @@ const tests = [
       search_url: kBaseURL,
       search_url_post_params: "q={searchTerms}&enc=UTF-8",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kBaseURL,
         search_url_post_params: "q={searchTerms}&enc=UTF-8",
@@ -202,7 +202,7 @@ const tests = [
       search_url: kBaseURL,
       search_url_post_params: "q={searchTerms}&enc=UTF-8a",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kBaseURL,
         search_url_post_params: "q={searchTerms}&enc=UTF-8",
@@ -224,7 +224,7 @@ const tests = [
       search_url: kBaseURL,
       search_form: "https://example.com/form",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kBaseURL,
         search_form: "https://example.com/form",
@@ -248,7 +248,7 @@ const tests = [
       search_url: kBaseURL,
       search_form: "https://example.com/forma",
     },
-    whitelistUrls: [
+    allowlistUrls: [
       {
         search_url: kBaseURL,
         search_form: "https://example.com/form",
@@ -306,7 +306,7 @@ for (const test of tests) {
 
     if (test.expected.overridesEngine) {
       remoteSettingsStub.returns([
-        { ...whitelist[0], urls: test.whitelistUrls },
+        { ...allowlist[0], urls: test.allowlistUrls },
       ]);
     }
 

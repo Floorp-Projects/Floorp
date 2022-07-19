@@ -347,8 +347,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/reputationservice/test/unit/test_app_rep_windows.js
         - toolkit/components/reputationservice/test/unit/test_login_rep.js
         - toolkit/components/satchel/test/test_form_autocomplete.html
-        - toolkit/components/search/SearchService.jsm
-        - toolkit/components/search/tests/xpcshell/test_override_allowlist.js
         - toolkit/components/telemetry/docs/data/environment.rst
         - toolkit/components/url-classifier/LookupCache.cpp
         - toolkit/components/url-classifier/LookupCache.h
