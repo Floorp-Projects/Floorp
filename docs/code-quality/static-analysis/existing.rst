@@ -16,7 +16,7 @@ As explained earlier, our current static-analysis infrastructure is based on
 `clang-tidy <http://clang.llvm.org/extra/clang-tidy/>`__. The checkers that
 we use are split into 3 categories:
 
-#. `Firefox specific checkers <https://searchfox.org/mozilla-central/source/build/clang-plugin>`_. They detect incorrect Gecko programming
+#. :searchfox:`Firefox specific checkers <build/clang-plugin>`. They detect incorrect Gecko programming
    patterns which could lead to bugs or security issues.
 #. `Clang-tidy checkers <https://clang.llvm.org/extra/clang-tidy/checks/list.html>`_. They aim to suggest better programming practices
    and to improve memory efficiency and performance.
@@ -29,7 +29,7 @@ we use are split into 3 categories:
 In order to simplify the process of static-analysis we have focused on
 integrating this process with Phabricator and mach. A list of some
 checkers that are used during automated scan can be found
-`here <https://searchfox.org/mozilla-central/source/tools/clang-tidy/config.yaml>`__.
+:searchfox:`here <tools/clang-tidy/config.yaml>`.
 
 Static analysis at review phase
 -------------------------------
@@ -63,7 +63,7 @@ following parameters:
    ~/.mozbuild.
 -  ``--checks, -c`` - Checks to enabled during the scan. The checks
    enabled
-   `in the yaml file <https://searchfox.org/mozilla-central/source/tools/clang-tidy/config.yaml>`__
+   :searchfox:`in the yaml file <tools/clang-tidy/config.yaml>`
    are used by default.
 -  ``--fix, -f`` - Try to autofix errors detected by the checkers.
    Depending on the checker, this option might not do anything.
@@ -96,7 +96,7 @@ Regression Testing
 
 In order to prevent regressions in our clang-tidy based static analysis,
 we have created a
-`task <https://searchfox.org/mozilla-central/source/taskcluster/ci/static-analysis-autotest/kind.yml>`__
+:searchfox:`task <taskcluster/ci/static-analysis-autotest/kind.yml>`
 on automation. This task runs on each commit and launches a test suite
 that is integrated into mach.
 
@@ -104,13 +104,13 @@ The test suite implements the following:
 
 -  Downloads the necessary clang-tidy artifacts.
 -  Reads the
-   `configuration <https://searchfox.org/mozilla-central/source/tools/clang-tidy/config.yaml>`__
+   :searchfox:`configuration <tools/clang-tidy/config.yaml>`
    file.
 -  For each checker reads the test file plus the expected result. A
    sample of test and expected result can be found
-   `in the test file <https://searchfox.org/mozilla-central/source/tools/clang-tidy/test/clang-analyzer-deadcode.DeadStores.cpp>`__
+   :searchfox:`in the test file <tools/clang-tidy/test/clang-analyzer-deadcode.DeadStores.cpp>`
    and
-   `the json file <https://searchfox.org/mozilla-central/source/tools/clang-tidy/test/clang-analyzer-deadcode.DeadStores.json>`__.
+   :searchfox:`the json file <tools/clang-tidy/test/clang-analyzer-deadcode.DeadStores.json>`.
 
 This testing suit can be run locally by doing the following:
 

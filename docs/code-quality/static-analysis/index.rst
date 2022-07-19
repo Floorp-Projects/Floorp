@@ -5,7 +5,7 @@ Static Analysis is running an analysis of the source code without actually execu
 checkers in order to prevent different programming errors present in the
 code. The checkers that we use are split into 3 categories:
 
-#. `Firefox specific checkers <https://searchfox.org/mozilla-central/source/build/clang-plugin>`_. They detect incorrect Gecko programming
+#. :searchfox:`Firefox specific checkers <build/clang-plugin>`. They detect incorrect Gecko programming
    patterns which could lead to bugs or security issues.
 #. `Clang-tidy checkers <https://clang.llvm.org/extra/clang-tidy/checks/list.html>`_. They aim to suggest better programming practices
    and to improve memory efficiency and performance.
@@ -18,7 +18,7 @@ code. The checkers that we use are split into 3 categories:
 In order to simplify the process of static-analysis we have focused on
 integrating this process with Phabricator and mach. A list of some
 checkers that are used during automated scan can be found
-`here <https://searchfox.org/mozilla-central/source/tools/clang-tidy/config.yaml>`__.
+:searchfox:`here <tools/clang-tidy/config.yaml>`.
 
 This documentation is split into two parts:
 
