@@ -21,7 +21,7 @@ Configuration
 -------------
 
 To enable black on new directory, add the path to the include
-section in the `black.yml <https://searchfox.org/mozilla-central/source/tools/lint/black.yml>`_ file.
+section in the :searchfox:`black.yml <tools/lint/black.yml>` file.
 
 Autofix
 -------
@@ -32,5 +32,5 @@ The black linter provides a ``--fix`` option.
 Sources
 -------
 
-* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/black.yml>`_
-* `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/black.py>`_
+* :searchfox:`Configuration (YAML) <tools/lint/black.yml>`
+* :searchfox:`Source <tools/lint/python/black.py>`
