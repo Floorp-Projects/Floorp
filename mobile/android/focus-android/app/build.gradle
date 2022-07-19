@@ -231,8 +231,6 @@ dependencies {
 
     implementation Dependencies.sentry
 
-    implementation("com.google.code.findbugs:jsr305:3.0.2")
-
     implementation "org.mozilla.components:browser-engine-gecko:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-domains:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-errorpages:${AndroidComponents.VERSION}"
