@@ -41,17 +41,6 @@ describe("<DSContextFooter>", () => {
     const engagementLabel = wrapper.find(".story-view-count");
     assert.equal(engagementLabel.length, 0);
   });
-  it("should render an engagement status if no badge and spoc passed", () => {
-    wrapper = mount(
-      <DSContextFooter
-        display_engagement_labels={true}
-        engagement={engagement}
-      />
-    );
-
-    const engagementLabel = wrapper.find(".story-view-count");
-    assert.equal(engagementLabel.text(), engagement);
-  });
   it("should render a badge if a proper badge prop is passed", () => {
     wrapper = mount(
       <DSContextFooter context_type={bookmarkBadge} engagement={engagement} />

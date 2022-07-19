@@ -7159,25 +7159,21 @@ const ANIMATION_DURATION = 3000;
 const DSMessageLabel = props => {
   const {
     context,
-    context_type,
-    display_engagement_labels,
-    engagement
+    context_type
   } = props;
   const {
     icon,
     fluentID
   } = cardContextTypes[context_type] || {};
 
-  if (!context && (context_type || display_engagement_labels && engagement)) {
+  if (!context && context_type) {
     return /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.TransitionGroup, {
       component: null
     }, /*#__PURE__*/external_React_default().createElement(external_ReactTransitionGroup_namespaceObject.CSSTransition, {
       key: fluentID,
       timeout: ANIMATION_DURATION,
       classNames: "story-animate"
-    }, engagement && !context_type ? /*#__PURE__*/external_React_default().createElement("div", {
-      className: "story-view-count"
-    }, engagement) : /*#__PURE__*/external_React_default().createElement(StatusMessage, {
+    }, /*#__PURE__*/external_React_default().createElement(StatusMessage, {
       icon: icon,
       fluentID: fluentID
     })));
@@ -7235,12 +7231,9 @@ const SponsorLabel = ({
 };
 class DSContextFooter extends (external_React_default()).PureComponent {
   render() {
-    // display_engagement_labels is based on pref `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
     const {
       context,
       context_type,
-      engagement,
-      display_engagement_labels,
       sponsor,
       sponsored_by_override
     } = this.props;
@@ -7251,9 +7244,7 @@ class DSContextFooter extends (external_React_default()).PureComponent {
     });
     const dsMessageLabel = DSMessageLabel({
       context,
-      context_type,
-      display_engagement_labels,
-      engagement
+      context_type
     });
 
     if (sponsorLabel || dsMessageLabel) {
@@ -7270,15 +7261,11 @@ const DSMessageFooter = props => {
   const {
     context,
     context_type,
-    engagement,
-    display_engagement_labels,
     saveToPocketCard
   } = props;
   const dsMessageLabel = DSMessageLabel({
     context,
-    context_type,
-    engagement,
-    display_engagement_labels
+    context_type
   }); // This case is specific and already displayed to the user elsewhere.
 
   if (!dsMessageLabel || saveToPocketCard && context_type === "pocket") {
@@ -7353,10 +7340,8 @@ const DSSource = ({
   return /*#__PURE__*/external_React_default().createElement("p", {
     className: "source clamp"
   }, source);
-}; // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
-
+};
 const DefaultMeta = ({
-  display_engagement_labels,
   source,
   title,
   excerpt,
@@ -7364,9 +7349,6 @@ const DefaultMeta = ({
   newSponsoredLabel,
   context,
   context_type,
-  cta,
-  engagement,
-  cta_variant,
   sponsor,
   sponsored_by_override,
   saveToPocketCard,
@@ -7387,62 +7369,15 @@ const DefaultMeta = ({
   className: "title clamp"
 }, title), excerpt && /*#__PURE__*/external_React_default().createElement("p", {
   className: "excerpt clamp"
-}, excerpt), cta_variant === "link" && cta && /*#__PURE__*/external_React_default().createElement("div", {
-  role: "link",
-  className: "cta-link icon icon-arrow",
-  tabIndex: "0"
-}, cta)), !newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSContextFooter, {
+}, excerpt)), !newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSContextFooter, {
   context_type: context_type,
   context: context,
   sponsor: sponsor,
-  sponsored_by_override: sponsored_by_override,
-  display_engagement_labels: display_engagement_labels,
-  engagement: engagement
+  sponsored_by_override: sponsored_by_override
 }), newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSMessageFooter, {
   context_type: context_type,
   context: null,
-  display_engagement_labels: display_engagement_labels,
-  engagement: engagement,
   saveToPocketCard: saveToPocketCard
-}));
-const CTAButtonMeta = ({
-  display_engagement_labels,
-  source,
-  title,
-  excerpt,
-  context,
-  context_type,
-  cta,
-  engagement,
-  sponsor,
-  sponsored_by_override
-}) => /*#__PURE__*/external_React_default().createElement("div", {
-  className: "meta"
-}, /*#__PURE__*/external_React_default().createElement("div", {
-  className: "info-wrap"
-}, /*#__PURE__*/external_React_default().createElement("p", {
-  className: "source clamp"
-}, context && /*#__PURE__*/external_React_default().createElement(FluentOrText, {
-  message: {
-    id: `newtab-label-sponsored`,
-    values: {
-      sponsorOrSource: sponsor ? sponsor : source
-    }
-  }
-}), !context && (sponsor ? sponsor : source)), /*#__PURE__*/external_React_default().createElement("header", {
-  title: title,
-  className: "title clamp"
-}, title), excerpt && /*#__PURE__*/external_React_default().createElement("p", {
-  className: "excerpt clamp"
-}, excerpt)), context && cta && /*#__PURE__*/external_React_default().createElement("button", {
-  className: "button cta-button"
-}, cta), !context && /*#__PURE__*/external_React_default().createElement(DSContextFooter, {
-  context_type: context_type,
-  context: context,
-  sponsor: sponsor,
-  sponsored_by_override: sponsored_by_override,
-  display_engagement_labels: display_engagement_labels,
-  engagement: engagement
 }));
 class _DSCard extends (external_React_default()).PureComponent {
   constructor(props) {
@@ -7496,14 +7431,14 @@ class _DSCard extends (external_React_default()).PureComponent {
     if (this.props.dispatch) {
       this.props.dispatch(actionCreators.UserEvent({
         event: "CLICK",
-        source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
+        source: this.props.type.toUpperCase(),
         action_position: this.props.pos,
         value: {
           card_type: this.props.flightId ? "spoc" : "organic"
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
-        source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
+        source: this.props.type.toUpperCase(),
         click: 0,
         window_inner_width: this.props.windowObj.innerWidth,
         window_inner_height: this.props.windowObj.innerHeight,
@@ -7630,9 +7565,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       });
     }
 
-    const isButtonCTA = this.props.cta_variant === "button";
     const {
-      is_video,
       saveToPocketCard,
       hideDescriptions,
       compactImages,
@@ -7649,13 +7582,12 @@ class _DSCard extends (external_React_default()).PureComponent {
       timeToRead = this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
     }
 
-    const videoCardClassName = is_video ? `video-card` : ``;
     const compactImagesClassName = compactImages ? `ds-card-compact-image` : ``;
     const imageGradientClassName = imageGradient ? `ds-card-image-gradient` : ``;
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
     const descLinesClassName = `ds-card-desc-lines-${descLines}`;
     return /*#__PURE__*/external_React_default().createElement("div", {
-      className: `ds-card ${videoCardClassName} ${videoCardClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`,
+      className: `ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`,
       ref: this.setContextMenuButtonHostRef
     }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "ds-card-link",
@@ -7669,32 +7601,14 @@ class _DSCard extends (external_React_default()).PureComponent {
       source: this.props.image_src,
       rawSource: this.props.raw_image_src,
       sizes: this.dsImageSizes
-    }), this.props.is_video && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "playhead"
-    }, /*#__PURE__*/external_React_default().createElement("span", null, "Video Content"))), isButtonCTA ? /*#__PURE__*/external_React_default().createElement(CTAButtonMeta, {
-      display_engagement_labels: this.props.display_engagement_labels,
-      source: this.props.source,
-      title: this.props.title,
-      excerpt: excerpt,
-      timeToRead: timeToRead,
-      context: this.props.context,
-      context_type: this.props.context_type,
-      engagement: this.props.engagement,
-      cta: this.props.cta,
-      sponsor: this.props.sponsor,
-      sponsored_by_override: this.props.sponsored_by_override
-    }) : /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
-      display_engagement_labels: this.props.display_engagement_labels,
+    })), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
       source: this.props.source,
       title: this.props.title,
       excerpt: excerpt,
       newSponsoredLabel: this.props.newSponsoredLabel,
       timeToRead: timeToRead,
       context: this.props.context,
-      engagement: this.props.engagement,
       context_type: this.props.context_type,
-      cta: this.props.cta,
-      cta_variant: this.props.cta_variant,
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override,
       saveToPocketCard: saveToPocketCard
@@ -7708,7 +7622,7 @@ class _DSCard extends (external_React_default()).PureComponent {
         } : {})
       }],
       dispatch: this.props.dispatch,
-      source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type
+      source: this.props.type
     })), saveToPocketCard && /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-hover-background"
     }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -8226,9 +8140,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         pocket_id: rec.pocket_id,
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
-        engagement: rec.engagement,
         pocket_button_enabled: this.props.pocket_button_enabled,
-        display_engagement_labels: this.props.display_engagement_labels,
         hideDescriptions: hideDescriptions,
         saveToPocketCard: saveToPocketCard,
         compactImages: compactImages,
@@ -8236,9 +8148,6 @@ class _CardGrid extends (external_React_default()).PureComponent {
         newSponsoredLabel: newSponsoredLabel,
         titleLines: titleLines,
         descLines: descLines,
-        cta: rec.cta,
-        cta_variant: this.props.cta_variant,
-        is_video: this.props.enable_video_playheads && rec.is_video,
         is_collection: this.props.is_collection
       }));
     }
@@ -8355,7 +8264,6 @@ _CardGrid.defaultProps = {
   border: `border`,
   items: 4,
   // Number of stories to display
-  enable_video_playheads: false,
   saveToPocketCard: false
 };
 const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
@@ -13625,8 +13533,6 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
   }
 
   renderComponent(component, embedWidth) {
-    const ENGAGEMENT_LABEL_ENABLED = this.props.Prefs.values[`discoverystream.engagementLabelEnabled`];
-
     switch (component.type) {
       case "Highlights":
         return /*#__PURE__*/external_React_default().createElement(Highlights, null);
@@ -13700,16 +13606,13 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           border: component.properties.border,
           type: component.type,
           items: component.properties.items,
-          cta_variant: component.cta_variant,
           pocket_button_enabled: component.pocketButtonEnabled,
-          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED,
           dismissible: this.props.DiscoveryStream.isCollectionDismissible,
           dispatch: this.props.dispatch
         });
 
       case "CardGrid":
         return /*#__PURE__*/external_React_default().createElement(CardGrid, {
-          enable_video_playheads: !!component.properties.enable_video_playheads,
           title: component.header && component.header.title,
           display_variant: component.properties.display_variant,
           data: component.data,
@@ -13733,9 +13636,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           editorsPicksHeader: component.properties.editorsPicksHeader,
           readTime: component.properties.readTime,
           saveToPocketCard: component.saveToPocketCard,
-          cta_variant: component.cta_variant,
-          pocket_button_enabled: component.pocketButtonEnabled,
-          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED
+          pocket_button_enabled: component.pocketButtonEnabled
         });
 
       case "HorizontalRule":
