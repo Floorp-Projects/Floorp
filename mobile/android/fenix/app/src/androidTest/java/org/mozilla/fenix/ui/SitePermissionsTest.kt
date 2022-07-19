@@ -15,12 +15,12 @@ import androidx.test.rule.GrantPermissionRule
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.MockLocationUpdatesRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -44,11 +44,14 @@ class SitePermissionsTest {
     @get:Rule
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.CAMERA
+        Manifest.permission.CAMERA,
+        Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
-    @Rule
-    @JvmField
+    @get: Rule
+    val mockLocationUpdatesRule = MockLocationUpdatesRule()
+
+    @get: Rule
     val retryTestRule = RetryTestRule(3)
 
     @Before
@@ -282,20 +285,20 @@ class SitePermissionsTest {
         }
     }
 
-    @Ignore("Needs mocking location for Firebase - to do: https://github.com/mozilla-mobile/mobile-test-eng/issues/585")
     @Test
     fun allowLocationPermissionsTest() {
+        mockLocationUpdatesRule.setMockLocation()
+
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
         }.clickGetLocationButton {
             verifyLocationPermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(true) {
-            verifyPageContent("longitude")
-            verifyPageContent("latitude")
+            verifyPageContent("${mockLocationUpdatesRule.latitude}")
+            verifyPageContent("${mockLocationUpdatesRule.longitude}")
         }
     }
 
-    @Ignore("Needs mocking location for Firebase - to do: https://github.com/mozilla-mobile/mobile-test-eng/issues/585")
     @Test
     fun blockLocationPermissionsTest() {
         navigationToolbar {
