@@ -4034,15 +4034,14 @@ void nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 }
 
 bool nsDisplayOutline::IsThemedOutline() const {
-  const auto& outlineStyle = mFrame->StyleOutline()->mOutlineStyle;
-  if (!outlineStyle.IsAuto() ||
-      !StaticPrefs::layout_css_outline_style_auto_enabled()) {
-    return false;
-  }
-
+#ifdef DEBUG
   nsPresContext* pc = mFrame->PresContext();
-  nsITheme* theme = pc->Theme();
-  return theme->ThemeSupportsWidget(pc, mFrame, StyleAppearance::FocusOutline);
+  MOZ_ASSERT(
+      pc->Theme()->ThemeSupportsWidget(pc, mFrame,
+                                       StyleAppearance::FocusOutline),
+      "All of our supported platforms have support for themed focus-outlines");
+#endif
+  return mFrame->StyleOutline()->mOutlineStyle.IsAuto();
 }
 
 bool nsDisplayOutline::CreateWebRenderCommands(
