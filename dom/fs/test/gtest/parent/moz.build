@@ -2,16 +2,10 @@
 # vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-TEST_DIRS += [
-    "api",
-    "child",
-    "parent",
-]
+# file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES = [
-    "FileSystemMocks.cpp",
+    "TestFileSystemHashSource.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
@@ -19,5 +13,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [
-    "/dom/fs/include",
+    "/dom/fs/parent",
+    "/dom/fs/test/gtest",
 ]
