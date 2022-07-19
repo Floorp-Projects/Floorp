@@ -293,8 +293,8 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
     debugImplementation Dependencies.leakcanary
 
-    focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
-    focusImplementation 'com.android.installreferrer:installreferrer:1.1' // Required by Adjust
+    focusImplementation Dependencies.adjust
+    focusImplementation Dependencies.install_referrer // Required by Adjust
 
     jnaForTest "net.java.dev.jna:jna:${jna_version}@jar"
     testImplementation files(configurations.jnaForTest.copyRecursive().files)

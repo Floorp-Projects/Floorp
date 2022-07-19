@@ -46,6 +46,11 @@ object Versions {
         const val mockito = "3.11.0"
         const val androidx_work = "2.7.1"
     }
+
+    object Adjust {
+        const val adjust = "4.30.1"
+        const val install_referrer = "2.2"
+    }
 }
 
 object Dependencies {
@@ -82,6 +87,9 @@ object Dependencies {
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.Kotlin.version}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.Kotlin.coroutines}"
     const val kotlin_coroutines_android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.Kotlin.coroutines}"
+
+    const val adjust = "com.adjust.sdk:adjust-android:${Versions.Adjust.adjust}"
+    const val install_referrer = "com.android.installreferrer:installreferrer:${Versions.Adjust.install_referrer}"
 
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.Test.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.Test.mockito}"
