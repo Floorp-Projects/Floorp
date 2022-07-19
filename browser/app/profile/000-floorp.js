@@ -1,53 +1,117 @@
 #filter dumbComments emptyLines substitution
 
-pref("floorp.hide.tabbrowser-tab.enable", false);
-pref("floorp.optimized.msbutton.ope", false);
-pref("floorp.optimized.verticaltab", false);
-pref("floorp.horizontal.tab.position.shift", false);
-pref("floorp.Tree-type.verticaltab.optimization", false);
-pref("floorp.bookmarks.bar.focus.mode", false);
-pref("floorp.material.effect.enable", false);
-pref("floorp.browser.user.interface", 3);
-pref("floorp.browser.tabbar.settings", 1);
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifdef XP_UNIX
+  #ifndef XP_MACOSX
+    #define UNIX_BUT_NOT_MAC
+  #endif
+#endif
+
+/*----------------------------------------------------- Floorp 専用の pref 設定 ----------------------------------------------------*/
+//Floorpアップデートの最新版である旨の通知を許可
+pref("enable.floorp.updater.latest", false);
+pref("enable.floorp.update", true);
+pref("update.id.floorp", "floorp-beta");
+
+//ブラウザーUIのカスタマイズ設定
+pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
+pref("floorp.optimized.msbutton.ope", false); //サイドボタン付きマウス操作にブラウザーを最適化
+pref("floorp.optimized.verticaltab", false); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
+pref("floorp.horizontal.tab.position.shift", false); //水平タブ位置移動
+pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブのフォーカスした際の挙動を変更
+pref("floorp.bookmarks.bar.focus.mode", false);//フォーカスした際にブックマークバーを展開
+pref("floorp.material.effect.enable", false);//マテリアルモードの実装
+
+pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定
+pref("floorp.browser.tabbar.settings", 1);// タブの設定
+
 pref("floorp.enable.auto.restart", false);
+
+//新しいタブの検索を「ウェブを検索」に変更
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 pref("browser.newtabpage.activity-stream.feeds.section.highlights", true);
+
 pref("floorp.memory.free.button", true);
 pref("floorp.entable.deepl.translate", false);
 pref("floorp.multitab.bottommode", false);
+
+//CSS編集用エディタをみんな使えるメモ帳に（Windows のみ）
 pref("view_source.editor.path", "C:\\Windows\\System32\\notepad.exe");
+
+#if defined(XP_LINUX)
+pref("update.id.floorp", "", locked);
+#endif
+
+/*----------------------------------------------------------------------------------------------------------------------------------*/
+
+//検索エンジン
 pref("browser.search.separatePrivateDefault", true);
 pref("browser.search.separatePrivateDefault.ui.enabled", true);
 pref("browser.urlbar.update2.engineAliasRefresh", true);
-pref("services.sync.engine.prefs", false);
+
+//個人設定の同期無効
+pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.feeds.snippets", false, locked);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsored", false, locked);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsoredTopSites", false, locked);
 pref("services.sync.telemetry.maxPayloadCount", "0", locked);
 pref("services.sync.telemetry.submissionInterval", "0", locked);
-pref("services.sync.prefs.sync.browser.startup.page", false, locked);
-pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked);
+pref("services.sync.prefs.sync.browser.startup.page", false, locked); // Firefox の自動復元機能を Firefox Sync で同期しないようにします。
+pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked); //たくさんのタブを閉じようとした際の警告表示を Firefox Sync で同期しないようにします。
+
 pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
+
+//たくさん閉じようとしたときに警告
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
+
+//デフォルトブラウザーのチェック無効
 pref("browser.shell.checkDefaultBrowser", false, locked);
+
+//addon推奨プロンプトを消す
 pref("extensions.getAddons.showPane", false);
+
+//調査と思われるものを削除。Torでは削除済み。
 pref("app.normandy.api_url", "");
 pref("app.normandy.enabled", true);
+
+//backdropfilterを既定で有効化します。
 pref("layout.css.backdrop-filter.enabled", true);
+
+//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
 pref("svg.context-properties.content.enabled", true, locked);
 pref("image.avif.enabled", true, locked);
 pref("image.jxl.enabled", true, locked);
+
+// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減
 pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+
+//ブラックリストの参照の有効化
 pref("extensions.blocklist.enabled", true);
 pref("services.blocklist.update_enabled",	true);
+
+// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減のために、先にリンク先を指定
 pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+
+//Pocket機能を無効化*/
 pref("extensions.pocket.enabled", false);
+
+//コンテンツセキュリティポリシー(CSP)の有効化
 pref("security.csp.enable", true);
+
+//クラッシュレポートを無効化
 pref("breakpad.reportURL", "", locked);
 pref("browser.tabs.crashReporting.sendReport", false);
 pref("browser.crashReports.unsubmittedCheck.enabled",	false);
+
+//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。
 pref("xpinstall.signatures.required", false);
+
+// Firefox による、Mozilla への情報送信テレメンタリーを無効化
 pref("toolkit.telemetry.archive.enabled", false, locked);
 pref("toolkit.telemetry.bhrPing.enabled", false, locked);
 pref("toolkit.telemetry.enabled", false, locked);
@@ -62,37 +126,86 @@ pref("toolkit.telemetry.shutdownPingSender.enabledFirstSession", false, locked);
 pref("toolkit.telemetry.testing.overrideProductsCheck", false, locked);
 pref("toolkit.telemetry.unified", false, locked);
 pref("toolkit.telemetry.updatePing.enabled", false, locked);
+
+//Firefox調査を無効化
 pref("app.shield.optoutstudies.enabled", false, locked);
+
+// CPUのコア数を偽装し、正しい値をウェブサイトに返さないようにします。
 pref("dom.maxHardwareConcurrency",	2);
+
+//Mozillaが提供する位置特定型検索エンジンを使用しない。位置情報がより保護されます。
 pref("browser.search.geoSpecificDefaults", false);
+
+//http 通信時、Floorp は絶対にhttp:// をURLバーから隠しません
 pref("browser.urlbar.trimURLs", false);
+
+//「既定でオンを推奨」フィンガープリント対策の一環。
+//参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
 pref("dom.network.enabled", false);
+
+// webRTCは完全に無効化しません。Brave・Safari では、既定で無効化されています。
 pref("media.peerconnection.enabled", true);
+
+//WebRTC が有効な場合、Floorp はできるだけ、IPアドレスを秘匿するよう動作します。
 pref("media.peerconnection.ice.default_address_only", true);
 pref("media.peerconnection.ice.no_host", true);
+
+//アドオンのフィンガープリント採取から保護
 pref("privacy.resistFingerprinting.block_mozAddonManager", true);
+
+//プライバシー機能をオンにし、テレメトリー採取を無効化します。
 pref("privacy.trackingprotection.origin_telemetry.enabled", false, locked);
 pref("privacy.userContext.enabled", true);
 pref("privacy.userContext.ui.enabled", true);
 pref("trailhead.firstrun.branches", "", locked);
 pref("extensions.webcompat-reporter.enabled", false);
-pref("browser.startup.page", 3);
-pref("browser.tabs.closeWindowWithLastTab", false);
+
+pref("browser.startup.page", 3);//自動復元
+pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように]
 pref("general.config.obscure_value", 0);
+
 pref("floorp.enable.multitab", false);
+
+//font
+
+pref("font.name-list.serif.ja", "Noto Sans JP, Yu Mincho, MS PMincho, MS Mincho, Meiryo, Yu Gothic, MS PGothic, MS Gothic");
 pref("font.name-list.sans-serif.ja", "Noto Sans JP, Meiryo, Yu Gothic, MS PGothic, MS Gothic, Yu Mincho, MS PMincho, MS Mincho");
+pref("font.name-list.monospace.ja", "Noto Sans JP, MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho, MS PGothic, MS PMincho");
+
+/*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
+
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
 pref("datareporting.policy.dataSubmissionEnable", false, locked);
 pref("datareporting.healthreport.uploadEnabled", false, locked);
 pref("general.config.sandbox_enabled", false);
 pref("toolkit.legacyUserProfileCustomizations.script", false);
+
+/*-----------------------------------------------------------------------------以下、Photon の既定の設定-----------------------------------------------------------------------------*/
+
+// Proton Tooltip
 pref("browser.proton.places-tooltip.enabled", true);
+
+// Fill SVG Color
 pref("svg.context-properties.content.enabled", true);
+
+// CSS Color Mix - 88 Above
 pref("layout.css.color-mix.enabled", true);
+
+// CSS Blur Filter - 88 Above
 pref("layout.css.backdrop-filter.enabled", true);
+
+// Restore Compact Mode - 89 Above
 pref("browser.compactmode.show", true);
-pref("userChrome.tab.connect_to_window",          true);
-pref("userChrome.tab.color_like_toolbar",         true);
+
+// Browser Theme Based Scheme - Will be activate 95 Above
+// pref("layout.css.prefers-color-scheme.content-override", 3);
+
+// ** Theme Related Options ****************************************************
+// == Theme Distribution Settings ==============================================
+pref("userChrome.tab.connect_to_window",          true); // Original, Photon
+pref("userChrome.tab.color_like_toolbar",         true); // Original, Photon
+
+// pref("userChrome.tab.lepton_like_padding",     true); // Original
 pref("userChrome.tab.photon_like_padding",        true); // Photon
 
 // pref("userChrome.tab.dynamic_separtor",        true); // Original, Proton
@@ -176,3 +289,4 @@ pref("userContent.page.proton",           true); // Need proton_color
 // ** Useful Options ***********************************************************
 // Integrated calculator at urlbar
 pref("browser.urlbar.suggest.calculator", true);
+
