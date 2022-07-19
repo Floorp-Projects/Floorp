@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -28,7 +27,6 @@
 
 #include "js/Utility.h"
 #include "util/Unicode.h"
-#include "vm/Printer.h"
 
 class JSLinearString;
 
@@ -51,11 +49,9 @@ static MOZ_ALWAYS_INLINE size_t js_strnlen(const CharT* s, size_t maxlen) {
   return maxlen;
 }
 
-extern int32_t js_fputs(const char16_t* s, FILE* f);
-
 namespace js {
 
-class StringBuffer;
+class GenericPrinter;
 
 template <typename CharT>
 constexpr uint8_t AsciiDigitToNumber(CharT c) {
@@ -333,32 +329,6 @@ inline size_t PutEscapedString(char* buffer, size_t bufferSize,
 inline bool EscapedStringPrinter(GenericPrinter& out, JSLinearString* str,
                                  uint32_t quote) {
   return PutEscapedStringImpl(nullptr, 0, &out, str, quote) != size_t(-1);
-}
-
-inline bool EscapedStringPrinter(GenericPrinter& out, const char* chars,
-                                 size_t length, uint32_t quote) {
-  return PutEscapedStringImpl(nullptr, 0, &out, chars, length, quote) !=
-         size_t(-1);
-}
-
-/*
- * Write str into file escaping any non-printable or non-ASCII character.
- * If quote is not 0, it must be a single or double quote character that
- * will quote the output.
- */
-inline bool FileEscapedString(FILE* fp, JSLinearString* str, uint32_t quote) {
-  Fprinter out(fp);
-  bool res = EscapedStringPrinter(out, str, quote);
-  out.finish();
-  return res;
-}
-
-inline bool FileEscapedString(FILE* fp, const char* chars, size_t length,
-                              uint32_t quote) {
-  Fprinter out(fp);
-  bool res = EscapedStringPrinter(out, chars, length, quote);
-  out.finish();
-  return res;
 }
 
 JSString* EncodeURI(JSContext* cx, const char* chars, size_t length);

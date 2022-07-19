@@ -2568,10 +2568,10 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
 
   MOZ_ASSERT(gcNurseryEphemeronEdges().count() == 0);
 
-  // An OrderedHashMap::Range stays valid even when the underlying table
+  // An OrderedHashMap::MutableRange stays valid even when the underlying table
   // (zone->gcEphemeronEdges) is mutated, which is useful here since we may add
   // additional entries while iterating over the Range.
-  EphemeronEdgeTable::Range r = gcEphemeronEdges().all();
+  EphemeronEdgeTable::MutableRange r = gcEphemeronEdges().mutableAll();
   while (!r.empty()) {
     Cell* src = r.front().key;
     CellColor srcColor = gc::detail::GetEffectiveColor(marker->runtime(), src);

@@ -541,13 +541,25 @@ const AVAILABLE_SHIMS = [
     id: "Firebase",
     platform: "all",
     name: "Firebase",
-    bug: "1668408",
+    bug: "1771783",
     onlyIfPrivateBrowsing: true,
     runFirst: "firebase.js",
     matches: [
+      // bugs 1750699, 1767407
       "*://www.gstatic.com/firebasejs/*/firebase-messaging.js*",
-      "*://orangerie.eu/js/vendor*.js*",
-      "*://web.whatsapp.com/vendor*bootstrap_qr*.js*",
+    ],
+    contentScripts: [
+      {
+        cookieStoreId: "firefox-private",
+        js: "firebase.js",
+        runAt: "document_start",
+        matches: [
+          "*://www.homedepot.ca/*", // bug 1778993
+          "*://orangerie.eu/*", // bug 1758442
+          "*://web.whatsapp.com/*", // bug 1767407
+          "*://www.tripadvisor.com/*", // bug 1779536
+        ],
+      },
     ],
   },
   {

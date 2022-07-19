@@ -29,7 +29,7 @@ thunderbird_excludes = os.path.join("comm", "tools", "lint", "GlobalExclude.txt"
 if os.path.exists(thunderbird_excludes):
     EXCLUSION_FILES_OPTIONAL.append(thunderbird_excludes)
 
-GLOBAL_EXCLUDES = ["node_modules", "tools/lint/test/files", ".hg", ".git"]
+GLOBAL_EXCLUDES = ["**/node_modules", "tools/lint/test/files", ".hg", ".git"]
 
 VALID_FORMATTERS = {"black", "clang-format", "rustfmt"}
 VALID_ANDROID_FORMATTERS = {"android-format"}

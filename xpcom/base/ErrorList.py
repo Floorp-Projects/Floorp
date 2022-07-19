@@ -945,6 +945,7 @@ with modules["URILOADER"]:
     errors["NS_ERROR_FINGERPRINTING_URI"] = FAILURE(41)
     errors["NS_ERROR_CRYPTOMINING_URI"] = FAILURE(42)
     errors["NS_ERROR_SOCIALTRACKING_URI"] = FAILURE(43)
+    errors["NS_ERROR_EMAILTRACKING_URI"] = FAILURE(44)
     # Used when "Save Link As..." doesn't see the headers quickly enough to
     # choose a filename.  See nsContextMenu.js.
     errors["NS_ERROR_SAVE_LINK_AS_TIMEOUT"] = FAILURE(32)

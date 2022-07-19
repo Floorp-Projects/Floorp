@@ -28,7 +28,7 @@
   width: 100%;
 }
 
-.auto-growing-textarea::after {
+.auto-growing-textarea:focus-within::after {
   content: attr(data-replicated-value) " ";
   white-space: pre-wrap;
   visibility: hidden;
@@ -38,10 +38,19 @@
 .auto-growing-textarea > textarea {
   resize: none;
   overflow: hidden;
+  /* Force the content in a single line */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* When editing a textarea, restore the multiline display */
+.auto-growing-textarea > textarea:focus {
+  text-overflow: unset;
+  white-space: unset;
 }
 
 .auto-growing-textarea > textarea,
-.auto-growing-textarea::after {
+.auto-growing-textarea:focus-within::after {
   grid-area: 1 / 1 / 2 / 2;
   border: 0;
   font-weight: normal;
@@ -98,7 +107,7 @@
   overflow: auto;
 }
 
-#http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) {
+.http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) {
   position: relative;
   display: flex;
   flex-wrap: nowrap;
@@ -109,13 +118,13 @@
   padding-inline-end: 0;
 }
 
-#http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-name {
+.http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-name {
   width: 25%;
   align-self: stretch;
   min-width: min-content;
 }
 
-#http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-value {
+.http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-value {
   width: 75%;
   align-self: stretch;
 }
@@ -226,14 +235,14 @@
 
 :root.theme-dark .network-monitor .http-custom-method-and-url :is(.http-custom-method-value, .http-custom-url-value),
 :root.theme-dark .network-monitor .tabpanel-summary-container .tabpanel-summary-input,
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name,
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value {
+:root.theme-dark .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name,
+:root.theme-dark .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value {
   background-color: var(--grey-85);
   color: white;
 }
 
 :root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value,
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-value {
+:root.theme-dark .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) #http-custom-input-value {
   border-inline-start: 1px solid var(--grey-60);
 }
 
@@ -248,18 +257,18 @@
   width: calc(100% - 5px);
 }
 
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name:focus {
+:root.theme-dark .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name:focus {
   outline: 2px solid var(--blue-50);
   margin-inline-end: 1px;
 }
 
-:root.theme-dark #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value:focus {
+:root.theme-dark .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value:focus {
   outline: 2px solid var(--blue-50);
   width: calc(100% - 20px);
 }
 
-:root.theme-dark #http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value,
-:root.theme-dark #http-custom-query #http-custom-input-and-map-form .tabpanel-summary-input-value:focus {
+:root.theme-dark .http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value,
+:root.theme-dark #http-custom-query .http-custom-input-and-map-form .tabpanel-summary-input-value:focus {
   margin-inline-end: 1px;
 }
 
@@ -318,18 +327,18 @@
   width: calc(100% - 5px);
 }
 
-:root.theme-light #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name:focus {
+:root.theme-light .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-name:focus {
   outline: 2px solid var(--blue-50);
   margin-inline-end: 1px;
 }
 
-:root.theme-light #http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value:focus {
+:root.theme-light .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .http-custom-input-value:focus {
   outline: 2px solid var(--blue-50);
   width: calc(100% - 20px);
 }
 
-:root.theme-light #http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value:focus,
-:root.theme-light #http-custom-query #http-custom-input-and-map-form .tabpanel-summary-input-value:focus {
+:root.theme-light .http-custom-input-and-map-form .map-add-new-inputs .tabpanel-summary-input-value:focus,
+:root.theme-light #http-custom-query .http-custom-input-and-map-form .tabpanel-summary-input-value:focus {
   margin-inline-end: 3px;
 }
 

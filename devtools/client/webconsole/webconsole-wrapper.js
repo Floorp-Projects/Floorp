@@ -8,8 +8,10 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const ToolboxProvider = require("devtools/client/framework/store-provider");
+const {
+  Provider,
+  createProvider,
+} = require("devtools/client/shared/vendor/react-redux");
 const Services = require("Services");
 
 const actions = require("devtools/client/webconsole/actions/index");
@@ -54,7 +56,11 @@ function renderApp({ app, store, toolbox, root }) {
       Provider,
       { store },
       toolbox
-        ? createElement(ToolboxProvider, { store: toolbox.store }, app)
+        ? createElement(
+            createProvider(toolbox.commands.targetCommand.storeId),
+            { store: toolbox.commands.targetCommand.store },
+            app
+          )
         : app
     ),
     root

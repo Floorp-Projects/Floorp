@@ -81,8 +81,9 @@ var lastHTMLGlobals = {};
  * @param  {String} filePath
  *         The absolute path of the file being parsed.
  */
-function GlobalsForNode(filePath) {
+function GlobalsForNode(filePath, context) {
   this.path = filePath;
+  this.context = context;
 
   if (this.path) {
     this.dirname = path.dirname(this.path);
@@ -127,6 +128,22 @@ GlobalsForNode.prototype = {
       }
 
       let filePath = match[1].trim();
+
+      if (filePath.endsWith(".mjs")) {
+        if (this.context) {
+          this.context.report(
+            comment,
+            "import-globals-from does not support module files - use a direct import instead"
+          );
+        } else {
+          // Fall back to throwing an error, as we do not have a context in all situations,
+          // e.g. when loading the environment.
+          throw new Error(
+            "import-globals-from does not support module files - use a direct import instead"
+          );
+        }
+        continue;
+      }
 
       if (!path.isAbsolute(filePath)) {
         filePath = path.resolve(this.dirname, filePath);

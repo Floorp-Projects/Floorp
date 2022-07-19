@@ -910,8 +910,7 @@ add_task(async function() {
       { score: WARNING, issue: FORM_NO_VISIBLE_NAME },
     ],
     ["Aria slider with aria-labelledby a visible element", "#slider-9", null],
-    // See bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1555551
-    // ["Number input inside a label", "#spinbutton-1", null],
+    ["Number input inside a label", "#spinbutton-1", null],
     [
       "Number input with no label",
       "#spinbutton-2",

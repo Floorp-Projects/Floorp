@@ -166,15 +166,6 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
                        nsTArray<nsIFrame*>* aOutFrames) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
-  }
-
-  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                 const nsDisplayItemGeometry* aGeometry,
-                                 nsRegion* aInvalidRegion) const override;
-
   // Whether this part of the SVG should be natively handled by webrender,
   // potentially becoming an "active layer" inside a blob image.
   bool ShouldBeActive(mozilla::wr::DisplayListBuilder& aBuilder,

@@ -637,13 +637,6 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
 #ifndef MOZ_WIDGET_UIKIT
   // Output format type:
 
-#  if !defined(MAC_OS_VERSION_10_13) || \
-      MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
-  enum : OSType {
-    kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange = 'x420',
-    kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
-  };
-#  endif
   bool is10Bit = (gfx::BitDepthForColorDepth(mColorDepth) == 10);
   SInt32 PixelFormatTypeValue =
       mColorRange == gfx::ColorRange::FULL

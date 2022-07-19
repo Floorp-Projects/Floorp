@@ -16,6 +16,7 @@ build = MozbuildObject.from_environment(cwd=here)
 
 class CompareParser(BaseTryParser):
     name = "compare"
+    common_groups = ["task"]
     arguments = [
         [
             ["-cc", "--compare-commit"],
@@ -35,7 +36,7 @@ def run(compare_commit=None, **kwargs):
         current_revision_ref = vcs.head_ref
 
     try:
-        fuzzy_run()
+        fuzzy_run(**kwargs)
         vcs.update(compare_commit)
         again_run()
     finally:

@@ -257,7 +257,7 @@ static inline void SetHasNurseryMemory(TableObject* t, bool b) {
 }
 
 MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
-                                             ValueMap* data,
+                                             const ValueMap* data,
                                              MapObject::IteratorKind kind) {
   Handle<MapObject*> mapobj(obj.as<MapObject>());
   Rooted<GlobalObject*> global(cx, &mapobj->global());
@@ -520,8 +520,8 @@ const JSPropertySpec MapObject::staticProperties[] = {
   return NativeDefineDataProperty(cx, nativeProto, iteratorId, entriesFn, 0);
 }
 
-template <class Range>
-static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
+template <class MutableRange>
+static void TraceKey(MutableRange& r, const HashableValue& key, JSTracer* trc) {
   HashableValue newKey = key.trace(trc);
 
   if (newKey.get() != key.get()) {
@@ -536,8 +536,8 @@ static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
 }
 
 void MapObject::trace(JSTracer* trc, JSObject* obj) {
-  if (ValueMap* map = obj->as<MapObject>().getData()) {
-    for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
+  if (ValueMap* map = obj->as<MapObject>().getTableUnchecked()) {
+    for (auto r = map->mutableAll(); !r.empty(); r.popFront()) {
       TraceKey(r, r.front().key, trc);
       TraceEdge(trc, &r.front().value, "value");
     }
@@ -583,7 +583,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef {
 
   void trace(JSTracer* trc) override {
     MOZ_ASSERT(!IsInsideNursery(object));
-    auto realTable = object->getData();
+    auto realTable = object->getTableUnchecked();
     auto unbarrieredTable =
         reinterpret_cast<typename ObjectT::UnbarrieredTable*>(realTable);
     NurseryKeysVector* keys = GetNurseryKeys(object);
@@ -646,7 +646,7 @@ template <typename ObjectT>
 
 bool MapObject::getKeysAndValuesInterleaved(
     HandleObject obj, JS::MutableHandle<GCVector<JS::Value>> entries) {
-  ValueMap* map = obj->as<MapObject>().getData();
+  const ValueMap* map = obj->as<MapObject>().getData();
   if (!map) {
     return false;
   }
@@ -664,24 +664,23 @@ bool MapObject::getKeysAndValuesInterleaved(
 bool MapObject::set(JSContext* cx, HandleObject obj, HandleValue k,
                     HandleValue v) {
   MapObject* mapObject = &obj->as<MapObject>();
-  ValueMap* table = mapObject->getData();
-  if (!table) {
-    return false;
-  }
-
   Rooted<HashableValue> key(cx);
   if (!key.setValue(cx, k)) {
     return false;
   }
 
-  return setWithHashableKey(cx, mapObject, table, key, v);
+  return setWithHashableKey(cx, mapObject, key, v);
 }
 
 /* static */
 inline bool MapObject::setWithHashableKey(JSContext* cx, MapObject* obj,
-                                          ValueMap* table,
                                           Handle<HashableValue> key,
                                           Handle<Value> value) {
+  ValueMap* table = obj->getTableUnchecked();
+  if (!table) {
+    return false;
+  }
+
   bool needsPostBarriers = obj->isTenured();
   if (needsPostBarriers) {
     // Use the ValueMap representation which has post barriers.
@@ -735,7 +734,7 @@ MapObject* MapObject::create(JSContext* cx,
 
 size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
   size_t size = 0;
-  if (ValueMap* map = getData()) {
+  if (const ValueMap* map = getData()) {
     size += map->sizeOfIncludingThis(mallocSizeOf);
   }
   if (NurseryKeysVector* nurseryKeys = GetNurseryKeys(this)) {
@@ -746,7 +745,7 @@ size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
 
 void MapObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   MOZ_ASSERT(gcx->onMainThread());
-  ValueMap* table = obj->as<MapObject>().getData();
+  ValueMap* table = obj->as<MapObject>().getTableUnchecked();
   if (!table) {
     return;
   }
@@ -771,7 +770,7 @@ void MapObject::sweepAfterMinorGC(JS::GCContext* gcx, MapObject* mapobj) {
   }
 
   mapobj = MaybeForwarded(mapobj);
-  mapobj->getData()->destroyNurseryRanges();
+  mapobj->getTableUnchecked()->destroyNurseryRanges();
   SetHasNurseryMemory(mapobj, false);
 
   if (wasInsideNursery) {
@@ -826,19 +825,19 @@ bool MapObject::is(HandleObject o) {
   Rooted<HashableValue> key(cx); \
   if (args.length() > 0 && !key.setValue(cx, args[0])) return false
 
-ValueMap& MapObject::extract(HandleObject o) {
+const ValueMap& MapObject::extract(HandleObject o) {
   MOZ_ASSERT(o->hasClass(&MapObject::class_));
   return *o->as<MapObject>().getData();
 }
 
-ValueMap& MapObject::extract(const CallArgs& args) {
+const ValueMap& MapObject::extract(const CallArgs& args) {
   MOZ_ASSERT(args.thisv().isObject());
   MOZ_ASSERT(args.thisv().toObject().hasClass(&MapObject::class_));
   return *args.thisv().toObject().as<MapObject>().getData();
 }
 
 uint32_t MapObject::size(JSContext* cx, HandleObject obj) {
-  ValueMap& map = extract(obj);
+  const ValueMap& map = extract(obj);
   static_assert(sizeof(map.count()) <= sizeof(uint32_t),
                 "map count must be precisely representable as a JS number");
   return map.count();
@@ -858,14 +857,14 @@ bool MapObject::size(JSContext* cx, unsigned argc, Value* vp) {
 
 bool MapObject::get(JSContext* cx, HandleObject obj, HandleValue key,
                     MutableHandleValue rval) {
-  ValueMap& map = extract(obj);
+  const ValueMap& map = extract(obj);
   Rooted<HashableValue> k(cx);
 
   if (!k.setValue(cx, key)) {
     return false;
   }
 
-  if (ValueMap::Entry* p = map.get(k)) {
+  if (const ValueMap::Entry* p = map.get(k)) {
     rval.set(p->value);
   } else {
     rval.setUndefined();
@@ -887,7 +886,7 @@ bool MapObject::get(JSContext* cx, unsigned argc, Value* vp) {
 
 bool MapObject::has(JSContext* cx, HandleObject obj, HandleValue key,
                     bool* rval) {
-  ValueMap& map = extract(obj);
+  const ValueMap& map = extract(obj);
   Rooted<HashableValue> k(cx);
 
   if (!k.setValue(cx, key)) {
@@ -917,10 +916,9 @@ bool MapObject::has(JSContext* cx, unsigned argc, Value* vp) {
 bool MapObject::set_impl(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(MapObject::is(args.thisv()));
 
-  ValueMap& map = extract(args);
+  MapObject* obj = &args.thisv().toObject().as<MapObject>();
   ARG0_KEY(cx, args, key);
-  if (!setWithHashableKey(cx, &args.thisv().toObject().as<MapObject>(), &map,
-                          key, args.get(1))) {
+  if (!setWithHashableKey(cx, obj, key, args.get(1))) {
     return false;
   }
 
@@ -936,17 +934,25 @@ bool MapObject::set(JSContext* cx, unsigned argc, Value* vp) {
 
 bool MapObject::delete_(JSContext* cx, HandleObject obj, HandleValue key,
                         bool* rval) {
-  ValueMap& map = extract(obj);
+  MapObject* mapObject = &obj->as<MapObject>();
   Rooted<HashableValue> k(cx);
 
   if (!k.setValue(cx, key)) {
     return false;
   }
 
-  if (!map.remove(k, rval)) {
+  bool ok;
+  if (mapObject->isTenured()) {
+    ok = mapObject->tenuredTable()->remove(k, rval);
+  } else {
+    ok = mapObject->nurseryTable()->remove(k, rval);
+  }
+
+  if (!ok) {
     ReportOutOfMemory(cx);
     return false;
   }
+
   return true;
 }
 
@@ -961,14 +967,13 @@ bool MapObject::delete_impl(JSContext* cx, const CallArgs& args) {
   // of a ValueMap, Value() means HeapPtr<Value>(), which is the same as
   // HeapPtr<Value>(UndefinedValue()).
   MOZ_ASSERT(MapObject::is(args.thisv()));
+  RootedObject obj(cx, &args.thisv().toObject());
 
-  ValueMap& map = extract(args);
-  ARG0_KEY(cx, args, key);
   bool found;
-  if (!map.remove(key, &found)) {
-    ReportOutOfMemory(cx);
+  if (!delete_(cx, obj, args.get(0), &found)) {
     return false;
   }
+
   args.rval().setBoolean(found);
   return true;
 }
@@ -981,7 +986,7 @@ bool MapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
 
 bool MapObject::iterator(JSContext* cx, IteratorKind kind, HandleObject obj,
                          MutableHandleValue iter) {
-  ValueMap& map = extract(obj);
+  const ValueMap& map = extract(obj);
   Rooted<JSObject*> iterobj(cx, MapIteratorObject::create(cx, obj, &map, kind));
   if (!iterobj) {
     return false;
@@ -1039,11 +1044,20 @@ bool MapObject::clear(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 bool MapObject::clear(JSContext* cx, HandleObject obj) {
-  ValueMap& map = extract(obj);
-  if (!map.clear()) {
+  MapObject* mapObject = &obj->as<MapObject>();
+
+  bool ok;
+  if (mapObject->isTenured()) {
+    ok = mapObject->tenuredTable()->clear();
+  } else {
+    ok = mapObject->nurseryTable()->clear();
+  }
+
+  if (!ok) {
     ReportOutOfMemory(cx);
     return false;
   }
+
   return true;
 }
 
@@ -1417,7 +1431,7 @@ SetObject* SetObject::create(JSContext* cx,
 void SetObject::trace(JSTracer* trc, JSObject* obj) {
   SetObject* setobj = static_cast<SetObject*>(obj);
   if (ValueSet* set = setobj->getData()) {
-    for (ValueSet::Range r = set->all(); !r.empty(); r.popFront()) {
+    for (auto r = set->mutableAll(); !r.empty(); r.popFront()) {
       TraceKey(r, r.front(), trc);
     }
   }

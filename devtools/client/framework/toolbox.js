@@ -70,14 +70,14 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  [
-    "refreshTargets",
-    "registerTarget",
-    "registerWalkerListeners",
-    "selectTarget",
-    "unregisterTarget",
-  ],
+  ["registerWalkerListeners"],
   "devtools/client/framework/actions/index",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  ["selectTarget"],
+  "devtools/shared/commands/target/actions/targets",
   true
 );
 
@@ -144,7 +144,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "getSelectedTarget",
-  "devtools/client/framework/reducers/targets",
+  "devtools/shared/commands/target/selectors/targets",
   true
 );
 loader.lazyRequireGetter(
@@ -419,7 +419,6 @@ Toolbox.prototype = {
   get store() {
     if (!this._store) {
       this._store = createToolboxStore();
-      registerStoreObserver(this._store, this._onToolboxStateChange.bind(this));
     }
     return this._store;
   },
@@ -610,7 +609,9 @@ Toolbox.prototype = {
    */
   selectTarget(targetActorID) {
     if (this.getSelectedTargetFront()?.actorID !== targetActorID) {
-      this.store.dispatch(selectTarget(targetActorID));
+      // The selected target is managed by the TargetCommand's store.
+      // So dispatch this action against that other store.
+      this.commands.targetCommand.store.dispatch(selectTarget(targetActorID));
     }
   },
 
@@ -618,7 +619,11 @@ Toolbox.prototype = {
    * @returns {ThreadFront|null} The selected thread front, or null if there is none.
    */
   getSelectedTargetFront: function() {
-    const selectedTarget = getSelectedTarget(this.store.getState());
+    // The selected target is managed by the TargetCommand's store.
+    // So pull the state from that other store.
+    const selectedTarget = getSelectedTarget(
+      this.commands.targetCommand.store.getState()
+    );
     if (!selectedTarget) {
       return null;
     }
@@ -626,7 +631,12 @@ Toolbox.prototype = {
     return this.commands.client.getFrontByID(selectedTarget.actorID);
   },
 
-  _onToolboxStateChange(state, oldState) {
+  /**
+   * For now, the debugger isn't hooked to TargetCommand's store
+   * to display its thread list. So manually forward target selection change
+   * to the debugger via a dedicated action
+   */
+  _onTargetCommandStateChange(state, oldState) {
     if (getSelectedTarget(state) !== getSelectedTarget(oldState)) {
       const dbg = this.getPanel("jsdebugger");
       if (!dbg) {
@@ -714,10 +724,6 @@ Toolbox.prototype = {
       registerWalkerListeners(this.store, inspectorFront.walker);
     });
 
-    if (this.hostType !== Toolbox.HostType.PAGE) {
-      await this.store.dispatch(registerTarget(targetFront));
-    }
-
     if (targetFront.isTopLevel && isTargetSwitching) {
       // These methods expect the target to be attached, which is guaranteed by the time
       // _onTargetAvailable is called by the targetCommand.
@@ -779,10 +785,6 @@ Toolbox.prototype = {
       this.selection.onTargetDestroyed(targetFront);
     }
 
-    if (this.hostType !== Toolbox.HostType.PAGE) {
-      this.store.dispatch(unregisterTarget(targetFront));
-    }
-
     if (targetFront.targetForm.ignoreSubFrames) {
       this._updateFrames({
         frames: [
@@ -842,6 +844,10 @@ Toolbox.prototype = {
       this.commands.targetCommand.on(
         "target-thread-wrong-order-on-resume",
         this._onTargetThreadFrontResumeWrongOrder.bind(this)
+      );
+      registerStoreObserver(
+        this.commands.targetCommand.store,
+        this._onTargetCommandStateChange.bind(this)
       );
 
       // Bug 1709063: Use commands.resourceCommand instead of toolbox.resourceCommand
@@ -4653,9 +4659,6 @@ Toolbox.prototype = {
         // the host title a bit in order for the event listener in targetCommand to be
         // executed.
         setTimeout(() => {
-          // Update the EvaluationContext selector so url/title of targets can be updated
-          this.store.dispatch(refreshTargets());
-
           this._updateFrames({
             frameData: {
               id: resource.targetFront.actorID,

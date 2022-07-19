@@ -161,7 +161,7 @@ class MapObject : public NativeObject {
     return getFixedSlotOffset(DataSlot);
   }
 
-  ValueMap* getData() { return maybePtrFromReservedSlot<ValueMap>(DataSlot); }
+  const ValueMap* getData() { return getTableUnchecked(); }
 
   [[nodiscard]] static bool get(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
@@ -174,15 +174,26 @@ class MapObject : public NativeObject {
   static const JSFunctionSpec methods[];
   static const JSPropertySpec staticProperties[];
 
+  PreBarrieredTable* nurseryTable() {
+    MOZ_ASSERT(IsInsideNursery(this));
+    return maybePtrFromReservedSlot<PreBarrieredTable>(DataSlot);
+  }
+  ValueMap* tenuredTable() {
+    MOZ_ASSERT(!IsInsideNursery(this));
+    return getTableUnchecked();
+  }
+  ValueMap* getTableUnchecked() {
+    return maybePtrFromReservedSlot<ValueMap>(DataSlot);
+  }
+
   static inline bool setWithHashableKey(JSContext* cx, MapObject* obj,
-                                        ValueMap* table,
                                         Handle<HashableValue> key,
                                         Handle<Value> value);
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 
-  static ValueMap& extract(HandleObject o);
-  static ValueMap& extract(const CallArgs& args);
+  static const ValueMap& extract(HandleObject o);
+  static const ValueMap& extract(const CallArgs& args);
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JS::GCContext* gcx, JSObject* obj);
   [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
@@ -227,7 +238,7 @@ class MapIteratorObject : public NativeObject {
 
   static const JSFunctionSpec methods[];
   static MapIteratorObject* create(JSContext* cx, HandleObject mapobj,
-                                   ValueMap* data,
+                                   const ValueMap* data,
                                    MapObject::IteratorKind kind);
   static void finalize(JS::GCContext* gcx, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
@@ -299,7 +310,7 @@ class SetObject : public NativeObject {
     return getFixedSlotOffset(DataSlot);
   }
 
-  ValueSet* getData() { return maybePtrFromReservedSlot<ValueSet>(DataSlot); }
+  ValueSet* getData() { return getTableUnchecked(); }
 
  private:
   static const ClassSpec classSpec_;
@@ -308,6 +319,10 @@ class SetObject : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec staticProperties[];
+
+  ValueSet* getTableUnchecked() {
+    return maybePtrFromReservedSlot<ValueSet>(DataSlot);
+  }
 
   static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 

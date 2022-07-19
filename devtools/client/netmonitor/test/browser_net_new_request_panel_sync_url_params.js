@@ -106,7 +106,7 @@ add_task(async function() {
 
   const newParameterValue = Array.from(
     document.querySelectorAll(
-      "#http-custom-query #http-custom-name-and-value .http-custom-input-value"
+      "#http-custom-query .http-custom-input .http-custom-input-value"
     )
   ).pop();
   newParameterValue.focus();
@@ -171,10 +171,10 @@ function assertQueryScenario(
 
   // Check if the parameter name and value are what we expect
   const parameterNames = document.querySelectorAll(
-    "#http-custom-query #http-custom-input-and-map-form .http-custom-input-name"
+    "#http-custom-query .http-custom-input-and-map-form .http-custom-input-name"
   );
   const parameterValues = document.querySelectorAll(
-    "#http-custom-query #http-custom-input-and-map-form .http-custom-input-value"
+    "#http-custom-query .http-custom-input-and-map-form .http-custom-input-value"
   );
 
   for (let i = 0; i < expectedParameters.length; i++) {
