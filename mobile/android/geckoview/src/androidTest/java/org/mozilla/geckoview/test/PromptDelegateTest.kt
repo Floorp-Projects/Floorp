@@ -461,9 +461,6 @@ class PromptDelegateTest : BaseSessionTest() {
 
     @Test
     fun onBeforeUnloadTest() {
-    	// Bug 1763954 - disable the test on opt and isolated process builds to reduce failure rate
-    	assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
-    	assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
     	sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
         ))
@@ -502,6 +499,11 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         sessionRule.waitForResult(promptResult)
+
+        // Although onBeforeUnloadPrompt is done, nsDocumentViewer might not clear
+        // mInPermitUnloadPrompt flag at this time yet. We need a wait to finish
+        // "nsDocumentViewer::PermitUnload" loop.
+        mainSession.waitForJS("new Promise(resolve => window.setTimeout(resolve, 100))")
 
         // This request will go through and end the test. Doing the negative case first will
         // ensure that if either of this tests fail the test will fail.
