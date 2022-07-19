@@ -532,6 +532,8 @@ void WorkerScriptLoader::LoadingFinished(ScriptLoadRequest* aRequest,
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
   loadContext->mLoadResult = aRv;
+  MOZ_ASSERT(!loadContext->mLoadingFinished);
+  loadContext->mLoadingFinished = true;
 
   if (IsMainWorkerScript() && NS_SUCCEEDED(aRv)) {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->PrincipalURIMatchesScriptURL());
