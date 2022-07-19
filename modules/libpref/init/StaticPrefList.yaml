@@ -11725,6 +11725,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Collecting 3rd party emailtracking telemetry.
+- name: privacy.trackingprotection.emailtracking.data_collection.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether Origin Telemetry should be enabled.
 # NOTE: if telemetry.origin_telemetry_test_mode.enabled is enabled, this pref
 #       won't have any effect.
