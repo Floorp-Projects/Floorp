@@ -127,4 +127,21 @@ class CreditCardAutofillDialogFactsTest {
             )
         }
     }
+
+    @Test
+    fun `Emits facts for autofill save prompt shown event`() {
+        CollectionProcessor.withFactCollection { facts ->
+            emitCreditCardSaveShownFact()
+
+            assertEquals(1, facts.size)
+
+            val fact = facts.single()
+            assertEquals(Component.FEATURE_PROMPTS, fact.component)
+            assertEquals(Action.DISPLAY, fact.action)
+            assertEquals(
+                CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN,
+                fact.item
+            )
+        }
+    }
 }

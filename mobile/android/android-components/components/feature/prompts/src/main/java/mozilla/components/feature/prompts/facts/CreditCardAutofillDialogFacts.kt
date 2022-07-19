@@ -24,6 +24,7 @@ class CreditCardAutofillDialogFacts {
         const val AUTOFILL_CREDIT_CARD_PROMPT_DISMISSED = "autofill_credit_card_prompt_dismissed"
         const val AUTOFILL_CREDIT_CARD_CREATED = "autofill_credit_card_created"
         const val AUTOFILL_CREDIT_CARD_UPDATED = "autofill_credit_card_updated"
+        const val AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN = "autofill_credit_card_save_prompt_shown"
     }
 }
 
@@ -88,5 +89,12 @@ internal fun emitCreditCardAutofillUpdatedFact() {
     emitCreditCardAutofillDialogFact(
         Action.CONFIRM,
         CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED
+    )
+}
+
+internal fun emitCreditCardSaveShownFact() {
+    emitCreditCardAutofillDialogFact(
+        Action.DISPLAY,
+        CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN
     )
 }

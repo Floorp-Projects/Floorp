@@ -53,10 +53,14 @@ import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
+import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.share.ShareDelegate
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
@@ -2308,6 +2312,49 @@ class PromptFeatureTest {
             .joinBlocking()
 
         verify(dialogFragment).dismissAllowingStateLoss()
+    }
+
+    @Test
+    fun `WHEN SaveCreditCard is handled THEN the credit card save prompt shown fact is emitted`() {
+        val feature = PromptFeature(
+            activity = mock(),
+            store = store,
+            fragmentManager = fragmentManager,
+            isCreditCardAutofillEnabled = { true },
+            creditCardValidationDelegate = mock()
+        ) { }
+        val creditCardEntry = CreditCardEntry(
+            guid = "1",
+            name = "CC",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = ""
+        )
+        val request = PromptRequest.SaveCreditCard(
+            creditCard = creditCardEntry,
+            onConfirm = {},
+            onDismiss = {}
+        )
+        val session: TabSessionState = mock()
+        val sessionId = "sessionId"
+        `when`(session.id).thenReturn(sessionId)
+
+        CollectionProcessor.withFactCollection { facts ->
+            feature.handleDialogsRequest(
+                promptRequest = request,
+                session = session
+            )
+
+            assertEquals(1, facts.size)
+            val fact = facts.single()
+            assertEquals(Component.FEATURE_PROMPTS, fact.component)
+            assertEquals(Action.DISPLAY, fact.action)
+            assertEquals(
+                CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN,
+                fact.item
+            )
+        }
     }
 
     @Test
