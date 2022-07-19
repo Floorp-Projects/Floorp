@@ -17,7 +17,7 @@ To enable the debugger to work with a source map, you must:
 
 .. code-block:: JavaScript
 
-  //# sourceMappingURL=http://example.com/path/to/your/sourcemap.map</pre>
+  //# sourceMappingURL=http://example.com/path/to/your/sourcemap.map
 
 .. raw:: html
 
@@ -29,6 +29,6 @@ In the video above we load https://mdn.github.io/devtools-examples/sourcemaps-in
 
 .. code-block:: JavaScript
 
-  //# sourceMappingURL=main.js.map</pre>
+  //# sourceMappingURL=main.js.map
 
 In the Debugger's :ref:`source list pane <debugger-ui-tour-source-list-pane>`, the original CoffeeScript source now appears as "main.coffee", and we can debug it just like any other source.
