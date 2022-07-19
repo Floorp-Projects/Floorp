@@ -462,6 +462,29 @@
             "data": {
               "type": "object",
               "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Message id to block"
+                }
+              },
+              "required": ["id"],
+              "additionalProperties": false
+            },
+            "type": {
+              "type": "string",
+              "enum": ["BLOCK_MESSAGE"]
+            }
+          },
+          "required": ["data", "type"],
+          "additionalProperties": false,
+          "description": "Add message to an indexedDb list of blocked messages"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
                 "pref": {
                   "type": "object",
                   "properties": {

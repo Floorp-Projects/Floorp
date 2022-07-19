@@ -701,6 +701,12 @@ const MESSAGES = () => [
                 type: "PIN_FIREFOX_TO_TASKBAR",
               },
               {
+                type: "BLOCK_MESSAGE",
+                data: {
+                  id: "PB_NEWTAB_PIN_PROMO",
+                },
+              },
+              {
                 type: "OPEN_ABOUT_PAGE",
                 data: { args: "privatebrowsing", where: "current" },
               },
@@ -709,7 +715,7 @@ const MESSAGES = () => [
         },
       },
     },
-    priority: 2,
+    priority: 3,
     frequency: {
       custom: [
         {
