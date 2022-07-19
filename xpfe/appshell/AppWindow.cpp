@@ -2822,8 +2822,6 @@ void AppWindow::SizeModeChanged(nsSizeMode sizeMode) {
   }
   mWindow->SetSizeMode(sizeMode);
 
-  RecomputeBrowsingContextVisibility();
-
   // Persist mode, but not immediately, because in many (all?)
   // cases this will merge with the similar call in NS_SIZE and
   // write the attribute values only once.
@@ -2929,33 +2927,13 @@ void AppWindow::MacFullscreenMenubarOverlapChanged(
   }
 }
 
-void AppWindow::RecomputeBrowsingContextVisibility() {
-  if (!mDocShell) {
-    return;
-  }
-  if (RefPtr bc = mDocShell->GetBrowsingContext()) {
-    nsCOMPtr<nsIWidget> widget;
-    mDocShell->GetMainWidget(getter_AddRefs(widget));
-    const bool isActive = [&] {
-      if (!widget) {
-        return false;
-      }
-      return widget->SizeMode() != nsSizeMode_Minimized &&
-             !widget->IsFullyOccluded();
-    }();
-    bc->SetIsActive(isActive, IgnoreErrors());
-  }
-}
-
 void AppWindow::OcclusionStateChanged(bool aIsFullyOccluded) {
-  if (!mDocShell) {
-    return;
-  }
-  RecomputeBrowsingContextVisibility();
-  if (RefPtr win = mDocShell->GetWindow()) {
+  nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
+      mDocShell ? mDocShell->GetWindow() : nullptr;
+  if (ourWindow) {
     // And always fire a user-defined occlusionstatechange event on the window
-    win->DispatchCustomEvent(u"occlusionstatechange"_ns,
-                             ChromeOnlyDispatch::eYes);
+    ourWindow->DispatchCustomEvent(u"occlusionstatechange"_ns,
+                                   ChromeOnlyDispatch::eYes);
   }
 }
 
