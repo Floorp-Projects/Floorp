@@ -50,16 +50,18 @@ loader.lazyGetter(this, "L10N", function() {
   return new LocalizationHelper("devtools/client/locales/startup.properties");
 });
 
-function renderApp({ app, store, commands, root }) {
+function renderApp({ app, store, toolbox, root }) {
   return ReactDOM.render(
     createElement(
       Provider,
       { store },
-      createElement(
-        createProvider(commands.targetCommand.storeId),
-        { store: commands.targetCommand.store },
-        app
-      )
+      toolbox
+        ? createElement(
+            createProvider(toolbox.commands.targetCommand.storeId),
+            { store: toolbox.commands.targetCommand.store },
+            app
+          )
+        : app
     ),
     root
   );
@@ -133,7 +135,7 @@ class WebConsoleWrapper {
           app,
           store,
           root: this.parentNode,
-          commands: this.hud.commands,
+          toolbox: this.toolbox,
         });
       } else {
         // If there's no parentNode, we are in a test. So we can resolve immediately.
