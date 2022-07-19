@@ -227,6 +227,28 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
+#errorLongDesc strong {
+  font-weight: 500;
+}
+
+.title {
+  font-size: 1.75em;
+}
+
+.title-text {
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+#errorShortDescText {
+  font-size: 1.15em;
+  line-height: 1.3;
+  font-weight: 400;
+  margin-top: 10px;
+}
+
 @media only screen and (max-width: 959px) {
   #certificateErrorText {
     /* The encoded certificate chain looks better when we're not

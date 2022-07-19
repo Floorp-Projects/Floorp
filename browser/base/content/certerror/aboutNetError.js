@@ -315,6 +315,10 @@ function initPage() {
     ld.innerHTML = errDesc.innerHTML;
   }
 
+  if (err == "dnsNotFound") {
+    RPMCheckAlternateHostAvailable();
+  }
+
   if (err == "sslv3Used") {
     document.getElementById("learnMoreContainer").style.display = "block";
     document.body.className = "certerror";
