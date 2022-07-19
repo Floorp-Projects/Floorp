@@ -36,8 +36,6 @@ class CacheCreator;
  * WorkerLoadContext has the following generic fields applied to all worker
  * ScriptLoadRequests (and primarily used for error handling):
  *
- *    * mURI
- *        Set at worker creation, used when throwing an error.
  *    * mLoadResult
  *        Used to store the result of a load. In particular, it is used for
  *        error handling when a load fails (for example, a malformed URI).
@@ -62,6 +60,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   /* These fields are used by all workers */
   Maybe<bool> mMutedErrorFlag;
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
+  bool mLoadingFinished = false;
 
   /* These fields are only used by service workers */
   /* TODO: Split out a ServiceWorkerLoadContext */
