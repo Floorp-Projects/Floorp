@@ -156,7 +156,7 @@ class StorageAccessAPIHelper final {
   //   None if the document has not been granted or denied access by the Storage
   //        Access API before
   static Maybe<bool> CheckExistingPermissionDecidesStorageAccessAPI(
-      dom::Document* aDocument);
+      dom::Document* aDocument, bool aRequestingStorageAccess);
 
  private:
   friend class dom::ContentParent;
