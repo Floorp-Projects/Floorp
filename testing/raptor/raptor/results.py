@@ -25,6 +25,7 @@ KNOWN_TEST_MODIFIERS = [
     "gecko-profile",
     "cold",
     "webrender",
+    "bytecode-cached",
 ]
 
 
@@ -45,6 +46,7 @@ class PerftestResultsHandler(object):
         chimera=False,
         fission=True,
         perfstats=False,
+        test_bytecode_cache=False,
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -64,6 +66,7 @@ class PerftestResultsHandler(object):
         self.cold = cold
         self.chimera = chimera
         self.perfstats = perfstats
+        self.test_bytecode_cache = test_bytecode_cache
         self.existing_results = None
 
     @abstractmethod
@@ -95,6 +98,8 @@ class PerftestResultsHandler(object):
                 extra_options.append("gecko-profile")
             if self.cold:
                 extra_options.append("cold")
+            if self.test_bytecode_cache:
+                extra_options.append("bytecode-cached")
             extra_options.append("webrender")
         else:
             for modifier, name in modifiers:
@@ -118,6 +123,8 @@ class PerftestResultsHandler(object):
                 extra_options.remove("webrender")
             if "fission" in extra_options:
                 extra_options.remove("fission")
+            if "bytecode-cached" in extra_options:
+                extra_options.remove("bytecode-cached")
 
         return extra_options
 
