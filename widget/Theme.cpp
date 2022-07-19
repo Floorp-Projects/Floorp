@@ -457,6 +457,8 @@ std::array<sRGBColor, 3> Theme::ComputeFocusRectColors(const Colors& aColors) {
   return {accent.Get(), middle, accent.GetLight()};
 }
 
+static const CSSCoord kInnerFocusOutlineWidth = 2.0f;
+
 template <typename PaintBackendData>
 void Theme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
                                   const LayoutDeviceRect& aRect,
@@ -475,7 +477,7 @@ void Theme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
   //
   // But some controls might provide a negative offset to cover the border, if
   // necessary.
-  CSSCoord strokeWidth = 2.0f;
+  CSSCoord strokeWidth = kInnerFocusOutlineWidth;
   auto strokeWidthDevPx =
       LayoutDeviceCoord(ThemeDrawing::SnapBorderWidth(strokeWidth, aDpiRatio));
   CSSCoord strokeRadius = aRadius;
@@ -1285,73 +1287,63 @@ void Theme::PaintAutoStyleOutline(nsIFrame* aFrame,
                                   PaintBackendData& aPaintData,
                                   const LayoutDeviceRect& aRect,
                                   const Colors& aColors, DPIRatio aDpiRatio) {
-  const auto& accentColor = aColors.Accent();
-  const bool solid = StaticPrefs::widget_non_native_theme_solid_outline_style();
-  const LayoutDeviceCoord strokeWidth(
-      ThemeDrawing::SnapBorderWidth(solid ? 2.0f : 1.0f, aDpiRatio));
+  auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors(aColors);
+  Unused << middleColor;
+  Unused << outerColor;
 
   LayoutDeviceRect rect(aRect);
-  rect.Inflate(strokeWidth);
+  auto width = LayoutDeviceCoord(
+      ThemeDrawing::SnapBorderWidth(kInnerFocusOutlineWidth, aDpiRatio));
+  rect.Inflate(width);
 
-  const nscoord a2d = aFrame->PresContext()->AppUnitsPerDevPixel();
-  const nscoord cssOffset = aFrame->StyleOutline()->mOutlineOffset.ToAppUnits();
-  nscoord cssRadii[8] = {0};
-  auto offset = LayoutDeviceCoord::FromAppUnits(cssOffset, a2d);
+  const nscoord offset = aFrame->StyleOutline()->mOutlineOffset.ToAppUnits();
+  nscoord cssRadii[8];
   if (!aFrame->GetBorderRadii(cssRadii)) {
-    offset = 0;
-    const nscoord radius =
-        cssOffset >= 0 ? 2 * AppUnitsPerCSSPixel()
-                       : std::max(2 * AppUnitsPerCSSPixel() + cssOffset, 0);
-    for (auto& r : cssRadii) {
-      r = radius;
-    }
+    const CSSCoord cssOffset = CSSCoord::FromAppUnits(offset);
+    const CSSCoord radius =
+        cssOffset >= 0.0f
+            ? kInnerFocusOutlineWidth
+            : std::max(kInnerFocusOutlineWidth + cssOffset, CSSCoord(0.0f));
+    return ThemeDrawing::PaintRoundedRectWithRadius(
+        aPaintData, rect, sRGBColor::White(0.0f), innerColor,
+        kInnerFocusOutlineWidth, radius, aDpiRatio);
   }
+
+  nsPresContext* pc = aFrame->PresContext();
+  const Float devPixelOffset = pc->AppUnitsToFloatDevPixels(offset);
 
   RectCornerRadii innerRadii;
-  nsCSSRendering::ComputePixelRadii(cssRadii, a2d, &innerRadii);
+  nsCSSRendering::ComputePixelRadii(cssRadii, pc->AppUnitsPerDevPixel(),
+                                    &innerRadii);
 
+  const auto borderColor = ToDeviceColor(innerColor);
   // NOTE(emilio): This doesn't use PaintRoundedRectWithRadius because we need
   // to support arbitrary radii.
-  auto DrawRect = [&](const sRGBColor& aColor) {
-    RectCornerRadii outerRadii;
-    if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
-      const Float widths[4] = {strokeWidth + offset, strokeWidth + offset,
-                               strokeWidth + offset, strokeWidth + offset};
-      nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outerRadii);
-      const auto dest = wr::ToLayoutRect(rect);
-      const auto side =
-          wr::ToBorderSide(ToDeviceColor(aColor), StyleBorderStyle::Solid);
-      const wr::BorderSide sides[4] = {side, side, side, side};
-      const bool kBackfaceIsVisible = true;
-      const auto wrWidths = wr::ToBorderWidths(strokeWidth, strokeWidth,
-                                               strokeWidth, strokeWidth);
-      const auto wrRadius = wr::ToBorderRadius(outerRadii);
-      aPaintData.mBuilder.PushBorder(dest, dest, kBackfaceIsVisible, wrWidths,
-                                     {sides, 4}, wrRadius);
-    } else {
-      const LayoutDeviceCoord halfWidth = strokeWidth * 0.5f;
-      const Float widths[4] = {halfWidth + offset, halfWidth + offset,
-                               halfWidth + offset, halfWidth + offset};
-      nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outerRadii);
-      LayoutDeviceRect dest(rect);
-      dest.Deflate(halfWidth);
-      RefPtr<Path> path =
-          MakePathForRoundedRect(aPaintData, dest.ToUnknownRect(), outerRadii);
-      aPaintData.Stroke(path, ColorPattern(ToDeviceColor(aColor)),
-                        StrokeOptions(strokeWidth));
-    }
-  };
+  RectCornerRadii outerRadii;
+  if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
+    const Float widths[4] = {width + devPixelOffset, width + devPixelOffset,
+                             width + devPixelOffset, width + devPixelOffset};
+    nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outerRadii);
 
-  DrawRect(accentColor.Get());
-
-  if (solid) {
-    return;
+    const auto dest = wr::ToLayoutRect(rect);
+    const auto side = wr::ToBorderSide(borderColor, StyleBorderStyle::Solid);
+    const wr::BorderSide sides[4] = {side, side, side, side};
+    const bool kBackfaceIsVisible = true;
+    const auto wrWidths = wr::ToBorderWidths(width, width, width, width);
+    const auto wrRadius = wr::ToBorderRadius(outerRadii);
+    aPaintData.mBuilder.PushBorder(dest, dest, kBackfaceIsVisible, wrWidths,
+                                   {sides, 4}, wrRadius);
+  } else {
+    const LayoutDeviceCoord halfWidth = width * 0.5f;
+    rect.Deflate(halfWidth);
+    const Float widths[4] = {
+        halfWidth + devPixelOffset, halfWidth + devPixelOffset,
+        halfWidth + devPixelOffset, halfWidth + devPixelOffset};
+    nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outerRadii);
+    RefPtr<Path> path =
+        MakePathForRoundedRect(aPaintData, rect.ToUnknownRect(), outerRadii);
+    aPaintData.Stroke(path, ColorPattern(borderColor), StrokeOptions(width));
   }
-
-  rect.Inflate(strokeWidth);
-  offset += strokeWidth;
-
-  DrawRect(accentColor.GetForeground());
 }
 
 LayoutDeviceIntMargin Theme::GetWidgetBorder(nsDeviceContext* aContext,
