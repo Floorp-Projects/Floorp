@@ -402,6 +402,13 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
 
   if (!inputStream) {
     mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
+
+    if (mLoader->IsCancelled()) {
+      mLoadContext->GetCacheCreator()->DeleteCache(
+          mLoader->mCancelMainThread.ref());
+      return;
+    }
+
     nsresult rv = DataReceivedFromCache(
         (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
         mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
@@ -468,6 +475,13 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
   mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
 
   MOZ_ASSERT(mPrincipalInfo);
+
+  if (mLoader->IsCancelled()) {
+    mLoadContext->GetCacheCreator()->DeleteCache(
+        mLoader->mCancelMainThread.ref());
+    return NS_OK;
+  }
+
   nsresult rv = DataReceivedFromCache(
       aString, aStringLen, mChannelInfo, std::move(mPrincipalInfo),
       mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
@@ -481,12 +495,6 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
     const nsACString& aCSPReportOnlyHeaderValue,
     const nsACString& aReferrerPolicyHeaderValue) {
   AssertIsOnMainThread();
-
-  if (mLoader->IsCancelled()) {
-    mLoadContext->GetCacheCreator()->DeleteCache(
-        mLoader->mCancelMainThread.ref());
-    return mLoader->mCancelMainThread.ref();
-  }
 
   MOZ_ASSERT(mLoadContext->mCacheStatus == WorkerLoadContext::Cached);
 
