@@ -18,9 +18,7 @@ XPCOMUtils.defineLazyGetter(lazy, "SearchUIUtilsL10n", () => {
   return new Localization(["browser/search.ftl", "branding/brand.ftl"]);
 });
 
-var EXPORTED_SYMBOLS = ["SearchUIUtils"];
-
-var SearchUIUtils = {
+export var SearchUIUtils = {
   /**
    * Adds an open search engine and handles error UI.
    *

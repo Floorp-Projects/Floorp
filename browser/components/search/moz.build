@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "BrowserSearchTelemetry.jsm",
-    "SearchOneOffs.jsm",
-    "SearchSERPTelemetry.jsm",
-    "SearchUIUtils.jsm",
+    "BrowserSearchTelemetry.sys.mjs",
+    "SearchOneOffs.sys.mjs",
+    "SearchSERPTelemetry.sys.mjs",
+    "SearchUIUtils.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

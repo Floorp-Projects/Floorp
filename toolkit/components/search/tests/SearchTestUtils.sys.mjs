@@ -19,11 +19,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   sinon: "resource://testing-common/Sinon.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["SearchTestUtils"];
-
 var gTestScope;
 
-var SearchTestUtils = {
+export var SearchTestUtils = {
   init(testScope) {
     gTestScope = testScope;
     let env = Cc["@mozilla.org/process/environment;1"].getService(

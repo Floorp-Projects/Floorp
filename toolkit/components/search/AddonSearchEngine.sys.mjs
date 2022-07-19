@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 /**
  * AddonSearchEngine represents a search engine defined by an add-on.
  */
-class AddonSearchEngine extends SearchEngine {
+export class AddonSearchEngine extends SearchEngine {
   /**
    * Creates a AddonSearchEngine.
    *
@@ -176,5 +176,3 @@ class AddonSearchEngine extends SearchEngine {
     );
   }
 }
-
-var EXPORTED_SYMBOLS = ["AddonSearchEngine"];

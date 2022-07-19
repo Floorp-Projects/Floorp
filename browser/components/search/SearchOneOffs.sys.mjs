@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchOneOffs"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -23,7 +21,7 @@ const EMPTY_ADD_ENGINES = [];
  * browser/components/urlbar/UrlbarSearchOneOffs.jsm. If you are adding a new
  * subclass, see "Methods for subclasses to override" below.
  */
-class SearchOneOffs {
+export class SearchOneOffs {
   constructor(container) {
     this.container = container;
     this.window = container.ownerGlobal;

@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * PolicySearchEngine represents a search engine defined by an enterprise
  * policy.
  */
-class PolicySearchEngine extends SearchEngine {
+export class PolicySearchEngine extends SearchEngine {
   /**
    * Creates a PolicySearchEngine.
    *
@@ -71,5 +71,3 @@ class PolicySearchEngine extends SearchEngine {
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 }
-
-var EXPORTED_SYMBOLS = ["PolicySearchEngine"];

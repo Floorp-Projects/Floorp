@@ -141,7 +141,7 @@ const gEmptyParseSubmissionResult = Object.freeze(
  *
  * @implements {nsISearchService}
  */
-class SearchService {
+export class SearchService {
   constructor() {
     this.#initObservers = PromiseUtils.defer();
     // this._engines is prefixed with _ rather than # because it is called from
@@ -3390,5 +3390,3 @@ class SearchDefaultOverrideAllowlistHandler {
     return result;
   }
 }
-
-var EXPORTED_SYMBOLS = ["SearchService"];

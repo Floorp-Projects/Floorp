@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchSERPTelemetry"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -876,4 +874,4 @@ class ContentHandler {
   }
 }
 
-var SearchSERPTelemetry = new TelemetryHandler();
+export var SearchSERPTelemetry = new TelemetryHandler();

@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchEngineSelector"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -82,7 +80,7 @@ function aboveMaxVersion(config, version) {
  * search engines and returns the applicable engines depending
  * on their region + locale.
  */
-class SearchEngineSelector {
+export class SearchEngineSelector {
   /**
    * @param {function} listener
    *   A listener for configuration update changes.

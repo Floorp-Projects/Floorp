@@ -223,9 +223,7 @@ class SuggestAutoComplete {
  * results specific to web searches.
  * @constructor
  */
-class SearchSuggestAutoComplete extends SuggestAutoComplete {
+export class SearchSuggestAutoComplete extends SuggestAutoComplete {
   classID = Components.ID("{aa892eb4-ffbf-477d-9f9a-06c995ae9f27}");
   serviceURL = "";
 }
-
-var EXPORTED_SYMBOLS = ["SearchSuggestAutoComplete"];
