@@ -141,11 +141,15 @@ class VsyncDispatcher final {
     // Always non-null.
     RefPtr<gfx::VsyncSource> mCurrentVsyncSource;
 
+    // The number of skipped vsyncs since the last non-skipped vsync.
+    // Reset to zero every n vsyncs, where n is given by the pref
+    // gfx.display.frame-rate-divisor.
+    int32_t mVsyncSkipCounter = 0;
+
     bool mIsObservingVsync = false;
   };
 
   DataMutex<State> mState;
-  int32_t mVsyncSkipCounter = 0;
 };
 
 }  // namespace mozilla

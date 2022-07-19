@@ -126,17 +126,20 @@ TimeDuration VsyncDispatcher::GetVsyncRate() {
 }
 
 void VsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
-  if (++mVsyncSkipCounter < StaticPrefs::gfx_display_frame_rate_divisor()) {
-    return;
-  }
-  mVsyncSkipCounter = 0;
-
   nsTArray<RefPtr<VsyncObserver>> observers;
   bool shouldDispatchToMainThread = false;
   {
+    auto state = mState.Lock();
+
+    // Respect the pref gfx.display.frame-rate-divisor.
+    if (++state->mVsyncSkipCounter <
+        StaticPrefs::gfx_display_frame_rate_divisor()) {
+      return;
+    }
+    state->mVsyncSkipCounter = 0;
+
     // Copy out the observers so that we don't keep the mutex
     // locked while notifying vsync.
-    auto state = mState.Lock();
     observers = state->mObservers.Clone();
     shouldDispatchToMainThread = !state->mMainThreadObservers.IsEmpty() &&
                                  (state->mLastVsyncIdSentToMainThread ==
