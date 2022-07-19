@@ -141,6 +141,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
       const LayersObserverEpoch& aChildEpoch) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
+  mozilla::ipc::IPCResult RecvClearAnimationResources() override;
   mozilla::ipc::IPCResult RecvInvalidateRenderedFrame() override;
   mozilla::ipc::IPCResult RecvScheduleComposite(
       const wr::RenderReasons& aReasons) override;
