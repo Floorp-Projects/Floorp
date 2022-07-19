@@ -17,6 +17,8 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DisplayPortUtils.h"
+#include "mozilla/dom/CSSAnimation.h"
+#include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -808,6 +810,12 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (!IsPlaceholderFrame() && !aPrevInFlow) {
     UpdateVisibleDescendantsState();
   }
+
+  // TODO(mrobinson): Once bug 1765615 is fixed, this should be called on
+  // layout changes. In addition, when `content-visibility: auto` is implemented
+  // this should also be called when scrolling or focus causes content to be
+  // skipped or unskipped.
+  UpdateAnimationVisibility();
 }
 
 void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
@@ -11639,6 +11647,31 @@ void nsIFrame::UpdateVisibleDescendantsState() {
     }
   } else {
     mAllDescendantsAreInvisible = HasNoVisibleDescendants(this);
+  }
+}
+
+void nsIFrame::UpdateAnimationVisibility() {
+  auto* animationCollection =
+      AnimationCollection<CSSAnimation>::GetAnimationCollection(this);
+  auto* transitionCollection =
+      AnimationCollection<CSSTransition>::GetAnimationCollection(this);
+
+  if ((!animationCollection || animationCollection->mAnimations.IsEmpty()) &&
+      (!transitionCollection || transitionCollection->mAnimations.IsEmpty())) {
+    return;
+  }
+
+  bool hidden = AncestorHidesContent();
+  if (animationCollection) {
+    for (auto& animation : animationCollection->mAnimations) {
+      animation->SetHiddenByContentVisibility(hidden);
+    }
+  }
+
+  if (transitionCollection) {
+    for (auto& transition : transitionCollection->mAnimations) {
+      transition->SetHiddenByContentVisibility(hidden);
+    }
   }
 }
 
