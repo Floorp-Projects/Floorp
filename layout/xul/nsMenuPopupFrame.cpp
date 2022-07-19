@@ -1098,13 +1098,6 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   mCurrentMenu = nullptr;  // make sure no current menu is set
   mHFlip = mVFlip = false;
 
-  if (auto* widget = GetWidget()) {
-    // Ideally we should call ClearCachedWebrenderResources but there are
-    // intermittent failures (see bug 1748788), so we currently call
-    // ClearWebrenderAnimationResources instead.
-    widget->ClearWebrenderAnimationResources();
-  }
-
   nsView* view = GetView();
   nsViewManager* viewManager = view->GetViewManager();
   viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
