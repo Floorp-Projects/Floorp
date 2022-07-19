@@ -354,7 +354,7 @@
 }
 
 .network-monitor #response-panel .notificationbox .notification[data-key="CORS-error"].notification[data-type="info"] {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-body-alternate-emphasized-background);
 }
 
 .network-monitor #response-panel .notification[data-key="CORS-error"] .notificationInner .messageText {
@@ -560,7 +560,7 @@
 }
 
 .network-monitor #response-panel .notification[data-key="xssi-string-removed-info-box"] {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-body-alternate-emphasized-background);
 }
 
 .network-monitor #response-panel .notification[data-key="xssi-string-removed-info-box"] .notificationInner .messageText {

@@ -452,7 +452,7 @@ body {
   grid-template-columns: 22px 1fr;
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 8px 16px;
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-body-alternate-emphasized-background);
   grid-gap: 0 14px;
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 12px;

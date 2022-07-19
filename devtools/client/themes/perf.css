@@ -236,7 +236,7 @@ a.perf-photon-button:focus {
  *  +-----------------------------+---+
  */
 .perf-onboarding {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-body-alternate-emphasized-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   display: grid;
   font-size: 13px;
