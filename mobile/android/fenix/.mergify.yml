@@ -31,7 +31,11 @@ pull_request_rules:
   - name: L10N - Auto Merge
     conditions:
       - and:
-        - files~=(strings.xml|l10n.toml)
+        - files~=^(l10n.toml|app/src/main/res/values[A-Za-z-]*/strings\.xml)$
+        # /!\ The line above doesn't prevent random files to be changed alongside
+        # l10n ones. That's why the additional condition exists below. For more
+        # information: https://docs.mergify.com/conditions/#how-to-match-lists
+        - -files~=^(?!(l10n.toml|app/src/main/res/values[A-Za-z-]*/strings\.xml)).+$
         - or:
           - and:
             - author=mozilla-l10n-automation-bot
