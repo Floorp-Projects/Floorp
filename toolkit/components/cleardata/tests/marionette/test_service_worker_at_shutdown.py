@@ -21,14 +21,10 @@ class ServiceWorkerAtShutdownTestCase(MarionetteTestCase):
             "serviceworker/install_serviceworker.html"
         )
         self.marionette.navigate(install_url)
-        # Make sure 'install_url' is not loaded on startup, it would reinstall the service worker
-        dummy_url = self.marionette.absolute_url("dummy.html")
-        self.marionette.navigate(dummy_url)
         Wait(self.marionette).until(lambda _: self.is_service_worker_registered)
 
     def set_pref_to_delete_site_data_on_shutdown(self):
-        self.marionette.set_pref("privacy.sanitize.sanitizeOnShutdown", True)
-        self.marionette.set_pref("privacy.clearOnShutdown.offlineApps", True)
+        self.marionette.set_pref("network.cookie.lifetimePolicy", 2)
 
     def test_unregistering_service_worker_when_clearing_data(self):
         self.marionette.restart(clean=False, in_app=True)

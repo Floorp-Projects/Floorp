@@ -106,6 +106,8 @@ if CONFIG["MOZ_WEBRTC"]:
         "webrtc/tests/mochitests/mochitest_peerconnection.ini",
     ]
 
+    CRASHTEST_MANIFESTS += ["webrtc/tests/crashtests/crashtests.list"]
+
 XPIDL_SOURCES += [
     "nsIAudioDeviceInfo.idl",
     "nsIMediaDevice.idl",

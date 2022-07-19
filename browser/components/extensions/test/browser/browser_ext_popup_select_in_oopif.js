@@ -85,13 +85,11 @@ add_task(async function testPopupSelectPopup() {
     return { left: r.left, bottom: r.bottom };
   });
 
-  const selectPopup = document.getElementById("ContentSelectDropdown")
-    .firstElementChild;
-  const popupPromise = promisePopupShown(selectPopup);
+  const popupPromise = BrowserTestUtils.waitForSelectPopupShown(window);
 
   BrowserTestUtils.synthesizeMouseAtCenter("select", {}, iframe);
 
-  await popupPromise;
+  const selectPopup = await popupPromise;
 
   let popupRect = selectPopup.getOuterScreenRect();
   let popupMarginLeft = parseFloat(getComputedStyle(selectPopup).marginLeft);

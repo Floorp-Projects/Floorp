@@ -47,6 +47,10 @@ if (host_os == "mac") {
   use_system_xcode = _result == 0
 }
 
+use_system_xcode = false
+xcode_version = "10.15"
+mac_xcode_version = "default"
+
 declare_args() {
   # WebRTC doesn't depend on //base from production code but only for testing
   # purposes. In any case, it doesn't depend on //third_party/perfetto which

@@ -134,6 +134,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpTransceiver)
   // teardown code itself during unlink.
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow, mReceiver, mSendTrack, mSender,
                                   mDtlsTransport, mLastStableDtlsTransport)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpTransceiver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow, mPc, mSendTrack, mReceiver,

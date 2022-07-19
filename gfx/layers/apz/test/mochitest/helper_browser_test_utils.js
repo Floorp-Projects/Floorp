@@ -4,12 +4,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-function openSelectPopup(selectPopup, selector = "select", win = window) {
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
-
+function openSelectPopup(selector = "select", win = window) {
+  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(win);
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
   return popupShownPromise;
 }

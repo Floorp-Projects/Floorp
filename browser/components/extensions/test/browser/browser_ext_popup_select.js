@@ -46,11 +46,8 @@ add_task(async function testPopupSelectPopup() {
 
   await extension.startup();
 
-  let selectPopup = document.getElementById("ContentSelectDropdown")
-    .firstElementChild;
-
   async function testPanel(browser) {
-    let popupPromise = promisePopupShown(selectPopup);
+    const popupPromise = BrowserTestUtils.waitForSelectPopupShown(window);
 
     // Wait the select element in the popup window to be ready before sending a
     // mouse event to open the select popup.
@@ -61,7 +58,7 @@ add_task(async function testPopupSelectPopup() {
     });
     BrowserTestUtils.synthesizeMouseAtCenter("#select", {}, browser);
 
-    await popupPromise;
+    const selectPopup = await popupPromise;
 
     let elemRect = await SpecialPowers.spawn(browser, [], async function() {
       let elem = content.document.getElementById("select");
