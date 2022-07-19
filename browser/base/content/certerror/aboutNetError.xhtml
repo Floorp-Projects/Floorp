@@ -27,6 +27,7 @@
     <link rel="localization" href="browser/aboutCertError.ftl" />
     <link rel="localization" href="browser/nsserrors.ftl" />
     <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/netError.ftl"/>
   </head>
 
   <body dir="&locale.dir;">
@@ -36,14 +37,21 @@
         <span id="ept_nssBadCert">&certerror.pagetitle2;</span>
         <span id="ept_nssBadCert_sts">&certerror.sts.pagetitle;</span>
         <span id="ept_captivePortal">&captivePortal.title;</span>
-        <span id="ept_dnsNotFound">&dnsNotFound.pageTitle;</span>
+        <span id="ept_dnsNotFound" data-l10n-id="dns-not-found-title"></span>
         <span id="ept_malformedURI">&malformedURI.pageTitle;</span>
         <span id="ept_blockedByPolicy">&blockedByPolicy.title;</span>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
         <div id="ed_captivePortal">&captivePortal.longDesc2;</div>
-        <div id="ed_dnsNotFound">&dnsNotFound.longDesc1;</div>
+        <div id="ed_dnsNotFound">
+          <span data-l10n-id="dns-not-found-hint-header"></span>
+          <ul>
+            <li data-l10n-id="dns-not-found-hint-try-again"></li>
+            <li data-l10n-id="dns-not-found-hint-check-network"></li>
+            <li data-l10n-id="dns-not-found-hint-firewall"></li>
+          </ul>
+        </div>
         <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
         <div id="ed_fileAccessDenied">&fileAccessDenied.longDesc;</div>
         <div id="ed_malformedURI"></div>

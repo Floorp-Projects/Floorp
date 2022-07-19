@@ -1000,10 +1000,11 @@ class AsyncPanZoomController {
   // monitor. Do not read from or modify them without locking.
   ScrollMetadata mScrollMetadata;
 
-  // Protects |mScrollMetadata|, |mLastContentPaintMetrics| and |mState|.
-  // Before manipulating |mScrollMetadata| or |mLastContentPaintMetrics| the
-  // monitor should be held. When setting |mState|, either the SetState()
-  // function can be used, or the monitor can be held and then |mState| updated.
+  // Protects |mScrollMetadata|, |mLastContentPaintMetrics|, |mState| and
+  // |mLastSnapTargetIds|.  Before manipulating |mScrollMetadata|,
+  // |mLastContentPaintMetrics| or |mLastSnapTargetIds| the monitor should be
+  // held. When setting |mState|, either the SetState() function can be used, or
+  // the monitor can be held and then |mState| updated.
   // IMPORTANT: See the note about lock ordering at the top of
   // APZCTreeManager.h. This is mutable to allow entering it from 'const'
   // methods; doing otherwise would significantly limit what methods could be
@@ -1754,6 +1755,7 @@ class AsyncPanZoomController {
   // is in a panning state.
   TimeDuration mTouchStartRestingTimeBeforePan;
   Maybe<ParentLayerCoord> mMinimumVelocityDuringPan;
+  // This variable needs to be protected by |mRecursiveMutex|.
   ScrollSnapTargetIds mLastSnapTargetIds;
   // Extra offset to add to the async scroll position for testing
   CSSPoint mTestAsyncScrollOffset;

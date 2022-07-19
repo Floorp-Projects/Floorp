@@ -54,13 +54,11 @@ nsDisplayItemBoundsGeometry::nsDisplayItemBoundsGeometry(
 
 nsDisplayBorderGeometry::nsDisplayBorderGeometry(nsDisplayItem* aItem,
                                                  nsDisplayListBuilder* aBuilder)
-    : nsDisplayItemGeometry(aItem, aBuilder),
-      nsImageGeometryMixin(aItem, aBuilder) {}
+    : nsDisplayItemGeometry(aItem, aBuilder) {}
 
 nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(
     nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder)
     : nsDisplayItemGeometry(aItem, aBuilder),
-      nsImageGeometryMixin(aItem, aBuilder),
       mPositioningArea(aItem->GetPositioningArea()),
       mDestRect(aItem->GetDestRect()) {}
 
@@ -111,19 +109,16 @@ void nsDisplaySVGEffectGeometry::MoveBy(const nsPoint& aOffset) {
 nsDisplayMasksAndClipPathsGeometry::nsDisplayMasksAndClipPathsGeometry(
     nsDisplayMasksAndClipPaths* aItem, nsDisplayListBuilder* aBuilder)
     : nsDisplaySVGEffectGeometry(aItem, aBuilder),
-      nsImageGeometryMixin(aItem, aBuilder),
       mDestRects(aItem->GetDestRects().Clone()) {}
 
 nsDisplayFiltersGeometry::nsDisplayFiltersGeometry(
     nsDisplayFilters* aItem, nsDisplayListBuilder* aBuilder)
-    : nsDisplaySVGEffectGeometry(aItem, aBuilder),
-      nsImageGeometryMixin(aItem, aBuilder) {}
+    : nsDisplaySVGEffectGeometry(aItem, aBuilder) {}
 
 nsDisplayTableItemGeometry::nsDisplayTableItemGeometry(
     nsDisplayTableItem* aItem, nsDisplayListBuilder* aBuilder,
     const nsPoint& aFrameOffsetToViewport)
     : nsDisplayItemGenericGeometry(aItem, aBuilder),
-      nsImageGeometryMixin(aItem, aBuilder),
       mFrameOffsetToViewport(aFrameOffsetToViewport) {}
 
 }  // namespace mozilla

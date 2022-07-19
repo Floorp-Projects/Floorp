@@ -358,6 +358,7 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
     return;
   }
 
+  resourceURINode.value = esmify(resourceURI);
   const prop = jscodeshift.property(
     "init",
     jscodeshift.identifier(nameNode.value),
@@ -378,7 +379,6 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
 
     path.node.callee.object.name = "ChromeUtils";
     path.node.callee.property.name = "defineESModuleGetters";
-    resourceURINode.value = esmify(resourceURI);
     path.node.arguments = [
       path.node.arguments[0],
       jscodeshift.objectExpression([prop]),

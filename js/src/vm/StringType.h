@@ -57,6 +57,7 @@ struct CompilationAtomCache;
 
 class ArrayObject;
 class PropertyName;
+class StringBuffer;
 
 /* The buffer length required to contain any unsigned 32-bit integer. */
 static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;

@@ -88,6 +88,7 @@ class AndroidSharedBlitGL final {
       NS_WARNING("Fail to create GL context for native blitter.");
       return nullptr;
     }
+    gl->mOwningThreadId = Nothing();
 
     // Yield the current state made in constructor.
     UnmakeCurrent(gl);

@@ -68,7 +68,7 @@ add_task(async function() {
 
   const newHeaderValue = Array.from(
     document.querySelectorAll(
-      "#http-custom-headers #http-custom-name-and-value .http-custom-input-value"
+      "#http-custom-headers .http-custom-input .http-custom-input-value"
     )
   ).pop();
   newHeaderValue.focus();

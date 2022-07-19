@@ -12,3 +12,7 @@ on each other's globals.
 
 If <path> is a relative path, then it must be relative to the file being
 checked by the rule.
+
+Note: ``import-globals-from`` does not support loading globals from ES modules.
+These should be imported as variable definitions directly, or the file where
+they are imported should be referenced.

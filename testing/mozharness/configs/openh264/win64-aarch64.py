@@ -49,5 +49,6 @@ config = {
             "{_VSPATH}/SDK/lib/10.0.17134.0/ucrt/arm64;"
             "{_VSPATH}/SDK/lib/10.0.17134.0/um/arm64;"
         ).format(_VSPATH=VSPATH),
+        "CFLAGS": ("--target=aarch64-windows-msvc"),
     },
 }

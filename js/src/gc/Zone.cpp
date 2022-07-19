@@ -275,8 +275,8 @@ void Zone::sweepAfterMinorGC(JSTracer* trc) {
 }
 
 void Zone::sweepEphemeronTablesAfterMinorGC() {
-  for (EphemeronEdgeTable::Range r = gcNurseryEphemeronEdges().all();
-       !r.empty(); r.popFront()) {
+  for (auto r = gcNurseryEphemeronEdges().mutableAll(); !r.empty();
+       r.popFront()) {
     // Sweep gcNurseryEphemeronEdges to move live (forwarded) keys to
     // gcEphemeronEdges, scanning through all the entries for such keys to
     // update them.

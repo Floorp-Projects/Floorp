@@ -18,12 +18,12 @@
 #include "js/GCAPI.h"
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 using namespace JS;
 using namespace js;
 
-using js::gc::AutoSuppressGC;
 using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
 using mozilla::Maybe;
@@ -46,16 +46,6 @@ template const Latin1Char* js_strchr_limit(const Latin1Char* s, char16_t c,
 
 template const char16_t* js_strchr_limit(const char16_t* s, char16_t c,
                                          const char16_t* limit);
-
-int32_t js_fputs(const char16_t* s, FILE* f) {
-  while (*s != 0) {
-    if (fputwc(wchar_t(*s), f) == static_cast<wint_t>(WEOF)) {
-      return WEOF;
-    }
-    s++;
-  }
-  return 1;
-}
 
 UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
                                        const char* s) {

@@ -74,18 +74,16 @@ class InputMap extends Component {
     return div(
       {
         ref: this.listRef,
-        id: "http-custom-input-and-map-form",
+        className: "http-custom-input-and-map-form",
       },
       list.map((item, index) => {
         return div(
           {
             className: "tabpanel-summary-container http-custom-input",
-            id: "http-custom-name-and-value",
             key: index,
           },
           input({
             className: "tabpanel-summary-input-checkbox",
-            id: "http-custom-input-checkbox",
             name: `checked-${index}`,
             type: "checkbox",
             onChange: event => {
@@ -101,6 +99,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": item.name,
+                title: item.name,
               },
               textarea({
                 className: "http-custom-input-name",
@@ -120,6 +119,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": item.value,
+                title: item.value,
               },
               textarea({
                 className: "http-custom-input-value",
@@ -151,7 +151,6 @@ class InputMap extends Component {
           },
           input({
             className: "tabpanel-summary-input-checkbox",
-            id: "http-custom-input-checkbox",
             onChange: () => {},
             checked: true,
             type: "checkbox",
@@ -162,6 +161,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": name,
+                title: value,
               },
               textarea({
                 className: "http-custom-input-name",
@@ -182,6 +182,7 @@ class InputMap extends Component {
               {
                 className: "auto-growing-textarea",
                 "data-replicated-value": value,
+                title: value,
               },
               textarea({
                 className: "http-custom-input-value",

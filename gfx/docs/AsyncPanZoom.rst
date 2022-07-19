@@ -837,7 +837,7 @@ a large portion of the APZ reftests, run something like the following:
 
     ./mach reftest ./layout/reftests/async-scrolling/
 
-Useful information about the reftests can be found in the `README.txt`_.
+Useful information about the reftests can be found in the `Reftest Documentation`_.
 
 There is no defined process for choosing which directory the APZ reftests
 should be placed in, but in general reftests should exist where other
@@ -845,7 +845,7 @@ similar tests do.
 
 .. _layout/reftests/async-scrolling/: https://searchfox.org/mozilla-central/source/layout/reftests/async-scrolling/
 .. _gfx/layers/apz/test/reftest: https://searchfox.org/mozilla-central/source/gfx/layers/apz/test/reftest/
-.. _README.txt: https://searchfox.org/mozilla-central/source/layout/tools/reftest/README.txt
+.. _Reftest Documentation: /layout/Reftest.html
 
 Threading / Locking Overview
 ----------------------------

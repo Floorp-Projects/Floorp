@@ -86,24 +86,6 @@ void DisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
                  gfxMatrix::Translation(devPixelOffset);
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx, tm, imgParams);
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
-}
-
-void DisplaySVGGeometry::ComputeInvalidationRegion(
-    nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
-    nsRegion* aInvalidRegion) const {
-  const auto* geometry =
-      static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
-
-  if (aBuilder->ShouldSyncDecodeImages() &&
-      geometry->ShouldInvalidateToSyncDecodeImages()) {
-    bool snap;
-    aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
-  }
-
-  nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                                  aInvalidRegion);
 }
 
 //----------------------------------------------------------------------

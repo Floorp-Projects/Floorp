@@ -18,16 +18,6 @@
 
 <!ENTITY deniedPortAccess.longDesc "">
 
-<!ENTITY dnsNotFound.pageTitle "Server Not Found">
-<!ENTITY dnsNotFound.longDesc1 "
-<strong>If that address is correct, here are three other things you can try:</strong>
-<ul>
-  <li>Try again later.</li>
-  <li>Check your network connection.</li>
-  <li>If you are connected but behind a firewall, check that &brandShortName; has permission to access the Web.</li>
-</ul>
-">
-
 <!ENTITY fileNotFound.longDesc "
 <ul>
   <li>Check the file name for capitalization or other typing errors.</li>

@@ -16,6 +16,7 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libpulse-devel",
         "rpmconf",
         "which",
+        "unzip",
     ]
 
     BROWSER_PACKAGES = [
@@ -97,29 +98,19 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self(["pip3", "install", "--upgrade", "pip", "--user"])
         self(["pip3", "install", "--upgrade", "Mercurial", "--user"])
 
-    def zypper_install(self, *packages):
-        command = ["zypper", "install"]
+    def zypper(self, *args):
         if self.no_interactive:
-            command.append("-n")
-
-        command.extend(packages)
+            command = ["zypper", "-n", *args]
+        else:
+            command = ["zypper", *args]
 
         self.run_as_root(command)
+
+    def zypper_install(self, *packages):
+        self.zypper("install", *packages)
 
     def zypper_update(self, *packages):
-        command = ["zypper", "update"]
-        if self.no_interactive:
-            command.append("-n")
-
-        command.extend(packages)
-
-        self.run_as_root(command)
+        self.zypper("update", *packages)
 
     def zypper_patterninstall(self, *packages):
-        command = ["zypper", "install", "-t", "pattern"]
-        if self.no_interactive:
-            command.append("-y")
-
-        command.extend(packages)
-
-        self.run_as_root(command)
+        self.zypper("install", "-t", "pattern", *packages)

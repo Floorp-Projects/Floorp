@@ -70,6 +70,7 @@ RefPtr<GLContext> ClaimSnapshotGLContext() {
       LOGDMABUF(("GetAsSourceSurface: Failed to create snapshot GLContext."));
       return nullptr;
     }
+    sSnapshotContext->mOwningThreadId = Nothing();  // No singular owner.
   }
   if (!sSnapshotContext->MakeCurrent()) {
     LOGDMABUF(("GetAsSourceSurface: Failed to make GLContext current."));

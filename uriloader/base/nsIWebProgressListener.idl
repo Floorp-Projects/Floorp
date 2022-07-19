@@ -324,6 +324,12 @@ interface nsIWebProgressListener : nsISupports
    *
    * STATE_ALLOWED_TRACKING_CONTENT
    *   Tracking content which should be blocked from loading was allowed.
+   *
+   * STATE_BLOCKED_EMAILTRACING_CONTENT
+   *   EmailTracking content has been blocked from loading.
+   *
+   * STATE_LOADED_EMAILTRACKING_CONTENT
+   *   EmailTracking content has been loaded.
    */
   const unsigned long STATE_BLOCKED_TRACKING_CONTENT        = 0x00001000;
   const unsigned long STATE_LOADED_LEVEL_1_TRACKING_CONTENT = 0x00002000;
@@ -346,6 +352,8 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT   = 0x00020000;
   const unsigned long STATE_REPLACED_TRACKING_CONTENT       = 0x00000010;
   const unsigned long STATE_ALLOWED_TRACKING_CONTENT        = 0x00000020;
+  const unsigned long STATE_BLOCKED_EMAILTRACKING_CONTENT   = 0x00400000;
+  const unsigned long STATE_LOADED_EMAILTRACKING_CONTENT    = 0x00800000;
 
   /**
    * Flag for HTTPS-Only Mode upgrades

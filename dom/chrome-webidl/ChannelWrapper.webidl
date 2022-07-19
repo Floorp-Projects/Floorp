@@ -44,6 +44,8 @@ enum MozUrlClassificationFlags {
   "fingerprinting_content",
   "cryptomining",
   "cryptomining_content",
+  "emailtracking",
+  "emailtracking_content",
   "tracking",
   "tracking_ad",
   "tracking_analytics",

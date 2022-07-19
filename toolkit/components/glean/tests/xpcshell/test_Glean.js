@@ -235,6 +235,47 @@ add_task(async function test_fog_timing_distribution_works() {
   );
 });
 
+add_task(async function test_fog_labels_conform() {
+  Glean.testOnly.mabelsLabelMaker.singleword.set("portmanteau");
+  Assert.equal(
+    "portmanteau",
+    Glean.testOnly.mabelsLabelMaker.singleword.testGetValue()
+  );
+  Glean.testOnly.mabelsLabelMaker.snake_case.set("snek");
+  Assert.equal(
+    "snek",
+    Glean.testOnly.mabelsLabelMaker.snake_case.testGetValue()
+  );
+  Glean.testOnly.mabelsLabelMaker["dash-character"].set("Dash Rendar");
+  Assert.equal(
+    "Dash Rendar",
+    Glean.testOnly.mabelsLabelMaker["dash-character"].testGetValue()
+  );
+  Glean.testOnly.mabelsLabelMaker["dot.separated"].set("dot product");
+  Assert.equal(
+    "dot product",
+    Glean.testOnly.mabelsLabelMaker["dot.separated"].testGetValue()
+  );
+  Glean.testOnly.mabelsLabelMaker.camelCase.set("wednesday");
+  Assert.throws(
+    () => Glean.testOnly.mabelsLabelMaker.camelCase.testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Should throw because of an invalid label."
+  );
+  Assert.throws(
+    () => Glean.testOnly.mabelsLabelMaker.__other__.testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Should throw because of an invalid label."
+  );
+  // This test _should_ throw because we are calling data after an invalid label
+  // has been set.
+  Assert.throws(
+    () => Glean.testOnly.mabelsLabelMaker["dot.separated"].testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Should throw because of an invalid label."
+  );
+});
+
 add_task(async function test_fog_labeled_boolean_works() {
   Assert.equal(
     undefined,

@@ -230,6 +230,24 @@ test_only:
     send_in_pings:
       - test-ping
 
+  mabels_label_maker:
+    type: labeled_string
+    description: |
+      Mabel just got a label maker and wants to party like it's
+      1999.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696388
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1696388
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
   mirror_time:
     type: timespan
     time_unit: nanosecond

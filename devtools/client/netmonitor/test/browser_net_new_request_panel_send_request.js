@@ -107,7 +107,7 @@ add_task(async function() {
 
   const newHeaderValue = Array.from(
     document.querySelectorAll(
-      "#http-custom-headers #http-custom-name-and-value .http-custom-input-value"
+      "#http-custom-headers .http-custom-input .http-custom-input-value"
     )
   ).pop();
   newHeaderValue.focus();
@@ -154,6 +154,18 @@ add_task(async function() {
     "{'name': 'value'}",
     "The request has the right post body"
   );
+
+  info("Check that all growing textareas provide a title tooltip");
+  const textareas = [
+    ...document.querySelectorAll("#http-custom-headers .auto-growing-textarea"),
+  ];
+  for (const textarea of textareas) {
+    is(
+      textarea.title,
+      textarea.dataset.replicatedValue,
+      "Title tooltip is set to the expected value"
+    );
+  }
 
   await teardown(monitor);
 });

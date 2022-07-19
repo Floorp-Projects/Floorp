@@ -5815,6 +5815,7 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("identity.fxaccounts.account.device.name"),
     PREF_LIST_ENTRY("identity.fxaccounts.account.telemetry.sanitized_uid"),
     PREF_LIST_ENTRY("identity.fxaccounts.lastSignedInUserHash"),
+    PREF_LIST_ENTRY("print_printer"),
     PREF_LIST_ENTRY("services."),
 
     // Remove UUIDs

@@ -13,6 +13,17 @@ const BROWSERTOOLBOX_SCOPE_PREF = "devtools.browsertoolbox.scope";
 const BROWSERTOOLBOX_SCOPE_EVERYTHING = "everything";
 const BROWSERTOOLBOX_SCOPE_PARENTPROCESS = "parent-process";
 
+// eslint-disable-next-line mozilla/reject-some-requires
+const createStore = require("devtools/client/shared/redux/create-store");
+const reducer = require("devtools/shared/commands/target/reducers/targets");
+
+loader.lazyRequireGetter(
+  this,
+  ["refreshTargets", "registerTarget", "unregisterTarget"],
+  "devtools/shared/commands/target/actions/targets",
+  true
+);
+
 class TargetCommand extends EventEmitter {
   #selectedTargetFront;
   /**
@@ -41,6 +52,10 @@ class TargetCommand extends EventEmitter {
     this.commands = commands;
     this.descriptorFront = descriptorFront;
     this.rootFront = descriptorFront.client.mainRoot;
+
+    this.store = createStore(reducer);
+    // Name of the store used when calling createProvider.
+    this.storeId = "target-store";
 
     this._updateBrowserToolboxScope = this._updateBrowserToolboxScope.bind(
       this
@@ -222,6 +237,8 @@ class TargetCommand extends EventEmitter {
       return;
     }
 
+    this.store.dispatch(registerTarget(targetFront));
+
     // Then, once the target is attached, notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
       targetFront,
@@ -325,6 +342,8 @@ class TargetCommand extends EventEmitter {
       isTargetSwitching,
     });
     this._targets.delete(targetFront);
+
+    this.store.dispatch(unregisterTarget(targetFront));
 
     // If the destroyed target was the selected one, we need to do some cleanup
     if (this.#selectedTargetFront == targetFront) {
@@ -527,6 +546,7 @@ class TargetCommand extends EventEmitter {
 
     // Add the top-level target to the list of targets.
     this._targets.add(this.targetFront);
+    this.store.dispatch(registerTarget(this.targetFront));
   }
 
   _computeTargetTypes() {
@@ -666,6 +686,17 @@ class TargetCommand extends EventEmitter {
         }
         if (resource.url !== undefined && targetFront?.setUrl) {
           targetFront.setUrl(resource.url);
+        }
+        if (
+          !resource.isFrameSwitching &&
+          // `url` is set on the targetFront when we receive dom-loading, and `title` when
+          // `dom-interactive` is received. Here we're only updating the window title in
+          // the "newer" event.
+          resource.name === "dom-interactive"
+        ) {
+          // We just updated the targetFront title and url, force a refresh
+          // so that the EvaluationContext selector update them.
+          this.store.dispatch(refreshTargets());
         }
       }
     }

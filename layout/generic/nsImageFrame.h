@@ -472,10 +472,6 @@ class nsDisplayImage final : public nsPaintedDisplayItem {
   }
   ~nsDisplayImage() final { MOZ_COUNT_DTOR(nsDisplayImage); }
 
-  nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder*) final;
-  void ComputeInvalidationRegion(nsDisplayListBuilder*,
-                                 const nsDisplayItemGeometry*,
-                                 nsRegion* aInvalidRegion) const final;
   void Paint(nsDisplayListBuilder*, gfxContext* aCtx) final;
 
   /**
