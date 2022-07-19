@@ -4,6 +4,10 @@
 
 /* globals chrome */
 
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE =
   "webextensions.native-messaging.max-output-message-bytes";
@@ -58,6 +62,33 @@ const INFO_BODY = String.raw`
   sys.exit(0)
 `;
 
+const DELAYED_ECHO_BODY = String.raw`
+  import struct
+  import sys
+
+  stdin = getattr(sys.stdin, 'buffer', sys.stdin)
+  stdout = getattr(sys.stdout, 'buffer', sys.stdout)
+
+  delayed_echo_messages = []
+
+  while True:
+    rawlen = stdin.read(4)
+    if len(rawlen) == 0:
+      sys.exit(0)
+    msglen = struct.unpack('@I', rawlen)[0]
+    msg = stdin.read(msglen)
+
+    if msg == "delayed-echo":
+      delayed_echo_messages.append([msglen, msg]);
+    else:
+      for [oldmsglen, oldmsg] in delayed_echo_messages:
+        stdout.write(struct.pack('@I', msglen))
+        stdout.write(msg)
+      delayed_echo_messages = []
+      stdout.write(struct.pack('@I', msglen))
+      stdout.write(msg)
+`;
+
 const STDERR_LINES = ["hello stderr", "this should be a separate line"];
 let STDERR_MSG = STDERR_LINES.join("\\n");
 
@@ -71,6 +102,12 @@ let SCRIPTS = [
     name: "echo",
     description: "a native app that echoes back messages it receives",
     script: ECHO_BODY.replace(/^ {2}/gm, ""),
+  },
+  {
+    name: "delayedecho",
+    description:
+      "a native app that queue 'delayed-echo' messages and then echoes back all messages tweaked",
+    script: DELAYED_ECHO_BODY.replace(/^ {2}/gm, ""),
   },
   {
     name: "info",
@@ -93,7 +130,7 @@ if (AppConstants.platform == "win") {
   });
 }
 
-add_task(async function setup() {
+add_setup(async function setup() {
   optionalPermissionsPromptHandler.init();
   optionalPermissionsPromptHandler.acceptPrompt = true;
   await AddonTestUtils.promiseStartupManager();
@@ -556,7 +593,7 @@ add_task(async function test_child_process() {
   );
   equal(
     msg.cwd.replace(/^\/private\//, "/"),
-    OS.Path.join(tmpDir.path, TYPE_SLUG),
+    PathUtils.join(tmpDir.path, TYPE_SLUG),
     "Working directory is the directory containing the native appliation"
   );
 
@@ -701,3 +738,187 @@ add_task(async function test_connect_native_from_content_script() {
   let procCount = await getSubprocessCount();
   equal(procCount, 0, "No child process was started");
 });
+
+// Testing native app messaging against idle timeout.
+async function startupExtensionAndRequestPermission() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: { gecko: { id: ID } },
+      optional_permissions: ["nativeMessaging"],
+      background: { persistent: false },
+    },
+    async background() {
+      browser.runtime.onSuspend.addListener(() => {
+        browser.test.sendMessage("bgpage:suspending");
+      });
+
+      let port;
+      browser.test.onMessage.addListener(async (msg, ...args) => {
+        switch (msg) {
+          case "request-permission": {
+            await browser.permissions.request({
+              permissions: ["nativeMessaging"],
+            });
+            break;
+          }
+          case "delayedecho-sendmessage": {
+            browser.runtime
+              .sendNativeMessage("delayedecho", args[0])
+              .then(msg =>
+                browser.test.sendMessage(
+                  `delayedecho-sendmessage:got-reply`,
+                  msg
+                )
+              );
+            break;
+          }
+          case "connectNative": {
+            if (port) {
+              browser.test.fail(`Unexpected already connected NativeApp port`);
+            } else {
+              port = browser.runtime.connectNative("echo");
+            }
+            break;
+          }
+          case "disconnectNative": {
+            if (!port) {
+              browser.test.fail(`Unexpected undefined NativeApp port`);
+            }
+            port?.disconnect();
+            break;
+          }
+          default:
+            browser.test.fail(`Got an unexpected test message: ${msg}`);
+        }
+
+        browser.test.sendMessage(`${msg}:done`);
+      });
+      browser.test.sendMessage("bg:ready");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("bg:ready");
+  const contextId = extension.extension.backgroundContext.contextId;
+  notEqual(contextId, undefined, "Got a contextId for the background context");
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request-permission");
+    await extension.awaitMessage("request-permission:done");
+  });
+
+  return { extension, contextId };
+}
+
+async function expectTerminateBackgroundToResetIdle({ extension, contextId }) {
+  await TestUtils.waitForCondition(
+    () => extension.extension.backgroundContext,
+    "Parent proxy context should be active"
+  );
+
+  await TestUtils.waitForCondition(
+    () => extension.extension.backgroundContext?.hasActiveNativeAppPorts,
+    "Parent proxy context should have active native app ports tracked"
+  );
+
+  const promiseResetIdle = promiseExtensionEvent(
+    extension,
+    "background-script-reset-idle"
+  );
+  await extension.terminateBackground();
+  info("Wait for 'background-script-reset-idle' event to be emitted");
+  await promiseResetIdle;
+  equal(
+    extension.extension.backgroundContext.contextId,
+    contextId,
+    "Initial background context is still available as expected"
+  );
+}
+
+async function testSendNativeMessage({ extension, contextId }) {
+  // Send to the nativeApp a message using runtime.sendNativeMessage
+  // and expect the extension page to reset the idle timer
+  // when trying to terminate the background page on idle timeout.
+  extension.sendMessage("delayedecho-sendmessage", "delayed-echo");
+  await extension.awaitMessage("delayedecho-sendmessage:done");
+
+  await expectTerminateBackgroundToResetIdle({ extension, contextId });
+
+  // Try again after the native app replied to all the sendNativeMessage
+  // requests queued.
+  info("wait for NativeApp to reply to all messages sent");
+  extension.sendMessage("delayedecho-sendmessage", "echo-all-queued-messages");
+  await extension.awaitMessage("delayedecho-sendmessage:done");
+  // we expect exactly two replies (one for the previous queued message
+  // and one more for the last message sent right above).
+  equal(
+    await extension.awaitMessage("delayedecho-sendmessage:got-reply"),
+    "delayed-echo",
+    "Got the expected reply for the first message sent"
+  );
+  equal(
+    await extension.awaitMessage("delayedecho-sendmessage:got-reply"),
+    "echo-all-queued-messages",
+    "Got the expected reply for the second message sent"
+  );
+
+  await TestUtils.waitForCondition(
+    () => !extension.extension.backgroundContext?.hasActiveNativeAppPorts,
+    "Parent proxy context should not have any active native app ports tracked"
+  );
+
+  info("terminating the background script");
+  await extension.terminateBackground();
+  info("wait for runtime.onSuspend listener to have been called");
+  await extension.awaitMessage("bgpage:suspending");
+}
+
+async function testConnectNative({ extension, contextId }) {
+  extension.sendMessage("connectNative");
+  await extension.awaitMessage("connectNative:done");
+
+  await expectTerminateBackgroundToResetIdle({ extension, contextId });
+
+  // Disconnect the NativeApp and confirm that the background page
+  // will be suspending as expected.
+  extension.sendMessage("disconnectNative");
+  await extension.awaitMessage("disconnectNative:done");
+
+  await TestUtils.waitForCondition(
+    () => !extension.extension.backgroundContext?.hasActiveNativeAppPorts,
+    "Parent proxy context should not have any active native app ports tracked"
+  );
+
+  info("terminating the background script");
+  await extension.terminateBackground();
+  info("wait for runtime.onSuspend listener to have been called");
+  await extension.awaitMessage("bgpage:suspending");
+}
+
+add_task(
+  {
+    pref_set: [["extensions.eventPages.enabled", true]],
+  },
+  async function test_pending_sendNativeMessageReply_resets_bgscript_idle_timeout() {
+    const {
+      extension,
+      contextId,
+    } = await startupExtensionAndRequestPermission();
+    await testSendNativeMessage({ extension, contextId });
+    await extension.unload();
+  }
+);
+
+add_task(
+  {
+    pref_set: [["extensions.eventPages.enabled", true]],
+  },
+  async function test_open_connectNativePort_resets_bgscript_idle_timeout() {
+    const {
+      extension,
+      contextId,
+    } = await startupExtensionAndRequestPermission();
+    await testConnectNative({ extension, contextId });
+    await extension.unload();
+  }
+);

@@ -426,6 +426,18 @@ this.backgroundPage = class extends ExtensionAPI {
         return;
       }
 
+      // Similar to what happens in recent Chrome version for MV3 extensions, extensions non-persistent
+      // background scripts with a nativeMessaging port still open or a sendNativeMessage request still
+      // pending an answer are exempt from being terminated when the idle timeout expires.
+      // The motivation, as for the similar change that Chrome applies to MV3 extensions, is that using
+      // the native messaging API have already an higher barrier due to having to specify a native messaging
+      // host app in their manifest and the user also have to install the native app separately as a native
+      // application).
+      if (extension.backgroundContext?.hasActiveNativeAppPorts) {
+        extension.emit("background-script-reset-idle");
+        return;
+      }
+
       const childId = extension.backgroundContext?.childId;
       if (
         childId !== undefined &&
