@@ -116,7 +116,8 @@ let NewTabPagePreloading = {
       !this.enabled ||
       window.gBrowser.preloadedBrowser ||
       !window.toolbar.visible ||
-      window.document.hidden
+      window.windowState == window.STATE_MINIMIZED ||
+      window.isFullyOccluded
     ) {
       return;
     }
