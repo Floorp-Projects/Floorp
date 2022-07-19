@@ -272,23 +272,6 @@ const FEATURES = [
       );
     },
   },
-  {
-    name: "emailtracking-data-collection",
-    list: [
-      "urlclassifier.features.emailtracking.datacollection.blocklistTables",
-      "urlclassifier.features.emailtracking.datacollection.allowlistTables",
-    ],
-    enabled() {
-      // Data collection features are enabled by default.
-      return true;
-    },
-    update() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.features.emailtracking.datacollection.update",
-        this.enabled()
-      );
-    },
-  },
 ];
 
 var SafeBrowsing = {
