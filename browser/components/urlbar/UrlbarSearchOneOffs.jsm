@@ -10,8 +10,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { SearchOneOffs } = ChromeUtils.import(
-  "resource:///modules/SearchOneOffs.jsm"
+const { SearchOneOffs } = ChromeUtils.importESModule(
+  "resource:///modules/SearchOneOffs.sys.mjs"
 );
 
 const lazy = {};

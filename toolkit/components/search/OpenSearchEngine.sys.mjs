@@ -4,17 +4,19 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-const { EngineURL, SearchEngine } = ChromeUtils.import(
-  "resource://gre/modules/SearchEngine.jsm"
-);
+import {
+  EngineURL,
+  SearchEngine,
+} from "resource://gre/modules/SearchEngine.sys.mjs";
+
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {

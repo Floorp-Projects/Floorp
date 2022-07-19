@@ -6,11 +6,10 @@ const { FormAutoCompleteResult } = ChromeUtils.import(
   "resource://gre/modules/nsFormAutoCompleteResult.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SearchSuggestionController",
-  "resource://gre/modules/SearchSuggestionController.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchSuggestionController:
+    "resource://gre/modules/SearchSuggestionController.sys.mjs",
+});
 
 /**
  * SuggestAutoComplete is a base class that implements nsIAutoCompleteSearch

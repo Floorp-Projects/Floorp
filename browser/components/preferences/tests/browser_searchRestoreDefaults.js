@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { SearchTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SearchTestUtils.jsm"
+const { SearchTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SearchTestUtils.sys.mjs"
 );
-const { SearchUtils } = ChromeUtils.import(
-  "resource://gre/modules/SearchUtils.jsm"
+const { SearchUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/SearchUtils.sys.mjs"
 );
 add_task(async function test_restore_functionality() {
   // Ensure no engines are hidden to begin with.

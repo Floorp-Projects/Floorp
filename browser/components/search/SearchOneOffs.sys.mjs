@@ -8,9 +8,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SearchUIUtils: "resource:///modules/SearchUIUtils.jsm",
 });
 
 const EMPTY_ADD_ENGINES = [];
