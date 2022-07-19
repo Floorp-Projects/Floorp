@@ -7165,42 +7165,32 @@ bool nsGlobalWindowInner::IsFullyOccluded() {
 }
 
 void nsGlobalWindowInner::Maximize() {
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetMainWidget()) {
     widget->SetSizeMode(nsSizeMode_Maximized);
   }
 }
 
 void nsGlobalWindowInner::Minimize() {
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetMainWidget()) {
     widget->SetSizeMode(nsSizeMode_Minimized);
   }
 }
 
 void nsGlobalWindowInner::Restore() {
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetMainWidget()) {
     widget->SetSizeMode(nsSizeMode_Normal);
   }
 }
 
 void nsGlobalWindowInner::GetWorkspaceID(nsAString& workspaceID) {
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-
   workspaceID.Truncate();
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetMainWidget()) {
     return widget->GetWorkspaceID(workspaceID);
   }
 }
 
 void nsGlobalWindowInner::MoveToWorkspace(const nsAString& workspaceID) {
-  nsCOMPtr<nsIWidget> widget = GetMainWidget();
-
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetMainWidget()) {
     widget->MoveToWorkspace(workspaceID);
   }
 }
