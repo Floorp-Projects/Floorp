@@ -2,6 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+add_setup(async () => {
+  // Disable window occlusion. See bug 1733955 / bug 1779559.
+  if (navigator.platform.indexOf("Win") == 0) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["widget.windows.window_occlusion_tracking.enabled", false]],
+    });
+  }
+});
+
 add_task(async () => {
   // Open a new browser window to make sure there is no navigation history.
   const newBrowser = await BrowserTestUtils.openNewBrowserWindow({});
