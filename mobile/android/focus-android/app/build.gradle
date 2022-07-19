@@ -300,11 +300,9 @@ dependencies {
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
     testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
-    testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
-    testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
-    testImplementation "junit:junit:4.12"
-    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
+    testImplementation Dependencies.testing_junit_api
+    testRuntimeOnly Dependencies.testing_junit_engine
+    testImplementation Dependencies.testing_junit_params
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_coroutines

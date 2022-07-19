@@ -45,6 +45,7 @@ object Versions {
         const val robolectric = "4.8.1"
         const val mockito = "3.11.0"
         const val androidx_work = "2.7.1"
+        const val junit = "5.8.2"
     }
 
     object Adjust {
@@ -95,4 +96,8 @@ object Dependencies {
     const val testing_mockito = "org.mockito:mockito-core:${Versions.Test.mockito}"
     const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.Kotlin.coroutines}"
     const val androidx_work_testing = "androidx.work:work-testing:${Versions.Test.androidx_work}"
+
+    const val testing_junit_api = "org.junit.jupiter:junit-jupiter-api:${Versions.Test.junit}"
+    const val testing_junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Versions.Test.junit}"
+    const val testing_junit_params = "org.junit.jupiter:junit-jupiter-params:${Versions.Test.junit}"
 }
