@@ -2014,7 +2014,10 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
     }
 
     if (snapTarget) {
-      mLastSnapTargetIds = std::move(snapTarget->mTargetIds);
+      {
+        RecursiveMutexAutoLock lock(mRecursiveMutex);
+        mLastSnapTargetIds = std::move(snapTarget->mTargetIds);
+      }
     }
     SetState(NOTHING);
 
@@ -2446,7 +2449,10 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       }
 
       if (snapTarget) {
-        mLastSnapTargetIds = std::move(snapTarget->mTargetIds);
+        {
+          RecursiveMutexAutoLock lock(mRecursiveMutex);
+          mLastSnapTargetIds = std::move(snapTarget->mTargetIds);
+        }
       }
       SetState(NOTHING);
 
@@ -4408,6 +4414,8 @@ static CSSRect GetDisplayPortRect(const FrameMetrics& aFrameMetrics,
 void AsyncPanZoomController::RequestContentRepaint(
     const FrameMetrics& aFrameMetrics, const ParentLayerPoint& aVelocity,
     const ScreenMargin& aDisplayportMargins, RepaintUpdateType aUpdateType) {
+  mRecursiveMutex.AssertCurrentThreadIn();
+
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (!controller) {
     return;
@@ -4526,8 +4534,11 @@ bool AsyncPanZoomController::UpdateAnimation(
     if (!continueAnimation) {
       SetState(NOTHING);
       if (mAnimation->AsSmoothMsdScrollAnimation()) {
-        mLastSnapTargetIds =
-            mAnimation->AsSmoothMsdScrollAnimation()->TakeSnapTargetIds();
+        {
+          RecursiveMutexAutoLock lock(mRecursiveMutex);
+          mLastSnapTargetIds =
+              mAnimation->AsSmoothMsdScrollAnimation()->TakeSnapTargetIds();
+        }
       }
       mAnimation = nullptr;
     }
