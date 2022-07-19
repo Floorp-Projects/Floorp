@@ -55,6 +55,12 @@ loader.lazyRequireGetter(
   "devtools/client/webconsole/utils/messages",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "getSelectedTarget",
+  "devtools/shared/commands/target/selectors/targets",
+  true
+);
 
 const HELP_URL =
   "https://firefox-source-docs.mozilla.org/devtools-user/web_console/helpers/";
@@ -113,7 +119,9 @@ function evaluateExpression(expression, from = "input") {
       .execute(expression, {
         frameActor: hud.getSelectedFrameActorID(),
         selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
-        selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
+        selectedTargetFront: getSelectedTarget(
+          webConsoleUI.hud.commands.targetCommand.store.getState()
+        ),
         mapped,
       })
       .then(onSettled, onSettled);
@@ -244,7 +252,8 @@ function handleHelperResult(response) {
         case "screenshotOutput":
           const { args, value } = helperResult;
           const targetFront =
-            toolbox?.getSelectedTargetFront() || hud.currentTarget;
+            getSelectedTarget(hud.commands.targetCommand.store.getState()) ||
+            hud.currentTarget;
           let screenshotMessages;
 
           // @backward-compat { version 87 } The screenshot-content actor isn't available
@@ -371,14 +380,7 @@ function setInputValue(value) {
  *                         the previous evaluation.
  */
 function terminalInputChanged(expression, force = false) {
-  return async ({
-    dispatch,
-    webConsoleUI,
-    hud,
-    toolbox,
-    commands,
-    getState,
-  }) => {
+  return async ({ dispatch, webConsoleUI, hud, commands, getState }) => {
     const prefs = getAllPrefs(getState());
     if (!prefs.eagerEvaluation) {
       return null;
@@ -417,7 +419,9 @@ function terminalInputChanged(expression, force = false) {
     const response = await commands.scriptCommand.execute(expression, {
       frameActor: hud.getSelectedFrameActorID(),
       selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
-      selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
+      selectedTargetFront: getSelectedTarget(
+        hud.commands.targetCommand.store.getState()
+      ),
       mapped,
       eager: true,
     });
