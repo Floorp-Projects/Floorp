@@ -38,7 +38,7 @@ To add a new message type to the Messaging Experiments schema:
 
   .. code-block:: shell
 
-     cd browser/components/newtab/schemas
+     cd browser/components/newtab/content-src/asrouter/schemas/
      ../../../../../../mach python make-schemas.py
 
 4. Commit the results.
@@ -60,6 +60,6 @@ Triggers and actions
 ..  _update_action_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json
 ..  _whats_new_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json
 ..  _pbnewtab_promo_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
-..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/schemas/MessagingExperiment.schema.json
+..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json
 ..  _make_schemas_script: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/make-schemas.py
 ..  _jsonschema_bundling: https://json-schema.org/understanding-json-schema/structuring.html#bundling
