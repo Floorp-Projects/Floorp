@@ -1,0 +1,11 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen. See RunCbindgen.py */"""
+include_guard = "DOM_FS_PARENT_RUST_DATA_ENCODING_FFI_H_"
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C++"
+namespaces = ["mozilla", "dom", "fs"]

@@ -322,6 +322,9 @@ function sortProps(obj) {
 
 // Move comments above `nodeFrom` before `nodeTo`.
 function moveComments(nodeTo, nodeFrom) {
+  if (!nodeFrom.comments) {
+    return;
+  }
   if (nodeTo.comments) {
     nodeTo.comments = [...nodeTo.comments, ...nodeFrom.comments];
   } else {

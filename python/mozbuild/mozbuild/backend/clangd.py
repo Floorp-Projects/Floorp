@@ -28,6 +28,8 @@ def find_vscode_cmd():
     if path is not None:
         return [path]
 
+    cmd_and_path = []
+
     # If the binary wasn't on $PATH, try to find it in a variety of other
     # well-known install locations based on the current platform.
     if sys.platform.startswith("darwin"):

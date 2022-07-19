@@ -17,7 +17,7 @@ Configuration
 -------------
 
 To enable rustfmt on new directory, add the path to the include
-section in the `rustfmt.yml <https://searchfox.org/mozilla-central/source/tools/lint/rustfmt.yml>`_ file.
+section in the :searchfox:`rustfmt.yml <tools/lint/rustfmt.yml>` file.
 
 
 Autofix
@@ -29,5 +29,5 @@ the ``--check`` option.
 Sources
 -------
 
-* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/rustfmt.yml>`_
-* `Source <https://searchfox.org/mozilla-central/source/tools/lint/rust/__init__.py>`_
+* :searchfox:`Configuration (YAML) <tools/lint/rustfmt.yml>`
+* :searchfox:`Source <tools/lint/rust/__init__.py>`

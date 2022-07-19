@@ -16,12 +16,13 @@ The mozlint integration of codespell can be run using mach:
 Configuration
 -------------
 
-This linter is enabled on the whole code base. Issues existing in the code base are listed in the exclude list in
- the `rejected-words.yml <https://searchfox.org/mozilla-central/source/tools/lint/rejected-words.yml>`_ file.
+This linter is enabled on the whole code base. Issues existing in the code base
+are listed in the exclude list in the :searchfox:`rejected-words.yml
+<tools/lint/rejected-words.yml>` file.
 
 New words can be added in the `payload` section.
 
 Sources
 -------
 
-* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/rejected-words.yml>`_
+* :searchfox:`Configuration (YAML) <tools/lint/rejected-words.yml>`

@@ -19,7 +19,7 @@ Configuration
 -------------
 
 To enable codespell on new directory, add the path to the include
-section in the `codespell.yml <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_ file.
+section in the :searchfox:`codespell.yml <tools/lint/codespell.yml>` file.
 
 This job is configured as `tier 2 <https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#Overview_of_the_Job_Visibility_Tiers>`_.
 
@@ -32,5 +32,5 @@ Codespell provides a ``--fix`` option. It is based on the ``-w`` option provided
 Sources
 -------
 
-* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_
-* `Source <https://searchfox.org/mozilla-central/source/tools/lint/spell/__init__.py>`_
+* :searchfox:`Configuration (YAML) <tools/lint/codespell.yml>`
+* :searchfox:`Source <tools/lint/spell/__init__.py>`

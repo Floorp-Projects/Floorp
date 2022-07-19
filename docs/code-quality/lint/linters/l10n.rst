@@ -41,5 +41,5 @@ updated clone, remove the marker file in
 Sources
 -------
 
-* `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/l10n.yml>`_
-* `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/l10n_lint.py>`_
+* :searchfox:`Configuration (YAML) <tools/lint/l10n.yml>`
+* :searchfox:`Source <tools/lint/python/l10n_lint.py>`

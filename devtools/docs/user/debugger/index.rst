@@ -37,7 +37,7 @@ You probably want to pause the execution of your code, in order to see what is g
 - :doc:`Set a breakpoint <how_to/set_a_breakpoint/index>`
 - :doc:`Set a conditional breakpoint <how_to/set_a_conditional_breakpoint/index>`
 - :doc:`Set an XHR breakpoint <set_an_xhr_breakpoint/index>`
-- :doc:`Set even listener <set_event_listener_breakpoints/index>`
+- :doc:`Set event listener <set_event_listener_breakpoints/index>`
 - :doc:`Break on exceptions <how_to/breaking_on_exceptions/index>`
 - :doc:`Use watchpoints for property reads and writes <how_to/use_watchpoints/index>`
 - :doc:`Break on DOM Mutation <break_on_dom_mutation/index>`

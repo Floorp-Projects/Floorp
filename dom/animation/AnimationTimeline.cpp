@@ -42,6 +42,8 @@ bool AnimationTimeline::Tick() {
   for (Animation* animation = mAnimationOrder.getFirst(); animation;
        animation =
            static_cast<LinkedListElement<Animation>*>(animation)->getNext()) {
+    MOZ_ASSERT(!animation->IsHiddenByContentVisibility());
+
     // Skip any animations that are longer need associated with this timeline.
     if (animation->GetTimeline() != this) {
       // If animation has some other timeline, it better not be also in the
@@ -74,7 +76,9 @@ void AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
     if (aAnimation.GetTimeline() && aAnimation.GetTimeline() != this) {
       aAnimation.GetTimeline()->RemoveAnimation(&aAnimation);
     }
-    mAnimationOrder.insertBack(&aAnimation);
+    if (!aAnimation.IsHiddenByContentVisibility()) {
+      mAnimationOrder.insertBack(&aAnimation);
+    }
   }
 }
 
@@ -84,6 +88,17 @@ void AnimationTimeline::RemoveAnimation(Animation* aAnimation) {
     static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
   }
   mAnimations.Remove(aAnimation);
+}
+
+void AnimationTimeline::NotifyAnimationContentVisibilityChanged(
+    Animation* aAnimation, bool visible) {
+  bool inList =
+      static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList();
+  if (visible && !inList) {
+    mAnimationOrder.insertBack(aAnimation);
+  } else if (!visible && inList) {
+    static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
+  }
 }
 
 }  // namespace mozilla::dom
