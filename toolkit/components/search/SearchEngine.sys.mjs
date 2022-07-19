@@ -329,7 +329,7 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
 /**
  * EngineURL holds a query URL and all associated parameters.
  */
-class EngineURL {
+export class EngineURL {
   params = [];
   rels = [];
 
@@ -558,7 +558,7 @@ class EngineURL {
 /**
  * SearchEngine represents WebExtension based search engines.
  */
-class SearchEngine {
+export class SearchEngine {
   QueryInterface = ChromeUtils.generateQI(["nsISearchEngine"]);
   // Data set by the user.
   _metaData = {};
@@ -1675,5 +1675,3 @@ class Submission {
     return this._postData;
   }
 }
-
-var EXPORTED_SYMBOLS = ["EngineURL", "SearchEngine"];

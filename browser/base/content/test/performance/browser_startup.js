@@ -64,7 +64,7 @@ const startupPhases = {
         "resource://gre/modules/PageThumbs.jsm",
         "resource://gre/modules/PlacesUtils.jsm",
         "resource://gre/modules/Preferences.jsm",
-        "resource://gre/modules/SearchService.jsm",
+        "resource://gre/modules/SearchService.sys.mjs",
         "resource://gre/modules/Sqlite.jsm",
       ]),
       services: new Set(["@mozilla.org/browser/search-service;1"]),

@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchSuggestionController"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -131,7 +129,7 @@ var gFirstPartyDomains = new Map();
  * be called many times to fetch suggestions.
  *
  */
-class SearchSuggestionController {
+export class SearchSuggestionController {
   /**
    * The maximum length of a value to be stored in search history.
    *  @type {number}

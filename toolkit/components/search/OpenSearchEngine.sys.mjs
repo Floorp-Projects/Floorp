@@ -63,7 +63,7 @@ function ENSURE_WARN(assertion, message, resultCode) {
 /**
  * OpenSearchEngine represents an OpenSearch base search engine.
  */
-class OpenSearchEngine extends SearchEngine {
+export class OpenSearchEngine extends SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
 
@@ -416,5 +416,3 @@ class OpenSearchEngine extends SearchEngine {
     return `[${uri.scheme}]${uri.host}/${shortName}.xml`;
   }
 }
-
-var EXPORTED_SYMBOLS = ["OpenSearchEngine"];

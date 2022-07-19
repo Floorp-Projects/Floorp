@@ -11,7 +11,7 @@ const { SearchEngine } = ChromeUtils.import(
 /**
  * UserSearchEngine represents a search engine defined by a user.
  */
-class UserSearchEngine extends SearchEngine {
+export class UserSearchEngine extends SearchEngine {
   /**
    * Creates a UserSearchEngine.
    *
@@ -52,5 +52,3 @@ class UserSearchEngine extends SearchEngine {
     return `other-${this.name}`;
   }
 }
-
-var EXPORTED_SYMBOLS = ["UserSearchEngine"];

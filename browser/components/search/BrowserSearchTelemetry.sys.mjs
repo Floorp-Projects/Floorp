@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["BrowserSearchTelemetry"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -295,4 +293,4 @@ class BrowserSearchTelemetryHandler {
   }
 }
 
-var BrowserSearchTelemetry = new BrowserSearchTelemetryHandler();
+export var BrowserSearchTelemetry = new BrowserSearchTelemetryHandler();
