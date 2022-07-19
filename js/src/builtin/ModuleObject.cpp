@@ -1467,6 +1467,8 @@ static ArrayObject* ModuleBuilderInitArray(
 
         assertionArray->initDenseElement(j, ObjectValue(*assertionObject));
       }
+    } else {
+      assertionArray = nullptr;
     }
 
     moduleRequest = ModuleRequestObject::create(cx, specifier, assertionArray);
