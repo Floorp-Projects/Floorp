@@ -292,7 +292,21 @@ const ProxyMessenger = {
   },
 
   recvNativeMessage({ nativeApp, holder }, { sender }) {
-    return this.openNative(nativeApp, sender).sendMessage(holder);
+    const app = this.openNative(nativeApp, sender);
+
+    // Track in-flight NativeApp sendMessage requests as
+    // a NativeApp port destroyed when the request
+    // has been handled.
+    const promiseSendMessage = app.sendMessage(holder);
+    const sendMessagePort = {
+      native: true,
+      senderChildId: sender.childId,
+    };
+    this.trackNativeAppPort(sendMessagePort);
+    const untrackSendMessage = () => this.untrackNativeAppPort(sendMessagePort);
+    promiseSendMessage.then(untrackSendMessage, untrackSendMessage);
+
+    return promiseSendMessage;
   },
 
   getSender(extension, source) {
@@ -358,7 +372,10 @@ const ProxyMessenger = {
   async recvPortConnect(arg, { sender }) {
     if (arg.native) {
       let port = this.openNative(arg.name, sender).onConnect(arg.portId, this);
+      port.senderChildId = sender.childId;
+      port.native = true;
       this.ports.set(arg.portId, port);
+      this.trackNativeAppPort(port);
       return;
     }
 
@@ -378,8 +395,14 @@ const ProxyMessenger = {
 
   async recvPortMessage({ holder }, { sender }) {
     if (sender.native) {
-      return this.ports.get(sender.portId).onPortMessage(holder);
+      // If the nativeApp port connect fails (e.g. if triggered by a content
+      // script), the portId may not be in the map (because it did throw in
+      // the openNative method).
+      return this.ports.get(sender.portId)?.onPortMessage(holder);
     }
+    // NOTE: the following await make sure we await for promised ports
+    // (ports that were not yet open when added to the Map,
+    // see recvPortConnect).
     await this.ports.get(sender.portId);
     this.sendPortMessage(sender.portId, holder, !sender.source);
   },
@@ -387,6 +410,7 @@ const ProxyMessenger = {
   recvConduitClosed(sender) {
     let app = this.ports.get(sender.portId);
     if (this.ports.delete(sender.portId) && sender.native) {
+      this.untrackNativeAppPort(app);
       return app.onPortDisconnect();
     }
     this.sendPortDisconnect(sender.portId, null, !sender.source);
@@ -397,8 +421,38 @@ const ProxyMessenger = {
   },
 
   sendPortDisconnect(portId, error, source = true) {
+    let port = this.ports.get(portId);
+    this.untrackNativeAppPort(port);
     this.conduit.castPortDisconnect("port", { portId, source, error });
     this.ports.delete(portId);
+  },
+
+  trackNativeAppPort(port) {
+    if (!port?.native) {
+      return;
+    }
+
+    try {
+      let context = ParentAPIManager.getContextById(port.senderChildId);
+      context?.trackNativeAppPort(port);
+    } catch {
+      // getContextById will throw if the context has been destroyed
+      // in the meantime.
+    }
+  },
+
+  untrackNativeAppPort(port) {
+    if (!port?.native) {
+      return;
+    }
+
+    try {
+      let context = ParentAPIManager.getContextById(port.senderChildId);
+      context?.untrackNativeAppPort(port);
+    } catch {
+      // getContextById will throw if the context has been destroyed
+      // in the meantime.
+    }
   },
 };
 ProxyMessenger.init();
@@ -491,7 +545,34 @@ class ProxyContextParent extends BaseContext {
     this.pendingEventBrowser = null;
     this.callContextData = null;
 
+    // Set of active NativeApp ports.
+    this.activeNativePorts = new WeakSet();
+
     apiManager.emit("proxy-context-load", this);
+  }
+
+  trackNativeAppPort(port) {
+    if (
+      // Not a native port.
+      !port?.native ||
+      // Not a non persistent background script context.
+      !this.isBackgroundContext ||
+      this.extension?.persistentBackground ||
+      // The extension was already shutdown.
+      !this.extension
+    ) {
+      return;
+    }
+    this.activeNativePorts.add(port);
+  }
+
+  untrackNativeAppPort(port) {
+    this.activeNativePorts.delete(port);
+  }
+
+  get hasActiveNativeAppPorts() {
+    return !!ChromeUtils.nondeterministicGetWeakSetKeys(this.activeNativePorts)
+      .length;
   }
 
   /**
