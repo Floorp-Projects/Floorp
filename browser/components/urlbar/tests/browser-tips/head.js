@@ -33,8 +33,8 @@ XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SearchTestUtils", () => {
-  const { SearchTestUtils: module } = ChromeUtils.import(
-    "resource://testing-common/SearchTestUtils.jsm"
+  const { SearchTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/SearchTestUtils.sys.mjs"
   );
   module.init(this);
   return module;

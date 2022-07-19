@@ -16,20 +16,23 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonSearchEngine: "resource://gre/modules/AddonSearchEngine.sys.mjs",
+  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
+  PolicySearchEngine: "resource://gre/modules/PolicySearchEngine.sys.mjs",
+  SearchEngine: "resource://gre/modules/SearchEngine.sys.mjs",
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
+  SearchSettings: "resource://gre/modules/SearchSettings.sys.mjs",
+  SearchStaticData: "resource://gre/modules/SearchStaticData.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  UserSearchEngine: "resource://gre/modules/UserSearchEngine.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonSearchEngine: "resource://gre/modules/AddonSearchEngine.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
-  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
-  PolicySearchEngine: "resource://gre/modules/PolicySearchEngine.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
-  SearchEngine: "resource://gre/modules/SearchEngine.jsm",
-  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
-  SearchSettings: "resource://gre/modules/SearchSettings.jsm",
-  SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  UserSearchEngine: "resource://gre/modules/UserSearchEngine.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 

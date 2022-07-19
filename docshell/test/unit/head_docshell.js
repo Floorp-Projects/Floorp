@@ -6,11 +6,14 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
-  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 

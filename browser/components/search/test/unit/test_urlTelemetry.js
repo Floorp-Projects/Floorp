@@ -5,11 +5,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });

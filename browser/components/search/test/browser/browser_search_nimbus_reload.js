@@ -9,8 +9,8 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { NimbusFeatures } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
-const { SearchService } = ChromeUtils.import(
-  "resource://gre/modules/SearchService.jsm"
+const { SearchService } = ChromeUtils.importESModule(
+  "resource://gre/modules/SearchService.sys.mjs"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 

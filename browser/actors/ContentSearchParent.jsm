@@ -11,12 +11,16 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+
+  SearchSuggestionController:
+    "resource://gre/modules/SearchSuggestionController.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SearchSuggestionController:
-    "resource://gre/modules/SearchSuggestionController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
 });
 

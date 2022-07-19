@@ -14,8 +14,11 @@ const SCALAR_SEARCHMODE = "browser.engagement.navigation.urlbar_searchmode";
 // The preference to enable suggestions in the urlbar.
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 

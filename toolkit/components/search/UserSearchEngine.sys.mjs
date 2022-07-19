@@ -4,9 +4,7 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-const { SearchEngine } = ChromeUtils.import(
-  "resource://gre/modules/SearchEngine.jsm"
-);
+import { SearchEngine } from "resource://gre/modules/SearchEngine.sys.mjs";
 
 /**
  * UserSearchEngine represents a search engine defined by a user.

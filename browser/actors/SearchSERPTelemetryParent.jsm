@@ -7,11 +7,9 @@ var EXPORTED_SYMBOLS = ["SearchSERPTelemetryParent"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SearchSERPTelemetry",
-  "resource:///modules/SearchSERPTelemetry.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+});
 
 class SearchSERPTelemetryParent extends JSWindowActorParent {
   receiveMessage(msg) {

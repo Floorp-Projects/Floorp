@@ -8,9 +8,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
