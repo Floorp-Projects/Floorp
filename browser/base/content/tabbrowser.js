@@ -42,8 +42,7 @@
 
       Services.els.addSystemEventListener(document, "keydown", this, false);
       Services.els.addSystemEventListener(document, "keypress", this, false);
-      window.addEventListener("sizemodechange", this);
-      window.addEventListener("occlusionstatechange", this);
+      document.addEventListener("visibilitychange", this);
       window.addEventListener("framefocusrequested", this);
 
       this.tabContainer.init();
@@ -1101,9 +1100,7 @@
         oldBrowser.removeAttribute("primary");
         oldBrowser.docShellIsActive = false;
         newBrowser.setAttribute("primary", "true");
-        newBrowser.docShellIsActive =
-          window.windowState != window.STATE_MINIMIZED &&
-          !window.isFullyOccluded;
+        newBrowser.docShellIsActive = !document.hidden;
       }
 
       this._selectedBrowser = newBrowser;
@@ -5316,9 +5313,7 @@
         return this._switcher.shouldActivateDocShell(aBrowser);
       }
       return (
-        (aBrowser == this.selectedBrowser &&
-          window.windowState != window.STATE_MINIMIZED &&
-          !window.isFullyOccluded) ||
+        (aBrowser == this.selectedBrowser && !document.hidden) ||
         this._printPreviewBrowsers.has(aBrowser) ||
         this.PictureInPicture.isOriginatingBrowser(aBrowser)
       );
@@ -5633,17 +5628,11 @@
           aEvent.preventDefault();
           break;
         }
-        case "sizemodechange":
-        case "occlusionstatechange":
-          if (aEvent.target == window) {
-            const inactive =
-              window.windowState == window.STATE_MINIMIZED ||
-              window.isFullyOccluded;
-            window.browsingContext.isActive = !inactive;
-            if (!this._switcher) {
-              this.selectedBrowser.preserveLayers(inactive);
-              this.selectedBrowser.docShellIsActive = !inactive;
-            }
+        case "visibilitychange":
+          const inactive = document.hidden;
+          if (!this._switcher) {
+            this.selectedBrowser.preserveLayers(inactive);
+            this.selectedBrowser.docShellIsActive = !inactive;
           }
           break;
       }
@@ -5770,8 +5759,7 @@
           false
         );
       }
-      window.removeEventListener("sizemodechange", this);
-      window.removeEventListener("occlusionstatechange", this);
+      document.removeEventListener("visibilitychange", this);
       window.removeEventListener("framefocusrequested", this);
 
       if (gMultiProcessBrowser) {
