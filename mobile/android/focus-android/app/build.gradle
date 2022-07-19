@@ -218,6 +218,7 @@ dependencies {
     implementation Dependencies.androidx_compose_material
     implementation Dependencies.androidx_compose_constraint_layout
     implementation Dependencies.androidx_compose_runtime_livedata
+    implementation Dependencies.androidx_constraint_layout
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_lifecycle_process
     implementation Dependencies.androidx_palette
@@ -344,8 +345,6 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.4.0'
     androidTestUtil 'androidx.test:orchestrator:1.4.1'
 
-
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 }
 // -------------------------------------------------------------------------------------------------
 //  Dynamically set versionCode (See tools/build/versionCode.gradle
