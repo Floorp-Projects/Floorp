@@ -237,9 +237,7 @@ export class _CardGrid extends React.PureComponent {
             pocket_id={rec.pocket_id}
             context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
-            engagement={rec.engagement}
             pocket_button_enabled={this.props.pocket_button_enabled}
-            display_engagement_labels={this.props.display_engagement_labels}
             hideDescriptions={hideDescriptions}
             saveToPocketCard={saveToPocketCard}
             compactImages={compactImages}
@@ -247,9 +245,6 @@ export class _CardGrid extends React.PureComponent {
             newSponsoredLabel={newSponsoredLabel}
             titleLines={titleLines}
             descLines={descLines}
-            cta={rec.cta}
-            cta_variant={this.props.cta_variant}
-            is_video={this.props.enable_video_playheads && rec.is_video}
             is_collection={this.props.is_collection}
           />
         )
@@ -408,7 +403,6 @@ export class _CardGrid extends React.PureComponent {
 _CardGrid.defaultProps = {
   border: `border`,
   items: 4, // Number of stories to display
-  enable_video_playheads: false,
   saveToPocketCard: false,
 };
 

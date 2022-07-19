@@ -110,10 +110,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
   }
 
   renderComponent(component, embedWidth) {
-    const ENGAGEMENT_LABEL_ENABLED = this.props.Prefs.values[
-      `discoverystream.engagementLabelEnabled`
-    ];
-
     switch (component.type) {
       case "Highlights":
         return <Highlights />;
@@ -190,9 +186,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             border={component.properties.border}
             type={component.type}
             items={component.properties.items}
-            cta_variant={component.cta_variant}
             pocket_button_enabled={component.pocketButtonEnabled}
-            display_engagement_labels={ENGAGEMENT_LABEL_ENABLED}
             dismissible={this.props.DiscoveryStream.isCollectionDismissible}
             dispatch={this.props.dispatch}
           />
@@ -200,9 +194,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "CardGrid":
         return (
           <CardGrid
-            enable_video_playheads={
-              !!component.properties.enable_video_playheads
-            }
             title={component.header && component.header.title}
             display_variant={component.properties.display_variant}
             data={component.data}
@@ -226,9 +217,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             editorsPicksHeader={component.properties.editorsPicksHeader}
             readTime={component.properties.readTime}
             saveToPocketCard={component.saveToPocketCard}
-            cta_variant={component.cta_variant}
             pocket_button_enabled={component.pocketButtonEnabled}
-            display_engagement_labels={ENGAGEMENT_LABEL_ENABLED}
           />
         );
       case "HorizontalRule":
