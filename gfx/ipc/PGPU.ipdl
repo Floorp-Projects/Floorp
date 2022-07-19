@@ -37,7 +37,7 @@ using mozilla::gfx::Feature from "gfxFeature.h";
 using mozilla::gfx::Fallback from "gfxFallback.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::OverlayInfo from "mozilla/layers/OverlayInfo.h";
-using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
+using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 
 namespace mozilla {
 namespace gfx {
