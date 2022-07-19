@@ -364,7 +364,7 @@
     <!-- Preference description for banner about signing in -->
     <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Firefox 계정으로 북마크, 기록 등을 동기화하세요</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description_2">로그인하여 탭, 북마크, 비밀번호 등을 동기화하세요.</string>
+    <string name="preferences_sign_in_description_2">탭, 북마크, 비밀번호 등을 동기화하려면 로그인하세요.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 계정</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -798,6 +798,13 @@
     <string name="history_synced_from_other_devices">다른 기기에서 동기화됨</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">다른 기기에서</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">다른 기기에서 동기화된 기록을 보려면 로그인 하세요.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">로그인</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>또는 동기화를 시작하려면 Firefox 계정을 만드세요</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1282,7 +1289,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[컴퓨터에서 Firefox를 열고 <b>https://firefox.com/pair</b>로 이동하세요]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">스캔 준비</string>
+    <string name="sign_in_ready_for_scan">스캔 준비 완료</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">카메라로 로그인</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1898,4 +1905,5 @@
     <string name="experiments_snackbar">데이터를 보내려면 원격 분석을 활성화하세요.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">설정으로 이동</string>
+    <string name="firefox_suggest_header">Firefox 제안</string>
 </resources>

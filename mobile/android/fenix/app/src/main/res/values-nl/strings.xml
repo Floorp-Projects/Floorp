@@ -539,7 +539,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Sync inschakelen</string>
     <!-- Header of the Sync and save your data preference view -->
-    <string name="preferences_sync_2">Synchroniseren en uw gegevens opslaan</string>
+    <string name="preferences_sync_2">Uw gegevens synchroniseren en opslaan</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Aanmelden om opnieuw te verbinden</string>
     <!-- Preference for removing FxA account -->

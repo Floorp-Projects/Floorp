@@ -1275,7 +1275,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[在電腦上使用 Firefox 開啟 <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">準備掃描</string>
+    <string name="sign_in_ready_for_scan">準備好了，開始掃描！</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">使用攝影機登入</string>
     <!-- Text shown for settings option for sign with email -->
