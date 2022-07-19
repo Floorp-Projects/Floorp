@@ -107,7 +107,7 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
       // ended promise.
       if (CheckIfEnded()) {
         MOZ_ASSERT(!mAudioSink);
-        mEndedPromiseHolder.Resolve(true, __func__);
+        mEndedPromiseHolder.ResolveIfExists(true, __func__);
       }
     }
     mLastClockSource = ClockSource::SystemClock;
