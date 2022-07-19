@@ -1812,7 +1812,10 @@ function run_next_test() {
 
   function frontLoadSetups() {
     _gTests.sort(([propsA, funcA], [propsB, funcB]) => {
-      return propsB.isSetup ? 1 : 0;
+      if (propsB.isSetup === propsA.isSetup) {
+        return 0;
+      }
+      return propsB.isSetup ? 1 : -1;
     });
   }
 
