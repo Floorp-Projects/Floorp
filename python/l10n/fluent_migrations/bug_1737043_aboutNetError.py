@@ -13,7 +13,7 @@ def migrate(ctx):
     source = "browser/chrome/overrides/netError.dtd"
     target = "browser/browser/netError.ftl"
     ctx.add_transforms(
-        source,
+        target,
         target,
         transforms_from(
             """
