@@ -6,12 +6,17 @@
 
 #include "UrlClassifierFeatureEmailTrackingDataCollection.h"
 
+#include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
+#include "nsILoadInfo.h"
 
 namespace mozilla::net {
 
@@ -100,6 +105,14 @@ UrlClassifierFeatureEmailTrackingDataCollection::MaybeCreate(
     return nullptr;
   }
 
+  bool isThirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
+
+  // We don't need to collect data if the email tracker is loaded in first-party
+  // context.
+  if (!isThirdParty) {
+    return nullptr;
+  }
+
   MaybeInitialize();
   MOZ_ASSERT(gFeatureEmailTrackingDataCollection);
 
@@ -136,7 +149,7 @@ UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel(
 
   UC_LOG(
       ("UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel - "
-       "annotating channel %p",
+       "collecting data from channel %p",
        aChannel));
 
   static std::vector<UrlClassifierCommon::ClassificationData>
@@ -148,12 +161,34 @@ UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel(
                CLASSIFIED_EMAILTRACKING_CONTENT},
       };
 
+  // Get if the top window is a email webapp.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  RefPtr<dom::BrowsingContext> bc;
+  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+
+  RefPtr<dom::WindowGlobalParent> topWindowParent =
+      bc->Canonical()->GetTopWindowContext();
+
+  bool isTopEmailWebApp = topWindowParent->DocumentPrincipal()->IsURIInPrefList(
+      "privacy.trackingprotection.emailtracking.webapp.domains");
+
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
       aList, sClassificationData,
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_EMAILTRACKING);
 
-  // The flags will be used for Telemetry in the later patch.
-  Unused << flags;
+  if (flags & nsIClassifiedChannel::ClassificationFlags::
+                  CLASSIFIED_EMAILTRACKING_CONTENT) {
+    Telemetry::AccumulateCategorical(
+        isTopEmailWebApp
+            ? Telemetry::LABELS_EMAIL_TRACKER_COUNT::content_email_webapp
+            : Telemetry::LABELS_EMAIL_TRACKER_COUNT::content_normal);
+  } else {
+    Telemetry::AccumulateCategorical(
+        isTopEmailWebApp
+            ? Telemetry::LABELS_EMAIL_TRACKER_COUNT::base_email_webapp
+            : Telemetry::LABELS_EMAIL_TRACKER_COUNT::base_normal);
+  }
 
   return NS_OK;
 }
