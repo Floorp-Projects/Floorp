@@ -296,12 +296,6 @@ const CustomizableWidgets = [
     id: "add-ons-button",
     shortcutId: "key_openAddons",
     l10nId: "toolbar-addons-themes-button",
-    onBeforeCreated() {
-      // If the pref is set to `true`, we won't create this widget.
-      return !Services.prefs.getBoolPref(
-        "extensions.unifiedExtensions.enabled"
-      );
-    },
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenAddonsMgr();

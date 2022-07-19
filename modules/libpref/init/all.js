@@ -2071,8 +2071,6 @@ pref("extensions.blocklist.level", 2);
 pref("extensions.eventPages.enabled", false);
 // Whether "manifest_version: 3" extensions should be allowed to install successfully.
 pref("extensions.manifestV3.enabled", false);
-// Whether to enable the unified extensions feature.
-pref("extensions.unifiedExtensions.enabled", false);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
