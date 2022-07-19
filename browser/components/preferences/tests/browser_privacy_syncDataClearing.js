@@ -253,6 +253,31 @@ add_task(async function test_initialState() {
     "DeleteOnClose is set accordingly to the prefs, deselected"
   );
 
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // When private browsing mode autostart is selected, the deleteOnClose Box is selected always
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.clearOnShutdown.cookies", false],
+      ["privacy.clearOnShutdown.cache", false],
+      ["privacy.clearOnShutdown.offlineApps", false],
+      ["privacy.sanitize.sanitizeOnShutdown", false],
+      ["browser.privatebrowsing.autostart", true],
+    ],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
+
+  document = gBrowser.contentDocument;
+  deleteOnCloseBox = document.getElementById("deleteOnClose");
+
+  ok(
+    deleteOnCloseBox.checked,
+    "DeleteOnClose is set accordingly to the private Browsing autostart pref, selected"
+  );
+
   // Reset history mode
   let historyMode = document.getElementById("historyMode");
   historyMode.value = "remember";
