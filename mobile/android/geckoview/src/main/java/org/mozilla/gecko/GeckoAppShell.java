@@ -46,7 +46,6 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
@@ -1175,6 +1174,7 @@ public class GeckoAppShell {
   }
 
   private static Context sApplicationContext;
+  private static Boolean sIs24HourFormat = true;
 
   @WrapForJNI
   public static Context getApplicationContext() {
@@ -1528,10 +1528,13 @@ public class GeckoAppShell {
     return locales;
   }
 
+  public static void setIs24HourFormat(final Boolean is24HourFormat) {
+    sIs24HourFormat = is24HourFormat;
+  }
+
   @WrapForJNI
   public static boolean getIs24HourFormat() {
-    final Context context = getApplicationContext();
-    return DateFormat.is24HourFormat(context);
+    return sIs24HourFormat;
   }
 
   @WrapForJNI
