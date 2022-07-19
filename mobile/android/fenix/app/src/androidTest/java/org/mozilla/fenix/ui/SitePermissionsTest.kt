@@ -12,17 +12,16 @@ import android.os.Build
 import androidx.core.net.toUri
 import androidx.test.filters.SdkSuppress
 import androidx.test.rule.GrantPermissionRule
-import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -48,22 +47,21 @@ class SitePermissionsTest {
         Manifest.permission.CAMERA
     )
 
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
+
     @Before
     fun setUp() {
         // disabling the new homepage pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.deleteSitePermissions(true)
+        featureSettingsHelper.disablePwaCFR(true)
     }
 
     @After
     fun tearDown() {
-        // Clearing all permission data after each test to avoid overlapping data
-        val applicationContext: Context = activityTestRule.activity.applicationContext
-        val permissionStorage = PermissionStorage(applicationContext)
-
-        runBlocking {
-            permissionStorage.deleteAllSitePermissions()
-        }
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SdkSuppress(maxSdkVersion = Build.VERSION_CODES.P, codeName = "P")

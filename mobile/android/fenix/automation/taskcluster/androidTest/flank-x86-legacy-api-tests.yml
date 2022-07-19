@@ -23,7 +23,7 @@ gcloud:
 
   # The number of times a test execution should be re-attempted if one or more failures occur.
   # The maximum number of reruns allowed is 10. Default is 0, which implies no reruns.
-  num-flaky-test-attempts: 1
+  num-flaky-test-attempts: 2
 
   # test and app are the only required args
   app: /app/path
