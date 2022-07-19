@@ -1215,43 +1215,31 @@ var gUnifiedExtensions = {
       return;
     }
 
-    // Add a new property to the `gUnifiedExtensions` object for the pref that
-    // is controlling this feature. We also attach a method that will be called
-    // when the pref changes.
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "prefEnabled",
+    const unifiedExtensionsEnabled = Services.prefs.getBoolPref(
       "extensions.unifiedExtensions.enabled",
-      false,
-      this.onPrefChange.bind(this)
+      false
     );
 
-    MozXULElement.insertFTLIfNeeded("preview/unifiedExtensions.ftl");
+    if (unifiedExtensionsEnabled) {
+      MozXULElement.insertFTLIfNeeded("preview/unifiedExtensions.ftl");
 
-    // Lazy-load the panel view.
-    const template = document.getElementById("unified-extensions-template");
-    if (template) {
-      template.replaceWith(template.content);
+      // Lazy-load the panel view.
+      const template = document.getElementById("unified-extensions-template");
+      if (template) {
+        template.replaceWith(template.content);
+      }
+
+      let listView = document.getElementById("unified-extensions-view");
+      listView.addEventListener("ViewShowing", this);
+      listView.addEventListener("ViewHiding", this);
+
+      // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
+      document.getElementById(
+        "unified-extensions-button"
+      ).hidden = !unifiedExtensionsEnabled;
     }
 
-    let listView = document.getElementById("unified-extensions-view");
-    listView.addEventListener("ViewShowing", this);
-    listView.addEventListener("ViewHiding", this);
-
-    this.updateButtonState();
-
     this._initialized = true;
-  },
-
-  // TODO: Bug 1778684 - Hide the button when there is no visible extension.
-  updateButtonState() {
-    document.getElementById("unified-extensions-button").hidden = !this
-      .prefEnabled;
-  },
-
-  onPrefChange(pref, oldValue, newValue) {
-    this.prefEnabled = newValue;
-    this.updateButtonState();
   },
 
   /**
