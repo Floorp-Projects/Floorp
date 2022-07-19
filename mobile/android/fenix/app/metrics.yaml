@@ -7484,6 +7484,22 @@ credit_cards:
     metadata:
       tags:
         - Autofill
+  save_prompt_shown:
+    type: event
+    description: |
+      The autofill save prompt is shown.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26089
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26095
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 118
+    metadata:
+      tags:
+        - Autofill
 
 addresses:
   saved:

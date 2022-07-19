@@ -172,6 +172,8 @@ internal class ReleaseMetricController(
             CreditCards.savePromptCreate.record(NoExtras())
         Component.FEATURE_PROMPTS to CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED ->
             CreditCards.savePromptUpdate.record(NoExtras())
+        Component.FEATURE_PROMPTS to CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN ->
+            CreditCards.savePromptShown.record(NoExtras())
 
         Component.FEATURE_PROMPTS to AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_FORM_DETECTED ->
             Addresses.formDetected.record(NoExtras())
