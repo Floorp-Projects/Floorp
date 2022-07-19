@@ -1893,6 +1893,14 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearAnimationResources() {
+  if (!mDestroyed) {
+    ClearAnimationResources();
+  }
+
+  return IPC_OK();
+}
+
 wr::Epoch WebRenderBridgeParent::UpdateWebRender(
     CompositorVsyncScheduler* aScheduler, RefPtr<wr::WebRenderAPI>&& aApi,
     AsyncImagePipelineManager* aImageMgr,
