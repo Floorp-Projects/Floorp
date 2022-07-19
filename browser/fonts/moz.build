@@ -7,11 +7,7 @@
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk"):
     DIST_SUBDIR = ""
     FINAL_TARGET_FILES.fonts += [
-        "NotoSansJP-Black.otf",
-        "NotoSansJP-Bold.otf",
-        "NotoSansJP-Light.otf",
-        "NotoSansJP-Medium.otf",
-        "NotoSansJP-Regular.otf",
-        "NotoSansJP-Thin.otf",
+        "BIZUDPGothic-Bold.ttf",
+        "BIZUDPGothic-Regular.ttf",
         "TwemojiMozilla.ttf",
     ]
