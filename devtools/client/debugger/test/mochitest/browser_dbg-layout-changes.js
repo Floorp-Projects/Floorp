@@ -13,6 +13,15 @@ requestLongerTimeout(2);
 
 let gDefaultHostType = Services.prefs.getCharPref("devtools.toolbox.host");
 
+add_setup(async function() {
+  // Disable window occlusion. See bug 1733955 / bug 1779559.
+  if (navigator.platform.indexOf("Win") == 0) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["widget.windows.window_occlusion_tracking.enabled", false]],
+    });
+  }
+});
+
 add_task(async function() {
   // test is too slow on some platforms due to the number of test cases
   const dbg = await initDebugger("doc-iframes.html");

@@ -95,7 +95,9 @@ class EagerEvaluation extends Component {
 
   render() {
     const hasResult =
-      this.props.terminalEagerResult !== null && !this.state?.hasError;
+      this.props.terminalEagerResult !== null &&
+      this.props.terminalEagerResult !== undefined &&
+      !this.state?.hasError;
 
     return dom.div(
       { className: "eager-evaluation-result", key: "eager-evaluation-result" },

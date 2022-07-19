@@ -1629,10 +1629,11 @@ var gPrivacyPane = {
   initDeleteOnCloseBox() {
     let deleteOnCloseBox = document.getElementById("deleteOnClose");
     deleteOnCloseBox.checked =
-      Preferences.get("privacy.sanitize.sanitizeOnShutdown").value &&
-      Preferences.get("privacy.clearOnShutdown.cookies").value &&
-      Preferences.get("privacy.clearOnShutdown.cache").value &&
-      Preferences.get("privacy.clearOnShutdown.offlineApps").value;
+      (Preferences.get("privacy.sanitize.sanitizeOnShutdown").value &&
+        Preferences.get("privacy.clearOnShutdown.cookies").value &&
+        Preferences.get("privacy.clearOnShutdown.cache").value &&
+        Preferences.get("privacy.clearOnShutdown.offlineApps").value) ||
+      Preferences.get("browser.privatebrowsing.autostart").value;
   },
 
   /*

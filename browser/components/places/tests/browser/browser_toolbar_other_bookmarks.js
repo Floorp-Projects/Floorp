@@ -26,6 +26,13 @@ const bookmarksInfo = [
 
 // Setup.
 add_setup(async function() {
+  // Disable window occlusion. See bug 1733955 / bug 1779559.
+  if (navigator.platform.indexOf("Win") == 0) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["widget.windows.window_occlusion_tracking.enabled", false]],
+    });
+  }
+
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
 
