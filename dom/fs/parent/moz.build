@@ -11,9 +11,20 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     "BackgroundFileSystemParent.cpp",
+    "FileSystemHashSource.cpp",
     "OriginPrivateFileSystemParent.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
 
 include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    CbindgenHeader(
+        "data_encoding_ffi_generated.h",
+        inputs=["/dom/fs/parent/rust/data-encoding-ffi"],
+    )
+
+    EXPORTS.mozilla.dom += [
+        "!data_encoding_ffi_generated.h",
+    ]

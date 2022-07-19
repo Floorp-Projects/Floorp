@@ -97,6 +97,8 @@ extern crate origin_trials_ffi;
 
 extern crate dap_ffi;
 
+extern crate data_encoding_ffi;
+
 extern crate log;
 use log::info;
 
