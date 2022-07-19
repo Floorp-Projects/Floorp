@@ -1130,3 +1130,184 @@ var BrowserAddonUI = {
     }
   },
 };
+
+/**
+ * The `unified-extensions-item` custom element is used to manage an extension
+ * in the list of extensions, which is displayed when users click the unified
+ * extensions (toolbar) button.
+ *
+ * This custom element must be initialized with `setAddon()`:
+ *
+ * ```
+ * let item = document.createElement("unified-extensions-item");
+ * item.setAddon(addon);
+ * document.body.appendChild(item);
+ * ```
+ */
+customElements.define(
+  "unified-extensions-item",
+  class extends HTMLElement {
+    /**
+     * Set the add-on for this item. The item will be populated based on the
+     * add-on when it is rendered into the DOM.
+     *
+     * @param {AddonWrapper} addon The add-on to use.
+     */
+    setAddon(addon) {
+      this.addon = addon;
+    }
+
+    connectedCallback() {
+      if (this._openSubmenuButton) {
+        return;
+      }
+
+      const template = document.getElementById(
+        "unified-extensions-item-template"
+      );
+      this.appendChild(template.content.cloneNode(true));
+
+      this._openSubmenuButton = this.querySelector(
+        ".unified-extensions-item-open-submenu"
+      );
+      this._openSubmenuButton.addEventListener("mouseover", () => {
+        this.classList.add("no-hover");
+      });
+      this._openSubmenuButton.addEventListener("mouseout", () => {
+        this.classList.remove("no-hover");
+      });
+
+      this.render();
+    }
+
+    render() {
+      if (!this.addon) {
+        throw new Error(
+          "unified-extensions-item requires an add-on, forgot to call setAddon()?"
+        );
+      }
+
+      this.setAttribute("extension-id", this.addon.id);
+      this.classList.add("subviewbutton", "complex-subviewbutton");
+
+      this.querySelector(
+        ".unified-extensions-item-name"
+      ).textContent = this.addon.name;
+
+      const iconURL = AddonManager.getPreferredIconURL(this.addon, 32, window);
+      if (iconURL) {
+        this.querySelector(".unified-extensions-item-icon").setAttribute(
+          "src",
+          iconURL
+        );
+      }
+    }
+  }
+);
+
+// We must declare `gUnifiedExtensions` using `var` below to avoid a
+// "redeclaration" syntax error.
+var gUnifiedExtensions = {
+  _initialized: false,
+
+  init() {
+    if (this._initialized) {
+      return;
+    }
+
+    // Add a new property to the `gUnifiedExtensions` object for the pref that
+    // is controlling this feature. We also attach a method that will be called
+    // when the pref changes.
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "prefEnabled",
+      "extensions.unifiedExtensions.enabled",
+      false,
+      this.onPrefChange.bind(this)
+    );
+
+    MozXULElement.insertFTLIfNeeded("preview/unifiedExtensions.ftl");
+
+    // Lazy-load the panel view.
+    const template = document.getElementById("unified-extensions-template");
+    if (template) {
+      template.replaceWith(template.content);
+    }
+
+    let listView = document.getElementById("unified-extensions-view");
+    listView.addEventListener("ViewShowing", this);
+    listView.addEventListener("ViewHiding", this);
+
+    this.updateButtonState();
+
+    this._initialized = true;
+  },
+
+  // TODO: Bug 1778684 - Hide the button when there is no visible extension.
+  updateButtonState() {
+    document.getElementById("unified-extensions-button").hidden = !this
+      .prefEnabled;
+  },
+
+  onPrefChange(pref, oldValue, newValue) {
+    this.prefEnabled = newValue;
+    this.updateButtonState();
+  },
+
+  /**
+   * Gets a list of active AddonWrapper instances of type "extension", sorted
+   * alphabetically based on add-on's names.
+   *
+   * @return {Array<AddonWrapper>} An array of active extensions.
+   */
+  async getActiveExtensions() {
+    // TODO: Bug 1778682 - Use a new method on `AddonManager` so that we get
+    // the same list of extensions as the one in `about:addons`.
+
+    // We only want to display active and visible extensions, and we want to
+    // list them alphabetically.
+    let addons = await AddonManager.getAddonsByTypes(["extension"]);
+    addons = addons.filter(addon => !addon.hidden && addon.isActive);
+    addons.sort((a1, a2) => a1.name.localeCompare(a2.name));
+
+    return addons;
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "ViewShowing": {
+        this.onPanelViewShowing(event.target);
+        break;
+      }
+      case "ViewHiding": {
+        this.onPanelViewHiding(event.target);
+      }
+    }
+  },
+
+  async onPanelViewShowing(panelview) {
+    const list = panelview.querySelector(".unified-extensions-list");
+    const extensions = await this.getActiveExtensions();
+
+    for (const extension of extensions) {
+      const item = document.createElement("unified-extensions-item");
+      item.setAddon(extension);
+      list.appendChild(item);
+    }
+  },
+
+  onPanelViewHiding(panelview) {
+    const list = panelview.querySelector(".unified-extensions-list");
+    while (list.lastChild) {
+      list.lastChild.remove();
+    }
+  },
+
+  togglePanel(anchor, aEvent) {
+    if (anchor.getAttribute("open") == "true") {
+      PanelUI.hide();
+    } else {
+      PanelUI.showSubView("unified-extensions-view", anchor, aEvent);
+    }
+  },
+};

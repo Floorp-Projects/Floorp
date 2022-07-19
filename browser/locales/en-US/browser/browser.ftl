@@ -866,3 +866,9 @@ data-reporting-notification-button =
 
 # Label for the indicator shown in the private browsing window titlebar.
 private-browsing-indicator-label = Private browsing
+
+## Unified extensions (toolbar) button
+
+unified-extensions-button =
+    .label = Extensions
+    .tooltiptext = Extensions
