@@ -40,7 +40,7 @@ RefPtr<UtilityAudioDecoderChild> UtilityAudioDecoderChild::GetSingleton() {
 
 mozilla::ipc::IPCResult
 UtilityAudioDecoderChild::RecvUpdateMediaCodecsSupported(
-    const PDMFactory::MediaCodecsSupported& aSupported) {
+    const media::MediaCodecsSupported& aSupported) {
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
       RemoteDecodeIn::UtilityProcess, aSupported);
   return IPC_OK();

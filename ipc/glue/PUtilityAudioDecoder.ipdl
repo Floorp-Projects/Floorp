@@ -5,7 +5,7 @@
 
 include protocol PRemoteDecoderManager;
 
-using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
+using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 
 namespace mozilla {
 
