@@ -1247,8 +1247,7 @@ panelview .toolbarbutton-1 {
   .toolbaritem-combined-buttons:is(
     :not([cui-areatype="toolbar"]),
     [overflowedItem=true]
-  ) > toolbarbutton,
-  .panel-subview-body .subviewbutton.complex-subviewbutton
+  ) > toolbarbutton
 ):focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
@@ -1262,8 +1261,7 @@ panelview .toolbarbutton-1 {
   .toolbaritem-combined-buttons:is(
     :not([cui-areatype="toolbar"]),
     [overflowedItem=true]
-  ) > toolbarbutton,
-  .panel-subview-body .subviewbutton.complex-subviewbutton
+  ) > toolbarbutton
 ):not([disabled]):hover {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
@@ -1277,8 +1275,7 @@ panelview .toolbarbutton-1 {
   .toolbaritem-combined-buttons:is(
     :not([cui-areatype="toolbar"]),
     [overflowedItem=true]
-  ) > toolbarbutton,
-  .panel-subview-body .subviewbutton.complex-subviewbutton
+  ) > toolbarbutton
 ):not([disabled]):hover:active {
   color: inherit;
   background-color: var(--panel-item-active-bgcolor);
