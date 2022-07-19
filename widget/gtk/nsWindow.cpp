@@ -2546,6 +2546,8 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
       // nsSizeMode_Normal, really.
       if (mSizeMode == nsSizeMode_Minimized) {
         gtk_window_deiconify(GTK_WINDOW(mShell));
+        // We need this for actual deiconification on mutter.
+        gtk_window_present(GTK_WINDOW(mShell));
       } else if (mSizeMode == nsSizeMode_Maximized) {
         gtk_window_unmaximize(GTK_WINDOW(mShell));
       }
