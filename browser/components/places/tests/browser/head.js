@@ -162,14 +162,13 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
  *        The toolbar to update.
  * @param {boolean} aVisible
  *        True to make the toolbar visible, false to make it hidden.
- * @param {function} aCallback
  *
  * @returns {Promise}
  * @resolves Any animation associated with updating the toolbar's visibility has
  *           finished.
  * @rejects Never.
  */
-function promiseSetToolbarVisibility(aToolbar, aVisible, aCallback) {
+function promiseSetToolbarVisibility(aToolbar, aVisible) {
   if (isToolbarVisible(aToolbar) != aVisible) {
     let visibilityChanged = TestUtils.waitForCondition(
       () => aToolbar.collapsed != aVisible
