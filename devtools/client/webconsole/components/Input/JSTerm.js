@@ -1489,7 +1489,11 @@ class JSTerm extends Component {
   }
 
   renderEvaluationContextSelector() {
-    if (this.props.editorMode || !this.props.showEvaluationContextSelector) {
+    if (
+      !this.props.webConsoleUI.wrapper.toolbox ||
+      this.props.editorMode ||
+      !this.props.showEvaluationContextSelector
+    ) {
       return null;
     }
 

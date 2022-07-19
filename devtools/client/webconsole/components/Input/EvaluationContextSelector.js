@@ -232,16 +232,12 @@ class EvaluationContextSelector extends Component {
 
   render() {
     const { webConsoleUI, targets, selectedTarget } = this.props;
-
-    // Don't render if there's only one target.
-    // Also bail out if the console is being destroyed (where WebConsoleUI.wrapper gets
-    // nullified).
-    if (targets.length <= 1 || !webConsoleUI.wrapper) {
-      return null;
-    }
-
     const doc = webConsoleUI.document;
     const { toolbox } = webConsoleUI.wrapper;
+
+    if (targets.length <= 1) {
+      return null;
+    }
 
     return MenuButton(
       {
