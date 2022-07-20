@@ -407,7 +407,9 @@ TEST_F(APZCAxisLockTester, BreakAxisLockByLockAngle) {
 }
 
 TEST_F(APZCAxisLockTester, TestDominantAxisScrolling) {
-  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 3);
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
+  SCOPED_GFX_PREF_FLOAT("apz.axis_lock.lock_angle", M_PI / 4.0f);
+  SCOPED_GFX_PREF_FLOAT("apz.axis_lock.breakout_angle", M_PI / 4.0f);
 
   int panY;
   int panX;
@@ -421,7 +423,7 @@ TEST_F(APZCAxisLockTester, TestDominantAxisScrolling) {
 
   // In dominant axis mode, test pan gesture events with varying gesture
   // angles and ensure that we only pan on one axis.
-  for (panX = 0, panY = 50; panY >= 0; panY -= 10, panX += 5) {
+  for (panX = 0, panY = 50; panY >= 0; panY -= 10, panX += 10) {
     // Gesture that should be locked onto one axis
     QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
     PanGesture(PanGestureInput::PANGESTURE_START, manager,

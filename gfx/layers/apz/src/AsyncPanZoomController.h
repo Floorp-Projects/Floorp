@@ -942,12 +942,9 @@ class AsyncPanZoomController {
     FREE,     /* No locking at all */
     STANDARD, /* Default axis locking mode that remains locked until pan ends */
     STICKY,   /* Allow lock to be broken, with hysteresis */
-    DOMINANT_AXIS, /* Only allow movement on one axis */
   };
 
   static AxisLockMode GetAxisLockMode();
-
-  bool UsingStatefulAxisLock() const;
 
   enum PinchLockMode {
     PINCH_FREE,     /* No locking at all */
