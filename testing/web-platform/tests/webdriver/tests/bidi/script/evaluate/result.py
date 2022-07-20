@@ -35,23 +35,7 @@ async def test_primitive_values(bidi_session, top_context, expression, expected)
 @pytest.mark.parametrize(
     "expression, expected",
     [
-        (
-            "new RegExp(/foo/g)",
-            {
-                "type": "regexp",
-                "value": {
-                    "pattern": "foo",
-                    "flags": "g",
-                },
-            },
-        ),
-        (
-            "new Date(1654004849000)",
-            {
-                "type": "date",
-                "value": "2022-05-31T13:47:29.000Z",
-            },
-        ),
+        ("(Symbol('foo'))", {"type": "symbol", },),
         (
             "[1, 'foo', true, new RegExp(/foo/g), [1]]",
             {
@@ -69,6 +53,37 @@ async def test_primitive_values(bidi_session, top_context, expression, expected)
                     },
                     {"type": "array"},
                 ],
+            },
+        ),
+        (
+            "({'foo': {'bar': 'baz'}, 'qux': 'quux'})",
+            {
+                "type": "object",
+                "value": [
+                    ["foo", {"type": "object"}],
+                    ["qux", {"type": "string", "value": "quux"}],
+                ],
+            },
+        ),
+        ("(()=>{})", {"type": "function", },),
+        ("(function(){})", {"type": "function", },),
+        ("(async ()=>{})", {"type": "function", },),
+        ("(async function(){})", {"type": "function", },),
+        (
+            "new RegExp(/foo/g)",
+            {
+                "type": "regexp",
+                "value": {
+                    "pattern": "foo",
+                    "flags": "g",
+                },
+            },
+        ),
+        (
+            "new Date(1654004849000)",
+            {
+                "type": "date",
+                "value": "2022-05-31T13:47:29.000Z",
             },
         ),
         (
@@ -102,24 +117,39 @@ async def test_primitive_values(bidi_session, top_context, expression, expected)
                 ],
             },
         ),
+        ("new WeakMap()", {"type": "weakmap", },),
+        ("new WeakSet()", {"type": "weakset", },),
+        ("new Error('SOME_ERROR_TEXT')", {"type": "error"},),
+        # TODO(sadym): add `iterator` test.
+        # TODO(sadym): add `generator` test.
+        # TODO(sadym): add `proxy` test.
+        ("Promise.resolve()", {"type": "promise", },),
+        ("new Int32Array()", {"type": "typedarray", },),
+        ("new ArrayBuffer()", {"type": "arraybuffer", },),
         (
-            "({'foo': {'bar': 'baz'}, 'qux': 'quux'})",
+            "document.createElement('div')",
             {
-                "type": "object",
-                "value": [
-                    ["foo", {"type": "object"}],
-                    ["qux", {"type": "string", "value": "quux"}],
-                ],
+                "type": "node",
+                'value': {
+                    'attributes': {},
+                    'childNodeCount': 0,
+                    'children': [],
+                    'localName': 'div',
+                    'namespaceURI': 'http://www.w3.org/1999/xhtml',
+                    'nodeName': '',
+                    'nodeType': 1,
+                    'nodeValue': ''
+                }
             },
         ),
-    ],
-    ids=["regexp", "date", "array", "map", "set", "object"],
+        ("window", {"type": "window", },),
+    ]
 )
 async def test_remote_values(bidi_session, top_context, expression, expected):
     result = await bidi_session.script.evaluate(
         expression=expression,
         target=ContextTarget(top_context["context"]),
-        await_promise=True,
+        await_promise=False,
     )
 
     assert result == expected
