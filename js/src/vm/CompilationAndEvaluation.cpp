@@ -311,9 +311,10 @@ class FunctionCompiler {
 
     // Remember the position of ")".
     parameterListEnd_ = funStr_.length();
-    MOZ_ASSERT(FunctionConstructorMedialSigils[0] == ')');
+    static_assert(FunctionConstructorMedialSigils[0] == ')');
 
-    return funStr_.append(FunctionConstructorMedialSigils);
+    return funStr_.append(FunctionConstructorMedialSigils.data(),
+                          FunctionConstructorMedialSigils.length());
   }
 
   template <typename Unit>
@@ -325,7 +326,8 @@ class FunctionCompiler {
                      const ReadOnlyCompileOptions& optionsArg) {
     using js::frontend::FunctionSyntaxKind;
 
-    if (!funStr_.append(FunctionConstructorFinalBrace)) {
+    if (!funStr_.append(FunctionConstructorFinalBrace.data(),
+                        FunctionConstructorFinalBrace.length())) {
       return nullptr;
     }
 
