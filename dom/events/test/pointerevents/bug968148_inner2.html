@@ -252,12 +252,12 @@ function runTests() {
 
   // This should send pointer event to test1d1, test2d1.
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
-                       [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
+                       [left1d1 + 5, left2d1 + 5], [top1d1, top2d1], [rx, rx], [ry, ry],
                        [angle, angle], [force, force], modifiers);
 
   // This should send pointer event to test1d2, test2d2.
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
-                       [left1d1 + 1, left2d1 + 1], [top1d1, top2d1], [rx, rx], [ry, ry],
+                       [left1d1 + 5, left2d1 + 5], [top1d1 + 5, top2d1 + 5], [rx, rx], [ry, ry],
                        [angle, angle], [force, force], modifiers);
 
   is(test1d1pointermovecount, 3, "1d1 shouldn't have got pointermove");
