@@ -194,7 +194,7 @@ jobs:
         parent: push-to-try
     periodic-updates:
         symbol: I(file)
-        parent: ubuntu1804-base
+        parent: debian11-base
     firefox-snap:
         symbol: I(snap)
     firefox-flatpak:
