@@ -4,7 +4,7 @@ Page Inspector
 
 Use the Page Inspector to examine and modify the HTML and CSS of a page.
 
-You can examine pages loaded in the local copy of Firefox or in a remote target such as Firefox for Android. See :doc:`remote debugging <../remote_debugging/index>` to learn how to connect the developer tools to a remote target.
+You can examine pages loaded in the local copy of Firefox or in a remote target such as Firefox for Android. See :doc:`about debugging <../about_colon_debugging/index>` to learn how to connect the developer tools to a remote target.
 
 
 User Interface Tour
