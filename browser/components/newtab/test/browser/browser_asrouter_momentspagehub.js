@@ -1,14 +1,14 @@
-const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+const { PanelTestProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
-const { MomentsPageHub } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/MomentsPageHub.sys.mjs"
+const { MomentsPageHub } = ChromeUtils.import(
+  "resource://activity-stream/lib/MomentsPageHub.jsm"
 );
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-const { ASRouter } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouter.sys.mjs"
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
 );
 
 const HOMEPAGE_OVERRIDE_PREF = "browser.startup.homepage_override.once";

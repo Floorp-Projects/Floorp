@@ -13,8 +13,8 @@ let { AboutHomeStartupCache } = ChromeUtils.import(
 // we need and write them to preferences here dynamically. We do this in
 // its own scope to avoid polluting the global scope.
 {
-  const { PREFS_CONFIG } = ChromeUtils.importESModule(
-    "resource://activity-stream/lib/ActivityStream.sys.mjs"
+  const { PREFS_CONFIG } = ChromeUtils.import(
+    "resource://activity-stream/lib/ActivityStream.jsm"
   );
 
   let defaultDSConfig = JSON.parse(
@@ -112,8 +112,8 @@ async function simulateRestart(
 
   info("Waiting for AboutHomeStartupCacheChild to uninit");
   await SpecialPowers.spawn(browser, [], async () => {
-    let { AboutHomeStartupCacheChild } = ChromeUtils.importESModule(
-      "resource:///modules/AboutNewTabService.sys.mjs"
+    let { AboutHomeStartupCacheChild } = ChromeUtils.import(
+      "resource:///modules/AboutNewTabService.jsm"
     );
     AboutHomeStartupCacheChild.uninit();
   });
@@ -134,8 +134,8 @@ async function simulateRestart(
     if (ensureCacheWinsRace) {
       info("Ensuring cache bytes are available");
       await SpecialPowers.spawn(browser, [], async () => {
-        let { AboutHomeStartupCacheChild } = ChromeUtils.importESModule(
-          "resource:///modules/AboutNewTabService.sys.mjs"
+        let { AboutHomeStartupCacheChild } = ChromeUtils.import(
+          "resource:///modules/AboutNewTabService.jsm"
         );
         let pageStream = AboutHomeStartupCacheChild._pageInputStream;
         let scriptStream = AboutHomeStartupCacheChild._scriptInputStream;

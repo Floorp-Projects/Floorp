@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { AboutWelcomeTelemetry } = ChromeUtils.importESModule(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.sys.mjs"
+const { AboutWelcomeTelemetry } = ChromeUtils.import(
+  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
 );
 const { AttributionCode } = ChromeUtils.import(
   "resource:///modules/AttributionCode.jsm"

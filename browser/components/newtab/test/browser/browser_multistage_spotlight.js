@@ -3,11 +3,11 @@
 
 "use strict";
 
-const { Spotlight } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/Spotlight.sys.mjs"
+const { Spotlight } = ChromeUtils.import(
+  "resource://activity-stream/lib/Spotlight.jsm"
 );
-const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+const { PanelTestProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"

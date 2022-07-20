@@ -1,18 +1,18 @@
-const { CFRPageActions } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRPageActions.sys.mjs"
+const { CFRPageActions } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRPageActions.jsm"
 );
-const { ASRouterTriggerListeners } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouterTriggerListeners.sys.mjs"
+const { ASRouterTriggerListeners } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
-const { ASRouter } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouter.sys.mjs"
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+const { CFRMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
 
-const { TelemetryFeed } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
+const { TelemetryFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/TelemetryFeed.jsm"
 );
 
 const createDummyRecommendation = ({

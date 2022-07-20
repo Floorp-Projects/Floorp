@@ -1,11 +1,11 @@
 const TEST_URL =
   "https://example.com/browser/toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/index.md";
 
-const { ASRouterTriggerListeners } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouterTriggerListeners.sys.mjs"
+const { ASRouterTriggerListeners } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
-const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+const { CFRMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
 const { JsonSchema } = ChromeUtils.import(
   "resource://gre/modules/JsonSchema.jsm"

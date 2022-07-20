@@ -1,5 +1,5 @@
-const { ASRouterTriggerListeners } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouterTriggerListeners.sys.mjs"
+const { ASRouterTriggerListeners } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
 
 add_setup(async function() {

@@ -3,15 +3,15 @@
 
 "use strict";
 
-const { ASRouter, MessageLoaderUtils } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouter.sys.mjs"
+const { ASRouter, MessageLoaderUtils } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { PanelTestProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
+const { PanelTestProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { RemoteL10n } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/RemoteL10n.sys.mjs"
+const { RemoteL10n } = ChromeUtils.import(
+  "resource://activity-stream/lib/RemoteL10n.jsm"
 );
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"

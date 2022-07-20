@@ -1,8 +1,8 @@
-const { OnboardingMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/OnboardingMessageProvider.sys.mjs"
+const { OnboardingMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
 );
-const { ToolbarBadgeHub } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ToolbarBadgeHub.sys.mjs"
+const { ToolbarBadgeHub } = ChromeUtils.import(
+  "resource://activity-stream/lib/ToolbarBadgeHub.jsm"
 );
 
 add_task(async function test_setup() {

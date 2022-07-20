@@ -12,8 +12,8 @@ const TEST_URL3 = "https://foo.com/";
 const TEST_URL4 = "https://bar.com/";
 const TEST_URL5 = "https://something.com/";
 
-ChromeUtils.defineESModuleGetters(this, {
-  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
 async function addSnapshotAndFilter(url) {

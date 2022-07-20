@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+const { CFRMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
 
 add_task(async function test_all_test_messages() {

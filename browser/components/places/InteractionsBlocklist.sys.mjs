@@ -4,13 +4,18 @@
 
 "use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
