@@ -32,6 +32,9 @@ class ShadowRealmObject : public NativeObject {
   }
 };
 
+void ReportPotentiallyDetailedMessage(JSContext* cx,
+                                      const unsigned detailedError,
+                                      const unsigned genericError);
 }  // namespace js
 
 #endif
