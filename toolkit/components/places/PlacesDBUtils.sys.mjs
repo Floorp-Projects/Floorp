@@ -25,9 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["PlacesDBUtils", "PlacesDBUtilsIdleMaintenance"];
-
-var PlacesDBUtils = {
+export var PlacesDBUtils = {
   _isShuttingDown: false,
 
   _clearTaskQueue: false,
@@ -1469,7 +1467,7 @@ async function integrity(dbName) {
   }
 }
 
-function PlacesDBUtilsIdleMaintenance() {}
+export function PlacesDBUtilsIdleMaintenance() {}
 
 PlacesDBUtilsIdleMaintenance.prototype = {
   observe(subject, topic, data) {

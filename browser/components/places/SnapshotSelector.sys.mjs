@@ -1,8 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-const EXPORTED_SYMBOLS = ["SnapshotSelector"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -78,7 +76,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
  * This component is intentionally decoupled from where the context comes from
  * so it can be unit tested.
  */
-class SnapshotSelector extends EventEmitter {
+export class SnapshotSelector extends EventEmitter {
   /**
    * All of the active selectors.
    */

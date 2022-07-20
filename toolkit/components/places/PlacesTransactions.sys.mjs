@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PlacesTransactions"];
-
 /**
  * Overview
  * --------
@@ -306,7 +304,7 @@ XPCOMUtils.defineLazyGetter(
   () => new TransactionsHistoryArray()
 );
 
-var PlacesTransactions = {
+export var PlacesTransactions = {
   /**
    * @see Batches in the module documentation.
    */

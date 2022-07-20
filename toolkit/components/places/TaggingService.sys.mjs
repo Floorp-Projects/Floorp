@@ -12,7 +12,7 @@ const TOPIC_SHUTDOWN = "places-shutdown";
 /**
  * The Places Tagging Service
  */
-function TaggingService() {
+export function TaggingService() {
   this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
 
   // Observe bookmarks changes.
@@ -536,7 +536,7 @@ class TagSearch {
 }
 
 // Implements nsIAutoCompleteSearch
-function TagAutoCompleteSearch() {}
+export function TagAutoCompleteSearch() {}
 
 TagAutoCompleteSearch.prototype = {
   /*
@@ -566,5 +566,3 @@ TagAutoCompleteSearch.prototype = {
   classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}"),
   QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteSearch"]),
 };
-
-var EXPORTED_SYMBOLS = ["TaggingService", "TagAutoCompleteSearch"];

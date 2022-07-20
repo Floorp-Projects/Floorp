@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["InteractionsChild"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -26,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * Listens for interactions in the child process and passes information to the
  * parent.
  */
-class InteractionsChild extends JSWindowActorChild {
+export class InteractionsChild extends JSWindowActorChild {
   #progressListener;
   #currentURL;
 
