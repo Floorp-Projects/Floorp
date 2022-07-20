@@ -14,11 +14,8 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.jsm",
   ContextualIdentityService:

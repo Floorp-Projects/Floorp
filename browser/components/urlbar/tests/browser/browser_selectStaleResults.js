@@ -7,8 +7,8 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 add_task(async function init() {

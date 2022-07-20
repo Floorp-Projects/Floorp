@@ -13,10 +13,10 @@
 const ENGINE_NAME = "MozSearch";
 const ENGINE_DOMAIN = "example.com";
 
-ChromeUtils.defineESModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 function snapshotHistograms() {

@@ -19,10 +19,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -33,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",

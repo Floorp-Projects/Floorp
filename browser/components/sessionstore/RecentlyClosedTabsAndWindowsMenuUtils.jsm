@@ -17,9 +17,11 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
 
 var navigatorBundle = Services.strings.createBundle(
   "chrome://browser/locale/browser.properties"

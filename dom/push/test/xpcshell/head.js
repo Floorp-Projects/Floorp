@@ -7,15 +7,12 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PermissionTestUtils: "resource://testing-common/PermissionTestUtils.jsm",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   PushCrypto: "resource://gre/modules/PushCrypto.jsm",
   PushService: "resource://gre/modules/PushService.jsm",

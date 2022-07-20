@@ -22,10 +22,6 @@ const { E10SUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
@@ -34,6 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   UIState: "resource://services-sync/UIState.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

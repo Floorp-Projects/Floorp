@@ -8,9 +8,11 @@ const EXPORTED_SYMBOLS = ["LinkHandlerParent"];
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
 
 let gTestListeners = new Set();
 

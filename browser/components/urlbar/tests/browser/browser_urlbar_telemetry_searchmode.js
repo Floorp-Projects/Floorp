@@ -19,10 +19,10 @@ let engineDomain;
 // The preference to enable suggestions.
 const SUGGEST_PREF = "browser.search.suggest.enabled";
 
-ChromeUtils.defineESModuleGetters(this, {
+XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+    "resource:///modules/UrlbarProviderTabToSearch.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

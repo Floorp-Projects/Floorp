@@ -44,8 +44,8 @@
 var EXPORTED_SYMBOLS = ["AeroPeek"];
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"

@@ -18,11 +18,11 @@ var { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
-var { PlacesSyncUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesSyncUtils.sys.mjs"
+var { PlacesSyncUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesSyncUtils.jsm"
 );
-var { SyncedBookmarksMirror } = ChromeUtils.importESModule(
-  "resource://gre/modules/SyncedBookmarksMirror.sys.mjs"
+var { SyncedBookmarksMirror } = ChromeUtils.import(
+  "resource://gre/modules/SyncedBookmarksMirror.jsm"
 );
 var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
 var { FileTestUtils } = ChromeUtils.import(
