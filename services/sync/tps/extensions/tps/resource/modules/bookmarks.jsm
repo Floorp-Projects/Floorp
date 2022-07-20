@@ -15,14 +15,14 @@ var EXPORTED_SYMBOLS = [
   "DumpBookmarks",
 ];
 
-const { PlacesBackups } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesBackups.sys.mjs"
+const { PlacesBackups } = ChromeUtils.import(
+  "resource://gre/modules/PlacesBackups.jsm"
 );
-const { PlacesSyncUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesSyncUtils.sys.mjs"
+const { PlacesSyncUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesSyncUtils.jsm"
 );
-const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 

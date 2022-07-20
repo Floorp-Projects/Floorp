@@ -11,19 +11,16 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
-    "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
+  const { QuickSuggestTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/QuickSuggestTestUtils.jsm"
   );
   module.init(this);
   registerCleanupFunction(() => module.uninit());

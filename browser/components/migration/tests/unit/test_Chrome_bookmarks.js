@@ -7,8 +7,8 @@ const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
 
-const { PlacesUIUtils } = ChromeUtils.importESModule(
-  "resource:///modules/PlacesUIUtils.sys.mjs"
+const { PlacesUIUtils } = ChromeUtils.import(
+  "resource:///modules/PlacesUIUtils.jsm"
 );
 
 let rootDir = do_get_file("chromefiles/", true);

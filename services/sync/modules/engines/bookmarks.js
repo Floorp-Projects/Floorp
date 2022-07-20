@@ -29,18 +29,15 @@ const { Svc, Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
-  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  SyncedBookmarksMirror: "resource://gre/modules/SyncedBookmarksMirror.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Observers: "resource://services-common/observers.js",
   OS: "resource://gre/modules/osfile.jsm",
+  PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
+  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Resource: "resource://services-sync/resource.js",
+  SyncedBookmarksMirror: "resource://gre/modules/SyncedBookmarksMirror.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "ANNOS_TO_TRACK", () => [

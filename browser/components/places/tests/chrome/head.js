@@ -10,22 +10,32 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "BrowserTestUtils",
   "resource://testing-common/BrowserTestUtils.jsm"
 );
 
-ChromeUtils.defineESModuleGetters(window, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-ChromeUtils.defineESModuleGetters(window, {
-  PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  window,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  window,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  window,
+  "PlacesTransactions",
+  "resource://gre/modules/PlacesTransactions.jsm"
+);
 
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

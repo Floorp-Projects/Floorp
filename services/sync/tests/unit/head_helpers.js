@@ -15,8 +15,8 @@ var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
 );
 var { Async } = ChromeUtils.import("resource://services-common/async.js");
 var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
-var { PlacesTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/PlacesTestUtils.sys.mjs"
+var { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
 );
 var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 var { SerializableSet, Svc, Utils, getChromeWindow } = ChromeUtils.import(
@@ -25,11 +25,11 @@ var { SerializableSet, Svc, Utils, getChromeWindow } = ChromeUtils.import(
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-var { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
-var { PlacesSyncUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesSyncUtils.sys.mjs"
+var { PlacesSyncUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesSyncUtils.jsm"
 );
 var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
