@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.dom += [
     "BackgroundFileSystemParent.h",
+    "FileSystemQuotaClient.h",
     "OriginPrivateFileSystemParent.h",
 ]
 
@@ -16,6 +17,8 @@ DIRS += [
 UNIFIED_SOURCES += [
     "BackgroundFileSystemParent.cpp",
     "FileSystemHashSource.cpp",
+    "FileSystemQuotaClient.cpp",
+    "FileSystemQuotaClientImpl.cpp",
     "OriginPrivateFileSystemParent.cpp",
     "ResultStatement.cpp",
 ]
