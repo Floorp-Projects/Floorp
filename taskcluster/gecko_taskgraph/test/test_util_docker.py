@@ -33,14 +33,17 @@ class TestDocker(unittest.TestCase):
             with open(p, "w") as f:
                 f.write("data\n")
             os.chmod(p, MODE_STANDARD)
-            self.assertEqual(
+            self.assertIn(
                 docker.generate_context_hash(
                     tmpdir,
                     os.path.join(tmpdir, "docker/my-image"),
                     "my-image",
                     {},
                 ),
-                "680532a33c845e3b4f8ea8a7bd697da579b647f28c29f7a0a71e51e6cca33983",
+                (
+                    "680532a33c845e3b4f8ea8a7bd697da579b647f28c29f7a0a71e51e6cca33983",
+                    "cc02f943ae87b283749369fa9c4f6a74639c27a7b9972c99de58e5d9fb3a98ae",
+                ),
             )
         finally:
             shutil.rmtree(tmpdir)
@@ -100,8 +103,12 @@ class TestDocker(unittest.TestCase):
 
             tp = os.path.join(tmp, "tar")
             h = docker.create_context_tar(tmp, d, tp, "my_image", {})
-            self.assertEqual(
-                h, "eae3ad00936085eb3e5958912f79fb06ee8e14a91f7157c5f38625f7ddacb9c7"
+            self.assertIn(
+                h,
+                (
+                    "eae3ad00936085eb3e5958912f79fb06ee8e14a91f7157c5f38625f7ddacb9c7",
+                    "9ff54ee091c4f346e94e809b03efae5aa49a5c1db152f9f633682cfa005f7422",
+                ),
             )
 
             # File prefix should be "my_image"
@@ -133,8 +140,12 @@ class TestDocker(unittest.TestCase):
 
             tp = os.path.join(tmp, "tar")
             h = docker.create_context_tar(tmp, d, tp, "test_image", {})
-            self.assertEqual(
-                h, "49dc3827530cd344d7bcc52e1fdd4aefc632568cf442cffd3dd9633a58f271bf"
+            self.assertIn(
+                h,
+                (
+                    "49dc3827530cd344d7bcc52e1fdd4aefc632568cf442cffd3dd9633a58f271bf",
+                    "8f8e3dd2b712003cd12bb39e5a84fc2a7c06e891cf481613a52bf3db472c4ca9",
+                ),
             )
 
             with tarfile.open(tp, "r:gz") as tf:
@@ -217,8 +228,12 @@ class TestDocker(unittest.TestCase):
             tp = os.path.join(tmp, "tar")
             h = docker.create_context_tar(tmp, d, tp, "my_image", {})
 
-            self.assertEqual(
-                h, "a392f23cd6606ae43116390a4d0113354cff1e688a41d46f48b0fb25e90baa13"
+            self.assertIn(
+                h,
+                (
+                    "a392f23cd6606ae43116390a4d0113354cff1e688a41d46f48b0fb25e90baa13",
+                    "02325bdc508c2e941959170beeb840f6bb91d0675cb8095783a7db7301d136b2",
+                ),
             )
 
             with tarfile.open(tp, "r:gz") as tf:
