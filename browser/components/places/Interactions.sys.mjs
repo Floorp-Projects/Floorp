@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Interactions"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -581,7 +579,7 @@ class _Interactions {
   ]);
 }
 
-const Interactions = new _Interactions();
+export const Interactions = new _Interactions();
 
 /**
  * Store interactions data in the Places database.

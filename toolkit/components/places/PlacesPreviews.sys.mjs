@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PlacesPreviews", "PlacesPreviewsHelperService"];
-
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
@@ -202,7 +200,7 @@ class DeletionHandler {
  * format. All the previews are saved into a "places-previews" folder under
  * the roaming profile folder.
  */
-const PlacesPreviews = new (class extends EventEmitter {
+export const PlacesPreviews = new (class extends EventEmitter {
   #placesObserver = null;
   #deletionHandler = null;
   // This is used as a cache to avoid fetching the same preview multiple
@@ -446,7 +444,8 @@ const PlacesPreviews = new (class extends EventEmitter {
  * Used to exposes nsIPlacesPreviewsHelperService to the moz-page-thumb protocol
  * cpp implementation.
  */
-function PlacesPreviewsHelperService() {}
+export function PlacesPreviewsHelperService() {}
+
 PlacesPreviewsHelperService.prototype = {
   classID: Components.ID("{bd0a4d3b-ff26-4d4d-9a62-a513e1c1bf92}"),
   QueryInterface: ChromeUtils.generateQI(["nsIPlacesPreviewsHelperService"]),

@@ -7,7 +7,7 @@
 TEST_DIRS += ["gtest"]
 
 TESTING_JS_MODULES += [
-    "PlacesTestUtils.jsm",
+    "PlacesTestUtils.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [

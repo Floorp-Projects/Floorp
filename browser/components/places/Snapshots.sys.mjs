@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Snapshots"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -198,7 +196,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * - places-snapshots-deleted, data: JSON encoded array of urls
  *     Sent when a snapshot is removed.
  */
-const Snapshots = new (class Snapshots {
+export const Snapshots = new (class Snapshots {
   USER_PERSISTED = {
     // The snapshot was created automatically.
     NO: 0,
