@@ -109,31 +109,28 @@ RefPtr<File> MakeGetFileResult(nsIGlobalObject* aGlobal, const nsString& aName,
 }
 
 void GetDirectoryContentsResponseHandler(
-    nsIGlobalObject* aGlobal, FileSystemGetEntriesResponse&& aResponse,
-    ArrayAppendable& aSink, RefPtr<FileSystemActorHolder>& aActor) {
+    nsIGlobalObject* aGlobal, FileSystemDirectoryListing&& aResponse,
+    ArrayAppendable& /* aSink */, RefPtr<FileSystemActorHolder>& aActor) {
   // TODO: Add page size to FileSystemConstants, preallocate and handle overflow
-  const auto& listing = aResponse.get_FileSystemDirectoryListing();
   nsTArray<RefPtr<FileSystemHandle>> batch;
 
-  for (const auto& it : listing.files()) {
+  for (const auto& it : aResponse.files()) {
     RefPtr<FileSystemHandle> handle =
         new FileSystemFileHandle(aGlobal, aActor, it);
     batch.AppendElement(handle);
   }
 
-  for (const auto& it : listing.directories()) {
+  for (const auto& it : aResponse.directories()) {
     RefPtr<FileSystemHandle> handle =
         new FileSystemDirectoryHandle(aGlobal, aActor, it);
     batch.AppendElement(handle);
   }
-
-  aSink.append(batch);
 }
 
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
     nsIGlobalObject* aGlobal, FileSystemGetRootResponse&& aResponse,
-    const RefPtr<FileSystemDirectoryHandle>& /* aReturns */, const Name& aName,
-    RefPtr<FileSystemActorHolder>& aActor) {
+    const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
+    const Name& aName, RefPtr<FileSystemActorHolder>& aActor) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
       aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
   return result;
@@ -141,16 +138,17 @@ RefPtr<FileSystemDirectoryHandle> MakeResolution(
 
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
     nsIGlobalObject* aGlobal, FileSystemGetHandleResponse&& aResponse,
-    const RefPtr<FileSystemDirectoryHandle>& /* aReturns */, const Name& aName,
-    RefPtr<FileSystemActorHolder>& aActor) {
+    const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
+    const Name& aName, RefPtr<FileSystemActorHolder>& aActor) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
       aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+
   return result;
 }
 
 RefPtr<FileSystemFileHandle> MakeResolution(
     nsIGlobalObject* aGlobal, FileSystemGetHandleResponse&& aResponse,
-    const RefPtr<FileSystemFileHandle>& /* aReturns */, const Name& aName,
+    const RefPtr<FileSystemFileHandle>& /* aResolution */, const Name& aName,
     RefPtr<FileSystemActorHolder>& aActor) {
   RefPtr<FileSystemFileHandle> result = new FileSystemFileHandle(
       aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
@@ -159,7 +157,7 @@ RefPtr<FileSystemFileHandle> MakeResolution(
 
 RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             FileSystemGetFileResponse&& aResponse,
-                            const RefPtr<File>& /* aReturns */,
+                            const RefPtr<File>& /* aResolution */,
                             const Name& aName,
                             RefPtr<FileSystemActorHolder>& aActor) {
   auto& fileProperties = aResponse.get_FileSystemFileProperties();
@@ -235,29 +233,6 @@ void ResolveCallback(FileSystemGetEntriesResponse&& aResponse,
 
   // TODO: Remove this when sink is ready
   aPromise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-template <>
-void ResolveCallback(FileSystemResolveResponse&& aResponse,
-                     // NOLINTNEXTLINE(performance-unnecessary-value-param)
-                     RefPtr<Promise> aPromise) {
-  MOZ_ASSERT(aPromise);
-  if (Promise::PromiseState::Pending != aPromise->State()) {
-    return;
-  }
-
-  if (FileSystemResolveResponse::Tnsresult == aResponse.type()) {
-    aPromise->MaybeReject(aResponse.get_nsresult());
-    return;
-  }
-
-  auto& maybePath = aResponse.get_MaybeFileSystemPath();
-  if (maybePath.isSome()) {
-    aPromise->MaybeResolve(maybePath.value().path());
-    return;
-  }
-
-  aPromise->MaybeResolveWithUndefined();
 }
 
 template <class TResponse, class TReturns, class... Args,
@@ -477,25 +452,6 @@ void FileSystemRequestHandler::RemoveEntry(
   });
   aActor->Actor()->SendRemoveEntry(request, std::move(onResolve),
                                    std::move(onReject));
-}
-
-void FileSystemRequestHandler::Resolve(
-    RefPtr<FileSystemActorHolder>& aActor,
-    // NOLINTNEXTLINE(performance-unnecessary-value-param)
-    const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise) {
-  MOZ_ASSERT(!aEndpoints.parentId().IsEmpty());
-  MOZ_ASSERT(!aEndpoints.childId().IsEmpty());
-  MOZ_ASSERT(aPromise);
-
-  FileSystemResolveRequest request(aEndpoints);
-
-  auto&& onResolve =
-      SelectResolveCallback<FileSystemResolveResponse, void>(aPromise);
-
-  auto&& onReject = GetRejectCallback(aPromise);
-
-  aActor->Actor()->SendResolve(request, std::move(onResolve),
-                               std::move(onReject));
 }
 
 }  // namespace mozilla::dom::fs

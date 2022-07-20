@@ -6,7 +6,6 @@
 
 #include "BackgroundFileSystemParent.h"
 #include "OriginPrivateFileSystemParent.h"
-#include "datamodel/FileSystemDataManager.h"
 
 #include "nsNetCID.h"
 #include "mozilla/dom/FileSystemTypes.h"
@@ -30,6 +29,26 @@ LazyLogModule gOPFSLog("OPFS");
 
 namespace mozilla::dom {
 
+namespace fs::data {
+
+EntryId GetRootHandle(const Origin& aOrigin) { return "not implemented"_ns; }
+
+// TODO: Replace with real FileSystemDataManager
+class FileSystemDataManager : public FileSystemDataManagerBase {
+ public:
+  using result_t = Result<FileSystemDataManager*, nsresult>;
+  static FileSystemDataManager::result_t CreateFileSystemDataManager(
+      const fs::Origin& aOrigin);
+};
+
+FileSystemDataManager::result_t
+FileSystemDataManager::CreateFileSystemDataManager(
+    const fs::Origin& /*aOrigin*/) {
+  return nullptr;
+}
+
+}  // namespace fs::data
+
 using RootPromise = MozPromise<fs::FileSystemGetRootResponse, nsresult, false>;
 
 mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
@@ -48,13 +67,10 @@ mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
       quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(mPrincipalInfo);
 
   auto sendBackError = [aResolver](const auto& aRv) {
-    aResolver(fs::FileSystemGetRootResponse(aRv.NSResult()));
+    aResolver(fs::FileSystemGetRootResponse(aRv));
   };
 
-  QM_TRY_UNWRAP(fs::EntryId rootId, fs::data::GetRootHandle(origin), IPC_OK(),
-                [aResolver](const auto& aRv) {
-                  aResolver(fs::FileSystemGetRootResponse(aRv.NSResult()));
-                });
+  fs::EntryId rootId = fs::data::GetRootHandle(origin);
 
   // This opens the quota manager, which has to be done on PBackground
   QM_TRY_UNWRAP(
@@ -76,19 +92,19 @@ mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
   // We'll have to thread-hop back to this thread to respond.  We could
   // just have the create be one-way, then send the actual request on the
   // new channel, but that's an extra IPC instead.
-  InvokeAsync(
-      taskqueue, __func__,
-      [origin, parentEp = std::move(aParentEp), aResolver, rootId,
-       data = std::move(data), taskqueue, pbackground]() mutable {
-        RefPtr<OriginPrivateFileSystemParent> parent =
-            new OriginPrivateFileSystemParent(taskqueue, data.release());
-        if (!parentEp.Bind(parent)) {
-          auto response = fs::FileSystemGetRootResponse(NS_ERROR_FAILURE);
-          return RootPromise::CreateAndReject(response, __func__);
-        }
-        // Send response back to pbackground to send to child
-        return RootPromise::CreateAndResolve(rootId, __func__);
-      })
+  InvokeAsync(taskqueue, __func__,
+              [origin, parentEp = std::move(aParentEp), aResolver, rootId,
+               data = std::move(data), taskqueue, pbackground]() mutable {
+                RefPtr<OriginPrivateFileSystemParent> parent =
+                    new OriginPrivateFileSystemParent(taskqueue);
+                if (!parentEp.Bind(parent)) {
+                  auto response =
+                      fs::FileSystemGetRootResponse(NS_ERROR_FAILURE);
+                  return RootPromise::CreateAndReject(response, __func__);
+                }
+                // Send response back to pbackground to send to child
+                return RootPromise::CreateAndResolve(rootId, __func__);
+              })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [aResolver](const RootPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsReject()) {

@@ -6,25 +6,13 @@
 
 EXPORTS.mozilla.dom += [
     "BackgroundFileSystemParent.h",
-    "FileSystemQuotaClient.h",
     "OriginPrivateFileSystemParent.h",
-]
-
-DIRS += [
-    "datamodel",
 ]
 
 UNIFIED_SOURCES += [
     "BackgroundFileSystemParent.cpp",
     "FileSystemHashSource.cpp",
-    "FileSystemQuotaClient.cpp",
-    "FileSystemQuotaClientImpl.cpp",
     "OriginPrivateFileSystemParent.cpp",
-    "ResultStatement.cpp",
-]
-
-LOCAL_INCLUDES += [
-    "/dom/fs/include",
 ]
 
 FINAL_LIBRARY = "xul"

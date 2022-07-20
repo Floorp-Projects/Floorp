@@ -8,8 +8,6 @@ UNIFIED_SOURCES = [
     "TestFileSystemHashSource.cpp",
 ]
 
-TEST_DIRS += ["datamodel"]
-
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul-gtest"
