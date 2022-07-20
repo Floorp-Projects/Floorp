@@ -71,7 +71,7 @@ class HistoryRobot {
         deleteButton(item).click()
     }
 
-    fun clickDeleteAllHistoryButton() = deleteAllButton().click()
+    fun clickDeleteAllHistoryButton() = deleteButton().click()
 
     fun confirmDeleteAllHistory() {
         onView(withText("Delete"))
@@ -104,7 +104,7 @@ private fun pageUrl() = onView(withId(R.id.url))
 private fun deleteButton(title: String) =
     onView(allOf(withId(R.id.overflow_menu), hasSibling(withText(title))))
 
-private fun deleteAllButton() = onView(withId(R.id.history_delete_all))
+private fun deleteButton() = onView(withId(R.id.history_delete))
 
 private fun snackBarText() = onView(withId(R.id.snackbar_text))
 
@@ -147,7 +147,7 @@ private fun assertPageUrl(expectedUrl: Uri) = pageUrl()
     .check(matches(withText(Matchers.containsString(expectedUrl.toString()))))
 
 private fun assertDeleteConfirmationMessage() =
-    onView(withText("This will delete all of your browsing data."))
+    onView(withText("Removes history (including history synced from other devices), cookies and other browsing data."))
         .inRoot(isDialog())
         .check(matches(isDisplayed()))
 

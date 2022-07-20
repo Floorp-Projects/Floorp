@@ -7,7 +7,6 @@ package org.mozilla.fenix.library.historymetadata.controller
 import android.content.Context
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.HistoryMetadataAction
@@ -22,6 +21,7 @@ import org.mozilla.fenix.ext.components
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.toPendingDeletionHistory
+import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragment.DeleteAllConfirmationDialogFragment
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentStore
@@ -74,9 +74,14 @@ interface HistoryMetadataGroupController {
     fun handleDelete(items: Set<History.Metadata>)
 
     /**
-     * Deletes all the history metadata items in this group.
+     * Displays a [DeleteAllConfirmationDialogFragment] prompt.
      */
     fun handleDeleteAll()
+
+    /**
+     * Deletes history metadata items in this group.
+     */
+    fun handleDeleteAllConfirmed()
 }
 
 /**
@@ -90,13 +95,14 @@ class DefaultHistoryMetadataGroupController(
     private val store: HistoryMetadataGroupFragmentStore,
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
     private val navController: NavController,
+    private val scope: CoroutineScope,
     private val searchTerm: String,
     private val deleteSnackbar: (
         items: Set<History.Metadata>,
         undo: suspend (Set<History.Metadata>) -> Unit,
         delete: (Set<History.Metadata>) -> suspend (context: Context) -> Unit
     ) -> Unit,
-    private val promptDeleteAll: (() -> Unit) -> Unit,
+    private val promptDeleteAll: () -> Unit,
     private val allDeletedSnackbar: () -> Unit
 ) : HistoryMetadataGroupController {
 
@@ -144,7 +150,7 @@ class DefaultHistoryMetadataGroupController(
 
     private fun delete(items: Set<History.Metadata>): suspend (context: Context) -> Unit {
         return { context ->
-            CoroutineScope(IO).launch {
+            scope.launch {
                 val isDeletingLastItem = items.containsAll(store.state.items)
                 items.forEach {
                     store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
@@ -163,11 +169,11 @@ class DefaultHistoryMetadataGroupController(
     }
 
     override fun handleDeleteAll() {
-        promptDeleteAll.invoke(::deleteAll)
+        promptDeleteAll.invoke()
     }
 
-    private fun deleteAll() {
-        CoroutineScope(IO).launch {
+    override fun handleDeleteAllConfirmed() {
+        scope.launch {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
             store.state.items.forEach {
                 historyStorage.deleteVisitsFor(it.url)

@@ -11,7 +11,7 @@
         app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/history_delete_all"
+        android:id="@+id/history_delete"
         android:icon="@drawable/ic_delete"
         android:title="@string/history_delete_all"
         app:iconTint="?attr/textPrimary"

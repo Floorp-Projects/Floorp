@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
+import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
@@ -14,7 +15,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
@@ -23,14 +26,9 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.action.RecentlyClosedAction
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
@@ -48,11 +46,12 @@ import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.databinding.FragmentHistoryBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
@@ -100,13 +99,16 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         val historyController: HistoryController = DefaultHistoryController(
             store = historyStore,
             appStore = requireContext().components.appStore,
+            browserStore = requireComponents.core.store,
+            historyStorage = requireComponents.core.historyStorage,
             historyProvider = historyProvider,
             navController = findNavController(),
             scope = lifecycleScope,
             openToBrowser = ::openItem,
-            displayDeleteAll = ::displayDeleteAllDialog,
+            displayDeleteTimeRange = ::displayDeleteTimeRange,
             invalidateOptionsMenu = ::invalidateOptionsMenu,
-            deleteSnackbar = :: deleteSnackbar,
+            deleteSnackbar = ::deleteSnackbar,
+            onTimeFrameDeleted = ::onTimeFrameDeleted,
             syncHistory = ::syncHistory,
             settings = requireContext().components.settings,
         )
@@ -171,6 +173,16 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             },
             delete(items)
         )
+    }
+
+    private fun onTimeFrameDeleted() {
+        runIfFragmentIsAttached {
+            historyView.historyAdapter.refresh()
+            showSnackBar(
+                binding.root,
+                getString(R.string.preferences_delete_browsing_data_snackbar)
+            )
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -280,8 +292,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             historyInteractor.onSearch()
             true
         }
-        R.id.history_delete_all -> {
-            historyInteractor.onDeleteAll()
+        R.id.history_delete -> {
+            historyInteractor.onDeleteTimeRange()
             true
         }
         else -> super.onOptionsItemSelected(item)
@@ -331,40 +343,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         )
     }
 
-    private fun displayDeleteAllDialog() {
-        activity?.let { activity ->
-            AlertDialog.Builder(activity).apply {
-                setMessage(R.string.delete_browsing_data_prompt_message)
-                setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
-                    dialog.cancel()
-                }
-                setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
-                    historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
-                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
-                    lifecycleScope.launch(IO) {
-                        GleanHistory.removedAll.record(NoExtras())
-                        requireComponents.core.store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
-                        requireComponents.core.historyStorage.deleteEverything()
-                        deleteOpenTabsEngineHistory(requireComponents.core.store)
-                        launch(Main) {
-                            historyView.historyAdapter.refresh()
-                            historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
-                            showSnackBar(
-                                requireView(),
-                                getString(R.string.preferences_delete_browsing_data_snackbar)
-                            )
-                        }
-                    }
-
-                    dialog.dismiss()
-                }
-                create()
-            }.show()
-        }
-    }
-
-    private suspend fun deleteOpenTabsEngineHistory(store: BrowserStore) {
-        store.dispatch(EngineAction.PurgeHistoryAction).join()
+    private fun displayDeleteTimeRange() {
+        DeleteConfirmationDialogFragment(
+            historyInteractor = historyInteractor
+        ).show(childFragmentManager, null)
     }
 
     private fun share(data: List<ShareData>) {
@@ -387,6 +369,33 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         val accountManager = requireComponents.backgroundServices.accountManager
         accountManager.syncNow(SyncReason.User)
         historyView.historyAdapter.refresh()
+    }
+
+    internal class DeleteConfirmationDialogFragment(
+        private val historyInteractor: HistoryInteractor
+    ) : DialogFragment() {
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+            AlertDialog.Builder(requireContext()).apply {
+                val layout = LayoutInflater.from(context)
+                    .inflate(R.layout.delete_history_time_range_dialog, null)
+                val radioGroup = layout.findViewById<RadioGroup>(R.id.radio_group)
+                radioGroup.check(R.id.last_hour_button)
+                setView(layout)
+
+                setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
+                setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
+                    val selectedTimeFrame = when (radioGroup.checkedRadioButtonId) {
+                        R.id.last_hour_button -> RemoveTimeFrame.LastHour
+                        R.id.today_and_yesterday_button -> RemoveTimeFrame.TodayAndYesterday
+                        R.id.everything_button -> null
+                        else -> throw IllegalStateException("Unexpected radioButtonId")
+                    }
+                    historyInteractor.onDeleteTimeRangeConfirmed(selectedTimeFrame)
+                    dialog.dismiss()
+                }
+            }.create()
     }
 
     @Suppress("UnusedPrivateMember")

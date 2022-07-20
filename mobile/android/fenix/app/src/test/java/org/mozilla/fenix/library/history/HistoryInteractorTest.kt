@@ -75,11 +75,20 @@ class HistoryInteractorTest {
     }
 
     @Test
-    fun onDeleteAll() {
-        interactor.onDeleteAll()
+    fun onDeleteTimeRange() {
+        interactor.onDeleteTimeRange()
 
         verifyAll {
-            controller.handleDeleteAll()
+            controller.handleDeleteTimeRange()
+        }
+    }
+
+    @Test
+    fun onDeleteTimeRangeConfirmed() {
+        interactor.onDeleteTimeRangeConfirmed(null)
+
+        verifyAll {
+            controller.handleDeleteTimeRangeConfirmed(null)
         }
     }
 

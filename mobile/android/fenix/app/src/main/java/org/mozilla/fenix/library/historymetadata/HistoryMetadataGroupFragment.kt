@@ -98,6 +98,7 @@ class HistoryMetadataGroupFragment :
                 store = historyMetadataGroupStore,
                 selectOrAddUseCase = requireComponents.useCases.tabsUseCases.selectOrAddTab,
                 navController = findNavController(),
+                scope = CoroutineScope(Dispatchers.IO),
                 searchTerm = args.title,
                 deleteSnackbar = :: deleteSnackbar,
                 promptDeleteAll = :: promptDeleteAll,
@@ -194,8 +195,8 @@ class HistoryMetadataGroupFragment :
                 showTabTray()
                 true
             }
-            R.id.history_delete_all -> {
-                interactor.onDeleteAllMenuItem()
+            R.id.history_delete -> {
+                interactor.onDeleteAll()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -218,14 +219,14 @@ class HistoryMetadataGroupFragment :
         )
     }
 
-    private fun promptDeleteAll(delete: () -> Unit) {
+    private fun promptDeleteAll() {
         if (childFragmentManager.findFragmentByTag(DeleteAllConfirmationDialogFragment.TAG)
             as? DeleteAllConfirmationDialogFragment != null
         ) {
             return
         }
 
-        DeleteAllConfirmationDialogFragment(delete).show(
+        DeleteAllConfirmationDialogFragment(interactor, args.title).show(
             childFragmentManager, DeleteAllConfirmationDialogFragment.TAG
         )
     }
@@ -254,15 +255,23 @@ class HistoryMetadataGroupFragment :
         )
     }
 
-    internal class DeleteAllConfirmationDialogFragment(private val delete: () -> Unit) : DialogFragment() {
+    internal class DeleteAllConfirmationDialogFragment(
+        private val interactor: HistoryMetadataGroupInteractor,
+        private val groupName: String
+    ) : DialogFragment() {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
             AlertDialog.Builder(requireContext())
-                .setMessage(R.string.delete_history_group_prompt_message)
+                .setMessage(
+                    String.format(
+                        getString(R.string.delete_all_history_group_prompt_message),
+                        groupName
+                    )
+                )
                 .setNegativeButton(R.string.delete_history_group_prompt_cancel) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
                 .setPositiveButton(R.string.delete_history_group_prompt_allow) { dialog: DialogInterface, _ ->
-                    delete.invoke()
+                    interactor.onDeleteAllConfirmed()
                     dialog.dismiss()
                 }
                 .create()

@@ -29,10 +29,14 @@ interface HistoryMetadataGroupInteractor : SelectionInteractor<History.Metadata>
     fun onDelete(items: Set<History.Metadata>)
 
     /**
-     * Deletes all the history items in the history metadata group. Called when a user clicks
-     * on the "Delete history" menu item.
+     * Called when a user clicks on the "Delete history" menu item.
      */
-    fun onDeleteAllMenuItem()
+    fun onDeleteAll()
+
+    /**
+     * Called when a user has confirmed the deletion of the group.
+     */
+    fun onDeleteAllConfirmed()
 
     /**
      * Opens the share sheet for a set of history [items]. Called when a user clicks on the
@@ -70,8 +74,12 @@ class DefaultHistoryMetadataGroupInteractor(
         controller.handleDelete(items)
     }
 
-    override fun onDeleteAllMenuItem() {
+    override fun onDeleteAll() {
         controller.handleDeleteAll()
+    }
+
+    override fun onDeleteAllConfirmed() {
+        controller.handleDeleteAllConfirmed()
     }
 
     override fun onShareMenuItem(items: Set<History.Metadata>) {

@@ -23,11 +23,10 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -90,23 +89,7 @@ class HistoryMetadataGroupControllerTest {
 
     @Before
     fun setUp() {
-        controller = DefaultHistoryMetadataGroupController(
-            historyStorage = historyStorage,
-            browserStore = browserStore,
-            appStore = appStore,
-            store = store,
-            selectOrAddUseCase = selectOrAddUseCase,
-            navController = navController,
-            searchTerm = "mozilla",
-            deleteSnackbar = { items, _, delete ->
-                scope.launch {
-                    delete(items).invoke(context)
-                }
-            },
-            promptDeleteAll = { deleteAll -> deleteAll.invoke() },
-            allDeletedSnackbar = {}
-        )
-
+        controller = createController()
         every { activity.components.core.historyStorage } returns historyStorage
         every { context.components.core.store } returns browserStore
         every { context.components.core.historyStorage } returns historyStorage
@@ -189,7 +172,6 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteSingle() = runTestOnMain {
         assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
 
@@ -218,7 +200,6 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteMultiple() = runTestOnMain {
         assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         controller.handleDelete(getMetadataItemsList().toSet())
@@ -244,14 +225,16 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteAbnormal() = runTestOnMain {
         val abnormalList = listOf(
             mozillaHistoryMetadataItem,
             firefoxHistoryMetadataItem,
             mozillaHistoryMetadataItem.copy(title = "Pocket", url = "https://getpocket.com"),
             mozillaHistoryMetadataItem.copy(title = "BBC", url = "https://www.bbc.com/"),
-            mozillaHistoryMetadataItem.copy(title = "Stackoverflow", url = "https://stackoverflow.com/")
+            mozillaHistoryMetadataItem.copy(
+                title = "Stackoverflow",
+                url = "https://stackoverflow.com/"
+            )
         )
         assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
 
@@ -290,9 +273,21 @@ class HistoryMetadataGroupControllerTest {
 
     @Test
     fun handleDeleteAll() = runTestOnMain {
+        var promptDeleteAllInvoked = false
+        val controller = createController(
+            promptDeleteAll = {
+                promptDeleteAllInvoked = true
+            }
+        )
+        controller.handleDeleteAll()
+        assertTrue(promptDeleteAllInvoked)
+    }
+
+    @Test
+    fun handleDeleteAllConfirmed() = runTestOnMain {
         assertNull(GleanHistory.searchTermGroupRemoveAll.testGetValue())
 
-        controller.handleDeleteAll()
+        controller.handleDeleteAllConfirmed()
 
         coVerify {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
@@ -311,6 +306,35 @@ class HistoryMetadataGroupControllerTest {
         assertNull(
             GleanHistory.searchTermGroupRemoveAll.testGetValue()!!
                 .single().extra
+        )
+    }
+
+    @Suppress("LongParameterList")
+    private fun createController(
+        deleteSnackbar: (
+            items: Set<History.Metadata>,
+            undo: suspend (Set<History.Metadata>) -> Unit,
+            delete: (Set<History.Metadata>) -> suspend (context: Context) -> Unit
+        ) -> Unit = { items, _, delete ->
+            scope.launch {
+                delete(items).invoke(context)
+            }
+        },
+        promptDeleteAll: () -> Unit = {},
+        allDeletedSnackbar: () -> Unit = {}
+    ): DefaultHistoryMetadataGroupController {
+        return DefaultHistoryMetadataGroupController(
+            historyStorage = historyStorage,
+            browserStore = browserStore,
+            appStore = appStore,
+            store = store,
+            selectOrAddUseCase = selectOrAddUseCase,
+            navController = navController,
+            scope = scope,
+            searchTerm = searchTerm,
+            deleteSnackbar = deleteSnackbar,
+            promptDeleteAll = promptDeleteAll,
+            allDeletedSnackbar = allDeletedSnackbar
         )
     }
 }

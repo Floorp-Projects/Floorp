@@ -9,6 +9,9 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.state.action.RecentlyClosedAction
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,6 +43,8 @@ class HistoryControllerTest {
 
     private val store: HistoryFragmentStore = mockk(relaxed = true)
     private val appStore: AppStore = mockk(relaxed = true)
+    private val browserStore: BrowserStore = mockk(relaxed = true)
+    private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val historyProvider: DefaultPagedHistoryProvider = mockk(relaxed = true)
@@ -139,16 +144,29 @@ class HistoryControllerTest {
     }
 
     @Test
-    fun onDeleteAll() {
-        var displayDeleteAllInvoked = false
+    fun onDeleteTimeRange() {
+        var displayDeleteTimeRangeInvoked = false
         val controller = createController(
-            displayDeleteAll = {
-                displayDeleteAllInvoked = true
+            displayDeleteTimeRange = {
+                displayDeleteTimeRangeInvoked = true
             }
         )
 
-        controller.handleDeleteAll()
-        assertTrue(displayDeleteAllInvoked)
+        controller.handleDeleteTimeRange()
+        assertTrue(displayDeleteTimeRangeInvoked)
+    }
+
+    @Test
+    fun onDeleteTimeRangeConfirmed() {
+        val controller = createController()
+
+        controller.handleDeleteTimeRangeConfirmed(null)
+        coVerifyOrder {
+            store.dispatch(HistoryFragmentAction.EnterDeletionMode)
+            historyStorage.deleteEverything()
+            browserStore.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
+            store.dispatch(HistoryFragmentAction.ExitDeletionMode)
+        }
     }
 
     @Test
@@ -185,7 +203,8 @@ class HistoryControllerTest {
     @Suppress("LongParameterList")
     private fun createController(
         openInBrowser: (History) -> Unit = { _ -> },
-        displayDeleteAll: () -> Unit = {},
+        displayDeleteTimeRange: () -> Unit = {},
+        onTimeFrameDeleted: () -> Unit = {},
         invalidateOptionsMenu: () -> Unit = {},
         deleteHistoryItems: (Set<History>) -> Unit = { _ -> },
         syncHistory: suspend () -> Unit = {}
@@ -193,11 +212,14 @@ class HistoryControllerTest {
         return DefaultHistoryController(
             store,
             appStore,
+            browserStore,
+            historyStorage,
             historyProvider,
             navController,
             scope,
             openInBrowser,
-            displayDeleteAll,
+            displayDeleteTimeRange,
+            onTimeFrameDeleted,
             invalidateOptionsMenu,
             { items, _, _ -> deleteHistoryItems.invoke(items) },
             syncHistory,
