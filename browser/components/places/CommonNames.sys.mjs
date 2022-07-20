@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["CommonNames"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -292,7 +290,7 @@ const MAX_HOSTNAME_PARTS = 2;
  * a common name cannot be fetched, the origin is returned with its TLD
  * stripped, e.g. "stackoverflow".
  */
-class CommonNames {
+export class CommonNames {
   /**
    * Returns a snapshot's common name.
    *

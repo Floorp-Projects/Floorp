@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PlacesUIUtils"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -421,7 +419,7 @@ class BookmarkState {
   }
 }
 
-var PlacesUIUtils = {
+export var PlacesUIUtils = {
   BookmarkState,
   _bookmarkToolbarTelemetryListening: false,
   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
