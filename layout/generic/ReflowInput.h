@@ -412,7 +412,6 @@ struct ReflowInput : public SizeComputationInput {
   const nsStylePosition* mStylePosition = nullptr;
   const nsStyleBorder* mStyleBorder = nullptr;
   const nsStyleMargin* mStyleMargin = nullptr;
-  const nsStyleText* mStyleText = nullptr;
 
   enum class BreakType : uint8_t {
     Auto,
