@@ -1046,11 +1046,11 @@ nsresult HTMLEditor::InsertTableRowsWithTransaction(
         MOZ_ASSERT(numberOfCellsInStartRow >=
                    cellDataInLastRow.mEffectiveColSpan);
         numberOfCellsInStartRow -= cellDataInLastRow.mEffectiveColSpan;
-      } else if (colIndex < cellData.mCurrent.mColumn) {
+      } else if (colIndex < cellDataInLastRow.mCurrent.mColumn) {
         offsetInTRElementToPutCaret++;
       }
       MOZ_ASSERT(colIndex < cellDataInLastRow.NextColumnIndex());
-      colIndex = cellData.NextColumnIndex();
+      colIndex = cellDataInLastRow.NextColumnIndex();
     }
     return TableRowData{nullptr, numberOfCellsInStartRow,
                         offsetInTRElementToPutCaret};
