@@ -4,13 +4,11 @@
 
 // A utility to check if given JSM is already ESM-ified.
 
-/* global require, __dirname */
+/* eslint-env node */
 
 const fs = require("fs");
 const _path = require("path");
 const { esmifyExtension } = require(_path.resolve(__dirname, "./utils.js"));
-
-/* global exports */
 
 const uri_map = JSON.parse(
   fs.readFileSync(_path.resolve(__dirname, "./map.json"))

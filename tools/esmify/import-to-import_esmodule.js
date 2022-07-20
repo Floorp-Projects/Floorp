@@ -5,13 +5,10 @@
 // jscodeshift rule to replace import calls for JSM with import calls for ESM
 // or static import for ESM.
 
-/* global require, __dirname, process */
+/* eslint-env node */
 
 const _path = require("path");
-const { isESMified, getESMFiles } = require(_path.resolve(
-  __dirname,
-  "./is-esmified.js"
-));
+const { isESMified } = require(_path.resolve(__dirname, "./is-esmified.js"));
 const {
   calleeToString,
   jsmExtPattern,
@@ -22,8 +19,11 @@ const {
   getPrevStatement,
   getNextStatement,
 } = require(_path.resolve(__dirname, "./utils.js"));
-
-/* global module */
+const {
+  isImportESModuleCall,
+  replaceImportESModuleCall,
+  tryReplacingWithStaticImport,
+} = require(_path.resolve(__dirname, "./static-import.js"));
 
 module.exports = function(fileInfo, api) {
   const { jscodeshift } = api;
@@ -54,30 +54,9 @@ function isESMifiedAndTarget(resourceURI) {
   return true;
 }
 
-function isTargetESM(resourceURI) {
-  if ("ESMIFY_TARGET_PREFIX" in process.env) {
-    const files = getESMFiles(resourceURI);
-    const targetPrefix = process.env.ESMIFY_TARGET_PREFIX;
-    for (const esm of files) {
-      if (esm.startsWith(targetPrefix)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  return true;
-}
-
 function isImportCall(node) {
   const s = calleeToString(node.callee);
   return ["Cu.import", "ChromeUtils.import"].includes(s);
-}
-
-function isImportESModuleCall(node) {
-  const s = calleeToString(node.callee);
-  return ["ChromeUtils.importESModule"].includes(s);
 }
 
 function isLazyGetterCall(node) {
@@ -96,73 +75,6 @@ function isLazyGettersCall(node) {
 function isESModuleGettersCall(node) {
   const s = calleeToString(node.callee);
   return ["ChromeUtils.defineESModuleGetters"].includes(s);
-}
-
-// Replace `ChromeUtils.import`, `Cu.import`, and `ChromeUtils.importESModule`
-// with static import if it's at the top-level of system ESM file.
-function tryReplacingWithStaticImport(
-  jscodeshift,
-  inputFile,
-  path,
-  resourceURINode
-) {
-  if (!inputFile.endsWith(".sys.mjs")) {
-    // Static import is available only in system ESM.
-    return false;
-  }
-
-  // Check if it's at the top-level.
-  if (path.parent.node.type !== "VariableDeclarator") {
-    return false;
-  }
-
-  if (path.parent.parent.node.type !== "VariableDeclaration") {
-    return false;
-  }
-
-  const decls = path.parent.parent.node;
-  if (decls.declarations.length !== 1) {
-    return false;
-  }
-
-  if (path.parent.parent.parent.node.type !== "Program") {
-    return false;
-  }
-
-  if (path.node.arguments.length !== 1) {
-    return false;
-  }
-
-  const resourceURI = resourceURINode.value;
-
-  // Collect imported symbols.
-  const specs = [];
-  if (path.parent.node.id.type === "Identifier") {
-    specs.push(jscodeshift.importNamespaceSpecifier(path.parent.node.id));
-  } else if (path.parent.node.id.type === "ObjectPattern") {
-    for (const prop of path.parent.node.id.properties) {
-      if (prop.shorthand) {
-        specs.push(jscodeshift.importSpecifier(prop.key));
-      } else if (prop.value.type === "Identifier") {
-        specs.push(jscodeshift.importSpecifier(prop.key, prop.value));
-      } else {
-        return false;
-      }
-    }
-  } else {
-    return false;
-  }
-
-  // If this is `ChromeUtils.import` or `Cu.import`, replace the extension.
-  // no-op for `ChromeUtils.importESModule`.
-  resourceURINode.value = esmifyExtension(resourceURI);
-
-  const e = jscodeshift.importDeclaration(specs, resourceURINode);
-  e.comments = path.parent.parent.node.comments;
-  path.parent.parent.node.comments = [];
-  path.parent.parent.replace(e);
-
-  return true;
 }
 
 function replaceImportCall(inputFile, jscodeshift, path) {
@@ -194,31 +106,6 @@ function replaceImportCall(inputFile, jscodeshift, path) {
     path.node.callee.property.name = "importESModule";
     resourceURINode.value = esmifyExtension(resourceURI);
   }
-}
-
-function replaceImportESModuleCall(inputFile, jscodeshift, path) {
-  if (path.node.arguments.length !== 1) {
-    warnForPath(
-      inputFile,
-      path,
-      `importESModule call should have only one argument`
-    );
-    return;
-  }
-
-  const resourceURINode = path.node.arguments[0];
-  if (!isString(resourceURINode)) {
-    warnForPath(inputFile, path, `resource URI should be a string`);
-    return;
-  }
-
-  const resourceURI = resourceURINode.value;
-  if (!isTargetESM(resourceURI)) {
-    return;
-  }
-
-  // If this cannot be replaced with static import, do nothing.
-  tryReplacingWithStaticImport(jscodeshift, inputFile, path, resourceURINode);
 }
 
 // Find `ChromeUtils.defineESModuleGetters` statement adjacent to `path` which

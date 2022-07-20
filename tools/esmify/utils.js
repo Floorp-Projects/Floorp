@@ -4,7 +4,7 @@
 
 // Shared utility functions.
 
-/* global exports */
+/* eslint-env node */
 
 function warnForPath(inputFile, path, message) {
   const loc = path.node.loc;
