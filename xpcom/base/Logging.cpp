@@ -520,6 +520,8 @@ class LogModuleManager {
 
   void SetIsSync(bool aIsSync) { mIsSync = aIsSync; }
 
+  void SetRecordMarkers(bool aRecordMarkers) { mAddProfilerMarker = aRecordMarkers; }
+
   void SetAddTimestamp(bool aAddTimestamp) { mAddTimestamp = aAddTimestamp; }
 
   detail::LogFile* OpenFile(bool aShouldAppend, uint32_t aFileNum,
@@ -810,6 +812,10 @@ void LogModule::SetAddTimestamp(bool aAddTimestamp) {
 
 void LogModule::SetIsSync(bool aIsSync) {
   sLogModuleManager->SetIsSync(aIsSync);
+}
+
+void LogModule::SetRecordMarkers(bool aRecordMarkers) {
+  sLogModuleManager->SetRecordMarkers(aRecordMarkers);
 }
 
 // This function is defined in gecko_logger/src/lib.rs
