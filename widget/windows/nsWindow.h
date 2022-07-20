@@ -692,7 +692,6 @@ class nsWindow final : public nsBaseWidget {
 
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
-  static bool sDropShadowEnabled;
   static uint32_t sInstanceCount;
   static TriStateBool sCanQuit;
   static nsWindow* sCurrentWindow;
