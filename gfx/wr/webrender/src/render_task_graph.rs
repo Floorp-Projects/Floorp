@@ -91,8 +91,9 @@ struct Surface {
     kind: RenderTargetKind,
     /// Allocator for this surface texture
     allocator: GuillotineAllocator,
-    /// We can only allocate into this for reuse if it's a shared surface
-    is_shared: bool,
+    /// The pass that we can free this surface after (guaranteed
+    /// to be the same for all tasks assigned to this surface)
+    free_after: PassId,
 }
 
 impl Surface {
@@ -102,9 +103,9 @@ impl Surface {
         &mut self,
         size: DeviceIntSize,
         kind: RenderTargetKind,
-        is_shared: bool,
+        free_after: PassId,
     ) -> Option<DeviceIntPoint> {
-        if self.kind == kind && self.is_shared == is_shared {
+        if self.kind == kind && self.free_after == free_after {
             self.allocator
                 .allocate(&size)
                 .map(|(_slice, origin)| origin)
@@ -398,15 +399,8 @@ impl RenderTaskGraphBuilder {
                         let mut location = None;
                         let kind = task.kind.target_kind();
 
-                        // Allow this render task to use a shared surface target if it
-                        // is freed straight after this pass. Tasks that must remain
-                        // allocated for inputs on subsequent passes are always assigned
-                        // to a standalone surface, to simplify lifetime management of
-                        // render targets.
-
                         let can_use_shared_surface =
-                            task.kind.can_use_shared_surface() &&
-                            task.render_on == PassId(task.free_after.0 + 1);
+                            task.kind.can_use_shared_surface();
 
                         if can_use_shared_surface {
                             // If we can use a shared surface, step through the existing shared
@@ -415,7 +409,7 @@ impl RenderTaskGraphBuilder {
                             for sub_pass in &mut pass.sub_passes {
                                 if let SubPassSurface::Dynamic { texture_id, ref mut used_rect, .. } = sub_pass.surface {
                                     let surface = self.active_surfaces.get_mut(&texture_id).unwrap();
-                                    if let Some(p) = surface.alloc_rect(size, kind, true) {
+                                    if let Some(p) = surface.alloc_rect(size, kind, task.free_after) {
                                         location = Some((texture_id, p));
                                         *used_rect = used_rect.union(&DeviceIntRect::from_origin_and_size(p, size));
                                         sub_pass.task_ids.push(*task_id);
@@ -464,14 +458,14 @@ impl RenderTaskGraphBuilder {
                             let mut surface = Surface {
                                 kind,
                                 allocator: GuillotineAllocator::new(Some(surface_size)),
-                                is_shared: can_use_shared_surface,
+                                free_after: task.free_after,
                             };
 
                             // Allocation of the task must fit in this new surface!
                             let p = surface.alloc_rect(
                                 size,
                                 kind,
-                                can_use_shared_surface,
+                                task.free_after,
                             ).expect("bug: alloc must succeed!");
 
                             location = Some((texture_id, p));
@@ -1155,7 +1149,7 @@ fn fg_test_5() {
     gb.add_dependency(pc_root, child_pic_3);
 
     gb.test_expect(5, 4, &[
-        (256, 256, ImageFormat::RGBA8),
+        (2048, 2048, ImageFormat::RGBA8),
         (2048, 2048, ImageFormat::RGBA8),
         (2048, 2048, ImageFormat::RGBA8),
     ]);
@@ -1204,7 +1198,7 @@ fn fg_test_7() {
     gb.add_dependency(child2, child3);
 
     gb.test_expect(3, 3, &[
-        (256, 256, ImageFormat::RGBA8),
+        (2048, 2048, ImageFormat::RGBA8),
         (2048, 2048, ImageFormat::RGBA8),
         (2048, 2048, ImageFormat::RGBA8),
     ]);
