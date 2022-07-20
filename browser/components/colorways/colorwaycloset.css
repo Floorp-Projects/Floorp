@@ -5,7 +5,7 @@
 :root {
   height: 100%;
   --body-columns: 1fr;
-  --body-rows: 40px 2fr 1fr 40px;
+  --body-rows: auto 2fr 1fr 40px;
   --colorway-name-font-size: 1.5em;
   --colorway-selector-align: center;
   --figure-height: 200px;
@@ -15,7 +15,7 @@
 @media (min-width: 800px) {
   :root {
     --body-columns: 24px repeat(2, 1fr);
-    --body-rows: 64px 1fr 64px;
+    --body-rows: auto 1fr 64px;
     --colorway-name-font-size: 2.5em;
     --colorway-selector-align: start;
     --customization-panel-column: 3;
@@ -62,7 +62,7 @@ figure {
 }
 
 figure > img {
-  margin-block-start: 3em;
+  margin-block-start: 2rem;
   max-width: var(--figure-height);
   max-height: var(--figure-width);
 }
@@ -74,7 +74,8 @@ figure > img {
 
 #collection-title {
   display: inline-block;
-  margin: 0;
+  margin-inline: 0 .7em;
+  margin-block: 0 .2em;
   padding: 0;
   font-size: 1.7em;
   font-weight: bold;
@@ -86,8 +87,7 @@ figure > img {
   background-origin: border-box;
   border-radius: 1.5em;
   padding: 1px;
-  margin: 0.2em 1em;
-  vertical-align: bottom;
+  font-size: 1.1em;
 }
 
 #collection-expiry-date > span {
@@ -95,7 +95,7 @@ figure > img {
   color: var(--in-content-page-color);
   background: var(--in-content-page-background);
   border-radius: 1.5em;
-  padding: .2em 1em;
+  padding: .3em 1em;
 }
 
 #homepage-reset-container:not([hidden]) {
@@ -124,6 +124,7 @@ figure > img {
 }
 
 #colorway-selector {
+  margin-block-start: 2rem;
   text-align: var(--colorway-selector-align);
 }
 
