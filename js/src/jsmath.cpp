@@ -222,7 +222,7 @@ double js::math_cos_fdlibm_impl(double x) {
 double js::math_cos_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
-  return cos(x);
+  return std::cos(x);
 }
 
 bool js::math_cos(JSContext* cx, unsigned argc, Value* vp) {
@@ -496,13 +496,13 @@ double js::ecmaPow(double x, double y) {
    */
   if (IsFinite(x) && x != 0.0) {
     if (y == 0.5) {
-      return sqrt(x);
+      return std::sqrt(x);
     }
     if (y == -0.5) {
-      return 1.0 / sqrt(x);
+      return 1.0 / std::sqrt(x);
     }
   }
-  return pow(x, y);
+  return std::pow(x, y);
 }
 
 bool js::math_pow(JSContext* cx, unsigned argc, Value* vp) {
@@ -644,7 +644,7 @@ double js::math_sin_fdlibm_impl(double x) {
 double js::math_sin_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
-  return sin(x);
+  return std::sin(x);
 }
 
 bool js::math_sin_handle(JSContext* cx, HandleValue val,
@@ -664,7 +664,7 @@ bool js::math_sin(JSContext* cx, unsigned argc, Value* vp) {
 
 double js::math_sqrt_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
-  return sqrt(x);
+  return std::sqrt(x);
 }
 
 bool js::math_sqrt_handle(JSContext* cx, HandleValue number,
@@ -685,7 +685,7 @@ double js::math_tan_fdlibm_impl(double x) {
 double js::math_tan_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
-  return tan(x);
+  return std::tan(x);
 }
 
 bool js::math_tan(JSContext* cx, unsigned argc, Value* vp) {
@@ -822,7 +822,7 @@ double js::hypot4(double x, double y, double z, double w) {
   hypot_step(scale, sumsq, z);
   hypot_step(scale, sumsq, w);
 
-  return scale * sqrt(sumsq);
+  return scale * std::sqrt(sumsq);
 }
 
 double js::hypot3(double x, double y, double z) {
@@ -876,7 +876,7 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
 
   double result = isInfinite ? PositiveInfinity<double>()
                   : isNaN    ? GenericNaN()
-                             : scale * sqrt(sumsq);
+                             : scale * std::sqrt(sumsq);
   res.setDouble(result);
   return true;
 }
