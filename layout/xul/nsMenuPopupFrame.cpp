@@ -359,19 +359,11 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   bool remote = HasRemoteContent();
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(this, this);
-  nsIContent* parentContent = GetContent()->GetParent();
-  nsAtom* tag = nullptr;
-  if (parentContent && parentContent->IsXULElement())
-    tag = parentContent->NodeInfo()->NameAtom();
   widgetData.mHasRemoteContent = remote;
   widgetData.mSupportTranslucency = mode == eTransparencyTransparent;
   widgetData.mPopupLevel = PopupLevel(widgetData.mNoAutoHide);
 
-  // The special cases are menulists.
-  widgetData.mDropShadow =
-      !(mode == eTransparencyTransparent || tag == nsGkAtoms::menulist);
-
-  // panels which have a parent level need a parent widget. This allows them to
+  // Panels which have a parent level need a parent widget. This allows them to
   // always appear in front of the parent window but behind other windows that
   // should be in front of it.
   nsCOMPtr<nsIWidget> parentWidget;
