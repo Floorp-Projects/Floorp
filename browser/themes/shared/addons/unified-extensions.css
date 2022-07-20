@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/addons/unified-extensions-item.css");
+
+#unified-extensions-view > .panel-subview-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  max-width: var(--menu-panel-width-wide);
+}
+
+.unified-extensions-panel-header {
+  align-items: center;
+  display: flex;
+  font-weight: 600;
+  padding: 4px;
+  padding-top: 8px;
+}
+
+.unified-extensions-panel-header > h1 {
+  display: inline;
+  flex: auto;
+  font-size: inherit;
+  font-weight: 600;
+  margin: 4px 0;
+  text-align: center;
+}
