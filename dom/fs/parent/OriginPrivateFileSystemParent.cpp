@@ -5,9 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OriginPrivateFileSystemParent.h"
-#include "nsNetCID.h"
+#include "BackgroundFileSystemParent.h"
+#include "datamodel/FileSystemDataManager.h"
+#include "fs/FileSystemConstants.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/FileDescriptorUtils.h"
+#include "mozilla/Maybe.h"
 
 using IPCResult = mozilla::ipc::IPCResult;
 
@@ -22,10 +25,28 @@ extern LazyLogModule gOPFSLog;
 
 namespace mozilla::dom {
 
+OriginPrivateFileSystemParent::OriginPrivateFileSystemParent(
+    TaskQueue* aTaskQueue, fs::data::FileSystemDataManager* aData)
+    : mTaskQueue(aTaskQueue), mData(aData) {}
+
 IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandle(
-    FileSystemGetHandleRequest&& /* aRequest */,
+    FileSystemGetHandleRequest&& aRequest,
     GetDirectoryHandleResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
+  MOZ_ASSERT(mData);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemGetHandleResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(
+      fs::EntryId entryId,
+      mData->GetOrCreateDirectory(aRequest.handle(), aRequest.create()),
+      IPC_OK(), reportError);
+  MOZ_ASSERT(!entryId.IsEmpty());
+
+  FileSystemGetHandleResponse response(entryId);
   aResolver(response);
 
   return IPC_OK();
@@ -33,7 +54,20 @@ IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandle(
 
 IPCResult OriginPrivateFileSystemParent::RecvGetFileHandle(
     FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
+  MOZ_ASSERT(mData);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemGetHandleResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(fs::EntryId entryId,
+                mData->GetOrCreateFile(aRequest.handle(), aRequest.create()),
+                IPC_OK(), reportError);
+  MOZ_ASSERT(!entryId.IsEmpty());
+
+  FileSystemGetHandleResponse response(entryId);
   aResolver(response);
 
   return IPC_OK();
@@ -49,7 +83,34 @@ IPCResult OriginPrivateFileSystemParent::RecvGetFile(
 
 IPCResult OriginPrivateFileSystemParent::RecvResolve(
     FileSystemResolveRequest&& aRequest, ResolveResolver&& aResolver) {
-  FileSystemResolveResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.endpoints().parentId().IsEmpty());
+  MOZ_ASSERT(!aRequest.endpoints().childId().IsEmpty());
+  MOZ_ASSERT(mData);
+
+  fs::Path filePath;
+  if (aRequest.endpoints().parentId() == aRequest.endpoints().childId()) {
+    FileSystemResolveResponse response(Some(FileSystemPath(filePath)));
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemResolveResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(filePath, mData->Resolve(aRequest.endpoints()), IPC_OK(),
+                reportError);
+
+  if (filePath.IsEmpty()) {
+    FileSystemResolveResponse response(Nothing{});
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  FileSystemResolveResponse response(Some(FileSystemPath(filePath)));
   aResolver(response);
 
   return IPC_OK();
@@ -65,9 +126,35 @@ IPCResult OriginPrivateFileSystemParent::RecvGetEntries(
 
 IPCResult OriginPrivateFileSystemParent::RecvRemoveEntry(
     FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver) {
-  FileSystemRemoveEntryResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
+  MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
+  MOZ_ASSERT(mData);
 
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemRemoveEntryResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(bool isDeleted, mData->RemoveFile(aRequest.handle()), IPC_OK(),
+                reportError);
+
+  FileSystemRemoveEntryResponse ok(NS_OK);
+  if (isDeleted) {
+    aResolver(ok);
+    return IPC_OK();
+  }
+
+  QM_TRY_UNWRAP(isDeleted,
+                mData->RemoveDirectory(aRequest.handle(), aRequest.recursive()),
+                IPC_OK(), reportError);
+
+  if (!isDeleted) {
+    FileSystemRemoveEntryResponse response(NS_ERROR_UNEXPECTED);
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  aResolver(ok);
   return IPC_OK();
 }
 

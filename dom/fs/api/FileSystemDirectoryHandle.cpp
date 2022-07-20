@@ -106,7 +106,10 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::Resolve(
     return nullptr;
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
+  fs::FileSystemEntryPair endpoints(mMetadata.entryId(),
+                                    aPossibleDescendant.GetId());
+
+  mRequestHandler->Resolve(mActor, endpoints, promise);
 
   return promise.forget();
 }

@@ -9,6 +9,7 @@
 
 #include "fs/FileSystemChildFactory.h"
 
+#include "mozilla/dom/FileSystemActorHolder.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "nsStringFwd.h"
@@ -26,8 +27,12 @@ namespace mozilla::dom::fs {
 
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
+class FileSystemEntryPair;
 
-class ArrayAppendable {};
+class ArrayAppendable {
+ public:
+  void append(const nsTArray<RefPtr<FileSystemHandle>>& /* aBatch */) {}
+};
 
 class FileSystemRequestHandler {
  public:
@@ -59,11 +64,14 @@ class FileSystemRequestHandler {
                            const FileSystemChildMetadata& aEntry,
                            bool aRecursive, RefPtr<Promise> aPromise);
 
+  virtual void Resolve(RefPtr<FileSystemActorHolder>& aActor,
+                       const FileSystemEntryPair& aEndpoints,
+                       RefPtr<Promise> aPromise);
+
   virtual ~FileSystemRequestHandler() = default;
 
  protected:
   const UniquePtr<FileSystemChildFactory> mChildFactory;
-
 };  // class FileSystemRequestHandler
 
 }  // namespace mozilla::dom::fs
