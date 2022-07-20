@@ -5,7 +5,7 @@ patch_types="${2}"
 update_xml="$(mktemp -t update.xml.XXXXXXXXXX)"
 update_xml_headers="$(mktemp -t update.xml.headers.XXXXXXXXXX)"
 update_xml_debug="$(mktemp -t update.xml.debug.XXXXXXXXXX)"
-curl --retry 50 --retry-max-time 300 -s --show-error -D "${update_xml_headers}" -L -v "${update_xml_url}" > "${update_xml}" 2>"${update_xml_debug}"
+curl --retry 50 --retry-max-time 300 -s --show-error -D "${update_xml_headers}" -L -v -H "Cache-Control: max-stale=0" "${update_xml_url}" > "${update_xml}" 2>"${update_xml_debug}"
 update_xml_curl_exit_code=$?
 if [ "${update_xml_curl_exit_code}" == 0 ]
 then
