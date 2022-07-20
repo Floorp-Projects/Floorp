@@ -185,4 +185,33 @@ describe("RemoteL10n", () => {
       assert.ok(!RemoteL10n.isLocaleSupported("und"));
     });
   });
+  describe("#formatLocalizableText", () => {
+    let instance;
+    let formatValueStub;
+    beforeEach(() => {
+      instance = new _RemoteL10n();
+      formatValueStub = sandbox.stub();
+      sandbox
+        .stub(instance, "l10n")
+        .get(() => ({ formatValue: formatValueStub }));
+    });
+    it("should localize a string_id", async () => {
+      formatValueStub.resolves("VALUE");
+
+      assert.equal(
+        await instance.formatLocalizableText({ string_id: "ID" }),
+        "VALUE"
+      );
+      assert.calledOnce(formatValueStub);
+    });
+    it("should pass through a string", async () => {
+      formatValueStub.reset();
+
+      assert.equal(
+        await instance.formatLocalizableText("unchanged"),
+        "unchanged"
+      );
+      assert.isFalse(formatValueStub.called);
+    });
+  });
 });
