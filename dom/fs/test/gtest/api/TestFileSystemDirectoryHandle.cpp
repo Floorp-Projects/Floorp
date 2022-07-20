@@ -19,6 +19,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
 
+using ::testing::_;
+
 namespace mozilla::dom::fs::test {
 
 class TestFileSystemDirectoryHandle : public ::testing::Test {
@@ -175,6 +177,8 @@ TEST_F(TestFileSystemDirectoryHandle, doesRemoveEntryFailOnNullGlobal) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isResolveSuccessful) {
+  EXPECT_CALL(*mRequestHandler, Resolve(_, _, _)).Times(1);
+
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
                                                mRequestHandler.release());

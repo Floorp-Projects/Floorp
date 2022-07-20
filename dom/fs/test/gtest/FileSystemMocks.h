@@ -73,6 +73,11 @@ class MockFileSystemRequestHandler : public FileSystemRequestHandler {
                const FileSystemChildMetadata& aEntry, bool aRecursive,
                RefPtr<Promise> aPromise),
               (override));
+
+  MOCK_METHOD(void, Resolve,
+              (RefPtr<FileSystemActorHolder> & aActor,
+               const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise),
+              (override));
 };
 
 class WaitablePromiseListener {
