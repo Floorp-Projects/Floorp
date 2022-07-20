@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
+  PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
+});
 /* import-globals-from /browser/base/content/utilityOverlay.js */
-/* import-globals-from ../PlacesUIUtils.jsm */
-/* import-globals-from /toolkit/components/places/PlacesUtils.jsm */
-/* import-globals-from /toolkit/components/places/PlacesTransactions.jsm */
 /* import-globals-from ./places.js */
 
 /**
