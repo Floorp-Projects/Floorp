@@ -868,6 +868,14 @@ def test_info_tests(
 )
 @CommandArgument("--output-file", help="Path to report file.")
 @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
+@CommandArgument(
+    "--start",
+    default=(date.today() - timedelta(30)).strftime("%Y-%m-%d"),
+    help="Start date (YYYY-MM-DD)",
+)
+@CommandArgument(
+    "--end", default=date.today().strftime("%Y-%m-%d"), help="End date (YYYY-MM-DD)"
+)
 def test_report(
     command_context,
     components,
@@ -883,6 +891,8 @@ def test_report(
     show_components,
     output_file,
     verbose,
+    start,
+    end,
 ):
     import testinfo
     from mozbuild import build_commands
@@ -907,6 +917,8 @@ def test_report(
         filter_keys,
         show_components,
         output_file,
+        start,
+        end,
     )
 
 
