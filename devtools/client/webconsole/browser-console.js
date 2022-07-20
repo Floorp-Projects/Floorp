@@ -29,6 +29,9 @@ loader.lazyRequireGetter(
  * This object extends the WebConsole object located in webconsole.js
  */
 class BrowserConsole extends WebConsole {
+  #bcInitializer = null;
+  #bcDestroyer = null;
+  #telemetry;
   /*
    * @constructor
    * @param object commands
@@ -41,9 +44,7 @@ class BrowserConsole extends WebConsole {
   constructor(commands, iframeWindow, chromeWindow) {
     super(null, commands, iframeWindow, chromeWindow, true);
 
-    this._telemetry = new Telemetry();
-    this._bcInitializer = null;
-    this._bcDestroyer = null;
+    this.#telemetry = new Telemetry();
   }
 
   /**
@@ -53,17 +54,17 @@ class BrowserConsole extends WebConsole {
    *         A promise for the initialization.
    */
   init() {
-    if (this._bcInitializer) {
-      return this._bcInitializer;
+    if (this.#bcInitializer) {
+      return this.#bcInitializer;
     }
 
-    this._bcInitializer = (async () => {
+    this.#bcInitializer = (async () => {
       // Only add the shutdown observer if we've opened a Browser Console window.
       ShutdownObserver.init();
 
       // browserconsole is not connected with a toolbox so we pass -1 as the
       // toolbox session id.
-      this._telemetry.toolOpened("browserconsole", -1, this);
+      this.#telemetry.toolOpened("browserconsole", -1, this);
 
       await super.init(false);
 
@@ -72,7 +73,7 @@ class BrowserConsole extends WebConsole {
       const id = Utils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-created");
     })();
-    return this._bcInitializer;
+    return this.#bcInitializer;
   }
 
   /**
@@ -82,14 +83,14 @@ class BrowserConsole extends WebConsole {
    *         A promise object that is resolved once the Browser Console is closed.
    */
   destroy() {
-    if (this._bcDestroyer) {
-      return this._bcDestroyer;
+    if (this.#bcDestroyer) {
+      return this.#bcDestroyer;
     }
 
-    this._bcDestroyer = (async () => {
+    this.#bcDestroyer = (async () => {
       // browserconsole is not connected with a toolbox so we pass -1 as the
       // toolbox session id.
-      this._telemetry.toolClosed("browserconsole", -1, this);
+      this.#telemetry.toolClosed("browserconsole", -1, this);
 
       this.commands.targetCommand.destroy();
       await super.destroy();
@@ -97,7 +98,7 @@ class BrowserConsole extends WebConsole {
       this.chromeWindow.close();
     })();
 
-    return this._bcDestroyer;
+    return this.#bcDestroyer;
   }
 }
 
