@@ -2136,6 +2136,14 @@ var gDecodeSuspendTests = [
   },
 ];
 
+// These are video files with hardware-decodable formats and longer
+// durations that are looped while we check telemetry for macOS video
+// low power mode.
+var gVideoLowPowerTests = [
+  { name: "seek.ogv", type: "video/ogg", duration: 3.966 },
+  { name: "gizmo.mp4", type: "video/mp4", duration: 5.56 },
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");
