@@ -3107,13 +3107,13 @@ void MacroAssembler::pow32(Register base, Register power, Register dest,
   // Inline int32-specialized implementation of js::powi with overflow
   // detection.
 
-  move32(Imm32(1), dest);  // p = 1
+  move32(Imm32(1), dest);  // result = 1
 
   // x^y where x == 1 returns 1 for any y.
   Label done;
   branch32(Assembler::Equal, base, Imm32(1), &done);
 
-  move32(base, temp1);   // m = x
+  move32(base, temp1);   // runningSquare = x
   move32(power, temp2);  // n = y
 
   // x^y where y < 0 returns a non-int32 value for any x != 1. Except when y is
@@ -3129,19 +3129,19 @@ void MacroAssembler::pow32(Register base, Register power, Register dest,
   Label loop;
   bind(&loop);
 
-  // m *= m
+  // runningSquare *= runningSquare
   branchMul32(Assembler::Overflow, temp1, temp1, onOver);
 
   bind(&start);
 
-  // if ((n & 1) != 0) p *= m
+  // if ((n & 1) != 0) result *= runningSquare
   Label even;
   branchTest32(Assembler::Zero, temp2, Imm32(1), &even);
   branchMul32(Assembler::Overflow, temp1, dest, onOver);
   bind(&even);
 
   // n >>= 1
-  // if (n == 0) return p
+  // if (n == 0) return result
   branchRshift32(Assembler::NonZero, Imm32(1), temp2, &loop);
 
   bind(&done);
