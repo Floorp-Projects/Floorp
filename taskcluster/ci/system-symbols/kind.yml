@@ -29,6 +29,8 @@ job-defaults:
 jobs:
     mac:
         description: Extract macOS system symbols found in crashreports
+        attributes:
+            build_platform: macos
         index:
             product: system-symbols
             job-name: mac
@@ -51,6 +53,8 @@ jobs:
             symbol: system-symbols-mac
     win:
         description: Extract windows system symbols found in crashreports
+        attributes:
+            build_platform: windows
         index:
             product: system-symbols
             job-name: win
@@ -73,6 +77,8 @@ jobs:
                 - linux64-dump_syms
     archlinux:
         description: Extract ArchLinux system symbols found in crashreports
+        attributes:
+            build_platform: archlinux
         index:
             product: system-symbols
             job-name: archlinux
@@ -97,6 +103,8 @@ jobs:
                 - symbol-scrapers
     debian:
         description: Extract Debian system symbols found in crashreports
+        attributes:
+            build_platform: debian
         index:
             product: system-symbols
             job-name: debian
@@ -121,6 +129,8 @@ jobs:
                 - symbol-scrapers
     fedora:
         description: Extract Fedora system symbols found in crashreports
+        attributes:
+            build_platform: fedora
         index:
             product: system-symbols
             job-name: fedora
@@ -145,6 +155,8 @@ jobs:
                 - symbol-scrapers
     opensuse:
         description: Extract OpenSUSE system symbols found in crashreports
+        attributes:
+            build_platform: opensuse
         index:
             product: system-symbols
             job-name: opensuse
@@ -169,6 +181,8 @@ jobs:
                 - symbol-scrapers
     ubuntu:
         description: Extract Ubuntu system symbols found in crashreports
+        attributes:
+            build_platform: ubuntu
         index:
             product: system-symbols
             job-name: ubuntu

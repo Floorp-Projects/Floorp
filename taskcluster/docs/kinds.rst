@@ -697,6 +697,10 @@ system-symbols-upload
 ---------------------
 Upload macOS and windows system symbols to tecken.
 
+system-symbols-reprocess
+------------------------
+Call Crash-Stats API to reprocess after symbols upload.
+
 scriptworker-canary
 -------------------
 Push tasks to try to test new scriptworker deployments.

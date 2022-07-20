@@ -37,6 +37,8 @@ default_optimizations = (
     {"test-verify": list(schedules.ALL_COMPONENTS)},
     # optimize strategy alias for upload-symbols tasks
     {"upload-symbols": None},
+    # optimize strategy alias for reprocess-symbols tasks
+    {"reprocess-symbols": None},
 )
 
 OptimizationSchema = voluptuous.Any(*default_optimizations)
