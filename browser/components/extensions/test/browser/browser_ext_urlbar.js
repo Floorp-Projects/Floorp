@@ -3,11 +3,8 @@
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 async function loadTipExtension(options = {}) {

@@ -8,9 +8,12 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 const EN_US_TOPSITES =

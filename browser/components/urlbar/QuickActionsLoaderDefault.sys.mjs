@@ -9,11 +9,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarProviderQuickActions:
+    "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
-  UrlbarProviderQuickActions:
-    "resource:///modules/UrlbarProviderQuickActions.jsm",
 });
 
 const BASE_URL = Services.urlFormatter.formatURLPref("app.support.baseURL");

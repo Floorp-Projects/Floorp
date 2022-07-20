@@ -14,17 +14,21 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+import {
+  UrlbarProvider,
+  UrlbarUtils,
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
 const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000

@@ -7,9 +7,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderPreloadedSites:
-    "resource:///modules/UrlbarProviderPreloadedSites.jsm",
+    "resource:///modules/UrlbarProviderPreloadedSites.sys.mjs",
 });
 
 const SCALAR_URLBAR = "browser.engagement.navigation.urlbar";
