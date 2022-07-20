@@ -8,9 +8,11 @@ const TEST_URL =
   "https://example.com/browser/browser/components/newtab/test/browser/blue_page.html";
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 
-ChromeUtils.defineESModuleGetters(this, {
-  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "Screenshots",
+  "resource://activity-stream/lib/Screenshots.jsm"
+);
 
 function get_pixels(stringOrObject, width, height) {
   return new Promise(resolve => {

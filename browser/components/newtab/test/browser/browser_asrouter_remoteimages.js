@@ -13,14 +13,9 @@ const {
   RemoteImages,
   REMOTE_IMAGES_PATH,
   REMOTE_IMAGES_DB_PATH,
-} = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/RemoteImages.sys.mjs"
-);
-const {
-  RemoteImagesTestUtils,
-  RemoteSettingsServer,
-} = ChromeUtils.importESModule(
-  "resource://testing-common/RemoteImagesTestUtils.sys.mjs"
+} = ChromeUtils.import("resource://activity-stream/lib/RemoteImages.jsm");
+const { RemoteImagesTestUtils, RemoteSettingsServer } = ChromeUtils.import(
+  "resource://testing-common/RemoteImagesTestUtils.jsm"
 );
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"

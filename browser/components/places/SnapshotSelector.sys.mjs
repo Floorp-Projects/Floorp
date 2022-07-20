@@ -1,8 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
@@ -10,7 +11,6 @@ const { EventEmitter } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   SnapshotScorer: "resource:///modules/SnapshotScorer.sys.mjs",
   Snapshots: "resource:///modules/Snapshots.sys.mjs",
@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {

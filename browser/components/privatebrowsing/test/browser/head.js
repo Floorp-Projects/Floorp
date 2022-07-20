@@ -19,14 +19,11 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FileUtils.jsm"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.sys.mjs",
-  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
+  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 

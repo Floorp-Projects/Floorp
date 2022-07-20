@@ -6,10 +6,14 @@
 
 var EXPORTED_SYMBOLS = ["AboutNewTabParent"];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
 class AboutNewTabParent extends JSWindowActorParent {

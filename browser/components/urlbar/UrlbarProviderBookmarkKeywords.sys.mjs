@@ -8,7 +8,9 @@
  * This module exports a provider that offers bookmarks with keywords.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 import {
   UrlbarProvider,

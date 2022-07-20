@@ -11,14 +11,10 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",

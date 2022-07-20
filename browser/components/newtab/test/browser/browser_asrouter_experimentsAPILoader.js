@@ -4,8 +4,8 @@ const { BrowserTestUtils } = ChromeUtils.import(
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-const { ASRouter } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouter.sys.mjs"
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
 );
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
@@ -19,8 +19,8 @@ const { ExperimentFakes, ExperimentTestUtils } = ChromeUtils.import(
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
-const { TelemetryFeed } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
+const { TelemetryFeed } = ChromeUtils.import(
+  "resource://activity-stream/lib/TelemetryFeed.jsm"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"

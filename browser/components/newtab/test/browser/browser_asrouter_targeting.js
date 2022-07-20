@@ -1,11 +1,11 @@
-const { ASRouterTargeting, QueryCache } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouterTargeting.sys.mjs"
+const { ASRouterTargeting, QueryCache } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
+const { CFRMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,

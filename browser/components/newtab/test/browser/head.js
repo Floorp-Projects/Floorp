@@ -7,8 +7,12 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  QueryCache: "resource://activity-stream/lib/ASRouterTargeting.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  this,
+  "QueryCache",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+);
 // eslint-disable-next-line no-unused-vars
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"

@@ -7,8 +7,8 @@
 const { AttributionCode } = ChromeUtils.import(
   "resource:///modules/AttributionCode.jsm"
 );
-const { ASRouterTargeting } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ASRouterTargeting.sys.mjs"
+const { ASRouterTargeting } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
 const { MacAttribution } = ChromeUtils.import(
   "resource:///modules/MacAttribution.jsm"

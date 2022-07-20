@@ -15,7 +15,6 @@ ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
 ChromeUtils.defineESModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
-  CFRPageActions: "resource://activity-stream/lib/CFRPageActions.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -38,6 +37,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
   Color: "resource://gre/modules/Color.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",

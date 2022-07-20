@@ -17,9 +17,11 @@ ChromeUtils.defineModuleGetter(
   "PanelMultiView",
   "resource:///modules/PanelMultiView.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ToolbarPanelHub",
+  "resource://activity-stream/lib/ToolbarPanelHub.jsm"
+);
 
 /**
  * Maintains the state and dispatches events for the main menu panel.

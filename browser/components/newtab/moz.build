@@ -20,7 +20,7 @@ TESTING_JS_MODULES += [
     "content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json",
     "content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json",
     "content-src/asrouter/templates/ToastNotification/ToastNotification.schema.json",
-    "test/RemoteImagesTestUtils.sys.mjs",
+    "test/RemoteImagesTestUtils.jsm",
 ]
 
 SPHINX_TREES["docs"] = "docs"
@@ -37,14 +37,14 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "browser-newtab"
 
 EXTRA_JS_MODULES += [
-    "AboutNewTabService.sys.mjs",
+    "AboutNewTabService.jsm",
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "aboutwelcome/AboutWelcomeChild.sys.mjs",
-    "aboutwelcome/AboutWelcomeParent.sys.mjs",
-    "actors/ASRouterChild.sys.mjs",
-    "actors/ASRouterParent.sys.mjs",
+    "aboutwelcome/AboutWelcomeChild.jsm",
+    "aboutwelcome/AboutWelcomeParent.jsm",
+    "actors/ASRouterChild.jsm",
+    "actors/ASRouterParent.jsm",
 ]
 
 XPCOM_MANIFESTS += [

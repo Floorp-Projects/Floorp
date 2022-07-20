@@ -9,7 +9,9 @@
  * the newtab or starts an organic search with their default search engine.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 import {
   UrlbarProvider,

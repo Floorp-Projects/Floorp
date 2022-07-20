@@ -1,7 +1,8 @@
-ChromeUtils.defineESModuleGetters(this, {
-  ASRouterTriggerListeners:
-    "resource://activity-stream/lib/ASRouterTriggerListeners.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterTriggerListeners",
+  "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "TestUtils",
