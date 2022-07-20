@@ -1,4 +1,4 @@
-function hideSelectPopup(selectPopup, mode = "enter", win = window) {
+function hideSelectPopup(mode = "enter", win = window) {
   let browser = win.gBrowser.selectedBrowser;
   let selectClosedPromise = SpecialPowers.spawn(browser, [], async function() {
     let { SelectContentHelper } = ChromeUtils.import(
@@ -12,7 +12,8 @@ function hideSelectPopup(selectPopup, mode = "enter", win = window) {
   } else if (mode == "enter") {
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
   } else if (mode == "click") {
-    EventUtils.synthesizeMouseAtCenter(selectPopup.lastElementChild, {}, win);
+    let popup = win.document.getElementById("ContentSelectDropdown").menupopup;
+    EventUtils.synthesizeMouseAtCenter(popup.lastElementChild, {}, win);
   }
 
   return selectClosedPromise;

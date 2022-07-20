@@ -7560,7 +7560,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 		    if (_cairo_surface_get_extents (surface_pattern->surface, &rec_extents)) {
 			if (_cairo_fixed_integer_ceil(box.p1.x) < rec_extents.x ||
 			    _cairo_fixed_integer_ceil(box.p1.y) < rec_extents.y ||
-			    _cairo_fixed_integer_floor(box.p2.y) > rec_extents.x + rec_extents.width ||
+			    _cairo_fixed_integer_floor(box.p2.x) > rec_extents.x + rec_extents.width ||
 			    _cairo_fixed_integer_floor(box.p2.y) > rec_extents.y + rec_extents.height)
 			{
 			    return CAIRO_INT_STATUS_UNSUPPORTED;

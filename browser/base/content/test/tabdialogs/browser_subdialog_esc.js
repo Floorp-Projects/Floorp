@@ -79,20 +79,16 @@ add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
 
     // Open dropdown
     let select = dialog._frame.contentDocument.getElementById("select");
-    let shownPromise = BrowserTestUtils.waitForEvent(
-      document.getElementById("ContentSelectDropdown"),
-      "popupshowing",
-      true
-    );
+    let shownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
 
     info("Opening dropdown");
     select.focus();
     EventUtils.synthesizeKey("VK_SPACE", {}, dialog._frame.contentWindow);
 
-    await shownPromise;
+    let selectPopup = await shownPromise;
 
     let hiddenPromise = BrowserTestUtils.waitForEvent(
-      document.getElementById("ContentSelectDropdown"),
+      selectPopup,
       "popuphiding",
       true
     );

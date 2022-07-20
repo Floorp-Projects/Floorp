@@ -29,7 +29,7 @@ add_setup(async () => {
     true
   );
 
-  useHttpServer();
+  useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
 
   await Services.search.init();
@@ -208,6 +208,29 @@ add_task(async function test_defaultPrivateEngine() {
     },
     private: {
       engineId: "engine-pref",
+    },
+  });
+
+  Services.search.defaultEngine = originalDefault;
+});
+
+add_task(async function test_telemetry_private_empty_submission_url() {
+  let engine = await Services.search.addOpenSearchEngine(
+    gDataUrl + "simple.xml",
+    null
+  );
+  Services.search.defaultPrivateEngine = engine;
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: originalDefault.telemetryId,
+    },
+    private: {
+      engineId: "other-simple",
+      displayName: "simple",
+      loadPath: "[http]localhost/simple.xml",
+      submissionUrl: "blank:",
+      verified: "verified",
     },
   });
 

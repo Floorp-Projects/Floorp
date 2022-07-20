@@ -4,7 +4,6 @@ set -e -v -x
 # This script is for building GN on Windows.
 
 UPLOAD_DIR=$PWD/public/build
-COMPRESS_EXT=bz2
 
 cd $GECKO_PATH
 

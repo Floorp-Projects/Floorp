@@ -114,7 +114,7 @@ config = {
         },
         "msix-latest": {
             "product-name": "Firefox-esr-msix-latest-SSL",
-            "check_uptake": True,
+            "check_uptake": False,
             "platforms": [
                 "win",
                 "win64",
@@ -122,7 +122,7 @@ config = {
         },
         "msix-next-latest": {
             "product-name": "Firefox-esr-next-msix-latest-SSL",
-            "check_uptake": True,
+            "check_uptake": False,
             "platforms": [
                 "win",
                 "win64",

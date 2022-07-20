@@ -4,11 +4,11 @@
 ---
 job-defaults:
     description: "gn toolchain build"
+    attributes:
+        local-toolchain: true
     worker-type: b-linux
     worker:
         max-run-time: 1800
-    run-on-projects:
-        - trunk
     run:
         resources:
             - 'taskcluster/scripts/misc/build-gn-common.sh'
@@ -28,6 +28,7 @@ macosx64-gn:
         symbol: TM(gn)
     run:
         script: build-gn-macosx.sh
+        toolchain-alias: macosx64-aarch64-gn
     fetches:
         toolchain:
             - linux64-cctools-port
