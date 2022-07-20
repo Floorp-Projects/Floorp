@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
-const { PlacesTransactions } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesTransactions.sys.mjs"
+const { PlacesTransactions } = ChromeUtils.import(
+  "resource://gre/modules/PlacesTransactions.jsm"
 );
 
 let engine;

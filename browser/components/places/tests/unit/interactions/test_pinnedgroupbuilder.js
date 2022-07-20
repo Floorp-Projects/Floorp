@@ -5,9 +5,11 @@
  * Tests for ensuring the domain builder works correctly.
  */
 
-ChromeUtils.defineESModuleGetters(this, {
-  PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PinnedGroupBuilder",
+  "resource:///modules/PinnedGroupBuilder.jsm"
+);
 
 const TEST_PERSISTED_URLS = ["https://example.com/1", "https://example.com/2"];
 const TEST_EXTRA_PERSISTED_URL = "https://example.com/3";

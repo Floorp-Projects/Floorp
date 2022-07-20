@@ -5,9 +5,11 @@ ChromeUtils.defineModuleGetter(
   "ObjectUtils",
   "resource://gre/modules/ObjectUtils.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "QueryCache",

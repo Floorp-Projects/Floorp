@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 var updateService = Cc["@mozilla.org/updates/update-service;1"].getService(

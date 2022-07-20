@@ -17,9 +17,11 @@ ChromeUtils.defineModuleGetter(
   "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 const TEST_SITE = "http://example.net";
 const TEST_THIRD_PARTY_SITE = "http://mochi.test:8888";

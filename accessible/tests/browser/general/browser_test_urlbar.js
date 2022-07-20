@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { UrlbarTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+const { UrlbarTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
 // Checking that the awesomebar popup gets COMBOBOX_LIST role instead of

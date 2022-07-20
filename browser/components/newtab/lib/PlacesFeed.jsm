@@ -31,9 +31,11 @@ ChromeUtils.defineModuleGetter(
   "PartnerLinkAttribution",
   "resource:///modules/PartnerLinkAttribution.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   lazy,
   "PrivateBrowsingUtils",

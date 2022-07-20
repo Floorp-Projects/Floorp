@@ -24,10 +24,11 @@
         "AsyncTabSwitcher",
         "resource:///modules/AsyncTabSwitcher.jsm"
       );
-      ChromeUtils.defineESModuleGetters(this, {
-        UrlbarProviderOpenTabs:
-          "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
-      });
+      ChromeUtils.defineModuleGetter(
+        this,
+        "UrlbarProviderOpenTabs",
+        "resource:///modules/UrlbarProviderOpenTabs.jsm"
+      );
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         ChromeUtils.defineModuleGetter(

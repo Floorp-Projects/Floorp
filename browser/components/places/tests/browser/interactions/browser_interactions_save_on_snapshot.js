@@ -6,11 +6,9 @@
  * Tests page view time recording for interactions.
  */
 
-const { Snapshots } = ChromeUtils.importESModule(
-  "resource:///modules/Snapshots.sys.mjs"
-);
-const { PlacesTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/PlacesTestUtils.sys.mjs"
+const { Snapshots } = ChromeUtils.import("resource:///modules/Snapshots.jsm");
+const { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
 );
 
 async function reset() {

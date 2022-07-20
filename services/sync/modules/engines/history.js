@@ -27,10 +27,17 @@ const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesSyncUtils",
+  "resource://gre/modules/PlacesSyncUtils.jsm"
+);
 
 function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);

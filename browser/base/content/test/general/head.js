@@ -7,10 +7,16 @@ ChromeUtils.defineModuleGetter(
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "BrowserTestUtils",

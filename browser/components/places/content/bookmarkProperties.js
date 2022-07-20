@@ -51,6 +51,7 @@
  */
 
 /* import-globals-from instantEditBookmark.js */
+/* import-globals-from controller.js */
 
 /* Shared Places Import - change other consumers if you change this: */
 var { XPCOMUtils } = ChromeUtils.importESModule(

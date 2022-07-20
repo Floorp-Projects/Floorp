@@ -1,8 +1,8 @@
 /*
  * Bug 1270678 - A test case to test does the favicon obey originAttributes.
  */
-const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 

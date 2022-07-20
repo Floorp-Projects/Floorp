@@ -8,9 +8,11 @@ ChromeUtils.defineModuleGetter(
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
 
 // Cutoff of 1.5 minutes + 1 second to determine what text string to display
 export const nowThresholdMs = 91000;
