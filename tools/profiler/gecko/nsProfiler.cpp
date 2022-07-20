@@ -1168,8 +1168,14 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
       !exitProfiles.empty()) {
     for (auto& exitProfile : exitProfiles) {
       if (!exitProfile.IsEmpty()) {
-        if (mWriter->ChunkedWriteFunc().Length() + exitProfile.Length() <
-            scLengthAccumulationThreshold) {
+        if (exitProfile[0] == '*') {
+          LogEvent([&](Json::Value& aEvent) {
+            aEvent.append(
+                Json::StaticString{"Exit non-profile with error message:"});
+            aEvent.append(exitProfile.Data() + 1);
+          });
+        } else if (mWriter->ChunkedWriteFunc().Length() + exitProfile.Length() <
+                   scLengthAccumulationThreshold) {
           mWriter->Splice(exitProfile);
           LogEvent([&](Json::Value& aEvent) {
             aEvent.append(Json::StaticString{"Added exit profile with size:"});

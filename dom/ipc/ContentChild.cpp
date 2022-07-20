@@ -3029,6 +3029,13 @@ void ContentChild::ShutdownInternal() {
         CrashReporter::Annotation::ProfilerChildShutdownPhase,
         isProfiling ? "Profiling - SendShutdownProfile (sending)"_ns
                     : "Not profiling - SendShutdownProfile (sending)"_ns);
+    if (const size_t len = shutdownProfile.Length();
+        len >= size_t(IPC::Channel::kMaximumMessageSize)) {
+      shutdownProfile = nsPrintfCString(
+          "*Profile from pid %u bigger (%zu) than IPC max (%zu)",
+          unsigned(profiler_current_process_id().ToNumber()), len,
+          size_t(IPC::Channel::kMaximumMessageSize));
+    }
     // Send the shutdown profile to the parent process through our own
     // message channel, which we know will survive for long enough.
     bool sent = SendShutdownProfile(shutdownProfile);
