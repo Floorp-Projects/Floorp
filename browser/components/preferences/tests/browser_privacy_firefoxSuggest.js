@@ -5,15 +5,15 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.import(
-    "resource://testing-common/QuickSuggestTestUtils.jsm"
+  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
   module.init(this);
   registerCleanupFunction(() => module.uninit());
