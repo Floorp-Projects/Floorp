@@ -7,9 +7,12 @@ const { RemoteL10n } = ChromeUtils.import(
   "resource://activity-stream/lib/RemoteL10n.jsm"
 );
 
-add_task(async function test_TODO() {
+const ID = "remote_l10n_test_string";
+const VALUE = "RemoteL10n string";
+const CONTENT = `${ID} = ${VALUE}`;
+
+add_setup(async () => {
   const l10nRegistryInstance = L10nRegistry.getInstance();
-  const CONTENT = "remote_l10n_test_string = RemoteL10n string";
   const localProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
   const dirPath = PathUtils.join(
     localProfileDir,
@@ -31,14 +34,23 @@ add_task(async function test_TODO() {
   if (l10nRegistryInstance.hasSource("cfr")) {
     l10nRegistryInstance.removeSources(["cfr"]);
   }
+});
 
-  let [{ value }] = await RemoteL10n.l10n.formatMessages([
-    { id: "remote_l10n_test_string" },
-  ]);
+add_task(async function test_TODO() {
+  let [{ value }] = await RemoteL10n.l10n.formatMessages([{ id: ID }]);
 
-  Assert.equal(
-    value,
-    "RemoteL10n string",
-    "Got back the string we wrote to disk"
-  );
+  Assert.equal(value, VALUE, "Got back the string we wrote to disk");
+});
+
+// Test that the formatting helper works.  This helper is lower-level than the
+// DOM localization apparatus, and as such doesn't require the weight of the
+// `browser` test framework, but it's nice to co-locate related tests.
+add_task(async function test_formatLocalizableText() {
+  let value = await RemoteL10n.formatLocalizableText({ string_id: ID });
+
+  Assert.equal(value, VALUE, "Got back the string we wrote to disk");
+
+  value = await RemoteL10n.formatLocalizableText("unchanged");
+
+  Assert.equal(value, "unchanged", "Got back the string provided");
 });
