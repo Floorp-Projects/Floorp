@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1737682
+
+This is a test of the macOS video low power telemetry, defined as GFX_MACOS_VIDEO_LOW_POWER
+enums in Histograms.json. The test will load some video media files, play them for some
+number of frames, then check that appropriate telemetry has been recorded. Since the
+telemetry fires based on the number of frames presented, the test is structured around
+the `media.video_stats.enabled` pref, which allows us to monitor the number of frames
+that have been shown. The telemetry fires every 600 frames. To make sure we have enough
+presented frames to trigger telemetry, we run the media for more frames and then check
+that the expected telemetry value has been recorded either 1 or 2 times.
+
+The tests are run via the MediaTestManager, which loads and plays the video sequentially.
+Since we want to test different telemetry outcomes, we have some special setup and teardown
+steps we run before each video. We keep track of which test we are running with a simple
+1-based index, `testIndex`. So our test structure is:
+
+1) Set some initial preferences that need to be set for the whole test series.
+2) Start MediaTestManager with a set of media to play.
+3) When a video arrives, increment testIndex and call preTest.
+4) Run the video for PRESENTED_FRAMES frames, then call postTest, which checks telemetry
+   and cleans up.
+5) Tell the MediaTestManager we've finished with that video, which triggers the next.
+-->
+
+<head>
+  <title>Test of macOS video low power telemetry</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1737682">Mozilla Bug 1737682</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  // Parallel test must be disabled for media.video_stats.enabled is a global setting
+  // to prevent the setting from changing unexpectedly in the middle of the test.
+  PARALLEL_TESTS = 1;
+  SimpleTest.waitForExplicitFinish();
+
+  // How many frames do we run? Must be more than 600, because that's how
+  // many frames must be shown before telemetry is emitted. It must also be
+  // less than twice that number because we check that the expected values
+  // are emitted either 1 or 2 times.
+  const TELEMETRY_FRAMES = 600;
+  const PRESENTED_FRAMES = TELEMETRY_FRAMES * 1.2;
+
+  // Taken from TelemetryHistogramEnums.h
+  const GFX_MACOS_VIDEO_LOW_POWER_Success = 1;
+  const GFX_MACOS_VIDEO_LOW_POWER_FailWindowed = 3;
+
+  var manager = new MediaTestManager;
+
+  // Define some state variables that we'll use to manage multiple setup,
+  // check, and teardown steps using the same preTest and postTest functions.
+  var testIndex = 0;
+  var testsComplete = false;
+
+  async function retrieveSnapshotAndClearTelemetry() {
+    return SpecialPowers.spawnChrome([], () => {
+      let hist = Services.telemetry.getHistogramById("GFX_MACOS_VIDEO_LOW_POWER");
+      let snap = hist.snapshot();
+      hist.clear();
+      return snap;
+    });
+  }
+
+  function checkSnapshot(snap, category) {
+    if (!snap) {
+      return;
+    }
+
+    // Since we've run the media for slightly more frames than the telemetry needs
+    // to fire, we should have either 1 or 2 of the expected values.
+    let val = snap.values[category];
+    if (!val) {
+      val = 0;
+    }
+    ok(val >= 1 && val <= 2, `Test ${testIndex} enum ${category} should have either 1 or 2 occurrences; found ${val}.`);
+  }
+
+  async function doPreTest(v) {
+    if (testsComplete) {
+      manager.finished(v.token);
+      return;
+    }
+
+    switch (testIndex) {
+      case 1: {
+        // Test 1 (FailWindowed): No special setup.
+        break;
+      }
+
+      case 2: {
+        // Test 2 (Success): Enter fullscreen.
+        info("Attempting to enter fullscreen.");
+        await SpecialPowers.wrap(v).requestFullscreen();
+        break;
+      }
+    }
+  }
+
+  async function doPostTest(v) {
+    info(`Test ${testIndex} attempting to retrieve telemetry.`);
+    let snap = await retrieveSnapshotAndClearTelemetry();
+    ok(snap, `Test ${testIndex} should have telemetry.`);
+
+    switch (testIndex) {
+      case 1: {
+        // Test 1 (FailWindowed): Just check.
+        checkSnapshot(snap, GFX_MACOS_VIDEO_LOW_POWER_FailWindowed);
+        break;
+      }
+
+      case 2: {
+        // Test 2 (Success): Check, then exit fullscreen.
+        checkSnapshot(snap, GFX_MACOS_VIDEO_LOW_POWER_Success);
+
+        info("Attempting to exit fullscreen.");
+        await SpecialPowers.wrap(document).exitFullscreen();
+
+        // This is the last test.
+        testsComplete = true;
+        break;
+      }
+    }
+  }
+
+  function ontimeupdate(event) {
+    let v = event.target;
+    // Count presented frames to see when we should hit some telemetry threshholds.
+    if (v.mozPresentedFrames >= PRESENTED_FRAMES) {
+      v.pause();
+      v.removeEventListener("timeupdate", ontimeupdate);
+
+      doPostTest(v).then(() => {
+        let token = v.token;
+        removeNodeAndSource(v);
+        manager.finished(token);
+      });
+    }
+  }
+
+  function startTest(test, token) {
+    manager.started(token);
+
+    testIndex++;
+    info(`Starting test ${testIndex} video ${test.name}.`);
+
+    let v = document.createElement('video');
+    v.addEventListener("timeupdate", ontimeupdate);
+    v.token = token;
+    v.src = test.name;
+    v.loop = true;
+    document.body.appendChild(v);
+
+    doPreTest(v).then(() => {
+      info(`Playing test ${testIndex}.`);
+      v.play();
+    });
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", true]]},
+    async function() {
+      // Clear out existing telemetry in case previous tests were displaying
+      // video.
+      info("Clearing initial telemetry.");
+      await retrieveSnapshotAndClearTelemetry();
+
+      ok(gVideoLowPowerTests.length >= 2, "Should have enough videos to test.");
+      manager.runTests(gVideoLowPowerTests, startTest);
+  });
+
+</script>
+</pre>
+</body>
+</html>
