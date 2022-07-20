@@ -1124,3 +1124,42 @@ add_task(async function check_doesAppNeedPrivatePin() {
     "Should return a boolean"
   );
 });
+
+add_task(async function check_isBackgroundTaskMode() {
+  if (!AppConstants.MOZ_BACKGROUNDTASKS) {
+    // `mochitest-browser` suite `add_task` does not yet support
+    // `properties.skip_if`.
+    ok(true, "Skipping because !AppConstants.MOZ_BACKGROUNDTASKS");
+    return;
+  }
+
+  const bts = Cc["@mozilla.org/backgroundtasks;1"].getService(
+    Ci.nsIBackgroundTasks
+  );
+
+  // Pretend that this is a background task.
+  bts.overrideBackgroundTaskNameForTesting("taskName");
+  is(
+    await ASRouterTargeting.Environment.isBackgroundTaskMode,
+    true,
+    "Is in background task mode"
+  );
+  is(
+    await ASRouterTargeting.Environment.backgroundTaskName,
+    "taskName",
+    "Has expected background task name"
+  );
+
+  // Unset, so that subsequent test functions don't see background task mode.
+  bts.overrideBackgroundTaskNameForTesting(null);
+  is(
+    await ASRouterTargeting.Environment.isBackgroundTaskMode,
+    false,
+    "Is not in background task mode"
+  );
+  is(
+    await ASRouterTargeting.Environment.backgroundTaskName,
+    null,
+    "Has no background task name"
+  );
+});

@@ -715,6 +715,32 @@ const TargetingGetters = {
   get doesAppNeedPrivatePin() {
     return QueryCache.getters.doesAppNeedPrivatePin.get();
   },
+
+  /**
+   * Is this invocation running in background task mode?
+   *
+   * @return {boolean} `true` if running in background task mode.
+   */
+  get isBackgroundTaskMode() {
+    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
+      Ci.nsIBackgroundTasks
+    );
+    return !!bts?.isBackgroundTaskMode;
+  },
+
+  /**
+   * A non-empty task name if this invocation is running in background
+   * task mode, or `null` if this invocation is not running in
+   * background task mode.
+   *
+   * @return {string|null} background task name or `null`.
+   */
+  get backgroundTaskName() {
+    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
+      Ci.nsIBackgroundTasks
+    );
+    return bts?.backgroundTaskName();
+  },
 };
 
 const ASRouterTargeting = {
