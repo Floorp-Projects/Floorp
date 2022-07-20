@@ -378,6 +378,11 @@ function updateLogModules() {
         activeLogModules.push("sync");
       }
     } catch (e) {}
+    try {
+      if (Services.prefs.getBoolPref("logging.config.profilermarkers")) {
+        activeLogModules.push("profilermarkers");
+      }
+    } catch (e) {}
 
     let children = Services.prefs.getBranch("logging.").getChildList("");
 
@@ -444,6 +449,8 @@ function setLogModules() {
       // XXX: append is not yet supported.
     } else if (module == "sync") {
       Services.prefs.setBoolPref("logging.config.sync", true);
+    } else if (module == "profilermarkers") {
+      Services.prefs.setBoolPref("logging.config.profilermarkers", true);
     } else {
       let lastColon = module.lastIndexOf(":");
       let key = module.slice(0, lastColon);
