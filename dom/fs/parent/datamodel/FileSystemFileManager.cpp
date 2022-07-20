@@ -69,13 +69,16 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateEntry(
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
     const Origin& aOrigin) {
+  auto asQMResult = [](const auto& aRv) { return QMResult(aRv); };
+
+  QM_TRY(quota::QuotaManager::EnsureCreated().mapErr(asQMResult));
   quota::QuotaManager* qm = quota::QuotaManager::Get();
-  QM_TRY(OkIf(qm), Err(QMResult(NS_ERROR_NOT_AVAILABLE)));
+  MOZ_ASSERT(qm);
 
   QM_TRY_UNWRAP(
       nsCOMPtr<nsIFile> fileSystemDirectory,
       qm->GetDirectoryForOrigin(quota::PERSISTENCE_TYPE_DEFAULT, aOrigin)
-          .mapErr([](const auto& aRv) { return QMResult(aRv); }));
+          .mapErr(asQMResult));
 
   QM_TRY(
       QM_TO_RESULT(fileSystemDirectory->AppendRelativePath(u"filesystem"_ns)));
@@ -85,7 +88,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
 
 Result<nsString, QMResult> GetFileSystemDatabaseFile(const Origin& aOrigin) {
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> directoryPath,
-                getFileSystemDirectory(aOrigin));
+                GetFileSystemDirectory(aOrigin));
 
   QM_TRY(
       QM_TO_RESULT(directoryPath->AppendRelativePath(u"metadata.sqlite"_ns)));
@@ -100,11 +103,11 @@ Result<nsString, QMResult> GetFileSystemDatabaseFile(const Origin& aOrigin) {
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetDatabasePath(const Origin& aOrigin,
                                                     bool& aExists) {
-  QM_TRY_UNWRAP(nsString databaseFilePath, getFileSystemDatabaseFile(aOrigin))
+  QM_TRY_UNWRAP(nsString databaseFilePath, GetFileSystemDatabaseFile(aOrigin))
 
   MOZ_ASSERT(!databaseFilePath.IsEmpty());
 
-  return getOrCreateEntry(databaseFilePath, aExists, nsIFile::NORMAL_FILE_TYPE,
+  return GetOrCreateEntry(databaseFilePath, aExists, nsIFile::NORMAL_FILE_TYPE,
                           0644);
 }
 
@@ -117,7 +120,7 @@ FileSystemFileManager::CreateFileSystemFileManager(
 Result<FileSystemFileManager, QMResult>
 FileSystemFileManager::CreateFileSystemFileManager(const Origin& aOrigin) {
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> topDirectory,
-                getFileSystemDirectory(aOrigin));
+                GetFileSystemDirectory(aOrigin));
 
   return FileSystemFileManager(std::move(topDirectory));
 }
@@ -138,34 +141,33 @@ Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetOrCreateFile(
   bool exists = false;
   QM_TRY_UNWRAP(
       nsCOMPtr<nsIFile> result,
-      getOrCreateEntry(desiredPath, exists, nsIFile::NORMAL_FILE_TYPE, 0644));
+      GetOrCreateEntry(desiredPath, exists, nsIFile::NORMAL_FILE_TYPE, 0644));
 
   return result;
 }
 
-Result<bool, QMResult> FileSystemFileManager::RemoveFile(
-    const EntryId& aEntryId) {
+nsresult FileSystemFileManager::RemoveFile(const EntryId& aEntryId) {
   MOZ_ASSERT(!aEntryId.IsEmpty());
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> pathObject,
                 GetFileDestination(*mTopDirectory, aEntryId));
 
   bool exists = false;
-  QM_TRY(QM_TO_RESULT(pathObject->Exists(&exists)));
+  QM_TRY(MOZ_TO_RESULT(pathObject->Exists(&exists)));
 
   if (!exists) {
-    return false;
+    return NS_OK;
   }
 
   bool isFile = false;
-  QM_TRY(QM_TO_RESULT(pathObject->IsFile(&isFile)));
+  QM_TRY(MOZ_TO_RESULT(pathObject->IsFile(&isFile)));
 
   if (!isFile) {
-    return Err(QMResult(NS_ERROR_FILE_IS_DIRECTORY));
+    return NS_ERROR_FILE_IS_DIRECTORY;
   }
 
-  QM_TRY(QM_TO_RESULT(pathObject->Remove(/* recursive */ false)));
+  QM_TRY(MOZ_TO_RESULT(pathObject->Remove(/* recursive */ false)));
 
-  return true;
+  return NS_OK;
 }
 
 }  // namespace mozilla::dom::fs::data
