@@ -4,7 +4,7 @@
 
 // jscodeshift rule to replace EXPORTED_SYMBOLS with export declarations.
 
-/* global require, __dirname, process */
+/* eslint-env node */
 
 const _path = require("path");
 const {
@@ -12,8 +12,6 @@ const {
   getPrevStatement,
   getNextStatement,
 } = require(_path.resolve(__dirname, "./utils.js"));
-
-/* global module */
 
 module.exports = function(fileInfo, api) {
   const { jscodeshift } = api;
