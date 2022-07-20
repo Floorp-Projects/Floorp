@@ -580,6 +580,7 @@ register_strategy("test", args=("skip-unless-schedules",))(Alias)
 register_strategy("test-inclusive", args=("skip-unless-schedules",))(Alias)
 register_strategy("test-verify", args=("skip-unless-schedules",))(Alias)
 register_strategy("upload-symbols", args=("never",))(Alias)
+register_strategy("reprocess-symbols", args=("never",))(Alias)
 
 
 # Strategy overrides used to tweak the default strategies. These are referenced
@@ -815,5 +816,6 @@ tryselect = ExperimentalOverride(
         ),
         "test-verify": "base:test",
         "upload-symbols": Alias("always"),
+        "reprocess-symbols": Alias("always"),
     },
 )
