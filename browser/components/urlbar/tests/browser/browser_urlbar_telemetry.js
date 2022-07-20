@@ -16,10 +16,7 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 function searchInAwesomebar(value, win = window) {
