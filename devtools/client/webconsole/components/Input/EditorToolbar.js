@@ -60,10 +60,7 @@ class EditorToolbar extends Component {
   }
 
   renderEvaluationContextSelector() {
-    if (
-      !this.props.webConsoleUI.wrapper.toolbox ||
-      !this.props.showEvaluationContextSelector
-    ) {
+    if (!this.props.showEvaluationContextSelector) {
       return null;
     }
 

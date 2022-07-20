@@ -1837,11 +1837,8 @@ function getContextSelectorItems(hud) {
  * state.
  *
  * @param {WebConsole} hud
- * @param {Array<Object>} expected: An array of object which can have the following shape:
- *         - {String} label: The label of the target
- *         - {String} tooltip: The tooltip of the target element in the menu
- *         - {Boolean} checked: if the target should be selected or not
- *         - {Boolean} separator: if the element is a simple separator
+ * @param {Array<Object>} expected: An array of object (see checkContextSelectorMenuItemAt
+ *                        for expected properties)
  */
 function checkContextSelectorMenu(hud, expected) {
   const items = getContextSelectorItems(hud);
@@ -1852,30 +1849,41 @@ function checkContextSelectorMenu(hud, expected) {
     "The context selector menu has the expected number of items"
   );
 
-  expected.forEach(({ label, tooltip, checked, separator }, i) => {
-    const el = items[i];
-
-    if (separator === true) {
-      is(
-        el.getAttribute("role"),
-        "menuseparator",
-        "The element is a separator"
-      );
-      return;
-    }
-
-    const elChecked = el.getAttribute("aria-checked") === "true";
-    const elTooltip = el.getAttribute("title");
-    const elLabel = el.querySelector(".label").innerText;
-
-    is(elLabel, label, `The item has the expected label`);
-    is(elTooltip, tooltip, `Item "${label}" has the expected tooltip`);
-    is(
-      elChecked,
-      checked,
-      `Item "${label}" is ${checked ? "checked" : "unchecked"}`
-    );
+  expected.forEach((expectedItem, i) => {
+    checkContextSelectorMenuItemAt(hud, i, expectedItem);
   });
+}
+
+/**
+ * Check that the evaluation context selector menu has the expected item at the specified index.
+ *
+ * @param {WebConsole} hud
+ * @param {Number} index
+ * @param {Object} expected
+ * @param {String} expected.label: The label of the target
+ * @param {String} expected.tooltip: The tooltip of the target element in the menu
+ * @param {Boolean} expected.checked: if the target should be selected or not
+ * @param {Boolean} expected.separator: if the element is a simple separator
+ */
+function checkContextSelectorMenuItemAt(hud, index, expected) {
+  const el = getContextSelectorItems(hud).at(index);
+
+  if (expected.separator === true) {
+    is(el.getAttribute("role"), "menuseparator", "The element is a separator");
+    return;
+  }
+
+  const elChecked = el.getAttribute("aria-checked") === "true";
+  const elTooltip = el.getAttribute("title");
+  const elLabel = el.querySelector(".label").innerText;
+
+  is(elLabel, expected.label, `The item has the expected label`);
+  is(elTooltip, expected.tooltip, `Item "${elLabel}" has the expected tooltip`);
+  is(
+    elChecked,
+    expected.checked,
+    `Item "${elLabel}" is ${expected.checked ? "checked" : "unchecked"}`
+  );
 }
 
 /**
