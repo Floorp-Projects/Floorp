@@ -77,8 +77,8 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

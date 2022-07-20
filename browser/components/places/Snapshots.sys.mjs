@@ -11,18 +11,18 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CommonNames: "resource:///modules/CommonNames.sys.mjs",
+  Interactions: "resource:///modules/Interactions.sys.mjs",
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
-  CommonNames: "resource:///modules/CommonNames.jsm",
-  Interactions: "resource:///modules/Interactions.jsm",
-  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
 });
 
 /**

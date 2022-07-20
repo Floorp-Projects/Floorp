@@ -35,6 +35,10 @@ const { PromiseUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Authentication: "resource://tps/auth/fxaccounts.jsm",
   Async: "resource://services-common/async.js",
@@ -47,7 +51,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.jsm",
   Logger: "resource://tps/logger.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   Svc: "resource://services-sync/util.js",
   SyncTelemetry: "resource://services-sync/telemetry.js",

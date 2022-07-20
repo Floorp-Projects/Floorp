@@ -15,13 +15,16 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
-  PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",

@@ -7,6 +7,10 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -14,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 /**

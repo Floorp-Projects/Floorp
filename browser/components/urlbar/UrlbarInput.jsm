@@ -17,6 +17,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  ExtensionSearchHandler:
+    "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
   SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
@@ -25,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",

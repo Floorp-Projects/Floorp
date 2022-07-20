@@ -24,11 +24,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 // Places query used to retrieve all history downloads for the related list.

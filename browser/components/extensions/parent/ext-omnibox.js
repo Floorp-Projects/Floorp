@@ -6,11 +6,10 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionSearchHandler",
-  "resource://gre/modules/ExtensionSearchHandler.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionSearchHandler:
+    "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
+});
 
 this.omnibox = class extends ExtensionAPIPersistent {
   PERSISTENT_EVENTS = {

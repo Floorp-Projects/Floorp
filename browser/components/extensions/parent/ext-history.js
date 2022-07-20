@@ -6,8 +6,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 var { normalizeTime } = ExtensionCommon;

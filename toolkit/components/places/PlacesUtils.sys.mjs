@@ -15,12 +15,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Bookmarks: "resource://gre/modules/Bookmarks.sys.mjs",
+  History: "resource://gre/modules/History.sys.mjs",
+  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
-  Bookmarks: "resource://gre/modules/Bookmarks.jsm",
-  History: "resource://gre/modules/History.jsm",
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "MOZ_ACTION_REGEX", () => {

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { BookmarkJSONUtils } = ChromeUtils.import(
-  "resource://gre/modules/BookmarkJSONUtils.jsm"
+const { BookmarkJSONUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/BookmarkJSONUtils.sys.mjs"
 );
 
 // An object representing the contents of bookmarks.json.

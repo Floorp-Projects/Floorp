@@ -3,11 +3,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+});
 
 let win;
 
