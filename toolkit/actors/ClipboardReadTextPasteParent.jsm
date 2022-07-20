@@ -62,7 +62,7 @@ class ClipboardReadTextPasteParent extends JSWindowActorParent {
 
       let mouseXInCSSPixels = {};
       let mouseYInCSSPixels = {};
-      windowUtils.getLastOverWindowPointerLocationInCSSPixels(
+      windowUtils.getLastOverWindowMouseLocationInCSSPixels(
         mouseXInCSSPixels,
         mouseYInCSSPixels
       );

@@ -50,7 +50,7 @@ function promiseClickPasteButton() {
 function getMouseCoordsRelativeToScreenInDevicePixels() {
   let mouseXInCSSPixels = {};
   let mouseYInCSSPixels = {};
-  window.windowUtils.getLastOverWindowPointerLocationInCSSPixels(
+  window.windowUtils.getLastOverWindowMouseLocationInCSSPixels(
     mouseXInCSSPixels,
     mouseYInCSSPixels
   );
