@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["InteractionsBlocklist"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -286,4 +284,4 @@ class _InteractionsBlocklist {
   }
 }
 
-const InteractionsBlocklist = new _InteractionsBlocklist();
+export const InteractionsBlocklist = new _InteractionsBlocklist();

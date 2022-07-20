@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["DomainGroupBuilder"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -18,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 /**
  * A builder for snapshot groups based on domains.
  */
-const DomainGroupBuilder = new (class DomainGroupBuilder {
+export const DomainGroupBuilder = new (class DomainGroupBuilder {
   /**
    * @type {Map<string, object>}
    * A map of domains to snapshot group data for groups that are currently in

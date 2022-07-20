@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PlacesBackups"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -95,7 +93,7 @@ function getBackupFileForSameDate(aFilename) {
   })();
 }
 
-var PlacesBackups = {
+export var PlacesBackups = {
   /**
    * Matches the backup filename:
    *  0: file name

@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["InteractionsParent"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -18,7 +16,7 @@ ChromeUtils.defineModuleGetter(
  * Receives messages from InteractionsChild and passes them to the appropriate
  * interactions object.
  */
-class InteractionsParent extends JSWindowActorParent {
+export class InteractionsParent extends JSWindowActorParent {
   receiveMessage(msg) {
     switch (msg.name) {
       case "Interactions:PageLoaded":

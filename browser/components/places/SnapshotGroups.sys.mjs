@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SnapshotGroups"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -70,7 +68,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   places-snapshot-group-updated, data: id of the snapshot group.
  *   places-snapshot-group-deleted, data: id of the snapshot group.
  */
-const SnapshotGroups = new (class SnapshotGroups {
+export const SnapshotGroups = new (class SnapshotGroups {
   constructor() {}
 
   /**

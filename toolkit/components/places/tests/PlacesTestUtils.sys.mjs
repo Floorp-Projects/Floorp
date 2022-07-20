@@ -1,7 +1,5 @@
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PlacesTestUtils"];
-
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -14,7 +12,7 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/TestUtils.jsm"
 );
 
-var PlacesTestUtils = Object.freeze({
+export var PlacesTestUtils = Object.freeze({
   /**
    * Asynchronously adds visits to a page.
    *
