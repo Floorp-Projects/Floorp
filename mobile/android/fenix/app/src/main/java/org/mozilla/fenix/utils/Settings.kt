@@ -1210,7 +1210,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             "en-US",
             "en-CA",
             "fr-CA"
-        ).contains(langTag) && Config.channel.isNightlyOrDebug
+        ).contains(langTag)
     }
 
     private var isHistoryMetadataEnabled by booleanPreference(
