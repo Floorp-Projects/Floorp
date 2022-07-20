@@ -1,0 +1,20 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+name: Tag Milestone
+
+on:
+  issues:
+    types:
+      - closed
+
+jobs:
+  milestone:
+    runs-on: ubuntu-latest
+    if: github.actor == 'mergify[bot]'
+    steps:
+      - name: Tag Milestone
+        uses: gabrielluong/milestone@1.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
