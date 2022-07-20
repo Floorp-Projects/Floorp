@@ -8,9 +8,7 @@
  * Provide unit converter.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { UnitConverterSimple } from "resource:///modules/UnitConverterSimple.sys.mjs";
 import { UnitConverterTemperature } from "resource:///modules/UnitConverterTemperature.sys.mjs";
