@@ -1336,9 +1336,33 @@ void nsProfiler::FinishGathering() {
     return;
   }
 
-  UniquePtr<char[]> buf = mWriter->ChunkedWriteFunc().CopyData();
   nsCString result;
-  result.Adopt(buf.release(), len);
+  if (!result.SetLength(len, fallible)) {
+    NS_WARNING("Cannot allocate a string for the Profile JSON.");
+    ResetGathering(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  MOZ_ASSERT(*(result.Data() + len) == '\0',
+             "We expected a null at the end of the string buffer, to be "
+             "rewritten by CopyDataIntoLazilyAllocatedBuffer");
+
+  char* const resultBeginWriting = result.BeginWriting();
+  if (!resultBeginWriting) {
+    NS_WARNING("Cannot access the string to write the Profile JSON.");
+    ResetGathering(NS_ERROR_CACHE_WRITE_ACCESS_DENIED);
+    return;
+  }
+
+  // Here, we have enough space reserved in `result`, starting at
+  // `resultBeginWriting`, copy the JSON profile there.
+  mWriter->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
+      [&](size_t aBufferLen) -> char* {
+        MOZ_RELEASE_ASSERT(aBufferLen == len + 1);
+        return resultBeginWriting;
+      });
+  MOZ_ASSERT(*(result.Data() + len) == '\0',
+             "We still expected a null at the end of the string buffer");
+
   mPromiseHolder->Resolve(std::move(result), __func__);
 
   ResetGathering(NS_ERROR_UNEXPECTED);
