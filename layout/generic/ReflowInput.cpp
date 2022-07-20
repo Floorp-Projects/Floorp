@@ -338,7 +338,6 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   mStyleDisplay = mFrame->StyleDisplay();
   mStyleBorder = mFrame->StyleBorder();
   mStyleMargin = mFrame->StyleMargin();
-  mStylePadding = mFrame->StylePadding();
   mStyleText = mFrame->StyleText();
 
   InitCBReflowInput();
@@ -1097,23 +1096,22 @@ void ReflowInput::CalculateBorderPaddingMargin(
   nscoord paddingStartEnd, marginStartEnd;
 
   // See if the style system can provide us the padding directly
-  nsMargin stylePadding;
-  if (mStylePadding->GetPadding(stylePadding)) {
-    paddingStartEnd = stylePadding.Side(startSide) + stylePadding.Side(endSide);
+  const auto* stylePadding = mFrame->StylePadding();
+  if (nsMargin padding; stylePadding->GetPadding(padding)) {
+    paddingStartEnd = padding.Side(startSide) + padding.Side(endSide);
   } else {
     // We have to compute the start and end values
     nscoord start, end;
     start = nsLayoutUtils::ComputeCBDependentValue(
-        aContainingBlockSize, mStylePadding->mPadding.Get(startSide));
+        aContainingBlockSize, stylePadding->mPadding.Get(startSide));
     end = nsLayoutUtils::ComputeCBDependentValue(
-        aContainingBlockSize, mStylePadding->mPadding.Get(endSide));
+        aContainingBlockSize, stylePadding->mPadding.Get(endSide));
     paddingStartEnd = start + end;
   }
 
   // See if the style system can provide us the margin directly
-  nsMargin styleMargin;
-  if (mStyleMargin->GetMargin(styleMargin)) {
-    marginStartEnd = styleMargin.Side(startSide) + styleMargin.Side(endSide);
+  if (nsMargin margin; mStyleMargin->GetMargin(margin)) {
+    marginStartEnd = margin.Side(startSide) + margin.Side(endSide);
   } else {
     nscoord start, end;
     // We have to compute the start and end values
