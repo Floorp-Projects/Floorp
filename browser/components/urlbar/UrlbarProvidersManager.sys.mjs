@@ -36,46 +36,50 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 // List of available local providers, each is implemented in its own jsm module
 // and will track different queries internally by queryContext.
 var localProviderModules = {
-  UrlbarProviderAboutPages: "resource:///modules/UrlbarProviderAboutPages.jsm",
+  UrlbarProviderAboutPages:
+    "resource:///modules/UrlbarProviderAboutPages.sys.mjs",
   UrlbarProviderAliasEngines:
-    "resource:///modules/UrlbarProviderAliasEngines.jsm",
-  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
+    "resource:///modules/UrlbarProviderAliasEngines.sys.mjs",
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
   UrlbarProviderBookmarkKeywords:
-    "resource:///modules/UrlbarProviderBookmarkKeywords.jsm",
-  UrlbarProviderCalculator: "resource:///modules/UrlbarProviderCalculator.jsm",
+    "resource:///modules/UrlbarProviderBookmarkKeywords.sys.mjs",
+  UrlbarProviderCalculator:
+    "resource:///modules/UrlbarProviderCalculator.sys.mjs",
   UrlbarProviderHeuristicFallback:
-    "resource:///modules/UrlbarProviderHeuristicFallback.jsm",
+    "resource:///modules/UrlbarProviderHeuristicFallback.sys.mjs",
   UrlbarProviderInputHistory:
-    "resource:///modules/UrlbarProviderInputHistory.jsm",
+    "resource:///modules/UrlbarProviderInputHistory.sys.mjs",
   UrlbarProviderInterventions:
-    "resource:///modules/UrlbarProviderInterventions.jsm",
-  UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.jsm",
-  UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.jsm",
+    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
+  UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.sys.mjs",
+  UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.sys.mjs",
   UrlbarProviderPreloadedSites:
-    "resource:///modules/UrlbarProviderPreloadedSites.jsm",
+    "resource:///modules/UrlbarProviderPreloadedSites.sys.mjs",
   UrlbarProviderPrivateSearch:
-    "resource:///modules/UrlbarProviderPrivateSearch.jsm",
+    "resource:///modules/UrlbarProviderPrivateSearch.sys.mjs",
   UrlbarProviderQuickActions:
-    "resource:///modules/UrlbarProviderQuickActions.jsm",
+    "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
   UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarProviderRemoteTabs: "resource:///modules/UrlbarProviderRemoteTabs.jsm",
-  UrlbarProviderSearchTips: "resource:///modules/UrlbarProviderSearchTips.jsm",
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarProviderRemoteTabs:
+    "resource:///modules/UrlbarProviderRemoteTabs.sys.mjs",
+  UrlbarProviderSearchTips:
+    "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarProviderSearchSuggestions:
-    "resource:///modules/UrlbarProviderSearchSuggestions.jsm",
+    "resource:///modules/UrlbarProviderSearchSuggestions.sys.mjs",
   UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.jsm",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
   UrlbarProviderTokenAliasEngines:
-    "resource:///modules/UrlbarProviderTokenAliasEngines.jsm",
-  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
+    "resource:///modules/UrlbarProviderTokenAliasEngines.sys.mjs",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProviderUnitConversion:
-    "resource:///modules/UrlbarProviderUnitConversion.jsm",
+    "resource:///modules/UrlbarProviderUnitConversion.sys.mjs",
 };
 
 // List of available local muxers, each is implemented in its own jsm module.
 var localMuxerModules = {
   UrlbarMuxerUnifiedComplete:
-    "resource:///modules/UrlbarMuxerUnifiedComplete.jsm",
+    "resource:///modules/UrlbarMuxerUnifiedComplete.sys.mjs",
 };
 
 // To improve dataflow and reduce UI work, when a result is added by a
@@ -96,7 +100,7 @@ class ProvidersManager {
     // providers at the front.
     this.providers = [];
     for (let [symbol, module] of Object.entries(localProviderModules)) {
-      let { [symbol]: provider } = ChromeUtils.import(module);
+      let { [symbol]: provider } = ChromeUtils.importESModule(module);
       this.registerProvider(provider);
     }
     // Tracks ongoing Query instances by queryContext.
@@ -110,7 +114,7 @@ class ProvidersManager {
     // This maps muxer names to muxers.
     this.muxers = new Map();
     for (let [symbol, module] of Object.entries(localMuxerModules)) {
-      let { [symbol]: muxer } = ChromeUtils.import(module);
+      let { [symbol]: muxer } = ChromeUtils.importESModule(module);
       this.registerMuxer(muxer);
     }
   }
