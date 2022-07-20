@@ -365,14 +365,42 @@ void ProfilerChild::GatherProfileThreadFunction(
                 // ProfilerChild thread, that's why this task was needed here.
                 mozilla::ipc::Shmem shmem;
                 if (writer) {
-                  writer->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
-                      [&](size_t allocationSize) -> char* {
-                        if (parameters->profilerChild->AllocShmem(
-                                allocationSize, &shmem)) {
-                          return shmem.get<char>();
-                        }
-                        return nullptr;
-                      });
+                  if (const size_t len = writer->ChunkedWriteFunc().Length();
+                      len < UINT32_MAX) {
+                    bool success = false;
+                    writer->ChunkedWriteFunc()
+                        .CopyDataIntoLazilyAllocatedBuffer(
+                            [&](size_t allocationSize) -> char* {
+                              MOZ_ASSERT(allocationSize == len + 1);
+                              if (parameters->profilerChild->AllocShmem(
+                                      allocationSize, &shmem)) {
+                                success = true;
+                                return shmem.get<char>();
+                              }
+                              return nullptr;
+                            });
+                    if (!success) {
+                      const nsPrintfCString message(
+                          "*Could not create shmem for profile from pid %u "
+                          "(%zu B)",
+                          unsigned(profiler_current_process_id().ToNumber()),
+                          len);
+                      if (parameters->profilerChild->AllocShmem(
+                              message.Length() + 1, &shmem)) {
+                        strcpy(shmem.get<char>(), message.Data());
+                      }
+                    }
+                  } else {
+                    const nsPrintfCString message(
+                        "*Profile from pid %u bigger (%zu) than shmem max "
+                        "(%zu)",
+                        unsigned(profiler_current_process_id().ToNumber()), len,
+                        size_t(UINT32_MAX));
+                    if (parameters->profilerChild->AllocShmem(
+                            message.Length() + 1, &shmem)) {
+                      strcpy(shmem.get<char>(), message.Data());
+                    }
+                  }
                   writer = nullptr;
                 } else {
                   // No profile, send an empty string.
