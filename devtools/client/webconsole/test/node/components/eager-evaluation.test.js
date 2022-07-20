@@ -29,7 +29,7 @@ function getEagerEvaluation(overrides = {}) {
   });
 }
 
-describe.only("EagerEvaluation component:", () => {
+describe("EagerEvaluation component:", () => {
   it("render Date result", () => {
     const store = setupStore();
     store.dispatch({
