@@ -203,7 +203,7 @@ async def test_no_await_promise_rejected(bidi_session, top_context):
         await_promise=False,
     )
 
-    recursive_compare({"type": "promise", "handle": any_string}, result)
+    recursive_compare({"type": "promise"}, result)
 
 
 @pytest.mark.asyncio
@@ -214,4 +214,4 @@ async def test_no_await_promise_resolved(bidi_session, top_context):
         await_promise=False,
     )
 
-    recursive_compare({"type": "promise", "handle": any_string}, result)
+    recursive_compare({"type": "promise"}, result)

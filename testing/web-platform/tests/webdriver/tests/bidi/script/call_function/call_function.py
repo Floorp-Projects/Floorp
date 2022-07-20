@@ -38,7 +38,6 @@ async def test_invalid_function(bidi_session, top_context):
         'exceptionDetails': {
             'columnNumber': any_int,
             'exception': {
-                'handle': any_string,
                 'type': 'error'},
             'lineNumber': any_int,
             'stackTrace': any_stack_trace,
@@ -73,7 +72,6 @@ async def test_arguments(bidi_session, top_context):
 
     recursive_compare({
         "type": "array",
-        "handle": any_string,
         "value": [{
             "type": 'string',
             "value": 'ARGUMENT_STRING_VALUE'
@@ -92,7 +90,6 @@ async def test_default_arguments(bidi_session, top_context):
 
     recursive_compare({
         "type": "array",
-        "handle": any_string,
         "value": []
     }, result)
 
@@ -127,7 +124,6 @@ async def test_default_this(bidi_session, top_context):
     # Note: https://github.com/w3c/webdriver-bidi/issues/251
     recursive_compare({
         "type": 'window',
-        "handle": any_string,
     }, result)
 
 
@@ -136,6 +132,7 @@ async def test_remote_value_argument(bidi_session, top_context):
     remote_value_result = await bidi_session.script.evaluate(
         expression="({SOME_PROPERTY:'SOME_VALUE'})",
         await_promise=False,
+        result_ownership="root",
         target=ContextTarget(top_context["context"]))
 
     remote_value_handle = remote_value_result["handle"]
@@ -166,8 +163,7 @@ async def test_async_arrow_await_promise(bidi_session, top_context, await_promis
             "value": "SOME_VALUE"}
     else:
         recursive_compare({
-            "type": "promise",
-            "handle": any_string},
+            "type": "promise"},
             result)
 
 
@@ -185,6 +181,5 @@ async def test_async_classic_await_promise(bidi_session, top_context, await_prom
             "value": "SOME_VALUE"}
     else:
         recursive_compare({
-            "type": "promise",
-            "handle": any_string},
+            "type": "promise"},
             result)
