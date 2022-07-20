@@ -55,11 +55,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Async: "resource://services-common/async.js",
   Log: "resource://gre/modules/Log.jsm",
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "MirrorLog", () =>

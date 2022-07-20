@@ -16,8 +16,11 @@ const POPUP_ACTION_COLOR_BRIGHT = "#bfbfc9";
 
 const SEARCH_TERM = "urlbar-reflows-" + Date.now();
 
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 

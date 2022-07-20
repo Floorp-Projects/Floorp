@@ -60,17 +60,13 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
-const { PlacesUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesBackups",
-  "resource://gre/modules/PlacesBackups.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
+});
 
 const Container_Normal = 0;
 const Container_Toolbar = 1;

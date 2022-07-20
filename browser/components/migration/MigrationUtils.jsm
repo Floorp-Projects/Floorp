@@ -18,21 +18,17 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BookmarkHTMLUtils",
-  "resource://gre/modules/BookmarkHTMLUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PromiseUtils",

@@ -26,9 +26,12 @@ const { RawCryptoWrapper } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["BridgedEngine", "LogAdapter"];

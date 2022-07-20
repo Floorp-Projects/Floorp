@@ -6,11 +6,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Interactions",
-  "resource:///modules/Interactions.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Interactions: "resource:///modules/Interactions.sys.mjs",
+});
 
 /**
  * Receives messages from InteractionsChild and passes them to the appropriate

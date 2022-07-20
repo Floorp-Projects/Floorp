@@ -6,17 +6,10 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 Cu.importGlobalProperties(["btoa"]);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
 
 const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 const SEARCH_SHORTCUTS_EXPERIMENT_PREF =

@@ -16,14 +16,14 @@ var {
 } = ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
 
 ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",

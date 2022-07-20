@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { BookmarkHTMLUtils } = ChromeUtils.import(
-  "resource://gre/modules/BookmarkHTMLUtils.jsm"
+const { BookmarkHTMLUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/BookmarkHTMLUtils.sys.mjs"
 );
 
 add_task(async function setup_l10n() {

@@ -22,11 +22,9 @@ ChromeUtils.defineModuleGetter(
   "Timer",
   "resource://gre/modules/Timer.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+});
 
 const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;

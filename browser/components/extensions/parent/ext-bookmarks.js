@@ -10,8 +10,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 var { ExtensionError } = ExtensionUtils;

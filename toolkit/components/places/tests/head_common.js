@@ -26,22 +26,26 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { PlacesSyncUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesSyncUtils.jsm"
+var { PlacesSyncUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PlacesSyncUtils.sys.mjs"
 );
+
+ChromeUtils.defineESModuleGetters(this, {
+  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
+  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
+  PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.jsm",
-  BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.jsm",
-  PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
-  PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {

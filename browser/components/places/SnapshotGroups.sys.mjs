@@ -10,14 +10,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.sys.mjs",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
+  Snapshots: "resource:///modules/Snapshots.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Snapshots: "resource:///modules/Snapshots.jsm",
-  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

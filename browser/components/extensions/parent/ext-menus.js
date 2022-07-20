@@ -12,11 +12,9 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
 
 var { DefaultMap, ExtensionError, parseMatchPatterns } = ExtensionUtils;
 

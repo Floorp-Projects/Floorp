@@ -25,11 +25,9 @@ ChromeUtils.defineModuleGetter(
   "ctypes",
   "resource://gre/modules/ctypes.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "OSCrypto",

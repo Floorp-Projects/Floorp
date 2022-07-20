@@ -2,8 +2,8 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=420605
  */
 
-const { PlacesTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PlacesTestUtils.jsm"
+const { PlacesTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
 
 add_task(async function test() {
