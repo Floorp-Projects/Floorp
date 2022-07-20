@@ -47,11 +47,11 @@ add_task(async function test_default_bookmark_toolbar_visibility() {
  * if the toolbar has > 3 (NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE) bookmarks.
  */
 add_task(async function test_bookmark_toolbar_visible_when_populated() {
-  const { Bookmarks } = ChromeUtils.import(
-    "resource://gre/modules/Bookmarks.jsm"
+  const { Bookmarks } = ChromeUtils.importESModule(
+    "resource://gre/modules/Bookmarks.sys.mjs"
   );
-  const { PlacesUIUtils } = ChromeUtils.import(
-    "resource:///modules/PlacesUIUtils.jsm"
+  const { PlacesUIUtils } = ChromeUtils.importESModule(
+    "resource:///modules/PlacesUIUtils.sys.mjs"
   );
 
   let bookmark = {

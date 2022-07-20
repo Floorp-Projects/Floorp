@@ -11,8 +11,8 @@
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-const { PlacesUIUtils } = ChromeUtils.import(
-  "resource:///modules/PlacesUIUtils.jsm"
+const { PlacesUIUtils } = ChromeUtils.importESModule(
+  "resource:///modules/PlacesUIUtils.sys.mjs"
 );
 
 let sandbox;

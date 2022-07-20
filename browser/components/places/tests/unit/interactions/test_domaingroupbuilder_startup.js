@@ -6,11 +6,9 @@
  * incremental update.
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DomainGroupBuilder",
-  "resource:///modules/DomainGroupBuilder.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.sys.mjs",
+});
 
 const TEST_URLS = [
   "https://example.com/1",

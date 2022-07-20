@@ -11,8 +11,8 @@
 
 // Put any other stuff relative to this test folder below.
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
 });
 
 async function createCorruptDb(filename) {
