@@ -638,6 +638,9 @@ class TelemetryFeed {
       case "spotlight_user_event":
         event = await this.applySpotlightPolicy(event);
         break;
+      case "toast_notification_user_event":
+        event = await this.applyToastNotificationPolicy(event);
+        break;
       case "moments_user_event":
         event = await this.applyMomentsPolicy(event);
         break;
@@ -698,6 +701,13 @@ class TelemetryFeed {
     ping.browser_session_id = lazy.browserSessionId;
     delete ping.action;
     return { ping, pingType: "spotlight" };
+  }
+
+  async applyToastNotificationPolicy(ping) {
+    ping.client_id = await this.telemetryClientId;
+    ping.browser_session_id = lazy.browserSessionId;
+    delete ping.action;
+    return { ping, pingType: "toast_notification" };
   }
 
   /**
@@ -1043,6 +1053,8 @@ class TelemetryFeed {
       case msg.INFOBAR_TELEMETRY:
       // Intentional fall-through
       case msg.SPOTLIGHT_TELEMETRY:
+      // Intentional fall-through
+      case msg.TOAST_NOTIFICATION_TELEMETRY:
       // Intentional fall-through
       case at.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);
