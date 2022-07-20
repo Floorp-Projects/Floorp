@@ -9,23 +9,19 @@
  * extensions using the `omnibox` API.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { SkippableTimer, UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+import {
+  SkippableTimer,
+  UrlbarProvider,
+  UrlbarUtils,
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
-});
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
 // After this time, we'll give up waiting for the extension to return matches.

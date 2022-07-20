@@ -17,11 +17,9 @@ ChromeUtils.defineModuleGetter(
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UrlbarUtils",
-  "resource:///modules/UrlbarUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "WebNavigationFrames",

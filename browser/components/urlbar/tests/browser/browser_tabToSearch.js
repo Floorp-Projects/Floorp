@@ -13,9 +13,9 @@ const TEST_ENGINE_DOMAIN = "example.com";
 
 const DYNAMIC_RESULT_TYPE = "onboardTabToSearch";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderTabToSearch:
-    "resource:///modules/UrlbarProviderTabToSearch.jsm",
+    "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
 });
 
 add_setup(async function() {
