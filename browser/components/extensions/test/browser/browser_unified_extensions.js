@@ -338,3 +338,49 @@ add_task(async function test_list_active_extensions_only() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_unified_extensions_and_addons_themes_widget() {
+  const addonsAndThemesWidgetId = "add-ons-button";
+
+  // Let's start with the unified extensions feature is disabled.
+  let win = await promiseDisableUnifiedExtensions();
+
+  // Add the button to the navbar.
+  CustomizableUI.addWidgetToArea(
+    addonsAndThemesWidgetId,
+    CustomizableUI.AREA_NAVBAR
+  );
+  let cleanupDone = false;
+  const cleanup = () => {
+    if (cleanupDone) {
+      return;
+    }
+    cleanupDone = true;
+
+    CustomizableUI.reset();
+  };
+  registerCleanupFunction(cleanup);
+
+  let addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
+  ok(addonsButton, "expected add-ons and themes button");
+
+  await BrowserTestUtils.closeWindow(win);
+  // Now we enable the unified extensions feature, which should remove the
+  // add-ons button.
+  win = await promiseEnableUnifiedExtensions();
+
+  addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
+  is(addonsButton, null, "expected no add-ons and themes button");
+
+  await BrowserTestUtils.closeWindow(win);
+  // Disable the unified extensions feature again. We expect the add-ons and
+  // themes button to be back (i.e. visible).
+  win = await promiseDisableUnifiedExtensions();
+
+  addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
+  ok(addonsButton, "expected add-ons and themes button");
+
+  cleanup();
+
+  await BrowserTestUtils.closeWindow(win);
+});
