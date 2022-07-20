@@ -69,18 +69,21 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     value = value.unsafeDereference();
   }
 
+  const targetActor = threadActor._parent;
   const message = {
     filename: sourceActor.url,
     lineNumber: line,
     columnNumber: column,
     arguments: value,
     level,
+    chromeContext:
+      targetActor.actorID &&
+      /conn\d+\.parentProcessTarget\d+/.test(targetActor.actorID),
     // The 'prepareConsoleMessageForRemote' method in webconsoleActor expects internal source ID,
     // thus we can't set sourceId directly to sourceActorID.
     sourceId: sourceActor.internalSourceId,
   };
 
-  const targetActor = threadActor._parent;
   // Note that only WindowGlobalTarget actor support resource watcher
   // This is still missing for worker and content processes
   const consoleMessageWatcher = getResourceWatcher(
