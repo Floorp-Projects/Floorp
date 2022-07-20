@@ -928,12 +928,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
     }
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].autoSVGFiltersObserver);
   }
-  for (size_t x = 0; x < tmp->mHitRegionsOptions.Length(); x++) {
-    RegionInfo& info = tmp->mHitRegionsOptions[x];
-    if (info.mElement) {
-      ImplCycleCollectionUnlink(info.mElement);
-    }
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -957,13 +951,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
                                 "Fill CanvasGradient");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].autoSVGFiltersObserver,
                                 "RAII SVG Filters Observer");
-  }
-  for (size_t x = 0; x < tmp->mHitRegionsOptions.Length(); x++) {
-    RegionInfo& info = tmp->mHitRegionsOptions[x];
-    if (info.mElement) {
-      ImplCycleCollectionTraverse(cb, info.mElement,
-                                  "Hit region fallback element");
-    }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1144,9 +1131,6 @@ nsresult CanvasRenderingContext2D::Reset() {
   ReturnTarget(forceReset);
   mTarget = nullptr;
   mBufferProvider = nullptr;
-
-  // reset hit regions
-  mHitRegionsOptions.ClearAndRetainStorage();
 
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
@@ -1827,17 +1811,6 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
   return ret;
-}
-
-nsString CanvasRenderingContext2D::GetHitRegion(
-    const mozilla::gfx::Point& aPoint) {
-  for (size_t x = 0; x < mHitRegionsOptions.Length(); x++) {
-    RegionInfo& info = mHitRegionsOptions[x];
-    if (info.mPath->ContainsPoint(aPoint, Matrix())) {
-      return info.mId;
-    }
-  }
-  return nsString();
 }
 
 NS_IMETHODIMP
@@ -3738,95 +3711,6 @@ TextMetrics* CanvasRenderingContext2D::MeasureText(const nsAString& aRawText,
   Optional<double> maxWidth;
   return DrawOrMeasureText(aRawText, 0, 0, maxWidth, TextDrawOperation::MEASURE,
                            aError);
-}
-
-void CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& aOptions,
-                                            ErrorResult& aError) {
-  RefPtr<gfx::Path> path;
-  if (aOptions.mPath) {
-    EnsureTarget();
-    if (!IsTargetValid()) {
-      return;
-    }
-    path = aOptions.mPath->GetPath(CanvasWindingRule::Nonzero, mTarget);
-  }
-
-  if (!path) {
-    // check if the path is valid
-    EnsureUserSpacePath(CanvasWindingRule::Nonzero);
-    path = mPath;
-  }
-
-  if (!path) {
-    return aError.ThrowNotSupportedError("Invalid path");
-  }
-
-  // get the bounds of the current path. They are relative to the canvas
-  gfx::Rect bounds(path->GetBounds(mTarget->GetTransform()));
-  if ((bounds.width == 0) || (bounds.height == 0) || !bounds.IsFinite()) {
-    return aError.ThrowNotSupportedError("The specified region has no pixels");
-  }
-
-  // remove old hit region first
-  RemoveHitRegion(aOptions.mId);
-
-  if (aOptions.mControl) {
-    // also remove regions with this control
-    for (size_t x = 0; x < mHitRegionsOptions.Length(); x++) {
-      RegionInfo& info = mHitRegionsOptions[x];
-      if (info.mElement == aOptions.mControl) {
-        mHitRegionsOptions.RemoveElementAt(x);
-        break;
-      }
-    }
-#ifdef ACCESSIBILITY
-    aOptions.mControl->SetProperty(nsGkAtoms::hitregion,
-                                   reinterpret_cast<void*>(true));
-#endif
-  }
-
-  // finally, add the region to the list
-  RegionInfo info;
-  info.mId = aOptions.mId;
-  info.mElement = aOptions.mControl;
-  RefPtr<PathBuilder> pathBuilder =
-      path->TransformedCopyToBuilder(mTarget->GetTransform());
-  info.mPath = pathBuilder->Finish();
-
-  mHitRegionsOptions.InsertElementAt(0, info);
-}
-
-void CanvasRenderingContext2D::RemoveHitRegion(const nsAString& aId) {
-  if (aId.Length() == 0) {
-    return;
-  }
-
-  for (size_t x = 0; x < mHitRegionsOptions.Length(); x++) {
-    RegionInfo& info = mHitRegionsOptions[x];
-    if (info.mId == aId) {
-      mHitRegionsOptions.RemoveElementAt(x);
-
-      return;
-    }
-  }
-}
-
-void CanvasRenderingContext2D::ClearHitRegions() { mHitRegionsOptions.Clear(); }
-
-bool CanvasRenderingContext2D::GetHitRegionRect(Element* aElement,
-                                                nsRect& aRect) {
-  for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
-    RegionInfo& info = mHitRegionsOptions[x];
-    if (info.mElement == aElement) {
-      gfx::Rect bounds(info.mPath->GetBounds());
-      gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
-      aRect = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
-
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /**

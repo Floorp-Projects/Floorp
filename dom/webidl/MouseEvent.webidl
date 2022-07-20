@@ -43,6 +43,7 @@ interface MouseEvent : UIEvent {
   readonly attribute short          button;
   readonly attribute unsigned short buttons;
   readonly attribute EventTarget?   relatedTarget;
+  [Pref="dom.mouse_event.region.enabled"]
   readonly attribute DOMString?     region;
 
   // Pointer Lock

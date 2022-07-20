@@ -652,28 +652,6 @@ nsIFrame* LocalAccessible::FindNearestAccessibleAncestorFrame() {
 nsRect LocalAccessible::ParentRelativeBounds() {
   nsIFrame* frame = GetFrame();
   if (frame && mContent) {
-    if (mContent->GetProperty(nsGkAtoms::hitregion) && mContent->IsElement()) {
-      // This is for canvas fallback content
-      // Find a canvas frame the found hit region is relative to.
-      nsIFrame* canvasFrame = frame->GetParent();
-      if (canvasFrame) {
-        canvasFrame = nsLayoutUtils::GetClosestFrameOfType(
-            canvasFrame, LayoutFrameType::HTMLCanvas);
-      }
-
-      if (canvasFrame) {
-        if (auto* canvas =
-                dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent())) {
-          if (auto* context = canvas->GetCurrentContext()) {
-            nsRect bounds;
-            if (context->GetHitRegionRect(mContent->AsElement(), bounds)) {
-              return bounds;
-            }
-          }
-        }
-      }
-    }
-
     nsIFrame* boundingFrame = FindNearestAccessibleAncestorFrame();
     nsRect result = nsLayoutUtils::GetAllInFlowRectsUnion(frame, boundingFrame);
 
@@ -711,30 +689,6 @@ nsRect LocalAccessible::ParentRelativeBounds() {
 nsRect LocalAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   nsIFrame* frame = GetFrame();
   if (frame && mContent) {
-    if (mContent->GetProperty(nsGkAtoms::hitregion) && mContent->IsElement()) {
-      // This is for canvas fallback content
-      // Find a canvas frame the found hit region is relative to.
-      nsIFrame* canvasFrame = frame->GetParent();
-      if (canvasFrame) {
-        canvasFrame = nsLayoutUtils::GetClosestFrameOfType(
-            canvasFrame, LayoutFrameType::HTMLCanvas);
-      }
-
-      // make the canvas the bounding frame
-      if (canvasFrame) {
-        *aBoundingFrame = canvasFrame;
-        if (auto* canvas =
-                dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent())) {
-          if (auto* context = canvas->GetCurrentContext()) {
-            nsRect bounds;
-            if (context->GetHitRegionRect(mContent->AsElement(), bounds)) {
-              return bounds;
-            }
-          }
-        }
-      }
-    }
-
     *aBoundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
     nsRect unionRect = nsLayoutUtils::GetAllInFlowRectsUnion(
         frame, *aBoundingFrame, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
