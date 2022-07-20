@@ -3,56 +3,37 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
-const { SectionsManager } = ChromeUtils.import(
-  "resource://activity-stream/lib/SectionsManager.jsm"
-);
-const {
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+import { SectionsManager } from "resource://activity-stream/lib/SectionsManager.sys.mjs";
+import {
   TOP_SITES_DEFAULT_ROWS,
   TOP_SITES_MAX_SITES_PER_ROW,
-} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm");
-const { Dedupe } = ChromeUtils.import(
-  "resource://activity-stream/common/Dedupe.jsm"
-);
+} from "resource://activity-stream/common/Reducers.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FilterAdult",
-  "resource://activity-stream/lib/FilterAdult.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LinksCache",
-  "resource://activity-stream/lib/LinksCache.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
+  LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Screenshots",
-  "resource://activity-stream/lib/Screenshots.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DownloadsManager",
-  "resource://activity-stream/lib/DownloadsManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DownloadsManager: "resource://activity-stream/lib/DownloadsManager.sys.mjs",
+});
 
 const HIGHLIGHTS_MAX_LENGTH = 16;
 

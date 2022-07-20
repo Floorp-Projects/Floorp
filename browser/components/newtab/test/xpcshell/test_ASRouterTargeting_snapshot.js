@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { ASRouterTargeting } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+const { ASRouterTargeting } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ASRouterTargeting.sys.mjs"
 );
 
 add_task(async function should_ignore_rejections() {

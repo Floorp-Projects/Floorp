@@ -5,9 +5,7 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
 
 const lazy = {};
 

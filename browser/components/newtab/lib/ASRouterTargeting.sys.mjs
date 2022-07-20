@@ -21,8 +21,12 @@ const { ShellService } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterPreferences:
+    "resource://activity-stream/lib/ASRouterPreferences.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",

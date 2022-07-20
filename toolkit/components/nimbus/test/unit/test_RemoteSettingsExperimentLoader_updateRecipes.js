@@ -9,8 +9,8 @@ const { FirstStartup } = ChromeUtils.import(
 const { NimbusFeatures } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
-const { PanelTestProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PanelTestProvider.jsm"
+const { PanelTestProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"

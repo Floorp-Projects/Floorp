@@ -24,11 +24,11 @@ const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
 
-const {
-  actionCreators: ac,
-  actionTypes: at,
-  actionUtils: au,
-} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
+import {
+  actionCreators as ac,
+  actionTypes as at,
+  actionUtils as au,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 const ABOUT_NEW_TAB_URL = "about:newtab";
 const ABOUT_HOME_URL = "about:home";

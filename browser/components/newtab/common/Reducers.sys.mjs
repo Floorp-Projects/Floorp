@@ -3,12 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-const { Dedupe } = ChromeUtils.import(
-  "resource://activity-stream/common/Dedupe.jsm"
-);
+import { actionTypes as at } from "resource://activity-stream/common/Actions.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
 
 export const TOP_SITES_DEFAULT_ROWS = 1;
 export const TOP_SITES_MAX_SITES_PER_ROW = 8;

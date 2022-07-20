@@ -3,11 +3,11 @@
 
 "use strict";
 
-const { Spotlight } = ChromeUtils.import(
-  "resource://activity-stream/lib/Spotlight.jsm"
+const { Spotlight } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/Spotlight.sys.mjs"
 );
-const { PanelTestProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PanelTestProvider.jsm"
+const { PanelTestProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"
@@ -15,8 +15,8 @@ const { BrowserWindowTracker } = ChromeUtils.import(
 const { SpecialMessageActions } = ChromeUtils.import(
   "resource://messaging-system/lib/SpecialMessageActions.jsm"
 );
-const { RemoteImagesTestUtils } = ChromeUtils.import(
-  "resource://testing-common/RemoteImagesTestUtils.jsm"
+const { RemoteImagesTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/RemoteImagesTestUtils.sys.mjs"
 );
 
 function waitForDialog(callback = win => win.close()) {

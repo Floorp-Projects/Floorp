@@ -9,12 +9,11 @@ const { EventEmitter } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-const { getDefaultOptions } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { getDefaultOptions } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
 
 const lazy = {};
 

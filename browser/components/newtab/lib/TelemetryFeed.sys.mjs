@@ -7,19 +7,13 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
-  "resource://activity-stream/common/ActorConstants.jsm"
-);
-
-const { actionTypes: at, actionUtils: au } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-const { Prefs } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
-);
-const { classifySite } = ChromeUtils.import(
-  "resource://activity-stream/lib/SiteClassifier.jsm"
-);
+import { MESSAGE_TYPE_HASH as msg } from "resource://activity-stream/common/ActorConstants.sys.mjs";
+import {
+  actionTypes as at,
+  actionUtils as au,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+import { classifySite } from "resource://activity-stream/lib/SiteClassifier.sys.mjs";
 
 const lazy = {};
 
@@ -33,11 +27,9 @@ ChromeUtils.defineModuleGetter(
   "PingCentre",
   "resource:///modules/PingCentre.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "UTEventReporting",
-  "resource://activity-stream/lib/UTEventReporting.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  UTEventReporting: "resource://activity-stream/lib/UTEventReporting.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "UpdateUtils",

@@ -6,9 +6,10 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 export const PREFERENCES_LOADED_EVENT = "home-pane-loaded";

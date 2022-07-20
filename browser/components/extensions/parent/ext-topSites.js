@@ -6,11 +6,14 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  getSearchProvider: "resource://activity-stream/lib/SearchShortcuts.sys.mjs",
+  shortURL: "resource://activity-stream/lib/ShortURL.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
-  shortURL: "resource://activity-stream/lib/ShortURL.jsm",
-  getSearchProvider: "resource://activity-stream/lib/SearchShortcuts.jsm",
 });
 
 const SHORTCUTS_PREF =

@@ -15,9 +15,11 @@ let shortURL = {};
 let searchShortcuts = {};
 let didSuccessfulImport = false;
 try {
-  shortURL = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm");
-  searchShortcuts = ChromeUtils.import(
-    "resource://activity-stream/lib/SearchShortcuts.jsm"
+  shortURL = ChromeUtils.importESModule(
+    "resource://activity-stream/lib/ShortURL.sys.mjs"
+  );
+  searchShortcuts = ChromeUtils.importESModule(
+    "resource://activity-stream/lib/SearchShortcuts.sys.mjs"
   );
   didSuccessfulImport = true;
 } catch (e) {

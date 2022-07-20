@@ -10,13 +10,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.jsm",
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
-  shortURL: "resource://activity-stream/lib/ShortURL.jsm",
-  TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
   AboutWelcomeDefaults:
-    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.sys.mjs",
+
+  DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.sys.mjs",
+  TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.sys.mjs",
+  shortURL: "resource://activity-stream/lib/ShortURL.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 

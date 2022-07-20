@@ -9,10 +9,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(lazy, {
   AboutWelcomeTelemetry:
-    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
-  RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.sys.mjs",
+  RemoteImages: "resource://activity-stream/lib/RemoteImages.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });

@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { MESSAGE_TYPE_LIST, MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
-  "resource://activity-stream/common/ActorConstants.jsm"
-);
+import {
+  MESSAGE_TYPE_LIST,
+  MESSAGE_TYPE_HASH as msg,
+} from "resource://activity-stream/common/ActorConstants.sys.mjs";
+
 const VALID_TYPES = new Set(MESSAGE_TYPE_LIST);
 
 export class ASRouterChild extends JSWindowActorChild {

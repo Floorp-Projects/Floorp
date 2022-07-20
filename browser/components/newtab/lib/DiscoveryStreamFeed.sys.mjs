@@ -22,19 +22,19 @@ ChromeUtils.defineModuleGetter(
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "Region",
   "resource://gre/modules/Region.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PersistentCache",
-  "resource://activity-stream/lib/PersistentCache.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PersistentCache: "resource://activity-stream/lib/PersistentCache.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "ExperimentAPI",

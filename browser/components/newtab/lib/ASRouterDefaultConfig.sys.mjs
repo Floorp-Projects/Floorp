@@ -5,27 +5,16 @@
 
 "use strict";
 
-const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
-);
-const { TelemetryFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
-);
-const { ASRouterParentProcessMessageHandler } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterParentProcessMessageHandler.jsm"
-);
+import { ASRouter } from "resource://activity-stream/lib/ASRouter.sys.mjs";
+import { TelemetryFeed } from "resource://activity-stream/lib/TelemetryFeed.sys.mjs";
+import { ASRouterParentProcessMessageHandler } from "resource://activity-stream/lib/ASRouterParentProcessMessageHandler.sys.mjs";
+
 const { SpecialMessageActions } = ChromeUtils.import(
   "resource://messaging-system/lib/SpecialMessageActions.jsm"
 );
-const { ASRouterPreferences } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterPreferences.jsm"
-);
-const { QueryCache } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterTargeting.jsm"
-);
-const { ActivityStreamStorage } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
-);
+import { ASRouterPreferences } from "resource://activity-stream/lib/ASRouterPreferences.sys.mjs";
+import { QueryCache } from "resource://activity-stream/lib/ASRouterTargeting.sys.mjs";
+import { ActivityStreamStorage } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
 
 const createStorage = async telemetryFeed => {
   const dbStore = new ActivityStreamStorage({
