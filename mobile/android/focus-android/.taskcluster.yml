@@ -5,19 +5,20 @@ policy:
 tasks:
     - $let:
           trustDomain: mobile
+
           # Github events have this stuff in different places...
           ownerEmail:
               $if: 'tasks_for in ["cron", "action"]'
               then: '${tasks_for}@noreply.mozilla.org'
               else:
-                $if: 'tasks_for == "github-push"'
-                then: '${event.pusher.email}'
-                else:
-                    $if: 'tasks_for == "github-pull-request"'
-                    then: '${event.pull_request.user.login}@users.noreply.github.com'
-                    else:
-                        $if: 'tasks_for == "github-release"'
-                        then: '${event.sender.login}@users.noreply.github.com'
+                  $if: 'event.sender.login == "github-actions[bot]"'
+                  then: 'github-actions[bot]@users.noreply.github.com'
+                  else:
+                      $if: 'tasks_for == "github-push"'
+                      then: '${event.pusher.email}'
+                      else:
+                          $if: 'tasks_for == "github-pull-request"'
+                          then: '${event.pull_request.user.login}@users.noreply.github.com'
           baseRepoUrl:
               $if: 'tasks_for in ["github-push", "github-release"]'
               then: '${event.repository.html_url}'
