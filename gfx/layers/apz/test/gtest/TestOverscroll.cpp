@@ -749,6 +749,7 @@ TEST_F(APZCOverscrollTester, DisallowOverscrollInSingleLineTextControl) {
 // pan momentum scrolling.
 TEST_F(APZCOverscrollTester,
        HorizontalOverscrollAnimationWithVerticalPanMomentumScrolling) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   ScrollMetadata metadata;
@@ -929,6 +930,7 @@ TEST_F(APZCOverscrollTester,
 // but having OverscrollAnimation on both axes initially.
 TEST_F(APZCOverscrollTester,
        BothAxesOverscrollAnimationWithPanMomentumScrolling) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   ScrollMetadata metadata;
@@ -1115,6 +1117,7 @@ TEST_F(APZCOverscrollTester,
 TEST_F(
     APZCOverscrollTester,
     VerticalOverscrollAnimationInAdditionToExistingHorizontalOverscrollAnimation) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   ScrollMetadata metadata;
@@ -1605,6 +1608,7 @@ class APZCOverscrollTesterMock : public APZCTreeManagerTester {
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCOverscrollTesterMock, OverscrollHandoff) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   const char* treeShape = "x(x)";
@@ -1638,6 +1642,7 @@ TEST_F(APZCOverscrollTesterMock, OverscrollHandoff) {
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCOverscrollTesterMock, VerticalOverscrollHandoffToScrollableRoot) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Create a layer tree having two vertical scrollable layers.
@@ -1669,6 +1674,7 @@ TEST_F(APZCOverscrollTesterMock, VerticalOverscrollHandoffToScrollableRoot) {
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCOverscrollTesterMock, NoOverscrollHandoffToNonScrollableRoot) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Create a layer tree having non-scrollable root and a vertical scrollable
@@ -1701,6 +1707,7 @@ TEST_F(APZCOverscrollTesterMock, NoOverscrollHandoffToNonScrollableRoot) {
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCOverscrollTesterMock, NoOverscrollHandoffOrthogonalPanGesture) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   // Create a layer tree having horizontal scrollable root and a vertical
@@ -1894,6 +1901,7 @@ TEST_F(APZCOverscrollTesterMock, RetriggeredOverscrollAnimationVelocity) {
 
 #ifndef MOZ_WIDGET_ANDROID  // Only applies to GenericOverscrollEffect
 TEST_F(APZCOverscrollTesterMock, OverscrollIntoPreventDefault) {
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   const char* treeShape = "x";
