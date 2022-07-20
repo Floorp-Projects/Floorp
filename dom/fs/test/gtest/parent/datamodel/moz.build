@@ -5,16 +5,16 @@
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES = [
-    "TestFileSystemHashSource.cpp",
+    "TestDataManagerVersion001.cpp",
 ]
-
-TEST_DIRS += ["datamodel"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [
+    "/dom/fs/include",
     "/dom/fs/parent",
+    "/dom/fs/parent/datamodel",
     "/dom/fs/test/gtest",
 ]

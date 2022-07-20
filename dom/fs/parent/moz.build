@@ -9,10 +9,19 @@ EXPORTS.mozilla.dom += [
     "OriginPrivateFileSystemParent.h",
 ]
 
+DIRS += [
+    "datamodel",
+]
+
 UNIFIED_SOURCES += [
     "BackgroundFileSystemParent.cpp",
     "FileSystemHashSource.cpp",
     "OriginPrivateFileSystemParent.cpp",
+    "ResultStatement.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/fs/include",
 ]
 
 FINAL_LIBRARY = "xul"
