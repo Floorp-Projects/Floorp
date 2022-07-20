@@ -803,7 +803,8 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
-      RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported);
+      RemoteDecodeIn aLocation,
+      const PDMFactory::MediaCodecsSupported& aSupported);
 
 #ifdef NIGHTLY_BUILD
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;

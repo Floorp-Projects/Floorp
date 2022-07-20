@@ -41,7 +41,7 @@ class RemoteDecoderManagerChild final
 
   static void Init();
   static void SetSupported(RemoteDecodeIn aLocation,
-                           const media::MediaCodecsSupported& aSupported);
+                           const PDMFactory::MediaCodecsSupported& aSupported);
 
   // Can be called from any thread.
   static bool Supports(RemoteDecodeIn aLocation,
