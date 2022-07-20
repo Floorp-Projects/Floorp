@@ -59,6 +59,36 @@ nsProfiler::~nsProfiler() {
 
 nsresult nsProfiler::Init() { return NS_OK; }
 
+template <typename JsonLogObjectUpdater>
+void nsProfiler::Log(JsonLogObjectUpdater&& aJsonLogObjectUpdater) {
+  if (mGatheringLog) {
+    MOZ_ASSERT(mGatheringLog->isObject());
+    std::forward<JsonLogObjectUpdater>(aJsonLogObjectUpdater)(*mGatheringLog);
+    MOZ_ASSERT(mGatheringLog->isObject());
+  }
+}
+
+template <typename JsonArrayAppender>
+void nsProfiler::LogEvent(JsonArrayAppender&& aJsonArrayAppender) {
+  Log([&](Json::Value& aRoot) {
+    Json::Value& events = aRoot[Json::StaticString{"events"}];
+    if (!events.isArray()) {
+      events = Json::Value{Json::arrayValue};
+    }
+    Json::Value newEvent{Json::arrayValue};
+    newEvent.append(ProfilingLog::Timestamp());
+    std::forward<JsonArrayAppender>(aJsonArrayAppender)(newEvent);
+    MOZ_ASSERT(newEvent.isArray());
+    events.append(std::move(newEvent));
+  });
+}
+
+void nsProfiler::LogEventLiteralString(const char* aEventString) {
+  LogEvent([&](Json::Value& aEvent) {
+    aEvent.append(Json::StaticString{aEventString});
+  });
+}
+
 static nsresult FillVectorFromStringArray(Vector<const char*>& aVector,
                                           const nsTArray<nsCString>& aArray) {
   if (NS_WARN_IF(!aVector.reserve(aArray.Length()))) {
@@ -760,12 +790,21 @@ bool nsProfiler::SendProgressRequest(PendingProfile& aPendingProfile) {
   if (!progressPromise) {
     LOG("RequestGatherProfileProgress(%u) -> null!",
         unsigned(aPendingProfile.childPid));
+    LogEvent([&](Json::Value& aEvent) {
+      aEvent.append(
+          Json::StaticString{"Failed to send progress request to pid:"});
+      aEvent.append(Json::Value::UInt64(aPendingProfile.childPid));
+    });
     // Failed to send request.
     return false;
   }
 
   DEBUG_LOG("RequestGatherProfileProgress(%u) sent...",
             unsigned(aPendingProfile.childPid));
+  LogEvent([&](Json::Value& aEvent) {
+    aEvent.append(Json::StaticString{"Requested progress from pid:"});
+    aEvent.append(Json::Value::UInt64(aPendingProfile.childPid));
+  });
   aPendingProfile.lastProgressRequest = TimeStamp::Now();
   progressPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
@@ -786,6 +825,16 @@ bool nsProfiler::SendProgressRequest(PendingProfile& aPendingProfile) {
             aResult.progressLocation().Data(),
             unsigned(self->mPendingProfiles.length()),
             pendingProfile ? "including" : "excluding", unsigned(childPid));
+        self->LogEvent([&](Json::Value& aEvent) {
+          aEvent.append(
+              Json::StaticString{"Got response from pid, with progress:"});
+          aEvent.append(Json::Value::UInt64(childPid));
+          aEvent.append(
+              Json::Value{ProportionValue::FromUnderlyingType(
+                              aResult.progressProportionValueUnderlyingType())
+                              .ToDouble() *
+                          100.0});
+        });
         if (pendingProfile) {
           // We have a progress report for a still-pending profile.
           pendingProfile->lastProgressResponse = TimeStamp::Now();
@@ -813,6 +862,12 @@ bool nsProfiler::SendProgressRequest(PendingProfile& aPendingProfile) {
             unsigned(childPid), (int)aReason,
             unsigned(self->mPendingProfiles.length()),
             pendingProfile ? "including" : "excluding", unsigned(childPid));
+        self->LogEvent([&](Json::Value& aEvent) {
+          aEvent.append(Json::StaticString{
+              "Got progress request rejection from pid, with reason:"});
+          aEvent.append(Json::Value::UInt64(childPid));
+          aEvent.append(Json::Value::UInt{static_cast<unsigned>(aReason)});
+        });
         if (pendingProfile) {
           // Failure response, assume the child process is gone.
           MOZ_ASSERT(self->mPendingProfiles.begin() <= pendingProfile &&
@@ -927,6 +982,13 @@ bool nsProfiler::SendProgressRequest(PendingProfile& aPendingProfile) {
     // Not gathering anymore.
     return;
   }
+  self->LogEvent([&](Json::Value& aEvent) {
+    aEvent.append(Json::StaticString{
+        "No progress made recently, giving up; pending pids:"});
+    for (const PendingProfile& pendingProfile : self->mPendingProfiles) {
+      aEvent.append(Json::Value::UInt64(pendingProfile.childPid));
+    }
+  });
   NS_WARNING("Profiler failed to gather profiles from all sub-processes");
   // We have really reached a timeout while gathering, finish now.
   // TODO: Add information about missing processes.
@@ -1055,6 +1117,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
 
   MOZ_ASSERT(mPendingProfiles.empty());
   if (!mPendingProfiles.reserve(profiles.Length())) {
+    ResetGathering();
     return GatheringPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
@@ -1072,17 +1135,35 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     // at the time that ProfileGatherer::Start() was called, or that it was
     // stopped on a different thread since that call. Either way, we need to
     // reject the promise and stop gathering.
+    ResetGathering();
     return GatheringPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
+
+  LogEvent([&](Json::Value& aEvent) {
+    aEvent.append(
+        Json::StaticString{"Generated parent process profile, size:"});
+    aEvent.append(Json::Value::UInt64{mWriter->ChunkedWriteFunc().Length()});
+  });
 
   mWriter->StartArrayProperty("processes");
 
   // If we have any process exit profiles, add them immediately.
-  Vector<nsCString> exitProfiles = profiler_move_exit_profiles();
-  for (auto& exitProfile : exitProfiles) {
-    if (!exitProfile.IsEmpty()) {
-      mWriter->Splice(exitProfile);
+  if (Vector<nsCString> exitProfiles = profiler_move_exit_profiles();
+      !exitProfiles.empty()) {
+    for (auto& exitProfile : exitProfiles) {
+      if (!exitProfile.IsEmpty()) {
+        mWriter->Splice(exitProfile);
+      }
     }
+
+    LogEvent([&](Json::Value& aEvent) {
+      aEvent.append(Json::StaticString{
+          "Processed all exit profiles, total size so far:"});
+      aEvent.append(Json::Value::UInt64{mWriter->ChunkedWriteFunc().Length()});
+    });
+  } else {
+    // There are no pending profiles, we're already done.
+    LogEventLiteralString("No exit profiles.");
   }
 
   mPromiseHolder.emplace();
@@ -1117,6 +1198,10 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     MOZ_ASSERT(mPendingProfiles.capacity() >= profiles.Length());
     for (const auto& profile : profiles) {
       mPendingProfiles.infallibleAppend(PendingProfile{profile.childPid});
+      LogEvent([&](Json::Value& aEvent) {
+        aEvent.append(Json::StaticString{"Waiting for pending profile, pid:"});
+        aEvent.append(Json::Value::UInt64(profile.childPid));
+      });
       profile.profilePromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr<nsProfiler>(this),
@@ -1127,12 +1212,22 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
                 unsigned(self->mPendingProfiles.length()),
                 pendingProfile ? "including" : "excluding", unsigned(childPid));
             if (aResult.IsReadable()) {
+              self->LogEvent([&](Json::Value& aEvent) {
+                aEvent.append(
+                    Json::StaticString{"Got profile from pid, with size:"});
+                aEvent.append(Json::Value::UInt64(childPid));
+                aEvent.append(Json::Value::UInt64{aResult.Size<char>()});
+              });
               const nsDependentCSubstring profileString(
                   aResult.get<char>(), aResult.Size<char>() - 1);
               self->GatheredOOPProfile(childPid, profileString);
             } else {
               // This can happen if the child failed to allocate
               // the Shmem (or maliciously sent an invalid Shmem).
+              self->LogEvent([&](Json::Value& aEvent) {
+                aEvent.append(Json::StaticString{"Got failure from pid:"});
+                aEvent.append(Json::Value::UInt64(childPid));
+              });
               self->GatheredOOPProfile(childPid, ""_ns);
             }
           },
@@ -1143,11 +1238,18 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
                 unsigned(childPid), (int)aReason,
                 unsigned(self->mPendingProfiles.length()),
                 pendingProfile ? "including" : "excluding", unsigned(childPid));
+            self->LogEvent([&](Json::Value& aEvent) {
+              aEvent.append(
+                  Json::StaticString{"Got rejection from pid, with reason:"});
+              aEvent.append(Json::Value::UInt64(childPid));
+              aEvent.append(Json::Value::UInt{static_cast<unsigned>(aReason)});
+            });
             self->GatheredOOPProfile(childPid, ""_ns);
           });
     }
   } else {
     // There are no pending profiles, we're already done.
+    LogEventLiteralString("No pending child profiles.");
     FinishGathering();
   }
 
@@ -1203,6 +1305,10 @@ void nsProfiler::FinishGathering() {
   mWriter->EndArray();
 
   if (mGatheringLog) {
+    LogEvent([&](Json::Value& aEvent) {
+      aEvent.append(Json::StaticString{"Finished gathering, total size:"});
+      aEvent.append(Json::Value::UInt64{mWriter->ChunkedWriteFunc().Length()});
+    });
     (*mGatheringLog)[Json::StaticString{
         "profileGatheringLogEnd" TIMESTAMP_JSON_SUFFIX}] =
         ProfilingLog::Timestamp();
