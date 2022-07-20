@@ -7,6 +7,7 @@
   --body-columns: 1fr;
   --body-rows: 40px 2fr 1fr 40px;
   --colorway-name-font-size: 1.5em;
+  --colorway-selector-align: center;
   --figure-height: 200px;
   --figure-width: 200px;
 }
@@ -16,6 +17,7 @@
     --body-columns: 24px repeat(2, 1fr);
     --body-rows: 64px 1fr 64px;
     --colorway-name-font-size: 2.5em;
+    --colorway-selector-align: start;
     --customization-panel-column: 3;
     --customization-panel-padding-inline: 24px;
     --figure-column: 2;
@@ -122,8 +124,7 @@ figure > img {
 }
 
 #colorway-selector {
-  display: flex;
-  justify-content: center;
+  text-align: var(--colorway-selector-align);
 }
 
 #colorway-selector > input[type="radio"],
