@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>bug 1777572</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  async function testCSPInheritance(closeOpenerWindow) {
+    let url = "file_bug1777572.html";
+    if (closeOpenerWindow) {
+      url += "?close";
+    }
+    let win = window.open(url);
+    return new Promise((resolve) => {
+      window.addEventListener("message", (event) => {
+        ok(event.data.includes("img-src"), "Got expected data " + event.data);
+        resolve();
+      }, { once: true});
+    });
+  }
+
+  async function run() {
+    // Test that CSP inheritance to the initial about:blank works the same way
+    // whether or not the opener is already closed when window.open is called.
+    await testCSPInheritance(false);
+    await testCSPInheritance(true);
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="run()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
