@@ -24,6 +24,7 @@
 #endif
 #include <math.h>
 #include <string.h>  // memmove
+#include <string_view>
 
 #include "jstypes.h"
 
@@ -2188,18 +2189,17 @@ double js_strtod(const CharT* begin, const CharT* end, const CharT** dEnd) {
   // instead of using StringToDoubleConverter's infinity_symbol because it's
   // faster: the code below is less generic and not on the fast path for regular
   // doubles.
-  static constexpr char InfinityStr[] = "Infinity";
-  static constexpr size_t InfinityLen = sizeof(InfinityStr) - 1;
-  if (length >= InfinityLen) {
+  static constexpr std::string_view Infinity = "Infinity";
+  if (length >= Infinity.length()) {
     const CharT* afterSign = s;
     bool negative = (*afterSign == '-');
     if (negative || *afterSign == '+') {
       afterSign++;
     }
     MOZ_ASSERT(afterSign < end);
-    if (*afterSign == 'I' && size_t(end - afterSign) >= InfinityLen &&
-        EqualChars(afterSign, InfinityStr, InfinityLen)) {
-      *dEnd = afterSign + InfinityLen;
+    if (*afterSign == 'I' && size_t(end - afterSign) >= Infinity.length() &&
+        EqualChars(afterSign, Infinity.data(), Infinity.length())) {
+      *dEnd = afterSign + Infinity.length();
       return negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
     }
   }
