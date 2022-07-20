@@ -164,8 +164,6 @@ add_task(async function ShouldNotSendDuplicatedPointerMove() {
     [ // [event target, event type]
       [target0, "pointerdown"],
       [target1, "pointerdown"],
-      // The first pointermove should not be suppressed.
-      [target0, "pointermove"],
       [target1, "pointermove"],
       // Should receive only one pointer event for target 1.
       [target1, "pointermove"],
