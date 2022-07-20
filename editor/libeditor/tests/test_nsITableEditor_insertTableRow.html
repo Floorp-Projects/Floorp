@@ -373,6 +373,48 @@ SimpleTest.waitForFocus(() => {
       "when selection is collapsed in a cell whose row follows a text node (testInsertAfterRowFollowedTextNode)"
     );
   })();
+
+  (function testInsertAfterLastRow() {
+    selection.removeAllRanges();
+    editor.innerHTML =
+      "<table>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+      "</table>";
+    editor.focus();
+    beforeInputEvents = [];
+    inputEvents = [];
+    selection.collapse(document.getElementById("select").firstChild, 0);
+    getTableEditor().insertTableRow(1, true);
+    is(
+      editor.innerHTML,
+      "<table><tbody>" +
+        "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+        '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+        '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+      "</tbody></table>",
+      "testInsertAfterLastRow: nsITableEditor.insertTableRow(1, true) should insert a row after the last row"
+    );
+    is(
+      beforeInputEvents.length,
+      1,
+      'testInsertAfterLastRow: Only one "beforeinput" event should be fired'
+    );
+    checkInputEvent(
+      beforeInputEvents[0],
+      "when selection is collapsed in a cell whose row follows a text node (testInsertAfterLastRow)"
+    );
+    is(
+      inputEvents.length,
+      1,
+      'testInsertAfterLastRow: Only one "input" event should be fired'
+    );
+    checkInputEvent(
+      inputEvents[0],
+      "when selection is collapsed in a cell whose row follows a text node (testInsertAfterLastRow)"
+    );
+  })();
+
   editor.removeEventListener("beforeinput", onBeforeInput);
   editor.removeEventListener("input", onInput);
 
