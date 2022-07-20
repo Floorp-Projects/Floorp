@@ -3335,34 +3335,6 @@ main.has-snippet {
   flex-direction: column;
   position: relative;
 }
-.ds-card .playhead {
-  background: var(--newtab-primary-action-background) url("chrome://activity-stream/content/data/content/assets/glyph-playhead.svg") no-repeat 12px center;
-  border-radius: 20px;
-  bottom: -16px;
-  color: color-mix(in srgb, var(--newtab-primary-element-text-color) 0%, transparent);
-  display: flex;
-  flex-direction: column;
-  height: 40px;
-  justify-content: center;
-  left: 16px;
-  min-width: 40px;
-  padding: 0 0 0 40px;
-  position: absolute;
-  transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
-}
-.ds-card .playhead:hover {
-  color: var(--newtab-primary-element-text-color);
-  padding: 0 20px 0 40px;
-}
-.ds-card .playhead span {
-  display: none;
-}
-.ds-card .playhead:hover span {
-  display: inline;
-  font-style: normal;
-  font-weight: 600;
-  font-size: 13px;
-}
 .ds-card.placeholder {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
@@ -3478,9 +3450,6 @@ main.has-snippet {
 .ds-card .ds-card-link:active header {
   color: var(--newtab-primary-element-active-color);
 }
-.ds-card.video-card .meta {
-  margin-top: 4px;
-}
 .ds-card .meta {
   display: flex;
   flex-direction: column;
@@ -3510,46 +3479,6 @@ main.has-snippet {
 .ds-card .meta .new-sponsored-label {
   font-size: 13px;
   margin-bottom: 2px;
-}
-.ds-card .meta .cta-button {
-  background-color: var(--newtab-button-secondary-color);
-  width: 100%;
-  margin: 12px 0 4px;
-  box-shadow: none;
-  border-radius: 4px;
-  height: 32px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 5px 8px 7px;
-  border: 1px solid var(--newtab-border-color);
-}
-.ds-card .meta .cta-button:active {
-  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
-}
-.ds-card .meta .cta-link {
-  color: var(--newtab-primary-action-background);
-  fill: var(--newtab-primary-action-background);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 24px;
-  height: 24px;
-  width: auto;
-  background-size: auto;
-  background-position: right 1.5px;
-  padding-right: 9px;
-}
-.ds-card .meta .cta-link:focus {
-  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
-  border-radius: 4px;
-  outline: 0;
-}
-.ds-card .meta .cta-link:active {
-  color: var(--newtab-primary-element-active-color);
-  fill: var(--newtab-primary-element-active-color);
-  box-shadow: none;
-}
-.ds-card .meta .cta-link:hover {
-  text-decoration: underline;
 }
 .ds-card.ds-card-title-lines-2 .meta .title {
   font-size: 17px;
@@ -3599,7 +3528,6 @@ main.has-snippet {
   position: relative;
 }
 .story-footer .story-sponsored-label,
-.story-footer .story-view-count,
 .story-footer .status-message {
   -webkit-line-clamp: 1;
   font-size: 13px;

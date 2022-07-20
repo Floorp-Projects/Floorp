@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 
 import android.app.Instrumentation;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
@@ -89,6 +90,7 @@ import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebNotificationDelegate;
 import org.mozilla.geckoview.WebPushDelegate;
+import org.mozilla.geckoview.test.GeckoViewTestActivity;
 import org.mozilla.geckoview.test.util.Environment;
 import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.TestServer;
@@ -2127,6 +2129,32 @@ public class GeckoSessionTestRule implements TestRule {
     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
     location.setTime(System.currentTimeMillis());
     locationManager.setTestProviderLocation(mockproviderName, location);
+  }
+
+  /**
+   * Simulates a press to the Home button, causing the application to go to onPause. NB: Some time
+   * must elapse for the event to fully occur.
+   *
+   * @param context starting the Home intent
+   */
+  public void simulatePressHome(Context context) {
+    Intent intent = new Intent();
+    intent.setAction(Intent.ACTION_MAIN);
+    intent.addCategory(Intent.CATEGORY_HOME);
+    context.startActivity(intent);
+  }
+
+  /**
+   * Simulates returningGeckoViewTestActivity to the foreground. Activity must already be in use.
+   * NB: Some time must elapse for the event to fully occur.
+   *
+   * @param context starting the intent
+   */
+  public void requestActivityToForeground(Context context) {
+    Intent notificationIntent = new Intent(context, GeckoViewTestActivity.class);
+    notificationIntent.setAction(Intent.ACTION_MAIN);
+    notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+    context.startActivity(notificationIntent);
   }
 
   Map<GeckoSession, WebExtension.Port> mPorts = new HashMap<>();

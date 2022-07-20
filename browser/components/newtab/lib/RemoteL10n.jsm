@@ -226,6 +226,25 @@ class _RemoteL10n {
   isLocaleSupported(locale) {
     return locale === "en-US" || ALL_LOCALES.has(locale);
   }
+
+  /**
+   * Format given `localizableText`.
+   *
+   * Format `localizableText` if it is an object using any `string_id` field,
+   * otherwise return `localizableText` unmodified.
+   *
+   * @param {object|string} `localizableText` to format.
+   * @return {string} formatted text.
+   */
+  async formatLocalizableText(localizableText) {
+    if (typeof localizableText !== "string") {
+      // It's more useful to get an error than passing through an object without
+      // a `string_id` field.
+      let value = await this.l10n.formatValue(localizableText.string_id);
+      return value;
+    }
+    return localizableText;
+  }
 }
 
 const RemoteL10n = new _RemoteL10n();

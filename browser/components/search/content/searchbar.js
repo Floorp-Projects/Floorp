@@ -104,8 +104,8 @@
       this.FormHistory = ChromeUtils.import(
         "resource://gre/modules/FormHistory.jsm"
       ).FormHistory;
-      this.SearchSuggestionController = ChromeUtils.import(
-        "resource://gre/modules/SearchSuggestionController.jsm"
+      this.SearchSuggestionController = ChromeUtils.importESModule(
+        "resource://gre/modules/SearchSuggestionController.sys.mjs"
       ).SearchSuggestionController;
 
       Services.obs.addObserver(this.observer, "browser-search-engine-modified");

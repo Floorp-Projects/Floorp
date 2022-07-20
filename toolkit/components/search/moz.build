@@ -18,18 +18,18 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "toolkit_search"
 
 EXTRA_JS_MODULES += [
-    "AddonSearchEngine.jsm",
-    "OpenSearchEngine.jsm",
-    "PolicySearchEngine.jsm",
-    "SearchEngine.jsm",
-    "SearchEngineSelector.jsm",
-    "SearchService.jsm",
-    "SearchSettings.jsm",
-    "SearchStaticData.jsm",
-    "SearchSuggestionController.jsm",
-    "SearchSuggestions.jsm",
-    "SearchUtils.jsm",
-    "UserSearchEngine.jsm",
+    "AddonSearchEngine.sys.mjs",
+    "OpenSearchEngine.sys.mjs",
+    "PolicySearchEngine.sys.mjs",
+    "SearchEngine.sys.mjs",
+    "SearchEngineSelector.sys.mjs",
+    "SearchService.sys.mjs",
+    "SearchSettings.sys.mjs",
+    "SearchStaticData.sys.mjs",
+    "SearchSuggestionController.sys.mjs",
+    "SearchSuggestions.sys.mjs",
+    "SearchUtils.sys.mjs",
+    "UserSearchEngine.sys.mjs",
 ]
 
 EXTRA_COMPONENTS += [
@@ -41,7 +41,7 @@ XPCOM_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES += [
-    "tests/SearchTestUtils.jsm",
+    "tests/SearchTestUtils.sys.mjs",
 ]
 
 with Files("**"):

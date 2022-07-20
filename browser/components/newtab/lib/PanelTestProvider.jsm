@@ -701,6 +701,12 @@ const MESSAGES = () => [
                 type: "PIN_FIREFOX_TO_TASKBAR",
               },
               {
+                type: "BLOCK_MESSAGE",
+                data: {
+                  id: "PB_NEWTAB_PIN_PROMO",
+                },
+              },
+              {
                 type: "OPEN_ABOUT_PAGE",
                 data: { args: "privatebrowsing", where: "current" },
               },
@@ -709,7 +715,7 @@ const MESSAGES = () => [
         },
       },
     },
-    priority: 2,
+    priority: 3,
     frequency: {
       custom: [
         {
@@ -721,6 +727,23 @@ const MESSAGES = () => [
     },
     targeting:
       "region != 'CN' && !hasActiveEnterprisePolicies && doesAppNeedPin",
+  },
+  {
+    id: "TEST_TOAST_NOTIFICATION1",
+    weight: 100,
+    template: "toast_notification",
+    content: {
+      title: {
+        string_id: "cfr-doorhanger-bookmark-fxa-header",
+      },
+      body: "Body",
+      image_url:
+        "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+    },
+    groups: ["panel-test-provider"],
+    targeting: "!hasActiveEnterprisePolicies",
+    trigger: { id: "backgroundTaskMessage" },
+    frequency: { lifetime: 3 },
   },
 ];
 

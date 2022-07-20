@@ -8,21 +8,22 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { SearchEngine } = ChromeUtils.import(
-  "resource://gre/modules/SearchEngine.jsm"
-);
+import { SearchEngine } from "resource://gre/modules/SearchEngine.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 /**
  * AddonSearchEngine represents a search engine defined by an add-on.
  */
-class AddonSearchEngine extends SearchEngine {
+export class AddonSearchEngine extends SearchEngine {
   /**
    * Creates a AddonSearchEngine.
    *
@@ -176,5 +177,3 @@ class AddonSearchEngine extends SearchEngine {
     );
   }
 }
-
-var EXPORTED_SYMBOLS = ["AddonSearchEngine"];

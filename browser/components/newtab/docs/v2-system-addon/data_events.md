@@ -1026,6 +1026,31 @@ Similar policy applied as for the Infobar messages: client_id is reported in all
 }
 ```
 
+## ToastNotification pings
+
+This reports when the user interacts with a toast notification: an OS-level
+toast notification UI affordance or a pop-up OS-level window.  Similar policy
+applied as for the What's New panel: client_id is reported in all the
+channels. Currently this is only used in experiments.
+
+```
+{
+  "experiments" : {
+    "exp1" : {
+      "branch" : "treatment-a"
+    }
+  },
+  "addon_version" : "20210115035053",
+  "release_channel" : "release",
+  "locale" : "en-US",
+  "event" : ["IMPRESSION"],
+  "client_id" : "c4beb4bf-4feb-9c4e-9587-9323b28c2e50",
+  "version" : "86",
+  "message_id" : "TOAST_NOTIFICATION_EXAMPLE_ID",
+  "browser_session_id" : "93714e76-9919-ca49-b697-5e7c09a1394f"
+}
+```
+
 ## Messaging-experiments pings
 
 As the new experiment platform, the Messaging experiment manager is now managing & operating all the experiments of Firefox Messaging System, including the first-run experience (about:welcome), CFR, Whats-new-panel, Moments Page, and Snippets.

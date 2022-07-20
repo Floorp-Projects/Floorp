@@ -18,6 +18,7 @@ System handles:
 * `Extension Doorhanger <extension_doorhanger_schema_>`_
 * `Infobar <infobar_schema_>`_
 * `Spotlight <spotlight_schema_>`_
+* `Toast Notification <toast_notification_schema_>`_
 * `Toolbar Badge <toolbar_badge_schema_>`_
 * `Update Action <update_action_schema_>`_
 * `Whats New <whats_new_schema_>`_
@@ -38,7 +39,7 @@ To add a new message type to the Messaging Experiments schema:
 
   .. code-block:: shell
 
-     cd browser/components/newtab/schemas
+     cd browser/components/newtab/content-src/asrouter/schemas/
      ../../../../../../mach python make-schemas.py
 
 4. Commit the results.
@@ -56,10 +57,11 @@ Triggers and actions
 ..  _extension_doorhanger_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json
 ..  _infobar_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/InfoBar.schema.json
 ..  _spotlight_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json
+..  _toast_notification_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/ToastNotification/ToastNotification.schema.json
 ..  _toolbar_badge_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json
 ..  _update_action_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json
 ..  _whats_new_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json
 ..  _pbnewtab_promo_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
-..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/schemas/MessagingExperiment.schema.json
+..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json
 ..  _make_schemas_script: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/make-schemas.py
 ..  _jsonschema_bundling: https://json-schema.org/understanding-json-schema/structuring.html#bundling

@@ -8,6 +8,7 @@
 #define ProfilerRunnable_h
 
 #include "GeckoProfiler.h"
+#include "nsIThreadPool.h"
 
 #if !defined(MOZ_GECKO_PROFILER) || !defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
 #  define AUTO_PROFILE_FOLLOWING_RUNNABLE(runnable)
@@ -33,6 +34,13 @@ class MOZ_RAII AutoProfileRunnable {
       return;
     }
 
+    nsCOMPtr<nsIThreadPool> threadPool = do_QueryInterface(aRunnable);
+    if (threadPool) {
+      // nsThreadPool::Run has its own call to AUTO_PROFILE_FOLLOWING_RUNNABLE,
+      // avoid nesting runnable markers.
+      return;
+    }
+
     nsCOMPtr<nsINamed> named = do_QueryInterface(aRunnable);
     if (named) {
       named->GetName(mName);
@@ -42,7 +50,7 @@ class MOZ_RAII AutoProfileRunnable {
       : mStartTime(TimeStamp::Now()), mName(aName) {}
 
   ~AutoProfileRunnable() {
-    if (!profiler_thread_is_being_profiled_for_markers()) {
+    if (!profiler_thread_is_being_profiled_for_markers() || mName.IsEmpty()) {
       return;
     }
 

@@ -52,6 +52,9 @@ nimbus_events:
       reason:
         type: string
         description: The reason for the enrollment failure
+      branch:
+        type: string
+        description: If reason == "invalid-branch", this is the invalid branch.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
     data_reviews:
@@ -137,4 +140,33 @@ nimbus_events:
     notification_emails:
       - tlong@mozilla.com
       - nimbus-team@mozilla.com
+    expires: never
+  validation_failed:
+    type: event
+    description: >
+      This records when validation of a recipe fails.
+    extra_keys:
+      experiment:
+        type: string
+        description: The slug/unique identifier of the experiment
+      reason:
+        type: string
+        description: >
+          Why validation failed (one of "invalid-recipe", "invalid-branch", or
+          "invalid-reason").
+      branch:
+        type: string
+        description: >
+          If reason == invalid-branch, the branch that failed validation.
+      feature:
+        type: string
+        description: If reason == invalid-feature, the invalid feature ID.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1762652
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1762652
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - barret@mozilla.com
     expires: never

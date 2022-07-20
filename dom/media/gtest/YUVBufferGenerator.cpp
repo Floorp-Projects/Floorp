@@ -59,12 +59,12 @@ Image* YUVBufferGenerator::CreateI420Image() {
   data.mYStride = mImageSize.width;
   data.mYSkip = 0;
 
-  // Cr plane.
+  // Cr plane (aka V).
   uint8_t* cr = y + yPlaneSize + uvPlaneSize;
   data.mCrChannel = cr;
   data.mCrSkip = 0;
 
-  // Cb plane
+  // Cb plane (aka U).
   uint8_t* cb = y + yPlaneSize;
   data.mCbChannel = cb;
   data.mCbSkip = 0;
@@ -92,15 +92,15 @@ Image* YUVBufferGenerator::CreateNV12Image() {
   data.mYStride = mImageSize.width;
   data.mYSkip = 0;
 
-  // Cr plane.
-  uint8_t* cr = y + yPlaneSize;
-  data.mCrChannel = cr;
-  data.mCrSkip = 1;
-
-  // Cb plane
-  uint8_t* cb = y + yPlaneSize + 1;
+  // Cb plane (aka U).
+  uint8_t* cb = y + yPlaneSize;
   data.mCbChannel = cb;
   data.mCbSkip = 1;
+
+  // Cr plane (aka V).
+  uint8_t* cr = y + yPlaneSize + 1;
+  data.mCrChannel = cr;
+  data.mCrSkip = 1;
 
   // 4:2:0.
   data.mCbCrStride = mImageSize.width;
@@ -123,15 +123,15 @@ Image* YUVBufferGenerator::CreateNV21Image() {
   data.mYStride = mImageSize.width;
   data.mYSkip = 0;
 
-  // Cr plane.
-  uint8_t* cr = y + yPlaneSize + 1;
-  data.mCrChannel = cr;
-  data.mCrSkip = 1;
-
-  // Cb plane
-  uint8_t* cb = y + yPlaneSize;
+  // Cb plane (aka U).
+  uint8_t* cb = y + yPlaneSize + 1;
   data.mCbChannel = cb;
   data.mCbSkip = 1;
+
+  // Cr plane (aka V).
+  uint8_t* cr = y + yPlaneSize;
+  data.mCrChannel = cr;
+  data.mCrSkip = 1;
 
   // 4:2:0.
   data.mCbCrStride = mImageSize.width;

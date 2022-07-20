@@ -10,20 +10,21 @@ const { MockRegistrar } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["SearchTestUtils"];
-
 var gTestScope;
 
-var SearchTestUtils = {
+export var SearchTestUtils = {
   init(testScope) {
     gTestScope = testScope;
     let env = Cc["@mozilla.org/process/environment;1"].getService(

@@ -16,6 +16,7 @@ let UPDATE_ACTION_SCHEMA;
 let WHATS_NEW_SCHEMA;
 let SPOTLIGHT_SCHEMA;
 let PB_NEWTAB_SCHEMA;
+let TOAST_NOTIFICATION_SCHEMA;
 
 add_setup(async function setup() {
   function fetchSchema(uri) {
@@ -40,6 +41,9 @@ add_setup(async function setup() {
   PB_NEWTAB_SCHEMA = await fetchSchema(
     "resource://testing-common/NewtabPromoMessage.schema.json"
   );
+  TOAST_NOTIFICATION_SCHEMA = await fetchSchema(
+    "resource://testing-common/ToastNotification.schema.json"
+  );
 });
 
 function assertSchema(obj, schema, log) {
@@ -63,7 +67,7 @@ add_task(async function test_PanelTestProvider() {
   // through schema validation.
   Assert.strictEqual(
     messages.length,
-    17,
+    18,
     "PanelTestProvider should have the correct number of messages"
   );
 
@@ -100,6 +104,16 @@ add_task(async function test_PanelTestProvider() {
       msg,
       SPOTLIGHT_SCHEMA,
       `spotlight message ${msg.id ?? i} is valid`
+    );
+  }
+
+  for (const [i, msg] of messages
+    .filter(m => m.template === "toast_notification")
+    .entries()) {
+    assertSchema(
+      msg,
+      TOAST_NOTIFICATION_SCHEMA,
+      `toast notification message ${msg.id ?? i} is valid`
     );
   }
 

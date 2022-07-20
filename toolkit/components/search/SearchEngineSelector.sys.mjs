@@ -4,17 +4,18 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchEngineSelector"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 const USER_LOCALE = "$USER_LOCALE";
@@ -82,7 +83,7 @@ function aboveMaxVersion(config, version) {
  * search engines and returns the applicable engines depending
  * on their region + locale.
  */
-class SearchEngineSelector {
+export class SearchEngineSelector {
   /**
    * @param {function} listener
    *   A listener for configuration update changes.

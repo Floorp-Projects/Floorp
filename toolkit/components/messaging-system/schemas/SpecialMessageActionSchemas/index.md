@@ -256,6 +256,12 @@ additional privacy section in about:preferences.
 
 Action for opening a spotlight tab or window modal using the content passed to the dialog.
 
+### `BLOCK_MESSAGE`
+
+Disable a message by adding to an indexedDb list of blocked messages
+
+* args: `string` id of the message
+
 ### `SET_PREF`
 
 Action for setting various browser prefs

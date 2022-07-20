@@ -133,8 +133,8 @@ export class QuickOpenModal extends Component {
 
   formatSources = memoizeLast(
     (displayedSources, tabUrls, blackBoxRanges, projectDirectoryRoot) => {
-      // Avoid formating more sources than necessary
-      displayedSources = displayedSources.slice(0, maxResults);
+      // Note that we should format all displayed sources,
+      // the actual filtering will only be done late from `searchSources()`
       return displayedSources.map(source => {
         const isBlackBoxed = !!blackBoxRanges[source.url];
         const hasTabOpened = tabUrls.includes(source.url);

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "file:///ToastNotification.schema.json",
+  "title": "ToastNotification",
+  "description": "A template for toast notifications displayed by the Alert service.",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "localizableText": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The string to be rendered."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "string_id"
+          ],
+          "description": "Id of localized string to be rendered."
+        }
+      ]
+    }
+  },
+  "properties": {
+    "content": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "Id of localized string or message override of toast notification title"
+            }
+          ]
+        },
+        "body": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/localizableText"
+            },
+            {
+              "description": "Id of localized string or message override of toast notification body"
+            }
+          ]
+        },
+        "icon_url": {
+          "description": "The URL of the image used as an icon of the toast notification.",
+          "type": "string",
+          "format": "moz-url-format"
+        },
+        "image_url": {
+          "description": "The URL of an image to be displayed as part of the notification.",
+          "type": "string",
+          "format": "moz-url-format"
+        },
+        "requireInteraction": {
+          "type": "boolean",
+          "description": "Whether the toast notification should remain active until the user clicks or dismisses it, rather than closing automatically."
+        },
+        "tag": {
+          "type": "string",
+          "description": "An identifying tag for the toast notification."
+        },
+        "data": {
+          "type": "object",
+          "description": "Arbitrary data associated with the toast notification."
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "title",
+        "body"
+      ]
+    },
+    "targeting": {
+      "type": "string",
+      "description": "A JEXL expression representing targeting information"
+    },
+    "template": {
+      "type": "string",
+      "const": "toast_notification"
+    },
+    "trigger": {
+      "type": "object",
+      "description": "An action to trigger potentially showing the message",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A string identifying the trigger action"
+        },
+        "params": {
+          "type": "array",
+          "description": "An optional array of string parameters for the trigger action",
+          "items": {
+            "anyOf": [{ "type": "integer" }, { "type": "string" }]
+          }
+        }
+      },
+      "required": ["id"]
+    }
+  },
+  "required": [
+    "content",
+    "targeting",
+    "template",
+    "trigger"
+  ],
+  "additionalProperties": true
+}

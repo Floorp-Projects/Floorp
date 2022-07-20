@@ -59,6 +59,13 @@ this.extension = class extends ExtensionAPI {
             }
           }
 
+          // Do not include extension popups contexts while their document
+          // is blocked on parsing during its preloading state
+          // (See Bug 1748808).
+          if (context.extension.hasContextBlockedParsingDocument(view)) {
+            continue;
+          }
+
           result.push(view.contentWindow);
         }
 

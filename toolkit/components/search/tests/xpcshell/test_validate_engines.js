@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { SearchService } = ChromeUtils.import(
-  "resource://gre/modules/SearchService.jsm"
+const { SearchService } = ChromeUtils.importESModule(
+  "resource://gre/modules/SearchService.sys.mjs"
 );
 
 const ss = new SearchService();
