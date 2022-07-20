@@ -179,18 +179,6 @@ class nsICanvasRenderingContextInternal : public nsISupports,
     return NS_OK;
   }
 
-  // return true and fills in the bounding rect if elementis a child and has a
-  // hit region.
-  virtual bool GetHitRegionRect(mozilla::dom::Element* element, nsRect& rect) {
-    return false;
-  }
-
-  // Given a point, return hit region ID if it exists or an empty string if it
-  // doesn't
-  virtual nsString GetHitRegion(const mozilla::gfx::Point& point) {
-    return nsString();
-  }
-
   virtual void OnMemoryPressure() {}
 
   virtual void OnBeforePaintTransaction() {}

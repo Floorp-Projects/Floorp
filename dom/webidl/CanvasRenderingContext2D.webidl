@@ -145,7 +145,6 @@ CanvasRenderingContext2D includes CanvasImageData;
 CanvasRenderingContext2D includes CanvasPathDrawingStyles;
 CanvasRenderingContext2D includes CanvasTextDrawingStyles;
 CanvasRenderingContext2D includes CanvasPathMethods;
-CanvasRenderingContext2D includes CanvasHitRegions;
 
 
 interface mixin CanvasState {
@@ -334,13 +333,6 @@ interface mixin CanvasPathMethods {
 
   [Throws, LenientFloat]
   void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, optional boolean anticlockwise = false);
-};
-
-interface mixin CanvasHitRegions {
-  // hit regions
-  [Pref="canvas.hitregions.enabled", Throws] void addHitRegion(optional HitRegionOptions options = {});
-  [Pref="canvas.hitregions.enabled"] void removeHitRegion(DOMString id);
-  [Pref="canvas.hitregions.enabled"] void clearHitRegions();
 };
 
 [Exposed=(Window,Worker),

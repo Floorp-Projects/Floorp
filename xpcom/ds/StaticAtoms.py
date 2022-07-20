@@ -2316,7 +2316,6 @@ STATIC_ATOMS = [
     Atom("grammar", "grammar"),
     Atom("gridcell", "gridcell"),
     Atom("heading", "heading"),
-    Atom("hitregion", "hitregion"),
     Atom("inlinevalue", "inline"),
     Atom("inline_size", "inline-size"),
     Atom("invalid", "invalid"),
