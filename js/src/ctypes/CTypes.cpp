@@ -6484,10 +6484,7 @@ struct AutoValue {
   bool SizeToType(JSContext* cx, JSObject* type) {
     // Allocate a minimum of sizeof(ffi_arg) to handle small integers.
     size_t size = Align(CType::GetSize(type), sizeof(ffi_arg));
-    mData = js_malloc(size);
-    if (mData) {
-      memset(mData, 0, size);
-    }
+    mData = js_calloc(size);
     return mData != nullptr;
   }
 
