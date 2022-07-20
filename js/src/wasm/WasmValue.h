@@ -31,11 +31,11 @@ namespace wasm {
 // A V128 value.
 
 struct V128 {
-  uint8_t bytes[16];  // Little-endian
+  uint8_t bytes[16] = {};  // Little-endian
 
   WASM_CHECK_CACHEABLE_POD(bytes);
 
-  V128() { memset(bytes, 0, sizeof(bytes)); }
+  V128() = default;
 
   explicit V128(uint8_t splatValue) {
     memset(bytes, int(splatValue), sizeof(bytes));
