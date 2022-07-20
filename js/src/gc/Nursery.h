@@ -556,9 +556,9 @@ class Nursery {
 
       if (key->asLinear().hasLatin1Chars()) {
         MOZ_ASSERT(lookup->asLinear().hasLatin1Chars());
-        return mozilla::ArrayEqual(key->asLinear().latin1Chars(nogc),
-                                   lookup->asLinear().latin1Chars(nogc),
-                                   lookup->length());
+        return EqualChars(key->asLinear().latin1Chars(nogc),
+                          lookup->asLinear().latin1Chars(nogc),
+                          lookup->length());
       } else {
         MOZ_ASSERT(key->asLinear().hasTwoByteChars());
         MOZ_ASSERT(lookup->asLinear().hasTwoByteChars());

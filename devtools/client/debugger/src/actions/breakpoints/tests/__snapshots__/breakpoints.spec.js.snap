@@ -28,6 +28,7 @@ Array [
     "filename": "a",
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "",
         "filename": "a",
         "group": "localhost:8000",
         "path": "/examples/a",
@@ -100,6 +101,7 @@ Array [
     "filename": "a",
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "",
         "filename": "a",
         "group": "localhost:8000",
         "path": "/examples/a",

@@ -395,6 +395,10 @@ toolbar {
   animation-duration: calc(52 * 16.667ms);
 }
 
+#unified-extensions-button {
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}
+
 #email-link-button {
   list-style-image: url("chrome://browser/skin/mail.svg");
 }

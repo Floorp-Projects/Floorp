@@ -326,10 +326,10 @@ class FuncImport {
 
  private:
   FuncType funcType_;
-  CacheablePod pod;
+  CacheablePod pod = {};
 
  public:
-  FuncImport() { memset(&pod, 0, sizeof(CacheablePod)); }
+  FuncImport() = default;
 
   FuncImport(FuncType&& funcType, uint32_t instanceOffset)
       : funcType_(std::move(funcType)) {

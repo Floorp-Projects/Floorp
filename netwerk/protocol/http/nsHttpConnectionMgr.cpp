@@ -3353,6 +3353,11 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(aTrans);
   MOZ_ASSERT(aEnt);
+  if (!gHttpHandler->Active()) {
+    // Do nothing if we are shutting down.
+    return;
+  }
+
   if (aFetchHTTPSRR && NS_SUCCEEDED(aTrans->FetchHTTPSRR())) {
     // nsHttpConnectionMgr::DoSpeculativeConnection will be called again when
     // HTTPS RR is available.

@@ -4855,6 +4855,8 @@ static void VerifyUniqueStringContents(
   UniquePtr<char[]> jsonString = writer.ChunkedWriteFunc().CopyData();
   MOZ_RELEASE_ASSERT(jsonString);
   std::string_view jsonStringView(jsonString.get());
+  const size_t length = writer.ChunkedWriteFunc().Length();
+  MOZ_RELEASE_ASSERT(length == jsonStringView.length());
   std::string expected = "{\"data\": [";
   expected += aExpectedData;
   expected += "], \"stringTable\": [";

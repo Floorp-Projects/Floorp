@@ -1320,9 +1320,8 @@ bool ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf,
 JSLinearString* ScriptSource::functionBodyString(JSContext* cx) {
   MOZ_ASSERT(isFunctionBody());
 
-  size_t start =
-      parameterListEnd_ + (sizeof(FunctionConstructorMedialSigils) - 1);
-  size_t stop = length() - (sizeof(FunctionConstructorFinalBrace) - 1);
+  size_t start = parameterListEnd_ + FunctionConstructorMedialSigils.length();
+  size_t stop = length() - FunctionConstructorFinalBrace.length();
   return substring(cx, start, stop);
 }
 

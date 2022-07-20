@@ -10,7 +10,6 @@
 
 #include "vm/JSAtom-inl.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"  // mozilla::HashStringKnownLength
 #include "mozilla/RangedPtr.h"
@@ -154,7 +153,7 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
     const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
     switch (lookup.type) {
       case Lookup::Latin1:
-        return mozilla::ArrayEqual(keyChars, lookup.latin1Chars, lookup.length);
+        return EqualChars(keyChars, lookup.latin1Chars, lookup.length);
       case Lookup::TwoByteChar:
         return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
       case Lookup::UTF8: {
@@ -169,7 +168,7 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
     case Lookup::Latin1:
       return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
     case Lookup::TwoByteChar:
-      return mozilla::ArrayEqual(keyChars, lookup.twoByteChars, lookup.length);
+      return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
     case Lookup::UTF8: {
       JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
       return UTF8EqualsChars(utf8, keyChars);

@@ -2,7 +2,7 @@
 How to report Gecko Telemetry in engine-gecko via Glean
 =======================================================
 
-In `Gecko <https://developer.mozilla.org/en-US/docs/Mozilla/Gecko>`__, the `Telemetry <../index.html>`__ system collects various measures of Gecko performance, hardware, usage and customizations.
+In Gecko, the `Telemetry <../index.html>`__ system collects various measures of Gecko performance, hardware, usage and customizations.
 When the Gecko engine is embedded in Android products through any of the `engine-gecko-* <https://github.com/mozilla-mobile/android-components/tree/master/components/browser>`__ components of `Android Components <https://mozac.org/>`__ (there is one component for each Gecko channel),
 and the product is also using the `Glean SDK <https://docs.telemetry.mozilla.org/concepts/glean/glean.html>`__ for data collection, then Gecko metrics can be reported in `Glean pings <https://mozilla.github.io/glean/book/user/pings/index.html>`__.
 This article provides an overview of what is needed to report any existing or new Telemetry data collection in Gecko to Glean.

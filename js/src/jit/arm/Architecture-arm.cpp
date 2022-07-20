@@ -264,8 +264,7 @@ void InitARMFlags() {
 
   FILE* fp = fopen("/proc/cpuinfo", "r");
   if (fp) {
-    char buf[1024];
-    memset(buf, 0, sizeof(buf));
+    char buf[1024] = {};
     size_t len = fread(buf, sizeof(char), sizeof(buf) - 1, fp);
     fclose(fp);
     buf[len] = '\0';

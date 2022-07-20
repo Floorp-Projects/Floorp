@@ -179,6 +179,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
   source={
     Object {
       "displayURL": Object {
+        "fileExtension": "",
         "filename": "url",
         "group": "",
         "path": "url",
@@ -380,6 +381,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
   source={
     Object {
       "displayURL": Object {
+        "fileExtension": "",
         "filename": "url",
         "group": "",
         "path": "url",
@@ -581,6 +583,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
   source={
     Object {
       "displayURL": Object {
+        "fileExtension": "",
         "filename": "url",
         "group": "",
         "path": "url",

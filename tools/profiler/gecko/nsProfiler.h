@@ -53,7 +53,7 @@ class nsProfiler final : public nsIProfiler {
   void GatheredOOPProfile(base::ProcessId aChildPid,
                           const nsACString& aProfile);
   void FinishGathering();
-  void ResetGathering();
+  void ResetGathering(nsresult aPromiseRejectionIfPending);
   static void GatheringTimerCallback(nsITimer* aTimer, void* aClosure);
   void RestartGatheringTimer();
 
@@ -81,6 +81,17 @@ class nsProfiler final : public nsIProfiler {
   PendingProfile* GetPendingProfile(base::ProcessId aChildPid);
   // Returns false if the request could not be sent.
   bool SendProgressRequest(PendingProfile& aPendingProfile);
+
+  // If the log is active, call aJsonLogObjectUpdater(Json::Value&) on the log's
+  // root object.
+  template <typename JsonLogObjectUpdater>
+  void Log(JsonLogObjectUpdater&& aJsonLogObjectUpdater);
+  // If the log is active, call aJsonArrayAppender(Json::Value&) on a Json
+  // array that already contains a timestamp, and to which event-related
+  // elements may be appended.
+  template <typename JsonArrayAppender>
+  void LogEvent(JsonArrayAppender&& aJsonArrayAppender);
+  void LogEventLiteralString(const char* aEventString);
 
   // These fields are all related to profile gathering.
   mozilla::Vector<ExitProfile> mExitProfiles;

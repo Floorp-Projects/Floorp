@@ -4,7 +4,7 @@
 
 import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
-import { getPathParts, getFileExtension } from "../utils/sources-tree/utils";
+import { getPathParts } from "../utils/sources-tree/utils";
 
 import {
   getPrettySourceURL,
@@ -256,7 +256,7 @@ export const getDisplayedSources = createSelector(
 
 function isSourceHiddenInSourceTree(source) {
   return (
-    IGNORED_EXTENSIONS.includes(getFileExtension(source)) ||
+    IGNORED_EXTENSIONS.includes(source.displayURL.fileExtension) ||
     IGNORED_URLS.includes(source.url) ||
     isPretty(source)
   );

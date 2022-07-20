@@ -4054,11 +4054,10 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
 
   // Allocate the data buffer before initializing the object so that an OOM
   // does not result in a partially constructed object.
-  uint8_t* data = (uint8_t*)js_malloc(tagType->size_);
+  uint8_t* data = (uint8_t*)js_calloc(tagType->size_);
   if (!data) {
     return nullptr;
   }
-  memset(data, 0, tagType->size_);
 
   MOZ_ASSERT(obj->isNewborn());
   obj->initFixedSlot(TAG_SLOT, ObjectValue(*tag));

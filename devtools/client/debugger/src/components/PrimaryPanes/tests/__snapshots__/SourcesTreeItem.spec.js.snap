@@ -17,6 +17,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -74,6 +75,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -114,6 +116,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -187,6 +190,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -229,6 +233,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -291,6 +296,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -346,6 +352,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -386,6 +393,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -444,6 +452,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -507,6 +516,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "",
             "filename": "url",
             "group": "",
             "path": "url",
@@ -543,6 +553,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -617,6 +628,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "",
                   "filename": "url",
                   "group": "",
                   "path": "url",
@@ -655,6 +667,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -717,6 +730,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -778,6 +792,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "",
           "filename": "url",
           "group": "",
           "path": "url",
@@ -814,6 +829,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -872,6 +888,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -930,6 +947,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "",
             "filename": "url",
             "group": "",
             "path": "url",
@@ -966,6 +984,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -1040,6 +1059,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "",
                   "filename": "url",
                   "group": "",
                   "path": "url",
@@ -1078,6 +1098,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -1140,6 +1161,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -1196,6 +1218,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "",
           "filename": "url",
           "group": "",
           "path": "url",
@@ -1232,6 +1255,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -1322,6 +1346,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -1407,6 +1432,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -1499,6 +1525,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -1590,6 +1617,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -1676,6 +1704,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -1769,6 +1798,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -2030,6 +2060,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -2114,6 +2145,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -2205,6 +2237,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -2295,6 +2328,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -2381,6 +2415,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -2474,6 +2509,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -2894,6 +2930,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo.js",
             "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
             "path": "/foo.js",
@@ -2935,6 +2972,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -3009,6 +3047,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "foo.js",
                   "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
                   "path": "/foo.js",
@@ -3052,6 +3091,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -3135,6 +3175,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "foo.js",
           "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
           "path": "/foo.js",
@@ -3176,6 +3217,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -3257,6 +3299,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo.js",
             "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
             "path": "/foo.js",
@@ -3298,6 +3341,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -3373,6 +3417,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "foo.js",
                   "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
                   "path": "/foo.js",
@@ -3416,6 +3461,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -3500,6 +3546,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "foo.js",
           "group": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
           "path": "/foo.js",
@@ -3541,6 +3588,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -3631,6 +3679,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -3715,6 +3764,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -3806,6 +3856,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -3864,6 +3915,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -3922,6 +3974,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -3964,6 +4017,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -4038,6 +4092,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -4082,6 +4137,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -4145,6 +4201,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -4201,6 +4258,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -4243,6 +4301,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -4297,8 +4356,44 @@ Object {
     <span
       className="img no-arrow"
     />
-    <AccessibleImage
-      className="prettyPrint"
+    <Connect(SourceIcon)
+      modifier={[Function]}
+      source={
+        Object {
+          "displayURL": Object {
+            "fileExtension": "js",
+            "filename": "one.js",
+            "group": "mdn.com",
+            "path": "/one.js",
+            "search": "",
+          },
+          "extensionName": null,
+          "id": "server1.conn13.child1/39",
+          "isExtension": false,
+          "isOriginal": false,
+          "isPrettyPrinted": false,
+          "isWasm": false,
+          "parts": Array [
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "FakeThread",
+              "path": "FakeThread",
+            },
+            Object {
+              "mainThreadHostIfRoot": "http://www.example.com",
+              "part": "mdn.com",
+              "path": "FakeThread/mdn.com",
+            },
+            Object {
+              "mainThreadHostIfRoot": null,
+              "part": "one.js",
+              "path": "FakeThread/mdn.com/one.js",
+            },
+          ],
+          "thread": "FakeThread",
+          "url": "http://mdn.com/one.js",
+        }
+      }
     />
     <span
       className="label"
@@ -4325,6 +4420,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "",
             "filename": "url",
             "group": "",
             "path": "url",
@@ -4361,6 +4457,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -4435,6 +4532,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "",
                   "filename": "url",
                   "group": "",
                   "path": "url",
@@ -4473,6 +4571,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -4530,8 +4629,44 @@ Object {
           <span
             className="img no-arrow"
           />
-          <AccessibleImage
-            className="prettyPrint"
+          <Connect(SourceIcon)
+            modifier={[Function]}
+            source={
+              Object {
+                "displayURL": Object {
+                  "fileExtension": "js",
+                  "filename": "one.js",
+                  "group": "mdn.com",
+                  "path": "/one.js",
+                  "search": "",
+                },
+                "extensionName": null,
+                "id": "server1.conn13.child1/39",
+                "isExtension": false,
+                "isOriginal": false,
+                "isPrettyPrinted": false,
+                "isWasm": false,
+                "parts": Array [
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "FakeThread",
+                    "path": "FakeThread",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": "http://www.example.com",
+                    "part": "mdn.com",
+                    "path": "FakeThread/mdn.com",
+                  },
+                  Object {
+                    "mainThreadHostIfRoot": null,
+                    "part": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                  },
+                ],
+                "thread": "FakeThread",
+                "url": "http://mdn.com/one.js",
+              }
+            }
           />
           <span
             className="label"
@@ -4556,6 +4691,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "",
           "filename": "url",
           "group": "",
           "path": "url",
@@ -4592,6 +4728,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -4650,6 +4787,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -4707,6 +4845,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "",
             "filename": "url",
             "group": "",
             "path": "url",
@@ -4743,6 +4882,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -4816,6 +4956,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "",
                   "filename": "url",
                   "group": "",
                   "path": "url",
@@ -4854,6 +4995,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -4916,6 +5058,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -4971,6 +5114,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "",
           "filename": "url",
           "group": "",
           "path": "url",
@@ -5007,6 +5151,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -5065,6 +5210,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -5124,6 +5270,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -5164,6 +5311,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -5239,6 +5387,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -5281,6 +5430,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -5343,6 +5493,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -5400,6 +5551,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -5440,6 +5592,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",
@@ -5498,6 +5651,7 @@ Object {
       source={
         Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "one.js",
             "group": "mdn.com",
             "path": "/one.js",
@@ -5555,6 +5709,7 @@ Object {
       "item": Object {
         "contents": Object {
           "displayURL": Object {
+            "fileExtension": "",
             "filename": "url",
             "group": "",
             "path": "url",
@@ -5591,6 +5746,7 @@ Object {
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
         "displayURL": Object {
+          "fileExtension": "js",
           "filename": "one.js",
           "group": "mdn.com",
           "path": "/one.js",
@@ -5664,6 +5820,7 @@ Object {
             Object {
               "contents": Object {
                 "displayURL": Object {
+                  "fileExtension": "",
                   "filename": "url",
                   "group": "",
                   "path": "url",
@@ -5702,6 +5859,7 @@ Object {
           source={
             Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "one.js",
                 "group": "mdn.com",
                 "path": "/one.js",
@@ -5764,6 +5922,7 @@ Object {
             source={
               Object {
                 "displayURL": Object {
+                  "fileExtension": "js",
                   "filename": "one.js",
                   "group": "mdn.com",
                   "path": "/one.js",
@@ -5819,6 +5978,7 @@ Object {
     "item": Object {
       "contents": Object {
         "displayURL": Object {
+          "fileExtension": "",
           "filename": "url",
           "group": "",
           "path": "url",
@@ -5855,6 +6015,7 @@ Object {
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
       "displayURL": Object {
+        "fileExtension": "js",
         "filename": "one.js",
         "group": "mdn.com",
         "path": "/one.js",

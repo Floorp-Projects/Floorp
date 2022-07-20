@@ -211,7 +211,7 @@ If you open the developer tools using :ref:`keyboard shortcuts <keyboard-shortcu
    * - :doc:`about:debugging <about_colon_debugging/index>`
      - Debug add-ons, content tabs, and workers running in the browser.
 
-   * - :ref:`Connecting to Firefox for Android <about-color-debugging-connecting-over-the-network>`
+   * - :ref:`Connecting to Firefox for Android <about-colon-debugging-connecting-to-a-remote-device>`
      - Connect the developer tools to an instance of Firefox running on an Android device.
 
    * - :doc:`Connecting to iframes <working_with_iframes/index>`

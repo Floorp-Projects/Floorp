@@ -92,16 +92,6 @@ export function isSource(item) {
   return item.type === "source";
 }
 
-export function getFileExtension(source) {
-  const { path } = source.displayURL;
-  if (!path) {
-    return "";
-  }
-
-  const lastIndex = path.lastIndexOf(".");
-  return lastIndex !== -1 ? path.slice(lastIndex + 1) : "";
-}
-
 export function partIsFile(index, parts, url) {
   const isLastPart = index === parts.length - 1;
   return isLastPart && !isDirectory(url);

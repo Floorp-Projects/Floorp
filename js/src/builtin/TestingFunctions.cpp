@@ -40,6 +40,7 @@
 #  include <chrono>
 #endif
 
+#include "fdlibm.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsmath.h"
@@ -961,19 +962,19 @@ static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(!(ion && cranelift));
 
   JSStringBuilder result(cx);
-  if (none && !result.append("none", 4)) {
+  if (none && !result.append("none")) {
     return false;
   }
-  if (baseline && !result.append("baseline", 8)) {
+  if (baseline && !result.append("baseline")) {
     return false;
   }
-  if (tiered && !result.append("+", 1)) {
+  if (tiered && !result.append("+")) {
     return false;
   }
-  if (ion && !result.append("ion", 3)) {
+  if (ion && !result.append("ion")) {
     return false;
   }
-  if (cranelift && !result.append("cranelift", 9)) {
+  if (cranelift && !result.append("cranelift")) {
     return false;
   }
   if (JSString* str = result.finishString()) {
@@ -7927,6 +7928,29 @@ static bool NukeCCW(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool FdLibM_Pow(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  double x;
+  if (!JS::ToNumber(cx, args.get(0), &x)) {
+    return false;
+  }
+
+  double y;
+  if (!JS::ToNumber(cx, args.get(1), &y)) {
+    return false;
+  }
+
+  // Because C99 and ECMA specify different behavior for pow(), we need to wrap
+  // the fdlibm call to make it ECMA compliant.
+  if (!mozilla::IsFinite(y) && (x == 1.0 || x == -1.0)) {
+    args.rval().setNaN();
+  } else {
+    args.rval().setDouble(fdlibm::pow(x, y));
+  }
+  return true;
+}
+
 // clang-format off
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
@@ -9007,6 +9031,16 @@ static const JSFunctionSpecWithHelp PCCountProfilingTestingFunctions[] = {
 };
 // clang-format on
 
+// clang-format off
+static const JSFunctionSpecWithHelp FdLibMTestingFunctions[] = {
+    JS_FN_HELP("pow", FdLibM_Pow, 2, 0,
+    "pow(x, y)",
+    "  Return x ** y."),
+
+    JS_FS_HELP_END
+};
+// clang-format on
+
 bool js::InitTestingFunctions() { return disasmBuf.init(); }
 
 bool js::DefineTestingFunctions(JSContext* cx, HandleObject obj,
@@ -9036,6 +9070,19 @@ bool js::DefineTestingFunctions(JSContext* cx, HandleObject obj,
                                     PCCountProfilingTestingFunctions)) {
       return false;
     }
+  }
+
+  RootedObject fdlibm(cx, JS_NewPlainObject(cx));
+  if (!fdlibm) {
+    return false;
+  }
+
+  if (!JS_DefineProperty(cx, obj, "fdlibm", fdlibm, 0)) {
+    return false;
+  }
+
+  if (!JS_DefineFunctionsWithHelp(cx, fdlibm, FdLibMTestingFunctions)) {
+    return false;
   }
 
   return JS_DefineFunctionsWithHelp(cx, obj, TestingFunctions);

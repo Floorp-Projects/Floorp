@@ -8,14 +8,13 @@
 
 #include <algorithm>
 #include <stdarg.h>
+#include <string_view>
 
 #include "util/Unicode.h"
 
 using namespace js;
 using namespace js::cli;
 using namespace js::cli::detail;
-
-const char OptionParser::prognameMeta[] = "{progname}";
 
 #define OPTION_CONVERT_IMPL(__cls)                                             \
   bool Option::is##__cls##Option() const { return kind == OptionKind##__cls; } \
@@ -150,10 +149,12 @@ static const char* OptionFlagsToFormatInfo(char shortflag, bool isValued,
 }
 
 OptionParser::Result OptionParser::printHelp(const char* progname) {
-  const char* prefixEnd = strstr(usage, prognameMeta);
+  constexpr std::string_view prognameMeta = "{progname}";
+
+  const char* prefixEnd = strstr(usage, prognameMeta.data());
   if (prefixEnd) {
     printf("%.*s%s%s\n", int(prefixEnd - usage), usage, progname,
-           prefixEnd + sizeof(prognameMeta) - 1);
+           prefixEnd + prognameMeta.length());
   } else {
     puts(usage);
   }

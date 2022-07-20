@@ -2756,6 +2756,9 @@ MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
 
   MOZ_ASSERT(type() == MIRType::Double || type() == MIRType::Int32);
 
+  // NOTE: The optimizations must match the optimizations used in |js::ecmaPow|
+  // resp. |js::powi| to avoid differential testing issues.
+
   double pow = power()->toConstant()->numberToDouble();
 
   // Math.pow(x, 0.5) is a sqrt with edge-case detection.

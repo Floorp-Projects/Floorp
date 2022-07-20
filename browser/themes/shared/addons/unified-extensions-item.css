@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Style for the custom element "unified-extensions-item". */
+
+unified-extensions-item {
+  display: flex;
+}
+
+unified-extensions-item.no-hover:hover {
+  /* Overrides panelUI-shared.css */
+  background-color: transparent !important;
+}
+
+/* The padding-block for menuitems is set to 0 in compact mode which, with the
+ * extension icon being 32px in this case, makes the item look crowded even for
+ * compact mode. */
+:root[uidensity="compact"] unified-extensions-item {
+  padding-block: 4px;
+}
+
+.unified-extensions-item-icon {
+  align-self: center;
+  flex-shrink: 0;
+  height: 32px;
+  width: 32px;
+  margin-inline-end: 6px;
+}
+
+.unified-extensions-item-contents {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-x: hidden;
+  white-space: nowrap;
+}
+
+.unified-extensions-item-name,
+.unified-extensions-item-message {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.unified-extensions-item-message {
+  color: var(--panel-description-color);
+}
+
+.unified-extensions-item-open-submenu.subviewbutton {
+  flex-shrink: 0;
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+  margin: 0;
+  margin-inline-start: 6px;
+}
+
+.unified-extensions-item-open-submenu.subviewbutton > .toolbarbutton-text {
+  display: none;
+}

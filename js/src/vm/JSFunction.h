@@ -12,6 +12,7 @@
  */
 
 #include <iterator>
+#include <string_view>
 
 #include "jstypes.h"
 
@@ -35,8 +36,8 @@ static constexpr uint32_t BoundFunctionEnvTargetSlot = 2;
 static constexpr uint32_t BoundFunctionEnvThisSlot = 3;
 static constexpr uint32_t BoundFunctionEnvArgsSlot = 4;
 
-static const char FunctionConstructorMedialSigils[] = ") {\n";
-static const char FunctionConstructorFinalBrace[] = "\n}";
+static constexpr std::string_view FunctionConstructorMedialSigils = ") {\n";
+static constexpr std::string_view FunctionConstructorFinalBrace = "\n}";
 
 // JSFunctions can have one of two classes:
 extern const JSClass FunctionClass;

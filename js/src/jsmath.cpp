@@ -10,6 +10,7 @@
 
 #include "jsmath.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RandomNum.h"
@@ -46,6 +47,7 @@ using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
+using mozilla::NumberEqualsInt64;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 
@@ -220,7 +222,7 @@ double js::math_cos_fdlibm_impl(double x) {
 double js::math_cos_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
-  return cos(x);
+  return std::cos(x);
 }
 
 bool js::math_cos(JSContext* cx, unsigned argc, Value* vp) {
@@ -402,29 +404,65 @@ bool js::minmax_impl(JSContext* cx, bool max, HandleValue a, HandleValue b,
 
 double js::powi(double x, int32_t y) {
   AutoUnsafeCallWithABI unsafe;
-  uint32_t n = Abs(y);
-  double m = x;
-  double p = 1;
-  while (true) {
-    if ((n & 1) != 0) p *= m;
-    n >>= 1;
-    if (n == 0) {
-      if (y < 0) {
-        // Unfortunately, we have to be careful when p has reached
-        // infinity in the computation, because sometimes the higher
-        // internal precision in the pow() implementation would have
-        // given us a finite p. This happens very rarely.
 
-        double result = 1.0 / p;
-        return (result == 0 && IsInfinite(p))
-                   ? pow(x, static_cast<double>(y))  // Avoid pow(double, int).
-                   : result;
+  // It's only safe to optimize this when we can compute with integer values or
+  // the exponent is a small, positive constant.
+  if (y >= 0) {
+    uint32_t n = uint32_t(y);
+
+    // NB: Have to take fast-path for n <= 4 to match |MPow::foldsTo|. Otherwise
+    // we risk causing differential testing issues.
+    if (n == 0) {
+      return 1;
+    }
+    if (n == 1) {
+      return x;
+    }
+    if (n == 2) {
+      return x * x;
+    }
+    if (n == 3) {
+      return x * x * x;
+    }
+    if (n == 4) {
+      double z = x * x;
+      return z * z;
+    }
+
+    int64_t i;
+    if (NumberEqualsInt64(x, &i)) {
+      // Special-case: |-0 ** odd| is -0.
+      if (i == 0) {
+        return (n & 1) ? x : 0;
       }
 
-      return p;
+      // Use int64 to cover cases like |Math.pow(2, 53)|.
+      mozilla::CheckedInt64 runningSquare = i;
+      mozilla::CheckedInt64 result = 1;
+      while (true) {
+        if ((n & 1) != 0) {
+          result *= runningSquare;
+          if (!result.isValid()) {
+            break;
+          }
+        }
+
+        n >>= 1;
+        if (n == 0) {
+          return static_cast<double>(result.value());
+        }
+
+        runningSquare *= runningSquare;
+        if (!runningSquare.isValid()) {
+          break;
+        }
+      }
     }
-    m *= m;
+
+    // Fall-back to use std::pow to reduce floating point precision errors.
   }
+
+  return std::pow(x, static_cast<double>(y));  // Avoid pow(double, int).
 }
 
 double js::ecmaPow(double x, double y) {
@@ -458,13 +496,13 @@ double js::ecmaPow(double x, double y) {
    */
   if (IsFinite(x) && x != 0.0) {
     if (y == 0.5) {
-      return sqrt(x);
+      return std::sqrt(x);
     }
     if (y == -0.5) {
-      return 1.0 / sqrt(x);
+      return 1.0 / std::sqrt(x);
     }
   }
-  return pow(x, y);
+  return std::pow(x, y);
 }
 
 bool js::math_pow(JSContext* cx, unsigned argc, Value* vp) {
@@ -606,7 +644,7 @@ double js::math_sin_fdlibm_impl(double x) {
 double js::math_sin_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
-  return sin(x);
+  return std::sin(x);
 }
 
 bool js::math_sin_handle(JSContext* cx, HandleValue val,
@@ -626,7 +664,7 @@ bool js::math_sin(JSContext* cx, unsigned argc, Value* vp) {
 
 double js::math_sqrt_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
-  return sqrt(x);
+  return std::sqrt(x);
 }
 
 bool js::math_sqrt_handle(JSContext* cx, HandleValue number,
@@ -647,7 +685,7 @@ double js::math_tan_fdlibm_impl(double x) {
 double js::math_tan_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
-  return tan(x);
+  return std::tan(x);
 }
 
 bool js::math_tan(JSContext* cx, unsigned argc, Value* vp) {
@@ -784,7 +822,7 @@ double js::hypot4(double x, double y, double z, double w) {
   hypot_step(scale, sumsq, z);
   hypot_step(scale, sumsq, w);
 
-  return scale * sqrt(sumsq);
+  return scale * std::sqrt(sumsq);
 }
 
 double js::hypot3(double x, double y, double z) {
@@ -838,7 +876,7 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
 
   double result = isInfinite ? PositiveInfinity<double>()
                   : isNaN    ? GenericNaN()
-                             : scale * sqrt(sumsq);
+                             : scale * std::sqrt(sumsq);
   res.setDouble(result);
   return true;
 }

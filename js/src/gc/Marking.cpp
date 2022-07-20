@@ -144,7 +144,6 @@ static inline bool IsThingPoisoned(T* thing) {
       JS_OOB_PARSE_NODE_PATTERN,     JS_LIFO_UNDEFINED_PATTERN,
       JS_LIFO_UNINITIALIZED_PATTERN,
   };
-  const int numPoisonBytes = sizeof(poisonBytes) / sizeof(poisonBytes[0]);
   uint32_t* p =
       reinterpret_cast<uint32_t*>(reinterpret_cast<FreeSpan*>(thing) + 1);
   // Note: all free patterns are odd to make the common, not-poisoned case a
@@ -152,8 +151,7 @@ static inline bool IsThingPoisoned(T* thing) {
   if ((*p & 1) == 0) {
     return false;
   }
-  for (int i = 0; i < numPoisonBytes; ++i) {
-    const uint8_t pb = poisonBytes[i];
+  for (const uint8_t pb : poisonBytes) {
     const uint32_t pw = pb | (pb << 8) | (pb << 16) | (pb << 24);
     if (*p == pw) {
       return true;
