@@ -238,16 +238,20 @@ search-one-offs-actions =
 
 ## QuickActions are shown in the urlbar as the user types a matching string
 
-quickactions-clear = Clear history
-quickactions-print = Print
-quickactions-screenshot = Take a screenshot
-quickactions-settings = Open Settings
+quickactions-addons = View Add-ons
+quickactions-bookmarks = View Bookmarks
+quickactions-clearhistory = Clear History
 quickactions-downloads = Open Downloads
-quickactions-viewsource = View Source
 quickactions-inspector = Open Inspector
+quickactions-logins = View Logins
+quickactions-print = Print
+quickactions-private = Open Private Browsing Window
 quickactions-refresh = Refresh { -brand-short-name }
 quickactions-restart = Restart { -brand-short-name }
+quickactions-screenshot2 = Take a Screenshot
+quickactions-settings = Open Settings
 quickactions-update = Update { -brand-short-name }
+quickactions-viewsource = View Source
 
 ## Bookmark Panel
 

@@ -40,9 +40,25 @@ let currentBrowser = () =>
   lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
 
 const DEFAULT_ACTIONS = {
+  addons: {
+    commands: ["addons"],
+    icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
+    label: "quickactions-addons",
+    onPick: openUrlFun("about:addons"),
+  },
+  bookmarks: {
+    commands: ["bookmarks"],
+    icon: "chrome://browser/skin/bookmark.svg",
+    label: "quickactions-bookmarks",
+    onPick: () => {
+      lazy.BrowserWindowTracker.getTopWindow().top.PlacesCommandHook.showPlacesOrganizer(
+        "BookmarksToolbar"
+      );
+    },
+  },
   clear: {
     commands: ["clear"],
-    label: "quickactions-clear",
+    label: "quickactions-clearhistory",
     onPick: openUrlFun(
       `${BASE_URL}delete-browsing-search-download-history-firefox`
     ),
@@ -60,6 +76,11 @@ const DEFAULT_ACTIONS = {
     isActive: currentPageIsWebContentFilter,
     onPick: openInspector,
   },
+  logins: {
+    commands: ["logins", "passwords"],
+    label: "quickactions-logins",
+    onPick: openUrlFun("about:logins"),
+  },
   print: {
     commands: ["print"],
     label: "quickactions-print",
@@ -68,6 +89,16 @@ const DEFAULT_ACTIONS = {
       lazy.BrowserWindowTracker.getTopWindow()
         .document.getElementById("cmd_print")
         .doCommand();
+    },
+  },
+  private: {
+    commands: ["private"],
+    label: "quickactions-private",
+    icon: "chrome://global/skin/icons/indicator-private-browsing.svg",
+    onPick: () => {
+      lazy.BrowserWindowTracker.getTopWindow().OpenBrowserWindow({
+        private: true,
+      });
     },
   },
   refresh: {
@@ -82,7 +113,7 @@ const DEFAULT_ACTIONS = {
   },
   screenshot: {
     commands: ["screenshot"],
-    label: "quickactions-screenshot",
+    label: "quickactions-screenshot2",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
       Services.obs.notifyObservers(
