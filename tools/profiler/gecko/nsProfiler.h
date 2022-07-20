@@ -82,6 +82,17 @@ class nsProfiler final : public nsIProfiler {
   // Returns false if the request could not be sent.
   bool SendProgressRequest(PendingProfile& aPendingProfile);
 
+  // If the log is active, call aJsonLogObjectUpdater(Json::Value&) on the log's
+  // root object.
+  template <typename JsonLogObjectUpdater>
+  void Log(JsonLogObjectUpdater&& aJsonLogObjectUpdater);
+  // If the log is active, call aJsonArrayAppender(Json::Value&) on a Json
+  // array that already contains a timestamp, and to which event-related
+  // elements may be appended.
+  template <typename JsonArrayAppender>
+  void LogEvent(JsonArrayAppender&& aJsonArrayAppender);
+  void LogEventLiteralString(const char* aEventString);
+
   // These fields are all related to profile gathering.
   mozilla::Vector<ExitProfile> mExitProfiles;
   mozilla::Maybe<mozilla::MozPromiseHolder<GatheringPromise>> mPromiseHolder;
