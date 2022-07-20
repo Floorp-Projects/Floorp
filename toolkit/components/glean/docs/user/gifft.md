@@ -51,24 +51,25 @@ This compatibility table explains which Telemetry probe types can be mirrors for
 
 ### The `telemetry_mirror` property in `metrics.yaml`
 
-You must use the C++ enum value of the Histogram, Scalar, or Event being mirrored to.
+You must use the C++ enum identifier of the Histogram, Scalar, or Event being mirrored to:
+* For Histograms, the Telemetry C++ enum identifier is the histogram's name
+    * e.g. The C++ enum identifier for `WR_RENDERER_TIME` is
+      `WR_RENDERER_TIME` (see {searchfox}`gfx/metrics.yaml`)
+* For Scalars, the Telemetry C++ enum identifier is the Scalar category and name in
+  `SCREAMING_SNAKE_CASE` with any `.` replaced with `_`
+    * e.g. The enum identifier for `extensions.startupCache.load_time` is
+      `EXTENSIONS_STARTUPCACHE_LOAD_TIME` (see {searchfox}`toolkit/components/extensions/metrics.yaml`)
+* For Events, the Telemetry C++ enum identifier is the Event category, method, and object
+  rendered in `Snakey_CamelCase`.
+    * e.g. The enum identifier for `page_load.toplevel#content` is
+      `Page_load_Toplevel_Content` (see {searchfox}`dom/metrics.yaml`)
 
-For example, for this Scalar of kind `boolean`:
-```yaml
-category.name:
-  probe_name:
-    kind: boolean
-    ...
-```
+If you use the wrong enum identifier, this will manifest as a build error.
 
-You must provide the following `telemetry_mirror` name for its source
-`boolean` metric's definition:
-
-```yaml
-    telemetry_mirror: CATEGORY_NAME_PROBE_NAME
-```
-
-If you get this wrong it will manifest as a build error.
+If you are having trouble finding the correct conjugation for the mirror Telemetry probe,
+you can find the specific value in the list of all Telemetry C++ enum identifiers in
+`<objdir>/toolkit/components/telemetry/Telemetry{Histogram|Scalar|Event}Enums.h`.
+(Choose the file appropriate to the type of the Telemetry mirror.)
 
 ## Artifact Build Support
 
