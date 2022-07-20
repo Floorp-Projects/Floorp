@@ -2,13 +2,10 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.jsm",
   PermissionTestUtils: "resource://testing-common/PermissionTestUtils.jsm",

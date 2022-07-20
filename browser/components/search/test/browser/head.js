@@ -4,7 +4,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -15,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);

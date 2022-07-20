@@ -9,9 +9,11 @@ var EXPORTED_SYMBOLS = ["ClickHandlerParent", "MiddleMousePasteHandlerParent"];
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   lazy,
   "PrivateBrowsingUtils",

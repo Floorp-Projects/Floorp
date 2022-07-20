@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+const { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 
 const FAVICON_DATA =

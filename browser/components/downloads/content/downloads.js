@@ -50,9 +50,11 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const { Integration } = ChromeUtils.import(
   "resource://gre/modules/Integration.jsm"

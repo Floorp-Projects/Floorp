@@ -15,9 +15,11 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 var readerButton = document.getElementById("reader-mode-button");
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 add_task(async function test_reader_button() {
   registerCleanupFunction(function() {

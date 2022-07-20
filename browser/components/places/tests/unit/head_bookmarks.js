@@ -16,9 +16,11 @@ if (commonFile) {
 
 // Put any other stuff relative to this test folder below.
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
 
 // Needed by some test that relies on having an app registered.
 const { updateAppInfo } = ChromeUtils.import(

@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const TEST_ENGINE_NAME = "Test";

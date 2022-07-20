@@ -7,8 +7,8 @@ var { LoginHelper } = ChromeUtils.import(
   "resource://gre/modules/LoginHelper.jsm"
 );
 var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var { PlacesUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesUtils.sys.mjs"
+var { PlacesUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesUtils.jsm"
 );
 var { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
@@ -22,8 +22,8 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 var { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-var { PlacesTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/PlacesTestUtils.sys.mjs"
+var { PlacesTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PlacesTestUtils.jsm"
 );
 
 ChromeUtils.defineModuleGetter(

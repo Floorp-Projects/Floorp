@@ -24,9 +24,11 @@ ChromeUtils.defineModuleGetter(
   "FileUtils",
   "resource://gre/modules/FileUtils.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "HttpServer",

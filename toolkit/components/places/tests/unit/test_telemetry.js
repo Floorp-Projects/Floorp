@@ -3,8 +3,8 @@
 
 // Tests common Places telemetry probes by faking the telemetry service.
 
-const { PlacesDBUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PlacesDBUtils.sys.mjs"
+const { PlacesDBUtils } = ChromeUtils.import(
+  "resource://gre/modules/PlacesDBUtils.jsm"
 );
 
 var histograms = {

@@ -6,9 +6,11 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();

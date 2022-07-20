@@ -7,9 +7,11 @@ ChromeUtils.defineModuleGetter(
   "FormHistory",
   "resource://gre/modules/FormHistory.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
 
 const REFERENCE_DATE = Date.now();
 

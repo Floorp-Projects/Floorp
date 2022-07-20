@@ -12,18 +12,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
-  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
-  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
-    "resource://testing-common/UrlbarTestUtils.sys.mjs"
+  const { UrlbarTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/UrlbarTestUtils.jsm"
   );
   module.init(this);
   return module;

@@ -7,9 +7,11 @@
 /* import-globals-from ../../mochitest/states.js */
 loadScripts({ name: "states.js", dir: MOCHITESTS_DIR });
 
-ChromeUtils.defineESModuleGetters(this, {
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm"
+);
 
 /**
  * Test rotor with heading

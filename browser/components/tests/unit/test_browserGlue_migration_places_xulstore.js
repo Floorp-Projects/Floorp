@@ -10,8 +10,8 @@ const UI_VERSION = 120;
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { PlacesUIUtils } = ChromeUtils.importESModule(
-  "resource:///modules/PlacesUIUtils.sys.mjs"
+const { PlacesUIUtils } = ChromeUtils.import(
+  "resource:///modules/PlacesUIUtils.jsm"
 );
 
 add_task(async function has_not_used_ctrl_tab_and_its_off() {

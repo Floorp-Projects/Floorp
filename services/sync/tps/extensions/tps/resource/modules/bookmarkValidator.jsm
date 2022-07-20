@@ -25,10 +25,17 @@ ChromeUtils.defineModuleGetter(
   "resource://services-common/async.js"
 );
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PlacesSyncUtils",
+  "resource://gre/modules/PlacesSyncUtils.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
