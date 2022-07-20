@@ -100,7 +100,13 @@ function replaceImportCall(inputFile, jscodeshift, path) {
   }
 
   if (
-    !tryReplacingWithStaticImport(jscodeshift, inputFile, path, resourceURINode)
+    !tryReplacingWithStaticImport(
+      jscodeshift,
+      inputFile,
+      path,
+      resourceURINode,
+      false
+    )
   ) {
     path.node.callee.object.name = "ChromeUtils";
     path.node.callee.property.name = "importESModule";
@@ -420,7 +426,7 @@ function doTranslate(inputFile, jscodeshift, root) {
     if (isImportCall(path.node)) {
       replaceImportCall(inputFile, jscodeshift, path);
     } else if (isImportESModuleCall(path.node)) {
-      replaceImportESModuleCall(inputFile, jscodeshift, path);
+      replaceImportESModuleCall(inputFile, jscodeshift, path, false);
     } else if (isLazyGetterCall(path.node)) {
       replaceLazyGetterCall(inputFile, jscodeshift, path);
     } else if (isLazyGettersCall(path.node)) {
