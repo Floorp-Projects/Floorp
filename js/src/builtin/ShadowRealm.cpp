@@ -168,9 +168,9 @@ static ShadowRealmObject* ValidateShadowRealmObject(JSContext* cx,
   return &maybeUnwrappedO->as<ShadowRealmObject>();
 }
 
-static void ReportPotentiallyDetailedMessage(JSContext* cx,
-                                             const unsigned detailedError,
-                                             const unsigned genericError) {
+void js::ReportPotentiallyDetailedMessage(JSContext* cx,
+                                          const unsigned detailedError,
+                                          const unsigned genericError) {
   Rooted<Value> exception(cx);
   if (!JS_GetPendingException(cx, &exception)) {
     return;

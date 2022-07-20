@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 
+#include "builtin/ShadowRealm.h"
 #include "js/CallAndConstruct.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"
@@ -113,9 +114,9 @@ static bool WrappedFunction_Call(JSContext* cx, unsigned argc, Value* vp) {
     if (!JS::Call(cx, wrappedThisArgument, target, wrappedArgs, &result)) {
       // 11. Else (reordered);
       //     a. Throw a TypeError exception.
-      JS_ClearPendingException(cx);
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE);
+      ReportPotentiallyDetailedMessage(
+          cx, JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE_DETAIL,
+          JSMSG_SHADOW_REALM_WRAPPED_EXECUTION_FAILURE);
       return false;
     }
 
