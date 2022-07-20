@@ -5876,6 +5876,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("font.system.whitelist"),
     PREF_LIST_ENTRY("marionette.log.level"),
     PREF_LIST_ENTRY("media.audio_loopback_dev"),
+    PREF_LIST_ENTRY("media.decoder-doctor."),
     PREF_LIST_ENTRY("media.getusermedia.fake-camera-name"),
     PREF_LIST_ENTRY("media.hls.server.url"),
     PREF_LIST_ENTRY("media.peerconnection.nat_simulator.filtering_type"),
