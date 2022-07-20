@@ -70,7 +70,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
-#include "mozilla/dom/FileSystemQuotaClient.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/StorageActivityService.h"
@@ -3677,8 +3676,7 @@ nsresult QuotaManager::Init() {
                     "QuotaManager IO"));
 
   static_assert(Client::IDB == 0 && Client::DOMCACHE == 1 && Client::SDB == 2 &&
-                    Client::FILESYSTEM == 3 && Client::LS == 4 &&
-                    Client::TYPE_MAX == 5,
+                    Client::LS == 3 && Client::TYPE_MAX == 4,
                 "Fix the registration!");
 
   // Register clients.
@@ -3686,7 +3684,6 @@ nsresult QuotaManager::Init() {
   clients.AppendElement(indexedDB::CreateQuotaClient());
   clients.AppendElement(cache::CreateQuotaClient());
   clients.AppendElement(simpledb::CreateQuotaClient());
-  clients.AppendElement(fs::CreateQuotaClient());
   if (NextGenLocalStorageEnabled()) {
     clients.AppendElement(localstorage::CreateQuotaClient());
   } else {
@@ -3698,12 +3695,11 @@ nsresult QuotaManager::Init() {
   MOZ_ASSERT(mClients->Capacity() == Client::TYPE_MAX,
              "Should be using an auto array with correct capacity!");
 
-  mAllClientTypes.init(ClientTypesArray{
-      Client::Type::IDB, Client::Type::DOMCACHE, Client::Type::SDB,
-      Client::Type::FILESYSTEM, Client::Type::LS});
-  mAllClientTypesExceptLS.init(
-      ClientTypesArray{Client::Type::IDB, Client::Type::DOMCACHE,
-                       Client::Type::SDB, Client::Type::FILESYSTEM});
+  mAllClientTypes.init(ClientTypesArray{Client::Type::IDB,
+                                        Client::Type::DOMCACHE,
+                                        Client::Type::SDB, Client::Type::LS});
+  mAllClientTypesExceptLS.init(ClientTypesArray{
+      Client::Type::IDB, Client::Type::DOMCACHE, Client::Type::SDB});
 
   return NS_OK;
 }
