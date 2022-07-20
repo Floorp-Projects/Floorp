@@ -40,9 +40,10 @@ function tryReplacingWithStaticImport(
   jscodeshift,
   inputFile,
   path,
-  resourceURINode
+  resourceURINode,
+  alwaysReplace
 ) {
-  if (!inputFile.endsWith(".sys.mjs")) {
+  if (!alwaysReplace && !inputFile.endsWith(".sys.mjs")) {
     // Static import is available only in system ESM.
     return false;
   }
@@ -101,7 +102,12 @@ function tryReplacingWithStaticImport(
   return true;
 }
 
-function replaceImportESModuleCall(inputFile, jscodeshift, path) {
+function replaceImportESModuleCall(
+  inputFile,
+  jscodeshift,
+  path,
+  alwaysReplace
+) {
   if (path.node.arguments.length !== 1) {
     warnForPath(
       inputFile,
@@ -117,13 +123,21 @@ function replaceImportESModuleCall(inputFile, jscodeshift, path) {
     return;
   }
 
-  const resourceURI = resourceURINode.value;
-  if (!isTargetESM(resourceURI)) {
-    return;
+  if (!alwaysReplace) {
+    const resourceURI = resourceURINode.value;
+    if (!isTargetESM(resourceURI)) {
+      return;
+    }
   }
 
   // If this cannot be replaced with static import, do nothing.
-  tryReplacingWithStaticImport(jscodeshift, inputFile, path, resourceURINode);
+  tryReplacingWithStaticImport(
+    jscodeshift,
+    inputFile,
+    path,
+    resourceURINode,
+    alwaysReplace
+  );
 }
 
 exports.isImportESModuleCall = isImportESModuleCall;
