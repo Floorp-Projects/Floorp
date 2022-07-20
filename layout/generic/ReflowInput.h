@@ -409,7 +409,6 @@ struct ReflowInput : public SizeComputationInput {
 
   // Cached pointers to the various style structs used during initialization.
   const nsStyleDisplay* mStyleDisplay = nullptr;
-  const nsStyleVisibility* mStyleVisibility = nullptr;
   const nsStylePosition* mStylePosition = nullptr;
   const nsStyleBorder* mStyleBorder = nullptr;
   const nsStyleMargin* mStyleMargin = nullptr;

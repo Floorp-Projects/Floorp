@@ -2724,8 +2724,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       const auto align = isLastLine ? StyleText()->TextAlignForLastLine()
                                     : StyleText()->mTextAlign;
       if (line->mWritingMode.IsVertical() || line->mWritingMode.IsBidiRTL() ||
-          !IsAlignedLeft(align,
-                         aState.mReflowInput.mStyleVisibility->mDirection,
+          !IsAlignedLeft(align, StyleVisibility()->mDirection,
                          StyleTextReset()->mUnicodeBidi, this)) {
         line->MarkDirty();
       }

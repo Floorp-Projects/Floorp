@@ -336,7 +336,6 @@ void ReflowInput::Init(nsPresContext* aPresContext,
 
   mStylePosition = mFrame->StylePosition();
   mStyleDisplay = mFrame->StyleDisplay();
-  mStyleVisibility = mFrame->StyleVisibility();
   mStyleBorder = mFrame->StyleBorder();
   mStyleMargin = mFrame->StyleMargin();
   mStylePadding = mFrame->StylePadding();
