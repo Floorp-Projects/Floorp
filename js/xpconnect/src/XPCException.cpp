@@ -9,6 +9,8 @@
 #include "xpcprivate.h"
 #include "nsError.h"
 
+#include <iterator>
+
 /***************************************************************************/
 /* Quick and dirty mapping of well known result codes to strings. We only
  *  call this when building an exception object, so iterating the short array
@@ -29,7 +31,7 @@ static const struct ResultMap {
     {NS_OK, 0, 0}  // sentinel to mark end of array
 };
 
-#define RESULT_COUNT ((sizeof(map) / sizeof(map[0])) - 1)
+#define RESULT_COUNT (std::size(map) - 1)
 
 // static
 bool nsXPCException::NameAndFormatForNSResult(nsresult rv, const char** name,
