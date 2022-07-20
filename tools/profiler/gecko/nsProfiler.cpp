@@ -46,6 +46,8 @@ using dom::AutoJSAPI;
 using dom::Promise;
 using std::string;
 
+static constexpr size_t scLengthMax = size_t(JS::MaxStringLength);
+
 NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
 nsProfiler::nsProfiler() : mGathering(false) {}
@@ -1326,8 +1328,15 @@ void nsProfiler::FinishGathering() {
   // Close the root object of the generated JSON.
   mWriter->End();
 
+  // And try to resolve the promise with the profile JSON.
+  const size_t len = mWriter->ChunkedWriteFunc().Length();
+  if (len >= scLengthMax) {
+    NS_WARNING("Profile JSON is too big to fit in a string.");
+    ResetGathering(NS_ERROR_FILE_TOO_BIG);
+    return;
+  }
+
   UniquePtr<char[]> buf = mWriter->ChunkedWriteFunc().CopyData();
-  size_t len = strlen(buf.get());
   nsCString result;
   result.Adopt(buf.release(), len);
   mPromiseHolder->Resolve(std::move(result), __func__);
