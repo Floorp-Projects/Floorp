@@ -4,10 +4,13 @@
 
 /* eslint-env mozilla/browser-window */
 
+ChromeUtils.defineESModuleGetters(this, {
+  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentBlockingAllowList:
     "resource://gre/modules/ContentBlockingAllowList.jsm",
-  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

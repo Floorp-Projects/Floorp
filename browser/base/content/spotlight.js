@@ -5,9 +5,9 @@
 const browser = window.docShell.chromeEventHandler;
 const { document: gDoc, XPCOMUtils } = browser.ownerGlobal;
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
 });
 
 const [CONFIG, PARAMS] = window.arguments[0];

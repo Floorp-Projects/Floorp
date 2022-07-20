@@ -7,21 +7,14 @@ const { NewTabUtils } = ChromeUtils.import(
   "resource://gre/modules/NewTabUtils.jsm"
 );
 
-const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-const { Prefs } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
-);
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
-const { SectionsManager } = ChromeUtils.import(
-  "resource://activity-stream/lib/SectionsManager.jsm"
-);
-const { PersistentCache } = ChromeUtils.import(
-  "resource://activity-stream/lib/PersistentCache.jsm"
-);
+import {
+  actionTypes as at,
+  actionCreators as ac,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+import { SectionsManager } from "resource://activity-stream/lib/SectionsManager.sys.mjs";
+import { PersistentCache } from "resource://activity-stream/lib/PersistentCache.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineModuleGetter(

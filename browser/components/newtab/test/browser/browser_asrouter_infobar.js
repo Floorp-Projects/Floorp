@@ -3,14 +3,14 @@
 
 "use strict";
 
-const { InfoBar } = ChromeUtils.import(
-  "resource://activity-stream/lib/InfoBar.jsm"
+const { InfoBar } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/InfoBar.sys.mjs"
 );
-const { CFRMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRMessageProvider.jsm"
+const { CFRMessageProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
-const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ASRouter.sys.mjs"
 );
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"

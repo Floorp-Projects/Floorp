@@ -9,9 +9,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
 
 class InfoBarNotification {

@@ -13,12 +13,15 @@ const NETWORK_TRR_MODE_PREF = "network.trr.mode";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Spotlight: "resource://activity-stream/lib/Spotlight.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   UITour: "resource:///modules/UITour.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
 });
 
 const SpecialMessageActions = {

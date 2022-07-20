@@ -7,25 +7,20 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-const { TippyTopProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/TippyTopProvider.jsm"
-);
-const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } = ChromeUtils.import(
-  "resource://activity-stream/common/Reducers.jsm"
-);
-const { Dedupe } = ChromeUtils.import(
-  "resource://activity-stream/common/Dedupe.jsm"
-);
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
-const { getDefaultOptions } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
-);
-const {
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
+import {
+  insertPinned,
+  TOP_SITES_MAX_SITES_PER_ROW,
+} from "resource://activity-stream/common/Reducers.sys.mjs";
+import { Dedupe } from "resource://activity-stream/common/Dedupe.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+import { getDefaultOptions } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
+
+import {
   CUSTOM_SEARCH_SHORTCUTS,
   SEARCH_SHORTCUTS_EXPERIMENT,
   SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
@@ -33,29 +28,19 @@ const {
   checkHasSearchEngine,
   getSearchProvider,
   getSearchFormURL,
-} = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm");
+} from "resource://activity-stream/lib/SearchShortcuts.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FilterAdult",
-  "resource://activity-stream/lib/FilterAdult.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LinksCache",
-  "resource://activity-stream/lib/LinksCache.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.sys.mjs",
+  LinksCache: "resource://activity-stream/lib/LinksCache.sys.mjs",
+  Screenshots: "resource://activity-stream/lib/Screenshots.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Screenshots",
-  "resource://activity-stream/lib/Screenshots.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

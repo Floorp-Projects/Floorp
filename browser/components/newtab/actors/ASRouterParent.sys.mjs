@@ -7,13 +7,11 @@
 
 const {
   MESSAGE_TYPE_HASH: { BLOCK_MESSAGE_BY_ID },
-} = ChromeUtils.import("resource://activity-stream/common/ActorConstants.jsm");
-const { ASRouterNewTabHook } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterNewTabHook.jsm"
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/common/ActorConstants.sys.mjs"
 );
-const { ASRouterDefaultConfig } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterDefaultConfig.jsm"
-);
+import { ASRouterNewTabHook } from "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs";
+import { ASRouterDefaultConfig } from "resource://activity-stream/lib/ASRouterDefaultConfig.sys.mjs";
 
 export class ASRouterTabs {
   constructor({ asRouterNewTabHook }) {

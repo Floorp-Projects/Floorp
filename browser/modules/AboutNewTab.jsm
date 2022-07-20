@@ -14,8 +14,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ActivityStream: "resource://activity-stream/lib/ActivityStream.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActivityStream: "resource://activity-stream/lib/ActivityStream.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   RemotePages:
     "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",

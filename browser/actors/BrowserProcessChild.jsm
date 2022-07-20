@@ -14,11 +14,9 @@ ChromeUtils.defineModuleGetter(
   "resource:///actors/WebRTCChild.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutHomeStartupCacheChild",
-  "resource:///modules/AboutNewTabService.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutHomeStartupCacheChild: "resource:///modules/AboutNewTabService.sys.mjs",
+});
 
 class BrowserProcessChild extends JSProcessActorChild {
   receiveMessage(message) {

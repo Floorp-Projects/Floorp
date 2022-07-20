@@ -3,8 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { AboutHomeStartupCacheChild } = ChromeUtils.import(
-  "resource:///modules/AboutNewTabService.jsm"
+const { AboutHomeStartupCacheChild } = ChromeUtils.importESModule(
+  "resource:///modules/AboutNewTabService.sys.mjs"
 );
 
 /**

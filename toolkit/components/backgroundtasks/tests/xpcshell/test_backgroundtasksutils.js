@@ -12,8 +12,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.sys.mjs",
 });
 
 setupProfileService();

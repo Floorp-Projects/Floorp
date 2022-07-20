@@ -11,51 +11,49 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SnippetsTestMessageProvider:
-    "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
-  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
-  Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
-  ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
-  ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.jsm",
-  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
-  MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.jsm",
-  InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
-  TARGETING_PREFERENCES:
-    "resource://activity-stream/lib/ASRouterPreferences.jsm",
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterPreferences:
+    "resource://activity-stream/lib/ASRouterPreferences.sys.mjs",
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.sys.mjs",
   ASRouterTriggerListeners:
-    "resource://activity-stream/lib/ASRouterTriggerListeners.jsm",
+    "resource://activity-stream/lib/ASRouterTriggerListeners.sys.mjs",
+  InfoBar: "resource://activity-stream/lib/InfoBar.sys.mjs",
+  MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.sys.mjs",
+  PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.sys.mjs",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
+  SnippetsTestMessageProvider:
+    "resource://activity-stream/lib/SnippetsTestMessageProvider.sys.mjs",
+  Spotlight: "resource://activity-stream/lib/Spotlight.sys.mjs",
+  TARGETING_PREFERENCES:
+    "resource://activity-stream/lib/ASRouterPreferences.sys.mjs",
+  ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.sys.mjs",
+  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Downloader: "resource://services-settings/Attachments.jsm",
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
+  ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
   MacAttribution: "resource:///modules/MacAttribution.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
-const { actionCreators: ac } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
+import { actionCreators as ac } from "resource://activity-stream/common/Actions.sys.mjs";
+import { CFRMessageProvider } from "resource://activity-stream/lib/CFRMessageProvider.sys.mjs";
+import { OnboardingMessageProvider } from "resource://activity-stream/lib/OnboardingMessageProvider.sys.mjs";
 
-const { CFRMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRMessageProvider.jsm"
-);
-const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
-);
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-const { CFRPageActions } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRPageActions.jsm"
-);
+import { CFRPageActions } from "resource://activity-stream/lib/CFRPageActions.sys.mjs";
+
 const { AttributionCode } = ChromeUtils.import(
   "resource:///modules/AttributionCode.jsm"
 );

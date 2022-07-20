@@ -5,13 +5,8 @@
 
 "use strict";
 
-const { ASRouterPreferences } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouterPreferences.jsm"
-);
-
-const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.import(
-  "resource://activity-stream/common/ActorConstants.jsm"
-);
+import { ASRouterPreferences } from "resource://activity-stream/lib/ASRouterPreferences.sys.mjs";
+import { MESSAGE_TYPE_HASH as msg } from "resource://activity-stream/common/ActorConstants.sys.mjs";
 
 export class ASRouterParentProcessMessageHandler {
   constructor({

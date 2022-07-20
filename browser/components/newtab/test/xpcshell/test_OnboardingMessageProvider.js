@@ -4,8 +4,8 @@
 const { JsonSchema } = ChromeUtils.import(
   "resource://gre/modules/JsonSchema.jsm"
 );
-const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+const { OnboardingMessageProvider } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/OnboardingMessageProvider.sys.mjs"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 

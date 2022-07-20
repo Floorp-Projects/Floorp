@@ -1,11 +1,11 @@
 "use strict";
 
-const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ASRouter.sys.mjs"
 );
 
-const { TelemetryFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
+const { TelemetryFeed } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
 );
 
 add_task(async function render_below_search_snippet() {

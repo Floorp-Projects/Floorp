@@ -7,14 +7,13 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const {
-  actionCreators: ac,
-  actionTypes: at,
-  actionUtils: au,
-} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
-const { shortURL } = ChromeUtils.import(
-  "resource://activity-stream/lib/ShortURL.jsm"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+  actionUtils as au,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
+
 const { AboutNewTab } = ChromeUtils.import(
   "resource:///modules/AboutNewTab.jsm"
 );

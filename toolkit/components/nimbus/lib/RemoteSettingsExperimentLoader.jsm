@@ -15,8 +15,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",

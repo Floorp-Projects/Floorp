@@ -7,13 +7,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
-  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
 ChromeUtils.defineModuleGetter(
   lazy,

@@ -19,10 +19,17 @@ const { AppConstants } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.sys.mjs",
+  ASRouterDefaultConfig:
+    "resource://activity-stream/lib/ASRouterDefaultConfig.sys.mjs",
+  ASRouterNewTabHook:
+    "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
+  OnboardingMessageProvider:
+    "resource://activity-stream/lib/OnboardingMessageProvider.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
@@ -39,10 +46,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
-  ASRouterDefaultConfig:
-    "resource://activity-stream/lib/ASRouterDefaultConfig.jsm",
-  ASRouterNewTabHook: "resource://activity-stream/lib/ASRouterNewTabHook.jsm",
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
   Blocklist: "resource://gre/modules/Blocklist.jsm",
@@ -70,8 +73,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
-  OnboardingMessageProvider:
-    "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
   OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
@@ -359,10 +360,10 @@ let JSWINDOWACTORS = {
 
   AboutWelcome: {
     parent: {
-      moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
+      esModuleURI: "resource:///actors/AboutWelcomeParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
+      esModuleURI: "resource:///actors/AboutWelcomeChild.sys.mjs",
       events: {
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.
@@ -731,10 +732,10 @@ let JSWINDOWACTORS = {
 
   ASRouter: {
     parent: {
-      moduleURI: "resource:///actors/ASRouterParent.jsm",
+      esModuleURI: "resource:///actors/ASRouterParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/ASRouterChild.jsm",
+      esModuleURI: "resource:///actors/ASRouterChild.sys.mjs",
       events: {
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.

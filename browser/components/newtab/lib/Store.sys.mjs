@@ -3,18 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ActivityStreamMessageChannel } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamMessageChannel.jsm"
-);
-const { ActivityStreamStorage } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamStorage.jsm"
-);
-const { Prefs } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
-);
-const { reducers } = ChromeUtils.import(
-  "resource://activity-stream/common/Reducers.jsm"
-);
+import { ActivityStreamMessageChannel } from "resource://activity-stream/lib/ActivityStreamMessageChannel.sys.mjs";
+import { ActivityStreamStorage } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
+import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
+import { reducers } from "resource://activity-stream/common/Reducers.sys.mjs";
+
 const { redux } = ChromeUtils.import(
   "resource://activity-stream/vendor/Redux.jsm"
 );

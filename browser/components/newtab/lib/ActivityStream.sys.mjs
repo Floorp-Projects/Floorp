@@ -9,11 +9,9 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DEFAULT_SITES",
-  "resource://activity-stream/lib/DefaultSites.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DEFAULT_SITES: "resource://activity-stream/lib/DefaultSites.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -23,84 +21,30 @@ ChromeUtils.defineModuleGetter(
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
-const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
-  "resource://activity-stream/common/Actions.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutPreferences",
-  "resource://activity-stream/lib/AboutPreferences.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DefaultPrefs",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NewTabInit",
-  "resource://activity-stream/lib/NewTabInit.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SectionsFeed",
-  "resource://activity-stream/lib/SectionsManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RecommendationProvider",
-  "resource://activity-stream/lib/RecommendationProvider.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PlacesFeed",
-  "resource://activity-stream/lib/PlacesFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrefsFeed",
-  "resource://activity-stream/lib/PrefsFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Store",
-  "resource://activity-stream/lib/Store.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SystemTickFeed",
-  "resource://activity-stream/lib/SystemTickFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryFeed",
-  "resource://activity-stream/lib/TelemetryFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FaviconFeed",
-  "resource://activity-stream/lib/FaviconFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TopSitesFeed",
-  "resource://activity-stream/lib/TopSitesFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TopStoriesFeed",
-  "resource://activity-stream/lib/TopStoriesFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "HighlightsFeed",
-  "resource://activity-stream/lib/HighlightsFeed.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DiscoveryStreamFeed",
-  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
-);
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "resource://activity-stream/common/Actions.sys.mjs";
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutPreferences: "resource://activity-stream/lib/AboutPreferences.sys.mjs",
+  DefaultPrefs: "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs",
+  DiscoveryStreamFeed:
+    "resource://activity-stream/lib/DiscoveryStreamFeed.sys.mjs",
+  FaviconFeed: "resource://activity-stream/lib/FaviconFeed.sys.mjs",
+  HighlightsFeed: "resource://activity-stream/lib/HighlightsFeed.sys.mjs",
+  NewTabInit: "resource://activity-stream/lib/NewTabInit.sys.mjs",
+  PlacesFeed: "resource://activity-stream/lib/PlacesFeed.sys.mjs",
+  PrefsFeed: "resource://activity-stream/lib/PrefsFeed.sys.mjs",
+  RecommendationProvider:
+    "resource://activity-stream/lib/RecommendationProvider.sys.mjs",
+  SectionsFeed: "resource://activity-stream/lib/SectionsManager.sys.mjs",
+  Store: "resource://activity-stream/lib/Store.sys.mjs",
+  SystemTickFeed: "resource://activity-stream/lib/SystemTickFeed.sys.mjs",
+  TelemetryFeed: "resource://activity-stream/lib/TelemetryFeed.sys.mjs",
+  TopSitesFeed: "resource://activity-stream/lib/TopSitesFeed.sys.mjs",
+  TopStoriesFeed: "resource://activity-stream/lib/TopStoriesFeed.sys.mjs",
+});
 
 const REGION_STORIES_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-stories-config";

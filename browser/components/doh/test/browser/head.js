@@ -1,7 +1,10 @@
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
   DoHController: "resource:///modules/DoHController.jsm",
   DoHConfigController: "resource:///modules/DoHConfig.jsm",
   DoHTestUtils: "resource://testing-common/DoHTestUtils.jsm",

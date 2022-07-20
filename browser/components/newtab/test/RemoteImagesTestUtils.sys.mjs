@@ -5,9 +5,11 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { RemoteImages, REMOTE_IMAGES_PATH } = ChromeUtils.import(
-  "resource://activity-stream/lib/RemoteImages.jsm"
-);
+import {
+  RemoteImages,
+  REMOTE_IMAGES_PATH,
+} from "resource://activity-stream/lib/RemoteImages.sys.mjs";
+
 const RS_SERVER_PREF = "services.settings.server";
 
 class RemoteSettingsRecord {

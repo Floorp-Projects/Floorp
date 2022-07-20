@@ -4,14 +4,10 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  shortURL: "resource://activity-stream/lib/ShortURL.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  shortURL: "resource://activity-stream/lib/ShortURL.sys.mjs",
 });
 
 /**
