@@ -13,6 +13,9 @@ const { isESMified, getESMFiles } = require(_path.resolve(
   "./is-esmified.js"
 ));
 const {
+  calleeToString,
+  jsmExtPattern,
+  esmifyExtension,
   isIdentifier,
   isString,
   warnForPath,
@@ -67,18 +70,6 @@ function isTargetESM(resourceURI) {
   return true;
 }
 
-function calleeToString(node) {
-  if (node.type === "Identifier") {
-    return node.name;
-  }
-
-  if (node.type === "MemberExpression" && !node.computed) {
-    return calleeToString(node.object) + "." + node.property.name;
-  }
-
-  return "???";
-}
-
 function isImportCall(node) {
   const s = calleeToString(node.callee);
   return ["Cu.import", "ChromeUtils.import"].includes(s);
@@ -105,12 +96,6 @@ function isLazyGettersCall(node) {
 function isESModuleGettersCall(node) {
   const s = calleeToString(node.callee);
   return ["ChromeUtils.defineESModuleGetters"].includes(s);
-}
-
-const extPattern = /\.(jsm|js|jsm\.js)$/;
-
-function esmify(path) {
-  return path.replace(extPattern, ".sys.mjs");
 }
 
 // Replace `ChromeUtils.import`, `Cu.import`, and `ChromeUtils.importESModule`
@@ -170,7 +155,7 @@ function tryReplacingWithStaticImport(
 
   // If this is `ChromeUtils.import` or `Cu.import`, replace the extension.
   // no-op for `ChromeUtils.importESModule`.
-  resourceURINode.value = esmify(resourceURI);
+  resourceURINode.value = esmifyExtension(resourceURI);
 
   const e = jscodeshift.importDeclaration(specs, resourceURINode);
   e.comments = path.parent.parent.node.comments;
@@ -193,7 +178,7 @@ function replaceImportCall(inputFile, jscodeshift, path) {
   }
 
   const resourceURI = resourceURINode.value;
-  if (!resourceURI.match(extPattern)) {
+  if (!resourceURI.match(jsmExtPattern)) {
     warnForPath(inputFile, path, `Non-jsm: ${resourceURI}`);
     return;
   }
@@ -207,7 +192,7 @@ function replaceImportCall(inputFile, jscodeshift, path) {
   ) {
     path.node.callee.object.name = "ChromeUtils";
     path.node.callee.property.name = "importESModule";
-    resourceURINode.value = esmify(resourceURI);
+    resourceURINode.value = esmifyExtension(resourceURI);
   }
 }
 
@@ -352,7 +337,7 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
   }
 
   const resourceURI = resourceURINode.value;
-  if (!resourceURI.match(extPattern)) {
+  if (!resourceURI.match(jsmExtPattern)) {
     warnForPath(inputFile, path, `Non-js/jsm: ${resourceURI}`);
     return;
   }
@@ -361,7 +346,7 @@ function replaceLazyGetterCall(inputFile, jscodeshift, path) {
     return;
   }
 
-  resourceURINode.value = esmify(resourceURI);
+  resourceURINode.value = esmifyExtension(resourceURI);
   const prop = jscodeshift.property(
     "init",
     jscodeshift.identifier(nameNode.value),
@@ -413,7 +398,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
     }
 
     const resourceURI = resourceURINode.value;
-    if (!resourceURI.match(extPattern)) {
+    if (!resourceURI.match(jsmExtPattern)) {
       warnForPath(inputFile, path, `Non-js/jsm: ${resourceURI}`);
       jsmProps.push(prop);
       continue;
@@ -441,7 +426,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
 
       for (const prop of esmProps) {
         const resourceURINode = prop.value;
-        resourceURINode.value = esmify(resourceURINode.value);
+        resourceURINode.value = esmifyExtension(resourceURINode.value);
         callStmt.expression.arguments[1].properties.push(prop);
       }
       sortProps(callStmt.expression.arguments[1]);
@@ -452,7 +437,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
       path.node.callee.property.name = "defineESModuleGetters";
       for (const prop of esmProps) {
         const resourceURINode = prop.value;
-        resourceURINode.value = esmify(resourceURINode.value);
+        resourceURINode.value = esmifyExtension(resourceURINode.value);
       }
     }
   } else {
@@ -480,7 +465,7 @@ function replaceLazyGettersCall(inputFile, jscodeshift, path) {
 
     for (const prop of esmProps) {
       const resourceURINode = prop.value;
-      resourceURINode.value = esmify(resourceURINode.value);
+      resourceURINode.value = esmifyExtension(resourceURINode.value);
       callStmt.expression.arguments[1].properties.push(prop);
     }
     sortProps(callStmt.expression.arguments[1]);
@@ -530,7 +515,7 @@ function tryReplaceActorDefinition(inputFile, path, name) {
   }
 
   const moduleURI = moduleURIProp.value.value;
-  if (!moduleURI.match(extPattern)) {
+  if (!moduleURI.match(jsmExtPattern)) {
     warnForPath(inputFile, path, `${name} Non-js/jsm: ${moduleURI}`);
     return;
   }
@@ -540,7 +525,7 @@ function tryReplaceActorDefinition(inputFile, path, name) {
   }
 
   moduleURIProp.key.name = "esModuleURI";
-  moduleURIProp.value.value = esmify(moduleURI);
+  moduleURIProp.value.value = esmifyExtension(moduleURI);
 }
 
 function doTranslate(inputFile, jscodeshift, root) {

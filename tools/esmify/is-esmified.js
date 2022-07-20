@@ -8,6 +8,7 @@
 
 const fs = require("fs");
 const _path = require("path");
+const { esmifyExtension } = require(_path.resolve(__dirname, "./utils.js"));
 
 /* global exports */
 
@@ -23,14 +24,10 @@ function generateESMURIMap(jsm_map) {
     if (typeof jsms === "string") {
       jsms = [jsms];
     }
-    esm_map[esmify(uri)] = jsms.map(esmify);
+    esm_map[esmifyExtension(uri)] = jsms.map(esmifyExtension);
   }
 
   return esm_map;
-}
-
-function esmify(path) {
-  return path.replace(/\.(jsm|js|jsm\.js)$/, ".sys.mjs");
 }
 
 function isESMifiedSlow(resourceURI) {
@@ -49,7 +46,7 @@ function isESMifiedSlow(resourceURI) {
     if (fs.existsSync(prefix + jsm)) {
       return { result: false, jsms };
     }
-    const esm = esmify(jsm);
+    const esm = esmifyExtension(jsm);
     if (!fs.existsSync(prefix + esm)) {
       return { result: false, jsms };
     }
@@ -65,7 +62,7 @@ function isESMified(resourceURI, files) {
   }
 
   for (const jsm of isESMified_memo[resourceURI].jsms) {
-    files.push(esmify(jsm));
+    files.push(esmifyExtension(jsm));
   }
 
   return isESMified_memo[resourceURI].result;
