@@ -764,6 +764,12 @@
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">解锁</string>
 
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">指纹确认</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">你可以验证指纹以继续当前应用会话。</string>
+
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">触摸指纹传感器以继续。</string>
 
