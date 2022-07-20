@@ -177,7 +177,7 @@ mozharness:
         cache-dotcache: true
         cwd: '{checkout}/testing/mozharness'
         command: >
-            /usr/local/bin/tox -e py36-hg5.2
+            /usr/local/bin/tox -e py39-hg5.2
     when:
         files-changed:
             - 'testing/mozharness/**'
