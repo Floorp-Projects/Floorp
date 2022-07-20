@@ -42,12 +42,6 @@ TEST(FOG, FogInitDoesntCrash)
   ASSERT_EQ(NS_OK, fog_test_reset(&empty, &empty));
 }
 
-extern "C" void Rust_MeasureInitializeTime();
-// Disabled because this depends on the preinit buffer not overflowing,
-// which currently can't be guaranteed. See bug 1756057 for how to fix it.
-TEST(FOG, DISABLED_TestMeasureInitializeTime)
-{ Rust_MeasureInitializeTime(); }
-
 TEST(FOG, BuiltinPingsRegistered)
 {
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
