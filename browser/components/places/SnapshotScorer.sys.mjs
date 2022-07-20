@@ -8,8 +8,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Snapshots: "resource:///modules/Snapshots.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Snapshots: "resource:///modules/Snapshots.jsm",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 

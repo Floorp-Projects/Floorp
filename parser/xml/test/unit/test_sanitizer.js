@@ -22,8 +22,8 @@ function run_test() {
     // is set to true *before* profile-change-teardown notifications are fired.
     // To work around this, just force the history service to be created earlier:
 
-    let { PlacesUtils } = ChromeUtils.import(
-      "resource://gre/modules/PlacesUtils.jsm"
+    let { PlacesUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PlacesUtils.sys.mjs"
     );
     Assert.ok(
       PlacesUtils.history.databaseStatus <= 1,

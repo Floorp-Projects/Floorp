@@ -20,8 +20,11 @@ const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",

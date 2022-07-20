@@ -4,11 +4,11 @@
 /**
  * Tests PlacesPreviews.jsm
  */
-const { PlacesPreviews } = ChromeUtils.import(
-  "resource://gre/modules/PlacesPreviews.jsm"
+const { PlacesPreviews } = ChromeUtils.importESModule(
+  "resource://gre/modules/PlacesPreviews.sys.mjs"
 );
-const { PlacesTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PlacesTestUtils.jsm"
+const { PlacesTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
 
 const TEST_URL1 = "http://example.com/";

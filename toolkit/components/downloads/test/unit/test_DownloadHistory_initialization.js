@@ -6,8 +6,8 @@
 const { DownloadHistory } = ChromeUtils.import(
   "resource://gre/modules/DownloadHistory.jsm"
 );
-const { PlacesTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PlacesTestUtils.jsm"
+const { PlacesTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
 
 let baseDate = new Date("2000-01-01");

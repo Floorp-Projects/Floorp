@@ -8,12 +8,15 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.sys.mjs",
+  PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.sys.mjs",
+  Snapshots: "resource:///modules/Snapshots.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.jsm",
-  PinnedGroupBuilder: "resource:///modules/PinnedGroupBuilder.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  Snapshots: "resource:///modules/Snapshots.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

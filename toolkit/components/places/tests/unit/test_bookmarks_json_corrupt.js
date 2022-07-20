@@ -19,8 +19,8 @@
  * throw an error.
  */
 
-const { BookmarkJSONUtils } = ChromeUtils.import(
-  "resource://gre/modules/BookmarkJSONUtils.jsm"
+const { BookmarkJSONUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/BookmarkJSONUtils.sys.mjs"
 );
 
 add_task(async function test_import_bookmarks() {

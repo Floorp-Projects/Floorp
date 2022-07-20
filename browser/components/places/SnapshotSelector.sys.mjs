@@ -10,12 +10,15 @@ const { EventEmitter } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
+  SnapshotScorer: "resource:///modules/SnapshotScorer.sys.mjs",
+  Snapshots: "resource:///modules/Snapshots.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
-  Snapshots: "resource:///modules/Snapshots.jsm",
-  SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
