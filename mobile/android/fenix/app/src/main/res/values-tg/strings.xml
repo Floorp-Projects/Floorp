@@ -784,6 +784,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Аз дастгоҳҳои дигар</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Барои дидани таърихи ҳамоҳангшуда аз дастгоҳҳои дигари худ ворид шавед.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Ворид шудан</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Ё барои оғози ҳамоҳангсозӣ, ҳисоби Firefox-ро эҷод кунед</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Боргириҳо тоза шуданд</string>
@@ -1852,4 +1859,5 @@
     <string name="experiments_snackbar">Барои фиристодани маълумот дурисанҷро фаъол созед.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Гузариш ба танзимот</string>
+    <string name="firefox_suggest_header">Пешниҳоди Firefox</string>
 </resources>

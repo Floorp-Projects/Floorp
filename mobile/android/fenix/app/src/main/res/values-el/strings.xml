@@ -794,6 +794,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Από άλλες συσκευές</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Συνδεθείτε για να δείτε το ιστορικό από τις άλλες συσκευές σας.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Σύνδεση</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Ή δημιουργήστε έναν λογαριασμό Firefox για να ξεκινήσει ο συγχρονισμός</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Οι λήψεις διαγράφηκαν</string>
@@ -1870,4 +1877,5 @@
     <string name="experiments_snackbar">Ενεργοποιήστε την τηλεμετρία για την αποστολή δεδομένων.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Μετάβαση στις ρυθμίσεις</string>
+    <string name="firefox_suggest_header">Προτάσεις Firefox</string>
 </resources>

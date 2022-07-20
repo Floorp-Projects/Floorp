@@ -795,6 +795,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Från andra enheter</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Logga in för att se historik synkroniserad från dina andra enheter.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Logga in</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Eller skapa ett Firefox-konto för att börja synkronisera</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Nedladdningar har tagits bort</string>
@@ -1863,4 +1870,5 @@
     <string name="experiments_snackbar">Aktivera telemetri för att skicka data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Gå till inställningar</string>
+    <string name="firefox_suggest_header">Firefox-förslag</string>
 </resources>

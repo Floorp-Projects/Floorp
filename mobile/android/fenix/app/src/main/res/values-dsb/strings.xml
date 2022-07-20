@@ -785,6 +785,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Z drugich rědow</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Pśizjawśo se, aby historiju wiźeł, kótaruž sćo synchronizěrował ze swójich drugich rědow.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Pśizjawiś</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Abo załožćo konto Firefox, aby synchronizěrowanje zachopił</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Ześěgnjenja wótwónoźone</string>
@@ -1850,4 +1857,5 @@
     <string name="experiments_snackbar">Zmóžniśo telemetriju, aby daty słał.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">K nastajenjam</string>
+    <string name="firefox_suggest_header">Naraźenja Firefox</string>
 </resources>

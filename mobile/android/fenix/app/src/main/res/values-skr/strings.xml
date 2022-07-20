@@ -42,8 +42,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">حالیہ کتاب نشان</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">سارے ݙکھاؤ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">سارے محفوظ تھئے کتاب نشان ݙکھاؤ</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -352,7 +350,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">تخصیص کرو</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">آپݨے فائرفوکس کھاتے نال کتاب نشانیاں، تاریخ تے ٻیا ٻہوں کجھ ہم وقت کرو</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">آپݨے فائرفوکس کھاتے نال کتاب نشانیاں، تاریخ تے ٻیا ٻہوں کجھ ہم وقت کرو</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">ٹیباں، نشانیاں، پاس ورڈ تے ٻیا ٻہوں کجھ ہم وقت کرݨ کیتے سائن ان تھیوو۔</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">فائرفوکس کھاتہ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -528,7 +528,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ہم وقت کرݨ چالو کرو</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ہم وقت کرݨ چالو کرو</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">آپݨا ڈیٹا ہم وقت کرو تے محفوظ کرو</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ولدا کنکٹ کرݨ کیتے سائن ان تھیوو</string>
     <!-- Preference for removing FxA account -->
@@ -785,6 +787,13 @@
     <string name="history_synced_from_other_devices">ٻیاں ڈیوائساں کنوں ہم وقت تھیاں</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">ٻیاں ڈیوائساں کنوں</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">آپݨیاں ٻنھاں ڈیوائساں کنوں ہم وقت تھئی تاریخ ݙیکھݨ کیتے سائن ان تھیوو۔</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">سائن ان</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u> یا ہم وقت کرݨ کیتے فائرفوکس کھاتہ بݨاؤ</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1073,8 +1082,6 @@
     <string name="snackbar_tabs_closed">ٹیب بند تھی ڳئے</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">کتاب نشانیاں محفوظ تھی ڳیاں!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">اہم سائٹاں وچ شامل تھی ڳیا!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">شارٹ کٹاں وچ شامل تھی ڳیا!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1698,10 +1705,6 @@
     <string name="no_site_exceptions">کوئی سائٹ استثنات کائنی</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">بھلا تہاکوں پک ہے جو تساں ایہ نشانی مٹاوݨ چاہندے ہو؟</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">بہترین سائٹاں وچ شامل کرو</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">بہترین سائٹاں کنوں ہٹاؤ</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">شارٹ کٹاں وچ شامل کرو</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1777,12 +1780,8 @@
     <string name="synced_tabs_collapse_group">ٹیباں کوں ہم وقت کرݨ کیتے گروپ کٹھے کرو</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">اہم سائٹ حد پوری تھی ڳئی</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">شاٹ کٹ حد پوری تھی ڳئی</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">نویں اہم سائٹ شامل کرݨ کیتے، ہک ہٹاؤ۔ ٹچ کرتے، سائٹ قاٻو کرو تے ہٹاؤ چݨو۔</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">نواں شاٹ کٹ شامل کرݨ کیتے، ہک ہٹاؤ۔ ٹچ کرتے، سائٹ قاٻو کرو تے ہٹاؤ چݨو۔</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1791,8 +1790,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">شارٹ کٹ</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ناں</string>
-    <!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">بہترین سائٹ ناں</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">شارٹ کٹ ناں</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
@@ -1864,4 +1861,5 @@
     <string name="experiments_snackbar">ڈیٹا پٹھݨ کیتے ٹیلی میٹری فعال کرو۔</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ترتیباں تے ون٘ڄو</string>
+    <string name="firefox_suggest_header">فائرفوکس تجویز</string>
 </resources>

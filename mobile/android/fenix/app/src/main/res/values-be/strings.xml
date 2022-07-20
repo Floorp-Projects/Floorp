@@ -750,7 +750,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Прыватны рэжым)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Іншыя карткі</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Іншыя карткі</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -785,6 +785,13 @@
     <string name="history_synced_from_other_devices">Сінхранавана з іншых прылад</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">З іншых прылад</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Увайдзіце, каб убачыць гісторыю, сінхранізаваную з іншых вашых прылад.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Увайсці</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Або стварыць уліковы запіс Firefox, каб пачаць сінхранізацыю</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1876,4 +1883,5 @@
     <string name="experiments_snackbar">Уключыць тэлеметрыю для адпраўкі дадзеных.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Перайсці ў налады</string>
+    <string name="firefox_suggest_header">Прапановы Firefox</string>
 </resources>

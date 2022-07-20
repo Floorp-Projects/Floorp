@@ -802,6 +802,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Da altri dispositivi</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Accedi per visualizzare la cronologia sincronizzata con altri dispositivi.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Accedi</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Oppure crea un account Firefox per iniziare a sincronizzare</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Download eliminati</string>
@@ -1892,4 +1899,5 @@
     <string name="experiments_snackbar">Attiva la telemetria per inviare dati.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Vai alle impostazioni</string>
+    <string name="firefox_suggest_header">Firefox Suggest</string>
 </resources>

@@ -786,6 +786,14 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">ממכשירים אחרים</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">יש להיכנס כדי לצפות בהיסטוריה המסונכרנת משאר מהמכשירים שלך.</string>
+
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">כניסה</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>או יצירת חשבון Firefox כדי להתחיל לסנכרן</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ההורדות הוסרו</string>
@@ -1754,7 +1762,7 @@
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">אין לך לשוניות פתוחות ב־Firefox בשאר המכשירים שלך.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
-    <string name="synced_tabs_sign_in_message">הצגת רשימת הלשוניות מהמכשירים האחרים שלך.</string>
+    <string name="synced_tabs_sign_in_message">הצגת רשימת לשוניות משאר המכשירים שלך.</string>
 
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">יש להתחבר כדי לסנכרן</string>
@@ -1852,4 +1860,5 @@
     <string name="experiments_snackbar">יש להפעיל טלמטריה כדי לשלוח נתונים.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">מעבר להגדרות</string>
+    <string name="firefox_suggest_header">הצעות של Firefox</string>
 </resources>

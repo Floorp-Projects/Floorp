@@ -797,6 +797,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">來自其他裝置</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">登入以檢視您其他裝置中的瀏覽紀錄。</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">登入</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>或註冊 Firefox 帳號進行同步</u>]]></string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">已移除下載紀錄</string>
@@ -1882,4 +1889,5 @@
     <string name="experiments_snackbar">開啟 Telemetry 功能即可傳送資料。</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">開啟設定</string>
+    <string name="firefox_suggest_header">Firefox 建議</string>
 </resources>
