@@ -675,7 +675,8 @@ const MESSAGES = () => [
       promoEnabled: true,
       promoType: "PIN",
       promoHeader: "Private browsing freedom in one click",
-      promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
+      promoImageLarge:
+        "chrome://browser/content/assets/private-promo-asset.svg",
       promoLinkText: "Pin To Taskbar",
       promoLinkType: "button",
       promoSectionStyle: "below-search",
