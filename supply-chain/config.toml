@@ -1089,10 +1089,6 @@ criteria = "safe-to-run"
 version = "0.0.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.naga]]
-version = "0.8.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.net2]]
 version = "0.2.37"
 criteria = "safe-to-run"
@@ -1771,18 +1767,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.webrtc-sdp]]
 version = "0.3.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.wgpu-core]]
-version = "0.12.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.wgpu-hal]]
-version = "0.12.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.wgpu-types]]
-version = "0.12.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.whatsys]]

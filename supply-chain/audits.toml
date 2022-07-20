@@ -108,6 +108,18 @@ criteria = "safe-to-deploy"
 version = "0.1.9"
 notes = "This is a trivial crate."
 
+[[audits.naga]]
+who = "Dzmitry Malyshau <kvark@fastmail.com>"
+criteria = "safe-to-deploy"
+version = "0.8.0"
+notes = """
+This crate, up through the indicated version, was written or reviewed
+by Dzmitry Malyshau while he was a Mozilla employee. Dzmitry left
+Mozilla at the beginning of February 2022. This audit statement was
+collected by Jim Blandy, a Mozilla employee, over email in July 2022:
+Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
+"""
+
 [[audits.new_debug_unreachable]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
@@ -182,6 +194,42 @@ who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "3.0.0"
 notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.wgpu-core]]
+who = "Dzmitry Malyshau <kvark@fastmail.com>"
+criteria = "safe-to-deploy"
+version = "0.12.0"
+notes = """
+This crate, up through the indicated version, was written or reviewed
+by Dzmitry Malyshau while he was a Mozilla employee. Dzmitry left
+Mozilla at the beginning of February 2022. This audit statement was
+collected by Jim Blandy, a Mozilla employee, over email in July 2022:
+Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
+"""
+
+[[audits.wgpu-hal]]
+who = "Dzmitry Malyshau <kvark@fastmail.com>"
+criteria = "safe-to-deploy"
+version = "0.12.0"
+notes = """
+This crate, up through the indicated version, was written or reviewed
+by Dzmitry Malyshau while he was a Mozilla employee. Dzmitry left
+Mozilla at the beginning of February 2022. This audit statement was
+collected by Jim Blandy, a Mozilla employee, over email in July 2022:
+Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
+"""
+
+[[audits.wgpu-types]]
+who = "Dzmitry Malyshau <kvark@fastmail.com>"
+criteria = "safe-to-deploy"
+version = "0.12.0"
+notes = """
+This crate, up through the indicated version, was written or reviewed
+by Dzmitry Malyshau while he was a Mozilla employee. Dzmitry left
+Mozilla at the beginning of February 2022. This audit statement was
+collected by Jim Blandy, a Mozilla employee, over email in July 2022:
+Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
+"""
 
 [[audits.webdriver]]
 who = "Henrik Skupin <mail@hskupin.info>"
