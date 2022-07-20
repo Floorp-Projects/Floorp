@@ -18,6 +18,8 @@
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_GetProperty, JS_GetPropertyById
 #include "js/Symbol.h"
 
+#include <string_view>
+
 using namespace mozilla;
 using namespace JS;
 
@@ -86,8 +88,8 @@ static bool XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool XPC_WN_Shared_ToSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  static const char empty[] = "({})";
-  JSString* str = JS_NewStringCopyN(cx, empty, sizeof(empty) - 1);
+  static constexpr std::string_view empty = "({})";
+  JSString* str = JS_NewStringCopyN(cx, empty.data(), empty.length());
   if (!str) {
     return false;
   }

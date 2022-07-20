@@ -251,8 +251,6 @@ class OptionParser {
   // argument.
   int restArgument;
 
-  static const char prognameMeta[];
-
   Option* findOption(char shortflag);
   const Option* findOption(char shortflag) const;
   Option* findOption(const char* longflag);
