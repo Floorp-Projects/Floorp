@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ExtensionSearchHandler } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionSearchHandler.jsm"
+const { ExtensionSearchHandler } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionSearchHandler.sys.mjs"
 );
 
 let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(

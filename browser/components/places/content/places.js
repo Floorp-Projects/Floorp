@@ -34,16 +34,10 @@ ChromeUtils.defineModuleGetter(
   "MigrationUtils",
   "resource:///modules/MigrationUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "BookmarkJSONUtils",
-  "resource://gre/modules/BookmarkJSONUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesBackups",
-  "resource://gre/modules/PlacesBackups.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
+  PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "DownloadUtils",
@@ -498,8 +492,8 @@ var PlacesOrganizer = {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = function fpCallback_done(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel && fp.fileURL) {
-        var { BookmarkHTMLUtils } = ChromeUtils.import(
-          "resource://gre/modules/BookmarkHTMLUtils.jsm"
+        var { BookmarkHTMLUtils } = ChromeUtils.importESModule(
+          "resource://gre/modules/BookmarkHTMLUtils.sys.mjs"
         );
         BookmarkHTMLUtils.importFromURL(fp.fileURL.spec).catch(Cu.reportError);
       }
@@ -521,8 +515,8 @@ var PlacesOrganizer = {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     let fpCallback = function fpCallback_done(aResult) {
       if (aResult != Ci.nsIFilePicker.returnCancel) {
-        var { BookmarkHTMLUtils } = ChromeUtils.import(
-          "resource://gre/modules/BookmarkHTMLUtils.jsm"
+        var { BookmarkHTMLUtils } = ChromeUtils.importESModule(
+          "resource://gre/modules/BookmarkHTMLUtils.sys.mjs"
         );
         BookmarkHTMLUtils.exportToFile(fp.file.path).catch(Cu.reportError);
       }

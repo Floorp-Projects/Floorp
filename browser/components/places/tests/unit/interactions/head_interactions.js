@@ -6,18 +6,21 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  Interactions: "resource:///modules/Interactions.sys.mjs",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.sys.mjs",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  SnapshotGroups: "resource:///modules/SnapshotGroups.sys.mjs",
+  SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
+  SnapshotScorer: "resource:///modules/SnapshotScorer.sys.mjs",
+  SnapshotSelector: "resource:///modules/SnapshotSelector.sys.mjs",
+  Snapshots: "resource:///modules/Snapshots.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Interactions: "resource:///modules/Interactions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  SnapshotGroups: "resource:///modules/SnapshotGroups.jsm",
-  Snapshots: "resource:///modules/Snapshots.jsm",
-  SnapshotMonitor: "resource:///modules/SnapshotMonitor.jsm",
-  SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",
-  SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 

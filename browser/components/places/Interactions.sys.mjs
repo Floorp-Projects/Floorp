@@ -11,16 +11,16 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  Snapshots: "resource:///modules/Snapshots.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  Snapshots: "resource:///modules/Snapshots.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
@@ -182,10 +182,10 @@ class _Interactions {
 
     ChromeUtils.registerWindowActor("Interactions", {
       parent: {
-        moduleURI: "resource:///actors/InteractionsParent.jsm",
+        esModuleURI: "resource:///actors/InteractionsParent.sys.mjs",
       },
       child: {
-        moduleURI: "resource:///actors/InteractionsChild.jsm",
+        esModuleURI: "resource:///actors/InteractionsChild.sys.mjs",
         events: {
           DOMContentLoaded: {},
           pagehide: { mozSystemGroup: true },
