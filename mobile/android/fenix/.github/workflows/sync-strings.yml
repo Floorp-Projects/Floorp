@@ -15,10 +15,10 @@ jobs:
     steps:
       - name: "Discover Fenix Beta Version"
         id: fenix-beta-version
-        uses: mozilla-mobile/fenix-beta-version@2.0.0
+        uses: mozilla-mobile/fenix-beta-version@4.1.0
       - name: "Skip non-beta versions"
         uses: andymckay/cancel-action@0.2
-        if: ${{ steps.fenix-beta-version.outputs.fenix-beta-version == '' }}
+        if: ${{ steps.fenix-beta-version.outputs.beta_version == '' }}
       - name: "Checkout Master Branch"
         uses: actions/checkout@v2
         with:
@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: beta
-          ref: "releases_v${{ steps.fenix-beta-version.outputs.fenix-beta-version }}.0.0"
+          ref: "releases_v${{ steps.fenix-beta-version.outputs.beta_version }}.0.0"
       - name: "Sync Strings"
         uses: mozilla-mobile/sync-strings-action@1.0.1
         with:
@@ -39,6 +39,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: beta
-          branch: automation/sync-strings-${{ steps.fenix-beta-version.outputs.fenix-beta-version }}
-          title: "Sync Strings from main to releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0"
-          body: "This (automated) PR syncs strings from `main` to `releases_${{steps.fenix-beta-version.outputs.fenix-beta-version}}.0.0`"
+          branch: automation/sync-strings-${{ steps.fenix-beta-version.outputs.beta_version }}
+          title: "Sync Strings from main to releases_${{steps.fenix-beta-version.outputs.beta_version}}.0"
+          body: "This (automated) PR syncs strings from `main` to `releases_${{steps.fenix-beta-version.outputs.beta_version}}.0.0`"
