@@ -97,7 +97,6 @@ struct nsWidgetInitData {
   // when painting exclude area occupied by child windows and sibling windows
   bool mClipChildren = false;
   bool mClipSiblings = false;
-  bool mDropShadow = false;
   bool mRTL = false;
   bool mNoAutoHide = false;   // true for noautohide panels
   bool mIsDragPopup = false;  // true for drag feedback panels
