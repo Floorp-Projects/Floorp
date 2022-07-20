@@ -42,6 +42,22 @@ namespace layers {
 class NativeLayerRootSnapshotterCA;
 class SurfacePoolHandleCA;
 
+enum class VideoLowPowerType {
+  // These must be kept synchronized with the telemetry histogram enums.
+  NotVideo,           // Never emitted as telemetry. No video is visible.
+  LowPower,           // As best we can tell, we are in the "detached",
+                      // low-power compositing mode. We don't use "Success"
+                      // because of name collision with telemetry generation.
+  FailMultipleVideo,  // There is more than one video visible.
+  FailWindowed,       // The window is not fullscreen.
+  FailOverlaid,       // Something is on top of the video (likely captions).
+  FailBacking,        // The layer behind the video is not full-coverage black.
+  FailMacOSVersion,   // macOS version does not meet requirements.
+  FailPref,           // Pref is not set.
+  FailSurface,        // Surface is not eligible.
+  FailEnqueue,        // Enqueueing the video didn't work.
+};
+
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
 // CALayer with a call to CreateForCALayer - this CALayer is the root of the
@@ -122,7 +138,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
       gfx::DeviceColor aColor) override;
 
   void SetWindowIsFullscreen(bool aFullscreen);
-  void NoteMouseMoveAtTime(const TimeStamp& aTime);
+
+  VideoLowPowerType CheckVideoLowPower();
 
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
@@ -164,6 +181,12 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // Updated by the layer's view's window to match the fullscreen state
   // of that window.
   bool mWindowIsFullscreen = false;
+
+  // How many times have we committed since the last time we emitted
+  // telemetry?
+  unsigned int mTelemetryCommitCount = 0;
+  static const unsigned int TELEMETRY_COMMIT_PERIOD =
+      600;  // 10 seconds at 60fps
 };
 
 class RenderSourceNLRS;
