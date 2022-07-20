@@ -486,16 +486,6 @@ Download.prototype = {
             throw new DownloadError({ becauseBlockedByParentalControls: true });
           }
 
-          // Disallow download if needed runtime permissions have not been granted
-          // by user.
-          if (
-            await lazy.DownloadIntegration.shouldBlockForRuntimePermissions()
-          ) {
-            throw new DownloadError({
-              becauseBlockedByRuntimePermissions: true,
-            });
-          }
-
           // We should check if we have been canceled in the meantime, after all
           // the previous asynchronous operations have been executed and just
           // before we call the "execute" method of the saver.
@@ -1854,8 +1844,7 @@ var DownloadError = function(aProperties) {
   } else if (
     aProperties.becauseBlocked ||
     aProperties.becauseBlockedByParentalControls ||
-    aProperties.becauseBlockedByReputationCheck ||
-    aProperties.becauseBlockedByRuntimePermissions
+    aProperties.becauseBlockedByReputationCheck
   ) {
     this.message = "Download blocked.";
   } else {
@@ -1883,9 +1872,6 @@ var DownloadError = function(aProperties) {
     this.becauseBlocked = true;
     this.becauseBlockedByReputationCheck = true;
     this.reputationCheckVerdict = aProperties.reputationCheckVerdict || "";
-  } else if (aProperties.becauseBlockedByRuntimePermissions) {
-    this.becauseBlocked = true;
-    this.becauseBlockedByRuntimePermissions = true;
   } else if (aProperties.becauseBlocked) {
     this.becauseBlocked = true;
   }
@@ -1946,15 +1932,6 @@ DownloadError.prototype = {
   becauseBlockedByReputationCheck: false,
 
   /**
-   * Indicates the download was blocked because a runtime permission required to
-   * download files was not granted.
-   *
-   * This does not apply to all systems. On Android this flag is set to true if
-   * a needed runtime permission (storage) has not been granted by the user.
-   */
-  becauseBlockedByRuntimePermissions: false,
-
-  /**
    * If becauseBlockedByReputationCheck is true, indicates the detailed reason
    * why the download was blocked, according to the "BLOCK_VERDICT_" constants.
    *
@@ -1984,8 +1961,6 @@ DownloadError.prototype = {
       becauseBlocked: this.becauseBlocked,
       becauseBlockedByParentalControls: this.becauseBlockedByParentalControls,
       becauseBlockedByReputationCheck: this.becauseBlockedByReputationCheck,
-      becauseBlockedByRuntimePermissions: this
-        .becauseBlockedByRuntimePermissions,
       reputationCheckVerdict: this.reputationCheckVerdict,
     };
 
@@ -2015,7 +1990,6 @@ DownloadError.fromSerializable = function(aSerializable) {
       property != "becauseBlocked" &&
       property != "becauseBlockedByParentalControls" &&
       property != "becauseBlockedByReputationCheck" &&
-      property != "becauseBlockedByRuntimePermissions" &&
       property != "reputationCheckVerdict"
   );
 
