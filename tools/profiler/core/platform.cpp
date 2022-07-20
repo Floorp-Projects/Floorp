@@ -5517,7 +5517,7 @@ static void locked_profiler_save_profile_to_file(
       w.StartArrayProperty("processes");
       Vector<nsCString> exitProfiles = ActivePS::MoveExitProfiles(aLock);
       for (auto& exitProfile : exitProfiles) {
-        if (!exitProfile.IsEmpty()) {
+        if (!exitProfile.IsEmpty() && exitProfile[0] != '*') {
           w.Splice(exitProfile);
         }
       }

@@ -1169,7 +1169,6 @@ add_setup(function test_common_initialize() {
     loadPublicDownloadListFromStore: () => Promise.resolve(),
     shouldKeepBlockedData: () => Promise.resolve(false),
     shouldBlockForParentalControls: () => Promise.resolve(false),
-    shouldBlockForRuntimePermissions: () => Promise.resolve(false),
     shouldBlockForReputationCheck: () =>
       Promise.resolve({
         shouldBlock: false,

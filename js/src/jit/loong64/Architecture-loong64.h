@@ -10,6 +10,7 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include <algorithm>
+#include <iterator>
 
 #include "jit/shared/Architecture-shared.h"
 
@@ -143,8 +144,7 @@ class Registers {
         "zero", "ra", "tp", "sp", "a0", "a1", "a2", "a3", "a4", "a5", "a6",
         "a7",   "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "rx",
         "fp",   "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"};
-    static_assert(Total == sizeof(Names) / sizeof(Names[0]),
-                  "Table is the correct size");
+    static_assert(Total == std::size(Names), "Table is the correct size");
     if (code >= Total) {
       return "invalid";
     }
@@ -260,8 +260,7 @@ class FloatRegisters {
         "f8",  "f9",  "f10", "f11", "f12", "f13", "f14", "f15",
         "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",
         "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31"};
-    static_assert(TotalPhys == sizeof(Names) / sizeof(Names[0]),
-                  "Table is the correct size");
+    static_assert(TotalPhys == std::size(Names), "Table is the correct size");
     if (code >= Total) {
       return "invalid";
     }

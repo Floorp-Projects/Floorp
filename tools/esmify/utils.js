@@ -4,7 +4,7 @@
 
 // Shared utility functions.
 
-/* global exports */
+/* eslint-env node */
 
 function warnForPath(inputFile, path, message) {
   const loc = path.node.loc;
@@ -65,8 +65,29 @@ function isString(node) {
   return node.type === "Literal" && typeof node.value === "string";
 }
 
+const jsmExtPattern = /\.(jsm|js|jsm\.js)$/;
+
+function esmifyExtension(path) {
+  return path.replace(jsmExtPattern, ".sys.mjs");
+}
+
+function calleeToString(node) {
+  if (node.type === "Identifier") {
+    return node.name;
+  }
+
+  if (node.type === "MemberExpression" && !node.computed) {
+    return calleeToString(node.object) + "." + node.property.name;
+  }
+
+  return "???";
+}
+
 exports.warnForPath = warnForPath;
 exports.getPrevStatement = getPrevStatement;
 exports.getNextStatement = getNextStatement;
 exports.isIdentifier = isIdentifier;
 exports.isString = isString;
+exports.jsmExtPattern = jsmExtPattern;
+exports.esmifyExtension = esmifyExtension;
+exports.calleeToString = calleeToString;

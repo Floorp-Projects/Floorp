@@ -41,6 +41,7 @@ exports[`Frame getFrameTitle 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo-view.js",
             "group": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
             "path": "/assets/src/js/foo-view.js",
@@ -102,6 +103,7 @@ exports[`Frame getFrameTitle 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo-view.js",
             "group": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
             "path": "/assets/src/js/foo-view.js",
@@ -170,6 +172,7 @@ exports[`Frame library frame 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "backbone.js",
             "group": "",
             "path": "backbone.js",
@@ -232,6 +235,7 @@ exports[`Frame library frame 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "backbone.js",
             "group": "",
             "path": "backbone.js",
@@ -299,6 +303,7 @@ exports[`Frame user frame (not selected) 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo-view.js",
             "group": "",
             "path": "foo-view.js",
@@ -360,6 +365,7 @@ exports[`Frame user frame (not selected) 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo-view.js",
             "group": "",
             "path": "foo-view.js",
@@ -427,6 +433,7 @@ exports[`Frame user frame 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo-view.js",
             "group": "",
             "path": "foo-view.js",
@@ -488,6 +495,7 @@ exports[`Frame user frame 1`] = `
         },
         "source": Object {
           "displayURL": Object {
+            "fileExtension": "js",
             "filename": "foo-view.js",
             "group": "",
             "path": "foo-view.js",

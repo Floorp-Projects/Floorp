@@ -12,6 +12,7 @@
 #include "mozilla/RangedPtr.h"
 
 #include <algorithm>
+#include <string_view>
 
 #include "jsapi.h"
 
@@ -176,13 +177,13 @@ static bool obj_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
 template <typename CharT>
 static bool Consume(RangedPtr<const CharT>& s, RangedPtr<const CharT> e,
-                    const char* chars) {
+                    std::string_view chars) {
   MOZ_ASSERT(s <= e);
-  size_t len = strlen(chars);
+  size_t len = chars.length();
   if (e - s < len) {
     return false;
   }
-  if (!EqualChars(s.get(), chars, len)) {
+  if (!EqualChars(s.get(), chars.data(), len)) {
     return false;
   }
   s += len;

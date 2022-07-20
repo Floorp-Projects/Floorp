@@ -1592,9 +1592,10 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   // Remember the position of ")".
   Maybe<uint32_t> parameterListEnd = Some(uint32_t(sb.length()));
-  MOZ_ASSERT(FunctionConstructorMedialSigils[0] == ')');
+  static_assert(FunctionConstructorMedialSigils[0] == ')');
 
-  if (!sb.append(FunctionConstructorMedialSigils)) {
+  if (!sb.append(FunctionConstructorMedialSigils.data(),
+                 FunctionConstructorMedialSigils.length())) {
     return false;
   }
 
@@ -1606,7 +1607,8 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     }
   }
 
-  if (!sb.append(FunctionConstructorFinalBrace)) {
+  if (!sb.append(FunctionConstructorFinalBrace.data(),
+                 FunctionConstructorFinalBrace.length())) {
     return false;
   }
 

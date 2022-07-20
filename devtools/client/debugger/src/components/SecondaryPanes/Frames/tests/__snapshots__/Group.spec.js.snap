@@ -45,6 +45,7 @@ exports[`Group displays a group 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",
@@ -126,6 +127,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "mahscripts.js",
               "group": "myfile.com",
               "path": "/mahscripts.js",
@@ -206,6 +208,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "mahscripts.js",
               "group": "myfile.com",
               "path": "/mahscripts.js",
@@ -263,6 +266,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",
@@ -331,6 +335,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "back.js",
               "group": "myfile.com",
               "path": "/back.js",
@@ -388,6 +393,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",
@@ -456,6 +462,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "back.js",
               "group": "myfile.com",
               "path": "/back.js",
@@ -513,6 +520,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",
@@ -586,6 +594,7 @@ exports[`Group renders group with anonymous functions 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "mahscripts.js",
               "group": "myfile.com",
               "path": "/mahscripts.js",
@@ -667,6 +676,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "mahscripts.js",
               "group": "myfile.com",
               "path": "/mahscripts.js",
@@ -747,6 +757,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "mahscripts.js",
               "group": "myfile.com",
               "path": "/mahscripts.js",
@@ -803,6 +814,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",
@@ -871,6 +883,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "back.js",
               "group": "myfile.com",
               "path": "/back.js",
@@ -927,6 +940,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",
@@ -995,6 +1009,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "js",
               "filename": "back.js",
               "group": "myfile.com",
               "path": "/back.js",
@@ -1051,6 +1066,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "url",
               "group": "",
               "path": "url",

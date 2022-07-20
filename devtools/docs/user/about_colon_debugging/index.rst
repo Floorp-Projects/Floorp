@@ -4,6 +4,8 @@ about:debugging
 
 The ``about:debugging`` page provides a single place from which you can attach the Firefox Developer Tools to a number of debugging targets. At the moment it supports three main sorts of targets: restartless add-ons, tabs, and workers.
 
+This is also the main entry point to remotely debug Firefox, in particular Firefox for Android.
+
 Opening the about:debugging page
 ********************************
 
@@ -30,6 +32,8 @@ If your ``about:debugging`` page is different from the one displayed here, go to
 
 Setup tab
 *********
+
+.. _about-colon-debugging-connecting-to-a-remote-device:
 
 Connecting to a remote device
 -----------------------------

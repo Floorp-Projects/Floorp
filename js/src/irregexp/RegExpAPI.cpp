@@ -321,9 +321,8 @@ template <typename CharT>
 static bool HasFewDifferentCharacters(const CharT* chars, size_t length) {
   const uint32_t tableSize =
       v8::internal::NativeRegExpMacroAssembler::kTableSize;
-  bool character_found[tableSize];
+  bool character_found[tableSize] = {};
   uint32_t different = 0;
-  memset(&character_found[0], 0, sizeof(character_found));
   for (uint32_t i = 0; i < length; i++) {
     uint32_t ch = chars[i] % tableSize;
     if (!character_found[ch]) {

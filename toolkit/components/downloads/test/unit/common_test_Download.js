@@ -1938,50 +1938,6 @@ add_task(async function test_blocked_parental_controls_httpstatus450() {
 });
 
 /**
- * Download with runtime permissions
- */
-add_task(async function test_blocked_runtime_permissions() {
-  let blockFn = base => ({
-    shouldBlockForRuntimePermissions: () => Promise.resolve(true),
-  });
-
-  Integration.downloads.register(blockFn);
-  function cleanup() {
-    Integration.downloads.unregister(blockFn);
-  }
-  registerCleanupFunction(cleanup);
-
-  let download;
-  try {
-    if (!gUseLegacySaver) {
-      // When testing DownloadCopySaver, we want to check that the promise
-      // returned by the "start" method is rejected.
-      download = await promiseNewDownload();
-      await download.start();
-    } else {
-      // When testing DownloadLegacySaver, we cannot be sure whether we are
-      // testing the promise returned by the "start" method or we are testing
-      // the "error" property checked by promiseDownloadStopped.  This happens
-      // because we don't have control over when the download is started.
-      download = await promiseStartLegacyDownload();
-      await promiseDownloadStopped(download);
-    }
-    do_throw("The download should have blocked.");
-  } catch (ex) {
-    if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
-      throw ex;
-    }
-    Assert.ok(ex.becauseBlockedByRuntimePermissions);
-    Assert.ok(download.error.becauseBlockedByRuntimePermissions);
-  }
-
-  // Now that the download stopped, the target file should not exist.
-  Assert.equal(false, await OS.File.exists(download.target.path));
-
-  cleanup();
-});
-
-/**
  * Check that DownloadCopySaver can always retrieve the hash.
  * DownloadLegacySaver can only retrieve the hash when
  * nsIExternalHelperAppService is invoked.

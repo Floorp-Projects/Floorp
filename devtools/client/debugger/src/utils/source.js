@@ -16,7 +16,6 @@ import { memoizeLast } from "../utils/memoizeLast";
 import { renderWasmText } from "./wasm";
 import { toEditorLine } from "./editor";
 export { isMinified } from "./isMinified";
-import { getFileExtension } from "./sources-tree";
 
 import { isFulfilled } from "./async-value";
 
@@ -126,7 +125,7 @@ export function findBlackBoxRange(source, blackboxedRanges, lineRange) {
  * @static
  */
 export function isJavaScript(source, content) {
-  const extension = getFileExtension(source).toLowerCase();
+  const extension = source.displayURL.fileExtension;
   const contentType = content.type === "wasm" ? null : content.contentType;
   return (
     javascriptLikeExtensions.includes(extension) ||
@@ -363,7 +362,7 @@ export function getSourceLineCount(content) {
  */
 // eslint-disable-next-line complexity
 export function getMode(source, content, symbols) {
-  const extension = getFileExtension(source);
+  const extension = source.displayURL.fileExtension;
 
   if (content.type !== "text") {
     return { name: "text" };
@@ -532,7 +531,7 @@ export function getSourceClassnames(
     return "extension";
   }
 
-  return sourceTypes[getFileExtension(source)] || defaultClassName;
+  return sourceTypes[source.displayURL.fileExtension] || defaultClassName;
 }
 
 export function getRelativeUrl(source, root) {

@@ -120,6 +120,12 @@ class LogModule {
   static void SetIsSync(bool aIsSync);
 
   /**
+   * @param aRecordMarkers If we should add Firefox Profiler markers for each
+   * log entry.
+   */
+  static void SetRecordMarkers(bool aRecordMarkers);
+
+  /**
    * Indicates whether or not the given log level is enabled.
    */
   bool ShouldLog(LogLevel aLevel) const { return mLevel >= aLevel; }

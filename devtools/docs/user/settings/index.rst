@@ -217,7 +217,7 @@ Advanced settings
   Enable you to use developer tools in the context of the browser itself, and not only web content.
 
 *Enable remote debugging*
-  Enable the developer tools to :doc:`debug remote Firefox instances <../remote_debugging/d>`.
+  Enable the developer tools debug remote Firefox instances.
 
 *Enable worker debugging*
   Enable a panel within the debugger to debug workers.

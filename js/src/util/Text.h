@@ -69,7 +69,17 @@ static constexpr bool IsAsciiPrintable(CharT c) {
 
 template <typename Char1, typename Char2>
 inline bool EqualChars(const Char1* s1, const Char2* s2, size_t len) {
-  return mozilla::ArrayEqual(s1, s2, len);
+  // Cast |JS::Latin1Char| to |char| to ensure compilers emit std::memcmp for
+  // the comparison.
+  if constexpr (std::is_same_v<Char1, char> &&
+                std::is_same_v<Char2, JS::Latin1Char>) {
+    return mozilla::ArrayEqual(s1, reinterpret_cast<const char*>(s2), len);
+  } else if constexpr (std::is_same_v<Char1, JS::Latin1Char> &&
+                       std::is_same_v<Char2, char>) {
+    return mozilla::ArrayEqual(reinterpret_cast<const char*>(s1), s2, len);
+  } else {
+    return mozilla::ArrayEqual(s1, s2, len);
+  }
 }
 
 // Return less than, equal to, or greater than zero depending on whether
