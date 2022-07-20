@@ -338,7 +338,6 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   mStyleDisplay = mFrame->StyleDisplay();
   mStyleBorder = mFrame->StyleBorder();
   mStyleMargin = mFrame->StyleMargin();
-  mStyleText = mFrame->StyleText();
 
   InitCBReflowInput();
 
@@ -682,7 +681,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     dependsOnCBBSize |= (flexBasis.IsSize() && flexBasis.AsSize().HasPercent());
   }
 
-  if (mStyleText->mLineHeight.IsMozBlockHeight()) {
+  if (mFrame->StyleText()->mLineHeight.IsMozBlockHeight()) {
     // line-height depends on block bsize
     mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     // but only on containing blocks if this frame is not a suitable block
@@ -2653,20 +2652,19 @@ void ReflowInput::CalculateBlockSideMargins() {
     // 'direction' property of the parent to tell which margin to
     // ignore
     // First check if there is an HTML alignment that we should honor
-    const ReflowInput* pri = mParentReflowInput;
-    if (pri && (pri->mStyleText->mTextAlign == StyleTextAlign::MozLeft ||
-                pri->mStyleText->mTextAlign == StyleTextAlign::MozCenter ||
-                pri->mStyleText->mTextAlign == StyleTextAlign::MozRight)) {
-      if (pri->mWritingMode.IsBidiLTR()) {
-        isAutoStartMargin =
-            pri->mStyleText->mTextAlign != StyleTextAlign::MozLeft;
-        isAutoEndMargin =
-            pri->mStyleText->mTextAlign != StyleTextAlign::MozRight;
+    const StyleTextAlign* textAlign =
+        mParentReflowInput
+            ? &mParentReflowInput->mFrame->StyleText()->mTextAlign
+            : nullptr;
+    if (textAlign && (*textAlign == StyleTextAlign::MozLeft ||
+                      *textAlign == StyleTextAlign::MozCenter ||
+                      *textAlign == StyleTextAlign::MozRight)) {
+      if (mParentReflowInput->mWritingMode.IsBidiLTR()) {
+        isAutoStartMargin = *textAlign != StyleTextAlign::MozLeft;
+        isAutoEndMargin = *textAlign != StyleTextAlign::MozRight;
       } else {
-        isAutoStartMargin =
-            pri->mStyleText->mTextAlign != StyleTextAlign::MozRight;
-        isAutoEndMargin =
-            pri->mStyleText->mTextAlign != StyleTextAlign::MozLeft;
+        isAutoStartMargin = *textAlign != StyleTextAlign::MozRight;
+        isAutoEndMargin = *textAlign != StyleTextAlign::MozLeft;
       }
     }
     // Otherwise apply the CSS rules, and ignore one margin by forcing
