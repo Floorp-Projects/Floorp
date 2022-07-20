@@ -23,6 +23,7 @@
 #if defined(SOLARIS)
 #  include <ieeefp.h>
 #endif
+#include <iterator>
 #include <limits>
 #include <stdint.h>
 #ifdef HAVE_SSIZE_T
@@ -3074,7 +3075,7 @@ void IntegerToString(IntegerType i, int radix,
   // The buffer must be big enough for all the bits of IntegerType to fit,
   // in base-2, including '-'.
   CharType buffer[sizeof(IntegerType) * 8 + 1];
-  CharType* end = buffer + sizeof(buffer) / sizeof(CharType);
+  CharType* end = std::end(buffer);
   CharType* cp = end;
 
   // Build the string in reverse. We use multiplication and subtraction
