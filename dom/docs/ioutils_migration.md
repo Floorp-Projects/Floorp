@@ -533,10 +533,10 @@ Promise<void> setPermissions(DOMString path, unsigned long permissions, optional
 
 #### Options
 
-| `OS.File` option        | `IOUtils` option          | Description                                                                                                                          |
-| ----------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| unixMode: number        | permissions: usigned long | The UNIX file mode representing the permissions. Required in IOUtils.                                                                |
-| unixHonorUmask: boolean | honorUmask: boolean       | If omitted or true, any UNIX file mode is modified by the permissions. Otherwise the exact value of the permissions will be applied. |
+| `OS.File` option        | `IOUtils` option           | Description                                                                                                                          |
+| ----------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| unixMode: number        | permissions: unsigned long | The UNIX file mode representing the permissions. Required in IOUtils.                                                                |
+| unixHonorUmask: boolean | honorUmask: boolean        | If omitted or true, any UNIX file mode is modified by the permissions. Otherwise the exact value of the permissions will be applied. |
 
 #### Example
 

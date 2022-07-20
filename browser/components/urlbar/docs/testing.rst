@@ -157,8 +157,7 @@ modules names to where they can be found, their paths. ``Lazy`` means the files
 are only imported if or when it is used. Any tests in this directory can use
 these modules without importing it themselves in their own file.
 The ``head.js`` provides a convenience for this purpose. The ``head.js`` file
-imports `common-head.js <https://searchfox.org/mozilla-cen
-tral/source/browser/components/urlbar/tests/browser/head-common.js>`_
+imports `common-head.js <https://searchfox.org/mozilla-central/source/browser/components/urlbar/tests/browser/head-common.js>`_
 making everything within ``head-common.js`` available in ``head.js`` as well.
 
 The ``registerCleanupFunction`` is an important function in browser mochi tests

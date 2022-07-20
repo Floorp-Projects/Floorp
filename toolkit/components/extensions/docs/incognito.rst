@@ -71,7 +71,7 @@ Android does not currently support private windows.  When a tab is available,
 the test should prefer tab over window.
 
 - PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser)
-- PrivateBrowsingUtils.isContentWindowPrivate(widnow)
+- PrivateBrowsingUtils.isContentWindowPrivate(window)
 
 When WebExtensionPolicy is handy to use, you can directly check window access:
 
