@@ -54,7 +54,7 @@ nsProfiler::~nsProfiler() {
   if (mSymbolTableThread) {
     mSymbolTableThread->Shutdown();
   }
-  ResetGathering();
+  ResetGathering(NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
 }
 
 nsresult nsProfiler::Init() { return NS_OK; }
@@ -140,7 +140,7 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const nsTArray<nsCString>& aFilters,
                           uint64_t aActiveTabID, double aDuration,
                           JSContext* aCx, Promise** aPromise) {
-  ResetGathering();
+  ResetGathering(NS_ERROR_DOM_ABORT_ERR);
 
   Vector<const char*> featureStringVector;
   nsresult rv = FillVectorFromStringArray(featureStringVector, aFeatures);
@@ -166,7 +166,7 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
 
 NS_IMETHODIMP
 nsProfiler::StopProfiler(JSContext* aCx, Promise** aPromise) {
-  ResetGathering();
+  ResetGathering(NS_ERROR_DOM_ABORT_ERR);
   return RunFunctionAndConvertPromise(aCx, aPromise,
                                       []() { return profiler_stop(); });
 }
@@ -1117,8 +1117,8 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
 
   MOZ_ASSERT(mPendingProfiles.empty());
   if (!mPendingProfiles.reserve(profiles.Length())) {
-    ResetGathering();
-    return GatheringPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+    ResetGathering(NS_ERROR_OUT_OF_MEMORY);
+    return GatheringPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
   mWriter.emplace();
@@ -1135,7 +1135,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     // at the time that ProfileGatherer::Start() was called, or that it was
     // stopped on a different thread since that call. Either way, we need to
     // reject the promise and stop gathering.
-    ResetGathering();
+    ResetGathering(NS_ERROR_NOT_AVAILABLE);
     return GatheringPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
@@ -1332,14 +1332,14 @@ void nsProfiler::FinishGathering() {
   result.Adopt(buf.release(), len);
   mPromiseHolder->Resolve(std::move(result), __func__);
 
-  ResetGathering();
+  ResetGathering(NS_ERROR_UNEXPECTED);
 }
 
-void nsProfiler::ResetGathering() {
+void nsProfiler::ResetGathering(nsresult aPromiseRejectionIfPending) {
   // If we have an unfulfilled Promise in flight, we should reject it before
   // destroying the promise holder.
   if (mPromiseHolder.isSome()) {
-    mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mPromiseHolder->RejectIfExists(aPromiseRejectionIfPending, __func__);
     mPromiseHolder.reset();
   }
   mPendingProfiles.clearAndFree();

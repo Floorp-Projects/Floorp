@@ -53,7 +53,7 @@ class nsProfiler final : public nsIProfiler {
   void GatheredOOPProfile(base::ProcessId aChildPid,
                           const nsACString& aProfile);
   void FinishGathering();
-  void ResetGathering();
+  void ResetGathering(nsresult aPromiseRejectionIfPending);
   static void GatheringTimerCallback(nsITimer* aTimer, void* aClosure);
   void RestartGatheringTimer();
 
