@@ -423,7 +423,7 @@ const EXPIRATION_QUERIES = {
   },
 };
 
-function nsPlacesExpiration() {
+export function nsPlacesExpiration() {
   // Allows other components to easily access getPagesLimit.
   this.wrappedJSObject = this;
 
@@ -981,5 +981,3 @@ nsPlacesExpiration.prototype = {
     "nsISupportsWeakReference",
   ]),
 };
-
-var EXPORTED_SYMBOLS = ["nsPlacesExpiration"];

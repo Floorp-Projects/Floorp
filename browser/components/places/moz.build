@@ -19,22 +19,22 @@ JAR_MANIFESTS += ["jar.mn"]
 SPHINX_TREES["/browser/places"] = "docs"
 
 EXTRA_JS_MODULES += [
-    "CommonNames.jsm",
-    "DomainGroupBuilder.jsm",
-    "Interactions.jsm",
-    "InteractionsBlocklist.jsm",
-    "PinnedGroupBuilder.jsm",
-    "PlacesUIUtils.jsm",
-    "SnapshotGroups.jsm",
-    "SnapshotMonitor.jsm",
-    "Snapshots.jsm",
-    "SnapshotScorer.jsm",
-    "SnapshotSelector.jsm",
+    "CommonNames.sys.mjs",
+    "DomainGroupBuilder.sys.mjs",
+    "Interactions.sys.mjs",
+    "InteractionsBlocklist.sys.mjs",
+    "PinnedGroupBuilder.sys.mjs",
+    "PlacesUIUtils.sys.mjs",
+    "SnapshotGroups.sys.mjs",
+    "SnapshotMonitor.sys.mjs",
+    "Snapshots.sys.mjs",
+    "SnapshotScorer.sys.mjs",
+    "SnapshotSelector.sys.mjs",
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "InteractionsChild.jsm",
-    "InteractionsParent.jsm",
+    "InteractionsChild.sys.mjs",
+    "InteractionsParent.sys.mjs",
 ]
 
 with Files("**"):

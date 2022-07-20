@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["SnapshotMonitor"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -57,7 +55,7 @@ const EXPIRE_CHUNK_SIZE = 10;
  * Monitors changes in snapshots (additions, deletions, etc) and triggers
  * the snapshot group builders to run as necessary.
  */
-const SnapshotMonitor = new (class SnapshotMonitor {
+export const SnapshotMonitor = new (class SnapshotMonitor {
   /**
    * @type {number}
    */

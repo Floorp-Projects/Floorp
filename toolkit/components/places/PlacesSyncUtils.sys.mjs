@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PlacesSyncUtils"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -25,7 +23,7 @@ ChromeUtils.defineModuleGetter(
  * `nsINavBookmarksService`, with special handling for
  * tags, keywords, synced annotations, and missing parents.
  */
-var PlacesSyncUtils = {};
+export var PlacesSyncUtils = {};
 
 const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
 

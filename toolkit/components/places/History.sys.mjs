@@ -68,8 +68,6 @@
  * @see PlacesObservers
  */
 
-var EXPORTED_SYMBOLS = ["History"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -127,7 +125,7 @@ function notify(observers, notification, args = []) {
   }
 }
 
-var History = Object.freeze({
+export var History = Object.freeze({
   ANNOTATION_EXPIRE_NEVER: 4,
   // Constants for the type of annotation.
   ANNOTATION_TYPE_STRING: 3,

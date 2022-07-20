@@ -56,8 +56,6 @@
  * both require the content (= title) before actually creating it.
  */
 
-var EXPORTED_SYMBOLS = ["BookmarkHTMLUtils"];
-
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
@@ -124,7 +122,7 @@ function notifyObservers(aTopic, aInitialImport) {
   );
 }
 
-var BookmarkHTMLUtils = Object.freeze({
+export var BookmarkHTMLUtils = Object.freeze({
   /**
    * Loads the current bookmarks hierarchy from a "bookmarks.html" file.
    *
