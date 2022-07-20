@@ -27,8 +27,10 @@
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
+#include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "vm/GlobalObject.h"
+#include "vm/JSObject.h"
 #include "vm/ObjectOperations.h"
 
 #include "builtin/HandlerFunction-inl.h"
@@ -164,6 +166,27 @@ static ShadowRealmObject* ValidateShadowRealmObject(JSContext* cx,
   }
 
   return &maybeUnwrappedO->as<ShadowRealmObject>();
+}
+
+static void ReportPotentiallyDetailedMessage(JSContext* cx,
+                                             const unsigned detailedError,
+                                             const unsigned genericError) {
+  Rooted<Value> exception(cx);
+  if (!JS_GetPendingException(cx, &exception)) {
+    return;
+  }
+  JS_ClearPendingException(cx);
+
+  JS::ErrorReportBuilder jsReport(cx);
+  JS::ExceptionStack exnStack(cx, exception, nullptr);
+  if (!jsReport.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects)) {
+    JS_ClearPendingException(cx);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, genericError);
+    return;
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, detailedError,
+                           jsReport.toStringResult().c_str());
 }
 
 //  PerformShadowRealmEval ( sourceText: a String, callerRealm: a Realm Record,
@@ -303,21 +326,10 @@ static bool PerformShadowRealmEval(JSContext* cx, HandleString sourceText,
     //
     // The type error here needs to come from the calling global, so has to
     // happen outside the AutoRealm above.
+    ReportPotentiallyDetailedMessage(cx,
+                                     JSMSG_SHADOW_REALM_EVALUATE_FAILURE_DETAIL,
+                                     JSMSG_SHADOW_REALM_EVALUATE_FAILURE);
 
-    // MG:XXX: Figure out how to extract the error message and include in
-    // message of TypeError (if possible): See discussion in
-    // https://github.com/tc39/proposal-shadowrealm/issues/353 for some
-    // potential pitfalls (i.e. what if the error has a getter on the message
-    // property?)
-    //
-    // I imagine we could do something like GetPropertyPure, and have a nice
-    // error message if we *don't* have anything to worry about.
-    //
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1769849
-
-    JS_ClearPendingException(cx);
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_SHADOW_REALM_EVALUATE_FAILURE);
     return false;
   }
 
