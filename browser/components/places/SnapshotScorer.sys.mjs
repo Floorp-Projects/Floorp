@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["SnapshotScorer"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -54,7 +52,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
  * expected relevancy to the user. This order is subsequently used to display
  * the candidates.
  */
-const SnapshotScorer = new (class SnapshotScorer {
+export const SnapshotScorer = new (class SnapshotScorer {
   /**
    * @type {Map}
    *   A map of function suffixes to relevancy points. The suffixes are prefixed

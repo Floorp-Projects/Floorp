@@ -57,8 +57,6 @@
  * @see nsINavBookmarkObserver
  */
 
-var EXPORTED_SYMBOLS = ["Bookmarks"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -100,7 +98,7 @@ const MATCH_ANYWHERE_UNMODIFIED =
   Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED;
 const BEHAVIOR_BOOKMARK = Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
 
-var Bookmarks = Object.freeze({
+export var Bookmarks = Object.freeze({
   /**
    * Item's type constants.
    * These should stay consistent with nsINavBookmarksService.idl

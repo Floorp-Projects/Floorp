@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ExtensionSearchHandler"];
-
 // Used to keep track of all of the registered keywords, where each keyword is
 // mapped to a KeywordInfo instance.
 let gKeywordMap = new Map();
@@ -90,7 +88,7 @@ class InputSession {
   }
 }
 
-var ExtensionSearchHandler = Object.freeze({
+export var ExtensionSearchHandler = Object.freeze({
   MSG_INPUT_STARTED: "webext-omnibox-input-started",
   MSG_INPUT_CHANGED: "webext-omnibox-input-changed",
   MSG_INPUT_ENTERED: "webext-omnibox-input-entered",

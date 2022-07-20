@@ -49,8 +49,6 @@
  *   issues.
  */
 
-var EXPORTED_SYMBOLS = ["SyncedBookmarksMirror"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -247,7 +245,7 @@ ProgressTracker.STEPS = {
  * changes on the server, and when the user is node reassigned, disables the
  * bookmarks engine, or signs out.
  */
-class SyncedBookmarksMirror {
+export class SyncedBookmarksMirror {
   constructor(
     db,
     wasCorrupt = false,
