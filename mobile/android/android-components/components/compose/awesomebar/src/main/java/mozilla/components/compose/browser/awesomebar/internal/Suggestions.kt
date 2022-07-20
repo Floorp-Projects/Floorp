@@ -16,11 +16,12 @@ import androidx.compose.ui.platform.testTag
 import mozilla.components.compose.browser.awesomebar.AwesomeBarColors
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
+import java.util.SortedMap
 
 @Composable
 @Suppress("LongParameterList")
 internal fun Suggestions(
-    suggestions: Map<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>,
+    suggestions: SortedMap<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
