@@ -41,6 +41,17 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     return !mChunkPtr;
   }
 
+  // Length of data written so far, excluding null terminator.
+  size_t Length() const {
+    MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
+    size_t totalLen = 0;
+    for (size_t i = 0; i < mChunkLengths.length(); i++) {
+      MOZ_ASSERT(strlen(mChunkList[i].get()) == mChunkLengths[i]);
+      totalLen += mChunkLengths[i];
+    }
+    return totalLen;
+  }
+
   void Write(const Span<const char>& aStr) override {
     MOZ_ASSERT(mChunkPtr >= mChunkList.back().get() && mChunkPtr <= mChunkEnd);
     MOZ_ASSERT(mChunkEnd >= mChunkList.back().get() + mChunkLengths.back());
@@ -69,13 +80,7 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
   void CopyDataIntoLazilyAllocatedBuffer(
       const std::function<char*(size_t)>& aAllocator) const {
     // Request a buffer for the full content plus a null terminator.
-    MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
-    size_t totalLen = 1;
-    for (size_t i = 0; i < mChunkLengths.length(); i++) {
-      MOZ_ASSERT(strlen(mChunkList[i].get()) == mChunkLengths[i]);
-      totalLen += mChunkLengths[i];
-    }
-    char* ptr = aAllocator(totalLen);
+    char* ptr = aAllocator(Length() + 1);
 
     if (!ptr) {
       // Failed to allocate memory.
