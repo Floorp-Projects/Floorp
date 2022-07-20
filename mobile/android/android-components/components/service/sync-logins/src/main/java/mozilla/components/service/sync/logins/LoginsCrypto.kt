@@ -75,10 +75,10 @@ class LoginsCrypto(
             if (checkCanary(canary, CANARY_PHRASE_PLAINTEXT, rawKey)) {
                 null
             } else {
-                // A bad key should trigger a CryptoException, but check this branch just in case.
+                // A bad key should trigger a IncorrectKey, but check this branch just in case.
                 KeyGenerationReason.RecoveryNeeded.Corrupt
             }
-        } catch (e: CryptoException) {
+        } catch (e: IncorrectKey) {
             KeyGenerationReason.RecoveryNeeded.Corrupt
         }
     }

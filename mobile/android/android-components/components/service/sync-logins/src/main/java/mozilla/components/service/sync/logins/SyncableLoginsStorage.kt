@@ -65,11 +65,6 @@ typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageExcep
 typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsStorageException.SyncAuthInvalid
 
 /**
- * This is thrown if `lock()`/`unlock()` pairs don't match up.
- */
-typealias MismatchedLockException = mozilla.appservices.logins.LoginsStorageException.MismatchedLock
-
-/**
  * This is thrown if `update()` is performed with a record whose GUID
  * does not exist.
  */
@@ -89,17 +84,7 @@ typealias InvalidRecordException = mozilla.appservices.logins.LoginsStorageExcep
 /**
  * Error encrypting/decrypting logins data
  */
-typealias CryptoException = mozilla.appservices.logins.LoginsStorageException.CryptoException
-
-/**
- * This error is emitted when migrating from an sqlcipher DB in two cases:
- *
- * 1. An incorrect key is used to to open the login database
- * 2. The file at the path specified is not a sqlite database.
- *
- * SQLCipher does not give any way to distinguish between these two cases.
- */
-typealias InvalidKeyException = mozilla.appservices.logins.LoginsStorageException.InvalidKey
+typealias IncorrectKey = mozilla.appservices.logins.LoginsStorageException.IncorrectKey
 
 /**
  * This error is emitted if a request to a sync server failed.
@@ -195,24 +180,24 @@ class SyncableLoginsStorage(
 
     /**
      * @throws [InvalidRecordException] if the record is invalid.
-     * @throws [CryptoException] invalid encryption key
+     * @throws [IncorrectKey] if the encryption key can't decrypt the login
      * @throws [LoginsStorageException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(CryptoException::class, InvalidRecordException::class, LoginsStorageException::class)
+    @Throws(IncorrectKey::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun add(entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().add(entry.toLoginEntry(), crypto.getOrGenerateKey().key).toEncryptedLogin()
     }
 
     /**
      * @throws [NoSuchRecordException] if the login does not exist.
-     * @throws [CryptoException] invalid encryption key
+     * @throws [IncorrectKey] if the encryption key can't decrypt the login
      * @throws [InvalidRecordException] if the update would create an invalid record.
      * @throws [LoginsStorageException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
     @Throws(
-        CryptoException::class,
+        IncorrectKey::class,
         NoSuchRecordException::class,
         InvalidRecordException::class,
         LoginsStorageException::class
@@ -223,11 +208,11 @@ class SyncableLoginsStorage(
 
     /**
      * @throws [InvalidRecordException] if the update would create an invalid record.
-     * @throws [CryptoException] invalid encryption key
+     * @throws [IncorrectKey] if the encryption key can't decrypt the login
      * @throws [LoginsStorageException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(CryptoException::class, InvalidRecordException::class, LoginsStorageException::class)
+    @Throws(IncorrectKey::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun addOrUpdate(entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().addOrUpdate(entry.toLoginEntry(), crypto.getOrGenerateKey().key).toEncryptedLogin()
     }
@@ -237,11 +222,11 @@ class SyncableLoginsStorage(
     }
 
     /**
-     * @throws [CryptoException] invalid encryption key
+     * @throws [IncorrectKey] if the encryption key can't decrypt the login
      * @throws [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors
      * (IO failure, rust panics, etc).
      */
-    @Throws(CryptoException::class, LoginsStorageException::class)
+    @Throws(IncorrectKey::class, LoginsStorageException::class)
     override suspend fun importLoginsAsync(logins: List<Login>): Unit = withContext(coroutineContext) {
         conn.getStorage().importMultiple(logins.map { it.toLogin() }, crypto.getOrGenerateKey().key)
     }
@@ -256,7 +241,7 @@ class SyncableLoginsStorage(
     }
 
     /**
-     * @throws [CryptoException] invalid encryption key
+     * @throws [IncorrectKey] if the encryption key can't decrypt the login
      * @throws [LoginsStorageException] On unexpected errors (IO failure, rust panics, etc)
      */
     @Throws(LoginsStorageException::class)
@@ -265,7 +250,7 @@ class SyncableLoginsStorage(
     }
 
     /**
-     * @throws [CryptoException] invalid encryption key
+     * @throws [IncorrectKey] if the encryption key can't decrypt the login
      */
     override suspend fun decryptLogin(login: EncryptedLogin) = crypto.decryptLogin(login)
 
