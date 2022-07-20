@@ -169,7 +169,7 @@ TEST(TestFileSystemHashSource, encodeGeneratedHash)
   // Always the same length
   ASSERT_EQ(kExpectedLength, result.Length());
 
-  // Encoded versions should differ
+  // Reused buffer should be different
   ASSERT_STRNE(asWide(expected).c_str(), asWide(result).c_str());
 
   // Padding length should have been stripped
