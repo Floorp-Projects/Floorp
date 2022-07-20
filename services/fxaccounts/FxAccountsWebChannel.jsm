@@ -88,11 +88,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "firefoxViewEnabled",
-  "browser.tabs.firefox-view"
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
   "separatePrivilegedMozillaWebContentProcess",
   "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
   false
@@ -284,9 +279,7 @@ FxAccountsWebChannel.prototype = {
         }
         break;
       case COMMAND_FIREFOX_VIEW:
-        if (lazy.firefoxViewEnabled) {
-          this._helpers.openFirefoxView(browser, data.entryPoint);
-        }
+        this._helpers.openFirefoxView(browser, data.entryPoint);
         break;
       case COMMAND_CHANGE_PASSWORD:
         this._helpers
