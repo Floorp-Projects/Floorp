@@ -17,10 +17,12 @@ import json
 class SecretsMixin(object):
     def _fetch_secret(self, secret_name):
         self.info("fetching secret {} from API".format(secret_name))
-        # fetch from http://taskcluster, which points to the taskcluster proxy
+        # fetch from TASKCLUSTER_PROXY_URL, which points to the taskcluster proxy
         # within a taskcluster task.  Outside of that environment, do not
         # use this action.
-        url = "http://taskcluster/secrets/v1/secret/" + secret_name
+        proxy = os.environ.get("TASKCLUSTER_PROXY_URL", "http://taskcluster")
+        proxy = proxy.rstrip("/")
+        url = proxy + "/secrets/v1/secret/" + secret_name
         res = urllib.request.urlopen(url)
         if res.getcode() != 200:
             self.fatal("Error fetching from secrets API:" + res.read())
