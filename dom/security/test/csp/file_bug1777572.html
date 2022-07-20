@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Security-Policy" content="img-src https://*;">
+    <script>
+      async function timeout (cmd) {
+        const timer = new Promise((resolve, reject) => {
+          const id = setTimeout(() => {
+            clearTimeout(id)
+            reject(new Error('Promise timed out!'))
+          }, 750)
+        })
+        return Promise.race([cmd, timer])
+      }
+
+      let ourOpener = window.opener;
+
+      if (location.search.includes("close")) {
+        window.close();
+      }
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const frame = document.createElementNS('http://www.w3.org/1999/xhtml', 'frame');
+        const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        document.documentElement.appendChild(frame)
+        image.setAttribute('href', 'a.png')
+        for (let i = 0; i < 5; ++i) {
+          try { await timeout(image.decode()) } catch (e) {}
+        }
+        let w = window.open();
+        // Need to run SpecialPowers in the newly opened window to avoid
+        // .wrap throwing because of dead objects.
+        let csp = w.eval("SpecialPowers.wrap(document).cspJSON;");
+        ourOpener.postMessage(csp, "*");
+        w.close();
+
+        if (!location.search.includes("close")) {
+          window.close();
+        }
+      })
+    </script>
+</head>
+</html>
