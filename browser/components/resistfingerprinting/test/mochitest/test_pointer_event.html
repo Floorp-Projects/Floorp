@@ -86,8 +86,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363508
     ];
 
     synthesizeTouch(target0, 5, 5, { type: "touchstart" });
-    synthesizeTouch(target0, 5, 5, { type: "touchmove" });
-    synthesizeTouch(target0, 5, 5, { type: "touchcancel" });
+    synthesizeTouch(target0, 6, 6, { type: "touchmove" });
+    synthesizeTouch(target0, 6, 6, { type: "touchcancel" });
 
     await Promise.all(eventPromises);
   }

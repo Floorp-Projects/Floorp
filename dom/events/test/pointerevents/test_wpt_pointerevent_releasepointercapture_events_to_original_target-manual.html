@@ -27,9 +27,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         window.addEventListener("message", function(aEvent) {
           if (aEvent.data == "Test Touch") {
             // Synthesize touch events to run this test.
-            sendTouchEvent(int_win, "target0", "touchstart");
-            sendTouchEvent(int_win, "target0", "touchmove");
-            sendTouchEvent(int_win, "target0", "touchend");
+            sendTouchEvent(int_win, "target0", "touchstart", {offsetX: 10});
+            sendTouchEvent(int_win, "target0", "touchmove", {offsetX: 11});
+            sendTouchEvent(int_win, "target0", "touchend", {offsetX: 11});
             window.postMessage("Test Pen", "*");
           } else if (aEvent.data == "Test Pen") {
             // Synthesize pen events to run this test.
