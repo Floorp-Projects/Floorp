@@ -82,6 +82,12 @@ class ProfileBufferGlobalController final {
   template <typename F>
   void Log(F&& aF);
 
+  static void LogUpdateChunks(Json::Value& updates, base::ProcessId aProcessId,
+                              const TimeStamp& aTimeStamp, int aChunkDiff);
+  void LogUpdate(base::ProcessId aProcessId,
+                 const ProfileBufferControlledChunkManager::Update& aUpdate);
+  void LogDeletion(base::ProcessId aProcessId, const TimeStamp& aTimeStamp);
+
   void HandleChunkManagerNonFinalUpdate(
       base::ProcessId aProcessId,
       ProfileBufferControlledChunkManager::Update&& aUpdate,
@@ -216,6 +222,50 @@ void ProfileBufferGlobalController::Log(F&& aF) {
   });
 }
 
+/* static */
+void ProfileBufferGlobalController::LogUpdateChunks(Json::Value& updates,
+                                                    base::ProcessId aProcessId,
+                                                    const TimeStamp& aTimeStamp,
+                                                    int aChunkDiff) {
+  MOZ_ASSERT(updates.isArray());
+  Json::Value row{Json::arrayValue};
+  row.append(Json::Value{Json::UInt64(aProcessId)});
+  row.append(ProfilingLog::Timestamp(aTimeStamp));
+  row.append(Json::Value{Json::Int(aChunkDiff)});
+  updates.append(std::move(row));
+}
+
+void ProfileBufferGlobalController::LogUpdate(
+    base::ProcessId aProcessId,
+    const ProfileBufferControlledChunkManager::Update& aUpdate) {
+  Log([&](Json::Value& aRoot) {
+    Json::Value& updates = aRoot[Json::StaticString{"updates"}];
+    if (!updates.isArray()) {
+      aRoot[Json::StaticString{"updatesSchema"}] =
+          Json::StaticString{"0: pid, 1: chunkRelease_TSms, 3: chunkDiff"};
+      updates = Json::Value{Json::arrayValue};
+    }
+    if (aUpdate.IsFinal()) {
+      LogUpdateChunks(updates, aProcessId, TimeStamp{}, 0);
+    } else if (!aUpdate.IsNotUpdate()) {
+      for (const auto& chunk : aUpdate.NewlyReleasedChunksRef()) {
+        LogUpdateChunks(updates, aProcessId, chunk.mDoneTimeStamp, 1);
+      }
+    }
+  });
+}
+
+void ProfileBufferGlobalController::LogDeletion(base::ProcessId aProcessId,
+                                                const TimeStamp& aTimeStamp) {
+  Log([&](Json::Value& aRoot) {
+    Json::Value& updates = aRoot[Json::StaticString{"updates"}];
+    if (!updates.isArray()) {
+      updates = Json::Value{Json::arrayValue};
+    }
+    LogUpdateChunks(updates, aProcessId, aTimeStamp, -1);
+  });
+}
+
 ProfileBufferGlobalController::ProfileBufferGlobalController(
     size_t aMaximumBytes)
     : mMaximumBytes(aMaximumBytes) {
@@ -318,6 +368,7 @@ void ProfileBufferGlobalController::HandleChildChunkManagerUpdate(
 
   if (aUpdate.IsFinal()) {
     // Final update in a child process, remove all traces of that process.
+    LogUpdate(aProcessId, aUpdate);
     size_t index = mUnreleasedBytesByPid.BinaryIndexOf(aProcessId);
     if (index != PidAndBytesArray::NoIndex) {
       // We already have a value for this pid.
@@ -373,6 +424,7 @@ void ProfileBufferGlobalController::HandleChunkManagerNonFinalUpdate(
     ProfileBufferControlledChunkManager::Update&& aUpdate,
     ProfileBufferControlledChunkManager& aParentChunkManager) {
   MOZ_ASSERT(!aUpdate.IsFinal());
+  LogUpdate(aProcessId, aUpdate);
 
   size_t index = mUnreleasedBytesByPid.BinaryIndexOf(aProcessId);
   if (index != PidAndBytesArray::NoIndex) {
@@ -434,6 +486,7 @@ void ProfileBufferGlobalController::HandleChunkManagerNonFinalUpdate(
     // We have reached the global memory limit, and there *are* released chunks
     // that can be destroyed. Start with the first one, which is the oldest.
     const TimeStampAndBytesAndPid& oldest = mReleasedChunksByTime[0];
+    LogDeletion(oldest.mProcessId, oldest.mTimeStamp);
     mReleasedTotalBytes -= oldest.mBytes;
     if (oldest.mProcessId == mParentProcessId) {
       aParentChunkManager.DestroyChunksAtOrBefore(oldest.mTimeStamp);

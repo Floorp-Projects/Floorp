@@ -11,6 +11,10 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   PromptTestUtils: "resource://testing-common/PromptTestUtils.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
@@ -19,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",

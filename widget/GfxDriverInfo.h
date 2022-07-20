@@ -190,7 +190,7 @@ enum class DeviceFamily : uint8_t {
   NvidiaBlockD3D9Layers,
   RadeonX1000,
   RadeonCaicos,
-  RadeonBlockNoVideoCopy,
+  RadeonBlockZeroVideoCopy,
   Geforce7300GT,
   Nvidia310M,
   Nvidia8800GTS,

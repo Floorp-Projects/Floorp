@@ -4,18 +4,19 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchSERPTelemetry"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 // The various histograms and scalars that we report to.
@@ -876,4 +877,4 @@ class ContentHandler {
   }
 }
 
-var SearchSERPTelemetry = new TelemetryHandler();
+export var SearchSERPTelemetry = new TelemetryHandler();

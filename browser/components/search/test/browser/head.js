@@ -1,6 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ADLINK_CHECK_TIMEOUT_MS: "resource:///actors/SearchSERPTelemetryChild.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
@@ -8,8 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://testing-common/CustomizableUITestUtils.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });

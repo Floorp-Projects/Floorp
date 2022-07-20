@@ -4,14 +4,12 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-const { SearchEngine } = ChromeUtils.import(
-  "resource://gre/modules/SearchEngine.jsm"
-);
+import { SearchEngine } from "resource://gre/modules/SearchEngine.sys.mjs";
 
 /**
  * UserSearchEngine represents a search engine defined by a user.
  */
-class UserSearchEngine extends SearchEngine {
+export class UserSearchEngine extends SearchEngine {
   /**
    * Creates a UserSearchEngine.
    *
@@ -52,5 +50,3 @@ class UserSearchEngine extends SearchEngine {
     return `other-${this.name}`;
   }
 }
-
-var EXPORTED_SYMBOLS = ["UserSearchEngine"];

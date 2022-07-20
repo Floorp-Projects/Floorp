@@ -50,6 +50,22 @@ If it continues to fail, consider installing Mercurial by following the
 instructions at http://mercurial.selenic.com/.
 """
 
+MERCURIAL_INSTALL_PROMPT = """
+Mercurial releases a new version every 3 months and your distro's package
+may become out of date. This may cause incompatibility with some
+Mercurial extensions that rely on new Mercurial features. As a result,
+you may not have an optimal version control experience.
+
+To have the best Mercurial experience possible, we recommend installing
+Mercurial via the "pip" Python packaging utility. This will likely result
+in files being placed in /usr/local/bin and /usr/local/lib.
+
+How would you like to continue?
+  1. Install a modern Mercurial via pip [default]
+  2. Install a legacy Mercurial via the distro package manager
+  3. Do not install Mercurial
+Your choice: """
+
 PYTHON_UNABLE_UPGRADE = """
 You are currently running Python %s. Running %s or newer (but
 not 3.x) is required.

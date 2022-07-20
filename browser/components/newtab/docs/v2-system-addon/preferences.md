@@ -145,14 +145,6 @@ Endpoint for when a user opts-out of sponsored content to delete the correspondi
 
 A list of endpoints that are allowed to be used by Discovery Stream for remote content (eg: story metadata) and configuration (eg: remote layout definitions for experimentation).
 
-#### `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
-
-- Type: `boolean`
-- Default: `false`
-- Pref Type: AS
-
-A flag controlling the visibility of engagement labels on cards (eg: "Trending" or "Popular").
-
 #### `browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout`
 
 - Type: `boolean`

@@ -518,6 +518,30 @@ static const struct EVInfo kEVInfos[] = {
     "amg+nFGby1M=",
   },
   {
+    // CN=E-Tugra Global Root CA RSA v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xEF, 0x66, 0xB0, 0xB1, 0x0A, 0x3C, 0xDB, 0x9F, 0x2E, 0x36, 0x48,
+      0xC7, 0x6B, 0xD2, 0xAF, 0x18, 0xEA, 0xD2, 0xBF, 0xE6, 0xF1, 0x17,
+      0x65, 0x5E, 0x28, 0xC4, 0x06, 0x0D, 0xA1, 0xA3, 0xF4, 0xC2 },
+    "MIGAMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1"
+    "Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjEmMCQG"
+    "A1UEAxMdRS1UdWdyYSBHbG9iYWwgUm9vdCBDQSBSU0EgdjM=",
+    "DU3FzRYilZYIfrgLfxUGNPt5EDQ=",
+  },
+  {
+    // CN=E-Tugra Global Root CA ECC v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x87, 0x3F, 0x46, 0x85, 0xFA, 0x7F, 0x56, 0x36, 0x25, 0x25, 0x2E,
+      0x6D, 0x36, 0xBC, 0xD7, 0xF1, 0x6F, 0xC2, 0x49, 0x51, 0xF2, 0x64,
+      0xE4, 0x7E, 0x1B, 0x95, 0x4F, 0x49, 0x08, 0xCD, 0xCA, 0x13 },
+    "MIGAMQswCQYDVQQGEwJUUjEPMA0GA1UEBxMGQW5rYXJhMRkwFwYDVQQKExBFLVR1"
+    "Z3JhIEVCRyBBLlMuMR0wGwYDVQQLExRFLVR1Z3JhIFRydXN0IENlbnRlcjEmMCQG"
+    "A1UEAxMdRS1UdWdyYSBHbG9iYWwgUm9vdCBDQSBFQ0MgdjM=",
+    "JkYZdzHhT28oNt45UYbm1JeIIsE=",
+  },
+  {
     // CN=Actalis Authentication Root CA,O=Actalis S.p.A./03358520967,L=Milan,C=IT
     "1.3.159.1.17.1",
     "Actalis EV OID",
@@ -588,6 +612,28 @@ static const struct EVInfo kEVInfos[] = {
     "EHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lDZXJ0IFRydXN0ZWQgUm9v"
     "dCBHNA==",
     "BZsbV56OITLiOQe9p3d1XA==",
+  },
+  {
+    // CN=DigiCert TLS RSA4096 Root G5,O="DigiCert, Inc.",C=US
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x37, 0x1A, 0x00, 0xDC, 0x05, 0x33, 0xB3, 0x72, 0x1A, 0x7E, 0xEB,
+      0x40, 0xE8, 0x41, 0x9E, 0x70, 0x79, 0x9D, 0x2B, 0x0A, 0x0F, 0x2C,
+      0x1D, 0x80, 0x69, 0x31, 0x65, 0xF7, 0xCE, 0xC4, 0xAD, 0x75 },
+    "ME0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjElMCMGA1UE"
+    "AxMcRGlnaUNlcnQgVExTIFJTQTQwOTYgUm9vdCBHNQ==",
+    "CPm0eKj6ftpqMzeJ3nzPig==",
+  },
+  {
+    // CN=DigiCert TLS ECC P384 Root G5,O="DigiCert, Inc.",C=US
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x01, 0x8E, 0x13, 0xF0, 0x77, 0x25, 0x32, 0xCF, 0x80, 0x9B, 0xD1,
+      0xB1, 0x72, 0x81, 0x86, 0x72, 0x83, 0xFC, 0x48, 0xC6, 0xE1, 0x3B,
+      0xE9, 0xC6, 0x98, 0x12, 0x85, 0x4A, 0x49, 0x0C, 0x1B, 0x05 },
+    "ME4xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjEmMCQGA1UE"
+    "AxMdRGlnaUNlcnQgVExTIEVDQyBQMzg0IFJvb3QgRzU=",
+    "CeCTZaz32ci5PhwLBCou8w==",
   },
   {
     // CN=QuoVadis Root CA 2 G3,O=QuoVadis Limited,C=BM

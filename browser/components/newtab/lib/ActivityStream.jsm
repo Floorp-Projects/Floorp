@@ -394,14 +394,6 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.engagementLabelEnabled",
-    {
-      title:
-        "Allow the display of engagement labels for discovery stream components (eg: Trending, Popular, etc)",
-      value: false,
-    },
-  ],
-  [
     "discoverystream.isCollectionDismissible",
     {
       title: "Allows Pocket story collections to be dismissed",

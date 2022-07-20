@@ -20,9 +20,12 @@ const { SkippableTimer, UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(lazy, {
   SearchSuggestionController:
-    "resource://gre/modules/SearchSuggestionController.jsm",
+    "resource://gre/modules/SearchSuggestionController.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",

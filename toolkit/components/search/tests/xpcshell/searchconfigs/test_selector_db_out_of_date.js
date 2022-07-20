@@ -3,9 +3,12 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
-  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
 });
 
 do_get_profile();

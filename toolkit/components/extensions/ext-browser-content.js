@@ -101,7 +101,12 @@ const BrowserListener = {
     switch (event.type) {
       case "DOMDocElementInserted":
         if (this.blockingPromise) {
-          event.target.blockParsing(this.blockingPromise);
+          const doc = event.target;
+          const policy = doc?.nodePrincipal?.addonPolicy;
+          event.target.blockParsing(this.blockingPromise).then(() => {
+            policy?.weakExtension?.get()?.untrackBlockedParsingDocument(doc);
+          });
+          policy?.weakExtension?.get()?.trackBlockedParsingDocument(doc);
         }
         break;
 

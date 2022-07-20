@@ -7,11 +7,14 @@ const TEST_ENGINE2_NAME = "searchSuggestionEngine2";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
+ChromeUtils.defineESModuleGetters(this, {
+  SearchSuggestionController:
+    "resource://gre/modules/SearchSuggestionController.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentSearch: "resource:///actors/ContentSearchParent.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
-  SearchSuggestionController:
-    "resource://gre/modules/SearchSuggestionController.jsm",
 });
 
 const pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;

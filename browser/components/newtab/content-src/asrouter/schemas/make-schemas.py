@@ -23,6 +23,7 @@ MESSAGE_TYPES = {
     "InfoBar": Path("CFR", "templates", "InfoBar.schema.json"),
     "NewtabPromoMessage": Path("PBNewtab", "NewtabPromoMessage.schema.json"),
     "Spotlight": Path("OnboardingMessage", "Spotlight.schema.json"),
+    "ToastNotification": Path("ToastNotification", "ToastNotification.schema.json"),
     "ToolbarBadgeMessage": Path("OnboardingMessage", "ToolbarBadgeMessage.schema.json"),
     "UpdateAction": Path("OnboardingMessage", "UpdateAction.schema.json"),
     "WhatsNewMessage": Path("OnboardingMessage", "WhatsNewMessage.schema.json"),

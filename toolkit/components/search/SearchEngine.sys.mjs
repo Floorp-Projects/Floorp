@@ -13,9 +13,12 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
@@ -329,7 +332,7 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
 /**
  * EngineURL holds a query URL and all associated parameters.
  */
-class EngineURL {
+export class EngineURL {
   params = [];
   rels = [];
 
@@ -558,7 +561,7 @@ class EngineURL {
 /**
  * SearchEngine represents WebExtension based search engines.
  */
-class SearchEngine {
+export class SearchEngine {
   QueryInterface = ChromeUtils.generateQI(["nsISearchEngine"]);
   // Data set by the user.
   _metaData = {};
@@ -1675,5 +1678,3 @@ class Submission {
     return this._postData;
   }
 }
-
-var EXPORTED_SYMBOLS = ["EngineURL", "SearchEngine"];

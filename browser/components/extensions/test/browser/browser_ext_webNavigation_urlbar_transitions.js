@@ -7,11 +7,9 @@ ChromeUtils.defineModuleGetter(
   "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "SearchTestUtils",
-  "resource://testing-common/SearchTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "UrlbarTestUtils",

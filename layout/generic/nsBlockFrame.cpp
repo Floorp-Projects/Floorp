@@ -1405,7 +1405,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // parent resizing.
   if (!HasAnyStateBits(NS_FRAME_IS_DIRTY) && reflowInput->mCBReflowInput &&
       reflowInput->mCBReflowInput->IsIResize() &&
-      reflowInput->mStyleText->mTextIndent.HasPercent() && !mLines.empty()) {
+      StyleText()->mTextIndent.HasPercent() && !mLines.empty()) {
     mLines.front()->MarkDirty();
   }
 
@@ -2724,8 +2724,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       const auto align = isLastLine ? StyleText()->TextAlignForLastLine()
                                     : StyleText()->mTextAlign;
       if (line->mWritingMode.IsVertical() || line->mWritingMode.IsBidiRTL() ||
-          !IsAlignedLeft(align,
-                         aState.mReflowInput.mStyleVisibility->mDirection,
+          !IsAlignedLeft(align, StyleVisibility()->mDirection,
                          StyleTextReset()->mUnicodeBidi, this)) {
         line->MarkDirty();
       }

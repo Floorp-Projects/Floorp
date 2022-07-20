@@ -44,7 +44,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   modal: "chrome://remote/content/marionette/modal.js",
   navigate: "chrome://remote/content/marionette/navigate.js",
   permissions: "chrome://remote/content/marionette/permissions.js",
-  PollPromise: "chrome://remote/content/marionette/sync.js",
   pprint: "chrome://remote/content/shared/Format.jsm",
   print: "chrome://remote/content/shared/PDF.jsm",
   reftest: "chrome://remote/content/marionette/reftest.js",
@@ -63,7 +62,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
   WebReference: "chrome://remote/content/marionette/element.js",
-  WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
   windowManager: "chrome://remote/content/shared/WindowManager.jsm",
   WindowState: "chrome://remote/content/marionette/browser.js",
 });
@@ -2443,19 +2441,16 @@ GeckoDriver.prototype.minimizeWindow = async function() {
 
   if (lazy.WindowState.from(win.windowState) != lazy.WindowState.Minimized) {
     let cb;
-    let observer = new lazy.WebElementEventTarget(
-      this.curBrowser.messageManager
-    );
     // Use a timed promise to abort if no window manager is present
     await new lazy.TimedPromise(
       resolve => {
         cb = new lazy.DebounceCallback(resolve);
-        observer.addEventListener("visibilitychange", cb);
+        win.addEventListener("sizemodechange", cb);
         win.minimize();
       },
       { throws: null, timeout: TIMEOUT_NO_WINDOW_MANAGER }
     );
-    observer.removeEventListener("visibilitychange", cb);
+    win.removeEventListener("sizemodechange", cb);
     await new lazy.IdlePromise(win);
   }
 
@@ -3221,19 +3216,23 @@ async function exitFullscreen(win) {
     { throws: null, timeout: TIMEOUT_NO_WINDOW_MANAGER }
   );
   win.removeEventListener("sizemodechange", cb);
+  await new lazy.IdlePromise(win);
 }
 
 async function restoreWindow(win) {
-  win.restore();
-  // Use a poll promise to abort if no window manager is present
-  await new lazy.PollPromise(
-    (resolve, reject) => {
-      if (lazy.WindowState.from(win.windowState) == lazy.WindowState.Normal) {
-        resolve();
-      } else {
-        reject();
-      }
+  let cb;
+  if (lazy.WindowState.from(win.windowState) == lazy.WindowState.Normal) {
+    return;
+  }
+  // Use a timed promise to abort if no window manager is present
+  await new lazy.TimedPromise(
+    resolve => {
+      cb = new lazy.DebounceCallback(resolve);
+      win.addEventListener("sizemodechange", cb);
+      win.restore();
     },
-    { timeout: TIMEOUT_NO_WINDOW_MANAGER }
+    { throws: null, timeout: TIMEOUT_NO_WINDOW_MANAGER }
   );
+  win.removeEventListener("sizemodechange", cb);
+  await new lazy.IdlePromise(win);
 }

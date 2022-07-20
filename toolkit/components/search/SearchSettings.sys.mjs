@@ -2,17 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SearchSettings"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -30,7 +31,7 @@ const SETTINGS_FILENAME = "search.json.mozlz4";
  * Global settings can be saved and obtained from this class via the
  * `*Attribute` methods.
  */
-class SearchSettings {
+export class SearchSettings {
   constructor(searchService) {
     this._searchService = searchService;
   }

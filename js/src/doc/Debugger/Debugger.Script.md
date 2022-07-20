@@ -307,7 +307,10 @@ Returns an object with the following properties:
 **If the instance refers to a `JSScript`**, set a breakpoint at the
 bytecode instruction at <i>offset</i> in this script, reporting hits to
 the `hit` method of <i>handler</i>. If <i>offset</i> is not a valid offset
-in this script, throw an error.
+in this script, throw an error.  Also, even if <i>offset</i> is valid offset
+in this script, some instructions for engine-internal operation (e.g.
+SetAliasedVar in the generator function initialization) don't allow setting
+breakpoints, and in that case, this also throws an error.
 
 When execution reaches the given instruction, SpiderMonkey calls the
 `hit` method of <i>handler</i>, passing a [`Debugger.Frame`][frame]
@@ -363,6 +366,11 @@ containing the offsets of all bytecodes in the script which can have direct
 side effects that are visible outside the currently executing frame.  This
 includes, for example, operations that set properties or elements on
 objects, or that may set names in environments created outside the frame.
+
+This doesn't include some instructions for engine-internal operation (e.g.
+SetAliasedVar in the generator function initialization).  Those instructions
+can be effectful in term of engine-internal, but that's not user-visible and
+can be treated as not-effectful here.
 
 ### `getOffsetsCoverage()`:
 **If the instance refers to a `JSScript`**, return `null` or an array which

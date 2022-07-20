@@ -6,8 +6,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchUtils"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -115,7 +113,7 @@ class LoadListener {
   onStatus(request, status, statusArg) {}
 }
 
-var SearchUtils = {
+export var SearchUtils = {
   BROWSER_SEARCH_PREF,
 
   SETTINGS_KEY: "search-config",

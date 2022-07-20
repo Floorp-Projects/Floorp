@@ -780,6 +780,16 @@ describe("TelemetryFeed", () => {
       assert.equal(pingType, "infobar");
     });
   });
+  describe("#applyToastNotificationPolicy", () => {
+    it("should set client_id and set pingType", async () => {
+      const { ping, pingType } = await instance.applyToastNotificationPolicy(
+        {}
+      );
+
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.equal(pingType, "toast_notification");
+    });
+  });
   describe("#applySpotlightPolicy", () => {
     it("should set client_id and set pingType", async () => {
       let pingData = { action: "foo" };
@@ -1072,6 +1082,18 @@ describe("TelemetryFeed", () => {
       await instance.createASRouterEvent(action);
 
       assert.calledOnce(instance.applySpotlightPolicy);
+    });
+    it("should call applyToastNotificationPolicy if action equals to toast_notification_user_event", async () => {
+      const data = {
+        action: "toast_notification_user_event",
+        event: "IMPRESSION",
+        message_id: "TEST_TOAST_NOTIFICATION1",
+      };
+      sandbox.stub(instance, "applyToastNotificationPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applyToastNotificationPolicy);
     });
     it("should call applyUndesiredEventPolicy if action equals to asrouter_undesired_event", async () => {
       const data = {

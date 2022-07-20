@@ -57,13 +57,11 @@ Rotating triage
 ~~~~~~~~~~~~~~~
 
 Some components are monitored by a rotation of triagers. In those cases,
-the triage owner should be seen as the person responsible for assuring
-the component is triaged, but the work is done by the people in the
-rotation. The `rotations are managed as
-calendars <https://github.com/mozilla/relman-auto-nag/tree/master/auto_nag/scripts/configs>`__.
+the triage owner on Bugzilla will be automatically updated to reflect the
+person on the rotation. The rotations are managed as calendars.
 
 If you wish to set up a rotation for triaging one or more components,
-contact the Bugzilla team on Slack (#bmo.)
+add a link to your rotation calendar in the `triage rotations spreadsheet <https://docs.google.com/spreadsheets/d/1EK6iCtdD8KP4UflIHscuZo6W5er2vy_TX7vsmaaBVd4>`__.
 
 Firefox::General and Toolkit::General
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

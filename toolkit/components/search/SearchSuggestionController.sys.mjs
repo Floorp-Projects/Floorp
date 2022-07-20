@@ -4,15 +4,17 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["SearchSuggestionController"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
 });
 
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
@@ -131,7 +133,7 @@ var gFirstPartyDomains = new Map();
  * be called many times to fetch suggestions.
  *
  */
-class SearchSuggestionController {
+export class SearchSuggestionController {
   /**
    * The maximum length of a value to be stored in search history.
    *  @type {number}

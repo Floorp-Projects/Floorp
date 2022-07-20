@@ -91,8 +91,6 @@ class PdfCreationTest : BaseSessionTest() {
 
     @NullDelegate(Autofill.Delegate::class)
     @Test fun singleColorPdf() {
-        // Bug 1763466
-        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         activityRule.scenario.onActivity {
             mainSession.loadTestPath(COLOR_ORANGE_BACKGROUND_HTML_PATH)
             mainSession.waitForPageStop()
@@ -109,8 +107,6 @@ class PdfCreationTest : BaseSessionTest() {
 
     @NullDelegate(Autofill.Delegate::class)
     @Test fun rgbColorsPdf() {
-        // Bug 1763466
-        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
         activityRule.scenario.onActivity {
             mainSession.loadTestPath(COLOR_GRID_HTML_PATH)
             mainSession.waitForPageStop()

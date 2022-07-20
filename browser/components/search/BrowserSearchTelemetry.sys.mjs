@@ -4,18 +4,19 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["BrowserSearchTelemetry"];
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
@@ -295,4 +296,4 @@ class BrowserSearchTelemetryHandler {
   }
 }
 
-var BrowserSearchTelemetry = new BrowserSearchTelemetryHandler();
+export var BrowserSearchTelemetry = new BrowserSearchTelemetryHandler();

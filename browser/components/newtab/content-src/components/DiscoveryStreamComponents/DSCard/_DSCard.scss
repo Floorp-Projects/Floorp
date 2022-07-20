@@ -11,38 +11,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
   flex-direction: column;
   position: relative;
 
-  .playhead {
-    background: var(--newtab-primary-action-background) url('chrome://activity-stream/content/data/content/assets/glyph-playhead.svg') no-repeat 12px center;
-    border-radius: 20px;
-    bottom: -16px;
-    color: color-mix(in srgb, var(--newtab-primary-element-text-color) 0%, transparent);
-    display: flex;
-    flex-direction: column;
-    height: 40px;
-    justify-content: center;
-    left: 16px;
-    min-width: 40px;
-    padding: 0 0 0 40px;
-    position: absolute;
-    transition: padding 100ms ease-in-out 0ms, color 100ms linear 100ms;
-
-    &:hover {
-      color: var(--newtab-primary-element-text-color);
-      padding: 0 20px 0 40px;
-    }
-
-    span {
-      display: none;
-    }
-
-    &:hover span {
-      display: inline;
-      font-style: normal;
-      font-weight: 600;
-      font-size: 13px;
-    }
-  }
-
   &.placeholder {
     background: transparent;
     box-shadow: inset $inner-box-shadow;
@@ -192,10 +160,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
     }
   }
 
-  &.video-card .meta {
-    margin-top: 4px;
-  }
-
   .meta {
     display: flex;
     flex-direction: column;
@@ -231,54 +195,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
     .new-sponsored-label {
       font-size: 13px;
       margin-bottom: 2px;
-    }
-
-    .cta-button {
-      background-color: var(--newtab-button-secondary-color);
-      width: 100%;
-      margin: 12px 0 4px;
-      box-shadow: none;
-      border-radius: 4px;
-      height: 32px;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 5px 8px 7px;
-      border: $border-primary;
-
-      &:active {
-        box-shadow: $shadow-primary;
-      }
-    }
-
-    .cta-link {
-      color: var(--newtab-primary-action-background);
-      fill: var(--newtab-primary-action-background);
-
-      font-size: 15px;
-      font-weight: 600;
-      line-height: 24px;
-      height: 24px;
-      width: auto;
-      background-size: auto;
-      background-position: right 1.5px;
-      padding-right: 9px;
-
-      &:focus {
-        box-shadow: $shadow-primary;
-
-        border-radius: 4px;
-        outline: 0;
-      }
-
-      &:active {
-        color: var(--newtab-primary-element-active-color);
-        fill: var(--newtab-primary-element-active-color);
-        box-shadow: none;
-      }
-
-      &:hover {
-        text-decoration: underline;
-      }
     }
   }
 
