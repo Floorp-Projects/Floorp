@@ -1256,7 +1256,17 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
               });
               const nsDependentCSubstring profileString(
                   aResult.get<char>(), aResult.Size<char>() - 1);
-              self->GatheredOOPProfile(childPid, profileString);
+              if (profileString.IsEmpty() || profileString[0] != '*') {
+                self->GatheredOOPProfile(childPid, profileString);
+              } else {
+                self->LogEvent([&](Json::Value& aEvent) {
+                  aEvent.append(Json::StaticString{
+                      "Child non-profile from pid, with error message:"});
+                  aEvent.append(Json::Value::UInt64(childPid));
+                  aEvent.append(profileString.Data() + 1);
+                });
+                self->GatheredOOPProfile(childPid, ""_ns);
+              }
             } else {
               // This can happen if the child failed to allocate
               // the Shmem (or maliciously sent an invalid Shmem).
