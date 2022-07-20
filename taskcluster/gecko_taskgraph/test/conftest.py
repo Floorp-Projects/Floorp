@@ -6,15 +6,14 @@ import os
 import pytest
 from mach.logging import LoggingManager
 from responses import RequestsMock
+from taskgraph import target_tasks as target_tasks_mod
 from taskgraph.config import GraphConfig
-
 from taskgraph.parameters import Parameters
 
 from gecko_taskgraph import (
     GECKO,
     generator,
     optimize as optimize_mod,
-    target_tasks as target_tasks_mod,
 )
 from gecko_taskgraph.actions import render_actions_json
 from gecko_taskgraph.config import load_graph_config
