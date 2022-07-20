@@ -8,9 +8,7 @@ import {
   actionTypes as at,
 } from "resource://activity-stream/common/Actions.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
 
 const { AppConstants } = ChromeUtils.import(

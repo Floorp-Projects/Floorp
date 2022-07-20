@@ -1,8 +1,6 @@
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
