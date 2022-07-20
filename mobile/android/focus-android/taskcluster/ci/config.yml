@@ -11,7 +11,15 @@ treeherder:
         'release': 'Production-related tasks with same APK configuration as Focus'
         'TL': 'Toolchain builds for Linux 64-bits'
 
-task-priority: highest
+task-priority:
+    by-project:
+        "focus-android": highest
+        "staging-focus-android": low
+        # This handles cases where a fork may end up not being named
+        # as one of the explicit names above. Ideally anything forked
+        # from "focus-android" would inherit its setting, but "low" is the
+        # safer default
+        default: low
 
 taskgraph:
     register: focus_android_taskgraph:register
