@@ -345,7 +345,11 @@
 
 - name: apz.axis_lock.breakout_angle
   type: AtomicFloat
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  value: float(M_PI / 4.0)    # 45 degrees
+#else
   value: float(M_PI / 8.0)    # 22.5 degrees
+#endif
   mirror: always
   include: <cmath>
 
@@ -362,7 +366,11 @@
 
 - name: apz.axis_lock.lock_angle
   type: AtomicFloat
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  value: float(M_PI / 4.0)    # 45 degrees
+#else
   value: float(M_PI / 6.0)    # 30 degrees
+#endif
   mirror: always
   include: <cmath>
 
@@ -370,15 +378,9 @@
 # 0 = FREE (No locking at all)
 # 1 = STANDARD (Once locked, remain locked until scrolling ends)
 # 2 = STICKY (Allow lock to be broken, with hysteresis)
-# 3 = DOMINANT_AXIS (Only allow movement on one axis at a time, only
-#     applies to touchpad scrolling)
 - name: apz.axis_lock.mode
   type: RelaxedAtomicInt32
-#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
-  value: 3
-#else
   value: 2
-#endif
   mirror: always
 
 - name: apz.content_response_timeout
