@@ -20,12 +20,3 @@ pytestmark = pytest.mark.asyncio
 )
 async def test_invalid_address(bidi_session, new_tab, url):
     await navigate_and_assert(bidi_session, new_tab, url, expected_error=True)
-
-
-async def test_invalid_content_encoding(bidi_session, new_tab, inline):
-    await navigate_and_assert(
-        bidi_session,
-        new_tab,
-        f"{inline('<div>foo')}&pipe=header(Content-Encoding,gzip)",
-        expected_error=True
-    )
