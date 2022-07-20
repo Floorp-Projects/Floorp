@@ -1,21 +1,7 @@
 queue_rules:
   - name: default
     conditions:
-      - status-success=build-android-test-beta
-      - status-success=build-android-test-debug
-      - status-success=build-android-test-nightly
-      - status-success=build-beta-firebase
-      - status-success=build-focus-debug
-      - status-success=build-klar-debug
-      - status-success=build-nightly-firebase
-      - status-success=lint-compare-locales
-      - status-success=lint-detekt
-      - status-success=lint-ktlint
-      - status-success=lint-lint
-      - status-success=test-debug
-      - status-success=ui-test-x86-beta
-      - status-success=ui-test-x86-debug
-      - status-success=ui-test-x86-nightly
+      - status-success=complete-pr
 pull_request_rules:
   - name: L10N - Auto Merge
     conditions:
@@ -25,7 +11,7 @@ pull_request_rules:
           - and:
             - author=mozilla-l10n-automation-bot
             - base=main
-            - status-success=pr-complete
+            - status-success=complete-pr
           - and:
             - author=github-actions[bot]
             - base~=releases[_/].*
