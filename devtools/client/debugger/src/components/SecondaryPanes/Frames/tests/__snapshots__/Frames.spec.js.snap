@@ -38,6 +38,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "source1",
               "group": "",
               "path": "source1",
@@ -90,6 +91,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "source1",
               "group": "",
               "path": "source1",
@@ -145,6 +147,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "source1",
               "group": "",
               "path": "source1",
@@ -197,6 +200,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           },
           "source": Object {
             "displayURL": Object {
+              "fileExtension": "",
               "filename": "source1",
               "group": "",
               "path": "source1",

@@ -136,6 +136,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
           Object {
             "contents": Object {
               "displayURL": Object {
+                "fileExtension": "js",
                 "filename": "three.js",
                 "group": "mdn.com",
                 "path": "/three.js",
@@ -177,6 +178,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               Object {
                 "contents": Object {
                   "displayURL": Object {
+                    "fileExtension": "js",
                     "filename": "four.js",
                     "group": "mdn.com",
                     "path": "/four.js",
@@ -216,6 +218,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               Object {
                 "contents": Object {
                   "displayURL": Object {
+                    "fileExtension": "js%20[original]",
                     "filename": "four.js [original]",
                     "group": "mdn.com",
                     "path": "/four.js%20[original]",
@@ -255,6 +258,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               Object {
                 "contents": Object {
                   "displayURL": Object {
+                    "fileExtension": "js",
                     "filename": "one.js",
                     "group": "mdn.com",
                     "path": "/one.js",
@@ -294,6 +298,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               Object {
                 "contents": Object {
                   "displayURL": Object {
+                    "fileExtension": "js",
                     "filename": "three.js",
                     "group": "mdn.com",
                     "path": "/three.js",
@@ -333,6 +338,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               Object {
                 "contents": Object {
                   "displayURL": Object {
+                    "fileExtension": "js",
                     "filename": "two.js",
                     "group": "mdn.com",
                     "path": "/two.js",
@@ -381,6 +387,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   Object {
                     "contents": Object {
                       "displayURL": Object {
+                        "fileExtension": "js",
                         "filename": "four.js",
                         "group": "mdn.com",
                         "path": "/four.js",
@@ -420,6 +427,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   Object {
                     "contents": Object {
                       "displayURL": Object {
+                        "fileExtension": "js%20[original]",
                         "filename": "four.js [original]",
                         "group": "mdn.com",
                         "path": "/four.js%20[original]",
@@ -459,6 +467,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   Object {
                     "contents": Object {
                       "displayURL": Object {
+                        "fileExtension": "js",
                         "filename": "one.js",
                         "group": "mdn.com",
                         "path": "/one.js",
@@ -498,6 +507,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   Object {
                     "contents": Object {
                       "displayURL": Object {
+                        "fileExtension": "js",
                         "filename": "three.js",
                         "group": "mdn.com",
                         "path": "/three.js",
@@ -537,6 +547,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   Object {
                     "contents": Object {
                       "displayURL": Object {
+                        "fileExtension": "js",
                         "filename": "two.js",
                         "group": "mdn.com",
                         "path": "/two.js",
