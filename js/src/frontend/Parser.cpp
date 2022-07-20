@@ -2567,11 +2567,11 @@ TaggedParserAtomIndex ParserBase::prefixAccessorName(
     PropertyType propType, TaggedParserAtomIndex propAtom) {
   StringBuffer prefixed(cx_);
   if (propType == PropertyType::Setter) {
-    if (!prefixed.append("set ", 4)) {
+    if (!prefixed.append("set ")) {
       return TaggedParserAtomIndex::null();
     }
   } else {
-    if (!prefixed.append("get ", 4)) {
+    if (!prefixed.append("get ")) {
       return TaggedParserAtomIndex::null();
     }
   }
