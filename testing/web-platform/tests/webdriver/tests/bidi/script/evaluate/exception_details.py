@@ -17,9 +17,7 @@ async def test_invalid_script(bidi_session, top_context):
         'realm': any_string,
         'exceptionDetails': {
             'columnNumber': any_int,
-            'exception': {
-                'handle': any_string,
-                'type': 'error'},
+            'exception': {'type': 'error'},
             'lineNumber': any_int,
             'stackTrace': any_stack_trace,
             'text': any_string}},
@@ -68,9 +66,7 @@ async def test_reject_error(bidi_session, top_context):
             "realm": any_string,
             "exceptionDetails": {
                 "columnNumber": any_int,
-                "exception": {
-                    "handle": any_string,
-                    "type": "error"},
+                "exception": {"type": "error"},
                 "lineNumber": any_int,
                 "stackTrace": any_stack_trace,
                 "text": any_string,
@@ -92,9 +88,7 @@ async def test_throw_error(bidi_session, top_context):
         'realm': any_string,
         'exceptionDetails': {
             'columnNumber': any_int,
-            'exception': {
-                'handle': any_string,
-                'type': 'error'},
+            'exception': {'type': 'error'},
             'lineNumber': any_int,
             'stackTrace': any_stack_trace,
             'text': any_string}},
