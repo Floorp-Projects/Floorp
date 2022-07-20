@@ -50,7 +50,7 @@ function withoutImplicitlyPointerCaptureForTouch() {
   }, {once : true});
 
   synthesizeTouch(target0, 5, 5, { type: "touchstart" });
-  synthesizeTouch(target0, 5, 5, { type: "touchmove" });
+  synthesizeTouch(target0, 6, 6, { type: "touchmove" });
   synthesizeTouch(target1, 5, 5, { type: "touchmove" });
   synthesizeTouch(target1, 5, 5, { type: "touchcancel" });
   synthesizeMouseAtCenter(done, { type: "mousedown" });

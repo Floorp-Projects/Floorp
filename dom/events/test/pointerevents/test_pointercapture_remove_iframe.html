@@ -67,7 +67,7 @@ add_task(async function test_remove_iframe_after_pointer_capture() {
     waitForEvent(targetInIframe, "pointermove")
   ]);
   synthesizeTouch(targetInIframe, 10, 10, { type: "touchstart", id: 10 }, iframeWin);
-  synthesizeTouch(targetInIframe, 10, 10, { type: "touchmove", id: 10 }, iframeWin);
+  synthesizeTouch(targetInIframe, 11, 11, { type: "touchmove", id: 10 }, iframeWin);
   await promise;
 
   // Intentionally not synthesize touchend event to not trigger implicit releasing
