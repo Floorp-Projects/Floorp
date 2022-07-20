@@ -105,7 +105,8 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
       mRenderer(aRenderer),
       mBridge(aBridge),
       mWindowId(aWindowId),
-      mDisableNativeCompositor(false) {
+      mDisableNativeCompositor(false),
+      mLastPipelineInfo(new WebRenderPipelineInfo) {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mCompositor);
   MOZ_ASSERT(mRenderer);
@@ -134,6 +135,7 @@ void RendererOGL::Update() {
   mCompositor->Update();
   if (mCompositor->MakeCurrent()) {
     wr_renderer_update(mRenderer);
+    FlushPipelineInfo();
   }
 }
 
@@ -182,8 +184,10 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   nsTArray<DeviceIntRect> dirtyRects;
-  if (!wr_renderer_render(mRenderer, size.width, size.height, bufferAge,
-                          aOutStats, &dirtyRects)) {
+  bool rendered = wr_renderer_render(mRenderer, size.width, size.height,
+                                     bufferAge, aOutStats, &dirtyRects);
+  FlushPipelineInfo();
+  if (!rendered) {
     mCompositor->CancelFrame();
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);
@@ -210,6 +214,11 @@ RenderedFrameId RendererOGL::UpdateAndRender(
       mScreenshotGrabber.MaybeGrabScreenshot(this, size.ToUnknownSize());
     }
   }
+
+  // Frame recording must happen before EndFrame, as we must ensure we read the
+  // contents of the back buffer before any calls to SwapBuffers which might
+  // invalidate it.
+  MaybeRecordFrame(mLastPipelineInfo);
 
   RenderedFrameId frameId = mCompositor->EndFrame(dirtyRects);
 
@@ -400,10 +409,10 @@ Maybe<layers::CollectedFrames> RendererOGL::GetCollectedFrames() {
   return Some(std::move(frames));
 }
 
-RefPtr<WebRenderPipelineInfo> RendererOGL::FlushPipelineInfo() {
-  RefPtr<WebRenderPipelineInfo> info = new WebRenderPipelineInfo();
+void RendererOGL::FlushPipelineInfo() {
+  RefPtr<WebRenderPipelineInfo> info = new WebRenderPipelineInfo;
   wr_renderer_flush_pipeline_info(mRenderer, &info->Raw());
-  return info;
+  mLastPipelineInfo = info;
 }
 
 RenderTextureHost* RendererOGL::GetRenderTexture(

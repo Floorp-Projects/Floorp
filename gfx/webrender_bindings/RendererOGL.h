@@ -113,7 +113,11 @@ class RendererOGL {
 
   layers::CompositorBridgeParent* GetCompositorBridge() { return mBridge; }
 
-  RefPtr<WebRenderPipelineInfo> FlushPipelineInfo();
+  void FlushPipelineInfo();
+
+  RefPtr<const WebRenderPipelineInfo> GetLastPipelineInfo() const {
+    return mLastPipelineInfo;
+  }
 
   RenderTextureHost* GetRenderTexture(wr::ExternalImageId aExternalImageId);
 
@@ -160,6 +164,8 @@ class RendererOGL {
   // We need to use uint64_t here since wr::PipelineId is not default
   // constructable.
   std::unordered_map<uint64_t, wr::Epoch> mContentPipelineEpochs;
+
+  RefPtr<WebRenderPipelineInfo> mLastPipelineInfo;
 };
 
 }  // namespace wr

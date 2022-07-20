@@ -566,16 +566,12 @@ void RenderThread::UpdateAndRender(
   renderer->CheckGraphicsResetStatus("PostUpdate", /* aForce */ false);
 
   TimeStamp end = TimeStamp::Now();
-  RefPtr<const WebRenderPipelineInfo> info = renderer->FlushPipelineInfo();
+  RefPtr<const WebRenderPipelineInfo> info = renderer->GetLastPipelineInfo();
 
   layers::CompositorThread()->Dispatch(
       NewRunnableFunction("NotifyDidRenderRunnable", &NotifyDidRender,
                           renderer->GetCompositorBridge(), info, aStartId,
                           aStartTime, start, end, aRender, stats));
-
-  if (latestFrameId.IsValid()) {
-    renderer->MaybeRecordFrame(info);
-  }
 
   ipc::FileDescriptor fenceFd;
 
