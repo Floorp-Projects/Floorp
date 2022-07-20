@@ -162,6 +162,71 @@ wayland:
             extra-options:
                 - "--setpref=widget.wayland.test-workarounds.enabled=true"
 
+# -
+# Webrender DComp variants for Win10
+
+webrender-dcomp-disabled:
+    description: "{description} with dcomp disabled"
+    component: "Core::Graphics: WebRender"
+    suffix: "wr-dc0"
+    when:
+        $eval: '"windows10" in task["test-platform"]'
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=gfx.webrender.dcomp-win.enabled=false"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win=false"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win.force-enabled=false"
+                - "--setpref=gfx.webrender.compositor=false"
+                - "--setpref=gfx.webrender.compositor.force-enabled=false"
+
+webrender-dcomp-present:  # Default variant ends up like this.
+    description: "{description} with dcomp present but not overlays"
+    component: "Core::Graphics: WebRender"
+    suffix: "wr-dc1-p"
+    when:
+        $eval: '"windows10" in task["test-platform"]'
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=gfx.webrender.dcomp-win.enabled=true"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win=false"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win.force-enabled=false"
+                - "--setpref=gfx.webrender.compositor=false"
+                - "--setpref=gfx.webrender.compositor.force-enabled=false"
+
+webrender-dcomp-overlays:
+    description: "{description} with dcomp overlays but not compositing"
+    component: "Core::Graphics: WebRender"
+    suffix: "wr-dc2-o"
+    when:
+        $eval: '"windows10" in task["test-platform"]'
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=gfx.webrender.dcomp-win.enabled=true"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win=true"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win.force-enabled=true"
+                - "--setpref=gfx.webrender.compositor=false"
+                - "--setpref=gfx.webrender.compositor.force-enabled=false"
+
+webrender-dcomp-compositing:
+    description: "{description} with dcomp compositing"
+    component: "Core::Graphics: WebRender"
+    suffix: "wr-dc3-c"
+    when:
+        $eval: '"windows10" in task["test-platform"]'
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=gfx.webrender.dcomp-win.enabled=true"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win=true"
+                - "--setpref=gfx.webrender.dcomp-video-overlay-win.force-enabled=true"
+                - "--setpref=gfx.webrender.compositor=true"
+                - "--setpref=gfx.webrender.compositor.force-enabled=true"
+
+# -
+
 webrender-sw:
     description: "{description} with software webrender enabled"
     component: "Core::Graphics: WebRender"

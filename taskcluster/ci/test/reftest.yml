@@ -177,6 +177,10 @@ reftest:
     variants:
         - no-fission
         - wayland
+        - webrender-dcomp-disabled
+        - webrender-dcomp-present
+        - webrender-dcomp-overlays
+        - webrender-dcomp-compositing  # Should match default
         - webrender-sw+no-fission
         - webrender-sw
     run-on-projects:
