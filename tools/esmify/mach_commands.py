@@ -399,8 +399,8 @@ def esmify(command_context, path=None, convert=False, imports=False, prefix=""):
 
         info(f"Found {len(jsms)} file(s) to convert to ESM.")
 
-        info("Rewriting exports...")
-        jsms = rewrite_exports(command_context, jsms)
+        info("Converting to ESM...")
+        jsms = convert_module(command_context, jsms)
         if jsms is None:
             error("Failed to rewrite exports.")
             return 1
@@ -631,9 +631,10 @@ def setup_jscodeshift():
     subprocess.run(cmd, check=True)
 
 
-def rewrite_exports(command_context, jsms):
-    """Replace EXPORTED_SYMBOLS with export declarations. And return the list of
-    successfully rewritten files."""
+def convert_module(command_context, jsms):
+    """Replace EXPORTED_SYMBOLS with export declarations, and replace
+    ChromeUtils.importESModule with static import as much as possible,
+    and return the list of successfully rewritten files."""
 
     def warn(text):
         command_context.log(logging.WARN, "esmify", {}, f"[WARN] {text}")
@@ -646,7 +647,7 @@ def rewrite_exports(command_context, jsms):
         "./mach",
         "npm",
         "run",
-        "rewrite_exports",
+        "convert_module",
         "--prefix",
         str(npm_prefix),
     ]

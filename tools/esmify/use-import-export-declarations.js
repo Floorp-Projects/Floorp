@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// jscodeshift rule to replace EXPORTED_SYMBOLS with export declarations.
+// jscodeshift rule to replace EXPORTED_SYMBOLS with export declarations,
+// and also convert existing ChromeUtils.importESModule to static import.
 
 /* eslint-env node */
 
@@ -12,6 +13,10 @@ const {
   getPrevStatement,
   getNextStatement,
 } = require(_path.resolve(__dirname, "./utils.js"));
+const {
+  isImportESModuleCall,
+  replaceImportESModuleCall,
+} = require(_path.resolve(__dirname, "./static-import.js"));
 
 module.exports = function(fileInfo, api) {
   const { jscodeshift } = api;
@@ -192,4 +197,12 @@ function doTranslate(inputFile, jscodeshift, root) {
       `exported symbols ${[...EXPORTED_SYMBOLS].join(", ")} not found`
     );
   }
+
+  root.find(jscodeshift.CallExpression).forEach(path => {
+    if (isImportESModuleCall(path.node)) {
+      // This file is not yet renamed. Skip the extension check.
+      // Also skip the isTargetESM.
+      replaceImportESModuleCall(inputFile, jscodeshift, path, true);
+    }
+  });
 }
