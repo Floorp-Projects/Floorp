@@ -4,15 +4,17 @@
 
 /* eslint-env module */
 
-const { Interactions } = ChromeUtils.import(
-  "resource:///modules/Interactions.jsm"
+const { Interactions } = ChromeUtils.importESModule(
+  "resource:///modules/Interactions.sys.mjs"
 );
-const { Snapshots } = ChromeUtils.import("resource:///modules/Snapshots.jsm");
-const { PlacesUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesUtils.jsm"
+const { Snapshots } = ChromeUtils.importESModule(
+  "resource:///modules/Snapshots.sys.mjs"
 );
-const { PlacesDBUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesDBUtils.jsm"
+const { PlacesUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PlacesUtils.sys.mjs"
+);
+const { PlacesDBUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PlacesDBUtils.sys.mjs"
 );
 
 /**

@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -16,8 +12,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.sys.mjs",
 });
 
 /**
