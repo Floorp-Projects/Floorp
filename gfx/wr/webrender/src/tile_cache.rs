@@ -272,7 +272,12 @@ impl TileCacheBuilder {
             .collect();
 
         scroll_root_occurrences.retain(|parent_spatial_node_index, _| {
+            let parent_is_root = spatial_tree.is_root_coord_system(*parent_spatial_node_index);
+
             scroll_roots.iter().all(|child_spatial_node_index| {
+                let child_is_root = spatial_tree.is_root_coord_system(*child_spatial_node_index);
+
+                (parent_is_root && child_is_root) ||
                 parent_spatial_node_index == child_spatial_node_index ||
                 spatial_tree.is_ancestor(
                     *parent_spatial_node_index,
