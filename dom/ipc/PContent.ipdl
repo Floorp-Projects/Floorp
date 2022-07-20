@@ -1315,6 +1315,14 @@ parent:
                                     bool aMaybeUnsafePermissionDelegate,
                                     TabId tabId);
 
+    /**
+     * If the profiler is running when the process shuts down, this sends the
+     * profile data collected so far.
+     *
+     * @param aProfile
+     *   This may contain an empty string (unknown issue), an error message
+     *   starting with '*', or a profile as a stringified JSON object.
+     */
     async ShutdownProfile(nsCString aProfile);
 
     /**

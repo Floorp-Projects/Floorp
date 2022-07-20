@@ -8,9 +8,12 @@
 
 #include "GeckoProfiler.h"
 #include "platform.h"
+#include "ProfilerCodeAddressService.h"
 #include "ProfilerControl.h"
 #include "ProfilerParent.h"
 
+#include "chrome/common/ipc_channel.h"
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 
 #include <memory>
@@ -256,17 +259,6 @@ mozilla::ipc::IPCResult ProfilerChild::RecvClearAllPages() {
   return IPC_OK();
 }
 
-static nsCString CollectProfileOrEmptyString(bool aIsShuttingDown) {
-  nsCString profileCString;
-  UniquePtr<char[]> profile =
-      profiler_get_profile(/* aSinceTime */ 0, aIsShuttingDown);
-  if (profile) {
-    size_t len = strlen(profile.get());
-    profileCString.Adopt(profile.release(), len);
-  }
-  return profileCString;
-}
-
 mozilla::ipc::IPCResult ProfilerChild::RecvAwaitNextChunkManagerUpdate(
     AwaitNextChunkManagerUpdateResolver&& aResolve) {
   MOZ_ASSERT(!mDestroyed,
@@ -455,7 +447,61 @@ void ProfilerChild::Destroy() {
 }
 
 nsCString ProfilerChild::GrabShutdownProfile() {
-  return CollectProfileOrEmptyString(/* aIsShuttingDown */ true);
+  LOG("GrabShutdownProfile");
+
+  UniquePtr<ProfilerCodeAddressService> service =
+      profiler_code_address_service_for_presymbolication();
+  SpliceableChunkedJSONWriter writer;
+  writer.Start();
+  if (!profiler_stream_json_for_this_process(writer, /* aSinceTime */ 0,
+                                             /* aIsShuttingDown */ true,
+                                             service.get(), ProgressLogger{})) {
+    return nsPrintfCString("*Profile unavailable for pid %u",
+                           unsigned(profiler_current_process_id().ToNumber()));
+  }
+  writer.StartArrayProperty("processes");
+  writer.EndArray();
+  writer.End();
+
+  const size_t len = writer.ChunkedWriteFunc().Length();
+  // This string is destined to be sent as a shutdown profile, which is limited
+  // by the maximum IPC message size.
+  // TODO: IPC to change to shmem (bug 1780330), raising this limit to
+  // JS::MaxStringLength.
+  if (len >= size_t(IPC::Channel::kMaximumMessageSize)) {
+    return nsPrintfCString(
+        "*Profile from pid %u bigger (%zu) than IPC max (%zu)",
+        unsigned(profiler_current_process_id().ToNumber()), len,
+        size_t(IPC::Channel::kMaximumMessageSize));
+  }
+
+  nsCString profileCString;
+  if (!profileCString.SetLength(len, fallible)) {
+    return nsPrintfCString(
+        "*Could not allocate %zu bytes for profile from pid %u", len,
+        unsigned(profiler_current_process_id().ToNumber()));
+  }
+  MOZ_ASSERT(*(profileCString.Data() + len) == '\0',
+             "We expected a null at the end of the string buffer, to be "
+             "rewritten by CopyDataIntoLazilyAllocatedBuffer");
+
+  char* const profileBeginWriting = profileCString.BeginWriting();
+  if (!profileBeginWriting) {
+    return nsPrintfCString("*Could not write profile from pid %u",
+                           unsigned(profiler_current_process_id().ToNumber()));
+  }
+
+  // Here, we have enough space reserved in `profileCString`, starting at
+  // `profileBeginWriting`, copy the JSON profile there.
+  writer.ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
+      [&](size_t aBufferLen) -> char* {
+        MOZ_RELEASE_ASSERT(aBufferLen == len + 1);
+        return profileBeginWriting;
+      });
+  MOZ_ASSERT(*(profileCString.Data() + len) == '\0',
+             "We still expected a null at the end of the string buffer");
+
+  return profileCString;
 }
 
 }  // namespace mozilla
