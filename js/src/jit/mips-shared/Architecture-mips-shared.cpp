@@ -39,8 +39,7 @@ static uint32_t get_mips_flags() {
     return flags;
   }
 
-  char buf[1024];
-  memset(buf, 0, sizeof(buf));
+  char buf[1024] = {};
   (void)fread(buf, sizeof(char), sizeof(buf) - 1, fp);
   fclose(fp);
   if (strstr(buf, "FPU")) {
