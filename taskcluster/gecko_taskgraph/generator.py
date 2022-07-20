@@ -7,6 +7,7 @@ import os
 import copy
 
 import attr
+from taskgraph import filter_tasks
 from taskgraph.config import GraphConfig
 from taskgraph.graph import Graph
 from taskgraph.parameters import parameters_loader
@@ -16,7 +17,6 @@ from taskgraph.transforms.base import TransformSequence, TransformConfig
 from taskgraph.util.python_path import find_object
 from taskgraph.util.yaml import load_yaml
 
-from . import filter_tasks
 from .morph import morph
 from .optimize import optimize_task_graph
 from .util.verify import verifications
