@@ -38,6 +38,8 @@
   skin/classic/browser/addons/addon-install-downloading.svg    (../shared/addons/addon-install-downloading.svg)
   skin/classic/browser/addons/addon-install-installed.svg      (../shared/addons/addon-install-installed.svg)
   skin/classic/browser/addons/extension-controlled.css         (../shared/addons/extension-controlled.css)
+  skin/classic/browser/addons/unified-extensions-item.css      (../shared/addons/unified-extensions-item.css)
+  skin/classic/browser/addons/unified-extensions.css           (../shared/addons/unified-extensions.css)
   skin/classic/browser/controlcenter/3rdpartycookies.svg       (../shared/controlcenter/3rdpartycookies.svg)
   skin/classic/browser/controlcenter/cryptominers.svg          (../shared/controlcenter/cryptominers.svg)
   skin/classic/browser/controlcenter/dashboard.svg             (../shared/controlcenter/dashboard.svg)

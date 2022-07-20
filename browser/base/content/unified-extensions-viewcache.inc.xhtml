@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<html:template id="unified-extensions-template">
+  <panelview id="unified-extensions-view"
+             class="PanelUI-subView"
+             descriptionheightworkaround="true"
+             flex="1">
+    <vbox class="unified-extensions-panel-header">
+      <html:h1 data-l10n-id="unified-extensions-header-title"/>
+    </vbox>
+
+    <toolbarseparator />
+
+    <vbox class="panel-subview-body unified-extensions-list">
+      <!-- active visible extensions go here -->
+    </vbox>
+
+    <toolbarseparator />
+
+    <toolbarbutton id="unified-extensions-manage-extensions"
+                   class="subviewbutton panel-subview-footer-button unified-extensions-manage-extensions"
+                   data-l10n-id="unified-extensions-manage-extensions"
+                   oncommand="BrowserOpenAddonsMgr('addons://list/extension');" />
+  </panelview>
+</html:template>
+
+<!--
+  This is the template used for the `unified-extensions-item` custom element,
+  defined in `browser/base/content/browser-addons.js`.
+-->
+<html:template id="unified-extensions-item-template">
+  <image class="unified-extensions-item-icon"
+         role="presentation"
+         src="chrome://mozapps/skin/extensions/extensionGeneric.svg" />
+
+  <vbox class="unified-extensions-item-contents">
+    <label class="unified-extensions-item-name" />
+    <label class="unified-extensions-item-message">
+      <!-- A notification could be printed here -->
+    </label>
+  </vbox>
+
+  <toolbarbutton class="unified-extensions-item-open-submenu subviewbutton subviewbutton-iconic"
+                 data-l10n-id="unified-extensions-item-open-submenu" />
+</html:template>
