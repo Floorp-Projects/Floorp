@@ -1015,15 +1015,19 @@ void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
 
   int32_t virtualViewID = kNoID;
   if (!isTopLevel) {
+    if (sessionAcc->mIDToAccessibleMap.IsEmpty()) {
+      // We expect there to already be at least one accessible
+      // registered (the top-level one). If it isn't we are
+      // probably in a shutdown process where it was already
+      // unregistered. So we don't register this accessible.
+      return;
+    }
     // Don't use the special "unset" value (0).
     while ((virtualViewID = sIDSet.GetID()) == kUnsetID) {
     }
   }
   AccessibleWrap::SetVirtualViewID(aAccessible, virtualViewID);
 
-  MOZ_ASSERT(
-      !sessionAcc->mIDToAccessibleMap.IsEmpty() || virtualViewID == kNoID,
-      "root (kNoID) accessible should be the first one added");
   MOZ_ASSERT(!sessionAcc->mIDToAccessibleMap.Contains(virtualViewID),
              "ID already registered");
   sessionAcc->mIDToAccessibleMap.InsertOrUpdate(virtualViewID, aAccessible);
