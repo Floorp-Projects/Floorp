@@ -76,7 +76,9 @@ function checkSelectedIndexAfterResponseTime(expectedIndex) {
   });
 }
 
-let input = $_(1, "field1");
+// getFormElementByName() returns wrapped input,
+// but in this test we want to test untrusted events, so we must unwrap
+const input = SpecialPowers.unwrap(getFormElementByName(1, "field1"));
 
 function doKeyUnprivileged(key) {
   let keyName = "DOM_VK_" + key.toUpperCase();

@@ -144,7 +144,7 @@ Form History test: form field autocomplete
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
-var input = $_(1, "field1");
+var input = getFormElementByName(1, "field1");
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
@@ -580,7 +580,7 @@ async function runTest() { // eslint-disable-line complexity
 
     case 64:
       // Look at form 2, trigger autocomplete popup
-      input = $_(2, "field2");
+      input = getFormElementByName(2, "field2");
       testNum = 99;
       expectPopup();
       restoreForm();
@@ -596,7 +596,7 @@ async function runTest() { // eslint-disable-line complexity
       checkForm("value1");
 
       // Look at form 3, try to trigger autocomplete popup
-      input = $_(3, "field2");
+      input = getFormElementByName(3, "field2");
       restoreForm();
       // Sometimes, this will fail if scrollTo(0, 0) is called, so that doesn't
       // happen here. Fortunately, a different input is used from the last test,
@@ -612,7 +612,7 @@ async function runTest() { // eslint-disable-line complexity
       checkForm("");
 
       // Look at form 4, try to trigger autocomplete popup
-      input = $_(4, "field2");
+      input = getFormElementByName(4, "field2");
       restoreForm();
       synthesizeKey("KEY_ArrowDown");
       waitForMenuChange(0);
@@ -625,7 +625,7 @@ async function runTest() { // eslint-disable-line complexity
       checkForm("");
 
       // Look at form 5, try to trigger autocomplete popup
-      input = $_(5, "field3");
+      input = getFormElementByName(5, "field3");
       restoreForm();
       testNum = 199;
       expectPopup();
@@ -709,7 +709,7 @@ async function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_Escape");
 
       // Look at form 6, try to trigger autocomplete popup
-      input = $_(6, "field4");
+      input = getFormElementByName(6, "field4");
       restoreForm();
       testNum = 249;
       expectPopup();
@@ -775,7 +775,7 @@ async function runTest() { // eslint-disable-line complexity
       checkMenuEntries([], testNum);
 
       // Look at form 7, try to trigger autocomplete popup
-      input = $_(7, "field5");
+      input = getFormElementByName(7, "field5");
       testNum = 299;
       expectPopup();
       restoreForm();
@@ -869,7 +869,7 @@ async function runTest() { // eslint-disable-line complexity
     case 310:
       checkMenuEntries([], testNum);
 
-      input = $_(8, "field6");
+      input = getFormElementByName(8, "field6");
       testNum = 399;
       expectPopup();
       restoreForm();
@@ -886,14 +886,14 @@ async function runTest() { // eslint-disable-line complexity
       checkForm("value");
 
       if (testNum == 400) {
-        input = $_(9, "field7");
+        input = getFormElementByName(9, "field7");
       } else if (testNum == 401) {
-        input = $_(10, "field8");
+        input = getFormElementByName(10, "field8");
       } else if (testNum == 402) {
-        input = $_(11, "field9");
+        input = getFormElementByName(11, "field9");
       } else if (testNum == 403) {
         todo(false, "Fix input type=number");
-        input = $_(12, "field10");
+        input = getFormElementByName(12, "field10");
       }
 
       expectPopup();
@@ -907,7 +907,7 @@ async function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_Enter");
       checkForm("42");
 
-      input = $_(14, "field11");
+      input = getFormElementByName(14, "field11");
       restoreForm();
       waitForMenuChange(0);
       break;
@@ -917,7 +917,7 @@ async function runTest() { // eslint-disable-line complexity
       // have a drop down menu for now
       checkForm("");
 
-      input = $_(15, "field12");
+      input = getFormElementByName(15, "field12");
       restoreForm();
       waitForMenuChange(0);
       break;
@@ -927,7 +927,7 @@ async function runTest() { // eslint-disable-line complexity
       // have a drop down menu for now
       checkForm("");
 
-      input = $_(16, "field13");
+      input = getFormElementByName(16, "field13");
       restoreForm();
       synthesizeKey("KEY_ArrowDown");
       waitForMenuChange(0);
@@ -939,7 +939,7 @@ async function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_Enter");
       checkForm("30"); // default (midway between minimum (0) and maximum (64)) - step
 
-      input = $_(17, "field14");
+      input = getFormElementByName(17, "field14");
       restoreForm();
       waitForMenuChange(0);
       break;
@@ -948,7 +948,7 @@ async function runTest() { // eslint-disable-line complexity
       checkMenuEntries([]); // type=color does not have a drop down menu
       checkForm("#000000"); // default color value
 
-      input = $_(18, "field15");
+      input = getFormElementByName(18, "field15");
       restoreForm();
       expectPopup();
       synthesizeKey("KEY_ArrowDown");
@@ -960,7 +960,7 @@ async function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_Enter");
       checkForm("2016-08");
 
-      input = $_(19, "field16");
+      input = getFormElementByName(19, "field16");
       restoreForm();
       expectPopup();
       synthesizeKey("KEY_ArrowDown");
@@ -972,7 +972,7 @@ async function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_Enter");
       checkForm("2016-W32");
 
-      input = $_(20, "field17");
+      input = getFormElementByName(20, "field17");
       restoreForm();
       waitForMenuChange(0);
       synthesizeKey("KEY_ArrowDown");
@@ -987,7 +987,7 @@ async function runTest() { // eslint-disable-line complexity
       break;
 
     case 412:
-      input = $_(1, "field1");
+      input = getFormElementByName(1, "field1");
       // Go to test 500.
       testNum = 499;
 
@@ -1073,7 +1073,7 @@ async function runTest() { // eslint-disable-line complexity
     }
     case 600:
       // check we don't show autocomplete for searchbar-history
-      input = $_(13, "searchbar-history");
+      input = getFormElementByName(13, "searchbar-history");
 
       // Trigger autocomplete popup
       checkForm("");
