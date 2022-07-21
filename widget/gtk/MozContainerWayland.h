@@ -61,6 +61,9 @@ typedef struct _MozContainerClass MozContainerClass;
 void moz_container_wayland_class_init(MozContainerClass* klass);
 void moz_container_wayland_init(MozContainerWayland* container);
 
+// Lock mozcontainer and get wayland surface of it. You need to pair with
+// moz_container_wayland_surface_unlock() even
+// if moz_container_wayland_surface_lock() fails and returns nullptr.
 struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container);
 void moz_container_wayland_surface_unlock(MozContainer* container,
                                           struct wl_surface** surface);
@@ -78,9 +81,13 @@ void moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                int width, int height);
 void moz_container_wayland_set_scale_factor(MozContainer* container);
 void moz_container_wayland_set_scale_factor_locked(MozContainer* container);
-void moz_container_wayland_add_initial_draw_callback(
+
+void moz_container_wayland_add_initial_draw_callback_locked(
+    MozContainer* container, const std::function<void(void)>& initial_draw_cb);
+void moz_container_wayland_add_or_fire_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
 void moz_container_wayland_clear_initial_draw_callback(MozContainer* container);
+
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
 void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 int corner_radius);
