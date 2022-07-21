@@ -614,6 +614,9 @@ const TEST_GLOBAL = {
       submit() {},
     },
   },
+  Utils: {
+    SERVER_URL: "bogus://foo",
+  }
 };
 overrider.set(TEST_GLOBAL);
 
