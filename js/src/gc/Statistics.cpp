@@ -1256,45 +1256,49 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
   runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
 
   if (slice.budget.isTimeBudget()) {
-    int64_t budget_ms = slice.budget.timeBudget();
-    runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS_2, budget_ms);
+    TimeDuration budgetDuration = slice.budget.timeBudgetDuration();
+    runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS_2, t(budgetDuration));
     if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
       runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
     }
 
-    // Long GC slices are those that go 1.5 times or 5ms over their budget.
-    double longSliceThreshold = std::min(1.5 * budget_ms, budget_ms + 5.0);
-    bool wasLongSlice = sliceTime.ToMilliseconds() > longSliceThreshold;
-    runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_WAS_LONG, wasLongSlice);
+    if (sliceTime > budgetDuration) {
+      // Record how long we went over budget.
+      TimeDuration overrun = sliceTime - budgetDuration;
+      runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_OVERRUN,
+                            overrun.ToMicroseconds());
 
-    // Record the longest phase in any long slice.
-    if (wasLongSlice) {
-      PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
-      reportLongestPhaseInMajorGC(longest, JS_TELEMETRY_GC_SLOW_PHASE);
+      // Long GC slices are those that go 50% or 5ms over their budget.
+      bool wasLongSlice = (overrun > TimeDuration::FromMilliseconds(5)) ||
+                          (overrun > (budgetDuration / int64_t(2)));
+      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_WAS_LONG, wasLongSlice);
 
-      // If the longest phase was waiting for parallel tasks then record the
-      // longest task.
-      if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
-        PhaseKind longestParallel =
-            FindLongestPhaseKind(slice.maxParallelTimes);
-        reportLongestPhaseInMajorGC(longestParallel, JS_TELEMETRY_GC_SLOW_TASK);
+      // Record the longest phase in any long slice.
+      if (wasLongSlice) {
+        PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
+        reportLongestPhaseInMajorGC(longest, [runtime](auto sample) {
+          runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_PHASE, sample);
+        });
+
+        // If the longest phase was waiting for parallel tasks then record the
+        // longest task.
+        if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
+          PhaseKind longestParallel =
+              FindLongestPhaseKind(slice.maxParallelTimes);
+          reportLongestPhaseInMajorGC(longestParallel, [runtime](auto sample) {
+            runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_TASK, sample);
+          });
+        }
       }
-    }
-
-    // Record how long we went over budget.
-    int64_t overrun = int64_t(sliceTime.ToMicroseconds()) - (1000 * budget_ms);
-    if (overrun > 0) {
-      runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_OVERRUN, uint32_t(overrun));
     }
   }
 }
 
-void Statistics::reportLongestPhaseInMajorGC(PhaseKind longest,
-                                             int telemetryId) {
-  JSRuntime* runtime = gc->rt;
+template <typename Fn>
+void Statistics::reportLongestPhaseInMajorGC(PhaseKind longest, Fn reportFn) {
   if (longest != PhaseKind::NONE) {
     uint8_t bucket = phaseKinds[longest].telemetryBucket;
-    runtime->addTelemetry(telemetryId, bucket);
+    reportFn(bucket);
   }
 }
 

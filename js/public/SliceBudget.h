@@ -126,9 +126,10 @@ class JS_PUBLIC_API SliceBudget {
   bool isTimeBudget() const { return budget.is<TimeBudget>(); }
   bool isUnlimited() const { return budget.is<UnlimitedBudget>(); }
 
-  int64_t timeBudget() const {
-    return budget.as<TimeBudget>().budget.ToMilliseconds();
+  mozilla::TimeDuration timeBudgetDuration() const {
+    return budget.as<TimeBudget>().budget;
   }
+  int64_t timeBudget() const { return timeBudgetDuration().ToMilliseconds(); }
   int64_t workBudget() const { return budget.as<WorkBudget>().budget; }
 
   mozilla::TimeStamp deadline() const {
