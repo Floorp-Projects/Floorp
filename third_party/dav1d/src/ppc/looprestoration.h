@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2019, VideoLAN and dav1d authors
+ * Copyright © 2019, Michail Alvanos
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,21 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "common/intops.h"
+
 #include "src/cpu.h"
-#include "src/loopfilter.h"
+#include "src/looprestoration.h"
 
-decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_y, neon));
-decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_y, neon));
-decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_uv, neon));
-decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_uv, neon));
+void dav1d_wiener_filter_vsx(uint8_t *p, const ptrdiff_t stride,
+                             const uint8_t (*const left)[4],
+                             const uint8_t *lpf,
+                             const int w, const int h,
+                             const LooprestorationParams *const params,
+                             const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX);
 
-COLD void bitfn(dav1d_loop_filter_dsp_init_arm)(Dav1dLoopFilterDSPContext *const c) {
+static ALWAYS_INLINE void loop_restoration_dsp_init_ppc(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
     const unsigned flags = dav1d_get_cpu_flags();
 
-    if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
+    if (!(flags & DAV1D_PPC_CPU_FLAG_VSX)) return;
 
-    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, neon);
-    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, neon);
-    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, neon);
-    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, neon);
+#if BITDEPTH == 8
+    c->wiener[0] = c->wiener[1] = dav1d_wiener_filter_vsx;
+#endif
 }

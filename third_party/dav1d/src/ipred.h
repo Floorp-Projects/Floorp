@@ -90,7 +90,5 @@ typedef struct Dav1dIntraPredDSPContext {
 } Dav1dIntraPredDSPContext;
 
 bitfn_decls(void dav1d_intra_pred_dsp_init, Dav1dIntraPredDSPContext *c);
-bitfn_decls(void dav1d_intra_pred_dsp_init_arm, Dav1dIntraPredDSPContext *c);
-bitfn_decls(void dav1d_intra_pred_dsp_init_x86, Dav1dIntraPredDSPContext *c);
 
 #endif /* DAV1D_SRC_IPRED_H */

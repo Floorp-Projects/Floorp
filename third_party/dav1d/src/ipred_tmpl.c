@@ -726,6 +726,14 @@ static void pal_pred_c(pixel *dst, const ptrdiff_t stride,
     }
 }
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/ipred.h"
+#elif ARCH_X86
+#include "src/x86/ipred.h"
+#endif
+#endif
+
 COLD void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
     c->intra_pred[DC_PRED      ] = ipred_dc_c;
     c->intra_pred[DC_128_PRED  ] = ipred_dc_128_c;
@@ -755,9 +763,9 @@ COLD void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_intra_pred_dsp_init_arm)(c);
+    intra_pred_dsp_init_arm(c);
 #elif ARCH_X86
-    bitfn(dav1d_intra_pred_dsp_init_x86)(c);
+    intra_pred_dsp_init_x86(c);
 #endif
 #endif
 }

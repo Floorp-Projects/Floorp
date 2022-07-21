@@ -246,7 +246,7 @@ static void sgr_filter_mix_neon(pixel *const dst, const ptrdiff_t stride,
                                   tmp1, tmp2, w, h, wt HIGHBD_TAIL_SUFFIX);
 }
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPContext *const c, int bpc) {
+static ALWAYS_INLINE void loop_restoration_dsp_init_arm(Dav1dLoopRestorationDSPContext *const c, int bpc) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
@@ -257,7 +257,7 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_arm)(Dav1dLoopRestorationDSPCont
 #else
     c->wiener[0] = c->wiener[1] = wiener_filter_neon;
 #endif
-    if (bpc <= 10) {
+    if (BITDEPTH == 8 || bpc == 10) {
         c->sgr[0] = sgr_filter_5x5_neon;
         c->sgr[1] = sgr_filter_3x3_neon;
         c->sgr[2] = sgr_filter_mix_neon;

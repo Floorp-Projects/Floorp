@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2021, VideoLAN and dav1d authors
+ * Copyright © 2021, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,33 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_SRC_LOOPFILTER_H
-#define DAV1D_SRC_LOOPFILTER_H
+#include "src/cpu.h"
+#include "src/refmvs.h"
 
-#include <stdint.h>
-#include <stddef.h>
+decl_splat_mv_fn(dav1d_splat_mv_sse2);
+decl_splat_mv_fn(dav1d_splat_mv_avx2);
+decl_splat_mv_fn(dav1d_splat_mv_avx512icl);
 
-#include "common/bitdepth.h"
+static ALWAYS_INLINE void refmvs_dsp_init_x86(Dav1dRefmvsDSPContext *const c) {
+    const unsigned flags = dav1d_get_cpu_flags();
 
-#include "src/levels.h"
-#include "src/lf_mask.h"
+    if (!(flags & DAV1D_X86_CPU_FLAG_SSE2)) return;
 
-#define decl_loopfilter_sb_fn(name) \
-void (name)(pixel *dst, ptrdiff_t stride, const uint32_t *mask, \
-            const uint8_t (*lvl)[4], ptrdiff_t lvl_stride, \
-            const Av1FilterLUT *lut, int w HIGHBD_DECL_SUFFIX)
-typedef decl_loopfilter_sb_fn(*loopfilter_sb_fn);
+    c->splat_mv = dav1d_splat_mv_sse2;
 
-typedef struct Dav1dLoopFilterDSPContext {
-    /*
-     * dimension 1: plane (0=luma, 1=chroma)
-     * dimension 2: 0=col-edge filter (h), 1=row-edge filter (v)
-     *
-     * dst/stride are aligned by 32
-     */
-    loopfilter_sb_fn loop_filter_sb[2][2];
-} Dav1dLoopFilterDSPContext;
+#if ARCH_X86_64
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
-bitfn_decls(void dav1d_loop_filter_dsp_init, Dav1dLoopFilterDSPContext *c);
+    c->splat_mv = dav1d_splat_mv_avx2;
 
-#endif /* DAV1D_SRC_LOOPFILTER_H */
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
+
+    c->splat_mv = dav1d_splat_mv_avx512icl;
+#endif
+}

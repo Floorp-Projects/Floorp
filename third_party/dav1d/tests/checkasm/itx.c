@@ -294,8 +294,8 @@ static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
                     if (memcmp(coeff[0], coeff[1], sizeof(*coeff)))
                         fail();
 
-                    bench_new(a_dst, a_dst_stride, coeff[0], eob
-                              HIGHBD_TAIL_SUFFIX);
+                    bench_new(alternate(c_dst, a_dst), a_dst_stride,
+                              alternate(coeff[0], coeff[1]), eob HIGHBD_TAIL_SUFFIX);
                 }
     }
     report("add_%dx%d", w, h);

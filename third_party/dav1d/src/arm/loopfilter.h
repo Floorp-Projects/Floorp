@@ -1,6 +1,6 @@
 /*
- * Copyright © 2021, VideoLAN and dav1d authors
- * Copyright © 2021, Two Orioles, LLC
+ * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,20 @@
  */
 
 #include "src/cpu.h"
-#include "src/refmvs.h"
+#include "src/loopfilter.h"
 
-decl_splat_mv_fn(dav1d_splat_mv_neon);
+decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_y, neon));
+decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_y, neon));
+decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_uv, neon));
+decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_uv, neon));
 
-COLD void dav1d_refmvs_dsp_init_arm(Dav1dRefmvsDSPContext *const c) {
+static ALWAYS_INLINE void loop_filter_dsp_init_arm(Dav1dLoopFilterDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-    c->splat_mv = dav1d_splat_mv_neon;
+    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, neon);
+    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, neon);
+    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, neon);
+    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, neon);
 }

@@ -47,9 +47,7 @@ decl_sgr_filter_fns(ssse3);
 decl_sgr_filter_fns(avx2);
 decl_sgr_filter_fns(avx512icl);
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPContext *const c,
-                                                     const int bpc)
-{
+static ALWAYS_INLINE void loop_restoration_dsp_init_x86(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSE2)) return;
@@ -61,7 +59,7 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPCont
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
     c->wiener[0] = BF(dav1d_wiener_filter7, ssse3);
     c->wiener[1] = BF(dav1d_wiener_filter5, ssse3);
-    if (bpc <= 10) {
+    if (BITDEPTH == 8 || bpc == 10) {
         c->sgr[0] = BF(dav1d_sgr_filter_5x5, ssse3);
         c->sgr[1] = BF(dav1d_sgr_filter_3x3, ssse3);
         c->sgr[2] = BF(dav1d_sgr_filter_mix, ssse3);
@@ -72,7 +70,7 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPCont
 
     c->wiener[0] = BF(dav1d_wiener_filter7, avx2);
     c->wiener[1] = BF(dav1d_wiener_filter5, avx2);
-    if (bpc <= 10) {
+    if (BITDEPTH == 8 || bpc == 10) {
         c->sgr[0] = BF(dav1d_sgr_filter_5x5, avx2);
         c->sgr[1] = BF(dav1d_sgr_filter_3x3, avx2);
         c->sgr[2] = BF(dav1d_sgr_filter_mix, avx2);
@@ -87,7 +85,7 @@ COLD void bitfn(dav1d_loop_restoration_dsp_init_x86)(Dav1dLoopRestorationDSPCont
 #else
     c->wiener[1] = BF(dav1d_wiener_filter5, avx512icl);
 #endif
-    if (bpc <= 10) {
+    if (BITDEPTH == 8 || bpc == 10) {
         c->sgr[0] = BF(dav1d_sgr_filter_5x5, avx512icl);
         c->sgr[1] = BF(dav1d_sgr_filter_3x3, avx512icl);
         c->sgr[2] = BF(dav1d_sgr_filter_mix, avx512icl);

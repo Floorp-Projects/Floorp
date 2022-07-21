@@ -105,7 +105,7 @@ decl_fn(emu_edge, dav1d_emu_edge);
 
 decl_fn(resize, dav1d_resize);
 
-COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
+static ALWAYS_INLINE void mc_dsp_init_x86(Dav1dMCDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if(!(flags & DAV1D_X86_CPU_FLAG_SSE2))

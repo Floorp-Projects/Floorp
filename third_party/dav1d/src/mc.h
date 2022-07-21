@@ -132,7 +132,5 @@ typedef struct Dav1dMCDSPContext {
 } Dav1dMCDSPContext;
 
 bitfn_decls(void dav1d_mc_dsp_init, Dav1dMCDSPContext *c);
-bitfn_decls(void dav1d_mc_dsp_init_arm, Dav1dMCDSPContext *c);
-bitfn_decls(void dav1d_mc_dsp_init_x86, Dav1dMCDSPContext *c);
 
 #endif /* DAV1D_SRC_MC_H */

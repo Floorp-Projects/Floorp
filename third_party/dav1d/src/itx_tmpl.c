@@ -180,6 +180,14 @@ static void inv_txfm_add_wht_wht_4x4_c(pixel *dst, const ptrdiff_t stride,
             dst[x] = iclip_pixel(dst[x] + *c++);
 }
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/itx.h"
+#elif ARCH_X86
+#include "src/x86/itx.h"
+#endif
+#endif
+
 COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c, int bpc) {
 #define assign_itx_all_fn64(w, h, pfx) \
     c->itxfm_add[pfx##TX_##w##X##h][DCT_DCT  ] = \
@@ -247,10 +255,10 @@ COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c, int bpc) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_itx_dsp_init_arm)(c, bpc);
+    itx_dsp_init_arm(c, bpc);
 #endif
 #if ARCH_X86
-    bitfn(dav1d_itx_dsp_init_x86)(c, bpc);
+    itx_dsp_init_x86(c, bpc);
 #endif
 #endif
 }

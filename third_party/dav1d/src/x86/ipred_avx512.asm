@@ -242,9 +242,9 @@ cglobal ipred_dc_8bpc, 3, 7, 5, dst, stride, tl, w, h, stride3
     jmp                  wq
 .w8:
     movq               xmm1, [tlq+1]
-    vextracti32x4      xmm2, ym0, 1
+    vextracti32x4       xm2, ym0, 1
     vpdpbusd            xm0, xmm1, xm3
-    paddd              xmm2, xm0
+    paddd              xmm2, xm2, xm0
     punpckhqdq         xmm0, xmm2, xmm2
     paddd              xmm0, xmm2
     psrlq              xmm1, xmm0, 32
@@ -275,9 +275,9 @@ cglobal ipred_dc_8bpc, 3, 7, 5, dst, stride, tl, w, h, stride3
     jmp                  wq
 .w16:
     movu               xmm1, [tlq+1]
-    vextracti32x4      xmm2, ym0, 1
+    vextracti32x4       xm2, ym0, 1
     vpdpbusd            xm0, xmm1, xm3
-    paddd              xmm2, xm0
+    paddd              xmm2, xm2, xm0
     punpckhqdq         xmm0, xmm2, xmm2
     paddd              xmm0, xmm2
     psrlq              xmm1, xmm0, 32
@@ -309,8 +309,8 @@ cglobal ipred_dc_8bpc, 3, 7, 5, dst, stride, tl, w, h, stride3
 .w32:
     movu                ym1, [tlq+1]
     vpdpbusd            ym0, ym1, ym3
-    vextracti32x4      xmm1, ym0, 1
-    paddd              xmm1, xm0
+    vextracti32x4       xm1, ym0, 1
+    paddd              xmm1, xm1, xm0
     punpckhqdq         xmm0, xmm1, xmm1
     paddd              xmm0, xmm1
     psrlq              xmm1, xmm0, 32
@@ -345,8 +345,8 @@ cglobal ipred_dc_8bpc, 3, 7, 5, dst, stride, tl, w, h, stride3
     movu                ym2, [tlq+33]
     vpdpbusd            ym0, ym1, ym3
     vpdpbusd            ym0, ym2, ym3
-    vextracti32x4      xmm1, ym0, 1
-    paddd              xmm1, xm0
+    vextracti32x4       xm1, ym0, 1
+    paddd              xmm1, xm1, xm0
     punpckhqdq         xmm0, xmm1, xmm1
     paddd              xmm0, xmm1
     psrlq              xmm1, xmm0, 32
@@ -524,12 +524,12 @@ INIT_YMM avx512icl
     pextrd [dstq+stride3q ], xm0, 3
     sub                  hd, 8
     jl .w4_ret
-    vextracti32x4      xmm0, m0, 1
+    vextracti32x4       xm0, m0, 1
     lea                dstq, [dstq+strideq*4]
-    movd   [dstq+strideq*0], xmm0
-    pextrd [dstq+strideq*1], xmm0, 1
-    pextrd [dstq+strideq*2], xmm0, 2
-    pextrd [dstq+stride3q ], xmm0, 3
+    movd   [dstq+strideq*0], xm0
+    pextrd [dstq+strideq*1], xm0, 1
+    pextrd [dstq+strideq*2], xm0, 2
+    pextrd [dstq+stride3q ], xm0, 3
     lea                dstq, [dstq+strideq*4]
     jg .w4_loop
 .w4_ret:
@@ -545,20 +545,20 @@ INIT_ZMM avx512icl
     vpbroadcastq         m4, [tlq+hq-8]
     pshufb               m4, m9
     PAETH
-    vextracti32x4      xmm1, m0, 2
-    vextracti32x4      xmm2, ym0, 1
-    vextracti32x4      xmm3, m0, 3
+    vextracti32x4       xm1, m0, 2
+    vextracti32x4       xm2, ym0, 1
+    vextracti32x4       xm3, m0, 3
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+stride3q ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
+    movq   [dstq+stride3q ], xm3
     sub                  hd, 8
     jl .w8_ret
     lea                dstq, [dstq+strideq*4]
     movhps [dstq+strideq*0], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+stride3q ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     jg .w8_loop
 .w8_ret:
@@ -639,18 +639,18 @@ cglobal ipred_smooth_v_8bpc, 3, 7, 7, dst, stride, tl, w, h, weights, stride3
     pmaddubsw            m0, m2, m0
     paddw                m0, m3
     vpermb               m0, m6, m0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movd   [dstq+strideq*0], xm0
-    movd   [dstq+strideq*1], xmm1
+    movd   [dstq+strideq*1], xm1
     pextrd [dstq+strideq*2], xm0, 2
-    pextrd [dstq+stride3q ], xmm1, 2
+    pextrd [dstq+stride3q ], xm1, 2
     add                  hq, 8
     jg .ret
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq+strideq*0], xm0, 1
-    pextrd [dstq+strideq*1], xmm1, 1
+    pextrd [dstq+strideq*1], xm1, 1
     pextrd [dstq+strideq*2], xm0, 3
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+stride3q ], xm1, 3
     lea                dstq, [dstq+strideq*4]
     jl .w4_loop
 .ret:
@@ -669,11 +669,11 @@ cglobal ipred_smooth_v_8bpc, 3, 7, 7, dst, stride, tl, w, h, weights, stride3
     pmaddubsw            m0, m2, m0
     paddw                m0, m3
     vpermb               m0, m6, m0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     lea                dstq, [dstq+strideq*4]
     add                  hq, 4
     jl .w8_loop
@@ -785,18 +785,18 @@ cglobal ipred_smooth_h_8bpc, 4, 7, 11, dst, stride, tl, w, h, stride3
     paddw                m0, m2
     paddw                m0, m1
     vpermb               m0, m8, m0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movd   [dstq+strideq*0], xm0
-    movd   [dstq+strideq*1], xmm1
+    movd   [dstq+strideq*1], xm1
     pextrd [dstq+strideq*2], xm0, 2
-    pextrd [dstq+stride3q ], xmm1, 2
+    pextrd [dstq+stride3q ], xm1, 2
     sub                  hd, 8
     jl .ret
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq+strideq*0], xm0, 1
-    pextrd [dstq+strideq*1], xmm1, 1
+    pextrd [dstq+strideq*1], xm1, 1
     pextrd [dstq+strideq*2], xm0, 3
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+stride3q ], xm1, 3
     lea                dstq, [dstq+strideq*4]
     jg .w4_loop
 .ret:
@@ -815,11 +815,11 @@ cglobal ipred_smooth_h_8bpc, 4, 7, 11, dst, stride, tl, w, h, stride3
     paddw                m0, m2
     paddw                m0, m1
     vpermb               m0, m8, m0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jg .w8_loop
@@ -937,18 +937,18 @@ cglobal ipred_smooth_8bpc, 4, 7, 16, dst, stride, tl, w, h, v_weights, stride3
     paddw                m1, m2
     pavgw                m0, m1
     vpermb               m0, m11, m0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movd   [dstq+strideq*0], xm0
-    movd   [dstq+strideq*1], xmm1
+    movd   [dstq+strideq*1], xm1
     pextrd [dstq+strideq*2], xm0, 2
-    pextrd [dstq+stride3q ], xmm1, 2
+    pextrd [dstq+stride3q ], xm1, 2
     sub                  hd, 8
     jl .ret
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq+strideq*0], xm0, 1
-    pextrd [dstq+strideq*1], xmm1, 1
+    pextrd [dstq+strideq*1], xm1, 1
     pextrd [dstq+strideq*2], xm0, 3
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+stride3q ], xm1, 3
     lea                dstq, [dstq+strideq*4]
     jg .w4_loop
 .ret:
@@ -978,11 +978,11 @@ cglobal ipred_smooth_8bpc, 4, 7, 16, dst, stride, tl, w, h, v_weights, stride3
     paddw                m1, m2
     pavgw                m0, m1
     vpermb               m0, m11, m0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jg .w8_loop

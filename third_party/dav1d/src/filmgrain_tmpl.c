@@ -412,6 +412,14 @@ fguv_ss_fn(420, 1, 1);
 fguv_ss_fn(422, 1, 0);
 fguv_ss_fn(444, 0, 0);
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/filmgrain.h"
+#elif ARCH_X86
+#include "src/x86/filmgrain.h"
+#endif
+#endif
+
 COLD void bitfn(dav1d_film_grain_dsp_init)(Dav1dFilmGrainDSPContext *const c) {
     c->generate_grain_y = generate_grain_y_c;
     c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = generate_grain_uv_420_c;
@@ -425,9 +433,9 @@ COLD void bitfn(dav1d_film_grain_dsp_init)(Dav1dFilmGrainDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_film_grain_dsp_init_arm)(c);
+    film_grain_dsp_init_arm(c);
 #elif ARCH_X86
-    bitfn(dav1d_film_grain_dsp_init_x86)(c);
+    film_grain_dsp_init_x86(c);
 #endif
 #endif
 }

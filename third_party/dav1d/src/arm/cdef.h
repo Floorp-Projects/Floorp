@@ -76,8 +76,7 @@ DEFINE_FILTER(8, 8, 16)
 DEFINE_FILTER(4, 8, 8)
 DEFINE_FILTER(4, 4, 8)
 
-
-COLD void bitfn(dav1d_cdef_dsp_init_arm)(Dav1dCdefDSPContext *const c) {
+static ALWAYS_INLINE void cdef_dsp_init_arm(Dav1dCdefDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;

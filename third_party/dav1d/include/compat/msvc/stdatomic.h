@@ -62,6 +62,7 @@ typedef enum {
 #define atomic_fetch_add(p_a, inc)    InterlockedExchangeAdd(p_a, inc)
 #define atomic_fetch_sub(p_a, dec)    InterlockedExchangeAdd(p_a, -(dec))
 #define atomic_fetch_or(p_a, v)       InterlockedOr(p_a, v)
+#define atomic_fetch_add_explicit(p_a, inc, mo) atomic_fetch_add(p_a, inc)
 
 #endif /* ! stdatomic.h */
 

@@ -284,15 +284,19 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
 #define bench_new(...)\
     do {\
         if (checkasm_bench_func()) {\
-            func_type *tfunc = func_new;\
+            func_type *const tfunc = func_new;\
             checkasm_set_signal_handler_state(1);\
             uint64_t tsum = 0;\
             int tcount = 0;\
             for (int ti = 0; ti < BENCH_RUNS; ti++) {\
                 uint64_t t = readtime();\
+                int talt = 0; (void)talt;\
                 tfunc(__VA_ARGS__);\
+                talt = 1;\
                 tfunc(__VA_ARGS__);\
+                talt = 0;\
                 tfunc(__VA_ARGS__);\
+                talt = 1;\
                 tfunc(__VA_ARGS__);\
                 t = readtime() - t;\
                 if (t*tcount <= tsum*4 && ti > 0) {\
@@ -303,6 +307,7 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
             checkasm_set_signal_handler_state(0);\
             checkasm_update_bench(tcount, tsum);\
         } else {\
+            const int talt = 0; (void)talt;\
             call_new(__VA_ARGS__);\
         }\
     } while (0)
@@ -310,6 +315,10 @@ void checkasm_stack_clobber(uint64_t clobber, ...);
 #define bench_new(...) do {} while (0)
 #endif
 
+/* Alternates between two pointers. Intended to be used within bench_new()
+ * calls for functions which modifies their input buffer(s) to ensure that
+ * throughput, and not latency, is measured. */
+#define alternate(a, b) (talt ? (b) : (a))
 
 #define ROUND_UP(x,a) (((x)+((a)-1)) & ~((a)-1))
 #define PIXEL_RECT(name, w, h) \

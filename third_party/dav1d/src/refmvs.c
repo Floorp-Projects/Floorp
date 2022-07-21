@@ -922,15 +922,23 @@ static void splat_mv_c(refmvs_block **rr, const refmvs_block *const rmv,
     } while (--bh4);
 }
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/refmvs.h"
+#elif ARCH_X86
+#include "src/x86/refmvs.h"
+#endif
+#endif
+
 COLD void dav1d_refmvs_dsp_init(Dav1dRefmvsDSPContext *const c)
 {
     c->splat_mv = splat_mv_c;
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    dav1d_refmvs_dsp_init_arm(c);
+    refmvs_dsp_init_arm(c);
 #elif ARCH_X86
-    dav1d_refmvs_dsp_init_x86(c);
+    refmvs_dsp_init_x86(c);
 #endif
 #endif
 }

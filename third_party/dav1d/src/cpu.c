@@ -48,28 +48,24 @@
 #define cpu_set_t cpuset_t
 #endif
 
-static unsigned flags = 0;
-static unsigned flags_mask = -1;
+unsigned dav1d_cpu_flags = 0U;
+unsigned dav1d_cpu_flags_mask = ~0U;
 
 COLD void dav1d_init_cpu(void) {
 #if HAVE_ASM && !__has_feature(memory_sanitizer)
 // memory sanitizer is inherently incompatible with asm
 #if ARCH_AARCH64 || ARCH_ARM
-    flags = dav1d_get_cpu_flags_arm();
+    dav1d_cpu_flags = dav1d_get_cpu_flags_arm();
 #elif ARCH_PPC64LE
-    flags = dav1d_get_cpu_flags_ppc();
+    dav1d_cpu_flags = dav1d_get_cpu_flags_ppc();
 #elif ARCH_X86
-    flags = dav1d_get_cpu_flags_x86();
+    dav1d_cpu_flags = dav1d_get_cpu_flags_x86();
 #endif
 #endif
-}
-
-COLD unsigned dav1d_get_cpu_flags(void) {
-    return flags & flags_mask;
 }
 
 COLD void dav1d_set_cpu_flags_mask(const unsigned mask) {
-    flags_mask = mask;
+    dav1d_cpu_flags_mask = mask;
 }
 
 COLD int dav1d_num_logical_processors(Dav1dContext *const c) {

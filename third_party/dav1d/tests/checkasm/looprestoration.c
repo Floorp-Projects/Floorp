@@ -109,8 +109,8 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc)
                     break;
                 }
             }
-            bench_new(a_dst, 448 * sizeof(pixel), left, h_edge,
-                      256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
+            bench_new(alternate(c_dst, a_dst), 448 * sizeof(pixel), left,
+                      h_edge, 256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
 }
@@ -169,8 +169,8 @@ static void check_sgr(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
                     break;
                 }
             }
-            bench_new(a_dst, 448 * sizeof(pixel), left, h_edge,
-                      256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
+            bench_new(alternate(c_dst, a_dst), 448 * sizeof(pixel), left,
+                      h_edge, 256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
 }

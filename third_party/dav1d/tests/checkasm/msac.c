@@ -125,7 +125,8 @@ static void msac_dump(unsigned c_res, unsigned a_res,
                     }                                                      \
                 }                                                          \
                 if (cdf_update && ns == n - 1)                             \
-                    bench_new(&s_a, cdf[1], ns);                           \
+                    bench_new(alternate(&s_c, &s_a),                       \
+                              alternate(cdf[0], cdf[1]), ns);              \
             }                                                              \
         }                                                                  \
     }                                                                      \
@@ -164,7 +165,7 @@ static void check_decode_bool_adapt(MsacDSPContext *const c, uint8_t *const buf)
                 }
             }
             if (cdf_update)
-                bench_new(&s_a, cdf[1]);
+                bench_new(alternate(&s_c, &s_a), alternate(cdf[0], cdf[1]));
         }
     }
 }
@@ -184,7 +185,7 @@ static void check_decode_bool_equi(MsacDSPContext *const c, uint8_t *const buf) 
                     msac_dump(c_res, a_res, &s_c, &s_a, NULL, NULL, 0);
             }
         }
-        bench_new(&s_a);
+        bench_new(alternate(&s_c, &s_a));
     }
 }
 
@@ -204,7 +205,7 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
                     msac_dump(c_res, a_res, &s_c, &s_a, NULL, NULL, 0);
             }
         }
-        bench_new(&s_a, 16384);
+        bench_new(alternate(&s_c, &s_a), 16384);
     }
 
 }
@@ -239,7 +240,7 @@ static void check_decode_hi_tok(MsacDSPContext *const c, uint8_t *const buf) {
                 }
             }
             if (cdf_update)
-                bench_new(&s_a, cdf[1]);
+                bench_new(alternate(&s_c, &s_a), alternate(cdf[0], cdf[1]));
         }
     }
     report("decode_hi_tok");

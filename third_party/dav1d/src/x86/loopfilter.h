@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -26,64 +26,41 @@
  */
 
 #include "src/cpu.h"
-#include "src/cdef.h"
+#include "src/loopfilter.h"
 
-#define decl_cdef_fns(ext) \
-    decl_cdef_fn(BF(dav1d_cdef_filter_4x4, ext)); \
-    decl_cdef_fn(BF(dav1d_cdef_filter_4x8, ext)); \
-    decl_cdef_fn(BF(dav1d_cdef_filter_8x8, ext))
+#define decl_loopfilter_sb_fns(ext) \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_y, ext)); \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_y, ext)); \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_uv, ext)); \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_uv, ext))
 
-decl_cdef_fns(avx512icl);
-decl_cdef_fns(avx2);
-decl_cdef_fns(sse4);
-decl_cdef_fns(ssse3);
-decl_cdef_fns(sse2);
+decl_loopfilter_sb_fns(ssse3);
+decl_loopfilter_sb_fns(avx2);
+decl_loopfilter_sb_fns(avx512icl);
 
-decl_cdef_dir_fn(BF(dav1d_cdef_dir, avx2));
-decl_cdef_dir_fn(BF(dav1d_cdef_dir, sse4));
-decl_cdef_dir_fn(BF(dav1d_cdef_dir, ssse3));
-
-COLD void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
+static ALWAYS_INLINE void loop_filter_dsp_init_x86(Dav1dLoopFilterDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
-
-#if BITDEPTH == 8
-    if (!(flags & DAV1D_X86_CPU_FLAG_SSE2)) return;
-
-    c->fb[0] = BF(dav1d_cdef_filter_8x8, sse2);
-    c->fb[1] = BF(dav1d_cdef_filter_4x8, sse2);
-    c->fb[2] = BF(dav1d_cdef_filter_4x4, sse2);
-#endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
 
-    c->dir = BF(dav1d_cdef_dir, ssse3);
-    c->fb[0] = BF(dav1d_cdef_filter_8x8, ssse3);
-    c->fb[1] = BF(dav1d_cdef_filter_4x8, ssse3);
-    c->fb[2] = BF(dav1d_cdef_filter_4x4, ssse3);
-
-    if (!(flags & DAV1D_X86_CPU_FLAG_SSE41)) return;
-
-    c->dir = BF(dav1d_cdef_dir, sse4);
-#if BITDEPTH == 8
-    c->fb[0] = BF(dav1d_cdef_filter_8x8, sse4);
-    c->fb[1] = BF(dav1d_cdef_filter_4x8, sse4);
-    c->fb[2] = BF(dav1d_cdef_filter_4x4, sse4);
-#endif
+    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, ssse3);
+    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, ssse3);
+    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, ssse3);
+    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, ssse3);
 
 #if ARCH_X86_64
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
-    c->dir = BF(dav1d_cdef_dir, avx2);
-    c->fb[0] = BF(dav1d_cdef_filter_8x8, avx2);
-    c->fb[1] = BF(dav1d_cdef_filter_4x8, avx2);
-    c->fb[2] = BF(dav1d_cdef_filter_4x4, avx2);
+    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, avx2);
+    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, avx2);
+    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, avx2);
+    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, avx2);
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
 
-#if BITDEPTH == 8
-    c->fb[0] = BF(dav1d_cdef_filter_8x8, avx512icl);
-    c->fb[1] = BF(dav1d_cdef_filter_4x8, avx512icl);
-    c->fb[2] = BF(dav1d_cdef_filter_4x4, avx512icl);
-#endif
+    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, avx512icl);
+    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, avx512icl);
+    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, avx512icl);
+    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, avx512icl);
 #endif
 }

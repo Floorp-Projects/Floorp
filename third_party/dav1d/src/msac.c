@@ -203,6 +203,6 @@ void dav1d_msac_init(MsacContext *const s, const uint8_t *const data,
 #if ARCH_X86_64 && HAVE_ASM
     s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt_c;
 
-    dav1d_msac_init_x86(s);
+    msac_init_x86(s);
 #endif
 }
