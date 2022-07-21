@@ -402,6 +402,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     atomMarking().markAtomValue(this, value);
   }
 
+  // Interface for recording telemetry metrics.
+  js::Metrics metrics() { return js::Metrics(runtime_); }
+
   // Methods specific to any HelperThread for the context.
   bool addPendingCompileError(js::CompileError** err);
   void addPendingOverRecursed();
