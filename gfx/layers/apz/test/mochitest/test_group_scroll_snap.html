@@ -31,6 +31,13 @@ const subtests = [
   {"file": "helper_scroll_snap_resnap_after_async_scrollBy.html",
     // Same as above helper_scroll_snap_resnap_after_async_scroll.html.
    "prefs": [["layout.css.scroll-behavior.spring-constant", 10]]},
+  {"file": "helper_scroll_snap_not_resnap_during_panning.html",
+    // Specify a strong spring constant to make scroll snap animation be
+    // effective in a short span of time.
+   "prefs": [["layout.css.scroll-behavior.spring-constant", 1000]]},
+  {"file": "helper_scroll_snap_not_resnap_during_scrollbar_dragging.html",
+    // Same as above helper_scroll_snap_not_resnap_during_scrollbar_dragging.html.
+   "prefs": [["layout.css.scroll-behavior.spring-constant", 1000]]},
 ];
 
 if (isApzEnabled()) {

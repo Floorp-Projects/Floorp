@@ -345,6 +345,7 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aWriter, aParam.mLastSnapTargetIds);
     WriteParam(aWriter, aParam.mIsRootContent);
     WriteParam(aWriter, aParam.mIsScrollInfoLayer);
+    WriteParam(aWriter, aParam.mIsInScrollingGesture);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -368,7 +369,9 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
         ReadParam(aReader, &aResult->mLastSnapTargetIds) &&
         ReadBoolForBitfield(aReader, aResult, &paramType::SetIsRootContent) &&
         ReadBoolForBitfield(aReader, aResult,
-                            &paramType::SetIsScrollInfoLayer));
+                            &paramType::SetIsScrollInfoLayer) &&
+        ReadBoolForBitfield(aReader, aResult,
+                            &paramType::SetIsInScrollingGesture));
   }
 };
 

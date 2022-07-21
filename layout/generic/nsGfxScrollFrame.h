@@ -60,6 +60,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   using Element = mozilla::dom::Element;
   using AnimationState = nsIScrollableFrame::AnimationState;
   using SnapTargetSet = nsTHashSet<RefPtr<nsIContent>>;
+  using InScrollingGesture = nsIScrollableFrame::InScrollingGesture;
 
   class AsyncScroll;
   class AsyncSmoothMSDScroll;
@@ -528,7 +529,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
                                const APZScrollGeneration& aGenerationOnApz,
-                               APZScrollAnimationType aAPZScrollAnimationType);
+                               APZScrollAnimationType aAPZScrollAnimationType,
+                               InScrollingGesture aInScrollingGesture);
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
@@ -682,6 +684,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // process of starting or in progress" you need to check mScrollUpdates,
   // mApzAnimationRequested, and this type.
   APZScrollAnimationType mCurrentAPZScrollAnimationType;
+
+  // Representing whether the APZC corresponding to this frame is now in the
+  // middle of handling a gesture (e.g. a pan gesture).
+  InScrollingGesture mInScrollingGesture : 1;
 
   bool mAllowScrollOriginDowngrade : 1;
   bool mHadDisplayPortAtLastFrameUpdate : 1;
@@ -1190,9 +1196,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void ResetScrollInfoIfNeeded(
       const mozilla::MainThreadScrollGeneration& aGeneration,
       const mozilla::APZScrollGeneration& aGenerationOnApz,
-      mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType,
+      InScrollingGesture aInScrollingGesture) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aGenerationOnApz,
-                                    aAPZScrollAnimationType);
+                                    aAPZScrollAnimationType,
+                                    aInScrollingGesture);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -1669,9 +1677,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void ResetScrollInfoIfNeeded(
       const mozilla::MainThreadScrollGeneration& aGeneration,
       const mozilla::APZScrollGeneration& aGenerationOnApz,
-      mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType,
+      InScrollingGesture aInScrollingGesture) final {
     mHelper.ResetScrollInfoIfNeeded(aGeneration, aGenerationOnApz,
-                                    aAPZScrollAnimationType);
+                                    aAPZScrollAnimationType,
+                                    aInScrollingGesture);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
