@@ -88,7 +88,6 @@
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
   fill: GrayText;
-  list-style-image: url(chrome://browser/skin/login.svg);
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper > .ac-site-icon {

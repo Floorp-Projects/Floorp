@@ -688,6 +688,9 @@
 
       let details = JSON.parse(this.getAttribute("ac-label"));
       this.querySelector(".line2-label").textContent = details.comment;
+      this.querySelector(
+        ".ac-site-icon"
+      ).src = `page-icon:${details.login?.origin}`;
     }
   }
 
