@@ -444,18 +444,6 @@ bool BackgroundChildImpl::DeallocPServiceWorkerManagerChild(
 // Cache API
 // -----------------------------------------------------------------------------
 
-PCacheStorageChild* BackgroundChildImpl::AllocPCacheStorageChild(
-    const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
-  MOZ_CRASH("CacheStorageChild actor must be provided to PBackground manager");
-  return nullptr;
-}
-
-bool BackgroundChildImpl::DeallocPCacheStorageChild(
-    PCacheStorageChild* aActor) {
-  dom::cache::DeallocPCacheStorageChild(aActor);
-  return true;
-}
-
 already_AddRefed<PCacheChild> BackgroundChildImpl::AllocPCacheChild() {
   return dom::cache::AllocPCacheChild();
 }

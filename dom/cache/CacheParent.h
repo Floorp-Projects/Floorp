@@ -27,9 +27,8 @@ class CacheParent final : public PCacheParent {
   // PCacheParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  PCacheOpParent* AllocPCacheOpParent(const CacheOpArgs& aOpArgs);
-
-  bool DeallocPCacheOpParent(PCacheOpParent* aActor);
+  already_AddRefed<PCacheOpParent> AllocPCacheOpParent(
+      const CacheOpArgs& aOpArgs);
 
   virtual mozilla::ipc::IPCResult RecvPCacheOpConstructor(
       PCacheOpParent* actor, const CacheOpArgs& aOpArgs) override;
@@ -39,7 +38,7 @@ class CacheParent final : public PCacheParent {
   SafeRefPtr<cache::Manager> mManager;
   const CacheId mCacheId;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheParent, override)
+  NS_INLINE_DECL_REFCOUNTING(CacheParent, override)
 };
 
 }  // namespace mozilla::dom::cache

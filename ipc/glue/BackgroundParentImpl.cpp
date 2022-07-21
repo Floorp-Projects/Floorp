@@ -964,15 +964,10 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar() {
   return IPC_OK();
 }
 
-PCacheStorageParent* BackgroundParentImpl::AllocPCacheStorageParent(
+already_AddRefed<PCacheStorageParent>
+BackgroundParentImpl::AllocPCacheStorageParent(
     const Namespace& aNamespace, const PrincipalInfo& aPrincipalInfo) {
   return dom::cache::AllocPCacheStorageParent(this, aNamespace, aPrincipalInfo);
-}
-
-bool BackgroundParentImpl::DeallocPCacheStorageParent(
-    PCacheStorageParent* aActor) {
-  dom::cache::DeallocPCacheStorageParent(aActor);
-  return true;
 }
 
 PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(

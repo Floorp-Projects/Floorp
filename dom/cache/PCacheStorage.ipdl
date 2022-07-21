@@ -13,7 +13,6 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-[ManualDealloc]
 protocol PCacheStorage
 {
   manager PBackground;

@@ -19,7 +19,7 @@ void DeallocPCacheStorageChild(PCacheStorageChild* aActor) { delete aActor; }
 
 CacheStorageChild::CacheStorageChild(CacheStorage* aListener,
                                      SafeRefPtr<CacheWorkerRef> aWorkerRef)
-    : mListener(aListener), mNumChildActors(0), mDelayedDestroy(false) {
+    : mListener(aListener), mDelayedDestroy(false) {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_DIAGNOSTIC_ASSERT(mListener);
 
@@ -41,36 +41,19 @@ void CacheStorageChild::ClearListener() {
 void CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
                                   nsISupports* aParent,
                                   const CacheOpArgs& aArgs) {
-  mNumChildActors += 1;
   Unused << SendPCacheOpConstructor(
-      new CacheOpChild(GetWorkerRefPtr().clonePtr(), aGlobal, aParent,
-                       aPromise),
+      new CacheOpChild(GetWorkerRefPtr().clonePtr(), aGlobal, aParent, aPromise,
+                       this),
       aArgs);
 }
 
 void CacheStorageChild::StartDestroyFromListener() {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
 
-  // The listener should be held alive by any async operations, so if it
-  // is going away then there must not be any child actors.  This in turn
-  // ensures that StartDestroy() will not trigger the delayed path.
-  MOZ_DIAGNOSTIC_ASSERT(!mNumChildActors);
-
   StartDestroy();
 }
 
-void CacheStorageChild::StartDestroy() {
-  NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
-
-  // If we have outstanding child actors, then don't destroy ourself yet.
-  // The child actors should be short lived and we should allow them to complete
-  // if possible.  NoteDeletedActor() will call back into this Shutdown()
-  // method when the last child actor is gone.
-  if (mNumChildActors) {
-    mDelayedDestroy = true;
-    return;
-  }
-
+void CacheStorageChild::DestroyInternal() {
   RefPtr<CacheStorage> listener = mListener;
 
   // StartDestroy() can get called from either CacheStorage or the
@@ -90,6 +73,24 @@ void CacheStorageChild::StartDestroy() {
   QM_WARNONLY_TRY(OkIf(SendTeardown()));
 }
 
+void CacheStorageChild::StartDestroy() {
+  NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
+
+  if (NumChildActors() != 0) {
+    mDelayedDestroy = true;
+    return;
+  }
+  DestroyInternal();
+}
+
+void CacheStorageChild::NoteDeletedActor() {
+  // Check to see if DestroyInternal was delayed because of active CacheOpChilds
+  // when StartDestroy was called from WorkerRef notification. If the last
+  // CacheOpChild is getting destructed; it's the time for us to SendTearDown to
+  // the other side.
+  if (NumChildActors() == 1 && mDelayedDestroy) DestroyInternal();
+}
+
 void CacheStorageChild::ActorDestroy(ActorDestroyReason aReason) {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
   RefPtr<CacheStorage> listener = mListener;
@@ -107,19 +108,4 @@ PCacheOpChild* CacheStorageChild::AllocPCacheOpChild(
   MOZ_CRASH("CacheOpChild should be manually constructed.");
   return nullptr;
 }
-
-bool CacheStorageChild::DeallocPCacheOpChild(PCacheOpChild* aActor) {
-  delete aActor;
-  NoteDeletedActor();
-  return true;
-}
-
-void CacheStorageChild::NoteDeletedActor() {
-  MOZ_DIAGNOSTIC_ASSERT(mNumChildActors);
-  mNumChildActors -= 1;
-  if (!mNumChildActors && mDelayedDestroy) {
-    StartDestroy();
-  }
-}
-
 }  // namespace mozilla::dom::cache
