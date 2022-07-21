@@ -4,6 +4,13 @@
 
 "use strict";
 
+// Allow telemetry probes which may otherwise be disabled for some
+// applications (e.g. Thunderbird).
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 // Tests that nsIHttpChannelInternal.beConservative correctly limits the use of
 // advanced TLS features that may cause compatibility issues. Does so by
 // starting a TLS server that requires the advanced features and then ensuring
