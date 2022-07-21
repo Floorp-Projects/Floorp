@@ -3,7 +3,9 @@
   "$id": "file:///WhatsNewMessage.schema.json",
   "title": "WhatsNewMessage",
   "description": "A template for the messages that appear in the What's New panel.",
-  "version": "1.2.0",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
   "properties": {
     "content": {
@@ -84,24 +86,17 @@
         "cta_url",
         "bucket_id"
       ],
-      "dependencies": {
+      "dependentSchemas": {
         "layout": [
           "layout_title_content_variable"
         ]
       }
-    },
-    "order": {
-      "type": "integer"
     },
     "template": {
       "type": "string",
       "const": "whatsnew_panel_message"
     }
   },
-  "required": [
-    "content",
-    "order",
-    "template"
-  ],
+  "required": ["order"],
   "additionalProperties": true
 }

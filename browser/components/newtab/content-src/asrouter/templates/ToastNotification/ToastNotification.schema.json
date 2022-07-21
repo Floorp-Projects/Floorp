@@ -3,6 +3,9 @@
   "$id": "file:///ToastNotification.schema.json",
   "title": "ToastNotification",
   "description": "A template for toast notifications displayed by the Alert service.",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
   "properties": {
     "content": {
@@ -45,31 +48,9 @@
         "body"
       ]
     },
-    "targeting": {
-      "type": "string",
-      "description": "A JEXL expression representing targeting information"
-    },
     "template": {
       "type": "string",
       "const": "toast_notification"
-    },
-    "trigger": {
-      "type": "object",
-      "description": "An action to trigger potentially showing the message",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "A string identifying the trigger action"
-        },
-        "params": {
-          "type": "array",
-          "description": "An optional array of string parameters for the trigger action",
-          "items": {
-            "anyOf": [{ "type": "integer" }, { "type": "string" }]
-          }
-        }
-      },
-      "required": ["id"]
     }
   },
   "required": [

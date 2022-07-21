@@ -3,7 +3,9 @@
   "$id": "file:///ToolbarBadgeMessage.schema.json",
   "title": "ToolbarBadgeMessage",
   "description": "A template that specifies to which element in the browser toolbar to add a notification.",
-  "version": "1.1.0",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
   "properties": {
     "content": {
@@ -37,18 +39,11 @@
       "additionalProperties": true,
       "required": ["target"]
     },
-    "targeting": {
-      "type": "string"
-    },
     "template": {
       "type": "string",
       "const": "toolbar_badge"
     }
   },
   "additionalProperties": true,
-  "required": [
-    "content",
-    "targeting",
-    "template"
-  ]
+  "required": ["targeting"]
 }

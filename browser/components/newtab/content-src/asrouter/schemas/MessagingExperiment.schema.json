@@ -12,28 +12,7 @@
     {
       "allOf": [
         {
-          "type": "object",
-          "properties": {
-            "template": {
-              "type": "string",
-              "enum": [
-                "cfr_urlbar_chiclet",
-                "cfr_doorhanger",
-                "milestone_message",
-                "infobar",
-                "pb_newtab",
-                "protections_panel",
-                "spotlight",
-                "toast_notification",
-                "toolbar_badge",
-                "update_action",
-                "whatsnew_panel_message"
-              ]
-            }
-          },
-          "required": [
-            "template"
-          ]
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
         },
         {
           "if": {
@@ -235,21 +214,13 @@
       "$id": "file:///CFRUrlbarChiclet.schema.json",
       "title": "CFRUrlbarChiclet",
       "description": "A template with a chiclet button with text.",
-      "version": "1.0.0",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
-        "groups": {
-          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "Preference name"
-          }
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -309,50 +280,13 @@
             "action"
           ]
         },
-        "priority": {
-          "type": "integer"
-        },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression representing targeting information"
-        },
         "template": {
           "type": "string",
           "const": "cfr_urlbar_chiclet"
-        },
-        "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action"
-            },
-            "params": {
-              "type": "array",
-              "description": "An optional array of string parameters for the trigger action",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "id"
-          ]
         }
       },
       "required": [
-        "id",
-        "content",
         "targeting",
-        "template",
         "trigger"
       ]
     },
@@ -361,32 +295,13 @@
       "$id": "file:///ExtensionDoorhanger.schema.json",
       "title": "ExtensionDoorhanger",
       "description": "A template with a heading, addon icon, title and description. No markup allowed.",
-      "version": "1.0.0",
-      "type": "object",
-      "$defs": {
-        "plainText": {
-          "description": "Plain text (no HTML allowed)",
-          "type": "string"
-        },
-        "linkUrl": {
-          "description": "Target for links or buttons",
-          "type": "string",
-          "format": "uri"
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
         }
-      },
+      ],
+      "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
-        "groups": {
-          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "Preference name"
-          }
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -730,64 +645,19 @@
             ]
           }
         },
-        "priority": {
-          "type": "integer"
-        },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression representing targeting information"
-        },
         "template": {
           "type": "string",
           "enum": [
             "cfr_doorhanger",
             "milestone_message"
           ]
-        },
-        "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action"
-            },
-            "params": {
-              "type": "array",
-              "description": "An optional array of string parameters for the trigger action",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "id"
-          ]
         }
       },
       "additionalProperties": true,
       "required": [
-        "id",
-        "content",
         "targeting",
-        "template",
         "trigger"
-      ]
-    },
-    "InfoBar": {
-      "$schema": "https://json-schema.org/draft/2019-09/schema",
-      "$id": "file:///InfoBar.schema.json",
-      "title": "InfoBar",
-      "description": "A template with an image, test and buttons.",
-      "version": "1.0.0",
-      "type": "object",
+      ],
       "$defs": {
         "plainText": {
           "description": "Plain text (no HTML allowed)",
@@ -798,20 +668,20 @@
           "type": "string",
           "format": "uri"
         }
-      },
+      }
+    },
+    "InfoBar": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///InfoBar.schema.json",
+      "title": "InfoBar",
+      "description": "A template with an image, test and buttons.",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
+      "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
-        "groups": {
-          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "Preference name"
-          }
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -885,121 +755,40 @@
             "buttons"
           ]
         },
-        "frequency": {
-          "type": "object",
-          "description": "An object containing frequency cap information for a message.",
-          "properties": {
-            "lifetime": {
-              "type": "integer",
-              "description": "The maximum lifetime impressions for a message.",
-              "minimum": 1,
-              "maximum": 100
-            },
-            "custom": {
-              "type": "array",
-              "description": "An array of custom frequency cap definitions.",
-              "items": {
-                "description": "A frequency cap definition containing time and max impression information",
-                "type": "object",
-                "properties": {
-                  "period": {
-                    "oneOf": [
-                      {
-                        "type": "integer",
-                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
-                      },
-                      {
-                        "type": "string",
-                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
-                        "enum": [
-                          "daily"
-                        ]
-                      }
-                    ]
-                  },
-                  "cap": {
-                    "type": "integer",
-                    "description": "The maximum impressions for the message within the defined period.",
-                    "minimum": 1,
-                    "maximum": 100
-                  }
-                },
-                "required": [
-                  "period",
-                  "cap"
-                ]
-              }
-            }
-          }
-        },
-        "priority": {
-          "type": "integer"
-        },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression representing targeting information"
-        },
         "template": {
           "type": "string",
           "const": "infobar"
-        },
-        "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action"
-            },
-            "params": {
-              "type": "array",
-              "description": "An optional array of string parameters for the trigger action",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "id"
-          ]
         }
       },
       "additionalProperties": true,
       "required": [
-        "id",
-        "content",
         "targeting",
-        "template",
         "trigger"
-      ]
+      ],
+      "$defs": {
+        "plainText": {
+          "description": "Plain text (no HTML allowed)",
+          "type": "string"
+        },
+        "linkUrl": {
+          "description": "Target for links or buttons",
+          "type": "string",
+          "format": "uri"
+        }
+      }
     },
     "NewtabPromoMessage": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
       "$id": "file:///NewtabPromoMessage.schema.json",
       "title": "PBNewtabPromoMessage",
       "description": "Message shown on the private browsing newtab page.",
-      "version": "1.0.0",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
-        "groups": {
-          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "Preference name"
-          }
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -1172,36 +961,28 @@
             }
           ]
         },
-        "priority": {
-          "type": "integer"
-        },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression represetning targeting information"
-        },
         "template": {
           "type": "string",
           "const": "pb_newtab"
         }
       },
+      "additionalProperties": true,
       "required": [
-        "id",
-        "content",
-        "targeting",
-        "template"
-      ],
-      "additionalProperties": true
+        "targeting"
+      ]
     },
     "ProtectionsPanelMessage": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
       "$id": "file:///ProtectionsPanelMessage.schema.json",
       "title": "ProtectionsPanelMessage",
+      "description": "A message shown in the protections panel.",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -1269,22 +1050,13 @@
           "const": "protections_panel"
         },
         "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action",
-              "const": "protectionsPanelOpen"
-            }
-          },
-          "required": [
-            "id"
-          ]
+          "description": "An action to trigger potentially showing the message. The action ID `protectionsPanelOpen` is required.",
+          "const": {
+            "id": "protectionsPanelOpen"
+          }
         }
       },
       "required": [
-        "id",
         "content",
         "template",
         "trigger"
@@ -1296,21 +1068,13 @@
       "$id": "file:///Spotlight.schema.json",
       "title": "Spotlight",
       "description": "A template with an image, title, content and two buttons.",
-      "version": "1.1.0",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
-        "groups": {
-          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "Preference name"
-          }
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -1484,98 +1248,14 @@
             "template"
           ]
         },
-        "frequency": {
-          "type": "object",
-          "description": "An object containing frequency cap information for a message.",
-          "properties": {
-            "lifetime": {
-              "type": "integer",
-              "description": "The maximum lifetime impressions for a message.",
-              "minimum": 1,
-              "maximum": 100
-            },
-            "custom": {
-              "type": "array",
-              "description": "An array of custom frequency cap definitions.",
-              "items": {
-                "description": "A frequency cap definition containing time and max impression information",
-                "type": "object",
-                "properties": {
-                  "period": {
-                    "oneOf": [
-                      {
-                        "type": "integer",
-                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
-                      },
-                      {
-                        "type": "string",
-                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
-                        "enum": [
-                          "daily"
-                        ]
-                      }
-                    ]
-                  },
-                  "cap": {
-                    "type": "integer",
-                    "description": "The maximum impressions for the message within the defined period.",
-                    "minimum": 1,
-                    "maximum": 100
-                  }
-                },
-                "required": [
-                  "period",
-                  "cap"
-                ]
-              }
-            }
-          }
-        },
-        "priority": {
-          "type": "integer"
-        },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression representing targeting information"
-        },
         "template": {
           "type": "string",
           "const": "spotlight"
-        },
-        "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action"
-            },
-            "params": {
-              "type": "array",
-              "description": "An optional array of string parameters for the trigger action",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "id"
-          ]
         }
       },
       "additionalProperties": true,
       "required": [
-        "id",
-        "content",
-        "targeting",
-        "template"
+        "targeting"
       ]
     },
     "ToastNotification": {
@@ -1583,6 +1263,11 @@
       "$id": "file:///ToastNotification.schema.json",
       "title": "ToastNotification",
       "description": "A template for toast notifications displayed by the Alert service.",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
         "content": {
@@ -1625,40 +1310,9 @@
             "body"
           ]
         },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression representing targeting information"
-        },
         "template": {
           "type": "string",
           "const": "toast_notification"
-        },
-        "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action"
-            },
-            "params": {
-              "type": "array",
-              "description": "An optional array of string parameters for the trigger action",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "id"
-          ]
         }
       },
       "required": [
@@ -1674,7 +1328,11 @@
       "$id": "file:///ToolbarBadgeMessage.schema.json",
       "title": "ToolbarBadgeMessage",
       "description": "A template that specifies to which element in the browser toolbar to add a notification.",
-      "version": "1.1.0",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
         "content": {
@@ -1710,9 +1368,6 @@
             "target"
           ]
         },
-        "targeting": {
-          "type": "string"
-        },
         "template": {
           "type": "string",
           "const": "toolbar_badge"
@@ -1720,9 +1375,7 @@
       },
       "additionalProperties": true,
       "required": [
-        "content",
-        "targeting",
-        "template"
+        "targeting"
       ]
     },
     "UpdateAction": {
@@ -1730,21 +1383,13 @@
       "$id": "file:///UpdateAction.schema.json",
       "title": "UpdateActionMessage",
       "description": "A template for messages that execute predetermined actions.",
-      "version": "1.0.0",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Message identifier"
-        },
-        "groups": {
-          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "description": "Preference name"
-          }
-        },
         "content": {
           "type": "object",
           "properties": {
@@ -1782,47 +1427,13 @@
             "action"
           ]
         },
-        "targeting": {
-          "type": "string",
-          "description": "A JEXL expression representing targeting information"
-        },
         "template": {
           "type": "string",
           "const": "update_action"
-        },
-        "trigger": {
-          "type": "object",
-          "description": "An action to trigger potentially showing the message",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "A string identifying the trigger action"
-            },
-            "params": {
-              "type": "array",
-              "description": "An optional array of string parameters for the trigger action",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "id"
-          ]
         }
       },
       "required": [
-        "id",
-        "content",
-        "targeting",
-        "template"
+        "targeting"
       ]
     },
     "WhatsNewMessage": {
@@ -1830,7 +1441,11 @@
       "$id": "file:///WhatsNewMessage.schema.json",
       "title": "WhatsNewMessage",
       "description": "A template for the messages that appear in the What's New panel.",
-      "version": "1.2.0",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
       "type": "object",
       "properties": {
         "content": {
@@ -1911,14 +1526,11 @@
             "cta_url",
             "bucket_id"
           ],
-          "dependencies": {
+          "dependentSchemas": {
             "layout": [
               "layout_title_content_variable"
             ]
           }
-        },
-        "order": {
-          "type": "integer"
         },
         "template": {
           "type": "string",
@@ -1926,11 +1538,135 @@
         }
       },
       "required": [
-        "content",
-        "order",
-        "template"
+        "order"
       ],
       "additionalProperties": true
+    },
+    "Message": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "template": {
+          "type": "string",
+          "description": "Which messaging template this message is using.",
+          "enum": [
+            "cfr_urlbar_chiclet",
+            "cfr_doorhanger",
+            "milestone_message",
+            "infobar",
+            "pb_newtab",
+            "protections_panel",
+            "spotlight",
+            "toast_notification",
+            "toolbar_badge",
+            "update_action",
+            "whatsnew_panel_message"
+          ]
+        },
+        "frequency": {
+          "type": "object",
+          "description": "An object containing frequency cap information for a message.",
+          "properties": {
+            "lifetime": {
+              "type": "integer",
+              "description": "The maximum lifetime impressions for a message.",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "custom": {
+              "type": "array",
+              "description": "An array of custom frequency cap definitions.",
+              "items": {
+                "description": "A frequency cap definition containing time and max impression information",
+                "type": "object",
+                "properties": {
+                  "period": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                      },
+                      {
+                        "type": "string",
+                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                        "enum": [
+                          "daily"
+                        ]
+                      }
+                    ]
+                  },
+                  "cap": {
+                    "type": "integer",
+                    "description": "The maximum impressions for the message within the defined period.",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "period",
+                  "cap"
+                ]
+              }
+            }
+          }
+        },
+        "priority": {
+          "description": "The priority of the message. If there are two competing messages to show, the one with the highest priority will be shown",
+          "type": "integer"
+        },
+        "order": {
+          "description": "The order in which messages should be shown. Messages will be shown in increasing order.",
+          "type": "integer"
+        },
+        "targeting": {
+          "description": "A JEXL expression representing targeting information",
+          "type": "string"
+        },
+        "trigger": {
+          "description": "An action to trigger potentially showing the message",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "content",
+        "template"
+      ]
     },
     "localizedText": {
       "type": "object",

@@ -3,32 +3,11 @@
   "$id": "file:///InfoBar.schema.json",
   "title": "InfoBar",
   "description": "A template with an image, test and buttons.",
-  "version": "1.0.0",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
-  "$defs": {
-    "plainText": {
-      "description": "Plain text (no HTML allowed)",
-      "type": "string"
-    },
-    "linkUrl": {
-      "description": "Target for links or buttons",
-      "type": "string",
-      "format": "uri"
-    }
-  },
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Message identifier"
-    },
-    "groups": {
-      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-      "type": "array",
-      "items": {
-        "type": "string",
-        "description": "Preference name"
-      }
-    },
     "content": {
       "type": "object",
       "properties": {
@@ -91,78 +70,22 @@
       "additionalProperties": true,
       "required": ["text", "buttons"]
     },
-    "frequency": {
-      "type": "object",
-      "description": "An object containing frequency cap information for a message.",
-      "properties": {
-        "lifetime": {
-          "type": "integer",
-          "description": "The maximum lifetime impressions for a message.",
-          "minimum": 1,
-          "maximum": 100
-        },
-        "custom": {
-          "type": "array",
-          "description": "An array of custom frequency cap definitions.",
-          "items": {
-            "description": "A frequency cap definition containing time and max impression information",
-            "type": "object",
-            "properties": {
-              "period": {
-                "oneOf": [
-                  {
-                    "type": "integer",
-                    "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
-                  },
-                  {
-                    "type": "string",
-                    "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
-                    "enum": ["daily"]
-                  }
-                ]
-              },
-              "cap": {
-                "type": "integer",
-                "description": "The maximum impressions for the message within the defined period.",
-                "minimum": 1,
-                "maximum": 100
-              }
-            },
-            "required": ["period", "cap"]
-          }
-        }
-      }
-    },
-    "priority": {
-      "type": "integer"
-    },
-    "targeting": {
-      "type": "string",
-      "description": "A JEXL expression representing targeting information"
-    },
     "template": {
       "type": "string",
       "const": "infobar"
-    },
-    "trigger": {
-      "type": "object",
-      "description": "An action to trigger potentially showing the message",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "A string identifying the trigger action"
-        },
-        "params": {
-          "type": "array",
-          "description": "An optional array of string parameters for the trigger action",
-          "items": {
-            "anyOf": [{ "type": "integer" }, { "type": "string" }]
-          }
-        }
-      },
-      "required": ["id"]
     }
   },
   "additionalProperties": true,
-  "required": ["id", "content", "targeting", "template", "trigger"]
+  "required": ["targeting", "trigger"],
+  "$defs": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "linkUrl": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  }
 }

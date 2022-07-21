@@ -35,11 +35,36 @@ Schema Changes
 
 To add a new message type to the Messaging Experiments schema:
 
-1. Ensure the schema has an ``$id`` member. This allows for references (e.g.,
+1. Add your message template schema.
+
+   Your message template schema only needs to define the following fields at a
+   minimum:
+
+   * ``template``: a string field that defines an identifier for your message.
+     This must be either a ``const`` or ``enum`` field.
+
+     For example, the ``template`` field of Spotlight looks like:
+
+     .. code-block:: json
+
+        { "type": "string", "const": "spotlight" }
+
+   * ``content``: an object field that defines your per-message unique content.
+
+   If your message requires ``targeting``, you must add a targeting field.
+
+   If your message supports triggering, there is a definition you can reference
+   the ``MessageTrigger`` `shared definition <Shared Definitions_>`_.
+
+   The ``groups``, ``frequency``, and ``priority`` fields will automatically be
+   inherited by your message.
+
+2. Ensure the schema has an ``$id`` member. This allows for references (e.g.,
    ``{ "$ref": "#!/$defs/Foo" }``) to work in the bundled schema. See docs on
    `bundling JSON schemas <jsonschema_bundling_>`_ for more information.
-2. Add the new schema to the list in `make-schemas.py <make_schemas_script_>`_.
-3. Build the new schema by running:
+
+3. Add the new schema to the list in `make-schemas.py <make_schemas_script_>`_.
+4. Build the new schema by running:
 
   .. code-block:: shell
 
@@ -83,6 +108,9 @@ schema will be rewritten in the generated schema.
 
 The definitions listed in this file are:
 
+* ``Message``, which defines the common fields present in each FxMS message;
+* ``MessageTrigger``, which defines a method that may trigger the message to be
+  presented to the user;
 * ``localizableText``, for when either a string or a string ID (for translation
   purposes) can be used; and
 * ``localizedText``, for when a string ID is required.
