@@ -59,7 +59,7 @@ random == rotate-1f.html rotate-1-ref.html
 # "Translate" with percentages should be indistinguishable from translate with
 # equivalent values.
 == percent-1a.html percent-1-ref.html
-== percent-1b.html percent-1-ref.html
+fuzzy(0-1,0-2) == percent-1b.html percent-1-ref.html
 fuzzy(0-1,0-80) == percent-1c.html percent-1-ref.html
 fuzzy(0-1,0-80) == percent-1d.html percent-1-ref.html
 fuzzy(0-1,0-80) == percent-1e.html percent-1-ref.html
