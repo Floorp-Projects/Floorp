@@ -858,7 +858,6 @@ section:not(:empty) ~ #empty-addons-message {
   background-origin: border-box;
   border-radius: 1.5em;
   padding: 1px;
-  vertical-align: bottom;
 }
 
 #colorways-expiry-date > span {
@@ -866,7 +865,7 @@ section:not(:empty) ~ #empty-addons-message {
   color: var(--in-content-page-color);
   background: var(--in-content-page-background);
   border-radius: 1.5em;
-  padding: .2em 1em;
+  padding: .3em 1em;
 }
 
 #colorways-button {
