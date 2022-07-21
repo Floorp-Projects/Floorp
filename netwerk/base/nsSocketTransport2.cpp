@@ -1084,6 +1084,10 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     controlFlags |= nsISocketProvider::DONT_TRY_ECH;
   }
 
+  if (mConnectionFlags & nsISocketTransport::IS_RETRY) {
+    controlFlags |= nsISocketProvider::IS_RETRY;
+  }
+
   if (mConnectionFlags &
       nsISocketTransport::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT) {
     controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
