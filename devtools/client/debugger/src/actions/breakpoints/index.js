@@ -128,11 +128,11 @@ export function toggleBreakpointsAtLine(cx, shouldDisableBreakpoints, line) {
 export function removeAllBreakpoints(cx) {
   return async ({ dispatch, getState }) => {
     const breakpointList = getBreakpointsList(getState());
+
     await Promise.all(
       breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
     );
     dispatch({ type: "CLEAR_BREAKPOINTS" });
-    asyncStore.pendingBreakpoints = {};
   };
 }
 
