@@ -616,7 +616,7 @@ const TEST_GLOBAL = {
   },
   Utils: {
     SERVER_URL: "bogus://foo",
-  }
+  },
 };
 overrider.set(TEST_GLOBAL);
 
