@@ -102,6 +102,36 @@ function update(state = initialPauseState(), action) {
       };
     }
 
+    case "REMOVE_THREAD": {
+      if (
+        action.threadActorID in state.threads ||
+        action.threadActorID == state.threadcx.thread
+      ) {
+        // Remove the thread from the cached list
+        const threads = { ...state.threads };
+        delete threads[action.threadActorID];
+        let threadcx = state.threadcx;
+
+        // And also switch to another thread if this was the currently selected one.
+        // As we don't store thread objects in this reducer, and only store thread actor IDs,
+        // we can't try to find the top level thread. So we pick the first available thread,
+        // and hope that's the top level one.
+        if (state.threadcx.thread == action.threadActorID) {
+          threadcx = {
+            ...threadcx,
+            thread: Object.keys(threads)[0],
+            pauseCounter: threadcx.pauseCounter + 1,
+          };
+        }
+        return {
+          ...state,
+          threadcx,
+          threads,
+        };
+      }
+      break;
+    }
+
     case "PAUSED": {
       const { thread, frame, why } = action;
       state = {
