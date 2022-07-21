@@ -3498,6 +3498,10 @@ bool AsyncPanZoomController::AttemptScroll(
           block->SetScrolledApzc(this);
         }
       }
+      // Note that in the case of instant scrolling, the last snap target ids
+      // will be set after AttemptScroll call so that we can clobber them
+      // unconditionally here.
+      mLastSnapTargetIds = ScrollSnapTargetIds{};
       ScheduleCompositeAndMaybeRepaint();
     }
 
@@ -4429,7 +4433,8 @@ void AsyncPanZoomController::RequestContentRepaint(
                         : APZScrollAnimationType::TriggeredByUserInput;
   }
   RepaintRequest request(aFrameMetrics, aDisplayportMargins, aUpdateType,
-                         animationType, mScrollGeneration, mLastSnapTargetIds);
+                         animationType, mScrollGeneration, mLastSnapTargetIds,
+                         IsInScrollingGesture());
 
   if (request.IsRootContent() && request.GetZoom() != mLastNotifiedZoom &&
       mState != PINCHING && mState != ANIMATING_ZOOM) {
@@ -6024,6 +6029,11 @@ bool AsyncPanZoomController::IsPanningState(PanZoomState aState) {
 
 bool AsyncPanZoomController::IsInPanningState() const {
   return IsPanningState(mState);
+}
+
+bool AsyncPanZoomController::IsInScrollingGesture() const {
+  return IsPanningState(mState) || mState == SCROLLBAR_DRAG ||
+         mState == TOUCHING || mState == PINCHING;
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(

@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skip re-snapping during scrollbar dragging</title>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+    div {
+      position: absolute;
+    }
+    #scroller {
+      width: 100%;
+      height: 500px;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+    }
+    .child {
+      width: 100%;
+      height: 100px;
+      background-color: blue;
+      scroll-snap-align: start;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroller">
+    <div class="child" style="top: 0px;"></div>
+    <div id="spacer" style="width: 100%; height: 2000px;"></div>
+  </div>
+  <script type="application/javascript">
+    async function test() {
+      is(scroller.scrollTop, 0, "The initial snap point is at 0px");
+
+      // Move onto the scroll thumb for the scroller element.
+      let w = {}, h = {};
+      SpecialPowers.DOMWindowUtils.getScrollbarSizes(scroller, w, h);
+      if (w.value == 0) {
+        ok(true, "No scrollbar, can't do this test");
+        return;
+      }
+
+      const x = scroller.clientWidth + w.value / 2;
+      await promiseNativeMouseEventWithAPZ({
+        target: scroller,
+        offsetX: x,
+        offsetY: w.value + 5,
+        type: "mousemove"});
+
+      // Start dragging the thumb.
+      await promiseNativeMouseEventWithAPZ({
+        target: scroller,
+        offsetX: x,
+        offsetY: w.value + 5,
+        type: "mousedown",
+      });
+
+      // Move down the thumb to scroll.
+      let scrollEventPromise = waitForScrollEvent(scroller);
+      await promiseNativeMouseEventWithAPZ({
+        target: scroller,
+        offsetX: x,
+        offsetY: w.value + 10,
+        type: "mousemove"});
+      await scrollEventPromise;
+
+      ok(scroller.scrollTop > 0, "Dragging the scroll thumb should scroll");
+
+      // Expand the scrollable region during the dragging.
+      spacer.style.height = "2200px";
+
+      isnot(scroller.scrollTop, 0, "Do not re-snap to the original 0px");
+      let previousScrollPosition = scroller.scrollTop;
+
+      scrollEventPromise = waitForScrollEvent(scroller);
+      // Release the mouse button, it will trigger snapping.
+      await promiseNativeMouseEventWithAPZ({
+          target: scroller,
+          offsetX: x,
+          offsetY: 10,
+          type: "mouseup"});
+
+      await scrollEventPromise;
+
+      // Make sure the new scroll positions have reached to the main-thread.
+      await promiseApzFlushedRepaints();
+
+      // There's no good way to tell whether the snapping has finished, has
+      // reached to the snap destination, so we just check whether the current
+      // scroll position is a bit scrolled back toward the snap destination.
+      ok(scroller.scrollTop < previousScrollPosition,
+         "Releasing the mouse button should trigger snapping toward 0px");
+    }
+
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>

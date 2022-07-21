@@ -1714,6 +1714,10 @@ class AsyncPanZoomController {
  public:
   bool IsInPanningState() const;
 
+  // Returns whether being in the middle of a gesture. E.g., this APZC has
+  // started handling a pan gesture but hasn't yet received pan-end, etc.
+  bool IsInScrollingGesture() const;
+
  private:
   /* This is the cumulative CSS transform for all the layers from (and
    * including) the parent APZC down to (but excluding) this one, and excluding

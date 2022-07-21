@@ -158,7 +158,9 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
   if (sf) {
     sf->ResetScrollInfoIfNeeded(aRequest.GetScrollGeneration(),
                                 aRequest.GetScrollGenerationOnApz(),
-                                aRequest.GetScrollAnimationType());
+                                aRequest.GetScrollAnimationType(),
+                                nsIScrollableFrame::InScrollingGesture(
+                                    aRequest.IsInScrollingGesture()));
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {

@@ -2323,6 +2323,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID),
       mAnchor(this),
       mCurrentAPZScrollAnimationType(APZScrollAnimationType::No),
+      mInScrollingGesture(InScrollingGesture::No),
       mAllowScrollOriginDowngrade(false),
       mHadDisplayPortAtLastFrameUpdate(false),
       mHasVerticalScrollbar(false),
@@ -7487,7 +7488,8 @@ EnumSet<AnimationState> ScrollFrameHelper::ScrollAnimationState() const {
 void ScrollFrameHelper::ResetScrollInfoIfNeeded(
     const MainThreadScrollGeneration& aGeneration,
     const APZScrollGeneration& aGenerationOnApz,
-    APZScrollAnimationType aAPZScrollAnimationType) {
+    APZScrollAnimationType aAPZScrollAnimationType,
+    InScrollingGesture aInScrollingGesture) {
   if (aGeneration == mScrollGeneration) {
     mLastScrollOrigin = ScrollOrigin::None;
     mApzAnimationRequested = false;
@@ -7497,6 +7499,8 @@ void ScrollFrameHelper::ResetScrollInfoIfNeeded(
   // We can reset this regardless of scroll generation, as this is only set
   // here, as a response to APZ requesting a repaint.
   mCurrentAPZScrollAnimationType = aAPZScrollAnimationType;
+
+  mInScrollingGesture = aInScrollingGesture;
 }
 
 UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
@@ -8041,8 +8045,10 @@ bool ScrollFrameHelper::IsLastSnappedTarget(const nsIFrame* aFrame) const {
 }
 
 void ScrollFrameHelper::TryResnap() {
-  // If there's any async scroll is running, don't clobber the scroll.
-  if (!ScrollAnimationState().isEmpty()) {
+  // If there's any async scroll is running or we are processing pan/touch
+  // gestures or scroll thumb dragging,  don't clobber the scroll.
+  if (!ScrollAnimationState().isEmpty() ||
+      mInScrollingGesture == InScrollingGesture::Yes) {
     return;
   }
 

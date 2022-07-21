@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skip re-snapping during pan gesture</title>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+    div {
+      position: absolute;
+    }
+    #scroller {
+      width: 100%;
+      height: 500px;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+    }
+    .child {
+      width: 100%;
+      height: 100px;
+      background-color: blue;
+      scroll-snap-align: start;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroller">
+    <div class="child" style="top: 0px;"></div>
+    <div id="spacer" style="width: 100%; height: 2000px;"></div>
+  </div>
+  <script type="application/javascript">
+    async function test() {
+      is(scroller.scrollTop, 0, "The initial snap point is at 0px");
+
+      let scrollEventPromise = waitForScrollEvent(scroller);
+
+      // Start a pan gesture downward.
+      await promiseNativePanGestureEventAndWaitForObserver(
+        scroller,
+        100,
+        100,
+        0,
+        -10,
+        1 /* kCGScrollPhaseBegan */);
+
+      await scrollEventPromise;
+
+      ok(scroller.scrollTop > 0, "The pan-start should scroll");
+
+      // Expand the scrollable region during the panning.
+      spacer.style.height = "2200px";
+
+      isnot(scroller.scrollTop, 0, "Do not re-snap to the original 0px");
+      let previousScrollPosition = scroller.scrollTop;
+
+      scrollEventPromise = waitForScrollEvent(scroller);
+      // Finish the pan gesture now.
+      await promiseNativePanGestureEventAndWaitForObserver(
+        scroller,
+        100,
+        100,
+        0,
+        0 /* 0 velocity to avoid further scrolling by this event */,
+        4 /* kCGScrollPhaseEnd */);
+
+      await scrollEventPromise;
+
+      // Make sure the new scroll positions have reached to the main-thread.
+      await promiseApzFlushedRepaints();
+
+      // There's no good way to tell whether the snapping has finished, has
+      // reached to the snap destination, so we just check whether the current
+      // scroll position is a bit scrolled back toward the snap destination.
+      ok(scroller.scrollTop < previousScrollPosition,
+         "The pan-end should trigger snapping toward 0px");
+    }
+
+    if (getPlatform() == "mac") {
+      waitUntilApzStable()
+      .then(test)
+      .then(subtestDone, subtestFailed);
+    } else {
+      ok(true, "Skipping test because this test works only on mac");
+      subtestDone();
+    }
+  </script>
+</body>
+</html>

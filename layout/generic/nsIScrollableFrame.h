@@ -457,6 +457,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * the last call to NotifyApzTransaction().
    */
   virtual bool HasScrollUpdates() const = 0;
+
+  enum class InScrollingGesture : bool { No, Yes };
   /**
    * Clears the "origin of last scroll" property stored in this frame, if
    * the generation counter passed in matches the current scroll generation
@@ -467,7 +469,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual void ResetScrollInfoIfNeeded(
       const mozilla::MainThreadScrollGeneration& aGeneration,
       const mozilla::APZScrollGeneration& aGenerationOnApz,
-      mozilla::APZScrollAnimationType aAPZScrollAnimationType) = 0;
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType,
+      InScrollingGesture aInScrollingGesture) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.
