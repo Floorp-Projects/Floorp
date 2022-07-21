@@ -19,7 +19,8 @@ class nsINode;
 
 namespace mozilla {
 class DeclarationBlock;
-}
+enum class StyleSanitizationKind : uint8_t;
+}  // namespace mozilla
 
 namespace mozilla::dom {
 class DocumentFragment;
@@ -63,6 +64,11 @@ class nsTreeSanitizer {
    */
   void WithWebSanitizerOptions(const mozilla::dom::SanitizerConfig& aOptions);
 
+  /**
+   * Removes conditional CSS from this subtree.
+   */
+  static void RemoveConditionalCSSFromSubtree(nsINode* aRoot);
+
  private:
   /**
    * Whether <style> and style="" are allowed.
@@ -103,11 +109,6 @@ class nsTreeSanitizer {
    * Whether we should notify to the console for anything that's stripped.
    */
   bool mLogRemovals;
-
-  /**
-   * Whether we should remove CSS conditional rules, no other changes.
-   */
-  bool mOnlyConditionalCSS;
 
   /**
    * We have various tables of static atoms for elements and attributes.
@@ -214,27 +215,23 @@ class nsTreeSanitizer {
   bool SanitizeStyleDeclaration(mozilla::DeclarationBlock* aDeclaration);
 
   /**
-   * Parses a style sheet and reserializes it with the 'binding' property
-   * removed if it was present.
+   * Sanitizes an inline style element (an HTML or SVG <style>).
    *
-   * @param aOriginal the original style sheet source
-   * @param aSanitized the reserialization without dangerous CSS.
-   * @param aDocument the document the style sheet belongs to
-   * @param aBaseURI the base URI to use
+   * Returns whether the style has changed.
    */
-  void SanitizeStyleSheet(const nsAString& aOriginal, nsAString& aSanitized,
-                          mozilla::dom::Document* aDocument, nsIURI* aBaseURI);
+  static bool SanitizeInlineStyle(mozilla::dom::Element*,
+                                  mozilla::StyleSanitizationKind);
 
   /**
    * Removes all attributes from an element node.
    */
-  void RemoveAllAttributes(mozilla::dom::Element* aElement);
+  static void RemoveAllAttributes(mozilla::dom::Element* aElement);
 
   /**
    * Removes all attributes from the descendants of an element but not from
    * the element itself.
    */
-  void RemoveAllAttributesFromDescendants(mozilla::dom::Element* aElement);
+  static void RemoveAllAttributesFromDescendants(mozilla::dom::Element*);
 
   /**
    * Log a Console Service message to indicate we removed something.

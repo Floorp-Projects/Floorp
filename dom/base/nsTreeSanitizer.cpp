@@ -16,6 +16,7 @@
 #include "mozilla/dom/SanitizerBinding.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/NullPrincipal.h"
@@ -985,9 +986,7 @@ nsTreeSanitizer::nsTreeSanitizer(uint32_t aFlags)
       mCidEmbedsOnly(aFlags & nsIParserUtils::SanitizerCidEmbedsOnly),
       mDropMedia(aFlags & nsIParserUtils::SanitizerDropMedia),
       mFullDocument(false),
-      mLogRemovals(aFlags & nsIParserUtils::SanitizerLogRemovals),
-      mOnlyConditionalCSS(aFlags &
-                          nsIParserUtils::SanitizerRemoveOnlyConditionalCSS) {
+      mLogRemovals(aFlags & nsIParserUtils::SanitizerLogRemovals) {
   if (mCidEmbedsOnly) {
     // Sanitizing styles for external references is not supported.
     mAllowStyles = false;
@@ -1001,12 +1000,6 @@ nsTreeSanitizer::nsTreeSanitizer(uint32_t aFlags)
     // doesn't paste HTML or load feeds.
     InitializeStatics();
   }
-  /* Ensure SanitizerRemoveOnlyConditionalCSS isn't combined with any
-   * flags, except SanitizerLogRemovals. */
-  MOZ_ASSERT(!mOnlyConditionalCSS ||
-             0 ==
-                 (aFlags & ~(nsIParserUtils::SanitizerRemoveOnlyConditionalCSS |
-                             nsIParserUtils::SanitizerLogRemovals)));
 }
 
 bool nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal) {
@@ -1114,10 +1107,19 @@ bool nsTreeSanitizer::MustPrune(int32_t aNamespace, nsAtom* aLocal,
   return false;
 }
 
-void nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
-                                         nsAString& aSanitized,
-                                         Document* aDocument,
-                                         nsIURI* aBaseURI) {
+/**
+ * Parses a style sheet and reserializes it with unsafe styles removed.
+ *
+ * @param aOriginal the original style sheet source
+ * @param aSanitized the reserialization without dangerous CSS.
+ * @param aDocument the document the style sheet belongs to
+ * @param aBaseURI the base URI to use
+ * @param aSanitizationKind the kind of style sanitization to use.
+ */
+static void SanitizeStyleSheet(const nsAString& aOriginal,
+                               nsAString& aSanitized, Document* aDocument,
+                               nsIURI* aBaseURI,
+                               StyleSanitizationKind aSanitizationKind) {
   aSanitized.Truncate();
 
   NS_ConvertUTF16toUTF8 style(aOriginal);
@@ -1125,9 +1127,6 @@ void nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
       ReferrerInfo::CreateForInternalCSSResources(aDocument);
   auto extraData =
       MakeRefPtr<URLExtraData>(aBaseURI, referrer, aDocument->NodePrincipal());
-  auto sanitizationKind = mOnlyConditionalCSS
-                              ? StyleSanitizationKind::NoConditionalRules
-                              : StyleSanitizationKind::Standard;
   RefPtr<RawServoStyleSheetContents> contents =
       Servo_StyleSheet_FromUTF8Bytes(
           /* loader = */ nullptr,
@@ -1137,12 +1136,36 @@ void nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
           /* line_number_offset = */ 0, aDocument->GetCompatibilityMode(),
           /* reusable_sheets = */ nullptr,
           /* use_counters = */ nullptr, StyleAllowImportRules::Yes,
-          sanitizationKind, &aSanitized)
+          aSanitizationKind, &aSanitized)
           .Consume();
+}
 
-  if (mLogRemovals && aSanitized.Length() != aOriginal.Length()) {
-    LogMessage("Removed some rules and/or properties from stylesheet.",
-               aDocument);
+bool nsTreeSanitizer::SanitizeInlineStyle(
+    Element* aElement, StyleSanitizationKind aSanitizationKind) {
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aElement->IsHTMLElement(nsGkAtoms::style) ||
+             aElement->IsSVGElement(nsGkAtoms::style));
+
+  nsAutoString styleText;
+  nsContentUtils::GetNodeTextContent(aElement, false, styleText);
+
+  nsAutoString sanitizedStyle;
+  SanitizeStyleSheet(styleText, sanitizedStyle, aElement->OwnerDoc(),
+                     aElement->GetBaseURI(), StyleSanitizationKind::Standard);
+  RemoveAllAttributesFromDescendants(aElement);
+  nsContentUtils::SetNodeTextContent(aElement, sanitizedStyle, true);
+
+  return sanitizedStyle.Length() != styleText.Length();
+}
+
+void nsTreeSanitizer::RemoveConditionalCSSFromSubtree(nsINode* aRoot) {
+  for (nsINode* node : ShadowIncludingTreeIterator(*aRoot)) {
+    if (!node->IsHTMLElement(nsGkAtoms::style) &&
+        !node->IsSVGElement(nsGkAtoms::style)) {
+      continue;
+    }
+    SanitizeInlineStyle(node->AsElement(),
+                        StyleSanitizationKind::NoConditionalRules);
   }
 }
 
@@ -1393,7 +1416,7 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
       nsAtom* localName = nodeInfo->NameAtom();
       int32_t ns = nodeInfo->NamespaceID();
 
-      if (!mOnlyConditionalCSS && MustPrune(ns, localName, elt)) {
+      if (MustPrune(ns, localName, elt)) {
         if (mLogRemovals) {
           LogMessage("Removing unsafe node.", elt->OwnerDoc(), elt);
         }
@@ -1418,40 +1441,32 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
         mFullDocument = wasFullDocument;
       }
       if (nsGkAtoms::style == localName) {
-        // If !mOnlyConditionalCSS check the following condition:
         // If styles aren't allowed, style elements got pruned above. Even
         // if styles are allowed, non-HTML, non-SVG style elements got pruned
         // above.
-        NS_ASSERTION((ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG) ||
-                         mOnlyConditionalCSS,
+        NS_ASSERTION(ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG,
                      "Should have only HTML or SVG here!");
-        nsAutoString styleText;
-        nsContentUtils::GetNodeTextContent(node, false, styleText);
-
-        nsAutoString sanitizedStyle;
-        SanitizeStyleSheet(styleText, sanitizedStyle, aRoot->OwnerDoc(),
-                           node->GetBaseURI());
-        RemoveAllAttributesFromDescendants(elt);
-        nsContentUtils::SetNodeTextContent(node, sanitizedStyle, true);
-
-        if (!mOnlyConditionalCSS) {
-          AllowedAttributes allowed;
-          allowed.mStyle = mAllowStyles;
-          if (ns == kNameSpaceID_XHTML) {
-            allowed.mNames = sAttributesHTML;
-            allowed.mURLs = kURLAttributesHTML;
-            SanitizeAttributes(elt, allowed);
-          } else {
-            allowed.mNames = sAttributesSVG;
-            allowed.mURLs = kURLAttributesSVG;
-            allowed.mXLink = true;
-            SanitizeAttributes(elt, allowed);
-          }
+        if (SanitizeInlineStyle(elt, StyleSanitizationKind::Standard) &&
+            mLogRemovals) {
+          LogMessage("Removed some rules and/or properties from stylesheet.",
+                     aRoot->OwnerDoc());
         }
+
+        AllowedAttributes allowed;
+        allowed.mStyle = mAllowStyles;
+        if (ns == kNameSpaceID_XHTML) {
+          allowed.mNames = sAttributesHTML;
+          allowed.mURLs = kURLAttributesHTML;
+        } else {
+          allowed.mNames = sAttributesSVG;
+          allowed.mURLs = kURLAttributesSVG;
+          allowed.mXLink = true;
+        }
+        SanitizeAttributes(elt, allowed);
         node = node->GetNextNonChildNode(aRoot);
         continue;
       }
-      if (!mOnlyConditionalCSS && MustFlatten(ns, localName)) {
+      if (MustFlatten(ns, localName)) {
         if (mLogRemovals) {
           LogMessage("Flattening unsafe node (descendants are preserved).",
                      elt->OwnerDoc(), elt);
@@ -1472,37 +1487,34 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
         node = next;
         continue;
       }
-      if (!mOnlyConditionalCSS) {
-        NS_ASSERTION(ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG ||
-                         ns == kNameSpaceID_MathML,
-                     "Should have only HTML, MathML or SVG here!");
-        AllowedAttributes allowed;
-        if (ns == kNameSpaceID_XHTML) {
-          allowed.mNames = sAttributesHTML;
-          allowed.mURLs = kURLAttributesHTML;
-          allowed.mStyle = mAllowStyles;
-          allowed.mDangerousSrc =
-              nsGkAtoms::img == localName && !mCidEmbedsOnly;
-          SanitizeAttributes(elt, allowed);
-        } else if (ns == kNameSpaceID_SVG) {
-          allowed.mNames = sAttributesSVG;
-          allowed.mURLs = kURLAttributesSVG;
-          allowed.mXLink = true;
-          allowed.mStyle = mAllowStyles;
-          SanitizeAttributes(elt, allowed);
-        } else {
-          allowed.mNames = sAttributesMathML;
-          allowed.mURLs = kURLAttributesMathML;
-          allowed.mXLink = true;
-          SanitizeAttributes(elt, allowed);
-        }
+      NS_ASSERTION(ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG ||
+                       ns == kNameSpaceID_MathML,
+                   "Should have only HTML, MathML or SVG here!");
+      AllowedAttributes allowed;
+      if (ns == kNameSpaceID_XHTML) {
+        allowed.mNames = sAttributesHTML;
+        allowed.mURLs = kURLAttributesHTML;
+        allowed.mStyle = mAllowStyles;
+        allowed.mDangerousSrc = nsGkAtoms::img == localName && !mCidEmbedsOnly;
+        SanitizeAttributes(elt, allowed);
+      } else if (ns == kNameSpaceID_SVG) {
+        allowed.mNames = sAttributesSVG;
+        allowed.mURLs = kURLAttributesSVG;
+        allowed.mXLink = true;
+        allowed.mStyle = mAllowStyles;
+        SanitizeAttributes(elt, allowed);
+      } else {
+        allowed.mNames = sAttributesMathML;
+        allowed.mURLs = kURLAttributesMathML;
+        allowed.mXLink = true;
+        SanitizeAttributes(elt, allowed);
       }
       node = node->GetNextNode(aRoot);
       continue;
     }
     NS_ASSERTION(!node->GetFirstChild(), "How come non-element node had kids?");
     nsIContent* next = node->GetNextNonChildNode(aRoot);
-    if (!mOnlyConditionalCSS && (!mAllowComments && node->IsComment())) {
+    if (!mAllowComments && node->IsComment()) {
       node->RemoveFromParent();
     }
     node = next;

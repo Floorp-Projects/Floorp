@@ -66,6 +66,13 @@ div.WordSection1
   },
 ];
 
+const kConditionalCSSTestCases = [
+  {
+    data: `#foo { display: none } @media (min-width: 300px) { #bar { display: none } }`,
+    sanitized: `#foo { display: none }`,
+  },
+];
+
 function run_test() {
   if (AppConstants.platform != "android") {
     // xpcshell tests are weird. They fake shutdown after the test finishes. This upsets this test
@@ -96,6 +103,15 @@ function run_test() {
 
   for (let { data, sanitized } of kTestCases) {
     let out = ParserUtils.sanitize(`<style>${data}</style>`, sanitizeFlags);
+    info(out);
+    Assert.equal(
+      `<html><head><style>${sanitized}</style></head><body></body></html>`,
+      out
+    );
+  }
+
+  for (let { data, sanitized } of kConditionalCSSTestCases) {
+    let out = ParserUtils.removeConditionalCSS(`<style>${data}</style>`);
     info(out);
     Assert.equal(
       `<html><head><style>${sanitized}</style></head><body></body></html>`,

@@ -41,31 +41,44 @@ nsParserUtils::ConvertToPlainText(const nsAString& aFromStr, uint32_t aFlags,
   return nsContentUtils::ConvertToPlainText(aFromStr, aToStr, aFlags, aWrapCol);
 }
 
-NS_IMETHODIMP
-nsParserUtils::Sanitize(const nsAString& aFromStr, uint32_t aFlags,
-                        nsAString& aToStr) {
+template <typename Callable>
+static nsresult SanitizeWith(const nsAString& aInput, nsAString& aOutput,
+                             Callable aDoSanitize) {
   RefPtr<Document> document = nsContentUtils::CreateInertHTMLDocument(nullptr);
-
   if (!document) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = nsContentUtils::ParseDocumentHTML(aFromStr, document, false);
+  nsresult rv = nsContentUtils::ParseDocumentHTML(aInput, document, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTreeSanitizer sanitizer(aFlags);
-  sanitizer.Sanitize(document);
+  aDoSanitize(document.get());
 
   nsCOMPtr<nsIDocumentEncoder> encoder = do_createDocumentEncoder("text/html");
-
   encoder->NativeInit(document, u"text/html"_ns,
                       nsIDocumentEncoder::OutputDontRewriteEncodingDeclaration |
                           nsIDocumentEncoder::OutputNoScriptContent |
                           nsIDocumentEncoder::OutputEncodeBasicEntities |
                           nsIDocumentEncoder::OutputLFLineBreak |
                           nsIDocumentEncoder::OutputRaw);
+  return encoder->EncodeToString(aOutput);
+}
 
-  return encoder->EncodeToString(aToStr);
+NS_IMETHODIMP
+nsParserUtils::Sanitize(const nsAString& aFromStr, uint32_t aFlags,
+                        nsAString& aToStr) {
+  return SanitizeWith(aFromStr, aToStr, [&](Document* aDocument) {
+    nsTreeSanitizer sanitizer(aFlags);
+    sanitizer.Sanitize(aDocument);
+  });
+}
+
+NS_IMETHODIMP
+nsParserUtils::RemoveConditionalCSS(const nsAString& aFromStr,
+                                    nsAString& aToStr) {
+  return SanitizeWith(aFromStr, aToStr, [](Document* aDocument) {
+    nsTreeSanitizer::RemoveConditionalCSSFromSubtree(aDocument);
+  });
 }
 
 NS_IMETHODIMP
