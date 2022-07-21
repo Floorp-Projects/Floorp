@@ -920,6 +920,9 @@ class GlobalObject : public NativeObject {
   static bool getIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
                                 Handle<PropertyName*> name,
                                 MutableHandleValue value) {
+    // `undefined` in self-hosted JS code should be emitted as JSOp::Undefined.
+    MOZ_ASSERT(name != cx->names().undefined);
+
     if (global->maybeGetIntrinsicValue(name, value.address(), cx)) {
       return true;
     }
