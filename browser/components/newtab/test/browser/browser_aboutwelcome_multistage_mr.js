@@ -52,32 +52,10 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
   );
 });
 
-async function clickVisibleButton(browser, selector) {
-  // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(browser, { selector }, async ({ selector }) => {
-    function getVisibleElement() {
-      for (const el of content.document.querySelectorAll(selector)) {
-        if (el.offsetParent !== null) {
-          return el;
-        }
-      }
-      return null;
-    }
-    await ContentTaskUtils.waitForCondition(
-      getVisibleElement,
-      selector,
-      200, // interval
-      100 // maxTries
-    );
-    getVisibleElement().click();
-  });
-}
-
 /**
  * Test MR template content
  */
 add_task(async function test_aboutwelcome_mr_template_content() {
-  await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
   let browser = await openMRAboutWelcome();
 
   await test_screen_content(
@@ -85,99 +63,5 @@ add_task(async function test_aboutwelcome_mr_template_content() {
     "MR template includes screens with split position",
     // Expected selectors:
     [`main.screen[pos="split"]`]
-  );
-
-  await test_screen_content(
-    browser,
-    "renders pin screen",
-    //Expected selectors:
-    ["main.AW_PIN_FIREFOX"],
-    //Unexpected selectors:
-    ["main.AW_GRATITUDE"]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  //should render set default
-  await test_screen_content(
-    browser,
-    "renders set default screen",
-    //Expected selectors:
-    ["main.AW_SET_DEFAULT"],
-    //Unexpected selectors:
-    ["main.AW_CHOOSE_THEME"]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_screen_content(
-    browser,
-    "renders import settings screen",
-    //Expected selectors:
-    ["main.AW_IMPORT_SETTINGS"],
-    //Unexpected selectors:
-    ["main.AW_PIN_FIREFOX"]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_screen_content(
-    browser,
-    "renders set colorway screen",
-    //Expected selectors:
-    ["main.AW_CHOOSE_THEME"],
-    //Unexpected selectors:
-    ["main.AW_PIN_FIREFOX"]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_screen_content(
-    browser,
-    "renders gratitude screen",
-    //Expected selectors:
-    ["main.AW_GRATITUDE"],
-    //Unexpected selectors:
-    ["main.AW_PIN_FIREFOX"]
-  );
-});
-
-/**
- * Test MR template content - browser.shell.checkDefaultBrowser is false by default
- */
-add_task(async function test_aboutwelcome_mr_template_content_default() {
-  await pushPrefs(["browser.shell.checkDefaultBrowser", false]);
-
-  let browser = await openMRAboutWelcome();
-
-  await test_screen_content(
-    browser,
-    "renders pin screen",
-    //Expected selectors:
-    ["main.AW_PIN_FIREFOX"],
-    //Unexpected selectors:
-    ["main.AW_GRATITUDE"]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_screen_content(
-    browser,
-    "renders set colorway screen",
-    //Expected selectors:
-    ["main.AW_CHOOSE_THEME"],
-    //Unexpected selectors:
-    ["main.AW_SET_DEFAULT"]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_screen_content(
-    browser,
-    "renders gratitude screen",
-    //Expected selectors:
-    ["main.AW_GRATITUDE"],
-    //Unexpected selectors:
-    ["main.AW_IMPORT_SETTINGS"]
   );
 });
