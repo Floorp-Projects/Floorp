@@ -5895,7 +5895,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("type.String."),
     PREF_LIST_ENTRY("toolkit.mozprotocol.url"),
     PREF_LIST_ENTRY("toolkit.telemetry.log.level"),
-    PREF_LIST_ENTRY("ui.-moz-fieldtext.dark"),
+    PREF_LIST_ENTRY("ui."),
 };
 
 #undef PREF_LIST_ENTRY
