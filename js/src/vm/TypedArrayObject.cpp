@@ -915,8 +915,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     return makeInstance(cx, buffer, 0, nelements, proto);
   }
 
-  static bool AllocateArrayBuffer(JSContext* cx, HandleObject ctor,
-                                  size_t count,
+  static bool AllocateArrayBuffer(JSContext* cx, size_t count,
                                   MutableHandle<ArrayBufferObject*> buffer);
 
   static TypedArrayObject* fromArray(JSContext* cx, HandleObject other,
@@ -1100,34 +1099,13 @@ TypedArrayObject* js::NewTypedArrayWithTemplateAndBuffer(
 
 // ES2023 draft rev cf86f1cdc28e809170733d74ea64fd0f3dd79f78
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength )
+// constructor = %ArrayBuffer%
 // byteLength = count * BYTES_PER_ELEMENT
 template <typename T>
 /* static */ bool TypedArrayObjectTemplate<T>::AllocateArrayBuffer(
-    JSContext* cx, HandleObject ctor, size_t count,
-    MutableHandle<ArrayBufferObject*> buffer) {
-  // Step 1 (partially).
-  RootedObject proto(cx);
-
-  JSObject* arrayBufferCtor =
-      GlobalObject::getOrCreateArrayBufferConstructor(cx, cx->global());
-  if (!arrayBufferCtor) {
-    return false;
-  }
-
-  // As an optimization, skip the "prototype" lookup for %ArrayBuffer%.
-  if (ctor != arrayBufferCtor) {
-    // 9.1.13 OrdinaryCreateFromConstructor, steps 1-2.
-    if (!GetPrototypeFromConstructor(cx, ctor, JSProto_ArrayBuffer, &proto)) {
-      return false;
-    }
-  }
-
-  // Steps 1 (remaining part), 2-5.
-  if (!maybeCreateArrayBuffer(cx, count, proto, buffer)) {
-    return false;
-  }
-
-  return true;
+    JSContext* cx, size_t count, MutableHandle<ArrayBufferObject*> buffer) {
+  // Steps 1-5.
+  return maybeCreateArrayBuffer(cx, count, nullptr, buffer);
 }
 
 template <typename T>
@@ -1193,17 +1171,10 @@ template <typename T>
 
   // InitializeTypedArrayFromTypedArray, step 9. (Skipped)
 
-  RootedObject bufferCtor(
-      cx, GlobalObject::getOrCreateArrayBufferConstructor(cx, cx->global()));
-  if (!bufferCtor) {
-    return nullptr;
-  }
-
-  Rooted<ArrayBufferObject*> buffer(cx);
-
   // InitializeTypedArrayFromTypedArray, step 10.a. (Partial)
   // InitializeTypedArrayFromTypedArray, step 11.a.
-  if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, &buffer)) {
+  Rooted<ArrayBufferObject*> buffer(cx);
+  if (!AllocateArrayBuffer(cx, elementLength, &buffer)) {
     return nullptr;
   }
 
