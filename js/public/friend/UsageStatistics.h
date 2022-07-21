@@ -22,49 +22,49 @@ class JS_PUBLIC_API JSObject;
  * It's OK for these enum values to change as they will be mapped to a fixed
  * member of the mozilla::Telemetry::HistogramID enum by the callback.
  */
-#define FOR_EACH_JS_METRIC(_)  \
-  _(GC_REASON_2)               \
-  _(GC_IS_COMPARTMENTAL)       \
-  _(GC_MS)                     \
-  _(GC_BUDGET_MS_2)            \
-  _(GC_BUDGET_WAS_INCREASED)   \
-  _(GC_SLICE_WAS_LONG)         \
-  _(GC_BUDGET_OVERRUN)         \
-  _(GC_ANIMATION_MS)           \
-  _(GC_MAX_PAUSE_MS_2)         \
-  _(GC_PREPARE_MS)             \
-  _(GC_MARK_MS)                \
-  _(GC_SWEEP_MS)               \
-  _(GC_COMPACT_MS)             \
-  _(GC_MARK_ROOTS_US)          \
-  _(GC_MARK_GRAY_MS_2)         \
-  _(GC_MARK_WEAK_MS)           \
-  _(GC_SLICE_MS)               \
-  _(GC_SLOW_PHASE)             \
-  _(GC_SLOW_TASK)              \
-  _(GC_MMU_50)                 \
-  _(GC_RESET)                  \
-  _(GC_RESET_REASON)           \
-  _(GC_NON_INCREMENTAL)        \
-  _(GC_NON_INCREMENTAL_REASON) \
-  _(GC_MINOR_REASON)           \
-  _(GC_MINOR_REASON_LONG)      \
-  _(GC_MINOR_US)               \
-  _(GC_NURSERY_BYTES_2)        \
-  _(GC_PRETENURE_COUNT_2)      \
-  _(GC_NURSERY_PROMOTION_RATE) \
-  _(GC_TENURED_SURVIVAL_RATE)  \
-  _(GC_MARK_RATE_2)            \
-  _(GC_TIME_BETWEEN_S)         \
-  _(GC_TIME_BETWEEN_SLICES_MS) \
-  _(GC_SLICE_COUNT)            \
-  _(DESERIALIZE_BYTES)         \
-  _(DESERIALIZE_ITEMS)         \
-  _(DESERIALIZE_US)            \
-  _(GC_EFFECTIVENESS)
+#define FOR_EACH_JS_METRIC(_)                   \
+  _(GC_REASON_2, Enumeration)                   \
+  _(GC_IS_COMPARTMENTAL, Boolean)               \
+  _(GC_MS, TimeDuration_MS)                     \
+  _(GC_BUDGET_MS_2, TimeDuration_MS)            \
+  _(GC_BUDGET_WAS_INCREASED, Boolean)           \
+  _(GC_SLICE_WAS_LONG, Boolean)                 \
+  _(GC_BUDGET_OVERRUN, TimeDuration_US)         \
+  _(GC_ANIMATION_MS, TimeDuration_MS)           \
+  _(GC_MAX_PAUSE_MS_2, TimeDuration_MS)         \
+  _(GC_PREPARE_MS, TimeDuration_MS)             \
+  _(GC_MARK_MS, TimeDuration_MS)                \
+  _(GC_SWEEP_MS, TimeDuration_MS)               \
+  _(GC_COMPACT_MS, TimeDuration_MS)             \
+  _(GC_MARK_ROOTS_US, TimeDuration_US)          \
+  _(GC_MARK_GRAY_MS_2, TimeDuration_MS)         \
+  _(GC_MARK_WEAK_MS, TimeDuration_MS)           \
+  _(GC_SLICE_MS, TimeDuration_MS)               \
+  _(GC_SLOW_PHASE, Enumeration)                 \
+  _(GC_SLOW_TASK, Enumeration)                  \
+  _(GC_MMU_50, Percentage)                      \
+  _(GC_RESET, Boolean)                          \
+  _(GC_RESET_REASON, Enumeration)               \
+  _(GC_NON_INCREMENTAL, Boolean)                \
+  _(GC_NON_INCREMENTAL_REASON, Enumeration)     \
+  _(GC_MINOR_REASON, Enumeration)               \
+  _(GC_MINOR_REASON_LONG, Enumeration)          \
+  _(GC_MINOR_US, TimeDuration_US)               \
+  _(GC_NURSERY_BYTES_2, MemoryDistribution)     \
+  _(GC_PRETENURE_COUNT_2, QuantityDistribution) \
+  _(GC_NURSERY_PROMOTION_RATE, Percentage)      \
+  _(GC_TENURED_SURVIVAL_RATE, Percentage)       \
+  _(GC_MARK_RATE_2, QuantityDistribution)       \
+  _(GC_TIME_BETWEEN_S, TimeDuration_S)          \
+  _(GC_TIME_BETWEEN_SLICES_MS, TimeDuration_MS) \
+  _(GC_SLICE_COUNT, QuantityDistribution)       \
+  _(DESERIALIZE_BYTES, MemoryDistribution)      \
+  _(DESERIALIZE_ITEMS, QuantityDistribution)    \
+  _(DESERIALIZE_US, TimeDuration_US)            \
+  _(GC_EFFECTIVENESS, MemoryDistribution)
 
 // clang-format off
-#define ENUM_DEF(NAME) NAME,
+#define ENUM_DEF(NAME, _) NAME,
 enum class JSMetric {
   FOR_EACH_JS_METRIC(ENUM_DEF)
   Count

@@ -227,10 +227,77 @@ class Metrics {
  public:
   explicit Metrics(JSRuntime* rt) : rt_(rt) {}
 
+  // Records a TimeDuration metric. These are converted to integers when being
+  // recorded so choose an appropriate scale. In the future these will be Glean
+  // Timing Distribution metrics.
+  struct TimeDuration_S {
+    using SourceType = mozilla::TimeDuration;
+    static uint32_t convert(SourceType td) { return uint32_t(td.ToSeconds()); }
+  };
+  struct TimeDuration_MS {
+    using SourceType = mozilla::TimeDuration;
+    static uint32_t convert(SourceType td) {
+      return uint32_t(td.ToMilliseconds());
+    }
+  };
+  struct TimeDuration_US {
+    using SourceType = mozilla::TimeDuration;
+    static uint32_t convert(SourceType td) {
+      return uint32_t(td.ToMicroseconds());
+    }
+  };
+
+  // Record a metric in bytes. In the future these will be Glean Memory
+  // Distribution metrics.
+  struct MemoryDistribution {
+    using SourceType = size_t;
+    static uint32_t convert(SourceType sz) {
+      return static_cast<uint32_t>(std::min(sz, size_t(UINT32_MAX)));
+    }
+  };
+
+  // Record a metric for a quanity of items. This doesn't currently have a Glean
+  // analogue and we avoid using MemoryDistribution directly to avoid confusion
+  // about units.
+  using QuantityDistribution = MemoryDistribution;
+
+  // Record the distribution of boolean values. In the future this will be a
+  // Glean Rate metric.
+  struct Boolean {
+    using SourceType = bool;
+    static uint32_t convert(SourceType sample) {
+      return static_cast<uint32_t>(sample);
+    }
+  };
+
+  // Record the distribution of an enumeration value. This records integer
+  // values so take care not to redefine the value of enum values. In the
+  // future, these should become Glean Labeled Counter metrics.
+  struct Enumeration {
+    using SourceType = int;
+    static uint32_t convert(SourceType sample) {
+      MOZ_ASSERT(sample <= 100);
+      return static_cast<uint32_t>(sample);
+    }
+  };
+
+  // Record a percentage distribution which is an integer in the range 0 to 100.
+  // In the future, this will be a Glean Custom Distribution unless they add a
+  // better match.
+  struct Percentage {
+    using SourceType = int;
+    static uint32_t convert(SourceType sample) {
+      MOZ_ASSERT(sample <= 100);
+      return static_cast<uint32_t>(sample);
+    }
+  };
+
   inline void addTelemetry(JSMetric id, uint32_t sample);
 
-#define DECLARE_METRIC_HELPER(NAME) \
-  void NAME(uint32_t sample) { addTelemetry(JSMetric::NAME, sample); }
+#define DECLARE_METRIC_HELPER(NAME, TY)                \
+  void NAME(TY::SourceType sample) {                   \
+    addTelemetry(JSMetric::NAME, TY::convert(sample)); \
+  }
   FOR_EACH_JS_METRIC(DECLARE_METRIC_HELPER)
 #undef DECLARE_METRIC_HELPER
 };

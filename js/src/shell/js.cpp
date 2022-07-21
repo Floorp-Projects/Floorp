@@ -1316,7 +1316,7 @@ static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,
 
 // clang-format off
 static const char* telemetryNames[static_cast<int>(JSMetric::Count)] = {
-#define LIT(NAME) #NAME,
+#define LIT(NAME, _) #NAME,
   FOR_EACH_JS_METRIC(LIT)
 #undef LIT
 };
@@ -1359,7 +1359,7 @@ static void WriteTelemetryDataToDisk(const char* dir) {
     return true;
   };
 
-  for (int id = 0; id < size_t(JSMetric::Count); id++) {
+  for (size_t id = 0; id < size_t(JSMetric::Count); id++) {
     auto clear = MakeScopeExit([&] { telemetryResults[id].clearAndFree(); });
     if (!initOutput(telemetryNames[id])) {
       continue;
