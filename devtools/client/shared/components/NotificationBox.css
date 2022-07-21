@@ -54,7 +54,7 @@
 
 .notificationbox .notification[data-type="new"] {
   color: var(--theme-contrast-color);
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-body-alternate-emphasized-background);
 }
 
 /**
