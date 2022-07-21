@@ -10,7 +10,14 @@ loadTestSubscript("head_disco.js");
 // latest AMO API, by replacing API_RESPONSE_FILE's content with latest AMO API
 // response, e.g. from https://addons.allizom.org/api/v4/discovery/?lang=en-US
 // The response must contain at least one theme, and one extension.
-const API_RESPONSE_FILE = RELATIVE_DIR + "discovery/api_response.json";
+
+const API_RESPONSE_FILE = PathUtils.join(
+  Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+  // Trim empty component from splitting with trailing slash.
+  ...RELATIVE_DIR.split("/").filter(c => c.length),
+  "discovery",
+  "api_response.json"
+);
 
 const AMO_TEST_HOST = "rewritten-for-testing.addons.allizom.org";
 
