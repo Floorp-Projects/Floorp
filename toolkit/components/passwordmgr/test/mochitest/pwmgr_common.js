@@ -51,9 +51,9 @@ function $_(formNum, name) {
     return null;
   }
 
-  var element = form.children.namedItem(name);
+  var element = form.querySelector(`:is([name="${name}"], [id="${name}"])`);
   if (!element) {
-    ok(false, "$_ couldn't find requested element " + name);
+    ok(false, `$_ couldn't find requested element "${name}"`);
     return null;
   }
 

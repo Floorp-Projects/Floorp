@@ -48,7 +48,7 @@ function startTest() {
   // value attribute, but we don't save default form values (and we want to
   // ensure unsaved values are because of autocomplete=off or whatever).
   for (let i = 1; i <= numInputFields; i++) {
-    $_(1, "test" + i).value = i;
+    getFormElementByName(1, "test" + i).value = i;
   }
 
   // submit the first form.

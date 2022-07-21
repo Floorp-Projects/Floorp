@@ -95,10 +95,17 @@ class FormHistoryChild extends JSWindowActorChild {
         continue;
       }
 
-      let value = input.value.trim();
+      const value = input.lastInteractiveValue?.trim();
 
-      // Don't save empty or unchanged values.
-      if (!value || value == input.defaultValue.trim()) {
+      // Only save user entered values even if they match the default value.
+      // Any script input is ignored.
+      // See Bug 1642570 for details.
+      if (!value) {
+        continue;
+      }
+
+      // Save only when user input was last.
+      if (value != input.value.trim()) {
         continue;
       }
 
