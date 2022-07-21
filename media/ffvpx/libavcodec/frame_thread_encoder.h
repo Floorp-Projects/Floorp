@@ -27,7 +27,7 @@
  * Initialize frame thread encoder.
  * @note hardware encoders are not supported
  */
-int ff_frame_thread_encoder_init(AVCodecContext *avctx, AVDictionary *options);
+int ff_frame_thread_encoder_init(AVCodecContext *avctx);
 void ff_frame_thread_encoder_free(AVCodecContext *avctx);
 int ff_thread_video_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
                                  AVFrame *frame, int *got_packet_ptr);

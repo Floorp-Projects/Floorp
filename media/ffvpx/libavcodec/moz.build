@@ -9,10 +9,11 @@
 if CONFIG['FFVPX_ASFLAGS']:
     if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
         DIRS += ['x86']
-    elif CONFIG['CPU_ARCH'] == 'aarch64':
-        DIRS += ['aarch64']
     elif CONFIG['CPU_ARCH'] == 'arm':
         DIRS += ['arm']
+
+if CONFIG['CPU_ARCH'] == 'aarch64':
+    DIRS += ['aarch64']
 
 SharedLibrary('mozavcodec')
 SOURCES += [
@@ -40,6 +41,7 @@ SOURCES += [
     'flacdata.c',
     'flacdec.c',
     'flacdsp.c',
+    'get_buffer.c',
     'idctdsp.c',
     'jfdctfst.c',
     'jfdctint.c',
@@ -54,6 +56,7 @@ SOURCES += [
     'mpegaudiodsp_data.c',
     'mpegaudiodsp_fixed.c',
     'mpegaudiodsp_float.c',
+    'mpegaudiotabs.c',
     'null_bsf.c',
     'options.c',
     'parser.c',
@@ -65,6 +68,8 @@ SOURCES += [
     'reverse.c',
     'simple_idct.c',
     'utils.c',
+    'version.c',
+    'vlc.c',
     'vorbis_parser.c',
     'xiph.c'
 ]
@@ -73,7 +78,6 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'av1dec.c',
         'avpicture.c',
-        'bitstream_filter.c',
         'cbs.c',
         'cbs_av1.c',
         'golomb.c',
