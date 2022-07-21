@@ -537,10 +537,7 @@ class nsWindow final : public nsBaseWidget {
   // in some reasonable time when page content is not updated.
   int mCompositorPauseTimeoutID = 0;
 
-  // The actual size mode that's in effect.
   nsSizeMode mSizeMode = nsSizeMode_Normal;
-  nsSizeMode mLastSizeModeBeforeFullscreen = nsSizeMode_Normal;
-
   float mAspectRatio = 0.0f;
   float mAspectRatioSaved = 0.0f;
 
@@ -751,6 +748,10 @@ class nsWindow final : public nsBaseWidget {
   float mLastMotionPressure = 0.0f;
 
   InputRegion mInputRegion;
+
+  // Remember the last sizemode so that we can restore it when
+  // leaving fullscreen
+  nsSizeMode mLastSizeMode = nsSizeMode_Normal;
 
   static bool DragInProgress(void);
 
