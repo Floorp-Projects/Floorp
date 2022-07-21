@@ -48,7 +48,7 @@
 
 ### Repository Overview
 
-This repository contains source code for the Floorp legacy browser (Floorp browser) from version 10.0.0 and later.
+This repository contains source code for the Floorp browser from version 10.0.0 and later.
 
 Branches ```master```, ```release```, and ``beta`` exist, and may contain branches created temporarily to create Linux versions.
 
