@@ -22,7 +22,7 @@ Form History test: Test for events while the form history popup is open
 <pre id="test">
 <script class="testbody">
 var form = document.getElementById("form1");
-var input = $_(1, "field1");
+var input = getFormElementByName(1, "field1");
 var expectedValue = "value1";
 
 function setupFormHistory(aCallback) {
