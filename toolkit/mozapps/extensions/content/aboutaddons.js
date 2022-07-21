@@ -3754,42 +3754,44 @@ class ColorwayClosetCard extends HTMLElement {
   setCardContent(card) {
     card.querySelector(".addon-icon").hidden = true;
 
-    let preview = card.querySelector(".card-heading-image");
     const collection = BuiltInThemes.findActiveColorwayCollection?.();
-    if (collection) {
-      const { cardImagePath, expiry } = collection;
-      if (cardImagePath) {
-        preview.src = cardImagePath;
-      }
-
-      let colorwayExpiryDateSpan = card.querySelector(
-        "#colorways-expiry-date > span"
-      );
-      document.l10n.setAttributes(
-        colorwayExpiryDateSpan,
-        "colorway-collection-expiry-date-span",
-        {
-          expiryDate: expiry.getTime(),
-        }
-      );
-
-      let colorwaysButton = card.querySelector("[action='open-colorways']");
-      const isCurrentThemeColorway = BuiltInThemes.isMonochromaticTheme(
-        ACTIVE_THEME_ID
-      );
-
-      document.l10n.setAttributes(
-        colorwaysButton,
-        isCurrentThemeColorway
-          ? "theme-colorways-button-colorway-enabled"
-          : "theme-colorways-button"
-      );
-
-      colorwaysButton.hidden = false;
-      colorwaysButton.onclick = () => {
-        ColorwayClosetOpener.openModal();
-      };
+    if (!collection) {
+      return;
     }
+
+    const preview = card.querySelector(".card-heading-image");
+    const { cardImagePath, expiry } = collection;
+    if (cardImagePath) {
+      preview.src = cardImagePath;
+    }
+
+    let colorwayExpiryDateSpan = card.querySelector(
+      "#colorways-expiry-date > span"
+    );
+    document.l10n.setAttributes(
+      colorwayExpiryDateSpan,
+      "colorway-collection-expiry-label",
+      {
+        expiryDate: expiry.getTime(),
+      }
+    );
+
+    let colorwaysButton = card.querySelector("[action='open-colorways']");
+    const isCurrentThemeColorway = BuiltInThemes.isMonochromaticTheme(
+      ACTIVE_THEME_ID
+    );
+
+    document.l10n.setAttributes(
+      colorwaysButton,
+      isCurrentThemeColorway
+        ? "theme-colorways-button-colorway-enabled"
+        : "theme-colorways-button"
+    );
+
+    colorwaysButton.hidden = false;
+    colorwaysButton.onclick = () => {
+      ColorwayClosetOpener.openModal();
+    };
   }
 }
 customElements.define("colorways-card", ColorwayClosetCard);

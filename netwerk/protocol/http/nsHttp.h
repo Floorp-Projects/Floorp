@@ -150,6 +150,9 @@ extern const nsCString kHttp3Versions[];
 // and set the User-Agent accordingly.
 #define NS_HTTP_USE_RFP (1 << 26)
 
+// If set, then the initial TLS handshake failed.
+#define NS_HTTP_IS_RETRY (1 << 27)
+
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 
 #define NS_HTTP_TRR_MODE_FROM_FLAGS(x) \

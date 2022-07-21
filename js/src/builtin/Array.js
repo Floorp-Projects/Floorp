@@ -17,7 +17,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 6-7. */
     /* Steps a (implicit), and d. */
@@ -51,7 +51,7 @@ function ArraySome(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 6-7. */
     /* Steps a (implicit), and d. */
@@ -134,7 +134,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 6-7. */
     /* Steps a (implicit), and d. */
@@ -147,7 +147,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     }
 
     /* Step 8. */
-    return void 0;
+    return undefined;
 }
 // Inlining this enables inlining of the callback function.
 SetIsInlinableLargeFunction(ArrayForEach);
@@ -167,7 +167,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 4. */
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 5. */
     var A = ArraySpeciesCreate(O, len);
@@ -204,7 +204,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 4. */
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Step 5. */
     var A = ArraySpeciesCreate(O, 0);
@@ -248,7 +248,7 @@ function ArrayGroup(callbackfn/*, thisArg*/) {
     /* Step 5. Let groups be a new empty List. */
     var groups = new_List();
 
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Steps 4, 6. */
     for (var k = 0; k < len; k++) {
@@ -322,7 +322,7 @@ function ArrayGroupToMap(callbackfn/*, thisArg*/) {
     var C = GetBuiltinConstructor("Map");
     var map = new C();
 
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     /* Combine Step 6. and Step 8.
      *

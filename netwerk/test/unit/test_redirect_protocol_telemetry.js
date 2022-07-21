@@ -1,9 +1,6 @@
 "use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
-);
 
 function make_channel(url, callback, ctx) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });

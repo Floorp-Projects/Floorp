@@ -81,12 +81,15 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
     "injections/js/bug1739489-draftjs-beforeinput.js",
     "injections/js/bug1769762-tiktok.com-plugins-shim.js",
+    "injections/js/bug1772949-youtube-webshare-shim.js",
     "injections/js/bug1774005-installtrigger-shim.js",
+    "injections/js/bug1778239-m.pji.co.kr-banner-hide.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/addthis-angular.js",
     "shims/adform.js",
+    "shims/adnexus-ast.js",
     "shims/adnexus-prebid.js",
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
@@ -102,8 +105,10 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/eluminate.js",
     "shims/empty-script.js",
     "shims/empty-shim.txt",
+    "shims/everest.js",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
+    "shims/fastclick.js",
     "shims/firebase.js",
     "shims/google-ads.js",
     "shims/google-analytics-and-tag-manager.js",

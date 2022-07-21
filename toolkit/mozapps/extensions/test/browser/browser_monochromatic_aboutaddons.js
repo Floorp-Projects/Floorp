@@ -8,9 +8,15 @@ const { BuiltInThemes } = ChromeUtils.import(
   "resource:///modules/BuiltInThemes.jsm"
 );
 
-AddonTestUtils.initMochitest(this);
-
 const kTestThemeId = "test-colorway@mozilla.org";
+
+add_setup(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.colorway-closet", false]],
+  });
+
+  AddonTestUtils.initMochitest(this);
+});
 
 add_task(async function testMonochromaticList() {
   // Install test theme before loading view.

@@ -51,9 +51,16 @@ bool NameOpEmitter::emitGet() {
       break;
     }
     case NameLocation::Kind::Intrinsic:
-      if (!bce_->emitAtomOp(JSOp::GetIntrinsic, name_)) {
-        //          [stack] VAL
-        return false;
+      if (name_ == TaggedParserAtomIndex::WellKnown::undefined()) {
+        if (!bce_->emit1(JSOp::Undefined)) {
+          //        [stack] Undefined
+          return false;
+        }
+      } else {
+        if (!bce_->emitAtomOp(JSOp::GetIntrinsic, name_)) {
+          //        [stack] VAL
+          return false;
+        }
       }
       break;
     case NameLocation::Kind::NamedLambdaCallee:

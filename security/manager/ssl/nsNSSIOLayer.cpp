@@ -189,21 +189,32 @@ void nsNSSSocketInfo::NoteTimeUntilReady() {
 
   mNotedTimeUntilReady = true;
 
-  Telemetry::HistogramID time_histogram;
+  auto timestampNow = TimeStamp::Now();
+  if (!(mProviderFlags & nsISocketProvider::IS_RETRY)) {
+    Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY_FIRST_TRY,
+                                   mSocketCreationTimestamp, timestampNow);
+  }
+
+  if (mProviderFlags & nsISocketProvider::BE_CONSERVATIVE) {
+    Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY_CONSERVATIVE,
+                                   mSocketCreationTimestamp, timestampNow);
+  }
+
   switch (GetEchExtensionStatus()) {
-    case EchExtensionStatus::kNotPresent:
-      time_histogram = Telemetry::SSL_TIME_UNTIL_READY;
-      break;
     case EchExtensionStatus::kGREASE:
-      time_histogram = Telemetry::SSL_TIME_UNTIL_READY_ECH_GREASE;
+      Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY_ECH_GREASE,
+                                     mSocketCreationTimestamp, timestampNow);
       break;
     case EchExtensionStatus::kReal:
-      time_histogram = Telemetry::SSL_TIME_UNTIL_READY_ECH;
+      Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY_ECH,
+                                     mSocketCreationTimestamp, timestampNow);
+      break;
+    default:
       break;
   }
   // This will include TCP and proxy tunnel wait time
-  Telemetry::AccumulateTimeDelta(time_histogram, mSocketCreationTimestamp,
-                                 TimeStamp::Now());
+  Telemetry::AccumulateTimeDelta(Telemetry::SSL_TIME_UNTIL_READY,
+                                 mSocketCreationTimestamp, timestampNow);
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("[%p] nsNSSSocketInfo::NoteTimeUntilReady\n", mFd));
@@ -1144,7 +1155,7 @@ static_assert((mozilla::pkix::ERROR_BASE - mozilla::pkix::END_OF_LIST) < 31,
 
 static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
                                   PRErrorCode err,
-                                  EchExtensionStatus aEchExtensionStatus) {
+                                  nsNSSSocketInfo* socketInfo) {
   uint32_t bucket;
 
   // A negative bytesTransferred or a 0 read are errors.
@@ -1169,19 +1180,26 @@ static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
     bucket = 671;
   }
 
-  Telemetry::HistogramID result_histogram;
-  switch (aEchExtensionStatus) {
-    case EchExtensionStatus::kNotPresent:
-      result_histogram = Telemetry::SSL_HANDSHAKE_RESULT;
-      break;
+  uint32_t flags = socketInfo->GetProviderFlags();
+  if (!(flags & nsISocketProvider::IS_RETRY)) {
+    Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT_FIRST_TRY, bucket);
+  }
+
+  if (flags & nsISocketProvider::BE_CONSERVATIVE) {
+    Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT_CONSERVATIVE, bucket);
+  }
+
+  switch (socketInfo->GetEchExtensionStatus()) {
     case EchExtensionStatus::kGREASE:
-      result_histogram = Telemetry::SSL_HANDSHAKE_RESULT_ECH_GREASE;
+      Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT_ECH_GREASE, bucket);
       break;
     case EchExtensionStatus::kReal:
-      result_histogram = Telemetry::SSL_HANDSHAKE_RESULT_ECH;
+      Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT_ECH, bucket);
+      break;
+    default:
       break;
   }
-  Telemetry::Accumulate(result_histogram, bucket);
+  Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT, bucket);
 }
 
 int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
@@ -1256,7 +1274,7 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
     // get handshakes which are cancelled before any reads or writes
     // happen.
     reportHandshakeResult(bytesTransfered, wasReading, originalError,
-                          socketInfo->GetEchExtensionStatus());
+                          socketInfo);
     socketInfo->SetHandshakeNotPending();
   }
 

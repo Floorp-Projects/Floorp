@@ -430,11 +430,15 @@ if (window.googletag?.apiReady === undefined) {
       this.#mapping = new SizeMapping();
     }
     addSize(size, creatives) {
-      if (!Array.isArray(size) || isNaN(size[0]) || isNaN(size[1])) {
+      if (
+        size !== "fluid" &&
+        (!Array.isArray(size) || isNaN(size[0]) || isNaN(size[1]))
+      ) {
         this.#mapping = null;
       } else {
         this.#mapping?.push([size, creatives]);
       }
+      return this;
     }
     build() {
       return this.#mapping;

@@ -2916,7 +2916,7 @@ export class SearchService {
     } else {
       Glean.searchEnginePrivate.displayName.set("");
       Glean.searchEnginePrivate.loadPath.set("");
-      Glean.searchEnginePrivate.submissionUrl.set("");
+      Glean.searchEnginePrivate.submissionUrl.set("blank:");
       Glean.searchEnginePrivate.verified.set("");
     }
   }

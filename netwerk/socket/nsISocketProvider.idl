@@ -125,4 +125,9 @@ interface nsISocketProvider : nsISupports
      */
     const unsigned long DONT_TRY_ECH = (1 << 10);
 
+    /** 
+     *  If set, indicates that the connection is a retry. 
+     */ 
+    const unsigned long IS_RETRY = (1 << 11); 
+
 };

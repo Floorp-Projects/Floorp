@@ -843,13 +843,6 @@ bool GlobalObject::createIntrinsicsHolder(JSContext* cx,
     return false;
   }
 
-  // Define a top-level property 'undefined' with the undefined value.
-  if (!DefineDataProperty(cx, intrinsicsHolder, cx->names().undefined,
-                          UndefinedHandleValue,
-                          JSPROP_PERMANENT | JSPROP_READONLY)) {
-    return false;
-  }
-
   // Install the intrinsics holder on the global.
   global->data().intrinsicsHolder.init(intrinsicsHolder);
   return true;
