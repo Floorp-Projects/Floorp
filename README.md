@@ -48,15 +48,11 @@
 
 ### Repository Overview
 
-This repository contains source code for the Floorp legacy browser (Floorp browser) from version 10.0.0 and later.
+This repository contains source code for the Floorp browser from version 10.0.0 and later.
 
-Branches ```master```, ```release```, and ``beta`` exist, and may contain branches created temporarily to create Linux versions.
+Branches ```master```, ```release```, ``beta``, and ``ESR102`` exist.
 
-The ``master`` is the Nighly version of Firefox, and is used by the Floorp developers to envision future features. Therefore, not all source code falls into the ``release``.
-
-```beta``` is the version of Floorp that will be released next; Firefox is a Beta/Developer version, which contains code that will actually be released, but not all features may be applicable to ``release``.
-
-```release``` is the source code for the current release of the browser, which is the same version as the stable version of Firefox.
+``ESR102`` is main branch. This is stable release of Floorp 10.
 
 ----
 
