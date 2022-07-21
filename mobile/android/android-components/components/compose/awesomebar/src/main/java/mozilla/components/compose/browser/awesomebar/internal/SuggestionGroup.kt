@@ -26,7 +26,7 @@ internal fun SuggestionGroup(
         color = colors.groupTitle,
         modifier = Modifier
             .padding(
-                vertical = 24.dp,
+                vertical = 12.dp,
                 horizontal = 16.dp
             )
             .fillMaxWidth(),
