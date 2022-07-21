@@ -881,21 +881,26 @@ Toolbox.prototype = {
         onDestroyed: this._onTargetDestroyed,
       });
 
+      const watchedResources = [
+        // Watch for console API messages, errors and network events in order to populate
+        // the error count icon in the toolbox.
+        this.resourceCommand.TYPES.CONSOLE_MESSAGE,
+        this.resourceCommand.TYPES.ERROR_MESSAGE,
+        this.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this.resourceCommand.TYPES.THREAD_STATE,
+      ];
+
+      if (!this.isBrowserToolbox) {
+        // Independently of watching network event resources for the error count icon,
+        // we need to start tracking network activity on toolbox open for targets such
+        // as tabs, in order to ensure there is always at least one listener existing
+        // for network events across the lifetime of the various panels, so stopping
+        // the resource command from clearing out its cache of network event resources.
+        watchedResources.push(this.resourceCommand.TYPES.NETWORK_EVENT);
+      }
+
       const onResourcesWatched = this.resourceCommand.watchResources(
-        [
-          // Watch for console API messages, errors and network events in order to populate
-          // the error count icon in the toolbox.
-          this.resourceCommand.TYPES.CONSOLE_MESSAGE,
-          this.resourceCommand.TYPES.ERROR_MESSAGE,
-          // Independently of watching network event resources for the error count icon,
-          // we need to start tracking network activity on toolbox open for targets such
-          // as tabs, in order to ensure there is always at least one listener existing
-          // for network events across the lifetime of the various panels, so stopping
-          // the resource command from clearing out its cache of network event resources.
-          this.resourceCommand.TYPES.NETWORK_EVENT,
-          this.resourceCommand.TYPES.DOCUMENT_EVENT,
-          this.resourceCommand.TYPES.THREAD_STATE,
-        ],
+        watchedResources,
         {
           onAvailable: this._onResourceAvailable,
           onUpdated: this._onResourceUpdated,
@@ -4082,18 +4087,21 @@ Toolbox.prototype = {
       onSelected: this._onTargetSelected,
       onDestroyed: this._onTargetDestroyed,
     });
-    this.resourceCommand.unwatchResources(
-      [
-        this.resourceCommand.TYPES.CONSOLE_MESSAGE,
-        this.resourceCommand.TYPES.ERROR_MESSAGE,
-        this.resourceCommand.TYPES.NETWORK_EVENT,
-        this.resourceCommand.TYPES.DOCUMENT_EVENT,
-        this.resourceCommand.TYPES.THREAD_STATE,
-      ],
-      {
-        onAvailable: this._onResourceAvailable,
-      }
-    );
+
+    const watchedResources = [
+      this.resourceCommand.TYPES.CONSOLE_MESSAGE,
+      this.resourceCommand.TYPES.ERROR_MESSAGE,
+      this.resourceCommand.TYPES.DOCUMENT_EVENT,
+      this.resourceCommand.TYPES.THREAD_STATE,
+    ];
+
+    if (!this.isBrowserToolbox) {
+      watchedResources.push(this.resourceCommand.TYPES.NETWORK_EVENT);
+    }
+
+    this.resourceCommand.unwatchResources(watchedResources, {
+      onAvailable: this._onResourceAvailable,
+    });
 
     // Unregister buttons listeners
     this.toolbarButtons.forEach(button => {

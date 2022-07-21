@@ -49,6 +49,16 @@ add_task(async function() {
   });
 
   await ToolboxTask.spawn(null, async () => {
+    const { resourceCommand } = gToolbox.commands;
+
+    // Assert that the toolbox is not listening to network events
+    // before the netmonitor panel is opened.
+    is(
+      resourceCommand.isResourceWatched(resourceCommand.TYPES.NETWORK_EVENT),
+      false,
+      "The toolox is not watching for network event resources"
+    );
+
     await gToolbox.selectTool("netmonitor");
     const monitor = gToolbox.getCurrentPanel();
     const { document, store, windowRequire } = monitor.panelWin;
@@ -61,6 +71,12 @@ add_task(async function() {
 
     await waitUntil(
       () => !!document.querySelector(".request-list-empty-notice")
+    );
+
+    is(
+      resourceCommand.isResourceWatched(resourceCommand.TYPES.NETWORK_EVENT),
+      true,
+      "The network panel is now watching for network event resources"
     );
 
     const emptyListNotice = document.querySelector(

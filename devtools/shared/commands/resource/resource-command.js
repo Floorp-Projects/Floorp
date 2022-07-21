@@ -363,6 +363,18 @@ class ResourceCommand {
   }
 
   /**
+   * Check if there are any watchers for the specified resource.
+   *
+   * @param {String} resourceType
+   *         One of ResourceCommand.TYPES
+   * @return {Boolean}
+   *         If the resources type is beibg watched.
+   */
+  isResourceWatched(resourceType) {
+    return this._listenedResources.has(resourceType);
+  }
+
+  /**
    * Start watching for all already existing and future targets.
    *
    * We are using ALL_TYPES, but this won't force listening to all types.
