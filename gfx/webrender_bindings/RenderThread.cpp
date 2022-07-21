@@ -25,6 +25,7 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/SurfacePool.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RendererOGL.h"
@@ -426,8 +427,11 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
   // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
   // point until now (when the frame is finally pushed to the screen) is
   // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
-  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
-                                          frame.mStartTime);
+  TimeDuration compositeDuration = TimeStamp::Now() - frame.mStartTime;
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::COMPOSITE_TIME,
+                                 uint32_t(compositeDuration.ToMilliseconds()));
+  PerfStats::RecordMeasurement(PerfStats::Metric::Compositing,
+                               compositeDuration);
 }
 
 void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
