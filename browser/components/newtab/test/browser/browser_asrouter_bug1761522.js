@@ -17,6 +17,8 @@ const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
 
+// This pref is used to override the Remote Settings server URL in tests.
+// See SERVER_URL in services/settings/Utils.jsm for more details.
 const RS_SERVER_PREF = "services.settings.server";
 
 const FLUENT_CONTENT = "asrouter-test-string = Test Test Test\n";

@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
+  Utils: "resource://services-settings/Utils.jsm",
   MacAttribution: "resource:///modules/MacAttribution.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -77,7 +78,6 @@ const LOCAL_MESSAGE_PROVIDERS = {
 const STARTPAGE_VERSION = "6";
 
 // Remote Settings
-const RS_SERVER_PREF = "services.settings.server";
 const RS_MAIN_BUCKET = "main";
 const RS_COLLECTION_L10N = "ms-language-packs"; // "ms" stands for Messaging System
 const RS_PROVIDERS_WITH_L10N = ["cfr"];
@@ -280,9 +280,7 @@ const MessageLoaderUtils = {
           RemoteL10n.isLocaleSupported(MessageLoaderUtils.locale)
         ) {
           const recordId = `${RS_FLUENT_RECORD_PREFIX}-${MessageLoaderUtils.locale}`;
-          const kinto = new KintoHttpClient(
-            Services.prefs.getStringPref(RS_SERVER_PREF)
-          );
+          const kinto = new KintoHttpClient(Utils.SERVER_URL);
           const record = await kinto
             .bucket(RS_MAIN_BUCKET)
             .collection(RS_COLLECTION_L10N)
