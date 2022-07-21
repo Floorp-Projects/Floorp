@@ -1,9 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import abc
-import fnmatch
-from itertools import chain
-from operator import methodcaller as method
 from textwrap import dedent
 
 from six import add_metaclass
@@ -56,20 +53,11 @@ class CPython3Windows(CPythonWindows, CPython3):
 
     @classmethod
     def sources(cls, interpreter):
-        if cls.has_shim(interpreter):
-            refs = cls.executables(interpreter)
-        else:
-            refs = chain(
-                cls.executables(interpreter),
-                cls.dll_and_pyd(interpreter),
-                cls.python_zip(interpreter),
-            )
-        for ref in refs:
-            yield ref
-
-    @classmethod
-    def executables(cls, interpreter):
-        return super(CPython3Windows, cls).sources(interpreter)
+        for src in super(CPython3Windows, cls).sources(interpreter):
+            yield src
+        if not cls.has_shim(interpreter):
+            for src in cls.include_dll_and_pyd(interpreter):
+                yield src
 
     @classmethod
     def has_shim(cls, interpreter):
@@ -91,32 +79,13 @@ class CPython3Windows(CPythonWindows, CPython3):
         return super(CPython3Windows, cls).host_python(interpreter)
 
     @classmethod
-    def dll_and_pyd(cls, interpreter):
+    def include_dll_and_pyd(cls, interpreter):
         dll_folder = Path(interpreter.system_prefix) / "DLLs"
         host_exe_folder = Path(interpreter.system_executable).parent
         for folder in [host_exe_folder, dll_folder]:
             for file in folder.iterdir():
                 if file.suffix in (".pyd", ".dll"):
-                    yield PathRefToDest(file, cls.to_bin)
+                    yield PathRefToDest(file, dest=cls.to_dll_and_pyd)
 
-    @classmethod
-    def python_zip(cls, interpreter):
-        """
-        "python{VERSION}.zip" contains compiled *.pyc std lib packages, where
-        "VERSION" is `py_version_nodot` var from the `sysconfig` module.
-        :see: https://docs.python.org/3/using/windows.html#the-embeddable-package
-        :see: `discovery.py_info.PythonInfo` class (interpreter).
-        :see: `python -m sysconfig` output.
-
-        :note: The embeddable Python distribution for Windows includes
-        "python{VERSION}.zip" and "python{VERSION}._pth" files. User can
-        move/rename *zip* file and edit `sys.path` by editing *_pth* file.
-        Here the `pattern` is used only for the default *zip* file name!
-        """
-        pattern = "*python{}.zip".format(interpreter.version_nodot)
-        matches = fnmatch.filter(interpreter.path, pattern)
-        matched_paths = map(Path, matches)
-        existing_paths = filter(method("exists"), matched_paths)
-        path = next(existing_paths, None)
-        if path is not None:
-            yield PathRefToDest(path, cls.to_bin)
+    def to_dll_and_pyd(self, src):
+        return self.bin_dir / src.name
