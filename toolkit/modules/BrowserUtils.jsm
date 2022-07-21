@@ -401,6 +401,7 @@ var BrowserUtils = {
     VPN: 1,
     RALLY: 2,
     FOCUS: 3,
+    PIN: 4,
   },
 
   /**
@@ -425,6 +426,8 @@ var BrowserUtils = {
       case this.PromoType.RALLY:
         return this._shouldShowRallyPromo();
       case this.PromoType.FOCUS:
+        return this._shouldShowPromoInternal(promoType);
+      case this.PromoType.PIN:
         return this._shouldShowPromoInternal(promoType);
       default:
         throw new Error("Unknown promo type: ", promoType);
@@ -454,7 +457,8 @@ var BrowserUtils = {
         supportedRegions.has(homeRegion.toLowerCase());
     }
 
-    const avoidAdsRegions = info.lazyStringSetPrefs.disallowedRegions.lazyValue;
+    const avoidAdsRegions =
+      info.lazyStringSetPrefs.disallowedRegions?.lazyValue;
 
     // Don't show promo if there's an active enterprise policy
     const noActivePolicy =
@@ -463,8 +467,8 @@ var BrowserUtils = {
 
     return (
       promoEnabled &&
-      !avoidAdsRegions.has(homeRegion.toLowerCase()) &&
-      !avoidAdsRegions.has(currentRegion.toLowerCase()) &&
+      !avoidAdsRegions?.has(homeRegion.toLowerCase()) &&
+      !avoidAdsRegions?.has(currentRegion.toLowerCase()) &&
       !info.illegalRegions.includes(homeRegion.toLowerCase()) &&
       !info.illegalRegions.includes(currentRegion.toLowerCase()) &&
       inSupportedRegion &&
@@ -519,6 +523,11 @@ let PromoInfo = {
       },
     },
     illegalRegions: ["cn"],
+  },
+  [BrowserUtils.PromoType.PIN]: {
+    enabledPref: "browser.promo.pin.enabled",
+    lazyStringSetPrefs: {},
+    illegalRegions: [],
   },
 };
 
