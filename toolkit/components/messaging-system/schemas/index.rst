@@ -82,11 +82,15 @@ schema:
    ../../../../../../mach python make-schemas.py
 
 If you do not, the `Firefox MS Schemas CI job <make_schemas_check_>`_ will fail.
+
+.. _run_make_schemas:
+
 You can run this locally via:
 
 .. code-block:: shell
 
    cd browser/components/newtab/content-src/asrouter/schemas/
+   ../../../../../../mach xpcshell extract-test-corpus.js
    ../../../../../../mach python make-schemas.py --check
 
 This test will re-generate the schema and compare it to
@@ -144,6 +148,8 @@ library, which is reused in the `Firefox MS Schemas CI job
 `CFRMessageProvider`_, `OnboardingMessageProvider`_, and `PanelTestProvider`_
 with the same JSON schema validation library and configuration as Experimenter.
 
+See how to run these tests :ref:`above <run_make_schemas_>`.
+
 
 Triggers and actions
 ---------------------
@@ -153,14 +159,6 @@ Triggers and actions
 
   SpecialMessageActionSchemas/index
   TriggerActionSchemas/index
-
-.. rubric: Footnotes
-
-.. [#message] Unfortunately due to technical limitations, the message corpus
-   cannot be shared between the Python tests and JavaScript tests, so the Python
-   tests use a second copy of the messages written as a JSON blob. The copies of
-   these messages are not updated automatically.
-
 
 ..  _cfr_urlbar_chiclet_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/CFRUrlbarChiclet.schema.json
 ..  _extension_doorhanger_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json

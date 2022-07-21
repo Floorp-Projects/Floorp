@@ -91,6 +91,7 @@ SCHEMAS = [
             ),
         },
         bundle_common=True,
+        # These are generated via extract-test-corpus.js
         test_corpus={
             "CFRMessageProvider": Path("corpus", "CFRMessageProvider.messages.json"),
             "OnboardingMessageProvider": Path(
@@ -111,6 +112,7 @@ SCHEMAS = [
             ),
         },
         bundle_common=True,
+        # These are generated via extract-test-corpus.js
         test_corpus={
             # Just the "toast_notification" messages.
             "PanelTestProvider": Path(
@@ -399,8 +401,18 @@ def validate_corpus(schema_def: SchemaDefinition, schema: Dict[str, Any]):
     for provider, provider_path in schema_def.test_corpus.items():
         print(f"    Validating messages from {provider}:")
 
-        with provider_path.open("r") as f:
-            messages = json.load(f)
+        try:
+            with provider_path.open("r") as f:
+                messages = json.load(f)
+        except FileNotFoundError as e:
+            if not provider_path.parent.exists():
+                new_exc = Exception(
+                    f"Could not find {provider_path}: Did you run "
+                    "`mach xpcshell extract-test-corpus` ?"
+                )
+                raise new_exc from e
+
+            raise e
 
         for message in messages:
             template = message["template"]
