@@ -5872,7 +5872,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("general.appversion.override"),
     PREF_LIST_ENTRY("general.useragent.override"),
     PREF_LIST_ENTRY("general.platform.override"),
-    PREF_LIST_ENTRY("gfx.blacklist.hardwarevideodecoding.failureid"),
+    PREF_LIST_ENTRY("gfx.blacklist."),
     PREF_LIST_ENTRY("font.system.whitelist"),
     PREF_LIST_ENTRY("marionette.log.level"),
     PREF_LIST_ENTRY("media.audio_loopback_dev"),
