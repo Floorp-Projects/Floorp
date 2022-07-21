@@ -1013,35 +1013,51 @@ class Window extends WindowBase {
       [window.STATE_MAXIMIZED]: "maximized",
       [window.STATE_MINIMIZED]: "minimized",
       [window.STATE_NORMAL]: "normal",
+      [window.STATE_FULLSCREEN]: "fullscreen",
     };
-    let state = STATES[window.windowState];
-    if (window.fullScreen) {
-      state = "fullscreen";
-    }
-    return state;
+    return STATES[window.windowState];
   }
 
   get state() {
     return Window.getState(this.window);
   }
 
-  set state(state) {
+  async setState(state) {
     let { window } = this;
-    if (state !== "fullscreen" && window.fullScreen) {
+
+    const expectedState = (function() {
+      switch (state) {
+        case "maximized":
+          return window.STATE_MAXIMIZED;
+        case "minimized":
+        case "docked":
+          return window.STATE_MINIMIZED;
+        case "normal":
+          return window.STATE_NORMAL;
+        case "fullscreen":
+          return window.STATE_FULLSCREEN;
+      }
+      throw new Error(`Unexpected window state: ${state}`);
+    })();
+
+    const initialState = window.windowState;
+    if (expectedState == initialState) {
+      return;
+    }
+
+    if (initialState == window.STATE_FULLSCREEN) {
       window.fullScreen = false;
     }
 
-    switch (state) {
-      case "maximized":
+    switch (expectedState) {
+      case window.STATE_MAXIMIZED:
         window.maximize();
         break;
-
-      case "minimized":
-      case "docked":
+      case window.STATE_MINIMIZED:
         window.minimize();
         break;
 
-      case "normal":
+      case window.STATE_NORMAL:
         // Restore sometimes returns the window to its previous state, rather
         // than to the "normal" state, so it may need to be called anywhere from
         // zero to two times.
@@ -1056,12 +1072,36 @@ class Window extends WindowBase {
         }
         break;
 
-      case "fullscreen":
+      case window.STATE_FULLSCREEN:
         window.fullScreen = true;
         break;
 
       default:
         throw new Error(`Unexpected window state: ${state}`);
+    }
+
+    if (window.windowState != expectedState) {
+      // On Linux, sizemode changes are asynchronous. Some of them might not
+      // even happen if the window manager doesn't want to, so wait for a bit
+      // instead of forever for a sizemode change that might not ever happen.
+      const noWindowManagerTimeout = 2000;
+
+      let onSizeModeChange;
+      const promiseExpectedSizeMode = new Promise(resolve => {
+        onSizeModeChange = function() {
+          if (window.windowState == expectedState) {
+            resolve();
+          }
+        };
+        window.addEventListener("sizemodechange", onSizeModeChange);
+      });
+
+      await Promise.any([
+        promiseExpectedSizeMode,
+        new Promise(resolve => setTimeout(resolve, noWindowManagerTimeout)),
+      ]);
+
+      window.removeEventListener("sizemodechange", onSizeModeChange);
     }
   }
 

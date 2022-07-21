@@ -17,7 +17,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-var { promiseObserved } = ExtensionUtils;
+var { ExtensionError, promiseObserved } = ExtensionUtils;
 
 this.windows = class extends ExtensionAPIPersistent {
   windowEventRegistrar(event, listener) {
@@ -149,23 +149,23 @@ this.windows = class extends ExtensionAPIPersistent {
           return windows;
         },
 
-        create: function(createData) {
+        create: async function(createData) {
           let needResize =
             createData.left !== null ||
             createData.top !== null ||
             createData.width !== null ||
             createData.height !== null;
           if (createData.incognito && !context.privateBrowsingAllowed) {
-            return Promise.reject({
-              message: "Extension does not have permission for incognito mode",
-            });
+            throw new ExtensionError(
+              "Extension does not have permission for incognito mode"
+            );
           }
 
           if (needResize) {
             if (createData.state !== null && createData.state != "normal") {
-              return Promise.reject({
-                message: `"state": "${createData.state}" may not be combined with "left", "top", "width", or "height"`,
-              });
+              throw new ExtensionError(
+                `"state": "${createData.state}" may not be combined with "left", "top", "width", or "height"`
+              );
             }
             createData.state = "normal";
           }
@@ -185,23 +185,20 @@ this.windows = class extends ExtensionAPIPersistent {
           let principal = context.principal;
           if (createData.tabId !== null) {
             if (createData.url !== null) {
-              return Promise.reject({
-                message: "`tabId` may not be used in conjunction with `url`",
-              });
+              throw new ExtensionError(
+                "`tabId` may not be used in conjunction with `url`"
+              );
             }
 
             if (createData.allowScriptsToClose) {
-              return Promise.reject({
-                message:
-                  "`tabId` may not be used in conjunction with `allowScriptsToClose`",
-              });
+              throw new ExtensionError(
+                "`tabId` may not be used in conjunction with `allowScriptsToClose`"
+              );
             }
 
             let tab = tabTracker.getTab(createData.tabId);
             if (!context.canAccessWindow(tab.ownerGlobal)) {
-              return Promise.reject({
-                message: `Invalid tab ID: ${createData.tabId}`,
-              });
+              throw new ExtensionError(`Invalid tab ID: ${createData.tabId}`);
             }
             // Private browsing tabs can only be moved to private browsing
             // windows.
@@ -212,10 +209,9 @@ this.windows = class extends ExtensionAPIPersistent {
               createData.incognito !== null &&
               createData.incognito != incognito
             ) {
-              return Promise.reject({
-                message:
-                  "`incognito` property must match the incognito state of tab",
-              });
+              throw new ExtensionError(
+                "`incognito` property must match the incognito state of tab"
+              );
             }
             createData.incognito = incognito;
 
@@ -224,9 +220,9 @@ this.windows = class extends ExtensionAPIPersistent {
               createData.cookieStoreId !==
                 getCookieStoreIdForTab(createData, tab)
             ) {
-              return Promise.reject({
-                message: "`cookieStoreId` must match the tab's cookieStoreId",
-              });
+              throw new ExtensionError(
+                "`cookieStoreId` must match the tab's cookieStoreId"
+              );
             }
 
             args.appendElement(tab);
@@ -310,10 +306,9 @@ this.windows = class extends ExtensionAPIPersistent {
           if (createData.incognito !== null) {
             if (createData.incognito) {
               if (!PrivateBrowsingUtils.enabled) {
-                return Promise.reject({
-                  message:
-                    "`incognito` cannot be used if incognito mode is disabled",
-                });
+                throw new ExtensionError(
+                  "`incognito` cannot be used if incognito mode is disabled"
+                );
               }
               features.push("private");
             } else {
@@ -340,42 +335,46 @@ this.windows = class extends ExtensionAPIPersistent {
 
           // TODO: focused, type
 
-          return new Promise(resolve => {
+          const contentLoaded = new Promise(resolve => {
             window.addEventListener(
               "DOMContentLoaded",
               function() {
                 if (allowScriptsToClose) {
                   window.gBrowserAllowScriptsToCloseInitialTabs = true;
                 }
-                resolve(
-                  promiseObserved(
-                    "browser-delayed-startup-finished",
-                    win => win == window
-                  )
-                );
+                resolve();
               },
               { once: true }
             );
-          }).then(() => {
-            if (
-              [
-                "minimized",
-                "fullscreen",
-                "docked",
-                "normal",
-                "maximized",
-              ].includes(createData.state)
-            ) {
-              win.state = createData.state;
-            }
-            if (createData.titlePreface !== null) {
-              win.setTitlePreface(createData.titlePreface);
-            }
-            return win.convert({ populate: true });
           });
+
+          const startupFinished = promiseObserved(
+            "browser-delayed-startup-finished",
+            win => win == window
+          );
+
+          await contentLoaded;
+          await startupFinished;
+
+          if (
+            [
+              "minimized",
+              "fullscreen",
+              "docked",
+              "normal",
+              "maximized",
+            ].includes(createData.state)
+          ) {
+            await win.setState(createData.state);
+          }
+
+          if (createData.titlePreface !== null) {
+            win.setTitlePreface(createData.titlePreface);
+          }
+          return win.convert({ populate: true });
         },
 
-        update: function(windowId, updateInfo) {
+        update: async function(windowId, updateInfo) {
           if (updateInfo.state !== null && updateInfo.state != "normal") {
             if (
               updateInfo.left !== null ||
@@ -383,24 +382,22 @@ this.windows = class extends ExtensionAPIPersistent {
               updateInfo.width !== null ||
               updateInfo.height !== null
             ) {
-              return Promise.reject({
-                message: `"state": "${updateInfo.state}" may not be combined with "left", "top", "width", or "height"`,
-              });
+              throw new ExtensionError(
+                `"state": "${updateInfo.state}" may not be combined with "left", "top", "width", or "height"`
+              );
             }
           }
 
           let win = windowManager.get(windowId, context);
           if (!win) {
-            return Promise.reject({
-              message: `Invalid window ID: ${windowId}`,
-            });
+            throw new ExtensionError(`Invalid window ID: ${windowId}`);
           }
           if (updateInfo.focused) {
             win.window.focus();
           }
 
           if (updateInfo.state !== null) {
-            win.state = updateInfo.state;
+            await win.setState(updateInfo.state);
           }
 
           if (updateInfo.drawAttention) {
@@ -417,7 +414,7 @@ this.windows = class extends ExtensionAPIPersistent {
 
           // TODO: All the other properties, focused=false...
 
-          return Promise.resolve(win.convert());
+          return win.convert();
         },
 
         remove: function(windowId) {
