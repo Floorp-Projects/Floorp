@@ -23,6 +23,7 @@ System handles:
 * `Update Action <update_action_schema_>`_
 * `Whats New <whats_new_schema_>`_
 * `Private Browsing Newtab Promo Message <pbnewtab_promo_schema_>`_
+* `Protections Panel <protections_panel_schema_>`_
 
 Together, they are combined into the `Messaging Experiments
 <messaging_experiments_schema_>`_ via a `script <make_schemas_script_>`_. This
@@ -141,6 +142,7 @@ Triggers and actions
 ..  _toolbar_badge_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json
 ..  _update_action_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json
 ..  _whats_new_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/WhatsNewMessage.schema.json
+..  _protections_panel_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/ProtectionsPanelMessage.schema.json
 ..  _pbnewtab_promo_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
 ..  _messaging_experiments_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json
 ..  _common_schema: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/asrouter/schemas/FxMSCommon.schema.json

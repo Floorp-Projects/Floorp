@@ -39,6 +39,9 @@ MESSAGE_TYPES = {
     "ExtensionDoorhanger": Path("CFR", "templates", "ExtensionDoorhanger.schema.json"),
     "InfoBar": Path("CFR", "templates", "InfoBar.schema.json"),
     "NewtabPromoMessage": Path("PBNewtab", "NewtabPromoMessage.schema.json"),
+    "ProtectionsPanelMessage": Path(
+        "OnboardingMessage", "ProtectionsPanelMessage.schema.json"
+    ),
     "Spotlight": Path("OnboardingMessage", "Spotlight.schema.json"),
     "ToastNotification": Path("ToastNotification", "ToastNotification.schema.json"),
     "ToolbarBadgeMessage": Path("OnboardingMessage", "ToolbarBadgeMessage.schema.json"),
@@ -328,13 +331,6 @@ def check_schema(filename, schema):
         for message in messages:
             template = message["template"]
             msg_id = message["id"]
-
-            if template == "protections_panel":
-                print(
-                    f"    SKIPPING {msg_id} {template} message because there is no schema for "
-                    f"template {template}"
-                )
-                continue
 
             print(f"    Validating {msg_id} {template} message with {filename}...")
             jsonschema.validate(instance=message, schema=schema, resolver=resolver)
