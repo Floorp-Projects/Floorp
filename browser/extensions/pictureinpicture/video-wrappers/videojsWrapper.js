@@ -4,9 +4,10 @@
 
 "use strict";
 
+// This wrapper supports multiple sites that use video.js player
 class PictureInPictureVideoWrapper {
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.getElementById("vjs_video_3");
+    let container = document.querySelector(".vjs-text-track-display");
 
     if (container) {
       updateCaptionsFunction("");
