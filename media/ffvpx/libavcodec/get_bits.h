@@ -33,8 +33,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
 #include "libavutil/avassert.h"
-
-#include "defs.h"
+#include "avcodec.h"
 #include "mathops.h"
 #include "vlc.h"
 
@@ -710,8 +709,8 @@ static inline const uint8_t *align_get_bits(GetBitContext *s)
         unsigned int index;                                     \
                                                                 \
         index = SHOW_UBITS(name, gb, bits);                     \
-        code  = table[index].sym;                               \
-        n     = table[index].len;                               \
+        code  = table[index][0];                                \
+        n     = table[index][1];                                \
                                                                 \
         if (max_depth > 1 && n < 0) {                           \
             LAST_SKIP_BITS(name, gb, bits);                     \
@@ -720,8 +719,8 @@ static inline const uint8_t *align_get_bits(GetBitContext *s)
             nb_bits = -n;                                       \
                                                                 \
             index = SHOW_UBITS(name, gb, nb_bits) + code;       \
-            code  = table[index].sym;                           \
-            n     = table[index].len;                           \
+            code  = table[index][0];                            \
+            n     = table[index][1];                            \
             if (max_depth > 2 && n < 0) {                       \
                 LAST_SKIP_BITS(name, gb, nb_bits);              \
                 UPDATE_CACHE(name, gb);                         \
@@ -729,8 +728,8 @@ static inline const uint8_t *align_get_bits(GetBitContext *s)
                 nb_bits = -n;                                   \
                                                                 \
                 index = SHOW_UBITS(name, gb, nb_bits) + code;   \
-                code  = table[index].sym;                       \
-                n     = table[index].len;                       \
+                code  = table[index][0];                        \
+                n     = table[index][1];                        \
             }                                                   \
         }                                                       \
         SKIP_BITS(name, gb, n);                                 \
@@ -775,15 +774,15 @@ static inline const uint8_t *align_get_bits(GetBitContext *s)
 
 /* Return the LUT element for the given bitstream configuration. */
 static inline int set_idx(GetBitContext *s, int code, int *n, int *nb_bits,
-                          const VLCElem *table)
+                          VLC_TYPE (*table)[2])
 {
     unsigned idx;
 
     *nb_bits = -*n;
     idx = show_bits(s, *nb_bits) + code;
-    *n = table[idx].len;
+    *n = table[idx][1];
 
-    return table[idx].sym;
+    return table[idx][0];
 }
 
 /**
@@ -795,14 +794,14 @@ static inline int set_idx(GetBitContext *s, int code, int *n, int *nb_bits,
  *                  = (max_vlc_length + bits - 1) / bits
  * @returns the code parsed or -1 if no vlc matches
  */
-static av_always_inline int get_vlc2(GetBitContext *s, const VLCElem *table,
+static av_always_inline int get_vlc2(GetBitContext *s, VLC_TYPE (*table)[2],
                                      int bits, int max_depth)
 {
 #if CACHED_BITSTREAM_READER
     int nb_bits;
     unsigned idx = show_bits(s, bits);
-    int code = table[idx].sym;
-    int n    = table[idx].len;
+    int code = table[idx][0];
+    int n    = table[idx][1];
 
     if (max_depth > 1 && n < 0) {
         skip_remaining(s, bits);

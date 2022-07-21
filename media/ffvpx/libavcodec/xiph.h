@@ -21,7 +21,7 @@
 #ifndef AVCODEC_XIPH_H
 #define AVCODEC_XIPH_H
 
-#include <stdint.h>
+#include "libavutil/common.h"
 
 /**
  * Split a single extradata buffer into the three headers that most

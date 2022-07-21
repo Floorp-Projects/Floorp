@@ -21,14 +21,10 @@
 #ifndef AVCODEC_AV1_PARSE_H
 #define AVCODEC_AV1_PARSE_H
 
-#include <limits.h>
 #include <stdint.h>
 
-#include "libavutil/error.h"
-#include "libavutil/intmath.h"
-#include "libavutil/macros.h"
-
 #include "av1.h"
+#include "avcodec.h"
 #include "get_bits.h"
 
 // OBU header fields + max leb128 length

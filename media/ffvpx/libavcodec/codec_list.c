@@ -1,4 +1,4 @@
-static const FFCodec * const codec_list[] = {
+static const AVCodec * const codec_list[] = {
 #if CONFIG_VP8_DECODER
     &ff_vp8_decoder,
 #endif

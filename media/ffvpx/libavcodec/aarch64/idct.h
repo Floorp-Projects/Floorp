@@ -19,7 +19,6 @@
 #ifndef AVCODEC_AARCH64_IDCT_H
 #define AVCODEC_AARCH64_IDCT_H
 
-#include <stddef.h>
 #include <stdint.h>
 
 void ff_simple_idct_neon(int16_t *data);

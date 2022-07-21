@@ -25,7 +25,6 @@
 function ff_imdct_half_neon, export=1
         sub             sp,  sp,  #32
         stp             x19, x20, [sp]
-        AARCH64_SIGN_LINK_REGISTER
         str             x30, [sp, #16]
         mov             x12, #1
         ldr             w14, [x0, #28]          // mdct_bits
@@ -122,7 +121,6 @@ function ff_imdct_half_neon, export=1
 
         ldp             x19, x20, [sp]
         ldr             x30, [sp, #16]
-        AARCH64_VALIDATE_LINK_REGISTER
         add             sp,  sp,  #32
 
         ret
@@ -131,7 +129,6 @@ endfunc
 function ff_imdct_calc_neon, export=1
         sub             sp,  sp,  #32
         stp             x19, x20, [sp]
-        AARCH64_SIGN_LINK_REGISTER
         str             x30, [sp, #16]
         ldr             w3,  [x0, #28]          // mdct_bits
         mov             x19, #1
@@ -163,10 +160,8 @@ function ff_imdct_calc_neon, export=1
         subs            x19, x19,  #16
         b.gt            1b
 
-        ldp             x19, x20, [sp]
-        ldr             x30, [sp, #16]
-        AARCH64_VALIDATE_LINK_REGISTER
-        add             sp,  sp,  #32
+        ldp             x19, x20, [sp], #16
+        ldr             x30, [sp], #16
 
         ret
 endfunc
@@ -175,7 +170,6 @@ endfunc
 function ff_mdct_calc_neon, export=1
         sub             sp,  sp,  #32
         stp             x19, x20, [sp]
-        AARCH64_SIGN_LINK_REGISTER
         str             x30, [sp, #16]
 
         mov             x12, #1
@@ -323,10 +317,7 @@ function ff_mdct_calc_neon, export=1
         st2             {v4.2s,v5.2s},  [x0]
         st2             {v6.2s,v7.2s},  [x8]
 
-        ldp             x19, x20, [sp]
-        ldr             x30, [sp, #16]
-        AARCH64_VALIDATE_LINK_REGISTER
-        add             sp,  sp,  #32
-
+        ldp             x19, x20, [sp], #16
+        ldr             x30, [sp], #16
         ret
 endfunc
