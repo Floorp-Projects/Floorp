@@ -169,7 +169,7 @@ body > main > aside {
   color: var(--in-content-page-color);
   background: var(--in-content-page-background);
   border-radius: 1.5em;
-  padding: .2em 1em;
+  padding: .3em 1em;
 }
 
 #colorways > figure {
