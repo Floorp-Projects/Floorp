@@ -551,6 +551,9 @@ const TEST_GLOBAL = {
     removeExpirationFilter() {},
   },
   Logger,
+  Utils: {
+    SERVER_URL: "bogus://foo",
+  },
 };
 overrider.set(TEST_GLOBAL);
 

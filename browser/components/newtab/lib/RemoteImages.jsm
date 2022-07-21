@@ -21,7 +21,12 @@ ChromeUtils.defineModuleGetter(
   "resource://services-common/kinto-http-client.js"
 );
 
-const RS_SERVER_PREF = "services.settings.server";
+ChromeUtils.defineModuleGetter(
+  this,
+  "Utils",
+  "resource://services-settings/Utils.jsm"
+);
+
 const RS_MAIN_BUCKET = "main";
 const RS_COLLECTION = "ms-images";
 const RS_DOWNLOAD_MAX_RETRIES = 2;
@@ -293,10 +298,7 @@ class _RemoteImages {
    *          with an Error.
    */
   async #download(db, recordId) {
-    const client = new KintoHttpClient(
-      Services.prefs.getStringPref(RS_SERVER_PREF)
-    );
-
+    const client = new KintoHttpClient(Utils.SERVER_URL);
     const record = await client
       .bucket(RS_MAIN_BUCKET)
       .collection(RS_COLLECTION)
