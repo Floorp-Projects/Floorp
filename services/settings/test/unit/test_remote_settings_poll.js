@@ -748,6 +748,39 @@ add_task(async function test_server_error_5xx() {
 });
 add_task(clear_state);
 
+add_task(async function test_server_error_4xx() {
+  function simulateErrorResponse(request, response) {
+    response.setHeader("Date", new Date(3000).toUTCString());
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    if (request.queryString.includes(`_since=${encodeURIComponent('"abc"')}`)) {
+      response.setStatusLine(null, 400, "Bad Request");
+      response.write(JSON.stringify({}));
+    } else {
+      response.setStatusLine(null, 200, "OK");
+      response.write(JSON.stringify({ changes: [] }));
+    }
+  }
+  server.registerPathHandler(CHANGES_PATH, simulateErrorResponse);
+
+  Services.prefs.setCharPref(PREF_LAST_ETAG, '"abc"');
+
+  let error;
+  try {
+    await RemoteSettings.pollChanges();
+  } catch (e) {
+    error = e;
+  }
+
+  Assert.ok(error.message.includes("400 Bad Request"), "Polling failed");
+  Assert.ok(
+    !Services.prefs.prefHasUserValue(PREF_LAST_ETAG),
+    "Last ETag pref was cleared"
+  );
+
+  await RemoteSettings.pollChanges(); // Does not raise.
+});
+add_task(clear_state);
+
 add_task(async function test_client_error() {
   const startSnapshot = getUptakeTelemetrySnapshot(
     TELEMETRY_COMPONENT,
