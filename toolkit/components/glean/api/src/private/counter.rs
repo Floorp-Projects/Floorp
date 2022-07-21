@@ -3,13 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use inherent::inherent;
+use std::sync::Arc;
 
 use glean::traits::Counter;
 
-use super::CommonMetricData;
-
+use super::{CommonMetricData, MetricId};
 use crate::ipc::{need_ipc, with_ipc_payload};
-use crate::private::MetricId;
 
 /// A counter metric.
 ///
@@ -22,7 +21,7 @@ pub enum CounterMetric {
         ///
         /// **TEST-ONLY** - Do not use unless gated with `#[cfg(test)]`.
         id: MetricId,
-        inner: glean::private::CounterMetric,
+        inner: Arc<glean::private::CounterMetric>,
     },
     Child(CounterMetricIpc),
 }
@@ -35,7 +34,7 @@ impl CounterMetric {
         if need_ipc() {
             CounterMetric::Child(CounterMetricIpc(id))
         } else {
-            let inner = glean::private::CounterMetric::new(meta);
+            let inner = Arc::new(glean::private::CounterMetric::new(meta));
             CounterMetric::Parent { id, inner }
         }
     }
