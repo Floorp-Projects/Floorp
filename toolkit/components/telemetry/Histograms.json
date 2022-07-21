@@ -14161,7 +14161,7 @@
   "SERVICE_WORKER_RUNNING": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "105",
+    "expires_in_version": "never",
     "kind": "linear",
     "high": 31,
     "n_buckets": 30,
