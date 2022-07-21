@@ -322,7 +322,10 @@ describe("breakpoints", () => {
   it("should remove all the breakpoints", async () => {
     const mockedPendingBreakpoint = mockPendingBreakpoint({ column: 2 });
     const id = makePendingLocationId(mockedPendingBreakpoint.location);
-    const pendingBreakpoints = { [id]: mockedPendingBreakpoint };
+
+    const pendingBreakpoints = {
+      [id]: mockedPendingBreakpoint,
+    };
 
     asyncStore.pendingBreakpoints = pendingBreakpoints;
 
