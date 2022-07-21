@@ -78,6 +78,8 @@ add_task(async function test_userscripts_register_cookieStoreId() {
   await extension.startup();
   await extension.awaitMessage("background_ready");
 
+  registerCleanupFunction(() => extension.unload());
+
   let testCases = [
     {
       contentPageOptions: { userContextId: 0 },
@@ -116,14 +118,13 @@ add_task(async function test_userscripts_register_cookieStoreId() {
       // Omit the default content from file_sample.html.
       return textContent.replace("\n\nSample text\n\n\n\n", "");
     });
+
+    await contentPage.close();
+
     equal(
       result,
       test.expectedTextContent,
       `Expected textContent on content page`
     );
-
-    await contentPage.close();
   }
-
-  await extension.unload();
 });
