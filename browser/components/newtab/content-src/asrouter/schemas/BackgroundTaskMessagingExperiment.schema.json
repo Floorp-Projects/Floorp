@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json",
+  "title": "Messaging Experiment",
+  "description": "A Firefox Messaging System message.",
+  "oneOf": [
+    {
+      "description": "An empty FxMS message.",
+      "type": "object",
+      "additionalProperties": false
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "toast_notification"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
+          }
+        }
+      ]
+    }
+  ],
+  "$defs": {
+    "ToastNotification": {
+      "$schema": "https://json-schema.org/draft/2019-09/schema",
+      "$id": "file:///ToastNotification.schema.json",
+      "title": "ToastNotification",
+      "description": "A template for toast notifications displayed by the Alert service.",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
+        }
+      ],
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of toast notification title"
+            },
+            "body": {
+              "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of toast notification body"
+            },
+            "icon_url": {
+              "description": "The URL of the image used as an icon of the toast notification.",
+              "type": "string",
+              "format": "moz-url-format"
+            },
+            "image_url": {
+              "description": "The URL of an image to be displayed as part of the notification.",
+              "type": "string",
+              "format": "moz-url-format"
+            },
+            "requireInteraction": {
+              "type": "boolean",
+              "description": "Whether the toast notification should remain active until the user clicks or dismisses it, rather than closing automatically."
+            },
+            "tag": {
+              "type": "string",
+              "description": "An identifying tag for the toast notification."
+            },
+            "data": {
+              "type": "object",
+              "description": "Arbitrary data associated with the toast notification."
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "title",
+            "body"
+          ]
+        },
+        "template": {
+          "type": "string",
+          "const": "toast_notification"
+        }
+      },
+      "required": [
+        "content",
+        "targeting",
+        "template",
+        "trigger"
+      ],
+      "additionalProperties": true
+    },
+    "Message": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The message identifier"
+        },
+        "groups": {
+          "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Preference name"
+          }
+        },
+        "template": {
+          "type": "string",
+          "description": "Which messaging template this message is using.",
+          "enum": [
+            "toast_notification"
+          ]
+        },
+        "frequency": {
+          "type": "object",
+          "description": "An object containing frequency cap information for a message.",
+          "properties": {
+            "lifetime": {
+              "type": "integer",
+              "description": "The maximum lifetime impressions for a message.",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "custom": {
+              "type": "array",
+              "description": "An array of custom frequency cap definitions.",
+              "items": {
+                "description": "A frequency cap definition containing time and max impression information",
+                "type": "object",
+                "properties": {
+                  "period": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
+                      },
+                      {
+                        "type": "string",
+                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
+                        "enum": [
+                          "daily"
+                        ]
+                      }
+                    ]
+                  },
+                  "cap": {
+                    "type": "integer",
+                    "description": "The maximum impressions for the message within the defined period.",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "period",
+                  "cap"
+                ]
+              }
+            }
+          }
+        },
+        "priority": {
+          "description": "The priority of the message. If there are two competing messages to show, the one with the highest priority will be shown",
+          "type": "integer"
+        },
+        "order": {
+          "description": "The order in which messages should be shown. Messages will be shown in increasing order.",
+          "type": "integer"
+        },
+        "targeting": {
+          "description": "A JEXL expression representing targeting information",
+          "type": "string"
+        },
+        "trigger": {
+          "description": "An action to trigger potentially showing the message",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A string identifying the trigger action"
+            },
+            "params": {
+              "type": "array",
+              "description": "An optional array of string parameters for the trigger action",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "content",
+        "template"
+      ]
+    },
+    "localizedText": {
+      "type": "object",
+      "properties": {
+        "string_id": {
+          "description": "Id of localized string to be rendered.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "string_id"
+      ]
+    },
+    "localizableText": {
+      "description": "Either a raw string or an object containing the string_id of the localized text",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The string to be rendered."
+        },
+        {
+          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizedText"
+        }
+      ]
+    }
+  }
+}
