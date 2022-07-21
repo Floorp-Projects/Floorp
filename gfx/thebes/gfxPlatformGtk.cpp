@@ -989,7 +989,7 @@ gfxPlatformGtk::CreateGlobalHardwareVsyncSource() {
   RefPtr<VsyncSource> softwareVsync = new XrandrSoftwareVsyncSource();
   return softwareVsync.forget();
 #else
-  return CreateSoftwareVsyncSource();
+  return GetSoftwareVsyncSource();
 #endif
 }
 

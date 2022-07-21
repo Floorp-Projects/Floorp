@@ -13,7 +13,9 @@ namespace mozilla::gl {
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
+#ifdef MOZ_X11
 static class GLContextProviderGLX sGLContextProviderGLX;
+#endif
 static class GLContextProviderEGL sGLContextProviderEGL;
 
 already_AddRefed<GLContext> GLContextProviderLinux::CreateForCompositorWidget(
@@ -22,9 +24,11 @@ already_AddRefed<GLContext> GLContextProviderLinux::CreateForCompositorWidget(
   if (gfxVars::UseEGL()) {
     return sGLContextProviderEGL.CreateForCompositorWidget(
         aCompositorWidget, aHardwareWebRender, aForceAccelerated);
+#ifdef MOZ_X11
   } else {
     return sGLContextProviderGLX.CreateForCompositorWidget(
         aCompositorWidget, aHardwareWebRender, aForceAccelerated);
+#endif
   }
 }
 
@@ -33,8 +37,10 @@ already_AddRefed<GLContext> GLContextProviderLinux::CreateHeadless(
     const GLContextCreateDesc& desc, nsACString* const out_failureId) {
   if (gfxVars::UseEGL()) {
     return sGLContextProviderEGL.CreateHeadless(desc, out_failureId);
+#ifdef MOZ_X11
   } else {
     return sGLContextProviderGLX.CreateHeadless(desc, out_failureId);
+#endif
   }
 }
 
@@ -42,8 +48,10 @@ already_AddRefed<GLContext> GLContextProviderLinux::CreateHeadless(
 GLContext* GLContextProviderLinux::GetGlobalContext() {
   if (gfxVars::UseEGL()) {
     return sGLContextProviderEGL.GetGlobalContext();
+#ifdef MOZ_X11
   } else {
     return sGLContextProviderGLX.GetGlobalContext();
+#endif
   }
 }
 
@@ -51,8 +59,10 @@ GLContext* GLContextProviderLinux::GetGlobalContext() {
 void GLContextProviderLinux::Shutdown() {
   if (gfxVars::UseEGL()) {
     sGLContextProviderEGL.Shutdown();
+#ifdef MOZ_X11
   } else {
     sGLContextProviderGLX.Shutdown();
+#endif
   }
 }
 
