@@ -217,17 +217,6 @@
       "description": "A template with a chiclet button with text.",
       "version": "1.0.0",
       "type": "object",
-      "definitions": {
-        "plainText": {
-          "description": "Plain text (no HTML allowed)",
-          "type": "string"
-        },
-        "linkUrl": {
-          "description": "Target for links or buttons",
-          "type": "string",
-          "format": "uri"
-        }
-      },
       "properties": {
         "id": {
           "type": "string",
@@ -260,25 +249,8 @@
               "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
             },
             "notification_text": {
-              "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the location bar notification."
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the location bar notification."
-                    }
-                  },
-                  "required": [
-                    "string_id"
-                  ]
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "active_color": {
               "type": "string",
@@ -289,17 +261,12 @@
               "properties": {
                 "url": {
                   "description": "The page to open when the button is clicked.",
-                  "allOf": [
-                    {
-                      "$ref": "file:///CFRUrlbarChiclet.schema.json#/definitions/linkUrl"
-                    },
-                    {
-                      "description": "Icon associated with the message"
-                    }
-                  ]
+                  "type": "string",
+                  "format": "moz-url-format"
                 },
                 "where": {
                   "description": "Should it open in a new tab or the current tab",
+                  "type": "string",
                   "enum": [
                     "current",
                     "tabshifted"
@@ -376,7 +343,7 @@
       "description": "A template with a heading, addon icon, title and description. No markup allowed.",
       "version": "1.0.0",
       "type": "object",
-      "definitions": {
+      "$defs": {
         "plainText": {
           "description": "Plain text (no HTML allowed)",
           "type": "string"
@@ -433,25 +400,8 @@
               "description": "Prevent the doorhanger from being dismissed if user interacts with the page or switches between applications."
             },
             "notification_text": {
-              "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the location bar notification."
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the location bar notification."
-                    }
-                  },
-                  "required": [
-                    "string_id"
-                  ]
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "info_icon": {
               "type": "object",
@@ -466,24 +416,8 @@
                           "type": "object",
                           "properties": {
                             "tooltiptext": {
-                              "oneOf": [
-                                {
-                                  "type": "string",
-                                  "description": "Text for button tooltip used to provide information about the doorhanger."
-                                },
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "string_id": {
-                                      "type": "string",
-                                      "description": "Id of localized string for the tooltip."
-                                    }
-                                  },
-                                  "required": [
-                                    "string_id"
-                                  ]
-                                }
-                              ]
+                              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                              "description": "Text for button tooltip used to provide information about the doorhanger."
                             }
                           },
                           "required": [
@@ -496,16 +430,7 @@
                       ]
                     },
                     {
-                      "type": "object",
-                      "properties": {
-                        "string_id": {
-                          "type": "string",
-                          "description": "Id of localized string used to provide information about the doorhanger."
-                        }
-                      },
-                      "required": [
-                        "string_id"
-                      ]
+                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
                     }
                   ]
                 },
@@ -528,36 +453,12 @@
               ]
             },
             "heading_text": {
-              "description": "The larger heading text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string.",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "The message displayed in the title of the extension doorhanger"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "string_id"
-                  ],
-                  "description": "Id of localized string for extension doorhanger title"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "The larger heading text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "icon": {
-              "description": "The icon displayed in the pop-over. Should be 32x32px or 64x64px and png/svg.",
-              "allOf": [
-                {
-                  "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
-                },
-                {
-                  "description": "Icon associated with the message"
-                }
-              ]
+              "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/linkUrl",
+              "description": "The icon displayed in the pop-over. Should be 32x32px or 64x64px and png/svg."
             },
             "icon_dark_theme": {
               "type": "string",
@@ -572,45 +473,20 @@
               "type": "object",
               "properties": {
                 "id": {
-                  "allOf": [
-                    {
-                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
-                    },
-                    {
-                      "description": "Unique addon ID"
-                    }
-                  ]
+                  "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/plainText",
+                  "description": "Unique addon ID"
                 },
                 "title": {
-                  "allOf": [
-                    {
-                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
-                    },
-                    {
-                      "description": "Addon name"
-                    }
-                  ]
+                  "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/plainText",
+                  "description": "Addon name"
                 },
                 "author": {
-                  "allOf": [
-                    {
-                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
-                    },
-                    {
-                      "description": "Addon author"
-                    }
-                  ]
+                  "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/plainText",
+                  "description": "Addon author"
                 },
                 "icon": {
-                  "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg.",
-                  "allOf": [
-                    {
-                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
-                    },
-                    {
-                      "description": "Addon icon"
-                    }
-                  ]
+                  "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/linkUrl",
+                  "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg."
                 },
                 "rating": {
                   "type": "number",
@@ -624,14 +500,8 @@
                   "description": "Installed users"
                 },
                 "amo_url": {
-                  "allOf": [
-                    {
-                      "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
-                    },
-                    {
-                      "description": "Link that offers more information related to the addon."
-                    }
-                  ]
+                  "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/linkUrl",
+                  "description": "Link that offers more information related to the addon."
                 }
               },
               "required": [
@@ -642,44 +512,19 @@
               ]
             },
             "text": {
-              "description": "The body text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string.",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Description message of the addon."
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of string to localized addon description"
-                    }
-                  },
-                  "required": [
-                    "string_id"
-                  ]
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "The body text displayed in the pop-over. This can be a reference to a localized string in Firefox or just a plain string."
             },
             "descriptionDetails": {
               "description": "Additional information and steps on how to use",
               "type": "object",
               "properties": {
                 "steps": {
-                  "description": "Array of messages or string_ids",
+                  "description": "Array of string_ids",
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "string_id": {
-                        "type": "string",
-                        "description": "Id of string to localized addon description"
-                      }
-                    },
-                    "required": [
-                      "string_id"
-                    ]
+                    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText",
+                    "description": "Id of string to localized addon description"
                   }
                 }
               },
@@ -700,14 +545,8 @@
                         {
                           "properties": {
                             "value": {
-                              "allOf": [
-                                {
-                                  "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
-                                },
-                                {
-                                  "description": "Button label override used when a localized version is not available."
-                                }
-                              ]
+                              "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/plainText",
+                              "description": "Button label override used when a localized version is not available."
                             },
                             "attributes": {
                               "type": "object",
@@ -729,21 +568,7 @@
                           ]
                         },
                         {
-                          "properties": {
-                            "string_id": {
-                              "allOf": [
-                                {
-                                  "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
-                                },
-                                {
-                                  "description": "Id of localized string for button"
-                                }
-                              ]
-                            }
-                          },
-                          "required": [
-                            "string_id"
-                          ]
+                          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
                         }
                       ],
                       "description": "Id of localized string or message override."
@@ -781,7 +606,7 @@
                               "value": {
                                 "allOf": [
                                   {
-                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
+                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/plainText"
                                   },
                                   {
                                     "description": "Button label override used when a localized version is not available."
@@ -812,7 +637,7 @@
                               "string_id": {
                                 "allOf": [
                                   {
-                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/plainText"
+                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/plainText"
                                   },
                                   {
                                     "description": "Id of localized string for button"
@@ -839,7 +664,7 @@
                               "url": {
                                 "allOf": [
                                   {
-                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/definitions/linkUrl"
+                                    "$ref": "file:///ExtensionDoorhanger.schema.json#/$defs/linkUrl"
                                   },
                                   {
                                     "description": "URL used in combination with the primary action dispatched."
@@ -943,7 +768,7 @@
       "description": "A template with an image, test and buttons.",
       "version": "1.0.0",
       "type": "object",
-      "definitions": {
+      "$defs": {
         "plainText": {
           "description": "Plain text (no HTML allowed)",
           "type": "string"
@@ -979,25 +804,8 @@
               ]
             },
             "text": {
-              "description": "The text show in the notification box.",
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Message shown in the location bar notification."
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "string_id": {
-                      "type": "string",
-                      "description": "Id of localized string for the location bar notification."
-                    }
-                  },
-                  "required": [
-                    "string_id"
-                  ]
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "The text show in the notification box."
             },
             "priority": {
               "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
@@ -1011,25 +819,8 @@
                 "type": "object",
                 "properties": {
                   "label": {
-                    "description": "The text label of the button.",
-                    "oneOf": [
-                      {
-                        "type": "string",
-                        "description": "Message content for the button."
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "string_id": {
-                            "type": "string",
-                            "description": "Id of localized string for the button."
-                          }
-                        },
-                        "required": [
-                          "string_id"
-                        ]
-                      }
-                    ]
+                    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                    "description": "The text label of the button."
                   },
                   "primary": {
                     "type": "boolean",
@@ -1440,30 +1231,14 @@
               "additionalProperties": true
             },
             "body": {
+              "type": "object",
               "properties": {
                 "title": {
                   "type": "object",
                   "properties": {
                     "label": {
-                      "description": "The title shown in the Spotlight message",
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "description": "Message shown in the header element"
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "string_id": {
-                              "type": "string",
-                              "description": "Id of localized string for the header element"
-                            }
-                          },
-                          "required": [
-                            "string_id"
-                          ]
-                        }
-                      ]
+                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                      "description": "The title shown in the Spotlight message"
                     }
                   },
                   "required": [
@@ -1474,25 +1249,8 @@
                   "type": "object",
                   "properties": {
                     "label": {
-                      "description": "The content shown in the Spotlight message",
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "description": "Message shown in the paragraph element"
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "string_id": {
-                              "type": "string",
-                              "description": "Id of localized string for the paragraph element"
-                            }
-                          },
-                          "required": [
-                            "string_id"
-                          ]
-                        }
-                      ]
+                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                      "description": "The content shown in the Spotlight message"
                     }
                   },
                   "required": [
@@ -1503,25 +1261,8 @@
                   "type": "object",
                   "properties": {
                     "label": {
-                      "description": "The label for the primary button",
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "description": "Message shown in the button element"
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "string_id": {
-                              "type": "string",
-                              "description": "Id of localized string for the button element"
-                            }
-                          },
-                          "required": [
-                            "string_id"
-                          ]
-                        }
-                      ]
+                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                      "description": "The label for the primary button"
                     },
                     "action": {
                       "type": "object",
@@ -1549,25 +1290,8 @@
                   "type": "object",
                   "properties": {
                     "label": {
-                      "description": "The label for the secondary button",
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "description": "Message shown in the button element"
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "string_id": {
-                              "type": "string",
-                              "description": "Id of localized string for the button element"
-                            }
-                          },
-                          "required": [
-                            "string_id"
-                          ]
-                        }
-                      ]
+                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                      "description": "The label for the secondary button"
                     }
                   },
                   "required": [
@@ -1585,30 +1309,14 @@
               ]
             },
             "extra": {
+              "type": "object",
               "properties": {
                 "expanded": {
                   "type": "object",
                   "properties": {
                     "label": {
-                      "description": "The label for the secondary button",
-                      "oneOf": [
-                        {
-                          "type": "string",
-                          "description": "Message shown in the button element"
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "string_id": {
-                              "type": "string",
-                              "description": "Id of localized string for the button element"
-                            }
-                          },
-                          "required": [
-                            "string_id"
-                          ]
-                        }
-                      ]
+                      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                      "description": "The label for the secondary button"
                     }
                   },
                   "required": [
@@ -1756,53 +1464,18 @@
       "$id": "file:///ToastNotification.schema.json",
       "title": "ToastNotification",
       "description": "A template for toast notifications displayed by the Alert service.",
-      "version": "1.0.0",
       "type": "object",
-      "definitions": {
-        "localizableText": {
-          "oneOf": [
-            {
-              "type": "string",
-              "description": "The string to be rendered."
-            },
-            {
-              "type": "object",
-              "properties": {
-                "string_id": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "string_id"
-              ],
-              "description": "Id of localized string to be rendered."
-            }
-          ]
-        }
-      },
       "properties": {
         "content": {
           "type": "object",
           "properties": {
             "title": {
-              "allOf": [
-                {
-                  "$ref": "file:///ToastNotification.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "Id of localized string or message override of toast notification title"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of toast notification title"
             },
             "body": {
-              "allOf": [
-                {
-                  "$ref": "file:///ToastNotification.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "Id of localized string or message override of toast notification body"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of toast notification body"
             },
             "icon_url": {
               "description": "The URL of the image used as an icon of the toast notification.",
@@ -1909,17 +1582,8 @@
               "description": "Optional delay in ms after which to show the notification"
             },
             "badgeDescription": {
-              "type": "object",
-              "description": "This is used in combination with the badged button to offer a text based alternative to the visual badging. Example 'New Feature: What's New'",
-              "properties": {
-                "string_id": {
-                  "type": "string",
-                  "description": "Fluent string id"
-                }
-              },
-              "required": [
-                "string_id"
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText",
+              "description": "This is used in combination with the badged button to offer a text based alternative to the visual badging. Example 'New Feature: What's New'"
             }
           },
           "additionalProperties": true,
@@ -2049,28 +1713,6 @@
       "description": "A template for the messages that appear in the What's New panel.",
       "version": "1.2.0",
       "type": "object",
-      "definitions": {
-        "localizableText": {
-          "oneOf": [
-            {
-              "type": "string",
-              "description": "The string to be rendered."
-            },
-            {
-              "type": "object",
-              "properties": {
-                "string_id": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "string_id"
-              ],
-              "description": "Id of localized string to be rendered."
-            }
-          ]
-        }
-      },
       "properties": {
         "content": {
           "type": "object",
@@ -2094,44 +1736,20 @@
               "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
             },
             "title": {
-              "allOf": [
-                {
-                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "Id of localized string or message override of What's New message title"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of What's New message title"
             },
             "subtitle": {
-              "allOf": [
-                {
-                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "Id of localized string or message override of What's New message subtitle"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of What's New message subtitle"
             },
             "body": {
-              "allOf": [
-                {
-                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "Id of localized string or message override of What's New message body"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Id of localized string or message override of What's New message body"
             },
             "link_text": {
-              "allOf": [
-                {
-                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "(optional) Id of localized string or message override of What's New message link text"
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "(optional) Id of localized string or message override of What's New message link text"
             },
             "cta_url": {
               "description": "Target URL for the What's New message.",
@@ -2162,14 +1780,8 @@
               "format": "uri"
             },
             "icon_alt": {
-              "allOf": [
-                {
-                  "$ref": "file:///WhatsNewMessage.schema.json#/definitions/localizableText"
-                },
-                {
-                  "description": "Alt text for image."
-                }
-              ]
+              "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+              "description": "Alt text for image."
             }
           },
           "additionalProperties": true,
@@ -2200,6 +1812,30 @@
         "template"
       ],
       "additionalProperties": true
+    },
+    "localizedText": {
+      "type": "object",
+      "properties": {
+        "string_id": {
+          "description": "Id of localized string to be rendered.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "string_id"
+      ]
+    },
+    "localizableText": {
+      "description": "Either a raw string or an object containing the string_id of the localized text",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The string to be rendered."
+        },
+        {
+          "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizedText"
+        }
+      ]
     }
   }
 }

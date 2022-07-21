@@ -5,28 +5,6 @@
   "description": "A template for the messages that appear in the What's New panel.",
   "version": "1.2.0",
   "type": "object",
-  "definitions": {
-    "localizableText": {
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "The string to be rendered."
-        },
-        {
-          "type": "object",
-          "properties": {
-            "string_id": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "string_id"
-          ],
-          "description": "Id of localized string to be rendered."
-        }
-      ]
-    }
-  },
   "properties": {
     "content": {
       "type": "object",
@@ -50,44 +28,20 @@
           "description": "The date/time (number of milliseconds elapsed since January 1, 1970 00:00:00 UTC) the message was published."
         },
         "title": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "Id of localized string or message override of What's New message title"
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "Id of localized string or message override of What's New message title"
         },
         "subtitle": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "Id of localized string or message override of What's New message subtitle"
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "Id of localized string or message override of What's New message subtitle"
         },
         "body": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "Id of localized string or message override of What's New message body"
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "Id of localized string or message override of What's New message body"
         },
         "link_text": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "(optional) Id of localized string or message override of What's New message link text"
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "(optional) Id of localized string or message override of What's New message link text"
         },
         "cta_url": {
           "description": "Target URL for the What's New message.",
@@ -118,14 +72,8 @@
           "format": "uri"
         },
         "icon_alt": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "Alt text for image."
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "Alt text for image."
         }
       },
       "additionalProperties": true,

@@ -3,6 +3,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""Firefox Messaging System Messaging Experiment schema generator
+
+The Firefox Messaging System handles several types of messages. This program
+patches and combines those schemas into a single schema
+(MessagingExperiment.schema.json) which is used to validate messaging
+experiments coming from Nimbus.
+
+Definitions from FxMsCommon.schema.json are bundled into this schema. This
+allows all of the FxMS schemas to reference common definitions, e.g.
+`localizableText` for translatable strings, via referencing the common schema.
+The bundled schema will be re-written so that the references now point at the
+top-level, generated schema.
+
+Additionally, all self-references in each messaging schema will be rewritten
+into absolute references, referencing each sub-schemas `$id`. This is requried
+due to the JSONSchema validation library used by Experimenter not fully
+supporting self-references and bundled schema.
+"""
+
 import json
 import sys
 from argparse import ArgumentParser
@@ -15,8 +34,6 @@ import jsonschema
 
 SCHEMA_BASE_DIR = Path("..", "templates")
 
-PANEL_TEST_PROVIDER_MESSAGES = Path("PanelTestProvider.messages.json")
-
 MESSAGE_TYPES = {
     "CFRUrlbarChiclet": Path("CFR", "templates", "CFRUrlbarChiclet.schema.json"),
     "ExtensionDoorhanger": Path("CFR", "templates", "ExtensionDoorhanger.schema.json"),
@@ -28,6 +45,19 @@ MESSAGE_TYPES = {
     "UpdateAction": Path("OnboardingMessage", "UpdateAction.schema.json"),
     "WhatsNewMessage": Path("OnboardingMessage", "WhatsNewMessage.schema.json"),
 }
+
+COMMON_SCHEMA_NAME = "FxMSCommon.schema.json"
+COMMON_SCHEMA_PATH = Path(COMMON_SCHEMA_NAME)
+
+TEST_CORPUS = {
+    "CFRMessageProvider": Path("corpus", "CFRMessageProvider.messages.json"),
+    "OnboardingMessageProvider": Path(
+        "corpus", "OnboardingMessageProvider.messages.json"
+    ),
+    "PanelTestProvider": Path("corpus", "PanelTestProvider.messages.json"),
+}
+
+SCHEMA_ID = "resource://activity-stream/schemas/MessagingExperiment.schema.json"
 
 
 class NestedRefResolver(jsonschema.RefResolver):
@@ -65,7 +95,7 @@ def extract_template_values(template):
         return [const]
 
 
-def patch_schema(schema):
+def patch_schema(schema, schema_id=None):
     """Patch the given schema.
 
     The JSON schema validator that Experimenter uses
@@ -73,11 +103,17 @@ def patch_schema(schema):
     nor does it support bundled schemas. We rewrite the schema so that all
     relative refs are transformed into absolute refs via the schema's `$id`.
 
+    Additionally, we merge in the contents of FxMSCommon.schema.json, so all
+    refs relative to that schema will be transformed to become relative to this
+    schema.
+
     See-also: https://github.com/python-jsonschema/jsonschema/issues/313
     """
-    schema_id = schema["$id"]
+    if schema_id is None:
+        schema_id = schema["$id"]
 
     def patch_impl(schema):
+
         ref = schema.get("$ref")
 
         if ref:
@@ -89,28 +125,38 @@ def patch_schema(schema):
                 and uri.fragment != ""
             ):
                 schema["$ref"] = f"{schema_id}#{uri.fragment}"
+            elif (uri.scheme, uri.path) == ("file", f"/{COMMON_SCHEMA_NAME}"):
+                schema["$ref"] = f"{SCHEMA_ID}#{uri.fragment}"
 
+        # If `schema` is object-like, inspect each of its indivual properties
+        # and patch them.
         properties = schema.get("properties")
         if properties:
             for prop in properties.keys():
                 patch_impl(properties[prop])
 
+        # If `schema` is array-like, inspect each of its items and patch them.
         items = schema.get("items")
         if items:
             patch_impl(items)
 
-        for key in ("if", "then", "else"):
+        # Patch each `if`, `then`, `else`, and `not` sub-schema that is present.
+        for key in ("if", "then", "else", "not"):
             if key in schema:
                 patch_impl(schema[key])
 
+        # Patch the items of each `oneOf`, `allOf`, and `anyOf` sub-schema that
+        # is present.
         for key in ("oneOf", "allOf", "anyOf"):
             subschema = schema.get(key)
             if subschema:
                 for i, alternate in enumerate(subschema):
                     patch_impl(alternate)
 
+    # Patch the top-level type defined in the schema.
     patch_impl(schema)
 
+    # Patch each named definition in the schema.
     for key in ("$defs", "definitions"):
         defns = schema.get(key)
         if defns:
@@ -122,15 +168,24 @@ def patch_schema(schema):
 
 def main(check=False):
     """Generate Nimbus feature schemas for Firefox Messaging System."""
+    # Patch each message type schema to resolve all self-references to be
+    # absolute and rewrite # references to FxMSCommon.schema.json to be relative
+    # to the new schema (because we are about to bundle its definitions).
     defs = {
         name: patch_schema(read_schema(SCHEMA_BASE_DIR / path))
         for name, path in MESSAGE_TYPES.items()
     }
 
+    # Bundle the definitions from FxMSCommon.schema.json into this schema.
+    defs.update(
+        patch_schema(read_schema(COMMON_SCHEMA_PATH), schema_id=SCHEMA_ID)["$defs"]
+    )
+
     # Ensure all bundled schemas have an $id so that $refs inside the
     # bundled schema work correctly (i.e, they will reference the subschema
     # and not the bundle).
-    for name, schema in defs.items():
+    for name in MESSAGE_TYPES.keys():
+        schema = defs[name]
         if "$id" not in schema:
             raise ValueError(f"Schema {name} is missing an $id")
 
@@ -145,8 +200,8 @@ def main(check=False):
     filename = Path("MessagingExperiment.schema.json")
 
     templates = {
-        name: extract_template_values(schema["properties"]["template"])
-        for name, schema in defs.items()
+        name: extract_template_values(defs[name]["properties"]["template"])
+        for name in MESSAGE_TYPES.keys()
     }
 
     # Ensure that each schema has a unique set of template values.
@@ -168,13 +223,16 @@ def main(check=False):
 
     all_templates = list(chain.from_iterable(templates.values()))
 
-    schema_id = "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-
+    # Generate the combined schema.
     feature_schema = {
         "$schema": "https://json-schema.org/draft/2019-09/schema",
-        "$id": schema_id,
+        "$id": SCHEMA_ID,
         "title": "Messaging Experiment",
         "description": "A Firefox Messaging System message.",
+        # A message must be one of
+        # - an empty message (i.e., a completely empty object), which is the
+        #   equivalent of an experiment branch not providing a message; or
+        # - An object that contains a template field
         "oneOf": [
             {
                 "description": "An empty FxMS message.",
@@ -195,6 +253,17 @@ def main(check=False):
                         },
                         "required": ["template"],
                     },
+                    # For each message type, create a subschema that says if the
+                    # template field matches a value for a message type defined
+                    # in MESSAGE_TYPES, then the message must also match the
+                    # schema for that message type.
+                    #
+                    # This is done using `allOf: [{ if, then }]` instead of `oneOf: []`
+                    # because it provides better error messages. Using `if-then`
+                    # will only show validation errors for the sub-schema that
+                    # matches template, whereas using `oneOf` will show
+                    # validation errors for *all* sub-schemas, which makes
+                    # debugging messages much harder.
                     *(
                         {
                             "if": {
@@ -207,9 +276,9 @@ def main(check=False):
                                 },
                                 "required": ["template"],
                             },
-                            "then": {"$ref": f"{schema_id}#/$defs/{message_type}"},
+                            "then": {"$ref": f"{SCHEMA_ID}#/$defs/{message_type}"},
                         }
-                        for message_type in defs
+                        for message_type in MESSAGE_TYPES
                     ),
                 ],
             },
@@ -250,17 +319,27 @@ def check_schema(filename, schema):
 
     resolver = NestedRefResolver(schema)
 
-    with PANEL_TEST_PROVIDER_MESSAGES.open("r") as f:
-        messages = json.load(f)
+    for provider, provider_path in TEST_CORPUS.items():
+        print(f"  Validating messages from {provider}:")
 
-    for message in messages:
-        # PanelTestProvider overrides the targeting of all messages. Some
-        # messages are missing targeting and will fail without this patch.
-        message["targeting"] = 'providerCohorts.panel_local_testing == "SHOW_TEST"'
-        msg_id = message["id"]
+        with provider_path.open("r") as f:
+            messages = json.load(f)
 
-        print(f"Validating {msg_id} with {filename}...")
-        jsonschema.validate(instance=message, schema=schema, resolver=resolver)
+        for message in messages:
+            template = message["template"]
+            msg_id = message["id"]
+
+            if template == "protections_panel":
+                print(
+                    f"    SKIPPING {msg_id} {template} message because there is no schema for "
+                    f"template {template}"
+                )
+                continue
+
+            print(f"    Validating {msg_id} {template} message with {filename}...")
+            jsonschema.validate(instance=message, schema=schema, resolver=resolver)
+
+        print()
 
 
 if __name__ == "__main__":
@@ -268,7 +347,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Check that the generated schemas have not changed",
+        help="Check that the generated schemas have not changed and run validation tests.",
         default=False,
     )
     args = parser.parse_args()
