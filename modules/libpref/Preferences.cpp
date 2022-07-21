@@ -5835,7 +5835,6 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("browser.contextual-services.contextId"),
     PREF_LIST_ENTRY("browser.laterrun.bookkeeping.profileCreationTime"),
     PREF_LIST_ENTRY("browser.newtabpage.activity-stream.discoverystream."),
-    PREF_LIST_ENTRY("browser.region.update.updated"),
     PREF_LIST_ENTRY("browser.sessionstore.upgradeBackup.latestBuildID"),
     PREF_LIST_ENTRY("browser.shell.mostRecentDateSetAsDefault"),
     PREF_LIST_ENTRY("fission.experiment.max-origins.last-"),
