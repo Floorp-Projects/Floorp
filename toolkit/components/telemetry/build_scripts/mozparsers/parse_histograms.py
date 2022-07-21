@@ -11,7 +11,6 @@ import re
 import runpy
 import sys
 import atexit
-import six
 from . import shared_telemetry_utils as utils
 
 from ctypes import c_int
@@ -601,22 +600,22 @@ class Histogram:
             "low": int,
             "high": int,
             "keyed": bool,
-            "expires_in_version": six.string_types,
-            "kind": six.string_types,
-            "description": six.string_types,
-            "releaseChannelCollection": six.string_types,
+            "expires_in_version": str,
+            "kind": str,
+            "description": str,
+            "releaseChannelCollection": str,
         }
 
         # For list fields we check the items types.
         type_checked_list_fields = {
             "bug_numbers": int,
-            "alert_emails": six.string_types,
-            "labels": six.string_types,
-            "record_in_processes": six.string_types,
-            "keys": six.string_types,
-            "products": six.string_types,
-            "operating_systems": six.string_types,
-            "record_into_store": six.string_types,
+            "alert_emails": str,
+            "labels": str,
+            "record_in_processes": str,
+            "keys": str,
+            "products": str,
+            "operating_systems": str,
+            "record_into_store": str,
         }
 
         # For the server-side, where _strict_type_checks==False, we want to
