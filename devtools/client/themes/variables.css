@@ -103,6 +103,7 @@
 :root.theme-light {
   --theme-body-background: white;
   --theme-body-emphasized-background: var(--grey-10);
+  --theme-body-alternate-emphasized-background: #f0f9fe;
   --theme-sidebar-background: white;
 
   /* Toolbar */
@@ -227,6 +228,7 @@
 :root.theme-dark {
   --theme-body-background: #232327;
   --theme-body-emphasized-background: var(--grey-70);
+  --theme-body-alternate-emphasized-background: #353b48;
   --theme-sidebar-background: #18181a;
 
   /* Toolbar */
