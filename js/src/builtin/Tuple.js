@@ -363,7 +363,7 @@ function TupleFilter(callbackfn) {
     var newK = 0;
 
     /* Step 7. */
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
     while(k < len) {
         /* Step 7a. */
         var kValue = list[k];
@@ -421,7 +421,7 @@ function TupleMap(callbackfn) {
     var newList = [];
 
     /* Steps 6-7. */
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
     for(var k = 0; k < len; k++) {
         /* Step 7a. */
         var kValue = list[k];
@@ -561,7 +561,7 @@ function TupleFlatMap(mapperFunction /*, thisArg*/) {
     var flat = [];
 
     /* Step 5. */
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
     FlattenIntoTuple(flat, list, 1, mapperFunction, thisArg);
 
     /* Step 6. */
