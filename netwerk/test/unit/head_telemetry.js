@@ -171,7 +171,10 @@ var HandshakeTelemetryHelpers = {
       let hObj = Services.telemetry.getHistogramById(h);
       Assert.ok(
         this.countHistogramEntries(hObj) === 0,
-        `No entries expected in ${h.name}. Contents: ${JSON.stringify(hObj.snapshot())}`);
+        `No entries expected in ${h.name}. Contents: ${JSON.stringify(
+          hObj.snapshot()
+        )}`
+      );
     }
   },
 };

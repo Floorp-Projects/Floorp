@@ -26,7 +26,7 @@ function setup() {
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY); 
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 
   add_tls_server_setup(
     "EncryptedClientHelloServer",
