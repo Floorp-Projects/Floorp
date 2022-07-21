@@ -29,7 +29,7 @@ class MemoryDistributionMetric {
    * Notes: Values bigger than 1 Terabyte (2^40 bytes) are truncated and an
    * InvalidValue error is recorded.
    */
-  void Accumulate(uint64_t aSample) const;
+  void Accumulate(size_t aSample) const;
 
   /**
    * **Test-only API**

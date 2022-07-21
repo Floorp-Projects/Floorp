@@ -19,11 +19,13 @@ namespace mozilla::glean {
 
 namespace impl {
 
-void MemoryDistributionMetric::Accumulate(uint64_t aSample) const {
+void MemoryDistributionMetric::Accumulate(size_t aSample) const {
   auto hgramId = HistogramIdForMetric(mId);
   if (hgramId) {
     Telemetry::Accumulate(hgramId.extract(), aSample);
   }
+  static_assert(sizeof(size_t) <= sizeof(uint64_t),
+                "Memory distribution samples might overflow.");
   fog_memory_distribution_accumulate(mId, aSample);
 }
 
