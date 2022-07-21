@@ -250,9 +250,7 @@ class EvaluationContextSelector extends Component {
         label: this.getLabel(),
         className:
           "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button" +
-          (selectedTarget && !selectedTarget.isTopLevel
-            ? " webconsole-evaluation-selector-button-non-top"
-            : ""),
+          (selectedTarget && !selectedTarget.isTopLevel ? " checked" : ""),
         title: l10n.getStr("webconsole.input.selector.tooltip"),
       },
       // We pass the children in a function so we don't require the MenuItem and MenuList

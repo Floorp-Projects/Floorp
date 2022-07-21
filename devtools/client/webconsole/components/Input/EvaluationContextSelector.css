@@ -20,14 +20,14 @@ html[dir="rtl"] .webconsole-evaluation-selector-button {
   margin-top: 1px;
 }
 
-.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button {
+.webconsole-evaluation-selector-button.checked.devtools-dropdown-button {
   background-color: var(--blue-60);
   color: white;
   fill: currentColor;
 }
 
-.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button:hover,
-.webconsole-evaluation-selector-button-non-top.devtools-dropdown-button[aria-expanded="true"] {
+.webconsole-evaluation-selector-button.checked.devtools-dropdown-button:hover,
+.webconsole-evaluation-selector-button.checked.devtools-dropdown-button[aria-expanded="true"] {
   background-color: var(--blue-70) !important;
   color: white !important;
 }
