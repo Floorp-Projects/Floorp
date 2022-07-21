@@ -777,12 +777,17 @@ Toolbox.prototype = {
         consoleFront.off("inspectObject", this._onInspectObject);
       }
       targetFront.off("frame-update", this._updateFrames);
-      // When navigating the old target can get destroyed before the thread state changed
-      // event for the target is received, so it gets lost. This currently happens with bf-cache
-      // navigations when paused, so lets make sure we resumed if not.
-      this._resumeToolbox();
     } else if (this.selection) {
       this.selection.onTargetDestroyed(targetFront);
+    }
+
+    // When navigating the old (top level) target can get destroyed before the thread state changed
+    // event for the target is received, so it gets lost. This currently happens with bf-cache
+    // navigations when paused, so lets make sure we resumed if not.
+    //
+    // We should also resume if a paused non-top-level target is destroyed
+    if (targetFront.isTopLevel || targetFront.threadFront?.paused) {
+      this._resumeToolbox();
     }
 
     if (targetFront.targetForm.ignoreSubFrames) {
