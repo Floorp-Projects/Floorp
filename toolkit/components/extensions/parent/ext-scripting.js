@@ -138,7 +138,7 @@ const ensureValidScriptId = id => {
   }
 };
 
-const ensureValidScriptParams = script => {
+const ensureValidScriptParams = (extension, script) => {
   if (!script.js?.length && !script.css?.length) {
     throw new ExtensionError("At least one js or css must be specified.");
   }
@@ -148,11 +148,17 @@ const ensureValidScriptParams = script => {
   }
 
   // This will throw if a match pattern is invalid.
-  parseMatchPatterns(script.matches);
+  parseMatchPatterns(script.matches, {
+    // This only works with MV2, not MV3. See Bug 1780507 for more information.
+    restrictSchemes: extension.restrictSchemes,
+  });
 
   if (script.excludeMatches) {
     // This will throw if a match pattern is invalid.
-    parseMatchPatterns(script.excludeMatches);
+    parseMatchPatterns(script.excludeMatches, {
+      // This only works with MV2, not MV3. See Bug 1780507 for more information.
+      restrictSchemes: extension.restrictSchemes,
+    });
   }
 };
 
@@ -223,7 +229,7 @@ this.scripting = class extends ExtensionAPI {
               );
             }
 
-            ensureValidScriptParams(script);
+            ensureValidScriptParams(extension, script);
 
             scriptsToRegister.set(script.id, makeInternalContentScript(script));
           }
@@ -355,7 +361,7 @@ this.scripting = class extends ExtensionAPI {
             script.runAt ??= options.runAt;
             script.persistAcrossSessions ??= options.persistAcrossSessions;
 
-            ensureValidScriptParams(script);
+            ensureValidScriptParams(extension, script);
 
             scriptsToUpdate.set(script.id, {
               ...makeInternalContentScript(script),
