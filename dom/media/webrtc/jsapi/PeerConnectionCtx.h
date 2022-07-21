@@ -27,6 +27,20 @@ class NoTrialsConfig : public FieldTrialsView {
   public:
     NoTrialsConfig() = default;
     std::string Lookup(absl::string_view key) const override {
+      // Upstream added a new default field trial string for
+      // CongestionWindow, that we don't want.  In
+      // third_party/libwebrtc/rtc_base/experiments/rate_control_settings.cc
+      // they set kCongestionWindowDefaultFieldTrialString to
+      // "QueueSize:350,MinBitrate:30000,DropFrame:true". With QueueSize
+      // set, GoogCcNetworkController::UpdateCongestionWindowSize is
+      // called.  Because negative values are calculated in
+      // feedback_rtt, an assert fires when calculating data_window in
+      // GoogCcNetworkController::UpdateCongestionWindowSize.  We probably
+      // need to figure out why we're calculating negative feedback_rtt.
+      // See Bug 1780620.
+      if ("WebRTC-CongestionWindow" == key) {
+        return std::string("MinBitrate:30000,DropFrame:true");
+      }
       return std::string();
     }
 };
