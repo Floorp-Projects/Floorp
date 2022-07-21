@@ -38,7 +38,7 @@ object Versions {
 
     object Gradle {
         const val kotlin_plugin = Kotlin.version
-        const val android_plugin = "7.0.0"
+        const val android_plugin = "7.2.1"
     }
 
     object Test {
