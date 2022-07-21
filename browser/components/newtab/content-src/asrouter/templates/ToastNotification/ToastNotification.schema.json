@@ -3,53 +3,18 @@
   "$id": "file:///ToastNotification.schema.json",
   "title": "ToastNotification",
   "description": "A template for toast notifications displayed by the Alert service.",
-  "version": "1.0.0",
   "type": "object",
-  "definitions": {
-    "localizableText": {
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "The string to be rendered."
-        },
-        {
-          "type": "object",
-          "properties": {
-            "string_id": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "string_id"
-          ],
-          "description": "Id of localized string to be rendered."
-        }
-      ]
-    }
-  },
   "properties": {
     "content": {
       "type": "object",
       "properties": {
         "title": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "Id of localized string or message override of toast notification title"
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "Id of localized string or message override of toast notification title"
         },
         "body": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/localizableText"
-            },
-            {
-              "description": "Id of localized string or message override of toast notification body"
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "Id of localized string or message override of toast notification body"
         },
         "icon_url": {
           "description": "The URL of the image used as an icon of the toast notification.",

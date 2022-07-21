@@ -54,28 +54,14 @@
           "additionalProperties": true
         },
         "body": {
+          "type": "object",
           "properties": {
             "title": {
               "type": "object",
               "properties": {
                 "label": {
-                  "description": "The title shown in the Spotlight message",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "description": "Message shown in the header element"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "string_id": {
-                          "type": "string",
-                          "description": "Id of localized string for the header element"
-                        }
-                      },
-                      "required": ["string_id"]
-                    }
-                  ]
+                  "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+                  "description": "The title shown in the Spotlight message"
                 }
               },
               "required": ["label"]
@@ -84,23 +70,8 @@
               "type": "object",
               "properties": {
                 "label": {
-                  "description": "The content shown in the Spotlight message",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "description": "Message shown in the paragraph element"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "string_id": {
-                          "type": "string",
-                          "description": "Id of localized string for the paragraph element"
-                        }
-                      },
-                      "required": ["string_id"]
-                    }
-                  ]
+                  "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+                  "description": "The content shown in the Spotlight message"
                 }
               },
               "required": ["label"]
@@ -109,23 +80,8 @@
               "type": "object",
               "properties": {
                 "label": {
-                  "description": "The label for the primary button",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "description": "Message shown in the button element"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "string_id": {
-                          "type": "string",
-                          "description": "Id of localized string for the button element"
-                        }
-                      },
-                      "required": ["string_id"]
-                    }
-                  ]
+                  "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+                  "description": "The label for the primary button"
                 },
                 "action": {
                   "type": "object",
@@ -148,23 +104,8 @@
               "type": "object",
               "properties": {
                 "label": {
-                  "description": "The label for the secondary button",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "description": "Message shown in the button element"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "string_id": {
-                          "type": "string",
-                          "description": "Id of localized string for the button element"
-                        }
-                      },
-                      "required": ["string_id"]
-                    }
-                  ]
+                  "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+                  "description": "The label for the secondary button"
                 }
               },
               "required": ["label", "action"]
@@ -174,28 +115,14 @@
           "required": ["title", "text", "primary", "secondary"]
         },
         "extra": {
+          "type": "object",
           "properties": {
             "expanded": {
               "type": "object",
               "properties": {
                 "label": {
-                  "description": "The label for the secondary button",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "description": "Message shown in the button element"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "string_id": {
-                          "type": "string",
-                          "description": "Id of localized string for the button element"
-                        }
-                      },
-                      "required": ["string_id"]
-                    }
-                  ]
+                  "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+                  "description": "The label for the secondary button"
                 }
               },
               "required": ["label"]

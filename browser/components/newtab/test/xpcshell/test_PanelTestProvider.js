@@ -4,134 +4,74 @@
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
-const { JsonSchema } = ChromeUtils.import(
-  "resource://gre/modules/JsonSchema.jsm"
-);
 
-Cu.importGlobalProperties(["fetch"]);
-
-let MESSAGING_EXPERIMENT_SCHEMA;
-let CFR_SCHEMA;
-let UPDATE_ACTION_SCHEMA;
-let WHATS_NEW_SCHEMA;
-let SPOTLIGHT_SCHEMA;
-let PB_NEWTAB_SCHEMA;
-let TOAST_NOTIFICATION_SCHEMA;
+const MESSAGE_VALIDATORS = {};
+let EXPERIMENT_VALIDATOR;
 
 add_setup(async function setup() {
-  function fetchSchema(uri) {
-    return fetch(uri, { credentials: "omit" }).then(rsp => rsp.json());
-  }
+  const validators = await makeValidators();
 
-  MESSAGING_EXPERIMENT_SCHEMA = await fetchSchema(
-    "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-  );
-  CFR_SCHEMA = await fetchSchema(
-    "resource://testing-common/ExtensionDoorhanger.schema.json"
-  );
-  UPDATE_ACTION_SCHEMA = await fetchSchema(
-    "resource://testing-common/UpdateAction.schema.json"
-  );
-  WHATS_NEW_SCHEMA = await fetchSchema(
-    "resource://testing-common/WhatsNewMessage.schema.json"
-  );
-  SPOTLIGHT_SCHEMA = await fetchSchema(
-    "resource://testing-common/Spotlight.schema.json"
-  );
-  PB_NEWTAB_SCHEMA = await fetchSchema(
-    "resource://testing-common/NewtabPromoMessage.schema.json"
-  );
-  TOAST_NOTIFICATION_SCHEMA = await fetchSchema(
-    "resource://testing-common/ToastNotification.schema.json"
-  );
+  EXPERIMENT_VALIDATOR = validators.experimentValidator;
+  Object.assign(MESSAGE_VALIDATORS, validators.messageValidators);
 });
-
-function assertSchema(obj, schema, log) {
-  Assert.deepEqual(
-    JsonSchema.validate(obj, schema),
-    { valid: true, errors: [] },
-    `${log} (${schema.title} schema)`
-  );
-
-  Assert.deepEqual(
-    JsonSchema.validate(obj, MESSAGING_EXPERIMENT_SCHEMA),
-    { valid: true, errors: [] },
-    `${log} (MessagingExperiment schema)`
-  );
-}
 
 add_task(async function test_PanelTestProvider() {
   const messages = await PanelTestProvider.getMessages();
 
-  // Careful: when changing this number make sure the new messages also go
-  // through schema validation.
+  const EXPECTED_MESSAGE_COUNTS = {
+    cfr_doorhanger: 2,
+    milestone_message: 0,
+    update_action: 1,
+    whatsnew_panel_message: 7,
+    spotlight: 5,
+    pb_newtab: 2,
+    toast_notification: 1,
+  };
+
+  const EXPECTED_TOTAL_MESSAGE_COUNT = Object.values(
+    EXPECTED_MESSAGE_COUNTS
+  ).reduce((a, b) => a + b, 0);
+
   Assert.strictEqual(
     messages.length,
-    18,
+    EXPECTED_TOTAL_MESSAGE_COUNT,
     "PanelTestProvider should have the correct number of messages"
   );
 
-  for (const [i, msg] of messages
-    .filter(m => ["cfr_doorhanger", "milestone_message"].includes(m.template))
-    .entries()) {
-    assertSchema(msg, CFR_SCHEMA, `cfr message ${msg.id ?? i} is valid`);
-  }
-
-  for (const [i, msg] of messages
-    .filter(m => m.template === "update_action")
-    .entries()) {
-    assertSchema(
-      msg,
-      UPDATE_ACTION_SCHEMA,
-      `update_action message ${msg.id ?? i} is valid`
-    );
-  }
-
-  for (const [i, msg] of messages
-    .filter(m => m.template === "whatsnew_panel_message")
-    .entries()) {
-    assertSchema(
-      msg,
-      WHATS_NEW_SCHEMA,
-      `whatsnew_panel_message message ${msg.id ?? i} is valid`
-    );
-  }
-
-  for (const [i, msg] of messages
-    .filter(m => m.template === "spotlight")
-    .entries()) {
-    assertSchema(
-      msg,
-      SPOTLIGHT_SCHEMA,
-      `spotlight message ${msg.id ?? i} is valid`
-    );
-  }
-
-  for (const [i, msg] of messages
-    .filter(m => m.template === "toast_notification")
-    .entries()) {
-    assertSchema(
-      msg,
-      TOAST_NOTIFICATION_SCHEMA,
-      `toast notification message ${msg.id ?? i} is valid`
-    );
-  }
-
-  for (const [i, msg] of messages
-    .filter(m => m.template === "pb_newtab")
-    .entries()) {
-    assertSchema(
-      msg,
-      PB_NEWTAB_SCHEMA,
-      `pb_newtab message ${msg.id ?? i} is valid`
-    );
-  }
-
-  Assert.strictEqual(
-    messages.filter(m => m.template === "pb_newtab").length,
-    2,
-    "There are two pb_newtab messages"
+  const messageCounts = Object.assign(
+    {},
+    ...Object.keys(EXPECTED_MESSAGE_COUNTS).map(key => ({ [key]: 0 }))
   );
+
+  for (const message of messages) {
+    const validator = MESSAGE_VALIDATORS[message.template];
+    Assert.ok(
+      typeof validator !== "undefined",
+      typeof validator !== "undefined"
+        ? `Schema validator found for ${message.template}`
+        : `No schema validator found for template ${message.template}. Please update this test to add one.`
+    );
+    assertValidates(
+      validator,
+      message,
+      `Message ${message.id} validates as ${message.template} template`
+    );
+    assertValidates(
+      EXPERIMENT_VALIDATOR,
+      message,
+      `Message ${message.id} validates as MessagingExperiment`
+    );
+
+    messageCounts[message.template]++;
+  }
+
+  for (const [template, count] of Object.entries(messageCounts)) {
+    Assert.equal(
+      count,
+      EXPECTED_MESSAGE_COUNTS[template],
+      `Expected ${EXPECTED_MESSAGE_COUNTS[template]} ${template} messages`
+    );
+  }
 });
 
 add_task(async function test_emptyMessage() {
@@ -139,9 +79,5 @@ add_task(async function test_emptyMessage() {
     "Testing blank FxMS messages validate with the Messaging Experiment schema"
   );
 
-  Assert.deepEqual(
-    JsonSchema.validate({}, MESSAGING_EXPERIMENT_SCHEMA),
-    { valid: true, errors: [] },
-    "Empty messages validate"
-  );
+  assertValidates(EXPERIMENT_VALIDATOR, {}, "Empty message should validate");
 });

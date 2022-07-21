@@ -1,0 +1,30 @@
+{
+  "description": "Common elements used across FxMS schemas",
+  "$id": "file:///FxMSCommon.schema.json",
+  "$defs": {
+    "localizedText": {
+      "type": "object",
+      "properties": {
+        "string_id": {
+          "description": "Id of localized string to be rendered.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "string_id"
+      ]
+    },
+    "localizableText": {
+      "description": "Either a raw string or an object containing the string_id of the localized text",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The string to be rendered."
+        },
+        {
+          "$ref": "#/$defs/localizedText"
+        }
+      ]
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "description": "A template with an image, test and buttons.",
   "version": "1.0.0",
   "type": "object",
-  "definitions": {
+  "$defs": {
     "plainText": {
       "description": "Plain text (no HTML allowed)",
       "type": "string"
@@ -38,23 +38,8 @@
           "enum": ["global", "tab"]
         },
         "text": {
-          "description": "The text show in the notification box.",
-          "oneOf": [
-            {
-              "type": "string",
-              "description": "Message shown in the location bar notification."
-            },
-            {
-              "type": "object",
-              "properties": {
-                "string_id": {
-                  "type": "string",
-                  "description": "Id of localized string for the location bar notification."
-                }
-              },
-              "required": ["string_id"]
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "The text show in the notification box."
         },
         "priority": {
           "description": "Infobar priority level https://searchfox.org/mozilla-central/rev/3aef835f6cb12e607154d56d68726767172571e4/toolkit/content/widgets/notificationbox.js#387",
@@ -68,23 +53,8 @@
             "type": "object",
             "properties": {
               "label": {
-                "description": "The text label of the button.",
-                "oneOf": [
-                  {
-                    "type": "string",
-                    "description": "Message content for the button."
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "string_id": {
-                        "type": "string",
-                        "description": "Id of localized string for the button."
-                      }
-                    },
-                    "required": ["string_id"]
-                  }
-                ]
+                "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+                "description": "The text label of the button."
               },
               "primary": {
                 "type": "boolean",

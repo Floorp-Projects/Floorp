@@ -5,17 +5,6 @@
   "description": "A template with a chiclet button with text.",
   "version": "1.0.0",
   "type": "object",
-  "definitions": {
-    "plainText": {
-      "description": "Plain text (no HTML allowed)",
-      "type": "string"
-    },
-    "linkUrl": {
-      "description": "Target for links or buttons",
-      "type": "string",
-      "format": "uri"
-    }
-  },
   "properties": {
     "id": {
       "type": "string",
@@ -46,23 +35,8 @@
           "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
         },
         "notification_text": {
-          "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string.",
-          "oneOf": [
-            {
-              "type": "string",
-              "description": "Message shown in the location bar notification."
-            },
-            {
-              "type": "object",
-              "properties": {
-                "string_id": {
-                  "type": "string",
-                  "description": "Id of localized string for the location bar notification."
-                }
-              },
-              "required": ["string_id"]
-            }
-          ]
+          "$ref": "file:///FxMSCommon.schema.json#/$defs/localizableText",
+          "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string."
         },
         "active_color": {
           "type": "string",
@@ -73,13 +47,12 @@
           "properties": {
             "url": {
               "description": "The page to open when the button is clicked.",
-              "allOf": [
-                { "$ref": "#/definitions/linkUrl" },
-                { "description": "Icon associated with the message" }
-              ]
+              "type": "string",
+              "format": "moz-url-format"
             },
             "where": {
               "description": "Should it open in a new tab or the current tab",
+              "type": "string",
               "enum": ["current", "tabshifted"]
             }
           },

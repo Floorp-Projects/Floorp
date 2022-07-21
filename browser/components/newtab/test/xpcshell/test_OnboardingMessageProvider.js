@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { JsonSchema } = ChromeUtils.import(
-  "resource://gre/modules/JsonSchema.jsm"
-);
 const { OnboardingMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
 );
@@ -75,43 +72,11 @@ add_task(
 );
 
 add_task(async function test_schemaValidation() {
-  function schemaValidator(uri) {
-    return fetch(uri, { credentials: "omit" })
-      .then(rsp => rsp.json())
-      .then(schema => new JsonSchema.Validator(schema));
-  }
-
-  function assertValid(validator, obj, msg) {
-    const result = validator.validate(obj);
-    Assert.deepEqual(
-      result,
-      { valid: true, errors: [] },
-      `${msg} - errors = ${JSON.stringify(result.errors, undefined, 2)}`
-    );
-  }
-
-  const experimentValidator = await schemaValidator(
-    "resource://activity-stream/schemas/MessagingExperiment.schema.json"
-  );
-  const schemas = {
-    toolbar_badge: await schemaValidator(
-      "resource://testing-common/ToolbarBadgeMessage.schema.json"
-    ),
-    cfr_doorhanger: await schemaValidator(
-      "resource://testing-common/ExtensionDoorhanger.schema.json"
-    ),
-    spotlight: await schemaValidator(
-      "resource://testing-common/Spotlight.schema.json"
-    ),
-    pb_newtab: await schemaValidator(
-      "resource://testing-common/NewtabPromoMessage.schema.json"
-    ),
-    protections_panel: null, // TODO: There is no schema for protections_panel.
-  };
+  const { experimentValidator, messageValidators } = await makeValidators();
 
   const messages = await OnboardingMessageProvider.getMessages();
   for (const message of messages) {
-    const validator = schemas[message.template];
+    const validator = messageValidators[message.template];
 
     if (validator === null) {
       continue;
@@ -121,12 +86,12 @@ add_task(async function test_schemaValidation() {
         `No schema validator found for message template ${message.template}. Please update this test to add one.`
       );
     } else {
-      assertValid(
+      assertValidates(
         validator,
         message,
         `Message ${message.id} validates as template ${message.template}`
       );
-      assertValid(
+      assertValidates(
         experimentValidator,
         message,
         `Message ${message.id} validates as MessagingExperiment`
