@@ -20,7 +20,7 @@ const TEST_COLORWAY_COLLECTION = {
   },
 };
 
-const EXPIRY_DATE_L10N_ID = "colorway-collection-expiry-date-span";
+const EXPIRY_DATE_L10N_ID = "colorway-collection-expiry-label";
 const TEST_FIGURE_URL = "https://www.example.com/figure.avif";
 
 function getTestElements(document) {

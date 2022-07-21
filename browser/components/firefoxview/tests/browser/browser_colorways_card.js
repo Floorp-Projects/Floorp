@@ -31,7 +31,7 @@ const SOFT_COLORWAY_THEME_ID = "mocktheme-soft-colorway@mozilla.org";
 const NO_INTENSITY_COLORWAY_THEME_ID = "mocktheme-colorway@mozilla.org";
 const OUTDATED_COLORWAY_THEME_ID = "outdatedtheme-colorway@mozilla.org";
 
-const EXPIRY_DATE_L10N_ID = "colorway-collection-expiry-date-span";
+const EXPIRY_DATE_L10N_ID = "colorway-collection-expiry-label";
 const COLORWAY_DESCRIPTION_L10N_ID = "firefoxview-colorway-description";
 const MOCK_THEME_L10N_VALUE = "Mock Theme";
 const SOFT_L10N_VALUE = "Soft";
