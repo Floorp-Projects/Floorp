@@ -553,7 +553,7 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
-        t-linux(-large|-xlarge)-gcp:
+        t-linux(-large|-xlarge|-xlarge-source)-gcp:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux

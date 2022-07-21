@@ -18,7 +18,7 @@ job-defaults:
     treeherder:
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: ubuntu1804-test}
         max-run-time: 3600
