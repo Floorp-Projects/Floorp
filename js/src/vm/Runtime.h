@@ -216,6 +216,25 @@ struct SelfHostedLazyScript {
   }
 };
 
+// An interface for reporting telemetry from within SpiderMonkey. Reporting data
+// to this interface will forward it to the embedding if a telemetry callback
+// was registered. It is the embedding's responsibility to store and/or combine
+// repeated samples for each metric.
+class Metrics {
+ private:
+  JSRuntime* rt_;
+
+ public:
+  explicit Metrics(JSRuntime* rt) : rt_(rt) {}
+
+  inline void addTelemetry(JSMetric id, uint32_t sample);
+
+#define DECLARE_METRIC_HELPER(NAME) \
+  void NAME(uint32_t sample) { addTelemetry(JSMetric::NAME, sample); }
+  FOR_EACH_JS_METRIC(DECLARE_METRIC_HELPER)
+#undef DECLARE_METRIC_HELPER
+};
+
 }  // namespace js
 
 struct JSRuntime {
@@ -278,6 +297,8 @@ struct JSRuntime {
   js::Fprinter parserWatcherFile;
 
   inline JSContext* mainContextFromOwnThread();
+
+  js::Metrics metrics() { return js::Metrics(this); }
 
   /*
    * The start of the range stored in the profiler sample buffer, as measured
@@ -1049,6 +1070,10 @@ struct JSRuntime {
 };
 
 namespace js {
+
+void Metrics::addTelemetry(JSMetric id, uint32_t sample) {
+  rt_->addTelemetry(id, sample);
+}
 
 static MOZ_ALWAYS_INLINE void MakeRangeGCSafe(Value* vec, size_t len) {
   // Don't PodZero here because JS::Value is non-trivial.
