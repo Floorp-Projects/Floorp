@@ -76,6 +76,9 @@ export default class LoginItem extends HTMLElement {
       ".save-changes-button"
     );
     this._favicon = this.shadowRoot.querySelector(".login-item-favicon");
+    this._faviconWrapper = this.shadowRoot.querySelector(
+      ".login-item-favicon-wrapper"
+    );
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
@@ -112,6 +115,7 @@ export default class LoginItem extends HTMLElement {
     this._revealCheckbox.addEventListener("click", this);
     this._vulnerableAlertLearnMoreLink.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
+    window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsShowBlankLogin", this);
     window.addEventListener("AboutLoginsRemaskPassword", this);
@@ -205,7 +209,17 @@ export default class LoginItem extends HTMLElement {
       timeUsed: this._login.timeLastUsed || "",
     });
 
-    this._favicon.src = `page-icon:${this._login.origin}`;
+    if (this._login.faviconDataURI) {
+      this._faviconWrapper.classList.add("hide-default-favicon");
+      this._favicon.src = this._login.faviconDataURI;
+      this._favicon.hidden = false;
+    } else {
+      // reset the src and alt attributes if the currently selected favicon doesn't have a favicon
+      this._favicon.src = "";
+      this._favicon.hidden = true;
+      this._faviconWrapper.classList.remove("hide-default-favicon");
+    }
+
     this._title.textContent = this._login.title;
     this._title.title = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
@@ -303,6 +317,10 @@ export default class LoginItem extends HTMLElement {
     switch (event.type) {
       case "AboutLoginsInitialLoginSelected": {
         this.setLogin(event.detail, { skipFocusChange: true });
+        break;
+      }
+      case "AboutLoginsLoadInitialFavicon": {
+        this.render();
         break;
       }
       case "AboutLoginsLoginSelected": {
@@ -716,6 +734,11 @@ export default class LoginItem extends HTMLElement {
   loginModified(login) {
     if (this._login.guid != login.guid) {
       return;
+    }
+
+    // Restore faviconDataURI on modified login
+    if (this._login.faviconDataURI && this._login.origin == login.origin) {
+      login.faviconDataURI = this._login.faviconDataURI;
     }
 
     let valuesChanged =
