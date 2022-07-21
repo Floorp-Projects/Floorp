@@ -1204,7 +1204,7 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
   }
   rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
+  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES_2, committed());
 
   if (!wasEmpty) {
     rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, sitesPretenured);

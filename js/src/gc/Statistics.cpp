@@ -1008,7 +1008,10 @@ void Statistics::endGC() {
 
 void Statistics::sendGCTelemetry() {
   JSRuntime* runtime = gc->rt;
-  runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC,
+  // NOTE: "Compartmental" is term that was deprecated with the
+  // introduction of zone-based GC, but the old telemetry probe
+  // continues to be used.
+  runtime->addTelemetry(JS_TELEMETRY_GC_IS_COMPARTMENTAL,
                         !runtime->gc.fullGCRequested);
   TimeDuration prepareTotal = SumPhase(PhaseKind::PREPARE, phaseTimes);
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
@@ -1159,7 +1162,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
     return;
   }
 
-  runtime->addTelemetry(JS_TELEMETRY_GC_REASON, uint32_t(reason));
+  runtime->addTelemetry(JS_TELEMETRY_GC_REASON_2, uint32_t(reason));
   runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_WAS_INCREASED,
                         budgetWasIncreased);
 
