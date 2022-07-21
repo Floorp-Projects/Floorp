@@ -7,6 +7,7 @@
 #include "OriginPrivateFileSystemParent.h"
 #include "BackgroundFileSystemParent.h"
 #include "datamodel/FileSystemDataManager.h"
+#include "datamodel/FileSystemFileManager.h"
 #include "fs/FileSystemConstants.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"

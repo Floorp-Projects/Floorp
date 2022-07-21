@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_FILESYSTEMFILEMANAGER_H_
 
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/QMResult.h"
 
 #include "ErrorList.h"
 #include "nsIFile.h"
@@ -32,7 +33,7 @@ class FileSystemFileManager {
 
   Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(const EntryId& aEntryId);
 
-  Result<bool, QMResult> RemoveFile(const EntryId& aEntryId);
+  nsresult RemoveFile(const EntryId& aEntryId);
 
  private:
   explicit FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory);

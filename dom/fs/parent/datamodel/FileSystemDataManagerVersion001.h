@@ -32,9 +32,10 @@ namespace mozilla::dom::fs::data {
  */
 class FileSystemDataManagerVersion001 : public FileSystemDataManager {
  public:
-  explicit FileSystemDataManagerVersion001(
-      fs::data::FileSystemConnection&& aConnection)
-      : mConnection(aConnection) {}
+  FileSystemDataManagerVersion001(
+      FileSystemConnection&& aConnection,
+      UniquePtr<FileSystemFileManager>&& aFileManager)
+      : mConnection(aConnection), mFileManager(std::move(aFileManager)) {}
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
 
@@ -67,6 +68,8 @@ class FileSystemDataManagerVersion001 : public FileSystemDataManager {
   nsresult UpdateUsage(int64_t aDelta);
 
   FileSystemConnection mConnection;
+
+  UniquePtr<FileSystemFileManager> mFileManager;
 };
 
 }  // namespace mozilla::dom::fs::data

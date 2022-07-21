@@ -95,7 +95,12 @@ void MakeDataManagerVersion001(FileSystemDataManagerVersion001*& aResult) {
       SchemaVersion001::InitializeConnection(connection, testOrigin));
   ASSERT_EQ(1, version);
 
-  aResult = new FileSystemDataManagerVersion001(std::move(connection));
+  auto fmRes =
+      FileSystemFileManager::CreateFileSystemFileManager(std::move(testPath));
+  ASSERT_FALSE(fmRes.isErr());
+
+  aResult = new FileSystemDataManagerVersion001(
+      std::move(connection), MakeUnique<FileSystemFileManager>(fmRes.unwrap()));
 }
 
 TEST(TestDataManagerVersion001, smokeTestCreateRemoveDirectories)
