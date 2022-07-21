@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
+const { TabsSetupFlowManager } = ChromeUtils.importESModule(
+  "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
+);
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(globalThis, {
@@ -101,7 +104,7 @@ const syncedTabsData4 = structuredClone(syncedTabsData3);
 syncedTabsData4[0].tabs = [...syncedTabsData4[0].tabs, ...twoTabs];
 
 function setupMocks(mockData1, mockData2) {
-  sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => [
+  const mockDeviceData = [
     {
       id: 1,
       name: "My desktop",
@@ -113,7 +116,8 @@ function setupMocks(mockData1, mockData2) {
       name: "My iphone",
       type: "mobile",
     },
-  ]);
+  ];
+  sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => mockDeviceData);
 
   sandbox.stub(UIState, "get").returns({
     status: UIState.STATUS_SIGNED_IN,
