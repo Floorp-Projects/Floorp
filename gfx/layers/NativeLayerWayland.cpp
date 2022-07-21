@@ -17,6 +17,7 @@
 #include "mozilla/layers/SurfacePoolWayland.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/ScopeExit.h"
 
 namespace mozilla::layers {
 
@@ -149,10 +150,13 @@ bool NativeLayerRootWayland::CommitToScreen(const MutexAutoLock& aProofOfLock) {
   mFrameInProcess = false;
 
   wl_surface* containerSurface = moz_container_wayland_surface_lock(mContainer);
+  auto mozContainerUnlock = MakeScopeExit([&] {
+    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
+  });
   if (!containerSurface) {
     if (!mCallbackRequested) {
       RefPtr<NativeLayerRootWayland> self(this);
-      moz_container_wayland_add_initial_draw_callback(
+      moz_container_wayland_add_initial_draw_callback_locked(
           mContainer, [self]() -> void {
             MutexAutoLock lock(self->mMutex);
             if (!self->mFrameInProcess) {
@@ -240,7 +244,6 @@ bool NativeLayerRootWayland::CommitToScreen(const MutexAutoLock& aProofOfLock) {
     wl_surface_commit(containerSurface);
   }
 
-  moz_container_wayland_surface_unlock(mContainer, &containerSurface);
   wl_display_flush(widget::WaylandDisplayGet()->GetDisplay());
   return true;
 }
@@ -257,10 +260,11 @@ void NativeLayerRootWayland::RequestFrameCallback(CallbackFunc aCallbackFunc,
   }
 
   wl_surface* wlSurface = moz_container_wayland_surface_lock(mContainer);
+  auto mozContainerUnlock = MakeScopeExit(
+      [&] { moz_container_wayland_surface_unlock(mContainer, &wlSurface); });
   if (wlSurface) {
     wl_surface_commit(wlSurface);
     wl_display_flush(widget::WaylandDisplayGet()->GetDisplay());
-    moz_container_wayland_surface_unlock(mContainer, &wlSurface);
   }
 }
 
@@ -272,13 +276,15 @@ static void sAfterFrameClockAfterPaint(
 void NativeLayerRootWayland::AfterFrameClockAfterPaint() {
   MutexAutoLock lock(mMutex);
   wl_surface* containerSurface = moz_container_wayland_surface_lock(mContainer);
+  auto mozContainerUnlock = MakeScopeExit([&] {
+    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
+  });
 
   for (const RefPtr<NativeLayerWayland>& layer : mSublayersOnMainThread) {
     wl_surface_commit(layer->mWlSurface);
   }
   if (containerSurface) {
     wl_surface_commit(containerSurface);
-    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
   }
 }
 
@@ -294,6 +300,9 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
           RTLD_DEFAULT, "gdk_wayland_window_remove_frame_callback_surface");
 
   wl_surface* containerSurface = moz_container_wayland_surface_lock(mContainer);
+  auto mozContainerUnlock = MakeScopeExit([&] {
+    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
+  });
   GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
 
   mSublayersOnMainThread.RemoveElementsBy([&](const auto& layer) {
@@ -339,7 +348,6 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
 
   if (containerSurface) {
     wl_surface_commit(containerSurface);
-    moz_container_wayland_surface_unlock(mContainer, &containerSurface);
   }
 
   if (!mGdkAfterPaintId && gdkWindow) {
