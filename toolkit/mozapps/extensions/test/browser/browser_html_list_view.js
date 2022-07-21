@@ -1075,6 +1075,13 @@ add_task(async function testEmptyMessage() {
       disabledSection.firstChild.remove();
     }
 
+    if (test.type == "theme") {
+      // The colorways section won't exist if there's no active collection.
+      // Bug 1774432 is going to make it easier to use a mock collection
+      // which would allow for a more predictable setup here.
+      getSection(doc, "colorways-section")?.remove();
+    }
+
     // Message should now be displayed
     is_element_visible(message, "Empty addons message visible");
 
