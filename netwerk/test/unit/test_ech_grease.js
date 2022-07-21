@@ -4,6 +4,13 @@
 
 "use strict";
 
+// Allow telemetry probes which may otherwise be disabled for some
+// applications (e.g. Thunderbird).
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 // Get a profile directory and ensure PSM initializes NSS.
 do_get_profile();
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);

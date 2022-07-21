@@ -19,6 +19,13 @@ const certOverrideService = Cc[
 ].getService(Ci.nsICertOverrideService);
 
 function setup() {
+  // Allow telemetry probes which may otherwise be disabled for some
+  // applications (e.g. Thunderbird).
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   trr_test_setup();
 
   Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
