@@ -14,10 +14,9 @@ webidl Element;
  * Don't use this from within Gecko--use nsContentUtils, nsTreeSanitizer, etc.
  * directly instead.
  */
-[scriptable, uuid(a1101145-0025-411e-8873-fdf57bf28128)]
+[builtinclass, scriptable, uuid(a1101145-0025-411e-8873-fdf57bf28128)]
 interface nsIParserUtils : nsISupports
 {
-
   /**
    * Flag for sanitizer: Allow comment nodes.
    */
@@ -66,13 +65,6 @@ interface nsIParserUtils : nsISupports
   const unsigned long SanitizerLogRemovals = (1 << 6);
 
   /**
-   * Flag for sanitizer: Only CSS conditional rules will be moved,
-   * nothing else will be changed.
-   * Can be combined with flag SanitizerLogRemovals, only.
-   */
-  const unsigned long SanitizerRemoveOnlyConditionalCSS = (1 << 7);
-
-  /**
    * Parses a string into an HTML document, sanitizes the document and
    * returns the result serialized to a string.
    *
@@ -106,6 +98,11 @@ interface nsIParserUtils : nsISupports
    * @param flags sanitization option flags defined above
    */
   AString sanitize(in AString src, in unsigned long flags);
+
+  /**
+   * Removes conditional CSS (@media / etc) from the input string.
+   */
+  AString removeConditionalCSS(in AString src);
 
   /**
    * Convert HTML to plain text.
