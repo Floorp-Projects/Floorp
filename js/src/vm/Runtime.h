@@ -218,8 +218,6 @@ struct SelfHostedLazyScript {
 
 }  // namespace js
 
-struct JSTelemetrySender;
-
 struct JSRuntime {
  private:
   friend class js::Activation;
@@ -322,8 +320,6 @@ struct JSRuntime {
   // histogram. |key| provides an additional key to identify the histogram.
   // |sample| is the data to add to the histogram.
   void addTelemetry(int id, uint32_t sample, const char* key = nullptr);
-
-  JSTelemetrySender getTelemetrySender() const;
 
   void setTelemetryCallback(JSRuntime* rt,
                             JSAccumulateTelemetryDataCallback callback);
@@ -1052,34 +1048,6 @@ struct JSRuntime {
 
   js::MainThreadData<JS::GlobalCreationCallback>
       shadowRealmGlobalCreationCallback;
-};
-
-// Context for sending telemetry to the embedder from any thread, main or
-// helper.  Obtain a |JSTelemetrySender| by calling |getTelemetrySender()| on
-// the |JSRuntime|.
-struct JSTelemetrySender {
- private:
-  friend struct JSRuntime;
-
-  JSAccumulateTelemetryDataCallback callback_;
-
-  explicit JSTelemetrySender(JSAccumulateTelemetryDataCallback callback)
-      : callback_(callback) {}
-
- public:
-  JSTelemetrySender() : callback_(nullptr) {}
-  JSTelemetrySender(const JSTelemetrySender& other) = default;
-  explicit JSTelemetrySender(JSRuntime* runtime)
-      : JSTelemetrySender(runtime->getTelemetrySender()) {}
-
-  // Accumulates data for Firefox telemetry. |id| is the ID of a JS_TELEMETRY_*
-  // histogram. |key| provides an additional key to identify the histogram.
-  // |sample| is the data to add to the histogram.
-  void addTelemetry(int id, uint32_t sample, const char* key = nullptr) {
-    if (callback_) {
-      callback_(id, sample, key);
-    }
-  }
 };
 
 namespace js {
