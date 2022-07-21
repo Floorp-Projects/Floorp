@@ -12,8 +12,8 @@ add_task(async function about_firefoxview_smoke_test() {
 
       // sanity check the important regions exist on this page
       ok(
-        document.getElementById("tabs-pickup-container"),
-        "tabs-pickup-container element exists"
+        document.getElementById("tab-pickup-container"),
+        "tab-pickup-container element exists"
       );
       ok(
         document.getElementById("colorways-active-collection-template"),

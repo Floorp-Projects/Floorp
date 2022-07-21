@@ -7,7 +7,7 @@ browser.jar:
     content/browser/firefoxview.mjs
     content/browser/firefoxview.css
     content/browser/helpers.mjs
-    content/browser/tabs-pickup-container.mjs
+    content/browser/tab-pickup-container.mjs
     content/browser/tab-pickup-list.mjs
     content/browser/recently-closed-tabs.mjs
     content/browser/colorways-card.mjs

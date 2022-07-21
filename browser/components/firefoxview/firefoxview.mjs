@@ -13,6 +13,6 @@ window.addEventListener("unload", () => {
   if (tabPickupList) {
     tabPickupList.cleanup();
   }
-  document.getElementById("tabs-pickup-container").cleanup();
+  document.getElementById("tab-pickup-container").cleanup();
   document.getElementById("recently-closed-tabs-container").cleanup();
 });
