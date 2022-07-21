@@ -242,11 +242,13 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             document.querySelector('${id}').style.display = "block";
             document.querySelector('${id}').style.border = "0";
             document.querySelector('${id}').style.padding = "0";
+            document.querySelector('${id}').offsetHeight; // flush layout
         })()"""
         val jsBorder10pxPadding10px = """(function() {
             document.querySelector('${id}').style.display = "block";
             document.querySelector('${id}').style.border = "10px solid";
             document.querySelector('${id}').style.padding = "10px";
+            document.querySelector('${id}').offsetHeight; // flush layout
         })()"""
         val expectedDiff = RectF(20f, 20f, 20f, 20f) // left, top, right, bottom
         testClientRect(selectedContent, jsCssReset, jsBorder10pxPadding10px, expectedDiff)
