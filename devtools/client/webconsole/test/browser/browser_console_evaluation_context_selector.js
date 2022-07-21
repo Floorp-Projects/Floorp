@@ -26,11 +26,9 @@ add_task(async function() {
     "The button has the expected 'Top' text"
   );
   is(
-    evaluationContextSelectorButton.classList.contains(
-      "webconsole-evaluation-selector-button-non-top"
-    ),
+    evaluationContextSelectorButton.classList.contains("checked"),
     false,
-    "The non-top class isn't applied"
+    "The checked class isn't applied"
   );
 
   await executeAndWaitForResultMessage(
@@ -77,11 +75,9 @@ add_task(async function() {
   );
   ok(true, "The context was set to the selected document");
   is(
-    evaluationContextSelectorButton.classList.contains(
-      "webconsole-evaluation-selector-button-non-top"
-    ),
+    evaluationContextSelectorButton.classList.contains("checked"),
     true,
-    "The non-top class is applied"
+    "The checked class is applied"
   );
 
   checkContextSelectorMenuItemAt(hud, documentIndex, {
