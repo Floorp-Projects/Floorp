@@ -181,7 +181,7 @@ nsresult GDIFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     charmap->mBuildOnTheFly = true;
   }
   if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
-    Unused << charmap.forget();
+    charmap.get()->AddRef();
   }
 
   LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %zd hash: %8.8x%s\n",
