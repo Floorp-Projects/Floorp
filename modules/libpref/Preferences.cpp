@@ -5855,7 +5855,7 @@ static const PrefListEntry sParentOnlyPrefBranchList[] = {
 };
 
 static const PrefListEntry sDynamicPrefOverrideList[]{
-    PREF_LIST_ENTRY("autoadmin.global_config_url"), // Bug 1780575
+    PREF_LIST_ENTRY("autoadmin.global_config_url"),  // Bug 1780575
     PREF_LIST_ENTRY("browser.contentblocking.category"),
     PREF_LIST_ENTRY("browser.search.region"),
     PREF_LIST_ENTRY(
@@ -5893,7 +5893,10 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("print.printer_"),
     PREF_LIST_ENTRY("print_printer"),
     PREF_LIST_ENTRY("places.interactions.customBlocklist"),
-    PREF_LIST_ENTRY("services.settings.preview_enabled"), // This is really a boolean dynamic pref, but one Nightly user has it set as a string...
+    PREF_LIST_ENTRY(
+        "services.settings.preview_enabled"),  // This is really a boolean
+                                               // dynamic pref, but one Nightly
+                                               // user has it set as a string...
     PREF_LIST_ENTRY("spellchecker.dictionary"),
     PREF_LIST_ENTRY("test.char"),
     PREF_LIST_ENTRY("Test.IPC."),
