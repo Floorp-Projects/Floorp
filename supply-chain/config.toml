@@ -1645,10 +1645,6 @@ criteria = "safe-to-run"
 version = "0.1.27"
 criteria = "safe-to-run"
 
-[[exemptions.tracy-rs]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.triple_buffer]]
 version = "5.0.6"
 criteria = "safe-to-deploy"
