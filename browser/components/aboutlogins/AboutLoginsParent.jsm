@@ -22,10 +22,6 @@ const { E10SUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
@@ -668,40 +664,6 @@ class AboutLoginsInternal {
     this.#messageSubscribers("AboutLogins:RemoveAllLogins", []);
   }
 
-  async #getFavicon(login) {
-    try {
-      const faviconData = await lazy.PlacesUtils.promiseFaviconData(
-        login.origin
-      );
-      return {
-        faviconData,
-        guid: login.guid,
-      };
-    } catch (ex) {
-      return null;
-    }
-  }
-
-  async getAllFavicons(logins) {
-    let favicons = await Promise.all(
-      logins.map(login => this.#getFavicon(login))
-    );
-    let vanillaFavicons = {};
-    for (let favicon of favicons) {
-      if (!favicon) {
-        continue;
-      }
-      try {
-        vanillaFavicons[favicon.guid] = {
-          data: favicon.faviconData.data,
-          dataLen: favicon.faviconData.dataLen,
-          mimeType: favicon.faviconData.mimeType,
-        };
-      } catch (ex) {}
-    }
-    return vanillaFavicons;
-  }
-
   async #reloadAllLogins() {
     let logins = await this.getAllLogins();
     this.#messageSubscribers("AboutLogins:AllLogins", logins);
@@ -864,11 +826,6 @@ class AboutLoginsInternal {
         );
       }
     }
-
-    sendMessageFn(
-      "AboutLogins:SendFavicons",
-      await AboutLogins.getAllFavicons(logins)
-    );
   }
 
   getSyncState() {
