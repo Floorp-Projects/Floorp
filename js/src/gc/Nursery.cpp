@@ -1196,20 +1196,19 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
                                 bool wasEmpty, double promotionRate,
                                 size_t sitesPretenured) {
   JSRuntime* rt = runtime();
-  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
+  rt->addTelemetry(JSMetric::GC_MINOR_REASON, uint32_t(reason));
 
   // Long minor GCs are those that take more than 1ms.
   bool wasLongMinorGC = totalTime.ToMilliseconds() > 1.0;
   if (wasLongMinorGC) {
-    rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
+    rt->addTelemetry(JSMetric::GC_MINOR_REASON_LONG, uint32_t(reason));
   }
-  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES_2, committed());
+  rt->addTelemetry(JSMetric::GC_MINOR_US, totalTime.ToMicroseconds());
+  rt->addTelemetry(JSMetric::GC_NURSERY_BYTES_2, committed());
 
   if (!wasEmpty) {
-    rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, sitesPretenured);
-    rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE,
-                     promotionRate * 100);
+    rt->addTelemetry(JSMetric::GC_PRETENURE_COUNT_2, sitesPretenured);
+    rt->addTelemetry(JSMetric::GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
   }
 }
 

@@ -316,10 +316,8 @@ struct JSRuntime {
   js::MainThreadData<JSSetUseCounterCallback> useCounterCallback;
 
  public:
-  // Accumulates data for Firefox telemetry. |id| is the ID of a JS_TELEMETRY_*
-  // histogram. |key| provides an additional key to identify the histogram.
-  // |sample| is the data to add to the histogram.
-  void addTelemetry(int id, uint32_t sample, const char* key = nullptr);
+  // Accumulates data for Firefox telemetry.
+  void addTelemetry(JSMetric id, uint32_t sample);
 
   void setTelemetryCallback(JSRuntime* rt,
                             JSAccumulateTelemetryDataCallback callback);
