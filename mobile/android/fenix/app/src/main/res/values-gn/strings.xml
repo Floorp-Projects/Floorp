@@ -762,7 +762,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Ayvu Ñemigua)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Ambue tendayke</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Ambue tendayke</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -798,6 +798,9 @@
 
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Ambue mba’e’oka guive</string>
+
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Eñemboheraguapy</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1887,4 +1890,5 @@
     <string name="experiments_snackbar">Embojuruja telemetry emondo hag̃ua mba’ekuaarã.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Eho ñembohekópe</string>
+    <string name="firefox_suggest_header">Firefox Kuave’ẽmby</string>
 </resources>

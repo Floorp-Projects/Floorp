@@ -753,7 +753,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Gizli Mod)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Diğer sekmeler</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Diğer sekmeler</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -786,6 +786,9 @@
     <string name="history_synced_from_other_devices">Diğer cihazlarla eşitlendi</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Diğer cihazlardan</string>
+
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Giriş yap</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1849,4 +1852,5 @@
     <string name="experiments_snackbar">Veri göndermek için telemetriyi etkinleştirin.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Ayarlara git</string>
+    <string name="firefox_suggest_header">Firefox Önerileri</string>
 </resources>

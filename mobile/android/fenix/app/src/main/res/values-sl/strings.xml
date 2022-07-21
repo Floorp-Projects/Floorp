@@ -760,7 +760,7 @@
     <string name="pwa_site_controls_title_private">%1$s (zasebni način)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Ostali zavihki</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Ostali zavihki</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -794,6 +794,14 @@
     <string name="history_synced_from_other_devices">Sinhronizirano z drugih naprav</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Z drugih naprav</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Prijavite se za ogled sinhronizirane zgodovine z drugih naprav.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Prijava</string>
+
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Ali ustvarite Firefox Račun za začetek sinhronizacije</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1872,4 +1880,5 @@
     <string name="experiments_snackbar">Za pošiljanje podatkov omogočite telemetrijo.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Pojdi v nastavitve</string>
+    <string name="firefox_suggest_header">Firefoxovi predlogi</string>
 </resources>

@@ -748,7 +748,7 @@
     <string name="pwa_site_controls_title_private">%1$s (priveemodus)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Oare ljeplêden</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Oare ljeplêden</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -781,6 +781,13 @@
     <string name="history_synced_from_other_devices">Syngronisearre fan oare apparaten ôf</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Fan oare apparaten ôf</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Meld jo oan om fan jo oare apparaten syngronisearre skiednis te besjen.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Oanmelde</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Of meitsje in Firefox-account om te begjinnen mei syngronisaasje</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1848,4 +1855,5 @@
     <string name="experiments_snackbar">Skeakelje telemetry yn om gegevens te ferstjoeren.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Nei Ynstellingen</string>
+    <string name="firefox_suggest_header">Firefox Suggestjes</string>
 </resources>
