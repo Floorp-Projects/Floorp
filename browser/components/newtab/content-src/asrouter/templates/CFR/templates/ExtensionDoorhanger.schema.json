@@ -3,32 +3,11 @@
   "$id": "file:///ExtensionDoorhanger.schema.json",
   "title": "ExtensionDoorhanger",
   "description": "A template with a heading, addon icon, title and description. No markup allowed.",
-  "version": "1.0.0",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
-  "$defs": {
-    "plainText": {
-      "description": "Plain text (no HTML allowed)",
-      "type": "string"
-    },
-    "linkUrl": {
-      "description": "Target for links or buttons",
-      "type": "string",
-      "format": "uri"
-    }
-  },
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Message identifier"
-    },
-    "groups": {
-      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-      "type": "array",
-      "items": {
-        "type": "string",
-        "description": "Preference name"
-      }
-    },
     "content": {
       "type": "object",
       "properties": {
@@ -326,36 +305,22 @@
         "required": ["category", "notification_text"]
       }
     },
-    "priority": {
-      "type": "integer"
-    },
-    "targeting": {
-      "type": "string",
-      "description": "A JEXL expression representing targeting information"
-    },
     "template": {
       "type": "string",
       "enum": ["cfr_doorhanger", "milestone_message"]
-    },
-    "trigger": {
-      "type": "object",
-      "description": "An action to trigger potentially showing the message",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "A string identifying the trigger action"
-        },
-        "params": {
-          "type": "array",
-          "description": "An optional array of string parameters for the trigger action",
-          "items": {
-            "anyOf": [{ "type": "integer" }, { "type": "string" }]
-          }
-        }
-      },
-      "required": ["id"]
     }
   },
   "additionalProperties": true,
-  "required": ["id", "content", "targeting", "template", "trigger"]
+  "required": ["targeting", "trigger"],
+  "$defs": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "linkUrl": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  }
 }

@@ -226,6 +226,10 @@ def main(check=False):
 
     all_templates = list(chain.from_iterable(templates.values()))
 
+    # Enforce that one of the templates must match (so that one of the if
+    # branches will match).
+    defs["Message"]["properties"]["template"]["enum"] = all_templates
+
     # Generate the combined schema.
     feature_schema = {
         "$schema": "https://json-schema.org/draft/2019-09/schema",
@@ -244,18 +248,14 @@ def main(check=False):
             },
             {
                 "allOf": [
-                    # Enforce that one of the templates must match (so that one of the
-                    # if branches will match).
-                    {
-                        "type": "object",
-                        "properties": {
-                            "template": {
-                                "type": "string",
-                                "enum": all_templates,
-                            },
-                        },
-                        "required": ["template"],
-                    },
+                    # Ensure each message has all the fields defined in the base
+                    # Message type.
+                    #
+                    # This is slightly redundant because each message should
+                    # already inherit from this message type, but it is easier
+                    # to add this requirement here than to verify that each
+                    # message's schema is properly inheriting.
+                    {"$ref": f"{SCHEMA_ID}#/$defs/Message"},
                     # For each message type, create a subschema that says if the
                     # template field matches a value for a message type defined
                     # in MESSAGE_TYPES, then the message must also match the

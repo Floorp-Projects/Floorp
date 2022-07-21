@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2019-09/schema",
   "$id": "file:///ProtectionsPanelMessage.schema.json",
   "title": "ProtectionsPanelMessage",
+  "description": "A message shown in the protections panel.",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Message identifier"
-    },
     "content": {
       "type": "object",
       "properties": {
@@ -62,20 +62,12 @@
       "const": "protections_panel"
     },
     "trigger": {
-      "type": "object",
-      "description": "An action to trigger potentially showing the message",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "A string identifying the trigger action",
-          "const": "protectionsPanelOpen"
-        }
-      },
-      "required": [
-        "id"
-      ]
+      "description": "An action to trigger potentially showing the message. The action ID `protectionsPanelOpen` is required.",
+      "const": {
+        "id": "protectionsPanelOpen"
+      }
     }
   },
-  "required": ["id", "content", "template", "trigger"],
+  "required": ["content", "template", "trigger"],
   "additionalProperties": true
 }

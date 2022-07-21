@@ -3,21 +3,11 @@
   "$id": "file:///UpdateAction.schema.json",
   "title": "UpdateActionMessage",
   "description": "A template for messages that execute predetermined actions.",
-  "version": "1.0.0",
+  "allOf": [
+    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
+  ],
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Message identifier"
-    },
-    "groups": {
-      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
-      "type": "array",
-      "items": {
-        "type": "string",
-        "description": "Preference name"
-      }
-    },
     "content": {
       "type": "object",
       "properties": {
@@ -50,32 +40,10 @@
       "additionalProperties": true,
       "required": ["action"]
     },
-    "targeting": {
-      "type": "string",
-      "description": "A JEXL expression representing targeting information"
-    },
     "template": {
       "type": "string",
       "const": "update_action"
-    },
-    "trigger": {
-      "type": "object",
-      "description": "An action to trigger potentially showing the message",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "A string identifying the trigger action"
-        },
-        "params": {
-          "type": "array",
-          "description": "An optional array of string parameters for the trigger action",
-          "items": {
-            "anyOf": [{ "type": "integer" }, { "type": "string" }]
-          }
-        }
-      },
-      "required": ["id"]
     }
   },
-  "required": ["id", "content", "targeting", "template"]
+  "required": ["targeting"]
 }
