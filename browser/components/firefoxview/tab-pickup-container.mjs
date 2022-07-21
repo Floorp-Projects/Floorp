@@ -11,7 +11,7 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
 );
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
 
-class TabsPickupContainer extends HTMLElement {
+class TabPickupContainer extends HTMLElement {
   constructor() {
     super();
     this.boundObserve = (...args) => this.observe(...args);
@@ -145,6 +145,6 @@ class TabsPickupContainer extends HTMLElement {
     }
   }
 }
-customElements.define("tabs-pickup-container", TabsPickupContainer);
+customElements.define("tab-pickup-container", TabPickupContainer);
 
-export { TabsPickupContainer };
+export { TabPickupContainer };
