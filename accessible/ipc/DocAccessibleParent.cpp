@@ -549,7 +549,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvVirtualCursorChangeEvent(
           GetXPCAccessible(target), doc, nullptr, aFromUser,
           GetXPCAccessible(oldPosition), aOldStartOffset, aOldEndOffset,
           GetXPCAccessible(newPosition), aNewStartOffset, aNewEndOffset,
-          aBoundaryType, aReason);
+          aReason, aBoundaryType);
   nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
