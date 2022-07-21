@@ -6665,13 +6665,30 @@ bool PresShell::MouseLocationWasSetBySynthesizedMouseEventForTests() const {
          rootPresShell->mMouseLocationWasSetBySynthesizedMouseEventForTests;
 }
 
-void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
-  if (!mPresContext) return;
+nsPoint PresShell::GetEventLocation(const WidgetMouseEvent& aEvent) const {
+  nsIFrame* rootFrame = GetRootFrame();
+  if (rootFrame) {
+    RelativeTo relativeTo{rootFrame};
+    if (rootFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
+      relativeTo.mViewportType = ViewportType::Visual;
+    }
+    return nsLayoutUtils::GetEventCoordinatesRelativeTo(&aEvent, relativeTo);
+  }
+
+  nsView* rootView = mViewManager->GetRootView();
+  return nsLayoutUtils::TranslateWidgetToView(mPresContext, aEvent.mWidget,
+                                              aEvent.mRefPoint, rootView);
+}
+
+void PresShell::RecordPointerLocation(WidgetGUIEvent* aEvent) {
+  if (!mPresContext) {
+    return;
+  }
 
   if (!mPresContext->IsRoot()) {
     PresShell* rootPresShell = GetRootPresShell();
     if (rootPresShell) {
-      rootPresShell->RecordMouseLocation(aEvent);
+      rootPresShell->RecordPointerLocation(aEvent);
     }
     return;
   }
@@ -6680,25 +6697,8 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
        aEvent->AsMouseEvent()->mReason == WidgetMouseEvent::eReal) ||
       aEvent->mMessage == eMouseEnterIntoWidget ||
       aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp) {
-    nsIFrame* rootFrame = GetRootFrame();
-    if (!rootFrame) {
-      nsView* rootView = mViewManager->GetRootView();
-      mMouseLocation = nsLayoutUtils::TranslateWidgetToView(
-          mPresContext, aEvent->mWidget, aEvent->mRefPoint, rootView);
-      // TODO: instead, encapsulate `mMouseLocation` and
-      // `mLastOverWindowMouseLocation` in a struct.
-      mLastOverWindowMouseLocation = mMouseLocation;
-      mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
-    } else {
-      RelativeTo relativeTo{rootFrame};
-      if (rootFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
-        relativeTo.mViewportType = ViewportType::Visual;
-      }
-      mMouseLocation =
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, relativeTo);
-      mLastOverWindowMouseLocation = mMouseLocation;
-      mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
-    }
+    mMouseLocation = GetEventLocation(*aEvent->AsMouseEvent());
+    mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     mMouseLocationWasSetBySynthesizedMouseEventForTests =
         aEvent->mFlags.mIsSynthesizedForTests;
 #ifdef DEBUG_MOUSE_LOCATION
@@ -6725,6 +6725,13 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
     printf("[ps=%p]got mouse exit for %p\n", this, aEvent->mWidget);
     printf("[ps=%p]clearing mouse location\n", this);
 #endif
+  } else if ((aEvent->mMessage == ePointerMove &&
+              aEvent->AsMouseEvent()->mReason == WidgetMouseEvent::eReal) ||
+             aEvent->mMessage == ePointerDown ||
+             aEvent->mMessage == ePointerUp) {
+    // TODO: instead, encapsulate `mMouseLocation` and
+    // `mLastOverWindowPointerLocation` in a struct.
+    mLastOverWindowPointerLocation = GetEventLocation(*aEvent->AsMouseEvent());
   }
 }
 
@@ -6874,7 +6881,7 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
     return NS_OK;
   }
 
-  mPresShell->RecordMouseLocation(aGUIEvent);
+  mPresShell->RecordPointerLocation(aGUIEvent);
 
   if (MaybeHandleEventWithAccessibleCaret(aFrameForPresShell, aGUIEvent,
                                           aEventStatus)) {
@@ -8077,6 +8084,9 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
 #endif
   NS_ENSURE_STATE(!aNewEventContent ||
                   aNewEventContent->GetComposedDoc() == GetDocument());
+  if (aEvent->mClass == ePointerEventClass) {
+    mPresShell->RecordPointerLocation(aEvent->AsMouseEvent());
+  }
   AutoPointerEventTargetUpdater updater(mPresShell, aEvent, aNewEventFrame,
                                         aTargetContent);
   AutoCurrentEventInfoSetter eventInfoSetter(*this, aNewEventFrame,
