@@ -27,11 +27,15 @@ class CacheOpChild final : public PCacheOpChild,
   friend class CacheStorageChild;
   friend class PCacheOpChild;
 
+ public:
+  NS_INLINE_DECL_REFCOUNTING(CacheOpChild, override)
+
  private:
   // This class must be constructed by CacheChild or CacheStorageChild using
   // their ExecuteOp() factory method.
   CacheOpChild(SafeRefPtr<CacheWorkerRef> aWorkerRef, nsIGlobalObject* aGlobal,
-               nsISupports* aParent, Promise* aPromise);
+               nsISupports* aParent, Promise* aPromise,
+               ActorChild* aParentActor);
   ~CacheOpChild();
 
   // PCacheOpChild methods
@@ -64,8 +68,7 @@ class CacheOpChild final : public PCacheOpChild,
   // operation completes.
   nsCOMPtr<nsISupports> mParent;
   RefPtr<Promise> mPromise;
-
-  NS_DECL_OWNINGTHREAD
+  ActorChild* mParentActor;
 };
 
 }  // namespace cache

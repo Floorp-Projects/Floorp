@@ -253,12 +253,9 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   mozilla::ipc::IPCResult RecvShutdownServiceWorkerRegistrar() override;
 
-  dom::cache::PCacheStorageParent* AllocPCacheStorageParent(
+  already_AddRefed<dom::cache::PCacheStorageParent> AllocPCacheStorageParent(
       const dom::cache::Namespace& aNamespace,
       const PrincipalInfo& aPrincipalInfo) override;
-
-  bool DeallocPCacheStorageParent(
-      dom::cache::PCacheStorageParent* aActor) override;
 
   PUDPSocketParent* AllocPUDPSocketParent(const Maybe<PrincipalInfo>& pInfo,
                                           const nsCString& aFilter) override;

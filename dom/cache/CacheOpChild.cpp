@@ -64,8 +64,11 @@ void AddWorkerRefToStreamChild(const CacheRequest& aRequest,
 
 CacheOpChild::CacheOpChild(SafeRefPtr<CacheWorkerRef> aWorkerRef,
                            nsIGlobalObject* aGlobal, nsISupports* aParent,
-                           Promise* aPromise)
-    : mGlobal(aGlobal), mParent(aParent), mPromise(aPromise) {
+                           Promise* aPromise, ActorChild* aParentActor)
+    : mGlobal(aGlobal),
+      mParent(aParent),
+      mPromise(aPromise),
+      mParentActor(aParentActor) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mParent);
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
@@ -90,7 +93,7 @@ void CacheOpChild::ActorDestroy(ActorDestroyReason aReason) {
     mPromise->MaybeReject(NS_ERROR_FAILURE);
     mPromise = nullptr;
   }
-
+  mParentActor->NoteDeletedActor();
   RemoveWorkerRef();
 }
 

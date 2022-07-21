@@ -38,7 +38,7 @@ already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild();
 
 void DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor);
 
-PCacheStorageParent* AllocPCacheStorageParent(
+already_AddRefed<PCacheStorageParent> AllocPCacheStorageParent(
     mozilla::ipc::PBackgroundParent* aManagingActor, Namespace aNamespace,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 

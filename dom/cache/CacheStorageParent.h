@@ -22,9 +22,12 @@ class CacheStorageParent final : public PCacheStorageParent,
  public:
   CacheStorageParent(PBackgroundParent* aManagingActor, Namespace aNamespace,
                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
-  virtual ~CacheStorageParent();
+
+  NS_INLINE_DECL_REFCOUNTING(CacheStorageParent, override)
 
  private:
+  virtual ~CacheStorageParent();
+
   // PCacheStorageParent methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 

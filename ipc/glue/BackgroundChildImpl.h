@@ -167,13 +167,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPServiceWorkerManagerChild(
       PServiceWorkerManagerChild* aActor) override;
 
-  virtual dom::cache::PCacheStorageChild* AllocPCacheStorageChild(
-      const dom::cache::Namespace& aNamespace,
-      const PrincipalInfo& aPrincipalInfo) override;
-
-  virtual bool DeallocPCacheStorageChild(
-      dom::cache::PCacheStorageChild* aActor) override;
-
   virtual already_AddRefed<dom::cache::PCacheChild> AllocPCacheChild() override;
 
   virtual already_AddRefed<dom::cache::PCacheStreamControlChild>
