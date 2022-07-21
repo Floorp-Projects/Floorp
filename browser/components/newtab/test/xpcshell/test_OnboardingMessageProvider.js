@@ -78,24 +78,21 @@ add_task(async function test_schemaValidation() {
   for (const message of messages) {
     const validator = messageValidators[message.template];
 
-    if (validator === null) {
-      continue;
-    } else if (typeof validator === "undefined") {
-      Assert.ok(
-        false,
-        `No schema validator found for message template ${message.template}. Please update this test to add one.`
-      );
-    } else {
-      assertValidates(
-        validator,
-        message,
-        `Message ${message.id} validates as template ${message.template}`
-      );
-      assertValidates(
-        experimentValidator,
-        message,
-        `Message ${message.id} validates as MessagingExperiment`
-      );
-    }
+    Assert.ok(
+      typeof validator !== "undefined",
+      typeof validator !== "undefined"
+        ? `Schema validator found for ${message.template}.`
+        : `No schema validator found for template ${message.template}. Please update this test to add one.`
+    );
+    assertValidates(
+      validator,
+      message,
+      `Message ${message.id} validates as template ${message.template}`
+    );
+    assertValidates(
+      experimentValidator,
+      message,
+      `Message ${message.id} validates as MessagingExperiment`
+    );
   }
 });
