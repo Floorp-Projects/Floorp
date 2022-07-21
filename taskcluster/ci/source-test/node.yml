@@ -9,7 +9,7 @@ newtab-unit-tests:
         symbol: node(newtab)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: "ubuntu1804-test"}
         max-run-time: 1800
@@ -40,7 +40,7 @@ newtab-unit-tests-ccov:
         symbol: node(newtab-ccov)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: "ubuntu1804-test"}
         max-run-time: 1800
@@ -73,7 +73,7 @@ debugger-tests:
         symbol: node(debugger)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -104,7 +104,7 @@ devtools-tests:
         symbol: node(devtools)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -141,7 +141,7 @@ devtools-verify-bundle:
         symbol: node(devtools-bundle)
         kind: test
         tier: 2
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1200
@@ -172,7 +172,7 @@ eslint-plugin-mozilla:
         symbol: node(epm)
         kind: test
         tier: 1
-    worker-type: t-linux-xlarge-source
+    worker-type: t-linux-xlarge-source-gcp
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
