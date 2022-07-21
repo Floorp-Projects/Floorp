@@ -1270,7 +1270,11 @@ def target_tasks_system_symbols(full_task_graph, parameters, graph_config):
     Select tasks for scraping and uploading system symbols.
     """
     for name, task in full_task_graph.tasks.items():
-        if task.kind in ["system-symbols", "system-symbols-upload"]:
+        if task.kind in [
+            "system-symbols",
+            "system-symbols-upload",
+            "system-symbols-reprocess",
+        ]:
             yield name
 
 
