@@ -49,8 +49,11 @@ if (!window?.branch?.b) {
     first() {}
     getBrowserFingerprintId() {}
     getCode() {}
-    init(key, cb) {
-      cb?.(undefined, {});
+    init(key, ...args) {
+      const cb = args.pop();
+      if (typeof cb === "function") {
+        cb(undefined, {});
+      }
     }
     lastAttributedTouchData() {}
     link() {}
@@ -70,7 +73,7 @@ if (!window?.branch?.b) {
     trackCommerceEvent() {}
     validateCode() {}
   })();
-  const push = (fn, args) => {
+  const push = ([fn, ...args]) => {
     try {
       window.branch[fn].apply(window.branch, args);
     } catch (e) {

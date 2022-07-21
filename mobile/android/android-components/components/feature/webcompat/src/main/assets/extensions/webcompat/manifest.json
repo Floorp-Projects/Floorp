@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "103.0.0",
+  "version": "104.0.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -94,9 +94,12 @@
   "web_accessible_resources": [
     "shims/addthis-angular.js",
     "shims/adform.js",
+    "shims/adnexus-ast.js",
     "shims/adnexus-prebid.js",
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
+    "shims/blogger.js",
+    "shims/bloggerAccount.js",
     "shims/bmauth.js",
     "shims/branch.js",
     "shims/chartbeat.js",
@@ -107,8 +110,10 @@
     "shims/eluminate.js",
     "shims/empty-script.js",
     "shims/empty-shim.txt",
+    "shims/everest.js",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
+    "shims/fastclick.js",
     "shims/firebase.js",
     "shims/google-ads.js",
     "shims/google-analytics-and-tag-manager.js",

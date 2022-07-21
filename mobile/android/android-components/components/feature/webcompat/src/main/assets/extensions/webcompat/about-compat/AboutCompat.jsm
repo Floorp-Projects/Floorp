@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["AboutCompat"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const Services =
+  globalThis.Services ||
+  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 const addonID = "webcompat@mozilla.org";
 const addonPageRelativeURL = "/about-compat/aboutCompat.html";

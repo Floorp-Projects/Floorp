@@ -6,7 +6,9 @@
 
 /* global ExtensionAPI, XPCOMUtils */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const Services =
+  globalThis.Services ||
+  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
