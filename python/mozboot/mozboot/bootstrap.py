@@ -324,6 +324,7 @@ class Bootstrapper(object):
         state_dir = Path(get_state_dir())
         self.instance.state_dir = state_dir
 
+        hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
         hg = to_optional_path(which("hg"))
 
         # We need to enable the loading of hgrc in case extensions are
@@ -346,7 +347,6 @@ class Bootstrapper(object):
         # Like 'install_browser_packages' or 'install_mobile_android_packages'.
         getattr(self.instance, "install_%s_packages" % application)(mozconfig_builder)
 
-        hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
         if not self.instance.artifact_mode:
             self.instance.ensure_rust_modern()
 
