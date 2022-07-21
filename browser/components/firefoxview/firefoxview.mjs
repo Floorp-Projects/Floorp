@@ -4,20 +4,15 @@
 
 "use strict";
 
-import { tabsSetupFlowManager } from "./tabs-pickup.mjs";
-
-window.addEventListener("load", () => {
-  tabsSetupFlowManager.initialize(
-    document.getElementById("tabs-pickup-container")
-  );
+window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("recently-closed-tabs-container").onLoad();
 });
 
 window.addEventListener("unload", () => {
-  tabsSetupFlowManager?.uninit();
   const tabPickupList = document.querySelector("tab-pickup-list");
   if (tabPickupList) {
     tabPickupList.cleanup();
   }
+  document.getElementById("tabs-pickup-container").cleanup();
   document.getElementById("recently-closed-tabs-container").cleanup();
 });
