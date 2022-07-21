@@ -4,11 +4,6 @@
 
 "use strict";
 
-// Tests that nsIHttpChannelInternal.beConservative correctly limits the use of
-// advanced TLS features that may cause compatibility issues. Does so by
-// starting a TLS server that requires the advanced features and then ensuring
-// that a client that is set to be conservative will fail when connecting.
-
 // Get a profile directory and ensure PSM initializes NSS.
 do_get_profile();
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
@@ -125,15 +120,19 @@ class ServerSocketListener {
   }
 }
 
-function startServer(cert, minServerVersion, maxServerVersion) {
+function startServer(
+  minServerVersion = Ci.nsITLSClientStatus.TLS_VERSION_1_2,
+  maxServerVersion = Ci.nsITLSClientStatus.TLS_VERSION_1_3
+) {
   let tlsServer = Cc["@mozilla.org/network/tls-server-socket;1"].createInstance(
     Ci.nsITLSServerSocket
   );
   tlsServer.init(-1, true, -1);
-  tlsServer.serverCert = cert;
+  tlsServer.serverCert = getTestServerCertificate();
   tlsServer.setVersionRange(minServerVersion, maxServerVersion);
   tlsServer.setSessionTickets(false);
   tlsServer.asyncListen(new ServerSocketListener());
+  storeCertOverride(tlsServer.port, tlsServer.serverCert);
   return tlsServer;
 }
 
@@ -157,28 +156,38 @@ function storeCertOverride(port, cert) {
   );
 }
 
-function startClient(port, beConservative, expectSuccess) {
+function startClient(port, useGREASE, beConservative) {
   HandshakeTelemetryHelpers.resetHistograms();
   let flavors = ["", "_FIRST_TRY"];
-  let nonflavors = [];
-  if (beConservative) {
-    flavors.push("_CONSERVATIVE");
-    nonflavors.push("_ECH");
-    nonflavors.push("_ECH_GREASE");
+  let nonflavors = ["_ECH"];
+
+  if (useGREASE) {
+    Services.prefs.setIntPref("security.tls.ech.grease_probability", 100);
   } else {
-    nonflavors.push("_CONSERVATIVE");
+    Services.prefs.setIntPref("security.tls.ech.grease_probability", 0);
   }
 
   let req = new XMLHttpRequest();
   req.open("GET", `https://${hostname}:${port}`);
-  let internalChannel = req.channel.QueryInterface(Ci.nsIHttpChannelInternal);
-  internalChannel.beConservative = beConservative;
+
+  if (beConservative) {
+    // We don't have a way to set DONT_TRY_ECH at the moment.
+    let internalChannel = req.channel.QueryInterface(Ci.nsIHttpChannelInternal);
+    internalChannel.beConservative = beConservative;
+    flavors.push("_CONSERVATIVE");
+  } else {
+    nonflavors.push("_CONSERVATIVE");
+  }
+
+  //GREASE is only used if enabled and not in conservative mode.
+  if (useGREASE && !beConservative) {
+    flavors.push("_ECH_GREASE");
+  } else {
+    nonflavors.push("_ECH_GREASE");
+  }
+
   return new Promise((resolve, reject) => {
     req.onload = () => {
-      ok(
-        expectSuccess,
-        `should ${expectSuccess ? "" : "not "}have gotten load event`
-      );
       equal(req.responseText, "OK", "response text should be 'OK'");
 
       // Only check telemetry if network process is disabled.
@@ -190,18 +199,7 @@ function startClient(port, beConservative, expectSuccess) {
       resolve();
     };
     req.onerror = () => {
-      ok(
-        !expectSuccess,
-        `should ${!expectSuccess ? "" : "not "}have gotten an error`
-      );
-
-      // Only check telemetry if network process is disabled.
-      if (!mozinfo.socketprocess_networking) {
-        // 98 is SSL_ERROR_PROTOCOL_VERSION_ALERT (see sslerr.h)
-        HandshakeTelemetryHelpers.checkEntry(flavors, 98, 1);
-        HandshakeTelemetryHelpers.checkEmpty(nonflavors);
-      }
-
+      ok(false, `should not have gotten an error`);
       resolve();
     };
 
@@ -209,46 +207,61 @@ function startClient(port, beConservative, expectSuccess) {
   });
 }
 
-add_task(async function() {
+function setup() {
   Services.prefs.setIntPref("security.tls.version.max", 4);
   Services.prefs.setCharPref("network.dns.localDomains", hostname);
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
-  let cert = getTestServerCertificate();
+}
+setup();
 
+add_task(async function GreaseYConservativeN() {
   // First run a server that accepts TLS 1.2 and 1.3. A conservative client
   // should succeed in connecting.
-  let server = startServer(
-    cert,
-    Ci.nsITLSClientStatus.TLS_VERSION_1_2,
-    Ci.nsITLSClientStatus.TLS_VERSION_1_3
+  let server = startServer();
+
+  await startClient(
+    server.port,
+    true /*be conservative*/,
+    false /*should succeed*/
   );
-  storeCertOverride(server.port, cert);
+  server.close();
+});
+
+add_task(async function GreaseNConservativeY() {
+  // First run a server that accepts TLS 1.2 and 1.3. A conservative client
+  // should succeed in connecting.
+  let server = startServer();
+
+  await startClient(
+    server.port,
+    false /*be conservative*/,
+    true /*should succeed*/
+  );
+  server.close();
+});
+
+add_task(async function GreaseYConservativeY() {
+  // First run a server that accepts TLS 1.2 and 1.3. A conservative client
+  // should succeed in connecting.
+  let server = startServer();
+
   await startClient(
     server.port,
     true /*be conservative*/,
     true /*should succeed*/
   );
   server.close();
+});
 
-  // Now run a server that only accepts TLS 1.3. A conservative client will not
-  // succeed in this case.
-  server = startServer(
-    cert,
-    Ci.nsITLSClientStatus.TLS_VERSION_1_3,
-    Ci.nsITLSClientStatus.TLS_VERSION_1_3
-  );
-  storeCertOverride(server.port, cert);
+add_task(async function GreaseNConservativeN() {
+  // First run a server that accepts TLS 1.2 and 1.3. A conservative client
+  // should succeed in connecting.
+  let server = startServer();
+
   await startClient(
     server.port,
-    true /*be conservative*/,
-    false /*should fail*/
-  );
-
-  // However, a non-conservative client should succeed.
-  await startClient(
-    server.port,
-    false /*don't be conservative*/,
-    true /*should succeed*/
+    false /*be conservative*/,
+    false /*should succeed*/
   );
   server.close();
 });
@@ -256,5 +269,6 @@ add_task(async function() {
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("security.tls.ech.grease_probability");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
 });
