@@ -108,6 +108,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       document.documentElement.classList.remove("login-selected");
       break;
     }
+    case "SendFavicons": {
+      gElements.loginList.addFavicons(event.detail.value);
+      break;
+    }
     case "SetBreaches": {
       gElements.loginList.setBreaches(event.detail.value);
       gElements.loginItem.setBreaches(event.detail.value);
