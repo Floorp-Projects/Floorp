@@ -10,8 +10,10 @@
 #if defined(MOZ_FFVPX_AUDIOONLY)
 #  if defined(MOZ_WIDGET_ANDROID) && defined(__arm__)
 #    include "config_android32.h"
+#  elif defined(MOZ_WIDGET_ANDROID) && defined(__aarch64__)
+#    include "config_android64.h"
 #  else
-#    include "config_audio.h"
+#    error "Unsupported configuration"
 #  endif
 #else  // MOZ_FFVPX_AUDIOONLY
 #  if defined(XP_WIN)
@@ -44,6 +46,8 @@
 #    else
 #      include "config_darwin64.h"
 #    endif
+#  elif defined(MOZ_WIDGET_ANDROID) && defined(HAVE_64BIT_BUILD)
+#      include "config_androidx86_64.h"
 #  elif defined(XP_UNIX)
 #    if defined(HAVE_64BIT_BUILD)
 #      include "config_unix64.h"
@@ -52,7 +56,5 @@
 #    endif
 #  endif
 #endif  // else MOZ_FFVPX_AUDIOONLY
-
-#include "config_common.h"
 
 #endif  // MOZ_FFVPX_CONFIG_H
