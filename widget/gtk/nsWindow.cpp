@@ -2520,8 +2520,8 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     MakeFullScreen(false);
     // NOTE: Fullscreen restoration changes mSizeMode to the state before
     // fullscreen, but we might need to still transition to aMode.
-    if (mLastSizeModeBeforeFullscreen == aMode) {
-      LOG("    will restore to desired state");
+    if (mSizeMode == aMode) {
+      LOG("    restored to desired state");
       return;
     }
   }
@@ -2553,6 +2553,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
       }
       break;
   }
+  mSizeMode = aMode;
 }
 
 static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
@@ -4856,7 +4857,6 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     return;
   }
 
-  auto oldSizeMode = mSizeMode;
   if (aEvent->new_window_state & GDK_WINDOW_STATE_ICONIFIED) {
     LOG("\tIconified\n");
     mSizeMode = nsSizeMode_Minimized;
@@ -4880,16 +4880,19 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 #endif  // ACCESSIBILITY
   }
 
-  mIsTiled = aEvent->new_window_state & GDK_WINDOW_STATE_TILED;
-  LOG("\tTiled: %d\n", int(mIsTiled));
+  if (aEvent->new_window_state & GDK_WINDOW_STATE_TILED) {
+    LOG("\tTiled\n");
+    mIsTiled = true;
+  } else {
+    LOG("\tNot tiled\n");
+    mIsTiled = false;
+  }
 
   if (mWidgetListener) {
-    if (mSizeMode != oldSizeMode) {
-      mWidgetListener->SizeModeChanged(mSizeMode);
-      if (mSizeMode == nsSizeMode_Fullscreen ||
-          oldSizeMode == nsSizeMode_Fullscreen) {
-        mWidgetListener->FullscreenChanged(mSizeMode == nsSizeMode_Fullscreen);
-      }
+    mWidgetListener->SizeModeChanged(mSizeMode);
+    if (aEvent->changed_mask & GDK_WINDOW_STATE_FULLSCREEN) {
+      mWidgetListener->FullscreenChanged(aEvent->new_window_state &
+                                         GDK_WINDOW_STATE_FULLSCREEN);
     }
   }
 
@@ -7128,15 +7131,18 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  const bool wasFullscreen = mSizeMode == nsSizeMode_Fullscreen;
+  bool wasFullscreen = mSizeMode == nsSizeMode_Fullscreen;
   if (aFullScreen != wasFullscreen && mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
   }
 
   if (aFullScreen) {
-    if (!wasFullscreen) {
-      mLastSizeModeBeforeFullscreen = mSizeMode;
+    if (mSizeMode != nsSizeMode_Fullscreen) {
+      mLastSizeMode = mSizeMode;
     }
+
+    mSizeMode = nsSizeMode_Fullscreen;
+
     if (mIsPIPWindow) {
       gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_NORMAL);
       if (gUseAspectRatio) {
@@ -7148,6 +7154,7 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
 
     gtk_window_fullscreen(GTK_WINDOW(mShell));
   } else {
+    mSizeMode = mLastSizeMode;
     gtk_window_unfullscreen(GTK_WINDOW(mShell));
 
     if (mIsPIPWindow) {
@@ -7160,7 +7167,8 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
     }
   }
 
-  MOZ_ASSERT(mLastSizeModeBeforeFullscreen != nsSizeMode_Fullscreen);
+  NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
+               "mLastSizeMode should never be fullscreen");
   return NS_OK;
 }
 

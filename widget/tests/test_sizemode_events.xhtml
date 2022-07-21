@@ -85,37 +85,36 @@ function openWindow() {
 }
 
 async function runTest() {
+  if (kIsLinux) {
+    todo(false, "Test times out on automation because bug 1780212");
+    SimpleTest.finish();
+    return;
+  }
   // Install event handler.
   gWindow.addEventListener("sizemodechange", sizemodeChanged);
 
   // Run tests.
-  info("Testing minimize()");
   await expectSizeModeChange(gWindow.STATE_MINIMIZED, function () {
     gWindow.minimize();
   });
 
-  info("Testing restore() after minimize()");
   await expectSizeModeChange(gWindow.STATE_NORMAL, function () {
     gWindow.restore();
   });
 
-  info("Testing maximize()");
   await expectSizeModeChange(gWindow.STATE_MAXIMIZED, function () {
     gWindow.maximize();
   });
 
-  info("Testing restore() after maximize()");
   await expectSizeModeChange(gWindow.STATE_NORMAL, function () {
     gWindow.restore();
   });
 
   // Normal window resizing shouldn't fire a sizemodechanged event, bug 715867.
-  info("Testing resizeTo() horizontal");
   await expectSizeModeChange(0, function () {
     gWindow.resizeTo(gWindow.outerWidth + 10, gWindow.outerHeight);
   });
 
-  info("Testing resizeTo() vertical");
   await expectSizeModeChange(0, function () {
     gWindow.resizeTo(gWindow.outerWidth, gWindow.outerHeight + 10);
   });
