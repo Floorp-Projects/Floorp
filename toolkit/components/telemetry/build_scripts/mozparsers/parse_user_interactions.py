@@ -4,7 +4,6 @@
 
 import io
 import re
-import six
 import yaml
 import atexit
 
@@ -96,7 +95,7 @@ class UserInteractionType:
         # The required and optional fields in a UserInteraction definition.
         REQUIRED_FIELDS = {
             "bug_numbers": list,  # This contains ints. See LIST_FIELDS_CONTENT.
-            "description": six.string_types,
+            "description": str,
         }
 
         # The types for the data within the fields that hold lists.

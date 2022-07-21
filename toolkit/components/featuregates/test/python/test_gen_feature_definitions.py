@@ -6,14 +6,8 @@ from textwrap import dedent
 
 import mozunit
 import pytoml
-import six
 import voluptuous
-
-
-if six.PY3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from io import StringIO
 
 
 FEATURE_GATES_ROOT_PATH = path.abspath(
