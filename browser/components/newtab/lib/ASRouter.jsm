@@ -1689,7 +1689,11 @@ class _ASRouter {
 
   async sendPBNewTabMessage({ tabId, hideDefault }) {
     let message = null;
-
+    const PromoInfo = {
+      FOCUS: { enabledPref: "browser.promo.focus.enabled" },
+      VPN: { enabledPref: "browser.vpn_promo.enabled" },
+      PIN: { enabledPref: "browser.promo.pin.enabled" },
+    };
     await this.loadMessagesFromAllProviders();
 
     // If message has hideDefault property set to true
@@ -1701,6 +1705,18 @@ class _ASRouter {
         ),
       }));
     }
+
+    // Check and filter out messages of any disabled PromoType
+    await this.setState(state => ({
+      messages: state.messages.filter(
+        m =>
+          m.template === "pb_newtab" &&
+          Services.prefs.getBoolPref(
+            PromoInfo[m.content?.promoType]?.enabledPref,
+            true
+          )
+      ),
+    }));
 
     const telemetryObject = { tabId };
     TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
