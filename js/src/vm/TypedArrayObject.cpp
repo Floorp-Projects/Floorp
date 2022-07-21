@@ -913,9 +913,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     return makeInstance(cx, buffer, 0, nelements, proto);
   }
 
-  static bool AllocateArrayBuffer(JSContext* cx, size_t count,
-                                  MutableHandle<ArrayBufferObject*> buffer);
-
   static TypedArrayObject* fromArray(JSContext* cx, HandleObject other,
                                      HandleObject proto = nullptr);
 
@@ -1095,17 +1092,6 @@ TypedArrayObject* js::NewTypedArrayWithTemplateAndBuffer(
   }
 }
 
-// ES2023 draft rev cf86f1cdc28e809170733d74ea64fd0f3dd79f78
-// 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength )
-// constructor = %ArrayBuffer%
-// byteLength = count * BYTES_PER_ELEMENT
-template <typename T>
-/* static */ bool TypedArrayObjectTemplate<T>::AllocateArrayBuffer(
-    JSContext* cx, size_t count, MutableHandle<ArrayBufferObject*> buffer) {
-  // Steps 1-5.
-  return maybeCreateArrayBuffer(cx, count, buffer);
-}
-
 template <typename T>
 /* static */ TypedArrayObject* TypedArrayObjectTemplate<T>::fromArray(
     JSContext* cx, HandleObject other, HandleObject proto /* = nullptr */) {
@@ -1172,13 +1158,7 @@ template <typename T>
   // InitializeTypedArrayFromTypedArray, step 10.a. (Partial)
   // InitializeTypedArrayFromTypedArray, step 11.a.
   Rooted<ArrayBufferObject*> buffer(cx);
-  if (!AllocateArrayBuffer(cx, elementLength, &buffer)) {
-    return nullptr;
-  }
-
-  if (srcArray->hasDetachedBuffer()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_DETACHED);
+  if (!maybeCreateArrayBuffer(cx, elementLength, &buffer)) {
     return nullptr;
   }
 
@@ -1199,6 +1179,8 @@ template <typename T>
   if (!obj) {
     return nullptr;
   }
+
+  MOZ_RELEASE_ASSERT(!srcArray->hasDetachedBuffer());
 
   // InitializeTypedArrayFromTypedArray, steps 10.a. (Remaining parts)
   // InitializeTypedArrayFromTypedArray, steps 11.c-f.
