@@ -30,7 +30,7 @@ function waitForNextPopup() {
 }
 
 add_task(async function test_popup_direction() {
-  let input = getFormElementByName(1, "field1");
+  let input = $_(1, "field1");
 
   await new Promise(resolve => updateFormHistory([
     { op: "remove" },
