@@ -606,9 +606,6 @@ fails-if(!xulRuntime.shell) script test262/language/statements/class/subclass-bu
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1761989
-skip script test262/built-ins/TypedArrayConstructors/ctors/no-species.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
