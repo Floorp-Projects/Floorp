@@ -27,40 +27,101 @@ import sys
 from argparse import ArgumentParser
 from itertools import chain
 from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Union
 from urllib.parse import urlparse
 
 import jsonschema
 
 
-SCHEMA_BASE_DIR = Path("..", "templates")
+class SchemaDefinition(NamedTuple):
+    """A definition of a schema that is to be bundled."""
 
-MESSAGE_TYPES = {
-    "CFRUrlbarChiclet": Path("CFR", "templates", "CFRUrlbarChiclet.schema.json"),
-    "ExtensionDoorhanger": Path("CFR", "templates", "ExtensionDoorhanger.schema.json"),
-    "InfoBar": Path("CFR", "templates", "InfoBar.schema.json"),
-    "NewtabPromoMessage": Path("PBNewtab", "NewtabPromoMessage.schema.json"),
-    "ProtectionsPanelMessage": Path(
-        "OnboardingMessage", "ProtectionsPanelMessage.schema.json"
+    #: The $id of the generated schema.
+    schema_id: str
+
+    #: The path of the generated schema.
+    schema_path: Path
+
+    #: The message types that will be bundled into the schema.
+    message_types: Dict[str, Path]
+
+    #: What common definitions to bundle into the schema.
+    #:
+    #: If `True`, all definitions will be bundled.
+    #: If `False`, no definitons will be bundled.
+    #: If a list, only the named definitions will be bundled.
+    bundle_common: Union[bool, List[str]]
+
+    #: The testing corpus for the schema.
+    test_corpus: Dict[str, Path]
+
+
+SCHEMA_DIR = Path("..", "templates")
+
+SCHEMAS = [
+    SchemaDefinition(
+        schema_id="resource://activity-stream/schemas/MessagingExperiment.schema.json",
+        schema_path=Path("MessagingExperiment.schema.json"),
+        message_types={
+            "CFRUrlbarChiclet": (
+                SCHEMA_DIR / "CFR" / "templates" / "CFRUrlbarChiclet.schema.json"
+            ),
+            "ExtensionDoorhanger": (
+                SCHEMA_DIR / "CFR" / "templates" / "ExtensionDoorhanger.schema.json"
+            ),
+            "InfoBar": SCHEMA_DIR / "CFR" / "templates" / "InfoBar.schema.json",
+            "NewtabPromoMessage": (
+                SCHEMA_DIR / "PBNewtab" / "NewtabPromoMessage.schema.json"
+            ),
+            "ProtectionsPanelMessage": (
+                SCHEMA_DIR / "OnboardingMessage" / "ProtectionsPanelMessage.schema.json"
+            ),
+            "Spotlight": SCHEMA_DIR / "OnboardingMessage" / "Spotlight.schema.json",
+            "ToastNotification": (
+                SCHEMA_DIR / "ToastNotification" / "ToastNotification.schema.json"
+            ),
+            "ToolbarBadgeMessage": (
+                SCHEMA_DIR / "OnboardingMessage" / "ToolbarBadgeMessage.schema.json"
+            ),
+            "UpdateAction": (
+                SCHEMA_DIR / "OnboardingMessage" / "UpdateAction.schema.json"
+            ),
+            "WhatsNewMessage": (
+                SCHEMA_DIR / "OnboardingMessage" / "WhatsNewMessage.schema.json"
+            ),
+        },
+        bundle_common=True,
+        test_corpus={
+            "CFRMessageProvider": Path("corpus", "CFRMessageProvider.messages.json"),
+            "OnboardingMessageProvider": Path(
+                "corpus", "OnboardingMessageProvider.messages.json"
+            ),
+            "PanelTestProvider": Path("corpus", "PanelTestProvider.messages.json"),
+        },
     ),
-    "Spotlight": Path("OnboardingMessage", "Spotlight.schema.json"),
-    "ToastNotification": Path("ToastNotification", "ToastNotification.schema.json"),
-    "ToolbarBadgeMessage": Path("OnboardingMessage", "ToolbarBadgeMessage.schema.json"),
-    "UpdateAction": Path("OnboardingMessage", "UpdateAction.schema.json"),
-    "WhatsNewMessage": Path("OnboardingMessage", "WhatsNewMessage.schema.json"),
-}
+    SchemaDefinition(
+        schema_id=(
+            "resource://activity-stream/schemas/"
+            "BackgroundTaskMessagingExperiment.schema.json"
+        ),
+        schema_path=Path("BackgroundTaskMessagingExperiment.schema.json"),
+        message_types={
+            "ToastNotification": (
+                SCHEMA_DIR / "ToastNotification" / "ToastNotification.schema.json"
+            ),
+        },
+        bundle_common=True,
+        test_corpus={
+            # Just the "toast_notification" messages.
+            "PanelTestProvider": Path(
+                "corpus", "PanelTestProvider_toast_notification.messages.json"
+            ),
+        },
+    ),
+]
 
 COMMON_SCHEMA_NAME = "FxMSCommon.schema.json"
 COMMON_SCHEMA_PATH = Path(COMMON_SCHEMA_NAME)
-
-TEST_CORPUS = {
-    "CFRMessageProvider": Path("corpus", "CFRMessageProvider.messages.json"),
-    "OnboardingMessageProvider": Path(
-        "corpus", "OnboardingMessageProvider.messages.json"
-    ),
-    "PanelTestProvider": Path("corpus", "PanelTestProvider.messages.json"),
-}
-
-SCHEMA_ID = "resource://activity-stream/schemas/MessagingExperiment.schema.json"
 
 
 class NestedRefResolver(jsonschema.RefResolver):
@@ -98,7 +159,7 @@ def extract_template_values(template):
         return [const]
 
 
-def patch_schema(schema, schema_id=None):
+def patch_schema(schema, bundled_id, schema_id=None):
     """Patch the given schema.
 
     The JSON schema validator that Experimenter uses
@@ -116,7 +177,6 @@ def patch_schema(schema, schema_id=None):
         schema_id = schema["$id"]
 
     def patch_impl(schema):
-
         ref = schema.get("$ref")
 
         if ref:
@@ -129,7 +189,7 @@ def patch_schema(schema, schema_id=None):
             ):
                 schema["$ref"] = f"{schema_id}#{uri.fragment}"
             elif (uri.scheme, uri.path) == ("file", f"/{COMMON_SCHEMA_NAME}"):
-                schema["$ref"] = f"{SCHEMA_ID}#{uri.fragment}"
+                schema["$ref"] = f"{bundled_id}#{uri.fragment}"
 
         # If `schema` is object-like, inspect each of its indivual properties
         # and patch them.
@@ -169,30 +229,50 @@ def patch_schema(schema, schema_id=None):
     return schema
 
 
-def main(check=False):
-    """Generate Nimbus feature schemas for Firefox Messaging System."""
+def bundle_schema(schema_def: SchemaDefinition):
+    """Create a bundled schema based on the schema definition."""
     # Patch each message type schema to resolve all self-references to be
     # absolute and rewrite # references to FxMSCommon.schema.json to be relative
     # to the new schema (because we are about to bundle its definitions).
     defs = {
-        name: patch_schema(read_schema(SCHEMA_BASE_DIR / path))
-        for name, path in MESSAGE_TYPES.items()
+        name: patch_schema(read_schema(path), bundled_id=schema_def.schema_id)
+        for name, path in schema_def.message_types.items()
     }
 
     # Bundle the definitions from FxMSCommon.schema.json into this schema.
-    defs.update(
-        patch_schema(read_schema(COMMON_SCHEMA_PATH), schema_id=SCHEMA_ID)["$defs"]
-    )
+    if schema_def.bundle_common:
+
+        def dfn_filter(name):
+            if schema_def.bundle_common is True:
+                return True
+
+            return name in schema_def.bundle_common
+
+        common_schema = patch_schema(
+            read_schema(COMMON_SCHEMA_PATH),
+            bundled_id=schema_def.schema_id,
+            schema_id=schema_def.schema_id,
+        )
+
+        # patch_schema mutates the given schema, so we read a new copy in for
+        # each bundle operation.
+        defs.update(
+            {
+                name: dfn
+                for name, dfn in common_schema["$defs"].items()
+                if dfn_filter(name)
+            }
+        )
 
     # Ensure all bundled schemas have an $id so that $refs inside the
     # bundled schema work correctly (i.e, they will reference the subschema
     # and not the bundle).
-    for name in MESSAGE_TYPES.keys():
-        schema = defs[name]
-        if "$id" not in schema:
+    for name in schema_def.message_types.keys():
+        subschema = defs[name]
+        if "$id" not in subschema:
             raise ValueError(f"Schema {name} is missing an $id")
 
-        props = schema["properties"]
+        props = subschema["properties"]
         if "template" not in props:
             raise ValueError(f"Schema {name} is missing a template")
 
@@ -200,11 +280,9 @@ def main(check=False):
         if "enum" not in template and "const" not in template:
             raise ValueError(f"Schema {name} should have const or enum template")
 
-    filename = Path("MessagingExperiment.schema.json")
-
     templates = {
         name: extract_template_values(defs[name]["properties"]["template"])
-        for name in MESSAGE_TYPES.keys()
+        for name in schema_def.message_types.keys()
     }
 
     # Ensure that each schema has a unique set of template values.
@@ -231,9 +309,9 @@ def main(check=False):
     defs["Message"]["properties"]["template"]["enum"] = all_templates
 
     # Generate the combined schema.
-    feature_schema = {
+    return {
         "$schema": "https://json-schema.org/draft/2019-09/schema",
-        "$id": SCHEMA_ID,
+        "$id": schema_def.schema_id,
         "title": "Messaging Experiment",
         "description": "A Firefox Messaging System message.",
         # A message must be one of
@@ -255,7 +333,7 @@ def main(check=False):
                     # already inherit from this message type, but it is easier
                     # to add this requirement here than to verify that each
                     # message's schema is properly inheriting.
-                    {"$ref": f"{SCHEMA_ID}#/$defs/Message"},
+                    {"$ref": f"{schema_def.schema_id}#/$defs/Message"},
                     # For each message type, create a subschema that says if the
                     # template field matches a value for a message type defined
                     # in MESSAGE_TYPES, then the message must also match the
@@ -279,9 +357,11 @@ def main(check=False):
                                 },
                                 "required": ["template"],
                             },
-                            "then": {"$ref": f"{SCHEMA_ID}#/$defs/{message_type}"},
+                            "then": {
+                                "$ref": f"{schema_def.schema_id}#/$defs/{message_type}"
+                            },
                         }
-                        for message_type in MESSAGE_TYPES
+                        for message_type in schema_def.message_types
                     ),
                 ],
             },
@@ -289,41 +369,35 @@ def main(check=False):
         "$defs": defs,
     }
 
-    if check:
-        print(f"Checking {filename} ...")
 
-        with filename.open("r") as f:
-            on_disk = json.load(f)
+def check_diff(schema_def: SchemaDefinition, schema: Dict[str, Any]):
+    """Check the generated schema matches the on-disk schema."""
+    print(f"  Checking {schema_def.schema_path} for differences...")
 
-        if on_disk != feature_schema:
-            print(f"{filename} does not match generated schema")
-            print("Generated schema:")
-            json.dump(feature_schema, sys.stdout)
-            print("\n\nCommitted schema:")
-            json.dump(on_disk, sys.stdout)
+    with schema_def.schema_path.open("r") as f:
+        on_disk = json.load(f)
 
-            raise ValueError("Schemas do not match!")
+    if on_disk != schema:
+        print(f"{schema_def.schema_path} does not match generated schema:")
+        print("Generated schema:")
+        json.dump(schema, sys.stdout, indent=2)
+        print("\n\nOn Disk schema:")
+        json.dump(on_disk, sys.stdout, indent=2)
 
-        check_schema(filename, schema=on_disk)
-
-    else:
-        with filename.open("wb") as f:
-            print(f"Generating {filename} ...")
-            f.write(json.dumps(feature_schema, indent=2).encode("utf-8"))
-            f.write(b"\n")
+        raise ValueError("Schemas do not match!")
 
 
-def check_schema(filename, schema):
+def validate_corpus(schema_def: SchemaDefinition, schema: Dict[str, Any]):
     """Check that the schema validates.
 
     This uses the same validation configuration that is used in Experimenter.
     """
-    print("Validating messages with Experimenter JSON Schema validator...")
+    print("  Validating messages with Experimenter JSON Schema validator...")
 
     resolver = NestedRefResolver(schema)
 
-    for provider, provider_path in TEST_CORPUS.items():
-        print(f"  Validating messages from {provider}:")
+    for provider, provider_path in schema_def.test_corpus.items():
+        print(f"    Validating messages from {provider}:")
 
         with provider_path.open("r") as f:
             messages = json.load(f)
@@ -332,10 +406,29 @@ def check_schema(filename, schema):
             template = message["template"]
             msg_id = message["id"]
 
-            print(f"    Validating {msg_id} {template} message with {filename}...")
+            print(
+                f"      Validating {msg_id} {template} message with {schema_def.schema_path}..."
+            )
             jsonschema.validate(instance=message, schema=schema, resolver=resolver)
 
         print()
+
+
+def main(check=False):
+    """Generate Nimbus feature schemas for Firefox Messaging System."""
+    for schema_def in SCHEMAS:
+        print(f"Generating {schema_def.schema_path} ...")
+        schema = bundle_schema(schema_def)
+
+        if check:
+            print(f"Checking {schema_def.schema_path} ...")
+            check_diff(schema_def, schema)
+            validate_corpus(schema_def, schema)
+        else:
+            with schema_def.schema_path.open("wb") as f:
+                print(f"Writing {schema_def.schema_path} ...")
+                f.write(json.dumps(schema, indent=2).encode("utf-8"))
+                f.write(b"\n")
 
 
 if __name__ == "__main__":
