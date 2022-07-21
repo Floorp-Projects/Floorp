@@ -11,13 +11,11 @@ if CONFIG['FFVPX_ASFLAGS']:
         DIRS += ['x86']
     elif CONFIG['CPU_ARCH'] == 'arm':
         DIRS += ['arm']
-
-if CONFIG['CPU_ARCH'] == 'aarch64':
-    DIRS += ['aarch64']
+    elif CONFIG['CPU_ARCH'] == 'aarch64':
+        DIRS += ['aarch64']
 
 SharedLibrary('mozavutil')
 SOURCES += [
-    'avsscanf.c',
     'avstring.c',
     'bprint.c',
     'buffer.c',
@@ -47,7 +45,6 @@ SOURCES += [
     'time.c',
     'utils.c'
 ]
-
 if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'adler32.c',

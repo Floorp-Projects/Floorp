@@ -28,8 +28,9 @@
 #include <math.h>
 #include <string.h>
 
-#include "config.h"
 #include "attributes.h"
+#include "internal.h"
+#include "version.h"
 #include "lls.h"
 
 static void update_lls(LLSModel *m, const double *var)
@@ -117,7 +118,6 @@ av_cold void avpriv_init_lls(LLSModel *m, int indep_count)
     m->indep_count = indep_count;
     m->update_lls = update_lls;
     m->evaluate_lls = evaluate_lls;
-#if ARCH_X86
-    ff_init_lls_x86(m);
-#endif
+    if (ARCH_X86)
+        ff_init_lls_x86(m);
 }
