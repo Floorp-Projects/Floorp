@@ -1118,6 +1118,9 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::
   MOZ_RELEASE_ASSERT(mGlobalEventHooks.empty());
   CALC_LOG(LogLevel::Info, "RegisterEventHooks()");
 
+  // Detects native window lost mouse capture
+  RegisterGlobalEventHook(EVENT_SYSTEM_CAPTUREEND, EVENT_SYSTEM_CAPTUREEND);
+
   // Detects native window move (drag) and resizing events.
   RegisterGlobalEventHook(EVENT_SYSTEM_MOVESIZESTART, EVENT_SYSTEM_MOVESIZEEND);
 
