@@ -64,8 +64,6 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
 
   OriginPrivateFileSystemChild* Actor() const;
 
-  const fs::EntryId& GetId() const { return mMetadata.entryId(); }
-
  protected:
   virtual ~FileSystemHandle() = default;
 
