@@ -32,12 +32,18 @@
 #include "config.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avassert.h"
+#include "libavutil/common.h"
 
-#include "version.h"
-
+#if ARCH_X86_64
+// TODO: Benchmark and optionally enable on other 64-bit architectures.
+typedef uint64_t BitBuf;
+#define AV_WBBUF AV_WB64
+#define AV_WLBUF AV_WL64
+#else
 typedef uint32_t BitBuf;
 #define AV_WBBUF AV_WB32
 #define AV_WLBUF AV_WL32
+#endif
 
 static const int BUF_BITS = 8 * sizeof(BitBuf);
 
@@ -45,7 +51,6 @@ typedef struct PutBitContext {
     BitBuf bit_buf;
     int bit_left;
     uint8_t *buf, *buf_ptr, *buf_end;
-    int size_in_bits;
 } PutBitContext;
 
 /**
@@ -62,7 +67,6 @@ static inline void init_put_bits(PutBitContext *s, uint8_t *buffer,
         buffer      = NULL;
     }
 
-    s->size_in_bits = 8 * buffer_size;
     s->buf          = buffer;
     s->buf_end      = s->buf + buffer_size;
     s->buf_ptr      = s->buf;
@@ -76,6 +80,26 @@ static inline void init_put_bits(PutBitContext *s, uint8_t *buffer,
 static inline int put_bits_count(PutBitContext *s)
 {
     return (s->buf_ptr - s->buf) * 8 + BUF_BITS - s->bit_left;
+}
+
+/**
+ * @return the number of bytes output so far; may only be called
+ *         when the PutBitContext is freshly initialized or flushed.
+ */
+static inline int put_bytes_output(const PutBitContext *s)
+{
+    av_assert2(s->bit_left == BUF_BITS);
+    return s->buf_ptr - s->buf;
+}
+
+/**
+ * @param  round_up  When set, the number of bits written so far will be
+ *                   rounded up to the next byte.
+ * @return the number of bytes output so far.
+ */
+static inline int put_bytes_count(const PutBitContext *s, int round_up)
+{
+    return s->buf_ptr - s->buf + ((BUF_BITS - s->bit_left + (round_up ? 7 : 0)) >> 3);
 }
 
 /**
@@ -93,7 +117,6 @@ static inline void rebase_put_bits(PutBitContext *s, uint8_t *buffer,
     s->buf_end = buffer + buffer_size;
     s->buf_ptr = buffer + (s->buf_ptr - s->buf);
     s->buf     = buffer;
-    s->size_in_bits = 8 * buffer_size;
 }
 
 /**
@@ -102,6 +125,16 @@ static inline void rebase_put_bits(PutBitContext *s, uint8_t *buffer,
 static inline int put_bits_left(PutBitContext* s)
 {
     return (s->buf_end - s->buf_ptr) * 8 - BUF_BITS + s->bit_left;
+}
+
+/**
+ * @param  round_up  When set, the number of bits written will be
+ *                   rounded up to the next byte.
+ * @return the number of bytes left.
+ */
+static inline int put_bytes_left(const PutBitContext *s, int round_up)
+{
+    return s->buf_end - s->buf_ptr - ((BUF_BITS - s->bit_left + (round_up ? 7 : 0)) >> 3);
 }
 
 /**
@@ -139,11 +172,6 @@ static inline void flush_put_bits_le(PutBitContext *s)
     s->bit_left = BUF_BITS;
     s->bit_buf  = 0;
 }
-
-#if FF_API_AVPRIV_PUT_BITS
-void avpriv_align_put_bits(PutBitContext *s);
-void avpriv_copy_bits(PutBitContext *pb, const uint8_t *src, int length);
-#endif
 
 #ifdef BITSTREAM_WRITER_LE
 #define ff_put_string ff_put_string_unsupported_here
@@ -377,7 +405,6 @@ static inline void set_put_bits_buffer_size(PutBitContext *s, int size)
 {
     av_assert0(size <= INT_MAX/8 - BUF_BITS);
     s->buf_end = s->buf + size;
-    s->size_in_bits = 8*size;
 }
 
 /**

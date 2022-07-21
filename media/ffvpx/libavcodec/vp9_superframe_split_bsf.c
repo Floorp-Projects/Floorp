@@ -51,6 +51,9 @@ static int vp9_superframe_split_filter(AVBSFContext *ctx, AVPacket *out)
             return ret;
         in = s->buffer_pkt;
 
+        if (!in->size)
+            goto passthrough;
+
         marker = in->data[in->size - 1];
         if ((marker & 0xe0) == 0xc0) {
             int length_size = 1 + ((marker >> 3) & 0x3);
@@ -70,7 +73,7 @@ static int vp9_superframe_split_filter(AVBSFContext *ctx, AVPacket *out)
                         frame_size |= bytestream2_get_byte(&bc) << (j * 8);
 
                     total_size += frame_size;
-                    if (frame_size < 0 || total_size > in->size - idx_size) {
+                    if (frame_size <= 0 || total_size > in->size - idx_size) {
                         av_log(ctx, AV_LOG_ERROR,
                                "Invalid frame size in a superframe: %d\n", frame_size);
                         ret = AVERROR(EINVAL);
@@ -121,6 +124,7 @@ static int vp9_superframe_split_filter(AVBSFContext *ctx, AVPacket *out)
             out->pts = AV_NOPTS_VALUE;
 
     } else {
+passthrough:
         av_packet_move_ref(out, s->buffer_pkt);
     }
 
@@ -155,12 +159,12 @@ static void vp9_superframe_split_uninit(AVBSFContext *ctx)
     av_packet_free(&s->buffer_pkt);
 }
 
-const AVBitStreamFilter ff_vp9_superframe_split_bsf = {
-    .name = "vp9_superframe_split",
+const FFBitStreamFilter ff_vp9_superframe_split_bsf = {
+    .p.name         = "vp9_superframe_split",
+    .p.codec_ids    = (const enum AVCodecID []){ AV_CODEC_ID_VP9, AV_CODEC_ID_NONE },
     .priv_data_size = sizeof(VP9SFSplitContext),
     .init           = vp9_superframe_split_init,
     .flush          = vp9_superframe_split_flush,
     .close          = vp9_superframe_split_uninit,
     .filter         = vp9_superframe_split_filter,
-    .codec_ids      = (const enum AVCodecID []){ AV_CODEC_ID_VP9, AV_CODEC_ID_NONE },
 };

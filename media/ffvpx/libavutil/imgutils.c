@@ -123,8 +123,7 @@ int av_image_fill_plane_sizes(size_t sizes[4], enum AVPixelFormat pix_fmt,
         return AVERROR(EINVAL);
     sizes[0] = linesizes[0] * (size_t)height;
 
-    if (desc->flags & AV_PIX_FMT_FLAG_PAL ||
-        desc->flags & FF_PSEUDOPAL) {
+    if (desc->flags & AV_PIX_FMT_FLAG_PAL) {
         sizes[1] = 256 * 4; /* palette is stored here as 256 32 bits words */
         return 0;
     }
@@ -165,6 +164,9 @@ int av_image_fill_pointers(uint8_t *data[4], enum AVPixelFormat pix_fmt, int hei
             return AVERROR(EINVAL);
         ret += sizes[i];
     }
+
+    if (!ptr)
+        return ret;
 
     data[0] = ptr;
     for (i = 1; i < 4 && sizes[i]; i++)
@@ -250,7 +252,7 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
         av_free(buf);
         return ret;
     }
-    if (desc->flags & AV_PIX_FMT_FLAG_PAL || (desc->flags & FF_PSEUDOPAL && pointers[1])) {
+    if (desc->flags & AV_PIX_FMT_FLAG_PAL) {
         avpriv_set_systematic_pal2((uint32_t*)pointers[1], pix_fmt);
         if (align < 4) {
             av_log(NULL, AV_LOG_ERROR, "Formats with a palette require a minimum alignment of 4\n");
@@ -259,8 +261,7 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
         }
     }
 
-    if ((desc->flags & AV_PIX_FMT_FLAG_PAL ||
-         desc->flags & FF_PSEUDOPAL) && pointers[1] &&
+    if (desc->flags & AV_PIX_FMT_FLAG_PAL && pointers[1] &&
         pointers[1] - pointers[0] > linesizes[0] * h) {
         /* zero-initialize the padding before the palette */
         memset(pointers[0] + linesizes[0] * h, 0,
@@ -355,9 +356,9 @@ static void image_copy_plane(uint8_t       *dst, ptrdiff_t dst_linesize,
     }
 }
 
-static void image_copy_plane_uc_from(uint8_t       *dst, ptrdiff_t dst_linesize,
-                                     const uint8_t *src, ptrdiff_t src_linesize,
-                                     ptrdiff_t bytewidth, int height)
+void av_image_copy_plane_uc_from(uint8_t *dst, ptrdiff_t dst_linesize,
+                                 const uint8_t *src, ptrdiff_t src_linesize,
+                                 ptrdiff_t bytewidth, int height)
 {
     int ret = -1;
 
@@ -388,8 +389,7 @@ static void image_copy(uint8_t *dst_data[4], const ptrdiff_t dst_linesizes[4],
     if (!desc || desc->flags & AV_PIX_FMT_FLAG_HWACCEL)
         return;
 
-    if (desc->flags & AV_PIX_FMT_FLAG_PAL ||
-        desc->flags & FF_PSEUDOPAL) {
+    if (desc->flags & AV_PIX_FMT_FLAG_PAL) {
         copy_plane(dst_data[0], dst_linesizes[0],
                    src_data[0], src_linesizes[0],
                    width, height);
@@ -440,7 +440,7 @@ void av_image_copy_uc_from(uint8_t *dst_data[4], const ptrdiff_t dst_linesizes[4
                            enum AVPixelFormat pix_fmt, int width, int height)
 {
     image_copy(dst_data, dst_linesizes, src_data, src_linesizes, pix_fmt,
-               width, height, image_copy_plane_uc_from);
+               width, height, av_image_copy_plane_uc_from);
 }
 
 int av_image_fill_arrays(uint8_t *dst_data[4], int dst_linesize[4],
@@ -477,10 +477,6 @@ int av_image_get_buffer_size(enum AVPixelFormat pix_fmt,
     ret = av_image_check_size(width, height, 0, NULL);
     if (ret < 0)
         return ret;
-
-    // do not include palette for these pseudo-paletted formats
-    if (desc->flags & FF_PSEUDOPAL)
-        return FFALIGN(width, align) * height;
 
     ret = av_image_fill_linesizes(linesize, pix_fmt, width);
     if (ret < 0)
