@@ -423,19 +423,47 @@ mozperftest:
             - 'python/mozperftest/**'
 
 fxms-schemas:
-    description: Ensure messaging-system schemas are up-to-date
+    description: >
+        Ensure messaging-system schemas are up-to-date and run Experimenter
+        integration tests.
+    platform:
+        - linux1804-64/opt
     treeherder:
         symbol: py3(fxms)
+    require-build:
+        by-project:
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64/opt
+    fetches:
+        build:
+            - artifact: target.tar.bz2
+            - artifact: target.common.tests.tar.gz
+    worker:
+        by-platform:
+            linux1804-64.*:
+                docker-image: {in-tree: "ubuntu1804-test"}
+                max-run-time: 3600
     run:
         using: run-task
         cwd: '{checkout}'
         command: >
             cd browser/components/newtab/content-src/asrouter/schemas &&
+            env LD_LIBRARY_PATH=${MOZ_FETCHES_DIR}/firefox \
+                ${MOZ_FETCHES_DIR}/bin/xpcshell \
+                    -g ${MOZ_FETCHES_DIR}/firefox \
+                    -a ${MOZ_FETCHES_DIR}/firefox/browser \
+                    extract-test-corpus.js
             ../../../../../../mach python -- make-schemas.py --check
     when:
         files-changed:
+            - 'browser/components/newtab/content-src/asrouter/schemas/extract-test-corpus.js'
             - 'browser/components/newtab/content-src/asrouter/schemas/make-schemas.py'
             - 'browser/components/newtab/content-src/**/*.schema.json'
+            - 'browser/components/newtab/lib/CFRMessageProvider.jsm'
+            - 'browser/components/newtab/lib/OnboardingMessageProvider.jsm'
+            - 'browser/components/newtab/lib/PanelTestProvider.jsm'
 
 condprof:
     description: testing/condprofile unit tests
