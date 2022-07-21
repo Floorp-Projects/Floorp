@@ -498,6 +498,11 @@ void NativeLayerRootCA::SetWindowIsFullscreen(bool aFullscreen) {
     return true;
   }
   size_t componentCount = CGColorGetNumberOfComponents(aColor);
+  if (componentCount == 0) {
+    // This will happen if aColor is kCGColorClear. It's not opaque black.
+    return false;
+  }
+
   const CGFloat* components = CGColorGetComponents(aColor);
   for (size_t c = 0; c < componentCount - 1; ++c) {
     if (components[c] > 0.0f) {
