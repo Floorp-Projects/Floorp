@@ -7,8 +7,8 @@
   function submitForm() {
     if (!location.search.includes("field")) {
       let form  = document.getElementById("form");
-      let field = document.getElementById("field");
-      field.value = "value";
+      let field = SpecialPowers.wrap(document.getElementById("field"));
+      field.setUserInput("value");
       form.submit();
     }
   }
