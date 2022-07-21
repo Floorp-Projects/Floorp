@@ -49,6 +49,7 @@ class ThrottlingProfile {
   }
 }
 
+// Should be synced with devtools/docs/user/network_monitor/throttling/index.rst
 const profiles = [
   {
     id: "GPRS",

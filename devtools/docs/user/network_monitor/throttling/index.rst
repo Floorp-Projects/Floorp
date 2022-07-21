@@ -26,7 +26,7 @@ The table below lists the numbers associated with each network type, but please 
 
   GPRS, 50 Kbps, 20 Kbps, 500
   Regular 2G, 250 Kbps, 50 Kbps, 300
-  Good 2G, 50 Kbps, 150 Kbps, 150
+  Good 2G, 450 Kbps, 150 Kbps, 150
   Regular 3G, 750 Kbps, 250 Kbps, 100
   Good 3G, 1.5 Mbps, 750 Kbps, 40
   Regular 4G/LTE, 4 Mbps, 3 Mbps, 20
