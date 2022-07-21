@@ -2579,10 +2579,10 @@ static nsresult JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize,
 static void AccumulateTelemetryCallback(int id, uint32_t sample,
                                         const char* key) {
   switch (id) {
-    case JS_TELEMETRY_GC_REASON:
+    case JS_TELEMETRY_GC_REASON_2:
       Telemetry::Accumulate(Telemetry::GC_REASON_2, sample);
       break;
-    case JS_TELEMETRY_GC_IS_ZONE_GC:
+    case JS_TELEMETRY_GC_IS_COMPARTMENTAL:
       Telemetry::Accumulate(Telemetry::GC_IS_COMPARTMENTAL, sample);
       break;
     case JS_TELEMETRY_GC_MS:
@@ -2660,7 +2660,7 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_MINOR_US:
       Telemetry::Accumulate(Telemetry::GC_MINOR_US, sample);
       break;
-    case JS_TELEMETRY_GC_NURSERY_BYTES:
+    case JS_TELEMETRY_GC_NURSERY_BYTES_2:
       Telemetry::Accumulate(Telemetry::GC_NURSERY_BYTES_2, sample);
       break;
     case JS_TELEMETRY_GC_PRETENURE_COUNT_2:

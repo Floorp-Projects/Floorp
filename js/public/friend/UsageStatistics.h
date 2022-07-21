@@ -23,8 +23,8 @@ class JS_PUBLIC_API JSObject;
  * member of the mozilla::Telemetry::HistogramID enum by the callback.
  */
 #define MAP_JS_TELEMETRY(_)                 \
-  _(JS_TELEMETRY_GC_REASON)                 \
-  _(JS_TELEMETRY_GC_IS_ZONE_GC)             \
+  _(JS_TELEMETRY_GC_REASON_2)               \
+  _(JS_TELEMETRY_GC_IS_COMPARTMENTAL)       \
   _(JS_TELEMETRY_GC_MS)                     \
   _(JS_TELEMETRY_GC_BUDGET_MS_2)            \
   _(JS_TELEMETRY_GC_BUDGET_WAS_INCREASED)   \
@@ -50,7 +50,7 @@ class JS_PUBLIC_API JSObject;
   _(JS_TELEMETRY_GC_MINOR_REASON)           \
   _(JS_TELEMETRY_GC_MINOR_REASON_LONG)      \
   _(JS_TELEMETRY_GC_MINOR_US)               \
-  _(JS_TELEMETRY_GC_NURSERY_BYTES)          \
+  _(JS_TELEMETRY_GC_NURSERY_BYTES_2)        \
   _(JS_TELEMETRY_GC_PRETENURE_COUNT_2)      \
   _(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE) \
   _(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE)  \
