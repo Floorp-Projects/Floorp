@@ -4,6 +4,22 @@ import asyncio
 pytestmark = pytest.mark.asyncio
 
 
+async def wait_for_navigation(bidi_session, context, url, wait, expect_timeout):
+    # Ultimately, "interactive" and "complete" should support a timeout argument.
+    # See https://github.com/w3c/webdriver-bidi/issues/188.
+    if expect_timeout:
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(
+                bidi_session.browsing_context.navigate(
+                    context=context, url=url, wait=wait
+                ),
+              timeout=1,
+            )
+    else:
+        await bidi_session.browsing_context.navigate(
+            context=context, url=url, wait=wait
+        )
+
 @pytest.mark.parametrize("value", ["none", "interactive", "complete"])
 async def test_expected_url(bidi_session, inline, new_tab, value):
     url = inline("<div>foo</div>")
@@ -30,20 +46,7 @@ async def test_slow_image(bidi_session, inline, new_tab, wait, expect_timeout):
     script_url = "/webdriver/tests/bidi/browsing_context/navigate/support/empty.svg"
     url = inline(f"<img src='{script_url}?pipe=trickle(d10)'>")
 
-    # Ultimately, "interactive" and "complete" should support a timeout argument.
-    # See https://github.com/w3c/webdriver-bidi/issues/188.
-    wait_for_navigation = asyncio.wait_for(
-        bidi_session.browsing_context.navigate(
-            context=new_tab["context"], url=url, wait=wait
-        ),
-        timeout=1,
-    )
-
-    if expect_timeout:
-        with pytest.raises(asyncio.TimeoutError):
-            await wait_for_navigation
-    else:
-        await wait_for_navigation
+    await wait_for_navigation(bidi_session, new_tab["context"], url, wait, expect_timeout)
 
     if wait != "none":
         contexts = await bidi_session.browsing_context.get_tree(
@@ -65,18 +68,7 @@ async def test_slow_page(bidi_session, new_tab, url, wait, expect_timeout):
         "/webdriver/tests/bidi/browsing_context/navigate/support/empty.html?pipe=trickle(d10)"
     )
 
-    wait_for_navigation = asyncio.wait_for(
-        bidi_session.browsing_context.navigate(
-            context=new_tab["context"], url=page_url, wait=wait
-        ),
-        timeout=1,
-    )
-
-    if expect_timeout:
-        with pytest.raises(asyncio.TimeoutError):
-            await wait_for_navigation
-    else:
-        await wait_for_navigation
+    await wait_for_navigation(bidi_session, new_tab["context"], page_url, wait, expect_timeout)
 
     # Note that we cannot assert the top context url here, because the navigation
     # is blocked on the initial url for this test case.
@@ -94,18 +86,7 @@ async def test_slow_script(bidi_session, inline, new_tab, wait, expect_timeout):
     script_url = "/webdriver/tests/bidi/browsing_context/navigate/support/empty.js"
     url = inline(f"<script src='{script_url}?pipe=trickle(d10)'></script>")
 
-    wait_for_navigation = asyncio.wait_for(
-        bidi_session.browsing_context.navigate(
-            context=new_tab["context"], url=url, wait=wait
-        ),
-        timeout=1,
-    )
-
-    if expect_timeout:
-        with pytest.raises(asyncio.TimeoutError):
-            await wait_for_navigation
-    else:
-        await wait_for_navigation
+    await wait_for_navigation(bidi_session, new_tab["context"], url, wait, expect_timeout)
 
     if wait != "none":
         contexts = await bidi_session.browsing_context.get_tree(
