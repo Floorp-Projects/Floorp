@@ -2579,7 +2579,7 @@ static nsresult JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize,
 static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
   // clang-format off
   switch (id) {
-#define CASE_ACCUMULATE(NAME)                         \
+#define CASE_ACCUMULATE(NAME, _)                      \
     case JSMetric::NAME:                              \
       Telemetry::Accumulate(Telemetry::NAME, sample); \
       break;

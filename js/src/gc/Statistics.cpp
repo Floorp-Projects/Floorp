@@ -1020,19 +1020,19 @@ void Statistics::sendGCTelemetry() {
   TimeDuration markGrayTotal = phaseTimes[Phase::SWEEP_MARK_GRAY] +
                                phaseTimes[Phase::SWEEP_MARK_GRAY_WEAK];
   size_t markCount = gc->marker.getMarkCount();
-  runtime->metrics().GC_PREPARE_MS(t(prepareTotal));
-  runtime->metrics().GC_MARK_MS(t(markTotal));
+  runtime->metrics().GC_PREPARE_MS(prepareTotal);
+  runtime->metrics().GC_MARK_MS(markTotal);
   if (markTotal >= TimeDuration::FromMilliseconds(1)) {
     double markRate = double(markCount) / t(markTotal);
     runtime->metrics().GC_MARK_RATE_2(uint32_t(markRate));
   }
-  runtime->metrics().GC_SWEEP_MS(t(phaseTimes[Phase::SWEEP]));
+  runtime->metrics().GC_SWEEP_MS(phaseTimes[Phase::SWEEP]);
   if (gc->didCompactZones()) {
-    runtime->metrics().GC_COMPACT_MS(t(phaseTimes[Phase::COMPACT]));
+    runtime->metrics().GC_COMPACT_MS(phaseTimes[Phase::COMPACT]);
   }
-  runtime->metrics().GC_MARK_ROOTS_US(markRootsTotal.ToMicroseconds());
-  runtime->metrics().GC_MARK_GRAY_MS_2(t(markGrayTotal));
-  runtime->metrics().GC_MARK_WEAK_MS(t(markWeakTotal));
+  runtime->metrics().GC_MARK_ROOTS_US(markRootsTotal);
+  runtime->metrics().GC_MARK_GRAY_MS_2(markGrayTotal);
+  runtime->metrics().GC_MARK_WEAK_MS(markWeakTotal);
   runtime->metrics().GC_NON_INCREMENTAL(nonincremental());
   if (nonincremental()) {
     runtime->metrics().GC_NON_INCREMENTAL_REASON(
@@ -1054,8 +1054,8 @@ void Statistics::sendGCTelemetry() {
   TimeDuration total, longest;
   gcDuration(&total, &longest);
 
-  runtime->metrics().GC_MS(t(total));
-  runtime->metrics().GC_MAX_PAUSE_MS_2(t(longest));
+  runtime->metrics().GC_MS(total);
+  runtime->metrics().GC_MAX_PAUSE_MS_2(longest);
 
   const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
   runtime->metrics().GC_MMU_50(mmu50 * 100);
@@ -1063,7 +1063,7 @@ void Statistics::sendGCTelemetry() {
   // Record scheduling telemetry for the main runtime but not for workers, which
   // are scheduled differently.
   if (!runtime->parentRuntime && timeSinceLastGC) {
-    runtime->metrics().GC_TIME_BETWEEN_S(timeSinceLastGC.ToSeconds());
+    runtime->metrics().GC_TIME_BETWEEN_S(timeSinceLastGC);
     if (!nonincremental()) {
       runtime->metrics().GC_SLICE_COUNT(slices_.length());
     }
@@ -1141,8 +1141,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
   JSRuntime* runtime = gc->rt;
   if (!runtime->parentRuntime && !slices_.empty()) {
     TimeDuration timeSinceLastSlice = currentTime - slices_.back().end;
-    runtime->metrics().GC_TIME_BETWEEN_SLICES_MS(
-        uint32_t(timeSinceLastSlice.ToMilliseconds()));
+    runtime->metrics().GC_TIME_BETWEEN_SLICES_MS(timeSinceLastSlice);
   }
 
   Maybe<Trigger> trigger = recordedTrigger;
@@ -1245,19 +1244,19 @@ void Statistics::endSlice() {
 void Statistics::sendSliceTelemetry(const SliceData& slice) {
   JSRuntime* runtime = gc->rt;
   TimeDuration sliceTime = slice.end - slice.start;
-  runtime->metrics().GC_SLICE_MS(t(sliceTime));
+  runtime->metrics().GC_SLICE_MS(sliceTime);
 
   if (slice.budget.isTimeBudget()) {
     TimeDuration budgetDuration = slice.budget.timeBudgetDuration();
-    runtime->metrics().GC_BUDGET_MS_2(t(budgetDuration));
+    runtime->metrics().GC_BUDGET_MS_2(budgetDuration);
     if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
-      runtime->metrics().GC_ANIMATION_MS(t(sliceTime));
+      runtime->metrics().GC_ANIMATION_MS(sliceTime);
     }
 
     if (sliceTime > budgetDuration) {
       // Record how long we went over budget.
       TimeDuration overrun = sliceTime - budgetDuration;
-      runtime->metrics().GC_BUDGET_OVERRUN(overrun.ToMicroseconds());
+      runtime->metrics().GC_BUDGET_OVERRUN(overrun);
 
       // Long GC slices are those that go 50% or 5ms over their budget.
       bool wasLongSlice = (overrun > TimeDuration::FromMilliseconds(5)) ||

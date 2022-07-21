@@ -1203,7 +1203,7 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
   if (wasLongMinorGC) {
     rt->metrics().GC_MINOR_REASON_LONG(uint32_t(reason));
   }
-  rt->metrics().GC_MINOR_US(totalTime.ToMicroseconds());
+  rt->metrics().GC_MINOR_US(totalTime);
   rt->metrics().GC_NURSERY_BYTES_2(committed());
 
   if (!wasEmpty) {
