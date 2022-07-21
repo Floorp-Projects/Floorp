@@ -318,16 +318,19 @@ SECStatus DetermineCertOverrideErrors(const nsCOMPtr<nsIX509Cert>& cert,
           certInput, mozilla::pkix::EndEntityOrCA::MustBeEndEntity, nullptr);
       Result rv = backCert.Init();
       if (rv != Success) {
-        MapResultToPRErrorCode(rv);
+        PR_SetError(MapResultToPRErrorCode(rv), 0);
         return SECFailure;
       }
       mozilla::pkix::Time notBefore(mozilla::pkix::Time::uninitialized);
       mozilla::pkix::Time notAfter(mozilla::pkix::Time::uninitialized);
+      // If the validity can't be parsed, ParseValidity will return
+      // Result::ERROR_INVALID_DER_TIME.
       rv = mozilla::pkix::ParseValidity(backCert.GetValidity(), &notBefore,
                                         &notAfter);
       if (rv != Success) {
-        MapResultToPRErrorCode(rv);
-        return SECFailure;
+        collectedErrors |= nsICertOverrideService::ERROR_TIME;
+        errorCodeTime = MapResultToPRErrorCode(rv);
+        break;
       }
       // If `now` is outside of the certificate's validity period,
       // CheckValidity will return Result::ERROR_NOT_YET_VALID_CERTIFICATE or
