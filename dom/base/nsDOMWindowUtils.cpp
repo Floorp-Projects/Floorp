@@ -284,8 +284,8 @@ CompositorBridgeChild* nsDOMWindowUtils::GetCompositorBridge() {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetLastOverWindowPointerLocationInCSSPixels(float* aX,
-                                                              float* aY) {
+nsDOMWindowUtils::GetLastOverWindowMouseLocationInCSSPixels(float* aX,
+                                                            float* aY) {
   const PresShell* presShell = GetPresShell();
   const nsPresContext* presContext = GetPresContext();
 
@@ -293,18 +293,18 @@ nsDOMWindowUtils::GetLastOverWindowPointerLocationInCSSPixels(float* aX,
     return NS_ERROR_FAILURE;
   }
 
-  const nsPoint& lastOverWindowPointerLocation =
-      presShell->GetLastOverWindowPointerLocation();
+  const nsPoint& lastOverWindowMouseLocation =
+      presShell->GetLastOverWindowMouseLocation();
 
-  if (lastOverWindowPointerLocation.X() == NS_UNCONSTRAINEDSIZE &&
-      lastOverWindowPointerLocation.Y() == NS_UNCONSTRAINEDSIZE) {
+  if (lastOverWindowMouseLocation.X() == NS_UNCONSTRAINEDSIZE &&
+      lastOverWindowMouseLocation.Y() == NS_UNCONSTRAINEDSIZE) {
     *aX = 0;
     *aY = 0;
   } else {
-    const CSSPoint lastOverWindowPointerLocationInCSSPixels =
-        CSSPoint::FromAppUnits(lastOverWindowPointerLocation);
-    *aX = lastOverWindowPointerLocationInCSSPixels.X();
-    *aY = lastOverWindowPointerLocationInCSSPixels.Y();
+    const CSSPoint lastOverWindowMouseLocationInCSSPixels =
+        CSSPoint::FromAppUnits(lastOverWindowMouseLocation);
+    *aX = lastOverWindowMouseLocationInCSSPixels.X();
+    *aY = lastOverWindowMouseLocationInCSSPixels.Y();
   }
 
   return NS_OK;
