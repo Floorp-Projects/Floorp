@@ -18,6 +18,8 @@ module.exports = {
     ContentTask: false,
     ContentTaskUtils: false,
     EventUtils: false,
+    IOUtils: false,
+    PathUtils: false,
     PromiseDebugging: false,
     SpecialPowers: false,
     TestUtils: false,
