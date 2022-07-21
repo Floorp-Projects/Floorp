@@ -1130,15 +1130,6 @@ template <typename T>
     }
   }
 
-  // To keep things simpler, we always reify the array buffer for cross-realm or
-  // wrapped typed arrays. Note: isWrapped does not imply cross-realm, because
-  // of same-compartment wrappers.
-  if (cx->realm() != srcArray->realm() || isWrapped) {
-    if (!TypedArrayObject::ensureHasBuffer(cx, srcArray)) {
-      return nullptr;
-    }
-  }
-
   // InitializeTypedArrayFromTypedArray, step 1. (Skipped)
 
   // InitializeTypedArrayFromTypedArray, step 2.
