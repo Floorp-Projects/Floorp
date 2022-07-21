@@ -15,10 +15,11 @@ class nsTArray;
 namespace mozilla::dom::fs {
 
 using ContentType = nsString;
+using DatabaseVersion = int32_t;
 using EntryId = nsCString;
 using Name = nsString;
 using Origin = nsCString;
-using PageNumber = uint32_t;
+using PageNumber = int32_t;
 using Path = nsTArray<Name>;
 using TimeStamp = int64_t;
 using Usage = int64_t;
