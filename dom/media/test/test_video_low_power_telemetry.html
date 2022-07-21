@@ -9,8 +9,8 @@ number of frames, then check that appropriate telemetry has been recorded. Since
 telemetry fires based on the number of frames presented, the test is structured around
 the `media.video_stats.enabled` pref, which allows us to monitor the number of frames
 that have been shown. The telemetry fires every 600 frames. To make sure we have enough
-presented frames to trigger telemetry, we run the media for more frames and then check
-that the expected telemetry value has been recorded either 1 or 2 times.
+presented frames to trigger telemetry, we run the media for many frames and then check
+that the expected telemetry value has been recorded at least once.
 
 The tests are run via the MediaTestManager, which loads and plays the video sequentially.
 Since we want to test different telemetry outcomes, we have some special setup and teardown
@@ -41,11 +41,11 @@ steps we run before each video. We keep track of which test we are running with 
   SimpleTest.waitForExplicitFinish();
 
   // How many frames do we run? Must be more than 600, because that's how
-  // many frames must be shown before telemetry is emitted. It must also be
-  // less than twice that number because we check that the expected values
-  // are emitted either 1 or 2 times.
+  // many frames must be shown before telemetry is emitted. We present for
+  // much longer than that to ensure that the telemetry is emitted at least
+  // once.
   const TELEMETRY_FRAMES = 600;
-  const PRESENTED_FRAMES = TELEMETRY_FRAMES * 1.2;
+  const PRESENTED_FRAMES = TELEMETRY_FRAMES * 3.0;
 
   // Taken from TelemetryHistogramEnums.h
   const GFX_MACOS_VIDEO_LOW_POWER_LowPower = 1;
@@ -72,13 +72,21 @@ steps we run before each video. We keep track of which test we are running with 
       return;
     }
 
-    // Since we've run the media for slightly more frames than the telemetry needs
-    // to fire, we should have either 1 or 2 of the expected values.
+    // For debugging purposes, build a string of the snapshot values hashmap.
+    let valuesString = '';
+    let keys = Object.keys(snap.values);
+    keys.forEach(k => {
+      valuesString += `[${k}] = ${snap.values[k]}, `;
+    });
+    info(`Test ${testIndex} telemetry values are ${valuesString}`);
+
+    // Since we've run the media for more frames than the telemetry needs to
+    // fire, we should have at least 1 of the expected value.
     let val = snap.values[category];
     if (!val) {
       val = 0;
     }
-    ok(val >= 1 && val <= 2, `Test ${testIndex} enum ${category} should have either 1 or 2 occurrences; found ${val}.`);
+    ok(val > 0, `Test ${testIndex} enum ${category} should have at least 1 occurrence; found ${val}.`);
   }
 
   async function doPreTest(v) {
