@@ -570,6 +570,30 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1772949",
+    platform: "all",
+    domain: "YouTube embeds",
+    bug: "1772949",
+    customFunc: "runScriptBeforeRequest",
+    script: "injections/js/bug1772949-youtube-webshare-shim.js",
+    request: ["*://www.youtube.com/*/www-embed-player.js*"],
+    message: "The WebShare API is being disabled on a YouTube frame.",
+  },
+  {
+    id: "bug1778239",
+    platform: "all",
+    domain: "m.pji.co.kr",
+    bug: "1778239",
+    contentScripts: {
+      matches: ["*://m.pji.co.kr/*"],
+      js: [
+        {
+          file: "injections/js/bug1778239-m.pji.co.kr-banner-hide.js",
+        },
+      ],
+    },
+  },
+  {
     id: "bug1774005",
     platform: "all",
     domain: "Sites relying on window.InstallTrigger",
@@ -577,12 +601,15 @@ const AVAILABLE_INJECTIONS = [
     contentScripts: {
       matches: [
         "*://*.pixiv.net/*", // Bug 1774006
+        "*://*.crunchyroll.com/*", // Bug 1777597
+        "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382
       ],
       js: [
         {
           file: "injections/js/bug1774005-installtrigger-shim.js",
         },
       ],
+      allFrames: true,
     },
   },
 ];
