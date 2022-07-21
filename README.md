@@ -53,6 +53,7 @@ This repository contains source code for the Floorp browser from version 10.0.0 
 Branches ```master```, ```release```, ``beta``, and ``ESR102`` exist.
 
 ``ESR102`` is main branch. This is stable release of Floorp 10.
+
 ----
 
 ### About issues and pull requests
