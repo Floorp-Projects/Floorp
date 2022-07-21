@@ -3,9 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use inherent::inherent;
+use std::sync::Arc;
 
 use super::{CommonMetricData, MetricId};
-
 use crate::ipc::need_ipc;
 
 /// A string metric.
@@ -39,7 +39,7 @@ use crate::ipc::need_ipc;
 /// ```
 #[derive(Clone)]
 pub enum StringMetric {
-    Parent(glean::private::StringMetric),
+    Parent(Arc<glean::private::StringMetric>),
     Child(StringMetricIpc),
 }
 #[derive(Clone, Debug)]
@@ -51,7 +51,7 @@ impl StringMetric {
         if need_ipc() {
             StringMetric::Child(StringMetricIpc)
         } else {
-            StringMetric::Parent(glean::private::StringMetric::new(meta))
+            StringMetric::Parent(Arc::new(glean::private::StringMetric::new(meta)))
         }
     }
 
