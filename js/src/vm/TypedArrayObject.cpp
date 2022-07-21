@@ -874,7 +874,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   }
 
   static bool maybeCreateArrayBuffer(JSContext* cx, uint64_t count,
-                                     HandleObject nonDefaultProto,
                                      MutableHandle<ArrayBufferObject*> buffer) {
     if (count > maxByteLength() / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -887,13 +886,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     static_assert(INLINE_BUFFER_LIMIT % BYTES_PER_ELEMENT == 0,
                   "ArrayBuffer inline storage shouldn't waste any space");
 
-    if (!nonDefaultProto && byteLength <= INLINE_BUFFER_LIMIT) {
+    if (byteLength <= INLINE_BUFFER_LIMIT) {
       // The array's data can be inline, and the buffer created lazily.
       return true;
     }
 
-    ArrayBufferObject* buf =
-        ArrayBufferObject::createZeroed(cx, byteLength, nonDefaultProto);
+    ArrayBufferObject* buf = ArrayBufferObject::createZeroed(cx, byteLength);
     if (!buf) {
       return false;
     }
@@ -908,7 +906,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
   static JSObject* fromLength(JSContext* cx, uint64_t nelements,
                               HandleObject proto = nullptr) {
     Rooted<ArrayBufferObject*> buffer(cx);
-    if (!maybeCreateArrayBuffer(cx, nelements, nullptr, &buffer)) {
+    if (!maybeCreateArrayBuffer(cx, nelements, &buffer)) {
       return nullptr;
     }
 
@@ -1105,7 +1103,7 @@ template <typename T>
 /* static */ bool TypedArrayObjectTemplate<T>::AllocateArrayBuffer(
     JSContext* cx, size_t count, MutableHandle<ArrayBufferObject*> buffer) {
   // Steps 1-5.
-  return maybeCreateArrayBuffer(cx, count, nullptr, buffer);
+  return maybeCreateArrayBuffer(cx, count, buffer);
 }
 
 template <typename T>
@@ -1267,7 +1265,7 @@ template <typename T>
 
     // InitializeTypedArrayFromList, step 2.
     Rooted<ArrayBufferObject*> buffer(cx);
-    if (!maybeCreateArrayBuffer(cx, len, nullptr, &buffer)) {
+    if (!maybeCreateArrayBuffer(cx, len, &buffer)) {
       return nullptr;
     }
 
@@ -1348,7 +1346,7 @@ template <typename T>
 
   // InitializeTypedArrayFromArrayLike, step 2.
   Rooted<ArrayBufferObject*> buffer(cx);
-  if (!maybeCreateArrayBuffer(cx, len, nullptr, &buffer)) {
+  if (!maybeCreateArrayBuffer(cx, len, &buffer)) {
     return nullptr;
   }
 
