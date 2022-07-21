@@ -459,7 +459,7 @@ nsresult gfxFontconfigFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   }
   if (setCharMap) {
     if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
-      charmap->AddRef();
+      Unused << charmap.forget();
     }
   }
 
