@@ -260,38 +260,36 @@ const MR_ABOUT_WELCOME_DEFAULT = {
   backdrop: "#438ab6",
   screens: [
     {
-      id: "AW_PIN_FIREFOX",
+      id: "AW_SET_DEFAULT",
       content: {
         position: "split",
         background: "#3191f8",
         progress_bar: true,
         logo: {},
-        title: "Open up an amazing internet",
-        subtitle:
-          "Launch Firefox from anywhere with a single click. Every time you do, you’re choosing a more open and independent web.",
+        hero_text: {
+          string_id: "mr1-welcome-screen-hero-text",
+        },
+        title: {
+          string_id: "mr1-onboarding-default-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-default-subtitle",
+        },
         primary_button: {
-          label: "Pin Firefox to taskbar",
+          label: {
+            string_id: "mr1-onboarding-default-primary-button-label",
+          },
           action: {
             navigate: true,
-            type: "PIN_FIREFOX_TO_TASKBAR",
+            type: "SET_DEFAULT_BROWSER",
           },
         },
         secondary_button: {
-          label: "Skip this step",
+          label: {
+            string_id: "mr1-onboarding-set-default-secondary-button-label",
+          },
           action: {
             navigate: true,
-          },
-        },
-        secondary_button_top: {
-          label: {
-            string_id: "mr1-onboarding-sign-in-button-label",
-          },
-          action: {
-            data: {
-              entrypoint: "activity-stream-firstrun",
-            },
-            type: "SHOW_FIREFOX_ACCOUNTS",
-            addFlowParams: true,
           },
         },
       },
@@ -304,7 +302,6 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         logo: {},
         title: { string_id: "onboarding-live-language-header" },
-        subtitle: "Firefox speaks your language",
         languageSwitcher: {
           downloading: {
             string_id: "onboarding-live-language-button-label-downloading",
@@ -321,40 +318,18 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       },
     },
     {
-      id: "AW_SET_DEFAULT",
-      content: {
-        position: "split",
-        background: "#3191f8",
-        progress_bar: true,
-        logo: {},
-        title: "Make Firefox’s indie tech your go-to browser.",
-        subtitle:
-          "Start with a browser backed by a non-profit. We defend your privacy while you zip around the web.",
-        primary_button: {
-          label: "Set as default browser",
-          action: {
-            navigate: true,
-            type: "SET_DEFAULT_BROWSER",
-          },
-        },
-        secondary_button: {
-          label: "Skip this step",
-          action: {
-            navigate: true,
-          },
-        },
-      },
-    },
-    {
       id: "AW_IMPORT_SETTINGS",
       content: {
         position: "split",
         background: "#3191f8",
         progress_bar: true,
         logo: {},
-        title: "Lightning fast setup",
-        subtitle:
-          "It’s a cinch to get Firefox how you like it. Add your bookmarks, passwords and more from your old browser.",
+        title: {
+          string_id: "mr1-onboarding-import-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-import-subtitle",
+        },
         primary_button: {
           label: {
             string_id:
@@ -367,7 +342,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           },
         },
         secondary_button: {
-          label: "Skip this step",
+          label: {
+            string_id: "mr1-onboarding-import-secondary-button-label",
+          },
           action: {
             navigate: true,
           },
@@ -381,7 +358,12 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         background: "#3191f8",
         progress_bar: true,
         logo: {},
-        title: "Independent voices can change culture",
+        title: {
+          string_id: "mr1-onboarding-theme-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-theme-subtitle",
+        },
         tiles: {
           type: "theme",
           action: {
@@ -438,46 +420,20 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             },
           ],
         },
-        subtitle:
-          "You are an Expressionist. You see the world differently and your creations stir the emotions of others.",
         primary_button: {
-          label: "Set colorway",
+          label: {
+            string_id: "onboarding-theme-primary-button-label",
+          },
           action: {
             navigate: true,
           },
         },
         secondary_button: {
-          label: "Skip this step",
+          label: {
+            string_id: "mr1-onboarding-theme-secondary-button-label",
+          },
           action: {
             theme: "automatic",
-            navigate: true,
-          },
-        },
-      },
-    },
-    {
-      id: "AW_GRATITUDE",
-      content: {
-        position: "split",
-        background: "#3191f8",
-        progress_bar: true,
-        logo: {},
-        title: "You’re helping us build a better web.",
-        subtitle:
-          "Thank you for using Firefox, backed by the Mozilla Foundation. With your support, we’re working to make the internet more open, accessible, and better for everyone.",
-        primary_button: {
-          label: "See what’s new",
-          action: {
-            data: {
-              args: "about:firefoxview",
-            },
-            type: "OPEN_URL",
-            navigate: true,
-          },
-        },
-        secondary_button: {
-          label: "Start browsing",
-          action: {
             navigate: true,
           },
         },
@@ -575,44 +531,33 @@ function getLocalizedUA(ua) {
   return null;
 }
 
-// Helper to find screens and remove them where applicable.
-function removeScreens(check, screens) {
-  for (let i = 0; i < screens?.length; i++) {
-    if (check(screens[i])) {
-      screens.splice(i--, 1);
-    }
-  }
-}
-
 function prepareMRContent(content) {
   // Expand with logic for finalized MR designs
-  const { screens } = content;
-
-  //If Fx is set as default, skip Import settings screen and show colorways
-  let removeDefault = !content.needDefault;
-  if (removeDefault) {
-    removeScreens(
-      screen => screen.id?.startsWith("AW_IMPORT_SETTINGS"),
-      screens
-    );
-  }
-
   return content;
 }
 
 async function prepareContentForReact(content) {
-  const { screens } = content;
-
   if (content?.template === "return_to_amo") {
     return content;
   }
 
+  if (content.templateMR) {
+    return prepareMRContent(content);
+  }
+
+  // Helper to find screens and remove them where applicable.
+  function removeScreens(check) {
+    const { screens } = content;
+    for (let i = 0; i < screens?.length; i++) {
+      if (check(screens[i])) {
+        screens.splice(i--, 1);
+      }
+    }
+  }
+
   // Change content for Windows 7 because non-light themes aren't quite right.
   if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-    removeScreens(
-      screen => ["theme"].includes(screen.content?.tiles?.type),
-      screens
-    );
+    removeScreens(screen => ["theme"].includes(screen.content?.tiles?.type));
   }
 
   // Set the primary import button source based on attribution.
@@ -674,7 +619,7 @@ async function prepareContentForReact(content) {
     }
   }
   if (removeDefault) {
-    removeScreens(screen => screen.id?.startsWith("AW_SET_DEFAULT"), screens);
+    removeScreens(screen => screen.id?.startsWith("AW_SET_DEFAULT"));
   }
 
   // Remove Firefox Accounts related UI and prevent related metrics.
@@ -714,11 +659,7 @@ async function prepareContentForReact(content) {
   }
 
   if (shouldRemoveLanguageMismatchScreen) {
-    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH", screens);
-  }
-
-  if (content.templateMR) {
-    return prepareMRContent(content);
+    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH");
   }
 
   return content;
