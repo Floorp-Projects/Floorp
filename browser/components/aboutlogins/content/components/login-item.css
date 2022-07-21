@@ -347,24 +347,13 @@ input[name="password"] {
 }
 
 .login-item-favicon {
-  width: 24px;
-}
-
-.login-item-favicon-wrapper {
   margin-inline-end: 12px;
   height: 24px;
   width: 24px;
   flex-shrink: 0;
-  background-image: url("chrome://global/skin/icons/defaultFavicon.svg");
-  background-repeat: no-repeat;
-  background-size: contain;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.75;
-}
-
-.login-item-favicon-wrapper.hide-default-favicon {
-  background-image: none;
 }
 
 .vulnerable-alert,

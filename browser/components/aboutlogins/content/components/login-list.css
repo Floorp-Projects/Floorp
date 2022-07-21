@@ -159,23 +159,13 @@ ol {
   white-space: nowrap;
 }
 
-.favicon-wrapper {
+.favicon {
   height: 16px;
   width: 16px;
-  background-image: url("chrome://global/skin/icons/defaultFavicon.svg");
-  background-repeat: no-repeat;
   margin-inline-end: 12px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;
-}
-
-.favicon-wrapper.hide-default-favicon {
-  background-image: none;
-}
-
-.favicon {
-  width: 16px;
 }
 
 .username {
