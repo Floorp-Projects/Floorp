@@ -3,6 +3,40 @@
     {
       "stash": {
         "blocked": [
+          "{7c9745be-1cf7-48fd-8bc0-28c4272a563a}:2.4.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1658234246887,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1658255707535,
+      "id": "061a339b-43d1-4cb7-83d5-3995a0737d7d",
+      "last_modified": 1658255847874
+    },
+    {
+      "stash": {
+        "blocked": [
+          "support@wildfire.ai:1.3.4",
+          "support@wildfire.ai:1.3.5",
+          "support@wildfire.ai:1.3.8",
+          "support@wildfire.ai:1.2.4",
+          "support@wildfire.ai:1.2.8",
+          "support@wildfire.ai:1.3.9",
+          "support@wildfire.ai:1.3.6",
+          "support@wildfire.ai:1.3.7",
+          "{747bf19b-2579-4b5a-b2ff-749bdf186b7d}:15.0.7.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1657737452415,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1658234107295,
+      "id": "65e3a682-deb9-4104-8c7f-40aac99ac097",
+      "last_modified": 1658234246824
+    },
+    {
+      "stash": {
+        "blocked": [
           "{c66e1cb2-c5d0-4ff0-bf31-6c976a44bcd9}:2.0.14",
           "{c66e1cb2-c5d0-4ff0-bf31-6c976a44bcd9}:2.0.16",
           "{f842c363-7ebb-4599-b97b-2a123a774cde}:22.4.2"
@@ -1086,5 +1120,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1657737452355
+  "timestamp": 1658255847874
 }
