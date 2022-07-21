@@ -3615,32 +3615,32 @@ ALIGN function_align
 .w4:
     movq   [dstq          ], xm0
     movhps [dstq+strideq*1], xm0
-    vextracti32x4      xmm0, ym0, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    vextracti32x4       xm2, ym0, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
     cmp                  hd, 8
     jl .w4_end
-    vextracti32x4      xmm0, m0, 2
+    vextracti32x4       xm2, m0, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq          ], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m0, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq          ], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm0, m0, 3
+    movq   [dstq+strideq*2], xm0
+    movhps [dstq+stride3q ], xm0
     je .w4_end
     lea                dstq, [dstq+strideq*4]
     movq   [dstq          ], xm1
     movhps [dstq+strideq*1], xm1
-    vextracti32x4      xmm0, ym1, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
-    vextracti32x4      xmm0, m1, 2
+    vextracti32x4       xm0, ym1, 1
+    movq   [dstq+strideq*2], xm0
+    movhps [dstq+stride3q ], xm0
+    vextracti32x4       xm0, m1, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq          ], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m1, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq          ], xm0
+    movhps [dstq+strideq*1], xm0
+    vextracti32x4       xm1, m1, 3
+    movq   [dstq+strideq*2], xm1
+    movhps [dstq+stride3q ], xm1
 .w4_end:
     RET
 .w8_loop:
@@ -3860,33 +3860,33 @@ cglobal w_mask_420_16bpc, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vpermb               m3, m15, m3
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
-    vextracti32x4      xmm0, ym0, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    vextracti32x4       xm2, ym0, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
     mova            [maskq], xm3
     cmp                  hd, 8
     jl .w4_end
-    vextracti32x4      xmm0, m0, 2
+    vextracti32x4       xm2, m0, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m0, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq+strideq*0], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm0, m0, 3
+    movq   [dstq+strideq*2], xm0
+    movhps [dstq+stride3q ], xm0
     je .w4_end
     lea                dstq, [dstq+strideq*4]
     movq   [dstq+strideq*0], xm1
     movhps [dstq+strideq*1], xm1
-    vextracti32x4      xmm0, ym1, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
-    vextracti32x4      xmm0, m1, 2
+    vextracti32x4       xm2, ym1, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
+    vextracti32x4       xm2, m1, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m1, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq+strideq*0], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm1, m1, 3
+    movq   [dstq+strideq*2], xm1
+    movhps [dstq+stride3q ], xm1
 .w4_end:
     RET
 .w8:
@@ -4090,32 +4090,32 @@ cglobal w_mask_422_16bpc, 4, 8, 15, dst, stride, tmp1, tmp2, w, h, mask, stride3
 .w4:
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
-    vextracti32x4      xmm0, ym0, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    vextracti32x4       xm2, ym0, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
     cmp                  hd, 8
     jl .w4_end
-    vextracti32x4      xmm0, m0, 2
+    vextracti32x4       xm2, m0, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m0, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq+strideq*0], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm0, m0, 3
+    movq   [dstq+strideq*2], xm0
+    movhps [dstq+stride3q ], xm0
     je .w4_end
     lea                dstq, [dstq+strideq*4]
     movq   [dstq+strideq*0], xm1
     movhps [dstq+strideq*1], xm1
-    vextracti32x4      xmm0, ym1, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
-    vextracti32x4      xmm0, m1, 2
+    vextracti32x4       xm2, ym1, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
+    vextracti32x4       xm2, m1, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m1, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq+strideq*0], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm1, m1, 3
+    movq   [dstq+strideq*2], xm1
+    movhps [dstq+stride3q ], xm1
 .w4_end:
     RET
 .w8_loop:
@@ -4249,32 +4249,32 @@ cglobal w_mask_444_16bpc, 4, 8, 13, dst, stride, tmp1, tmp2, w, h, mask, stride3
 .w4:
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
-    vextracti32x4      xmm0, ym0, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    vextracti32x4       xm2, ym0, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
     cmp                  hd, 8
     jl .w4_end
-    vextracti32x4      xmm0, m0, 2
+    vextracti32x4       xm2, m0, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m0, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq+strideq*0], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm0, m0, 3
+    movq   [dstq+strideq*2], xm0
+    movhps [dstq+stride3q ], xm0
     je .w4_end
     lea                dstq, [dstq+strideq*4]
     movq   [dstq+strideq*0], xm1
     movhps [dstq+strideq*1], xm1
-    vextracti32x4      xmm0, ym1, 1
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
-    vextracti32x4      xmm0, m1, 2
+    vextracti32x4       xm2, ym1, 1
+    movq   [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm2
+    vextracti32x4       xm2, m1, 2
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm0
-    vextracti32x4      xmm0, m1, 3
-    movq   [dstq+strideq*2], xmm0
-    movhps [dstq+stride3q ], xmm0
+    movq   [dstq+strideq*0], xm2
+    movhps [dstq+strideq*1], xm2
+    vextracti32x4       xm1, m1, 3
+    movq   [dstq+strideq*2], xm1
+    movhps [dstq+stride3q ], xm1
 .w4_end:
     RET
 .w8_loop:

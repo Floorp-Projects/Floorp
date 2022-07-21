@@ -135,6 +135,12 @@
 #endif
 #define GNU_PROPERTY_AARCH64_PAC (1 << 1)
 
+#elif defined(__APPLE__) && defined(__arm64e__)
+
+#define GNU_PROPERTY_AARCH64_PAC 0
+#define AARCH64_SIGN_LINK_REGISTER      pacibsp
+#define AARCH64_VALIDATE_LINK_REGISTER  autibsp
+
 #else /* __ARM_FEATURE_PAC_DEFAULT */
 
 #define GNU_PROPERTY_AARCH64_PAC 0

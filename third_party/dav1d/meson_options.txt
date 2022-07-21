@@ -57,3 +57,9 @@ option('stack_alignment',
 option('xxhash_muxer',
     type : 'feature',
     value : 'auto')
+
+option('trim_dsp',
+    type: 'combo',
+    choices: ['true', 'false', 'if-release'],
+    value: 'if-release',
+    description: 'Eliminate redundant DSP functions where possible')

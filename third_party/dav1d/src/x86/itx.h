@@ -134,9 +134,7 @@ decl_itx_fns(ssse3);
 decl_itx_fn(dav1d_inv_txfm_add_wht_wht_4x4_16bpc_avx2);
 decl_itx_fn(BF(dav1d_inv_txfm_add_wht_wht_4x4, sse2));
 
-COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
-                                        const int bpc)
-{
+static ALWAYS_INLINE void itx_dsp_init_x86(Dav1dInvTxfmDSPContext *const c, const int bpc) {
 #define assign_itx_fn(pfx, w, h, type, type_enum, ext) \
     c->itxfm_add[pfx##TX_##w##X##h][type_enum] = \
         BF(dav1d_inv_txfm_add_##type##_##w##x##h, ext)
@@ -237,7 +235,7 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
     if (!(flags & DAV1D_X86_CPU_FLAG_SSE41)) return;
 
 #if BITDEPTH == 16
-    if (bpc <= 10) {
+    if (bpc == 10) {
         assign_itx16_fn(,   4,  4, sse4);
         assign_itx16_fn(R,  4,  8, sse4);
         assign_itx16_fn(R,  4, 16, sse4);
@@ -264,21 +262,6 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
     assign_itx_fn(, 4, 4, wht_wht, WHT_WHT, avx2);
-#if BITDEPTH == 16
-    assign_itx16_bpc_fn( ,  4,  4, 12, avx2);
-    assign_itx16_bpc_fn(R,  4,  8, 12, avx2);
-    assign_itx16_bpc_fn(R,  4, 16, 12, avx2);
-    assign_itx16_bpc_fn(R,  8,  4, 12, avx2);
-    assign_itx16_bpc_fn( ,  8,  8, 12, avx2);
-    assign_itx16_bpc_fn(R,  8, 16, 12, avx2);
-    assign_itx2_bpc_fn (R,  8, 32, 12, avx2);
-    assign_itx16_bpc_fn(R, 16,  4, 12, avx2);
-    assign_itx16_bpc_fn(R, 16,  8, 12, avx2);
-    assign_itx12_bpc_fn( , 16, 16, 12, avx2);
-    assign_itx2_bpc_fn (R, 32,  8, 12, avx2);
-#endif
-
-    if (bpc > 10) return;
 
 #if BITDEPTH == 8
     assign_itx16_fn( ,  4,  4, avx2);
@@ -300,26 +283,40 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
     assign_itx1_fn (R, 64, 16, avx2);
     assign_itx1_fn (R, 64, 32, avx2);
     assign_itx1_fn ( , 64, 64, avx2);
-#elif BITDEPTH == 16
-    assign_itx16_bpc_fn( ,  4,  4, 10, avx2);
-    assign_itx16_bpc_fn(R,  4,  8, 10, avx2);
-    assign_itx16_bpc_fn(R,  4, 16, 10, avx2);
-    assign_itx16_bpc_fn(R,  8,  4, 10, avx2);
-    assign_itx16_bpc_fn( ,  8,  8, 10, avx2);
-    assign_itx16_bpc_fn(R,  8, 16, 10, avx2);
-    assign_itx2_bpc_fn (R,  8, 32, 10, avx2);
-    assign_itx16_bpc_fn(R, 16,  4, 10, avx2);
-    assign_itx16_bpc_fn(R, 16,  8, 10, avx2);
-    assign_itx12_bpc_fn( , 16, 16, 10, avx2);
-    assign_itx2_bpc_fn (R, 16, 32, 10, avx2);
-    assign_itx1_bpc_fn (R, 16, 64, 10, avx2);
-    assign_itx2_bpc_fn (R, 32,  8, 10, avx2);
-    assign_itx2_bpc_fn (R, 32, 16, 10, avx2);
-    assign_itx2_bpc_fn ( , 32, 32, 10, avx2);
-    assign_itx1_bpc_fn (R, 32, 64, 10, avx2);
-    assign_itx1_bpc_fn (R, 64, 16, 10, avx2);
-    assign_itx1_bpc_fn (R, 64, 32, 10, avx2);
-    assign_itx1_bpc_fn ( , 64, 64, 10, avx2);
+#else
+    if (bpc == 10) {
+        assign_itx16_bpc_fn( ,  4,  4, 10, avx2);
+        assign_itx16_bpc_fn(R,  4,  8, 10, avx2);
+        assign_itx16_bpc_fn(R,  4, 16, 10, avx2);
+        assign_itx16_bpc_fn(R,  8,  4, 10, avx2);
+        assign_itx16_bpc_fn( ,  8,  8, 10, avx2);
+        assign_itx16_bpc_fn(R,  8, 16, 10, avx2);
+        assign_itx2_bpc_fn (R,  8, 32, 10, avx2);
+        assign_itx16_bpc_fn(R, 16,  4, 10, avx2);
+        assign_itx16_bpc_fn(R, 16,  8, 10, avx2);
+        assign_itx12_bpc_fn( , 16, 16, 10, avx2);
+        assign_itx2_bpc_fn (R, 16, 32, 10, avx2);
+        assign_itx1_bpc_fn (R, 16, 64, 10, avx2);
+        assign_itx2_bpc_fn (R, 32,  8, 10, avx2);
+        assign_itx2_bpc_fn (R, 32, 16, 10, avx2);
+        assign_itx2_bpc_fn ( , 32, 32, 10, avx2);
+        assign_itx1_bpc_fn (R, 32, 64, 10, avx2);
+        assign_itx1_bpc_fn (R, 64, 16, 10, avx2);
+        assign_itx1_bpc_fn (R, 64, 32, 10, avx2);
+        assign_itx1_bpc_fn ( , 64, 64, 10, avx2);
+    } else {
+        assign_itx16_bpc_fn( ,  4,  4, 12, avx2);
+        assign_itx16_bpc_fn(R,  4,  8, 12, avx2);
+        assign_itx16_bpc_fn(R,  4, 16, 12, avx2);
+        assign_itx16_bpc_fn(R,  8,  4, 12, avx2);
+        assign_itx16_bpc_fn( ,  8,  8, 12, avx2);
+        assign_itx16_bpc_fn(R,  8, 16, 12, avx2);
+        assign_itx2_bpc_fn (R,  8, 32, 12, avx2);
+        assign_itx16_bpc_fn(R, 16,  4, 12, avx2);
+        assign_itx16_bpc_fn(R, 16,  8, 12, avx2);
+        assign_itx12_bpc_fn( , 16, 16, 12, avx2);
+        assign_itx2_bpc_fn (R, 32,  8, 12, avx2);
+    }
 #endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;

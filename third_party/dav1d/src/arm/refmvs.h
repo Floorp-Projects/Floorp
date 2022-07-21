@@ -1,5 +1,6 @@
 /*
- * Copyright © 2020, VideoLAN and dav1d authors
+ * Copyright © 2021, VideoLAN and dav1d authors
+ * Copyright © 2021, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,19 +26,14 @@
  */
 
 #include "src/cpu.h"
-#include "src/msac.h"
-#include "src/x86/msac.h"
+#include "src/refmvs.h"
 
-#if ARCH_X86_64
-void dav1d_msac_init_x86(MsacContext *const s) {
+decl_splat_mv_fn(dav1d_splat_mv_neon);
+
+static ALWAYS_INLINE void refmvs_dsp_init_arm(Dav1dRefmvsDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
-    if (flags & DAV1D_X86_CPU_FLAG_SSE2) {
-        s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_sse2;
-    }
+    if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-    if (flags & DAV1D_X86_CPU_FLAG_AVX2) {
-        s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_avx2;
-    }
+    c->splat_mv = dav1d_splat_mv_neon;
 }
-#endif

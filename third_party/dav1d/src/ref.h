@@ -50,9 +50,11 @@ Dav1dRef *dav1d_ref_create_using_pool(Dav1dMemPool *pool, size_t size);
 Dav1dRef *dav1d_ref_wrap(const uint8_t *ptr,
                          void (*free_callback)(const uint8_t *data, void *user_data),
                          void *user_data);
-void dav1d_ref_inc(Dav1dRef *ref);
 void dav1d_ref_dec(Dav1dRef **ref);
-
 int dav1d_ref_is_writable(Dav1dRef *ref);
+
+static inline void dav1d_ref_inc(Dav1dRef *const ref) {
+    atomic_fetch_add_explicit(&ref->ref_cnt, 1, memory_order_relaxed);
+}
 
 #endif /* DAV1D_SRC_REF_H */

@@ -92,16 +92,6 @@ if is_asm_enabled
 
         libdav1d_sources += files(
             'arm/cpu.c',
-            'arm/refmvs_init.c',
-        )
-        libdav1d_tmpl_sources += files(
-            'arm/cdef_init_tmpl.c',
-            'arm/filmgrain_init_tmpl.c',
-            'arm/ipred_init_tmpl.c',
-            'arm/itx_init_tmpl.c',
-            'arm/loopfilter_init_tmpl.c',
-            'arm/looprestoration_init_tmpl.c',
-            'arm/mc_init_tmpl.c',
         )
         if (host_machine.cpu_family() == 'aarch64' or
             host_machine.cpu() == 'arm64')
@@ -177,18 +167,6 @@ if is_asm_enabled
 
         libdav1d_sources += files(
             'x86/cpu.c',
-            'x86/msac_init.c',
-            'x86/refmvs_init.c',
-        )
-
-        libdav1d_tmpl_sources += files(
-            'x86/cdef_init_tmpl.c',
-            'x86/filmgrain_init_tmpl.c',
-            'x86/ipred_init_tmpl.c',
-            'x86/itx_init_tmpl.c',
-            'x86/loopfilter_init_tmpl.c',
-            'x86/looprestoration_init_tmpl.c',
-            'x86/mc_init_tmpl.c',
         )
 
         # NASM source files
@@ -226,8 +204,10 @@ if is_asm_enabled
 
         if dav1d_bitdepths.contains('16')
             libdav1d_sources_asm += files(
+                'x86/cdef16_avx512.asm',
                 'x86/filmgrain16_avx512.asm',
                 'x86/ipred16_avx512.asm',
+                'x86/loopfilter16_avx512.asm',
                 'x86/looprestoration16_avx512.asm',
                 'x86/mc16_avx512.asm',
                 'x86/cdef16_avx2.asm',
@@ -255,8 +235,8 @@ if is_asm_enabled
             'ppc/cpu.c',
         )
         libdav1d_arch_tmpl_sources += files(
-            'ppc/cdef_init_tmpl.c',
-            'ppc/looprestoration_init_tmpl.c',
+            'ppc/cdef_tmpl.c',
+            'ppc/looprestoration_tmpl.c',
         )
     endif
 endif

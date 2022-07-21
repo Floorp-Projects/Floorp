@@ -25,10 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "common/intops.h"
 #include "src/ppc/dav1d_types.h"
-#include "src/cpu.h"
-#include "src/looprestoration.h"
+#include "src/ppc/looprestoration.h"
 
 #if BITDEPTH == 8
 
@@ -302,12 +300,12 @@ static inline void padding(uint8_t *dst, const uint8_t *p,
 // (since first and last tops are always 0 for chroma)
 // FIXME Could implement a version that requires less temporary memory
 // (should be possible to implement with only 6 rows of temp storage)
-static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t stride,
-                              const uint8_t (*const left)[4],
-                              const uint8_t *lpf,
-                              const int w, const int h,
-                              const LooprestorationParams *const params,
-                              const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
+void dav1d_wiener_filter_vsx(uint8_t *p, const ptrdiff_t stride,
+                             const uint8_t (*const left)[4],
+                             const uint8_t *lpf,
+                             const int w, const int h,
+                             const LooprestorationParams *const params,
+                             const enum LrEdgeFlags edges HIGHBD_DECL_SUFFIX)
 {
     const int16_t (*const filter)[8] = params->filter;
 
@@ -321,17 +319,3 @@ static void wiener_filter_vsx(uint8_t *p, const ptrdiff_t stride,
     wiener_filter_v_vsx(p, stride, hor, filter[1], w, h);
 }
 #endif
-
-COLD void bitfn(dav1d_loop_restoration_dsp_init_ppc)(Dav1dLoopRestorationDSPContext *const c,
-                                                     const int bpc)
-{
-    const unsigned flags = dav1d_get_cpu_flags();
-
-    if (!(flags & DAV1D_PPC_CPU_FLAG_VSX)) return;
-
-#if BITDEPTH == 8
-    c->wiener[0] = c->wiener[1] = wiener_filter_vsx;
-#endif
-}
-
-

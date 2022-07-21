@@ -449,9 +449,9 @@ cglobal put_bilin_8bpc, 4, 8, 0, dst, ds, src, ss, w, h, mxy
     pshufb              ym0, ym4
     pmaddubsw           ym0, ym5
     pmulhrsw            ym0, ym3
-    vpmovuswb          xmm0, ym0
-    movq       [dstq+dsq*0], xmm0
-    movhps     [dstq+dsq*1], xmm0
+    vpmovuswb           xm0, ym0
+    movq       [dstq+dsq*0], xm0
+    movhps     [dstq+dsq*1], xm0
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
     jg .h_w8
@@ -755,9 +755,9 @@ cglobal put_bilin_8bpc, 4, 8, 0, dst, ds, src, ss, w, h, mxy
     pmulhw              ym1, ym6
     paddw               ym1, ym2
     pmulhrsw            ym1, ym7
-    vpmovuswb          xmm1, ym1
-    movq       [dstq+dsq*0], xmm1
-    movhps     [dstq+dsq*1], xmm1
+    vpmovuswb           xm1, ym1
+    movq       [dstq+dsq*0], xm1
+    movhps     [dstq+dsq*1], xm1
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
     jg .hv_w8_loop
@@ -1588,13 +1588,13 @@ cglobal put_8tap_8bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     jg .h_w4_loop
     RET
 .h_w8:
-    movu               xmm0, [srcq+ssq*0]
-    vinserti32x4        ym0, ymm0, [srcq+ssq*1], 1
+    movu                xm0, [srcq+ssq*0]
+    vinserti32x4        ym0, [srcq+ssq*1], 1
     lea                srcq, [srcq+ssq*2]
     WRAP_YMM PUT_8TAP_H   0, 1, 2, 3
-    vpmovuswb          xmm0, ym0
-    movq       [dstq+dsq*0], xmm0
-    movhps     [dstq+dsq*1], xmm0
+    vpmovuswb           xm0, ym0
+    movq       [dstq+dsq*0], xm0
+    movhps     [dstq+dsq*1], xm0
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
     jg .h_w8
@@ -3308,17 +3308,17 @@ ALIGN function_align
     cmp                  hd, 8
     jg .w4_h16
     WRAP_YMM %1           0
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movd   [dstq          ], xm0
     pextrd [dstq+strideq*1], xm0, 1
-    movd   [dstq+strideq*2], xmm1
-    pextrd [dstq+stride3q ], xmm1, 1
+    movd   [dstq+strideq*2], xm1
+    pextrd [dstq+stride3q ], xm1, 1
     jl .w4_ret
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq          ], xm0, 2
     pextrd [dstq+strideq*1], xm0, 3
-    pextrd [dstq+strideq*2], xmm1, 2
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+strideq*2], xm1, 2
+    pextrd [dstq+stride3q ], xm1, 3
 .w4_ret:
     RET
 .w4_h16:
@@ -3332,29 +3332,29 @@ ALIGN function_align
     cmp                  hd, 4
     jne .w8_h8
     WRAP_YMM %1           0
-    vextracti128       xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq          ], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     RET
 .w8_loop:
     %1_INC_PTR            2
     lea                dstq, [dstq+strideq*4]
 .w8_h8:
     %1                    0
-    vextracti32x4      xmm1, ym0, 1
-    vextracti32x4      xmm2, m0, 2
-    vextracti32x4      xmm3, m0, 3
+    vextracti32x4       xm1, ym0, 1
+    vextracti32x4       xm2, m0, 2
+    vextracti32x4       xm3, m0, 3
     movq   [dstq          ], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+stride3q ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
+    movq   [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     movhps [dstq          ], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+stride3q ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm3
     sub                  hd, 8
     jg .w8_loop
     RET
@@ -3415,8 +3415,8 @@ ALIGN function_align
     paddw                m0, [tmp2q+(%1+0)*mmsize]
     mova                 m1, [tmp1q+(%1+1)*mmsize]
     paddw                m1, [tmp2q+(%1+1)*mmsize]
-    pmulhrsw             m0, m2
-    pmulhrsw             m1, m2
+    pmulhrsw             m0, m4
+    pmulhrsw             m1, m4
     packuswb             m0, m1
 %endmacro
 
@@ -3425,13 +3425,13 @@ ALIGN function_align
     add               tmp2q, %1*mmsize
 %endmacro
 
-cglobal avg_8bpc, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
+cglobal avg_8bpc, 4, 7, 5, dst, stride, tmp1, tmp2, w, h, stride3
 %define base r6-avg_avx512icl_table
     lea                  r6, [avg_avx512icl_table]
     tzcnt                wd, wm
     movifnidn            hd, hm
     movsxd               wq, dword [r6+wq*4]
-    vpbroadcastd         m2, [base+pw_1024]
+    vpbroadcastd         m4, [base+pw_1024]
     add                  wq, r6
     BIDIR_FN            AVG
 
@@ -3573,17 +3573,17 @@ cglobal w_mask_420_8bpc, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vinserti128         ym5, [wm_420_perm4+32], 1
     vpermb              ym4, ym5, ym4
     vpdpbusd            ym8, ym4, ym9
-    vextracti128       xmm1, m0, 1
+    vextracti32x4       xm1, m0, 1
     movd   [dstq+strideq*0], xm0
     pextrd [dstq+strideq*1], xm0, 1
-    movd   [dstq+strideq*2], xmm1
-    pextrd [dstq+stride3q ], xmm1, 1
+    movd   [dstq+strideq*2], xm1
+    pextrd [dstq+stride3q ], xm1, 1
     jl .w4_end
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq+strideq*0], xm0, 2
     pextrd [dstq+strideq*1], xm0, 3
-    pextrd [dstq+strideq*2], xmm1, 2
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+strideq*2], xm1, 2
+    pextrd [dstq+stride3q ], xm1, 3
 .w4_end:
     vpermb              ym8, ym10, ym8
     movq            [maskq], xm8
@@ -3609,11 +3609,11 @@ cglobal w_mask_420_8bpc, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vpdpbusd            ym8, ym4, ym9
     vpermb               m8, m10, m8
     mova            [maskq], xm8
-    vextracti128       xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     RET
 .w8_loop:
     add               tmp1q, 128
@@ -3627,18 +3627,18 @@ cglobal w_mask_420_8bpc, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vpdpbusd             m1, m4, m9
     vpermb               m1, m10, m1
     mova            [maskq], xm1
-    vextracti32x4      xmm1, ym0, 1
-    vextracti32x4      xmm2, m0, 2
-    vextracti32x4      xmm3, m0, 3
+    vextracti32x4       xm1, ym0, 1
+    vextracti32x4       xm2, m0, 2
+    vextracti32x4       xm3, m0, 3
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+stride3q ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
+    movq   [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     movhps [dstq+strideq*0], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+stride3q ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm3
     sub                  hd, 8
     jg .w8_loop
     RET
@@ -3766,17 +3766,17 @@ cglobal w_mask_422_8bpc, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
     movhps             xm10, [wm_422_mask+16]
     vpdpwssd            ym8, ym4, ym9
     vpermb              ym8, ym10, ym8
-    vextracti128       xmm1, m0, 1
+    vextracti32x4       xm1, m0, 1
     movd   [dstq+strideq*0], xm0
     pextrd [dstq+strideq*1], xm0, 1
-    movd   [dstq+strideq*2], xmm1
-    pextrd [dstq+stride3q ], xmm1, 1
+    movd   [dstq+strideq*2], xm1
+    pextrd [dstq+stride3q ], xm1, 1
     jl .w4_end
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq+strideq*0], xm0, 2
     pextrd [dstq+strideq*1], xm0, 3
-    pextrd [dstq+strideq*2], xmm1, 2
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+strideq*2], xm1, 2
+    pextrd [dstq+stride3q ], xm1, 3
 .w4_end:
     pand                xm8, xm11
     mova            [maskq], xm8
@@ -3801,11 +3801,11 @@ cglobal w_mask_422_8bpc, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vpermb              ym8, ym10, ym8
     pand                xm8, xm11
     mova            [maskq], xm8
-    vextracti128       xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     RET
 .w8_loop:
     add               tmp1q, 128
@@ -3819,18 +3819,18 @@ cglobal w_mask_422_8bpc, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vpermb               m1, m10, m1
     pand                ym1, ym11
     mova            [maskq], ym1
-    vextracti32x4      xmm1, ym0, 1
-    vextracti32x4      xmm2, m0, 2
-    vextracti32x4      xmm3, m0, 3
+    vextracti32x4       xm1, ym0, 1
+    vextracti32x4       xm2, m0, 2
+    vextracti32x4       xm3, m0, 3
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+stride3q ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
+    movq   [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     movhps [dstq+strideq*0], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+stride3q ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm3
     sub                  hd, 8
     jg .w8_loop
     RET
@@ -3936,17 +3936,17 @@ cglobal w_mask_444_8bpc, 4, 8, 12, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vinserti128         ym8, [wm_444_mask+32], 1
     vpermb              ym4, ym8, ym4
     mova            [maskq], ym4
-    vextracti128       xmm1, m0, 1
+    vextracti32x4      xm1, m0, 1
     movd   [dstq+strideq*0], xm0
     pextrd [dstq+strideq*1], xm0, 1
-    movd   [dstq+strideq*2], xmm1
-    pextrd [dstq+stride3q ], xmm1, 1
+    movd   [dstq+strideq*2], xm1
+    pextrd [dstq+stride3q ], xm1, 1
     jl .w4_end
     lea                dstq, [dstq+strideq*4]
     pextrd [dstq+strideq*0], xm0, 2
     pextrd [dstq+strideq*1], xm0, 3
-    pextrd [dstq+strideq*2], xmm1, 2
-    pextrd [dstq+stride3q ], xmm1, 3
+    pextrd [dstq+strideq*2], xm1, 2
+    pextrd [dstq+stride3q ], xm1, 3
 .w4_end:
     RET
 .w4_h16:
@@ -3965,11 +3965,11 @@ cglobal w_mask_444_8bpc, 4, 8, 12, dst, stride, tmp1, tmp2, w, h, mask, stride3
     vinserti128         ym8, [wm_444_mask+32], 1
     vpermb              ym4, ym8, ym4
     mova            [maskq], ym4
-    vextracti128       xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     RET
 .w8_loop:
     add               tmp1q, 128
@@ -3980,18 +3980,18 @@ cglobal w_mask_444_8bpc, 4, 8, 12, dst, stride, tmp1, tmp2, w, h, mask, stride3
     W_MASK                0, 4, 0, 1, 1
     vpermb               m4, m8, m4
     mova            [maskq], m4
-    vextracti32x4      xmm1, ym0, 1
-    vextracti32x4      xmm2, m0, 2
-    vextracti32x4      xmm3, m0, 3
+    vextracti32x4       xm1, ym0, 1
+    vextracti32x4       xm2, m0, 2
+    vextracti32x4       xm3, m0, 3
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+stride3q ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
+    movq   [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     movhps [dstq+strideq*0], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+stride3q ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm3
     sub                  hd, 8
     jg .w8_loop
     RET

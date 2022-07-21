@@ -73,6 +73,9 @@ if is_asm_enabled and get_option('b_sanitize') == 'memory'
     error('asm causes false positive with memory sanitizer. Use \'-Denable_asm=false\'.')
 endif
 
+cdata.set10('TRIM_DSP_FUNCTIONS', get_option('trim_dsp') == 'true' or
+    (get_option('trim_dsp') == 'if-release' and get_option('buildtype') == 'release'))
+
 # Logging option
 cdata.set10('CONFIG_LOG', get_option('logging'))
 

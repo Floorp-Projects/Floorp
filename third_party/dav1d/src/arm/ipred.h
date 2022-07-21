@@ -50,7 +50,7 @@ decl_cfl_ac_fn(BF(dav1d_ipred_cfl_ac_444, neon));
 
 decl_pal_pred_fn(BF(dav1d_pal_pred, neon));
 
-COLD void bitfn(dav1d_intra_pred_dsp_init_arm)(Dav1dIntraPredDSPContext *const c) {
+static ALWAYS_INLINE void intra_pred_dsp_init_arm(Dav1dIntraPredDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;

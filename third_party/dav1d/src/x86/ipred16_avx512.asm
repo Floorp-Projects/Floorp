@@ -114,20 +114,20 @@ cglobal ipred_paeth_16bpc, 3, 7, 10, dst, stride, tl, w, h
     vbroadcasti32x4     m2, [tlq]
     pshufb              m2, m7      ; left
     PAETH                4, 5, 6
-    vextracti32x4     xmm1, m0, 2
-    vextracti32x4     xmm2, ym0, 1
-    vextracti32x4     xmm3, m0, 3
+    vextracti32x4      xm1, m0, 2
+    vextracti32x4      xm8, ym0, 1
+    vextracti32x4      xm9, m0, 3
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+r6       ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm8
+    movq   [dstq+r6       ], xm9
     sub                 hd, 8
     jl .w4_end
     lea               dstq, [dstq+strideq*4]
     movhps [dstq+strideq*0], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+r6       ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm8
+    movhps [dstq+r6       ], xm9
     lea               dstq, [dstq+strideq*4]
     jg .w4_loop
 .w4_end:
@@ -220,19 +220,19 @@ cglobal ipred_smooth_v_16bpc, 3, 7, 7, dst, stride, tl, w, h, weights, stride3
     pshufb               m3, m4
     pmulhrsw             m3, m5
     paddw                m3, m6
-    vextracti32x4      xmm0, m3, 3
-    vextracti32x4      xmm1, ym3, 1
-    vextracti32x4      xmm2, m3, 2
-    movhps [dstq+strideq*0], xmm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
+    vextracti32x4       xm0, m3, 3
+    vextracti32x4       xm1, ym3, 1
+    vextracti32x4       xm2, m3, 2
+    movhps [dstq+strideq*0], xm0
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
     movhps [dstq+stride3q ], xm3
     add                  hq, 8
     jg .end
     lea                dstq, [dstq+strideq*4]
-    movq   [dstq+strideq*0], xmm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
+    movq   [dstq+strideq*0], xm0
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
     movq   [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     jl .w4_loop
@@ -337,20 +337,20 @@ cglobal ipred_smooth_h_16bpc, 3, 7, 7, dst, stride, tl, w, h, stride3
     psubw                m0, m6          ; left - right
     pmulhrsw             m0, m5
     paddw                m0, m6
-    vextracti32x4      xmm1, m0, 2
-    vextracti32x4      xmm2, ym0, 1
-    vextracti32x4      xmm3, m0, 3
+    vextracti32x4       xm1, m0, 2
+    vextracti32x4       xm2, ym0, 1
+    vextracti32x4       xm3, m0, 3
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
-    movq   [dstq+strideq*2], xmm2
-    movq   [dstq+stride3q ], xmm3
+    movq   [dstq+strideq*1], xm1
+    movq   [dstq+strideq*2], xm2
+    movq   [dstq+stride3q ], xm3
     sub                  hd, 8*2
     jl .end
     lea                dstq, [dstq+strideq*4]
     movhps [dstq+strideq*0], xm0
-    movhps [dstq+strideq*1], xmm1
-    movhps [dstq+strideq*2], xmm2
-    movhps [dstq+stride3q ], xmm3
+    movhps [dstq+strideq*1], xm1
+    movhps [dstq+strideq*2], xm2
+    movhps [dstq+stride3q ], xm3
     lea                dstq, [dstq+strideq*4]
     jg .w4_loop
 .end:
@@ -472,11 +472,11 @@ cglobal ipred_smooth_16bpc, 3, 7, 16, dst, stride, tl, w, h, v_weights, stride3
     vpdpwssd            m0, m1, m6
     vpermb              m0, m14, m0
     pavgw              ym0, ym15
-    vextracti32x4     xmm1, ym0, 1
+    vextracti32x4      xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
-    movq   [dstq+strideq*1], xmm1
+    movq   [dstq+strideq*1], xm1
     movhps [dstq+strideq*2], xm0
-    movhps [dstq+stride3q ], xmm1
+    movhps [dstq+stride3q ], xm1
     lea               dstq, [dstq+strideq*4]
     add         v_weightsq, 4*4
     sub                 hd, 4*2
@@ -624,11 +624,11 @@ cglobal pal_pred_16bpc, 4, 7, 4, dst, stride, pal, idx, w, h, stride3
     pmovzxbw            ym0, [idxq]
     add                idxq, 16
     vpermw              ym0, ym0, ym3
-    vextracti32x4      xmm1, ym0, 1
+    vextracti32x4       xm1, ym0, 1
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
-    movq   [dstq+strideq*2], xmm1
-    movhps [dstq+stride3q ], xmm1
+    movq   [dstq+strideq*2], xm1
+    movhps [dstq+stride3q ], xm1
     lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jg .w4

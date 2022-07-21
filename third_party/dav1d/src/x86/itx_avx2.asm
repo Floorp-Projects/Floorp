@@ -126,7 +126,7 @@ pw_m2751_3035x8: dw -2751*8, 3035*8
 
 SECTION .text
 
-; Code size reduction trickery: Intead of using rip-relative loads with
+; Code size reduction trickery: Instead of using rip-relative loads with
 ; mandatory 4-byte offsets everywhere, we can set up a base pointer with a
 ; single rip-relative lea and then address things relative from that with
 ; 1-byte offsets as long as data is within +-128 bytes of the base pointer.

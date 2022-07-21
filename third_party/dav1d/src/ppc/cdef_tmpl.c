@@ -24,15 +24,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-
-#include "common/bitdepth.h"
-#include "common/intops.h"
-
-#include "src/cdef.h"
-#include "src/cpu.h"
-
 #include "src/ppc/dav1d_types.h"
+#include "src/ppc/cdef.h"
 
 #if BITDEPTH == 8
 static inline i16x8 vconstrain(const i16x8 diff, const int16_t threshold,
@@ -451,18 +444,17 @@ filter_8xN(pixel *dst, const ptrdiff_t dst_stride,
 
 }
 
-
 #define cdef_fn(w, h, tmp_stride) \
-static void cdef_filter_##w##x##h##_vsx(pixel *const dst, \
-                                        const ptrdiff_t dst_stride, \
-                                        const pixel (*left)[2], \
-                                        const pixel *const top, \
-                                        const pixel *const bottom, \
-                                        const int pri_strength, \
-                                        const int sec_strength, \
-                                        const int dir, \
-                                        const int damping, \
-                                        const enum CdefEdgeFlags edges) \
+void dav1d_cdef_filter_##w##x##h##_vsx(pixel *const dst, \
+                                       const ptrdiff_t dst_stride, \
+                                       const pixel (*left)[2], \
+                                       const pixel *const top, \
+                                       const pixel *const bottom, \
+                                       const int pri_strength, \
+                                       const int sec_strength, \
+                                       const int dir, \
+                                       const int damping, \
+                                       const enum CdefEdgeFlags edges) \
 { \
     ALIGN_STK_16(uint16_t, tmp_buf, 12 * tmp_stride,); \
     uint16_t *tmp = tmp_buf + 2 * tmp_stride + 2; \
@@ -474,16 +466,3 @@ cdef_fn(4, 4, 8);
 cdef_fn(4, 8, 8);
 cdef_fn(8, 8, 16);
 #endif
-
-COLD void bitfn(dav1d_cdef_dsp_init_ppc)(Dav1dCdefDSPContext *const c) {
-    const unsigned flags = dav1d_get_cpu_flags();
-
-    if (!(flags & DAV1D_PPC_CPU_FLAG_VSX)) return;
-
-#if BITDEPTH == 8
-    // c->dir = dav1d_cdef_find_dir_vsx;
-    c->fb[0] = cdef_filter_8x8_vsx;
-    c->fb[1] = cdef_filter_4x8_vsx;
-    c->fb[2] = cdef_filter_4x4_vsx;
-#endif
-}

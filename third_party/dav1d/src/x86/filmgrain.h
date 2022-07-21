@@ -42,7 +42,7 @@ decl_fg_fns(ssse3);
 decl_fg_fns(avx2);
 decl_fg_fns(avx512icl);
 
-COLD void bitfn(dav1d_film_grain_dsp_init_x86)(Dav1dFilmGrainDSPContext *const c) {
+static ALWAYS_INLINE void film_grain_dsp_init_x86(Dav1dFilmGrainDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;

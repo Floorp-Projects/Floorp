@@ -107,6 +107,12 @@
 #define NOINLINE __attribute__((noinline))
 #endif
 
+#ifdef _MSC_VER
+#define ALWAYS_INLINE __forceinline
+#else
+#define ALWAYS_INLINE __attribute__((always_inline)) inline
+#endif
+
 #ifdef __clang__
 #define NO_SANITIZE(x) __attribute__((no_sanitize(x)))
 #else

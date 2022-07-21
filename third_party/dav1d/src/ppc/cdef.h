@@ -1,6 +1,5 @@
 /*
- * Copyright © 2021, VideoLAN and dav1d authors
- * Copyright © 2021, Two Orioles, LLC
+ * Copyright © 2019, Luca Barbato
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,27 +24,38 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdlib.h>
+
+#include "common/bitdepth.h"
+#include "common/intops.h"
+
+#include "src/cdef.h"
 #include "src/cpu.h"
-#include "src/refmvs.h"
 
-decl_splat_mv_fn(dav1d_splat_mv_sse2);
-decl_splat_mv_fn(dav1d_splat_mv_avx2);
-decl_splat_mv_fn(dav1d_splat_mv_avx512icl);
+#define cdef_vsx_fn(w, h) \
+void dav1d_cdef_filter_##w##x##h##_vsx(pixel *const dst, \
+                                       const ptrdiff_t dst_stride, \
+                                       const pixel (*left)[2], \
+                                       const pixel *const top, \
+                                       const pixel *const bottom, \
+                                       const int pri_strength, \
+                                       const int sec_strength, \
+                                       const int dir, \
+                                       const int damping, \
+                                       const enum CdefEdgeFlags edges)
 
-COLD void dav1d_refmvs_dsp_init_x86(Dav1dRefmvsDSPContext *const c) {
+cdef_vsx_fn(4, 4);
+cdef_vsx_fn(4, 8);
+cdef_vsx_fn(8, 8);
+
+static ALWAYS_INLINE void cdef_dsp_init_ppc(Dav1dCdefDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
-    if (!(flags & DAV1D_X86_CPU_FLAG_SSE2)) return;
+    if (!(flags & DAV1D_PPC_CPU_FLAG_VSX)) return;
 
-    c->splat_mv = dav1d_splat_mv_sse2;
-
-#if ARCH_X86_64
-    if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
-
-    c->splat_mv = dav1d_splat_mv_avx2;
-
-    if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
-
-    c->splat_mv = dav1d_splat_mv_avx512icl;
+#if BITDEPTH == 8
+    c->fb[0] = dav1d_cdef_filter_8x8_vsx;
+    c->fb[1] = dav1d_cdef_filter_4x8_vsx;
+    c->fb[2] = dav1d_cdef_filter_4x4_vsx;
 #endif
 }

@@ -77,7 +77,7 @@ decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_64x16, neon));
 decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_64x32, neon));
 decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_64x64, neon));
 
-COLD void bitfn(dav1d_itx_dsp_init_arm)(Dav1dInvTxfmDSPContext *const c, int bpc) {
+static ALWAYS_INLINE void itx_dsp_init_arm(Dav1dInvTxfmDSPContext *const c, int bpc) {
 #define assign_itx_fn(pfx, w, h, type, type_enum, ext) \
     c->itxfm_add[pfx##TX_##w##X##h][type_enum] = \
         BF(dav1d_inv_txfm_add_##type##_##w##x##h, ext)
@@ -117,7 +117,7 @@ COLD void bitfn(dav1d_itx_dsp_init_arm)(Dav1dInvTxfmDSPContext *const c, int bpc
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-    if (bpc > 10) return;
+    if (BITDEPTH == 16 && bpc != 10) return;
 
     assign_itx17_fn( ,  4,  4, neon);
     assign_itx16_fn(R,  4,  8, neon);

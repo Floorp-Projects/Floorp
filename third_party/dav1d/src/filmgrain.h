@@ -80,7 +80,5 @@ typedef struct Dav1dFilmGrainDSPContext {
 } Dav1dFilmGrainDSPContext;
 
 bitfn_decls(void dav1d_film_grain_dsp_init, Dav1dFilmGrainDSPContext *c);
-bitfn_decls(void dav1d_film_grain_dsp_init_arm, Dav1dFilmGrainDSPContext *c);
-bitfn_decls(void dav1d_film_grain_dsp_init_x86, Dav1dFilmGrainDSPContext *c);
 
 #endif /* DAV1D_SRC_FILM_GRAIN_H */
