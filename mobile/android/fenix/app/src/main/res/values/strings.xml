@@ -1123,11 +1123,11 @@
     <string name="delete_history_prompt_title">Time range to delete</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body">Removes history (including history synced from other devices), cookies and other browsing data.</string>
-    <!-- Radio button of a delete browsing data dialog, to delete history items for the last hour.  -->
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Last hour</string>
-    <!-- Radio button of a delete browsing data dialog, to delete history items for today and yesterday.  -->
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
     <string name="delete_history_prompt_button_today_and_yesterday">Today and yesterday</string>
-    <!-- Radio button of a delete browsing data dialog, to delete all history. -->
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
     <string name="delete_history_prompt_button_everything">Everything</string>
 
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
@@ -1141,7 +1141,7 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Deleting browsing data&#8230;</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
     <string name="delete_all_history_group_prompt_message">Delete all sites in \"%s\"</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Cancel</string>
