@@ -19,7 +19,7 @@
 #include "gc/GC.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
-#include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*
+#include "js/friend/UsageStatistics.h"  // JSMetric
 #include "util/GetPidProvider.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
@@ -1011,7 +1011,7 @@ void Statistics::sendGCTelemetry() {
   // NOTE: "Compartmental" is term that was deprecated with the
   // introduction of zone-based GC, but the old telemetry probe
   // continues to be used.
-  runtime->addTelemetry(JS_TELEMETRY_GC_IS_COMPARTMENTAL,
+  runtime->addTelemetry(JSMetric::GC_IS_COMPARTMENTAL,
                         !runtime->gc.fullGCRequested);
   TimeDuration prepareTotal = SumPhase(PhaseKind::PREPARE, phaseTimes);
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
@@ -1021,24 +1021,24 @@ void Statistics::sendGCTelemetry() {
   TimeDuration markGrayTotal = phaseTimes[Phase::SWEEP_MARK_GRAY] +
                                phaseTimes[Phase::SWEEP_MARK_GRAY_WEAK];
   size_t markCount = gc->marker.getMarkCount();
-  runtime->addTelemetry(JS_TELEMETRY_GC_PREPARE_MS, t(prepareTotal));
-  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, t(markTotal));
+  runtime->addTelemetry(JSMetric::GC_PREPARE_MS, t(prepareTotal));
+  runtime->addTelemetry(JSMetric::GC_MARK_MS, t(markTotal));
   if (markTotal >= TimeDuration::FromMilliseconds(1)) {
     double markRate = double(markCount) / t(markTotal);
-    runtime->addTelemetry(JS_TELEMETRY_GC_MARK_RATE_2, uint32_t(markRate));
+    runtime->addTelemetry(JSMetric::GC_MARK_RATE_2, uint32_t(markRate));
   }
-  runtime->addTelemetry(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[Phase::SWEEP]));
+  runtime->addTelemetry(JSMetric::GC_SWEEP_MS, t(phaseTimes[Phase::SWEEP]));
   if (gc->didCompactZones()) {
-    runtime->addTelemetry(JS_TELEMETRY_GC_COMPACT_MS,
+    runtime->addTelemetry(JSMetric::GC_COMPACT_MS,
                           t(phaseTimes[Phase::COMPACT]));
   }
-  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_ROOTS_US,
+  runtime->addTelemetry(JSMetric::GC_MARK_ROOTS_US,
                         markRootsTotal.ToMicroseconds());
-  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_GRAY_MS_2, t(markGrayTotal));
-  runtime->addTelemetry(JS_TELEMETRY_GC_MARK_WEAK_MS, t(markWeakTotal));
-  runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL, nonincremental());
+  runtime->addTelemetry(JSMetric::GC_MARK_GRAY_MS_2, t(markGrayTotal));
+  runtime->addTelemetry(JSMetric::GC_MARK_WEAK_MS, t(markWeakTotal));
+  runtime->addTelemetry(JSMetric::GC_NON_INCREMENTAL, nonincremental());
   if (nonincremental()) {
-    runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL_REASON,
+    runtime->addTelemetry(JSMetric::GC_NON_INCREMENTAL_REASON,
                           uint32_t(nonincrementalReason_));
   }
 
@@ -1049,28 +1049,28 @@ void Statistics::sendGCTelemetry() {
   }
 #endif
   const auto& lastSlice = slices_.back();
-  runtime->addTelemetry(JS_TELEMETRY_GC_RESET, lastSlice.wasReset());
+  runtime->addTelemetry(JSMetric::GC_RESET, lastSlice.wasReset());
   if (lastSlice.wasReset()) {
-    runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON,
+    runtime->addTelemetry(JSMetric::GC_RESET_REASON,
                           uint32_t(lastSlice.resetReason));
   }
 
   TimeDuration total, longest;
   gcDuration(&total, &longest);
 
-  runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
-  runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS_2, t(longest));
+  runtime->addTelemetry(JSMetric::GC_MS, t(total));
+  runtime->addTelemetry(JSMetric::GC_MAX_PAUSE_MS_2, t(longest));
 
   const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
-  runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
+  runtime->addTelemetry(JSMetric::GC_MMU_50, mmu50 * 100);
 
   // Record scheduling telemetry for the main runtime but not for workers, which
   // are scheduled differently.
   if (!runtime->parentRuntime && timeSinceLastGC) {
-    runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_S,
+    runtime->addTelemetry(JSMetric::GC_TIME_BETWEEN_S,
                           timeSinceLastGC.ToSeconds());
     if (!nonincremental()) {
-      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_COUNT, slices_.length());
+      runtime->addTelemetry(JSMetric::GC_SLICE_COUNT, slices_.length());
     }
   }
 
@@ -1085,7 +1085,7 @@ void Statistics::sendGCTelemetry() {
     MOZ_ASSERT(preCollectedHeapBytes >= bytesSurvived);
     double survialRate =
         100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
-    runtime->addTelemetry(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE,
+    runtime->addTelemetry(JSMetric::GC_TENURED_SURVIVAL_RATE,
                           uint32_t(survialRate));
 
     // Calculate 'effectiveness' in MB / second, on main thread only for now.
@@ -1095,7 +1095,7 @@ void Statistics::sendGCTelemetry() {
           TimeDuration::Max(total, TimeDuration::FromMilliseconds(1));
       double effectiveness =
           (double(bytesFreed) / BYTES_PER_MB) / clampedTotal.ToSeconds();
-      runtime->addTelemetry(JS_TELEMETRY_GC_EFFECTIVENESS,
+      runtime->addTelemetry(JSMetric::GC_EFFECTIVENESS,
                             uint32_t(effectiveness));
     }
   }
@@ -1148,7 +1148,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
   JSRuntime* runtime = gc->rt;
   if (!runtime->parentRuntime && !slices_.empty()) {
     TimeDuration timeSinceLastSlice = currentTime - slices_.back().end;
-    runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_SLICES_MS,
+    runtime->addTelemetry(JSMetric::GC_TIME_BETWEEN_SLICES_MS,
                           uint32_t(timeSinceLastSlice.ToMilliseconds()));
   }
 
@@ -1162,9 +1162,8 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
     return;
   }
 
-  runtime->addTelemetry(JS_TELEMETRY_GC_REASON_2, uint32_t(reason));
-  runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_WAS_INCREASED,
-                        budgetWasIncreased);
+  runtime->addTelemetry(JSMetric::GC_REASON_2, uint32_t(reason));
+  runtime->addTelemetry(JSMetric::GC_BUDGET_WAS_INCREASED, budgetWasIncreased);
 
   // Slice callbacks should only fire for the outermost level.
   if (sliceCallback) {
@@ -1253,31 +1252,31 @@ void Statistics::endSlice() {
 void Statistics::sendSliceTelemetry(const SliceData& slice) {
   JSRuntime* runtime = gc->rt;
   TimeDuration sliceTime = slice.end - slice.start;
-  runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
+  runtime->addTelemetry(JSMetric::GC_SLICE_MS, t(sliceTime));
 
   if (slice.budget.isTimeBudget()) {
     TimeDuration budgetDuration = slice.budget.timeBudgetDuration();
-    runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS_2, t(budgetDuration));
+    runtime->addTelemetry(JSMetric::GC_BUDGET_MS_2, t(budgetDuration));
     if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
-      runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
+      runtime->addTelemetry(JSMetric::GC_ANIMATION_MS, t(sliceTime));
     }
 
     if (sliceTime > budgetDuration) {
       // Record how long we went over budget.
       TimeDuration overrun = sliceTime - budgetDuration;
-      runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_OVERRUN,
+      runtime->addTelemetry(JSMetric::GC_BUDGET_OVERRUN,
                             overrun.ToMicroseconds());
 
       // Long GC slices are those that go 50% or 5ms over their budget.
       bool wasLongSlice = (overrun > TimeDuration::FromMilliseconds(5)) ||
                           (overrun > (budgetDuration / int64_t(2)));
-      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_WAS_LONG, wasLongSlice);
+      runtime->addTelemetry(JSMetric::GC_SLICE_WAS_LONG, wasLongSlice);
 
       // Record the longest phase in any long slice.
       if (wasLongSlice) {
         PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
         reportLongestPhaseInMajorGC(longest, [runtime](auto sample) {
-          runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_PHASE, sample);
+          runtime->addTelemetry(JSMetric::GC_SLOW_PHASE, sample);
         });
 
         // If the longest phase was waiting for parallel tasks then record the
@@ -1286,7 +1285,7 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
           PhaseKind longestParallel =
               FindLongestPhaseKind(slice.maxParallelTimes);
           reportLongestPhaseInMajorGC(longestParallel, [runtime](auto sample) {
-            runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_TASK, sample);
+            runtime->addTelemetry(JSMetric::GC_SLOW_TASK, sample);
           });
         }
       }

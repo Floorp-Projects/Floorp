@@ -1315,12 +1315,11 @@ static bool SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc,
 }
 
 // clang-format off
+static const char* telemetryNames[static_cast<int>(JSMetric::Count)] = {
 #define LIT(NAME) #NAME,
-static const char* telemetryNames[JS_TELEMETRY_END + 1] = {
-  MAP_JS_TELEMETRY(LIT)
-  "JS_TELEMETRY_END"
-};
+  FOR_EACH_JS_METRIC(LIT)
 #undef LIT
+};
 // clang-format on
 
 // Telemetry can be executed from multiple threads, and the callback is
@@ -1335,12 +1334,11 @@ class MOZ_RAII AutoLockTelemetry : public LockGuard<Mutex> {
 
 using TelemetryData = uint32_t;
 using TelemetryVec = Vector<TelemetryData, 0, SystemAllocPolicy>;
-static mozilla::Array<TelemetryVec, JS_TELEMETRY_END> telemetryResults;
-static void AccumulateTelemetryDataCallback(int id, uint32_t sample,
-                                            const char* key) {
+static mozilla::Array<TelemetryVec, size_t(JSMetric::Count)> telemetryResults;
+static void AccumulateTelemetryDataCallback(JSMetric id, uint32_t sample) {
   AutoLockTelemetry alt;
   // We ignore OOMs while writting teleemtry data.
-  if (telemetryResults[id].append(sample)) {
+  if (telemetryResults[static_cast<int>(id)].append(sample)) {
     return;
   }
 }
@@ -1361,7 +1359,7 @@ static void WriteTelemetryDataToDisk(const char* dir) {
     return true;
   };
 
-  for (size_t id = 0; id < JS_TELEMETRY_END; id++) {
+  for (int id = 0; id < size_t(JSMetric::Count); id++) {
     auto clear = MakeScopeExit([&] { telemetryResults[id].clearAndFree(); });
     if (!initOutput(telemetryNames[id])) {
       continue;

@@ -3792,13 +3792,13 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
 #endif
 
   JSRuntime* rt = context()->runtime();
-  rt->addTelemetry(JS_TELEMETRY_DESERIALIZE_BYTES,
+  rt->addTelemetry(JSMetric::DESERIALIZE_BYTES,
                    static_cast<uint32_t>(std::min(nbytes, size_t(MAX_UINT32))));
   rt->addTelemetry(
-      JS_TELEMETRY_DESERIALIZE_ITEMS,
+      JSMetric::DESERIALIZE_ITEMS,
       static_cast<uint32_t>(std::min(numItemsRead, size_t(MAX_UINT32))));
   mozilla::TimeDuration elapsed = mozilla::TimeStamp::Now() - startTime;
-  rt->addTelemetry(JS_TELEMETRY_DESERIALIZE_US,
+  rt->addTelemetry(JSMetric::DESERIALIZE_US,
                    static_cast<uint32_t>(elapsed.ToMicroseconds()));
 
   return true;

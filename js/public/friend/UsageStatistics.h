@@ -22,57 +22,57 @@ class JS_PUBLIC_API JSObject;
  * It's OK for these enum values to change as they will be mapped to a fixed
  * member of the mozilla::Telemetry::HistogramID enum by the callback.
  */
-#define MAP_JS_TELEMETRY(_)                 \
-  _(JS_TELEMETRY_GC_REASON_2)               \
-  _(JS_TELEMETRY_GC_IS_COMPARTMENTAL)       \
-  _(JS_TELEMETRY_GC_MS)                     \
-  _(JS_TELEMETRY_GC_BUDGET_MS_2)            \
-  _(JS_TELEMETRY_GC_BUDGET_WAS_INCREASED)   \
-  _(JS_TELEMETRY_GC_SLICE_WAS_LONG)         \
-  _(JS_TELEMETRY_GC_BUDGET_OVERRUN)         \
-  _(JS_TELEMETRY_GC_ANIMATION_MS)           \
-  _(JS_TELEMETRY_GC_MAX_PAUSE_MS_2)         \
-  _(JS_TELEMETRY_GC_PREPARE_MS)             \
-  _(JS_TELEMETRY_GC_MARK_MS)                \
-  _(JS_TELEMETRY_GC_SWEEP_MS)               \
-  _(JS_TELEMETRY_GC_COMPACT_MS)             \
-  _(JS_TELEMETRY_GC_MARK_ROOTS_US)          \
-  _(JS_TELEMETRY_GC_MARK_GRAY_MS_2)         \
-  _(JS_TELEMETRY_GC_MARK_WEAK_MS)           \
-  _(JS_TELEMETRY_GC_SLICE_MS)               \
-  _(JS_TELEMETRY_GC_SLOW_PHASE)             \
-  _(JS_TELEMETRY_GC_SLOW_TASK)              \
-  _(JS_TELEMETRY_GC_MMU_50)                 \
-  _(JS_TELEMETRY_GC_RESET)                  \
-  _(JS_TELEMETRY_GC_RESET_REASON)           \
-  _(JS_TELEMETRY_GC_NON_INCREMENTAL)        \
-  _(JS_TELEMETRY_GC_NON_INCREMENTAL_REASON) \
-  _(JS_TELEMETRY_GC_MINOR_REASON)           \
-  _(JS_TELEMETRY_GC_MINOR_REASON_LONG)      \
-  _(JS_TELEMETRY_GC_MINOR_US)               \
-  _(JS_TELEMETRY_GC_NURSERY_BYTES_2)        \
-  _(JS_TELEMETRY_GC_PRETENURE_COUNT_2)      \
-  _(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE) \
-  _(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE)  \
-  _(JS_TELEMETRY_GC_MARK_RATE_2)            \
-  _(JS_TELEMETRY_GC_TIME_BETWEEN_S)         \
-  _(JS_TELEMETRY_GC_TIME_BETWEEN_SLICES_MS) \
-  _(JS_TELEMETRY_GC_SLICE_COUNT)            \
-  _(JS_TELEMETRY_DESERIALIZE_BYTES)         \
-  _(JS_TELEMETRY_DESERIALIZE_ITEMS)         \
-  _(JS_TELEMETRY_DESERIALIZE_US)            \
-  _(JS_TELEMETRY_GC_EFFECTIVENESS)
+#define FOR_EACH_JS_METRIC(_)  \
+  _(GC_REASON_2)               \
+  _(GC_IS_COMPARTMENTAL)       \
+  _(GC_MS)                     \
+  _(GC_BUDGET_MS_2)            \
+  _(GC_BUDGET_WAS_INCREASED)   \
+  _(GC_SLICE_WAS_LONG)         \
+  _(GC_BUDGET_OVERRUN)         \
+  _(GC_ANIMATION_MS)           \
+  _(GC_MAX_PAUSE_MS_2)         \
+  _(GC_PREPARE_MS)             \
+  _(GC_MARK_MS)                \
+  _(GC_SWEEP_MS)               \
+  _(GC_COMPACT_MS)             \
+  _(GC_MARK_ROOTS_US)          \
+  _(GC_MARK_GRAY_MS_2)         \
+  _(GC_MARK_WEAK_MS)           \
+  _(GC_SLICE_MS)               \
+  _(GC_SLOW_PHASE)             \
+  _(GC_SLOW_TASK)              \
+  _(GC_MMU_50)                 \
+  _(GC_RESET)                  \
+  _(GC_RESET_REASON)           \
+  _(GC_NON_INCREMENTAL)        \
+  _(GC_NON_INCREMENTAL_REASON) \
+  _(GC_MINOR_REASON)           \
+  _(GC_MINOR_REASON_LONG)      \
+  _(GC_MINOR_US)               \
+  _(GC_NURSERY_BYTES_2)        \
+  _(GC_PRETENURE_COUNT_2)      \
+  _(GC_NURSERY_PROMOTION_RATE) \
+  _(GC_TENURED_SURVIVAL_RATE)  \
+  _(GC_MARK_RATE_2)            \
+  _(GC_TIME_BETWEEN_S)         \
+  _(GC_TIME_BETWEEN_SLICES_MS) \
+  _(GC_SLICE_COUNT)            \
+  _(DESERIALIZE_BYTES)         \
+  _(DESERIALIZE_ITEMS)         \
+  _(DESERIALIZE_US)            \
+  _(GC_EFFECTIVENESS)
 
 // clang-format off
-#define ENUM_DEF(NAME) NAME ,
-enum {
-  MAP_JS_TELEMETRY(ENUM_DEF)
-  JS_TELEMETRY_END
+#define ENUM_DEF(NAME) NAME,
+enum class JSMetric {
+  FOR_EACH_JS_METRIC(ENUM_DEF)
+  Count
 };
 #undef ENUM_DEF
 // clang-format on
 
-using JSAccumulateTelemetryDataCallback = void (*)(int, uint32_t, const char*);
+using JSAccumulateTelemetryDataCallback = void (*)(JSMetric, uint32_t);
 
 extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
     JSContext* cx, JSAccumulateTelemetryDataCallback callback);
