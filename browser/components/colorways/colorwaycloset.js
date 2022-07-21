@@ -143,7 +143,7 @@ const ColorwayCloset = {
     );
     document.l10n.setAttributes(
       this.el.expiryDateSpan,
-      "colorway-collection-expiry-date-span",
+      "colorway-collection-expiry-label",
       {
         expiryDate: collection.expiry.getTime(),
       }
