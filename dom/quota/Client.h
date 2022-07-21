@@ -25,7 +25,6 @@ class nsIFile;
 #define IDB_DIRECTORY_NAME "idb"
 #define DOMCACHE_DIRECTORY_NAME "cache"
 #define SDB_DIRECTORY_NAME "sdb"
-#define FILESYSTEM_DIRECTORY_NAME "filesystem"
 #define LS_DIRECTORY_NAME "ls"
 
 // Deprecated
@@ -55,7 +54,6 @@ class Client {
     // APPCACHE,
     DOMCACHE,
     SDB,
-    FILESYSTEM,
     LS,
     TYPE_MAX
   };

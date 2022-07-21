@@ -22,16 +22,17 @@ extern LazyLogModule gOPFSLog;
 #define LOG_DEBUG(args) \
   MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
-namespace mozilla::dom::fs::data {
-class FileSystemDataManager;
-}  // namespace mozilla::dom::fs::data
-
 namespace mozilla::dom {
+
+namespace fs::data {
+// TODO: Replace dummy with real FileSystemDataManager
+class FileSystemDataManagerBase {};
+}  // namespace fs::data
 
 class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
  public:
-  OriginPrivateFileSystemParent(TaskQueue* aTaskQueue,
-                                fs::data::FileSystemDataManager* aData);
+  explicit OriginPrivateFileSystemParent(TaskQueue* aTaskQueue)
+      : mTaskQueue(aTaskQueue), mData() {}
 
   mozilla::ipc::IPCResult RecvGetDirectoryHandle(
       FileSystemGetHandleRequest&& aRequest,
@@ -71,7 +72,7 @@ class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
  private:
   RefPtr<TaskQueue> mTaskQueue;
 
-  UniquePtr<fs::data::FileSystemDataManager> mData;
+  UniquePtr<fs::data::FileSystemDataManagerBase> mData;
 };
 
 }  // namespace mozilla::dom
