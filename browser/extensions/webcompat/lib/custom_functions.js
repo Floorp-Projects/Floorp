@@ -91,6 +91,38 @@ const CUSTOM_FUNCTIONS = {
     browser.webRequest.onBeforeRequest.removeListener(listener);
     delete injection.data.listener;
   },
+  runScriptBeforeRequest: injection => {
+    const { bug, message, request, script, types } = injection;
+    const warning = `${message} See https://bugzilla.mozilla.org/show_bug.cgi?id=${bug} for details.`;
+
+    const listener = (injection.listener = e => {
+      const { tabId, frameId } = e;
+      return browser.tabs
+        .executeScript(tabId, {
+          file: script,
+          frameId,
+          runAt: "document_start",
+        })
+        .then(() => {
+          browser.tabs.executeScript(tabId, {
+            code: `console.warn(${JSON.stringify(warning)})`,
+            runAt: "document_start",
+          });
+        })
+        .catch(_ => {});
+    });
+
+    browser.webRequest.onBeforeRequest.addListener(
+      listener,
+      { urls: request, types: types || ["script"] },
+      ["blocking"]
+    );
+  },
+  runScriptBeforeRequestDisable: injection => {
+    const { listener } = injection;
+    browser.webRequest.onBeforeRequest.removeListener(listener);
+    delete injection.data.listener;
+  },
 };
 
 module.exports = CUSTOM_FUNCTIONS;

@@ -260,10 +260,7 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: ["*://*.ceskatelevize.cz/*"],
       uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
-        );
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -719,7 +716,6 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://*.ibmserviceengage.com/*", // #105438
         "*://*.wordpress.org/*", // Bug 1743431
         "*://as.eservice.asus.com/*", // #104113
-        "*://bethesda.net/*", // #94607,
         "*://cdn-vzn.yottaa.net/*", // Bug 1764795
         "*://dsae.co.za/*", // Bug 1765925
         "*://fpt.dfp.microsoft.com/*", // #104237
@@ -839,7 +835,9 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: ["*://nordjyske.dk/*"],
       uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA("97.0.4692.9", "Pixel 4");
+        return UAHelpers.getDeviceAppropriateChromeUA({
+          androidDevice: "Pixel 4",
+        });
       },
     },
   },
@@ -894,7 +892,7 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: ["*://www.otsuka.co.jp/fib/*"],
       uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA("97.0.4692.9");
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -912,6 +910,64 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1771200",
     config: {
       matches: ["*://*.animalplanet.com/video/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1771200 - UA override for lazada.co.id
+     * Webcompat issue #106229 - https://webcompat.com/issues/106229
+     *
+     * The map is not playing and an error message is displayed
+     * in Firefox for Android, but work with Chrome UA
+     */
+    id: "bug1779059",
+    platform: "android",
+    domain: "lazada.co.id",
+    bug: "1779059",
+    config: {
+      matches: ["*://member-m.lazada.co.id/address/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1778168 - UA override for watch.antennaplus.gr
+     * Webcompat issue #106529 - https://webcompat.com/issues/106529
+     *
+     * The site's content is not loaded unless a Chrome UA is used,
+     * and breaks on Linux (so we claim Windows instead in that case).
+     */
+    id: "bug1778168",
+    platform: "desktop",
+    domain: "watch.antennaplus.gr",
+    bug: "1778168",
+    config: {
+      matches: ["*://watch.antennaplus.gr/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA({
+          desktopOS: "nonLinux",
+        });
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1776897 - UA override for watch.antennaplus.gr
+     * Webcompat issue #106545 - https://webcompat.com/issues/106545
+     *
+     * The site's podcast audio player does not load unless a Chrome UA is used.
+     */
+    id: "bug1776897",
+    platform: "all",
+    domain: "www.edencast.fr",
+    bug: "1776897",
+    config: {
+      matches: ["*://www.edencast.fr/zoomcast*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
