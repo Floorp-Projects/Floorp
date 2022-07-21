@@ -23,6 +23,11 @@ add_task(async function() {
     onAvailable,
   });
 
+  ok(
+    resourceCommand.isResourceWatched(resourceCommand.TYPES.ERROR_MESSAGE),
+    "The error message resource is currently been watched."
+  );
+
   is(
     resources.length,
     0,
@@ -50,6 +55,11 @@ add_task(async function() {
   resourceCommand.unwatchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable,
   });
+
+  ok(
+    !resourceCommand.isResourceWatched(resourceCommand.TYPES.ERROR_MESSAGE),
+    "The error message resource is no longer been watched."
+  );
   // clearing resources
   resources = [];
 
@@ -57,6 +67,11 @@ add_task(async function() {
   await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable,
   });
+
+  ok(
+    resourceCommand.isResourceWatched(resourceCommand.TYPES.ERROR_MESSAGE),
+    "The error message resource is been watched again."
+  );
   is(
     resources.length,
     1,
