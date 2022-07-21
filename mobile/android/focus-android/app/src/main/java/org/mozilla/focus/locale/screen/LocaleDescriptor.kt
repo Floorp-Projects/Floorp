@@ -52,6 +52,7 @@ class LocaleDescriptor(private val localeTag: String) : Comparable<LocaleDescrip
         languageCodeAndNameMap["co"] = "Corsu"
         languageCodeAndNameMap["sn"] = "ChiShona"
         languageCodeAndNameMap["zh-CN"] = "中文 (中国大陆)"
+        languageCodeAndNameMap["nv"] = "Navajo"
     }
 
     private fun setupLocaleDescriptor() {
