@@ -73,7 +73,7 @@ if (!window?.branch?.b) {
     trackCommerceEvent() {}
     validateCode() {}
   })();
-  const push = (fn, args) => {
+  const push = ([fn, ...args]) => {
     try {
       window.branch[fn].apply(window.branch, args);
     } catch (e) {

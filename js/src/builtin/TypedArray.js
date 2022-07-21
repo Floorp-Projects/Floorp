@@ -238,7 +238,7 @@ function TypedArrayEvery(callbackfn/*, thisArg*/) {
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = 0; k < len; k++) {
@@ -347,7 +347,7 @@ function TypedArrayFilter(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 5.
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     // Step 6.
     var kept = new_List();
@@ -408,7 +408,7 @@ function TypedArrayFind(predicate/*, thisArg*/) {
     if (!IsCallable(predicate))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = 0; k < len; k++) {
@@ -449,7 +449,7 @@ function TypedArrayFindIndex(predicate/*, thisArg*/) {
     if (!IsCallable(predicate))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = 0; k < len; k++) {
@@ -487,7 +487,7 @@ function TypedArrayForEach(callbackfn/*, thisArg*/) {
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = 0; k < len; k++) {
@@ -723,7 +723,7 @@ function TypedArrayMap(callbackfn/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 5.
-    var T = arguments.length > 1 ? arguments[1] : void 0;
+    var T = arguments.length > 1 ? arguments[1] : undefined;
 
     // Step 6.
     var A = TypedArraySpeciesCreateWithLength(O, len);
@@ -966,7 +966,7 @@ function TypedArraySome(callbackfn/*, thisArg*/) {
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = 0; k < len; k++) {
@@ -1228,7 +1228,7 @@ function TypedArrayFindLast(predicate/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
     }
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = len - 1; k >= 0; k--) {
@@ -1272,7 +1272,7 @@ function TypedArrayFindLastIndex(predicate/*, thisArg*/) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
     }
 
-    var thisArg = arguments.length > 1 ? arguments[1] : void 0;
+    var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = len - 1; k >= 0; k--) {

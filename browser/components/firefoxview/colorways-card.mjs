@@ -140,7 +140,7 @@ class ColorwaysCard extends HTMLElement {
   _showData({ collection, colorway, figureUrl }) {
     document.l10n.setAttributes(
       this.expiry,
-      "colorway-collection-expiry-date-span",
+      "colorway-collection-expiry-label",
       {
         expiryDate: collection.expiry.getTime(),
       }

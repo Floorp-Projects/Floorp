@@ -1159,6 +1159,10 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
     tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
   }
 
+  if (dnsAndSock->mCaps & NS_HTTP_IS_RETRY) {
+    tmpFlags |= nsISocketTransport::IS_RETRY;
+  }
+
   if (((dnsAndSock->mCaps & NS_HTTP_BE_CONSERVATIVE) ||
        ci->GetBeConservative()) &&
       gHttpHandler->ConnMgr()->BeConservativeIfProxied(ci->ProxyInfo())) {
