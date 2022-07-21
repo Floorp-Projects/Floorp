@@ -28,6 +28,7 @@ const BadCertAndPinningHost sBadCertAndPinningHosts[] = {
     {"expired.example.com", "expired-ee"},
     {"notyetvalid.example.com", "notYetValid"},
     {"before-epoch.example.com", "beforeEpoch"},
+    {"before-epoch-self-signed.example.com", "beforeEpochSelfSigned"},
     {"selfsigned.example.com", "selfsigned"},
     {"unknownissuer.example.com", "unknownissuer"},
     {"mismatch.example.com", "mismatch"},
