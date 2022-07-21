@@ -1001,11 +1001,6 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT void MaybeSubmitForm(nsPresContext* aPresContext);
 
   /**
-   * Update mFileList with the currently selected file.
-   */
-  void UpdateFileList();
-
-  /**
    * Called after calling one of the SetFilesOrDirectories() functions.
    * This method can explore the directory recursively if needed.
    */
