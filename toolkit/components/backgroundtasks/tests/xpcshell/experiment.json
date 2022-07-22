@@ -1,0 +1,107 @@
+{
+  "permissions": {},
+  "data": {
+    "slug": "test-experiment",
+    "appId": "firefox-desktop",
+    "appName": "firefox_desktop",
+    "channel": "",
+    "endDate": null,
+    "branches": [
+      {
+        "slug": "treatment-a",
+        "ratio": 1,
+        "feature": {
+          "value": {},
+          "enabled": false,
+          "featureId": "this-is-included-for-desktop-pre-95-support"
+        },
+        "features": [
+          {
+            "value": {
+              "id": "test-experiment:treatment-a",
+              "groups": [
+                "backgroundTaskMessage"
+              ],
+              "content": {
+                "body": "Body A",
+                "title": "Treatment A"
+              },
+              "trigger": {
+                "id": "backgroundTask"
+              },
+              "priority": 1,
+              "template": "toast_notification",
+              "frequency": {
+                "lifetime": 2
+              },
+              "targeting": "true"
+            },
+            "enabled": true,
+            "featureId": "backgroundTaskMessage"
+          }
+        ]
+      },
+      {
+        "slug": "treatment-b",
+        "ratio": 1,
+        "feature": {
+          "value": {},
+          "enabled": false,
+          "featureId": "this-is-included-for-desktop-pre-95-support"
+        },
+        "features": [
+          {
+            "value": {
+              "id": "test-experiment:treatment-b",
+              "groups": [
+                "backgroundTaskMessage"
+              ],
+              "content": {
+                "body": "Body B",
+                "title": "Treatment B"
+              },
+              "trigger": {
+                "id": "backgroundTask"
+              },
+              "priority": 1,
+              "template": "toast_notification",
+              "frequency": {
+                "lifetime": 2
+              },
+              "targeting": "true"
+            },
+            "enabled": true,
+            "featureId": "backgroundTaskMessage"
+          }
+        ]
+      }
+    ],
+    "outcomes": [],
+    "arguments": {},
+    "isRollout": false,
+    "probeSets": [],
+    "startDate": null,
+    "targeting": "('app.shield.optoutstudies.enabled'|preferenceValue) && (version|versionCompare('102.!') >= 0)",
+    "featureIds": [
+      "backgroundTaskMessage"
+    ],
+    "application": "firefox-desktop",
+    "bucketConfig": {
+      "count": 10000,
+      "start": 0,
+      "total": 10000,
+      "namespace": "firefox-desktop-backgroundTaskMessage-1",
+      "randomizationUnit": "normandy_id"
+    },
+    "schemaVersion": "1.8.0",
+    "userFacingName": "test-experiment",
+    "referenceBranch": "treatment-a",
+    "proposedDuration": 28,
+    "enrollmentEndDate": null,
+    "isEnrollmentPaused": false,
+    "proposedEnrollment": 7,
+    "userFacingDescription": "Test experiment to test supporting the Messaging System in Firefox background tasks.",
+    "id": "test-experiment",
+    "last_modified": 1657578927064
+  }
+}
