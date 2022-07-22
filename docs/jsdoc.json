@@ -1,5 +1,5 @@
 {
   "source": {
-    "includePattern": ".+\\.jsm?$"
+    "includePattern": ".+\\.m?jsm?$"
   }
 }
