@@ -1621,33 +1621,48 @@ void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
   }
 }
 
-char* js::NumberToCString(ToCStringBuf* cbuf, double d) {
+char* js::NumberToCString(ToCStringBuf* cbuf, double d, size_t* length) {
   int32_t i;
   size_t len;
   char* s = NumberEqualsInt32(d, &i) ? ::Int32ToCString(cbuf, i, &len)
                                      : FracNumberToCString(cbuf, d, &len);
   MOZ_ASSERT(s);
+  if (length) {
+    *length = len;
+  }
   return s;
 }
 
-char* js::Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value) {
+char* js::Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value,
+                         size_t* length) {
   size_t len;
   char* s = ::Int32ToCString(cbuf, value, &len);
   MOZ_ASSERT(s);
+  if (length) {
+    *length = len;
+  }
   return s;
 }
 
-char* js::Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value) {
+char* js::Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value,
+                          size_t* length) {
   size_t len;
   char* s = ::Int32ToCString(cbuf, value, &len);
   MOZ_ASSERT(s);
+  if (length) {
+    *length = len;
+  }
   return s;
 }
 
-char* js::Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value) {
+char* js::Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value,
+                             size_t* length) {
   size_t len;
   char* s = ::Int32ToCString<uint32_t, 16>(cbuf, value, &len);
   MOZ_ASSERT(s);
+  if (length) {
+    *length = len;
+  }
   return s;
 }
 
@@ -1841,13 +1856,7 @@ bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
   if (v.isInt32()) {
     cstr = ::Int32ToCString(&cbuf, v.toInt32(), &cstrlen);
   } else {
-    double d = v.toDouble();
-    int32_t i;
-    if (NumberEqualsInt32(d, &i)) {
-      cstr = Int32ToCString(&cbuf, i, &cstrlen);
-    } else {
-      cstr = FracNumberToCString(&cbuf, d, &cstrlen);
-    }
+    cstr = NumberToCString(&cbuf, v.toDouble(), &cstrlen);
   }
   MOZ_ASSERT(cstr);
   MOZ_ASSERT(cstrlen == strlen(cstr));

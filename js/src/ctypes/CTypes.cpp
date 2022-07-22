@@ -4143,18 +4143,19 @@ static void BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
     break;
       CTYPES_FOR_EACH_WRAPPED_INT_TYPE(WRAPPED_INT_CASE)
 #undef WRAPPED_INT_CASE
-#define FLOAT_CASE(name, type, ffiType)     \
-  case TYPE_##name: {                       \
-    /* Serialize as a primitive double. */  \
-    double fp = *static_cast<type*>(data);  \
-    ToCStringBuf cbuf;                      \
-    char* str = NumberToCString(&cbuf, fp); \
-    MOZ_ASSERT(str);                        \
-    if (!result.append(str, strlen(str))) { \
-      JS_ReportOutOfMemory(cx);             \
-      return false;                         \
-    }                                       \
-    break;                                  \
+#define FLOAT_CASE(name, type, ffiType)                 \
+  case TYPE_##name: {                                   \
+    /* Serialize as a primitive double. */              \
+    double fp = *static_cast<type*>(data);              \
+    ToCStringBuf cbuf;                                  \
+    size_t strLength;                                   \
+    char* str = NumberToCString(&cbuf, fp, &strLength); \
+    MOZ_ASSERT(str);                                    \
+    if (!result.append(str, strLength)) {               \
+      JS_ReportOutOfMemory(cx);                         \
+      return false;                                     \
+    }                                                   \
+    break;                                              \
   }
       CTYPES_FOR_EACH_FLOAT_TYPE(FLOAT_CASE)
 #undef FLOAT_CASE
