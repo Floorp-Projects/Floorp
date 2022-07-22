@@ -26,6 +26,10 @@
 #define FFT_FLOAT 1
 #endif
 
+#ifndef FFT_FIXED_32
+#define FFT_FIXED_32 0
+#endif
+
 #include <stdint.h>
 #include "config.h"
 
@@ -41,10 +45,14 @@ typedef float FFTDouble;
 
 #else
 
+#if FFT_FIXED_32
+
 #define Q31(x) (int)((x)*2147483648.0 + 0.5)
 #define FFT_NAME(x) x ## _fixed_32
 
 typedef int32_t FFTSample;
+
+#endif /* FFT_FIXED_32 */
 
 typedef struct FFTComplex {
     FFTSample re, im;

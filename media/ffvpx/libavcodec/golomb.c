@@ -26,7 +26,7 @@
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
-#include <stdint.h>
+#include "libavutil/common.h"
 
 const uint8_t ff_golomb_vlc_len[512]={
 19,17,15,15,13,13,13,13,11,11,11,11,11,11,11,11,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
