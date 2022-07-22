@@ -161,6 +161,7 @@ add_task(async function test_updateRecipes_someMismatch() {
       invalidRecipes: [],
       invalidBranches: new Map(),
       invalidFeatures: new Map(),
+      validationEnabled: true,
     }),
     "should call .onFinalize with the recipes that failed targeting"
   );
