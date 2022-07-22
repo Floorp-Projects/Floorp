@@ -78,13 +78,7 @@ extern bool IsInteger(double d);
 extern JSLinearString* IndexToString(JSContext* cx, uint32_t index);
 
 struct ToCStringBuf {
-  /*
-   * The longest possible result that would need to fit in sbuf is
-   * (-0x80000000).toString(2), which has length 33.  Longer cases are
-   * possible, but they'll go in dbuf.
-   */
-  static const size_t sbufSize = 34;
-  char sbuf[sbufSize];
+  char sbuf[JS::MaximumNumberToStringLength] = {};
 };
 
 struct Int32ToCStringBuf {
