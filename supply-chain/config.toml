@@ -1657,10 +1657,6 @@ criteria = "safe-to-deploy"
 version = "1.15.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.uluru]]
-version = "3.0.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.unic-langid]]
 version = "0.9.0"
 criteria = "safe-to-deploy"
