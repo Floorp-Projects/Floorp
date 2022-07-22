@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// These preferences override Gecko preferences in `greprefs.js`.  Use
+// `backgroundtasks_browser.js` to override browser/-specific preferences in
+// `firefox.js`.
+
 pref("browser.dom.window.dump.enabled", true);
 pref("devtools.console.stdout.chrome", true);
 
