@@ -387,14 +387,16 @@ static_assert(BeforePushRetAddr == 0, "Required by StartUnwinding");
 static_assert(PushedFP > PushedRetAddr, "Required by StartUnwinding");
 #elif defined(JS_CODEGEN_MIPS64)
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedFP = 12;
-static const unsigned SetFP = 16;
+static const unsigned PushedFP = 16;
+static const unsigned SetFP = 20;
 static const unsigned PoppedFP = 4;
+static const unsigned PoppedFPJitEntry = 0;
 #elif defined(JS_CODEGEN_LOONG64)
 static const unsigned PushedRetAddr = 8;
 static const unsigned PushedFP = 16;
 static const unsigned SetFP = 20;
 static const unsigned PoppedFP = 4;
+static const unsigned PoppedFPJitEntry = 0;
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 // Synthetic values to satisfy asserts and avoid compiler warnings.
 static const unsigned PushedRetAddr = 0;
@@ -457,10 +459,9 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
   {
     *entry = masm.currentOffset();
 
-    masm.subFromStackPtr(Imm32(sizeof(Frame)));
-    masm.storePtr(ra, Address(StackPointer, Frame::returnAddressOffset()));
+    masm.ma_push(ra);
     MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
-    masm.storePtr(FramePointer, Address(StackPointer, Frame::callerFPOffset()));
+    masm.ma_push(FramePointer);
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.moveStackPtrTo(FramePointer);
     MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);

@@ -35,8 +35,8 @@ body {
 
   // --newtab-element-*-color is used when an element needs to be set off from
   // the primary background color.
-  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #{$black});
-  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #{$black});
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #{$black});
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #{$black});
 
   // --newtab-element-secondary*-color is used when an element needs to be set
   // off from the secondary background color.
@@ -78,8 +78,8 @@ body {
     --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #{$white});
     --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 55%, #{$white});
 
-    --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #{$white});
-    --newtab-element-active-color:  color-mix(in srgb, var(--newtab-background-color) 90%, #{$white});
+    --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 80%, #{$white});
+    --newtab-element-active-color:  color-mix(in srgb, var(--newtab-background-color) 60%, #{$white});
 
     --newtab-element-secondary-color: color-mix(in srgb, currentColor 10%, transparent);
     --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 17%, transparent);

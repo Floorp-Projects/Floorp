@@ -344,10 +344,11 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
 
   if (!isThunderbird &&
       XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
+    bool isUtilityProcess = aProcessType == GeckoProcessType_Utility;
     RefPtr<DllServices> dllSvc(DllServices::Get());
     LauncherVoidResultWithLineInfo blocklistInitOk =
         dllSvc->InitDllBlocklistOOP(aPath, targetInfo.hProcess,
-                                    aCachedNtdllThunk);
+                                    aCachedNtdllThunk, isUtilityProcess);
     if (blocklistInitOk.isErr()) {
       dllSvc->HandleLauncherError(blocklistInitOk.unwrapErr(),
                                   XRE_GeckoProcessTypeToString(aProcessType));

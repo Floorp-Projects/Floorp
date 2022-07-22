@@ -63,13 +63,23 @@ const INFO_BODY = String.raw`
 `;
 
 const DELAYED_ECHO_BODY = String.raw`
+  import atexit
+  import json
+  import os
   import struct
   import sys
+  import time
 
   stdin = getattr(sys.stdin, 'buffer', sys.stdin)
   stdout = getattr(sys.stdout, 'buffer', sys.stdout)
+  pid = os.getpid()
 
-  delayed_echo_messages = []
+  sys.stderr.write("nativeapp with pid %d is running\n" % pid)
+
+  def onexit():
+    sys.stderr.write("nativeapp with pid %d is exiting\n" % pid)
+
+  atexit.register(onexit)
 
   while True:
     rawlen = stdin.read(4)
@@ -78,15 +88,19 @@ const DELAYED_ECHO_BODY = String.raw`
     msglen = struct.unpack('@I', rawlen)[0]
     msg = stdin.read(msglen)
 
-    if msg == "delayed-echo":
-      delayed_echo_messages.append([msglen, msg]);
-    else:
-      for [oldmsglen, oldmsg] in delayed_echo_messages:
-        stdout.write(struct.pack('@I', msglen))
-        stdout.write(msg)
-      delayed_echo_messages = []
-      stdout.write(struct.pack('@I', msglen))
-      stdout.write(msg)
+    sys.stderr.write(
+      "nativeapp with pid %d delaying echoing message '%s'\n" %
+      (pid, str(msg, 'utf-8'))
+    )
+
+    time.sleep(5)
+    stdout.write(struct.pack('@I', msglen))
+    stdout.write(msg)
+
+    sys.stderr.write(
+      "nativeapp with pid %d replied to message '%s'\n" %
+      (pid, str(msg, 'utf-8'))
+    )
 `;
 
 const STDERR_LINES = ["hello stderr", "this should be a separate line"];
@@ -106,7 +120,7 @@ let SCRIPTS = [
   {
     name: "delayedecho",
     description:
-      "a native app that queue 'delayed-echo' messages and then echoes back all messages tweaked",
+      "a native app that echo messages received with a small artificial delay",
     script: DELAYED_ECHO_BODY.replace(/^ {2}/gm, ""),
   },
   {
@@ -811,6 +825,7 @@ async function startupExtensionAndRequestPermission() {
 }
 
 async function expectTerminateBackgroundToResetIdle({ extension, contextId }) {
+  info("Wait for hasActiveNativeAppPorts to become true");
   await TestUtils.waitForCondition(
     () => extension.extension.backgroundContext,
     "Parent proxy context should be active"
@@ -821,6 +836,7 @@ async function expectTerminateBackgroundToResetIdle({ extension, contextId }) {
     "Parent proxy context should have active native app ports tracked"
   );
 
+  info("Trigger background script idle timeout and expect to be reset");
   const promiseResetIdle = promiseExtensionEvent(
     extension,
     "background-script-reset-idle"
@@ -836,30 +852,17 @@ async function expectTerminateBackgroundToResetIdle({ extension, contextId }) {
 }
 
 async function testSendNativeMessage({ extension, contextId }) {
-  // Send to the nativeApp a message using runtime.sendNativeMessage
-  // and expect the extension page to reset the idle timer
-  // when trying to terminate the background page on idle timeout.
   extension.sendMessage("delayedecho-sendmessage", "delayed-echo");
   await extension.awaitMessage("delayedecho-sendmessage:done");
 
   await expectTerminateBackgroundToResetIdle({ extension, contextId });
 
-  // Try again after the native app replied to all the sendNativeMessage
-  // requests queued.
-  info("wait for NativeApp to reply to all messages sent");
-  extension.sendMessage("delayedecho-sendmessage", "echo-all-queued-messages");
-  await extension.awaitMessage("delayedecho-sendmessage:done");
-  // we expect exactly two replies (one for the previous queued message
+  // We expect exactly two replies (one for the previous queued message
   // and one more for the last message sent right above).
   equal(
     await extension.awaitMessage("delayedecho-sendmessage:got-reply"),
     "delayed-echo",
     "Got the expected reply for the first message sent"
-  );
-  equal(
-    await extension.awaitMessage("delayedecho-sendmessage:got-reply"),
-    "echo-all-queued-messages",
-    "Got the expected reply for the second message sent"
   );
 
   await TestUtils.waitForCondition(
@@ -905,6 +908,7 @@ add_task(
       contextId,
     } = await startupExtensionAndRequestPermission();
     await testSendNativeMessage({ extension, contextId });
+    await waitForSubprocessExit();
     await extension.unload();
   }
 );
@@ -919,6 +923,7 @@ add_task(
       contextId,
     } = await startupExtensionAndRequestPermission();
     await testConnectNative({ extension, contextId });
+    await waitForSubprocessExit();
     await extension.unload();
   }
 );

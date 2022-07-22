@@ -9,6 +9,7 @@
 #include "mozilla/Bootstrap.h"
 #if defined(XP_WIN)
 #  include "mozilla/WindowsDllBlocklist.h"
+#  include "mozilla/GeckoArgs.h"
 #endif  // defined(XP_WIN)
 
 using namespace mozilla;
@@ -66,7 +67,15 @@ int main(int argc, char* argv[]) {
     ret = RunForkServer(std::move(bootstrap), argc, argv);
   } else {
 #ifdef HAS_DLL_BLOCKLIST
-    DllBlocklist_Initialize(eDllBlocklistInitFlagIsChildProcess);
+    uint32_t initFlags = eDllBlocklistInitFlagIsChildProcess;
+#  if defined(MOZ_SANDBOX)
+    Maybe<uint64_t> sandboxingKind =
+        geckoargs::sSandboxingKind.Get(argc, argv, CheckArgFlag::None);
+    if (sandboxingKind.isSome()) {
+      initFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+    }
+#  endif  // defined(MOZ_SANDBOX)
+    DllBlocklist_Initialize(initFlags);
 #endif
 
     ret = content_process_main(bootstrap.get(), argc, argv);

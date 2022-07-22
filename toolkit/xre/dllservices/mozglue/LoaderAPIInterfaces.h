@@ -95,7 +95,7 @@ class NS_NO_VTABLE LoaderAPI {
   virtual AllocatedUnicodeString GetSectionName(void* aSectionAddr) = 0;
 
   using InitDllBlocklistOOPFnPtr = LauncherVoidResultWithLineInfo (*)(
-      const wchar_t*, HANDLE, const IMAGE_THUNK_DATA*);
+      const wchar_t*, HANDLE, const IMAGE_THUNK_DATA*, const bool);
   using HandleLauncherErrorFnPtr = void (*)(const LauncherError&, const char*);
 
   /**

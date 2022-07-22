@@ -278,8 +278,8 @@ template <class T>
                                                    int argIndex) {
   HandleValue val = args.get(argIndex);
   return UnwrapAndTypeCheckValue<T>(cx, val, [cx, val, methodName, argIndex] {
-    ToCStringBuf cbuf;
-    char* numStr = NumberToCString(&cbuf, argIndex + 1);
+    Int32ToCStringBuf cbuf;
+    char* numStr = Int32ToCString(&cbuf, argIndex + 1);
     MOZ_ASSERT(numStr);
     JS_ReportErrorNumberLatin1(
         cx, GetErrorMessage, nullptr, JSMSG_WRONG_TYPE_ARG, numStr, methodName,

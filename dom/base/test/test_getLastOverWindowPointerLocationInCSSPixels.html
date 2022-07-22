@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test for Bug 1778486</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+<script src="chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+div {
+  width: 50px;
+  height: 50px;
+};
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1778486">Mozilla Bug 1778486</a>
+<p id="display"></p>
+<div id="target_mouse" style="background: red;"></div>
+<div id="target_touch" style="background: green;"></div>
+<script>
+
+function waitForEvent(aTarget, aEvent) {
+  return new Promise(resolve => {
+    aTarget.addEventListener(aEvent, resolve, { once: true });
+  });
+}
+
+function getLastOverWindowPointerLocationScreenOffset() {
+  let x = {};
+  let y = {};
+  let topWindow = window.browsingContext.topChromeWindow;
+  topWindow.windowUtils.getLastOverWindowPointerLocationInCSSPixels(x, y);
+  return {
+    x: Math.trunc(x.value + topWindow.mozInnerScreenX),
+    y: Math.trunc(y.value + topWindow.mozInnerScreenY),
+  };
+}
+
+function getElementScreenOffsetAtCentral(aElement) {
+  let rect = aElement.getBoundingClientRect();
+  return {
+    x: Math.trunc(rect.width / 2 + rect.left + mozInnerScreenX),
+    y: Math.trunc(rect.height / 2 + rect.top + mozInnerScreenY),
+  };
+}
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [["test.events.async.enabled", true]] });
+  await waitUntilApzStable();
+});
+
+/** Test for Bug 1778486 **/
+add_task(async function test_mouse() {
+  let target = document.getElementById("target_mouse");
+  let promise = waitForEvent(target, "click");
+  synthesizeMouseAtCenter(target, {});
+  await promise;
+
+  isDeeply(
+    getLastOverWindowPointerLocationScreenOffset(),
+    getElementScreenOffsetAtCentral(target),
+    "check last pointer location");
+});
+
+add_task(async function test_touch() {
+  let target = document.getElementById("target_touch");
+  let promise = waitForEvent(target, "pointerup");
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  await promise;
+
+  isDeeply(
+    getLastOverWindowPointerLocationScreenOffset(),
+    getElementScreenOffsetAtCentral(target),
+    "check last pointer location");
+});
+
+</script>
+</pre>
+</body>
+</html>

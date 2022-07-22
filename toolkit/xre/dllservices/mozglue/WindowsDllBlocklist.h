@@ -19,7 +19,8 @@
 enum DllBlocklistInitFlags {
   eDllBlocklistInitFlagDefault = 0,
   eDllBlocklistInitFlagIsChildProcess = 1,
-  eDllBlocklistInitFlagWasBootstrapped = 2
+  eDllBlocklistInitFlagWasBootstrapped = 2,
+  eDllBlocklistInitFlagIsUtilityProcess = 4
 };
 
 // Only available from within firefox.exe

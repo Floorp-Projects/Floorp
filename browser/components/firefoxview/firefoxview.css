@@ -9,6 +9,17 @@
   --header-spacing: 40px;
   --footer-spacing: 80px;
 
+  --colorways-figure-size: 225px;
+  --colorways-grid-template-areas:
+    "colorways-figure"
+    "colorways-header"
+    "colorways-description"
+    "colorways-button";
+  --colorways-grid-template-columns: auto auto;
+  --colorways-grid-template-rows: auto auto auto;
+  --colorways-figure-display: flex;
+  --colorways-header-flex-direction: column;
+
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
@@ -73,6 +84,15 @@ body > main > aside {
     grid-column: 1 / -1;
     grid-row: auto;
   }
+  :root {
+    --colorways-grid-template-areas:
+      "colorways-header colorways-figure"
+      "colorways-description colorways-figure"
+      "colorways-button colorways-figure";
+    --colorways-grid-template-columns: 1fr var(--colorways-figure-size);
+    --colorways-grid-template-rows: min-content min-content 1fr;
+    --colorways-header-flex-direction: row;
+  }
 }
 
 @media (max-width: 45rem) {
@@ -80,6 +100,14 @@ body > main > aside {
   :root {
     --header-spacing: 16px;
     --footer-spacing: 16px;
+    --colorways-grid-template-areas:
+        "colorways-header"
+        "colorways-description"
+        "colorways-button";
+    --colorways-grid-template-columns: auto;
+    --colorways-grid-template-rows: auto;
+    --colorways-figure-display: none;
+    --colorways-header-flex-direction: column;
   }
 }
 
@@ -111,6 +139,12 @@ body > main > aside {
 
 #colorways {
   position: relative;
+  display: grid;
+  grid-template-areas: var(--colorways-grid-template-areas);
+  grid-template-columns: var(--colorways-grid-template-columns);
+  grid-template-rows: var(--colorways-grid-template-rows);
+  justify-items: start;
+  align-items: start;
 }
 
 #colorways.no-collection {
@@ -119,19 +153,23 @@ body > main > aside {
   border-radius: 8px;
 }
 
-#colorways,
 #colorways.no-collection > div {
   display: flex;
   flex-direction: column;
-}
-
-#colorways.no-collection > div {
   height: 100%;
   justify-content: flex-end;
   background: url("chrome://browser/content/colorway-background.svg");
   background-size: 100%;
   background-position: center top;
   background-repeat: no-repeat;
+}
+
+#colorways > header {
+  grid-area: colorways-header;
+  display: flex;
+  flex-direction: var(--colorways-header-flex-direction);
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 #no-current-colorway-collection-notice {
@@ -141,14 +179,24 @@ body > main > aside {
   margin: 0 1em 1em;
 }
 
+#no-current-colorway-collection-notice,
+#colorways-collection-description {
+  grid-area: colorways-description;
+}
+
 #colorways-collection-description,
 #colorways-button {
   margin: 0.4em 0;
-  align-self: flex-start;
+}
+
+#colorways-button {
+  grid-area: colorways-button;
 }
 
 #colorways-collection-title {
   margin: 0;
+  margin-top: 0.3em;
+  margin-inline-end: 0.5em;
   padding: 0;
   font-size: 1.8em;
   font-weight: bold;
@@ -161,7 +209,6 @@ body > main > aside {
   border-radius: 1.5em;
   padding: 1px;
   margin: 0.8em 0;
-  align-self: flex-start;
 }
 
 #colorways-collection-expiry-date > span {
@@ -173,17 +220,18 @@ body > main > aside {
 }
 
 #colorways > figure {
-  display: flex;
+  display: var(--colorways-figure-display);
+  grid-area: colorways-figure;
   align-items: center;
   justify-content: center;
-  width: 225px;
-  height: 225px;
+  width: var(--colorways-figure-size);
+  height: var(--colorways-figure-size);
   margin: 0 0 1.5em;
 }
 
 #colorways-collection-figure {
-  max-width: 225px;
-  max-height: 225px;
+  max-width: var(--colorways-figure-size);
+  max-height: var(--colorways-figure-size);
 }
 
 [hidden] {

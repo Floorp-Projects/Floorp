@@ -30,7 +30,7 @@ namespace mozilla {
 // Also, AArch64 has not been tested with this.
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const IMAGE_THUNK_DATA*) {
+    const IMAGE_THUNK_DATA*, const bool aIsUtilityProcess) {
   return mozilla::Ok();
 }
 
@@ -43,7 +43,7 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
 
 static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     const wchar_t* aFullImagePath, nt::CrossExecTransferManager& aTransferMgr,
-    const IMAGE_THUNK_DATA* aCachedNtdllThunk) {
+    const IMAGE_THUNK_DATA* aCachedNtdllThunk, const bool aIsUtilityProcess) {
   CrossProcessDllInterceptor intcpt(aTransferMgr.RemoteProcess());
   intcpt.Init(L"ntdll.dll");
 
@@ -138,6 +138,10 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     newFlags |= eDllBlocklistInitFlagIsChildProcess;
   }
 
+  if (aIsUtilityProcess) {
+    newFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+  }
+
   LauncherVoidResult writeResult =
       aTransferMgr.Transfer(&gBlocklistInitFlags, &newFlags, sizeof(newFlags));
   if (writeResult.isErr()) {
@@ -149,7 +153,7 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const IMAGE_THUNK_DATA* aCachedNtdllThunk) {
+    const IMAGE_THUNK_DATA* aCachedNtdllThunk, const bool aIsUtilityProcess) {
   nt::CrossExecTransferManager transferMgr(aChildProcess);
   if (!transferMgr) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
@@ -171,8 +175,8 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     return transferResult.propagateErr();
   }
 
-  return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr,
-                                           aCachedNtdllThunk);
+  return InitializeDllBlocklistOOPInternal(
+      aFullImagePath, transferMgr, aCachedNtdllThunk, aIsUtilityProcess);
 }
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
@@ -204,8 +208,8 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
     // After transfer, the launcher process does not need the object anymore.
     freestanding::gSharedSection.Reset(nullptr);
   });
-  return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr,
-                                           nullptr);
+  return InitializeDllBlocklistOOPInternal(aFullImagePath, transferMgr, nullptr,
+                                           false);
 }
 
 #endif  // defined(MOZ_ASAN) || defined(_M_ARM64)

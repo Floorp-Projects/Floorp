@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.jsm",
 });
 
-const ColorwayL10n = new Localization(["preview/colorways.ftl"], true);
+const ColorwayL10n = new Localization(["browser/colorways.ftl"], true);
 
 const kActiveThemePref = "extensions.activeThemeID";
 const kRetainedThemesPref = "browser.theme.retainedExpiredThemes";

@@ -38,3 +38,12 @@ async def test_insecure_certificate(configuration, url, custom_profile, geckodri
         url("/common/blank.html", protocol="https"),
         expected_error=True,
     )
+
+
+async def test_invalid_content_encoding(bidi_session, new_tab, inline):
+    await navigate_and_assert(
+        bidi_session,
+        new_tab,
+        f"{inline('<div>foo')}&pipe=header(Content-Encoding,gzip)",
+        expected_error=True,
+    )
