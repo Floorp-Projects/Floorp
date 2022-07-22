@@ -146,6 +146,9 @@ enum class OpKind {
   TeeGlobal,
   Call,
   CallIndirect,
+#  ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  CallRef,
+#  endif
   OldCallDirect,
   OldCallIndirect,
   Return,
@@ -364,6 +367,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   template <typename ValTypeSpanT>
   [[nodiscard]] bool popWithTypes(ValTypeSpanT expected, ValueVector* values);
   [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
+  [[nodiscard]] bool popWithFuncType(Value* value, FuncType** funcType);
   [[nodiscard]] bool popWithRttType(Value* rtt, uint32_t* rttTypeIndex,
                                     uint32_t* rttDepth);
   [[nodiscard]] bool popWithRttType(Value* rtt, uint32_t rttTypeIndex,
@@ -562,6 +566,10 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readCallIndirect(uint32_t* funcTypeIndex,
                                       uint32_t* tableIndex, Value* callee,
                                       ValueVector* argValues);
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
+                                 ValueVector* argValues);
+#endif
   [[nodiscard]] bool readOldCallDirect(uint32_t numFuncImports,
                                        uint32_t* funcTypeIndex,
                                        ValueVector* argValues);
@@ -903,6 +911,35 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
   }
 
   return fail(error.get());
+}
+
+// This function pops exactly one value from the stack, checking that it is a
+// subtype of the function type.
+template <typename Policy>
+inline bool OpIter<Policy>::popWithFuncType(Value* value, FuncType** funcType) {
+  StackType ty;
+  if (!popWithRefType(value, &ty)) {
+    return false;
+  }
+
+  if (ty.isBottom()) {
+    return fail("gc instruction temporarily not allowed in dead code");
+  }
+
+  if (!ty.valType().isTypeIndex() ||
+      !env_.types->isFuncType(ty.valType().typeIndex())) {
+    return fail("type mismatch: reference expected to be a subtype of funcref");
+  }
+
+  *funcType = &env_.types->funcType(ty.valType().typeIndex());
+
+#ifdef WASM_PRIVATE_REFTYPES
+  if ((*funcType)->exposesTypeIndex()) {
+    return fail("cannot expose indexed reference type");
+  }
+#endif
+
+  return true;
 }
 
 // This function pops exactly one value from the stack, checking that it is an
@@ -2213,6 +2250,15 @@ inline bool OpIter<Policy>::readRefFunc(uint32_t* funcIndex) {
     return fail(
         "function index is not declared in a section before the code section");
   }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  // When function references enabled, push type index on the stack, e.g. for
+  // validation of the call_ref instruction.
+  if (env_.functionReferencesEnabled()) {
+    const uint32_t typeIndex = env_.funcs[*funcIndex].typeIndex;
+    return push(RefType::fromTypeIndex(typeIndex, false));
+  }
+#endif
   return push(RefType::func());
 }
 
@@ -2373,6 +2419,27 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
 
   return push(ResultType::Vector(funcType.results()));
 }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+template <typename Policy>
+inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
+                                        Value* callee, ValueVector* argValues) {
+  MOZ_ASSERT(Classify(op_) == OpKind::CallRef);
+
+  FuncType* funcType_;
+  if (!popWithFuncType(callee, &funcType_)) {
+    return false;
+  }
+
+  *funcType = funcType_;
+
+  if (!popCallArgs(funcType_->args(), argValues)) {
+    return false;
+  }
+
+  return push(ResultType::Vector(funcType_->results()));
+}
+#endif
 
 template <typename Policy>
 inline bool OpIter<Policy>::readOldCallDirect(uint32_t numFuncImports,
