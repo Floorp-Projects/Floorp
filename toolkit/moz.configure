@@ -2204,10 +2204,6 @@ with only_when(compile_environment | artifact_builds):
         if flac_only or not enable:
             use_nasm = False
 
-        if use_nasm:
-            # default disabled components
-            flags.append("-Pdefaults_disabled.asm")
-
         return namespace(
             enable=enable,
             use_nasm=use_nasm,
