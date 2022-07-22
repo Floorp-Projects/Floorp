@@ -57,5 +57,19 @@ async function test() {
   ed.setFontSize(ed.getFontSize() + 1);
   is(ed.getFontSize(), size + 1, "new font size was set");
 
+  info("Check that we display unicode values for non-printable characters");
+  ed.setText("> \u202e \u2066 - \u2069 \u2066 <");
+
+  const doc = win.document.querySelector("iframe").contentWindow.document;
+  const nonPrintableCharElements = Array.from(
+    doc.querySelectorAll(".cm-non-printable-char")
+  );
+
+  Assert.deepEqual(
+    nonPrintableCharElements.map(el => el.textContent),
+    ["\\u202e", "\\u2066", "\\u2069", "\\u2066"],
+    "non printable chars are displayed as expected"
+  );
+
   teardown(ed, win);
 }
