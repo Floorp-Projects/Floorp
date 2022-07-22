@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Zkusit znovu</string>
@@ -58,8 +58,9 @@ kdo se snaží vydávat za server.</li>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Rozšířené…</string>
+
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo"><![CDATA[Server <label> <b>%1$s</b> má nastaveno bezpečnostní pravidlo HTTP Strict Transport Security (HSTS), které od aplikace <b>%2$s</b> vyžaduje používání pouze zabezpečeného spojení. Pro připojení k této stránce nelze udělit výjimku.]]></string>
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[Server <label> <b>%1$s</b> má nastaveno bezpečnostní pravidlo HTTP Strict Transport Security (HSTS), které od aplikace <b>%2$s</b> vyžaduje používání pouze zabezpečeného spojení. Pro připojení k této stránce nelze udělit výjimku.]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Zpátky</string>
 
@@ -76,12 +77,6 @@ kdo se snaží vydávat za server.</li>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Vypršel čas spojení</string>
-    <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Požadovaný server neodpověděl na požadavek o připojení a prohlížeč ukončil čekání na tuto odpověď.</p>
-      <ul>
-        <li>Server může být velmi vytížen; Opakujte akci později.</li><li>Je možné, že se jedná o síťový problém mezi vaším zařízením a serverem.</li>
-        <li>Pokud problém přetrvává, poraďte se se správcem vaší sítě, nebo poskytovatelem připojení k internetu.</li>
-      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Nelze se připojit</string>
@@ -249,13 +244,6 @@ kdo se snaží vydávat za server.</li>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server nenalezen</string>
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
-      <p>Prohlížeč je nakonfigurován k použití proxy serveru, který nemohl být nalezen.</p>
-      <ul>
-        <li>Zkontrolujte v prohlížeči nastavení proxy serveru a opakujte akci.</li>
-        <li>Pokud problém přetrvává, poraďte se se správcem vaší sítě, nebo poskytovatelem připojení k internetu.</li>
-      </ul>
-    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problém se škodlivým softwarem</string>

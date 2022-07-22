@@ -238,14 +238,6 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Neznámy protokol</string>
 
-    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
-      <p>Adresa sa začína protokolom, ktorý prehliadač nepozná. Protokol je reťazec na začiatku adresy, ako napríklad https: alebo ftp:, ktorý hovorí prehliadaču, ako sa má pripojiť ku serveru..</p>
-      <ul>
-        <li>Chcete sa pripojiť k multimédiám alebo iným netextovým službám?</li>
-        <li>Niektoré protokoly vyžadujú softvér tretích strán alebo doplnky.</li>
-      </ul>
-    ]]></string>
-
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Súbor nebol nájdený</string>
 
