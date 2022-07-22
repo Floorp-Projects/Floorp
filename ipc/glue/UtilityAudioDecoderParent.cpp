@@ -10,6 +10,7 @@
 #include "nsDebugImpl.h"
 
 #include "mozilla/RemoteDecoderManagerParent.h"
+#include "PDMFactory.h"
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 #  include "WMF.h"
