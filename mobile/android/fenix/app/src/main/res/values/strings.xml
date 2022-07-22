@@ -1118,7 +1118,7 @@
     <string name="delete_browsing_data_on_quit_action">Quit</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="105" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">This will delete all of your browsing data.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">This will delete all of your browsing data.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Time range to delete</string>
     <!-- Body text of a delete browsing data dialog. -->
