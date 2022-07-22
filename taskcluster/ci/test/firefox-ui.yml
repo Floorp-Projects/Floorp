@@ -6,10 +6,6 @@ job-defaults:
     suite:
         category: firefox-ui
     max-run-time: 5400
-    worker-type:
-        by-test-platform:
-            linux.*: t-linux-large-gcp
-            default: default
     test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects: built-projects
     mozharness:

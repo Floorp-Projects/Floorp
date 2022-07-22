@@ -10,7 +10,7 @@ job-defaults:
             default: true
     worker-type:
         by-platform:
-            linux1804-64.*: t-linux-xlarge-source-gcp
+            linux1804-64.*: t-linux-xlarge-source
             macosx1015-64.*: t-osx-1015-r8
             windows10-64.*: win10-64-2004-source
     worker:
