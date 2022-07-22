@@ -20,9 +20,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/avassert.h"
+#include "av1_parse.h"
 #include "cbs.h"
 #include "cbs_av1.h"
+#include "internal.h"
 #include "parser.h"
 
 typedef struct AV1ParseContext {
@@ -55,9 +56,9 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
 {
     AV1ParseContext *s = ctx->priv_data;
     CodedBitstreamFragment *td = &s->temporal_unit;
-    const CodedBitstreamAV1Context *av1 = s->cbc->priv_data;
-    const AV1RawSequenceHeader *seq;
-    const AV1RawColorConfig *color;
+    CodedBitstreamAV1Context *av1 = s->cbc->priv_data;
+    AV1RawSequenceHeader *seq;
+    AV1RawColorConfig *color;
     int ret;
 
     *out_data = data;
@@ -95,9 +96,9 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
     color = &seq->color_config;
 
     for (int i = 0; i < td->nb_units; i++) {
-        const CodedBitstreamUnit *unit = &td->units[i];
-        const AV1RawOBU *obu = unit->content;
-        const AV1RawFrameHeader *frame;
+        CodedBitstreamUnit *unit = &td->units[i];
+        AV1RawOBU *obu = unit->content;
+        AV1RawFrameHeader *frame;
 
         if (unit->type == AV1_OBU_FRAME)
             frame = &obu->obu.frame.header;
@@ -204,10 +205,33 @@ static void av1_parser_close(AVCodecParserContext *ctx)
     ff_cbs_close(&s->cbc);
 }
 
-const AVCodecParser ff_av1_parser = {
+static int av1_parser_split(AVCodecContext *avctx,
+                            const uint8_t *buf, int buf_size)
+{
+    AV1OBU obu;
+    const uint8_t *ptr = buf, *end = buf + buf_size;
+
+    while (ptr < end) {
+        int len = ff_av1_extract_obu(&obu, ptr, buf_size, avctx);
+        if (len < 0)
+            break;
+
+        if (obu.type == AV1_OBU_FRAME_HEADER ||
+            obu.type == AV1_OBU_FRAME) {
+            return ptr - buf;
+        }
+        ptr      += len;
+        buf_size -= len;
+    }
+
+    return 0;
+}
+
+AVCodecParser ff_av1_parser = {
     .codec_ids      = { AV_CODEC_ID_AV1 },
     .priv_data_size = sizeof(AV1ParseContext),
     .parser_init    = av1_parser_init,
     .parser_close   = av1_parser_close,
     .parser_parse   = av1_parser_parse,
+    .split          = av1_parser_split,
 };

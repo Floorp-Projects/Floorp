@@ -28,7 +28,7 @@
 #include <stdint.h>
 
 #include "vp9.h"
-#include "threadframe.h"
+#include "thread.h"
 #include "vp56.h"
 
 enum BlockPartition {

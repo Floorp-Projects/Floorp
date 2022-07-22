@@ -66,8 +66,9 @@
  * Independent JPEG Group's fast AAN dct.
  */
 
-#include <stdint.h>
-#include "libavutil/attributes.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "libavutil/common.h"
 #include "dct.h"
 
 #define DCTSIZE 8
