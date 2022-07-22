@@ -3565,39 +3565,57 @@ nscoord StyleCalcNode::Resolve(nscoord aBasis,
   return ResolveInternal(aBasis, aRounder);
 }
 
+static nscoord Resolve(const StyleContainIntrinsicSize& aSize) {
+  if (aSize.IsNone()) {
+    return 0;
+  }
+  if (aSize.IsLength()) {
+    return aSize.AsLength().ToAppUnits();
+  }
+  MOZ_ASSERT(aSize.IsAutoLength());
+  // TODO: use last remembered size if possible.
+  return aSize.AsAutoLength().ToAppUnits();
+}
+
 nsSize ContainSizeAxes::ContainSize(const nsSize& aUncontainedSize,
-                                    const WritingMode& aWM) const {
+                                    const nsIFrame& aFrame) const {
   if (!IsAny()) {
     return aUncontainedSize;
   }
+  const nsStylePosition* stylePos = aFrame.StylePosition();
   if (IsBoth()) {
-    return nsSize();
+    return nsSize(Resolve(stylePos->mContainIntrinsicWidth),
+                  Resolve(stylePos->mContainIntrinsicHeight));
   }
   // At this point, we know that precisely one of our dimensions is contained.
-  const bool zeroWidth =
-      (!aWM.IsVertical() && mIContained) || (aWM.IsVertical() && mBContained);
-  if (zeroWidth) {
-    return nsSize(0, aUncontainedSize.Height());
+  const bool containsWidth =
+      aFrame.GetWritingMode().IsVertical() ? mBContained : mIContained;
+  if (containsWidth) {
+    return nsSize(Resolve(stylePos->mContainIntrinsicWidth),
+                  aUncontainedSize.Height());
   }
-  return nsSize(aUncontainedSize.Width(), 0);
+  return nsSize(aUncontainedSize.Width(),
+                Resolve(stylePos->mContainIntrinsicHeight));
 }
 
 IntrinsicSize ContainSizeAxes::ContainIntrinsicSize(
-    const IntrinsicSize& aUncontainedSize, const WritingMode& aWM) const {
+    const IntrinsicSize& aUncontainedSize, const nsIFrame& aFrame) const {
   if (!IsAny()) {
     return aUncontainedSize;
   }
+  const nsStylePosition* stylePos = aFrame.StylePosition();
   if (IsBoth()) {
-    return IntrinsicSize(0, 0);
+    return IntrinsicSize(Resolve(stylePos->mContainIntrinsicWidth),
+                         Resolve(stylePos->mContainIntrinsicHeight));
   }
   // At this point, we know that precisely one of our dimensions is contained.
-  const bool zeroWidth =
-      (!aWM.IsVertical() && mIContained) || (aWM.IsVertical() && mBContained);
+  const bool containsWidth =
+      aFrame.GetWritingMode().IsVertical() ? mBContained : mIContained;
   IntrinsicSize result(aUncontainedSize);
-  if (zeroWidth) {
-    result.width = Some(0);
+  if (containsWidth) {
+    result.width = Some(Resolve(stylePos->mContainIntrinsicWidth));
   } else {
-    result.height = Some(0);
+    result.height = Some(Resolve(stylePos->mContainIntrinsicHeight));
   }
   return result;
 }
