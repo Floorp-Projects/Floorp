@@ -5310,7 +5310,7 @@ void nsWindow::EnableRenderingToWindow() {
 
   if (GdkIsWaylandDisplay()) {
 #ifdef MOZ_WAYLAND
-    moz_container_wayland_add_or_fire_initial_draw_callback(
+    moz_container_wayland_add_initial_draw_callback(
         mContainer, [self = RefPtr{this}, this]() -> void {
           LOG("moz_container_wayland initial create "
               "ResumeCompositorHiddenWindow()");
