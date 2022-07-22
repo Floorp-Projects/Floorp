@@ -4,10 +4,12 @@ queue_rules:
       - or:
         - status-success=complete-pr
         - and:
-          # For more context, see "L10N - Auto Merge" rule down below
+          # For more context, see "Auto Merge" rules down below
           - base~=^releases[_/].*
-          - head~=^automation/sync-strings-\d+
           - status-success=complete-push
+          - or:
+            - head~=^automation/sync-strings-\d+
+            - head~=^relbot/fenix-\d+
 pull_request_rules:
   - name: Resolve conflict
     conditions:
@@ -15,16 +17,26 @@ pull_request_rules:
     actions:
         comment:
           message: This pull request has conflicts when rebasing. Could you fix it @{{author}}? 🙏
-  - name: MickeyMoz - Auto Merge
+  - name: Android-Components bump - Auto Merge
     conditions:
-      - author=MickeyMoz
-      - status-success=complete-pr
-      - files=buildSrc/src/main/java/AndroidComponents.kt
-      - -files~=^(?!buildSrc/src/main/java/AndroidComponents.kt).+$
+      - and:
+        - files=buildSrc/src/main/java/AndroidComponents.kt
+        - -files~=^(?!buildSrc/src/main/java/AndroidComponents.kt).+$
+        - or:
+          - and:
+            - author=MickeyMoz
+            - base=main
+            - head=ac-update
+            - status-success=complete-pr
+          - and:
+            - author=github-actions[bot]
+            - base~=^releases[_/].*
+            - head~=^relbot/fenix-\d+
+            - status-success=complete-push
     actions:
       review:
         type: APPROVE
-        message: MickeyMoz 💪
+        message: 🚢
       queue:
         method: rebase
         name: default
