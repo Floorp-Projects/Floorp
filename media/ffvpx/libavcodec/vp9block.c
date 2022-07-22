@@ -23,9 +23,7 @@
 
 #include "libavutil/avassert.h"
 
-#include "avcodec.h"
-#include "internal.h"
-#include "videodsp.h"
+#include "threadframe.h"
 #include "vp56.h"
 #include "vp9.h"
 #include "vp9data.h"
