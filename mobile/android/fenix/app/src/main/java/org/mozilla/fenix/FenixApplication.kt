@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
+import android.os.SystemClock
 import android.util.Log.INFO
 import androidx.annotation.CallSuper
 import androidx.annotation.VisibleForTesting
@@ -113,8 +114,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         private set
 
     override fun onCreate() {
-        // We use start/stop instead of measure so we don't measure outside the main process.
-        val completeMethodDurationTimerId = PerfStartup.applicationOnCreate.start() // DO NOT MOVE ANYTHING ABOVE HERE.
+        // We measure ourselves to avoid a call into Glean before its loaded.
+        val start = SystemClock.elapsedRealtimeNanos()
 
         super.onCreate()
 
@@ -134,8 +135,16 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         setupInMainProcessOnly()
 
         downloadWallpapers()
-        // DO NOT MOVE ANYTHING BELOW THIS stop CALL.
-        PerfStartup.applicationOnCreate.stopAndAccumulate(completeMethodDurationTimerId)
+
+        // DO NOT MOVE ANYTHING BELOW THIS elapsedRealtimeNanos CALL.
+        val stop = SystemClock.elapsedRealtimeNanos()
+        val durationMillis = TimeUnit.NANOSECONDS.toMillis(stop - start)
+
+        // We avoid blocking the main thread on startup by calling into Glean on the background thread.
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch(Dispatchers.IO) {
+            PerfStartup.applicationOnCreate.accumulateSamples(listOf(durationMillis))
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
