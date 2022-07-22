@@ -356,7 +356,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ᱠᱩᱥᱤᱭᱟᱜ ᱛᱮᱭᱟᱨ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">ᱵᱩᱠᱢᱟᱨᱠ, ᱱᱟᱜᱟᱢ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱥᱟᱶᱛᱮ ᱥᱭᱝᱠ ᱢᱮ</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ᱵᱩᱠᱢᱟᱨᱠ, ᱱᱟᱜᱟᱢ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱟᱢᱟᱜ Firefox ᱠᱷᱟᱛᱟ ᱥᱟᱶᱛᱮ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox ᱠᱷᱟᱛᱟ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -529,7 +529,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">ᱥᱭᱝᱠᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱥᱟᱺᱪᱟᱣ ᱛᱟᱢ</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ᱫᱩᱲᱟᱹ ᱡᱚᱲᱟᱣ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- Preference for removing FxA account -->
@@ -750,7 +752,7 @@
     <string name="pwa_site_controls_title_private">%1$s (ᱯᱨᱭᱣᱮᱴ ᱢᱳᱰ)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">ᱵᱷᱮᱜᱟᱨ ᱴᱮᱵᱽ ᱠᱚ</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ᱵᱷᱮᱜᱟᱨ ᱴᱮᱵᱽ ᱠᱚ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -783,6 +785,9 @@
     <string name="history_synced_from_other_devices">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱᱟ</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ</string>
+
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1849,4 +1854,5 @@
     <string name="experiments_snackbar">ᱰᱟᱴᱟ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱴᱮᱞᱤᱢᱮᱴᱨᱭ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
+    <string name="firefox_suggest_header">Firefox ᱵᱟᱛᱟᱣ</string>
 </resources>
