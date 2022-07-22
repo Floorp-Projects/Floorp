@@ -41,10 +41,8 @@ add_task(async function() {
     findSource(dbg, "doc-debugger-statements.html").id,
     16
   );
-  ok(
-    dbg.toolbox.isHighlighted("jsdebugger"),
-    "Debugger is highlighted when paused"
-  );
+  await waitFor(() => dbg.toolbox.isHighlighted("jsdebugger"));
+  ok(true, "Debugger is highlighted when paused");
 
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     info("Remove the iframe and wait for resume");
@@ -53,9 +51,7 @@ add_task(async function() {
       iframe.remove();
     });
     await waitForResumed(dbg);
-    ok(
-      !dbg.toolbox.isHighlighted("jsdebugger"),
-      "Debugger is no longer highlighted when resumed"
-    );
+    await waitFor(() => !dbg.toolbox.isHighlighted("jsdebugger"));
+    ok(true, "Debugger is no longer highlighted when resumed");
   }
 });
