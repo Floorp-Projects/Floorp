@@ -1009,11 +1009,16 @@ class Window extends WindowBase {
   }
 
   static getState(window) {
+    // NOTE(emilio): This is quite subtle: when instead of a Window object we
+    // get a windowData (like when using convertFromSessionStoreClosedData), we
+    // don't have the relevant properties in the object, so we end up doing
+    // { [undefined]: ..., }[undefined], so it's important that "normal" is the
+    // last property. We should do this more explicitly, probably.
     const STATES = {
       [window.STATE_MAXIMIZED]: "maximized",
       [window.STATE_MINIMIZED]: "minimized",
-      [window.STATE_NORMAL]: "normal",
       [window.STATE_FULLSCREEN]: "fullscreen",
+      [window.STATE_NORMAL]: "normal",
     };
     return STATES[window.windowState];
   }
