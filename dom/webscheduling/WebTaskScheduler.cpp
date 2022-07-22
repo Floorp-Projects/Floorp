@@ -109,10 +109,12 @@ bool WebTask::Run() {
   MOZ_ASSERT_IF(promiseState != Promise::PromiseState::Pending,
                 promiseState == Promise::PromiseState::Rejected);
 
-  if (error.Failed()) {
-    mPromise->MaybeReject(std::move(error));
-  } else {
-    mPromise->MaybeResolve(returnVal);
+  if (promiseState == Promise::PromiseState::Pending) {
+    if (error.Failed()) {
+      mPromise->MaybeReject(std::move(error));
+    } else {
+      mPromise->MaybeResolve(returnVal);
+    }
   }
 
   MOZ_ASSERT(!isInList());
