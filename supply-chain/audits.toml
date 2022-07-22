@@ -13,6 +13,15 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "I wrote this crate, reviewed by jimb. It is mostly a Rust port of some C++ code we already ship."
 
+[[audits.app_units]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.7.1"
+notes = """
+I'm pretty familiar with this crate. It provides a fixed-point numeric type.
+The code is pretty straight-forward, there's no unsafe code at all.
+"""
+
 [[audits.arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
