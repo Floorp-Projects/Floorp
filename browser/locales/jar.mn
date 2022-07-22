@@ -18,8 +18,6 @@
 #ifdef NIGHTLY_BUILD
   preview/firefoxView.ftl                          (../components/firefoxview/firefoxView.ftl)
 #endif
-  preview/colorwaycloset.ftl                       (../components/colorways/colorwaycloset.ftl)
-  preview/colorways.ftl                            (../components/colorways/colorways.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
