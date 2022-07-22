@@ -16,8 +16,12 @@ import {
   convertTimestamp,
   createFaviconElement,
   toggleContainer,
-  nowThresholdMs,
+  NOW_THRESHOLD_MS,
 } from "./helpers.mjs";
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const SS_NOTIFY_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 
@@ -30,8 +34,15 @@ class RecentlyClosedTabsList extends HTMLElement {
     super();
     this.maxTabsLength = 25;
     this.closedTabsData = [];
-    // We do this for testing purposes
-    this.nowThresholdMs = nowThresholdMs;
+
+    // The recency timestamp update period is stored in a pref to allow tests to easily change it
+    XPCOMUtils.defineLazyPreferenceGetter(
+      lazy,
+      "timeMsPref",
+      "browser.tabs.firefox-view.updateTimeMs",
+      NOW_THRESHOLD_MS,
+      () => this.updateTime()
+    );
   }
 
   get tabsList() {
@@ -45,10 +56,14 @@ class RecentlyClosedTabsList extends HTMLElement {
     return this._fluentStrings;
   }
 
+  get timeElements() {
+    return this.querySelectorAll("span.closed-tab-li-time");
+  }
+
   connectedCallback() {
     this.addEventListener("click", this);
     this.addEventListener("keydown", this);
-    this.intervalID = setInterval(this.updateTime, this.nowThresholdMs);
+    this.intervalID = setInterval(() => this.updateTime(), lazy.timeMsPref);
   }
 
   disconnectedCallback() {
@@ -65,12 +80,11 @@ class RecentlyClosedTabsList extends HTMLElement {
   }
 
   updateTime() {
-    const timeElements = this.querySelectorAll("span.closed-tab-li-time");
-
-    for (let timeEl of timeElements) {
+    for (let timeEl of this.timeElements) {
       timeEl.textContent = convertTimestamp(
         parseInt(timeEl.getAttribute("data-timestamp")),
-        this.fluentStrings
+        this.fluentStrings,
+        lazy.timeMsPref
       );
     }
   }
