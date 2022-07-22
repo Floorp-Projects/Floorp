@@ -816,6 +816,11 @@ class FunctionExtended : public JSFunction {
   // to be resolved eagerly.
   static const uint32_t BOUND_FUNCTION_LENGTH_SLOT = 1;
 
+  // wasm/asm.js exported functions store a code pointer to their direct entry
+  // point (see CodeRange::funcUncheckedCallEntry()) to support the call_ref
+  // instruction.
+  static const uint32_t WASM_FUNC_UNCHECKED_ENTRY_SLOT = 0;
+
   // wasm/asm.js exported functions store the wasm::Instance pointer of their
   // instance.
   static const uint32_t WASM_INSTANCE_SLOT = 1;

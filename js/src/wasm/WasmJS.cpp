@@ -2491,6 +2491,14 @@ bool WasmInstanceObject::getExportedFunction(
   fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
                        PrivateValue(const_cast<Instance*>(&instance)));
 
+  const CodeTier& codeTier =
+      instance.code().codeTier(instance.code().bestTier());
+  const CodeRange& codeRange = codeTier.metadata().codeRange(funcExport);
+
+  fun->setExtendedSlot(FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT,
+                       PrivateValue(codeTier.segment().base() +
+                                    codeRange.funcUncheckedCallEntry()));
+
   if (!instanceObj->exports().putNew(funcIndex, fun)) {
     ReportOutOfMemory(cx);
     return false;

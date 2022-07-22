@@ -8072,6 +8072,8 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
           callBase->builtinMethodFailureMode());
       switchRealm = false;
       break;
+    case wasm::CalleeDesc::FuncRef:
+      MOZ_CRASH("NYI");
   }
 
   // Note the assembler offset for the associated LSafePoint.

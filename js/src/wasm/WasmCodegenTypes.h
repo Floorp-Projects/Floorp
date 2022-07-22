@@ -400,9 +400,9 @@ extern const CodeRange* LookupInSorted(const CodeRangeVector& codeRanges,
 // adds the function index of the callee.
 
 class CallSiteDesc {
-  static constexpr size_t LINE_OR_BYTECODE_BITS_SIZE = 29;
+  static constexpr size_t LINE_OR_BYTECODE_BITS_SIZE = 28;
   uint32_t lineOrBytecode_ : LINE_OR_BYTECODE_BITS_SIZE;
-  uint32_t kind_ : 3;
+  uint32_t kind_ : 4;
 
   WASM_CHECK_CACHEABLE_POD(lineOrBytecode_, kind_);
 
@@ -415,6 +415,7 @@ class CallSiteDesc {
     Import,        // wasm import call
     Indirect,      // dynamic callee called via register, context on stack
     IndirectFast,  // dynamically determined to be same-instance
+    FuncRef,       // call using direct function reference
     Symbolic,      // call to a single symbolic callee
     EnterFrame,    // call to a enter frame handler
     LeaveFrame,    // call to a leave frame handler
@@ -433,10 +434,14 @@ class CallSiteDesc {
   Kind kind() const { return Kind(kind_); }
   bool isImportCall() const { return kind() == CallSiteDesc::Import; }
   bool isIndirectCall() const { return kind() == CallSiteDesc::Indirect; }
+  bool isFuncRefCall() const { return kind() == CallSiteDesc::FuncRef; }
   bool mightBeCrossInstance() const {
-    return isImportCall() || isIndirectCall();
+    return isImportCall() || isIndirectCall() || isFuncRefCall();
   }
 };
+
+static_assert(js::wasm::MaxFunctionBytes <=
+              CallSiteDesc::MAX_LINE_OR_BYTECODE_VALUE);
 
 WASM_DECLARE_CACHEABLE_POD(CallSiteDesc);
 
@@ -633,7 +638,10 @@ class CalleeDesc {
     Builtin,
 
     // Like Builtin, but automatically passes Instance* as first argument.
-    BuiltinInstanceMethod
+    BuiltinInstanceMethod,
+
+    // Calls a function reference.
+    FuncRef,
   };
 
  private:
@@ -666,6 +674,7 @@ class CalleeDesc {
   static CalleeDesc asmJSTable(const TableDesc& desc);
   static CalleeDesc builtin(SymbolicAddress callee);
   static CalleeDesc builtinInstanceMethod(SymbolicAddress callee);
+  static CalleeDesc wasmFuncRef();
   Which which() const { return which_; }
   uint32_t funcIndex() const {
     MOZ_ASSERT(which_ == Func);
