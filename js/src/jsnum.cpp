@@ -1605,28 +1605,6 @@ static char* FracNumberToCString(ToCStringBuf* cbuf, double d) {
   return builder.Finalize();
 }
 
-static char* FracNumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf,
-                                         double d, int base) {
-  // We use a faster algorithm for base 10.
-  if (base == 10) {
-    return FracNumberToCString(cbuf, d);
-  }
-
-#ifdef DEBUG
-  {
-    int32_t _;
-    MOZ_ASSERT(!NumberEqualsInt32(d, &_));
-  }
-#endif
-
-  if (!EnsureDtoaState(cx)) {
-    return nullptr;
-  }
-
-  char* numStr = cbuf->dbuf = js_dtobasestr(cx->dtoaState, base, d);
-  return numStr;
-}
-
 void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
   int32_t i;
   if (NumberEqualsInt32(d, &i)) {
@@ -1735,23 +1713,37 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
     return str;
   }
 
-  ToCStringBuf cbuf;
-  char* numStr = FracNumberToCStringWithBase(cx, &cbuf, d, base);
-  if (!numStr) {
-    if constexpr (allowGC) {
-      ReportOutOfMemory(cx);
+  JSLinearString* s;
+  if (base == 10) {
+    // We use a faster algorithm for base 10.
+    ToCStringBuf cbuf;
+    char* numStr = FracNumberToCString(&cbuf, d);
+    MOZ_ASSERT(numStr);
+
+    s = NewStringCopyZ<allowGC>(cx, numStr);
+    if (!s) {
+      return nullptr;
     }
-    return nullptr;
-  }
-  MOZ_ASSERT_IF(base == 10, !cbuf.dbuf && numStr >= cbuf.sbuf &&
-                                numStr < cbuf.sbuf + cbuf.sbufSize);
-  MOZ_ASSERT_IF(base != 10, cbuf.dbuf && cbuf.dbuf == numStr);
+  } else {
+    if (!EnsureDtoaState(cx)) {
+      if constexpr (allowGC) {
+        ReportOutOfMemory(cx);
+      }
+      return nullptr;
+    }
 
-  size_t numStrLen = strlen(numStr);
+    UniqueChars numStr(js_dtobasestr(cx->dtoaState, base, d));
+    if (!numStr) {
+      if constexpr (allowGC) {
+        ReportOutOfMemory(cx);
+      }
+      return nullptr;
+    }
 
-  JSLinearString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
-  if (!s) {
-    return nullptr;
+    s = NewStringCopyZ<allowGC>(cx, numStr.get());
+    if (!s) {
+      return nullptr;
+    }
   }
 
   realm->dtoaCache.cache(base, d, s);
