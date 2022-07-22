@@ -96,15 +96,21 @@ struct Int32ToCStringBuf {
 // Convert a number to a C string.  This function implements ToString() as
 // specified by ECMA-262-5 section 9.8.1.  It handles integral values cheaply.
 // Infallible: always returns a non-nullptr string.
-extern char* NumberToCString(ToCStringBuf* cbuf, double d);
+// The optional `length` out-param is set to the string length of the result.
+extern char* NumberToCString(ToCStringBuf* cbuf, double d,
+                             size_t* length = nullptr);
 
-extern char* Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value);
+extern char* Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value,
+                            size_t* length = nullptr);
 
-extern char* Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value);
+extern char* Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value,
+                             size_t* length = nullptr);
 
 // Like NumberToCString, but accepts only unsigned integers and uses base 16.
 // Infallible: always returns a non-nullptr string.
-extern char* Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value);
+// The optional `length` out-param is set to the string length of the result.
+extern char* Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value,
+                                size_t* length = nullptr);
 
 /*
  * The largest positive integer such that all positive integers less than it

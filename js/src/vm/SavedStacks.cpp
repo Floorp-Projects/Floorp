@@ -976,10 +976,12 @@ static bool FormatStackFrameColumn(js::StringBuffer& sb,
   if (frame->isWasm()) {
     // See comment in WasmFrameIter::computeLine().
     js::Int32ToCStringBuf cbuf;
-    const char* cstr = Uint32ToHexCString(&cbuf, frame->wasmBytecodeOffset());
+    size_t cstrlen;
+    const char* cstr =
+        Uint32ToHexCString(&cbuf, frame->wasmBytecodeOffset(), &cstrlen);
     MOZ_ASSERT(cstr);
 
-    return sb.append("0x") && sb.append(cstr, strlen(cstr));
+    return sb.append("0x") && sb.append(cstr, cstrlen);
   }
 
   return NumberValueToStringBuffer(NumberValue(frame->getColumn()), sb);
