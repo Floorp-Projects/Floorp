@@ -44,7 +44,7 @@ def main(args=sys.argv[1:]):
         "--strict",
         help="Errors out immediatly on a scenario failure",
         action="store_true",
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "--geckodriver",
