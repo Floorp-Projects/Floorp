@@ -139,6 +139,11 @@ See the above repository for updates as well as full license text. */
     }
     :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
     :root[sizemode="fullscreen"] #window-controls{ right: unset }
+    
+    .titlebar-buttonbox-container{
+      position: fixed;
+      top: 10px !important;
+    }
   }
 
   #navigator-toolbox{
@@ -152,6 +157,8 @@ See the above repository for updates as well as full license text. */
 
   #titlebar{
     height: 0px !important;
+    min-height: 0px !important;
+    max-height: 0px !important;
   }
 
   .private-browsing-indicator{
