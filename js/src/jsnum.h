@@ -11,6 +11,8 @@
 #include "mozilla/Range.h"
 #include "mozilla/Utf8.h"
 
+#include <limits>
+
 #include "NamespaceImports.h"
 
 #include "js/Conversions.h"
@@ -93,14 +95,35 @@ struct ToCStringBuf {
   ~ToCStringBuf();
 };
 
+struct Int32ToCStringBuf {
+  // The amount of space large enough to store the null-terminated result of
+  // |ToString| on any int32.
+  //
+  // We use the same amount for uint32 (base 10 and base 16), even though uint32
+  // only need 11 characters (base 10) resp. 9 characters (base 16) instead of
+  // 12 characters for int32 in base 10.
+  static constexpr size_t MaximumInt32ToStringLength =
+      std::numeric_limits<int32_t>::digits10 +
+      1 +  // account for the largest possible int32 value
+      1 +  // sign for negative numbers
+      1    // null character
+      ;
+
+  char sbuf[MaximumInt32ToStringLength] = {};
+};
+
 // Convert a number to a C string.  This function implements ToString() as
 // specified by ECMA-262-5 section 9.8.1.  It handles integral values cheaply.
 // Infallible: always returns a non-nullptr string.
 extern char* NumberToCString(ToCStringBuf* cbuf, double d);
 
+extern char* Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value);
+
+extern char* Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value);
+
 // Like NumberToCString, but accepts only unsigned integers and uses base 16.
 // Infallible: always returns a non-nullptr string.
-extern char* NumberToHexCString(ToCStringBuf* cbuf, uint32_t value);
+extern char* Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value);
 
 /*
  * The largest positive integer such that all positive integers less than it
