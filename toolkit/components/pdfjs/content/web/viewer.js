@@ -1741,7 +1741,7 @@ const PDFViewerApplication = {
 
     this.pdfViewer.cleanup();
     this.pdfThumbnailViewer.cleanup();
-    this.pdfDocument.cleanup(this.pdfViewer.renderer === _ui_utils.RendererType.SVG);
+    this.pdfDocument.cleanup();
   },
 
   forceRendering() {
@@ -2811,7 +2811,7 @@ exports.PDFPrintServiceFactory = PDFPrintServiceFactory;
 
 /***/ }),
 /* 3 */
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
@@ -2823,7 +2823,6 @@ exports.apiPageLayoutToViewerModes = apiPageLayoutToViewerModes;
 exports.apiPageModeToSidebarView = apiPageModeToSidebarView;
 exports.approximateFraction = approximateFraction;
 exports.backtrackBeforeAllVisibleElements = backtrackBeforeAllVisibleElements;
-exports.binarySearchFirstItem = binarySearchFirstItem;
 exports.docStyle = void 0;
 exports.getActiveOrFocusedElement = getActiveOrFocusedElement;
 exports.getPageSizeInches = getPageSizeInches;
@@ -2840,6 +2839,9 @@ exports.removeNullCharacters = removeNullCharacters;
 exports.roundToDivide = roundToDivide;
 exports.scrollIntoView = scrollIntoView;
 exports.watchScroll = watchScroll;
+
+var _pdfjsLib = __webpack_require__(4);
+
 const DEFAULT_SCALE_VALUE = "auto";
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
 const DEFAULT_SCALE = 1.0;
@@ -2881,10 +2883,7 @@ const SidebarView = {
   LAYERS: 4
 };
 exports.SidebarView = SidebarView;
-const RendererType = {
-  CANVAS: "canvas",
-  SVG: "svg"
-};
+const RendererType = null;
 exports.RendererType = RendererType;
 const TextLayerMode = {
   DISABLE: 0,
@@ -3026,32 +3025,6 @@ function removeNullCharacters(str, replaceInvisible = false) {
   return str.replace(NullCharactersRegExp, "");
 }
 
-function binarySearchFirstItem(items, condition, start = 0) {
-  let minIndex = start;
-  let maxIndex = items.length - 1;
-
-  if (maxIndex < 0 || !condition(items[maxIndex])) {
-    return items.length;
-  }
-
-  if (condition(items[minIndex])) {
-    return minIndex;
-  }
-
-  while (minIndex < maxIndex) {
-    const currentIndex = minIndex + maxIndex >> 1;
-    const currentItem = items[currentIndex];
-
-    if (condition(currentItem)) {
-      maxIndex = currentIndex;
-    } else {
-      minIndex = currentIndex + 1;
-    }
-  }
-
-  return minIndex;
-}
-
 function approximateFraction(x) {
   if (Math.floor(x) === x) {
     return [x, 1];
@@ -3174,7 +3147,7 @@ function getVisibleElements({
   const visible = [],
         ids = new Set(),
         numViews = views.length;
-  let firstVisibleElementInd = binarySearchFirstItem(views, horizontal ? isElementNextAfterViewHorizontally : isElementBottomAfterViewTop);
+  let firstVisibleElementInd = (0, _pdfjsLib.binarySearchFirstItem)(views, horizontal ? isElementNextAfterViewHorizontally : isElementBottomAfterViewTop);
 
   if (firstVisibleElementInd > 0 && firstVisibleElementInd < numViews && !horizontal) {
     firstVisibleElementInd = backtrackBeforeAllVisibleElements(firstVisibleElementInd, views, top);
@@ -5397,11 +5370,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.PDFFindController = exports.FindState = void 0;
 
-var _ui_utils = __webpack_require__(3);
-
 var _pdfjsLib = __webpack_require__(4);
 
 var _pdf_find_utils = __webpack_require__(17);
+
+var _ui_utils = __webpack_require__(3);
 
 const FindState = {
   FOUND: 0,
@@ -5577,13 +5550,13 @@ function getOriginalIndex(diffs, pos, len) {
 
   const start = pos;
   const end = pos + len;
-  let i = (0, _ui_utils.binarySearchFirstItem)(diffs, x => x[0] >= start);
+  let i = (0, _pdfjsLib.binarySearchFirstItem)(diffs, x => x[0] >= start);
 
   if (diffs[i][0] > start) {
     --i;
   }
 
-  let j = (0, _ui_utils.binarySearchFirstItem)(diffs, x => x[0] >= end, i);
+  let j = (0, _pdfjsLib.binarySearchFirstItem)(diffs, x => x[0] >= end, i);
 
   if (diffs[j][0] > end) {
     --j;
@@ -9751,7 +9724,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.259';
+    const viewerVersion = '2.15.303';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9770,7 +9743,6 @@ class BaseViewer {
     this.#annotationEditorMode = options.annotationEditorMode ?? ANNOTATION_EDITOR_MODE;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
-    this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
     this.maxCanvasPixels = options.maxCanvasPixels;
     this.l10n = options.l10n || _l10n_utils.NullL10n;
@@ -10139,7 +10111,7 @@ class BaseViewer {
             source: this,
             mode
           });
-          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager(this.eventBus);
+          this.#annotationEditorUIManager = new _pdfjsLib.AnnotationEditorUIManager(this.container, this.eventBus);
 
           if (mode !== _pdfjsLib.AnnotationEditorType.NONE) {
             this.#annotationEditorUIManager.updateMode(mode);
@@ -10177,7 +10149,7 @@ class BaseViewer {
           textHighlighterFactory: this,
           structTreeLayerFactory: this,
           imageResourcesPath: this.imageResourcesPath,
-          renderer: this.renderer,
+          renderer: null,
           useOnlyCssZoom: this.useOnlyCssZoom,
           maxCanvasPixels: this.maxCanvasPixels,
           pageColors: this.pageColors,
@@ -11469,12 +11441,14 @@ class AnnotationEditorLayerBuilder {
     this.div = document.createElement("div");
     this.div.className = "annotationEditorLayer";
     this.div.tabIndex = 0;
+    this.pageDiv.append(this.div);
     this.annotationEditorLayer = new _pdfjsLib.AnnotationEditorLayer({
       uiManager: this.#uiManager,
       div: this.div,
       annotationStorage: this.annotationStorage,
       pageIndex: this.pdfPage._pageIndex,
-      l10n: this.l10n
+      l10n: this.l10n,
+      viewport: clonedViewport
     });
     const parameters = {
       viewport: clonedViewport,
@@ -11483,11 +11457,11 @@ class AnnotationEditorLayerBuilder {
       intent
     };
     this.annotationEditorLayer.render(parameters);
-    this.pageDiv.append(this.div);
   }
 
   cancel() {
     this._cancelled = true;
+    this.destroy();
   }
 
   hide() {
@@ -11512,8 +11486,8 @@ class AnnotationEditorLayerBuilder {
     }
 
     this.pageDiv = null;
-    this.div.remove();
     this.annotationEditorLayer.destroy();
+    this.div.remove();
   }
 
 }
@@ -11583,7 +11557,10 @@ const DEFAULT_L10N_STRINGS = {
   printing_not_supported: "Warning: Printing is not fully supported by this browser.",
   printing_not_ready: "Warning: The PDF is not fully loaded for printing.",
   web_fonts_disabled: "Web fonts are disabled: unable to use embedded PDF fonts.",
-  free_text_default_content: "Enter text…"
+  free_text_default_content: "Enter text…",
+  editor_free_text_aria_label: "FreeText Editor",
+  editor_ink_aria_label: "Ink Editor",
+  editor_ink_canvas_aria_label: "User-created image"
 };
 
 function getL10nFallback(key, args) {
@@ -11806,7 +11783,6 @@ class PDFPageView {
     this.xfaLayerFactory = options.xfaLayerFactory;
     this.textHighlighter = options.textHighlighterFactory?.createTextHighlighter(this.id - 1, this.eventBus);
     this.structTreeLayerFactory = options.structTreeLayerFactory;
-    this.renderer = options.renderer || _ui_utils.RendererType.CANVAS;
     this.l10n = options.l10n || _l10n_utils.NullL10n;
     this.paintTask = null;
     this.paintedViewportMap = new WeakMap();
@@ -11998,11 +11974,6 @@ class PDFPageView {
       this._resetZoomLayer();
     }
 
-    if (this.svg) {
-      this.paintedViewportMap.delete(this.svg);
-      delete this.svg;
-    }
-
     this.loadingIconDiv = document.createElement("div");
     this.loadingIconDiv.className = "loadingIcon notVisible";
 
@@ -12040,23 +12011,6 @@ class PDFPageView {
 
     if (this._isStandalone) {
       _ui_utils.docStyle.setProperty("--scale-factor", this.viewport.scale);
-    }
-
-    if (this.svg) {
-      this.cssTransform({
-        target: this.svg,
-        redrawAnnotationLayer: true,
-        redrawAnnotationEditorLayer: true,
-        redrawXfaLayer: true
-      });
-      this.eventBus.dispatch("pagerendered", {
-        source: this,
-        pageNumber: this.id,
-        cssTransform: true,
-        timestamp: performance.now(),
-        error: this._renderError
-      });
-      return;
     }
 
     let isScalingRestricted = false;
@@ -12357,7 +12311,7 @@ class PDFPageView {
       }
     };
 
-    const paintTask = this.renderer === _ui_utils.RendererType.SVG ? this.paintOnSvg(canvasWrapper) : this.paintOnCanvas(canvasWrapper);
+    const paintTask = this.paintOnCanvas(canvasWrapper);
     paintTask.onRenderContinue = renderContinueCallback;
     this.paintTask = paintTask;
     const resultPromise = paintTask.promise.then(() => {
@@ -14867,8 +14821,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.15.259';
-const pdfjsBuild = '41b2f52f7';
+const pdfjsVersion = '2.15.303';
+const pdfjsBuild = 'bf0006873';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
