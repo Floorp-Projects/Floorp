@@ -7487,7 +7487,7 @@ credit_cards:
   save_prompt_shown:
     type: event
     description: |
-      The autofill save prompt is shown.
+      The credit card autofill save prompt is shown.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/26089
     data_reviews:
