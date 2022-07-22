@@ -1401,10 +1401,6 @@ static const JSFunctionSpec number_methods[] = {
     JS_FN("toPrecision", num_toPrecision, 1, 0),
     JS_FS_END};
 
-bool js::IsInteger(const Value& val) {
-  return val.isInt32() || IsInteger(val.toDouble());
-}
-
 bool js::IsInteger(double d) {
   return mozilla::IsFinite(d) && JS::ToInteger(d) == d;
 }
