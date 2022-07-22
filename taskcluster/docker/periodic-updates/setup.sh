@@ -19,6 +19,7 @@ apt-get install \
     libxtst6 \
     shellcheck \
     unzip \
+    bzip2 \
     wget
 
 rm -rf /setup
