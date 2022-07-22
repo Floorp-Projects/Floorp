@@ -8,6 +8,7 @@
   padding: 12px 16px !important;
   border-radius: 4px !important;
   box-shadow: var(--card-shadow) !important;
+  max-width: 20em;
 }
 #CanvasBlockerImg{
   list-style-image: url("https://addons.mozilla.org/user-media/addon_icons/534/534930-64.png?modified=1581849561");
