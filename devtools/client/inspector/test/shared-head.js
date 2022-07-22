@@ -560,7 +560,7 @@ function getRuleViewRule(view, selectorText, index = 0) {
 
 /**
  * Get references to the name and value span nodes corresponding to a given
- * selector and property name in the rule-view
+ * selector and property name in the rule-view.
  *
  * @param {CssRuleView} view
  *        The instance of the rule-view panel
@@ -568,25 +568,38 @@ function getRuleViewRule(view, selectorText, index = 0) {
  *        The selector in the rule-view to look for the property in
  * @param {String} propertyName
  *        The name of the property
+ * @param {Object=} options
+ * @param {Boolean=} options.wait
+ *        When true, returns a promise which waits until a valid rule view
+ *        property can be retrieved for the provided selectorText & propertyName.
+ *        Defaults to false.
  * @return {Object} An object like {nameSpan: DOMNode, valueSpan: DOMNode}
  */
-function getRuleViewProperty(view, selectorText, propertyName) {
-  let prop;
+function getRuleViewProperty(view, selectorText, propertyName, options = {}) {
+  if (options.wait) {
+    return waitFor(() =>
+      _syncGetRuleViewProperty(view, selectorText, propertyName)
+    );
+  }
+  return _syncGetRuleViewProperty(view, selectorText, propertyName);
+}
 
+function _syncGetRuleViewProperty(view, selectorText, propertyName) {
   const rule = getRuleViewRule(view, selectorText);
-  if (rule) {
-    // Look for the propertyName in that rule element
-    for (const p of rule.querySelectorAll(".ruleview-property")) {
-      const nameSpan = p.querySelector(".ruleview-propertyname");
-      const valueSpan = p.querySelector(".ruleview-propertyvalue");
+  if (!rule) {
+    return null;
+  }
 
-      if (nameSpan.textContent === propertyName) {
-        prop = { nameSpan: nameSpan, valueSpan: valueSpan };
-        break;
-      }
+  // Look for the propertyName in that rule element
+  for (const p of rule.querySelectorAll(".ruleview-property")) {
+    const nameSpan = p.querySelector(".ruleview-propertyname");
+    const valueSpan = p.querySelector(".ruleview-propertyvalue");
+
+    if (nameSpan.textContent === propertyName) {
+      return { nameSpan: nameSpan, valueSpan: valueSpan };
     }
   }
-  return prop;
+  return null;
 }
 
 /**

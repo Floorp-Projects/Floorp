@@ -41,7 +41,9 @@ async function testColorPickerAppearsOnColorSwatchActivation(
   property,
   withKeyboard = false
 ) {
-  const value = getRuleViewProperty(view, "body", property).valueSpan;
+  const value = (
+    await getRuleViewProperty(view, "body", property, { wait: true })
+  ).valueSpan;
   const swatch = value.querySelector(".ruleview-colorswatch");
 
   const cPicker = view.tooltips.getTooltip("colorPicker");
