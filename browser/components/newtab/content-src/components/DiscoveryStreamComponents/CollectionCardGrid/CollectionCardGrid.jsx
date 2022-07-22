@@ -116,7 +116,6 @@ export class CollectionCardGrid extends React.PureComponent {
           context={sponsoredByMessage}
           data={recsData}
           feed={feed}
-          border={this.props.border}
           type={type}
           is_collection={true}
           dispatch={this.props.dispatch}
