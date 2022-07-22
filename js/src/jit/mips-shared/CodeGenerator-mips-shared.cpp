@@ -1486,7 +1486,7 @@ void CodeGeneratorMIPSShared::emitTableSwitchDispatch(MTableSwitch* mir,
 }
 
 void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
-  MOZ_ASSERT(ins->tlsPtr()->isBogus());
+  MOZ_ASSERT(ins->instance()->isBogus());
   masm.movePtr(HeapReg, ToRegister(ins->output()));
 }
 
