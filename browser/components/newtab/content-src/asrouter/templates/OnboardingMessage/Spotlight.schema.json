@@ -127,10 +127,6 @@
         "transitions": {
           "type": "boolean",
           "description": "Show transitions within and between screens"
-        },
-        "disableHistoryUpdates": {
-          "type": "boolean",
-          "description": "Don't alter the browser session's history stack - used with messaging surfaces like Feature Callouts"
         }
       },
       "additionalProperties": true,
