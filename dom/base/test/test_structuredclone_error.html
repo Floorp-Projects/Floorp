@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=XXX">Mozilla Bug XXX</a>
+
+<script>
+  const tests = [
+    {obj: (() => {}), msg: "Function object could not be cloned."},
+    {obj: document.body, msg: "HTMLBodyElement object could not be cloned."},
+    {obj: {foo: new Audio()}, msg: "HTMLAudioElement object could not be cloned."},
+  ]
+
+  for (const test of tests) {
+    let message = undefined;
+    try {
+      structuredClone(test.obj);
+    } catch (e) {
+      message = e.message;
+    }
+
+    is(message, test.msg, 'Threw correct DataCloneError');
+  }
+</script>
