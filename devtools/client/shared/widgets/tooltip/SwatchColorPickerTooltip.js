@@ -138,9 +138,12 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
   async show() {
     // set contrast enabled for the spectrum
     const name = this.activeSwatch.dataset.propertyName;
+    const colorFunction = this.activeSwatch.dataset.colorFunction;
 
-    // Only enable contrast if the type of property is color.
-    this.spectrum.contrastEnabled = name === "color";
+    // Only enable contrast if the type of property is color
+    // and its value isn't inside a color-modifying function (e.g. color-mix()).
+    this.spectrum.contrastEnabled =
+      name === "color" && colorFunction !== "color-mix";
     if (this.spectrum.contrastEnabled) {
       const { nodeFront } = this.inspector.selection;
       const { pageStyle } = nodeFront.inspectorFront;

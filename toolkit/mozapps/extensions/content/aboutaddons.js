@@ -123,8 +123,6 @@ const PRIVATE_BROWSING_PERMS = {
 
 const L10N_ID_MAPPING = {
   "theme-disabled-heading": "theme-disabled-heading2",
-  "colorway-collection-independent-voices-subheading":
-    "colorway-collection-independent-voices-subheading2",
 };
 
 function getL10nIdMapping(id) {
@@ -3735,7 +3733,7 @@ class ColorwayClosetCard extends HTMLElement {
       document.l10n.setAttributes(colorwayPreviewHeading, l10nId.title);
       document.l10n.setAttributes(
         colorwayPreviewSubHeading,
-        getL10nIdMapping(`${l10nId.title}-subheading`)
+        `${l10nId.title}-short-description`
       );
     }
 
@@ -4878,7 +4876,7 @@ gViewController.defineView("list", async type => {
   ];
 
   if (type == "theme" && COLORWAY_CLOSET_ENABLED) {
-    MozXULElement.insertFTLIfNeeded("preview/colorways.ftl");
+    MozXULElement.insertFTLIfNeeded("browser/colorways.ftl");
 
     const hasActiveColorways = !!BuiltInThemes.findActiveColorwayCollection?.();
     sections.push({

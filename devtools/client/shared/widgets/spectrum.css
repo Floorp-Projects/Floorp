@@ -307,6 +307,8 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   border: none;
   margin-inline-start: auto;
   margin-block-start: 1px;
+  aspect-ratio: 1 / 1;
+  width: 12px;
 }
 
 .learn-more:-moz-locale-dir(ltr) {

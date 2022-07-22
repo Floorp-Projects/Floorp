@@ -12,7 +12,7 @@
   --figure-width: 200px;
 }
 
-@media (min-width: 800px) {
+@media (min-width: 50em) {
   :root {
     --body-columns: 24px repeat(2, 1fr);
     --body-rows: auto 1fr 64px;

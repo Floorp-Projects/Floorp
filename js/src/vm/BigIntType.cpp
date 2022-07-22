@@ -1810,8 +1810,9 @@ BigInt* js::NumberToBigInt(JSContext* cx, double d) {
   // Step 1 is an assertion checked by the caller.
   // Step 2.
   if (!IsInteger(d)) {
-    char str[JS::MaximumNumberToStringLength];
-    JS::NumberToString(d, str);
+    ToCStringBuf cbuf;
+    const char* str = NumberToCString(&cbuf, d);
+    MOZ_ASSERT(str);
 
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_NONINTEGER_NUMBER_TO_BIGINT, str);

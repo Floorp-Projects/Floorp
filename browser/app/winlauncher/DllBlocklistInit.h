@@ -15,7 +15,7 @@ namespace mozilla {
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess,
-    const IMAGE_THUNK_DATA* aCachedNtdllThunk);
+    const IMAGE_THUNK_DATA* aCachedNtdllThunk, const bool aIsUtilityProcess);
 
 LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPFromLauncher(
     const wchar_t* aFullImagePath, HANDLE aChildProcess);

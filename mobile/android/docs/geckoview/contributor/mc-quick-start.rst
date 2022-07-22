@@ -16,8 +16,8 @@ Getting setup to as a first time Mozilla contributor is hard. There are
 plenty of guides out there to help you get started as a contributor, but
 many of the new contributor guides out of date often more current ones
 are aimed at more experienced contributors. If you want to review these
-guides, you can find several linked to from `Contributing to the Mozilla code base <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Introduction>`_
-on `MDN <https://developer.mozilla.org/>`_.
+guides, you can find several linked to from
+:ref:`Working on Firefox <Working on Firefox>`.
 
 This guide will take you through setting up as a contributor to
 ``mozilla-central``, the Firefox main repository, as a git user.
@@ -181,4 +181,4 @@ In synopsis:
    git remote update
 
 All that’s left to do now is pick a bug to fix and `submit a
-patch <contributing-to-mc>`__.
+patch <contributing-to-mc.html>`__.

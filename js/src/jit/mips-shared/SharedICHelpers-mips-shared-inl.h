@@ -20,14 +20,16 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
 #ifdef DEBUG
   Register scratch = R2.scratchReg();
 
-  // Store frame size without VMFunction arguments for debug assertions.
+  // Compute frame size.
   masm.movePtr(FramePointer, scratch);
-  masm.addPtr(Imm32(BaselineFrame::FramePointerOffset), scratch);
   masm.subPtr(StackPointer, scratch);
+
+  // Store frame size without VMFunction arguments for debug assertions.
   masm.subPtr(Imm32(argSize), scratch);
   Address frameSizeAddr(FramePointer,
                         BaselineFrame::reverseOffsetOfDebugFrameSize());
   masm.store32(scratch, frameSizeAddr);
+  masm.addPtr(Imm32(argSize), scratch);
 #endif
 
   // Push frame descriptor and perform the tail call.
@@ -35,12 +37,8 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   // keep it there through the stub calls), but the VMWrapper code being
   // called expects the return address to also be pushed on the stack.
   MOZ_ASSERT(ICTailCallReg == ra);
-  masm.subPtr(Imm32(sizeof(CommonFrameLayout)), StackPointer);
-  masm.storePtr(ImmWord(MakeFrameDescriptor(FrameType::BaselineJS)),
-                Address(StackPointer, CommonFrameLayout::offsetOfDescriptor()));
-  masm.storePtr(
-      ra, Address(StackPointer, CommonFrameLayout::offsetOfReturnAddress()));
-
+  masm.pushFrameDescriptor(FrameType::BaselineJS);
+  masm.push(ra);
   masm.jump(target);
 }
 
@@ -55,7 +53,6 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
 #ifdef DEBUG
   // Compute frame size.
   masm.movePtr(FramePointer, scratch);
-  masm.addPtr(Imm32(BaselineFrame::FramePointerOffset), scratch);
   masm.subPtr(StackPointer, scratch);
 
   Address frameSizeAddr(FramePointer,
@@ -67,18 +64,13 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch) {
   // BaselineStubFrame if needed.
 
   // Push frame descriptor and return address.
-  masm.subPtr(Imm32(STUB_FRAME_SIZE), StackPointer);
-  masm.storePtr(ImmWord(MakeFrameDescriptor(FrameType::BaselineJS)),
-                Address(StackPointer, offsetof(BaselineStubFrame, descriptor)));
-  masm.storePtr(ICTailCallReg, Address(StackPointer, offsetof(BaselineStubFrame,
-                                                              returnAddress)));
+  masm.PushFrameDescriptor(FrameType::BaselineJS);
+  masm.Push(ICTailCallReg);
 
   // Save old frame pointer, stack pointer and stub reg.
-  masm.storePtr(ICStubReg,
-                Address(StackPointer, offsetof(BaselineStubFrame, savedStub)));
-  masm.storePtr(FramePointer,
-                Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)));
+  masm.Push(FramePointer);
   masm.movePtr(StackPointer, FramePointer);
+  masm.Push(ICStubReg);
 
   // Stack should remain aligned.
   masm.assertStackAlignment(sizeof(Value), 0);

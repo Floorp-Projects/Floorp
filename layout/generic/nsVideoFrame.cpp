@@ -473,22 +473,21 @@ nsSize nsVideoFrame::GetVideoIntrinsicSize() const {
     return {};
   }
 
-  auto wm = GetWritingMode();
   if (!isVideo) {
-    return containAxes.ContainSize(kFallbackIntrinsicSize, wm);
+    return containAxes.ContainSize(kFallbackIntrinsicSize, *this);
   }
 
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (Maybe<CSSIntSize> size = element->GetVideoSize()) {
-    return containAxes.ContainSize(CSSPixel::ToAppUnits(*size), wm);
+    return containAxes.ContainSize(CSSPixel::ToAppUnits(*size), *this);
   }
 
   if (ShouldDisplayPoster()) {
     if (Maybe<nsSize> imgSize = PosterImageSize()) {
-      return containAxes.ContainSize(*imgSize, wm);
+      return containAxes.ContainSize(*imgSize, *this);
     }
   }
-  return containAxes.ContainSize(kFallbackIntrinsicSize, wm);
+  return containAxes.ContainSize(kFallbackIntrinsicSize, *this);
 }
 
 IntrinsicSize nsVideoFrame::GetIntrinsicSize() {

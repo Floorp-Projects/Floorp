@@ -14,6 +14,7 @@ glob:browser/branding/nightly/**
 # Potential docs sources
 glob:**/*.rst
 glob:**/*.md
+glob:**/*.mjs
 glob:**/*.js
 glob:**/*.jsm
 

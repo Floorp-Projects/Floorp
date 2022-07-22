@@ -37,11 +37,8 @@ inline void EmitBaselineTailCallVM(TrampolinePtr target, MacroAssembler& masm,
   // keep it there through the stub calls), but the VMWrapper code being
   // called expects the return address to also be pushed on the stack.
   MOZ_ASSERT(ICTailCallReg == ra);
-  masm.subPtr(Imm32(sizeof(CommonFrameLayout)), StackPointer);
-  masm.storePtr(ImmWord(MakeFrameDescriptor(FrameType::BaselineJS)),
-                Address(StackPointer, CommonFrameLayout::offsetOfDescriptor()));
-  masm.storePtr(
-      ra, Address(StackPointer, CommonFrameLayout::offsetOfReturnAddress()));
+  masm.pushFrameDescriptor(FrameType::BaselineJS);
+  masm.push(ra);
 
   masm.jump(target);
 }

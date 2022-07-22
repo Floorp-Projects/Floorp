@@ -42,6 +42,7 @@ struct DllBlockInfoT {
     CHILD_PROCESSES_ONLY = 1 << 3,
     BROWSER_PROCESS_ONLY = 1 << 4,
     REDIRECT_TO_NOOP_ENTRYPOINT = 1 << 5,
+    UTILITY_PROCESSES_ONLY = 1 << 6,
   } mFlags;
 
   bool IsVersionBlocked(const uint64_t aOther) const {

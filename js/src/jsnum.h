@@ -11,6 +11,8 @@
 #include "mozilla/Range.h"
 #include "mozilla/Utf8.h"
 
+#include <limits>
+
 #include "NamespaceImports.h"
 
 #include "js/Conversions.h"
@@ -33,13 +35,10 @@ class StringBuffer;
 // This is a no-op if built with JS_HAS_INTL_API.
 extern void FinishRuntimeNumberState(JSRuntime* rt);
 
-/* Initialize the Number class, returning its prototype object. */
-extern JSObject* InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
-
 /*
- * When base == 10, this function implements ToString() as specified by
- * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
- * performance.  See also js::NumberToCString().
+ * This function implements ToString() as specified by ECMA-262-5 section 9.8.1;
+ * but note that it handles integers specially for performance.
+ * See also js::NumberToCString().
  */
 template <AllowGC allowGC>
 extern JSString* NumberToString(JSContext* cx, double d);
@@ -62,8 +61,6 @@ frontend::TaggedParserAtomIndex Int32ToParserAtom(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms, int32_t si);
 
 // ES6 15.7.3.12
-extern bool IsInteger(const Value& val);
-
 extern bool IsInteger(double d);
 
 /*
@@ -75,35 +72,45 @@ extern bool IsInteger(double d);
 
 extern JSLinearString* IndexToString(JSContext* cx, uint32_t index);
 
-/*
- * Usually a small amount of static storage is enough, but sometimes we need
- * to dynamically allocate much more.  This struct encapsulates that.
- * Dynamically allocated memory will be freed when the object is destroyed.
- */
 struct ToCStringBuf {
-  /*
-   * The longest possible result that would need to fit in sbuf is
-   * (-0x80000000).toString(2), which has length 33.  Longer cases are
-   * possible, but they'll go in dbuf.
-   */
-  static const size_t sbufSize = 34;
-  char sbuf[sbufSize];
-  char* dbuf;
+  char sbuf[JS::MaximumNumberToStringLength] = {};
+};
 
-  ToCStringBuf();
-  ~ToCStringBuf();
+struct Int32ToCStringBuf {
+  // The amount of space large enough to store the null-terminated result of
+  // |ToString| on any int32.
+  //
+  // We use the same amount for uint32 (base 10 and base 16), even though uint32
+  // only need 11 characters (base 10) resp. 9 characters (base 16) instead of
+  // 12 characters for int32 in base 10.
+  static constexpr size_t MaximumInt32ToStringLength =
+      std::numeric_limits<int32_t>::digits10 +
+      1 +  // account for the largest possible int32 value
+      1 +  // sign for negative numbers
+      1    // null character
+      ;
+
+  char sbuf[MaximumInt32ToStringLength] = {};
 };
 
 // Convert a number to a C string.  This function implements ToString() as
 // specified by ECMA-262-5 section 9.8.1.  It handles integral values cheaply.
 // Infallible: always returns a non-nullptr string.
-extern char* NumberToCString(ToCStringBuf* cbuf, double d);
+// The optional `length` out-param is set to the string length of the result.
+extern char* NumberToCString(ToCStringBuf* cbuf, double d,
+                             size_t* length = nullptr);
 
-// Like NumberToCString, but can be used for bases other than 10. If base == 10,
-// this is equivalent to NumberToCString. Unlike NumberToCString, this function
-// is fallible and will return nullptr if we ran out of memory.
-extern char* NumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf,
-                                     double d, int base);
+extern char* Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value,
+                            size_t* length = nullptr);
+
+extern char* Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value,
+                             size_t* length = nullptr);
+
+// Like NumberToCString, but accepts only unsigned integers and uses base 16.
+// Infallible: always returns a non-nullptr string.
+// The optional `length` out-param is set to the string length of the result.
+extern char* Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value,
+                                size_t* length = nullptr);
 
 /*
  * The largest positive integer such that all positive integers less than it

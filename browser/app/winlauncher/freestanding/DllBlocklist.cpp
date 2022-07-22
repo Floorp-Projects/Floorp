@@ -193,6 +193,11 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
     return BlockAction::Allow;
   }
 
+  if ((aInfo->mFlags & DllBlockInfo::UTILITY_PROCESSES_ONLY) &&
+      !(gBlocklistInitFlags & eDllBlocklistInitFlagIsUtilityProcess)) {
+    return BlockAction::Allow;
+  }
+
   if ((aInfo->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
       (gBlocklistInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return BlockAction::Allow;

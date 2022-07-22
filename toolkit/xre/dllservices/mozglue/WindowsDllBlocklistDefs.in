@@ -319,3 +319,8 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("hmpalert.dll", (3, 8, 8, 889)),
 ]
 
+UTILITY_PROCESSES += [
+    # Generated dynamic code that we block
+    DllBlocklistEntry("cyinjct.dll", ALL_VERSIONS),
+]
+

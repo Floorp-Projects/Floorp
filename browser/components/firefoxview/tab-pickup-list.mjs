@@ -15,8 +15,12 @@ import {
   formatURIForDisplay,
   convertTimestamp,
   createFaviconElement,
-  nowThresholdMs,
+  NOW_THRESHOLD_MS,
 } from "./helpers.mjs";
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
 
@@ -24,9 +28,16 @@ class TabPickupList extends HTMLElement {
   constructor() {
     super();
     this.maxTabsLength = 3;
-    // We do this for testing purposes
-    this.nowThresholdMs = nowThresholdMs;
     this.boundObserve = (...args) => this.getSyncedTabData(...args);
+
+    // The recency timestamp update period is stored in a pref to allow tests to easily change it
+    XPCOMUtils.defineLazyPreferenceGetter(
+      lazy,
+      "timeMsPref",
+      "browser.tabs.firefox-view.updateTimeMs",
+      NOW_THRESHOLD_MS,
+      () => this.updateTime()
+    );
   }
 
   get tabsList() {
@@ -40,6 +51,10 @@ class TabPickupList extends HTMLElement {
     return this._fluentStrings;
   }
 
+  get timeElements() {
+    return this.querySelectorAll("span.synced-tab-li-time");
+  }
+
   connectedCallback() {
     this.placeholderContainer = document.getElementById(
       "synced-tabs-placeholder"
@@ -49,15 +64,9 @@ class TabPickupList extends HTMLElement {
     );
 
     this.addEventListener("click", this);
-
     this.getSyncedTabData();
-    this.intervalID = setInterval(this.updateTime, this.nowThresholdMs);
 
     Services.obs.addObserver(this.boundObserve, SYNCED_TABS_CHANGED);
-  }
-
-  disconnectedCallback() {
-    clearInterval(this.intervalID);
   }
 
   handleEvent(event) {
@@ -71,15 +80,15 @@ class TabPickupList extends HTMLElement {
 
   cleanup() {
     Services.obs.removeObserver(this.boundObserve, SYNCED_TABS_CHANGED);
+    clearInterval(this.intervalID);
   }
 
   updateTime() {
-    const timeElements = this.querySelectorAll("span.synced-tab-li-time");
-
-    for (let timeEl of timeElements) {
+    for (let timeEl of this.timeElements) {
       timeEl.textContent = convertTimestamp(
         parseInt(timeEl.getAttribute("data-timestamp")),
-        this.fluentStrings
+        this.fluentStrings,
+        lazy.timeMsPref
       );
     }
   }
@@ -141,6 +150,10 @@ class TabPickupList extends HTMLElement {
     if (this.tabsList.hidden) {
       this.tabsList.hidden = false;
       this.togglePlaceholderVisibility(false);
+
+      if (!this.intervalID) {
+        this.intervalID = setInterval(() => this.updateTime(), lazy.timeMsPref);
+      }
     }
   }
 

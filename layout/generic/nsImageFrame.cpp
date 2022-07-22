@@ -640,23 +640,21 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
       ScaleIntrinsicSizeForDensity(intrinsicSize,
                                    aFrame.GetImageFromStyle()->GetResolution());
     }
-    return containAxes.ContainIntrinsicSize(intrinsicSize,
-                                            aFrame.GetWritingMode());
+    return containAxes.ContainIntrinsicSize(intrinsicSize, aFrame);
   }
 
   if (aKind == nsImageFrame::Kind::ListStyleImage) {
     // Note: images are handled above, this handles gradients etc.
     nscoord defaultLength = ListImageDefaultLength(aFrame);
     return containAxes.ContainIntrinsicSize(
-        IntrinsicSize(defaultLength, defaultLength), aFrame.GetWritingMode());
+        IntrinsicSize(defaultLength, defaultLength), aFrame);
   }
 
   if (aFrame.ShouldShowBrokenImageIcon()) {
     nscoord edgeLengthToUse = nsPresContext::CSSPixelsToAppUnits(
         ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
     return containAxes.ContainIntrinsicSize(
-        IntrinsicSize(edgeLengthToUse, edgeLengthToUse),
-        aFrame.GetWritingMode());
+        IntrinsicSize(edgeLengthToUse, edgeLengthToUse), aFrame);
   }
 
   if (aUseMappedRatio && style.StylePosition()->mAspectRatio.HasRatio()) {
