@@ -1423,6 +1423,10 @@ static void EnsureAutoPageName(nsFrameConstructorState& aState,
   // When building the entire document, this should only happen for the
   // root, which will mean the loop will immediately end. Either way, this will
   // only happen once for each time the frame constructor is run.
+  if (aState.mAutoPageNameValue) {
+    return;
+  }
+
   for (const nsContainerFrame* frame = aFrame; frame;
        frame = frame->GetParent()) {
     const StylePageName& pageName = frame->StylePage()->mPage;
