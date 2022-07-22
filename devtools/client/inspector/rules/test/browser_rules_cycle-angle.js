@@ -26,7 +26,10 @@ add_task(async function() {
 
 async function checkAngleCycling(inspector, view) {
   await selectNode(".turn", inspector);
-  const container = getRuleViewProperty(view, ".turn", "filter").valueSpan;
+
+  const container = (
+    await getRuleViewProperty(view, ".turn", "filter", { wait: true })
+  ).valueSpan;
   const valueNode = container.querySelector(".ruleview-angle");
   const win = view.styleWindow;
 
@@ -59,7 +62,9 @@ async function checkAngleCycling(inspector, view) {
 
 async function checkAngleCyclingPersist(inspector, view) {
   await selectNode(".deg", inspector);
-  let container = getRuleViewProperty(view, ".deg", "filter").valueSpan;
+  let container = (
+    await getRuleViewProperty(view, ".deg", "filter", { wait: true })
+  ).valueSpan;
   let valueNode = container.querySelector(".ruleview-angle");
   const win = view.styleWindow;
 
@@ -79,7 +84,9 @@ async function checkAngleCyclingPersist(inspector, view) {
 
   // We have to query for the container and the swatch because
   // they've been re-generated
-  container = getRuleViewProperty(view, ".deg", "filter").valueSpan;
+  container = (
+    await getRuleViewProperty(view, ".deg", "filter", { wait: true })
+  ).valueSpan;
   valueNode = container.querySelector(".ruleview-angle");
   is(
     valueNode.textContent,
