@@ -43,6 +43,11 @@ static constexpr std::string_view FunctionConstructorFinalBrace = "\n}";
 extern const JSClass FunctionClass;
 extern const JSClass ExtendedFunctionClass;
 
+namespace wasm {
+
+class Instance;
+
+}  // namespace wasm
 }  // namespace js
 
 class JSFunction : public js::NativeObject {
@@ -638,6 +643,7 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(isWasmWithJitEntry());
     return static_cast<void**>(nativeJitInfoOrInterpretedScript());
   }
+  inline js::wasm::Instance& wasmInstance() const;
 
   bool isDerivedClassConstructor() const;
   bool isSyntheticFunction() const;
@@ -810,10 +816,6 @@ class FunctionExtended : public JSFunction {
   // to be resolved eagerly.
   static const uint32_t BOUND_FUNCTION_LENGTH_SLOT = 1;
 
-  // Exported asm.js/wasm functions store their WasmInstanceObject in the
-  // first slot.
-  static const uint32_t WASM_INSTANCE_OBJ_SLOT = 0;
-
   // wasm/asm.js exported functions store the wasm::Instance pointer of their
   // instance.
   static const uint32_t WASM_INSTANCE_SLOT = 1;
@@ -873,6 +875,14 @@ inline const js::Value& JSFunction::getExtendedSlot(uint32_t which) const {
   MOZ_ASSERT(isExtended());
   MOZ_ASSERT(which < js::FunctionExtended::NUM_EXTENDED_SLOTS);
   return getFixedSlot(js::FunctionExtended::FirstExtendedSlot + which);
+}
+
+inline js::wasm::Instance& JSFunction::wasmInstance() const {
+  MOZ_ASSERT(isWasm() || isAsmJSNative());
+  MOZ_ASSERT(
+      !getExtendedSlot(js::FunctionExtended::WASM_INSTANCE_SLOT).isUndefined());
+  return *static_cast<js::wasm::Instance*>(
+      getExtendedSlot(js::FunctionExtended::WASM_INSTANCE_SLOT).toPrivate());
 }
 
 namespace js {
