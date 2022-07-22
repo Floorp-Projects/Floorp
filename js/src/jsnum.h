@@ -39,9 +39,9 @@ extern void FinishRuntimeNumberState(JSRuntime* rt);
 extern JSObject* InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
 
 /*
- * When base == 10, this function implements ToString() as specified by
- * ECMA-262-5 section 9.8.1; but note that it handles integers specially for
- * performance.  See also js::NumberToCString().
+ * This function implements ToString() as specified by ECMA-262-5 section 9.8.1;
+ * but note that it handles integers specially for performance.
+ * See also js::NumberToCString().
  */
 template <AllowGC allowGC>
 extern JSString* NumberToString(JSContext* cx, double d);
