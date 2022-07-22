@@ -442,7 +442,7 @@ IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
     return IntrinsicSize(0, 0);
   }
   return containAxes.ContainIntrinsicSize(
-      IntrinsicSizeFromCanvasSize(GetCanvasSize()), GetWritingMode());
+      IntrinsicSizeFromCanvasSize(GetCanvasSize()), *this);
 }
 
 /* virtual */

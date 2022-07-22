@@ -237,7 +237,7 @@ IntrinsicSize SVGOuterSVGFrame::GetIntrinsicSize() {
     intrinsicSize.height.emplace(std::max(val, 0));
   }
 
-  return containAxes.ContainIntrinsicSize(intrinsicSize, GetWritingMode());
+  return containAxes.ContainIntrinsicSize(intrinsicSize, *this);
 }
 
 /* virtual */

@@ -586,7 +586,7 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
   // XXXldb Can we depend more on ComputeSize here?
   nsSize kidSize =
       aState.mReflowInput.mStyleDisplay->GetContainSizeAxes().ContainSize(
-          aKidMetrics->PhysicalSize(), wm);
+          aKidMetrics->PhysicalSize(), *aState.mReflowInput.mFrame);
   const nsSize desiredInsideBorderSize = kidSize + scrollbarGutterSize;
   aState.mInsideBorderSize =
       ComputeInsideBorderSize(aState, desiredInsideBorderSize);
@@ -999,7 +999,7 @@ void nsHTMLScrollFrame::ReflowContents(ScrollReflowInput& aState,
       aState.mHScrollbar != ShowScrollbar::Always) {
     nsSize kidSize =
         aState.mReflowInput.mStyleDisplay->GetContainSizeAxes().ContainSize(
-            kidDesiredSize.PhysicalSize(), desiredWm);
+            kidDesiredSize.PhysicalSize(), *aState.mReflowInput.mFrame);
     nsSize insideBorderSize = ComputeInsideBorderSize(aState, kidSize);
     nsRect scrolledRect = mHelper.GetUnsnappedScrolledRectInternal(
         kidDesiredSize.ScrollableOverflow(), insideBorderSize);
