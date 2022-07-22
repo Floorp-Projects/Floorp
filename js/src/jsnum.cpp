@@ -1684,28 +1684,24 @@ template <AllowGC allowGC>
 static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
   MOZ_ASSERT(2 <= base && base <= 36);
 
-  ToCStringBuf cbuf;
-  char* numStr;
-  size_t numStrLen;
-
   Realm* realm = cx->realm();
 
   int32_t i;
-  bool isBase10Int = false;
   if (NumberEqualsInt32(d, &i)) {
-    isBase10Int = (base == 10);
-    if (isBase10Int && StaticStrings::hasInt(i)) {
-      return cx->staticStrings().getInt(i);
-    }
-    if (unsigned(i) < unsigned(base)) {
+    bool isBase10Int = (base == 10);
+    if (isBase10Int) {
+      static_assert(StaticStrings::INT_STATIC_LIMIT > 10 * 10);
+      if (StaticStrings::hasInt(i)) {
+        return cx->staticStrings().getInt(i);
+      }
+    } else if (unsigned(i) < unsigned(base)) {
       if (i < 10) {
         return cx->staticStrings().getInt(i);
       }
       char16_t c = 'a' + i - 10;
       MOZ_ASSERT(StaticStrings::hasUnit(c));
       return cx->staticStrings().getUnit(c);
-    }
-    if (unsigned(i) < unsigned(base * base)) {
+    } else if (unsigned(i) < unsigned(base * base)) {
       static constexpr char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
       char chars[] = {digits[i / base], digits[i % base]};
       JSString* str = cx->staticStrings().lookup(chars, 2);
@@ -1717,37 +1713,45 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       return str;
     }
 
-    numStr = Int32ToCStringWithBase(cbuf.sbuf, i, &numStrLen, base);
-    MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
-               numStr < cbuf.sbuf + cbuf.sbufSize);
+    ToCStringBuf cbuf;
+    size_t numStrLen;
+    char* numStr = Int32ToCStringWithBase(cbuf.sbuf, i, &numStrLen, base);
     MOZ_ASSERT(numStrLen == strlen(numStr));
-  } else {
-    if (JSLinearString* str = realm->dtoaCache.lookup(base, d)) {
-      return str;
-    }
 
-    numStr = FracNumberToCStringWithBase(cx, &cbuf, d, base);
-    if (!numStr) {
-      if constexpr (allowGC) {
-        ReportOutOfMemory(cx);
-      }
+    JSLinearString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
+    if (!s) {
       return nullptr;
     }
-    MOZ_ASSERT_IF(base == 10, !cbuf.dbuf && numStr >= cbuf.sbuf &&
-                                  numStr < cbuf.sbuf + cbuf.sbufSize);
-    MOZ_ASSERT_IF(base != 10, cbuf.dbuf && cbuf.dbuf == numStr);
 
-    numStrLen = strlen(numStr);
+    if (isBase10Int && i >= 0) {
+      s->maybeInitializeIndexValue(i);
+    }
+
+    realm->dtoaCache.cache(base, d, s);
+    return s;
   }
 
-  JSLinearString* s =
-      NewStringCopyN<allowGC>(cx, numStr, numStrLen, js::gc::DefaultHeap);
-  if (!s) {
+  if (JSLinearString* str = realm->dtoaCache.lookup(base, d)) {
+    return str;
+  }
+
+  ToCStringBuf cbuf;
+  char* numStr = FracNumberToCStringWithBase(cx, &cbuf, d, base);
+  if (!numStr) {
+    if constexpr (allowGC) {
+      ReportOutOfMemory(cx);
+    }
     return nullptr;
   }
+  MOZ_ASSERT_IF(base == 10, !cbuf.dbuf && numStr >= cbuf.sbuf &&
+                                numStr < cbuf.sbuf + cbuf.sbufSize);
+  MOZ_ASSERT_IF(base != 10, cbuf.dbuf && cbuf.dbuf == numStr);
 
-  if (isBase10Int && i >= 0) {
-    s->maybeInitializeIndexValue(i);
+  size_t numStrLen = strlen(numStr);
+
+  JSLinearString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
+  if (!s) {
+    return nullptr;
   }
 
   realm->dtoaCache.cache(base, d, s);
