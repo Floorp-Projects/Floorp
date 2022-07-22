@@ -202,6 +202,7 @@ class _ExperimentManager {
       invalidRecipes = [],
       invalidBranches = new Map(),
       invalidFeatures = new Map(),
+      validationEnabled = true,
     } = {}
   ) {
     if (!sourceToCheck) {
@@ -226,19 +227,25 @@ class _ExperimentManager {
       invalidFeatures
     );
 
-    for (const slug of invalidRecipes) {
-      this.sendValidationFailedTelemetry(slug, "invalid-recipe");
-    }
-    for (const [slug, branches] of invalidBranches.entries()) {
-      for (const branch of branches) {
-        this.sendValidationFailedTelemetry(slug, "invalid-branch", { branch });
+    // If validation is disabled, then we will never send validation failed
+    // telemetry.
+    if (validationEnabled) {
+      for (const slug of invalidRecipes) {
+        this.sendValidationFailedTelemetry(slug, "invalid-recipe");
       }
-    }
-    for (const [slug, featureIds] of invalidFeatures.entries()) {
-      for (const featureId of featureIds) {
-        this.sendValidationFailedTelemetry(slug, "invalid-feature", {
-          feature: featureId,
-        });
+      for (const [slug, branches] of invalidBranches.entries()) {
+        for (const branch of branches) {
+          this.sendValidationFailedTelemetry(slug, "invalid-branch", {
+            branch,
+          });
+        }
+      }
+      for (const [slug, featureIds] of invalidFeatures.entries()) {
+        for (const featureId of featureIds) {
+          this.sendValidationFailedTelemetry(slug, "invalid-feature", {
+            feature: featureId,
+          });
+        }
       }
     }
 
