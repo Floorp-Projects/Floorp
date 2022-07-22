@@ -281,12 +281,10 @@ bool WakeLockTopic::InhibitWaylandIdle() {
 
   MozContainer* container = focusedWindow->GetMozContainer();
   wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
-  auto mozContainerUnlock = MakeScopeExit([&] {
-    moz_container_wayland_surface_unlock(container, &waylandSurface);
-  });
   if (waylandSurface) {
     mWaylandInhibitor = zwp_idle_inhibit_manager_v1_create_inhibitor(
         waylandDisplay->GetIdleInhibitManager(), waylandSurface);
+    moz_container_wayland_surface_unlock(container, &waylandSurface);
   }
   return true;
 }
