@@ -61,6 +61,16 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.0 -> 0.2.2"
 
+[[audits.cstr]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.2.10"
+notes = """
+I've reviewed the code of the crate thoroughly. It generates an unsafe block
+which is statically guaranteed to be safe. Inputs to the macro have to be
+static so there's no uncontrolled input whatsoever.
+"""
+
 [[audits.derive_arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
