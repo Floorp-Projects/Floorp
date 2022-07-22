@@ -45,5 +45,5 @@ async def test_invalid_content_encoding(bidi_session, new_tab, inline):
         bidi_session,
         new_tab,
         f"{inline('<div>foo')}&pipe=header(Content-Encoding,gzip)",
-        expected_error=True
+        expected_error=True,
     )
