@@ -48,6 +48,7 @@ const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 // Use the same update interval as normandy
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
 const NIMBUS_DEBUG_PREF = "nimbus.debug";
+const NIMBUS_VALIDATION_PREF = "nimbus.validation.enabled";
 
 const STUDIES_ENABLED_CHANGED = "nimbus:studies-enabled-changed";
 
@@ -104,6 +105,13 @@ class _RemoteSettingsExperimentLoader {
       RUN_INTERVAL_PREF,
       21600,
       () => this.setTimer()
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "validationEnabled",
+      NIMBUS_VALIDATION_PREF,
+      true
     );
   }
 
@@ -194,6 +202,12 @@ class _RemoteSettingsExperimentLoader {
     if (this._updating || !this._initialized) {
       return;
     }
+
+    // Since this method is async, the enabled pref could change between await
+    // points. We don't want to half validate experiments, so we cache this to
+    // keep it consistent throughout updating.
+    const validationEnabled = this.validationEnabled;
+
     this._updating = true;
 
     lazy.log.debug(
@@ -215,9 +229,13 @@ class _RemoteSettingsExperimentLoader {
       Cu.reportError(e);
     }
 
-    const recipeValidator = new lazy.JsonSchema.Validator(
-      await SCHEMAS.NimbusExperiment
-    );
+    let recipeValidator;
+
+    if (validationEnabled) {
+      recipeValidator = new lazy.JsonSchema.Validator(
+        await SCHEMAS.NimbusExperiment
+      );
+    }
 
     let matches = 0;
     let recipeMismatches = [];
@@ -228,33 +246,37 @@ class _RemoteSettingsExperimentLoader {
 
     if (recipes && !loadingError) {
       for (const r of recipes) {
-        let validation = recipeValidator.validate(r);
-        if (!validation.valid) {
-          Cu.reportError(
-            `Could not validate experiment recipe ${r.id}: ${JSON.stringify(
-              validation.errors,
-              undefined,
-              2
-            )}`
-          );
-          if (r.slug) {
-            invalidRecipes.push(r.slug);
+        if (validationEnabled) {
+          let validation = recipeValidator.validate(r);
+          if (!validation.valid) {
+            Cu.reportError(
+              `Could not validate experiment recipe ${r.id}: ${JSON.stringify(
+                validation.errors,
+                undefined,
+                2
+              )}`
+            );
+            if (r.slug) {
+              invalidRecipes.push(r.slug);
+            }
+            continue;
           }
-          continue;
         }
 
         let type = r.isRollout ? "rollout" : "experiment";
 
-        const result = await this._validateBranches(r, validatorCache);
-        if (!result.valid) {
-          if (result.invalidBranchSlugs.length) {
-            invalidBranches.set(r.slug, result.invalidBranchSlugs);
+        if (validationEnabled) {
+          const result = await this._validateBranches(r, validatorCache);
+          if (!result.valid) {
+            if (result.invalidBranchSlugs.length) {
+              invalidBranches.set(r.slug, result.invalidBranchSlugs);
+            }
+            if (result.invalidFeatureIds.length) {
+              invalidFeatures.set(r.slug, result.invalidFeatureIds);
+            }
+            lazy.log.debug(`${r.id} did not validate`);
+            continue;
           }
-          if (result.invalidFeatureIds.length) {
-            invalidFeatures.set(r.slug, result.invalidFeatureIds);
-          }
-          lazy.log.debug(`${r.id} did not validate`);
-          continue;
         }
 
         if (await this.checkTargeting(r)) {
@@ -275,6 +297,7 @@ class _RemoteSettingsExperimentLoader {
         invalidRecipes,
         invalidBranches,
         invalidFeatures,
+        validationEnabled,
       });
     }
 

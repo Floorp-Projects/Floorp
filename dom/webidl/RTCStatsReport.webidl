@@ -6,6 +6,7 @@
  * The origin of this IDL file is
  * http://dev.w3.org/2011/webrtc/editor/webrtc.html#rtcstatsreport-object
  * http://www.w3.org/2011/04/webrtc/wiki/Stats
+ * https://www.w3.org/TR/webrtc-stats/
  */
 
 enum RTCStatsType {
@@ -66,11 +67,16 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   unsigned long framesDecoded;
   unsigned long frameWidth;
   unsigned long frameHeight;
+  double framesPerSecond;
   unsigned long long bytesReceived;
   unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
-  double framesPerSecond;
+  double jitterBufferDelay;
+  unsigned long long jitterBufferEmittedCount;
+  unsigned long long totalSamplesReceived;
+  unsigned long long concealedSamples;
+  unsigned long long silentConcealedSamples;
   unsigned long framesReceived;
 };
 

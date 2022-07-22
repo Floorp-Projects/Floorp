@@ -399,8 +399,11 @@ impl RenderTaskGraphBuilder {
                         let mut location = None;
                         let kind = task.kind.target_kind();
 
+                        // If a task is used as part of an existing-chain then we can't
+                        // safely share it (nor would we want to).
                         let can_use_shared_surface =
-                            task.kind.can_use_shared_surface();
+                            task.kind.can_use_shared_surface() &&
+                            task.free_after != PassId::INVALID;
 
                         if can_use_shared_surface {
                             // If we can use a shared surface, step through the existing shared

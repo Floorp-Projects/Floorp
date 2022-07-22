@@ -314,6 +314,15 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               local.mPacketsReceived.Construct(audioStats->packets_rcvd);
               local.mPacketsDiscarded.Construct(audioStats->packets_discarded);
               local.mBytesReceived.Construct(audioStats->payload_bytes_rcvd);
+              local.mJitterBufferDelay.Construct(
+                  audioStats->jitter_buffer_delay_seconds);
+              local.mJitterBufferEmittedCount.Construct(
+                  audioStats->jitter_buffer_emitted_count);
+              local.mTotalSamplesReceived.Construct(
+                  audioStats->total_samples_received);
+              local.mConcealedSamples.Construct(audioStats->concealed_samples);
+              local.mSilentConcealedSamples.Construct(
+                  audioStats->silent_concealed_samples);
               /*
                * Potential new stats that are now available upstream.
               if (audioStats->last_packet_received_timestamp_ms) {
@@ -335,15 +344,6 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                         webrtc::Timestamp::Millis(
                             *audioStats->estimated_playout_ntp_timestamp_ms)));
               }
-              local.mJitterBufferDelay.Construct(
-                  audioStats->jitter_buffer_delay_seconds);
-              local.mJitterBufferEmittedCount.Construct(
-                  audioStats->jitter_buffer_emitted_count);
-              local.mTotalSamplesReceived.Construct(
-                  audioStats->total_samples_received);
-              local.mConcealedSamples.Construct(audioStats->concealed_samples);
-              local.mSilentConcealedSamples.Construct(
-                  audioStats->silent_concealed_samples);
               local.mConcealmentEvents.Construct(
                   audioStats->concealment_events);
               local.mInsertedSamplesForDeceleration.Construct(
@@ -435,7 +435,10 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               local.mFramesReceived.Construct(
                   videoStats->frame_counts.key_frames +
                   videoStats->frame_counts.delta_frames);
-
+              local.mJitterBufferDelay.Construct(
+                  videoStats->jitter_buffer_delay_seconds);
+              local.mJitterBufferEmittedCount.Construct(
+                  videoStats->jitter_buffer_emitted_count);
               /*
                * Potential new stats that are now available upstream.
               if (videoStats->qp_sum) {
@@ -464,10 +467,6 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                         webrtc::Timestamp::Millis(
                             *videoStats->estimated_playout_ntp_timestamp_ms)));
               }
-              local.mJitterBufferDelay.Construct(
-                  videoStats->jitter_buffer_delay_seconds);
-              local.mJitterBufferEmittedCount.Construct(
-                  videoStats->jitter_buffer_emitted_count);
               local.mFramesReceived.Construct(
                   videoStats->frame_counts.key_frames +
                   videoStats->frame_counts.delta_frames);
