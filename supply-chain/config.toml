@@ -1149,10 +1149,6 @@ criteria = "safe-to-deploy"
 version = "3.0.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.origin-trial-token]]
-version = "0.1.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.os_str_bytes]]
 version = "6.1.0"
 criteria = "safe-to-deploy"
