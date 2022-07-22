@@ -736,10 +736,6 @@ static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static_assert(ToCStringBuf::sbufSize >= DTOSTR_STANDARD_BUFFER_SIZE,
-              "builtin space must be large enough to store even the "
-              "longest string produced by a conversion");
-
 // Subtract one from DTOSTR_STANDARD_BUFFER_SIZE to exclude the null-character.
 static_assert(
     double_conversion::DoubleToStringConverter::kMaxCharsEcmaScriptShortest ==
@@ -1597,8 +1593,7 @@ static char* FracNumberToCString(ToCStringBuf* cbuf, double d) {
    */
   const double_conversion::DoubleToStringConverter& converter =
       double_conversion::DoubleToStringConverter::EcmaScriptConverter();
-  double_conversion::StringBuilder builder(cbuf->sbuf,
-                                           js::ToCStringBuf::sbufSize);
+  double_conversion::StringBuilder builder(cbuf->sbuf, std::size(cbuf->sbuf));
   converter.ToShortest(d, &builder);
   return builder.Finalize();
 }
@@ -1689,9 +1684,13 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       return str;
     }
 
-    ToCStringBuf cbuf;
+    // Plus three to include the largest number, the sign, and the terminating
+    // null character.
+    constexpr size_t MaximumLength = std::numeric_limits<int32_t>::digits + 3;
+
+    char buf[MaximumLength] = {};
     size_t numStrLen;
-    char* numStr = Int32ToCStringWithBase(cbuf.sbuf, i, &numStrLen, base);
+    char* numStr = Int32ToCStringWithBase(buf, i, &numStrLen, base);
     MOZ_ASSERT(numStrLen == strlen(numStr));
 
     JSLinearString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
@@ -1775,7 +1774,7 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   ToCStringBuf cbuf;
   char* numStr = FracNumberToCString(&cbuf, d);
   MOZ_ASSERT(numStr);
-  MOZ_ASSERT(numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
+  MOZ_ASSERT(std::begin(cbuf.sbuf) <= numStr && numStr < std::end(cbuf.sbuf));
 
   size_t length = strlen(numStr);
   JSAtom* atom = Atomize(cx, numStr, length);
@@ -1798,7 +1797,7 @@ frontend::TaggedParserAtomIndex js::NumberToParserAtom(
   ToCStringBuf cbuf;
   char* numStr = FracNumberToCString(&cbuf, d);
   MOZ_ASSERT(numStr);
-  MOZ_ASSERT(numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
+  MOZ_ASSERT(std::begin(cbuf.sbuf) <= numStr && numStr < std::end(cbuf.sbuf));
 
   size_t length = strlen(numStr);
   return parserAtoms.internAscii(cx, numStr, length);
@@ -1844,7 +1843,7 @@ bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
     cstrlen = strlen(cstr);
   }
 
-  MOZ_ASSERT(cstrlen < cbuf.sbufSize);
+  MOZ_ASSERT(cstrlen < std::size(cbuf.sbuf));
   return sb.append(cstr, cstrlen);
 }
 
