@@ -49,10 +49,7 @@ class CrashHandlerService : Service() {
             val channel = CrashNotification.ensureChannelExists(this)
             val notification = NotificationCompat.Builder(this, channel)
                 .setContentTitle(
-                    getString(
-                        R.string.mozac_lib_crash_dialog_title,
-                        crashReporter.promptConfiguration.appName
-                    )
+                    getString(R.string.mozac_lib_gathering_crash_data_in_progress)
                 )
                 .setSmallIcon(R.drawable.mozac_lib_crash_notification)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)

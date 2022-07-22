@@ -12,10 +12,14 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.NotificationManagerCompat
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.databinding.MozacLibCrashCrashreporterBinding
+import mozilla.components.lib.crash.notification.CrashNotification
+import mozilla.components.lib.crash.notification.NOTIFICATION_ID
+import mozilla.components.lib.crash.notification.NOTIFICATION_TAG
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -40,6 +44,12 @@ class CrashReporterActivity : AppCompatActivity() {
     internal lateinit var binding: MozacLibCrashCrashreporterBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // if the activity is started by user tapping on the crash notification's report button,
+        // remove the crash notification.
+        if (CrashNotification.shouldShowNotificationInsteadOfPrompt(crash)) {
+            NotificationManagerCompat.from(applicationContext).cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
+        }
+
         setTheme(crashReporter.promptConfiguration.theme)
 
         super.onCreate(savedInstanceState)
@@ -54,9 +64,7 @@ class CrashReporterActivity : AppCompatActivity() {
         val appName = crashReporter.promptConfiguration.appName
         val organizationName = crashReporter.promptConfiguration.organizationName
 
-        val isBackgroundCrash = (crash as? Crash.NativeCodeCrash)?.processType ==
-            Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD
-        binding.titleView.text = when (isBackgroundCrash) {
+        binding.titleView.text = when (isRecoverableBackgroundCrash(crash)) {
             true -> getString(
                 R.string.mozac_lib_crash_background_process_notification_title,
                 appName
@@ -74,7 +82,7 @@ class CrashReporterActivity : AppCompatActivity() {
         binding.closeButton.setOnClickListener { close() }
 
         // For background crashes show just the close button. Otherwise show close and restart.
-        if (isBackgroundCrash) {
+        if (isRecoverableBackgroundCrash(crash)) {
             binding.restartButton.visibility = View.GONE
             val closeButtonParams = binding.closeButton.layoutParams as ConstraintLayout.LayoutParams
             closeButtonParams.startToStart = ConstraintLayout.LayoutParams.UNSET
@@ -128,6 +136,15 @@ class CrashReporterActivity : AppCompatActivity() {
         sendCrashReportIfNeeded {
             finish()
         }
+    }
+
+    /*
+     * Return true if the crash occurred in the background and is recoverable. (ex: GPU process crash)
+     */
+    @VisibleForTesting
+    internal fun isRecoverableBackgroundCrash(crash: Crash): Boolean {
+        return crash is Crash.NativeCodeCrash &&
+            crash.processType == Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD
     }
 
     companion object {

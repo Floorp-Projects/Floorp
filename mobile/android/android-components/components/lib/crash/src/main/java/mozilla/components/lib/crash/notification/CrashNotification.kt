@@ -15,10 +15,8 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.prompt.CrashPrompt
-import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.utils.PendingIntentUtils
-import mozilla.components.support.utils.asForegroundServicePendingIntent
 
 private const val NOTIFICATION_SDK_LEVEL = 29 // On Android Q+ we show a notification instead of a prompt
 
@@ -37,13 +35,6 @@ internal class CrashNotification(
             context, SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG),
             CrashPrompt.createIntent(context, crash), getNotificationFlag()
         )
-
-        val reportPendingIntent = SendCrashReportService
-            .createReportIntent(context, crash, NOTIFICATION_TAG, NOTIFICATION_ID)
-            .asForegroundServicePendingIntent(
-                context, SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG),
-                getNotificationFlag()
-            )
 
         val channel = ensureChannelExists(context)
 
@@ -69,7 +60,7 @@ internal class CrashNotification(
                 context.getString(
                     R.string.mozac_lib_crash_notification_action_report
                 ),
-                reportPendingIntent
+                pendingIntent,
             )
             .setAutoCancel(true)
             .build()

@@ -196,6 +196,31 @@ class CrashReporterActivityTest {
             assertEquals(activity.restartButton.visibility, View.GONE)
         }
     }
+
+    @Test
+    fun `WHEN crash is native AND background child THEN is background returns true`() = runTestOnMain {
+        CrashReporter(
+            context = testContext,
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            services = listOf(service),
+            scope = scope
+        ).install(testContext)
+
+        val crash = Crash.NativeCodeCrash(
+            123,
+            "",
+            true,
+            "",
+            Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+            arrayListOf()
+        )
+
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
+
+        scenario.onActivity { activity ->
+            assert(activity.isRecoverableBackgroundCrash(crash))
+        }
+    }
 }
 
 /**
