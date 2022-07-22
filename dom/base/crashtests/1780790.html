@@ -1,0 +1,15 @@
+<html  class="reftest-wait">
+  <head>
+    <script>
+      function test() {
+        let ac = new AbortController();
+        scheduler.postTask(()=> { ac.abort(); throw "Foobar";  }, { signal: ac.signal });
+        scheduler.postTask(()=> document.documentElement.removeAttribute('class'));
+      }
+    </script>
+    <style>
+    </style>
+  </head>
+  <body onload="test()">
+  </body>
+</html>
