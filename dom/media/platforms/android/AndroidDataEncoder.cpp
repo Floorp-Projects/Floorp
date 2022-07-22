@@ -5,6 +5,7 @@
 #include "AndroidDataEncoder.h"
 
 #include "AnnexB.h"
+#include "H264.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "SimpleMap.h"
@@ -170,9 +171,9 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder<ConfigType>::Encode(
 
 static jni::ByteBuffer::LocalRef ConvertI420ToNV12Buffer(
     RefPtr<const VideoData> aSample, RefPtr<MediaByteBuffer>& aYUVBuffer) {
-  const PlanarYCbCrImage* image = aSample->mImage->AsPlanarYCbCrImage();
+  const layers::PlanarYCbCrImage* image = aSample->mImage->AsPlanarYCbCrImage();
   MOZ_ASSERT(image);
-  const PlanarYCbCrData* yuv = image->GetData();
+  const layers::PlanarYCbCrData* yuv = image->GetData();
   auto ySize = yuv->YDataSize();
   auto cbcrSize = yuv->CbCrDataSize();
   size_t yLength = yuv->mYStride * ySize.height;
