@@ -300,12 +300,17 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
     WriteParam(aWriter, aParam.mFramesDecoded);
     WriteParam(aWriter, aParam.mFrameWidth);
     WriteParam(aWriter, aParam.mFrameHeight);
+    WriteParam(aWriter, aParam.mFramesPerSecond);
     WriteParam(aWriter, aParam.mBytesReceived);
     WriteParam(aWriter, aParam.mNackCount);
     WriteParam(aWriter, aParam.mFirCount);
     WriteParam(aWriter, aParam.mPliCount);
-    WriteParam(aWriter, aParam.mFramesPerSecond);
     WriteParam(aWriter, aParam.mFramesReceived);
+    WriteParam(aWriter, aParam.mJitterBufferDelay);
+    WriteParam(aWriter, aParam.mJitterBufferEmittedCount);
+    WriteParam(aWriter, aParam.mTotalSamplesReceived);
+    WriteParam(aWriter, aParam.mConcealedSamples);
+    WriteParam(aWriter, aParam.mSilentConcealedSamples);
     WriteRTCReceivedRtpStreamStats(aWriter, aParam);
   }
 
@@ -314,12 +319,17 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
            ReadParam(aReader, &(aResult->mFramesDecoded)) &&
            ReadParam(aReader, &(aResult->mFrameWidth)) &&
            ReadParam(aReader, &(aResult->mFrameHeight)) &&
+           ReadParam(aReader, &(aResult->mFramesPerSecond)) &&
            ReadParam(aReader, &(aResult->mBytesReceived)) &&
            ReadParam(aReader, &(aResult->mNackCount)) &&
            ReadParam(aReader, &(aResult->mFirCount)) &&
            ReadParam(aReader, &(aResult->mPliCount)) &&
-           ReadParam(aReader, &(aResult->mFramesPerSecond)) &&
            ReadParam(aReader, &(aResult->mFramesReceived)) &&
+           ReadParam(aReader, &(aResult->mJitterBufferDelay)) &&
+           ReadParam(aReader, &(aResult->mJitterBufferEmittedCount)) &&
+           ReadParam(aReader, &(aResult->mTotalSamplesReceived)) &&
+           ReadParam(aReader, &(aResult->mConcealedSamples)) &&
+           ReadParam(aReader, &(aResult->mSilentConcealedSamples)) &&
            ReadRTCReceivedRtpStreamStats(aReader, aResult);
   }
 };

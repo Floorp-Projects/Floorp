@@ -19,6 +19,8 @@ const statsExpectedByType = {
       "packetsDiscarded",
       "bytesReceived",
       "jitter",
+      "jitterBufferDelay",
+      "jitterBufferEmittedCount",
     ],
     optional: ["remoteId", "nackCount"],
     localVideoOnly: [
@@ -30,6 +32,11 @@ const statsExpectedByType = {
       "frameWidth",
       "frameHeight",
       "framesReceived",
+    ],
+    localAudioOnly: [
+      "totalSamplesReceived",
+      "concealedSamples",
+      "silentConcealedSamples",
     ],
     unimplemented: [
       "mediaTrackId",
@@ -65,6 +72,7 @@ const statsExpectedByType = {
       "retransmittedBytesSent",
     ],
     optional: ["nackCount", "qpSum"],
+    localAudioOnly: [],
     localVideoOnly: [
       "framesEncoded",
       "firCount",
@@ -230,7 +238,7 @@ const statsExpectedByType = {
 
 ["in", "out"].forEach(pre => {
   let s = statsExpectedByType[pre + "bound-rtp"];
-  s.optional = [...s.optional, ...s.localVideoOnly];
+  s.optional = [...s.optional, ...s.localVideoOnly, ...s.localAudioOnly];
 });
 
 //
@@ -490,9 +498,66 @@ function pedanticChecks(report) {
           `local only test. value=${stat.jitter}`
       );
 
+      // jitterBufferEmittedCount
+      let expectedJitterBufferEmmitedCount = stat.kind == "video" ? 10 : 1000;
+      ok(
+        stat.jitterBufferEmittedCount > expectedJitterBufferEmmitedCount,
+        `${stat.type}.jitterBufferEmittedCount is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.jitterBufferEmittedCount}`
+      );
+
+      // jitterBufferDelay
+      let avgJitterBufferDelay =
+        stat.jitterBufferDelay / stat.jitterBufferEmittedCount;
+      ok(
+        avgJitterBufferDelay > 0.01 && avgJitterBufferDelay < 10,
+        `${stat.type}.jitterBufferDelay is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.jitterBufferDelay}/${stat.jitterBufferEmittedCount}=${avgJitterBufferDelay}`
+      );
+
       //
       // Optional fields
       //
+
+      //
+      // Local audio only stats
+      //
+      if (stat.inner.kind != "audio") {
+        expectations.localAudioOnly.forEach(field => {
+          ok(
+            stat[field] === undefined,
+            `${stat.type} does not have field ${field}` +
+              ` when kind is not 'audio'`
+          );
+        });
+      } else {
+        expectations.localAudioOnly.forEach(field => {
+          ok(
+            stat.inner[field] !== undefined,
+            stat.type + " has field " + field + " when kind is video"
+          );
+        });
+        // totalSamplesReceived
+        ok(
+          stat.totalSamplesReceived > 1000,
+          `${stat.type}.totalSamplesReceived is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.totalSamplesReceived}`
+        );
+
+        // concealedSamples
+        ok(
+          stat.concealedSamples > 100,
+          `${stat.type}.concealedSamples is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.concealedSamples}`
+        );
+
+        // silentConcealedSamples
+        ok(
+          stat.silentConcealedSamples >= 0,
+          `${stat.type}.silentConcealedSamples is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.silentConcealedSamples}`
+        );
+      }
 
       //
       // Local video only stats
