@@ -344,6 +344,7 @@ OutputParser.prototype = {
   _doParse: function(text, options, tokenStream, stopAtCloseParen) {
     let parenDepth = stopAtCloseParen ? 1 : 0;
     let outerMostFunctionTakesColor = false;
+    const colorFunctions = [];
     let fontFamilyNameParts = [];
     let previousWasBang = false;
 
@@ -380,8 +381,11 @@ OutputParser.prototype = {
 
       switch (token.tokenType) {
         case "function": {
+          const isColorTakingFunction = COLOR_TAKING_FUNCTIONS.includes(
+            token.text
+          );
           if (
-            COLOR_TAKING_FUNCTIONS.includes(token.text) ||
+            isColorTakingFunction ||
             ANGLE_TAKING_FUNCTIONS.includes(token.text)
           ) {
             // The function can accept a color or an angle argument, and we know
@@ -392,9 +396,10 @@ OutputParser.prototype = {
               text.substring(token.startOffset, token.endOffset)
             );
             if (parenDepth === 0) {
-              outerMostFunctionTakesColor = COLOR_TAKING_FUNCTIONS.includes(
-                token.text
-              );
+              outerMostFunctionTakesColor = isColorTakingFunction;
+            }
+            if (isColorTakingFunction) {
+              colorFunctions.push({ parenDepth, functionName: token.text });
             }
             ++parenDepth;
           } else if (token.text === "var" && options.getVariableValue) {
@@ -412,6 +417,7 @@ OutputParser.prototype = {
               this._appendColor(value, {
                 ...options,
                 variableContainer: variableNode,
+                colorFunction: colorFunctions.at(-1)?.functionName,
               });
             } else {
               this.parsed.push(variableNode);
@@ -451,7 +457,10 @@ OutputParser.prototype = {
                 colorOK() &&
                 colorUtils.isValidCSSColor(functionText, this.cssColor4)
               ) {
-                this._appendColor(functionText, options);
+                this._appendColor(functionText, {
+                  ...options,
+                  colorFunction: colorFunctions.at(-1)?.functionName,
+                });
               } else if (
                 options.expectShape &&
                 BASIC_SHAPE_FUNCTIONS.includes(token.text)
@@ -479,7 +488,10 @@ OutputParser.prototype = {
             colorOK() &&
             colorUtils.isValidCSSColor(token.text, this.cssColor4)
           ) {
-            this._appendColor(token.text, options);
+            this._appendColor(token.text, {
+              ...options,
+              colorFunction: colorFunctions.at(-1)?.functionName,
+            });
           } else if (angleOK(token.text)) {
             this._appendAngle(token.text, options);
           } else if (options.expectFont && !previousWasBang) {
@@ -506,7 +518,10 @@ OutputParser.prototype = {
               // color is changed to something like rgb(...).
               this._appendTextNode(" ");
             }
-            this._appendColor(original, options);
+            this._appendColor(original, {
+              ...options,
+              colorFunction: colorFunctions.at(-1)?.functionName,
+            });
           } else {
             this._appendTextNode(original);
           }
@@ -556,6 +571,10 @@ OutputParser.prototype = {
             ++parenDepth;
           } else if (token.text === ")") {
             --parenDepth;
+
+            if (colorFunctions.at(-1)?.parenDepth == parenDepth) {
+              colorFunctions.pop();
+            }
 
             if (stopAtCloseParen && parenDepth === 0) {
               done = true;
@@ -1513,6 +1532,9 @@ OutputParser.prototype = {
         // attached for pressing SPACE and RETURN in SwatchBasedEditorTooltip.js
         const swatch = this._createNode("span", attributes);
         this.colorSwatches.set(swatch, colorObj);
+        if (options.colorFunction) {
+          swatch.dataset.colorFunction = options.colorFunction;
+        }
         swatch.addEventListener("mousedown", this._onColorSwatchMouseDown);
         EventEmitter.decorate(swatch);
 

@@ -67,17 +67,26 @@ function makeColorTest(name, value, segments) {
     if (typeof segment === "string") {
       result.expected += segment;
     } else {
+      const buttonAttributes = {
+        class: COLOR_TEST_CLASS,
+        style: `background-color:${segment.name}`,
+        tabindex: 0,
+        role: "button",
+      };
+      if (segment.colorFunction) {
+        buttonAttributes["data-color-function"] = segment.colorFunction;
+      }
+      const buttonAttrString = Object.entries(buttonAttributes)
+        .map(([attr, v]) => `${attr}="${v}"`)
+        .join(" ");
+
+      /* eslint-disable */
       result.expected +=
-        '<span data-color="' +
-        segment.name +
-        '">' +
-        '<span class="' +
-        COLOR_TEST_CLASS +
-        '" style="background-color:' +
-        segment.name +
-        '" tabindex="0" role="button"></span><span>' +
-        segment.name +
-        "</span></span>";
+        `<span data-color="${segment.name}">` +
+          `<span ${buttonAttrString}></span>`+
+          `<span>${segment.name}</span>` +
+        `</span>`;
+      /* eslint-enable */
     }
   }
 
@@ -95,9 +104,9 @@ function testParseCssProperty(doc, parser) {
       "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))",
       [
         "linear-gradient(to right, ",
-        { name: "#F60" },
+        { name: "#F60", colorFunction: "linear-gradient" },
         " 10%, ",
-        { name: "rgba(0,0,0,1)" },
+        { name: "rgba(0,0,0,1)", colorFunction: "linear-gradient" },
         ")",
       ]
     ),
@@ -127,7 +136,7 @@ function testParseCssProperty(doc, parser) {
         '<span data-filters="blur(1px) drop-shadow(0 0 0 blue) ',
         'url(red.svg#blue)"><span>',
         "blur(1px) drop-shadow(0 0 0 ",
-        { name: "blue" },
+        { name: "blue", colorFunction: "drop-shadow" },
         ") url(red.svg#blue)</span></span>",
       ]
     ),
@@ -142,85 +151,85 @@ function testParseCssProperty(doc, parser) {
       /* eslint-enable max-len */
       [
         "linear-gradient(to left, ",
-        { name: "transparent" },
+        { name: "transparent", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "transparent" },
+        { name: "transparent", colorFunction: "linear-gradient" },
         " 5%,",
-        { name: "#F00" },
+        { name: "#F00", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#F00" },
+        { name: "#F00", colorFunction: "linear-gradient" },
         " 10%,",
-        { name: "#FF0" },
+        { name: "#FF0", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#FF0" },
+        { name: "#FF0", colorFunction: "linear-gradient" },
         " 15%,",
-        { name: "#0F0" },
+        { name: "#0F0", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#0F0" },
+        { name: "#0F0", colorFunction: "linear-gradient" },
         " 20%,",
-        { name: "#0FF" },
+        { name: "#0FF", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#0FF" },
+        { name: "#0FF", colorFunction: "linear-gradient" },
         " 25%,",
-        { name: "#00F" },
+        { name: "#00F", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#00F" },
+        { name: "#00F", colorFunction: "linear-gradient" },
         " 30%,",
-        { name: "#800" },
+        { name: "#800", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#800" },
+        { name: "#800", colorFunction: "linear-gradient" },
         " 35%,",
-        { name: "#880" },
+        { name: "#880", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#880" },
+        { name: "#880", colorFunction: "linear-gradient" },
         " 40%,",
-        { name: "#080" },
+        { name: "#080", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#080" },
+        { name: "#080", colorFunction: "linear-gradient" },
         " 45%,",
-        { name: "#088" },
+        { name: "#088", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#088" },
+        { name: "#088", colorFunction: "linear-gradient" },
         " 50%,",
-        { name: "#008" },
+        { name: "#008", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#008" },
+        { name: "#008", colorFunction: "linear-gradient" },
         " 55%,",
-        { name: "#FFF" },
+        { name: "#FFF", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#FFF" },
+        { name: "#FFF", colorFunction: "linear-gradient" },
         " 60%,",
-        { name: "#EEE" },
+        { name: "#EEE", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#EEE" },
+        { name: "#EEE", colorFunction: "linear-gradient" },
         " 65%,",
-        { name: "#CCC" },
+        { name: "#CCC", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#CCC" },
+        { name: "#CCC", colorFunction: "linear-gradient" },
         " 70%,",
-        { name: "#999" },
+        { name: "#999", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#999" },
+        { name: "#999", colorFunction: "linear-gradient" },
         " 75%,",
-        { name: "#666" },
+        { name: "#666", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#666" },
+        { name: "#666", colorFunction: "linear-gradient" },
         " 80%,",
-        { name: "#333" },
+        { name: "#333", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#333" },
+        { name: "#333", colorFunction: "linear-gradient" },
         " 85%,",
-        { name: "#111" },
+        { name: "#111", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#111" },
+        { name: "#111", colorFunction: "linear-gradient" },
         " 90%,",
-        { name: "#000" },
+        { name: "#000", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "#000" },
+        { name: "#000", colorFunction: "linear-gradient" },
         " 95%,",
-        { name: "transparent" },
+        { name: "transparent", colorFunction: "linear-gradient" },
         " 0, ",
-        { name: "transparent" },
+        { name: "transparent", colorFunction: "linear-gradient" },
         " 100%)",
       ]
     ),
@@ -230,6 +239,29 @@ function testParseCssProperty(doc, parser) {
       "1px dotted ",
       { name: "#f06" },
     ]),
+
+    makeColorTest("color", "color-mix(in srgb, red, blue)", [
+      "color-mix(in srgb, ",
+      { name: "red", colorFunction: "color-mix" },
+      ", ",
+      { name: "blue", colorFunction: "color-mix" },
+      ")",
+    ]),
+
+    makeColorTest(
+      "background-image",
+      "linear-gradient(to top, color-mix(in srgb, #008000, rgba(255, 255, 0, 0.9)), blue)",
+      [
+        "linear-gradient(to top, ",
+        "color-mix(in srgb, ",
+        { name: "#008000", colorFunction: "color-mix" },
+        ", ",
+        { name: "rgba(255, 255, 0, 0.9)", colorFunction: "color-mix" },
+        "), ",
+        { name: "blue", colorFunction: "linear-gradient" },
+        ")",
+      ]
+    ),
   ];
 
   const target = doc.querySelector("div");
@@ -567,6 +599,29 @@ function testParseVariable(doc, parser) {
         "</span>",
         /* eslint-enable */
     },
+    {
+      text: "color-mix(in sgrb, var(--x), purple)",
+      variables: { "--x": "yellow" },
+      expected:
+        /* eslint-disable */
+        `color-mix(in sgrb, ` +
+        `<span data-color="yellow">` +
+          `<span class="test-class" style="background-color:yellow" tabindex="0" role="button" data-color-function="color-mix">` +
+          `</span>` +
+          `<span>var(<span data-variable="--x = yellow">--x</span>)</span>` +
+        `</span>` +
+        `, ` +
+        `<span data-color="purple">` +
+          `<span class="test-class" style="background-color:purple" tabindex="0" role="button" data-color-function="color-mix">` +
+          `</span>` +
+          `<span>purple</span>` +
+        `</span>` +
+        `)`,
+        /* eslint-enable */
+      parserExtraOptions: {
+        colorSwatchClass: COLOR_TEST_CLASS,
+      },
+    },
   ];
 
   for (const test of TESTS) {
@@ -577,6 +632,7 @@ function testParseVariable(doc, parser) {
     const frag = parser.parseCssProperty("color", test.text, {
       getVariableValue: getValue,
       unmatchedVariableClass: "unmatched-class",
+      ...(test.parserExtraOptions || {}),
     });
 
     const target = doc.querySelector("div");
