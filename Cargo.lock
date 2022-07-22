@@ -3291,7 +3291,7 @@ dependencies = [
 [[package]]
 name = "midir"
 version = "0.7.0"
-source = "git+https://github.com/mozilla/midir.git?rev=4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f#4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f"
+source = "git+https://github.com/mozilla/midir.git?rev=e1b4dcb767f9e69afe95a860374aaa9635d81e3d#e1b4dcb767f9e69afe95a860374aaa9635d81e3d"
 dependencies = [
  "alsa",
  "bitflags",
