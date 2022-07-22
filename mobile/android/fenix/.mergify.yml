@@ -19,7 +19,7 @@ pull_request_rules:
     conditions:
       - author=MickeyMoz
       - status-success=complete-pr
-      - files~=(Gecko.kt|AndroidComponents.kt)
+      - files~=AndroidComponents.kt
     actions:
       review:
         type: APPROVE
