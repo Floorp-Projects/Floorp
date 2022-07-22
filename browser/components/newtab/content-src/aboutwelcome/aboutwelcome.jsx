@@ -71,6 +71,7 @@ class AboutWelcome extends React.PureComponent {
       <MultiStageAboutWelcome
         message_id={props.messageId}
         screens={props.screens}
+        updateHistory={!props.disableHistoryUpdates}
         metricsFlowUri={this.state.metricsFlowUri}
         utm_term={props.UTMTerm}
         transitions={props.transitions}
