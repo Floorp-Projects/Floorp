@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #ifdef HAVE_LOCALECONV
 #  include <locale.h>
 #endif
@@ -870,9 +871,20 @@ frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
 }
 
 /* Returns a non-nullptr pointer to inside cbuf.  */
-static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, int32_t i, size_t* len,
+template <typename T>
+static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, T i, size_t* len,
                                     int base) {
-  uint32_t u = Abs(i);
+  // The buffer needs to be large enough to hold the largest number, including
+  // the sign and the terminating null-character.
+  static_assert(std::numeric_limits<T>::digits + (2 * std::is_signed_v<T>) <
+                ToCStringBuf::sbufSize);
+
+  uint32_t u;
+  if constexpr (std::is_signed_v<T>) {
+    u = Abs(i);
+  } else {
+    u = i;
+  }
 
   RangedPtr<char> cp(cbuf->sbuf + ToCStringBuf::sbufSize - 1, cbuf->sbuf,
                      ToCStringBuf::sbufSize);
@@ -900,8 +912,10 @@ static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, int32_t i, size_t* len,
       } while (u != 0);
       break;
   }
-  if (i < 0) {
-    *--cp = '-';
+  if constexpr (std::is_signed_v<T>) {
+    if (i < 0) {
+      *--cp = '-';
+    }
   }
 
   *len = end - cp.get();
@@ -1603,13 +1617,11 @@ char* js::NumberToCString(ToCStringBuf* cbuf, double d) {
   return s;
 }
 
-char* js::NumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf, double d,
-                                  int base) {
-  int32_t i;
+char* js::NumberToHexCString(ToCStringBuf* cbuf, uint32_t value) {
   size_t len;
-  return NumberEqualsInt32(d, &i)
-             ? Int32ToCStringWithBase(cbuf, i, &len, base)
-             : FracNumberToCStringWithBase(cx, cbuf, d, base);
+  char* s = Int32ToCStringWithBase(cbuf, value, &len, 16);
+  MOZ_ASSERT(s);
+  return s;
 }
 
 template <AllowGC allowGC>

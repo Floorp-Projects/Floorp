@@ -971,16 +971,13 @@ static bool FormatStackFrameLine(js::StringBuffer& sb,
   return NumberValueToStringBuffer(NumberValue(frame->getLine()), sb);
 }
 
-static bool FormatStackFrameColumn(JSContext* cx, js::StringBuffer& sb,
+static bool FormatStackFrameColumn(js::StringBuffer& sb,
                                    JS::Handle<js::SavedFrame*> frame) {
   if (frame->isWasm()) {
     // See comment in WasmFrameIter::computeLine().
     js::ToCStringBuf cbuf;
-    const char* cstr =
-        NumberToCStringWithBase(cx, &cbuf, frame->wasmBytecodeOffset(), 16);
-    if (!cstr) {
-      return false;
-    }
+    const char* cstr = NumberToHexCString(&cbuf, frame->wasmBytecodeOffset());
+    MOZ_ASSERT(cstr);
 
     return sb.append("0x") && sb.append(cstr, strlen(cstr));
   }
@@ -1002,7 +999,7 @@ static bool FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
          (!name || sb.append(name)) && sb.append('@') &&
          sb.append(frame->getSource()) && sb.append(':') &&
          FormatStackFrameLine(sb, frame) && sb.append(':') &&
-         FormatStackFrameColumn(cx, sb, frame) && sb.append('\n');
+         FormatStackFrameColumn(sb, frame) && sb.append('\n');
 }
 
 static bool FormatV8StackFrame(JSContext* cx, js::StringBuffer& sb,
@@ -1014,7 +1011,7 @@ static bool FormatV8StackFrame(JSContext* cx, js::StringBuffer& sb,
          (!name || (sb.append(name) && sb.append(' ') && sb.append('('))) &&
          sb.append(frame->getSource()) && sb.append(':') &&
          FormatStackFrameLine(sb, frame) && sb.append(':') &&
-         FormatStackFrameColumn(cx, sb, frame) && (!name || sb.append(')')) &&
+         FormatStackFrameColumn(sb, frame) && (!name || sb.append(')')) &&
          (lastFrame || sb.append('\n'));
 }
 
