@@ -30,24 +30,27 @@ export const MultiStageAboutWelcome = props => {
     });
 
     // Remember that a new screen has loaded for browser navigation
-    if (index > window.history.state) {
+    if (props.updateHistory && index > window.history.state) {
       window.history.pushState(index, "");
     }
   }, [index]);
 
   useEffect(() => {
-    // Switch to the screen tracked in state (null for initial state)
-    // or last screen index if a user navigates by pressing back
-    // button from about:home
-    const handler = ({ state }) =>
-      setScreenIndex(Math.min(state, screens.length - 1));
+    if (props.updateHistory) {
+      // Switch to the screen tracked in state (null for initial state)
+      // or last screen index if a user navigates by pressing back
+      // button from about:home
+      const handler = ({ state }) =>
+        setScreenIndex(Math.min(state, screens.length - 1));
 
-    // Handle page load, e.g., going back to about:welcome from about:home
-    handler(window.history);
+      // Handle page load, e.g., going back to about:welcome from about:home
+      handler(window.history);
 
-    // Watch for browser back/forward button navigation events
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+      // Watch for browser back/forward button navigation events
+      window.addEventListener("popstate", handler);
+      return () => window.removeEventListener("popstate", handler);
+    }
+    return false;
   }, []);
 
   const [flowParams, setFlowParams] = useState(null);
