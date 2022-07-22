@@ -77,7 +77,6 @@ if (AppConstants.platform == "macosx") {
 if (AppConstants.MOZ_BACKGROUNDTASKS) {
   // These preferences are active only when we're in background task mode.
   gExceptionPaths.push("resource://gre/defaults/backgroundtasks/");
-  gExceptionPaths.push("resource://app/defaults/backgroundtasks/");
   // `BackgroundTask_id.jsm` is loaded at runtime by `app --backgroundtask id ...`.
   gExceptionPaths.push("resource://gre/modules/backgroundtasks/");
 }
