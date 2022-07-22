@@ -19,7 +19,7 @@ void f() {
   nsIPrincipal *a = new SomePrincipal();
   a->GetURI(0); //  expected-error {{Principal->GetURI is deprecated and will be removed soon. Please consider using the new helper functions of nsIPrincipal}}
 
-  nsIPrincipal *b = new NullPrincipal();
+  ::nsIPrincipal *b = new NullPrincipal();
   b->GetURI(0); //  expected-error {{Principal->GetURI is deprecated and will be removed soon. Please consider using the new helper functions of nsIPrincipal}}
 
   SomeURI *c = new SomeURI();

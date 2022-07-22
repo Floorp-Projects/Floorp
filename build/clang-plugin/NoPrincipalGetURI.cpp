@@ -10,8 +10,8 @@ void NoPrincipalGetURI::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
       cxxMemberCallExpr(
           allOf(callee(cxxMethodDecl(hasName("GetURI"))),
-                anyOf(on(hasType(asString("class nsIPrincipal *"))),
-                      on(hasType(asString("class nsIPrincipal")))),
+                anyOf(on(hasType(hasCanonicalType(asString("class nsIPrincipal *")))),
+                      on(hasType(hasCanonicalType(asString("class nsIPrincipal"))))),
                 unless(isInWhiteListForPrincipalGetUri())),
           argumentCountIs(1))
           .bind("id"),
