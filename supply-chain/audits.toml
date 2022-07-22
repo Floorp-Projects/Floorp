@@ -131,6 +131,18 @@ criteria = "safe-to-deploy"
 version = "1.0.4"
 notes = "This is a trivial crate."
 
+[[audits.origin-trial-token]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.1.1"
+notes = """
+I'm the author of the crate. The only unsafe code is a view over a byte array
+which is properly validated.
+
+Cryptography shenanigans are delegated to the caller so there's no possible
+unsoundness there.
+"""
+
 [[audits.precomputed-hash]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
