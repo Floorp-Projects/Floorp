@@ -44,8 +44,8 @@ body {
   --newtab-primary-action-background: #0061e0;
   --newtab-primary-action-background-pocket: #008078;
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 80%, transparent);
-  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #000);
-  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
@@ -76,8 +76,8 @@ body[lwt-newtab-brighttext] {
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
   --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #FFF);
   --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 55%, #FFF);
-  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 95%, #FFF);
-  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 90%, #FFF);
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 80%, #FFF);
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 60%, #FFF);
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 10%, transparent);
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 17%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
