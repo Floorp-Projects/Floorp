@@ -196,23 +196,27 @@ const MultiStageAboutWelcome = props => {
       }
     }); // Remember that a new screen has loaded for browser navigation
 
-    if (index > window.history.state) {
+    if (props.updateHistory && index > window.history.state) {
       window.history.pushState(index, "");
     }
   }, [index]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    // Switch to the screen tracked in state (null for initial state)
-    // or last screen index if a user navigates by pressing back
-    // button from about:home
-    const handler = ({
-      state
-    }) => setScreenIndex(Math.min(state, screens.length - 1)); // Handle page load, e.g., going back to about:welcome from about:home
+    if (props.updateHistory) {
+      // Switch to the screen tracked in state (null for initial state)
+      // or last screen index if a user navigates by pressing back
+      // button from about:home
+      const handler = ({
+        state
+      }) => setScreenIndex(Math.min(state, screens.length - 1)); // Handle page load, e.g., going back to about:welcome from about:home
 
 
-    handler(window.history); // Watch for browser back/forward button navigation events
+      handler(window.history); // Watch for browser back/forward button navigation events
 
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+      window.addEventListener("popstate", handler);
+      return () => window.removeEventListener("popstate", handler);
+    }
+
+    return false;
   }, []);
   const [flowParams, setFlowParams] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const {
@@ -1711,6 +1715,7 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.MultiStageAboutWelcome, {
       message_id: props.messageId,
       screens: props.screens,
+      updateHistory: !props.disableHistoryUpdates,
       metricsFlowUri: this.state.metricsFlowUri,
       utm_term: props.UTMTerm,
       transitions: props.transitions,
