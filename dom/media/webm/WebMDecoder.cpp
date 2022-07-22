@@ -104,8 +104,9 @@ bool WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
   // color depth
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const auto& track : tracks) {
-    if (!track || !platform->Supports(SupportDecoderParams(*track),
-                                      nullptr /* diagnostic */)) {
+    if (!track || platform->Supports(SupportDecoderParams(*track),
+                                     nullptr /* diagnostic */) ==
+                      media::DecodeSupport::Unsupported) {
       return false;
     }
   }
