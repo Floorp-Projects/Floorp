@@ -870,15 +870,10 @@ frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
   return parserAtoms.internAscii(cx, start, length);
 }
 
-/* Returns a non-nullptr pointer to inside cbuf.  */
+/* Returns a non-nullptr pointer to inside `buf`. */
 template <typename T>
-static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, T i, size_t* len,
+static char* Int32ToCStringWithBase(mozilla::Range<char> buf, T i, size_t* len,
                                     int base) {
-  // The buffer needs to be large enough to hold the largest number, including
-  // the sign and the terminating null-character.
-  static_assert(std::numeric_limits<T>::digits + (2 * std::is_signed_v<T>) <
-                ToCStringBuf::sbufSize);
-
   uint32_t u;
   if constexpr (std::is_signed_v<T>) {
     u = Abs(i);
@@ -886,8 +881,8 @@ static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, T i, size_t* len,
     u = i;
   }
 
-  RangedPtr<char> cp(cbuf->sbuf + ToCStringBuf::sbufSize - 1, cbuf->sbuf,
-                     ToCStringBuf::sbufSize);
+  RangedPtr<char> cp = buf.end() - 1;
+
   char* end = cp.get();
   *cp = '\0';
 
@@ -920,6 +915,53 @@ static char* Int32ToCStringWithBase(ToCStringBuf* cbuf, T i, size_t* len,
 
   *len = end - cp.get();
   return cp.get();
+}
+
+/* Returns a non-nullptr pointer to inside `out`. */
+template <typename T, size_t Length>
+static char* Int32ToCStringWithBase(char (&out)[Length], T i, size_t* len,
+                                    int base) {
+  // The buffer needs to be large enough to hold the largest number, including
+  // the sign and the terminating null-character.
+  static_assert(std::numeric_limits<T>::digits + (2 * std::is_signed_v<T>) <
+                Length);
+
+  mozilla::Range<char> buf(out, Length);
+  return Int32ToCStringWithBase(buf, i, len, base);
+}
+
+/* Returns a non-nullptr pointer to inside `out`. */
+template <typename T, size_t Base, size_t Length>
+static char* Int32ToCString(char (&out)[Length], T i, size_t* len) {
+  // The buffer needs to be large enough to hold the largest number, including
+  // the sign and the terminating null-character.
+  if constexpr (Base == 10) {
+    static_assert(std::numeric_limits<T>::digits10 + 1 + std::is_signed_v<T> <
+                  Length);
+  } else {
+    // Compute digits16 analog to std::numeric_limits::digits10, which is
+    // defined as |std::numeric_limits::digits * std::log10(2)| for integer
+    // types.
+    // Note: log16(2) is 1/4.
+    static_assert(Base == 16);
+    static_assert(((std::numeric_limits<T>::digits + std::is_signed_v<T>) / 4 +
+                   std::is_signed_v<T>) < Length);
+  }
+
+  mozilla::Range<char> buf(out, Length);
+  return Int32ToCStringWithBase(buf, i, len, Base);
+}
+
+/* Returns a non-nullptr pointer to inside `cbuf`. */
+template <typename T, size_t Base = 10>
+static char* Int32ToCString(ToCStringBuf* cbuf, T i, size_t* len) {
+  return Int32ToCString<T, Base>(cbuf->sbuf, i, len);
+}
+
+/* Returns a non-nullptr pointer to inside `cbuf`. */
+template <typename T, size_t Base = 10>
+static char* Int32ToCString(Int32ToCStringBuf* cbuf, T i, size_t* len) {
+  return Int32ToCString<T, Base>(cbuf->sbuf, i, len);
 }
 
 template <AllowGC allowGC>
@@ -1588,9 +1630,9 @@ static char* FracNumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf,
 void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
   int32_t i;
   if (NumberEqualsInt32(d, &i)) {
-    ToCStringBuf cbuf;
+    Int32ToCStringBuf cbuf;
     size_t len;
-    char* loc = Int32ToCStringWithBase(&cbuf, i, &len, 10);
+    char* loc = ::Int32ToCString(&cbuf, i, &len);
     memmove(out, loc, len);
     out[len] = '\0';
   } else {
@@ -1611,15 +1653,29 @@ void JS::NumberToString(double d, char (&out)[MaximumNumberToStringLength]) {
 char* js::NumberToCString(ToCStringBuf* cbuf, double d) {
   int32_t i;
   size_t len;
-  char* s = NumberEqualsInt32(d, &i) ? Int32ToCStringWithBase(cbuf, i, &len, 10)
+  char* s = NumberEqualsInt32(d, &i) ? ::Int32ToCString(cbuf, i, &len)
                                      : FracNumberToCString(cbuf, d);
   MOZ_ASSERT(s);
   return s;
 }
 
-char* js::NumberToHexCString(ToCStringBuf* cbuf, uint32_t value) {
+char* js::Int32ToCString(Int32ToCStringBuf* cbuf, int32_t value) {
   size_t len;
-  char* s = Int32ToCStringWithBase(cbuf, value, &len, 16);
+  char* s = ::Int32ToCString(cbuf, value, &len);
+  MOZ_ASSERT(s);
+  return s;
+}
+
+char* js::Uint32ToCString(Int32ToCStringBuf* cbuf, uint32_t value) {
+  size_t len;
+  char* s = ::Int32ToCString(cbuf, value, &len);
+  MOZ_ASSERT(s);
+  return s;
+}
+
+char* js::Uint32ToHexCString(Int32ToCStringBuf* cbuf, uint32_t value) {
+  size_t len;
+  char* s = ::Int32ToCString<uint32_t, 16>(cbuf, value, &len);
   MOZ_ASSERT(s);
   return s;
 }
@@ -1661,7 +1717,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       return str;
     }
 
-    numStr = Int32ToCStringWithBase(&cbuf, i, &numStrLen, base);
+    numStr = Int32ToCStringWithBase(cbuf.sbuf, i, &numStrLen, base);
     MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
                numStr < cbuf.sbuf + cbuf.sbufSize);
     MOZ_ASSERT(numStrLen == strlen(numStr));
@@ -1788,7 +1844,7 @@ bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
   const char* cstr;
   size_t cstrlen;
   if (v.isInt32()) {
-    cstr = Int32ToCStringWithBase(&cbuf, v.toInt32(), &cstrlen, 10);
+    cstr = ::Int32ToCString(&cbuf, v.toInt32(), &cstrlen);
     MOZ_ASSERT(cstrlen == strlen(cstr));
   } else {
     cstr = NumberToCString(&cbuf, v.toDouble());

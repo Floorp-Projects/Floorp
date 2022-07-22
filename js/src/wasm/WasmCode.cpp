@@ -818,8 +818,8 @@ static bool AppendFunctionIndexName(uint32_t funcIndex, UTF8Bytes* bytes) {
   const char beforeFuncIndex[] = "wasm-function[";
   const char afterFuncIndex[] = "]";
 
-  ToCStringBuf cbuf;
-  const char* funcIndexStr = NumberToCString(&cbuf, funcIndex);
+  Int32ToCStringBuf cbuf;
+  const char* funcIndexStr = Uint32ToCString(&cbuf, funcIndex);
   MOZ_ASSERT(funcIndexStr);
 
   return bytes->append(beforeFuncIndex, strlen(beforeFuncIndex)) &&
@@ -1157,9 +1157,9 @@ void Code::ensureProfilingLabels(bool profilingEnabled) const {
       continue;
     }
 
-    ToCStringBuf cbuf;
+    Int32ToCStringBuf cbuf;
     const char* bytecodeStr =
-        NumberToCString(&cbuf, codeRange.funcLineOrBytecode());
+        Uint32ToCString(&cbuf, codeRange.funcLineOrBytecode());
     MOZ_ASSERT(bytecodeStr);
 
     UTF8Bytes name;

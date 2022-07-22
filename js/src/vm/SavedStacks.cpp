@@ -975,8 +975,8 @@ static bool FormatStackFrameColumn(js::StringBuffer& sb,
                                    JS::Handle<js::SavedFrame*> frame) {
   if (frame->isWasm()) {
     // See comment in WasmFrameIter::computeLine().
-    js::ToCStringBuf cbuf;
-    const char* cstr = NumberToHexCString(&cbuf, frame->wasmBytecodeOffset());
+    js::Int32ToCStringBuf cbuf;
+    const char* cstr = Uint32ToHexCString(&cbuf, frame->wasmBytecodeOffset());
     MOZ_ASSERT(cstr);
 
     return sb.append("0x") && sb.append(cstr, strlen(cstr));
