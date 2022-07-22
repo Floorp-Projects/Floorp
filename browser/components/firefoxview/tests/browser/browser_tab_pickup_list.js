@@ -103,6 +103,25 @@ const syncedTabsData3 = [
 const syncedTabsData4 = structuredClone(syncedTabsData3);
 syncedTabsData4[0].tabs = [...syncedTabsData4[0].tabs, ...twoTabs];
 
+const syncedTabsData5 = [
+  {
+    id: 1,
+    type: "client",
+    name: "My desktop",
+    clientType: "desktop",
+    lastModified: Date.now(),
+    tabs: [
+      {
+        type: "tab",
+        title: "Example2",
+        url: "https://example.com",
+        icon: "https://example/favicon.png",
+        lastUsed: Math.floor((Date.now() - 1000 * 60) / 1000), // This is one minute from now, which is below the threshold for 'Just now'
+      },
+    ],
+  },
+];
+
 function setupMocks(mockData1, mockData2) {
   const mockDeviceData = [
     {
@@ -362,6 +381,10 @@ add_task(async function test_empty_list() {
 });
 
 add_task(async function test_time_updates_correctly() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.firefox-view.updateTimeMs", 100]],
+  });
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -370,25 +393,34 @@ add_task(async function test_time_updates_correctly() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      setupMocks(syncedTabsData3, syncedTabsData4);
+      setupMocks(syncedTabsData5, []);
       await setupListState(browser);
 
-      document.querySelector("tab-pickup-list").nowThresholdMs = 2000;
-
-      const timeLabel = document.querySelector("span.synced-tab-li-time");
-
       ok(
-        (timeLabel.textContent = "Just now"),
-        "tab-pickup list item time is 'Just now'"
+        document
+          .querySelector("span.synced-tab-li-time")
+          .textContent.includes("Just now"),
+        "synced-tab-li-time text is 'Just now'"
       );
 
+      await SpecialPowers.pushPrefEnv({
+        set: [["browser.tabs.firefox-view.updateTimeMs", 100]],
+      });
+
+      const timeLabel = document.querySelector("span.synced-tab-li-time");
       await BrowserTestUtils.waitForMutationCondition(
         timeLabel,
-        { characterData: true },
-        () => (timeLabel.textContent = "2 seconds ago")
+        { childList: true },
+        () => !timeLabel.textContent.includes("now")
+      );
+
+      ok(
+        timeLabel.textContent.includes("minute"),
+        "synced-tab-li-time text has updated"
       );
 
       cleanup();
+      await SpecialPowers.popPrefEnv();
     }
   );
 });

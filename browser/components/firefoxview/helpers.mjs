@@ -13,20 +13,24 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 // Cutoff of 1.5 minutes + 1 second to determine what text string to display
-export const nowThresholdMs = 91000;
+export const NOW_THRESHOLD_MS = 91000;
 
 export function formatURIForDisplay(uriString) {
   return lazy.BrowserUtils.formatURIStringForDisplay(uriString);
 }
 
-export function convertTimestamp(timestamp, fluentStrings) {
+export function convertTimestamp(
+  timestamp,
+  fluentStrings,
+  _nowThresholdMs = NOW_THRESHOLD_MS
+) {
   const relativeTimeFormat = new Services.intl.RelativeTimeFormat(
     undefined,
     {}
   );
   const elapsed = Date.now() - timestamp;
   let formattedTime;
-  if (elapsed <= nowThresholdMs) {
+  if (elapsed <= _nowThresholdMs) {
     // Use a different string for very recent timestamps
     formattedTime = fluentStrings.formatValueSync(
       "firefoxview-just-now-timestamp"

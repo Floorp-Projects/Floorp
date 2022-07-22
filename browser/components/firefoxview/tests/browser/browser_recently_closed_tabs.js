@@ -239,8 +239,6 @@ add_task(async function test_max_list_items() {
 });
 
 add_task(async function test_time_updates_correctly() {
-  clearHistory();
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -249,29 +247,33 @@ add_task(async function test_time_updates_correctly() {
     async browser => {
       const { document } = browser.contentWindow;
 
-      document.querySelector("recently-closed-tabs-list").nowThresholdMs = 2000;
-
-      const closedObjectsChanged = TestUtils.topicObserved(
-        "sessionstore-closed-objects-changed"
-      );
-
-      const tab1 = await add_new_tab(URLs[0]);
-
-      await close_tab(tab1);
-      await closedObjectsChanged;
-
-      const timeLabel = document.querySelector("span.closed-tab-li-time");
+      // Use session store data from previous tests; the last child is the oldest and has
+      // a data-timestamp of approx one minute ago which is below the 'Just now' threshold
+      const lastListItem = document.querySelector("ol.closed-tabs-list")
+        .lastChild;
+      const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
 
       ok(
-        (timeLabel.textContent = "Just now"),
+        timeLabel.textContent.includes("Just now"),
         "recently-closed-tabs list item time is 'Just now'"
       );
 
+      await SpecialPowers.pushPrefEnv({
+        set: [["browser.tabs.firefox-view.updateTimeMs", 5]],
+      });
+
       await BrowserTestUtils.waitForMutationCondition(
         timeLabel,
-        { characterData: true },
-        () => (timeLabel.textContent = "2 seconds ago")
+        { childList: true },
+        () => !timeLabel.textContent.includes("now")
       );
+
+      ok(
+        timeLabel.textContent.includes("second"),
+        "recently-closed-tabs list item time has updated"
+      );
+
+      await SpecialPowers.popPrefEnv();
     }
   );
 });
