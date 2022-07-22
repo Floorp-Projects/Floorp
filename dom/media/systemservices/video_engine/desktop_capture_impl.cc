@@ -575,8 +575,11 @@ void DesktopCaptureImpl::LazyInitCaptureThread() {
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
   rtc::CritScope lock(&_apiCs);
-  MOZ_ASSERT(!started_, "Capture must be stopped before Start() can be called");
-
+  // See Bug 1780884 for followup on understanding why multiple calls happen.
+  // MOZ_ASSERT(!started_, "Capture must be stopped before Start() can be called");
+  if (started_) {
+    return 0;
+  }
 
   if(uint32_t err = LazyInitDesktopCapturer(); err) {
     return err;
