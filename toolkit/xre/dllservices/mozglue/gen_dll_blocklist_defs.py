@@ -62,6 +62,7 @@ CHILD_PROCESSES_ONLY = "CHILD_PROCESSES_ONLY"
 BROWSER_PROCESS_ONLY = "BROWSER_PROCESS_ONLY"
 SUBSTITUTE_LSP_PASSTHROUGH = "SUBSTITUTE_LSP_PASSTHROUGH"
 REDIRECT_TO_NOOP_ENTRYPOINT = "REDIRECT_TO_NOOP_ENTRYPOINT"
+UTILITY_PROCESSES_ONLY = "UTILITY_PROCESSES_ONLY"
 
 # Only these flags are available in the input script
 INPUT_ONLY_FLAGS = {
@@ -97,7 +98,12 @@ def derive_test_key(key):
     return key + "_TESTS"
 
 
-ALL_DEFINITION_LISTS = ("ALL_PROCESSES", "BROWSER_PROCESS", "CHILD_PROCESSES")
+ALL_DEFINITION_LISTS = (
+    "ALL_PROCESSES",
+    "BROWSER_PROCESS",
+    "CHILD_PROCESSES",
+    "UTILITY_PROCESSES",
+)
 
 
 class BlocklistDescriptor(object):
@@ -365,6 +371,7 @@ GENERATED_BLOCKLIST_FILES = [
         flagspec={
             "BROWSER_PROCESS": {BROWSER_PROCESS_ONLY},
             "CHILD_PROCESSES": {CHILD_PROCESSES_ONLY},
+            "UTILITY_PROCESSES": {UTILITY_PROCESSES_ONLY},
         },
     ),
     BlocklistDescriptor(
@@ -373,6 +380,7 @@ GENERATED_BLOCKLIST_FILES = [
         flagspec={
             "BROWSER_PROCESS": {BROWSER_PROCESS_ONLY},
             "CHILD_PROCESSES": {CHILD_PROCESSES_ONLY},
+            "UTILITY_PROCESSES": {UTILITY_PROCESSES_ONLY},
         },
     ),
     # Roughed-in for the moment; we'll enable this in bug 1238735

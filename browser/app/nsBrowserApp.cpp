@@ -296,9 +296,17 @@ int main(int argc, char* argv[], char* envp[]) {
   // main
   if (argc > 1 && IsArg(argv[1], "contentproc")) {
 #  ifdef HAS_DLL_BLOCKLIST
-    DllBlocklist_Initialize(gBlocklistInitFlags |
-                            eDllBlocklistInitFlagIsChildProcess);
-#  endif
+    uint32_t initFlags =
+        gBlocklistInitFlags | eDllBlocklistInitFlagIsChildProcess;
+#    if defined(MOZ_SANDBOX)
+    Maybe<uint64_t> sandboxingKind =
+        geckoargs::sSandboxingKind.Get(argc, argv, CheckArgFlag::None);
+    if (sandboxingKind.isSome()) {
+      initFlags |= eDllBlocklistInitFlagIsUtilityProcess;
+    }
+#    endif  // defined(MOZ_SANDBOX)
+    DllBlocklist_Initialize(initFlags);
+#  endif  // HAS_DLL_BLOCKLIST
 #  if defined(XP_WIN) && defined(MOZ_SANDBOX)
     // We need to set whether our process is supposed to have win32k locked down
     // from the command line setting before GetInitializedTargetServices and
