@@ -48,22 +48,20 @@ inline void EmitCallIC(MacroAssembler& masm, CodeOffset* callOffset) {
 inline void EmitReturnFromIC(MacroAssembler& masm) { masm.branch(ra); }
 
 inline void EmitBaselineLeaveStubFrame(MacroAssembler& masm) {
+  masm.loadPtr(
+      Address(FramePointer, BaselineStubFrameLayout::ICStubOffsetFromFP),
+      ICStubReg);
   masm.movePtr(FramePointer, StackPointer);
-
-  masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedFrame)),
-               FramePointer);
-  masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, savedStub)),
-               ICStubReg);
+  masm.Pop(FramePointer);
 
   // Load the return address.
-  masm.loadPtr(
-      Address(StackPointer, offsetof(BaselineStubFrame, returnAddress)),
-      ICTailCallReg);
+  masm.Pop(ICTailCallReg);
 
   // Discard the frame descriptor.
-  masm.loadPtr(Address(StackPointer, offsetof(BaselineStubFrame, descriptor)),
-               ScratchRegister);
-  masm.addPtr(Imm32(STUB_FRAME_SIZE), StackPointer);
+  {
+    SecondScratchRegisterScope scratch2(masm);
+    masm.Pop(scratch2);
+  }
 }
 
 template <typename AddrType>
