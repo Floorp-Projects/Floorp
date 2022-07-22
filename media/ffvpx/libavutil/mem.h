@@ -31,7 +31,6 @@
 #include <stdint.h>
 
 #include "attributes.h"
-#include "error.h"
 #include "avutil.h"
 #include "version.h"
 
@@ -238,20 +237,20 @@ av_alloc_size(1, 2) void *av_malloc_array(size_t nmemb, size_t size);
  * @see av_mallocz()
  * @see av_malloc_array()
  */
-av_alloc_size(1, 2) void *av_mallocz_array(size_t nmemb, size_t size);
+void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib av_alloc_size(1, 2);
 
+#if FF_API_AV_MALLOCZ_ARRAY
 /**
- * Non-inlined equivalent of av_mallocz_array().
- *
- * Created for symmetry with the calloc() C function.
+ * @deprecated use av_calloc()
  */
-void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib;
+attribute_deprecated
+void *av_mallocz_array(size_t nmemb, size_t size) av_malloc_attrib av_alloc_size(1, 2);
+#endif
 
 /**
  * Allocate, reallocate, or free a block of memory.
  *
- * If `ptr` is `NULL` and `size` > 0, allocate a new block. If `size` is
- * zero, free the memory block pointed to by `ptr`. Otherwise, expand or
+ * If `ptr` is `NULL` and `size` > 0, allocate a new block. Otherwise, expand or
  * shrink that block of memory according to `size`.
  *
  * @param ptr  Pointer to a memory block already allocated with
@@ -260,10 +259,11 @@ void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib;
  *             reallocated
  *
  * @return Pointer to a newly-reallocated block or `NULL` if the block
- *         cannot be reallocated or the function is used to free the memory block
+ *         cannot be reallocated
  *
  * @warning Unlike av_malloc(), the returned pointer is not guaranteed to be
- *          correctly aligned.
+ *          correctly aligned. The returned pointer must be freed after even
+ *          if size is zero.
  * @see av_fast_realloc()
  * @see av_reallocp()
  */
@@ -311,8 +311,7 @@ void *av_realloc_f(void *ptr, size_t nelem, size_t elsize);
 /**
  * Allocate, reallocate, or free an array.
  *
- * If `ptr` is `NULL` and `nmemb` > 0, allocate a new block. If
- * `nmemb` is zero, free the memory block pointed to by `ptr`.
+ * If `ptr` is `NULL` and `nmemb` > 0, allocate a new block.
  *
  * @param ptr   Pointer to a memory block already allocated with
  *              av_realloc() or `NULL`
@@ -320,19 +319,19 @@ void *av_realloc_f(void *ptr, size_t nelem, size_t elsize);
  * @param size  Size of the single element of the array
  *
  * @return Pointer to a newly-reallocated block or NULL if the block
- *         cannot be reallocated or the function is used to free the memory block
+ *         cannot be reallocated
  *
  * @warning Unlike av_malloc(), the allocated memory is not guaranteed to be
- *          correctly aligned.
+ *          correctly aligned. The returned pointer must be freed after even if
+ *          nmemb is zero.
  * @see av_reallocp_array()
  */
 av_alloc_size(2, 3) void *av_realloc_array(void *ptr, size_t nmemb, size_t size);
 
 /**
- * Allocate, reallocate, or free an array through a pointer to a pointer.
+ * Allocate, reallocate an array through a pointer to a pointer.
  *
- * If `*ptr` is `NULL` and `nmemb` > 0, allocate a new block. If `nmemb` is
- * zero, free the memory block pointed to by `*ptr`.
+ * If `*ptr` is `NULL` and `nmemb` > 0, allocate a new block.
  *
  * @param[in,out] ptr   Pointer to a pointer to a memory block already
  *                      allocated with av_realloc(), or a pointer to `NULL`.
@@ -343,7 +342,7 @@ av_alloc_size(2, 3) void *av_realloc_array(void *ptr, size_t nmemb, size_t size)
  * @return Zero on success, an AVERROR error code on failure
  *
  * @warning Unlike av_malloc(), the allocated memory is not guaranteed to be
- *          correctly aligned.
+ *          correctly aligned. *ptr must be freed after even if nmemb is zero.
  */
 int av_reallocp_array(void *ptr, size_t nmemb, size_t size);
 
@@ -672,16 +671,7 @@ void *av_dynarray2_add(void **tab_ptr, int *nb_ptr, size_t elem_size,
  * @param[out] r   Pointer to the result of the operation
  * @return 0 on success, AVERROR(EINVAL) on overflow
  */
-static inline int av_size_mult(size_t a, size_t b, size_t *r)
-{
-    size_t t = a * b;
-    /* Hack inspired from glibc: don't try the division if nelem and elsize
-     * are both less than sqrt(SIZE_MAX). */
-    if ((a | b) >= ((size_t)1 << (sizeof(size_t) * 4)) && a && t / a != b)
-        return AVERROR(EINVAL);
-    *r = t;
-    return 0;
-}
+int av_size_mult(size_t a, size_t b, size_t *r);
 
 /**
  * Set the maximum size that may be allocated in one block.
