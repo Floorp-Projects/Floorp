@@ -1607,6 +1607,17 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
   return true;
 }
 
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+CodeOffset BaseCompiler::callRef(const Stk& calleeRef,
+                                 const FunctionCall& call) {
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::FuncRef);
+  CalleeDesc callee = CalleeDesc::wasmFuncRef();
+
+  loadRef(calleeRef, RegRef(WasmCallRefReg));
+  return masm.wasmCallRef(desc, callee);
+}
+#endif
+
 // Precondition: sync()
 
 CodeOffset BaseCompiler::callImport(unsigned globalDataOffset,
@@ -4739,6 +4750,61 @@ bool BaseCompiler::emitCallIndirect() {
   captureCallResultRegisters(resultType);
   return pushCallResults(baselineCall, resultType, results);
 }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+bool BaseCompiler::emitCallRef() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  const FuncType* funcType;
+  Nothing unused_callee;
+  BaseNothingVector unused_args{};
+  if (!iter_.readCallRef(&funcType, &unused_callee, &unused_args)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  sync();
+
+  // Stack: ... arg1 .. argn callee
+
+  uint32_t numArgs = funcType->args().length() + 1;
+  size_t stackArgBytes = stackConsumed(numArgs);
+
+  ResultType resultType(ResultType::Vector(funcType->results()));
+  StackResultsLoc results;
+  if (!pushStackResultsForCall(resultType, RegPtr(ABINonArgReg0), &results)) {
+    return false;
+  }
+
+  FunctionCall baselineCall(lineOrBytecode);
+  // State and realm are restored as needed by by callRef (really by
+  // MacroAssembler::wasmCallRef).
+  beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
+
+  if (!emitCallArgs(funcType->args(), results, &baselineCall,
+                    CalleeOnStack::True)) {
+    return false;
+  }
+
+  const Stk& callee = peek(results.count());
+  CodeOffset raOffset = callRef(callee, baselineCall);
+  if (!createStackMap("emitCallRef", raOffset)) {
+    return false;
+  }
+
+  popStackResultsAfterCall(results, stackArgBytes);
+
+  endCall(baselineCall, stackArgBytes);
+
+  popValueStackBy(numArgs);
+
+  captureCallResultRegisters(resultType);
+  return pushCallResults(baselineCall, resultType, results);
+}
+#endif
 
 void BaseCompiler::emitRound(RoundingMode roundingMode, ValType operandType) {
   if (operandType == ValType::F32) {
@@ -8578,6 +8644,13 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitCall());
       case uint16_t(Op::CallIndirect):
         CHECK_NEXT(emitCallIndirect());
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      case uint16_t(Op::CallRef):
+        if (!moduleEnv_.functionReferencesEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitCallRef());
+#endif
 
       // Locals and globals
       case uint16_t(Op::LocalGet):

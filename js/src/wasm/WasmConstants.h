@@ -240,6 +240,7 @@ enum class Op {
   // Call operators
   Call = 0x10,
   CallIndirect = 0x11,
+  CallRef = 0x14,
 
   // Additional exception operators
   Delegate = 0x18,
