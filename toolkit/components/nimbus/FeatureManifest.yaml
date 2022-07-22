@@ -519,6 +519,16 @@ pbNewtab:
     uri: "resource://activity-stream/schemas/MessagingExperiment.schema.json"
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
+backgroundTaskMessage:
+  description: "A Firefox Messaging System message for the background task message channel"
+  hasExposure: true
+  exposureDescription: >-
+    Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
+  isEarlyStartup: false
+  schema:
+    uri: "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json"
+  variables: {}
 syncAfterTabChange:
   description: "Schedule a sync after any tab change"
   owner: mhammond@mozilla.com
