@@ -170,7 +170,7 @@ steps we run before each video. We keep track of which test we are running with 
     });
   }
 
-  SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", true]]},
+  SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", true], ["gfx.core-animation.specialize-video", true]]},
     async function() {
       // Clear out existing telemetry in case previous tests were displaying
       // video.
