@@ -1844,12 +1844,17 @@ bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
   size_t cstrlen;
   if (v.isInt32()) {
     cstr = ::Int32ToCString(&cbuf, v.toInt32(), &cstrlen);
-    MOZ_ASSERT(cstrlen == strlen(cstr));
   } else {
-    cstr = NumberToCString(&cbuf, v.toDouble());
-    MOZ_ASSERT(cstr);
-    cstrlen = strlen(cstr);
+    double d = v.toDouble();
+    int32_t i;
+    if (NumberEqualsInt32(d, &i)) {
+      cstr = Int32ToCString(&cbuf, i, &cstrlen);
+    } else {
+      cstr = FracNumberToCString(&cbuf, d, &cstrlen);
+    }
   }
+  MOZ_ASSERT(cstr);
+  MOZ_ASSERT(cstrlen == strlen(cstr));
 
   MOZ_ASSERT(cstrlen < std::size(cbuf.sbuf));
   return sb.append(cstr, cstrlen);
