@@ -1864,6 +1864,12 @@ GfxInfoBase::GetTargetFrameRate(uint32_t* aTargetFrameRate) {
 }
 
 NS_IMETHODIMP
+GfxInfoBase::GetCodecSupportInfo(nsACString& aCodecSupportInfo) {
+  aCodecSupportInfo.Assign(gfx::gfxVars::CodecSupportInfo());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetIsHeadless(bool* aIsHeadless) {
   *aIsHeadless = gfxPlatform::IsHeadless();
   return NS_OK;
