@@ -420,3 +420,43 @@ add_task(async function test_aboutwelcome_split_position() {
     }
   );
 });
+
+/**
+ * Test rendering a message with session history updates disabled
+ */
+add_task(async function test_aboutwelcome_history_updates_disabled() {
+  let screens = [];
+  // we need at least two screens to test the history state
+  for (let i = 1; i < 3; i++) {
+    screens.push(makeTestContent(`TEST_PUSH_STATE_STEP_${i}`));
+  }
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      enabled: true,
+      disableHistoryUpdates: true,
+      screens,
+    },
+  });
+  let browser = await openAboutWelcome(JSON.stringify(screens));
+
+  let startHistoryLength = await SpecialPowers.spawn(browser, [], () => {
+    return content.window.history.length;
+  });
+  // Advance to second screen
+  await onButtonClick(browser, "button.primary");
+  let endHistoryLength = await SpecialPowers.spawn(browser, [], async () => {
+    // Ensure next screen has rendered
+    await ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector(".TEST_PUSH_STATE_STEP_2")
+    );
+    return content.window.history.length;
+  });
+
+  ok(
+    startHistoryLength === endHistoryLength,
+    "No entries added to the session's history stack with history updates disabled"
+  );
+
+  await doExperimentCleanup();
+});
