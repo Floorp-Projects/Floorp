@@ -54,15 +54,6 @@ describe("<CardGrid>", () => {
     );
   });
 
-  it("should add hero classname to card grid", () => {
-    wrapper.setProps({
-      display_variant: "hero",
-      data: { recommendations: [{}, {}] },
-    });
-
-    assert.ok(wrapper.find(".ds-card-grid-hero").exists());
-  });
-
   it("should add 4 card classname to card grid", () => {
     wrapper.setProps({
       fourCardLayout: true,
