@@ -628,7 +628,11 @@ var gHomePane = {
   toggleRestoreDefaultsBtn() {
     const btn = document.getElementById("restoreDefaultHomePageBtn");
     const prefChanged = this._changedHomeTabDefaultPrefs();
-    btn.style.visibility = prefChanged ? "visible" : "hidden";
+    if (prefChanged) {
+      btn.style.removeProperty("visibility");
+    } else {
+      btn.style.visibility = "hidden";
+    }
   },
 
   /**

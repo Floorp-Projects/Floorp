@@ -215,7 +215,7 @@
   font-weight: bold;
 }
 
-.content-blocking-extra-information {
+.content-blocking-category:not(.expanded, .selected) .content-blocking-extra-information {
   visibility: collapse;
 }
 
@@ -232,7 +232,6 @@
 
 .content-blocking-category.expanded .content-blocking-extra-information,
 .content-blocking-category.selected .content-blocking-extra-information {
-  visibility: visible;
   display: flex;
   flex-direction: column;
   align-content: stretch;
