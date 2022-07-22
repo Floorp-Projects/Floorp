@@ -35,9 +35,6 @@ class StringBuffer;
 // This is a no-op if built with JS_HAS_INTL_API.
 extern void FinishRuntimeNumberState(JSRuntime* rt);
 
-/* Initialize the Number class, returning its prototype object. */
-extern JSObject* InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
-
 /*
  * This function implements ToString() as specified by ECMA-262-5 section 9.8.1;
  * but note that it handles integers specially for performance.
@@ -64,8 +61,6 @@ frontend::TaggedParserAtomIndex Int32ToParserAtom(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms, int32_t si);
 
 // ES6 15.7.3.12
-extern bool IsInteger(const Value& val);
-
 extern bool IsInteger(double d);
 
 /*
