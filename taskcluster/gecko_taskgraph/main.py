@@ -109,11 +109,11 @@ def format_taskgraph(options, parameters, logfile=None):
     from taskgraph.parameters import parameters_loader
 
     if logfile:
-        oldhandler = logging.root.handlers[-1]
-        logging.root.removeHandler(oldhandler)
-
         handler = logging.FileHandler(logfile, mode="w")
-        handler.setFormatter(oldhandler.formatter)
+        if logging.root.handlers:
+            oldhandler = logging.root.handlers[-1]
+            logging.root.removeHandler(oldhandler)
+            handler.setFormatter(oldhandler.formatter)
         logging.root.addHandler(handler)
 
     if options["fast"]:
