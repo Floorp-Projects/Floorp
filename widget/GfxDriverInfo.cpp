@@ -830,6 +830,8 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x1638);
       // Lucienne
       APPEND_DEVICE(0x164c);
+      // Yellow Carp
+      APPEND_DEVICE(0x1681);
 
       // Evergreen
       APPEND_RANGE(0x6840, 0x684b);
