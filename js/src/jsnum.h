@@ -98,11 +98,9 @@ struct ToCStringBuf {
 // Infallible: always returns a non-nullptr string.
 extern char* NumberToCString(ToCStringBuf* cbuf, double d);
 
-// Like NumberToCString, but can be used for bases other than 10. If base == 10,
-// this is equivalent to NumberToCString. Unlike NumberToCString, this function
-// is fallible and will return nullptr if we ran out of memory.
-extern char* NumberToCStringWithBase(JSContext* cx, ToCStringBuf* cbuf,
-                                     double d, int base);
+// Like NumberToCString, but accepts only unsigned integers and uses base 16.
+// Infallible: always returns a non-nullptr string.
+extern char* NumberToHexCString(ToCStringBuf* cbuf, uint32_t value);
 
 /*
  * The largest positive integer such that all positive integers less than it
