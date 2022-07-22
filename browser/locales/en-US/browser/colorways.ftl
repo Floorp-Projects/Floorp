@@ -8,9 +8,8 @@ colorway-collection-life-in-color = Life In Color
 colorway-collection-true-colors = True Colors
 colorway-collection-independent-voices = Independent Voices
 colorway-collection-independent-voices-description = Color can change culture. The latest colorways celebrate voices making the world a better place.
-
-# Subheading for colorway collection card in about:addons
-colorway-collection-independent-voices-subheading2 = Colors that change culture.
+# Used as a subheading for the colorway collection card in about:addons
+colorway-collection-independent-voices-short-description = Colors that change culture.
 
 ## Colorway names and descriptions
 

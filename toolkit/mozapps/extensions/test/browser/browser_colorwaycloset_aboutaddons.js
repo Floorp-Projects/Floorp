@@ -98,10 +98,10 @@ add_setup(async function() {
 
   await IOUtils.makeDirectory(tmpDir.path, { ignoreExisting: true });
   await IOUtils.writeUTF8(
-    PathUtils.join(tmpDir.path, "mock-colorwaycloset.ftl"),
+    PathUtils.join(tmpDir.path, "mock-colorways.ftl"),
     [
       "colorway-collection-test-mock = Mock collection title",
-      "colorway-collection-test-mock-subheading = Mock collection subheading",
+      "colorway-collection-test-mock-short-description = Mock collection subheading",
     ].join("\n")
   );
 
@@ -132,7 +132,7 @@ add_setup(async function() {
   });
 
   // Confirm that the mock fluent resources are available as expected.
-  let bundles = l10nReg.generateBundles(["en-US"], ["mock-colorwaycloset.ftl"]);
+  let bundles = l10nReg.generateBundles(["en-US"], ["mock-colorways.ftl"]);
   let bundle0 = (await bundles.next()).value;
   is(
     bundle0.locales[0],
@@ -190,7 +190,7 @@ add_task(async function testColorwayClosetPrefEnabled() {
   let doc = win.document;
 
   // Add mocked fluent resources for the mocked active colorway collection.
-  doc.l10n.addResourceIds(["mock-colorwaycloset.ftl"]);
+  doc.l10n.addResourceIds(["mock-colorways.ftl"]);
 
   let colorwaySection = getSection(doc, "colorways-section");
   ok(colorwaySection, "colorway section was found");
@@ -550,7 +550,7 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
   let doc = win.document;
 
   // Add mocked fluent resources for the mocked active colorway collection.
-  doc.l10n.addResourceIds(["mock-colorwaycloset.ftl"]);
+  doc.l10n.addResourceIds(["mock-colorways.ftl"]);
 
   await addon.disable();
 
