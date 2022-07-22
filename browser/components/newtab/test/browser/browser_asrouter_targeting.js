@@ -1163,3 +1163,11 @@ add_task(async function check_isBackgroundTaskMode() {
     "Has no background task name"
   );
 });
+
+add_task(async function check_userPrefersReducedMotion() {
+  is(
+    typeof (await ASRouterTargeting.Environment.userPrefersReducedMotion),
+    "boolean",
+    "Should return a boolean"
+  );
+});
