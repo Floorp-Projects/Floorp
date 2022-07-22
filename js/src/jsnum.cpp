@@ -735,11 +735,20 @@ static bool num_toSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-ToCStringBuf::ToCStringBuf() : dbuf(nullptr) {
-  static_assert(sbufSize >= DTOSTR_STANDARD_BUFFER_SIZE,
-                "builtin space must be large enough to store even the "
-                "longest string produced by a conversion");
-}
+static_assert(ToCStringBuf::sbufSize >= DTOSTR_STANDARD_BUFFER_SIZE,
+              "builtin space must be large enough to store even the "
+              "longest string produced by a conversion");
+
+// Subtract one from DTOSTR_STANDARD_BUFFER_SIZE to exclude the null-character.
+static_assert(
+    double_conversion::DoubleToStringConverter::kMaxCharsEcmaScriptShortest ==
+        DTOSTR_STANDARD_BUFFER_SIZE - 1,
+    "double_conversion and dtoa both agree how large the longest string "
+    "can be");
+
+static_assert(DTOSTR_STANDARD_BUFFER_SIZE <= JS::MaximumNumberToStringLength,
+              "MaximumNumberToStringLength is large enough to hold the longest "
+              "string produced by a conversion");
 
 ToCStringBuf::~ToCStringBuf() { js_free(dbuf); }
 

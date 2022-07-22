@@ -88,9 +88,8 @@ struct ToCStringBuf {
    */
   static const size_t sbufSize = 34;
   char sbuf[sbufSize];
-  char* dbuf;
+  char* dbuf = nullptr;
 
-  ToCStringBuf();
   ~ToCStringBuf();
 };
 
