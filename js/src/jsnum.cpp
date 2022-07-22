@@ -751,8 +751,6 @@ static_assert(DTOSTR_STANDARD_BUFFER_SIZE <= JS::MaximumNumberToStringLength,
               "MaximumNumberToStringLength is large enough to hold the longest "
               "string produced by a conversion");
 
-ToCStringBuf::~ToCStringBuf() { js_free(dbuf); }
-
 MOZ_ALWAYS_INLINE
 static JSLinearString* LookupDtoaCache(JSContext* cx, double d) {
   if (Realm* realm = cx->realm()) {
@@ -1777,8 +1775,7 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   ToCStringBuf cbuf;
   char* numStr = FracNumberToCString(&cbuf, d);
   MOZ_ASSERT(numStr);
-  MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
-             numStr < cbuf.sbuf + cbuf.sbufSize);
+  MOZ_ASSERT(numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
   JSAtom* atom = Atomize(cx, numStr, length);
@@ -1801,8 +1798,7 @@ frontend::TaggedParserAtomIndex js::NumberToParserAtom(
   ToCStringBuf cbuf;
   char* numStr = FracNumberToCString(&cbuf, d);
   MOZ_ASSERT(numStr);
-  MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
-             numStr < cbuf.sbuf + cbuf.sbufSize);
+  MOZ_ASSERT(numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
   return parserAtoms.internAscii(cx, numStr, length);
@@ -1848,7 +1844,7 @@ bool js::NumberValueToStringBuffer(const Value& v, StringBuffer& sb) {
     cstrlen = strlen(cstr);
   }
 
-  MOZ_ASSERT(!cbuf.dbuf && cstrlen < cbuf.sbufSize);
+  MOZ_ASSERT(cstrlen < cbuf.sbufSize);
   return sb.append(cstr, cstrlen);
 }
 

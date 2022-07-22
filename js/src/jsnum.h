@@ -77,11 +77,6 @@ extern bool IsInteger(double d);
 
 extern JSLinearString* IndexToString(JSContext* cx, uint32_t index);
 
-/*
- * Usually a small amount of static storage is enough, but sometimes we need
- * to dynamically allocate much more.  This struct encapsulates that.
- * Dynamically allocated memory will be freed when the object is destroyed.
- */
 struct ToCStringBuf {
   /*
    * The longest possible result that would need to fit in sbuf is
@@ -90,9 +85,6 @@ struct ToCStringBuf {
    */
   static const size_t sbufSize = 34;
   char sbuf[sbufSize];
-  char* dbuf = nullptr;
-
-  ~ToCStringBuf();
 };
 
 struct Int32ToCStringBuf {
