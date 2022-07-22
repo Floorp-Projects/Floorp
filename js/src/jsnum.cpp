@@ -1177,10 +1177,12 @@ template <typename Op>
   bool ok = op(converter, builder);
   MOZ_RELEASE_ASSERT(ok);
 
+  size_t numStrLen = builder.position();
   const char* numStr = builder.Finalize();
   MOZ_ASSERT(numStr == buf);
+  MOZ_ASSERT(numStrLen == strlen(numStr));
 
-  JSString* str = NewStringCopyZ<CanGC>(cx, numStr);
+  JSString* str = NewStringCopyN<CanGC>(cx, numStr, numStrLen);
   if (!str) {
     return false;
   }
@@ -1576,7 +1578,7 @@ const ClassSpec NumberObject::classSpec_ = {
     nullptr,
     NumberClassFinish};
 
-static char* FracNumberToCString(ToCStringBuf* cbuf, double d) {
+static char* FracNumberToCString(ToCStringBuf* cbuf, double d, size_t* len) {
 #ifdef DEBUG
   {
     int32_t _;
@@ -1595,6 +1597,8 @@ static char* FracNumberToCString(ToCStringBuf* cbuf, double d) {
       double_conversion::DoubleToStringConverter::EcmaScriptConverter();
   double_conversion::StringBuilder builder(cbuf->sbuf, std::size(cbuf->sbuf));
   converter.ToShortest(d, &builder);
+
+  *len = builder.position();
   return builder.Finalize();
 }
 
@@ -1625,7 +1629,7 @@ char* js::NumberToCString(ToCStringBuf* cbuf, double d) {
   int32_t i;
   size_t len;
   char* s = NumberEqualsInt32(d, &i) ? ::Int32ToCString(cbuf, i, &len)
-                                     : FracNumberToCString(cbuf, d);
+                                     : FracNumberToCString(cbuf, d, &len);
   MOZ_ASSERT(s);
   return s;
 }
@@ -1714,10 +1718,12 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
   if (base == 10) {
     // We use a faster algorithm for base 10.
     ToCStringBuf cbuf;
-    char* numStr = FracNumberToCString(&cbuf, d);
+    size_t numStrLen;
+    char* numStr = FracNumberToCString(&cbuf, d, &numStrLen);
     MOZ_ASSERT(numStr);
+    MOZ_ASSERT(numStrLen == strlen(numStr));
 
-    s = NewStringCopyZ<allowGC>(cx, numStr);
+    s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
     if (!s) {
       return nullptr;
     }
@@ -1772,11 +1778,12 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   }
 
   ToCStringBuf cbuf;
-  char* numStr = FracNumberToCString(&cbuf, d);
+  size_t length;
+  char* numStr = FracNumberToCString(&cbuf, d, &length);
   MOZ_ASSERT(numStr);
   MOZ_ASSERT(std::begin(cbuf.sbuf) <= numStr && numStr < std::end(cbuf.sbuf));
+  MOZ_ASSERT(length == strlen(numStr));
 
-  size_t length = strlen(numStr);
   JSAtom* atom = Atomize(cx, numStr, length);
   if (!atom) {
     return nullptr;
@@ -1795,11 +1802,12 @@ frontend::TaggedParserAtomIndex js::NumberToParserAtom(
   }
 
   ToCStringBuf cbuf;
-  char* numStr = FracNumberToCString(&cbuf, d);
+  size_t length;
+  char* numStr = FracNumberToCString(&cbuf, d, &length);
   MOZ_ASSERT(numStr);
   MOZ_ASSERT(std::begin(cbuf.sbuf) <= numStr && numStr < std::end(cbuf.sbuf));
+  MOZ_ASSERT(length == strlen(numStr));
 
-  size_t length = strlen(numStr);
   return parserAtoms.internAscii(cx, numStr, length);
 }
 
