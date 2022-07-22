@@ -180,10 +180,7 @@ export function RecentSavesContainer({
 
 export class _CardGrid extends React.PureComponent {
   renderCards() {
-    const { DiscoveryStream } = this.props;
     const prefs = this.props.Prefs.values;
-    const { recentSavesEnabled } = DiscoveryStream;
-    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const {
       items,
       hybridLayout,
@@ -201,7 +198,9 @@ export class _CardGrid extends React.PureComponent {
       essentialReadsHeader,
       editorsPicksHeader,
       widgets,
+      recentSavesEnabled,
     } = this.props;
+    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
 
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
