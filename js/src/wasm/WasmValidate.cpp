@@ -223,6 +223,16 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readCallIndirect(&unusedIndex, &unusedIndex2, &nothing,
                                     &unusedArgs));
       }
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      case uint16_t(Op::CallRef): {
+        if (!env.functionReferencesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        const FuncType* unusedType;
+        NothingVector unusedArgs{};
+        CHECK(iter.readCallRef(&unusedType, &nothing, &unusedArgs));
+      }
+#endif
       case uint16_t(Op::I32Const): {
         int32_t unused;
         CHECK(iter.readI32Const(&unused));

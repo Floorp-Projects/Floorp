@@ -3741,6 +3741,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                         mozilla::Maybe<uint32_t> tableSize,
                         CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
 
+  // This function takes care of loading the callee's instance and address from
+  // pinned reg.
+  CodeOffset wasmCallRef(const wasm::CallSiteDesc& desc,
+                         const wasm::CalleeDesc& callee);
+
   // WasmTableCallIndexReg must contain the index of the indirect call.
   // This is for asm.js calls only.
   CodeOffset asmCallIndirect(const wasm::CallSiteDesc& desc,

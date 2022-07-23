@@ -13,6 +13,15 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "I wrote this crate, reviewed by jimb. It is mostly a Rust port of some C++ code we already ship."
 
+[[audits.app_units]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.7.1"
+notes = """
+I'm pretty familiar with this crate. It provides a fixed-point numeric type.
+The code is pretty straight-forward, there's no unsafe code at all.
+"""
+
 [[audits.arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
@@ -23,6 +32,12 @@ who = "Bobby Holley <bholley@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.1.8"
 notes = "I maintain this crate and have reviewed every line."
+
+[[audits.bindgen]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.59.2"
+notes = "I'm the primary author and maintainer of the crate."
 
 [[audits.bit-set]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
@@ -36,10 +51,25 @@ criteria = "safe-to-deploy"
 version = "0.6.3"
 notes = "Another crate I own via contain-rs that is ancient and in maintenance mode but otherwise perfectly fine."
 
+[[audits.build-parallel]]
+who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+
 [[audits.clap_lex]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.0 -> 0.2.2"
+
+[[audits.cstr]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.2.10"
+notes = """
+I've reviewed the code of the crate thoroughly. It generates an unsafe block
+which is statically guaranteed to be safe. Inputs to the macro have to be
+static so there's no uncontrolled input whatsoever.
+"""
 
 [[audits.derive_arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -126,6 +156,18 @@ criteria = "safe-to-deploy"
 version = "1.0.4"
 notes = "This is a trivial crate."
 
+[[audits.origin-trial-token]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "0.1.1"
+notes = """
+I'm the author of the crate. The only unsafe code is a view over a byte array
+which is properly validated.
+
+Cryptography shenanigans are delegated to the caller so there's no possible
+unsoundness there.
+"""
+
 [[audits.precomputed-hash]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
@@ -152,6 +194,15 @@ notes = "I own this crate, and most of its versions were codeveloped and reviewe
 who = "Glenn Watson <git@intuitionlibrary.com>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
+
+[[audits.uluru]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+version = "3.0.0"
+notes = """
+I've reviewed multiple patches in this crate, including the initial
+implementation back in the day. It has no unsafe code at all nowadays.
+"""
 
 [[audits.unicode-ident]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

@@ -7,7 +7,7 @@ job-defaults:
     # to avoid running clang tools on the whole codebase
     run-on-projects: []
     platform: linux64/debug
-    worker-type: t-linux-xlarge-source-gcp
+    worker-type: t-linux-xlarge-source
     attributes:
         code-review: true
     worker:

@@ -5,10 +5,7 @@
 job-defaults:
     suite:
         category: web-platform-tests
-    worker-type:
-        by-test-platform:
-            linux.*: t-linux-xlarge-gcp
-            default: default
+    instance-size: xlarge
     max-run-time:
         by-test-platform:
             android-em-7.0-x86_64/debug: 7200

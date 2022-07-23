@@ -5,7 +5,7 @@
 diff:
     description: Generates diffs of CI changes
     platform: linux1804-64/opt
-    worker-type: t-linux-xlarge-source-gcp
+    worker-type: t-linux-xlarge-source
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800

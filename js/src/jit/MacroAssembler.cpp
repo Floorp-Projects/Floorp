@@ -3929,6 +3929,43 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   bind(&done);
 }
 
+CodeOffset MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
+                                       const wasm::CalleeDesc& callee) {
+  MOZ_ASSERT(callee.which() == wasm::CalleeDesc::FuncRef);
+  const Register calleeScratch = WasmCallRefCallScratchReg0;
+  const Register calleeFnObj = WasmCallRefReg;
+
+  storePtr(InstanceReg,
+           Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
+
+  // Get InstanceReg from the function's WASM_INSTANCE_SLOT extended slot.
+  size_t instanceSlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_INSTANCE_SLOT);
+  loadPtr(Address(calleeFnObj, instanceSlotOffset), InstanceReg);
+  storePtr(InstanceReg,
+           Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
+
+  loadWasmPinnedRegsFromInstance();
+  switchToWasmInstanceRealm(WasmCallRefCallScratchReg0,
+                            WasmCallRefCallScratchReg1);
+
+  // Get funcUncheckedCallEntry() from the function's
+  // WASM_FUNC_UNCHECKED_ENTRY_SLOT extended slot.
+  size_t uncheckedEntrySlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT);
+  loadPtr(Address(calleeFnObj, uncheckedEntrySlotOffset), calleeScratch);
+
+  CodeOffset raOffset = call(desc, calleeScratch);
+
+  // Restore registers and realm and back to this caller's.
+  loadPtr(Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall),
+          InstanceReg);
+  loadWasmPinnedRegsFromInstance();
+  switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
+
+  return raOffset;
+}
+
 void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
   CodeOffset offset = nopPatchableToCall();
   append(desc, offset);

@@ -232,6 +232,7 @@ body > main > aside {
 #colorways-collection-figure {
   max-width: var(--colorways-figure-size);
   max-height: var(--colorways-figure-size);
+  object-fit: scale-down;
 }
 
 [hidden] {

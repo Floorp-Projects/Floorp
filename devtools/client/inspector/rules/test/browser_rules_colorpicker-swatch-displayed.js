@@ -90,7 +90,9 @@ add_task(async function() {
         selector
     );
 
-    const prop = getRuleViewProperty(view, selector, propertyName).valueSpan;
+    const prop = (
+      await getRuleViewProperty(view, selector, propertyName, { wait: true })
+    ).valueSpan;
     const swatches = prop.querySelectorAll(".ruleview-colorswatch");
 
     ok(swatches.length, "Swatches found in the property");

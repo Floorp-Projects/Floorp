@@ -24,7 +24,7 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityAudioDecoderChild, override);
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
-      const PDMFactory::MediaCodecsSupported& aSupported);
+      const media::MediaCodecsSupported& aSupported);
 
   UtilityActorName GetActorName() { return UtilityActorName::AudioDecoder; }
 

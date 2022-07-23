@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.15.259';
+    const workerVersion = '2.15.303';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -208,8 +208,8 @@ class WorkerMessageHandler {
           rangeChunkSize: source.rangeChunkSize
         }, evaluatorOptions, enableXfa, docBaseUrl);
 
-        for (let i = 0; i < cachedChunks.length; i++) {
-          newPdfManager.sendProgressiveData(cachedChunks[i]);
+        for (const chunk of cachedChunks) {
+          newPdfManager.sendProgressiveData(chunk);
         }
 
         cachedChunks = [];
@@ -2447,7 +2447,7 @@ function _collectJS(entry, xref, list, parents) {
         code = js;
       }
 
-      code = code && (0, _util.stringToPDFString)(code);
+      code = code && (0, _util.stringToPDFString)(code).replace(/\u0000/g, "");
 
       if (code) {
         list.push(code);
@@ -11871,11 +11871,9 @@ class PartialEvaluator {
     let fontRef;
 
     if (font) {
-      if (!(font instanceof _primitives.Ref)) {
-        throw new _util.FormatError('The "font" object should be a reference.');
+      if (font instanceof _primitives.Ref) {
+        fontRef = font;
       }
-
-      fontRef = font;
     } else {
       const fontRes = resources.get("Font");
 
@@ -13751,10 +13749,18 @@ class PartialEvaluator {
         };
       }
 
-      const cidToGidMap = dict.get("CIDToGIDMap");
+      try {
+        const cidToGidMap = dict.get("CIDToGIDMap");
 
-      if (cidToGidMap instanceof _base_stream.BaseStream) {
-        cidToGidBytes = cidToGidMap.getBytes();
+        if (cidToGidMap instanceof _base_stream.BaseStream) {
+          cidToGidBytes = cidToGidMap.getBytes();
+        }
+      } catch (ex) {
+        if (!this.options.ignoreErrors) {
+          throw ex;
+        }
+
+        (0, _util.warn)(`extractDataStructures - ignoring CIDToGIDMap data: "${ex}".`);
       }
     }
 
@@ -30529,11 +30535,8 @@ class CFFCompiler {
 
   compileDict(dict, offsetTracker) {
     const out = [];
-    const order = dict.order;
 
-    for (let i = 0; i < order.length; ++i) {
-      const key = order[i];
-
+    for (const key of dict.order) {
       if (!(key in dict.values)) {
         continue;
       }
@@ -36865,10 +36868,11 @@ class Type1Font {
 
   getCharset() {
     const charset = [".notdef"];
-    const charstrings = this.charstrings;
 
-    for (let glyphId = 0; glyphId < charstrings.length; glyphId++) {
-      charset.push(charstrings[glyphId].glyphName);
+    for (const {
+      glyphName
+    } of this.charstrings) {
+      charset.push(glyphName);
     }
 
     return charset;
@@ -37576,7 +37580,7 @@ const Type1Parser = function Type1ParserClosure() {
           privateData
         }
       };
-      let token, length, data, lenIV, encoded;
+      let token, length, data, lenIV;
 
       while ((token = this.getToken()) !== null) {
         if (token !== "/") {
@@ -37608,7 +37612,7 @@ const Type1Parser = function Type1ParserClosure() {
               this.getToken();
               data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
               lenIV = program.properties.privateData.lenIV;
-              encoded = this.readCharStrings(data, lenIV);
+              const encoded = this.readCharStrings(data, lenIV);
               this.nextChar();
               token = this.getToken();
 
@@ -37636,7 +37640,7 @@ const Type1Parser = function Type1ParserClosure() {
               this.getToken();
               data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
               lenIV = program.properties.privateData.lenIV;
-              encoded = this.readCharStrings(data, lenIV);
+              const encoded = this.readCharStrings(data, lenIV);
               this.nextChar();
               token = this.getToken();
 
@@ -37686,9 +37690,10 @@ const Type1Parser = function Type1ParserClosure() {
         }
       }
 
-      for (let i = 0; i < charstrings.length; i++) {
-        const glyph = charstrings[i].glyph;
-        encoded = charstrings[i].encoded;
+      for (const {
+        encoded,
+        glyph
+      } of charstrings) {
         const charString = new Type1CharString();
         const error = charString.convert(encoded, subrs, this.seacAnalysisEnabled);
         let output = charString.output;
@@ -46130,7 +46135,8 @@ class Catalog {
         javaScript = new Map();
       }
 
-      javaScript.set(name, (0, _util.stringToPDFString)(js));
+      js = (0, _util.stringToPDFString)(js).replace(/\u0000/g, "");
+      javaScript.set(name, js);
     }
 
     if (obj instanceof _primitives.Dict && obj.has("JavaScript")) {
@@ -63264,8 +63270,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.259';
-const pdfjsBuild = '41b2f52f7';
+const pdfjsVersion = '2.15.303';
+const pdfjsBuild = 'bf0006873';
 })();
 
 /******/ 	return __webpack_exports__;
