@@ -120,22 +120,3 @@ Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
     }
    }
  )
-  if (Services.prefs.getBoolPref("floorp.legacy.menu.mode", false)) {
-    var Tag = document.createElement("style");
-    Tag.innerText = `@import url(chrome://browser/skin/optioncss/legacy_firefox_menu_mode.css)`
-    document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
-    Tag.setAttribute('id', 'sub-title');
-  }
-  Services.prefs.addObserver("floorp.legacy.menu.mode", function(){
-    if (Services.prefs.getBoolPref("floorp.legacy.menu.mode", false)) {
-       var Tag = document.createElement("style");
-       Tag.innerText = `@import url(chrome://browser/skin/optioncss/legacy_firefox_menu_mode.css)`
-       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
-       Tag.setAttribute("id", "sub-title");
-    }
-    else {
-       const menuid =document.getElementById("sub-title");
-       menuid.remove();
-    }
-  }
-)
