@@ -161,6 +161,24 @@ function Editor(config) {
     maxHighlightLength: 1000,
     // Disable codeMirror setTimeout-based cursor blinking (will be replaced by a CSS animation)
     cursorBlinkRate: 0,
+    // List of non-printable chars that will be displayed in the editor, showing their
+    // unicode version. We only add a few characters to the default list:
+    // - \u202d LEFT-TO-RIGHT OVERRIDE
+    // - \u202e RIGHT-TO-LEFT OVERRIDE
+    // - \u2066 LEFT-TO-RIGHT ISOLATE
+    // - \u2067 RIGHT-TO-LEFT ISOLATE
+    // - \u2069 POP DIRECTIONAL ISOLATE
+    // eslint-disable-next-line no-control-regex
+    specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\u202d\u202e\u2066\u2067\u2069\ufeff\ufff9-\ufffc]/,
+    specialCharPlaceholder: char => {
+      // Use the doc provided to the setup function if we don't have a reference to a codeMirror
+      // editor yet (this can happen when an Editor is being created with existing content)
+      const doc = this._ownerDoc;
+      const el = doc.createElement("span");
+      el.classList.add("cm-non-printable-char");
+      el.append(doc.createTextNode(`\\u${char.codePointAt(0).toString(16)}`));
+      return el;
+    },
   };
 
   // Additional shortcuts.
@@ -353,7 +371,7 @@ Editor.prototype = {
    * configure CodeMirror with all the right options/modes/etc.
    */
   _setup: function(el, doc) {
-    doc = doc || el.ownerDocument;
+    this._ownerDoc = doc || el.ownerDocument;
     const win = el.ownerDocument.defaultView;
 
     Services.scriptloader.loadSubScript(CM_BUNDLE, win);
@@ -421,7 +439,7 @@ Editor.prototype = {
 
       let popup = this.config.contextMenu;
       if (typeof popup == "string") {
-        popup = doc.getElementById(this.config.contextMenu);
+        popup = this._ownerDoc.getElementById(this.config.contextMenu);
       }
 
       this.emit("popupOpen", ev, popup);
@@ -1433,6 +1451,7 @@ Editor.prototype = {
     this.container = null;
     this.config = null;
     this.version = null;
+    this._ownerDoc = null;
 
     if (this._prefObserver) {
       this._prefObserver.off(KEYMAP_PREF, this.setKeyMap);

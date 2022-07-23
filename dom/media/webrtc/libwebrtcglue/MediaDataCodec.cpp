@@ -60,7 +60,7 @@ WebrtcVideoDecoder* MediaDataCodec::CreateDecoder(
       return nullptr;
   }
   RefPtr<PDMFactory> pdm = new PDMFactory();
-  if (!pdm->SupportsMimeType(codec)) {
+  if (pdm->SupportsMimeType(codec) == media::DecodeSupport::Unsupported) {
     return nullptr;
   }
 

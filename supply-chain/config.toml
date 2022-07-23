@@ -181,10 +181,6 @@ criteria = "safe-to-deploy"
 version = "1.0.57"
 criteria = "safe-to-deploy"
 
-[[exemptions.app_units]]
-version = "0.7.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.arbitrary]]
 version = "1.1.0"
 criteria = "safe-to-run"
@@ -291,10 +287,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.block-buffer]]
 version = "0.10.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.build-parallel]]
-version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.bumpalo]]
@@ -495,10 +487,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.cssparser-macros]]
 version = "0.6.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cstr]]
-version = "0.2.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.cty]]
@@ -1153,10 +1141,6 @@ criteria = "safe-to-deploy"
 version = "3.0.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.origin-trial-token]]
-version = "0.1.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.os_str_bytes]]
 version = "6.1.0"
 criteria = "safe-to-deploy"
@@ -1659,10 +1643,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.typenum]]
 version = "1.15.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.uluru]]
-version = "3.0.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.unic-langid]]

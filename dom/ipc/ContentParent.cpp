@@ -363,8 +363,7 @@ namespace dom {
 
 LazyLogModule gProcessLog("Process");
 
-static std::map<RemoteDecodeIn, PDMFactory::MediaCodecsSupported>
-    sCodecsSupported;
+static std::map<RemoteDecodeIn, media::MediaCodecsSupported> sCodecsSupported;
 
 /* static */
 uint32_t ContentParent::sMaxContentProcesses = 0;
@@ -1632,12 +1631,21 @@ void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
 
 /*static */
 void ContentParent::BroadcastMediaCodecsSupportedUpdate(
-    RemoteDecodeIn aLocation,
-    const PDMFactory::MediaCodecsSupported& aSupported) {
-  sCodecsSupported[aLocation] = aSupported;
+    RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported) {
+  // Merge incoming codec support with existing support list
+  media::MCSInfo::AddSupport(aSupported);
+  auto support = media::MCSInfo::GetSupport();
+
+  // Update processes
+  sCodecsSupported[aLocation] = support;
   for (auto* cp : AllProcesses(eAll)) {
-    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
+    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, support);
   }
+
+  // Generate + save support string for display in about:support
+  nsCString supportString;
+  media::MCSInfo::GetMediaCodecsSupportedString(supportString, support);
+  gfx::gfxVars::SetCodecSupportInfo(supportString);
 }
 
 const nsACString& ContentParent::GetRemoteType() const { return mRemoteType; }

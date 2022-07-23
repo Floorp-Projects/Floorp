@@ -65,6 +65,7 @@ figure > img {
   margin-block-start: 2rem;
   max-width: var(--figure-height);
   max-height: var(--figure-width);
+  object-fit: scale-down;
 }
 
 #colorway-customization-panel {

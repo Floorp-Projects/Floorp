@@ -46,6 +46,7 @@ UNIFIED_SOURCES += [
     "TestGroupId.cpp",
     "TestIntervalSet.cpp",
     "TestKeyValueStorage.cpp",
+    "TestMediaCodecsSupport.cpp",
     "TestMediaDataDecoder.cpp",
     "TestMediaDataEncoder.cpp",
     "TestMediaEventSource.cpp",

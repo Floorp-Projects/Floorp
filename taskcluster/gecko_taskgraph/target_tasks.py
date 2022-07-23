@@ -794,6 +794,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return False
         # Android selection
         elif accept_raptor_android_build(platform):
+            # Bug 1780817 - a51 is failing to install chrome
+            if "chrome-m" in try_name and "-a51" in platform:
+                return False
             # Ignore all fennec tests here, we run those weekly
             if "fennec" in try_name:
                 return False

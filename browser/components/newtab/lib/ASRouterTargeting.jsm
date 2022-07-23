@@ -741,6 +741,11 @@ const TargetingGetters = {
     );
     return bts?.backgroundTaskName();
   },
+
+  get userPrefersReducedMotion() {
+    let window = lazy.BrowserWindowTracker.getTopWindow();
+    return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches;
+  },
 };
 
 const ASRouterTargeting = {

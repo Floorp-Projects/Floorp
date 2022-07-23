@@ -29,7 +29,9 @@ add_task(async function() {
   } = getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
-  const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
+  const container = (
+    await getRuleViewProperty(view, "#grid", "display", { wait: true })
+  ).valueSpan;
   let gridToggle = container.querySelector(".js-toggle-grid-highlighter");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");

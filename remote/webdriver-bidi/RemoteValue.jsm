@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["deserialize", "serialize"];
+var EXPORTED_SYMBOLS = ["deserialize", "serialize", "stringify"];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -418,8 +418,32 @@ function serialize(
   }
 
   lazy.logger.warn(
-    `Unsupported type: ${type} for remote value: ${value.toString()}`
+    `Unsupported type: ${type} for remote value: ${stringify(value)}`
   );
 
   return undefined;
+}
+
+/**
+ * Safely stringify a value.
+ *
+ * @param {Object} value
+ *     Value of any type to be stringified.
+ *
+ * @returns {String} String representation of the value.
+ */
+function stringify(obj) {
+  let text;
+  try {
+    text =
+      obj !== null && typeof obj === "object" ? obj.toString() : String(obj);
+  } catch (e) {
+    // The error-case will also be handled in `finally {}`.
+  } finally {
+    if (typeof text != "string") {
+      text = Object.prototype.toString.apply(obj);
+    }
+  }
+
+  return text;
 }

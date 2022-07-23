@@ -1691,11 +1691,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    const Value& v2 =
-        fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_OBJ_SLOT);
-
-    WasmInstanceObject* instobj = &v2.toObject().as<WasmInstanceObject>();
-    js::wasm::Instance& inst = instobj->instance();
+    js::wasm::Instance& inst = fun->wasmInstance();
     const js::wasm::Code& code = inst.code();
     js::wasm::Tier tier = code.bestTier();
 

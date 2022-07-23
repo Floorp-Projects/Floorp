@@ -213,3 +213,8 @@ CalleeDesc CalleeDesc::builtinInstanceMethod(SymbolicAddress callee) {
   c.u.builtin_ = callee;
   return c;
 }
+CalleeDesc CalleeDesc::wasmFuncRef() {
+  CalleeDesc c;
+  c.which_ = FuncRef;
+  return c;
+}

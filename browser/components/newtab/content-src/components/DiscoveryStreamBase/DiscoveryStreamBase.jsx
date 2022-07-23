@@ -214,6 +214,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             readTime={component.properties.readTime}
             saveToPocketCard={component.saveToPocketCard}
             pocket_button_enabled={component.pocketButtonEnabled}
+            recentSavesEnabled={this.props.DiscoveryStream.recentSavesEnabled}
           />
         );
       case "HorizontalRule":

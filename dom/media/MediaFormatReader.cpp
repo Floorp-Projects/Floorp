@@ -1164,7 +1164,8 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
     UniquePtr<TrackInfo> videoInfo = mVideo.mTrackDemuxer->GetInfo();
     videoActive = videoInfo && videoInfo->IsValid();
     if (videoActive) {
-      if (platform && !platform->SupportsMimeType(videoInfo->mMimeType)) {
+      if (platform && platform->SupportsMimeType(videoInfo->mMimeType) ==
+                          media::DecodeSupport::Unsupported) {
         // We have no decoder for this track. Error.
         mMetadataPromise.Reject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
         return;
@@ -1195,7 +1196,8 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
     // We actively ignore audio tracks that we know we can't play.
     audioActive =
         audioInfo && audioInfo->IsValid() &&
-        (!platform || platform->SupportsMimeType(audioInfo->mMimeType));
+        (!platform || platform->SupportsMimeType(audioInfo->mMimeType) !=
+                          media::DecodeSupport::Unsupported);
 
     if (audioActive) {
       mInfo.mAudio = *audioInfo->GetAsAudioInfo();

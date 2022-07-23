@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   getFramesFromStack: "chrome://remote/content/shared/Stack.jsm",
   isChromeFrame: "chrome://remote/content/shared/Stack.jsm",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
+  stringify: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
@@ -88,10 +89,7 @@ class ScriptModule extends Module {
       exception: lazy.serialize(exception, 1),
       lineNumber: stack.line - 1,
       stackTrace: { callFrames },
-      text:
-        typeof exception === "object"
-          ? exception.toString()
-          : String(exception),
+      text: lazy.stringify(exception),
     };
   }
 

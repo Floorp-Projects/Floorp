@@ -8082,14 +8082,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
   renderCards() {
     var _widgets$positions, _widgets$data, _essentialReadsCards, _editorsPicksCards;
 
-    const {
-      DiscoveryStream
-    } = this.props;
     const prefs = this.props.Prefs.values;
-    const {
-      recentSavesEnabled
-    } = DiscoveryStream;
-    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const {
       items,
       hybridLayout,
@@ -8106,8 +8099,10 @@ class _CardGrid extends (external_React_default()).PureComponent {
       readTime,
       essentialReadsHeader,
       editorsPicksHeader,
-      widgets
+      widgets,
+      recentSavesEnabled
     } = this.props;
+    const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
     let essentialReadsCards = [];
@@ -13628,7 +13623,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           editorsPicksHeader: component.properties.editorsPicksHeader,
           readTime: component.properties.readTime,
           saveToPocketCard: component.saveToPocketCard,
-          pocket_button_enabled: component.pocketButtonEnabled
+          pocket_button_enabled: component.pocketButtonEnabled,
+          recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled
         });
 
       case "HorizontalRule":

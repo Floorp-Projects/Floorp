@@ -719,6 +719,11 @@
   transform-origin: 0 0;
 }
 
+.annotationEditorLayer .selectedEditor {
+  outline: var(--focus-outline);
+  resize: none;
+}
+
 .annotationEditorLayer .freeTextEditor {
   position: absolute;
   background: transparent;
@@ -729,6 +734,7 @@
   height: auto;
   z-index: 1;
   transform-origin: 0 0;
+  touch-action: none;
 }
 
 .annotationEditorLayer .freeTextEditor .internal {
@@ -766,21 +772,17 @@
   outline: none;
 }
 
-.annotationEditorLayer .freeTextEditor:focus-within {
-  outline: var(--focus-outline);
-}
-
-.annotationEditorLayer .inkEditor:not(:focus) {
+.annotationEditorLayer .inkEditor.disabled {
   resize: none;
 }
 
-.annotationEditorLayer .freeTextEditor:hover:not(:focus-within),
-.annotationEditorLayer .inkEditor:hover:not(:focus) {
-  outline: var(--hover-outline);
+.annotationEditorLayer .inkEditor.disabled.selectedEditor {
+  resize: horizontal;
 }
 
-.annotationEditorLayer .inkEditor.disabled:focus {
-  resize: horizontal;
+.annotationEditorLayer .freeTextEditor:hover:not(.selectedEditor),
+.annotationEditorLayer .inkEditor:hover:not(.selectedEditor) {
+  outline: var(--hover-outline);
 }
 
 .annotationEditorLayer .inkEditor {
@@ -795,15 +797,6 @@
   cursor: auto;
 }
 
-.annotationEditorLayer .background {
-  z-index: 0;
-}
-
-.annotationEditorLayer .inkEditor:focus {
-  outline: var(--focus-outline);
-  resize: both;
-}
-
 .annotationEditorLayer .inkEditor.editing {
   resize: none;
   cursor: var(--editorInk-editing-cursor), pointer;
@@ -815,11 +808,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-}
-
-.annotationEditorLayer .selectedEditor {
-  outline: var(--focus-outline);
-  resize: none;
+  touch-action: none;
 }
 
 :root {

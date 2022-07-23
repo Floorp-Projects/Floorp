@@ -2488,11 +2488,16 @@ bool WasmInstanceObject::getExportedFunction(
     }
   }
 
-  fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_OBJ_SLOT,
-                       ObjectValue(*instanceObj));
-
   fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
-                       PrivateValue((void*)&instance));
+                       PrivateValue(const_cast<Instance*>(&instance)));
+
+  const CodeTier& codeTier =
+      instance.code().codeTier(instance.code().bestTier());
+  const CodeRange& codeRange = codeTier.metadata().codeRange(funcExport);
+
+  fun->setExtendedSlot(FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT,
+                       PrivateValue(codeTier.segment().base() +
+                                    codeRange.funcUncheckedCallEntry()));
 
   if (!instanceObj->exports().putNew(funcIndex, fun)) {
     ReportOutOfMemory(cx);
@@ -2565,20 +2570,15 @@ bool wasm::IsWasmExportedFunction(JSFunction* fun) {
 }
 
 Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
-  return ExportedFunctionToInstanceObject(fun)->instance();
+  return fun->wasmInstance();
 }
 
 WasmInstanceObject* wasm::ExportedFunctionToInstanceObject(JSFunction* fun) {
-  MOZ_ASSERT(fun->kind() == FunctionFlags::Wasm ||
-             fun->kind() == FunctionFlags::AsmJS);
-  const Value& v =
-      fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_OBJ_SLOT);
-  return &v.toObject().as<WasmInstanceObject>();
+  return fun->wasmInstance().object();
 }
 
 uint32_t wasm::ExportedFunctionToFuncIndex(JSFunction* fun) {
-  Instance& instance = ExportedFunctionToInstanceObject(fun)->instance();
-  return instance.code().getFuncIndex(fun);
+  return fun->wasmInstance().code().getFuncIndex(fun);
 }
 
 // ============================================================================
