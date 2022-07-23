@@ -174,12 +174,12 @@ class AboutPreferences {
     const homeHeader = createAppend("label", contentsGroup).appendChild(
       document.createElementNS(HTML_NS, "h2")
     );
-    document.l10n.setAttributes(homeHeader, "home-prefs-content-header");
+    document.l10n.setAttributes(homeHeader, "home-prefs-content-header2");
 
     const homeDescription = createAppend("description", contentsGroup);
     document.l10n.setAttributes(
       homeDescription,
-      "home-prefs-content-description"
+      "home-prefs-content-description2"
     );
 
     // Add preferences for each section

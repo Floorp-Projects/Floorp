@@ -633,10 +633,8 @@ home-restore-defaults =
     .label = Restore Defaults
     .accesskey = R
 
-# "Firefox" should be treated as a brand and kept in English,
-# while "Home" and "(Default)" can be localized.
-home-mode-choice-default =
-    .label = Firefox Home (Default)
+home-mode-choice-default-fx =
+    .label = { -firefox-home-brand-name } (Default)
 
 home-mode-choice-custom =
     .label = Custom URLs…
@@ -665,8 +663,8 @@ choose-bookmark =
 
 ## Home Section - Firefox Home Content Customization
 
-home-prefs-content-header = Firefox Home Content
-home-prefs-content-description = Choose what content you want on your Firefox Home screen.
+home-prefs-content-header2 = { -firefox-home-brand-name } Content
+home-prefs-content-description2 = Choose what content you want on your { -firefox-home-brand-name } screen.
 
 home-prefs-search-header =
     .label = Web Search
