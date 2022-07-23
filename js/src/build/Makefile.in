@@ -31,6 +31,9 @@ install:: $(LIBRARY_NAME).pc
 install:: ../js-config.h
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(JS_LIBRARY_NAME)
 
+install:: ../../../mozglue/baseprofiler/public/ProfilingCategoryList.h
+	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(JS_LIBRARY_NAME)/js
+
 ######################################################
 # BEGIN SpiderMonkey header installation
 #
