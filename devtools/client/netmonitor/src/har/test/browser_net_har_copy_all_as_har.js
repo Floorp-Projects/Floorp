@@ -112,6 +112,8 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
     encodeURIComponent(
       `iframe<script>fetch("/document-builder.sjs?html=iframe-request")</script>`
     );
+
+  await waitForAllNetworkUpdateEvents();
   await navigateTo(topDocumentURL);
 
   info("Create an iframe doing a request and remove the iframe.");
@@ -130,6 +132,7 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
   // before removing the iframe so that the netmonitor is able to fetch
   // all lazy data without throwing
   await onNetworkEvents;
+  await waitForAllNetworkUpdateEvents();
 
   info("Remove the iframe so that lazy request data are freed");
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
