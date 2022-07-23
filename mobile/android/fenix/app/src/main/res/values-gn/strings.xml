@@ -799,8 +799,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Ambue mba’e’oka guive</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Eike ehecha hag̃ua tembiasakue mbojojapyre ambue nemba’e’okagua.</string>
     <!-- The synced history sign in dialog button text -->
     <string name="history_sign_in_button">Eñemboheraguapy</string>
+
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Térã emoheñói Firefox mba’ete embojuehe hag̃ua</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->

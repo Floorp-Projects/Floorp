@@ -745,7 +745,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Other tabs</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Other tabs</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -778,6 +778,13 @@
     <string name="history_synced_from_other_devices">Synced from other devices</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">From other devices</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Sign in to see history synced from your other devices.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Sign in</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Or create a Firefox account to start syncing</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1834,4 +1841,5 @@
     <string name="experiments_snackbar">Enable telemetry to send data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Go to settings</string>
+    <string name="firefox_suggest_header">Firefox Suggest</string>
 </resources>

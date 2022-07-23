@@ -764,7 +764,7 @@
     <string name="pwa_site_controls_title_private">%1$s (사생활 보호 모드)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">기타 탭</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">기타 탭</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1722,7 +1722,7 @@
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. 안드로이드 설정으로 이동하세요</string>
     <!-- Second step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>권한<b>을 누르세요.]]></string>
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>권한</b>을 누르세요.]]></string>
 
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b>을(를) 켜기로 전환하세요]]></string>
