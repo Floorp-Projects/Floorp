@@ -285,13 +285,12 @@ function generateDocumentation() {
   // map specific policies to a different string ID, to allow updates to
   // existing descriptions
   let string_mapping = {
-    BackgroundAppUpdate: "BackgroundAppUpdate2",
-    Certificates: "CertificatesDescription",
     DisableMasterPasswordCreation: "DisablePrimaryPasswordCreation",
     DisableSetDesktopBackground: "DisableSetAsDesktopBackground",
-    FirefoxHome: "FirefoxHome2",
-    Permissions: "Permissions2",
+    Certificates: "CertificatesDescription",
     SanitizeOnShutdown: "SanitizeOnShutdown2",
+    Permissions: "Permissions2",
+    BackgroundAppUpdate: "BackgroundAppUpdate2",
     WindowsSSO: "Windows10SSO",
   };
 
