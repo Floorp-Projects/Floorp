@@ -17,5 +17,10 @@ DIRS += [
     "undo-closed-tab",
     "official-site-ua",
     "multitabs",
-    "floorp-system",
 ]
+
+if CONFIG["OS_TARGET"] == "Linux" or "WINNT":
+ DIRS += ["floorp-system"]
+
+if CONFIG["OS_TARGET"] == "Darwin":
+ DIRS += ["floorp-system-mac"]

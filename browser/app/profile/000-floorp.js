@@ -15,7 +15,6 @@
 //Floorpアップデートの最新版である旨の通知を許可
 pref("enable.floorp.updater.latest", false);
 pref("enable.floorp.update", true);
-pref("update.id.floorp", "floorp-beta");
 
 //ブラウザーUIのカスタマイズ設定
 pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除

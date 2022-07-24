@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "Floorp System",
+    "description": "拡張機能の名前です。"
+  },
+  "start": {
+    "message": "Download Start",
+    "description": "ダウンロード開始"
+  },
+  "finish": {
+    "message": "Download Finish !",
+    "description": "ダウンロード完了"
+  }
+}
