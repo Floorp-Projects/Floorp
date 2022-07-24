@@ -21,22 +21,6 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["en"]
     "_locales/en/messages.json",
 ]
 
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ko"] += [
-    "_locales/ko/messages.json",
-]
-
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ru"] += [
-    "_locales/ru/messages.json",
-]
-
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["zh_TW"] += [
-    "_locales/zh_TW/messages.json",
-]
-
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["zh_CN"] += [
-    "_locales/zh_CN/messages.json",
-]
-
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
     "API/aboutConfigPrefs.js",
     "API/aboutConfigPrefs.json",

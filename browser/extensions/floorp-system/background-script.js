@@ -15,8 +15,8 @@
     if(pref===1||pref===2){
       browser.notifications.create({
         "type": "basic",
-        "iconUrl": browser.runtime.getURL("icons/floorp.png"),
-        "title": "ダウンロード開始",
+        "iconUrl": "chrome://branding/content/about-logo.png",
+        "title": chrome.i18n.getMessage("start"),
         "message": file.filename
     });}
     downloads[file.id] = file.filename;
@@ -28,7 +28,7 @@
     if (file.state.current == "complete"&& pref===2 || pref===3) {
         browser.notifications.create({
             "type": "basic",
-            "iconUrl": browser.runtime.getURL("icons/floorp.png"),
-            "title": "ダウンロード完了",
+            "iconUrl": "chrome://branding/content/about-logo.png",
+            "title": chrome.i18n.getMessage("finish"),
             "message": downloads[file.id]
  });}});
