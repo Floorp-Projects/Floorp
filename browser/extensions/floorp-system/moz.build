@@ -37,6 +37,11 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["zh_C
     "_locales/zh_CN/messages.json",
 ]
 
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
+    "API/aboutConfigPrefs.js",
+    "API/aboutConfigPrefs.json",
+]
+
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
     "icons/floorp.png",
     "icons/icon.png",

@@ -18,9 +18,20 @@
     "browserSettings",
     "mozillaAddons",
     "about:*",
-    "about:reader*"
+    "about:reader*",
+    "downloads"
   ],
 
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+        "schema": "API/aboutConfigPrefs.json",
+        "parent": {
+            "scopes": ["addon_parent"],
+            "script": "API/aboutConfigPrefs.js",
+            "paths": [["aboutConfigPrefs"]]
+        }
+    }
+  },
 
   "page_action": {
     "browser_style": true,
