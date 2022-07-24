@@ -1543,3 +1543,14 @@ Canvas-Blocker = Canvas Blocker
 about-CB = This add-on allows users to prevent websites from using some Javascript APIs to fingerprint them.
 WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
 WebRTC = Enable WebRTC Connetion
+
+## download mgr
+download-notification-preferences = Download Notification
+start-always-notify =
+ .label = Notify Only at Start
+finish-always-notify = 
+ .label = Notify Only when Finished
+always-notify =
+ .label = Notify Both at Start and End
+do-not-notify =
+ .label = Do not Enable Notifications

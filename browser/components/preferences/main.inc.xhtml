@@ -539,6 +539,15 @@
   <checkbox id="alwaysAsk"
             data-l10n-id="download-always-ask-where"
             preference="browser.download.useDownloadDir"/>
+
+  <label><description data-l10n-id="download-notification-preferences"/></label>
+  <radiogroup id="handleNewFileTypes" preference="floorp.download.notification">
+     <radio value="1" data-l10n-id="start-always-notify"/>
+     <radio value="2" data-l10n-id="finish-always-notify"/>
+     <radio value="3" data-l10n-id="always-notify"/>
+     <radio value="4" data-l10n-id="do-not-notify"/>
+  </radiogroup>
+
 </groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">

@@ -12,7 +12,7 @@
   browser.downloads.onCreated.addListener(
     async function checkfordownload(file) {
     let pref = await browser.aboutConfigPrefs.getPref("floorp.download.notification");
-    if(pref===1||pref===2){
+    if(pref===1||pref===3){
       browser.notifications.create({
         "type": "basic",
         "iconUrl": "chrome://branding/content/about-logo.png",

@@ -218,7 +218,7 @@ Preferences.addAll([
   { id: "toolkit.legacyUserProfileCustomizations.script", type:"bool"},
   { id: "toolkit.tabbox.switchByScrolling", type:"bool"},
   { id: "browser.tabs.closeTabByDblclick", type:"bool"},
-
+  { id: "floorp.download.notification", type:"int"},
 ]);
 
 // Floorp の設定項目終わり
