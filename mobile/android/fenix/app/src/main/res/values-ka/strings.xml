@@ -329,7 +329,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">სავარაუდოდ, საიტზე არაა მხარდაჭერილი HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
-    <string name="errorpage_httpsonly_message_summary">თუმცა, შესაძლოა შემტევის ხელიც ერიოს. თუ მაინც გადახვალთ, საიტის ველებში ნუ შეიყვანთ პირად მონაცემებს. ამასთან, მხოლოდ-HTTPS-რეჟიმი დროებით გამოირთვება ამ საიტისთვის.</string>
+    <string name="errorpage_httpsonly_message_summary">თუმცა, შესაძლოა შემტევის ხელიც ერიოს. თუ მაინც გადახვალთ, საიტის ველებში ნუ შეიყვანთ პირად მონაცემებს. ამასთანავე, მხოლოდ-HTTPS-რეჟიმი დროებით გამოირთვება ამ საიტისთვის.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ხელმისაწვდომობა</string>
     <!-- Preference to override the Firefox Account server -->
@@ -390,7 +390,7 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ბმულების გახსნა პროგრამებში</string>
     <!-- Preference for open download with an external download manager app -->
-    <string name="preferences_external_download_manager">გარეშე მმართველი ჩამოტვირთვების</string>
+    <string name="preferences_external_download_manager">გარეშე მმართველი ჩამოსატვირთად</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">დამატებები</string>
 
@@ -745,7 +745,7 @@
     <string name="pwa_site_controls_title_private">%1$s (პირადი რეჟიმი)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">სხვა ჩანართები</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">სხვა ჩანართები</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -779,6 +779,13 @@
     <string name="history_synced_from_other_devices">სხვა მოწყობილობებიდან დასინქრონებული</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">სხვა მოწყობილობებიდან</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">შედით თქვენი სხვა მოწყობილობებიდან ისტორიის სანახავად.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">შესვლა</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>ან შექმენით Firefox-ანგარიში სინქრონიზაციისთვის</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1184,7 +1191,7 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ყოველთვის პირადული</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s ავტომატურად უზღუდავს კომპანიებს, თქვენს მოქმედებებზე ფარულად თვალის მიდევნების საშუალებას ვებსივრცეში.</string>
+    <string name="onboarding_tracking_protection_description_4">%1$s ავტომატურად უზღუდავს კომპანიებს თქვენს მოქმედებებზე ფარულად თვალის მიდევნების საშუალებას ვებსივრცეში.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ჩვეულებრივი (ნაგულისხმევი)</string>
     <!-- text for standard blocking option button description -->
@@ -1196,7 +1203,7 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">აირჩიეთ ხელსაწყოთა ზოლის მდებარეობა</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">განათავსეთ ხელსაწყოები ხელმისაწვდომ ადგილას. დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
+    <string name="onboarding_toolbar_placement_description_1">განათავსეთ ხელსაწყოები მოხერხებულ ადგილას. დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">თქვენი პირადულობა</string>
     <!-- text for the privacy notice onboarding card description
@@ -1501,7 +1508,7 @@
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">ბარათების შენახვა და თვითშევსება</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">მონაცემები დაშიფრულია</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">მონაცემები იშიფრება</string>
 
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">დაასინქრონეთ ბარათები სხვადასხვა მოწყობილობაზე</string>
@@ -1849,4 +1856,5 @@
     <string name="experiments_snackbar">ჩართეთ გაზომვები მონაცემთა გასაგზავნად.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">პარამეტრებზე გადასვლა</string>
+    <string name="firefox_suggest_header">Firefox-შეთავაზება</string>
 </resources>
