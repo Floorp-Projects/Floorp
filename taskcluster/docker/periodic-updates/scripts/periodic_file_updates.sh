@@ -509,7 +509,7 @@ if [ "${REPODIR}" == "" ]; then
 fi
 
 case "${BRANCH}" in
-  mozilla-central|comm-central )
+  mozilla-central|comm-central|try )
     HGREPO="https://${HGHOST}/${BRANCH}"
     ;;
   mozilla-*|comm-* )
