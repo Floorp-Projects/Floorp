@@ -6085,7 +6085,7 @@
   # Whether to use a yuv video overlay layers with DirectComposition
 -   name: gfx.webrender.dcomp-video-yuv-overlay-win
     type: bool
-    value: true
+    value: false
     mirror: once
 -   name: gfx.webrender.dcomp-video-vp-scaling-win
     type: bool
