@@ -39,15 +39,19 @@ let currentPageIsWebContentFilter = () =>
 let currentBrowser = () =>
   lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
 
+XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
+  return new Localization(["browser/browser.ftl"], true);
+});
+
 const DEFAULT_ACTIONS = {
   addons: {
-    commands: ["addons"],
+    l10nCommands: "quickactions-cmd-addons",
     icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
     label: "quickactions-addons",
     onPick: openUrlFun("about:addons"),
   },
   bookmarks: {
-    commands: ["bookmarks"],
+    l10nCommands: "quickactions-cmd-bookmarks",
     icon: "chrome://browser/skin/bookmark.svg",
     label: "quickactions-bookmarks",
     onPick: () => {
@@ -57,32 +61,32 @@ const DEFAULT_ACTIONS = {
     },
   },
   clear: {
-    commands: ["clear"],
+    l10nCommands: "quickactions-cmd-clearhistory",
     label: "quickactions-clearhistory",
     onPick: openUrlFun(
       `${BASE_URL}delete-browsing-search-download-history-firefox`
     ),
   },
   downloads: {
-    commands: ["downloads"],
+    l10nCommands: "quickactions-cmd-downloads",
     icon: "chrome://browser/skin/downloads/downloads.svg",
     label: "quickactions-downloads",
     onPick: openUrlFun("about:downloads"),
   },
   inspect: {
-    commands: ["inspector"],
+    l10nCommands: "quickactions-cmd-inspector",
     icon: "chrome://devtools/skin/images/tool-inspector.svg",
     label: "quickactions-inspector",
     isActive: currentPageIsWebContentFilter,
     onPick: openInspector,
   },
   logins: {
-    commands: ["logins", "passwords"],
+    l10nCommands: "quickactions-cmd-logins",
     label: "quickactions-logins",
     onPick: openUrlFun("about:logins"),
   },
   print: {
-    commands: ["print"],
+    l10nCommands: "quickactions-cmd-print",
     label: "quickactions-print",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
@@ -92,7 +96,7 @@ const DEFAULT_ACTIONS = {
     },
   },
   private: {
-    commands: ["private"],
+    l10nCommands: "quickactions-cmd-private",
     label: "quickactions-private",
     icon: "chrome://global/skin/icons/indicator-private-browsing.svg",
     onPick: () => {
@@ -102,17 +106,17 @@ const DEFAULT_ACTIONS = {
     },
   },
   refresh: {
-    commands: ["reset"],
+    l10nCommands: "quickactions-cmd-refresh",
     label: "quickactions-refresh",
     onPick: openUrlFun(`${BASE_URL}refresh-firefox-reset-add-ons-and-settings`),
   },
   restart: {
-    commands: ["restart"],
+    l10nCommands: "quickactions-cmd-restart",
     label: "quickactions-restart",
     onPick: restartBrowser,
   },
   screenshot: {
-    commands: ["screenshot"],
+    l10nCommands: "quickactions-cmd-screenshot",
     label: "quickactions-screenshot2",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
@@ -124,17 +128,17 @@ const DEFAULT_ACTIONS = {
     },
   },
   settings: {
-    commands: ["settings"],
+    l10nCommands: "quickactions-cmd-settings",
     label: "quickactions-settings",
     onPick: openUrlFun("about:preferences"),
   },
   update: {
-    commands: ["update"],
+    l10nCommands: "quickactions-cmd-update",
     label: "quickactions-update",
     onPick: openUrlFun(`${BASE_URL}update-firefox-latest-release`),
   },
   viewsource: {
-    commands: ["view-source"],
+    l10nCommands: "quickactions-cmd-viewsource",
     icon: "chrome://global/skin/icons/settings.svg",
     label: "quickactions-viewsource",
     isActive: currentPageIsWebContentFilter,
@@ -179,9 +183,14 @@ function restartBrowser() {
  * Loads the default QuickActions.
  */
 class QuickActionsLoaderDefault {
-  static load() {
+  static async load() {
     for (const key in DEFAULT_ACTIONS) {
-      lazy.UrlbarProviderQuickActions.addAction(key, DEFAULT_ACTIONS[key]);
+      let actionData = DEFAULT_ACTIONS[key];
+      let messages = await lazy.gFluentStrings.formatMessages([
+        { id: actionData.l10nCommands },
+      ]);
+      actionData.commands = messages[0].value.split(",").map(x => x.trim());
+      lazy.UrlbarProviderQuickActions.addAction(key, actionData);
     }
   }
 }

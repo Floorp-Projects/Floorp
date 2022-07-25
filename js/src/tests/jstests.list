@@ -606,6 +606,11 @@ fails-if(!xulRuntime.shell) script test262/language/statements/class/subclass-bu
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1761993
+skip script test262/built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js
+skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
+skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-try-catch.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -623,6 +628,7 @@ skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 
 skip script test262/language/module-code/top-level-await/await-dynamic-import-rejection.js  # Bug 1727925, 1726243
 
+
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
@@ -637,33 +643,8 @@ skip script test262/language/module-code/top-level-await/await-dynamic-import-re
 # https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
 
-# Not yet updated for https://github.com/tc39/proposal-intl-numberformat-v3/pull/85
-skip script test262/intl402/NumberFormat/constructor-roundingIncrement.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-2.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-5.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-10.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-20.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-50.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-25.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-100.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-200.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-250.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-500.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-1000.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-2000.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-2500.js
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-5000.js
-
-# Not yet updated for https://github.com/tc39/proposal-intl-numberformat-v3/pull/92
-skip script test262/intl402/NumberFormat/test-option-useGrouping.js
-skip script test262/intl402/NumberFormat/test-option-useGrouping-extended.js
-
 # Missing "SharedArrayBuffer" features tag
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/prop-desc.js
-
-# "morePrecision" has the same expected results as "lessPrecision", which can't be correct.
-skip script test262/intl402/NumberFormat/prototype/format/format-rounding-priority-more-precision.js
-
 
 # Update required for https://github.com/tc39/ecma262/pull/2550
 # See bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1769088

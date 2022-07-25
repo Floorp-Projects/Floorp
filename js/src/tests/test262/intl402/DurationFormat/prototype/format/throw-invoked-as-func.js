@@ -14,11 +14,11 @@ features: [Intl.DurationFormat]
 
 const df = new Intl.DurationFormat();
 
-// Perform ? RequireInternalSlot(df, [[InitializedDurationFormat]]).
-let f = df['format'];
+let f = df["format"];
 
-assert.sameValue(typeof f, 'function');
-assert.throws(TypeError, () => { f('PT12.3456S') });
-
+assert.sameValue(typeof f, "function");
+assert.throws(TypeError, () => {
+  f({ hours: 1, minutes: 46, seconds: 40 });
+});
 
 reportCompare(0, 0);

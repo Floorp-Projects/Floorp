@@ -48,7 +48,8 @@ JQ="$(command -v jq)"
 DO_HSTS=false
 HSTS_PRELOAD_SCRIPT="${SCRIPTDIR}/getHSTSPreloadList.js"
 HSTS_PRELOAD_ERRORS="nsSTSPreloadList.errors"
-HSTS_PRELOAD_INC="${DATADIR}/nsSTSPreloadList.inc"
+HSTS_PRELOAD_INC_OLD="${DATADIR}/nsSTSPreloadList.inc"
+HSTS_PRELOAD_INC_NEW="${BASEDIR}/${PRODUCT}/nsSTSPreloadList.inc"
 HSTS_UPDATED=false
 
 DO_HPKP=false
@@ -170,37 +171,37 @@ function unpack_artifacts {
 function compare_hsts_files {
   cd "${BASEDIR}"
 
-  HSTS_PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/ssl/$(basename "${HSTS_PRELOAD_INC}")"
+  HSTS_PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/ssl/$(basename "${HSTS_PRELOAD_INC_OLD}")"
 
   echo "INFO: Downloading existing include file..."
-  rm -rf "${HSTS_PRELOAD_ERRORS}" "${HSTS_PRELOAD_INC}"
+  rm -rf "${HSTS_PRELOAD_ERRORS}" "${HSTS_PRELOAD_INC_OLD}"
   echo "INFO: ${WGET} ${HSTS_PRELOAD_INC_HG}"
-  ${WGET} -O "${HSTS_PRELOAD_INC}" "${HSTS_PRELOAD_INC_HG}"
+  ${WGET} -O "${HSTS_PRELOAD_INC_OLD}" "${HSTS_PRELOAD_INC_HG}"
 
-  if [ ! -f "${HSTS_PRELOAD_INC}" ]; then
-    echo "Downloaded file '${HSTS_PRELOAD_INC}' not found in directory '$(pwd)' - this should have been downloaded above from ${HSTS_PRELOAD_INC_HG}." >&2
+  if [ ! -f "${HSTS_PRELOAD_INC_OLD}" ]; then
+    echo "Downloaded file '${HSTS_PRELOAD_INC_OLD}' not found in directory '$(pwd)' - this should have been downloaded above from ${HSTS_PRELOAD_INC_HG}." >&2
     exit 41
   fi
 
   # Run the script to get an updated preload list.
   echo "INFO: Generating new HSTS preload list..."
   cd "${BASEDIR}/${PRODUCT}"
-  if ! LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_INC}"; then
+  if ! LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_INC_OLD}"; then
     echo "HSTS preload list generation failed" >&2
     exit 43
   fi
 
   # The created files should be non-empty.
   echo "INFO: Checking whether new HSTS preload list is valid..."
-  if [ ! -s "${HSTS_PRELOAD_INC}" ]; then
-    echo "New HSTS preload list ${HSTS_PRELOAD_INC} is empty. That's less good." >&2
+  if [ ! -s "${HSTS_PRELOAD_INC_NEW}" ]; then
+    echo "New HSTS preload list ${HSTS_PRELOAD_INC_NEW} is empty. That's less good." >&2
     exit 42
   fi
   cd "${BASEDIR}"
 
   # Check for differences
   echo "INFO: diffing old/new HSTS preload lists into ${HSTS_DIFF_ARTIFACT}"
-  ${DIFF} "${BASEDIR}/${PRODUCT}/$(basename "${HSTS_PRELOAD_INC}")" "${HSTS_PRELOAD_INC}" | tee "${HSTS_DIFF_ARTIFACT}"
+  ${DIFF} "${HSTS_PRELOAD_INC_OLD}" "${HSTS_PRELOAD_INC_NEW}" | tee "${HSTS_DIFF_ARTIFACT}"
   if [ -s "${HSTS_DIFF_ARTIFACT}" ]
   then
     return 0
@@ -400,7 +401,7 @@ function clone_repo {
 # Copies new HSTS files in place, and commits them.
 function stage_hsts_files {
   cd "${BASEDIR}"
-  cp -f "${BASEDIR}/${PRODUCT}/$(basename "${HSTS_PRELOAD_INC}")" "${REPODIR}/security/manager/ssl/"
+  cp -f "${HSTS_PRELOAD_INC_NEW}" "${REPODIR}/security/manager/ssl/"
 }
 
 function stage_hpkp_files {
@@ -509,7 +510,7 @@ if [ "${REPODIR}" == "" ]; then
 fi
 
 case "${BRANCH}" in
-  mozilla-central|comm-central )
+  mozilla-central|comm-central|try )
     HGREPO="https://${HGHOST}/${BRANCH}"
     ;;
   mozilla-*|comm-* )

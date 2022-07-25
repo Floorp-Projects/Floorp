@@ -13,10 +13,6 @@ const { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const FEATURE_STP_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const TOP_LEVEL_DOMAIN = "http://www.example.com/";
 const TRACKER_DOMAIN = "http://social-tracking.example.org/";

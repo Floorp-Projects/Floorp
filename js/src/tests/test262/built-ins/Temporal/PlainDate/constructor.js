@@ -10,6 +10,6 @@ info: |
 features: [Temporal]
 ---*/
 
-assert.throws(TypeError, () => Temporal.PlainDate());
+assert.throws(TypeError, () => Temporal.PlainDate(1970, 1, 2));
 
 reportCompare(0, 0);

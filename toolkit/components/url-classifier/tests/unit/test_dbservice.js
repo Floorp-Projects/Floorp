@@ -1,6 +1,3 @@
-var checkUrls = [];
-var checkExpect;
-
 var chunk1Urls = ["test.com/aba", "test.com/foo/bar", "foo.bar.com/a/b/c"];
 var chunk1 = chunk1Urls.join("\n");
 

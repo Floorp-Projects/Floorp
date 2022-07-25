@@ -90,6 +90,8 @@ struct ContainSizeAxes {
                      const nsIFrame& aFrame) const;
   IntrinsicSize ContainIntrinsicSize(const IntrinsicSize& aUncontainedSize,
                                      const nsIFrame& aFrame) const;
+  Maybe<nscoord> ContainIntrinsicBSize(const nsIFrame& aFrame) const;
+  Maybe<nscoord> ContainIntrinsicISize(const nsIFrame& aFrame) const;
 
   const bool mIContained;
   const bool mBContained;

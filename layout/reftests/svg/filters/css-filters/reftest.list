@@ -29,7 +29,7 @@ fails-if(useDrawSnapshot) == blur-zoomed-page.html blur-zoomed-page-ref.html
 == drop-shadow-default-color.html drop-shadow-default-color-ref.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
 == filter-on-huge-bbox.html pass.svg
-fuzzy(0-1,0-44) == filter-on-outer-svg.html pass.svg
+fuzzy(0-1,0-44) fuzzy-if(winWidget,0-1,0-198) == filter-on-outer-svg.html pass.svg
 fuzzy(0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == grayscale.html grayscale-ref.html
 fuzzy(0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == grayscale-one.html grayscale-one-ref.html
 fuzzy(0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == grayscale-over-one.html grayscale-over-one-ref.html

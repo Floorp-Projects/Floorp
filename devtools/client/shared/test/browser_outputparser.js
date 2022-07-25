@@ -10,6 +10,7 @@ const {
 add_task(async function() {
   await pushPref("layout.css.backdrop-filter.enabled", true);
   await pushPref("layout.css.individual-transform.enabled", true);
+  await pushPref("layout.css.color-mix.enabled", true);
   await addTab("about:blank");
   await performTest();
   gBrowser.removeCurrentTab();
