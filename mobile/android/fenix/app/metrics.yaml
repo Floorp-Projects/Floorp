@@ -5395,11 +5395,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/21593
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
@@ -5421,11 +5422,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/21593
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
@@ -5447,11 +5449,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/25401
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
@@ -5474,11 +5477,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/25401
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25418#issuecomment-1163390855
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
@@ -5504,11 +5508,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/21593
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
@@ -5521,11 +5526,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/21593
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
@@ -5537,11 +5543,12 @@ pocket:
       - https://github.com/mozilla-mobile/fenix/issues/21593
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+      - https://github.com/mozilla-mobile/fenix/pull/26184#issuecomment-1194744884
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
     metadata:
       tags:
         - PocketIntegration
