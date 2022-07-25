@@ -393,7 +393,9 @@ class HomeScreenRobot {
         }
 
         fun expandCollection(title: String, rule: ComposeTestRule, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+            homeScreenList().waitForExists(waitingTime)
             homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
+
             collectionTitle(title, rule)
                 .assertIsDisplayed()
                 .performClick()
