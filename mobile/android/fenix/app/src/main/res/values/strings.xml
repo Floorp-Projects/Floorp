@@ -1142,7 +1142,7 @@
     <string name="deleting_browsing_data_in_progress">Deleting browsing data&#8230;</string>
 
     <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
-    <string name="delete_all_history_group_prompt_message">Delete all sites in \"%s\"</string>
+    <string name="delete_all_history_group_prompt_message">Delete all sites in \“%s\”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Cancel</string>
     <!-- Text for the allow button for the history group dialog -->
