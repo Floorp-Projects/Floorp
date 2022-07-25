@@ -129,7 +129,7 @@ pref(layout.css.caption-side-non-standard.enabled,true) == grid-item-table-stret
 == grid-item-table-stretch-004.html grid-item-table-stretch-004-ref.html
 == grid-item-fieldset-stretch-001.html grid-item-fieldset-stretch-001-ref.html
 skip-if(Android) fuzzy-if(appleSilicon,255-255,167058-167058) == grid-item-video-stretch-001.html grid-item-video-stretch-001-ref.html # Huh, Android doesn't have webm support?
-skip-if(Android) fuzzy-if(appleSilicon,0-255,0-92666) == grid-item-video-stretch-002.html grid-item-video-stretch-002-ref.html # Huh, Android doesn't have webm support?
+skip-if(Android) fuzzy-if(appleSilicon,0-255,0-92666) fuzzy-if(winWidget,0-1,0-181) == grid-item-video-stretch-002.html grid-item-video-stretch-002-ref.html # Huh, Android doesn't have webm support?
 == grid-item-input-stretch-001.html grid-item-input-stretch-001-ref.html
 == grid-align-content-001.html grid-align-content-001-ref.html
 == grid-justify-content-001.html grid-justify-content-001-ref.html
