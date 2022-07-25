@@ -18,6 +18,7 @@
 @media (-moz-platform: linux) {
   #setDefaultPane,
   #macOS-only,
+  .floorp-updater,
   #Windows-only
   {
     display: none !important;
@@ -26,7 +27,8 @@
 
 @media (-moz-platform: windows){
   #macOS-only,
-  #Linux-only{
+  #Linux-only,
+  .floorp-updater{
     display: none !important;
   }
 }
