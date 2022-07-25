@@ -72,8 +72,7 @@ class MOZ_RAII AutoAssertReportedException {
       return;
     }
 
-    MOZ_ASSERT_IF(ec_, ec_->hadOutOfMemory() || ec_->hadOverRecursed() ||
-                           !ec_->errors().empty());
+    MOZ_ASSERT_IF(ec_, ec_->hadErrors());
   }
 #else
  public:
