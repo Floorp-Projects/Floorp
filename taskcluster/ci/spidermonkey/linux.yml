@@ -84,7 +84,7 @@ sm-smoosh-linux64/debug:
         tier: 3
     run:
         spidermonkey-variant: smooshdebug
-    run-on-projects: ['mozilla-central']
+    run-on-projects: []
     fetches:
         toolchain:
             - linux64-clang
@@ -124,7 +124,7 @@ sm-smoosh-linux64/opt:
         tier: 3
     run:
         spidermonkey-variant: smoosh
-    run-on-projects: ['mozilla-central']
+    run-on-projects: []
     fetches:
         toolchain:
             - linux64-clang
