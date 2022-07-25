@@ -164,6 +164,7 @@ ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
       anyChars(cx, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
+      ec_(cx),
 #ifdef DEBUG
       checkOptionsCalled_(false),
 #endif

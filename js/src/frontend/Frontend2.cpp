@@ -544,9 +544,10 @@ void InitSmoosh() { smoosh_init(); }
 
 void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
                               int errorNumber, ...) {
+  GeneralErrorContext ec(cx);
   va_list args;
   va_start(args, errorNumber);
-  ReportCompileErrorUTF8(cx, cx, std::move(metadata), /* notes = */ nullptr,
+  ReportCompileErrorUTF8(&ec, cx, std::move(metadata), /* notes = */ nullptr,
                          errorNumber, &args);
   va_end(args);
 }

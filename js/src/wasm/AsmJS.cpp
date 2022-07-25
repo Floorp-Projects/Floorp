@@ -1340,6 +1340,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
  protected:
   JSContext* cx_;
+  GeneralErrorContext ec_;
   ParserAtomsTable& parserAtoms_;
   FunctionNode* moduleFunctionNode_;
   TaggedParserAtomIndex moduleFunctionName_;
@@ -1372,6 +1373,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   ModuleValidatorShared(JSContext* cx, ParserAtomsTable& parserAtoms,
                         FunctionNode* moduleFunctionNode)
       : cx_(cx),
+        ec_(cx),
         parserAtoms_(parserAtoms),
         moduleFunctionNode_(moduleFunctionNode),
         moduleFunctionName_(FunctionName(moduleFunctionNode)),
@@ -1931,7 +1933,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     ErrorMetadata metadata;
     if (ts.computeErrorMetadata(&metadata, AsVariant(offset))) {
       if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailureOption) {
-        ReportCompileErrorLatin1(cx_, cx_, std::move(metadata), nullptr,
+        ReportCompileErrorLatin1(&ec_, cx_, std::move(metadata), nullptr,
                                  JSMSG_USE_ASM_TYPE_FAIL, &args);
       } else {
         // asm.js type failure is indicated by calling one of the fail*

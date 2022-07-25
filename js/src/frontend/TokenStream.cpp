@@ -494,6 +494,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
     : cx(cx),
+      ec(cx),
       options_(options),
       strictModeGetter_(smg),
       filename_(options.filename()),
@@ -609,7 +610,7 @@ void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
   ErrorMetadata metadata;
   computeErrorMetadataNoOffset(&metadata);
 
-  ReportCompileErrorLatin1(cx, cx, std::move(metadata), nullptr, errorNumber,
+  ReportCompileErrorLatin1(&ec, cx, std::move(metadata), nullptr, errorNumber,
                            args);
 }
 
@@ -1040,7 +1041,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
       break;
     }
 
-    ReportCompileErrorLatin1(anyChars.cx, anyChars.cx, std::move(err),
+    ReportCompileErrorLatin1(&anyChars.ec, anyChars.cx, std::move(err),
                              std::move(notes), errorNumber, &args);
   } while (false);
 
