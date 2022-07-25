@@ -14,7 +14,7 @@
 using namespace js;
 
 void ErrorAllocator::reportAllocationOverflow() {
-  context_->reportAllocationOverflow();
+  context_->onAllocationOverflow();
 }
 
 void* ErrorAllocator::onOutOfMemory(AllocFunction allocFunc, arena_id_t arena,
@@ -30,7 +30,7 @@ void* MainThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
   return cx_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
-void MainThreadErrorContext::reportAllocationOverflow() {
+void MainThreadErrorContext::onAllocationOverflow() {
   return cx_->reportAllocationOverflow();
 }
 
@@ -78,7 +78,7 @@ void* OffThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
   return nullptr;
 }
 
-void OffThreadErrorContext::reportAllocationOverflow() {
+void OffThreadErrorContext::onAllocationOverflow() {
   // TODO Bug 1780599 - Currently allocation overflows are not reported for
   // helper threads; see js::reportAllocationOverflow()
 }
