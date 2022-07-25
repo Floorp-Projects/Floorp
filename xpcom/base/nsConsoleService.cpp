@@ -410,9 +410,9 @@ nsConsoleService::LogStringMessage(const char16_t* aMessage) {
     return NS_OK;
   }
 
-  RefPtr<nsConsoleMessage> msg(
-      new nsConsoleMessage(nsDependentString(aMessage)));
-  return this->LogMessage(msg);
+  RefPtr<nsConsoleMessage> msg(new nsConsoleMessage(
+      aMessage ? nsDependentString(aMessage) : EmptyString()));
+  return LogMessage(msg);
 }
 
 NS_IMETHODIMP
