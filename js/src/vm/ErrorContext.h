@@ -29,6 +29,9 @@ class ErrorContext {
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
   virtual void reportAllocationOverflow() = 0;
 
+  virtual const JSErrorFormatString* gcSafeCallback(
+      JSErrorCallback callback, void* userRef, const unsigned errorNumber) = 0;
+
   virtual void reportError(js::CompileError* err) = 0;
   virtual void reportWarning(js::CompileError* err) = 0;
 
@@ -51,6 +54,10 @@ class GeneralErrorContext : public ErrorContext {
                               void* reallocPtr = nullptr) override;
   virtual void reportAllocationOverflow() override;
 
+  const JSErrorFormatString* gcSafeCallback(
+      JSErrorCallback callback, void* userRef,
+      const unsigned errorNumber) override;
+
   virtual void reportError(js::CompileError* err) override;
   virtual void reportWarning(js::CompileError* err) override;
 
@@ -72,6 +79,10 @@ class OffThreadErrorContext : public ErrorContext {
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
   void reportAllocationOverflow() override;
+
+  const JSErrorFormatString* gcSafeCallback(
+      JSErrorCallback callback, void* userRef,
+      const unsigned errorNumber) override;
 
   virtual void reportError(js::CompileError* err) override;
   virtual void reportWarning(js::CompileError* err) override;
