@@ -344,8 +344,6 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   ErrorContext* getContext() const override { return ec_; }
 
-  JSAllocator* getAllocator() const override { return cx_; }
-
   bool strictMode() const override { return pc_->sc()->strict(); }
 
   const JS::ReadOnlyCompileOptions& options() const override {

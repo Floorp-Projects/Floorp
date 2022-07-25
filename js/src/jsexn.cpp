@@ -686,7 +686,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
   }
 
   GeneralErrorContext ec(cx);
-  if (!ExpandErrorArgumentsVA(&ec, cx, GetErrorMessage, nullptr,
+  if (!ExpandErrorArgumentsVA(&ec, GetErrorMessage, nullptr,
                               JSMSG_UNCAUGHT_EXCEPTION, ArgumentsAreUTF8,
                               &ownedReport, ap)) {
     return false;

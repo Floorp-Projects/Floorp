@@ -172,8 +172,7 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
   return false;
 }
 
-bool js::ReportCompileWarning(ErrorContext* ec, JSAllocator* alloc,
-                              ErrorMetadata&& metadata,
+bool js::ReportCompileWarning(ErrorContext* ec, ErrorMetadata&& metadata,
                               UniquePtr<JSErrorNotes> notes,
                               unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
@@ -199,7 +198,7 @@ bool js::ReportCompileWarning(ErrorContext* ec, JSAllocator* alloc,
                           metadata.tokenOffset);
   }
 
-  if (!ExpandErrorArgumentsVA(ec, alloc, GetErrorMessage, nullptr, errorNumber,
+  if (!ExpandErrorArgumentsVA(ec, GetErrorMessage, nullptr, errorNumber,
                               ArgumentsAreLatin1, err, *args)) {
     return false;
   }
@@ -209,7 +208,7 @@ bool js::ReportCompileWarning(ErrorContext* ec, JSAllocator* alloc,
   return true;
 }
 
-static void ReportCompileErrorImpl(ErrorContext* ec, JSAllocator* alloc,
+static void ReportCompileErrorImpl(ErrorContext* ec,
                                    js::ErrorMetadata&& metadata,
                                    js::UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args,
@@ -234,28 +233,26 @@ static void ReportCompileErrorImpl(ErrorContext* ec, JSAllocator* alloc,
                           metadata.tokenOffset);
   }
 
-  if (!js::ExpandErrorArgumentsVA(ec, alloc, js::GetErrorMessage, nullptr,
-                                  errorNumber, argumentsType, err, *args)) {
+  if (!js::ExpandErrorArgumentsVA(ec, js::GetErrorMessage, nullptr, errorNumber,
+                                  argumentsType, err, *args)) {
     return;
   }
 
   ec->reportError(err);
 }
 
-void js::ReportCompileErrorLatin1(ErrorContext* ec, JSAllocator* alloc,
-                                  ErrorMetadata&& metadata,
+void js::ReportCompileErrorLatin1(ErrorContext* ec, ErrorMetadata&& metadata,
                                   UniquePtr<JSErrorNotes> notes,
                                   unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(ec, alloc, std::move(metadata), std::move(notes),
-                         errorNumber, args, ArgumentsAreLatin1);
+  ReportCompileErrorImpl(ec, std::move(metadata), std::move(notes), errorNumber,
+                         args, ArgumentsAreLatin1);
 }
 
-void js::ReportCompileErrorUTF8(ErrorContext* ec, JSAllocator* alloc,
-                                ErrorMetadata&& metadata,
+void js::ReportCompileErrorUTF8(ErrorContext* ec, ErrorMetadata&& metadata,
                                 UniquePtr<JSErrorNotes> notes,
                                 unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(ec, alloc, std::move(metadata), std::move(notes),
-                         errorNumber, args, ArgumentsAreUTF8);
+  ReportCompileErrorImpl(ec, std::move(metadata), std::move(notes), errorNumber,
+                         args, ArgumentsAreUTF8);
 }
 
 void js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global,
@@ -432,8 +429,8 @@ class MOZ_RAII AutoMessageArgs {
  * that is not worth it here because AutoMessageArgs takes a void* anyway, and
  * using void* here simplifies our callers a bit.
  */
-template <typename T, typename Allocator>
-static bool ExpandErrorArgumentsHelper(ErrorContext* ec, Allocator* alloc,
+template <typename T>
+static bool ExpandErrorArgumentsHelper(ErrorContext* ec,
                                        JSErrorCallback callback, void* userRef,
                                        const unsigned errorNumber,
                                        void* messageArgs,
@@ -475,7 +472,8 @@ static bool ExpandErrorArgumentsHelper(ErrorContext* ec, Allocator* alloc,
         size_t len = strlen(efs->format);
 
         AutoMessageArgs args;
-        if (!args.init(alloc, messageArgs, argCount, argumentsType, ap)) {
+        if (!args.init(ec->getAllocator(), messageArgs, argCount, argumentsType,
+                       ap)) {
           return false;
         }
 
@@ -486,7 +484,8 @@ static bool ExpandErrorArgumentsHelper(ErrorContext* ec, Allocator* alloc,
          * Note - the above calculation assumes that each argument
          * is used once and only once in the expansion !!!
          */
-        char* utf8 = out = alloc->template pod_malloc<char>(expandedLength + 1);
+        char* utf8 = out =
+            ec->getAllocator()->pod_malloc<char>(expandedLength + 1);
         if (!out) {
           return false;
         }
@@ -530,7 +529,7 @@ static bool ExpandErrorArgumentsHelper(ErrorContext* ec, Allocator* alloc,
     const char* defaultErrorMessage =
         "No error message available for error number %d";
     size_t nbytes = strlen(defaultErrorMessage) + 16;
-    char* message = alloc->template pod_malloc<char>(nbytes);
+    char* message = ec->getAllocator()->pod_malloc<char>(nbytes);
     if (!message) {
       return false;
     }
@@ -540,44 +539,40 @@ static bool ExpandErrorArgumentsHelper(ErrorContext* ec, Allocator* alloc,
   return true;
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSContext* alloc,
-                                JSErrorCallback callback, void* userRef,
-                                const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                void* userRef, const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType == ArgumentsAreUnicode);
-  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                JSErrorCallback callback, void* userRef,
-                                const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                void* userRef, const unsigned errorNumber,
                                 const char** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType != ArgumentsAreUnicode);
-  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                JSErrorCallback callback, void* userRef,
-                                const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                void* userRef, const unsigned errorNumber,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
-  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
-                                    nullptr, argumentsType, reportp, ap);
+  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber, nullptr,
+                                    argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                JSErrorCallback callback, void* userRef,
-                                const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                void* userRef, const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorNotes::Note* notep, va_list ap) {
-  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, notep, ap);
 }
 
@@ -591,7 +586,7 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
   PopulateReportBlame(cx, &report);
 
   GeneralErrorContext ec(cx);
-  if (!ExpandErrorArgumentsVA(&ec, cx, callback, userRef, errorNumber,
+  if (!ExpandErrorArgumentsVA(&ec, callback, userRef, errorNumber,
                               argumentsType, &report, ap)) {
     return false;
   }
@@ -602,16 +597,15 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
 }
 
 template <typename CharT>
-static bool ExpandErrorArguments(ErrorContext* ec, JSAllocator* alloc,
-                                 JSErrorCallback callback, void* userRef,
-                                 const unsigned errorNumber,
+static bool ExpandErrorArguments(ErrorContext* ec, JSErrorCallback callback,
+                                 void* userRef, const unsigned errorNumber,
                                  const CharT** messageArgs,
                                  js::ErrorArgumentsType argumentsType,
                                  JSErrorReport* reportp, ...) {
   va_list ap;
   va_start(ap, reportp);
   bool expanded =
-      js::ExpandErrorArgumentsVA(ec, alloc, callback, userRef, errorNumber,
+      js::ExpandErrorArgumentsVA(ec, callback, userRef, errorNumber,
                                  messageArgs, argumentsType, reportp, ap);
   va_end(ap);
   return expanded;
@@ -633,8 +627,8 @@ static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
   PopulateReportBlame(cx, &report);
 
   GeneralErrorContext ec(cx);
-  if (!ExpandErrorArguments(&ec, cx, callback, userRef, errorNumber, args,
-                            argType, &report)) {
+  if (!ExpandErrorArguments(&ec, callback, userRef, errorNumber, args, argType,
+                            &report)) {
     return false;
   }
 

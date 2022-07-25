@@ -178,11 +178,11 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
                               size_t length, ...) {
   MOZ_ASSERT(line.isSome() == column.isSome());
 
-  gc::AutoSuppressGC suppressGC(ts.allocator());
+  gc::AutoSuppressGC suppressGC(ts.jsContext());
   uint32_t errorNumber = ErrorNumber(result.error);
 
   if (errorNumber == JSMSG_OVER_RECURSED) {
-    ReportOverRecursed(ts.allocator());
+    ReportOverRecursed(ts.jsContext());
     return;
   }
 
@@ -238,7 +238,7 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
 
   // Create the windowed string, not including the potential line
   // terminator.
-  StringBuffer windowBuf(ts.allocator());
+  StringBuffer windowBuf(ts.jsContext());
   if (!windowBuf.append(windowStart, windowEnd)) {
     return;
   }
@@ -259,8 +259,8 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
 
   va_list args;
   va_start(args, length);
-  ReportCompileErrorLatin1(ts.context(), ts.allocator(), std::move(err),
-                           nullptr, errorNumber, &args);
+  ReportCompileErrorLatin1(ts.context(), std::move(err), nullptr, errorNumber,
+                           &args);
   va_end(args);
 }
 
