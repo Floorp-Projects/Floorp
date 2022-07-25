@@ -513,11 +513,11 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
 
 template <typename Unit>
 TokenStreamCharsBase<Unit>::TokenStreamCharsBase(JSContext* cx,
-                                                 ParserAtomsTable* pasrerAtoms,
+                                                 ParserAtomsTable* parserAtoms,
                                                  const Unit* units,
                                                  size_t length,
                                                  size_t startOffset)
-    : TokenStreamCharsShared(cx, pasrerAtoms),
+    : TokenStreamCharsShared(cx, parserAtoms),
       sourceUnits(units, length, startOffset) {}
 
 bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
@@ -581,9 +581,9 @@ bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
 
 template <typename Unit, class AnyCharsAccess>
 TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
-    JSContext* cx, ParserAtomsTable* pasrerAtoms,
+    JSContext* cx, ParserAtomsTable* parserAtoms,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length)
-    : TokenStreamChars<Unit, AnyCharsAccess>(cx, pasrerAtoms, units, length,
+    : TokenStreamChars<Unit, AnyCharsAccess>(cx, parserAtoms, units, length,
                                              options.scriptSourceOffset) {}
 
 bool TokenStreamAnyChars::checkOptions() {
