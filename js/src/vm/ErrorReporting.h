@@ -153,14 +153,16 @@ extern bool ReportErrorNumberUTF8Array(JSContext* cx, IsWarning isWarning,
                                        const unsigned errorNumber,
                                        const char** args);
 
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                   JSErrorCallback callback, void* userRef,
+                                   const unsigned errorNumber,
                                    const char16_t** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
 
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                   JSErrorCallback callback, void* userRef,
+                                   const unsigned errorNumber,
                                    const char** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
@@ -168,13 +170,15 @@ extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
 /*
  * For cases when we do not have an arguments array.
  */
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                   JSErrorCallback callback, void* userRef,
+                                   const unsigned errorNumber,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
 
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                   JSErrorCallback callback, void* userRef,
+                                   const unsigned errorNumber,
                                    const char16_t** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorNotes::Note* notep, va_list ap);

@@ -41,6 +41,12 @@ void GeneralErrorContext::reportAllocationOverflow() {
   return cx_->reportAllocationOverflow();
 }
 
+const JSErrorFormatString* GeneralErrorContext::gcSafeCallback(
+    JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
+  gc::AutoSuppressGC suppressGC(cx_);
+  return callback(userRef, errorNumber);
+}
+
 void GeneralErrorContext::reportError(CompileError* err) {
   // On the main thread, report the error immediately.
 
@@ -95,6 +101,11 @@ void* OffThreadErrorContext::onOutOfMemory(js::AllocFunction allocFunc,
 void OffThreadErrorContext::reportAllocationOverflow() {
   // TODO Bug 1780599 - Currently allocation overflows are not reported for
   // helper threads; see js::reportAllocationOverflow()
+}
+
+const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
+    JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
+  return callback(userRef, errorNumber);
 }
 
 void OffThreadErrorContext::reportError(CompileError* err) {
@@ -180,7 +191,7 @@ bool js::ReportCompileWarning(ErrorContext* ec, JSAllocator* alloc,
                           metadata.tokenOffset);
   }
 
-  if (!ExpandErrorArgumentsVA(alloc, GetErrorMessage, nullptr, errorNumber,
+  if (!ExpandErrorArgumentsVA(ec, alloc, GetErrorMessage, nullptr, errorNumber,
                               ArgumentsAreLatin1, err, *args)) {
     return false;
   }
@@ -215,7 +226,7 @@ static void ReportCompileErrorImpl(ErrorContext* ec, JSAllocator* alloc,
                           metadata.tokenOffset);
   }
 
-  if (!js::ExpandErrorArgumentsVA(alloc, js::GetErrorMessage, nullptr,
+  if (!js::ExpandErrorArgumentsVA(ec, alloc, js::GetErrorMessage, nullptr,
                                   errorNumber, argumentsType, err, *args)) {
     return;
   }
@@ -414,7 +425,7 @@ class MOZ_RAII AutoMessageArgs {
  * using void* here simplifies our callers a bit.
  */
 template <typename T, typename Allocator>
-static bool ExpandErrorArgumentsHelper(JSContext* cx, Allocator* alloc,
+static bool ExpandErrorArgumentsHelper(ErrorContext* ec, Allocator* alloc,
                                        JSErrorCallback callback, void* userRef,
                                        const unsigned errorNumber,
                                        void* messageArgs,
@@ -426,10 +437,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, Allocator* alloc,
     callback = GetErrorMessage;
   }
 
-  {
-    gc::AutoSuppressGC suppressGC(cx);  // TODO bug 1773324 remove JSContext use
-    efs = callback(userRef, errorNumber);
-  }
+  efs = ec->gcSafeCallback(callback, userRef, errorNumber);
 
   if (efs) {
     if constexpr (std::is_same_v<T, JSErrorReport>) {
@@ -524,44 +532,44 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, Allocator* alloc,
   return true;
 }
 
-bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                void* userRef, const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSContext* alloc,
+                                JSErrorCallback callback, void* userRef,
+                                const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType == ArgumentsAreUnicode);
-  ErrorAllocator<JSContext> alloc(cx);
-  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                void* userRef, const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                JSErrorCallback callback, void* userRef,
+                                const unsigned errorNumber,
                                 const char** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType != ArgumentsAreUnicode);
-  ErrorAllocator<JSContext> alloc(cx);
-  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                void* userRef, const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                JSErrorCallback callback, void* userRef,
+                                const unsigned errorNumber,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
-  ErrorAllocator<JSContext> alloc(cx);
-  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
                                     nullptr, argumentsType, reportp, ap);
 }
 
-bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                void* userRef, const unsigned errorNumber,
+bool js::ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
+                                JSErrorCallback callback, void* userRef,
+                                const unsigned errorNumber,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorNotes::Note* notep, va_list ap) {
-  ErrorAllocator<JSContext> alloc(cx);
-  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
+  return ExpandErrorArgumentsHelper(ec, alloc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, notep, ap);
 }
 
@@ -572,28 +580,30 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
   JSErrorReport report;
   report.isWarning_ = isWarning == IsWarning::Yes;
   report.errorNumber = errorNumber;
-  PopulateReportBlame(cx, &report);  // TODO bug 1773324
+  PopulateReportBlame(cx, &report);
 
-  if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber, argumentsType,
-                              &report, ap)) {
+  GeneralErrorContext ec(cx);
+  if (!ExpandErrorArgumentsVA(&ec, cx, callback, userRef, errorNumber,
+                              argumentsType, &report, ap)) {
     return false;
   }
 
-  ReportError(cx, &report, callback, userRef);  // TODO bug 1773324
+  ReportError(cx, &report, callback, userRef);
 
   return report.isWarning();
 }
 
 template <typename CharT>
-static bool ExpandErrorArguments(JSContext* cx, JSErrorCallback callback,
-                                 void* userRef, const unsigned errorNumber,
+static bool ExpandErrorArguments(ErrorContext* ec, JSAllocator* alloc,
+                                 JSErrorCallback callback, void* userRef,
+                                 const unsigned errorNumber,
                                  const CharT** messageArgs,
                                  js::ErrorArgumentsType argumentsType,
                                  JSErrorReport* reportp, ...) {
   va_list ap;
   va_start(ap, reportp);
   bool expanded =
-      js::ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
+      js::ExpandErrorArgumentsVA(ec, alloc, callback, userRef, errorNumber,
                                  messageArgs, argumentsType, reportp, ap);
   va_end(ap);
   return expanded;
@@ -614,8 +624,9 @@ static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
-  if (!ExpandErrorArguments(cx, callback, userRef, errorNumber, args, argType,
-                            &report)) {
+  GeneralErrorContext ec(cx);
+  if (!ExpandErrorArguments(&ec, cx, callback, userRef, errorNumber, args,
+                            argType, &report)) {
     return false;
   }
 
