@@ -365,14 +365,16 @@ Maybe<SnapTarget> ScrollSnapUtils::GetSnapPointForDestination(
           StyleScrollSnapStrictness::Proximity &&
       std::abs(aDestination.y - finalPos.mPosition.y) > proximityThreshold) {
     finalPos.mPosition.y = aDestination.y;
-  } else {
+  } else if (aSnapInfo.mScrollSnapStrictnessY !=
+             StyleScrollSnapStrictness::None) {
     snapped = true;
   }
   if (aSnapInfo.mScrollSnapStrictnessX ==
           StyleScrollSnapStrictness::Proximity &&
       std::abs(aDestination.x - finalPos.mPosition.x) > proximityThreshold) {
     finalPos.mPosition.x = aDestination.x;
-  } else {
+  } else if (aSnapInfo.mScrollSnapStrictnessX !=
+             StyleScrollSnapStrictness::None) {
     snapped = true;
   }
   return snapped ? Some(finalPos) : Nothing();
