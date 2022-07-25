@@ -497,9 +497,8 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 #endif
 
 struct MOZ_RAII AutoSetContextOffThreadFrontendErrors {
-  explicit AutoSetContextOffThreadFrontendErrors(
-      OffThreadFrontendErrors* errors) {
-    TlsContext.get()->setOffThreadFrontendErrors(errors);
+  explicit AutoSetContextOffThreadFrontendErrors(OffThreadErrorContext* ec) {
+    ec->linkWithJSContext(TlsContext.get());
   }
   ~AutoSetContextOffThreadFrontendErrors() {
     TlsContext.get()->setOffThreadFrontendErrors(nullptr);
@@ -1003,8 +1002,6 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
   // In case of early failure, no errors are reported, as a DelazifyTask is an
   // optimization and the VM should remain working even without this
   // optimization in place.
-  OffThreadFrontendErrors errors;
-  AutoSetContextOffThreadFrontendErrors recordErrors(&errors);
 
   UniquePtr<DelazifyTask> task;
   task.reset(js_new<DelazifyTask>(runtime, contextOptions));
@@ -1013,6 +1010,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
     return nullptr;
   }
 
+  AutoSetContextOffThreadFrontendErrors recordErrors(&task->ec_);
   RefPtr<ScriptSource> source(stencil.source);
   StencilCache& cache = runtime->caches().delazificationCache;
   if (!cache.startCaching(std::move(source))) {
@@ -1033,13 +1031,12 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
     return nullptr;
   }
 
-  task->errors_ = std::move(errors);
   return task;
 }
 
 DelazifyTask::DelazifyTask(JSRuntime* runtime,
                            const JS::ContextOptions& options)
-    : runtime(runtime), contextOptions(options), merger(), errors_() {
+    : runtime(runtime), contextOptions(options), merger() {
   runtime->addParseTaskRef();
 }
 
@@ -1123,7 +1120,7 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
 bool DelazifyTask::runTask(JSContext* cx) {
   AutoSetContextRuntime ascr(runtime);
-  AutoSetContextOffThreadFrontendErrors recordErrors(&this->errors_);
+  AutoSetContextOffThreadFrontendErrors recordErrors(&this->ec_);
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   using namespace js::frontend;
@@ -1139,7 +1136,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
       MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
       // Parse and generate bytecode for the inner function.
-      innerStencil = DelazifyCanonicalScriptedFunction(cx, borrow, scriptIndex);
+      innerStencil =
+          DelazifyCanonicalScriptedFunction(cx, &ec_, borrow, scriptIndex);
       if (!innerStencil) {
         return false;
       }

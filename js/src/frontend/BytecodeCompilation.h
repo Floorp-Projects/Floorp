@@ -80,11 +80,12 @@ extern JSScript* CompileEvalScript(JSContext* cx,
                                    JS::Handle<js::Scope*> enclosingScope,
                                    JS::Handle<JSObject*> enclosingEnv);
 
-extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
+extern bool DelazifyCanonicalScriptedFunction(JSContext* cx, ErrorContext* ec,
                                               JS::Handle<JSFunction*> fun);
 
 extern already_AddRefed<CompilationStencil> DelazifyCanonicalScriptedFunction(
-    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex);
+    JSContext* cx, ErrorContext* ec, CompilationStencil& context,
+    ScriptIndex scriptIndex);
 
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {

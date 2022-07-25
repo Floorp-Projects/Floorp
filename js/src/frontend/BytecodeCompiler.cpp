@@ -1085,11 +1085,11 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool CompileLazyFunctionToStencilMaybeInstantiate(
-    JSContext* cx, CompilationInput& input, const Unit* units, size_t length,
-    BytecodeCompilerOutput& output) {
+    JSContext* cx, ErrorContext* ec, CompilationInput& input, const Unit* units,
+    size_t length, BytecodeCompilerOutput& output) {
   MOZ_ASSERT(input.source);
 
-  AutoAssertReportedException assertException(cx);
+  AutoAssertReportedException assertException(cx, ec);
   if (input.options.consumeDelazificationCache()) {
     auto res = GetCachedLazyFunctionStencilMaybeInstantiate(cx, input, output);
     switch (res) {
@@ -1114,8 +1114,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  MainThreadErrorContext ec(cx);
-  Parser<FullParseHandler, Unit> parser(cx, &ec, input.options, units, length,
+  Parser<FullParseHandler, Unit> parser(cx, ec, input.options, units, length,
                                         /* foldConstants = */ true,
                                         compilationState,
                                         /* syntaxParser = */ nullptr);
@@ -1215,6 +1214,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 
 template <typename Unit>
 static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
+                                                  ErrorContext* ec,
                                                   HandleFunction fun,
                                                   Handle<BaseScript*> lazy,
                                                   ScriptSource* ss) {
@@ -1256,10 +1256,11 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   CompilationGCOutput* unusedGcOutput = nullptr;
   BytecodeCompilerOutput output(unusedGcOutput);
   return CompileLazyFunctionToStencilMaybeInstantiate(
-      cx, input.get(), units.get(), sourceLength, output);
+      cx, ec, input.get(), units.get(), sourceLength, output);
 }
 
 bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
+                                                 ErrorContext* ec,
                                                  HandleFunction fun) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "script delazify",
                                      JS::ProfilingCategoryPair::JS_Parsing);
@@ -1269,18 +1270,19 @@ bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
 
   if (ss->hasSourceType<Utf8Unit>()) {
     // UTF-8 source text.
-    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, fun, lazy, ss);
+    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, ec, fun, lazy,
+                                                           ss);
   }
 
   MOZ_ASSERT(ss->hasSourceType<char16_t>());
 
   // UTF-16 source text.
-  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fun, lazy, ss);
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, ec, fun, lazy, ss);
 }
 
 template <typename Unit>
 static already_AddRefed<CompilationStencil>
-DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
+DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, ErrorContext* ec,
                                       CompilationStencil& context,
                                       ScriptIndex scriptIndex) {
   ScriptStencilRef script{context, scriptIndex};
@@ -1328,14 +1330,14 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileLazyFunctionToStencilMaybeInstantiate(
-          cx, input.get(), units.get(), sourceLength, output)) {
+          cx, ec, input.get(), units.get(), sourceLength, output)) {
     return nullptr;
   }
   return output.as<OutputType>().forget();
 }
 
 already_AddRefed<CompilationStencil>
-frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
+frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, ErrorContext* ec,
                                             CompilationStencil& context,
                                             ScriptIndex scriptIndex) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil script delazify",
@@ -1344,13 +1346,13 @@ frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
   ScriptSource* ss = context.source;
   if (ss->hasSourceType<Utf8Unit>()) {
     // UTF-8 source text.
-    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, context,
+    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, ec, context,
                                                            scriptIndex);
   }
 
   // UTF-16 source text.
   MOZ_ASSERT(ss->hasSourceType<char16_t>());
-  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, context,
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, ec, context,
                                                          scriptIndex);
 }
 

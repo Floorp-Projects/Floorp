@@ -688,7 +688,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   frontend::CompilationStencilMerger merger;
 
   // Record any errors happening while parsing or generating bytecode.
-  OffThreadFrontendErrors errors_;
+  OffThreadErrorContext ec_;
 
   // Create a new DelazifyTask and initialize it.
   static UniquePtr<DelazifyTask> Create(
