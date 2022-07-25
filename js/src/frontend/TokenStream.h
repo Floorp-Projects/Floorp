@@ -2549,6 +2549,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   JSContext* getContext() const override { return anyCharsAccess().cx; }
 
+  JSAllocator* getAllocator() const override { return anyCharsAccess().cx; }
+
   [[nodiscard]] bool strictMode() const override {
     return anyCharsAccess().strictMode();
   }
