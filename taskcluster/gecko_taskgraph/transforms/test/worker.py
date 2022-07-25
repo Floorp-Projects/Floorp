@@ -198,6 +198,12 @@ def set_worker_type(config, tasks):
                 win_worker_type_platform = WINDOWS_WORKER_TYPES[
                     test_platform.split("/")[0]
                 ]
+                if task[
+                    "virtualization"
+                ] == "virtual-with-gpu" and test_platform.startswith("windows10"):
+                    # add in `--requires-gpu` to the mozharness options
+                    task["mozharness"]["extra-options"].append("--requires-gpu")
+
             # now we have the right platform set the worker type accordingly
             task["worker-type"] = win_worker_type_platform[task["virtualization"]]
         elif test_platform.startswith("android-hw-g5"):

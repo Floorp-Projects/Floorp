@@ -18,5 +18,15 @@
             "x": 1010,
             "y": 10
         }
+    },
+    "win10-vm": {
+        "screen_resolution": {
+            "x": 2560,
+            "y": 1600
+        },
+        "mouse_position": {
+            "x": 1010,
+            "y": 10
+        }
     }
 }
