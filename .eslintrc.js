@@ -30,6 +30,8 @@ const xpcshellTestPaths = [
   "**/test*/unit*/**/",
   "**/test*/*/unit*/",
   "**/test*/xpcshell/**/",
+  // Special case for xpcshell harness.
+  "testing/xpcshell/example/unit/",
 ];
 
 const browserTestPaths = ["**/test*/**/browser*/"];
@@ -224,7 +226,6 @@ module.exports = {
         "dom/**",
         "netwerk/**",
         "security/manager/ssl/tests/unit/**",
-        "testing/xpcshell/**",
         "toolkit/components/**",
         "toolkit/modules/**",
       ],
