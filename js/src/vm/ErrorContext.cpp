@@ -66,9 +66,9 @@ bool MainThreadErrorContext::hadOverRecursed() const {
   return cx_->offThreadFrontendErrors()->overRecursed;
 }
 
-const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>&
-MainThreadErrorContext::errors() const {
-  return cx_->offThreadFrontendErrors()->errors;
+bool MainThreadErrorContext::hadErrors() const {
+  return hadOutOfMemory() || hadOverRecursed() ||
+         !cx_->offThreadFrontendErrors()->errors.empty();
 }
 
 void* OffThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,

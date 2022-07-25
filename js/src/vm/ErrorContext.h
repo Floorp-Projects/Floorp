@@ -44,6 +44,11 @@ class ErrorContext {
 
   ErrorAllocator* getAllocator() { return &alloc_; }
 
+  // Report CompileErrors
+  virtual void reportError(js::CompileError* err) = 0;
+  virtual void reportWarning(js::CompileError* err) = 0;
+
+  // Report ErrorAllocator errors
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
   virtual void reportAllocationOverflow() = 0;
@@ -51,13 +56,10 @@ class ErrorContext {
   virtual const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef, const unsigned errorNumber) = 0;
 
-  virtual void reportError(js::CompileError* err) = 0;
-  virtual void reportWarning(js::CompileError* err) = 0;
-
+  // Status of errors reported to this ErrorContext
   virtual bool hadOutOfMemory() const = 0;
   virtual bool hadOverRecursed() const = 0;
-  virtual const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors()
-      const = 0;
+  virtual bool hadErrors() const = 0;
 };
 
 class MainThreadErrorContext : public ErrorContext {
@@ -67,22 +69,23 @@ class MainThreadErrorContext : public ErrorContext {
  public:
   explicit MainThreadErrorContext(JSContext* cx);
 
-  virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                              size_t nbytes,
-                              void* reallocPtr = nullptr) override;
-  virtual void reportAllocationOverflow() override;
+  // Report CompileErrors
+  void reportError(js::CompileError* err) override;
+  void reportWarning(js::CompileError* err) override;
+
+  // Report ErrorAllocator errors
+  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                      size_t nbytes, void* reallocPtr = nullptr) override;
+  void reportAllocationOverflow() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
       const unsigned errorNumber) override;
 
-  virtual void reportError(js::CompileError* err) override;
-  virtual void reportWarning(js::CompileError* err) override;
-
-  virtual bool hadOutOfMemory() const override;
-  virtual bool hadOverRecursed() const override;
-  virtual const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors()
-      const override;
+  // Status of errors reported to this ErrorContext
+  bool hadOutOfMemory() const override;
+  bool hadOverRecursed() const override;
+  bool hadErrors() const override;
 };
 
 class OffThreadErrorContext : public ErrorContext {
@@ -92,6 +95,16 @@ class OffThreadErrorContext : public ErrorContext {
  public:
   OffThreadErrorContext() = default;
 
+  void linkWithJSContext(JSContext* cx);
+  const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors() const {
+    return errors_.errors;
+  }
+
+  // Report CompileErrors
+  void reportError(js::CompileError* err) override;
+  void reportWarning(js::CompileError* err) override;
+
+  // Report ErrorAllocator errors
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
   void reportAllocationOverflow() override;
@@ -100,20 +113,16 @@ class OffThreadErrorContext : public ErrorContext {
       JSErrorCallback callback, void* userRef,
       const unsigned errorNumber) override;
 
-  virtual void reportError(js::CompileError* err) override;
-  virtual void reportWarning(js::CompileError* err) override;
-
-  void ReportOutOfMemory();
-  void addPendingOutOfMemory();
-
-  void linkWithJSContext(JSContext* cx);
-
+  // Status of errors reported to this ErrorContext
   bool hadOutOfMemory() const override { return errors_.outOfMemory; }
   bool hadOverRecursed() const override { return errors_.overRecursed; }
-  const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors()
-      const override {
-    return errors_.errors;
+  bool hadErrors() const override {
+    return hadOutOfMemory() || hadOverRecursed() || !errors_.errors.empty();
   }
+
+ private:
+  void ReportOutOfMemory();
+  void addPendingOutOfMemory();
 };
 
 }  // namespace js
