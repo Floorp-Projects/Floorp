@@ -25,6 +25,7 @@
 #define MACOS_VERSION_10_16_HEX 0x000A1000
 #define MACOS_VERSION_11_0_HEX 0x000B0000
 #define MACOS_VERSION_12_0_HEX 0x000C0000
+#define MACOS_VERSION_13_0_HEX 0x000D0000
 
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
@@ -187,6 +188,11 @@ bool Gecko_OnSierraExactly() { return nsCocoaFeatures::OnSierraExactly(); }
   // from this function if it's launched from the command line, see bug 1727624.
   // This will not be an issue anymore once we link against the Big Sur SDK.
   return (macOSVersion() >= MACOS_VERSION_12_0_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnVenturaOrLater() {
+  // See comments above regarding SYSTEM_VERSION_COMPAT.
+  return (macOSVersion() >= MACOS_VERSION_13_0_HEX);
 }
 
 /* static */ bool nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor,
