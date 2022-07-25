@@ -2,11 +2,9 @@
 
 const SCALAR_SEARCHBAR = "browser.engagement.navigation.searchbar";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "UrlbarTestUtils",
-  "resource://testing-common/UrlbarTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
 
 let suggestionEngine;
 
