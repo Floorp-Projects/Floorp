@@ -56,11 +56,11 @@ class GIOChannelChild final : public PGIOChannelChild,
 
   mozilla::ipc::IPCResult RecvOnStartRequest(const nsresult& aChannelStatus,
                                              const int64_t& aContentLength,
-                                             const nsCString& aContentType,
-                                             const nsCString& aEntityID,
+                                             const nsACString& aContentType,
+                                             const nsACString& aEntityID,
                                              const URIParams& aURI) override;
   mozilla::ipc::IPCResult RecvOnDataAvailable(const nsresult& aChannelStatus,
-                                              const nsCString& aData,
+                                              const nsACString& aData,
                                               const uint64_t& aOffset,
                                               const uint32_t& aCount) override;
   mozilla::ipc::IPCResult RecvOnStopRequest(
@@ -71,10 +71,11 @@ class GIOChannelChild final : public PGIOChannelChild,
 
   void DoOnStartRequest(const nsresult& aChannelStatus,
                         const int64_t& aContentLength,
-                        const nsCString& aContentType,
-                        const nsCString& aEntityID, const URIParams& aURI);
-  void DoOnDataAvailable(const nsresult& aChannelStatus, const nsCString& aData,
-                         const uint64_t& aOffset, const uint32_t& aCount);
+                        const nsACString& aContentType,
+                        const nsACString& aEntityID, const URIParams& aURI);
+  void DoOnDataAvailable(const nsresult& aChannelStatus,
+                         const nsACString& aData, const uint64_t& aOffset,
+                         const uint32_t& aCount);
   void DoOnStopRequest(const nsresult& aChannelStatus);
   void DoFailedAsyncOpen(const nsresult& aStatusCode);
   void DoDeleteSelf();

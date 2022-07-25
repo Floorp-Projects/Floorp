@@ -31,7 +31,7 @@ RemotePrintJobParent::RemotePrintJobParent(nsIPrintSettings* aPrintSettings)
 }
 
 mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
-    const nsString& aDocumentTitle, const int32_t& aStartPage,
+    const nsAString& aDocumentTitle, const int32_t& aStartPage,
     const int32_t& aEndPage) {
   nsresult rv = InitializePrintDevice(aDocumentTitle, aStartPage, aEndPage);
   if (NS_FAILED(rv)) {
@@ -58,7 +58,7 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvInitializePrint(
 }
 
 nsresult RemotePrintJobParent::InitializePrintDevice(
-    const nsString& aDocumentTitle, const int32_t& aStartPage,
+    const nsAString& aDocumentTitle, const int32_t& aStartPage,
     const int32_t& aEndPage) {
   nsresult rv;
   nsCOMPtr<nsIDeviceContextSpec> deviceContextSpec =

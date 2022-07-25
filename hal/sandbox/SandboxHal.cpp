@@ -108,13 +108,12 @@ void DisableWakeLockNotifications() {
 void ModifyWakeLock(const nsAString& aTopic, WakeLockControl aLockAdjust,
                     WakeLockControl aHiddenAdjust, uint64_t aProcessID) {
   MOZ_ASSERT(aProcessID != CONTENT_PROCESS_ID_UNKNOWN);
-  Hal()->SendModifyWakeLock(nsString(aTopic), aLockAdjust, aHiddenAdjust,
-                            aProcessID);
+  Hal()->SendModifyWakeLock(aTopic, aLockAdjust, aHiddenAdjust, aProcessID);
 }
 
 void GetWakeLockInfo(const nsAString& aTopic,
                      WakeLockInformation* aWakeLockInfo) {
-  Hal()->SendGetWakeLockInfo(nsString(aTopic), aWakeLockInfo);
+  Hal()->SendGetWakeLockInfo(aTopic, aWakeLockInfo);
 }
 
 bool EnableAlarm() {
@@ -264,7 +263,7 @@ class HalParent : public PHalParent,
   }
 
   virtual mozilla::ipc::IPCResult RecvModifyWakeLock(
-      const nsString& aTopic, const WakeLockControl& aLockAdjust,
+      const nsAString& aTopic, const WakeLockControl& aLockAdjust,
       const WakeLockControl& aHiddenAdjust,
       const uint64_t& aProcessID) override {
     MOZ_ASSERT(aProcessID != CONTENT_PROCESS_ID_UNKNOWN);
@@ -286,7 +285,7 @@ class HalParent : public PHalParent,
   }
 
   virtual mozilla::ipc::IPCResult RecvGetWakeLockInfo(
-      const nsString& aTopic, WakeLockInformation* aWakeLockInfo) override {
+      const nsAString& aTopic, WakeLockInformation* aWakeLockInfo) override {
     hal::GetWakeLockInfo(aTopic, aWakeLockInfo);
     return IPC_OK();
   }

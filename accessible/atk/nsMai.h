@@ -110,7 +110,7 @@ struct MaiAtkObject {
   /*
    * Notify ATK of a text change within this ATK object.
    */
-  void FireTextChangeEvent(const nsString& aStr, int32_t aStart, uint32_t aLen,
+  void FireTextChangeEvent(const nsAString& aStr, int32_t aStart, uint32_t aLen,
                            bool aIsInsert, bool aIsFromUser);
 
   /**

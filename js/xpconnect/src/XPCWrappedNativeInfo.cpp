@@ -203,7 +203,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       nsCOMPtr<nsIScriptError> error(
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
       error->Init(NS_ConvertUTF8toUTF16(errorMsg), filename, u""_ns, lineno,
-                  column, nsIScriptError::warningFlag, "chrome javascript",
+                  column, nsIScriptError::warningFlag, "chrome javascript"_ns,
                   false /* from private window */,
                   true /* from chrome context */);
       console->LogMessage(error);

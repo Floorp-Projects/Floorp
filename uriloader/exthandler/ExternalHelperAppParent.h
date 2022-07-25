@@ -72,8 +72,8 @@ class ExternalHelperAppParent
   NS_DECL_NSIREQUESTOBSERVER
 
   mozilla::ipc::IPCResult RecvOnStartRequest(
-      const nsCString& entityID) override;
-  mozilla::ipc::IPCResult RecvOnDataAvailable(const nsCString& data,
+      const nsACString& entityID) override;
+  mozilla::ipc::IPCResult RecvOnDataAvailable(const nsACString& data,
                                               const uint64_t& offset,
                                               const uint32_t& count) override;
   mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& code) override;
@@ -82,11 +82,11 @@ class ExternalHelperAppParent
 
   ExternalHelperAppParent(nsIURI* uri, const int64_t& contentLength,
                           const bool& wasFileChannel,
-                          const nsCString& aContentDispositionHeader,
+                          const nsACString& aContentDispositionHeader,
                           const uint32_t& aContentDispositionHint,
-                          const nsString& aContentDispositionFilename);
+                          const nsAString& aContentDispositionFilename);
   void Init(const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
-            const nsCString& aMimeContentType, const bool& aForceSave,
+            const nsACString& aMimeContentType, const bool& aForceSave,
             nsIURI* aReferrer, BrowsingContext* aContext,
             const bool& aShouldCloseWindow);
 

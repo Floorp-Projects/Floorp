@@ -434,7 +434,7 @@ void SessionAccessibility::SendTextSelectionChangedEvent(
 }
 
 void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
-                                                const nsString& aStr,
+                                                const nsAString& aStr,
                                                 int32_t aStart, uint32_t aLen,
                                                 bool aIsInsert,
                                                 bool aFromUser) {
@@ -538,7 +538,7 @@ void SessionAccessibility::SendSelectedEvent(Accessible* aAccessible,
 }
 
 void SessionAccessibility::SendAnnouncementEvent(Accessible* aAccessible,
-                                                 const nsString& aAnnouncement,
+                                                 const nsAString& aAnnouncement,
                                                  uint16_t aPriority) {
   MOZ_ASSERT(NS_IsMainThread());
   GECKOBUNDLE_START(eventInfo);

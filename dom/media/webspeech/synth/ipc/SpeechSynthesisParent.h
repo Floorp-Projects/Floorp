@@ -29,7 +29,7 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent {
   SpeechSynthesisParent();
   virtual ~SpeechSynthesisParent();
   PSpeechSynthesisRequestParent* AllocPSpeechSynthesisRequestParent(
-      const nsString& aText, const nsString& aLang, const nsString& aUri,
+      const nsAString& aText, const nsAString& aLang, const nsAString& aUri,
       const float& aVolume, const float& aRate, const float& aPitch,
       const bool& aIsChrome);
 
@@ -37,8 +37,8 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent {
       PSpeechSynthesisRequestParent* aActor);
 
   mozilla::ipc::IPCResult RecvPSpeechSynthesisRequestConstructor(
-      PSpeechSynthesisRequestParent* aActor, const nsString& aText,
-      const nsString& aLang, const nsString& aUri, const float& aVolume,
+      PSpeechSynthesisRequestParent* aActor, const nsAString& aText,
+      const nsAString& aLang, const nsAString& aUri, const float& aVolume,
       const float& aRate, const float& aPitch, const bool& aIsChrome) override;
 };
 

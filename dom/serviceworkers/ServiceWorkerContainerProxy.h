@@ -26,11 +26,12 @@ class ServiceWorkerContainerProxy final {
   void RevokeActor(ServiceWorkerContainerParent* aActor);
 
   RefPtr<ServiceWorkerRegistrationPromise> Register(
-      const ClientInfo& aClientInfo, const nsCString& aScopeURL,
-      const nsCString& aScriptURL, ServiceWorkerUpdateViaCache aUpdateViaCache);
+      const ClientInfo& aClientInfo, const nsACString& aScopeURL,
+      const nsACString& aScriptURL,
+      ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   RefPtr<ServiceWorkerRegistrationPromise> GetRegistration(
-      const ClientInfo& aClientInfo, const nsCString& aURL);
+      const ClientInfo& aClientInfo, const nsACString& aURL);
 
   RefPtr<ServiceWorkerRegistrationListPromise> GetRegistrations(
       const ClientInfo& aClientInfo);

@@ -16,7 +16,7 @@ class WebrtcTCPSocketCallback {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual void OnClose(nsresult aReason) = 0;
-  virtual void OnConnected(const nsCString& aProxyType) = 0;
+  virtual void OnConnected(const nsACString& aProxyType) = 0;
   virtual void OnRead(nsTArray<uint8_t>&& aReadData) = 0;
 
  protected:

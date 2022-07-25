@@ -1414,7 +1414,7 @@ imgLoader::RemoveEntriesFromBaseDomainInAllProcesses(
   }
 
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    Unused << cp->SendClearImageCacheFromBaseDomain(nsCString(aBaseDomain));
+    Unused << cp->SendClearImageCacheFromBaseDomain(aBaseDomain);
   }
 
   return RemoveEntriesInternal(nullptr, &aBaseDomain);

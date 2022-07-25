@@ -18,7 +18,7 @@ FileCreatorParent::FileCreatorParent()
 FileCreatorParent::~FileCreatorParent() = default;
 
 mozilla::ipc::IPCResult FileCreatorParent::CreateAndShareFile(
-    const nsString& aFullPath, const nsString& aType, const nsString& aName,
+    const nsAString& aFullPath, const nsAString& aType, const nsAString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
   RefPtr<dom::BlobImpl> blobImpl;

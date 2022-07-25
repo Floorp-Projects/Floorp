@@ -24,7 +24,7 @@ class EndpointForReportParent final : public PEndpointForReportParent {
 
   EndpointForReportParent();
 
-  void Run(const nsString& aGroupName,
+  void Run(const nsAString& aGroupName,
            const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
  private:

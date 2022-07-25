@@ -30,13 +30,13 @@ mozilla::ipc::IPCResult SpeechSynthesisChild::RecvVoiceAdded(
 }
 
 mozilla::ipc::IPCResult SpeechSynthesisChild::RecvVoiceRemoved(
-    const nsString& aUri) {
+    const nsAString& aUri) {
   nsSynthVoiceRegistry::RecvRemoveVoice(aUri);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult SpeechSynthesisChild::RecvSetDefaultVoice(
-    const nsString& aUri, const bool& aIsDefault) {
+    const nsAString& aUri, const bool& aIsDefault) {
   nsSynthVoiceRegistry::RecvSetDefaultVoice(aUri, aIsDefault);
   return IPC_OK();
 }
@@ -54,7 +54,7 @@ mozilla::ipc::IPCResult SpeechSynthesisChild::RecvNotifyVoicesChanged() {
 
 PSpeechSynthesisRequestChild*
 SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(
-    const nsString& aText, const nsString& aLang, const nsString& aUri,
+    const nsAString& aText, const nsAString& aLang, const nsAString& aUri,
     const float& aVolume, const float& aRate, const float& aPitch,
     const bool& aIsChrome) {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
@@ -79,7 +79,7 @@ SpeechSynthesisRequestChild::~SpeechSynthesisRequestChild() {
 }
 
 mozilla::ipc::IPCResult SpeechSynthesisRequestChild::RecvOnStart(
-    const nsString& aUri) {
+    const nsAString& aUri) {
   mTask->DispatchStartImpl(aUri);
   return IPC_OK();
 }
@@ -114,7 +114,7 @@ mozilla::ipc::IPCResult SpeechSynthesisRequestChild::RecvOnResume(
 }
 
 mozilla::ipc::IPCResult SpeechSynthesisRequestChild::RecvOnBoundary(
-    const nsString& aName, const float& aElapsedTime,
+    const nsAString& aName, const float& aElapsedTime,
     const uint32_t& aCharIndex, const uint32_t& aCharLength,
     const uint8_t& argc) {
   mTask->DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex, aCharLength,
@@ -123,7 +123,7 @@ mozilla::ipc::IPCResult SpeechSynthesisRequestChild::RecvOnBoundary(
 }
 
 mozilla::ipc::IPCResult SpeechSynthesisRequestChild::RecvOnMark(
-    const nsString& aName, const float& aElapsedTime,
+    const nsAString& aName, const float& aElapsedTime,
     const uint32_t& aCharIndex) {
   mTask->DispatchMarkImpl(aName, aElapsedTime, aCharIndex);
   return IPC_OK();

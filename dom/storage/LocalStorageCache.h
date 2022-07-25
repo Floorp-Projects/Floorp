@@ -50,7 +50,7 @@ class LocalStorageCacheBridge {
   virtual uint32_t LoadedCount() = 0;
 
   // Called by the database to load a key and its value to the cache
-  virtual bool LoadItem(const nsAString& aKey, const nsString& aValue) = 0;
+  virtual bool LoadItem(const nsAString& aKey, const nsAString& aValue) = 0;
 
   // Called by the database after all keys and values has been loaded
   // to this cache
@@ -130,7 +130,7 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   nsresult GetItem(const LocalStorage* aStorage, const nsAString& aKey,
                    nsAString& aRetval);
   nsresult SetItem(const LocalStorage* aStorage, const nsAString& aKey,
-                   const nsString& aValue, nsString& aOld,
+                   const nsAString& aValue, nsString& aOld,
                    const MutationSource aSource = ContentMutation);
   nsresult RemoveItem(const LocalStorage* aStorage, const nsAString& aKey,
                       nsString& aOld,
@@ -147,7 +147,7 @@ class LocalStorageCache : public LocalStorageCacheBridge {
   const nsCString& OriginSuffix() const override { return mOriginSuffix; }
   bool Loaded() override { return mLoaded; }
   uint32_t LoadedCount() override;
-  bool LoadItem(const nsAString& aKey, const nsString& aValue) override;
+  bool LoadItem(const nsAString& aKey, const nsAString& aValue) override;
   void LoadDone(nsresult aRv) override;
   void LoadWait() override;
 
@@ -189,8 +189,8 @@ class LocalStorageCache : public LocalStorageCacheBridge {
 
   // Used for firing storage events and synchronization of caches in other
   // content processes.
-  void NotifyObservers(const LocalStorage* aStorage, const nsString& aKey,
-                       const nsString& aOldValue, const nsString& aNewValue);
+  void NotifyObservers(const LocalStorage* aStorage, const nsAString& aKey,
+                       const nsAString& aOldValue, const nsAString& aNewValue);
 
   // Whether the storage change is about to persist
   bool Persist(const LocalStorage* aStorage) const;

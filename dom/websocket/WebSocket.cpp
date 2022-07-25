@@ -397,12 +397,13 @@ void WebSocketImpl::PrintErrorOnConsole(const char* aBundleURI,
   if (mInnerWindowID) {
     rv = errorObject->InitWithWindowID(
         message, NS_ConvertUTF8toUTF16(mScriptFile), u""_ns, mScriptLine,
-        mScriptColumn, nsIScriptError::errorFlag, "Web Socket", mInnerWindowID);
+        mScriptColumn, nsIScriptError::errorFlag, "Web Socket"_ns,
+        mInnerWindowID);
   } else {
     rv =
         errorObject->Init(message, NS_ConvertUTF8toUTF16(mScriptFile), u""_ns,
                           mScriptLine, mScriptColumn, nsIScriptError::errorFlag,
-                          "Web Socket", mPrivateBrowsing, mIsChromeContext);
+                          "Web Socket"_ns, mPrivateBrowsing, mIsChromeContext);
   }
 
   NS_ENSURE_SUCCESS_VOID(rv);

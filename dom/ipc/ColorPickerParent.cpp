@@ -20,7 +20,7 @@ NS_IMPL_ISUPPORTS(ColorPickerParent::ColorPickerShownCallback,
 NS_IMETHODIMP
 ColorPickerParent::ColorPickerShownCallback::Update(const nsAString& aColor) {
   if (mColorPickerParent) {
-    Unused << mColorPickerParent->SendUpdate(nsString(aColor));
+    Unused << mColorPickerParent->SendUpdate(aColor);
   }
   return NS_OK;
 }
@@ -28,8 +28,7 @@ ColorPickerParent::ColorPickerShownCallback::Update(const nsAString& aColor) {
 NS_IMETHODIMP
 ColorPickerParent::ColorPickerShownCallback::Done(const nsAString& aColor) {
   if (mColorPickerParent) {
-    Unused << ColorPickerParent::Send__delete__(mColorPickerParent,
-                                                nsString(aColor));
+    Unused << ColorPickerParent::Send__delete__(mColorPickerParent, aColor);
   }
   return NS_OK;
 }

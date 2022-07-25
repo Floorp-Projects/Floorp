@@ -76,7 +76,7 @@ mozilla::ipc::IPCResult LSDatabaseChild::RecvRequestAllowToClose() {
 }
 
 PBackgroundLSSnapshotChild* LSDatabaseChild::AllocPBackgroundLSSnapshotChild(
-    const nsString& aDocumentURI, const nsString& aKey,
+    const nsAString& aDocumentURI, const nsAString& aKey,
     const bool& aIncreasePeakUsage, const int64_t& aMinSize,
     LSSnapshotInitInfo* aInitInfo) {
   MOZ_CRASH("PBackgroundLSSnapshotChild actor should be manually constructed!");
@@ -131,7 +131,7 @@ void LSObserverChild::ActorDestroy(ActorDestroyReason aWhy) {
 
 mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
-    const nsString& aDocumentURI, const nsString& aKey,
+    const nsAString& aDocumentURI, const nsAString& aKey,
     const LSValue& aOldValue, const LSValue& aNewValue) {
   AssertIsOnOwningThread();
 

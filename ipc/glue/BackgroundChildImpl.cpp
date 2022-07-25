@@ -52,7 +52,7 @@ class TestChild final : public mozilla::ipc::PBackgroundTestChild {
 
   nsCString mTestArg;
 
-  explicit TestChild(const nsCString& aTestArg) : mTestArg(aTestArg) {
+  explicit TestChild(const nsACString& aTestArg) : mTestArg(aTestArg) {
     MOZ_COUNT_CTOR(TestChild);
   }
 
@@ -60,7 +60,7 @@ class TestChild final : public mozilla::ipc::PBackgroundTestChild {
   ~TestChild() override { MOZ_COUNT_DTOR(TestChild); }
 
  public:
-  mozilla::ipc::IPCResult Recv__delete__(const nsCString& aTestArg) override;
+  mozilla::ipc::IPCResult Recv__delete__(const nsACString& aTestArg) override;
 };
 
 }  // namespace
@@ -75,7 +75,6 @@ using mozilla::dom::PServiceWorkerContainerChild;
 using mozilla::dom::PServiceWorkerRegistrationChild;
 using mozilla::dom::StorageDBChild;
 using mozilla::dom::cache::PCacheChild;
-using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
 
 using mozilla::dom::WebAuthnTransactionChild;
@@ -146,7 +145,7 @@ void BackgroundChildImpl::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 PBackgroundTestChild* BackgroundChildImpl::AllocPBackgroundTestChild(
-    const nsCString& aTestArg) {
+    const nsACString& aTestArg) {
   return new TestChild(aTestArg);
 }
 
@@ -235,7 +234,7 @@ bool BackgroundChildImpl::DeallocPBackgroundLSRequestChild(
 
 BackgroundChildImpl::PBackgroundLocalStorageCacheChild*
 BackgroundChildImpl::AllocPBackgroundLocalStorageCacheChild(
-    const PrincipalInfo& aPrincipalInfo, const nsCString& aOriginKey,
+    const PrincipalInfo& aPrincipalInfo, const nsACString& aOriginKey,
     const uint32_t& aPrivateBrowsingId) {
   MOZ_CRASH(
       "PBackgroundLocalStorageChild actors should be manually "
@@ -268,7 +267,7 @@ bool BackgroundChildImpl::DeallocPBackgroundLSSimpleRequestChild(
 
 BackgroundChildImpl::PBackgroundStorageChild*
 BackgroundChildImpl::AllocPBackgroundStorageChild(
-    const nsString& aProfilePath, const uint32_t& aPrivateBrowsingId) {
+    const nsAString& aProfilePath, const uint32_t& aPrivateBrowsingId) {
   MOZ_CRASH("PBackgroundStorageChild actors should be manually constructed!");
 }
 
@@ -360,7 +359,7 @@ bool BackgroundChildImpl::DeallocPTemporaryIPCBlobChild(
 }
 
 dom::PFileCreatorChild* BackgroundChildImpl::AllocPFileCreatorChild(
-    const nsString& aFullPath, const nsString& aType, const nsString& aName,
+    const nsAString& aFullPath, const nsAString& aType, const nsAString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
   return new dom::FileCreatorChild();
@@ -372,7 +371,7 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
 }
 
 PUDPSocketChild* BackgroundChildImpl::AllocPUDPSocketChild(
-    const Maybe<PrincipalInfo>& aPrincipalInfo, const nsCString& aFilter) {
+    const Maybe<PrincipalInfo>& aPrincipalInfo, const nsACString& aFilter) {
   MOZ_CRASH("AllocPUDPSocket should not be called");
   return nullptr;
 }
@@ -388,8 +387,8 @@ bool BackgroundChildImpl::DeallocPUDPSocketChild(PUDPSocketChild* child) {
 // -----------------------------------------------------------------------------
 
 dom::PBroadcastChannelChild* BackgroundChildImpl::AllocPBroadcastChannelChild(
-    const PrincipalInfo& aPrincipalInfo, const nsCString& aOrigin,
-    const nsString& aChannel) {
+    const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin,
+    const nsAString& aChannel) {
   RefPtr<dom::BroadcastChannelChild> agent = new dom::BroadcastChannelChild();
   return agent.forget().take();
 }
@@ -569,7 +568,7 @@ BackgroundChildImpl::AllocPServiceWorkerRegistrationChild(
 }
 
 dom::PEndpointForReportChild* BackgroundChildImpl::AllocPEndpointForReportChild(
-    const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) {
+    const nsAString& aGroupName, const PrincipalInfo& aPrincipalInfo) {
   return new dom::EndpointForReportChild();
 }
 
@@ -597,7 +596,7 @@ bool BackgroundChildImpl::DeallocPMediaTransportChild(
 
 }  // namespace mozilla::ipc
 
-mozilla::ipc::IPCResult TestChild::Recv__delete__(const nsCString& aTestArg) {
+mozilla::ipc::IPCResult TestChild::Recv__delete__(const nsACString& aTestArg) {
   MOZ_RELEASE_ASSERT(aTestArg == mTestArg,
                      "BackgroundTest message was corrupted!");
 

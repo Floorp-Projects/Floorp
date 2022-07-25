@@ -58,7 +58,7 @@ IPCResult ServiceWorkerRegistrationParent::RecvUnregister(
 }
 
 IPCResult ServiceWorkerRegistrationParent::RecvUpdate(
-    const nsCString& aNewestWorkerScriptUrl, UpdateResolver&& aResolver) {
+    const nsACString& aNewestWorkerScriptUrl, UpdateResolver&& aResolver) {
   if (!mProxy) {
     aResolver(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return IPC_OK();
@@ -93,7 +93,7 @@ IPCResult ServiceWorkerRegistrationParent::RecvSetNavigationPreloadEnabled(
 }
 
 IPCResult ServiceWorkerRegistrationParent::RecvSetNavigationPreloadHeader(
-    const nsCString& aHeader, SetNavigationPreloadHeaderResolver&& aResolver) {
+    const nsACString& aHeader, SetNavigationPreloadHeaderResolver&& aResolver) {
   if (!mProxy) {
     aResolver(false);
     return IPC_OK();

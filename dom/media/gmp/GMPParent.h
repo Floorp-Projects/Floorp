@@ -30,16 +30,17 @@ class GMPCapability {
   GMPCapability(GMPCapability&& aOther)
       : mAPIName(std::move(aOther.mAPIName)),
         mAPITags(std::move(aOther.mAPITags)) {}
-  explicit GMPCapability(const nsCString& aAPIName) : mAPIName(aAPIName) {}
+  explicit GMPCapability(const nsACString& aAPIName) : mAPIName(aAPIName) {}
   explicit GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
   CopyableTArray<nsCString> mAPITags;
 
   static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
-                       const nsCString& aAPI, const nsTArray<nsCString>& aTags);
+                       const nsACString& aAPI,
+                       const nsTArray<nsCString>& aTags);
 
   static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
-                       const nsCString& aAPI, const nsCString& aTag);
+                       const nsACString& aAPI, const nsCString& aTag);
 };
 
 enum GMPState {

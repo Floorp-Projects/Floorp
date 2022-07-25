@@ -110,7 +110,7 @@ void ProxyCaretMoveEvent(RemoteAccessible* aTarget,
 void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
                          bool aIsSelectionCollapsed, int32_t aGranularity);
 #endif
-void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
+void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,
                           bool aFromUser);
 void ProxyShowHideEvent(RemoteAccessible* aTarget, RemoteAccessible* aParent,
@@ -133,7 +133,7 @@ void ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
                          uint32_t aMaxScrollX, uint32_t aMaxScrollY);
 
 void ProxyAnnouncementEvent(RemoteAccessible* aTarget,
-                            const nsString& aAnnouncement, uint16_t aPriority);
+                            const nsAString& aAnnouncement, uint16_t aPriority);
 
 class BatchData;
 

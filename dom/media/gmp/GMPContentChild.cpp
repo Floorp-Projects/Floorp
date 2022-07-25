@@ -51,7 +51,7 @@ GMPContentChild::AllocPGMPVideoEncoderChild() {
 }
 
 already_AddRefed<PChromiumCDMChild> GMPContentChild::AllocPChromiumCDMChild(
-    const nsCString& aKeySystem) {
+    const nsACString& aKeySystem) {
   return MakeAndAddRef<ChromiumCDMChild>(this);
 }
 
@@ -86,7 +86,7 @@ mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoEncoderConstructor(
 }
 
 mozilla::ipc::IPCResult GMPContentChild::RecvPChromiumCDMConstructor(
-    PChromiumCDMChild* aActor, const nsCString& aKeySystem) {
+    PChromiumCDMChild* aActor, const nsACString& aKeySystem) {
   ChromiumCDMChild* child = static_cast<ChromiumCDMChild*>(aActor);
   cdm::Host_10* host10 = child;
 

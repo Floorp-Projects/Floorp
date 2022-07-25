@@ -17,7 +17,7 @@ async protocol PBackgroundDataBridge
 child:
   async OnTransportAndData(uint64_t  offset,
                            uint32_t  count,
-                           nsDependentCSubstring data);
+                           nsCString data);
 
   async OnStopRequest(nsresult aStatus,
                       ResourceTimingStructArgs timing,

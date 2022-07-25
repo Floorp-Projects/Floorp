@@ -134,7 +134,7 @@ interface nsIScriptError : nsIConsoleMessage
               in uint32_t lineNumber,
               in uint32_t columnNumber,
               in uint32_t flags,
-              in string category,
+              in ACString category,
               [optional] in bool fromPrivateWindow,
               [optional] in bool fromChromeContext);
 

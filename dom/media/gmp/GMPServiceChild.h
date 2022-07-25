@@ -56,7 +56,7 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService,
 
   RefPtr<GetGMPContentParentPromise> GetContentParent(
       GMPCrashHelper* aHelper, const NodeIdVariant& aNodeIdVariant,
-      const nsCString& aAPI, const nsTArray<nsCString>& aTags) override;
+      const nsACString& aAPI, const nsTArray<nsCString>& aTags) override;
 
  private:
   friend class OpenPGMPServiceChild;

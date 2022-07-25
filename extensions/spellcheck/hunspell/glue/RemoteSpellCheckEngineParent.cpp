@@ -17,7 +17,7 @@ RemoteSpellcheckEngineParent::RemoteSpellcheckEngineParent() {
 RemoteSpellcheckEngineParent::~RemoteSpellcheckEngineParent() {}
 
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionary(
-    const nsCString& aDictionary, bool* success) {
+    const nsACString& aDictionary, bool* success) {
   nsresult rv = mSpellChecker->SetCurrentDictionary(aDictionary);
   *success = NS_SUCCEEDED(rv);
   return IPC_OK();
@@ -38,11 +38,11 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
   for (auto& dictionary : aList) {
     nsresult rv = mSpellChecker->SetCurrentDictionary(dictionary);
     if (NS_SUCCEEDED(rv)) {
-      aResolve(Tuple<const bool&, const nsCString&>(true, dictionary));
+      aResolve(Tuple<const bool&, const nsACString&>(true, dictionary));
       return IPC_OK();
     }
   }
-  aResolve(Tuple<const bool&, const nsCString&>(false, ""_ns));
+  aResolve(Tuple<const bool&, const nsACString&>(false, ""_ns));
   return IPC_OK();
 }
 
@@ -64,7 +64,7 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvCheckAsync(
 }
 
 mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSuggest(
-    const nsString& aWord, uint32_t aCount, SuggestResolver&& aResolve) {
+    const nsAString& aWord, uint32_t aCount, SuggestResolver&& aResolve) {
   nsTArray<nsString> suggestions;
   mSpellChecker->Suggest(aWord, aCount)
       ->Then(

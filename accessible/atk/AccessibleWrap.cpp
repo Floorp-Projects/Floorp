@@ -1390,9 +1390,9 @@ void MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled) {
   }
 }
 
-void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
-                                int32_t aStart, uint32_t aLen, bool aIsInsert,
-                                bool aFromUser) {
+void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget,
+                                const nsAString& aStr, int32_t aStart,
+                                uint32_t aLen, bool aIsInsert, bool aFromUser) {
   MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
   atkObj->FireTextChangeEvent(aStr, aStart, aLen, aIsInsert, aFromUser);
 }
@@ -1410,7 +1410,7 @@ static const char* textChangedStrings[2][2] = {
     {TEXT_REMOVED NON_USER_DETAIL, TEXT_INSERTED NON_USER_DETAIL},
     {TEXT_REMOVED, TEXT_INSERTED}};
 
-void MaiAtkObject::FireTextChangeEvent(const nsString& aStr, int32_t aStart,
+void MaiAtkObject::FireTextChangeEvent(const nsAString& aStr, int32_t aStart,
                                        uint32_t aLen, bool aIsInsert,
                                        bool aFromUser) {
   if (gAvailableAtkSignals == eUnknown) {

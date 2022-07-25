@@ -222,7 +222,7 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
           NS_ConvertUTF8toUTF16(nsPrintfCString(
               "JSWindowActor %s: expected window subject for topic '%s'.",
               mName.get(), aTopic)),
-          "JSActor",
+          "JSActor"_ns,
           /* aFromPrivateWindow */ false,
           /* aFromChromeContext */ true);
       return NS_ERROR_FAILURE;

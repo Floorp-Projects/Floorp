@@ -338,7 +338,7 @@ ServiceWorkerRegistrationProxy::DelayedUpdate::GetName(nsACString& aName) {
 }
 
 RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerRegistrationProxy::Update(
-    const nsCString& aNewestWorkerScriptUrl) {
+    const nsACString& aNewestWorkerScriptUrl) {
   AssertIsOnBackgroundThread();
 
   RefPtr<ServiceWorkerRegistrationProxy> self = this;
@@ -346,8 +346,9 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerRegistrationProxy::Update(
       new ServiceWorkerRegistrationPromise::Private(__func__);
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [self, promise,
-                 newestWorkerScriptUrl = aNewestWorkerScriptUrl]() mutable {
+      __func__,
+      [self, promise,
+       newestWorkerScriptUrl = nsCString(aNewestWorkerScriptUrl)]() mutable {
         auto scopeExit = MakeScopeExit(
             [&] { promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
 
@@ -428,15 +429,15 @@ ServiceWorkerRegistrationProxy::SetNavigationPreloadEnabled(
 
 RefPtr<GenericPromise>
 ServiceWorkerRegistrationProxy::SetNavigationPreloadHeader(
-    const nsCString& aHeader) {
+    const nsACString& aHeader) {
   AssertIsOnBackgroundThread();
 
   RefPtr<ServiceWorkerRegistrationProxy> self = this;
   RefPtr<GenericPromise::Private> promise =
       new GenericPromise::Private(__func__);
 
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction(__func__, [aHeader, self, promise]() mutable {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      __func__, [aHeader = nsCString(aHeader), self, promise]() mutable {
         nsresult rv = NS_ERROR_DOM_INVALID_STATE_ERR;
         auto scopeExit = MakeScopeExit([&] { promise->Reject(rv, __func__); });
 

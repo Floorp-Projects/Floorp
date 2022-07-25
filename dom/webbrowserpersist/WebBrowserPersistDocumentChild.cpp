@@ -122,8 +122,9 @@ bool WebBrowserPersistDocumentChild::DeallocPWebBrowserPersistResourcesChild(
 
 PWebBrowserPersistSerializeChild*
 WebBrowserPersistDocumentChild::AllocPWebBrowserPersistSerializeChild(
-    const WebBrowserPersistURIMap& aMap, const nsCString& aRequestedContentType,
-    const uint32_t& aEncoderFlags, const uint32_t& aWrapColumn) {
+    const WebBrowserPersistURIMap& aMap,
+    const nsACString& aRequestedContentType, const uint32_t& aEncoderFlags,
+    const uint32_t& aWrapColumn) {
   auto* actor = new WebBrowserPersistSerializeChild(aMap);
   NS_ADDREF(actor);
   return actor;
@@ -132,8 +133,9 @@ WebBrowserPersistDocumentChild::AllocPWebBrowserPersistSerializeChild(
 mozilla::ipc::IPCResult
 WebBrowserPersistDocumentChild::RecvPWebBrowserPersistSerializeConstructor(
     PWebBrowserPersistSerializeChild* aActor,
-    const WebBrowserPersistURIMap& aMap, const nsCString& aRequestedContentType,
-    const uint32_t& aEncoderFlags, const uint32_t& aWrapColumn) {
+    const WebBrowserPersistURIMap& aMap,
+    const nsACString& aRequestedContentType, const uint32_t& aEncoderFlags,
+    const uint32_t& aWrapColumn) {
   auto* castActor = static_cast<WebBrowserPersistSerializeChild*>(aActor);
   // This actor performs the roles of: completion, URI map, and output stream.
   nsresult rv =

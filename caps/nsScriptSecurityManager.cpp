@@ -1123,7 +1123,8 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
         aInnerWindowID, true /* From chrome context */);
   } else {
     rv = error->Init(message, u""_ns, u""_ns, 0, 0, nsIScriptError::errorFlag,
-                     "SOP", aFromPrivateWindow, true /* From chrome context */);
+                     "SOP"_ns, aFromPrivateWindow,
+                     true /* From chrome context */);
   }
   NS_ENSURE_SUCCESS(rv, rv);
   console->LogMessage(error);

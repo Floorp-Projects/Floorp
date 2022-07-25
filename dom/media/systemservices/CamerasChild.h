@@ -159,7 +159,7 @@ class CamerasChild final : public PCamerasChild {
   mozilla::ipc::IPCResult RecvReplyGetCaptureCapability(
       const VideoCaptureCapability& capability) override;
   mozilla::ipc::IPCResult RecvReplyGetCaptureDevice(
-      const nsCString& device_name, const nsCString& device_id,
+      const nsACString& device_name, const nsACString& device_id,
       const bool& scary) override;
   mozilla::ipc::IPCResult RecvReplyFailure(void) override;
   mozilla::ipc::IPCResult RecvReplySuccess(void) override;

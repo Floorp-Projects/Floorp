@@ -21,14 +21,15 @@ class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
 
   mozilla::ipc::IPCResult RecvOnClose(const nsresult& aReason) override;
 
-  mozilla::ipc::IPCResult RecvOnConnected(const nsCString& aProxyType) override;
+  mozilla::ipc::IPCResult RecvOnConnected(
+      const nsACString& aProxyType) override;
 
   mozilla::ipc::IPCResult RecvOnRead(nsTArray<uint8_t>&& aReadData) override;
 
   explicit WebrtcTCPSocketChild(WebrtcTCPSocketCallback* aProxyCallbacks);
 
-  void AsyncOpen(const nsCString& aHost, const int& aPort,
-                 const nsCString& aLocalAddress, const int& aLocalPort,
+  void AsyncOpen(const nsACString& aHost, const int& aPort,
+                 const nsACString& aLocalAddress, const int& aLocalPort,
                  bool aUseTls,
                  const std::shared_ptr<NrSocketProxyConfig>& aProxyConfig);
 

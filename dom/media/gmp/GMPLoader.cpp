@@ -50,7 +50,7 @@ class PassThroughGMPAdapter : public GMPAdapter {
   }
 
   GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                   const nsCString& /* aKeySystem */) override {
+                   const nsACString& /* aKeySystem */) override {
     if (!mLib) {
       return GMPGenericErr;
     }
@@ -121,7 +121,7 @@ bool GMPLoader::Load(const char* aUTF8LibPath, uint32_t aUTF8LibPathLen,
 }
 
 GMPErr GMPLoader::GetAPI(const char* aAPIName, void* aHostAPI,
-                         void** aPluginAPI, const nsCString& aKeySystem) {
+                         void** aPluginAPI, const nsACString& aKeySystem) {
   return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI, aKeySystem);
 }
 

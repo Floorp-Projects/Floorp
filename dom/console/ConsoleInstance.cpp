@@ -72,7 +72,7 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
           "Console.maxLogLevelPref used with a non-existing pref: ");
       message.Append(aOptions.mMaxLogLevelPref);
 
-      nsContentUtils::LogSimpleConsoleError(message, "chrome", false,
+      nsContentUtils::LogSimpleConsoleError(message, "chrome"_ns, false,
                                             true /* from chrome context*/);
     }
   }

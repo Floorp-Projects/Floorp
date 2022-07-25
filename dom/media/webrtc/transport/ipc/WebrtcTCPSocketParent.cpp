@@ -17,11 +17,11 @@ using namespace mozilla::ipc;
 namespace mozilla::net {
 
 mozilla::ipc::IPCResult WebrtcTCPSocketParent::RecvAsyncOpen(
-    const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
+    const nsACString& aHost, const int& aPort, const nsACString& aLocalAddress,
     const int& aLocalPort, const bool& aUseTls,
     const Maybe<WebrtcProxyConfig>& aProxyConfig) {
-  LOG(("WebrtcTCPSocketParent::RecvAsyncOpen %p to %s:%d\n", this, aHost.get(),
-       aPort));
+  LOG(("WebrtcTCPSocketParent::RecvAsyncOpen %p to %s:%d\n", this,
+       PromiseFlatCString(aHost).get(), aPort));
 
   MOZ_ASSERT(mChannel, "webrtc TCP socket should be non-null");
   mChannel->Open(aHost, aPort, aLocalAddress, aLocalPort, aUseTls,
@@ -100,7 +100,7 @@ void WebrtcTCPSocketParent::OnRead(nsTArray<uint8_t>&& aReadData) {
   }
 }
 
-void WebrtcTCPSocketParent::OnConnected(const nsCString& aProxyType) {
+void WebrtcTCPSocketParent::OnConnected(const nsACString& aProxyType) {
   LOG(("WebrtcTCPSocketParent::OnConnected %p\n", this));
 
   if (mChannel && !SendOnConnected(aProxyType)) {

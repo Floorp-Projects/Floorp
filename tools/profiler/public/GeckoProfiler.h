@@ -80,7 +80,7 @@ static inline void profiler_set_process_name(
     const nsACString& aProcessName, const nsACString* aETLDplus1 = nullptr) {}
 
 static inline void profiler_received_exit_profile(
-    const nsCString& aExitProfile) {}
+    const nsACString& aExitProfile) {}
 
 static inline void profiler_register_page(uint64_t aTabID,
                                           uint64_t aInnerWindowID,
@@ -359,7 +359,7 @@ void profiler_set_process_name(const nsACString& aProcessName,
                                const nsACString* aETLDplus1 = nullptr);
 
 // Record an exit profile from a child process.
-void profiler_received_exit_profile(const nsCString& aExitProfile);
+void profiler_received_exit_profile(const nsACString& aExitProfile);
 
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
 // profiler is inactive.

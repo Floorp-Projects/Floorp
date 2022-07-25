@@ -31,7 +31,7 @@ class VerifySSLServerCertParent : public PVerifySSLServerCertParent {
   VerifySSLServerCertParent();
 
   bool Dispatch(nsTArray<ByteArray>&& aPeerCertChain,
-                const nsCString& aHostName, const int32_t& aPort,
+                const nsACString& aHostName, const int32_t& aPort,
                 const OriginAttributes& aOriginAttributes,
                 const Maybe<ByteArray>& aStapledOCSPResponse,
                 const Maybe<ByteArray>& aSctsFromTLSExtension,

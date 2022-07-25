@@ -133,7 +133,7 @@ void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
+void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,
                           bool aFromUser) {
   RemoteAccessible* acc = aTarget;

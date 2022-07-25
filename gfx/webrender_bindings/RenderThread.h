@@ -175,7 +175,7 @@ class RenderThread final {
   void SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor);
 
   /// Automatically forwarded to the render thread.
-  void SetProfilerUI(wr::WindowId aWindowId, const nsCString& aUI);
+  void SetProfilerUI(wr::WindowId aWindowId, const nsACString& aUI);
 
   /// Automatically forwarded to the render thread.
   void PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId,

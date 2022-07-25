@@ -178,8 +178,7 @@ NS_IMETHODIMP ContentHandlerService::FillHandlerInfo(
     nsIHandlerInfo* aHandlerInfo, const nsACString& aOverrideType) {
   HandlerInfo info, returnedInfo;
   nsIHandlerInfoToHandlerInfo(aHandlerInfo, &info);
-  mHandlerServiceChild->SendFillHandlerInfo(info, nsCString(aOverrideType),
-                                            &returnedInfo);
+  mHandlerServiceChild->SendFillHandlerInfo(info, aOverrideType, &returnedInfo);
   CopyHandlerInfoTonsIHandlerInfo(returnedInfo, aHandlerInfo);
   return NS_OK;
 }
@@ -189,8 +188,7 @@ NS_IMETHODIMP ContentHandlerService::GetMIMEInfoFromOS(
     nsIMIMEInfo** aMIMEInfo) {
   nsresult rv = NS_ERROR_FAILURE;
   HandlerInfo returnedInfo;
-  if (!mHandlerServiceChild->SendGetMIMEInfoFromOS(nsCString(aMIMEType),
-                                                   nsCString(aFileExt), &rv,
+  if (!mHandlerServiceChild->SendGetMIMEInfoFromOS(aMIMEType, aFileExt, &rv,
                                                    &returnedInfo, aFound)) {
     return NS_ERROR_FAILURE;
   }
@@ -225,7 +223,7 @@ NS_IMETHODIMP ContentHandlerService::Remove(nsIHandlerInfo* aHandlerInfo) {
 NS_IMETHODIMP
 ContentHandlerService::ExistsForProtocolOS(const nsACString& aProtocolScheme,
                                            bool* aRetval) {
-  if (!mHandlerServiceChild->SendExistsForProtocolOS(nsCString(aProtocolScheme),
+  if (!mHandlerServiceChild->SendExistsForProtocolOS(aProtocolScheme,
                                                      aRetval)) {
     return NS_ERROR_FAILURE;
   }
@@ -235,8 +233,7 @@ ContentHandlerService::ExistsForProtocolOS(const nsACString& aProtocolScheme,
 NS_IMETHODIMP
 ContentHandlerService::ExistsForProtocol(const nsACString& aProtocolScheme,
                                          bool* aRetval) {
-  if (!mHandlerServiceChild->SendExistsForProtocol(nsCString(aProtocolScheme),
-                                                   aRetval)) {
+  if (!mHandlerServiceChild->SendExistsForProtocol(aProtocolScheme, aRetval)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -246,8 +243,7 @@ NS_IMETHODIMP ContentHandlerService::GetTypeFromExtension(
     const nsACString& aFileExtension, nsACString& _retval) {
   _retval.Assign(*mExtToTypeMap.LookupOrInsertWith(aFileExtension, [&] {
     nsCString type;
-    mHandlerServiceChild->SendGetTypeFromExtension(nsCString(aFileExtension),
-                                                   &type);
+    mHandlerServiceChild->SendGetTypeFromExtension(aFileExtension, &type);
     return MakeUnique<nsCString>(type);
   }));
   return NS_OK;

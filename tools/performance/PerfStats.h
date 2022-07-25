@@ -122,7 +122,7 @@ class PerfStats {
   }
 
   static void StorePerfStats(dom::ContentParent* aParent,
-                             const nsCString& aPerfStats) {
+                             const nsACString& aPerfStats) {
     GetSingleton()->StorePerfStatsInternal(aParent, aPerfStats);
   }
 
@@ -136,7 +136,7 @@ class PerfStats {
 
   void ResetCollection();
   void StorePerfStatsInternal(dom::ContentParent* aParent,
-                              const nsCString& aPerfStats);
+                              const nsACString& aPerfStats);
   RefPtr<PerfStatsPromise> CollectPerfStatsJSONInternal();
   nsCString CollectLocalPerfStatsJSONInternal();
 

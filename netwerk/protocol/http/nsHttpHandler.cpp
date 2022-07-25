@@ -2737,7 +2737,7 @@ void nsHttpHandler::SetHttpHandlerInitArgs(const HttpHandlerInitArgs& aArgs) {
   mDeviceModelId = aArgs.mDeviceModelId();
 }
 
-void nsHttpHandler::SetDeviceModelId(const nsCString& aModelId) {
+void nsHttpHandler::SetDeviceModelId(const nsACString& aModelId) {
   MOZ_ASSERT(XRE_IsSocketProcess());
   mDeviceModelId = aModelId;
 }

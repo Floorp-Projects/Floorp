@@ -99,8 +99,9 @@ bool WebBrowserPersistDocumentParent::DeallocPWebBrowserPersistResourcesParent(
 
 PWebBrowserPersistSerializeParent*
 WebBrowserPersistDocumentParent::AllocPWebBrowserPersistSerializeParent(
-    const WebBrowserPersistURIMap& aMap, const nsCString& aRequestedContentType,
-    const uint32_t& aEncoderFlags, const uint32_t& aWrapColumn) {
+    const WebBrowserPersistURIMap& aMap,
+    const nsACString& aRequestedContentType, const uint32_t& aEncoderFlags,
+    const uint32_t& aWrapColumn) {
   MOZ_CRASH("Don't use this; construct the actor directly.");
   return nullptr;
 }

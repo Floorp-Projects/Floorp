@@ -19,9 +19,9 @@ StunAddrsRequestChild::StunAddrsRequestChild(StunAddrsListener* listener)
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestChild::RecvOnMDNSQueryComplete(
-    const nsCString& hostname, const Maybe<nsCString>& address) {
+    const nsACString& hostname, const Maybe<nsCString>& address) {
   if (mListener) {
-    mListener->OnMDNSQueryComplete(hostname, address);
+    mListener->OnMDNSQueryComplete(PromiseFlatCString(hostname), address);
   }
   return IPC_OK();
 }

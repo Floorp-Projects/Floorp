@@ -54,12 +54,12 @@ class SocketProcessParent final
       const Maybe<TabId>& aTabId);
   bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
-      const nsCString& aHost, const nsCString& aTrrServer, const int32_t& port,
-      const uint16_t& aType, const OriginAttributes& aOriginAttributes,
-      const uint32_t& aFlags);
+      const nsACString& aHost, const nsACString& aTrrServer,
+      const int32_t& port, const uint16_t& aType,
+      const OriginAttributes& aOriginAttributes, const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
-      PDNSRequestParent* actor, const nsCString& aHost,
-      const nsCString& trrServer, const int32_t& port, const uint16_t& type,
+      PDNSRequestParent* actor, const nsACString& aHost,
+      const nsACString& trrServer, const int32_t& port, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
 
@@ -72,7 +72,7 @@ class SocketProcessParent final
   mozilla::ipc::IPCResult RecvObserveHttpActivity(
       const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
       const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
-      const uint64_t& aExtraSizeData, const nsCString& aExtraStringData);
+      const uint64_t& aExtraSizeData, const nsACString& aExtraStringData);
 
   mozilla::ipc::IPCResult RecvInitBackground(
       Endpoint<PBackgroundStarterParent>&& aEndpoint);

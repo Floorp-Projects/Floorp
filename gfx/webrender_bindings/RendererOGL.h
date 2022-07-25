@@ -125,7 +125,7 @@ class RendererOGL {
 
   void AccumulateMemoryReport(MemoryReport* aReport);
 
-  void SetProfilerUI(const nsCString& aUI);
+  void SetProfilerUI(const nsACString& aUI);
 
   wr::Renderer* GetRenderer() { return mRenderer; }
 

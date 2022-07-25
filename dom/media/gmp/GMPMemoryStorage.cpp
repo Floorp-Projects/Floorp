@@ -10,7 +10,7 @@ namespace mozilla::gmp {
 
 class GMPMemoryStorage : public GMPStorage {
  public:
-  GMPErr Open(const nsCString& aRecordName) override {
+  GMPErr Open(const nsACString& aRecordName) override {
     MOZ_ASSERT(!IsOpen(aRecordName));
 
     Record* record = mRecords.GetOrInsertNew(aRecordName);
@@ -18,7 +18,7 @@ class GMPMemoryStorage : public GMPStorage {
     return GMPNoErr;
   }
 
-  bool IsOpen(const nsCString& aRecordName) const override {
+  bool IsOpen(const nsACString& aRecordName) const override {
     const Record* record = mRecords.Get(aRecordName);
     if (!record) {
       return false;
@@ -26,7 +26,7 @@ class GMPMemoryStorage : public GMPStorage {
     return record->mIsOpen;
   }
 
-  GMPErr Read(const nsCString& aRecordName,
+  GMPErr Read(const nsACString& aRecordName,
               nsTArray<uint8_t>& aOutBytes) override {
     const Record* record = mRecords.Get(aRecordName);
     if (!record) {
@@ -36,7 +36,7 @@ class GMPMemoryStorage : public GMPStorage {
     return GMPNoErr;
   }
 
-  GMPErr Write(const nsCString& aRecordName,
+  GMPErr Write(const nsACString& aRecordName,
                const nsTArray<uint8_t>& aBytes) override {
     Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {
@@ -46,7 +46,7 @@ class GMPMemoryStorage : public GMPStorage {
     return GMPNoErr;
   }
 
-  void Close(const nsCString& aRecordName) override {
+  void Close(const nsACString& aRecordName) override {
     Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {
       return;

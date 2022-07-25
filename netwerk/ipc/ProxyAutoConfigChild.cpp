@@ -149,7 +149,7 @@ ProxyAutoConfigChild::ProxyAutoConfigChild()
 ProxyAutoConfigChild::~ProxyAutoConfigChild() = default;
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
-    const nsCString& aPACURI, const nsCString& aPACScriptData,
+    const nsACString& aPACURI, const nsACString& aPACScriptData,
     const bool& aIncludePath, const uint32_t& aExtraHeapSize) {
   mPAC->ConfigurePAC(aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize,
                      GetMainThreadSerialEventTarget());
@@ -161,12 +161,12 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
 }
 
 void ProxyAutoConfigChild::PendingQuery::Resolve(nsresult aStatus,
-                                                 const nsCString& aResult) {
-  mResolver(Tuple<const nsresult&, const nsCString&>(aStatus, aResult));
+                                                 const nsACString& aResult) {
+  mResolver(Tuple<const nsresult&, const nsACString&>(aStatus, aResult));
 }
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(
-    const nsCString& aTestURI, const nsCString& aTestHost,
+    const nsACString& aTestURI, const nsACString& aTestHost,
     GetProxyForURIResolver&& aResolver) {
   mPendingQ.insertBack(
       new PendingQuery(aTestURI, aTestHost, std::move(aResolver)));

@@ -102,7 +102,7 @@ GeckoMediaPluginServiceChild::~GeckoMediaPluginServiceChild() {
 RefPtr<GetGMPContentParentPromise>
 GeckoMediaPluginServiceChild::GetContentParent(
     GMPCrashHelper* aHelper, const NodeIdVariant& aNodeIdVariant,
-    const nsCString& aAPI, const nsTArray<nsCString>& aTags) {
+    const nsACString& aAPI, const nsTArray<nsCString>& aTags) {
   AssertOnGMPThread();
   MOZ_ASSERT(!mShuttingDownOnGMPThread,
              "Should not be called if GMPThread is shutting down!");
@@ -202,7 +202,7 @@ struct GMPCapabilityAndVersion {
     for (const GMPAPITags& tags : aCapabilities.capabilities()) {
       GMPCapability cap;
       cap.mAPIName = tags.api();
-      for (const nsCString& tag : tags.tags()) {
+      for (const nsACString& tag : tags.tags()) {
         cap.mAPITags.AppendElement(tag);
       }
       mCapabilities.AppendElement(std::move(cap));
@@ -218,7 +218,7 @@ struct GMPCapabilityAndVersion {
     StringJoinAppend(s, " "_ns, mCapabilities,
                      [](auto& tags, const GMPCapability& cap) {
                        tags.Append(cap.mAPIName);
-                       for (const nsCString& tag : cap.mAPITags) {
+                       for (const nsACString& tag : cap.mAPITags) {
                          tags.AppendLiteral(":");
                          tags.Append(tag);
                        }

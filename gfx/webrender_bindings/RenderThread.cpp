@@ -457,7 +457,8 @@ void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
   }
 }
 
-void RenderThread::SetProfilerUI(wr::WindowId aWindowId, const nsCString& aUI) {
+void RenderThread::SetProfilerUI(wr::WindowId aWindowId,
+                                 const nsACString& aUI) {
   if (mHasShutdown) {
     return;
   }
@@ -465,7 +466,7 @@ void RenderThread::SetProfilerUI(wr::WindowId aWindowId, const nsCString& aUI) {
   if (!IsInRenderThread()) {
     PostRunnable(NewRunnableMethod<wr::WindowId, nsCString>(
         "wr::RenderThread::SetProfilerUI", this, &RenderThread::SetProfilerUI,
-        aWindowId, aUI));
+        aWindowId, nsCString(aUI)));
     return;
   }
 

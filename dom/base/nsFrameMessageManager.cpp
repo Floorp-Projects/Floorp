@@ -440,7 +440,7 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
         u"Sending message that cannot be cloned. Are "
         "you trying to send an XPCOM object?"_ns,
         filename, u""_ns, lineno, column, nsIScriptError::warningFlag,
-        "chrome javascript", false /* from private window */,
+        "chrome javascript"_ns, false /* from private window */,
         true /* from chrome context */);
     console->LogMessage(error);
   }
@@ -798,7 +798,7 @@ void nsFrameMessageManager::ReceiveMessage(
             nsCOMPtr<nsIScriptError> error(
                 do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
             error->Init(msg, u""_ns, u""_ns, 0, 0, nsIScriptError::warningFlag,
-                        "chrome javascript", false /* from private window */,
+                        "chrome javascript"_ns, false /* from private window */,
                         true /* from chrome context */);
             console->LogMessage(error);
           }

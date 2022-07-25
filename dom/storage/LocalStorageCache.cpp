@@ -149,9 +149,9 @@ void LocalStorageCache::Init(LocalStorageManager* aManager, bool aPersistent,
 }
 
 void LocalStorageCache::NotifyObservers(const LocalStorage* aStorage,
-                                        const nsString& aKey,
-                                        const nsString& aOldValue,
-                                        const nsString& aNewValue) {
+                                        const nsAString& aKey,
+                                        const nsAString& aOldValue,
+                                        const nsAString& aNewValue) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aStorage);
 
@@ -330,7 +330,7 @@ nsresult LocalStorageCache::GetItem(const LocalStorage* aStorage,
 
 nsresult LocalStorageCache::SetItem(const LocalStorage* aStorage,
                                     const nsAString& aKey,
-                                    const nsString& aValue, nsString& aOld,
+                                    const nsAString& aValue, nsString& aOld,
                                     const MutationSource aSource) {
   // Size of the cache that will change after this action.
   int64_t delta = 0;
@@ -368,7 +368,7 @@ nsresult LocalStorageCache::SetItem(const LocalStorage* aStorage,
   }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-  NotifyObservers(aStorage, nsString(aKey), aOld, aValue);
+  NotifyObservers(aStorage, aKey, aOld, aValue);
 #endif
 
   if (Persist(aStorage)) {
@@ -417,7 +417,7 @@ nsresult LocalStorageCache::RemoveItem(const LocalStorage* aStorage,
   }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-  NotifyObservers(aStorage, nsString(aKey), aOld, VoidString());
+  NotifyObservers(aStorage, aKey, aOld, VoidString());
 #endif
 
   if (Persist(aStorage)) {
@@ -529,7 +529,7 @@ uint32_t LocalStorageCache::LoadedCount() {
 }
 
 bool LocalStorageCache::LoadItem(const nsAString& aKey,
-                                 const nsString& aValue) {
+                                 const nsAString& aValue) {
   MonitorAutoLock monitor(mMonitor);
   if (mLoaded) {
     return false;
@@ -538,7 +538,7 @@ bool LocalStorageCache::LoadItem(const nsAString& aKey,
   Data& data = mData[kDefaultSet];
   data.mKeys.LookupOrInsertWith(aKey, [&] {
     data.mOriginQuotaUsage += aKey.Length() + aValue.Length();
-    return aValue;
+    return nsString(aValue);
   });
   return true;
 }

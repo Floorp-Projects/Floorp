@@ -48,7 +48,7 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
   virtual ~StunAddrsRequestChild() = default;
 
   virtual mozilla::ipc::IPCResult RecvOnMDNSQueryComplete(
-      const nsCString& aHostname, const Maybe<nsCString>& aAddress) override;
+      const nsACString& aHostname, const Maybe<nsCString>& aAddress) override;
 
   virtual mozilla::ipc::IPCResult RecvOnStunAddrsAvailable(
       const NrIceStunAddrArray& addrs) override;

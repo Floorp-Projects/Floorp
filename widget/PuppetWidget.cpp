@@ -397,9 +397,8 @@ nsresult PuppetWidget::SynthesizeNativeKeyEvent(
     return NS_ERROR_FAILURE;
   }
   mBrowserChild->SendSynthesizeNativeKeyEvent(
-      aNativeKeyboardLayout, aNativeKeyCode, aModifierFlags,
-      nsString(aCharacters), nsString(aUnmodifiedCharacters),
-      notifier.SaveObserver());
+      aNativeKeyboardLayout, aNativeKeyCode, aModifierFlags, aCharacters,
+      aUnmodifiedCharacters, notifier.SaveObserver());
   return NS_OK;
 }
 
@@ -1082,8 +1081,8 @@ void PuppetWidget::LookUpDictionary(
     return;
   }
 
-  mBrowserChild->SendLookUpDictionary(nsString(aText), aFontRangeArray,
-                                      aIsVertical, aPoint);
+  mBrowserChild->SendLookUpDictionary(aText, aFontRangeArray, aIsVertical,
+                                      aPoint);
 }
 
 bool PuppetWidget::HasPendingInputEvent() {

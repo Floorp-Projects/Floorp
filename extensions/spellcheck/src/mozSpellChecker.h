@@ -144,7 +144,7 @@ class mozSpellChecker final {
    * by GetDictionaryList() or an empty string . If aDictionary is
    * an empty array, the spellchecker will be disabled.
    */
-  nsresult SetCurrentDictionary(const nsCString& aDictionary);
+  nsresult SetCurrentDictionary(const nsACString& aDictionary);
 
   /**
    * Tells the spellchecker to use the specified dictionaries.

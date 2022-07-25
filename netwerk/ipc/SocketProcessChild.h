@@ -71,7 +71,7 @@ class SocketProcessChild final : public PSocketProcessChild {
 
   already_AddRefed<PHttpConnectionMgrChild> AllocPHttpConnectionMgrChild(
       const HttpHandlerInitArgs& aArgs);
-  mozilla::ipc::IPCResult RecvUpdateDeviceModelId(const nsCString& aModelId);
+  mozilla::ipc::IPCResult RecvUpdateDeviceModelId(const nsACString& aModelId);
   mozilla::ipc::IPCResult RecvOnHttpActivityDistributorActivated(
       const bool& aIsActivated);
   mozilla::ipc::IPCResult RecvOnHttpActivityDistributorObserveProxyResponse(
@@ -89,12 +89,12 @@ class SocketProcessChild final : public PSocketProcessChild {
   bool IsShuttingDown() { return mShuttingDown; }
 
   already_AddRefed<PDNSRequestChild> AllocPDNSRequestChild(
-      const nsCString& aHost, const nsCString& aTrrServer, const int32_t& aPort,
-      const uint16_t& aType, const OriginAttributes& aOriginAttributes,
-      const uint32_t& aFlags);
+      const nsACString& aHost, const nsACString& aTrrServer,
+      const int32_t& aPort, const uint16_t& aType,
+      const OriginAttributes& aOriginAttributes, const uint32_t& aFlags);
   mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
-      PDNSRequestChild* aActor, const nsCString& aHost,
-      const nsCString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
+      PDNSRequestChild* aActor, const nsACString& aHost,
+      const nsACString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags) override;
 
@@ -119,8 +119,8 @@ class SocketProcessChild final : public PSocketProcessChild {
   mozilla::ipc::IPCResult RecvPNativeDNSResolverOverrideConstructor(
       PNativeDNSResolverOverrideChild* aActor) override;
 
-  mozilla::ipc::IPCResult RecvNotifyObserver(const nsCString& aTopic,
-                                             const nsString& aData);
+  mozilla::ipc::IPCResult RecvNotifyObserver(const nsACString& aTopic,
+                                             const nsAString& aData);
 
   mozilla::ipc::IPCResult RecvGetSocketData(GetSocketDataResolver&& aResolve);
   mozilla::ipc::IPCResult RecvGetDNSCacheEntries(

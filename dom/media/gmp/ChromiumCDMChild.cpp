@@ -29,7 +29,7 @@ ChromiumCDMChild::ChromiumCDMChild(GMPContentChild* aPlugin)
 }
 
 void ChromiumCDMChild::Init(cdm::ContentDecryptionModule_10* aCDM,
-                            const nsCString& aStorageId) {
+                            const nsACString& aStorageId) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   mCDM = aCDM;
   MOZ_ASSERT(mCDM);
@@ -200,7 +200,7 @@ void ChromiumCDMChild::OnResolveKeyStatusPromise(uint32_t aPromiseId,
 }
 
 bool ChromiumCDMChild::OnResolveNewSessionPromiseInternal(
-    uint32_t aPromiseId, const nsCString& aSessionId) {
+    uint32_t aPromiseId, const nsACString& aSessionId) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   if (mLoadSessionPromiseIds.Contains(aPromiseId)) {
     // As laid out in the Chromium CDM API, if the CDM fails to load
@@ -212,7 +212,7 @@ bool ChromiumCDMChild::OnResolveNewSessionPromiseInternal(
     GMP_LOG_DEBUG(
         "ChromiumCDMChild::OnResolveNewSessionPromise(pid=%u, sid=%s) "
         "resolving %s load session ",
-        aPromiseId, aSessionId.get(),
+        aPromiseId, PromiseFlatCString(aSessionId).get(),
         (loadSuccessful ? "successful" : "failed"));
     mLoadSessionPromiseIds.RemoveElement(aPromiseId);
     return SendResolveLoadSessionPromise(aPromiseId, loadSuccessful);
@@ -455,51 +455,55 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvCreateSessionAndGenerateRequest(
 
 mozilla::ipc::IPCResult ChromiumCDMChild::RecvLoadSession(
     const uint32_t& aPromiseId, const uint32_t& aSessionType,
-    const nsCString& aSessionId) {
+    const nsACString& aSessionId) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG_DEBUG(
       "ChromiumCDMChild::RecvLoadSession(pid=%u, type=%u, sessionId=%s)",
-      aPromiseId, aSessionType, aSessionId.get());
+      aPromiseId, aSessionType, PromiseFlatCString(aSessionId).get());
   if (mCDM) {
     mLoadSessionPromiseIds.AppendElement(aPromiseId);
     mCDM->LoadSession(aPromiseId, static_cast<cdm::SessionType>(aSessionType),
-                      aSessionId.get(), aSessionId.Length());
+                      aSessionId.BeginReading(), aSessionId.Length());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ChromiumCDMChild::RecvUpdateSession(
-    const uint32_t& aPromiseId, const nsCString& aSessionId,
+    const uint32_t& aPromiseId, const nsACString& aSessionId,
     nsTArray<uint8_t>&& aResponse) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG_DEBUG("ChromiumCDMChild::RecvUpdateSession(pid=%" PRIu32
                 ", sid=%s) responseLen=%zu",
-                aPromiseId, aSessionId.get(), aResponse.Length());
+                aPromiseId, PromiseFlatCString(aSessionId).get(),
+                aResponse.Length());
   if (mCDM) {
-    mCDM->UpdateSession(aPromiseId, aSessionId.get(), aSessionId.Length(),
-                        aResponse.Elements(), aResponse.Length());
+    mCDM->UpdateSession(aPromiseId, aSessionId.BeginReading(),
+                        aSessionId.Length(), aResponse.Elements(),
+                        aResponse.Length());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ChromiumCDMChild::RecvCloseSession(
-    const uint32_t& aPromiseId, const nsCString& aSessionId) {
+    const uint32_t& aPromiseId, const nsACString& aSessionId) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG_DEBUG("ChromiumCDMChild::RecvCloseSession(pid=%" PRIu32 ", sid=%s)",
-                aPromiseId, aSessionId.get());
+                aPromiseId, PromiseFlatCString(aSessionId).get());
   if (mCDM) {
-    mCDM->CloseSession(aPromiseId, aSessionId.get(), aSessionId.Length());
+    mCDM->CloseSession(aPromiseId, aSessionId.BeginReading(),
+                       aSessionId.Length());
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ChromiumCDMChild::RecvRemoveSession(
-    const uint32_t& aPromiseId, const nsCString& aSessionId) {
+    const uint32_t& aPromiseId, const nsACString& aSessionId) {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG_DEBUG("ChromiumCDMChild::RecvRemoveSession(pid=%" PRIu32 ", sid=%s)",
-                aPromiseId, aSessionId.get());
+                aPromiseId, PromiseFlatCString(aSessionId).get());
   if (mCDM) {
-    mCDM->RemoveSession(aPromiseId, aSessionId.get(), aSessionId.Length());
+    mCDM->RemoveSession(aPromiseId, aSessionId.BeginReading(),
+                        aSessionId.Length());
   }
   return IPC_OK();
 }

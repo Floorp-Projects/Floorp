@@ -21,7 +21,7 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual mozilla::ipc::IPCResult RecvSetDictionary(
-      const nsCString& aDictionary, bool* success);
+      const nsACString& aDictionary, bool* success);
 
   virtual mozilla::ipc::IPCResult RecvSetDictionaries(
       const nsTArray<nsCString>& aDictionaries,
@@ -33,7 +33,7 @@ class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent {
   virtual mozilla::ipc::IPCResult RecvCheckAsync(nsTArray<nsString>&& aWord,
                                                  CheckAsyncResolver&& aResolve);
 
-  virtual mozilla::ipc::IPCResult RecvSuggest(const nsString& aWord,
+  virtual mozilla::ipc::IPCResult RecvSuggest(const nsAString& aWord,
                                               uint32_t aCount,
                                               SuggestResolver&& aResolve);
 

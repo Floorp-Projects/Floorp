@@ -38,7 +38,6 @@
 
 #include "TestShellChild.h"
 
-using mozilla::AutoSafeJSContext;
 using mozilla::dom::AutoEntryScript;
 using mozilla::dom::AutoJSAPI;
 using mozilla::ipc::XPCShellEnvironment;
@@ -398,7 +397,7 @@ bool XPCShellEnvironment::Init() {
   return true;
 }
 
-bool XPCShellEnvironment::EvaluateString(const nsString& aString,
+bool XPCShellEnvironment::EvaluateString(const nsAString& aString,
                                          nsString* aResult) {
   AutoEntryScript aes(GetGlobalObject(),
                       "ipc XPCShellEnvironment::EvaluateString");
@@ -408,7 +407,7 @@ bool XPCShellEnvironment::EvaluateString(const nsString& aString,
   options.setFileAndLine("typein", 0);
 
   JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, aString.get(), aString.Length(),
+  if (!srcBuf.init(cx, aString.BeginReading(), aString.Length(),
                    JS::SourceOwnership::Borrowed)) {
     return false;
   }

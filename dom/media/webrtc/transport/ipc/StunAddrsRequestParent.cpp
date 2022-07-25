@@ -62,7 +62,7 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvGetStunAddrs() {
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestParent::RecvRegisterMDNSHostname(
-    const nsCString& aHostname, const nsCString& aAddress) {
+    const nsACString& aHostname, const nsACString& aAddress) {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {
@@ -78,7 +78,7 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvRegisterMDNSHostname(
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestParent::RecvQueryMDNSHostname(
-    const nsCString& aHostname) {
+    const nsACString& aHostname) {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {
@@ -93,7 +93,7 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::RecvQueryMDNSHostname(
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestParent::RecvUnregisterMDNSHostname(
-    const nsCString& aHostname) {
+    const nsACString& aHostname) {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {
@@ -113,12 +113,12 @@ mozilla::ipc::IPCResult StunAddrsRequestParent::Recv__delete__() {
   return IPC_OK();
 }
 
-void StunAddrsRequestParent::OnQueryComplete(const nsCString& hostname,
+void StunAddrsRequestParent::OnQueryComplete(const nsACString& hostname,
                                              const Maybe<nsCString>& address) {
   RUN_ON_THREAD(mMainThread,
                 WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
                              &StunAddrsRequestParent::OnQueryComplete_m,
-                             hostname, address),
+                             nsCString(hostname), address),
                 NS_DISPATCH_NORMAL);
 }
 
@@ -196,7 +196,7 @@ void StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs) {
 }
 
 void StunAddrsRequestParent::OnQueryComplete_m(
-    const nsCString& hostname, const Maybe<nsCString>& address) {
+    const nsACString& hostname, const Maybe<nsCString>& address) {
   ASSERT_ON_THREAD(mMainThread);
 
   if (mIPCClosed) {

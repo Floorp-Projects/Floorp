@@ -36,7 +36,8 @@ nsColorPickerProxy::Open(
   return NS_OK;
 }
 
-mozilla::ipc::IPCResult nsColorPickerProxy::RecvUpdate(const nsString& aColor) {
+mozilla::ipc::IPCResult nsColorPickerProxy::RecvUpdate(
+    const nsAString& aColor) {
   if (mCallback) {
     mCallback->Update(aColor);
   }
@@ -44,7 +45,7 @@ mozilla::ipc::IPCResult nsColorPickerProxy::RecvUpdate(const nsString& aColor) {
 }
 
 mozilla::ipc::IPCResult nsColorPickerProxy::Recv__delete__(
-    const nsString& aColor) {
+    const nsAString& aColor) {
   if (mCallback) {
     mCallback->Done(aColor);
     mCallback = nullptr;

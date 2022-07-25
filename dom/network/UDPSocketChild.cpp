@@ -158,12 +158,12 @@ nsresult UDPSocketChild::SendBinaryStream(const nsACString& aHost,
 
 void UDPSocketChild::JoinMulticast(const nsACString& aMulticastAddress,
                                    const nsACString& aInterface) {
-  SendJoinMulticast(nsCString(aMulticastAddress), nsCString(aInterface));
+  SendJoinMulticast(aMulticastAddress, aInterface);
 }
 
 void UDPSocketChild::LeaveMulticast(const nsACString& aMulticastAddress,
                                     const nsACString& aInterface) {
-  SendLeaveMulticast(nsCString(aMulticastAddress), nsCString(aInterface));
+  SendLeaveMulticast(aMulticastAddress, aInterface);
 }
 
 nsresult UDPSocketChild::SetFilterName(const nsACString& aFilterName) {
