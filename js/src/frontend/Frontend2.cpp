@@ -260,7 +260,8 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
 // into a list of RegExpStencil.
-bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
+bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
+                       const SmooshResult& result,
                        CompilationState& compilationState) {
   auto len = result.regexps.len;
   if (len == 0) {
@@ -277,7 +278,6 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     return false;
   }
 
-  MainThreadErrorContext ec(cx);
   for (size_t i = 0; i < len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
     auto s = smoosh_get_slice_at(result, item.pattern);
@@ -315,7 +315,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     mozilla::Range<const char16_t> range(pattern.get(), length);
 
-    TokenStreamAnyChars ts(cx, &ec, compilationState.input.options,
+    TokenStreamAnyChars ts(cx, ec, compilationState.input.options,
                            /* smg = */ nullptr);
 
     // See Parser<FullParseHandler, Unit>::newRegExp.
@@ -543,19 +543,18 @@ class AutoFreeSmooshParseResult {
 
 void InitSmoosh() { smoosh_init(); }
 
-void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
-                              int errorNumber, ...) {
-  MainThreadErrorContext ec(cx);
+void ReportSmooshCompileError(JSContext* cx, ErrorContext* ec,
+                              ErrorMetadata&& metadata, int errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
-  ReportCompileErrorUTF8(&ec, std::move(metadata), /* notes = */ nullptr,
+  ReportCompileErrorUTF8(ec, std::move(metadata), /* notes = */ nullptr,
                          errorNumber, &args);
   va_end(args);
 }
 
 /* static */
 bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   // FIXME: check info members and return with *unimplemented = true
@@ -576,7 +575,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     metadata.lineNumber = 1;
     metadata.columnNumber = 0;
     metadata.isMuted = false;
-    ReportSmooshCompileError(cx, std::move(metadata),
+    ReportSmooshCompileError(cx, ec, std::move(metadata),
                              JSMSG_SMOOSH_COMPILE_ERROR,
                              reinterpret_cast<const char*>(result.error.data));
     return false;
@@ -603,7 +602,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return false;
   }
 
-  if (!ConvertRegExpData(cx, result, compilationState)) {
+  if (!ConvertRegExpData(cx, ec, result, compilationState)) {
     return false;
   }
 

@@ -5981,11 +5981,12 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
             return false;
           }
 
+          MainThreadErrorContext ec(cx);
           Rooted<frontend::CompilationInput> input(
               cx, frontend::CompilationInput(options));
           UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
           if (!Smoosh::tryCompileGlobalScriptToExtensibleStencil(
-                  cx, input.get(), srcBuf, stencil)) {
+                  cx, &ec, input.get(), srcBuf, stencil)) {
             return false;
           }
           if (!stencil) {
