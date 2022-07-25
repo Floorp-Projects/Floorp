@@ -366,7 +366,9 @@
   mirror: always
   include: <cmath>
 
-# Whether to lock touch scrolling to one axis at a time.
+# Whether to lock touch scrolling to one axis at a time. When a new
+# axis lock mode is added, the APZCAxisLockCompatTester GTest shoud
+# be updated to include the lock mode value.
 # 0 = FREE (No locking at all)
 # 1 = STANDARD (Once locked, remain locked until scrolling ends)
 # 2 = STICKY (Allow lock to be broken, with hysteresis)
