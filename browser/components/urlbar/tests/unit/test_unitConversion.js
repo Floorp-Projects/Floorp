@@ -8,9 +8,9 @@
  * Unit test for unit conversion module.
  */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderUnitConversion:
-    "resource:///modules/UrlbarProviderUnitConversion.jsm",
+    "resource:///modules/UrlbarProviderUnitConversion.sys.mjs",
 });
 
 const TEST_DATA = [

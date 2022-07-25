@@ -3,9 +3,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderInterventions:
-    "resource:///modules/UrlbarProviderInterventions.jsm",
+    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
 });
 
 add_task(async function init() {
