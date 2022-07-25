@@ -17,11 +17,13 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EitherParser.h"
 #include "frontend/ErrorReporter.h"
+#include "vm/ErrorReporting.h"
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"  // Smoosh
 #endif
 #include "frontend/ModuleSharedContext.h"
 #include "js/SourceText.h"
+#include "js/UniquePtr.h"
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GlobalObject.h"
@@ -90,6 +92,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
 
   Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
   Maybe<Parser<FullParseHandler, Unit>> parser;
+  js::UniquePtr<ErrorContext> ec;
 
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
@@ -582,6 +585,8 @@ template <typename Unit>
 bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx) {
   const auto& options = compilationState_.input.options;
 
+  ec = MakeUnique<GeneralErrorContext>(cx);
+
   if (!compilationState_.source->assignSource(cx, options, sourceBuffer_)) {
     return false;
   }
@@ -589,7 +594,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx) {
   MOZ_ASSERT(compilationState_.canLazilyParse ==
              CanLazilyParse(compilationState_.input.options));
   if (compilationState_.canLazilyParse) {
-    syntaxParser.emplace(cx, options, sourceBuffer_.units(),
+    syntaxParser.emplace(cx, ec.get(), options, sourceBuffer_.units(),
                          sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationState_,
                          /* syntaxParser = */ nullptr);
@@ -598,7 +603,8 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx) {
     }
   }
 
-  parser.emplace(cx, options, sourceBuffer_.units(), sourceBuffer_.length(),
+  parser.emplace(cx, ec.get(), options, sourceBuffer_.units(),
+                 sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationState_,
                  syntaxParser.ptrOr(nullptr));
   parser->ss = compilationState_.source.get();
@@ -1094,7 +1100,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  Parser<FullParseHandler, Unit> parser(cx, input.options, units, length,
+  GeneralErrorContext ec(cx);
+  Parser<FullParseHandler, Unit> parser(cx, &ec, input.options, units, length,
                                         /* foldConstants = */ true,
                                         compilationState,
                                         /* syntaxParser = */ nullptr);
