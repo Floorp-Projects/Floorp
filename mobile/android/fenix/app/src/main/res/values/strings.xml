@@ -1542,8 +1542,6 @@
     <string name="addresses_edit_address">Edit address</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Manage addresses</string>
-    <!-- The header for the full name of an address -->
-    <string name="addresses_full_name" moz:removedIn="102" tools:ignore="UnusedResources">Full Name</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">First Name</string>
     <!-- The header for the middle name of an address -->
