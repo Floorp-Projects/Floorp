@@ -17,12 +17,12 @@ const { PlacesUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesUtils.sys.mjs"
 );
 
-const { UrlbarProviderOpenTabs } = ChromeUtils.importESModule(
-  "resource:///modules/UrlbarProviderOpenTabs.sys.mjs"
+const { UrlbarProviderOpenTabs } = ChromeUtils.import(
+  "resource:///modules/UrlbarProviderOpenTabs.jsm"
 );
 
-const { UrlbarTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+const { UrlbarTestUtils } = ChromeUtils.import(
+  "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
 var stateBackup = ss.getBrowserState();

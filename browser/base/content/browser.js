@@ -18,13 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  UrlbarInput: "resource:///modules/UrlbarInput.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderSearchTips:
-    "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -91,6 +84,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Translation: "resource:///modules/translation/TranslationParent.jsm",
   UITour: "resource:///modules/UITour.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+  UrlbarInput: "resource:///modules/UrlbarInput.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderSearchTips: "resource:///modules/UrlbarProviderSearchTips.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   Weave: "resource://services-sync/main.js",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   webrtcUI: "resource:///modules/webrtcUI.jsm",

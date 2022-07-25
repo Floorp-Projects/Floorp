@@ -4,18 +4,20 @@
 
 "use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
 });
 
 // A map of known search origins.

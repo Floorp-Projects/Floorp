@@ -16,8 +16,8 @@ const TEST_URL = getRootDirectory(gTestPath).replace(
   "http://mochi.test:8888"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 function searchInAwesomebar(value, win = window) {

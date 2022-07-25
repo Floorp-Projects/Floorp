@@ -3,10 +3,10 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProvider: "resource:///modules/UrlbarUtils.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const TEST_ENGINE_NAME = "Test";

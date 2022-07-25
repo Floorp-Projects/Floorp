@@ -7,9 +7,9 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 let gTree;
