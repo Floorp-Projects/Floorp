@@ -929,6 +929,10 @@ TEST_F(APZCOverscrollTester,
 // but having OverscrollAnimation on both axes initially.
 TEST_F(APZCOverscrollTester,
        BothAxesOverscrollAnimationWithPanMomentumScrolling) {
+  // TODO: This test currently requires gestures that cause movement on both
+  // axis, which excludes DOMINANT_AXIS locking mode. The gestures should be
+  // broken up into multiple gestures to cause the overscroll.
+  SCOPED_GFX_PREF_INT("apz.axis_lock.mode", 2);
   SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
 
   ScrollMetadata metadata;
