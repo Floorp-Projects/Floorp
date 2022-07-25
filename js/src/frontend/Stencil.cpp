@@ -4719,9 +4719,10 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   JS::CompileOptions options(cx, optionsInput);
   options.setModule();
 
+  GeneralErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil =
-      js::frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
+      js::frontend::ParseModuleToStencil(cx, &ec, input.get(), srcBuf);
   if (!stencil) {
     return nullptr;
   }

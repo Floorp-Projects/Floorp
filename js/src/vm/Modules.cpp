@@ -113,7 +113,8 @@ static JSObject* CompileModuleHelper(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  return frontend::CompileModule(cx, options, srcBuf);
+  GeneralErrorContext ec(cx);
+  return frontend::CompileModule(cx, &ec, options, srcBuf);
 }
 
 JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,

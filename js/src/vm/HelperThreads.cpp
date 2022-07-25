@@ -754,7 +754,8 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  stencil_ = frontend::ParseModuleToStencil(cx, *stencilInput_, data);
+  OffThreadErrorContext ec(cx);
+  stencil_ = frontend::ParseModuleToStencil(cx, &ec, *stencilInput_, data);
   if (!stencil_) {
     return;
   }
