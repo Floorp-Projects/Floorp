@@ -188,6 +188,10 @@ check_and_add_warning("-Wno-error=atomic-alignment")
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1515356
 check_and_add_warning("-Wno-error=deprecated-copy")
 
+# New warning with clang 15. Catches uses of deprecated builtins in abseil-cpp.
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1779528
+check_and_add_warning("-Wno-error=deprecated-builtins")
+
 # catches format/argument mismatches with printf
 c_format_warning, cxx_format_warning = check_and_add_warning(
     "-Wformat", when=depends(target)(lambda t: t.kernel != "WINNT")
