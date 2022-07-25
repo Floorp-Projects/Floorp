@@ -209,7 +209,8 @@ nsresult StatusBarEntry::OnComplete(imgIContainer* aImage) {
 
 LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
   if (msg == WM_USER &&
-      (LOWORD(lp) == WM_LBUTTONUP || LOWORD(lp) == WM_RBUTTONUP)) {
+      (LOWORD(lp) == NIN_SELECT || LOWORD(lp) == NIN_KEYSELECT ||
+       LOWORD(lp) == WM_CONTEXTMENU)) {
     nsMenuFrame* menu = do_QueryFrame(mMenu->GetPrimaryFrame());
     if (!menu) {
       return TRUE;
@@ -233,7 +234,15 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       return TRUE;
     }
 
-    if (LOWORD(lp) == WM_LBUTTONUP &&
+    if (LOWORD(lp) == NIN_KEYSELECT && ::GetForegroundWindow() == win) {
+      // When enter is pressed on the icon, the shell sends two NIN_KEYSELECT
+      // notifications. This might cause us to open two windows. To work around
+      // this, if we're already the foreground window (which happens below),
+      // ignore this notification.
+      return TRUE;
+    }
+
+    if (LOWORD(lp) != WM_CONTEXTMENU &&
         mMenu->HasAttr(kNameSpaceID_None, nsGkAtoms::contextmenu)) {
       ::SetForegroundWindow(win);
       nsEventStatus status = nsEventStatus_eIgnore;
