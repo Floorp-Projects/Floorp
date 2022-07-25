@@ -490,11 +490,11 @@ SourceCoords::LineToken SourceCoords::lineToken(uint32_t offset) const {
   return LineToken(indexFromOffset(offset), offset);
 }
 
-TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
+TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
     : cx(cx),
-      ec(cx),
+      ec(ec),
       options_(options),
       strictModeGetter_(smg),
       filename_(options.filename()),
@@ -610,7 +610,7 @@ void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
   ErrorMetadata metadata;
   computeErrorMetadataNoOffset(&metadata);
 
-  ReportCompileErrorLatin1(&ec, cx, std::move(metadata), nullptr, errorNumber,
+  ReportCompileErrorLatin1(ec, cx, std::move(metadata), nullptr, errorNumber,
                            args);
 }
 
@@ -1041,7 +1041,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
       break;
     }
 
-    ReportCompileErrorLatin1(&anyChars.ec, anyChars.cx, std::move(err),
+    ReportCompileErrorLatin1(anyChars.ec, anyChars.cx, std::move(err),
                              std::move(notes), errorNumber, &args);
   } while (false);
 

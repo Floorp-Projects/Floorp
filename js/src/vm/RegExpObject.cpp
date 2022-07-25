@@ -206,8 +206,9 @@ RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
 
 RegExpObject* RegExpObject::create(JSContext* cx, Handle<JSAtom*> source,
                                    RegExpFlags flags, NewObjectKind newKind) {
+  GeneralErrorContext ec(cx);
   CompileOptions dummyOptions(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, dummyOptions);
+  frontend::DummyTokenStream dummyTokenStream(cx, &ec, dummyOptions);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   if (!irregexp::CheckPatternSyntax(cx, dummyTokenStream, source, flags)) {
@@ -1231,8 +1232,9 @@ JS_PUBLIC_API bool JS::CheckRegExpSyntax(JSContext* cx, const char16_t* chars,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
+  GeneralErrorContext ec(cx);
   CompileOptions dummyOptions(cx);
-  frontend::DummyTokenStream dummyTokenStream(cx, dummyOptions);
+  frontend::DummyTokenStream dummyTokenStream(cx, &ec, dummyOptions);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 

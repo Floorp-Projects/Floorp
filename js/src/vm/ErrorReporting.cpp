@@ -29,26 +29,17 @@ using JS::UniqueTwoByteChars;
 
 GeneralErrorContext::GeneralErrorContext(JSContext* cx) : cx_(cx) {}
 
-bool GeneralErrorContext::addPendingError(CompileError** error) {
-  if (cx_->isHelperThreadContext()) {
-    return cx_->addPendingCompileError(error);
-  }
-  return true;
-}
+bool GeneralErrorContext::addPendingError(CompileError** error) { return true; }
 
 void GeneralErrorContext::reportError(CompileError* err) {
-  // On the main thread, report the error immediately. When compiling off
-  // thread, save the error so that the thread finishing the parse can report
-  // it later.
+  // On the main thread, report the error immediately.
 
   if (MOZ_UNLIKELY(!cx_->runtime()->hasInitializedSelfHosting())) {
     selfHosting_ErrorReporter(err);
     return;
   }
 
-  if (!cx_->isHelperThreadContext()) {
-    err->throwError(cx_);
-  }
+  err->throwError(cx_);
 }
 
 void GeneralErrorContext::reportWarning(CompileError* err) {
@@ -56,6 +47,26 @@ void GeneralErrorContext::reportWarning(CompileError* err) {
     err->throwError(cx_);
   }
 }
+
+OffThreadErrorContext::OffThreadErrorContext(JSContext* cx) : cx_(cx) {}
+
+bool OffThreadErrorContext::addPendingError(CompileError** error) {
+  // When compiling off thread, save the error so that the thread finishing the
+  // parse can report it later.
+  return cx_->addPendingCompileError(error);
+}
+
+void OffThreadErrorContext::reportError(CompileError* err) {
+  if (MOZ_UNLIKELY(
+          !cx_->runtime()
+               ->hasInitializedSelfHosting())) {  // TODO can SelfHosting run on
+                                                  // helper threads?
+    selfHosting_ErrorReporter(err);
+    return;
+  }
+}
+
+void OffThreadErrorContext::reportWarning(CompileError* err) {}
 
 void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
   MOZ_ASSERT(reportp->isWarning());
