@@ -51,7 +51,7 @@ class ErrorContext {
   // Report ErrorAllocator errors
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
-  virtual void reportAllocationOverflow() = 0;
+  virtual void onAllocationOverflow() = 0;
 
   virtual const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef, const unsigned errorNumber) = 0;
@@ -76,7 +76,7 @@ class MainThreadErrorContext : public ErrorContext {
   // Report ErrorAllocator errors
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
-  void reportAllocationOverflow() override;
+  void onAllocationOverflow() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
@@ -107,7 +107,7 @@ class OffThreadErrorContext : public ErrorContext {
   // Report ErrorAllocator errors
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
-  void reportAllocationOverflow() override;
+  void onAllocationOverflow() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
