@@ -266,6 +266,11 @@ add_task(async function test_panel_has_a_manage_extensions_button() {
     "about:addons",
     "Manage opened about:addons"
   );
+  is(
+    win.gBrowser.selectedBrowser.contentWindow.gViewController.currentViewId,
+    "addons://list/extension",
+    "expected about:addons to show the list of extensions"
+  );
   BrowserTestUtils.removeTab(tab);
 
   await BrowserTestUtils.closeWindow(win);
@@ -381,6 +386,48 @@ add_task(async function test_unified_extensions_and_addons_themes_widget() {
   ok(addonsButton, "expected add-ons and themes button");
 
   cleanup();
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_button_opens_discopane_when_no_extension() {
+  const win = await promiseEnableUnifiedExtensions();
+
+  // The test harness registers regular extensions so we need to mock the
+  // `getActiveExtensions` extension to simulate zero extensions installed.
+  const origGetActionExtensions = win.gUnifiedExtensions.getActiveExtensions;
+  win.gUnifiedExtensions.getActiveExtensions = () => Promise.resolve([]);
+
+  // Navigate away from the initial page so that about:addons always opens in a
+  // new tab during tests.
+  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+
+  const button = win.document.getElementById("unified-extensions-button");
+  ok(button, "expected button");
+
+  const tabPromise = BrowserTestUtils.waitForNewTab(
+    win.gBrowser,
+    "about:addons",
+    true
+  );
+
+  button.click();
+
+  const tab = await tabPromise;
+  is(
+    win.gBrowser.currentURI.spec,
+    "about:addons",
+    "expected about:addons to be open"
+  );
+  is(
+    win.gBrowser.selectedBrowser.contentWindow.gViewController.currentViewId,
+    "addons://discover/",
+    "expected about:addons to show the recommendations"
+  );
+  BrowserTestUtils.removeTab(tab);
+
+  win.gUnifiedExtensions.getActiveExtensions = origGetActionExtensions;
 
   await BrowserTestUtils.closeWindow(win);
 });
