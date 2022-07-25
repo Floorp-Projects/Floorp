@@ -49,7 +49,6 @@ class OffThreadErrorContext : public ErrorContext {
   js::OffThreadFrontendErrors errors_;
 
  public:
-  explicit OffThreadErrorContext(JSAllocator* alloc);
   bool addPendingError(js::CompileError** error) override;
 
   virtual void reportError(js::CompileError* err) override;

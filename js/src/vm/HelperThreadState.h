@@ -554,6 +554,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   // Record any errors happening while parsing or generating bytecode.
   OffThreadFrontendErrors errors;
+  OffThreadErrorContext ec_;
 
   ParseTask(ParseTaskKind kind, JSContext* cx,
             JS::OffThreadCompileCallback callback, void* callbackData);
@@ -566,7 +567,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void activate(JSRuntime* rt);
   void deactivate(JSRuntime* rt);
 
-  virtual void parse(JSContext* cx) = 0;
+  virtual void parse(JSContext* cx, ErrorContext* ec) = 0;
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 

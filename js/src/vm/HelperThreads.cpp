@@ -627,8 +627,9 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
 
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextOffThreadFrontendErrors recordErrors(&this->errors);
+  ec_.setAllocator(cx);
 
-  parse(cx);
+  parse(cx, &ec_);
 
   MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
   cx->tempLifoAlloc().freeAll();
@@ -674,7 +675,7 @@ struct CompileToStencilTask : public ParseTask {
   CompileToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
                        JS::OffThreadCompileCallback callback,
                        void* callbackData);
-  void parse(JSContext* cx) override;
+  void parse(JSContext* cx, ErrorContext* ec) override;
 };
 
 template <typename Unit>
@@ -684,7 +685,7 @@ struct CompileModuleToStencilTask : public ParseTask {
   CompileModuleToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
                              JS::OffThreadCompileCallback callback,
                              void* callbackData);
-  void parse(JSContext* cx) override;
+  void parse(JSContext* cx, ErrorContext* ec) override;
 };
 
 struct DecodeStencilTask : public ParseTask {
@@ -692,7 +693,7 @@ struct DecodeStencilTask : public ParseTask {
 
   DecodeStencilTask(JSContext* cx, const JS::TranscodeRange& range,
                     JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
+  void parse(JSContext* cx, ErrorContext* ec) override;
 };
 
 struct MultiStencilsDecodeTask : public ParseTask {
@@ -701,7 +702,7 @@ struct MultiStencilsDecodeTask : public ParseTask {
   MultiStencilsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
                           JS::OffThreadCompileCallback callback,
                           void* callbackData);
-  void parse(JSContext* cx) override;
+  void parse(JSContext* cx, ErrorContext* ec) override;
 };
 
 template <typename Unit>
@@ -712,7 +713,7 @@ CompileToStencilTask<Unit>::CompileToStencilTask(
       data(std::move(srcBuf)) {}
 
 template <typename Unit>
-void CompileToStencilTask<Unit>::parse(JSContext* cx) {
+void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   ScopeKind scopeKind =
@@ -723,10 +724,9 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  OffThreadErrorContext ec(cx);
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   stencil_ = frontend::CompileGlobalScriptToStencil(
-      cx, &ec, tempLifoAlloc, *stencilInput_, data, scopeKind);
+      cx, ec, tempLifoAlloc, *stencilInput_, data, scopeKind);
   if (!stencil_) {
     return;
   }
@@ -747,7 +747,7 @@ CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
       data(std::move(srcBuf)) {}
 
 template <typename Unit>
-void CompileModuleToStencilTask<Unit>::parse(JSContext* cx) {
+void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
@@ -755,8 +755,7 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
-  OffThreadErrorContext ec(cx);
-  stencil_ = frontend::ParseModuleToStencil(cx, &ec, *stencilInput_, data);
+  stencil_ = frontend::ParseModuleToStencil(cx, ec, *stencilInput_, data);
   if (!stencil_) {
     return;
   }
@@ -778,7 +777,7 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
   MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
 }
 
-void DecodeStencilTask::parse(JSContext* cx) {
+void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
@@ -815,7 +814,7 @@ MultiStencilsDecodeTask::MultiStencilsDecodeTask(
     : ParseTask(ParseTaskKind::MultiStencilsDecode, cx, callback, callbackData),
       sources(&sources) {}
 
-void MultiStencilsDecodeTask::parse(JSContext* cx) {
+void MultiStencilsDecodeTask::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   if (!stencils.reserve(sources->length())) {
