@@ -48,7 +48,7 @@ class ErrorReportMixin : public StrictModeGetter {
   virtual const JS::ReadOnlyCompileOptions& options() const = 0;
 
   // Returns the current context.
-  virtual JSContext* getContext() const = 0;
+  virtual ErrorContext* getContext() const = 0;
 
   // Returns the current allocator.
   virtual JSAllocator* getAllocator() const = 0;

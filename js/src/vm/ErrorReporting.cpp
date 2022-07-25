@@ -27,6 +27,36 @@ using JS::HandleObject;
 using JS::HandleValue;
 using JS::UniqueTwoByteChars;
 
+GeneralErrorContext::GeneralErrorContext(JSContext* cx) : cx_(cx) {}
+
+bool GeneralErrorContext::addPendingError(CompileError** error) {
+  if (cx_->isHelperThreadContext()) {
+    return cx_->addPendingCompileError(error);
+  }
+  return true;
+}
+
+void GeneralErrorContext::reportError(CompileError* err) {
+  // On the main thread, report the error immediately. When compiling off
+  // thread, save the error so that the thread finishing the parse can report
+  // it later.
+
+  if (MOZ_UNLIKELY(!cx_->runtime()->hasInitializedSelfHosting())) {
+    selfHosting_ErrorReporter(err);
+    return;
+  }
+
+  if (!cx_->isHelperThreadContext()) {
+    err->throwError(cx_);
+  }
+}
+
+void GeneralErrorContext::reportWarning(CompileError* err) {
+  if (!cx_->isHelperThreadContext()) {
+    err->throwError(cx_);
+  }
+}
+
 void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
   MOZ_ASSERT(reportp->isWarning());
 
@@ -52,7 +82,7 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
   return false;
 }
 
-bool js::ReportCompileWarning(JSContext* cx, JSAllocator* alloc,
+bool js::ReportCompileWarning(ErrorContext* ec, JSAllocator* alloc,
                               ErrorMetadata&& metadata,
                               UniquePtr<JSErrorNotes> notes,
                               unsigned errorNumber, va_list* args) {
@@ -61,7 +91,7 @@ bool js::ReportCompileWarning(JSContext* cx, JSAllocator* alloc,
   // it later.
   CompileError tempErr;
   CompileError* err = &tempErr;
-  if (cx->isHelperThreadContext() && !cx->addPendingCompileError(&err)) {
+  if (!ec->addPendingError(&err)) {
     return false;
   }
 
@@ -79,29 +109,24 @@ bool js::ReportCompileWarning(JSContext* cx, JSAllocator* alloc,
                           metadata.tokenOffset);
   }
 
-  if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
+  if (!ExpandErrorArgumentsVA(alloc, GetErrorMessage, nullptr, errorNumber,
                               ArgumentsAreLatin1, err, *args)) {
     return false;
   }
 
-  if (!cx->isHelperThreadContext()) {
-    err->throwError(cx);
-  }
+  ec->reportWarning(err);
 
   return true;
 }
 
-static void ReportCompileErrorImpl(JSContext* cx, JSAllocator* alloc,
+static void ReportCompileErrorImpl(ErrorContext* ec, JSAllocator* alloc,
                                    js::ErrorMetadata&& metadata,
                                    js::UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args,
                                    ErrorArgumentsType argumentsType) {
-  // On the main thread, report the error immediately. When compiling off
-  // thread, save the error so that the thread finishing the parse can report
-  // it later.
   js::CompileError tempErr;
   js::CompileError* err = &tempErr;
-  if (cx->isHelperThreadContext() && !cx->addPendingCompileError(&err)) {
+  if (!ec->addPendingError(&err)) {
     return;
   }
 
@@ -124,29 +149,22 @@ static void ReportCompileErrorImpl(JSContext* cx, JSAllocator* alloc,
     return;
   }
 
-  if (MOZ_UNLIKELY(!cx->runtime()->hasInitializedSelfHosting())) {
-    selfHosting_ErrorReporter(err);
-    return;
-  }
-
-  if (!cx->isHelperThreadContext()) {
-    err->throwError(cx);
-  }
+  ec->reportError(err);
 }
 
-void js::ReportCompileErrorLatin1(JSContext* cx, JSAllocator* alloc,
+void js::ReportCompileErrorLatin1(ErrorContext* ec, JSAllocator* alloc,
                                   ErrorMetadata&& metadata,
                                   UniquePtr<JSErrorNotes> notes,
                                   unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(cx, alloc, std::move(metadata), std::move(notes),
+  ReportCompileErrorImpl(ec, alloc, std::move(metadata), std::move(notes),
                          errorNumber, args, ArgumentsAreLatin1);
 }
 
-void js::ReportCompileErrorUTF8(JSContext* cx, JSAllocator* alloc,
+void js::ReportCompileErrorUTF8(ErrorContext* ec, JSAllocator* alloc,
                                 ErrorMetadata&& metadata,
                                 UniquePtr<JSErrorNotes> notes,
                                 unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(cx, alloc, std::move(metadata), std::move(notes),
+  ReportCompileErrorImpl(ec, alloc, std::move(metadata), std::move(notes),
                          errorNumber, args, ArgumentsAreUTF8);
 }
 

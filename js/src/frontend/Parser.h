@@ -184,6 +184,7 @@
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
 #include "js/friend/ErrorMessages.h"  // JSErrNum, JSMSG_*
+#include "vm/ErrorReporting.h"
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 
 namespace js {
@@ -286,6 +287,9 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   const bool foldConstants_ : 1;
 
  protected:
+  mutable GeneralErrorContext
+      ec_;  // TODO error context needs to be passed in from constructor
+
 #if DEBUG
   /* Our fallible 'checkOptions' member function has been called. */
   bool checkOptionsCalled_ : 1;
@@ -338,7 +342,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
  public:
   // Implement ErrorReportMixin.
 
-  JSContext* getContext() const override { return cx_; }
+  ErrorContext* getContext() const override { return &ec_; }
 
   JSAllocator* getAllocator() const override { return cx_; }
 

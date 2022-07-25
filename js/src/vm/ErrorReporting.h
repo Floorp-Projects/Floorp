@@ -85,16 +85,37 @@ class MOZ_STACK_CLASS ReportExceptionClosure final
 /** Send a JSErrorReport to the warningReporter callback. */
 extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
 
+class ErrorContext {
+ public:
+  virtual bool addPendingError(js::CompileError** error) = 0;
+
+  virtual void reportError(js::CompileError* err) = 0;
+  virtual void reportWarning(js::CompileError* err) = 0;
+};
+
+class GeneralErrorContext : public ErrorContext {
+ private:
+  JSContext* cx_;
+
+ public:
+  explicit GeneralErrorContext(JSContext* cx);
+
+  bool addPendingError(js::CompileError** error) override;
+
+  virtual void reportError(js::CompileError* err) override;
+  virtual void reportWarning(js::CompileError* err) override;
+};
+
 /**
  * Report a compile error during script processing prior to execution of the
  * script.
  */
-extern void ReportCompileErrorLatin1(JSContext* cx, JSAllocator* alloc,
+extern void ReportCompileErrorLatin1(ErrorContext* ec, JSAllocator* alloc,
                                      ErrorMetadata&& metadata,
                                      UniquePtr<JSErrorNotes> notes,
                                      unsigned errorNumber, va_list* args);
 
-extern void ReportCompileErrorUTF8(JSContext* cx, JSAllocator* alloc,
+extern void ReportCompileErrorUTF8(ErrorContext* ec, JSAllocator* alloc,
                                    ErrorMetadata&& metadata,
                                    UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args);
@@ -105,7 +126,7 @@ extern void ReportCompileErrorUTF8(JSContext* cx, JSAllocator* alloc,
  * error occurred.
  */
 [[nodiscard]] extern bool ReportCompileWarning(
-    JSContext* cx, JSAllocator* alloc, ErrorMetadata&& metadata,
+    ErrorContext* ec, JSAllocator* alloc, ErrorMetadata&& metadata,
     UniquePtr<JSErrorNotes> notes, unsigned errorNumber, va_list* args);
 
 class GlobalObject;
