@@ -10,6 +10,6 @@ info: |
 features: [Temporal]
 ---*/
 
-assert.throws(TypeError, () => Temporal.PlainMonthDay());
+assert.throws(TypeError, () => Temporal.PlainMonthDay(1, 2));
 
 reportCompare(0, 0);
