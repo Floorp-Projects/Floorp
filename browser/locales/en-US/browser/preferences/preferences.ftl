@@ -1526,7 +1526,7 @@ uBlock-Origin = uBlock Origin
 about-uboori = uBlock Origin blocks ads, extensive trackers, and additional dangerous sites.
 
 Privacy-Badger = Privacy Badger
-about-PBadger = Privacy Badger automatically learns to block hidden trackers and blocks trackers based on it.
+about-PBadger = Privacy Badger automatically learns to block hidden trackers based on their behaviour across websites.
 
 Duck-Duck-Go = DuckDuckGo Privacy Essentials
 about-DDG = DuckDuckGo Privacy Essentials replaces a default search engine with DuckDuckGo while blocking trackers on visited sites.
