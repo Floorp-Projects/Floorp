@@ -8,7 +8,7 @@
 
 ### QA
 <!-- Before submitting the PR, please address each item -->
-- [ ] **QA Needed**
+- [x] **QA Needed**
 
 ### To download an APK when reviewing a PR (after all CI tasks finished running):
 1. Click on `Checks` at the top of the PR page.
