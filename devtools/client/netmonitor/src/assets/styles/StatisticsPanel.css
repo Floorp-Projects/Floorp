@@ -41,6 +41,7 @@
 .statistics-panel .pie-table-chart-container {
   width: 100%;
   height: 100%;
+  margin-bottom: 1rem;
 }
 
 .statistics-panel .learn-more-link {
@@ -49,6 +50,7 @@
 
 .statistics-panel .table-chart-title {
   display: flex;
+  align-items: center;
 }
 
 .pie-table-chart-container {
@@ -156,5 +158,14 @@
   .statistics-panel .splitter {
     width: 100%;
     height: 1px;
+  }
+
+  .statistics-panel .table-chart-title {
+    margin-top: 3rem;
+  }
+
+  .statistics-panel .charts,
+  .statistics-panel .pie-table-chart-container{
+    margin-bottom: 2rem;
   }
 }
