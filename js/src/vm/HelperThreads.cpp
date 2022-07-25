@@ -722,9 +722,10 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
     return;
   }
 
+  GeneralErrorContext ec(cx);  // TODO helper thread ErrorContext
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   stencil_ = frontend::CompileGlobalScriptToStencil(
-      cx, tempLifoAlloc, *stencilInput_, data, scopeKind);
+      cx, &ec, tempLifoAlloc, *stencilInput_, data, scopeKind);
   if (!stencil_) {
     return;
   }

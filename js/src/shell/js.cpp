@@ -5812,8 +5812,9 @@ template <typename Unit>
 
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (goal == frontend::ParseGoal::Script) {
+    GeneralErrorContext ec(cx);
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, input.get(), srcBuf, ScopeKind::Global);
+        cx, &ec, input.get(), srcBuf, ScopeKind::Global);
   } else {
     stencil = frontend::ParseModuleToExtensibleStencil(cx, input.get(), srcBuf);
   }

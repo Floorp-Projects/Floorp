@@ -4688,9 +4688,10 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
+  GeneralErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
-      cx, cx->tempLifoAlloc(), input.get(), srcBuf, scopeKind);
+      cx, &ec, cx->tempLifoAlloc(), input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }

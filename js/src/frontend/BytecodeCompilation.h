@@ -20,6 +20,7 @@ namespace js {
 
 class Scope;
 class LifoAlloc;
+class ErrorContext;
 
 namespace frontend {
 
@@ -29,21 +30,24 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
+    JSContext* cx, ErrorContext* ec, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
+    ScopeKind scopeKind);
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
+    JSContext* cx, ErrorContext* ec, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencil(JSContext* cx, CompilationInput& input,
+CompileGlobalScriptToExtensibleStencil(JSContext* cx, ErrorContext* ec,
+                                       CompilationInput& input,
                                        JS::SourceText<char16_t>& srcBuf,
                                        ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
 CompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, CompilationInput& input,
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
 // Perform some operation to reduce the time taken by instantiation.
@@ -60,12 +64,12 @@ CompileGlobalScriptToExtensibleStencil(
                                               const CompilationStencil& stencil,
                                               CompilationGCOutput& gcOutput);
 
-extern JSScript* CompileGlobalScript(JSContext* cx,
+extern JSScript* CompileGlobalScript(JSContext* cx, ErrorContext* ec,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<char16_t>& srcBuf,
                                      ScopeKind scopeKind);
 
-extern JSScript* CompileGlobalScript(JSContext* cx,
+extern JSScript* CompileGlobalScript(JSContext* cx, ErrorContext* ec,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                      ScopeKind scopeKind);

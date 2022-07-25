@@ -6444,8 +6444,9 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   if (isModule) {
     stencil = frontend::ParseModuleToExtensibleStencil(cx, input.get(), srcBuf);
   } else {
+    GeneralErrorContext ec(cx);
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, input.get(), srcBuf, ScopeKind::Global);
+        cx, &ec, input.get(), srcBuf, ScopeKind::Global);
   }
   if (!stencil) {
     return false;
