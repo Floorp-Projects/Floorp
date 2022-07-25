@@ -420,7 +420,7 @@
         <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
     </style>
 
-    <style name="Header20TextStyle" parent="TextAppearance.MaterialComponents.Body1">
+    <style name="Header20TextStyle" parent="TextAppearance.MaterialComponents.Body1" tools:ignore="UnusedResources">
         <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>

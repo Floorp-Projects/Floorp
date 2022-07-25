@@ -134,9 +134,6 @@
     <dimen name="onboarding_dual_pane_radio_button_translation_x">-7dp</dimen>
     <dimen name="onboarding_dual_pane_radio_button_translation_y">-8dp</dimen>
 
-    <!--Onboarding home dialog-->
-    <dimen name="oboarding_home_dialog_margin_horizontal">24dp</dimen>
-
     <!-- Addon Details Fragment -->
     <dimen name="addon_details_rating_view_margin_start">6dp</dimen>
     <dimen name="addon_details_rating_view_margin_end">6dp</dimen>

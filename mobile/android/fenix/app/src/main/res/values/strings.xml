@@ -246,24 +246,37 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">What’s new in %1$s</string>
+    <string name="onboarding_home_screen_title_3" moz:RemovedIn="106" tools:ignore="UnusedResources">What’s new in %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">It’s now easier to pick back up where you left off.</string>
+    <string name="onboarding_home_screen_description_2" moz:RemovedIn="106" tools:ignore="UnusedResources">It’s now easier to pick back up where you left off.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Personalized %1$s homepage</string>
+    <string name="onboarding_home_screen_section_home_title_3" moz:RemovedIn="106" tools:ignore="UnusedResources">Personalized %1$s homepage</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Jump to your open tabs, bookmarks, and browsing history.</string>
+    <string name="onboarding_home_screen_section_home_description_2" moz:RemovedIn="106" tools:ignore="UnusedResources">Jump to your open tabs, bookmarks, and browsing history.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Clean, organized tabs</string>
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2" moz:RemovedIn="106" tools:ignore="UnusedResources">Clean, organized tabs</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Clear away tab clutter with improved layout and auto-closing tabs. </string>
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2" moz:RemovedIn="106" tools:ignore="UnusedResources">Clear away tab clutter with improved layout and auto-closing tabs. </string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Recent searches</string>
+    <string name="onboarding_home_screen_section_useful_history_title_2" moz:RemovedIn="106" tools:ignore="UnusedResources">Recent searches</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Revisit your latest searches from your homepage and tabs.</string>
-
+    <string name="onboarding_home_screen_section_useful_history_description_2" moz:RemovedIn="106" tools:ignore="UnusedResources">Revisit your latest searches from your homepage and tabs.</string>
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Your personalized Firefox homepage now makes it easier to pick up where you left off. Find your recent tabs, bookmarks, and search results.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">Your personalized Firefox homepage now makes it easier to pick up where you left off. Find your recent tabs, bookmarks, and search results.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Welcome to an independent internet</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Pick up where you left off with tabs from other devices now on your homepage.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">Switching screens is easier than ever</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Pick up where you left off with tabs from other devices now on your homepage.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Get started</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Sign in</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Skip</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

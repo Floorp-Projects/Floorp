@@ -40,6 +40,7 @@ object Versions {
     const val androidx_datastore = "1.0.0"
     const val google_material = "1.2.1"
     const val accompanist_drawablepainter = "0.23.1"
+    const val accompanist_insets = "0.23.1"
 
     const val mozilla_android_components = AndroidComponents.VERSION
 
@@ -212,6 +213,8 @@ object Deps {
     const val google_material = "com.google.android.material:material:${Versions.google_material}"
     const val google_accompanist_drawablepainter =
         "com.google.accompanist:accompanist-drawablepainter:${Versions.accompanist_drawablepainter}"
+    const val google_accompanist_insets =
+        "com.google.accompanist:accompanist-insets:${Versions.accompanist_drawablepainter}"
 
     const val protobuf_javalite = "com.google.protobuf:protobuf-javalite:${Versions.protobuf}"
     const val protobuf_compiler = "com.google.protobuf:protoc:${Versions.protobuf}"

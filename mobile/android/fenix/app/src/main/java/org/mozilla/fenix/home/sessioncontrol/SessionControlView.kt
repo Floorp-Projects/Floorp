@@ -171,13 +171,6 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
 }
 
-@VisibleForTesting
-internal fun AppState.shouldShowHomeOnboardingDialog(settings: Settings): Boolean {
-    val isAnySectionsVisible = recentTabs.isNotEmpty() || recentBookmarks.isNotEmpty() ||
-        recentHistory.isNotEmpty() || pocketStories.isNotEmpty()
-    return isAnySectionsVisible && !settings.hasShownHomeOnboardingDialog
-}
-
 private fun collectionTabItems(collection: TabCollection) =
     collection.tabs.mapIndexed { index, tab ->
         AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
@@ -211,7 +204,7 @@ class SessionControlView(
     }
 
     fun update(state: AppState, shouldReportMetrics: Boolean = false) {
-        if (state.shouldShowHomeOnboardingDialog(view.context.settings())) {
+        if (view.context.settings().showHomeOnboardingDialog) {
             interactor.showOnboardingDialog()
         }
 

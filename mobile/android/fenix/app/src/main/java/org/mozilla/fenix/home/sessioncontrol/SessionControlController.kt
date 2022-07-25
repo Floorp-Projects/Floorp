@@ -30,7 +30,6 @@ import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
@@ -508,12 +507,10 @@ class DefaultSessionControlController(
     }
 
     override fun handleShowOnboardingDialog() {
-        if (FeatureFlags.showHomeOnboarding) {
-            navController.nav(
-                R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalHomeOnboardingDialog()
-            )
-        }
+        navController.nav(
+            R.id.homeFragment,
+            HomeFragmentDirections.actionGlobalHomeOnboardingDialog()
+        )
     }
 
     override fun handleReadPrivacyNoticeClicked() {

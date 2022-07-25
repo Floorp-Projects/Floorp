@@ -4,48 +4,72 @@
 
 package org.mozilla.fenix.onboarding
 
+import android.annotation.SuppressLint
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.DialogFragment
+import androidx.navigation.fragment.findNavController
+import com.google.accompanist.insets.ProvideWindowInsets
+import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.FragmentOnboardingHomeDialogBinding
+import org.mozilla.fenix.components.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.onboarding.view.Onboarding
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Dialog displayed once when one or multiples of these sections are shown in the home screen
- * recentTabs,recentBookmarks,historyMetadata or pocketArticles.
+ * Dialog displaying a welcome and sync sign in onboarding.
  */
 class HomeOnboardingDialogFragment : DialogFragment() {
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.HomeOnboardingDialogStyle)
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_onboarding_home_dialog, container, false)
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentOnboardingHomeDialogBinding.bind(view)
+        setContent {
+            ProvideWindowInsets {
+                FirefoxTheme {
+                    val account =
+                        components.backgroundServices.syncStore.observeAsComposableState { state -> state.account }
 
-        val appName = requireContext().getString(R.string.app_name)
-        binding.welcomeTitle.text =
-            requireContext().getString(R.string.onboarding_home_screen_title_3, appName)
-        binding.homeTitle.text = requireContext().getString(
-            R.string.onboarding_home_screen_section_home_title_3,
-            appName
-        )
-
-        binding.finishButton.setOnClickListener {
-            context?.settings()?.let { settings ->
-                settings.hasShownHomeOnboardingDialog = true
+                    Onboarding(
+                        isSyncSignIn = account.value != null,
+                        onDismiss = ::onDismiss,
+                        onSignInButtonClick = {
+                            findNavController().nav(
+                                R.id.homeOnboardingDialogFragment,
+                                HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync()
+                            )
+                            onDismiss()
+                        },
+                    )
+                }
             }
-            dismiss()
         }
+    }
+
+    private fun onDismiss() {
+        context?.settings()?.showHomeOnboardingDialog = false
+        dismiss()
     }
 }

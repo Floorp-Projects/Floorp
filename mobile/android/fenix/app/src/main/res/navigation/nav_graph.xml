@@ -187,8 +187,7 @@
     </fragment>
     <dialog
         android:id="@+id/homeOnboardingDialogFragment"
-        android:name="org.mozilla.fenix.onboarding.HomeOnboardingDialogFragment"
-        tools:layout="@layout/fragment_onboarding_home_dialog"/>
+        android:name="org.mozilla.fenix.onboarding.HomeOnboardingDialogFragment" />
 
     <dialog
         android:id="@+id/searchDialogFragment"
