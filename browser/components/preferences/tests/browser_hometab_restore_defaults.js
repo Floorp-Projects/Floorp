@@ -197,7 +197,7 @@ add_task(async function testRestoreDefaultsBtn_hidden() {
         [],
         () =>
           content.document.getElementById("restoreDefaultHomePageBtn").style
-            .visibility === "visible"
+            .visibility === ""
       ),
     "Should show the Restore Defaults btn if prefs were changed"
   );
