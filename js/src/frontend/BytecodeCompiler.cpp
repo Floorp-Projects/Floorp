@@ -495,7 +495,7 @@ static JSScript* CompileEvalScriptImpl(
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   ScriptCompiler<Unit> compiler(cx, parserAllocScope, input.get(), srcBuf);
   if (!compiler.init(cx, &ec, InheritThis::Yes, enclosingEnv)) {
     return nullptr;
@@ -1115,7 +1115,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   Parser<FullParseHandler, Unit> parser(cx, &ec, input.options, units, length,
                                         /* foldConstants = */ true,
                                         compilationState,
@@ -1378,7 +1378,7 @@ static JSFunction* CompileStandaloneFunction(
   InheritThis inheritThis = (syntaxKind == FunctionSyntaxKind::Arrow)
                                 ? InheritThis::Yes
                                 : InheritThis::No;
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   StandaloneFunctionCompiler<char16_t> compiler(cx, parserAllocScope,
                                                 input.get(), srcBuf);
   if (!compiler.init(cx, &ec, inheritThis)) {

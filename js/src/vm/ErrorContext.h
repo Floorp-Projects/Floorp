@@ -61,12 +61,12 @@ class ErrorContext {
       const = 0;
 };
 
-class GeneralErrorContext : public ErrorContext {
+class MainThreadErrorContext : public ErrorContext {
  private:
   JSContext* cx_;
 
  public:
-  explicit GeneralErrorContext(JSContext* cx);
+  explicit MainThreadErrorContext(JSContext* cx);
 
   bool addPendingError(js::CompileError** error) override;
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,

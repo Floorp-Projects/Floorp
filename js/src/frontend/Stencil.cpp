@@ -4689,7 +4689,7 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
       cx, &ec, cx->tempLifoAlloc(), input.get(), srcBuf, scopeKind);
@@ -4720,7 +4720,7 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   JS::CompileOptions options(cx, optionsInput);
   options.setModule();
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil =
       js::frontend::ParseModuleToStencil(cx, &ec, input.get(), srcBuf);

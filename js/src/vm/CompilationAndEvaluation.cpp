@@ -31,7 +31,7 @@
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h"     // js::StringBuffer
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
-#include "vm/ErrorReporting.h"     // js::GeneralErrorContext
+#include "vm/ErrorReporting.h"     // js::MainThreadErrorContext
 #include "vm/FunctionFlags.h"      // js::FunctionFlags
 #include "vm/Interpreter.h"        // js::Execute
 #include "vm/JSContext.h"          // JSContext
@@ -68,7 +68,7 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   return frontend::CompileGlobalScript(cx, &ec, options, srcBuf, scopeKind);
 }
 
@@ -93,7 +93,7 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
   auto stencil = frontend::CompileGlobalScriptToExtensibleStencil(
@@ -233,7 +233,7 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(
       cx, &ec, options, chars.get(), length,
@@ -568,7 +568,7 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setNonSyntacticScope(scopeKind == ScopeKind::NonSyntactic);
   options.setIsRunOnce(true);
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   RootedScript script(
       cx, frontend::CompileGlobalScript(cx, &ec, options, srcBuf, scopeKind));
   if (!script) {

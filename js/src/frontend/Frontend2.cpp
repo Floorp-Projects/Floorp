@@ -277,7 +277,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   for (size_t i = 0; i < len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
     auto s = smoosh_get_slice_at(result, item.pattern);
@@ -545,7 +545,7 @@ void InitSmoosh() { smoosh_init(); }
 
 void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
                               int errorNumber, ...) {
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   va_list args;
   va_start(args, errorNumber);
   ReportCompileErrorUTF8(&ec, std::move(metadata), /* notes = */ nullptr,
