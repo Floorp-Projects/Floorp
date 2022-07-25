@@ -626,18 +626,21 @@ li {
 /* leafs */
 
 /* <hr> noshade and color attributes are handled completely by
- * the nsHTMLHRElement attribute mapping code
+ * HTMLHRElement::MapAttributesIntoRule.
+ * https://html.spec.whatwg.org/#the-hr-element-2
  */
 hr {
-  display: block;
-  border: 1px inset;
+  color: gray;
+  border-width: 1px;
+  border-style: inset;
   margin-block-start: 0.5em;
   margin-block-end: 0.5em;
   margin-inline-start: auto;
   margin-inline-end: auto;
-  color: gray;
-  -moz-float-edge: margin-box;
-  box-sizing: content-box;
+  overflow: hidden;
+
+  /* FIXME: This is not really per spec */
+  display: block;
 }
 
 hr[size="1"] {
