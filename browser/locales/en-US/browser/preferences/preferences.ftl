@@ -1543,7 +1543,7 @@ canvas-prompt = By default, it does not prompt and automatically rejects
 disable-webgl = Disable WebGL
 about-webgl = WebGL is Javascript API used to render graphics, which can be used to identify GPU.
 Canvas-Blocker = Canvas Blocker
-about-CB = This add-on prevents websites from using some JavaScript APIs for fingerprinting
+about-CB = This add-on spoofs data used by fingerprinting techniques.
 WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
 WebRTC = Enable WebRTC Connection
 
