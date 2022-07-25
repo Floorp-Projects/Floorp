@@ -144,7 +144,7 @@ class ErrorReportMixin : public StrictModeGetter {
       return;
     }
 
-    ReportCompileErrorLatin1(getContext(), std::move(metadata),
+    ReportCompileErrorLatin1(getContext(), getContext(), std::move(metadata),
                              std::move(notes), errorNumber, args);
   }
 
@@ -298,7 +298,7 @@ class ErrorReportMixin : public StrictModeGetter {
       return false;
     }
 
-    ReportCompileErrorLatin1(getContext(), std::move(metadata),
+    ReportCompileErrorLatin1(getContext(), getContext(), std::move(metadata),
                              std::move(notes), errorNumber, args);
     return false;
   }
@@ -307,7 +307,7 @@ class ErrorReportMixin : public StrictModeGetter {
   [[nodiscard]] bool compileWarning(ErrorMetadata&& metadata,
                                     UniquePtr<JSErrorNotes> notes,
                                     unsigned errorNumber, va_list* args) {
-    return ReportCompileWarning(getContext(), std::move(metadata),
+    return ReportCompileWarning(getContext(), getContext(), std::move(metadata),
                                 std::move(notes), errorNumber, args);
   }
 };

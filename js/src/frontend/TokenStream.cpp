@@ -609,7 +609,8 @@ void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
   ErrorMetadata metadata;
   computeErrorMetadataNoOffset(&metadata);
 
-  ReportCompileErrorLatin1(cx, std::move(metadata), nullptr, errorNumber, args);
+  ReportCompileErrorLatin1(cx, cx, std::move(metadata), nullptr, errorNumber,
+                           args);
 }
 
 [[nodiscard]] MOZ_ALWAYS_INLINE bool
@@ -1039,8 +1040,8 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
       break;
     }
 
-    ReportCompileErrorLatin1(anyChars.cx, std::move(err), std::move(notes),
-                             errorNumber, &args);
+    ReportCompileErrorLatin1(anyChars.cx, anyChars.cx, std::move(err),
+                             std::move(notes), errorNumber, &args);
   } while (false);
 
   va_end(args);

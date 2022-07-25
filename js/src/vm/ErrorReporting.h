@@ -19,6 +19,12 @@
 namespace js {
 
 /**
+ * Use this type instead of JSContext when the object is only used for its
+ * ability to allocate memory (via its MallocProvider methods).
+ */
+using JSAllocator = JSContext;
+
+/**
  * Metadata for a compilation error (or warning) at a particular offset, or at
  * no offset (i.e. with respect to a script overall).
  */
@@ -83,11 +89,13 @@ extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
  * Report a compile error during script processing prior to execution of the
  * script.
  */
-extern void ReportCompileErrorLatin1(JSContext* cx, ErrorMetadata&& metadata,
+extern void ReportCompileErrorLatin1(JSContext* cx, JSAllocator* alloc,
+                                     ErrorMetadata&& metadata,
                                      UniquePtr<JSErrorNotes> notes,
                                      unsigned errorNumber, va_list* args);
 
-extern void ReportCompileErrorUTF8(JSContext* cx, ErrorMetadata&& metadata,
+extern void ReportCompileErrorUTF8(JSContext* cx, JSAllocator* alloc,
+                                   ErrorMetadata&& metadata,
                                    UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args);
 
@@ -96,11 +104,9 @@ extern void ReportCompileErrorUTF8(JSContext* cx, ErrorMetadata&& metadata,
  * script.  Returns true if the warning was successfully reported, false if an
  * error occurred.
  */
-[[nodiscard]] extern bool ReportCompileWarning(JSContext* cx,
-                                               ErrorMetadata&& metadata,
-                                               UniquePtr<JSErrorNotes> notes,
-                                               unsigned errorNumber,
-                                               va_list* args);
+[[nodiscard]] extern bool ReportCompileWarning(
+    JSContext* cx, JSAllocator* alloc, ErrorMetadata&& metadata,
+    UniquePtr<JSErrorNotes> notes, unsigned errorNumber, va_list* args);
 
 class GlobalObject;
 

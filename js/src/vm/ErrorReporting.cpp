@@ -52,7 +52,8 @@ bool js::ReportExceptionClosure::operator()(JSContext* cx) {
   return false;
 }
 
-bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
+bool js::ReportCompileWarning(JSContext* cx, JSAllocator* alloc,
+                              ErrorMetadata&& metadata,
                               UniquePtr<JSErrorNotes> notes,
                               unsigned errorNumber, va_list* args) {
   // On the main thread, report the error immediately. When compiling off
@@ -90,7 +91,8 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   return true;
 }
 
-static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
+static void ReportCompileErrorImpl(JSContext* cx, JSAllocator* alloc,
+                                   js::ErrorMetadata&& metadata,
                                    js::UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args,
                                    ErrorArgumentsType argumentsType) {
@@ -117,8 +119,8 @@ static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
                           metadata.tokenOffset);
   }
 
-  if (!js::ExpandErrorArgumentsVA(cx, js::GetErrorMessage, nullptr, errorNumber,
-                                  argumentsType, err, *args)) {
+  if (!js::ExpandErrorArgumentsVA(alloc, js::GetErrorMessage, nullptr,
+                                  errorNumber, argumentsType, err, *args)) {
     return;
   }
 
@@ -132,18 +134,20 @@ static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
   }
 }
 
-void js::ReportCompileErrorLatin1(JSContext* cx, ErrorMetadata&& metadata,
+void js::ReportCompileErrorLatin1(JSContext* cx, JSAllocator* alloc,
+                                  ErrorMetadata&& metadata,
                                   UniquePtr<JSErrorNotes> notes,
                                   unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(cx, std::move(metadata), std::move(notes), errorNumber,
-                         args, ArgumentsAreLatin1);
+  ReportCompileErrorImpl(cx, alloc, std::move(metadata), std::move(notes),
+                         errorNumber, args, ArgumentsAreLatin1);
 }
 
-void js::ReportCompileErrorUTF8(JSContext* cx, ErrorMetadata&& metadata,
+void js::ReportCompileErrorUTF8(JSContext* cx, JSAllocator* alloc,
+                                ErrorMetadata&& metadata,
                                 UniquePtr<JSErrorNotes> notes,
                                 unsigned errorNumber, va_list* args) {
-  ReportCompileErrorImpl(cx, std::move(metadata), std::move(notes), errorNumber,
-                         args, ArgumentsAreUTF8);
+  ReportCompileErrorImpl(cx, alloc, std::move(metadata), std::move(notes),
+                         errorNumber, args, ArgumentsAreUTF8);
 }
 
 void js::ReportErrorToGlobal(JSContext* cx, Handle<GlobalObject*> global,
@@ -248,7 +252,7 @@ class MOZ_RAII AutoMessageArgs {
    * if argsArg were strongly typed we'd still need casting below for this to
    * compile, because typeArg is not known at compile-time here.
    */
-  bool init(JSContext* cx, void* argsArg, uint16_t countArg,
+  bool init(JSAllocator* alloc, void* argsArg, uint16_t countArg,
             ErrorArgumentsType typeArg, va_list ap) {
     MOZ_ASSERT(countArg > 0);
 
@@ -271,7 +275,7 @@ class MOZ_RAII AutoMessageArgs {
           const Latin1Char* latin1 = va_arg(ap, Latin1Char*);
           size_t len = strlen(reinterpret_cast<const char*>(latin1));
           mozilla::Range<const Latin1Char> range(latin1, len);
-          char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
+          char* utf8 = JS::CharsToNewUTF8CharsZ(alloc, range).c_str();
           if (!utf8) {
             return false;
           }
@@ -287,7 +291,7 @@ class MOZ_RAII AutoMessageArgs {
                                    : va_arg(ap, const char16_t*);
           size_t len = js_strlen(uc);
           mozilla::Range<const char16_t> range(uc, len);
-          char* utf8 = JS::CharsToNewUTF8CharsZ(cx, range).c_str();
+          char* utf8 = JS::CharsToNewUTF8CharsZ(alloc, range).c_str();
           if (!utf8) {
             return false;
           }
@@ -333,7 +337,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
   }
 
   {
-    gc::AutoSuppressGC suppressGC(cx);
+    gc::AutoSuppressGC suppressGC(cx);  // TODO bug 1773324 remove JSContext use
     efs = callback(userRef, errorNumber);
   }
 
@@ -474,14 +478,14 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
   JSErrorReport report;
   report.isWarning_ = isWarning == IsWarning::Yes;
   report.errorNumber = errorNumber;
-  PopulateReportBlame(cx, &report);
+  PopulateReportBlame(cx, &report);  // TODO bug 1773324
 
   if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber, argumentsType,
                               &report, ap)) {
     return false;
   }
 
-  ReportError(cx, &report, callback, userRef);
+  ReportError(cx, &report, callback, userRef);  // TODO bug 1773324
 
   return report.isWarning();
 }
