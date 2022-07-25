@@ -10,7 +10,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/SIMD.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -70,7 +69,6 @@ using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::IsAsciiDigit;
 using mozilla::Maybe;
-using mozilla::SIMD;
 
 using JS::AutoCheckCannotGC;
 using JS::IsArrayAnswer;
@@ -4075,19 +4073,6 @@ bool js::array_indexOf(JSContext* cx, unsigned argc, Value* vp) {
         std::min(nobj->getDenseInitializedLength(), uint32_t(len));
     const Value* elements = nobj->getDenseElements();
 
-    if (CanUseBitwiseCompareForStrictlyEqual(searchElement) && length > start) {
-      const uint64_t* elementsAsBits =
-          reinterpret_cast<const uint64_t*>(elements);
-      const uint64_t* res = SIMD::memchr64(
-          elementsAsBits + start, searchElement.asRawBits(), length - start);
-      if (res) {
-        args.rval().setInt32(static_cast<int32_t>(res - elementsAsBits));
-      } else {
-        args.rval().setInt32(-1);
-      }
-      return true;
-    }
-
     auto iterator = [elements, start, length](JSContext* cx, auto cmp,
                                               MutableHandleValue rval) {
       static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
@@ -4319,19 +4304,6 @@ bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
     if (uint32_t(len) > length && searchElement.isUndefined()) {
       // |undefined| is strictly equal only to |undefined|.
       args.rval().setBoolean(true);
-      return true;
-    }
-
-    // For |includes| we need to treat hole values as |undefined| so we use a
-    // different path if searching for |undefined|.
-    if (CanUseBitwiseCompareForStrictlyEqual(searchElement) &&
-        !searchElement.isUndefined() && length > start) {
-      if (SIMD::memchr64(reinterpret_cast<const uint64_t*>(elements) + start,
-                         searchElement.asRawBits(), length - start)) {
-        args.rval().setBoolean(true);
-      } else {
-        args.rval().setBoolean(false);
-      }
       return true;
     }
 
