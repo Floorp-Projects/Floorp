@@ -52,10 +52,7 @@ void MainThreadErrorContext::reportError(CompileError* err) {
 }
 
 void MainThreadErrorContext::reportWarning(CompileError* err) {
-  if (!cx_->isHelperThreadContext()) {  // TODO Bug 1773324 - shouldn't need
-                                        // this check
-    err->throwError(cx_);
-  }
+  err->throwError(cx_);
 }
 
 bool MainThreadErrorContext::hadOutOfMemory() const {
@@ -115,11 +112,10 @@ void OffThreadErrorContext::ReportOutOfMemory() {
     fprintf(stderr, "ReportOutOfMemory called\n");
   }
 
-  return addPendingOutOfMemory();
+  addPendingOutOfMemory();
 }
 
 void OffThreadErrorContext::addPendingOutOfMemory() {
-  // Keep in sync with recoverFromOutOfMemory.
   errors_.outOfMemory = true;
 }
 
