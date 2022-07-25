@@ -91,13 +91,11 @@ extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
  * Report a compile error during script processing prior to execution of the
  * script.
  */
-extern void ReportCompileErrorLatin1(ErrorContext* ec, JSAllocator* alloc,
-                                     ErrorMetadata&& metadata,
+extern void ReportCompileErrorLatin1(ErrorContext* ec, ErrorMetadata&& metadata,
                                      UniquePtr<JSErrorNotes> notes,
                                      unsigned errorNumber, va_list* args);
 
-extern void ReportCompileErrorUTF8(ErrorContext* ec, JSAllocator* alloc,
-                                   ErrorMetadata&& metadata,
+extern void ReportCompileErrorUTF8(ErrorContext* ec, ErrorMetadata&& metadata,
                                    UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args);
 
@@ -106,9 +104,11 @@ extern void ReportCompileErrorUTF8(ErrorContext* ec, JSAllocator* alloc,
  * script.  Returns true if the warning was successfully reported, false if an
  * error occurred.
  */
-[[nodiscard]] extern bool ReportCompileWarning(
-    ErrorContext* ec, JSAllocator* alloc, ErrorMetadata&& metadata,
-    UniquePtr<JSErrorNotes> notes, unsigned errorNumber, va_list* args);
+[[nodiscard]] extern bool ReportCompileWarning(ErrorContext* ec,
+                                               ErrorMetadata&& metadata,
+                                               UniquePtr<JSErrorNotes> notes,
+                                               unsigned errorNumber,
+                                               va_list* args);
 
 class GlobalObject;
 
@@ -153,16 +153,14 @@ extern bool ReportErrorNumberUTF8Array(JSContext* cx, IsWarning isWarning,
                                        const unsigned errorNumber,
                                        const char** args);
 
-extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                   JSErrorCallback callback, void* userRef,
-                                   const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                   void* userRef, const unsigned errorNumber,
                                    const char16_t** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
 
-extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                   JSErrorCallback callback, void* userRef,
-                                   const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                   void* userRef, const unsigned errorNumber,
                                    const char** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
@@ -170,15 +168,13 @@ extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
 /*
  * For cases when we do not have an arguments array.
  */
-extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                   JSErrorCallback callback, void* userRef,
-                                   const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                   void* userRef, const unsigned errorNumber,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorReport* reportp, va_list ap);
 
-extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSAllocator* alloc,
-                                   JSErrorCallback callback, void* userRef,
-                                   const unsigned errorNumber,
+extern bool ExpandErrorArgumentsVA(ErrorContext* ec, JSErrorCallback callback,
+                                   void* userRef, const unsigned errorNumber,
                                    const char16_t** messageArgs,
                                    ErrorArgumentsType argumentsType,
                                    JSErrorNotes::Note* notep, va_list ap);

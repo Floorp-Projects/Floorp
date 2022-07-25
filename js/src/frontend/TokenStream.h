@@ -877,7 +877,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
   ErrorContext* context() const { return ec; }
-  JSContext* allocator() const { return cx; }
+  JSContext* jsContext() const { return cx; }
 
   using LineToken = SourceCoords::LineToken;
 
@@ -2552,9 +2552,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  private:
   // Implement ErrorReportMixin.
 
-  ErrorContext* getContext() const override { return anyCharsAccess().ec; }
-
-  JSAllocator* getAllocator() const override { return anyCharsAccess().cx; }
+  ErrorContext* getContext() const override {
+    return anyCharsAccess().context();
+  }
 
   [[nodiscard]] bool strictMode() const override {
     return anyCharsAccess().strictMode();

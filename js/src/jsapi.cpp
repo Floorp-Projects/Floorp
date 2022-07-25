@@ -3653,7 +3653,7 @@ JS_PUBLIC_API bool JS_ExpandErrorArgumentsASCII(JSContext* cx,
   AssertHeapIsIdle();
   va_start(ap, reportp);
   GeneralErrorContext ec(cx);
-  ok = ExpandErrorArgumentsVA(&ec, cx, errorCallback, nullptr, errorNumber,
+  ok = ExpandErrorArgumentsVA(&ec, errorCallback, nullptr, errorNumber,
                               ArgumentsAreASCII, reportp, ap);
   va_end(ap);
   return ok;
@@ -3839,8 +3839,8 @@ static UniquePtr<JSErrorNotes::Note> CreateErrorNoteVA(
   note->column = column;
 
   GeneralErrorContext ec(cx);
-  if (!ExpandErrorArgumentsVA(&ec, cx, errorCallback, userRef, errorNumber,
-                              nullptr, argumentsType, note.get(), ap)) {
+  if (!ExpandErrorArgumentsVA(&ec, errorCallback, userRef, errorNumber, nullptr,
+                              argumentsType, note.get(), ap)) {
     return nullptr;
   }
 
