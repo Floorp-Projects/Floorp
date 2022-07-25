@@ -277,6 +277,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
     return false;
   }
 
+  GeneralErrorContext ec(cx);
   for (size_t i = 0; i < len; i++) {
     SmooshRegExpItem& item = result.regexps.data[i];
     auto s = smoosh_get_slice_at(result, item.pattern);
@@ -314,7 +315,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     mozilla::Range<const char16_t> range(pattern.get(), length);
 
-    TokenStreamAnyChars ts(cx, compilationState.input.options,
+    TokenStreamAnyChars ts(cx, &ec, compilationState.input.options,
                            /* smg = */ nullptr);
 
     // See Parser<FullParseHandler, Unit>::newRegExp.

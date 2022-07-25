@@ -162,7 +162,7 @@ ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
     : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
-      anyChars(cx, options, this),
+      anyChars(cx, ec, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
       ec_(ec),

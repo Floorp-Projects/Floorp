@@ -562,7 +562,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   JSContext* const cx;
 
-  mutable GeneralErrorContext ec;
+  ErrorContext* const ec;
 
   /** Options used for parsing/tokenizing. */
   const JS::ReadOnlyCompileOptions& options_;
@@ -721,7 +721,8 @@ class TokenStreamAnyChars : public TokenStreamShared {
   // End of fields.
 
  public:
-  TokenStreamAnyChars(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+  TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
+                      const JS::ReadOnlyCompileOptions& options,
                       StrictModeGetter* smg);
 
   template <typename Unit, class AnyCharsAccess>
@@ -874,7 +875,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
-  ErrorContext* context() const { return &ec; }
+  ErrorContext* context() const { return ec; }
   JSContext* allocator() const { return cx; }
 
   using LineToken = SourceCoords::LineToken;
@@ -2550,7 +2551,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  private:
   // Implement ErrorReportMixin.
 
-  ErrorContext* getContext() const override { return &anyCharsAccess().ec; }
+  ErrorContext* getContext() const override { return anyCharsAccess().ec; }
 
   JSAllocator* getAllocator() const override { return anyCharsAccess().cx; }
 
@@ -2931,18 +2932,19 @@ class MOZ_STACK_CLASS TokenStream
   using Unit = char16_t;
 
  public:
-  TokenStream(JSContext* cx, ParserAtomsTable* parserAtoms,
+  TokenStream(JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
               const JS::ReadOnlyCompileOptions& options, const Unit* units,
               size_t length, StrictModeGetter* smg)
-      : TokenStreamAnyChars(cx, options, smg),
+      : TokenStreamAnyChars(cx, ec, options, smg),
         TokenStreamSpecific<Unit, TokenStreamAnyCharsAccess>(
             cx, parserAtoms, options, units, length) {}
 };
 
 class MOZ_STACK_CLASS DummyTokenStream final : public TokenStream {
  public:
-  DummyTokenStream(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : TokenStream(cx, nullptr, options, nullptr, 0, nullptr) {}
+  DummyTokenStream(JSContext* cx, ErrorContext* ec,
+                   const JS::ReadOnlyCompileOptions& options)
+      : TokenStream(cx, ec, nullptr, options, nullptr, 0, nullptr) {}
 };
 
 template <class TokenStreamSpecific>

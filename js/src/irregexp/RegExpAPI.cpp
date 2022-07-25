@@ -598,8 +598,9 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
     FlatStringReader patternBytes(cx, pattern);
     if (!RegExpParser::ParseRegExp(cx->isolate, &zone, &patternBytes, flags,
                                    &data)) {
+      GeneralErrorContext ec(cx);
       JS::CompileOptions options(cx);
-      DummyTokenStream dummyTokenStream(cx, options);
+      DummyTokenStream dummyTokenStream(cx, &ec, options);
       ReportSyntaxError(dummyTokenStream, data, pattern);
       return false;
     }

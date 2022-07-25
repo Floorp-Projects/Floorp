@@ -107,6 +107,19 @@ class GeneralErrorContext : public ErrorContext {
   virtual void reportWarning(js::CompileError* err) override;
 };
 
+class OffThreadErrorContext : public ErrorContext {
+ private:
+  JSContext* cx_;
+
+ public:
+  explicit OffThreadErrorContext(JSContext* cx);
+
+  bool addPendingError(js::CompileError** error) override;
+
+  virtual void reportError(js::CompileError* err) override;
+  virtual void reportWarning(js::CompileError* err) override;
+};
+
 /**
  * Report a compile error during script processing prior to execution of the
  * script.
