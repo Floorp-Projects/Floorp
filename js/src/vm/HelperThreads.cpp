@@ -2492,23 +2492,6 @@ void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
   js_delete(parseTask);
 }
 
-bool JSContext::addPendingCompileError(js::CompileError** error) {
-  auto errorPtr = make_unique<js::CompileError>();
-  if (!errorPtr) {
-    return false;
-  }
-  if (!errors_->errors.append(std::move(errorPtr))) {
-    ReportOutOfMemory(this);
-    return false;
-  }
-  *error = errors_->errors.back().get();
-  return true;
-}
-
-bool JSContext::isCompileErrorPending() const {
-  return errors_->errors.length() > 0;
-}
-
 void JSContext::addPendingOverRecursed() {
   if (errors_) {
     errors_->overRecursed = true;
