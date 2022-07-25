@@ -235,8 +235,8 @@ inline Latin1CharsZ LossyTwoByteCharsToNewLatin1CharsZ(JSContext* cx,
   return JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, tbchars);
 }
 
-template <typename CharT>
-extern UTF8CharsZ CharsToNewUTF8CharsZ(JSContext* cx,
+template <typename CharT, typename Allocator>
+extern UTF8CharsZ CharsToNewUTF8CharsZ(Allocator* alloc,
                                        const mozilla::Range<CharT> chars);
 
 JS_PUBLIC_API uint32_t Utf8ToOneUcs4Char(const uint8_t* utf8Buffer,

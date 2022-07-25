@@ -8,6 +8,7 @@
 #define vm_ErrorContext_h
 
 #include "vm/ErrorReporting.h"
+#include "vm/MallocProvider.h"
 
 namespace js {
 
@@ -24,6 +25,9 @@ class ErrorContext {
  public:
   virtual ~ErrorContext() = default;
   virtual bool addPendingError(js::CompileError** error) = 0;
+  virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                              size_t nbytes, void* reallocPtr = nullptr) = 0;
+  virtual void reportAllocationOverflow() = 0;
 
   virtual void reportError(js::CompileError* err) = 0;
   virtual void reportWarning(js::CompileError* err) = 0;
@@ -42,6 +46,10 @@ class GeneralErrorContext : public ErrorContext {
   explicit GeneralErrorContext(JSContext* cx);
 
   bool addPendingError(js::CompileError** error) override;
+  virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                              size_t nbytes,
+                              void* reallocPtr = nullptr) override;
+  virtual void reportAllocationOverflow() override;
 
   virtual void reportError(js::CompileError* err) override;
   virtual void reportWarning(js::CompileError* err) override;
@@ -61,6 +69,9 @@ class OffThreadErrorContext : public ErrorContext {
  public:
   OffThreadErrorContext() : alloc_(nullptr) {}
   bool addPendingError(js::CompileError** error) override;
+  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                      size_t nbytes, void* reallocPtr = nullptr) override;
+  void reportAllocationOverflow() override;
 
   virtual void reportError(js::CompileError* err) override;
   virtual void reportWarning(js::CompileError* err) override;
@@ -76,6 +87,21 @@ class OffThreadErrorContext : public ErrorContext {
       const override {
     return errors_.errors;
   }
+};
+
+template <typename Context>
+class ErrorAllocator : public MallocProvider<ErrorAllocator<Context>> {
+ private:
+  Context* context_;
+
+ public:
+  explicit ErrorAllocator(Context* ec) : context_(ec) {}
+
+  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                      size_t nbytes, void* reallocPtr = nullptr) {
+    return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
+  }
+  void reportAllocationOverflow() { context_->reportAllocationOverflow(); }
 };
 
 }  // namespace js
