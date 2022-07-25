@@ -134,6 +134,19 @@ class JSErrorBase {
         errorNumber(0),
         errorMessageName(nullptr),
         ownsMessage_(false) {}
+  JSErrorBase(JSErrorBase&& other) noexcept
+      : message_(other.message_),
+        filename(other.filename),
+        sourceId(other.sourceId),
+        lineno(other.lineno),
+        column(other.column),
+        errorNumber(other.errorNumber),
+        errorMessageName(other.errorMessageName),
+        ownsMessage_(other.ownsMessage_) {
+    if (ownsMessage_) {
+      other.ownsMessage_ = false;
+    }
+  }
 
   ~JSErrorBase() { freeMessage(); }
 
@@ -256,6 +269,20 @@ class JSErrorReport : public JSErrorBase {
         isMuted(false),
         isWarning_(false),
         ownsLinebuf_(false) {}
+  JSErrorReport(JSErrorReport&& other) noexcept
+      : JSErrorBase(std::move(other)),
+        linebuf_(other.linebuf_),
+        linebufLength_(other.linebufLength_),
+        tokenOffset_(other.tokenOffset_),
+        notes(std::move(other.notes)),
+        exnType(other.exnType),
+        isMuted(other.isMuted),
+        isWarning_(other.isWarning_),
+        ownsLinebuf_(other.ownsLinebuf_) {
+    if (ownsLinebuf_) {
+      other.ownsLinebuf_ = false;
+    }
+  }
 
   ~JSErrorReport() { freeLinebuf(); }
 

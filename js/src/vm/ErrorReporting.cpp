@@ -58,32 +58,28 @@ bool js::ReportCompileWarning(ErrorContext* ec, ErrorMetadata&& metadata,
   // On the main thread, report the error immediately. When compiling off
   // thread, save the error so that the thread finishing the parse can report
   // it later.
-  CompileError tempErr;
-  CompileError* err = &tempErr;
-  if (!ec->addPendingError(&err)) {
-    return false;
-  }
+  CompileError err;
 
-  err->notes = std::move(notes);
-  err->isWarning_ = true;
-  err->errorNumber = errorNumber;
+  err.notes = std::move(notes);
+  err.isWarning_ = true;
+  err.errorNumber = errorNumber;
 
-  err->filename = metadata.filename;
-  err->lineno = metadata.lineNumber;
-  err->column = metadata.columnNumber;
-  err->isMuted = metadata.isMuted;
+  err.filename = metadata.filename;
+  err.lineno = metadata.lineNumber;
+  err.column = metadata.columnNumber;
+  err.isMuted = metadata.isMuted;
 
   if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext)) {
-    err->initOwnedLinebuf(lineOfContext.release(), metadata.lineLength,
-                          metadata.tokenOffset);
+    err.initOwnedLinebuf(lineOfContext.release(), metadata.lineLength,
+                         metadata.tokenOffset);
   }
 
   if (!ExpandErrorArgumentsVA(ec, GetErrorMessage, nullptr, errorNumber,
-                              ArgumentsAreLatin1, err, *args)) {
+                              ArgumentsAreLatin1, &err, *args)) {
     return false;
   }
 
-  ec->reportWarning(err);
+  ec->reportWarning(&err);
 
   return true;
 }
@@ -93,32 +89,28 @@ static void ReportCompileErrorImpl(ErrorContext* ec,
                                    js::UniquePtr<JSErrorNotes> notes,
                                    unsigned errorNumber, va_list* args,
                                    ErrorArgumentsType argumentsType) {
-  js::CompileError tempErr;
-  js::CompileError* err = &tempErr;
-  if (!ec->addPendingError(&err)) {
-    return;
-  }
+  js::CompileError err;
 
-  err->notes = std::move(notes);
-  err->isWarning_ = false;
-  err->errorNumber = errorNumber;
+  err.notes = std::move(notes);
+  err.isWarning_ = false;
+  err.errorNumber = errorNumber;
 
-  err->filename = metadata.filename;
-  err->lineno = metadata.lineNumber;
-  err->column = metadata.columnNumber;
-  err->isMuted = metadata.isMuted;
+  err.filename = metadata.filename;
+  err.lineno = metadata.lineNumber;
+  err.column = metadata.columnNumber;
+  err.isMuted = metadata.isMuted;
 
   if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext)) {
-    err->initOwnedLinebuf(lineOfContext.release(), metadata.lineLength,
-                          metadata.tokenOffset);
+    err.initOwnedLinebuf(lineOfContext.release(), metadata.lineLength,
+                         metadata.tokenOffset);
   }
 
   if (!js::ExpandErrorArgumentsVA(ec, js::GetErrorMessage, nullptr, errorNumber,
-                                  argumentsType, err, *args)) {
+                                  argumentsType, &err, *args)) {
     return;
   }
 
-  ec->reportError(err);
+  ec->reportError(&err);
 }
 
 void js::ReportCompileErrorLatin1(ErrorContext* ec, ErrorMetadata&& metadata,

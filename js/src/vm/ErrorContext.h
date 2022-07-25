@@ -44,7 +44,6 @@ class ErrorContext {
 
   ErrorAllocator* getAllocator() { return &alloc_; }
 
-  virtual bool addPendingError(js::CompileError** error) = 0;
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
   virtual void reportAllocationOverflow() = 0;
@@ -68,7 +67,6 @@ class MainThreadErrorContext : public ErrorContext {
  public:
   explicit MainThreadErrorContext(JSContext* cx);
 
-  bool addPendingError(js::CompileError** error) override;
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes,
                               void* reallocPtr = nullptr) override;
@@ -93,7 +91,7 @@ class OffThreadErrorContext : public ErrorContext {
 
  public:
   OffThreadErrorContext() = default;
-  bool addPendingError(js::CompileError** error) override;
+
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
   void reportAllocationOverflow() override;
