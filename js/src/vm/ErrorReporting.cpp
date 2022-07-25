@@ -18,7 +18,6 @@
 #include "vm/ErrorContext.h"  // GeneralErrorContext, OffThreadErrorContext
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
-#include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
 
 #include "vm/JSContext-inl.h"
 
@@ -27,125 +26,6 @@ using namespace js;
 using JS::HandleObject;
 using JS::HandleValue;
 using JS::UniqueTwoByteChars;
-
-void js::ErrorAllocator::reportAllocationOverflow() {
-  context_->reportAllocationOverflow();
-}
-void* js::ErrorAllocator::onOutOfMemory(js::AllocFunction allocFunc,
-                                        arena_id_t arena, size_t nbytes,
-                                        void* reallocPtr) {
-  return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
-}
-
-GeneralErrorContext::GeneralErrorContext(JSContext* cx) : cx_(cx) {}
-
-bool GeneralErrorContext::addPendingError(CompileError** error) { return true; }
-void* GeneralErrorContext::onOutOfMemory(js::AllocFunction allocFunc,
-                                         arena_id_t arena, size_t nbytes,
-                                         void* reallocPtr) {
-  return cx_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
-}
-
-void GeneralErrorContext::reportAllocationOverflow() {
-  return cx_->reportAllocationOverflow();
-}
-
-const JSErrorFormatString* GeneralErrorContext::gcSafeCallback(
-    JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
-  gc::AutoSuppressGC suppressGC(cx_);
-  return callback(userRef, errorNumber);
-}
-
-void GeneralErrorContext::reportError(CompileError* err) {
-  // On the main thread, report the error immediately.
-
-  if (MOZ_UNLIKELY(!cx_->runtime()->hasInitializedSelfHosting())) {
-    selfHosting_ErrorReporter(err);
-    return;
-  }
-
-  err->throwError(cx_);
-}
-
-void GeneralErrorContext::reportWarning(CompileError* err) {
-  if (!cx_->isHelperThreadContext()) {
-    err->throwError(cx_);
-  }
-}
-
-bool GeneralErrorContext::hadOutOfMemory() const {
-  return cx_->offThreadFrontendErrors()->outOfMemory;
-}
-
-bool GeneralErrorContext::hadOverRecursed() const {
-  return cx_->offThreadFrontendErrors()->overRecursed;
-}
-
-const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>&
-GeneralErrorContext::errors() const {
-  return cx_->offThreadFrontendErrors()->errors;
-}
-
-bool OffThreadErrorContext::addPendingError(CompileError** error) {
-  // When compiling off thread, save the error so that the thread finishing the
-  // parse can report it later.
-  auto errorPtr = getAllocator()->make_unique<js::CompileError>();
-  if (!errorPtr) {
-    return false;
-  }
-  if (!errors_.errors.append(std::move(errorPtr))) {
-    ReportOutOfMemory();
-    return false;
-  }
-  *error = errors_.errors.back().get();
-  return true;
-}
-void* OffThreadErrorContext::onOutOfMemory(js::AllocFunction allocFunc,
-                                           arena_id_t arena, size_t nbytes,
-                                           void* reallocPtr) {
-  addPendingOutOfMemory();
-  return nullptr;
-}
-
-void OffThreadErrorContext::reportAllocationOverflow() {
-  // TODO Bug 1780599 - Currently allocation overflows are not reported for
-  // helper threads; see js::reportAllocationOverflow()
-}
-
-const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
-    JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
-  return callback(userRef, errorNumber);
-}
-
-void OffThreadErrorContext::reportError(CompileError* err) {
-  // TODO Bug 1773324 - restore selfHosting_ErrorReporter if needed
-}
-
-void OffThreadErrorContext::reportWarning(CompileError* err) {}
-
-void OffThreadErrorContext::ReportOutOfMemory() {
-  /*
-   * OOMs are non-deterministic, especially across different execution modes
-   * (e.g. interpreter vs JIT). When doing differential testing, print to
-   * stderr so that the fuzzers can detect this.
-   */
-  if (js::SupportDifferentialTesting()) {
-    fprintf(stderr, "ReportOutOfMemory called\n");
-  }
-
-  return addPendingOutOfMemory();
-}
-
-void OffThreadErrorContext::addPendingOutOfMemory() {
-  // Keep in sync with recoverFromOutOfMemory.
-  errors_.outOfMemory = true;
-}
-
-void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
-  if (cx) {
-    cx->setOffThreadFrontendErrors(&errors_);
-  }
-}
 
 void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
   MOZ_ASSERT(reportp->isWarning());
