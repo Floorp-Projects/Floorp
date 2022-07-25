@@ -1534,7 +1534,7 @@ about-DDG = DuckDuckGo Privacy Essentials replaces a default search engine with 
 ## Fingerprint
 
 fingerprint-header = Resist Fingerprinting & IP address leak
-block-fingerprint = Fingerprinting is the process by which a website collects personal data and device information. This section provides settings to further reduce this protection beyond the default blocker.
+block-fingerprint = Fingerprinting is the process by which a website collects personal data and device information. This section provides settings to further increase this protection beyond the default blocker.
 enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
 about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
 fingerprint-Protection = Anti-fingerprinting protections
