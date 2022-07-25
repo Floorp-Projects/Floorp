@@ -153,10 +153,9 @@ interface nsIRequest : nsISupports
      *   - see network.trr.mode in all.js
      * Requests with TRR_DISABLED_MODE will always use native DNS, even if the
      *   pref is set to mode3 (TRR-only).
-     * Requests with TRR_DISABLED_MODE will first use TRR then fallback to
-     *   regular DNS, unless TRR is disabled by setting the pref to mode5,
-     *   parental control being enabled, or the domain being in the exclusion
-     *   list.
+     * Requests with TRR_FIRST_MODE will first use TRR then fallback to regular
+     *   DNS, unless TRR is disabled by setting the pref to mode5, parental
+     *   control being enabled, or the domain being in the exclusion list.
      * Requests with TRR_ONLY_MODE will only use TRR, unless not allowed by
      *   the same conditions mentioned above.
      */
