@@ -4,9 +4,7 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { SearchEngine } from "resource://gre/modules/SearchEngine.sys.mjs";
 
