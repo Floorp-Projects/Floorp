@@ -151,7 +151,6 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
   // Test that we were notified of the plugin's destruction.
   EXPECT_TRUE(test->IsTerminated());
 }
-#endif
 
 /*
  * Test that the plugin is still usable after a deferred RemoveAndDelete, and
@@ -180,6 +179,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredInUse)
   test->CloseVideoDecoder();
   test->Wait();
 }
+#endif
 
 static StaticRefPtr<GeckoMediaPluginService> gService;
 static StaticRefPtr<GeckoMediaPluginServiceParent> gServiceParent;
