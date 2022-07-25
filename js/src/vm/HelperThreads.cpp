@@ -626,7 +626,6 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   JSContext* cx = TlsContext.get();
 
   AutoSetContextRuntime ascr(runtime);
-  AutoSetContextOffThreadFrontendErrors recordErrors(&this->errors);
   ec_.setAllocator(cx);
 
   parse(cx, &ec_);
@@ -2317,16 +2316,16 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
       cx, removeFinishedParseTask(cx, kind, token));
 
   // Report out of memory errors eagerly, or errors could be malformed.
-  if (parseTask->errors.outOfMemory) {
+  if (parseTask->ec_.hadOutOfMemory()) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
   // Report any error or warnings generated during the parse.
-  for (UniquePtr<CompileError>& error : parseTask->errors.errors) {
+  for (const UniquePtr<CompileError>& error : parseTask->ec_.errors()) {
     error->throwError(cx);
   }
-  if (parseTask->errors.overRecursed) {
+  if (parseTask->ec_.hadOverRecursed()) {
     ReportOverRecursed(cx);
   }
   if (cx->isExceptionPending()) {

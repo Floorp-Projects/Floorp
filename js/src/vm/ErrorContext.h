@@ -27,6 +27,11 @@ class ErrorContext {
 
   virtual void reportError(js::CompileError* err) = 0;
   virtual void reportWarning(js::CompileError* err) = 0;
+
+  virtual bool hadOutOfMemory() const = 0;
+  virtual bool hadOverRecursed() const = 0;
+  virtual const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors()
+      const = 0;
 };
 
 class GeneralErrorContext : public ErrorContext {
@@ -40,6 +45,11 @@ class GeneralErrorContext : public ErrorContext {
 
   virtual void reportError(js::CompileError* err) override;
   virtual void reportWarning(js::CompileError* err) override;
+
+  virtual bool hadOutOfMemory() const override;
+  virtual bool hadOverRecursed() const override;
+  virtual const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors()
+      const override;
 };
 
 class OffThreadErrorContext : public ErrorContext {
@@ -49,6 +59,7 @@ class OffThreadErrorContext : public ErrorContext {
   js::OffThreadFrontendErrors errors_;
 
  public:
+  OffThreadErrorContext() : alloc_(nullptr) {}
   bool addPendingError(js::CompileError** error) override;
 
   virtual void reportError(js::CompileError* err) override;
@@ -57,7 +68,14 @@ class OffThreadErrorContext : public ErrorContext {
   void ReportOutOfMemory();
   void addPendingOutOfMemory();
 
-  void setAllocator(JSAllocator* alloc) { alloc_ = alloc; }
+  void setAllocator(JSAllocator* alloc);
+
+  bool hadOutOfMemory() const override { return errors_.outOfMemory; }
+  bool hadOverRecursed() const override { return errors_.overRecursed; }
+  const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>& errors()
+      const override {
+    return errors_.errors;
+  }
 };
 
 }  // namespace js

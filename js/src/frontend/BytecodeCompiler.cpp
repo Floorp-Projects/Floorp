@@ -52,10 +52,13 @@ using JS::SourceText;
 class MOZ_RAII AutoAssertReportedException {
 #ifdef DEBUG
   JSContext* cx_;
+  ErrorContext* ec_;
   bool check_;
 
  public:
-  explicit AutoAssertReportedException(JSContext* cx) : cx_(cx), check_(true) {}
+  explicit AutoAssertReportedException(JSContext* cx,
+                                       ErrorContext* ec = nullptr)
+      : cx_(cx), ec_(ec), check_(true) {}
   void reset() { check_ = false; }
   ~AutoAssertReportedException() {
     if (!check_) {
@@ -69,13 +72,12 @@ class MOZ_RAII AutoAssertReportedException {
       return;
     }
 
-    OffThreadFrontendErrors* errors = cx_->offThreadFrontendErrors();
-    MOZ_ASSERT(errors->outOfMemory || errors->overRecursed ||
-               !errors->errors.empty());
+    MOZ_ASSERT_IF(ec_, ec_->hadOutOfMemory() || ec_->hadOverRecursed() ||
+                           !ec_->errors().empty());
   }
 #else
  public:
-  explicit AutoAssertReportedException(JSContext*) {}
+  explicit AutoAssertReportedException(JSContext*, ErrorContext* = nullptr) {}
   void reset() {}
 #endif
 };
@@ -283,7 +285,7 @@ template <typename Unit>
     }
   }
 
-  AutoAssertReportedException assertException(cx);
+  AutoAssertReportedException assertException(cx, ec);
 
   LifoAllocScope parserAllocScope(&tempLifoAlloc);
   ScriptCompiler<Unit> compiler(cx, parserAllocScope, input, srcBuf);
@@ -851,7 +853,7 @@ template <typename Unit>
     return false;
   }
 
-  AutoAssertReportedException assertException(cx);
+  AutoAssertReportedException assertException(cx, ec);
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
   ModuleCompiler<Unit> compiler(cx, parserAllocScope, input, srcBuf);
@@ -954,7 +956,7 @@ template <typename Unit>
 static ModuleObject* CompileModuleImpl(
     JSContext* cx, ErrorContext* ec,
     const JS::ReadOnlyCompileOptions& optionsInput, SourceText<Unit>& srcBuf) {
-  AutoAssertReportedException assertException(cx);
+  AutoAssertReportedException assertException(cx, ec);
 
   CompileOptions options(cx, optionsInput);
   options.setModule();

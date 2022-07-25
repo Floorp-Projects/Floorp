@@ -553,7 +553,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   UniquePtr<frontend::CompilationGCOutput> gcOutput_;
 
   // Record any errors happening while parsing or generating bytecode.
-  OffThreadFrontendErrors errors;
   OffThreadErrorContext ec_;
 
   ParseTask(ParseTaskKind kind, JSContext* cx,
