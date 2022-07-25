@@ -4140,8 +4140,9 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
+  GeneralErrorContext ec(cx);
   Parser<FullParseHandler, char16_t> parser(
-      cx, options, chars.begin().get(), chars.length(),
+      cx, &ec, options, chars.begin().get(), chars.length(),
       /* foldConstants = */ false, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {

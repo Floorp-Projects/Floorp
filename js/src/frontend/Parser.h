@@ -287,8 +287,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   const bool foldConstants_ : 1;
 
  protected:
-  mutable GeneralErrorContext
-      ec_;  // TODO error context needs to be passed in from constructor
+  ErrorContext* ec_;
 
 #if DEBUG
   /* Our fallible 'checkOptions' member function has been called. */
@@ -322,8 +321,9 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-             bool foldConstants, CompilationState& compilationState);
+  ParserBase(JSContext* cx, ErrorContext* ec,
+             const JS::ReadOnlyCompileOptions& options, bool foldConstants,
+             CompilationState& compilationState);
   ~ParserBase();
 
   bool checkOptions();
@@ -342,7 +342,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
  public:
   // Implement ErrorReportMixin.
 
-  ErrorContext* getContext() const override { return &ec_; }
+  ErrorContext* getContext() const override { return ec_; }
 
   JSAllocator* getAllocator() const override { return cx_; }
 
@@ -472,16 +472,18 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+                   const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+                   const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
-      : PerHandlerParser(cx, options, foldConstants, compilationState,
+      : PerHandlerParser(cx, ec, options, foldConstants, compilationState,
                          static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
@@ -923,8 +925,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                const Unit* units, size_t length, bool foldConstants,
+  GeneralParser(JSContext* cx, ErrorContext* ec,
+                const JS::ReadOnlyCompileOptions& options, const Unit* units,
+                size_t length, bool foldConstants,
                 CompilationState& compilationState, SyntaxParser* syntaxParser);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);

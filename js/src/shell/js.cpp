@@ -175,6 +175,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/ErrorObject.h"
+#include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -5757,7 +5758,8 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                     js::frontend::ParseGoal goal) {
   using namespace js::frontend;
 
-  Parser<FullParseHandler, Unit> parser(cx, options, units, length,
+  GeneralErrorContext ec(cx);
+  Parser<FullParseHandler, Unit> parser(cx, &ec, options, units, length,
                                         /* foldConstants = */ false,
                                         compilationState,
                                         /* syntaxParser = */ nullptr);
@@ -6119,8 +6121,9 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  GeneralErrorContext ec(cx);
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, options, chars, length,
+      cx, &ec, options, chars, length,
       /* foldConstants = */ false, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {

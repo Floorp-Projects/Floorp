@@ -6109,9 +6109,10 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  GeneralErrorContext ec(cx);
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
-      cx, options, chars.twoByteChars(), length,
+      cx, &ec, options, chars.twoByteChars(), length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {

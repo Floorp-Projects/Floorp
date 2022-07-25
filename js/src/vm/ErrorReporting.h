@@ -87,6 +87,7 @@ extern void CallWarningReporter(JSContext* cx, JSErrorReport* report);
 
 class ErrorContext {
  public:
+  virtual ~ErrorContext() = default;
   virtual bool addPendingError(js::CompileError** error) = 0;
 
   virtual void reportError(js::CompileError* err) = 0;
