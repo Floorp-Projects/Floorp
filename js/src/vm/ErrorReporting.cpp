@@ -49,13 +49,10 @@ void GeneralErrorContext::reportWarning(CompileError* err) {
   }
 }
 
-OffThreadErrorContext::OffThreadErrorContext(JSAllocator* alloc)
-    : alloc_(alloc) {}
-
 bool OffThreadErrorContext::addPendingError(CompileError** error) {
   // When compiling off thread, save the error so that the thread finishing the
   // parse can report it later.
-  auto errorPtr = alloc_->make_unique<js::CompileError>();
+  auto errorPtr = alloc_ ? alloc_->make_unique<js::CompileError>() : nullptr;
   if (!errorPtr) {
     return false;
   }
