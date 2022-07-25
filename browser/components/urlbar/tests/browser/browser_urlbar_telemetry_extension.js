@@ -10,8 +10,8 @@
 
 const SCALAR_URLBAR = "browser.engagement.navigation.urlbar";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 function assertSearchTelemetryEmpty(search_hist) {

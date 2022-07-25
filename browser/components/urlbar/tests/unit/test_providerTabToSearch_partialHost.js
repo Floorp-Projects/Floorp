@@ -9,8 +9,8 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
 });
 
 add_task(async function setup() {

@@ -18,7 +18,10 @@ const SEARCH_TERM = "urlbar-reflows-" + Date.now();
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 add_setup(async function() {

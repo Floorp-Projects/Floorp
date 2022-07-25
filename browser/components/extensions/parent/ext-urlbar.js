@@ -4,10 +4,9 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderExtension:
-    "resource:///modules/UrlbarProviderExtension.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
 });
 
 var { ExtensionPreferencesManager } = ChromeUtils.import(

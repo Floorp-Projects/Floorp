@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  Calculator: "resource:///modules/UrlbarProviderCalculator.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Calculator: "resource:///modules/UrlbarProviderCalculator.jsm",
 });
 
 const FORMULAS = [
