@@ -12,6 +12,8 @@
 
 namespace js {
 
+class ErrorContext;
+
 struct OffThreadFrontendErrors {
   OffThreadFrontendErrors() : overRecursed(false), outOfMemory(false) {}
   // Any errors or warnings produced during compilation. These are reported
@@ -21,9 +23,27 @@ struct OffThreadFrontendErrors {
   bool outOfMemory;
 };
 
-class ErrorContext {
+class ErrorAllocator : public MallocProvider<ErrorAllocator> {
+ private:
+  ErrorContext* const context_;
+
  public:
+  explicit ErrorAllocator(ErrorContext* ec) : context_(ec) {}
+
+  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
+                      size_t nbytes, void* reallocPtr = nullptr);
+  void reportAllocationOverflow();
+};
+
+class ErrorContext {
+  ErrorAllocator alloc_;
+
+ public:
+  explicit ErrorContext() : alloc_(this) {}
   virtual ~ErrorContext() = default;
+
+  ErrorAllocator* getAllocator() { return &alloc_; }
+
   virtual bool addPendingError(js::CompileError** error) = 0;
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
@@ -69,12 +89,10 @@ class GeneralErrorContext : public ErrorContext {
 
 class OffThreadErrorContext : public ErrorContext {
  private:
-  JSAllocator* alloc_;
-
   js::OffThreadFrontendErrors errors_;
 
  public:
-  OffThreadErrorContext() : alloc_(nullptr) {}
+  OffThreadErrorContext() = default;
   bool addPendingError(js::CompileError** error) override;
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
@@ -90,7 +108,7 @@ class OffThreadErrorContext : public ErrorContext {
   void ReportOutOfMemory();
   void addPendingOutOfMemory();
 
-  void setAllocator(JSAllocator* alloc);
+  void linkWithJSContext(JSContext* cx);
 
   bool hadOutOfMemory() const override { return errors_.outOfMemory; }
   bool hadOverRecursed() const override { return errors_.overRecursed; }
@@ -98,21 +116,6 @@ class OffThreadErrorContext : public ErrorContext {
       const override {
     return errors_.errors;
   }
-};
-
-template <typename Context>
-class ErrorAllocator : public MallocProvider<ErrorAllocator<Context>> {
- private:
-  Context* context_;
-
- public:
-  explicit ErrorAllocator(Context* ec) : context_(ec) {}
-
-  void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                      size_t nbytes, void* reallocPtr = nullptr) {
-    return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
-  }
-  void reportAllocationOverflow() { context_->reportAllocationOverflow(); }
 };
 
 }  // namespace js

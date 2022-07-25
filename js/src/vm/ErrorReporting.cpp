@@ -28,6 +28,15 @@ using JS::HandleObject;
 using JS::HandleValue;
 using JS::UniqueTwoByteChars;
 
+void js::ErrorAllocator::reportAllocationOverflow() {
+  context_->reportAllocationOverflow();
+}
+void* js::ErrorAllocator::onOutOfMemory(js::AllocFunction allocFunc,
+                                        arena_id_t arena, size_t nbytes,
+                                        void* reallocPtr) {
+  return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
+}
+
 GeneralErrorContext::GeneralErrorContext(JSContext* cx) : cx_(cx) {}
 
 bool GeneralErrorContext::addPendingError(CompileError** error) { return true; }
@@ -80,7 +89,7 @@ GeneralErrorContext::errors() const {
 bool OffThreadErrorContext::addPendingError(CompileError** error) {
   // When compiling off thread, save the error so that the thread finishing the
   // parse can report it later.
-  auto errorPtr = alloc_ ? alloc_->make_unique<js::CompileError>() : nullptr;
+  auto errorPtr = getAllocator()->make_unique<js::CompileError>();
   if (!errorPtr) {
     return false;
   }
@@ -132,10 +141,9 @@ void OffThreadErrorContext::addPendingOutOfMemory() {
   errors_.outOfMemory = true;
 }
 
-void OffThreadErrorContext::setAllocator(JSAllocator* alloc) {
-  alloc_ = alloc;
-  if (alloc_) {
-    alloc_->setOffThreadFrontendErrors(&errors_);
+void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
+  if (cx) {
+    cx->setOffThreadFrontendErrors(&errors_);
   }
 }
 
