@@ -1518,8 +1518,8 @@ waterfox-lepton =
 
 privacy-hub-header = Privacy Hub
 
-block-tracker = Learn how to block more trackers:
-block-more-tracker = Block more Trackers and Ads
+block-tracker = Learn how to block more ads and trackers:
+block-more-tracker = Block more Ads and Trackers
 
 view-at-AMO = View at AMO
 uBlock-Origin = uBlock Origin
