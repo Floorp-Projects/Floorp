@@ -3619,3 +3619,25 @@ IntrinsicSize ContainSizeAxes::ContainIntrinsicSize(
   }
   return result;
 }
+
+Maybe<nscoord> ContainSizeAxes::ContainIntrinsicBSize(
+    const nsIFrame& aFrame) const {
+  if (!mBContained) {
+    return Nothing();
+  }
+  const nsStylePosition* stylePos = aFrame.StylePosition();
+  return Some(Resolve(aFrame.GetWritingMode().IsVertical()
+                          ? stylePos->mContainIntrinsicWidth
+                          : stylePos->mContainIntrinsicHeight));
+}
+
+Maybe<nscoord> ContainSizeAxes::ContainIntrinsicISize(
+    const nsIFrame& aFrame) const {
+  if (!mIContained) {
+    return Nothing();
+  }
+  const nsStylePosition* stylePos = aFrame.StylePosition();
+  return Some(Resolve(aFrame.GetWritingMode().IsVertical()
+                          ? stylePos->mContainIntrinsicHeight
+                          : stylePos->mContainIntrinsicWidth));
+}
