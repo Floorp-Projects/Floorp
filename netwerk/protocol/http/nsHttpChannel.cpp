@@ -396,14 +396,16 @@ nsresult nsHttpChannel::PrepareToConnect() {
 
 #ifdef XP_WIN
   // If Windows 10 SSO is enabled, we potentially add auth information to
-  // secure top level loads (DOCUMENTs) that aren't anonymous or
-  // private browsing.
+  // secure top level loads (DOCUMENTs) and iframes (SUBDOCUMENTs) that
+  // aren't anonymous or private browsing.
   if (StaticPrefs::network_http_windows_sso_enabled() &&
-      mURI->SchemeIs("https") &&
-      mLoadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_DOCUMENT &&
-      !(mLoadFlags & LOAD_ANONYMOUS) && !mPrivateBrowsing) {
-    AddWindowsSSO(this);
+      mURI->SchemeIs("https") && !(mLoadFlags & LOAD_ANONYMOUS) &&
+      !mPrivateBrowsing) {
+    ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
+    if (type == ExtContentPolicy::TYPE_DOCUMENT ||
+        type == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+      AddWindowsSSO(this);
+    }
   }
 #endif
 
