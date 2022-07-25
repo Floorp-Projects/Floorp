@@ -27,6 +27,7 @@
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "threading/Thread.h"
+#include "vm/ErrorContext.h"
 #include "vm/HelperThreads.h"
 #include "vm/HelperThreadTask.h"
 #include "vm/JSContext.h"
@@ -520,15 +521,6 @@ struct MOZ_RAII AutoSetContextRuntime {
     TlsContext.get()->setRuntime(rt);
   }
   ~AutoSetContextRuntime() { TlsContext.get()->setRuntime(nullptr); }
-};
-
-struct OffThreadFrontendErrors {
-  OffThreadFrontendErrors() : overRecursed(false), outOfMemory(false) {}
-  // Any errors or warnings produced during compilation. These are reported
-  // when finishing the script.
-  Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy> errors;
-  bool overRecursed;
-  bool outOfMemory;
 };
 
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>,

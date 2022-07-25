@@ -211,6 +211,7 @@
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "util/Unicode.h"
+#include "vm/ErrorContext.h"
 #include "vm/ErrorReporting.h"
 
 struct JS_PUBLIC_API JSContext;

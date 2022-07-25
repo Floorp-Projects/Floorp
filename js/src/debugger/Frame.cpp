@@ -53,6 +53,7 @@
 #include "vm/BytecodeUtil.h"               // for JSDVG_SEARCH_STACK
 #include "vm/Compartment.h"                // for Compartment
 #include "vm/EnvironmentObject.h"          // for IsGlobalLexicalEnvironment
+#include "vm/ErrorContext.h"               // for GeneralErrorContext
 #include "vm/GeneratorObject.h"            // for AbstractGeneratorObject
 #include "vm/GlobalObject.h"               // for GlobalObject
 #include "vm/Interpreter.h"                // for Call, ExecuteKernel
