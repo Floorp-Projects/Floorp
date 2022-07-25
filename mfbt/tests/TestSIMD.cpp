@@ -13,47 +13,79 @@ void TestTinyString() {
   const char* test = "012\n";
 
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '0', 3) == test + 0x0);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '0', 3) == test + 0x0);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '1', 3) == test + 0x1);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '1', 3) == test + 0x1);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '2', 3) == test + 0x2);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '2', 3) == test + 0x2);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '\n', 3) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '\n', 3) == nullptr);
 }
 
 void TestShortString() {
   const char* test = "0123456789\n";
 
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '0', 10) == test + 0x0);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '0', 10) == test + 0x0);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '1', 10) == test + 0x1);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '1', 10) == test + 0x1);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '2', 10) == test + 0x2);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '2', 10) == test + 0x2);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '3', 10) == test + 0x3);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '3', 10) == test + 0x3);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '4', 10) == test + 0x4);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '4', 10) == test + 0x4);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '5', 10) == test + 0x5);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '5', 10) == test + 0x5);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '6', 10) == test + 0x6);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '6', 10) == test + 0x6);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '7', 10) == test + 0x7);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '7', 10) == test + 0x7);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '8', 10) == test + 0x8);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '8', 10) == test + 0x8);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '9', 10) == test + 0x9);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '9', 10) == test + 0x9);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '\n', 10) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '\n', 10) == nullptr);
 }
 
 void TestMediumString() {
   const char* test = "0123456789abcdef\n";
 
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '0', 16) == test + 0x0);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '0', 16) == test + 0x0);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '1', 16) == test + 0x1);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '1', 16) == test + 0x1);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '2', 16) == test + 0x2);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '2', 16) == test + 0x2);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '3', 16) == test + 0x3);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '3', 16) == test + 0x3);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '4', 16) == test + 0x4);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '4', 16) == test + 0x4);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '5', 16) == test + 0x5);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '5', 16) == test + 0x5);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '6', 16) == test + 0x6);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '6', 16) == test + 0x6);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '7', 16) == test + 0x7);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '7', 16) == test + 0x7);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '8', 16) == test + 0x8);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '8', 16) == test + 0x8);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '9', 16) == test + 0x9);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '9', 16) == test + 0x9);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, 'a', 16) == test + 0xa);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, 'a', 16) == test + 0xa);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, 'b', 16) == test + 0xb);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, 'b', 16) == test + 0xb);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, 'c', 16) == test + 0xc);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, 'c', 16) == test + 0xc);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, 'd', 16) == test + 0xd);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, 'd', 16) == test + 0xd);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, 'e', 16) == test + 0xe);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, 'e', 16) == test + 0xe);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, 'f', 16) == test + 0xf);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, 'f', 16) == test + 0xf);
   MOZ_RELEASE_ASSERT(SIMD::memchr8(test, '\n', 16) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test, '\n', 16) == nullptr);
 }
 
 void TestLongString() {
@@ -70,9 +102,11 @@ void TestLongString() {
   for (size_t i = 0; i < count - 1; ++i) {
     MOZ_RELEASE_ASSERT(SIMD::memchr8(test, static_cast<char>(i), count - 1) ==
                        test + i);
+    MOZ_RELEASE_ASSERT(
+        SIMD::memchr8SSE2(test, static_cast<char>(i), count - 1) == test + i);
   }
-  MOZ_RELEASE_ASSERT(
-      SIMD::memchr8(test, static_cast<char>(count - 1), count - 1) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr8(test, static_cast<char>(count - 1),
+                                       count - 1) == nullptr);
 }
 
 void TestGauntlet() {
@@ -90,8 +124,10 @@ void TestGauntlet() {
           if (j >= k && j < i) {
             expected = test + j;
           }
-          MOZ_RELEASE_ASSERT(
-              SIMD::memchr8(test + k, static_cast<char>(j), i - k) == expected);
+          MOZ_RELEASE_ASSERT(SIMD::memchr8(test + k, static_cast<char>(j),
+                                               i - k) == expected);
+          MOZ_RELEASE_ASSERT(SIMD::memchr8SSE2(test + k, static_cast<char>(j),
+                                               i - k) == expected);
         }
       }
     }
@@ -102,47 +138,79 @@ void TestTinyString16() {
   const char16_t* test = u"012\n";
 
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'0', 3) == test + 0x0);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'0', 3) == test + 0x0);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'1', 3) == test + 0x1);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'1', 3) == test + 0x1);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'2', 3) == test + 0x2);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'2', 3) == test + 0x2);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'\n', 3) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'\n', 3) == nullptr);
 }
 
 void TestShortString16() {
   const char16_t* test = u"0123456789\n";
 
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'0', 10) == test + 0x0);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'0', 10) == test + 0x0);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'1', 10) == test + 0x1);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'1', 10) == test + 0x1);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'2', 10) == test + 0x2);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'2', 10) == test + 0x2);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'3', 10) == test + 0x3);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'3', 10) == test + 0x3);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'4', 10) == test + 0x4);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'4', 10) == test + 0x4);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'5', 10) == test + 0x5);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'5', 10) == test + 0x5);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'6', 10) == test + 0x6);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'6', 10) == test + 0x6);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'7', 10) == test + 0x7);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'7', 10) == test + 0x7);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'8', 10) == test + 0x8);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'8', 10) == test + 0x8);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'9', 10) == test + 0x9);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'9', 10) == test + 0x9);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'\n', 10) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'\n', 10) == nullptr);
 }
 
 void TestMediumString16() {
   const char16_t* test = u"0123456789abcdef\n";
 
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'0', 16) == test + 0x0);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'0', 16) == test + 0x0);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'1', 16) == test + 0x1);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'1', 16) == test + 0x1);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'2', 16) == test + 0x2);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'2', 16) == test + 0x2);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'3', 16) == test + 0x3);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'3', 16) == test + 0x3);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'4', 16) == test + 0x4);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'4', 16) == test + 0x4);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'5', 16) == test + 0x5);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'5', 16) == test + 0x5);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'6', 16) == test + 0x6);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'6', 16) == test + 0x6);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'7', 16) == test + 0x7);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'7', 16) == test + 0x7);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'8', 16) == test + 0x8);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'8', 16) == test + 0x8);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'9', 16) == test + 0x9);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'9', 16) == test + 0x9);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'a', 16) == test + 0xa);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'a', 16) == test + 0xa);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'b', 16) == test + 0xb);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'b', 16) == test + 0xb);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'c', 16) == test + 0xc);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'c', 16) == test + 0xc);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'd', 16) == test + 0xd);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'd', 16) == test + 0xd);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'e', 16) == test + 0xe);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'e', 16) == test + 0xe);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'f', 16) == test + 0xf);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'f', 16) == test + 0xf);
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, u'\n', 16) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, u'\n', 16) == nullptr);
 }
 
 void TestLongString16() {
@@ -153,10 +221,13 @@ void TestLongString16() {
   }
 
   for (size_t i = 0; i < count - 1; ++i) {
-    MOZ_RELEASE_ASSERT(
-        SIMD::memchr16(test, static_cast<char16_t>(i), count - 1) == test + i);
+    MOZ_RELEASE_ASSERT(SIMD::memchr16(test, static_cast<char16_t>(i),
+                                          count - 1) == test + i);
+    MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, static_cast<char16_t>(i),
+                                          count - 1) == test + i);
   }
   MOZ_RELEASE_ASSERT(SIMD::memchr16(test, count - 1, count - 1) == nullptr);
+  MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test, count - 1, count - 1) == nullptr);
 }
 
 void TestGauntlet16() {
@@ -174,8 +245,12 @@ void TestGauntlet16() {
           if (j >= k && j < i) {
             expected = test + j;
           }
-          MOZ_RELEASE_ASSERT(SIMD::memchr16(test + k, static_cast<char16_t>(j),
-                                            i - k) == expected);
+          MOZ_RELEASE_ASSERT(SIMD::memchr16(test + k,
+                                                static_cast<char16_t>(j),
+                                                i - k) == expected);
+          MOZ_RELEASE_ASSERT(SIMD::memchr16SSE2(test + k,
+                                                static_cast<char16_t>(j),
+                                                i - k) == expected);
         }
       }
     }

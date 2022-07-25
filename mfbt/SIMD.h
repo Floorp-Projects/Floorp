@@ -33,10 +33,18 @@ class SIMD {
   static MFBT_API const char* memchr8(const char* ptr, char value,
                                       size_t length);
 
+  // This function just restricts our execution to the SSE2 path
+  static MFBT_API const char* memchr8SSE2(const char* ptr, char value,
+                                          size_t length);
+
   // Search through `ptr[0..length]` for the first occurrence of `value` and
   // return the pointer to it, or nullptr if it cannot be found.
   static MFBT_API const char16_t* memchr16(const char16_t* ptr, char16_t value,
                                            size_t length);
+
+  // This function just restricts our execution to the SSE2 path
+  static MFBT_API const char16_t* memchr16SSE2(const char16_t* ptr,
+                                               char16_t value, size_t length);
 
   // Search through `ptr[0..length]` for the first occurrence of `v1` which is
   // immediately followed by `v2` and return the pointer to the occurrence of
