@@ -266,7 +266,7 @@ class WebRenderAPI final {
   void SetInt(wr::IntParameter, int32_t value);
 
   void SetClearColor(const gfx::DeviceColor& aColor);
-  void SetProfilerUI(const nsCString& aUIString);
+  void SetProfilerUI(const nsACString& aUIString);
 
   void Pause();
   bool Resume();
@@ -291,7 +291,7 @@ class WebRenderAPI final {
 
   void Capture();
 
-  void StartCaptureSequence(const nsCString& aPath, uint32_t aFlags);
+  void StartCaptureSequence(const nsACString& aPath, uint32_t aFlags);
   void StopCaptureSequence();
 
   void BeginRecording(const TimeStamp& aRecordingStart,

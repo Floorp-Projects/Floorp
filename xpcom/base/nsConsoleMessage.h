@@ -15,7 +15,7 @@
 class nsConsoleMessage final : public nsIConsoleMessage {
  public:
   nsConsoleMessage();
-  explicit nsConsoleMessage(const char16_t* aMessage);
+  explicit nsConsoleMessage(const nsAString& aMessage);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONSOLEMESSAGE

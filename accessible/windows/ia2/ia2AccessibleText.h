@@ -120,7 +120,7 @@ class ia2AccessibleText : public IAccessibleText {
 
   static void InitTextChangeData();
   static void UpdateTextChangeData(HyperTextAccessibleBase* aAcc, bool aInsert,
-                                   const nsString& aStr, int32_t aStart,
+                                   const nsAString& aStr, int32_t aStart,
                                    uint32_t aLen);
 
  protected:

@@ -23,7 +23,8 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
 
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
 
-  void Init(cdm::ContentDecryptionModule_10* aCDM, const nsCString& aStorageId);
+  void Init(cdm::ContentDecryptionModule_10* aCDM,
+            const nsACString& aStorageId);
 
   void TimerExpired(void* aContext);
 
@@ -68,7 +69,7 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
   ~ChromiumCDMChild();
 
   bool OnResolveNewSessionPromiseInternal(uint32_t aPromiseId,
-                                          const nsCString& aSessionId);
+                                          const nsACString& aSessionId);
 
   bool IsOnMessageLoopThread();
 
@@ -85,14 +86,14 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
       const uint32_t& aInitDataType, nsTArray<uint8_t>&& aInitData) override;
   ipc::IPCResult RecvLoadSession(const uint32_t& aPromiseId,
                                  const uint32_t& aSessionType,
-                                 const nsCString& aSessionId) override;
+                                 const nsACString& aSessionId) override;
   ipc::IPCResult RecvUpdateSession(const uint32_t& aPromiseId,
-                                   const nsCString& aSessionId,
+                                   const nsACString& aSessionId,
                                    nsTArray<uint8_t>&& aResponse) override;
   ipc::IPCResult RecvCloseSession(const uint32_t& aPromiseId,
-                                  const nsCString& aSessionId) override;
+                                  const nsACString& aSessionId) override;
   ipc::IPCResult RecvRemoveSession(const uint32_t& aPromiseId,
-                                   const nsCString& aSessionId) override;
+                                   const nsACString& aSessionId) override;
   ipc::IPCResult RecvCompleteQueryOutputProtectionStatus(
       const bool& aSuccess, const uint32_t& aLinkMask,
       const uint32_t& aProtectionMask) override;

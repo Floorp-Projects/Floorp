@@ -2877,7 +2877,7 @@ void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
     return;
   }
 
-  bool ok = browserParent->SendActivateFrameEvent(nsString(aType), aCapture);
+  bool ok = browserParent->SendActivateFrameEvent(aType, aCapture);
   if (!ok) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
   }
@@ -2964,8 +2964,7 @@ nsresult nsFrameLoader::FinishStaticClone(
 bool nsFrameLoader::DoLoadMessageManagerScript(const nsAString& aURL,
                                                bool aRunInGlobalScope) {
   if (auto* browserParent = GetBrowserParent()) {
-    return browserParent->SendLoadRemoteScript(nsString(aURL),
-                                               aRunInGlobalScope);
+    return browserParent->SendLoadRemoteScript(aURL, aRunInGlobalScope);
   }
   RefPtr<InProcessBrowserChildMessageManager> browserChild =
       GetBrowserChildMessageManager();
@@ -3009,7 +3008,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(const nsAString& aMessage,
       MOZ_CRASH();
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
-    if (browserParent->SendAsyncMessage(nsString(aMessage), data)) {
+    if (browserParent->SendAsyncMessage(aMessage, data)) {
       return NS_OK;
     } else {
       return NS_ERROR_UNEXPECTED;

@@ -50,7 +50,7 @@ mozilla::ipc::IPCResult WebBrowserPersistSerializeParent::RecvWriteData(
 }
 
 mozilla::ipc::IPCResult WebBrowserPersistSerializeParent::Recv__delete__(
-    const nsCString& aContentType, const nsresult& aStatus) {
+    const nsACString& aContentType, const nsresult& aStatus) {
   if (NS_SUCCEEDED(mOutputError)) {
     mOutputError = aStatus;
   }

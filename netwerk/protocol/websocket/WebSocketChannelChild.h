@@ -58,28 +58,28 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
  private:
   ~WebSocketChannelChild();
 
-  mozilla::ipc::IPCResult RecvOnStart(const nsCString& aProtocol,
-                                      const nsCString& aExtensions,
-                                      const nsString& aEffectiveURL,
+  mozilla::ipc::IPCResult RecvOnStart(const nsACString& aProtocol,
+                                      const nsACString& aExtensions,
+                                      const nsAString& aEffectiveURL,
                                       const bool& aEncrypted,
                                       const uint64_t& aHttpChannelId);
   mozilla::ipc::IPCResult RecvOnStop(const nsresult& aStatusCode);
-  mozilla::ipc::IPCResult RecvOnMessageAvailable(
-      const nsDependentCSubstring& aMsg, const bool& aMoreData);
-  mozilla::ipc::IPCResult RecvOnBinaryMessageAvailable(
-      const nsDependentCSubstring& aMsg, const bool& aMoreData);
+  mozilla::ipc::IPCResult RecvOnMessageAvailable(const nsACString& aMsg,
+                                                 const bool& aMoreData);
+  mozilla::ipc::IPCResult RecvOnBinaryMessageAvailable(const nsACString& aMsg,
+                                                       const bool& aMoreData);
   mozilla::ipc::IPCResult RecvOnAcknowledge(const uint32_t& aSize);
   mozilla::ipc::IPCResult RecvOnServerClose(const uint16_t& aCode,
-                                            const nsCString& aReason);
+                                            const nsACString& aReason);
 
-  void OnStart(const nsCString& aProtocol, const nsCString& aExtensions,
-               const nsString& aEffectiveURL, const bool& aEncrypted,
+  void OnStart(const nsACString& aProtocol, const nsACString& aExtensions,
+               const nsAString& aEffectiveURL, const bool& aEncrypted,
                const uint64_t& aHttpChannelId);
   void OnStop(const nsresult& aStatusCode);
-  void OnMessageAvailable(const nsCString& aMsg);
-  void OnBinaryMessageAvailable(const nsCString& aMsg);
+  void OnMessageAvailable(const nsACString& aMsg);
+  void OnBinaryMessageAvailable(const nsACString& aMsg);
   void OnAcknowledge(const uint32_t& aSize);
-  void OnServerClose(const uint16_t& aCode, const nsCString& aReason);
+  void OnServerClose(const uint16_t& aCode, const nsACString& aReason);
   void AsyncOpenFailed();
 
   void MaybeReleaseIPCObject();
@@ -87,8 +87,8 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   // This function tries to get a labeled event target for |mNeckoTarget|.
   void SetupNeckoTarget();
 
-  bool RecvOnMessageAvailableInternal(const nsDependentCSubstring& aMsg,
-                                      bool aMoreData, bool aBinary);
+  bool RecvOnMessageAvailableInternal(const nsACString& aMsg, bool aMoreData,
+                                      bool aBinary);
 
   void OnError();
 

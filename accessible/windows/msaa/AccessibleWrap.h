@@ -64,8 +64,8 @@ class AccessibleWrap : public LocalAccessible {
   static void InvalidateHandlers();
 
   static bool DispatchTextChangeToHandler(Accessible* aAcc, bool aIsInsert,
-                                          const nsString& aText, int32_t aStart,
-                                          uint32_t aLen);
+                                          const nsAString& aText,
+                                          int32_t aStart, uint32_t aLen);
 
  protected:
   virtual ~AccessibleWrap() = default;

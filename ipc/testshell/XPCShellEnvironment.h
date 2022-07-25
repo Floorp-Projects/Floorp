@@ -30,7 +30,7 @@ class XPCShellEnvironment {
 
   void ProcessFile(JSContext* cx, const char* filename, FILE* file,
                    bool forceTTY);
-  bool EvaluateString(const nsString& aString, nsString* aResult = nullptr);
+  bool EvaluateString(const nsAString& aString, nsString* aResult = nullptr);
 
   JSPrincipals* GetPrincipal() {
     return nsJSPrincipals::get(nsContentUtils::GetSystemPrincipal());

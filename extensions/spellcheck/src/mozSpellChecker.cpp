@@ -19,7 +19,6 @@
 using mozilla::AssertedCast;
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
-using mozilla::PRemoteSpellcheckEngineChild;
 using mozilla::RemoteSpellcheckEngineChild;
 using mozilla::TextServicesDocument;
 using mozilla::dom::ContentChild;
@@ -171,7 +170,7 @@ nsresult mozSpellChecker::CheckWord(const nsAString& aWord, bool* aIsMisspelled,
 RefPtr<mozilla::SuggestionsPromise> mozSpellChecker::Suggest(
     const nsAString& aWord, uint32_t aMaxCount) {
   if (XRE_IsContentProcess()) {
-    return mEngine->SendSuggest(nsString(aWord), aMaxCount)
+    return mEngine->SendSuggest(aWord, aMaxCount)
         ->Then(
             mozilla::GetCurrentSerialEventTarget(), __func__,
             [](nsTArray<nsString>&& aSuggestions) {
@@ -411,7 +410,7 @@ nsresult mozSpellChecker::GetCurrentDictionaries(
   return mSpellCheckingEngine->GetDictionaries(aDictionaries);
 }
 
-nsresult mozSpellChecker::SetCurrentDictionary(const nsCString& aDictionary) {
+nsresult mozSpellChecker::SetCurrentDictionary(const nsACString& aDictionary) {
   if (XRE_IsContentProcess()) {
     mCurrentDictionaries.Clear();
     bool isSuccess;

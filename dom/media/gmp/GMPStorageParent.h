@@ -18,17 +18,17 @@ class GMPStorageParent : public PGMPStorageParent {
 
  public:
   NS_INLINE_DECL_REFCOUNTING(GMPStorageParent)
-  GMPStorageParent(const nsCString& aNodeId, GMPParent* aPlugin);
+  GMPStorageParent(const nsACString& aNodeId, GMPParent* aPlugin);
 
   nsresult Init();
   void Shutdown();
 
  protected:
-  mozilla::ipc::IPCResult RecvOpen(const nsCString& aRecordName) override;
-  mozilla::ipc::IPCResult RecvRead(const nsCString& aRecordName) override;
-  mozilla::ipc::IPCResult RecvWrite(const nsCString& aRecordName,
+  mozilla::ipc::IPCResult RecvOpen(const nsACString& aRecordName) override;
+  mozilla::ipc::IPCResult RecvRead(const nsACString& aRecordName) override;
+  mozilla::ipc::IPCResult RecvWrite(const nsACString& aRecordName,
                                     nsTArray<uint8_t>&& aBytes) override;
-  mozilla::ipc::IPCResult RecvClose(const nsCString& aRecordName) override;
+  mozilla::ipc::IPCResult RecvClose(const nsACString& aRecordName) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

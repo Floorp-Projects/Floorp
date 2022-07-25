@@ -183,8 +183,8 @@ class EventTargetDispatcher : public ChannelEvent {
 
 class StartEvent : public WebSocketEvent {
  public:
-  StartEvent(const nsCString& aProtocol, const nsCString& aExtensions,
-             const nsString& aEffectiveURL, bool aEncrypted,
+  StartEvent(const nsACString& aProtocol, const nsACString& aExtensions,
+             const nsAString& aEffectiveURL, bool aEncrypted,
              uint64_t aHttpChannelId)
       : mProtocol(aProtocol),
         mExtensions(aExtensions),
@@ -206,8 +206,8 @@ class StartEvent : public WebSocketEvent {
 };
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnStart(
-    const nsCString& aProtocol, const nsCString& aExtensions,
-    const nsString& aEffectiveURL, const bool& aEncrypted,
+    const nsACString& aProtocol, const nsACString& aExtensions,
+    const nsAString& aEffectiveURL, const bool& aEncrypted,
     const uint64_t& aHttpChannelId) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
       this, new StartEvent(aProtocol, aExtensions, aEffectiveURL, aEncrypted,
@@ -216,9 +216,9 @@ mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnStart(
   return IPC_OK();
 }
 
-void WebSocketChannelChild::OnStart(const nsCString& aProtocol,
-                                    const nsCString& aExtensions,
-                                    const nsString& aEffectiveURL,
+void WebSocketChannelChild::OnStart(const nsACString& aProtocol,
+                                    const nsACString& aExtensions,
+                                    const nsAString& aEffectiveURL,
                                     const bool& aEncrypted,
                                     const uint64_t& aHttpChannelId) {
   LOG(("WebSocketChannelChild::RecvOnStart() %p\n", this));
@@ -277,7 +277,7 @@ void WebSocketChannelChild::OnStop(const nsresult& aStatusCode) {
 
 class MessageEvent : public WebSocketEvent {
  public:
-  MessageEvent(const nsCString& aMessage, bool aBinary)
+  MessageEvent(const nsACString& aMessage, bool aBinary)
       : mMessage(aMessage), mBinary(aBinary) {}
 
   void Run(WebSocketChannelChild* aChild) override {
@@ -294,7 +294,7 @@ class MessageEvent : public WebSocketEvent {
 };
 
 bool WebSocketChannelChild::RecvOnMessageAvailableInternal(
-    const nsDependentCSubstring& aMsg, bool aMoreData, bool aBinary) {
+    const nsACString& aMsg, bool aMoreData, bool aBinary) {
   if (aMoreData) {
     return mReceivedMsgBuffer.Append(aMsg, fallible);
   }
@@ -325,7 +325,7 @@ void WebSocketChannelChild::OnError() {
 }
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnMessageAvailable(
-    const nsDependentCSubstring& aMsg, const bool& aMoreData) {
+    const nsACString& aMsg, const bool& aMoreData) {
   if (!RecvOnMessageAvailableInternal(aMsg, aMoreData, false)) {
     LOG(("WebSocketChannelChild %p append message failed", this));
     mEventQ->RunOrEnqueue(new EventTargetDispatcher(this, new OnErrorEvent()));
@@ -333,7 +333,7 @@ mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnMessageAvailable(
   return IPC_OK();
 }
 
-void WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg) {
+void WebSocketChannelChild::OnMessageAvailable(const nsACString& aMsg) {
   LOG(("WebSocketChannelChild::RecvOnMessageAvailable() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
@@ -350,7 +350,7 @@ void WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg) {
 }
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnBinaryMessageAvailable(
-    const nsDependentCSubstring& aMsg, const bool& aMoreData) {
+    const nsACString& aMsg, const bool& aMoreData) {
   if (!RecvOnMessageAvailableInternal(aMsg, aMoreData, true)) {
     LOG(("WebSocketChannelChild %p append message failed", this));
     mEventQ->RunOrEnqueue(new EventTargetDispatcher(this, new OnErrorEvent()));
@@ -358,7 +358,7 @@ mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnBinaryMessageAvailable(
   return IPC_OK();
 }
 
-void WebSocketChannelChild::OnBinaryMessageAvailable(const nsCString& aMsg) {
+void WebSocketChannelChild::OnBinaryMessageAvailable(const nsACString& aMsg) {
   LOG(("WebSocketChannelChild::RecvOnBinaryMessageAvailable() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
@@ -412,7 +412,7 @@ void WebSocketChannelChild::OnAcknowledge(const uint32_t& aSize) {
 
 class ServerCloseEvent : public WebSocketEvent {
  public:
-  ServerCloseEvent(const uint16_t aCode, const nsCString& aReason)
+  ServerCloseEvent(const uint16_t aCode, const nsACString& aReason)
       : mCode(aCode), mReason(aReason) {}
 
   void Run(WebSocketChannelChild* aChild) override {
@@ -425,7 +425,7 @@ class ServerCloseEvent : public WebSocketEvent {
 };
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnServerClose(
-    const uint16_t& aCode, const nsCString& aReason) {
+    const uint16_t& aCode, const nsACString& aReason) {
   mEventQ->RunOrEnqueue(
       new EventTargetDispatcher(this, new ServerCloseEvent(aCode, aReason)));
 
@@ -433,7 +433,7 @@ mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnServerClose(
 }
 
 void WebSocketChannelChild::OnServerClose(const uint16_t& aCode,
-                                          const nsCString& aReason) {
+                                          const nsACString& aReason) {
   LOG(("WebSocketChannelChild::RecvOnServerClose() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
@@ -517,11 +517,10 @@ WebSocketChannelChild::AsyncOpenNative(
 
   gNeckoChild->SendPWebSocketConstructor(
       this, browserChild, IPC::SerializedLoadContext(this), mSerial);
-  if (!SendAsyncOpen(uri, nsCString(aOrigin), aOriginAttributes, aInnerWindowID,
-                     mProtocol, mEncrypted, mPingInterval,
-                     mClientSetPingInterval, mPingResponseTimeout,
-                     mClientSetPingTimeout, loadInfoArgs, transportProvider,
-                     mNegotiatedExtensions)) {
+  if (!SendAsyncOpen(uri, aOrigin, aOriginAttributes, aInnerWindowID, mProtocol,
+                     mEncrypted, mPingInterval, mClientSetPingInterval,
+                     mPingResponseTimeout, mClientSetPingTimeout, loadInfoArgs,
+                     transportProvider, mNegotiatedExtensions)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -578,7 +577,7 @@ WebSocketChannelChild::Close(uint16_t code, const nsACString& reason) {
     }
   }
 
-  if (!SendClose(code, nsCString(reason))) {
+  if (!SendClose(code, reason)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -629,7 +628,7 @@ WebSocketChannelChild::SendMsg(const nsACString& aMsg) {
     }
   }
 
-  if (!SendSendMsg(nsCString(aMsg))) {
+  if (!SendSendMsg(aMsg)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -652,7 +651,7 @@ WebSocketChannelChild::SendBinaryMsg(const nsACString& aMsg) {
     }
   }
 
-  if (!SendSendBinaryMsg(nsCString(aMsg))) {
+  if (!SendSendBinaryMsg(aMsg)) {
     return NS_ERROR_UNEXPECTED;
   }
 

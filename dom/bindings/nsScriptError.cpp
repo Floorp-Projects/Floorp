@@ -227,11 +227,10 @@ NS_IMETHODIMP
 nsScriptErrorBase::Init(const nsAString& message, const nsAString& sourceName,
                         const nsAString& sourceLine, uint32_t lineNumber,
                         uint32_t columnNumber, uint32_t flags,
-                        const char* category, bool fromPrivateWindow,
+                        const nsACString& category, bool fromPrivateWindow,
                         bool fromChromeContext) {
   InitializationHelper(message, sourceLine, lineNumber, columnNumber, flags,
-                       category ? nsDependentCString(category) : EmptyCString(),
-                       0 /* inner Window ID */, fromChromeContext);
+                       category, 0 /* inner Window ID */, fromChromeContext);
   AssignSourceNameHelper(mSourceName, sourceName);
 
   mIsFromPrivateWindow = fromPrivateWindow;

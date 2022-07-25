@@ -148,9 +148,9 @@ void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
   }
 }
 
-void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
-                                int32_t aStart, uint32_t aLen, bool aIsInsert,
-                                bool aFromUser) {
+void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget,
+                                const nsAString& aStr, int32_t aStart,
+                                uint32_t aLen, bool aIsInsert, bool aFromUser) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
@@ -214,7 +214,7 @@ void a11y::ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
 }
 
 void a11y::ProxyAnnouncementEvent(RemoteAccessible* aTarget,
-                                  const nsString& aAnnouncement,
+                                  const nsAString& aAnnouncement,
                                   uint16_t aPriority) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);

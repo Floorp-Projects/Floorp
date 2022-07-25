@@ -1567,7 +1567,7 @@ class Datastore final
 
   void NoteInactiveDatabase(Database* aDatabase);
 
-  void GetSnapshotLoadInfo(const nsString& aKey, bool& aAddKeyToUnknownItems,
+  void GetSnapshotLoadInfo(const nsAString& aKey, bool& aAddKeyToUnknownItems,
                            nsTHashtable<nsStringHashKey>& aLoadedItems,
                            nsTArray<LSItemInfo>& aItemInfos,
                            uint32_t& aNextLoadIndex,
@@ -1577,7 +1577,7 @@ class Datastore final
 
   const nsTArray<LSItemInfo>& GetOrderedItems() const { return mOrderedItems; }
 
-  void GetItem(const nsString& aKey, LSValue& aValue) const;
+  void GetItem(const nsAString& aKey, LSValue& aValue) const;
 
   void GetKeys(nsTArray<nsString>& aKeys) const;
 
@@ -1828,13 +1828,13 @@ class Database final
   mozilla::ipc::IPCResult RecvAllowToClose() override;
 
   PBackgroundLSSnapshotParent* AllocPBackgroundLSSnapshotParent(
-      const nsString& aDocumentURI, const nsString& aKey,
+      const nsAString& aDocumentURI, const nsAString& aKey,
       const bool& aIncreasePeakUsage, const int64_t& aMinSize,
       LSSnapshotInitInfo* aInitInfo) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundLSSnapshotConstructor(
-      PBackgroundLSSnapshotParent* aActor, const nsString& aDocumentURI,
-      const nsString& aKey, const bool& aIncreasePeakUsage,
+      PBackgroundLSSnapshotParent* aActor, const nsAString& aDocumentURI,
+      const nsAString& aKey, const bool& aIncreasePeakUsage,
       const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) override;
 
   bool DeallocPBackgroundLSSnapshotParent(
@@ -2058,7 +2058,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   mozilla::ipc::IPCResult RecvLoaded() override;
 
   mozilla::ipc::IPCResult RecvLoadValueAndMoreItems(
-      const nsString& aKey, LSValue* aValue,
+      const nsAString& aKey, LSValue* aValue,
       nsTArray<LSItemInfo>* aItemInfos) override;
 
   mozilla::ipc::IPCResult RecvLoadKeys(nsTArray<nsString>* aKeys) override;
@@ -4640,7 +4640,7 @@ void Datastore::NoteInactiveDatabase(Database* aDatabase) {
   }
 }
 
-void Datastore::GetSnapshotLoadInfo(const nsString& aKey,
+void Datastore::GetSnapshotLoadInfo(const nsAString& aKey,
                                     bool& aAddKeyToUnknownItems,
                                     nsTHashtable<nsStringHashKey>& aLoadedItems,
                                     nsTArray<LSItemInfo>& aItemInfos,
@@ -4840,7 +4840,7 @@ void Datastore::GetSnapshotLoadInfo(const nsString& aKey,
   aLoadState = loadState;
 }
 
-void Datastore::GetItem(const nsString& aKey, LSValue& aValue) const {
+void Datastore::GetItem(const nsAString& aKey, LSValue& aValue) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
 
@@ -5525,7 +5525,7 @@ mozilla::ipc::IPCResult Database::RecvAllowToClose() {
 }
 
 PBackgroundLSSnapshotParent* Database::AllocPBackgroundLSSnapshotParent(
-    const nsString& aDocumentURI, const nsString& aKey,
+    const nsAString& aDocumentURI, const nsAString& aKey,
     const bool& aIncreasePeakUsage, const int64_t& aMinSize,
     LSSnapshotInitInfo* aInitInfo) {
   AssertIsOnBackgroundThread();
@@ -5547,8 +5547,8 @@ PBackgroundLSSnapshotParent* Database::AllocPBackgroundLSSnapshotParent(
 }
 
 mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
-    PBackgroundLSSnapshotParent* aActor, const nsString& aDocumentURI,
-    const nsString& aKey, const bool& aIncreasePeakUsage,
+    PBackgroundLSSnapshotParent* aActor, const nsAString& aDocumentURI,
+    const nsAString& aKey, const bool& aIncreasePeakUsage,
     const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT_IF(aIncreasePeakUsage, aMinSize >= 0);
@@ -5906,7 +5906,7 @@ mozilla::ipc::IPCResult Snapshot::RecvLoaded() {
 }
 
 mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
-    const nsString& aKey, LSValue* aValue, nsTArray<LSItemInfo>* aItemInfos) {
+    const nsAString& aKey, LSValue* aValue, nsTArray<LSItemInfo>* aItemInfos) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(aItemInfos);

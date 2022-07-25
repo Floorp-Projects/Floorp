@@ -111,7 +111,7 @@ void WebrtcTCPSocketWrapper::OnRead(nsTArray<uint8_t>&& aReadData) {
           &WebrtcTCPSocketCallback::OnRead, std::move(aReadData))));
 }
 
-void WebrtcTCPSocketWrapper::OnConnected(const nsCString& aProxyType) {
+void WebrtcTCPSocketWrapper::OnConnected(const nsACString& aProxyType) {
   MOZ_ASSERT(NS_IsMainThread(), "not on main thread");
   MOZ_ASSERT(mProxyCallbacks, "webrtc TCP callbacks should be non-null");
 

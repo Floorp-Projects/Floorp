@@ -246,7 +246,7 @@ HandlerServiceParent::HandlerServiceParent() {}
 HandlerServiceParent::~HandlerServiceParent() {}
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvFillHandlerInfo(
-    const HandlerInfo& aHandlerInfoData, const nsCString& aOverrideType,
+    const HandlerInfo& aHandlerInfoData, const nsACString& aOverrideType,
     HandlerInfo* handlerInfoData) {
   nsCOMPtr<nsIHandlerInfo> info(WrapHandlerInfo(aHandlerInfoData));
   nsCOMPtr<nsIHandlerService> handlerSvc =
@@ -257,7 +257,7 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvFillHandlerInfo(
 }
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvGetMIMEInfoFromOS(
-    const nsCString& aMIMEType, const nsCString& aExtension, nsresult* aRv,
+    const nsACString& aMIMEType, const nsACString& aExtension, nsresult* aRv,
     HandlerInfo* aHandlerInfoData, bool* aFound) {
   *aFound = false;
   if (aMIMEType.Length() > MAX_MIMETYPE_LENGTH ||
@@ -297,14 +297,15 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExists(
 }
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocolOS(
-    const nsCString& aProtocolScheme, bool* aHandlerExists) {
+    const nsACString& aProtocolScheme, bool* aHandlerExists) {
   if (aProtocolScheme.Length() > MAX_SCHEME_LENGTH) {
     *aHandlerExists = false;
     return IPC_OK();
   }
 #ifdef MOZ_WIDGET_GTK
   // Check the GNOME registry for a protocol handler
-  *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme.get());
+  *aHandlerExists =
+      nsGNOMERegistry::HandlerExists(PromiseFlatCString(aProtocolScheme).get());
 #else
   *aHandlerExists = false;
 #endif
@@ -316,7 +317,7 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocolOS(
  * first and then fallback to checking the OS for a handler.
  */
 mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
-    const nsCString& aProtocolScheme, bool* aHandlerExists) {
+    const nsACString& aProtocolScheme, bool* aHandlerExists) {
   if (aProtocolScheme.Length() > MAX_SCHEME_LENGTH) {
     *aHandlerExists = false;
     return IPC_OK();
@@ -330,8 +331,8 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
     *aHandlerExists = false;
     return IPC_OK();
   }
-  rv = protoSvc->ExternalProtocolHandlerExists(aProtocolScheme.get(),
-                                               aHandlerExists);
+  rv = protoSvc->ExternalProtocolHandlerExists(
+      PromiseFlatCString(aProtocolScheme).get(), aHandlerExists);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     *aHandlerExists = false;
@@ -340,7 +341,7 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvExistsForProtocol(
 }
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvGetTypeFromExtension(
-    const nsCString& aFileExtension, nsCString* type) {
+    const nsACString& aFileExtension, nsCString* type) {
   if (aFileExtension.Length() > MAX_EXT_LENGTH) {
     return IPC_OK();
   }
@@ -359,7 +360,7 @@ mozilla::ipc::IPCResult HandlerServiceParent::RecvGetTypeFromExtension(
 }
 
 mozilla::ipc::IPCResult HandlerServiceParent::RecvGetApplicationDescription(
-    const nsCString& aScheme, nsresult* aRv, nsString* aDescription) {
+    const nsACString& aScheme, nsresult* aRv, nsString* aDescription) {
   if (aScheme.Length() > MAX_SCHEME_LENGTH) {
     *aRv = NS_ERROR_NOT_AVAILABLE;
     return IPC_OK();

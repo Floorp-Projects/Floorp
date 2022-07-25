@@ -104,13 +104,13 @@ class DocAccessibleParent : public RemoteAccessible,
       const bool& aIsAtEndOfLine, const int32_t& aGranularity) final;
 
   virtual mozilla::ipc::IPCResult RecvTextChangeEvent(
-      const uint64_t& aID, const nsString& aStr, const int32_t& aStart,
+      const uint64_t& aID, const nsAString& aStr, const int32_t& aStart,
       const uint32_t& aLen, const bool& aIsInsert,
       const bool& aFromUser) override;
 
 #if defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvSyncTextChangeEvent(
-      const uint64_t& aID, const nsString& aStr, const int32_t& aStart,
+      const uint64_t& aID, const nsAString& aStr, const int32_t& aStart,
       const uint32_t& aLen, const bool& aIsInsert,
       const bool& aFromUser) override;
 
@@ -147,7 +147,7 @@ class DocAccessibleParent : public RemoteAccessible,
 
 #if !defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvAnnouncementEvent(
-      const uint64_t& aID, const nsString& aAnnouncement,
+      const uint64_t& aID, const nsAString& aAnnouncement,
       const uint16_t& aPriority) override;
 #endif
 

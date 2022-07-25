@@ -24,7 +24,7 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr) {
   nsContentUtils::LogSimpleConsoleError(
       NS_ConvertUTF8toUTF16(
           nsPrintfCString("IndexedDB %s: %s:%" PRIu32, aStr, aFile, aLine)),
-      "indexedDB", false /* no IDB in private window */,
+      "indexedDB"_ns, false /* no IDB in private window */,
       true /* Internal errors are chrome context only */);
 }
 

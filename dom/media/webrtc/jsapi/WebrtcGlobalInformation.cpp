@@ -522,7 +522,7 @@ MOZ_IMPLICIT WebrtcGlobalParent::~WebrtcGlobalParent() {
 }
 
 mozilla::ipc::IPCResult WebrtcGlobalChild::RecvGetStats(
-    const nsString& aPcIdFilter, GetStatsResolver&& aResolve) {
+    const nsAString& aPcIdFilter, GetStatsResolver&& aResolve) {
   if (!mShutdown) {
     GetStatsPromiseForThisProcess(aPcIdFilter)
         ->Then(

@@ -179,7 +179,7 @@ void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget,
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }
 
-void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsString& aStr,
+void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsAString& aStr,
                                 int32_t aStart, uint32_t aLen, bool aInsert,
                                 bool) {
   uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED

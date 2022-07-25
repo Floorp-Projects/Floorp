@@ -40,7 +40,7 @@ class GMPAdapter {
   // and will be ignored by non-CDM GMPs. It is not part of the public GMP API
   // Gecko exposes.
   virtual GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI,
-                           void** aPluginAPI, const nsCString& aKeySystem) = 0;
+                           void** aPluginAPI, const nsACString& aKeySystem) = 0;
   virtual void GMPShutdown() = 0;
 };
 
@@ -62,7 +62,7 @@ class GMPLoader {
   // aKeySystem is passed to the CDM to allow for key system specific
   // configuration by the CDM.
   GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                const nsCString& aKeySystem);
+                const nsACString& aKeySystem);
 
   // Calls the GMPShutdown function exported by the GMP lib, and unloads the
   // plugin library.

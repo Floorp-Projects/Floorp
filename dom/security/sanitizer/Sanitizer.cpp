@@ -160,7 +160,7 @@ void Sanitizer::LogMessage(const nsAString& aMessage, uint32_t aFlags,
   message.Append(aMessage);
 
   // Allow for easy distinction in devtools code.
-  nsCString category("Sanitizer");
+  constexpr auto category = "Sanitizer"_ns;
 
   if (aInnerWindowID > 0) {
     // Send to content console
@@ -168,9 +168,9 @@ void Sanitizer::LogMessage(const nsAString& aMessage, uint32_t aFlags,
                                               aInnerWindowID);
   } else {
     // Send to browser console
-    nsContentUtils::LogSimpleConsoleError(
-        message, category.get(), aFromPrivateWindow,
-        true /* from chrome context */, aFlags);
+    nsContentUtils::LogSimpleConsoleError(message, category, aFromPrivateWindow,
+                                          true /* from chrome context */,
+                                          aFlags);
   }
 }
 

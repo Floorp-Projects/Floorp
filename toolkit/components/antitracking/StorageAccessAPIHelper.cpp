@@ -358,7 +358,7 @@ StorageAccessAPIHelper::AllowAccessFor(
 /* static */ RefPtr<StorageAccessAPIHelper::StorageAccessPermissionGrantPromise>
 StorageAccessAPIHelper::CompleteAllowAccessFor(
     dom::BrowsingContext* aParentContext, uint64_t aTopLevelWindowId,
-    nsIPrincipal* aTrackingPrincipal, const nsCString& aTrackingOrigin,
+    nsIPrincipal* aTrackingPrincipal, const nsACString& aTrackingOrigin,
     uint32_t aCookieBehavior,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
     const PerformFinalChecks& aPerformFinalChecks) {
@@ -548,7 +548,7 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
 }
 
 /* static */ void StorageAccessAPIHelper::OnAllowAccessFor(
-    dom::BrowsingContext* aParentContext, const nsCString& aTrackingOrigin,
+    dom::BrowsingContext* aParentContext, const nsACString& aTrackingOrigin,
     uint32_t aCookieBehavior,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
   MOZ_ASSERT(aParentContext->IsInProcess());

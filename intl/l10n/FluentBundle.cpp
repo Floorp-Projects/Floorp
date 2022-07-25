@@ -141,7 +141,7 @@ void FluentBundle::AddResource(
                              &errors);
 
   for (auto& err : errors) {
-    nsContentUtils::LogSimpleConsoleError(NS_ConvertUTF8toUTF16(err), "L10n",
+    nsContentUtils::LogSimpleConsoleError(NS_ConvertUTF8toUTF16(err), "L10n"_ns,
                                           false, true,
                                           nsIScriptError::warningFlag);
   }

@@ -587,7 +587,7 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest) {
 
 void HttpChannelChild::ProcessOnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
+    const uint64_t& aOffset, const uint32_t& aCount, const nsACString& aData) {
   LOG(("HttpChannelChild::ProcessOnTransportAndData [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
   mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
@@ -595,7 +595,7 @@ void HttpChannelChild::ProcessOnTransportAndData(
         return self->GetODATarget();
       },
       [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus,
-       aTransportStatus, aOffset, aCount, aData]() {
+       aTransportStatus, aOffset, aCount, aData = nsCString(aData)]() {
         self->OnTransportAndData(aChannelStatus, aTransportStatus, aOffset,
                                  aCount, aData);
       }));
@@ -605,7 +605,7 @@ void HttpChannelChild::OnTransportAndData(const nsresult& aChannelStatus,
                                           const nsresult& aTransportStatus,
                                           const uint64_t& aOffset,
                                           const uint32_t& aCount,
-                                          const nsCString& aData) {
+                                          const nsACString& aData) {
   LOG(("HttpChannelChild::OnTransportAndData [this=%p]\n", this));
 
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
@@ -1267,7 +1267,7 @@ void HttpChannelChild::ContinueDoNotifyListener() {
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvReportSecurityMessage(
-    const nsString& messageTag, const nsString& messageCategory) {
+    const nsAString& messageTag, const nsAString& messageCategory) {
   DebugOnly<nsresult> rv = AddSecurityMessage(messageTag, messageCategory);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return IPC_OK();
@@ -1278,7 +1278,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
     const uint32_t& aNewLoadFlags, const uint32_t& aRedirectFlags,
     const ParentLoadInfoForwarderArgs& aLoadInfoForwarder,
     const nsHttpResponseHead& aResponseHead,
-    const nsCString& aSecurityInfoSerialization, const uint64_t& aChannelId,
+    const nsACString& aSecurityInfoSerialization, const uint64_t& aChannelId,
     const NetAddr& aOldPeerAddr, const ResourceTimingStructArgs& aTiming) {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
@@ -1292,7 +1292,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aRegistrarId, aNewUri,
              aNewLoadFlags, aRedirectFlags, aLoadInfoForwarder, aResponseHead,
-             aSecurityInfoSerialization, aChannelId, aTiming]() {
+             aSecurityInfoSerialization = nsCString(aSecurityInfoSerialization),
+             aChannelId, aTiming]() {
         self->Redirect1Begin(aRegistrarId, aNewUri, aNewLoadFlags,
                              aRedirectFlags, aLoadInfoForwarder, aResponseHead,
                              aSecurityInfoSerialization, aChannelId, aTiming);
@@ -1465,19 +1466,21 @@ void HttpChannelChild::ProcessNotifyClassificationFlags(
 }
 
 void HttpChannelChild::ProcessSetClassifierMatchedInfo(
-    const nsCString& aList, const nsCString& aProvider,
-    const nsCString& aFullHash) {
+    const nsACString& aList, const nsACString& aProvider,
+    const nsACString& aFullHash) {
   LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this,
-      [self = UnsafePtr<HttpChannelChild>(this), aList, aProvider,
-       aFullHash]() { self->SetMatchedInfo(aList, aProvider, aFullHash); }));
+      [self = UnsafePtr<HttpChannelChild>(this), aList = nsCString(aList),
+       aProvider = nsCString(aProvider), aFullHash = nsCString(aFullHash)]() {
+        self->SetMatchedInfo(aList, aProvider, aFullHash);
+      }));
 }
 
 void HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo(
-    const nsCString& aLists, const nsCString& aFullHashes) {
+    const nsACString& aLists, const nsACString& aFullHashes) {
   LOG(("HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
   MOZ_ASSERT(OnSocketThread());
@@ -2944,7 +2947,7 @@ void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvLogBlockedCORSRequest(
-    const nsString& aMessage, const nsCString& aCategory) {
+    const nsAString& aMessage, const nsACString& aCategory) {
   Unused << LogBlockedCORSRequest(aMessage, aCategory);
   return IPC_OK();
 }
@@ -2962,8 +2965,8 @@ HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvLogMimeTypeMismatch(
-    const nsCString& aMessageName, const bool& aWarning, const nsString& aURL,
-    const nsString& aContentType) {
+    const nsACString& aMessageName, const bool& aWarning, const nsAString& aURL,
+    const nsAString& aContentType) {
   Unused << LogMimeTypeMismatch(aMessageName, aWarning, aURL, aContentType);
   return IPC_OK();
 }

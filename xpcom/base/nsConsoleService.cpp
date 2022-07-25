@@ -410,7 +410,8 @@ nsConsoleService::LogStringMessage(const char16_t* aMessage) {
     return NS_OK;
   }
 
-  RefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage));
+  RefPtr<nsConsoleMessage> msg(
+      new nsConsoleMessage(nsDependentString(aMessage)));
   return this->LogMessage(msg);
 }
 

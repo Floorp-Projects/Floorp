@@ -227,9 +227,8 @@ nsresult HTMLDNSPrefetch::Prefetch(
         net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
       // during shutdown gNeckoChild might be null
       if (gNeckoChild) {
-        gNeckoChild->SendHTMLDNSPrefetch(nsString(hostname), isHttps,
-                                         aPartitionedPrincipalOriginAttributes,
-                                         flags);
+        gNeckoChild->SendHTMLDNSPrefetch(
+            hostname, isHttps, aPartitionedPrincipalOriginAttributes, flags);
       }
     }
     return NS_OK;
@@ -312,8 +311,8 @@ nsresult HTMLDNSPrefetch::CancelPrefetch(
       // during shutdown gNeckoChild might be null
       if (gNeckoChild) {
         gNeckoChild->SendCancelHTMLDNSPrefetch(
-            nsString(hostname), isHttps, aPartitionedPrincipalOriginAttributes,
-            flags, aReason);
+            hostname, isHttps, aPartitionedPrincipalOriginAttributes, flags,
+            aReason);
       }
     }
     return NS_OK;

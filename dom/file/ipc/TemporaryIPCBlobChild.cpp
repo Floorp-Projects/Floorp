@@ -80,7 +80,7 @@ void TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
       FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(aFD)));
 
   mCallback = aCallback;
-  SendOperationDone(nsCString(aContentType), fdd);
+  SendOperationDone(aContentType, fdd);
 }
 
 }  // namespace mozilla::dom

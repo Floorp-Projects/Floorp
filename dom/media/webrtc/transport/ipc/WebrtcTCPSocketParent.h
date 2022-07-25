@@ -23,8 +23,9 @@ class WebrtcTCPSocketParent : public PWebrtcTCPSocketParent,
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcTCPSocketParent, override)
 
   mozilla::ipc::IPCResult RecvAsyncOpen(
-      const nsCString& aHost, const int& aPort, const nsCString& aLocalAddress,
-      const int& aLocalPort, const bool& aUseTls,
+      const nsACString& aHost, const int& aPort,
+      const nsACString& aLocalAddress, const int& aLocalPort,
+      const bool& aUseTls,
       const Maybe<WebrtcProxyConfig>& aProxyConfig) override;
 
   mozilla::ipc::IPCResult RecvWrite(nsTArray<uint8_t>&& aWriteData) override;
@@ -37,7 +38,7 @@ class WebrtcTCPSocketParent : public PWebrtcTCPSocketParent,
 
   // WebrtcTCPSocketCallback
   void OnClose(nsresult aReason) override;
-  void OnConnected(const nsCString& aProxyType) override;
+  void OnConnected(const nsACString& aProxyType) override;
   void OnRead(nsTArray<uint8_t>&& bytes) override;
 
   void AddIPDLReference() { AddRef(); }

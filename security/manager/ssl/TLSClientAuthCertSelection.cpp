@@ -853,7 +853,7 @@ namespace mozilla::psm {
 // (or selects no certificate), the continuation runs and sends the information
 // back via IPC.
 bool SelectTLSClientAuthCertParent::Dispatch(
-    const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
+    const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     const int32_t& aPort, const uint32_t& aProviderFlags,
     const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
     nsTArray<ByteArray>&& aCANames) {

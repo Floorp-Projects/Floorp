@@ -84,10 +84,10 @@ class LocalStorageCacheChild final : public PBackgroundLocalStorageCacheChild {
   mozilla::ipc::IPCResult RecvObserve(const PrincipalInfo& aPrincipalInfo,
                                       const PrincipalInfo& aCachePrincipalInfo,
                                       const uint32_t& aPrivateBrowsingId,
-                                      const nsString& aDocumentURI,
-                                      const nsString& aKey,
-                                      const nsString& aOldValue,
-                                      const nsString& aNewValue) override;
+                                      const nsAString& aDocumentURI,
+                                      const nsAString& aKey,
+                                      const nsAString& aOldValue,
+                                      const nsAString& aNewValue) override;
 };
 
 // Child side of the IPC protocol, exposes as DB interface but
@@ -150,19 +150,19 @@ class StorageDBChild final : public PBackgroundStorageChild {
   virtual bool ShouldPreloadOrigin(const nsACString& aOriginNoSuffix);
 
  private:
-  mozilla::ipc::IPCResult RecvObserve(const nsCString& aTopic,
-                                      const nsString& aOriginAttributesPattern,
-                                      const nsCString& aOriginScope) override;
-  mozilla::ipc::IPCResult RecvLoadItem(const nsCString& aOriginSuffix,
-                                       const nsCString& aOriginNoSuffix,
-                                       const nsString& aKey,
-                                       const nsString& aValue) override;
-  mozilla::ipc::IPCResult RecvLoadDone(const nsCString& aOriginSuffix,
-                                       const nsCString& aOriginNoSuffix,
+  mozilla::ipc::IPCResult RecvObserve(const nsACString& aTopic,
+                                      const nsAString& aOriginAttributesPattern,
+                                      const nsACString& aOriginScope) override;
+  mozilla::ipc::IPCResult RecvLoadItem(const nsACString& aOriginSuffix,
+                                       const nsACString& aOriginNoSuffix,
+                                       const nsAString& aKey,
+                                       const nsAString& aValue) override;
+  mozilla::ipc::IPCResult RecvLoadDone(const nsACString& aOriginSuffix,
+                                       const nsACString& aOriginNoSuffix,
                                        const nsresult& aRv) override;
   mozilla::ipc::IPCResult RecvOriginsHavingData(
       nsTArray<nsCString>&& aOrigins) override;
-  mozilla::ipc::IPCResult RecvLoadUsage(const nsCString& aOriginNoSuffix,
+  mozilla::ipc::IPCResult RecvLoadUsage(const nsACString& aOriginNoSuffix,
                                         const int64_t& aUsage) override;
   mozilla::ipc::IPCResult RecvError(const nsresult& aRv) override;
 
@@ -217,9 +217,9 @@ class SessionStorageObserverChild final : public PSessionStorageObserverChild {
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvObserve(const nsCString& aTopic,
-                                      const nsString& aOriginAttributesPattern,
-                                      const nsCString& aOriginScope) override;
+  mozilla::ipc::IPCResult RecvObserve(const nsACString& aTopic,
+                                      const nsAString& aOriginAttributesPattern,
+                                      const nsACString& aOriginScope) override;
 };
 
 class SessionStorageCacheChild final
@@ -292,7 +292,7 @@ class SessionStorageManagerChild final
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvClearStoragesForOrigin(
-      const nsCString& aOriginAttrs, const nsCString& aOriginKey) override;
+      const nsACString& aOriginAttrs, const nsACString& aOriginKey) override;
 };
 
 class LocalStorageCacheParent final
@@ -321,10 +321,10 @@ class LocalStorageCacheParent final
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvNotify(const nsString& aDocumentURI,
-                                     const nsString& aKey,
-                                     const nsString& aOldValue,
-                                     const nsString& aNewValue) override;
+  mozilla::ipc::IPCResult RecvNotify(const nsAString& aDocumentURI,
+                                     const nsAString& aKey,
+                                     const nsAString& aOldValue,
+                                     const nsAString& aNewValue) override;
 };
 
 // Receives async requests from child processes and is responsible
@@ -338,7 +338,7 @@ class StorageDBParent final : public PBackgroundStorageParent {
   virtual ~StorageDBParent();
 
  public:
-  StorageDBParent(const nsString& aProfilePath, uint32_t aPrivateBrowsingId);
+  StorageDBParent(const nsAString& aProfilePath, uint32_t aPrivateBrowsingId);
 
   void Init();
 
@@ -378,7 +378,7 @@ class StorageDBParent final : public PBackgroundStorageParent {
     virtual uint32_t LoadedCount() override { return mLoadedCount; }
 
     virtual bool LoadItem(const nsAString& aKey,
-                          const nsString& aValue) override;
+                          const nsAString& aValue) override;
     virtual void LoadDone(nsresult aRv) override;
     virtual void LoadWait() override;
 
@@ -425,42 +425,42 @@ class StorageDBParent final : public PBackgroundStorageParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvAsyncPreload(const nsCString& aOriginSuffix,
-                                           const nsCString& aOriginNoSuffix,
+  mozilla::ipc::IPCResult RecvAsyncPreload(const nsACString& aOriginSuffix,
+                                           const nsACString& aOriginNoSuffix,
                                            const bool& aPriority) override;
-  mozilla::ipc::IPCResult RecvPreload(const nsCString& aOriginSuffix,
-                                      const nsCString& aOriginNoSuffix,
+  mozilla::ipc::IPCResult RecvPreload(const nsACString& aOriginSuffix,
+                                      const nsACString& aOriginNoSuffix,
                                       const uint32_t& aAlreadyLoadedCount,
                                       nsTArray<nsString>* aKeys,
                                       nsTArray<nsString>* aValues,
                                       nsresult* aRv) override;
   mozilla::ipc::IPCResult RecvAsyncGetUsage(
-      const nsCString& aOriginNoSuffix) override;
-  mozilla::ipc::IPCResult RecvAsyncAddItem(const nsCString& aOriginSuffix,
-                                           const nsCString& aOriginNoSuffix,
-                                           const nsString& aKey,
-                                           const nsString& aValue) override;
-  mozilla::ipc::IPCResult RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
-                                              const nsCString& aOriginNoSuffix,
-                                              const nsString& aKey,
-                                              const nsString& aValue) override;
-  mozilla::ipc::IPCResult RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
-                                              const nsCString& aOriginNoSuffix,
-                                              const nsString& aKey) override;
+      const nsACString& aOriginNoSuffix) override;
+  mozilla::ipc::IPCResult RecvAsyncAddItem(const nsACString& aOriginSuffix,
+                                           const nsACString& aOriginNoSuffix,
+                                           const nsAString& aKey,
+                                           const nsAString& aValue) override;
+  mozilla::ipc::IPCResult RecvAsyncUpdateItem(const nsACString& aOriginSuffix,
+                                              const nsACString& aOriginNoSuffix,
+                                              const nsAString& aKey,
+                                              const nsAString& aValue) override;
+  mozilla::ipc::IPCResult RecvAsyncRemoveItem(const nsACString& aOriginSuffix,
+                                              const nsACString& aOriginNoSuffix,
+                                              const nsAString& aKey) override;
   mozilla::ipc::IPCResult RecvAsyncClear(
-      const nsCString& aOriginSuffix,
-      const nsCString& aOriginNoSuffix) override;
+      const nsACString& aOriginSuffix,
+      const nsACString& aOriginNoSuffix) override;
   mozilla::ipc::IPCResult RecvAsyncFlush() override;
 
   mozilla::ipc::IPCResult RecvStartup() override;
   mozilla::ipc::IPCResult RecvClearAll() override;
   mozilla::ipc::IPCResult RecvClearMatchingOrigin(
-      const nsCString& aOriginNoSuffix) override;
+      const nsACString& aOriginNoSuffix) override;
   mozilla::ipc::IPCResult RecvClearMatchingOriginAttributes(
       const OriginAttributesPattern& aPattern) override;
 
-  void Observe(const nsCString& aTopic, const nsString& aOriginAttrPattern,
-               const nsCString& aOriginScope);
+  void Observe(const nsACString& aTopic, const nsAString& aOriginAttrPattern,
+               const nsACString& aOriginScope);
 
  private:
   CacheParentBridge* NewCache(const nsACString& aOriginSuffix,
@@ -520,13 +520,13 @@ class SessionStorageCacheParent final
 
  public:
   SessionStorageCacheParent(const PrincipalInfo& aPrincipalInfo,
-                            const nsCString& aOriginKey,
+                            const nsACString& aOriginKey,
                             SessionStorageManagerParent* aActor);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::SessionStorageCacheParent, override)
 
   const PrincipalInfo& PrincipalInfo() const { return mPrincipalInfo; }
-  const nsCString& OriginKey() const { return mOriginKey; }
+  const nsACString& OriginKey() const { return mOriginKey; }
 
  private:
   ~SessionStorageCacheParent();
@@ -557,13 +557,13 @@ class SessionStorageManagerParent final
   already_AddRefed<PBackgroundSessionStorageCacheParent>
   AllocPBackgroundSessionStorageCacheParent(
       const PrincipalInfo& aPrincipalInfo,
-      const nsCString& aOriginKey) override;
+      const nsACString& aOriginKey) override;
 
   BackgroundSessionStorageManager* GetManager() const;
 
   mozilla::ipc::IPCResult RecvClearStorages(
       const OriginAttributesPattern& aPattern,
-      const nsCString& aOriginScope) override;
+      const nsACString& aOriginScope) override;
 
  private:
   ~SessionStorageManagerParent();
@@ -576,22 +576,22 @@ class SessionStorageManagerParent final
 
 PBackgroundLocalStorageCacheParent* AllocPBackgroundLocalStorageCacheParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    const nsCString& aOriginKey, const uint32_t& aPrivateBrowsingId);
+    const nsACString& aOriginKey, const uint32_t& aPrivateBrowsingId);
 
 mozilla::ipc::IPCResult RecvPBackgroundLocalStorageCacheConstructor(
     mozilla::ipc::PBackgroundParent* aBackgroundActor,
     PBackgroundLocalStorageCacheParent* aActor,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    const nsCString& aOriginKey, const uint32_t& aPrivateBrowsingId);
+    const nsACString& aOriginKey, const uint32_t& aPrivateBrowsingId);
 
 bool DeallocPBackgroundLocalStorageCacheParent(
     PBackgroundLocalStorageCacheParent* aActor);
 
 PBackgroundStorageParent* AllocPBackgroundStorageParent(
-    const nsString& aProfilePath, const uint32_t& aPrivateBrowsingId);
+    const nsAString& aProfilePath, const uint32_t& aPrivateBrowsingId);
 
 mozilla::ipc::IPCResult RecvPBackgroundStorageConstructor(
-    PBackgroundStorageParent* aActor, const nsString& aProfilePath,
+    PBackgroundStorageParent* aActor, const nsAString& aProfilePath,
     const uint32_t& aPrivateBrowsingId);
 
 bool DeallocPBackgroundStorageParent(PBackgroundStorageParent* aActor);
@@ -607,7 +607,7 @@ bool DeallocPSessionStorageObserverParent(
 already_AddRefed<PBackgroundSessionStorageCacheParent>
 AllocPBackgroundSessionStorageCacheParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    const nsCString& aOriginKey);
+    const nsACString& aOriginKey);
 
 already_AddRefed<PBackgroundSessionStorageManagerParent>
 AllocPBackgroundSessionStorageManagerParent(const uint64_t& aTopContextId);

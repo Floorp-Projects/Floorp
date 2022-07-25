@@ -339,7 +339,7 @@ nsresult SessionStorageManager::EnsureManager() {
 }
 
 SessionStorageCacheChild* SessionStorageManager::EnsureCache(
-    nsIPrincipal& aPrincipal, const nsCString& aOriginKey,
+    nsIPrincipal& aPrincipal, const nsACString& aOriginKey,
     SessionStorageCache& aCache) {
   AssertIsOnMainThread();
   MOZ_ASSERT(CanLoadData());
@@ -425,7 +425,7 @@ void SessionStorageManager::CheckpointData(nsIPrincipal& aPrincipal,
 }
 
 void SessionStorageManager::CheckpointDataInternal(
-    nsIPrincipal& aPrincipal, const nsCString& aOriginKey,
+    nsIPrincipal& aPrincipal, const nsACString& aOriginKey,
     SessionStorageCache& aCache) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mActor);
@@ -892,7 +892,7 @@ void BackgroundSessionStorageManager::UpdateData(
 }
 
 void BackgroundSessionStorageManager::ClearStorages(
-    const OriginAttributesPattern& aPattern, const nsCString& aOriginScope) {
+    const OriginAttributesPattern& aPattern, const nsACString& aOriginScope) {
   MOZ_ASSERT(XRE_IsParentProcess());
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   ClearStoragesInternal(aPattern, aOriginScope);

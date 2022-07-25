@@ -36,15 +36,12 @@
 #  include "mozilla/net/StunAddrsRequestParent.h"
 #  include "mozilla/net/WebrtcTCPSocketParent.h"
 #endif
-#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
-#include "mozilla/dom/ServiceWorkerManager.h"
 #ifdef MOZ_PLACES
 #  include "mozilla/places/PageIconProtocolHandler.h"
 #endif
@@ -63,20 +60,13 @@
 #include "nsIOService.h"
 
 using IPC::SerializedLoadContext;
-using mozilla::OriginAttributes;
 using mozilla::dom::BrowserParent;
-using mozilla::dom::ChromeUtils;
 using mozilla::dom::ContentParent;
-using mozilla::dom::ServiceWorkerManager;
-using mozilla::dom::TabContext;
 using mozilla::dom::TCPServerSocketParent;
 using mozilla::dom::TCPSocketParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::ipc::LoadInfoArgsToLoadInfo;
 using mozilla::ipc::PrincipalInfo;
-using mozilla::net::PTCPServerSocketParent;
-using mozilla::net::PTCPSocketParent;
-using mozilla::net::PUDPSocketParent;
 #ifdef MOZ_PLACES
 using mozilla::places::PageIconProtocolHandler;
 #endif
@@ -253,7 +243,7 @@ bool NeckoParent::DeallocPWebrtcTCPSocketParent(
 }
 
 PAltDataOutputStreamParent* NeckoParent::AllocPAltDataOutputStreamParent(
-    const nsCString& type, const int64_t& predictedSize,
+    const nsACString& type, const int64_t& predictedSize,
     PHttpChannelParent* channel) {
   HttpChannelParent* chan = static_cast<HttpChannelParent*>(channel);
   nsCOMPtr<nsIAsyncOutputStream> stream;
@@ -453,7 +443,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvPFileChannelConstructor(
 }
 
 PTCPSocketParent* NeckoParent::AllocPTCPSocketParent(
-    const nsString& /* host */, const uint16_t& /* port */) {
+    const nsAString& /* host */, const uint16_t& /* port */) {
   // We actually don't need host/port to construct a TCPSocketParent since
   // TCPSocketParent will maintain an internal nsIDOMTCPSocket instance which
   // can be delegated to get the host/port.
@@ -491,7 +481,7 @@ bool NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor) {
 }
 
 PUDPSocketParent* NeckoParent::AllocPUDPSocketParent(
-    nsIPrincipal* /* unused */, const nsCString& /* unused */) {
+    nsIPrincipal* /* unused */, const nsACString& /* unused */) {
   RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
 
   return p.forget().take();
@@ -499,7 +489,7 @@ PUDPSocketParent* NeckoParent::AllocPUDPSocketParent(
 
 mozilla::ipc::IPCResult NeckoParent::RecvPUDPSocketConstructor(
     PUDPSocketParent* aActor, nsIPrincipal* aPrincipal,
-    const nsCString& aFilter) {
+    const nsACString& aFilter) {
   if (!static_cast<UDPSocketParent*>(aActor)->Init(aPrincipal, aFilter)) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -513,7 +503,7 @@ bool NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
 }
 
 already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
-    const nsCString& aHost, const nsCString& aTrrServer, const int32_t& aPort,
+    const nsACString& aHost, const nsACString& aTrrServer, const int32_t& aPort,
     const uint16_t& aType, const OriginAttributes& aOriginAttributes,
     const uint32_t& aFlags) {
   RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
@@ -522,8 +512,8 @@ already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDNSRequestConstructor(
-    PDNSRequestParent* aActor, const nsCString& aHost,
-    const nsCString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
+    PDNSRequestParent* aActor, const nsACString& aHost,
+    const nsACString& aTrrServer, const int32_t& aPort, const uint16_t& aType,
     const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
   RefPtr<DNSRequestParent> actor = static_cast<DNSRequestParent*>(aActor);
   RefPtr<DNSRequestHandler> handler =
@@ -551,14 +541,14 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvHTMLDNSPrefetch(
-    const nsString& hostname, const bool& isHttps,
+    const nsAString& hostname, const bool& isHttps,
     const OriginAttributes& aOriginAttributes, const uint32_t& flags) {
   dom::HTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvCancelHTMLDNSPrefetch(
-    const nsString& hostname, const bool& isHttps,
+    const nsAString& hostname, const bool& isHttps,
     const OriginAttributes& aOriginAttributes, const uint32_t& flags,
     const nsresult& reason) {
   dom::HTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes,

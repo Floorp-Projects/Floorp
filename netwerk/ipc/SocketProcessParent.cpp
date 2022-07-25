@@ -212,7 +212,7 @@ bool SocketProcessParent::DeallocPWebrtcTCPSocketParent(
 }
 
 already_AddRefed<PDNSRequestParent> SocketProcessParent::AllocPDNSRequestParent(
-    const nsCString& aHost, const nsCString& aTrrServer, const int32_t& port,
+    const nsACString& aHost, const nsACString& aTrrServer, const int32_t& port,
     const uint16_t& aType, const OriginAttributes& aOriginAttributes,
     const uint32_t& aFlags) {
   RefPtr<DNSRequestHandler> handler = new DNSRequestHandler();
@@ -221,8 +221,8 @@ already_AddRefed<PDNSRequestParent> SocketProcessParent::AllocPDNSRequestParent(
 }
 
 mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
-    PDNSRequestParent* aActor, const nsCString& aHost,
-    const nsCString& aTrrServer, const int32_t& port, const uint16_t& aType,
+    PDNSRequestParent* aActor, const nsACString& aHost,
+    const nsACString& aTrrServer, const int32_t& port, const uint16_t& aType,
     const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
   RefPtr<DNSRequestParent> actor = static_cast<DNSRequestParent*>(aActor);
   RefPtr<DNSRequestHandler> handler =
@@ -235,7 +235,7 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
 mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
     const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
     const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
-    const uint64_t& aExtraSizeData, const nsCString& aExtraStringData) {
+    const uint64_t& aExtraSizeData, const nsACString& aExtraStringData) {
   nsCOMPtr<nsIHttpActivityDistributor> activityDistributor =
       components::HttpActivityDistributor::Service();
   MOZ_ASSERT(activityDistributor);

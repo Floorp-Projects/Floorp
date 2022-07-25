@@ -159,11 +159,11 @@ class SessionStorageManager final : public SessionStorageManagerBase,
                      const nsACString& aOriginScope);
 
   SessionStorageCacheChild* EnsureCache(nsIPrincipal& aPrincipal,
-                                        const nsCString& aOriginKey,
+                                        const nsACString& aOriginKey,
                                         SessionStorageCache& aCache);
 
   void CheckpointDataInternal(nsIPrincipal& aPrincipal,
-                              const nsCString& aOriginKey,
+                              const nsACString& aOriginKey,
                               SessionStorageCache& aCache);
 
   RefPtr<SessionStorageObserver> mObserver;
@@ -216,7 +216,7 @@ class BackgroundSessionStorageManager final : public SessionStorageManagerBase {
                   const nsTArray<SSSetItemInfo>& aData);
 
   void ClearStorages(const OriginAttributesPattern& aPattern,
-                     const nsCString& aOriginScope);
+                     const nsACString& aOriginScope);
 
   void ClearStoragesForOrigin(const nsACString& aOriginAttrs,
                               const nsACString& aOriginKey);

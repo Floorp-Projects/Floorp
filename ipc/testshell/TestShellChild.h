@@ -20,12 +20,13 @@ class TestShellChild : public PTestShellChild {
  public:
   TestShellChild();
 
-  mozilla::ipc::IPCResult RecvExecuteCommand(const nsString& aCommand);
+  mozilla::ipc::IPCResult RecvExecuteCommand(const nsAString& aCommand);
 
-  PTestShellCommandChild* AllocPTestShellCommandChild(const nsString& aCommand);
+  PTestShellCommandChild* AllocPTestShellCommandChild(
+      const nsAString& aCommand);
 
   mozilla::ipc::IPCResult RecvPTestShellCommandConstructor(
-      PTestShellCommandChild* aActor, const nsString& aCommand) override;
+      PTestShellCommandChild* aActor, const nsAString& aCommand) override;
 
   bool DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand);
 

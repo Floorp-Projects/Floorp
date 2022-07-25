@@ -189,7 +189,7 @@ mozilla::ipc::IPCResult GMPChild::RecvProvideStorageId(
 }
 
 GMPErr GMPChild::GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
-                        const nsCString aKeySystem) {
+                        const nsACString& aKeySystem) {
   if (!mGMPLoader) {
     return GMPGenericErr;
   }

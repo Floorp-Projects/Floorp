@@ -541,7 +541,7 @@ void WebRenderAPI::SetClearColor(const gfx::DeviceColor& aColor) {
   RenderThread::Get()->SetClearColor(mId, ToColorF(aColor));
 }
 
-void WebRenderAPI::SetProfilerUI(const nsCString& aUIString) {
+void WebRenderAPI::SetProfilerUI(const nsACString& aUIString) {
   RenderThread::Get()->SetProfilerUI(mId, aUIString);
 }
 
@@ -652,7 +652,7 @@ void WebRenderAPI::Capture() {
   wr_api_capture(mDocHandle, path, bits);
 }
 
-void WebRenderAPI::StartCaptureSequence(const nsCString& aPath,
+void WebRenderAPI::StartCaptureSequence(const nsACString& aPath,
                                         uint32_t aFlags) {
   if (mCaptureSequence) {
     wr_api_stop_capture_sequence(mDocHandle);

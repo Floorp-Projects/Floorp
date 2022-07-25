@@ -54,7 +54,7 @@ class WebBrowserPersistDocumentParent final
 
   PWebBrowserPersistSerializeParent* AllocPWebBrowserPersistSerializeParent(
       const WebBrowserPersistURIMap& aMap,
-      const nsCString& aRequestedContentType, const uint32_t& aEncoderFlags,
+      const nsACString& aRequestedContentType, const uint32_t& aEncoderFlags,
       const uint32_t& aWrapColumn);
   bool DeallocPWebBrowserPersistSerializeParent(
       PWebBrowserPersistSerializeParent* aActor);

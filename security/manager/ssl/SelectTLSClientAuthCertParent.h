@@ -29,7 +29,7 @@ class SelectTLSClientAuthCertParent : public PSelectTLSClientAuthCertParent {
 
   SelectTLSClientAuthCertParent() = default;
 
-  bool Dispatch(const nsCString& aHostName,
+  bool Dispatch(const nsACString& aHostName,
                 const OriginAttributes& aOriginAttributes, const int32_t& aPort,
                 const uint32_t& aProviderFlags,
                 const uint32_t& aProviderTlsFlags,

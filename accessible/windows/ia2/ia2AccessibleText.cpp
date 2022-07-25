@@ -468,7 +468,8 @@ void ia2AccessibleText::InitTextChangeData() {
 }
 
 void ia2AccessibleText::UpdateTextChangeData(HyperTextAccessibleBase* aAcc,
-                                             bool aInsert, const nsString& aStr,
+                                             bool aInsert,
+                                             const nsAString& aStr,
                                              int32_t aStart, uint32_t aLen) {
   if (!sLastTextChangeString) sLastTextChangeString = new nsString();
 

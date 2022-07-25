@@ -35,7 +35,7 @@ class NeckoChild : public PNeckoChild {
   bool DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor);
 
   PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(
-      const nsCString& type, const int64_t& predictedSize,
+      const nsACString& type, const int64_t& predictedSize,
       PHttpChannelChild* channel);
   bool DeallocPAltDataOutputStreamChild(PAltDataOutputStreamChild* aActor);
 
@@ -51,7 +51,7 @@ class NeckoChild : public PNeckoChild {
                                         const SerializedLoadContext&,
                                         const uint32_t&);
   bool DeallocPWebSocketChild(PWebSocketChild*);
-  PTCPSocketChild* AllocPTCPSocketChild(const nsString& host,
+  PTCPSocketChild* AllocPTCPSocketChild(const nsAString& host,
                                         const uint16_t& port);
   bool DeallocPTCPSocketChild(PTCPSocketChild*);
   PTCPServerSocketChild* AllocPTCPServerSocketChild(
@@ -59,7 +59,7 @@ class NeckoChild : public PNeckoChild {
       const bool& aUseArrayBuffers);
   bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
   PUDPSocketChild* AllocPUDPSocketChild(nsIPrincipal* aPrincipal,
-                                        const nsCString& aFilter);
+                                        const nsACString& aFilter);
   bool DeallocPUDPSocketChild(PUDPSocketChild*);
   PSimpleChannelChild* AllocPSimpleChannelChild(const uint32_t& channelId);
   bool DeallocPSimpleChannelChild(PSimpleChannelChild* child);

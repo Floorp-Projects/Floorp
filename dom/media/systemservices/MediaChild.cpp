@@ -29,7 +29,7 @@ RefPtr<PrincipalKeyPromise> GetPrincipalKey(
 
     mgr->GetNonE10sParent()->RecvGetPrincipalKey(
         aPrincipalInfo, aPersist,
-        [p](const nsCString& aKey) { p->Resolve(aKey, __func__); });
+        [p](const nsACString& aKey) { p->Resolve(aKey, __func__); });
     return p;
   }
   return Child::Get()

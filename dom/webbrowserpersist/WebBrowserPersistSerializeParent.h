@@ -27,7 +27,7 @@ class WebBrowserPersistSerializeParent
       nsTArray<uint8_t>&& aData) override;
 
   virtual mozilla::ipc::IPCResult Recv__delete__(
-      const nsCString& aContentType, const nsresult& aStatus) override;
+      const nsACString& aContentType, const nsresult& aStatus) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

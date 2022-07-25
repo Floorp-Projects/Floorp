@@ -119,7 +119,7 @@ void IPCServerCertVerificationResult::Dispatch(
 }  // anonymous namespace
 
 bool VerifySSLServerCertParent::Dispatch(
-    nsTArray<ByteArray>&& aPeerCertChain, const nsCString& aHostName,
+    nsTArray<ByteArray>&& aPeerCertChain, const nsACString& aHostName,
     const int32_t& aPort, const OriginAttributes& aOriginAttributes,
     const Maybe<ByteArray>& aStapledOCSPResponse,
     const Maybe<ByteArray>& aSctsFromTLSExtension,

@@ -128,14 +128,14 @@ class HttpChannelChild final : public PHttpChannelChild,
       const uint32_t& newLoadFlags, const uint32_t& redirectFlags,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
       const nsHttpResponseHead& responseHead,
-      const nsCString& securityInfoSerialization, const uint64_t& channelId,
+      const nsACString& securityInfoSerialization, const uint64_t& channelId,
       const NetAddr& oldPeerAddr,
       const ResourceTimingStructArgs& aTiming) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
   mozilla::ipc::IPCResult RecvDeleteSelf() override;
 
   mozilla::ipc::IPCResult RecvReportSecurityMessage(
-      const nsString& messageTag, const nsString& messageCategory) override;
+      const nsAString& messageTag, const nsAString& messageCategory) override;
 
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
 
@@ -162,13 +162,13 @@ class HttpChannelChild final : public PHttpChannelChild,
   already_AddRefed<nsISerialEventTarget> GetNeckoTarget() override;
 
   virtual mozilla::ipc::IPCResult RecvLogBlockedCORSRequest(
-      const nsString& aMessage, const nsCString& aCategory) override;
+      const nsAString& aMessage, const nsACString& aCategory) override;
   NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage,
                                    const nsACString& aCategory) override;
 
   virtual mozilla::ipc::IPCResult RecvLogMimeTypeMismatch(
-      const nsCString& aMessageName, const bool& aWarning, const nsString& aURL,
-      const nsString& aContentType) override;
+      const nsACString& aMessageName, const bool& aWarning,
+      const nsAString& aURL, const nsAString& aContentType) override;
   NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
@@ -203,7 +203,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const nsresult& aTransportStatus,
                                  const uint64_t& aOffset,
                                  const uint32_t& aCount,
-                                 const nsCString& aData);
+                                 const nsACString& aData);
   void ProcessOnStopRequest(const nsresult& aChannelStatus,
                             const ResourceTimingStructArgs& aTiming,
                             const nsHttpHeaderArray& aResponseTrailers,
@@ -214,11 +214,11 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   void ProcessNotifyClassificationFlags(uint32_t aClassificationFlags,
                                         bool aIsThirdParty);
-  void ProcessSetClassifierMatchedInfo(const nsCString& aList,
-                                       const nsCString& aProvider,
-                                       const nsCString& aFullHash);
-  void ProcessSetClassifierMatchedTrackingInfo(const nsCString& aLists,
-                                               const nsCString& aFullHashes);
+  void ProcessSetClassifierMatchedInfo(const nsACString& aList,
+                                       const nsACString& aProvider,
+                                       const nsACString& aFullHash);
+  void ProcessSetClassifierMatchedTrackingInfo(const nsACString& aLists,
+                                               const nsACString& aFullHashes);
   void ProcessOnAfterLastPart(const nsresult& aStatus);
   void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
 
@@ -391,7 +391,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const HttpChannelOnStartRequestArgs& aArgs);
   void OnTransportAndData(const nsresult& channelStatus, const nsresult& status,
                           const uint64_t& offset, const uint32_t& count,
-                          const nsCString& data);
+                          const nsACString& data);
   void OnStopRequest(const nsresult& channelStatus,
                      const ResourceTimingStructArgs& timing,
                      const nsHttpHeaderArray& aResponseTrailers);

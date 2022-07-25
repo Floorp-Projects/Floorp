@@ -29,7 +29,7 @@ class ServiceWorkerRegistrationParent final
   mozilla::ipc::IPCResult RecvUnregister(
       UnregisterResolver&& aResolver) override;
 
-  mozilla::ipc::IPCResult RecvUpdate(const nsCString& aNewestWorkerScriptUrl,
+  mozilla::ipc::IPCResult RecvUpdate(const nsACString& aNewestWorkerScriptUrl,
                                      UpdateResolver&& aResolver) override;
 
   mozilla::ipc::IPCResult RecvSetNavigationPreloadEnabled(
@@ -37,7 +37,7 @@ class ServiceWorkerRegistrationParent final
       SetNavigationPreloadEnabledResolver&& aResolver) override;
 
   mozilla::ipc::IPCResult RecvSetNavigationPreloadHeader(
-      const nsCString& aHeader,
+      const nsACString& aHeader,
       SetNavigationPreloadHeaderResolver&& aResolver) override;
 
   mozilla::ipc::IPCResult RecvGetNavigationPreloadState(

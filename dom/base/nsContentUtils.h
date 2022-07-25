@@ -1134,7 +1134,7 @@ class nsContentUtils {
    *   @param [aErrorFlags] See nsIScriptError.
    */
   static void LogSimpleConsoleError(
-      const nsAString& aErrorText, const char* aCategory,
+      const nsAString& aErrorText, const nsACString& aCategory,
       bool aFromPrivateWindow, bool aFromChromeContext,
       uint32_t aErrorFlags = nsIScriptError::errorFlag);
 

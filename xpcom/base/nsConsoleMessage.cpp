@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS(nsConsoleMessage, nsIConsoleMessage)
 
 nsConsoleMessage::nsConsoleMessage() : mTimeStamp(0), mMessage() {}
 
-nsConsoleMessage::nsConsoleMessage(const char16_t* aMessage) {
+nsConsoleMessage::nsConsoleMessage(const nsAString& aMessage) {
   mTimeStamp = JS_Now() / 1000;
   mMessage.Assign(aMessage);
   mIsForwardedFromContentProcess = false;

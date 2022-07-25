@@ -22,11 +22,11 @@ class HandlerServiceParent final : public mozilla::dom::PHandlerServiceParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvFillHandlerInfo(
-      const HandlerInfo& aHandlerInfoData, const nsCString& aOverrideType,
+      const HandlerInfo& aHandlerInfoData, const nsACString& aOverrideType,
       HandlerInfo* handlerInfoData) override;
 
-  mozilla::ipc::IPCResult RecvGetMIMEInfoFromOS(const nsCString& aMIMEType,
-                                                const nsCString& aExtension,
+  mozilla::ipc::IPCResult RecvGetMIMEInfoFromOS(const nsACString& aMIMEType,
+                                                const nsACString& aExtension,
                                                 nsresult* aRv,
                                                 HandlerInfo* aHandlerInfoData,
                                                 bool* aFound) override;
@@ -35,16 +35,17 @@ class HandlerServiceParent final : public mozilla::dom::PHandlerServiceParent {
                                      bool* exists) override;
 
   mozilla::ipc::IPCResult RecvGetTypeFromExtension(
-      const nsCString& aFileExtension, nsCString* type) override;
+      const nsACString& aFileExtension, nsCString* type) override;
 
   mozilla::ipc::IPCResult RecvExistsForProtocolOS(
-      const nsCString& aProtocolScheme, bool* aHandlerExists) override;
+      const nsACString& aProtocolScheme, bool* aHandlerExists) override;
 
   mozilla::ipc::IPCResult RecvExistsForProtocol(
-      const nsCString& aProtocolScheme, bool* aHandlerExists) override;
+      const nsACString& aProtocolScheme, bool* aHandlerExists) override;
 
   mozilla::ipc::IPCResult RecvGetApplicationDescription(
-      const nsCString& aScheme, nsresult* aRv, nsString* aDescription) override;
+      const nsACString& aScheme, nsresult* aRv,
+      nsString* aDescription) override;
 
   /*
    * Limit the length of MIME types, filename extensions, and protocol

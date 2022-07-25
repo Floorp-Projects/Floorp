@@ -73,16 +73,16 @@ class CamerasParent final : public PCamerasParent,
   // Messages received from the child. These run on the IPC/PBackground thread.
   mozilla::ipc::IPCResult RecvPCamerasConstructor();
   mozilla::ipc::IPCResult RecvAllocateCapture(
-      const CaptureEngine& aEngine, const nsCString& aUnique_idUTF8,
+      const CaptureEngine& aEngine, const nsACString& aUnique_idUTF8,
       const uint64_t& aWindowID) override;
   mozilla::ipc::IPCResult RecvReleaseCapture(const CaptureEngine&,
                                              const int&) override;
   mozilla::ipc::IPCResult RecvNumberOfCaptureDevices(
       const CaptureEngine&) override;
   mozilla::ipc::IPCResult RecvNumberOfCapabilities(const CaptureEngine&,
-                                                   const nsCString&) override;
+                                                   const nsACString&) override;
   mozilla::ipc::IPCResult RecvGetCaptureCapability(const CaptureEngine&,
-                                                   const nsCString&,
+                                                   const nsACString&,
                                                    const int&) override;
   mozilla::ipc::IPCResult RecvGetCaptureDevice(const CaptureEngine&,
                                                const int&) override;

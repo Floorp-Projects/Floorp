@@ -137,16 +137,16 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP PostMessageEvent::Run() {
       if (mCallerWindowID == 0) {
         rv = errorObject->Init(
             errorText, NS_ConvertUTF8toUTF16(mScriptLocation.value()), u""_ns,
-            0, 0, nsIScriptError::errorFlag, "DOM Window", mIsFromPrivateWindow,
-            mProvidedPrincipal->IsSystemPrincipal());
+            0, 0, nsIScriptError::errorFlag, "DOM Window"_ns,
+            mIsFromPrivateWindow, mProvidedPrincipal->IsSystemPrincipal());
       } else if (callerURI) {
         rv = errorObject->InitWithSourceURI(errorText, callerURI, u""_ns, 0, 0,
                                             nsIScriptError::errorFlag,
-                                            "DOM Window", mCallerWindowID);
+                                            "DOM Window"_ns, mCallerWindowID);
       } else {
         rv = errorObject->InitWithWindowID(
             errorText, NS_ConvertUTF8toUTF16(mScriptLocation.value()), u""_ns,
-            0, 0, nsIScriptError::errorFlag, "DOM Window", mCallerWindowID);
+            0, 0, nsIScriptError::errorFlag, "DOM Window"_ns, mCallerWindowID);
       }
       NS_ENSURE_SUCCESS(rv, rv);
 

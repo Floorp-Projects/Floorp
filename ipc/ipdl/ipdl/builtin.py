@@ -31,8 +31,6 @@ Types = (
     "nsresult",
     "nsString",
     "nsCString",
-    "nsDependentSubstring",
-    "nsDependentCSubstring",
     "mozilla::ipc::Shmem",
     "mozilla::ipc::ByteBuf",
     "mozilla::UniquePtr",

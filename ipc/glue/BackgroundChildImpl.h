@@ -46,7 +46,7 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PBackgroundTestChild* AllocPBackgroundTestChild(
-      const nsCString& aTestArg) override;
+      const nsACString& aTestArg) override;
 
   virtual bool DeallocPBackgroundTestChild(
       PBackgroundTestChild* aActor) override;
@@ -91,14 +91,14 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual PBackgroundLocalStorageCacheChild*
   AllocPBackgroundLocalStorageCacheChild(
-      const PrincipalInfo& aPrincipalInfo, const nsCString& aOriginKey,
+      const PrincipalInfo& aPrincipalInfo, const nsACString& aOriginKey,
       const uint32_t& aPrivateBrowsingId) override;
 
   virtual bool DeallocPBackgroundLocalStorageCacheChild(
       PBackgroundLocalStorageCacheChild* aActor) override;
 
   virtual PBackgroundStorageChild* AllocPBackgroundStorageChild(
-      const nsString& aProfilePath,
+      const nsAString& aProfilePath,
       const uint32_t& aPrivateBrowsingId) override;
 
   virtual bool DeallocPBackgroundStorageChild(
@@ -110,9 +110,9 @@ class BackgroundChildImpl : public PBackgroundChild {
       PTemporaryIPCBlobChild* aActor) override;
 
   virtual PFileCreatorChild* AllocPFileCreatorChild(
-      const nsString& aFullPath, const nsString& aType, const nsString& aName,
-      const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
-      const bool& aIsFromNsIFile) override;
+      const nsAString& aFullPath, const nsAString& aType,
+      const nsAString& aName, const Maybe<int64_t>& aLastModified,
+      const bool& aExistenceCheck, const bool& aIsFromNsIFile) override;
 
   virtual bool DeallocPFileCreatorChild(PFileCreatorChild* aActor) override;
 
@@ -151,12 +151,12 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual PUDPSocketChild* AllocPUDPSocketChild(
       const Maybe<PrincipalInfo>& aPrincipalInfo,
-      const nsCString& aFilter) override;
+      const nsACString& aFilter) override;
   virtual bool DeallocPUDPSocketChild(PUDPSocketChild* aActor) override;
 
   virtual PBroadcastChannelChild* AllocPBroadcastChannelChild(
-      const PrincipalInfo& aPrincipalInfo, const nsCString& aOrigin,
-      const nsString& aChannel) override;
+      const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin,
+      const nsAString& aChannel) override;
 
   virtual bool DeallocPBroadcastChannelChild(
       PBroadcastChannelChild* aActor) override;
@@ -213,7 +213,8 @@ class BackgroundChildImpl : public PBackgroundChild {
       const IPCServiceWorkerRegistrationDescriptor&);
 
   virtual PEndpointForReportChild* AllocPEndpointForReportChild(
-      const nsString& aGroupName, const PrincipalInfo& aPrincipalInfo) override;
+      const nsAString& aGroupName,
+      const PrincipalInfo& aPrincipalInfo) override;
 
   virtual bool DeallocPEndpointForReportChild(
       PEndpointForReportChild* aActor) override;

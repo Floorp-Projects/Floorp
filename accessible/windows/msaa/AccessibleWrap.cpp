@@ -213,7 +213,7 @@ void AccessibleWrap::InvalidateHandlers() {
 /* static */
 bool AccessibleWrap::DispatchTextChangeToHandler(Accessible* aAcc,
                                                  bool aIsInsert,
-                                                 const nsString& aText,
+                                                 const nsAString& aText,
                                                  int32_t aStart,
                                                  uint32_t aLen) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -254,8 +254,11 @@ bool AccessibleWrap::DispatchTextChangeToHandler(Accessible* aAcc,
 
   VARIANT_BOOL isInsert = aIsInsert ? VARIANT_TRUE : VARIANT_FALSE;
 
-  IA2TextSegment textSegment{::SysAllocStringLen(aText.get(), aText.Length()),
-                             aStart, aStart + static_cast<long>(aLen)};
+  IA2TextSegment textSegment{
+      ::SysAllocStringLen(
+          reinterpret_cast<const wchar_t*>(aText.BeginReading()),
+          aText.Length()),
+      aStart, aStart + static_cast<long>(aLen)};
 
   ASYNC_INVOKER_FOR(IHandlerControl)
   invoker(controller.mCtrl, Some(controller.mIsProxy));

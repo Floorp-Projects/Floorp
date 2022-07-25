@@ -26,8 +26,8 @@ IPCResult ServiceWorkerContainerParent::RecvTeardown() {
 }
 
 IPCResult ServiceWorkerContainerParent::RecvRegister(
-    const IPCClientInfo& aClientInfo, const nsCString& aScopeURL,
-    const nsCString& aScriptURL,
+    const IPCClientInfo& aClientInfo, const nsACString& aScopeURL,
+    const nsACString& aScriptURL,
     const ServiceWorkerUpdateViaCache& aUpdateViaCache,
     RegisterResolver&& aResolver) {
   if (!mProxy) {
@@ -51,7 +51,7 @@ IPCResult ServiceWorkerContainerParent::RecvRegister(
 }
 
 IPCResult ServiceWorkerContainerParent::RecvGetRegistration(
-    const IPCClientInfo& aClientInfo, const nsCString& aURL,
+    const IPCClientInfo& aClientInfo, const nsACString& aURL,
     GetRegistrationResolver&& aResolver) {
   if (!mProxy) {
     aResolver(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));

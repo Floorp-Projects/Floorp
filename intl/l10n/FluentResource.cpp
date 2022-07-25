@@ -33,7 +33,7 @@ already_AddRefed<FluentResource> FluentResource::Constructor(
 
   if (res->mHasErrors) {
     nsContentUtils::LogSimpleConsoleError(
-        u"Errors encountered while parsing Fluent Resource."_ns, "chrome",
+        u"Errors encountered while parsing Fluent Resource."_ns, "chrome"_ns,
         false, true /* from chrome context*/);
   }
   return res.forget();

@@ -51,7 +51,6 @@
 using mozilla::ipc::GeckoChildProcessHost;
 
 using CrashReporter::AnnotationTable;
-using CrashReporter::GetIDFromMinidump;
 
 namespace mozilla::gmp {
 
@@ -570,7 +569,7 @@ nsCOMPtr<nsISerialEventTarget> GMPParent::GMPEventTarget() {
 
 /* static */
 bool GMPCapability::Supports(const nsTArray<GMPCapability>& aCapabilities,
-                             const nsCString& aAPI,
+                             const nsACString& aAPI,
                              const nsTArray<nsCString>& aTags) {
   for (const nsCString& tag : aTags) {
     if (!GMPCapability::Supports(aCapabilities, aAPI, tag)) {
@@ -582,7 +581,7 @@ bool GMPCapability::Supports(const nsTArray<GMPCapability>& aCapabilities,
 
 /* static */
 bool GMPCapability::Supports(const nsTArray<GMPCapability>& aCapabilities,
-                             const nsCString& aAPI, const nsCString& aTag) {
+                             const nsACString& aAPI, const nsCString& aTag) {
   for (const GMPCapability& capabilities : aCapabilities) {
     if (!capabilities.mAPIName.Equals(aAPI)) {
       continue;

@@ -344,7 +344,7 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
   GetAllSpeechSynthActors(ssplist);
 
   for (uint32_t i = 0; i < ssplist.Length(); ++i)
-    Unused << ssplist[i]->SendVoiceRemoved(nsString(aUri));
+    Unused << ssplist[i]->SendVoiceRemoved(aUri);
 
   return NS_OK;
 }
@@ -392,7 +392,7 @@ nsSynthVoiceRegistry::SetDefaultVoice(const nsAString& aUri, bool aIsDefault) {
     GetAllSpeechSynthActors(ssplist);
 
     for (uint32_t i = 0; i < ssplist.Length(); ++i) {
-      Unused << ssplist[i]->SendSetDefaultVoice(nsString(aUri), aIsDefault);
+      Unused << ssplist[i]->SendSetDefaultVoice(aUri, aIsDefault);
     }
   }
 

@@ -312,7 +312,7 @@ int CamerasChild::GetCaptureDevice(
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureDevice(
-    const nsCString& device_name, const nsCString& device_id,
+    const nsACString& device_name, const nsACString& device_id,
     const bool& scary) {
   LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);

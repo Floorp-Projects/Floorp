@@ -116,7 +116,7 @@ class ScriptErrorRunnable final : public mozilla::Runnable {
       MOZ_ALWAYS_SUCCEEDS(scriptError->Init(
           aMessage, aFilename,
           /* aSourceLine */ u""_ns, aLineNumber, aColumnNumber, aSeverityFlag,
-          category.get(),
+          category,
           /* IDB doesn't run on Private browsing mode */ false,
           /* from chrome context */ aIsChrome));
     }

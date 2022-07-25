@@ -118,7 +118,7 @@ void LogMessage(const char* aMsg, ...) {
   va_end(args);
 
   nsCOMPtr<nsIConsoleMessage> error =
-      new nsConsoleMessage(NS_ConvertUTF8toUTF16(formatted.get()).get());
+      new nsConsoleMessage(NS_ConvertUTF8toUTF16(formatted.get()));
   console->LogMessage(error);
 }
 
@@ -152,11 +152,11 @@ void LogMessageWithContext(FileLocation& aFile, uint32_t aLineNumber,
     return;
   }
 
-  nsresult rv = error->Init(NS_ConvertUTF8toUTF16(formatted.get()),
-                            NS_ConvertUTF8toUTF16(file), u""_ns, aLineNumber, 0,
-                            nsIScriptError::warningFlag, "chrome registration",
-                            false /* from private window */,
-                            true /* from chrome context */);
+  nsresult rv = error->Init(
+      NS_ConvertUTF8toUTF16(formatted.get()), NS_ConvertUTF8toUTF16(file),
+      u""_ns, aLineNumber, 0, nsIScriptError::warningFlag,
+      "chrome registration"_ns, false /* from private window */,
+      true /* from chrome context */);
   if (NS_FAILED(rv)) {
     return;
   }

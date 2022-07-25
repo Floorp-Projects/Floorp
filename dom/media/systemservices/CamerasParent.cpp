@@ -493,73 +493,75 @@ mozilla::ipc::IPCResult CamerasParent::RecvEnsureInitialized(
 }
 
 mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
-    const CaptureEngine& aCapEngine, const nsCString& unique_id) {
+    const CaptureEngine& aCapEngine, const nsACString& unique_id) {
   LOG("%s", __PRETTY_FUNCTION__);
-  LOG("Getting caps for %s", unique_id.get());
+  LOG("Getting caps for %s", PromiseFlatCString(unique_id).get());
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, unique_id,
-                                                      aCapEngine]() {
-    int num = -1;
-    if (auto engine = self->EnsureInitialized(aCapEngine)) {
-      if (auto devInfo = engine->GetOrCreateVideoCaptureDeviceInfo()) {
-        num = devInfo->NumberOfCapabilities(unique_id.get());
-      }
-    }
-    RefPtr<nsIRunnable> ipc_runnable = NewRunnableFrom([self, num]() {
-      if (!self->mChildIsAlive) {
-        LOG("RecvNumberOfCapabilities: child not alive");
-        return NS_ERROR_FAILURE;
-      }
+  RefPtr<Runnable> webrtc_runnable =
+      NewRunnableFrom([self, unique_id = nsCString(unique_id), aCapEngine]() {
+        int num = -1;
+        if (auto engine = self->EnsureInitialized(aCapEngine)) {
+          if (auto devInfo = engine->GetOrCreateVideoCaptureDeviceInfo()) {
+            num = devInfo->NumberOfCapabilities(unique_id.get());
+          }
+        }
+        RefPtr<nsIRunnable> ipc_runnable = NewRunnableFrom([self, num]() {
+          if (!self->mChildIsAlive) {
+            LOG("RecvNumberOfCapabilities: child not alive");
+            return NS_ERROR_FAILURE;
+          }
 
-      if (num < 0) {
-        LOG("RecvNumberOfCapabilities couldn't find capabilities");
-        Unused << self->SendReplyFailure();
-        return NS_ERROR_FAILURE;
-      }
+          if (num < 0) {
+            LOG("RecvNumberOfCapabilities couldn't find capabilities");
+            Unused << self->SendReplyFailure();
+            return NS_ERROR_FAILURE;
+          }
 
-      LOG("RecvNumberOfCapabilities: %d", num);
-      Unused << self->SendReplyNumberOfCapabilities(num);
-      return NS_OK;
-    });
-    self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
-    return NS_OK;
-  });
+          LOG("RecvNumberOfCapabilities: %d", num);
+          Unused << self->SendReplyNumberOfCapabilities(num);
+          return NS_OK;
+        });
+        self->mPBackgroundEventTarget->Dispatch(ipc_runnable,
+                                                NS_DISPATCH_NORMAL);
+        return NS_OK;
+      });
   DispatchToVideoCaptureThread(webrtc_runnable);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
-    const CaptureEngine& aCapEngine, const nsCString& unique_id,
+    const CaptureEngine& aCapEngine, const nsACString& unique_id,
     const int& num) {
   LOG("%s", __PRETTY_FUNCTION__);
-  LOG("RecvGetCaptureCapability: %s %d", unique_id.get(), num);
+  LOG("RecvGetCaptureCapability: %s %d", PromiseFlatCString(unique_id).get(),
+      num);
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, unique_id,
-                                                      aCapEngine, num]() {
-    webrtc::VideoCaptureCapability webrtcCaps;
-    int error = -1;
-    if (auto engine = self->EnsureInitialized(aCapEngine)) {
-      if (auto devInfo = engine->GetOrCreateVideoCaptureDeviceInfo()) {
-        error = devInfo->GetCapability(unique_id.get(), num, webrtcCaps);
-      }
+  RefPtr<Runnable> webrtc_runnable = NewRunnableFrom(
+      [self, unique_id = nsCString(unique_id), aCapEngine, num]() {
+        webrtc::VideoCaptureCapability webrtcCaps;
+        int error = -1;
+        if (auto engine = self->EnsureInitialized(aCapEngine)) {
+          if (auto devInfo = engine->GetOrCreateVideoCaptureDeviceInfo()) {
+            error = devInfo->GetCapability(unique_id.get(), num, webrtcCaps);
+          }
 
-      if (!error && aCapEngine == CameraEngine) {
-        auto iter = self->mAllCandidateCapabilities.find(unique_id);
-        if (iter == self->mAllCandidateCapabilities.end()) {
-          std::map<uint32_t, webrtc::VideoCaptureCapability>
-              candidateCapabilities;
-          candidateCapabilities.emplace(num, webrtcCaps);
-          self->mAllCandidateCapabilities.emplace(nsCString(unique_id),
-                                                  candidateCapabilities);
-        } else {
-          (iter->second).emplace(num, webrtcCaps);
+          if (!error && aCapEngine == CameraEngine) {
+            auto iter = self->mAllCandidateCapabilities.find(unique_id);
+            if (iter == self->mAllCandidateCapabilities.end()) {
+              std::map<uint32_t, webrtc::VideoCaptureCapability>
+                  candidateCapabilities;
+              candidateCapabilities.emplace(num, webrtcCaps);
+              self->mAllCandidateCapabilities.emplace(nsCString(unique_id),
+                                                      candidateCapabilities);
+            } else {
+              (iter->second).emplace(num, webrtcCaps);
+            }
+          }
         }
-      }
-    }
-    RefPtr<nsIRunnable> ipc_runnable =
-        NewRunnableFrom([self, webrtcCaps, error]() {
+        RefPtr<nsIRunnable> ipc_runnable = NewRunnableFrom([self, webrtcCaps,
+                                                            error]() {
           if (!self->mChildIsAlive) {
             LOG("RecvGetCaptureCapability: child not alive");
             return NS_ERROR_FAILURE;
@@ -578,9 +580,10 @@ mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
           Unused << self->SendReplyGetCaptureCapability(capCap);
           return NS_OK;
         });
-    self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
-    return NS_OK;
-  });
+        self->mPBackgroundEventTarget->Dispatch(ipc_runnable,
+                                                NS_DISPATCH_NORMAL);
+        return NS_OK;
+      });
   DispatchToVideoCaptureThread(webrtc_runnable);
   return IPC_OK();
 }
@@ -697,12 +700,12 @@ static bool HasCameraPermission(const uint64_t& aWindowId) {
 }
 
 mozilla::ipc::IPCResult CamerasParent::RecvAllocateCapture(
-    const CaptureEngine& aCapEngine, const nsCString& unique_id,
+    const CaptureEngine& aCapEngine, const nsACString& unique_id,
     const uint64_t& aWindowID) {
   LOG("%s: Verifying permissions", __PRETTY_FUNCTION__);
   RefPtr<CamerasParent> self(this);
-  RefPtr<Runnable> mainthread_runnable =
-      NewRunnableFrom([self, aCapEngine, unique_id, aWindowID]() {
+  RefPtr<Runnable> mainthread_runnable = NewRunnableFrom(
+      [self, aCapEngine, unique_id = nsCString(unique_id), aWindowID]() {
         // Verify whether the claimed origin has received permission
         // to use the camera, either persistently or this session (one shot).
         bool allowed = HasCameraPermission(aWindowID);

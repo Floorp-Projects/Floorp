@@ -88,7 +88,7 @@ class NrTcpSocket : public NrSocketBase, public WebrtcTCPSocketCallback {
 
   // WebrtcTCPSocketCallback
   void OnClose(nsresult aReason) override;
-  void OnConnected(const nsCString& aProxyType) override;
+  void OnConnected(const nsACString& aProxyType) override;
   void OnRead(nsTArray<uint8_t>&& aReadData) override;
 
   size_t CountUnreadBytes() const;

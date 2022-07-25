@@ -78,7 +78,7 @@ class NeckoParent : public PNeckoParent {
   bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
 
   PAltDataOutputStreamParent* AllocPAltDataOutputStreamParent(
-      const nsCString& type, const int64_t& predictedSize,
+      const nsACString& type, const int64_t& predictedSize,
       PHttpChannelParent* channel);
   bool DeallocPAltDataOutputStreamParent(PAltDataOutputStreamParent* aActor);
 
@@ -87,7 +87,7 @@ class NeckoParent : public PNeckoParent {
       PBrowserParent* browser, const SerializedLoadContext& aSerialized,
       const uint32_t& aSerial);
   bool DeallocPWebSocketParent(PWebSocketParent*);
-  PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
+  PTCPSocketParent* AllocPTCPSocketParent(const nsAString& host,
                                           const uint16_t& port);
 
   already_AddRefed<PDocumentChannelParent> AllocPDocumentChannelParent(
@@ -108,28 +108,28 @@ class NeckoParent : public PNeckoParent {
       const uint16_t& aBacklog, const bool& aUseArrayBuffers) override;
   bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*);
   PUDPSocketParent* AllocPUDPSocketParent(nsIPrincipal* aPrincipal,
-                                          const nsCString& aFilter);
+                                          const nsACString& aFilter);
   virtual mozilla::ipc::IPCResult RecvPUDPSocketConstructor(
       PUDPSocketParent*, nsIPrincipal* aPrincipal,
-      const nsCString& aFilter) override;
+      const nsACString& aFilter) override;
   bool DeallocPUDPSocketParent(PUDPSocketParent*);
   already_AddRefed<PDNSRequestParent> AllocPDNSRequestParent(
-      const nsCString& aHost, const nsCString& aTrrServer, const int32_t& aPort,
-      const uint16_t& aType, const OriginAttributes& aOriginAttributes,
-      const uint32_t& aFlags);
+      const nsACString& aHost, const nsACString& aTrrServer,
+      const int32_t& aPort, const uint16_t& aType,
+      const OriginAttributes& aOriginAttributes, const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
-      PDNSRequestParent* actor, const nsCString& aHost,
-      const nsCString& trrServer, const int32_t& aPort, const uint16_t& type,
+      PDNSRequestParent* actor, const nsACString& aHost,
+      const nsACString& trrServer, const int32_t& aPort, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
   mozilla::ipc::IPCResult RecvSpeculativeConnect(nsIURI* aURI,
                                                  nsIPrincipal* aPrincipal,
                                                  const bool& aAnonymous);
   mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
-      const nsString& hostname, const bool& isHttps,
+      const nsAString& hostname, const bool& isHttps,
       const OriginAttributes& aOriginAttributes, const uint32_t& flags);
   mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(
-      const nsString& hostname, const bool& isHttps,
+      const nsAString& hostname, const bool& isHttps,
       const OriginAttributes& aOriginAttributes, const uint32_t& flags,
       const nsresult& reason);
   PWebSocketEventListenerParent* AllocPWebSocketEventListenerParent(
