@@ -10,6 +10,6 @@ info: |
 features: [Temporal]
 ---*/
 
-assert.throws(TypeError, () => Temporal.ZonedDateTime());
+assert.throws(TypeError, () => Temporal.ZonedDateTime(0n, "UTC"));
 
 reportCompare(0, 0);

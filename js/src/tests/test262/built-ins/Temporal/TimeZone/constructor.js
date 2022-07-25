@@ -10,6 +10,6 @@ info: |
 features: [Temporal]
 ---*/
 
-assert.throws(TypeError, () => Temporal.TimeZone());
+assert.throws(TypeError, () => Temporal.TimeZone("UTC"));
 
 reportCompare(0, 0);

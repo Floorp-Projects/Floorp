@@ -16,4 +16,4 @@ negative:
 $DONOTEVALUATE();
 
 let x;
-const x;
+const x = 0;
