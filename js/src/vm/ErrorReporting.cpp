@@ -15,6 +15,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_vsmprintf
 #include "js/Warnings.h"              // JS::WarningReporter
+#include "vm/ErrorContext.h"  // GeneralErrorContext, OffThreadErrorContext
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
@@ -48,25 +49,47 @@ void GeneralErrorContext::reportWarning(CompileError* err) {
   }
 }
 
-OffThreadErrorContext::OffThreadErrorContext(JSContext* cx) : cx_(cx) {}
+OffThreadErrorContext::OffThreadErrorContext(JSAllocator* alloc)
+    : alloc_(alloc) {}
 
 bool OffThreadErrorContext::addPendingError(CompileError** error) {
   // When compiling off thread, save the error so that the thread finishing the
   // parse can report it later.
-  return cx_->addPendingCompileError(error);
+  auto errorPtr = alloc_->make_unique<js::CompileError>();
+  if (!errorPtr) {
+    return false;
+  }
+  if (!errors_.errors.append(std::move(errorPtr))) {
+    ReportOutOfMemory();
+    return false;
+  }
+  *error = errors_.errors.back().get();
+  return true;
 }
 
 void OffThreadErrorContext::reportError(CompileError* err) {
-  if (MOZ_UNLIKELY(
-          !cx_->runtime()
-               ->hasInitializedSelfHosting())) {  // TODO can SelfHosting run on
-                                                  // helper threads?
-    selfHosting_ErrorReporter(err);
-    return;
-  }
+  // TODO Bug 1773324 - restore selfHosting_ErrorReporter if needed
 }
 
 void OffThreadErrorContext::reportWarning(CompileError* err) {}
+
+void OffThreadErrorContext::ReportOutOfMemory() {
+  /*
+   * OOMs are non-deterministic, especially across different execution modes
+   * (e.g. interpreter vs JIT). When doing differential testing, print to
+   * stderr so that the fuzzers can detect this.
+   */
+  if (js::SupportDifferentialTesting()) {
+    fprintf(stderr, "ReportOutOfMemory called\n");
+  }
+
+  return addPendingOutOfMemory();
+}
+
+void OffThreadErrorContext::addPendingOutOfMemory() {
+  // Keep in sync with recoverFromOutOfMemory.
+  errors_.outOfMemory = true;
+}
 
 void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
   MOZ_ASSERT(reportp->isWarning());

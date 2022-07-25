@@ -36,6 +36,7 @@
 #include "vm/BigIntType.h"   // ParseBigIntLiteral, BigIntLiteralIsZero
 #include "vm/BindingKind.h"  // BindingKind
 #include "vm/EnvironmentObject.h"
+#include "vm/ErrorContext.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/HelperThreads.h"          // js::StartOffThreadParseScript
 #include "vm/HelperThreadState.h"

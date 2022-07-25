@@ -23,6 +23,7 @@
 #include "js/RootingAPI.h"         // JS::MutableHandle
 #include "js/Value.h"              // JS::Value
 #include "vm/EnvironmentObject.h"  // js::ModuleEnvironmentObject
+#include "vm/ErrorContext.h"       // js::GeneralErrorContext
 #include "vm/JSContext.h"          // CHECK_THREAD, JSContext
 #include "vm/JSObject.h"           // JSObject
 #include "vm/Runtime.h"            // JSRuntime

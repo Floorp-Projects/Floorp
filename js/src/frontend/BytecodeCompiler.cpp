@@ -17,6 +17,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EitherParser.h"
 #include "frontend/ErrorReporter.h"
+#include "vm/ErrorContext.h"
 #include "vm/ErrorReporting.h"
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"  // Smoosh

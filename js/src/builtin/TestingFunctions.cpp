@@ -9,6 +9,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "vm/ErrorContext.h"
 #ifdef JS_HAS_INTL_API
 #  include "mozilla/intl/ICU4CLibrary.h"
 #  include "mozilla/intl/Locale.h"
