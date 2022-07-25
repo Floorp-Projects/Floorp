@@ -96,12 +96,43 @@
       };
     }
 
-    function changeRangeValue(aID) {
+    function changeRangeValueWithMouse(aID) {
       this.DOMNode = getNode(aID);
       this.eventSeq = [new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode)];
 
       this.invoke = function changeRangeValue_invoke() {
         synthesizeMouse(getNode(aID), 5, 5, { });
+      };
+
+      this.finalCheck = function changeRangeValue_finalCheck() {
+        var acc = getAccessible(this.DOMNode);
+        is(acc.value, "0", "Wrong value for " + prettyName(aID));
+      };
+
+      this.getID = function changeRangeValue_getID() {
+        return prettyName(aID) + " range value changed";
+      };
+    }
+
+    function changeRangeValueWithA11yAPI(aID) {
+      this.DOMNode = getNode(aID);
+      let inputChecker = new invokerChecker("input", this.DOMNode);
+      inputChecker.eventTarget = "element";
+
+      let changeChecker = new invokerChecker("change", this.DOMNode);
+      changeChecker.eventTarget = "element";
+
+      this.eventSeq = [
+        inputChecker,
+        changeChecker,
+        new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode),
+      ];
+
+      this.invoke = function changeRangeValue_invoke() {
+        this.DOMNode.focus();
+        let acc = getAccessible(this.DOMNode, [nsIAccessibleValue]);
+        acc.currentValue = 0;
+        this.DOMNode.blur();
       };
 
       this.finalCheck = function changeRangeValue_finalCheck() {
@@ -135,6 +166,7 @@
     // enableLogging("DOMEvents");
     // gA11yEventDumpToConsole = true;
     function doTests() {
+
       // Test initial values
       testValue("slider_vn", "5", 5, 0, 1000, 0);
       testValue("slider_vnvt", "plain", 0, 0, 5, 0);
@@ -143,6 +175,7 @@
       testValue("splitter", "5", 5, 0, 1000, 0);
       testValue("progress", "22%", 22, 0, 100, 0);
       testValue("range", "6", 6, 0, 10, 1);
+      testValue("range2", "6", 6, 0, 10, 1);
 
       // Test that elements which should not expose values do not
       let separatorVal = getAccessible("separator", [nsIAccessibleValue], null, DONOTFAIL_IF_NO_INTERFACE);
@@ -162,7 +195,8 @@
       gQueue.push(new changeValue("combobox", "hello"));
 
       gQueue.push(new changeProgressValue("progress", "50"));
-      gQueue.push(new changeRangeValue("range"));
+      gQueue.push(new changeRangeValueWithMouse("range"));
+      gQueue.push(new changeRangeValueWithA11yAPI("range2"));
 
       gQueue.push(new changeSelectValue("select", "VK_DOWN", "2nd"));
       gQueue.push(new changeSelectValue("select", "3", "3rd"));
@@ -172,7 +206,6 @@
 
       let shadowSelect = getAccessible("selectShadow").firstChild;
       gQueue.push(new changeSelectValue(shadowSelect, "VK_DOWN", "2"));
-
       gQueue.push(new changeValue("number", "2"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
@@ -248,6 +281,9 @@
 
   <!-- input@type="range" -->
   <input type="range" id="range" min="0" max="10" value="6">
+
+  <!-- input@type="range" -->
+  <input type="range" id="range2" min="0" max="10" value="6">
 
   <select id="select">
     <option>1st</option>

@@ -5,7 +5,7 @@
 /*---
 description: |
     Collection of functions used to assert the correctness of RegExp objects.
-defines: [buildString, testPropertyEscapes, testPropertyOfStrings, matchValidator]
+defines: [buildString, testPropertyEscapes, testPropertyOfStrings, testExtendedCharacterClass, matchValidator]
 ---*/
 
 function buildString(args) {
@@ -90,6 +90,12 @@ function testPropertyOfStrings(args) {
     }
   }
 }
+
+// The exact same logic can be used to test extended character classes
+// as enabled through the RegExp `v` flag. This is useful to test not
+// just standalone properties of strings, but also string literals, and
+// set operations.
+const testExtendedCharacterClass = testPropertyOfStrings;
 
 // Returns a function that validates a RegExp match result.
 //

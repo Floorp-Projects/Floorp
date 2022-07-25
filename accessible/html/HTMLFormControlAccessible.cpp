@@ -594,9 +594,11 @@ double HTMLRangeAccessible::CurValue() const {
 }
 
 bool HTMLRangeAccessible::SetCurValue(double aValue) {
-  ErrorResult er;
-  HTMLInputElement::FromNode(mContent)->SetValueAsNumber(aValue, er);
-  return !er.Failed();
+  nsAutoString strValue;
+  strValue.AppendFloat(aValue);
+  HTMLInputElement::FromNode(mContent)->SetUserInput(
+      strValue, *nsContentUtils::GetSystemPrincipal());
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

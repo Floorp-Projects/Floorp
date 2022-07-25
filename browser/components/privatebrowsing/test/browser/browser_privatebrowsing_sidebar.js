@@ -38,6 +38,7 @@ function test() {
         "Opening a private window from reg window does not open the sidebar"
       );
     })
+    .then(closeCachedWindows)
     // Part 2: NON PRIVATE WINDOW -> NON PRIVATE WINDOW
     .then(() => openWindow(window))
     .then(cacheWindow)
@@ -52,6 +53,7 @@ function test() {
         "Opening a reg window from reg window does open the sidebar"
       );
     })
+    .then(closeCachedWindows)
     // Part 3: PRIVATE WINDOW -> NON PRIVATE WINDOW
     .then(() => openWindow(window, { private: true }))
     .then(cacheWindow)
@@ -66,6 +68,7 @@ function test() {
         "Opening a reg window from a private window does not open the sidebar"
       );
     })
+    .then(closeCachedWindows)
     // Part 4: PRIVATE WINDOW -> PRIVATE WINDOW
     .then(() => openWindow(window, { private: true }))
     .then(cacheWindow)
