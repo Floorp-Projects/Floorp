@@ -19,6 +19,10 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Services.h"
 
+#ifdef XP_MACOSX
+#  include "nsCocoaFeatures.h"
+#endif
+
 using namespace mozilla;
 
 LazyLogModule gWifiMonitorLog("WifiMonitor");
@@ -50,6 +54,19 @@ nsWifiMonitor::Observe(nsISupports* subject, const char* topic,
   return NS_OK;
 }
 
+uint32_t nsWifiMonitor::GetMonitorThreadStackSize() {
+#ifdef XP_MACOSX
+  // If this ASSERT fails, we've increased our default stack size and
+  // may no longer need to special-case the stack size on macOS.
+  MOZ_ASSERT(kMacOS13MonitorStackSize > nsIThreadManager::DEFAULT_STACK_SIZE);
+  return nsCocoaFeatures::OnVenturaOrLater()
+             ? kMacOS13MonitorStackSize
+             : nsIThreadManager::DEFAULT_STACK_SIZE;
+#else
+  return nsIThreadManager::DEFAULT_STACK_SIZE;
+#endif
+}
+
 NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener) {
   LOG(("nsWifiMonitor::StartWatching %p thread %p listener %p\n", this,
        mThread.get(), aListener));
@@ -75,7 +92,8 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener) {
   }
 
   if (!mThread) {
-    rv = NS_NewNamedThread("Wifi Monitor", getter_AddRefs(mThread), this);
+    rv = NS_NewNamedThread("Wifi Monitor", getter_AddRefs(mThread), this,
+                           GetMonitorThreadStackSize());
     if (NS_FAILED(rv)) {
       return rv;
     }
