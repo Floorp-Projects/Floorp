@@ -46,6 +46,11 @@ class SIMD {
   static MFBT_API const char16_t* memchr16SSE2(const char16_t* ptr,
                                                char16_t value, size_t length);
 
+  // Search through `ptr[0..length]` for the first occurrence of `value` and
+  // return the pointer to it, or nullptr if it cannot be found.
+  static MFBT_API const uint64_t* memchr64(const uint64_t* ptr, uint64_t value,
+                                           size_t length);
+
   // Search through `ptr[0..length]` for the first occurrence of `v1` which is
   // immediately followed by `v2` and return the pointer to the occurrence of
   // `v1`.
