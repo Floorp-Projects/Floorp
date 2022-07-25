@@ -1518,8 +1518,8 @@ waterfox-lepton =
 
 privacy-hub-header = Privacy Hub
 
-block-tracker = Block more Trackers Trackers Track users in a Place that is Invisible to Them. Learn How to Block Further
-block-more-tracker = Block more Trackers and Ads 
+block-tracker = Learn how to block more trackers:
+block-more-tracker = Block more Trackers and Ads
 
 view-at-AMO = View at AMO
 uBlock-Origin = uBlock Origin
@@ -1529,23 +1529,23 @@ Privacy-Badger = Privacy Badger
 about-PBadger = Privacy Badger automatically learns to block hidden trackers and blocks trackers based on it.
 
 Duck-Duck-Go = DuckDuckGo Privacy Essentials
-about-DDG = It replaces the search engine with DuckDuckGo, blocks the tracker of the visited site, and evaluates that site.
+about-DDG = DuckDuckGo Privacy Essentials replaces a default search engine with DuckDuckGo while blocking trackers on visited sites.
 
 ## Fingerprint
 
-fingerprint-header = Resist Fingerprint & IP address leak
-block-fingerprint = Fingerprinting is the process by which a website collects information such as your device information, profiles you, and collects personal information. This section provides settings to further reduce this collection beyond the default blocker
-enable-firefox-fingerprint-protections = Enable Strong Fingerprintes Protection by Firefox
-about-firefox-fingerprint-protection = Enabling protection by Firefox enables forced light mode, disabling of some APIs, etc.
-fingerprint-Protection = Fingerprint Protections
+fingerprint-header = Resist Fingerprinting & IP address leak
+block-fingerprint = Fingerprinting is the process by which a website collects personal data and device information. This section provides settings to further reduce this protection beyond the default blocker.
+enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
+about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
+fingerprint-Protection = Anti-fingerprinting protections
 html5-canvas-prompt-settings = Automatically approve access confirmation prompts for HTML5 image data
 canvas-prompt = By default, it does not prompt and automatically rejects
 disable-webgl = Disable WebGL
-about-webgl = WebGL is information used to render graphics, which may identify the GPU of the OS.
+about-webgl = WebGL is Javascript API used to render graphics, which can be used to identify GPU.
 Canvas-Blocker = Canvas Blocker
-about-CB = This add-on allows users to prevent websites from using some Javascript APIs to fingerprint them.
+about-CB = This add-on prevents websites from using some JavaScript APIs for fingerprinting
 WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
-WebRTC = Enable WebRTC Connetion
+WebRTC = Enable WebRTC Connection
 
 ## download mgr
 download-notification-preferences = Download Notification
