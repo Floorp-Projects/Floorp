@@ -49,6 +49,19 @@ void GeneralErrorContext::reportWarning(CompileError* err) {
   }
 }
 
+bool GeneralErrorContext::hadOutOfMemory() const {
+  return cx_->offThreadFrontendErrors()->outOfMemory;
+}
+
+bool GeneralErrorContext::hadOverRecursed() const {
+  return cx_->offThreadFrontendErrors()->overRecursed;
+}
+
+const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>&
+GeneralErrorContext::errors() const {
+  return cx_->offThreadFrontendErrors()->errors;
+}
+
 bool OffThreadErrorContext::addPendingError(CompileError** error) {
   // When compiling off thread, save the error so that the thread finishing the
   // parse can report it later.
@@ -86,6 +99,13 @@ void OffThreadErrorContext::ReportOutOfMemory() {
 void OffThreadErrorContext::addPendingOutOfMemory() {
   // Keep in sync with recoverFromOutOfMemory.
   errors_.outOfMemory = true;
+}
+
+void OffThreadErrorContext::setAllocator(JSAllocator* alloc) {
+  alloc_ = alloc;
+  if (alloc_) {
+    alloc_->setOffThreadFrontendErrors(&errors_);
+  }
 }
 
 void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
