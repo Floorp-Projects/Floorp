@@ -5315,7 +5315,7 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   RootedObject module(cx, frontend::CompileModule(cx, &ec, options, srcBuf));
   if (!module) {
     return false;
@@ -5759,7 +5759,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                     js::frontend::ParseGoal goal) {
   using namespace js::frontend;
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   Parser<FullParseHandler, Unit> parser(cx, &ec, options, units, length,
                                         /* foldConstants = */ false,
                                         compilationState,
@@ -5811,7 +5811,7 @@ template <typename Unit>
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (goal == frontend::ParseGoal::Script) {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
@@ -6124,7 +6124,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
       cx, &ec, options, chars, length,
       /* foldConstants = */ false, compilationState,

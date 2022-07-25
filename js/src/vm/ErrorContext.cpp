@@ -22,26 +22,28 @@ void* ErrorAllocator::onOutOfMemory(AllocFunction allocFunc, arena_id_t arena,
   return context_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
-GeneralErrorContext::GeneralErrorContext(JSContext* cx) : cx_(cx) {}
+MainThreadErrorContext::MainThreadErrorContext(JSContext* cx) : cx_(cx) {}
 
-bool GeneralErrorContext::addPendingError(CompileError** error) { return true; }
-void* GeneralErrorContext::onOutOfMemory(AllocFunction allocFunc,
-                                         arena_id_t arena, size_t nbytes,
-                                         void* reallocPtr) {
+bool MainThreadErrorContext::addPendingError(CompileError** error) {
+  return true;
+}
+void* MainThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
+                                            arena_id_t arena, size_t nbytes,
+                                            void* reallocPtr) {
   return cx_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
-void GeneralErrorContext::reportAllocationOverflow() {
+void MainThreadErrorContext::reportAllocationOverflow() {
   return cx_->reportAllocationOverflow();
 }
 
-const JSErrorFormatString* GeneralErrorContext::gcSafeCallback(
+const JSErrorFormatString* MainThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
   gc::AutoSuppressGC suppressGC(cx_);
   return callback(userRef, errorNumber);
 }
 
-void GeneralErrorContext::reportError(CompileError* err) {
+void MainThreadErrorContext::reportError(CompileError* err) {
   // On the main thread, report the error immediately.
 
   if (MOZ_UNLIKELY(!cx_->runtime()->hasInitializedSelfHosting())) {
@@ -52,22 +54,22 @@ void GeneralErrorContext::reportError(CompileError* err) {
   err->throwError(cx_);
 }
 
-void GeneralErrorContext::reportWarning(CompileError* err) {
+void MainThreadErrorContext::reportWarning(CompileError* err) {
   if (!cx_->isHelperThreadContext()) {
     err->throwError(cx_);
   }
 }
 
-bool GeneralErrorContext::hadOutOfMemory() const {
+bool MainThreadErrorContext::hadOutOfMemory() const {
   return cx_->offThreadFrontendErrors()->outOfMemory;
 }
 
-bool GeneralErrorContext::hadOverRecursed() const {
+bool MainThreadErrorContext::hadOverRecursed() const {
   return cx_->offThreadFrontendErrors()->overRecursed;
 }
 
 const Vector<UniquePtr<CompileError>, 0, SystemAllocPolicy>&
-GeneralErrorContext::errors() const {
+MainThreadErrorContext::errors() const {
   return cx_->offThreadFrontendErrors()->errors;
 }
 

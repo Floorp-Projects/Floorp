@@ -6109,7 +6109,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
       cx, &ec, options, chars.twoByteChars(), length,

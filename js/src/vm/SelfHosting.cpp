@@ -2590,7 +2590,7 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
   if (!input) {
     return false;
   }
-  GeneralErrorContext ec(cx);
+  MainThreadErrorContext ec(cx);
   RefPtr<frontend::CompilationStencil> stencil =
       frontend::CompileGlobalScriptToStencil(cx, &ec, cx->tempLifoAlloc(),
                                              *input, srcBuf, ScopeKind::Global);
