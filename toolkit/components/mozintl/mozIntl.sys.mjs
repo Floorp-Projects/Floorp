@@ -838,7 +838,7 @@ class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
   }
 }
 
-class MozIntl {
+export class MozIntl {
   Collator = Intl.Collator;
   ListFormat = Intl.ListFormat;
   Locale = Intl.Locale;
@@ -1080,5 +1080,3 @@ MozIntl.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIObserver",
   "nsISupportsWeakReference",
 ]);
-
-var EXPORTED_SYMBOLS = ["MozIntl"];

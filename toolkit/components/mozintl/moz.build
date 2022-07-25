@@ -21,7 +21,7 @@ SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "mozIntl.jsm",
+    "mozIntl.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
