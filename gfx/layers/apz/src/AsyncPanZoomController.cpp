@@ -829,6 +829,10 @@ AsyncPanZoomController::GetAxisLockMode() {
   return static_cast<AxisLockMode>(StaticPrefs::apz_axis_lock_mode());
 }
 
+bool AsyncPanZoomController::UsingStatefulAxisLock() const {
+  return (GetAxisLockMode() == STANDARD || GetAxisLockMode() == STICKY);
+}
+
 /* static */ AsyncPanZoomController::PinchLockMode
 AsyncPanZoomController::GetPinchLockMode() {
   return static_cast<PinchLockMode>(StaticPrefs::apz_pinch_lock_mode());
@@ -2567,19 +2571,18 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
 
   StartTouch(aEvent.mLocalPanStartPoint, aEvent.mTimeStamp);
 
-  if (GetAxisLockMode() == FREE) {
+  if (!UsingStatefulAxisLock()) {
     SetState(PANNING);
-    return nsEventStatus_eConsumeNoDefault;
-  }
-
-  float dx = aEvent.mPanDisplacement.x, dy = aEvent.mPanDisplacement.y;
-
-  if (dx || dy) {
-    double angle = atan2(dy, dx);  // range [-pi, pi]
-    angle = fabs(angle);           // range [0, pi]
-    HandlePanning(angle);
   } else {
-    SetState(PANNING);
+    float dx = aEvent.mPanDisplacement.x, dy = aEvent.mPanDisplacement.y;
+
+    if (dx != 0.0f || dy != 0.0f) {
+      double angle = atan2(dy, dx);  // range [-pi, pi]
+      angle = fabs(angle);           // range [0, pi]
+      HandlePanning(angle);
+    } else {
+      SetState(PANNING);
+    }
   }
 
   // Call into OnPan in order to process any delta included in this event.
@@ -2654,6 +2657,21 @@ AsyncPanZoomController::GetDisplacementsForPanGesture(
   AdjustDeltaForAllowedScrollDirections(
       logicalPanDisplacement,
       GetCurrentPanGestureBlock()->GetAllowedScrollDirections());
+
+  if (GetAxisLockMode() == DOMINANT_AXIS) {
+    // Given a pan gesture and both directions have a delta, implement
+    // dominant axis scrolling and only use the delta for the larger
+    // axis.
+    if (logicalPanDisplacement.y != 0 && logicalPanDisplacement.x != 0) {
+      if (fabs(logicalPanDisplacement.y) >= fabs(logicalPanDisplacement.x)) {
+        logicalPanDisplacement.x = 0;
+        physicalPanDisplacement.x = 0;
+      } else {
+        logicalPanDisplacement.y = 0;
+        physicalPanDisplacement.y = 0;
+      }
+    }
+  }
 
   return {logicalPanDisplacement, physicalPanDisplacement};
 }
@@ -3240,6 +3258,8 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
   bool canScrollVertical =
       !mY.IsAxisLocked() && overscrollHandoffChain->CanScrollInDirection(
                                 this, ScrollDirection::eVertical);
+
+  MOZ_ASSERT(UsingStatefulAxisLock());
 
   if (!canScrollHorizontal || !canScrollVertical) {
     SetState(PANNING);
