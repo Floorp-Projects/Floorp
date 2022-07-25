@@ -31,6 +31,15 @@ using JS::UniqueTwoByteChars;
 GeneralErrorContext::GeneralErrorContext(JSContext* cx) : cx_(cx) {}
 
 bool GeneralErrorContext::addPendingError(CompileError** error) { return true; }
+void* GeneralErrorContext::onOutOfMemory(js::AllocFunction allocFunc,
+                                         arena_id_t arena, size_t nbytes,
+                                         void* reallocPtr) {
+  return cx_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
+}
+
+void GeneralErrorContext::reportAllocationOverflow() {
+  return cx_->reportAllocationOverflow();
+}
 
 void GeneralErrorContext::reportError(CompileError* err) {
   // On the main thread, report the error immediately.
@@ -75,6 +84,17 @@ bool OffThreadErrorContext::addPendingError(CompileError** error) {
   }
   *error = errors_.errors.back().get();
   return true;
+}
+void* OffThreadErrorContext::onOutOfMemory(js::AllocFunction allocFunc,
+                                           arena_id_t arena, size_t nbytes,
+                                           void* reallocPtr) {
+  addPendingOutOfMemory();
+  return nullptr;
+}
+
+void OffThreadErrorContext::reportAllocationOverflow() {
+  // TODO Bug 1780599 - Currently allocation overflows are not reported for
+  // helper threads; see js::reportAllocationOverflow()
 }
 
 void OffThreadErrorContext::reportError(CompileError* err) {
@@ -321,7 +341,8 @@ class MOZ_RAII AutoMessageArgs {
    * if argsArg were strongly typed we'd still need casting below for this to
    * compile, because typeArg is not known at compile-time here.
    */
-  bool init(JSAllocator* alloc, void* argsArg, uint16_t countArg,
+  template <typename Allocator>
+  bool init(Allocator* alloc, void* argsArg, uint16_t countArg,
             ErrorArgumentsType typeArg, va_list ap) {
     MOZ_ASSERT(countArg > 0);
 
@@ -392,9 +413,9 @@ class MOZ_RAII AutoMessageArgs {
  * that is not worth it here because AutoMessageArgs takes a void* anyway, and
  * using void* here simplifies our callers a bit.
  */
-template <typename T>
-static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
-                                       void* userRef,
+template <typename T, typename Allocator>
+static bool ExpandErrorArgumentsHelper(JSContext* cx, Allocator* alloc,
+                                       JSErrorCallback callback, void* userRef,
                                        const unsigned errorNumber,
                                        void* messageArgs,
                                        ErrorArgumentsType argumentsType,
@@ -438,7 +459,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
         size_t len = strlen(efs->format);
 
         AutoMessageArgs args;
-        if (!args.init(cx, messageArgs, argCount, argumentsType, ap)) {
+        if (!args.init(alloc, messageArgs, argCount, argumentsType, ap)) {
           return false;
         }
 
@@ -449,7 +470,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
          * Note - the above calculation assumes that each argument
          * is used once and only once in the expansion !!!
          */
-        char* utf8 = out = cx->pod_malloc<char>(expandedLength + 1);
+        char* utf8 = out = alloc->template pod_malloc<char>(expandedLength + 1);
         if (!out) {
           return false;
         }
@@ -493,7 +514,7 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
     const char* defaultErrorMessage =
         "No error message available for error number %d";
     size_t nbytes = strlen(defaultErrorMessage) + 16;
-    char* message = cx->pod_malloc<char>(nbytes);
+    char* message = alloc->template pod_malloc<char>(nbytes);
     if (!message) {
       return false;
     }
@@ -509,7 +530,8 @@ bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType == ArgumentsAreUnicode);
-  return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber,
+  ErrorAllocator<JSContext> alloc(cx);
+  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
@@ -519,7 +541,8 @@ bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
   MOZ_ASSERT(argumentsType != ArgumentsAreUnicode);
-  return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber,
+  ErrorAllocator<JSContext> alloc(cx);
+  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, reportp, ap);
 }
 
@@ -527,8 +550,9 @@ bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                 void* userRef, const unsigned errorNumber,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorReport* reportp, va_list ap) {
-  return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber, nullptr,
-                                    argumentsType, reportp, ap);
+  ErrorAllocator<JSContext> alloc(cx);
+  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
+                                    nullptr, argumentsType, reportp, ap);
 }
 
 bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
@@ -536,7 +560,8 @@ bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                 const char16_t** messageArgs,
                                 ErrorArgumentsType argumentsType,
                                 JSErrorNotes::Note* notep, va_list ap) {
-  return ExpandErrorArgumentsHelper(cx, callback, userRef, errorNumber,
+  ErrorAllocator<JSContext> alloc(cx);
+  return ExpandErrorArgumentsHelper(cx, &alloc, callback, userRef, errorNumber,
                                     messageArgs, argumentsType, notep, ap);
 }
 
