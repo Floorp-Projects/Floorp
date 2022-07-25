@@ -167,17 +167,16 @@ template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
     JSContext* cx, const mozilla::Range<const char16_t> chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    ErrorAllocator<JSContext>* cx, const mozilla::Range<Latin1Char> chars);
+    ErrorAllocator* cx, const mozilla::Range<Latin1Char> chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    ErrorAllocator<JSContext>* cx, const mozilla::Range<char16_t> chars);
+    ErrorAllocator* cx, const mozilla::Range<char16_t> chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    ErrorAllocator<JSContext>* cx,
-    const mozilla::Range<const Latin1Char> chars);
+    ErrorAllocator* cx, const mozilla::Range<const Latin1Char> chars);
 
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
-    ErrorAllocator<JSContext>* cx, const mozilla::Range<const char16_t> chars);
+    ErrorAllocator* cx, const mozilla::Range<const char16_t> chars);
 
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 

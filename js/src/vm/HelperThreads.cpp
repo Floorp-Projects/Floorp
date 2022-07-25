@@ -626,7 +626,7 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   JSContext* cx = TlsContext.get();
 
   AutoSetContextRuntime ascr(runtime);
-  ec_.setAllocator(cx);
+  ec_.linkWithJSContext(cx);
 
   parse(cx, &ec_);
 
@@ -718,7 +718,8 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+  stencilInput_ =
+      ec->getAllocator()->make_unique<frontend::CompilationInput>(options);
   if (!stencilInput_) {
     return;
   }
@@ -749,7 +750,8 @@ template <typename Unit>
 void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
-  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+  stencilInput_ =
+      ec->getAllocator()->make_unique<frontend::CompilationInput>(options);
   if (!stencilInput_) {
     return;
   }
@@ -779,7 +781,8 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
 void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
-  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+  stencilInput_ =
+      ec->getAllocator()->make_unique<frontend::CompilationInput>(options);
   if (!stencilInput_) {
     return;
   }
@@ -787,7 +790,8 @@ void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
     return;
   }
 
-  stencil_ = cx->new_<frontend::CompilationStencil>(stencilInput_->source);
+  stencil_ = ec->getAllocator()->new_<frontend::CompilationStencil>(
+      stencilInput_->source);
   if (!stencil_) {
     return;
   }
