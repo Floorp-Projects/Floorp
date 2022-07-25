@@ -2006,19 +2006,22 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
 
   aOptions->allocateInstantiationStorage = true;
 
-  // Checker whether a delazification strategy is requested from the preference
-  // in about:config, and allow to switch to it if we have not yet overflowed
-  // our document's quota of scripts to be parsed with a non-default strategy.
-  //
-  // Otherwise, the default is set either by the CompileOptions default field
-  // value or by the CompileOptions constructor which checks whether code
-  // coverage is enabled.
-  if (ShouldApplyDelazifyStrategy(aRequest, aOptions)) {
-    ApplyDelazifyStrategy(aOptions);
+  if (aOptions->forceFullParse()) {
+    // If code coverage is enabled, full-parsing is non revertable and asserts
+    // if any attempt to do so is made. Thus we should skip attempts to apply a
+    // different delazification strategy.
+  } else if (ShouldApplyDelazifyStrategy(aRequest)) {
+    ApplyDelazifyStrategy(aRequest, aOptions);
     mTotalFullParseSize +=
         aRequest->ScriptTextLength() > 0
             ? static_cast<uint32_t>(aRequest->ScriptTextLength())
             : 0;
+  } else {
+    // If we cannot apply the delazification strategy set in the preference, due
+    // to failure of the preconditions, then we default to the strategy which
+    // minimize the memory impact at runtime.
+    aOptions->setEagerDelazificationStrategy(
+        JS::DelazificationOption::OnDemandOnly);
   }
 
   return NS_OK;
@@ -3253,15 +3256,8 @@ static bool IsInternalURIScheme(nsIURI* uri) {
          uri->SchemeIs("chrome");
 }
 
-bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
-                                               JS::CompileOptions* aOptions) {
-  if (aOptions->forceFullParse()) {
-    // If code coverage is enabled, full-parsing is non revertable and asserts
-    // if any attempt to do so is made. Thus we should skip attempts to apply a
-    // different delazification strategy.
-    return false;
-  }
-
+bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
+  // Full parse everything if negative.
   if (!aRequest->IsTextSource()) {
     // Delazification strategy is only used while processing source input, as
     // the bytecode cache already contains delazified functions.
@@ -3271,13 +3267,6 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
   if (aRequest->IsModuleRequest()) {
     // Module do not yet support concurrent off-thread delazification.
     // (see Bug 1760334)
-    return false;
-  }
-
-  if (aRequest->HasScriptLoadContext() &&
-      aRequest->GetScriptLoadContext()->mIsInline) {
-    // For inline script, we use the strategy defined in CompileOptions
-    // constructor, or its default value.
     return false;
   }
 
@@ -3323,7 +3312,8 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
   return false;
 }
 
-void ScriptLoader::ApplyDelazifyStrategy(JS::CompileOptions* aOptions) {
+void ScriptLoader::ApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
+                                         JS::CompileOptions* aOptions) {
   JS::DelazificationOption strategy =
       JS::DelazificationOption::ParseEverythingEagerly;
   uint32_t strategyIndex =
@@ -3350,6 +3340,17 @@ void ScriptLoader::ApplyDelazifyStrategy(JS::CompileOptions* aOptions) {
   // ParseEverythingEagerly.
   if (strategyIndex <= uint32_t(strategy)) {
     strategy = JS::DelazificationOption(uint8_t(strategyIndex));
+  }
+
+  // When using inline script, we want to minimize time spent parsing before
+  // running the script and thus forbid choosing the eager delazification
+  // strategy. It might still be selected by others means such as through code
+  // coverage.
+  if (aRequest->HasScriptLoadContext() &&
+      aRequest->GetScriptLoadContext()->mIsInline) {
+    if (strategy == JS::DelazificationOption::ParseEverythingEagerly) {
+      strategy = JS::DelazificationOption::OnDemandOnly;
+    }
   }
 
   aOptions->setEagerDelazificationStrategy(strategy);
