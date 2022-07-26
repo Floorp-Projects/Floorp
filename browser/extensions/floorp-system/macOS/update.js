@@ -6,14 +6,11 @@ const Notify = (url, now, latest) =>{
         "type": "basic",
         "iconUrl": browser.runtime.getURL("icons/link-48.png"),
         "title": msg.getMessage("notificationTitle"),
-        "message": msg.getMessage("notificationContent", [now, latest])
+        "message": msg.getMessage("notificationContent", [now, latest]),
     });
     browser.notifications.onClicked.addListener(() =>{
-        browser.tabs.create({
-            "url": url
-        });
+        window.location.href = url
     });
-    return null;
 };
 
 const NotifyNew = (now, latest) =>{
