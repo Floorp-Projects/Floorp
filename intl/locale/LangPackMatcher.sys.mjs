@@ -382,7 +382,7 @@ async function getAvailableLocales() {
   return availableLocales;
 }
 
-var LangPackMatcher = {
+export var LangPackMatcher = {
   negotiateLangPackForLanguageMismatch,
   ensureLangPackInstalled,
   getAppAndSystemLocaleInfo,
@@ -390,5 +390,3 @@ var LangPackMatcher = {
   getAvailableLocales,
   mockable,
 };
-
-var EXPORTED_SYMBOLS = ["LangPackMatcher"];
