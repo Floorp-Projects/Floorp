@@ -965,13 +965,14 @@ NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
   // The onNativeCall hook is fired when self hosted functions are called,
   // and any other self hosted function or C++ native that is directly called
   // by the self hosted function is considered to be part of the same
-  // native call.
+  // native call, except for callContentFunction and constructContentFunction,
+  // which uses CallReason::CallContent.
   //
   // We check this only after checking that debuggerList has items in order
   // to avoid unnecessary calls to cx->currentScript(), which can be expensive
   // when the top frame is in jitcode.
   JSScript* script = cx->currentScript();
-  if (script && script->selfHosted()) {
+  if (script && script->selfHosted() && reason != CallReason::CallContent) {
     return NativeResumeMode::Continue;
   }
 
