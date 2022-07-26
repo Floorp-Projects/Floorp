@@ -339,6 +339,9 @@ def initialize(topsrcdir):
         "update-glean-tags": MachCommandReference(
             "toolkit/components/glean/build_scripts/mach_commands.py"
         ),
+        "update-glean": MachCommandReference(
+            "toolkit/components/glean/build_scripts/mach_commands.py"
+        ),
         "browsertime": MachCommandReference("tools/browsertime/mach_commands.py"),
         "compare-locales": MachCommandReference(
             "tools/compare-locales/mach_commands.py"

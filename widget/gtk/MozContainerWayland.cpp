@@ -682,6 +682,9 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
 
   MutexAutoLock lock(*wl_container->container_lock);
   if (!wl_container->surface || !wl_container->ready_to_draw) {
+    LOGWAYLAND(
+        "  quit, wl_container->surface %p wl_container->ready_to_draw %d\n",
+        wl_container->surface, wl_container->ready_to_draw);
     return nullptr;
   }
   if (!wl_container->eglwindow) {
@@ -690,9 +693,10 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
         wl_container->surface, (int)round(gdk_window_get_width(window) * scale),
         (int)round(gdk_window_get_height(window) * scale));
 
-    LOGWAYLAND("%s [%p] created eglwindow %p\n", __FUNCTION__,
-               (void*)moz_container_get_nsWindow(container),
-               (void*)wl_container->eglwindow);
+    LOGWAYLAND("%s [%p] created eglwindow %p size %d x %d scale %f\n",
+               __FUNCTION__, (void*)moz_container_get_nsWindow(container),
+               (void*)wl_container->eglwindow, gdk_window_get_width(window),
+               gdk_window_get_height(window), scale);
   }
   return wl_container->eglwindow;
 }

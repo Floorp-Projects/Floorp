@@ -85,24 +85,6 @@ nsLayoutDebuggingTools::Init(mozIDOMWindow* aWin) {
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::SetVisualDebugging(bool aVisualDebugging) {
-#ifdef DEBUG
-  nsIFrame::ShowFrameBorders(aVisualDebugging);
-  ForceRefresh();
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetVisualEventDebugging(bool aVisualEventDebugging) {
-#ifdef DEBUG
-  nsIFrame::ShowEventTargetFrameBorder(aVisualEventDebugging);
-  ForceRefresh();
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsLayoutDebuggingTools::SetReflowCounts(bool aShow) {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
   if (PresShell* presShell = GetPresShell(mDocShell)) {

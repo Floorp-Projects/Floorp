@@ -17,7 +17,6 @@
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/EffectCompositor.h"
-#include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/PreferenceSheet.h"
 #include "nsStyleStruct.h"
 
@@ -246,8 +245,7 @@ const RawServoAnimationValue* Gecko_ElementTransitions_EndValueAt(
 double Gecko_GetProgressFromComputedTiming(const mozilla::ComputedTiming*);
 
 double Gecko_GetPositionInSegment(const mozilla::AnimationPropertySegment*,
-                                  double aProgress,
-                                  mozilla::StyleEasingBeforeFlag aBeforeFlag);
+                                  double aProgress, bool aBeforeFlag);
 
 // Get servo's AnimationValue for |aProperty| from the cached base style
 // |aBaseStyles|.
@@ -390,7 +388,7 @@ void Gecko_EnsureStyleTransitionArrayLength(void* array, size_t len);
 // @returns  The matching or created Keyframe.
 mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
     nsTArray<mozilla::Keyframe>* keyframes, float offset,
-    const nsTimingFunction* timingFunction,
+    const mozilla::StyleComputedTimingFunction* timingFunction,
     const mozilla::dom::CompositeOperationOrAuto composition);
 
 // As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
@@ -400,7 +398,7 @@ mozilla::Keyframe* Gecko_GetOrCreateKeyframeAtStart(
 // inserted after the *last* Keyframe in |keyframes| with offset 0.0.
 mozilla::Keyframe* Gecko_GetOrCreateInitialKeyframe(
     nsTArray<mozilla::Keyframe>* keyframes,
-    const nsTimingFunction* timingFunction,
+    const mozilla::StyleComputedTimingFunction* timingFunction,
     const mozilla::dom::CompositeOperationOrAuto composition);
 
 // As with Gecko_GetOrCreateKeyframeAtStart except that this method will search
@@ -409,7 +407,7 @@ mozilla::Keyframe* Gecko_GetOrCreateInitialKeyframe(
 // Keyframe will be appended to the end of |keyframes|.
 mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
     nsTArray<mozilla::Keyframe>* keyframes,
-    const nsTimingFunction* timingFunction,
+    const mozilla::StyleComputedTimingFunction* timingFunction,
     const mozilla::dom::CompositeOperationOrAuto composition);
 
 // Appends and returns a new PropertyValuePair to |aProperties| initialized with

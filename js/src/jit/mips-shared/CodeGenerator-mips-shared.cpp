@@ -105,7 +105,8 @@ void CodeGenerator::visitCompare(LCompare* comp) {
 #ifdef JS_CODEGEN_MIPS64
   if (mir->compareType() == MCompare::Compare_Object ||
       mir->compareType() == MCompare::Compare_Symbol ||
-      mir->compareType() == MCompare::Compare_UIntPtr) {
+      mir->compareType() == MCompare::Compare_UIntPtr ||
+      mir->compareType() == MCompare::Compare_RefOrNull) {
     if (right->isConstant()) {
       MOZ_ASSERT(mir->compareType() == MCompare::Compare_UIntPtr);
       masm.cmpPtrSet(cond, ToRegister(left), Imm32(ToInt32(right)),
@@ -137,7 +138,8 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
 #ifdef JS_CODEGEN_MIPS64
   if (mir->compareType() == MCompare::Compare_Object ||
       mir->compareType() == MCompare::Compare_Symbol ||
-      mir->compareType() == MCompare::Compare_UIntPtr) {
+      mir->compareType() == MCompare::Compare_UIntPtr ||
+      mir->compareType() == MCompare::Compare_RefOrNull) {
     if (comp->right()->isConstant()) {
       MOZ_ASSERT(mir->compareType() == MCompare::Compare_UIntPtr);
       emitBranch(ToRegister(comp->left()), Imm32(ToInt32(comp->right())), cond,

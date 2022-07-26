@@ -118,15 +118,18 @@ void GtkCompositorWidget::RemoteLayoutSizeUpdated(
 }
 
 EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
+  EGLNativeWindowType window = nullptr;
   if (mWidget) {
-    return (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
+    window = (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
   }
 #if defined(MOZ_X11)
   if (mXWindow) {
-    return (EGLNativeWindowType)mXWindow;
+    window = (EGLNativeWindowType)mXWindow;
   }
 #endif
-  return nullptr;
+  LOG("GtkCompositorWidget::GetEGLNativeWindow [%p] window %p\n", mWidget.get(),
+      window);
+  return window;
 }
 
 #if defined(MOZ_WAYLAND)
@@ -209,7 +212,7 @@ bool GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
 
 void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
                                           const bool aShaped) {
-  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", (void*)mWidget.get());
+  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", mWidget.get());
 
   if (!mIsRenderingSuspended) {
     LOG("  quit, mIsRenderingSuspended = false\n");

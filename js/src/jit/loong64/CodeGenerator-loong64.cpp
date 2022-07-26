@@ -465,7 +465,8 @@ void CodeGenerator::visitCompare(LCompare* comp) {
 
   if (mir->compareType() == MCompare::Compare_Object ||
       mir->compareType() == MCompare::Compare_Symbol ||
-      mir->compareType() == MCompare::Compare_UIntPtr) {
+      mir->compareType() == MCompare::Compare_UIntPtr ||
+      mir->compareType() == MCompare::Compare_RefOrNull) {
     if (right->isConstant()) {
       MOZ_ASSERT(mir->compareType() == MCompare::Compare_UIntPtr);
       masm.cmpPtrSet(cond, ToRegister(left), Imm32(ToInt32(right)),
@@ -500,12 +501,14 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
   const Assembler::Condition cond = JSOpToCondition(type, comp->jsop());
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
-      type == MCompare::Compare_UIntPtr) {
+      type == MCompare::Compare_UIntPtr ||
+      type == MCompare::Compare_RefOrNull) {
     if (rhs->isConstant()) {
       emitBranch(ToRegister(lhs), Imm32(ToInt32(rhs)), cond, ifTrue, ifFalse);
     } else if (rhs->isGeneralReg()) {
       emitBranch(lhsReg, ToRegister(rhs), cond, ifTrue, ifFalse);
     } else {
+      MOZ_CRASH("NYI");
     }
     return;
   }

@@ -1080,6 +1080,27 @@ using FontStretch = StyleFontStretch;
 using FontSlantStyle = StyleFontStyle;
 using FontWeight = StyleFontWeight;
 
+template <>
+inline double StyleComputedTimingFunction::At(double aPortion,
+                                              bool aBeforeFlag) const {
+  return Servo_EasingFunctionAt(
+      this, aPortion,
+      aBeforeFlag ? StyleEasingBeforeFlag::Set : StyleEasingBeforeFlag::Unset);
+}
+
+template <>
+inline void StyleComputedTimingFunction::AppendToString(
+    nsACString& aOut) const {
+  return Servo_SerializeEasing(this, &aOut);
+}
+
+template <>
+inline double StyleComputedTimingFunction::GetPortion(
+    const Maybe<StyleComputedTimingFunction>& aFn, double aPortion,
+    bool aBeforeFlag) {
+  return aFn ? aFn->At(aPortion, aBeforeFlag) : aPortion;
+}
+
 }  // namespace mozilla
 
 #endif

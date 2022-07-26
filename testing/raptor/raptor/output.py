@@ -1107,6 +1107,48 @@ class PerftestOutput(object):
 
         return subtests, vals
 
+    def parseTwitchAnimationOutput(self, test):
+        _subtests = {}
+
+        for metric, data in test["measurements"].items():
+            if "perfstat-" not in metric and metric != "twitch-animation":
+                # Only keep perfstats or the run metric
+                continue
+            if metric == "twitch-animation":
+                metric = "run"
+
+            # data is just an array with a single number
+            for page_cycle in data:
+                # Each benchmark cycle is formatted like `[val]`, perfstats
+                # are not
+                if not isinstance(page_cycle, list):
+                    page_cycle = [page_cycle]
+                for val in page_cycle:
+                    _subtests.setdefault(
+                        metric,
+                        {
+                            "unit": test["subtest_unit"],
+                            "alertThreshold": float(test["alert_threshold"]),
+                            "lowerIsBetter": test["subtest_lower_is_better"],
+                            "name": metric,
+                            "replicates": [],
+                        },
+                    )
+
+                    # The values produced are far too large for perfherder
+                    _subtests[metric]["replicates"].append(val)
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1650,6 +1692,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseJetstreamTwoOutput(test)
                 if "matrix-react-bench" in test["name"]:
                     subtests, vals = self.parseMatrixReactBenchOutput(test)
+                if "twitch-animation" in test["name"]:
+                    subtests, vals = self.parseTwitchAnimationOutput(test)
 
                 if subtests is None:
                     raise Exception("No benchmark metrics found in browsertime results")

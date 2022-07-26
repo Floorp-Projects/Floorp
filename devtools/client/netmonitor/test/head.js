@@ -287,6 +287,10 @@ function startNetworkEventUpdateObserver(panelWin) {
       finishedQueue[key] = finishedQueue[key] ? finishedQueue[key] - 1 : -1;
     })
   );
+
+  panelWin.api.on("clear-network-resources", () => {
+    finishedQueue = {};
+  });
 }
 
 async function waitForAllNetworkUpdateEvents() {
@@ -436,6 +440,15 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
       eventTimings++;
       maybeResolve(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);
     }
+
+    function onClearNetworkResources() {
+      // Reset all counters.
+      networkEvent = 0;
+      nonBlockedNetworkEvent = 0;
+      payloadReady = 0;
+      eventTimings = 0;
+    }
+
     function maybeResolve(event, actor) {
       const { document } = monitor.panelWin;
       // Wait until networkEvent, payloadReady and event timings finish for each request.
@@ -483,6 +496,7 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
         panel.api.off(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
         panel.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
         panel.api.off(EVENTS.RECEIVED_EVENT_TIMINGS, onEventTimings);
+        panel.api.off("clear-network-resources", onClearNetworkResources);
         executeSoon(resolve);
       }
     }
@@ -490,6 +504,7 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
     panel.api.on(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
     panel.api.on(EVENTS.PAYLOAD_READY, onPayloadReady);
     panel.api.on(EVENTS.RECEIVED_EVENT_TIMINGS, onEventTimings);
+    panel.api.on("clear-network-resources", onClearNetworkResources);
   });
 }
 

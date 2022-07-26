@@ -18,13 +18,13 @@ const SUGGESTION_ENGINE_NAME =
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
 });
 

@@ -102,7 +102,8 @@ void CodeGenerator::visitCompare(LCompare* comp) {
   const Register defreg = ToRegister(comp->getDef(0));
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
-      type == MCompare::Compare_UIntPtr) {
+      type == MCompare::Compare_UIntPtr ||
+      type == MCompare::Compare_RefOrNull) {
     if (right->isConstant()) {
       MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
       masm.cmpPtrSet(cond, leftreg, Imm32(ToInt32(right)), defreg);
@@ -126,7 +127,8 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
   const LAllocation* right = comp->right();
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
-      type == MCompare::Compare_UIntPtr) {
+      type == MCompare::Compare_UIntPtr ||
+      type == MCompare::Compare_RefOrNull) {
     if (right->isConstant()) {
       MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
       masm.cmpPtr(ToRegister(left), Imm32(ToInt32(right)));

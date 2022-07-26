@@ -3,11 +3,14 @@
 
 /* import-globals-from ../../unit/head.js */
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 /**

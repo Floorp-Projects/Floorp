@@ -22,9 +22,7 @@ interface ResizeObserver {
     [Throws]
     constructor(ResizeObserverCallback callback);
 
-    [Throws]
     void observe(Element target, optional ResizeObserverOptions options = {});
-    [Throws]
     void unobserve(Element target);
     void disconnect();
 };

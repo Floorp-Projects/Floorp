@@ -5,9 +5,9 @@
  * This test makes sure that the urlbar's search mode is correctly preserved.
  */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 UrlbarTestUtils.init(this);

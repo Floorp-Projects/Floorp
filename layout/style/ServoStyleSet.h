@@ -30,6 +30,13 @@ namespace mozilla {
 enum class MediaFeatureChangeReason : uint16_t;
 enum class StylePageOrientation : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
+
+template <typename Integer, typename Number, typename LinearStops>
+struct StyleTimingFunction;
+struct StylePiecewiseLinearFunction;
+using StyleComputedTimingFunction =
+    StyleTimingFunction<int32_t, float, StylePiecewiseLinearFunction>;
+
 namespace css {
 class Rule;
 }  // namespace css
@@ -50,7 +57,6 @@ class nsIContent;
 
 class nsPresContext;
 class nsWindowSizes;
-struct nsTimingFunction;
 struct TreeMatchContext;
 
 namespace mozilla {
@@ -339,7 +345,7 @@ class ServoStyleSet {
 
   bool GetKeyframesForName(const dom::Element&, const ComputedStyle&,
                            nsAtom* aName,
-                           const nsTimingFunction& aTimingFunction,
+                           const StyleComputedTimingFunction& aTimingFunction,
                            nsTArray<Keyframe>& aKeyframes);
 
   nsTArray<ComputedKeyframeValues> GetComputedKeyframeValuesFor(

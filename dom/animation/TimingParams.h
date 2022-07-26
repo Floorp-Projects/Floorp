@@ -13,10 +13,10 @@
 #include "nsPrintfCString.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/UnionTypes.h"  // For OwningUnrestrictedDoubleOrString
-#include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h"  // for TimeDuration
+#include "mozilla/ServoStyleConsts.h"
 
 #include "mozilla/dom/AnimationEffectBinding.h"  // for FillMode
                                                  // and PlaybackDirection
@@ -43,7 +43,7 @@ struct TimingParams {
                const TimeDuration& aEndDelay, float aIterations,
                float aIterationStart, dom::PlaybackDirection aDirection,
                dom::FillMode aFillMode,
-               Maybe<ComputedTimingFunction>&& aFunction)
+               const Maybe<StyleComputedTimingFunction>& aFunction)
       : mDelay(aDelay),
         mEndDelay(aEndDelay),
         mIterations(aIterations),
@@ -119,8 +119,8 @@ struct TimingParams {
     }
   }
 
-  static Maybe<ComputedTimingFunction> ParseEasing(const nsACString& aEasing,
-                                                   ErrorResult& aRv);
+  static Maybe<StyleComputedTimingFunction> ParseEasing(const nsACString&,
+                                                        ErrorResult&);
 
   static StickyTimeDuration CalcActiveDuration(
       const Maybe<StickyTimeDuration>& aDuration, double aIterations) {
@@ -195,10 +195,10 @@ struct TimingParams {
   void SetFill(dom::FillMode aFill) { mFill = aFill; }
   dom::FillMode Fill() const { return mFill; }
 
-  void SetTimingFunction(Maybe<ComputedTimingFunction>&& aFunction) {
+  void SetTimingFunction(Maybe<StyleComputedTimingFunction>&& aFunction) {
     mFunction = std::move(aFunction);
   }
-  const Maybe<ComputedTimingFunction>& TimingFunction() const {
+  const Maybe<StyleComputedTimingFunction>& TimingFunction() const {
     return mFunction;
   }
 
@@ -222,7 +222,7 @@ struct TimingParams {
   double mIterationStart = 0.0;
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
-  Maybe<ComputedTimingFunction> mFunction;
+  Maybe<StyleComputedTimingFunction> mFunction;
   StickyTimeDuration mActiveDuration = StickyTimeDuration();
   StickyTimeDuration mEndTime = StickyTimeDuration();
 };

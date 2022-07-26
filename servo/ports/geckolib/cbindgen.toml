@@ -297,7 +297,6 @@ renaming_overrides_prefixing = true
 "Keyframe" = "Keyframe"
 "nsChangeHint" = "nsChangeHint"
 "ServoElementSnapshotTable" = "ServoElementSnapshotTable"
-"nsTimingFunction" = "nsTimingFunction"
 "Keyframe" = "Keyframe"
 "ComputedKeyframeValues" = "ComputedKeyframeValues"
 "OriginFlags" = "OriginFlags"
@@ -816,6 +815,13 @@ renaming_overrides_prefixing = true
  public:
   // The implementation of IPC LayersMessages needs this to be public.
   StyleTimingFunction() : tag(Tag::Keyword) { ::new (&keyword._0) (StyleTimingKeyword) (StyleTimingKeyword::Linear); }
+
+  bool IsLinearKeyword() const { return IsKeyword() && AsKeyword() == StyleTimingKeyword::Linear; }
+
+  inline double At(double, bool aBeforeFlag) const;
+  inline void AppendToString(nsACString&) const;
+
+  inline static double GetPortion(const Maybe<StyleTimingFunction>&, double, bool aBeforeFlag);
 """
 
 "GenericImage" = """

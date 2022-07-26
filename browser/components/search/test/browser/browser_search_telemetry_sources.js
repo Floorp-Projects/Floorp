@@ -13,8 +13,8 @@ const { BrowserSearchTelemetry } = ChromeUtils.importESModule(
 const { SearchSERPTelemetry } = ChromeUtils.importESModule(
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
-const { UrlbarTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlbarTestUtils.jsm"
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
 );
 const { SearchTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/SearchTestUtils.sys.mjs"

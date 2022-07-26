@@ -45,6 +45,7 @@
     <command id="cmd_dumpFrames" oncommand="gDebugger.dumpFrames();"/>
     <command id="cmd_dumpFramesInCSSPixels" oncommand="gDebugger.dumpFramesInCSSPixels();"/>
     <command id="cmd_dumpTextRuns" oncommand="gDebugger.dumpTextRuns();"/>
+    <command id="cmd_openDevTools" oncommand="gDebugger.openDevTools();"/>
   </commandset>
 
   <keyset id="tasksKeys">
@@ -56,6 +57,7 @@
     <key id="key_dumpFrames" key="F" modifiers="accel" command="cmd_dumpFrames"/>
     <key id="key_dumpFramesInCSSPixels" key="P" modifiers="accel" command="cmd_dumpFramesInCSSPixels"/>
     <key id="key_dumpTextRuns" key="T" modifiers="accel" command="cmd_dumpTextRuns"/>
+    <key id="key_devTools" keycode="VK_F12" command="cmd_openDevTools"/>
   </keyset>
 
   <vbox flex="1">
@@ -72,9 +74,6 @@
         <menu label="&ldb.ToggleMenu.label;"
               accesskey="&ldb.ToggleMenu.accesskey;">
           <menupopup>
-            <menuitem type="checkbox" id="menu_visualDebugging" label="&ldb.visualDebugging.label;" accesskey="&ldb.visualDebugging.accesskey;" oncommand="toggle(this);" />
-            <menuitem type="checkbox" id="menu_visualEventDebugging" label="&ldb.visualEventDebugging.label;" accesskey="&ldb.visualEventDebugging.accesskey;" oncommand="toggle(this);" />
-            <menuseparator />
             <menuitem type="checkbox" id="menu_paintDumping" label="&ldb.paintDumping.label;" accesskey="&ldb.paintDumping.accesskey;" oncommand="toggle(this);" />
             <menuitem type="checkbox" id="menu_invalidateDumping" label="&ldb.invalidateDumping.label;" accesskey="&ldb.invalidateDumping.accesskey;" oncommand="toggle(this);" />
             <menuseparator />

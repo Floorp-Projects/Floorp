@@ -4010,6 +4010,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvIsWindowSupportingProtectedMedia(
       FxRWindowManager::GetInstance()->IsFxRWindow(aOuterWindowID);
   aResolve(!isFxrWindow);
 #else
+#  ifdef FUZZING_SNAPSHOT
+  return IPC_FAIL(this, "Should only be called on Windows");
+#  endif
   MOZ_CRASH("Should only be called on Windows");
 #endif
 

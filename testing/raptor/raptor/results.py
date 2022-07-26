@@ -608,6 +608,13 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 for custom_type in custom_types:
                     for k, v in custom_types[custom_type].items():
                         bt_result["measurements"].setdefault(k, []).append(v)
+
+                if self.perfstats:
+                    for cycle in raw_result["geckoPerfStats"]:
+                        for metric in cycle:
+                            bt_result["measurements"].setdefault(
+                                "perfstat-" + metric, []
+                            ).append(cycle[metric])
             else:
                 # extracting values from browserScripts and statistics
                 for bt, raptor in conversion:

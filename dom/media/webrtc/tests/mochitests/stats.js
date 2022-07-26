@@ -546,14 +546,16 @@ function pedanticChecks(report) {
 
         // concealedSamples
         ok(
-          stat.concealedSamples > 100,
+          stat.concealedSamples >= 0 &&
+            stat.concealedSamples <= stat.totalSamplesReceived,
           `${stat.type}.concealedSamples is a sane number for a short ` +
             `${stat.kind} test. value=${stat.concealedSamples}`
         );
 
         // silentConcealedSamples
         ok(
-          stat.silentConcealedSamples >= 0,
+          stat.silentConcealedSamples >= 0 &&
+            stat.silentConcealedSamples <= stat.concealedSamples,
           `${stat.type}.silentConcealedSamples is a sane number for a short ` +
             `${stat.kind} test. value=${stat.silentConcealedSamples}`
         );

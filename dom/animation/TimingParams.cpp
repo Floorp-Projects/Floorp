@@ -92,8 +92,8 @@ TimingParams TimingParams::FromEffectTiming(
   if (aRv.Failed()) {
     return result;
   }
-  Maybe<ComputedTimingFunction> easing =
-      TimingParams::ParseEasing(aEffectTiming.mEasing, aRv);
+  Maybe<StyleComputedTimingFunction> easing =
+      ParseEasing(aEffectTiming.mEasing, aRv);
   if (aRv.Failed()) {
     return result;
   }
@@ -105,7 +105,7 @@ TimingParams TimingParams::FromEffectTiming(
   result.mIterationStart = aEffectTiming.mIterationStart;
   result.mDirection = aEffectTiming.mDirection;
   result.mFill = aEffectTiming.mFill;
-  result.mFunction = easing;
+  result.mFunction = std::move(easing);
 
   result.Update();
 
@@ -146,9 +146,9 @@ TimingParams TimingParams::MergeOptionalEffectTiming(
     }
   }
 
-  Maybe<ComputedTimingFunction> easing;
+  Maybe<StyleComputedTimingFunction> easing;
   if (aEffectTiming.mEasing.WasPassed()) {
-    easing = TimingParams::ParseEasing(aEffectTiming.mEasing.Value(), aRv);
+    easing = ParseEasing(aEffectTiming.mEasing.Value(), aRv);
     if (aRv.Failed()) {
       return result;
     }
@@ -189,19 +189,19 @@ TimingParams TimingParams::MergeOptionalEffectTiming(
 }
 
 /* static */
-Maybe<ComputedTimingFunction> TimingParams::ParseEasing(
+Maybe<StyleComputedTimingFunction> TimingParams::ParseEasing(
     const nsACString& aEasing, ErrorResult& aRv) {
-  nsTimingFunction timingFunction;
+  StyleComputedTimingFunction timingFunction;
   if (!ServoCSSParser::ParseEasing(aEasing, timingFunction)) {
     aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
     return Nothing();
   }
 
-  if (timingFunction.IsLinear()) {
+  if (timingFunction.IsLinearKeyword()) {
     return Nothing();
   }
 
-  return Some(ComputedTimingFunction(timingFunction));
+  return Some(std::move(timingFunction));
 }
 
 bool TimingParams::operator==(const TimingParams& aOther) const {
