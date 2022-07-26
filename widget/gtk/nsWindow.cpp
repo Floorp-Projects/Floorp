@@ -6415,15 +6415,6 @@ void nsWindow::EnsureGrabs(void) {
   }
 }
 
-void nsWindow::CleanLayerManagerRecursive(void) {
-  if (mWindowRenderer) {
-    mWindowRenderer->Destroy();
-    mWindowRenderer = nullptr;
-  }
-
-  DestroyCompositor();
-}
-
 void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
   bool isTransparent = aMode == eTransparencyTransparent;
 
@@ -6453,7 +6444,7 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
     // The choice of layer manager depends on
     // GtkCompositorWidgetInitData::Shaped(), which will need to change, so
     // clean out the old layer manager.
-    CleanLayerManagerRecursive();
+    DestroyLayerManager();
   }
 }
 
