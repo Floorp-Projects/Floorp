@@ -2678,17 +2678,9 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::I16x8DotI8x16I7x16S:
       masm.dotInt8x16Int7x16(lhs, rhs, dest);
       break;
-#  ifdef ENABLE_WASM_SIMD_WORMHOLE
-    case wasm::SimdOp::MozWHSELFTEST:
-      masm.loadConstantSimd128(wasm::WormholeSignature(), dest);
-      break;
-    case wasm::SimdOp::MozWHPMADDUBSW:
+    case wasm::SimdOp::MozPMADDUBSW:
       masm.vpmaddubsw(rhs, lhs, dest);
       break;
-    case wasm::SimdOp::MozWHPMADDWD:
-      masm.widenDotInt16x8(lhs, rhs, dest);
-      break;
-#  endif
     default:
       MOZ_CRASH("Binary SimdOp not implemented");
   }

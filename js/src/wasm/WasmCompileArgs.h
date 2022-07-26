@@ -73,10 +73,8 @@ class Tiers {
 // available under prefs.)
 
 struct FeatureOptions {
-  FeatureOptions() : simdWormhole(false), intrinsics(false) {}
+  FeatureOptions() : intrinsics(false) {}
 
-  // May be set if javascript.options.wasm_simd_wormhole==true.
-  bool simdWormhole;
   // Enables intrinsic opcodes, only set in WasmIntrinsic.cpp.
   bool intrinsics;
 };
@@ -91,7 +89,6 @@ struct FeatureArgs {
 #undef WASM_FEATURE
             sharedMemory(Shareable::False),
         simd(false),
-        simdWormhole(false),
         intrinsics(false) {
   }
   FeatureArgs(const FeatureArgs&) = default;
@@ -106,7 +103,6 @@ struct FeatureArgs {
 
   Shareable sharedMemory;
   bool simd;
-  bool simdWormhole;
   bool intrinsics;
 };
 

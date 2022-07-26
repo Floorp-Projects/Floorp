@@ -93,10 +93,6 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
       wasm::ThreadsAvailable(cx) ? Shareable::True : Shareable::False;
 
   features.simd = jit::JitSupportsWasmSimd();
-  // See comments in WasmConstants.h regarding the meaning of the wormhole
-  // options.
-  features.simdWormhole =
-      wasm::SimdWormholeAvailable(cx) && options.simdWormhole;
   features.intrinsics = options.intrinsics;
 
   return features;
