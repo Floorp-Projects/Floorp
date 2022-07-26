@@ -275,6 +275,16 @@ async function doEagerEvalWithSideEffect(commands) {
 
     // Call a funtion with side effect from self-hosted JS function.
     "[1, 2, 3].map(prompt)",
+
+    // Call a function with Function.prototype.call.
+    "Function.prototype.call.bind(Function.prototype.call)(prompt);",
+
+    // Call a function with Function.prototype.apply.
+    "Function.prototype.apply.bind(Function.prototype.apply)(prompt);",
+
+    // Indirectly call a function with Function.prototype.apply.
+    "Reflect.apply(prompt, null, []);",
+    "'aaaaaaaa'.replace(/(a)(a)(a)(a)(a)(a)(a)(a)/, prompt)",
   ];
 
   for (const code of testData) {
