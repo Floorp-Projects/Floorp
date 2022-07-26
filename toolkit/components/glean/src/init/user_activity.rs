@@ -69,7 +69,7 @@ impl UserActivityObserver {
         &self,
         _subject: *const nsISupports,
         topic: *const c_char,
-        _data: *const i16,
+        _data: *const u16,
     ) -> nserror::nsresult {
         match CStr::from_ptr(topic).to_str() {
             Ok("user-interaction-active") => self.handle_active(),
