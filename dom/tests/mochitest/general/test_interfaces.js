@@ -833,12 +833,12 @@ var interfaceNamesInGlobalScope = [
     disabled: isEarlyBetaOrEarlier,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "OffscreenCanvas", insecureContext: true, nightly: true },
+  { name: "OffscreenCanvas", insecureContext: true, earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "OffscreenCanvasRenderingContext2D",
     insecureContext: true,
-    nightly: true,
+    earlyBetaOrEarlier: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Option", insecureContext: true },

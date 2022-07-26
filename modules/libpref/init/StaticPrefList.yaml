@@ -5751,7 +5751,7 @@
 # Enable OffscreenCanvas everywhere.
 - name: gfx.offscreencanvas.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Enable OffscreenCanvas based on the domain allowlist.
@@ -7777,7 +7777,7 @@
 # Is support for workerGlobalScope.fonts enabled?
 - name: layout.css.font-loading-api.workers.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Is support for the @font-face metrics override descriptors enabled?
