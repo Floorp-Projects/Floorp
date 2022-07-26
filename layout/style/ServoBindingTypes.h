@@ -117,7 +117,6 @@ class nsCSSValue;
 class nsINode;
 class nsPresContext;
 struct nsFontFaceRuleContainer;
-struct nsTimingFunction;
 
 namespace mozilla {
 class ComputedStyle;

@@ -130,7 +130,7 @@ class CSSTransition final : public Animation {
     TimeDuration mStartTime;
     double mPlaybackRate;
     TimingParams mTiming;
-    Maybe<ComputedTimingFunction> mTimingFunction;
+    Maybe<StyleComputedTimingFunction> mTimingFunction;
     AnimationValue mFromValue, mToValue;
   };
   void SetReplacedTransition(

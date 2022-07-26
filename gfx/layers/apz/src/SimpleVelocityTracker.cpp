@@ -6,7 +6,7 @@
 
 #include "SimpleVelocityTracker.h"
 
-#include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
+#include "mozilla/ServoStyleConsts.h"  // for StyleComputedTimingFunction
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPtr.h"  // for StaticAutoPtr
 
@@ -23,7 +23,7 @@ namespace layers {
 // not recompute the velocity.
 const TimeDuration MIN_VELOCITY_SAMPLE_TIME = TimeDuration::FromMilliseconds(5);
 
-extern StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
+extern StaticAutoPtr<StyleComputedTimingFunction> gVelocityCurveFunction;
 
 SimpleVelocityTracker::SimpleVelocityTracker(Axis* aAxis)
     : mAxis(aAxis), mVelocitySamplePos(0) {}
@@ -113,8 +113,8 @@ float SimpleVelocityTracker::ApplyFlingCurveToVelocity(float aVelocity) const {
         // the curve
         float scale = maxVelocity - curveThreshold;
         float funcInput = (newVelocity - curveThreshold) / scale;
-        float funcOutput = gVelocityCurveFunction->GetValue(
-            funcInput, StyleEasingBeforeFlag::Unset);
+        float funcOutput =
+            gVelocityCurveFunction->At(funcInput, /* aBeforeFlag = */ false);
         float curvedVelocity = (funcOutput * scale) + curveThreshold;
         SVT_LOG("%p|%s curving up velocity from %f to %f\n",
                 mAxis->OpaqueApzcPointer(), mAxis->Name(), newVelocity,

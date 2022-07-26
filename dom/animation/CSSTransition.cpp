@@ -303,7 +303,7 @@ void CSSTransition::UpdateStartValueFromReplacedTransition() {
       Animation::ProgressTimelinePosition::NotBoundary);
 
   if (!computedTiming.mProgress.IsNull()) {
-    double valuePosition = ComputedTimingFunction::GetPortion(
+    double valuePosition = StyleComputedTimingFunction::GetPortion(
         mReplacedTransition->mTimingFunction, computedTiming.mProgress.Value(),
         computedTiming.mBeforeFlag);
 
