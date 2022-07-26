@@ -1217,6 +1217,7 @@ void nsWindow::HideWaylandToplevelWindow() {
 }
 
 void nsWindow::ShowWaylandToplevelWindow() {
+  MOZ_ASSERT(!IsWaylandPopup());
   LOG("nsWindow::ShowWaylandToplevelWindow");
   gtk_widget_show(mShell);
 }
