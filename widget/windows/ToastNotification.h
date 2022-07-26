@@ -42,7 +42,6 @@ class ToastNotification final : public nsIWindowsAlertsService,
   virtual ~ToastNotification();
 
   nsRefPtrHashtable<nsStringHashKey, ToastNotificationHandler> mActiveHandlers;
-  nsCOMPtr<nsIThread> mBackgroundThread;
   bool mSuppressForScreenSharing = false;
 };
 
