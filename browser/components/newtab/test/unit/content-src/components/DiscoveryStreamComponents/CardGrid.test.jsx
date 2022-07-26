@@ -27,12 +27,7 @@ describe("<CardGrid>", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallow(
-      <CardGrid
-        DiscoveryStream={INITIAL_STATE.DiscoveryStream}
-        Prefs={INITIAL_STATE.Prefs}
-      />
-    );
+    wrapper = shallow(<CardGrid Prefs={INITIAL_STATE.Prefs} />);
   });
 
   it("should render an empty div", () => {
@@ -80,7 +75,6 @@ describe("<CardGrid>", () => {
       data: {
         recommendations: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
       },
-      DiscoveryStream: INITIAL_STATE.DiscoveryStream,
       Prefs: INITIAL_STATE.Prefs,
     };
     wrapper = mount(
