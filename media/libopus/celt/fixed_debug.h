@@ -491,7 +491,7 @@ static OPUS_INLINE int MULT16_32_QX_(int a, opus_int64 b, int Q, char *file, int
       celt_assert(0);
 #endif
    }
-   if (ABS32(b)>=((opus_val32)(1)<<(15+Q)))
+   if (ABS32(b)>=((opus_int64)(1)<<(16+Q)))
    {
       fprintf (stderr, "MULT16_32_Q%d: second operand too large: %d %d in %s: line %d\n", Q, (int)a, (int)b, file, line);
 #ifdef FIXED_DEBUG_ASSERT
@@ -524,7 +524,7 @@ static OPUS_INLINE int MULT16_32_PX_(int a, opus_int64 b, int Q, char *file, int
       celt_assert(0);
 #endif
    }
-   if (ABS32(b)>=((opus_int64)(1)<<(15+Q)))
+   if (ABS32(b)>=((opus_int64)(1)<<(16+Q)))
    {
       fprintf (stderr, "MULT16_32_Q%d: second operand too large: %d %d in %s: line %d\n\n", Q, (int)a, (int)b,file, line);
 #ifdef FIXED_DEBUG_ASSERT
