@@ -145,13 +145,18 @@ class DefaultHistoryController(
         scope.launch {
             store.dispatch(HistoryFragmentAction.EnterDeletionMode)
             if (timeFrame == null) {
-                GleanHistory.removedAll.record(mozilla.telemetry.glean.private.NoExtras())
                 historyStorage.deleteEverything()
             } else {
+                val longRange = timeFrame.toLongRange()
                 historyStorage.deleteVisitsBetween(
-                    startTime = timeFrame.toLongRange().first,
-                    endTime = timeFrame.toLongRange().last,
+                    startTime = longRange.first,
+                    endTime = longRange.last,
                 )
+            }
+            when (timeFrame) {
+                RemoveTimeFrame.LastHour -> GleanHistory.removedLastHour.record(NoExtras())
+                RemoveTimeFrame.TodayAndYesterday -> GleanHistory.removedTodayAndYesterday.record(NoExtras())
+                null -> GleanHistory.removedAll.record(NoExtras())
             }
             // We introduced more deleting options, but are keeping these actions for all options.
             // The approach could be improved: https://github.com/mozilla-mobile/fenix/issues/26102

@@ -9,12 +9,17 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -36,6 +41,9 @@ class HistoryControllerTest {
         0.toLong(),
         HistoryItemTimeGroup.timeGroupForTimestamp(0)
     )
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -157,16 +165,54 @@ class HistoryControllerTest {
     }
 
     @Test
-    fun onDeleteTimeRangeConfirmed() {
+    fun `WHEN user confirms history deletion GIVEN timeFrame is null THEN delete all history, log the event, purge history and remove recently closed items`() {
         val controller = createController()
+        assertNull(org.mozilla.fenix.GleanMetrics.History.removedAll.testGetValue())
 
         controller.handleDeleteTimeRangeConfirmed(null)
         coVerifyOrder {
             store.dispatch(HistoryFragmentAction.EnterDeletionMode)
             historyStorage.deleteEverything()
             browserStore.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
+            browserStore.dispatch(EngineAction.PurgeHistoryAction)
             store.dispatch(HistoryFragmentAction.ExitDeletionMode)
         }
+
+        assertNotNull(org.mozilla.fenix.GleanMetrics.History.removedAll.testGetValue())
+    }
+
+    @Test
+    fun `WHEN user confirms history deletion GIVEN timeFrame is lastHour THEN delete visits between the time frame, log the event, purge history and remove recently closed items`() {
+        val controller = createController()
+        assertNull(org.mozilla.fenix.GleanMetrics.History.removedLastHour.testGetValue())
+
+        controller.handleDeleteTimeRangeConfirmed(RemoveTimeFrame.LastHour)
+        coVerifyOrder {
+            store.dispatch(HistoryFragmentAction.EnterDeletionMode)
+            historyStorage.deleteVisitsBetween(any(), any())
+            browserStore.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
+            browserStore.dispatch(EngineAction.PurgeHistoryAction)
+            store.dispatch(HistoryFragmentAction.ExitDeletionMode)
+        }
+
+        assertNotNull(org.mozilla.fenix.GleanMetrics.History.removedLastHour.testGetValue())
+    }
+
+    @Test
+    fun `WHEN user confirms history deletion GIVEN timeFrame is todayAndYesterday THEN delete visits between the time frame, log the event, purge history and remove recently closed items`() {
+        val controller = createController()
+        assertNull(org.mozilla.fenix.GleanMetrics.History.removedTodayAndYesterday.testGetValue())
+
+        controller.handleDeleteTimeRangeConfirmed(RemoveTimeFrame.TodayAndYesterday)
+        coVerifyOrder {
+            store.dispatch(HistoryFragmentAction.EnterDeletionMode)
+            historyStorage.deleteVisitsBetween(any(), any())
+            browserStore.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
+            browserStore.dispatch(EngineAction.PurgeHistoryAction)
+            store.dispatch(HistoryFragmentAction.ExitDeletionMode)
+        }
+
+        assertNotNull(org.mozilla.fenix.GleanMetrics.History.removedTodayAndYesterday.testGetValue())
     }
 
     @Test

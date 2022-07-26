@@ -383,6 +383,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                 setView(layout)
 
                 setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
+                    GleanHistory.removePromptCancelled.record(NoExtras())
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
@@ -395,6 +396,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                     historyInteractor.onDeleteTimeRangeConfirmed(selectedTimeFrame)
                     dialog.dismiss()
                 }
+
+                GleanHistory.removePromptOpened.record(NoExtras())
             }.create()
     }
 
