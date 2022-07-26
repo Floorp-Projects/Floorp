@@ -306,11 +306,10 @@ package org.mozilla.geckoview {
   @Retention(value=RetentionPolicy.SOURCE) public static interface Autofill.AutofillInputType {
   }
 
-  @Retention(value=RetentionPolicy.SOURCE) public static interface Autofill.AutofillNotify {
+  public static interface Autofill.AutofillNotify {
   }
 
   public static interface Autofill.Delegate {
-    method @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @UiThread default public void onAutofill(@NonNull GeckoSession, int, @Nullable Autofill.Node);
     method @UiThread default public void onNodeAdd(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
     method @UiThread default public void onNodeBlur(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
     method @UiThread default public void onNodeFocus(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
@@ -339,7 +338,6 @@ package org.mozilla.geckoview {
   }
 
   public static final class Autofill.Node {
-    method @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
     method @AnyThread @Nullable public String getAttribute(@NonNull String);
     method @AnyThread @NonNull public Map<String,String> getAttributes();
     method @AnyThread @NonNull public Collection<Autofill.Node> getChildren();
@@ -347,30 +345,14 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public String getDomain();
     method @AnyThread public boolean getEnabled();
     method @AnyThread public boolean getFocusable();
-    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public boolean getFocused();
     method @AnyThread public int getHint();
-    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public int getId();
     method @AnyThread public int getInputType();
     method @AnyThread @NonNull public String getTag();
-    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @NonNull public String getValue();
-    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public boolean getVisible();
   }
 
   public static class Autofill.NodeData {
     method @AnyThread public int getId();
     method @AnyThread @Nullable public String getValue();
-  }
-
-  @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public static final class Autofill.Notify {
-    method @AnyThread @Nullable public static String toString(int);
-    field public static final int NODE_ADDED = 3;
-    field public static final int NODE_BLURRED = 7;
-    field public static final int NODE_FOCUSED = 6;
-    field public static final int NODE_REMOVED = 4;
-    field public static final int NODE_UPDATED = 5;
-    field public static final int SESSION_CANCELED = 2;
-    field public static final int SESSION_COMMITTED = 1;
-    field public static final int SESSION_STARTED = 0;
   }
 
   public static final class Autofill.Session {
@@ -645,8 +627,6 @@ package org.mozilla.geckoview {
     method @UiThread public void setDynamicToolbarMaxHeight(int);
     method @UiThread public void setVerticalClipping(int);
     method @UiThread public boolean shouldPinOnScreen();
-    method @Deprecated @DeprecationSchedule(id="surfaceChanged",version=104) @UiThread public void surfaceChanged(@NonNull Surface, int, int);
-    method @Deprecated @DeprecationSchedule(id="surfaceChanged",version=104) @UiThread public void surfaceChanged(@NonNull Surface, int, int, int, int);
     method @UiThread public void surfaceChanged(@NonNull GeckoDisplay.SurfaceInfo);
     method @UiThread public void surfaceDestroyed();
   }
@@ -887,7 +867,6 @@ package org.mozilla.geckoview {
     ctor public GeckoSession();
     ctor public GeckoSession(@Nullable GeckoSessionSettings);
     method @NonNull @UiThread public GeckoDisplay acquireDisplay();
-    method @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @UiThread public void close();
     method @AnyThread public void exitFullScreen();
     method @NonNull @UiThread public SessionAccessibility getAccessibility();
@@ -1102,7 +1081,6 @@ package org.mozilla.geckoview {
     method @UiThread default public void onCanGoForward(@NonNull GeckoSession, boolean);
     method @Nullable @UiThread default public GeckoResult<String> onLoadError(@NonNull GeckoSession, @Nullable String, @NonNull WebRequestError);
     method @Nullable @UiThread default public GeckoResult<AllowOrDeny> onLoadRequest(@NonNull GeckoSession, @NonNull GeckoSession.NavigationDelegate.LoadRequest);
-    method @Deprecated @DeprecationSchedule(id="location-permissions",version=104) @UiThread default public void onLocationChange(@NonNull GeckoSession, @Nullable String);
     method @UiThread default public void onLocationChange(@NonNull GeckoSession, @Nullable String, @NonNull List<GeckoSession.PermissionDelegate.ContentPermission>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession> onNewSession(@NonNull GeckoSession, @NonNull String);
     method @Nullable @UiThread default public GeckoResult<AllowOrDeny> onSubframeLoadRequest(@NonNull GeckoSession, @NonNull GeckoSession.NavigationDelegate.LoadRequest);

@@ -140,7 +140,7 @@ public class GeckoSessionTestRule implements TestRule {
     displayTexture.setDefaultBufferSize(x, y);
 
     final Surface displaySurface = new Surface(displayTexture);
-    display.surfaceChanged(displaySurface, x, y);
+    display.surfaceChanged(new GeckoDisplay.SurfaceInfo.Builder(displaySurface).size(x, y).build());
 
     mDisplays.put(session, display);
     mDisplayTextures.put(session, displayTexture);

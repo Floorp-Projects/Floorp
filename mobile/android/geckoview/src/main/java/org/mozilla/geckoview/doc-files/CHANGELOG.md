@@ -13,6 +13,15 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v104
+- Removed deprecated Autofill.Delegate `onAutofill`, Autofill.Node `fillViewStructure`, `getFocused`, `getId`, `getValue`, `getVisible`, Autofill.NodeData `Autofill.Notify`, Autofill.Session `surfaceChanged`.
+  ([bug 1781180]({{bugzilla}}1781180))
+- Removed deprecated `GeckoDisplay.surfaceChanged` functions [[1]][101.4] [[2]][101.5]
+- Removed deprecated [`GeckoSession.autofill`][102.18].
+  ([bug 1781180]({{bugzilla}}1781180))
+- Removed deprecated [`onLocationChange(2)`][102.3]
+  ([bug 1781180]({{bugzilla}}1781180))
+
 ## v103
 - Added [`GeckoSession.saveAsPdf`][103.1] that returns a `GeckoResult<InputStream>` that contains a PDF of the current session's page.
 - Added missing `@Deprecated` tag for `setPermission`, see deprecation note in [v90](#v90).
@@ -1215,4 +1224,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 06664c1932db6304544048f752557eee7032d176
+[api-version]: 33ebc0f936697e14d12094ff872be822275dc21b
