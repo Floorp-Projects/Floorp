@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test that scroll snap wont't happen on zoomed content</title>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+    html {
+      overflow-y: scroll;
+      scroll-snap-type: y proximity;
+    }
+    .snap {
+      width: 100vw;
+      height: 100vh;
+      background-color: blue;
+      position: absolute;
+      top: 200px;
+      scroll-snap-align: start;
+    }
+  </style>
+</head>
+<body>
+  <div class="snap"></div>
+  <div style="width: 100%; height: 500vh;"></div>
+  <script type="application/javascript">
+    async function test() {
+      let transformEndPromise = promiseTransformEnd();
+
+      // Use scrollToVisual() to scroll visual viewport.
+      SpecialPowers.DOMWindowUtils.scrollToVisual(
+        100, 400,
+        SpecialPowers.DOMWindowUtils.UPDATE_TYPE_MAIN_THREAD,
+        SpecialPowers.DOMWindowUtils.SCROLL_MODE_SMOOTH);
+
+      // Wait for the end of the scroll.
+      await transformEndPromise;
+      await waitToClearOutAnyPotentialScrolls();
+
+      const pageTop = visualViewport.pageTop;
+      const pageLeft = visualViewport.pageLeft;
+
+      let eventFired = false;
+      window.visualViewport.addEventListener("scroll", () => {
+        eventFired = true;
+      });
+
+      // Trigger a scroll snap, it should nothing.
+      SpecialPowers.wrap(document.documentElement).mozScrollSnap();
+
+      await waitToClearOutAnyPotentialScrolls();
+      ok(!eventFired, "No visual scroll should happen");
+
+      // Sanity checks to see whether the visual viewport hasn't been changed.
+      is(visualViewport.pageTop, pageTop);
+      is(visualViewport.pageLeft, pageLeft);
+    }
+
+    SpecialPowers.DOMWindowUtils.setResolutionAndScaleTo(10.0);
+    waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</body>
+</html>
