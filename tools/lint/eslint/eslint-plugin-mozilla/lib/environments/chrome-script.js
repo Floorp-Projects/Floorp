@@ -8,40 +8,21 @@
 
 "use strict";
 
+var { globals } = require("./special-powers-sandbox");
+var util = require("util");
+
 module.exports = {
-  globals: {
-    // testing/specialpowers/content/SpecialPowersSandbox.jsm
+  globals: util._extend(
+    {
+      // testing/specialpowers/content/SpecialPowersParent.jsm
 
-    // SANDBOX_GLOBALS
-    Blob: false,
-    ChromeUtils: false,
-    FileReader: false,
-    TextDecoder: false,
-    TextEncoder: false,
-    URL: false,
-
-    // EXTRA_IMPORTS
-    EventUtils: false,
-
-    // SpecialPowersSandbox constructor
-    assert: false,
-    Assert: false,
-    BrowsingContext: false,
-    InspectorUtils: false,
-    ok: false,
-    is: false,
-    isnot: false,
-    todo: false,
-    todo_is: false,
-    info: false,
-
-    // testing/specialpowers/content/SpecialPowersParent.jsm
-
-    // SPLoadChromeScript block
-    createWindowlessBrowser: false,
-    sendAsyncMessage: false,
-    addMessageListener: false,
-    removeMessageListener: false,
-    actorParent: false,
-  },
+      // SPLoadChromeScript block
+      createWindowlessBrowser: false,
+      sendAsyncMessage: false,
+      addMessageListener: false,
+      removeMessageListener: false,
+      actorParent: false,
+    },
+    globals
+  ),
 };

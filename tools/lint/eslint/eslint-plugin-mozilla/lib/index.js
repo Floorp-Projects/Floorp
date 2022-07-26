@@ -29,6 +29,7 @@ module.exports = {
     "remote-page": require("../lib/environments/remote-page.js"),
     simpletest: require("../lib/environments/simpletest.js"),
     sjs: require("../lib/environments/sjs.js"),
+    "special-powers-sandbox": require("../lib/environments/special-powers-sandbox.js"),
     privileged: require("../lib/environments/privileged.js"),
     xpcshell: require("../lib/environments/xpcshell.js"),
   },
