@@ -45,8 +45,6 @@ const COMMANDS = [
 class Debugger {
   constructor() {
     this._flags = new Map();
-    this._visualDebugging = false;
-    this._visualEventDebugging = false;
     this._pagedMode = false;
     this._attached = false;
 
@@ -87,26 +85,6 @@ class Debugger {
     if (gFissionBrowser) {
       dump(`Subframe pids: ${framePids.length ? framePids.join(", ") : "-"}\n`);
     }
-  }
-
-  get visualDebugging() {
-    return this._visualDebugging;
-  }
-
-  set visualDebugging(v) {
-    v = !!v;
-    this._visualDebugging = v;
-    this._sendMessage("setVisualDebugging", v);
-  }
-
-  get visualEventDebugging() {
-    return this._visualEventDebugging;
-  }
-
-  set visualEventDebugging(v) {
-    v = !!v;
-    this._visualEventDebugging = v;
-    this._sendMessage("setVisualEventDebugging", v);
   }
 
   get pagedMode() {
