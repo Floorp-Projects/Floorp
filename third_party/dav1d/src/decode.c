@@ -749,9 +749,9 @@ static inline void splat_intraref(const Dav1dContext *const c,
     c->refmvs_dsp.splat_mv(&t->rt.r[(t->by & 31) + 5], &tmpl, t->bx, bw4, bh4);
 }
 
-static inline void mc_lowest_px(int *const dst, const int by4, const int bh4,
-                                const int mvy, const int ss_ver,
-                                const struct ScalableMotionParams *const smp)
+static void mc_lowest_px(int *const dst, const int by4, const int bh4,
+                         const int mvy, const int ss_ver,
+                         const struct ScalableMotionParams *const smp)
 {
     const int v_mul = 4 >> ss_ver;
     if (!smp->scale) {
@@ -766,14 +766,11 @@ static inline void mc_lowest_px(int *const dst, const int by4, const int bh4,
     }
 }
 
-static inline void affine_lowest_px(Dav1dTaskContext *const t,
-                                    int *const dst, const int is_chroma,
-                                    const uint8_t *const b_dim,
-                                    const Dav1dWarpedMotionParams *const wmp)
+static ALWAYS_INLINE void affine_lowest_px(Dav1dTaskContext *const t, int *const dst,
+                                           const uint8_t *const b_dim,
+                                           const Dav1dWarpedMotionParams *const wmp,
+                                           const int ss_ver, const int ss_hor)
 {
-    const Dav1dFrameContext *const f = t->f;
-    const int ss_ver = is_chroma && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
-    const int ss_hor = is_chroma && f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
     const int h_mul = 4 >> ss_hor, v_mul = 4 >> ss_ver;
     assert(!((b_dim[0] * h_mul) & 7) && !((b_dim[1] * v_mul) & 7));
     const int32_t *const mat = wmp->matrix;
@@ -790,6 +787,25 @@ static inline void affine_lowest_px(Dav1dTaskContext *const t,
         const int dy = (int) (mvy >> 16) - 4;
         *dst = imax(*dst, dy + 4 + 8);
     }
+}
+
+static NOINLINE void affine_lowest_px_luma(Dav1dTaskContext *const t, int *const dst,
+                                           const uint8_t *const b_dim,
+                                           const Dav1dWarpedMotionParams *const wmp)
+{
+    affine_lowest_px(t, dst, b_dim, wmp, 0, 0);
+}
+
+static NOINLINE void affine_lowest_px_chroma(Dav1dTaskContext *const t, int *const dst,
+                                             const uint8_t *const b_dim,
+                                             const Dav1dWarpedMotionParams *const wmp)
+{
+    const Dav1dFrameContext *const f = t->f;
+    assert(f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I400);
+    if (f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I444)
+        affine_lowest_px_luma(t, dst, b_dim, wmp);
+    else
+        affine_lowest_px(t, dst, b_dim, wmp, f->cur.p.layout & DAV1D_PIXEL_LAYOUT_I420, 1);
 }
 
 static void obmc_lowest_px(Dav1dTaskContext *const t,
@@ -2150,9 +2166,9 @@ static int decode_b(Dav1dTaskContext *const t,
                 ((b->inter_mode == GLOBALMV && f->gmv_warp_allowed[b->ref[0]]) ||
                  (b->motion_mode == MM_WARP && t->warpmv.type > DAV1D_WM_TYPE_TRANSLATION)))
             {
-                affine_lowest_px(t, &lowest_px[b->ref[0]][0], 0, b_dim,
-                                 b->motion_mode == MM_WARP ? &t->warpmv :
-                                     &f->frame_hdr->gmv[b->ref[0]]);
+                affine_lowest_px_luma(t, &lowest_px[b->ref[0]][0], b_dim,
+                                      b->motion_mode == MM_WARP ? &t->warpmv :
+                                      &f->frame_hdr->gmv[b->ref[0]]);
             } else {
                 mc_lowest_px(&lowest_px[b->ref[0]][0], t->by, bh4, b->mv[0].y,
                              0, &f->svc[b->ref[0]][1]);
@@ -2203,9 +2219,9 @@ static int decode_b(Dav1dTaskContext *const t,
                         ((b->inter_mode == GLOBALMV && f->gmv_warp_allowed[b->ref[0]]) ||
                          (b->motion_mode == MM_WARP && t->warpmv.type > DAV1D_WM_TYPE_TRANSLATION)))
                     {
-                        affine_lowest_px(t, &lowest_px[b->ref[0]][1], 1, b_dim,
-                                         b->motion_mode == MM_WARP ? &t->warpmv :
-                                            &f->frame_hdr->gmv[b->ref[0]]);
+                        affine_lowest_px_chroma(t, &lowest_px[b->ref[0]][1], b_dim,
+                                                b->motion_mode == MM_WARP ? &t->warpmv :
+                                                &f->frame_hdr->gmv[b->ref[0]]);
                     } else {
                         mc_lowest_px(&lowest_px[b->ref[0]][1],
                                      t->by & ~ss_ver, bh4 << (bh4 == ss_ver),
@@ -2220,8 +2236,8 @@ static int decode_b(Dav1dTaskContext *const t,
             // y
             for (int i = 0; i < 2; i++) {
                 if (b->inter_mode == GLOBALMV_GLOBALMV && f->gmv_warp_allowed[b->ref[i]]) {
-                    affine_lowest_px(t, &lowest_px[b->ref[i]][0], 0, b_dim,
-                                     &f->frame_hdr->gmv[b->ref[i]]);
+                    affine_lowest_px_luma(t, &lowest_px[b->ref[i]][0], b_dim,
+                                          &f->frame_hdr->gmv[b->ref[i]]);
                 } else {
                     mc_lowest_px(&lowest_px[b->ref[i]][0], t->by, bh4,
                                  b->mv[i].y, 0, &f->svc[b->ref[i]][1]);
@@ -2233,8 +2249,8 @@ static int decode_b(Dav1dTaskContext *const t,
                 if (b->inter_mode == GLOBALMV_GLOBALMV &&
                     imin(cbw4, cbh4) > 1 && f->gmv_warp_allowed[b->ref[i]])
                 {
-                    affine_lowest_px(t, &lowest_px[b->ref[i]][1], 1, b_dim,
-                                     &f->frame_hdr->gmv[b->ref[i]]);
+                    affine_lowest_px_chroma(t, &lowest_px[b->ref[i]][1], b_dim,
+                                            &f->frame_hdr->gmv[b->ref[i]]);
                 } else {
                     mc_lowest_px(&lowest_px[b->ref[i]][1], t->by, bh4,
                                  b->mv[i].y, ss_ver, &f->svc[b->ref[i]][1]);
