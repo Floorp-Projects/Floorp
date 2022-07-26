@@ -19,7 +19,6 @@
 #include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGkAtoms.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
@@ -51,15 +50,9 @@ class WebAccessibleResource final : public nsISupports {
   }
 
   bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) {
-    return mWebAccessiblePaths.Matches(aPath) &&
-           (IsHostMatch(aURI) || IsExtensionMatch(aURI));
+    return mWebAccessiblePaths.Matches(aPath) && mMatches &&
+           mMatches->Matches(aURI);
   }
-
-  bool IsHostMatch(const URLInfo& aURI) {
-    return mMatches && mMatches->Matches(aURI);
-  }
-
-  bool IsExtensionMatch(const URLInfo& aURI);
 
  protected:
   virtual ~WebAccessibleResource() = default;
@@ -67,7 +60,6 @@ class WebAccessibleResource final : public nsISupports {
  private:
   MatchGlobSet mWebAccessiblePaths;
   RefPtr<MatchPatternSet> mMatches;
-  RefPtr<AtomSet> mExtensionIDs;
 };
 
 class WebExtensionPolicy final : public nsISupports,
@@ -125,11 +117,6 @@ class WebExtensionPolicy final : public nsISupports,
   }
 
   bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) const {
-    if (aURI.Scheme() == nsGkAtoms::moz_extension &&
-        mHostname.Equals(aURI.Host())) {
-      // An extension can always access it's own paths.
-      return true;
-    }
     if (mManifestVersion < 3) {
       return IsWebAccessiblePath(aPath);
     }
