@@ -19,9 +19,6 @@
 // Generally gTestPath should be set by the harness.
 /* global gTestPath */
 
-// This can be loaded into a child process.
-/* eslint-env mozilla/frame-script */
-
 var SimpleTest = {};
 var parentRunner = null;
 
