@@ -22,6 +22,11 @@ window.addEventListener("load", () => {
   testDynamicImport(importMap, baseURL, "bare/bare", "log:bare", "module");
   testDynamicImport(importMap, baseURL, "bare/bare", "log:bare",
       "text/javascript");
+
+  testStaticImportInjectBase(importMap, baseURL, "bare/bare", "log:bare");
+  testDynamicImportInjectBase(importMap, baseURL, "bare/bare", "log:bare", "module");
+  testDynamicImportInjectBase(importMap, baseURL, "bare/bare", "log:bare",
+      "text/javascript");
 });
 
 </script>
