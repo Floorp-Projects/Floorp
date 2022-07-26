@@ -29,8 +29,9 @@ return-to-amo-add-theme-label = Add the Theme
 # Variables:
 #   $current (Int) - Number of the current page
 #   $total (Int) - Total number of pages
-onboarding-welcome-steps-indicator =
-  .aria-label = Getting started: screen { $current } of { $total }
+
+onboarding-welcome-steps-indicator2 =
+  .aria-valuetext = Progress: step { $current } of { $total }
 
 # "Hero Text" displayed on left side of welcome screen.
 # The "Fire" in "Fire starts here" plays on the "Fire" in "Firefox".

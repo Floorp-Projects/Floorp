@@ -367,7 +367,8 @@ const StepsIndicator = props => {
     let className = `${i === props.order ? "current" : ""} ${i < props.order ? "complete" : ""}`;
     steps.push( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       key: i,
-      className: `indicator ${className}`
+      className: `indicator ${className}`,
+      role: "presentation"
     }));
   }
 
@@ -816,14 +817,18 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     })), content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.SecondaryCTA, {
       content: content,
       handleAction: this.props.handleAction
-    }) : null)), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("nav", {
+    }) : null)), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `steps ${content.progress_bar ? "progress-bar" : ""}`,
-      "data-l10n-id": "onboarding-welcome-steps-indicator",
+      "data-l10n-id": "onboarding-welcome-steps-indicator2",
       "data-l10n-args": JSON.stringify({
         current: this.props.order,
         total
-      })
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.StepsIndicator, {
+      }),
+      role: "meter",
+      "aria-valuenow": this.props.order,
+      "aria-valuemin": 1,
+      "aria-valuemax": total
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.StepsIndicator, {
       order: this.props.stepOrder,
       totalNumberOfScreens: total
     })))));
