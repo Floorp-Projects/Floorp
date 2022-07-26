@@ -275,8 +275,7 @@ interface nsIProtocolHandler : nsISupports
     /**
      * This URI may be fetched and the contents are visible to anyone. This is
      * semantically equivalent to the resource being served with all-access CORS
-     * headers.  This is only used in MV2 Extensions and should not otherwise
-     * be used.
+     * headers.
      */
     const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 18);
 
@@ -313,7 +312,7 @@ interface nsIProtocolHandler : nsISupports
 
     /**
      * This is an extension web accessible uri that is loadable if checked
-     * against an allowlist using ExtensionPolicyService::SourceMayLoadExtensionURI.
+     * against an allow whitelist.
      */
     const unsigned long WEBEXT_URI_WEB_ACCESSIBLE = (1 << 24);
 };
