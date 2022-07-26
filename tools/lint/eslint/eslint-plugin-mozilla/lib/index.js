@@ -25,7 +25,7 @@ module.exports = {
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
     "frame-script": require("../lib/environments/frame-script.js"),
     jsm: require("../lib/environments/jsm.js"),
-    "process-script": require("../lib/environments/frame-script.js"),
+    "process-script": require("../lib/environments/process-script.js"),
     "remote-page": require("../lib/environments/remote-page.js"),
     simpletest: require("../lib/environments/simpletest.js"),
     sjs: require("../lib/environments/sjs.js"),
