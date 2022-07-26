@@ -9,9 +9,7 @@ const Notify = (url, now, latest) =>{
         "message": msg.getMessage("notificationContent", [now, latest])
     });
     browser.notifications.onClicked.addListener(() =>{
-        browser.tabs.create({
-            "url": url
-        });
+        window.location.href = url;
     });
     return null;
 };
