@@ -532,7 +532,7 @@ class nsWindow final : public nsBaseWidget {
   GdkWindow* mGdkWindow = nullptr;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate = nullptr;
   mozilla::Atomic<WindowCompositorState, mozilla::Relaxed> mCompositorState{
-      COMPOSITOR_ENABLED};
+      COMPOSITOR_PAUSED_INITIALLY};
   // This is used in COMPOSITOR_PAUSED_FLICKERING mode only to resume compositor
   // in some reasonable time when page content is not updated.
   int mCompositorPauseTimeoutID = 0;

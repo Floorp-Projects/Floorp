@@ -5741,9 +5741,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   GtkWidget* container = moz_container_new();
   mContainer = MOZ_CONTAINER(container);
 
-  // Don't render to invisible window.
-  mCompositorState = COMPOSITOR_PAUSED_INITIALLY;
-
   // "csd" style is set when widget is realized so we need to call
   // it explicitly now.
   gtk_widget_realize(mShell);
