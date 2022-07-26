@@ -249,37 +249,17 @@
     .more-info-pocket-wrapper {
       margin-inline-start: -2px;
       overflow: hidden;
-      transition: height 250ms $customize-menu-expand-bezier;
-      height: 100%;
-
-      &.shrink {
-        height: 0;
-      }
 
       .more-information {
         padding-top: 12px;
         position: relative;
-        transition: top 250ms $customize-menu-expand-bezier;
-      }
-
-      .more-information.expand {
-        top: 0;
+        transition: margin-top 250ms $customize-menu-expand-bezier;
       }
     }
 
     .more-info-top-wrapper {
-      .more-information {
-        top: -77px;
-      }
-
       .check-wrapper {
         margin-top: 10px;
-      }
-    }
-
-    .more-info-pocket-wrapper {
-      .more-information {
-        top: -35px;
       }
     }
   }
