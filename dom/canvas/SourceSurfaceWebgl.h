@@ -22,10 +22,8 @@ class SourceSurfaceWebgl : public DataSourceSurface {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceWebgl, override)
 
-  SourceSurfaceWebgl();
+  explicit SourceSurfaceWebgl(DrawTargetWebgl* aDT);
   virtual ~SourceSurfaceWebgl();
-
-  bool Init(DrawTargetWebgl* aDT);
 
   SurfaceType GetType() const override { return SurfaceType::WEBGL; }
   IntSize GetSize() const override { return mSize; }
