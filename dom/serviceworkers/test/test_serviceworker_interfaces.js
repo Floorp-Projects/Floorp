@@ -125,9 +125,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "CacheStorage",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CanvasGradient", nightly: true },
+  { name: "CanvasGradient", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CanvasPattern", nightly: true },
+  { name: "CanvasPattern", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Client",
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -181,11 +181,11 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "FileReader",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FontFace", nightly: true },
+  { name: "FontFace", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FontFaceSet", nightly: true },
+  { name: "FontFaceSet", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "FontFaceSetLoadEvent", nightly: true },
+  { name: "FontFaceSetLoadEvent", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "FormData",
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -241,11 +241,11 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "NotificationEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "OffscreenCanvas", nightly: true },
+  { name: "OffscreenCanvas", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "OffscreenCanvasRenderingContext2D", nightly: true },
+  { name: "OffscreenCanvasRenderingContext2D", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Path2D", nightly: true },
+  { name: "Path2D", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Performance",
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -333,39 +333,39 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebSocket",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGL2RenderingContext", nightly: true },
+  { name: "WebGL2RenderingContext", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLActiveInfo", nightly: true },
+  { name: "WebGLActiveInfo", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLBuffer", nightly: true },
+  { name: "WebGLBuffer", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLContextEvent", nightly: true },
+  { name: "WebGLContextEvent", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLFramebuffer", nightly: true },
+  { name: "WebGLFramebuffer", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLProgram", nightly: true },
+  { name: "WebGLProgram", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebGLQuery",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLRenderbuffer", nightly: true },
+  { name: "WebGLRenderbuffer", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLRenderingContext", nightly: true },
+  { name: "WebGLRenderingContext", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLSampler", nightly: true },
+  { name: "WebGLSampler", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLShader", nightly: true },
+  { name: "WebGLShader", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLShaderPrecisionFormat", nightly: true },
+  { name: "WebGLShaderPrecisionFormat", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLSync", nightly: true },
+  { name: "WebGLSync", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLTexture", nightly: true },
+  { name: "WebGLTexture", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLTransformFeedback", nightly: true },
+  { name: "WebGLTransformFeedback", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLUniformLocation", nightly: true },
+  { name: "WebGLUniformLocation", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebGLVertexArrayObject", nightly: true },
+  { name: "WebGLVertexArrayObject", earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WindowClient",
   // IMPORTANT: Do not change this list without review from a DOM peer!
