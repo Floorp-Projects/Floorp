@@ -2300,6 +2300,9 @@ bool Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
     case CallReason::Call:
       reasonAtom = cx->names().call;
       break;
+    case CallReason::CallContent:
+      reasonAtom = cx->names().call;
+      break;
     case CallReason::Getter:
       reasonAtom = cx->names().get;
       break;
