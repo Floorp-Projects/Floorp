@@ -950,7 +950,6 @@ body[lwt-newtab-brighttext] {
   padding-block: 16px 0;
   transition: var(--transition);
   z-index: -1;
-  height: 48px;
 }
 .onboardingContainer .steps.has-helptext {
   padding-bottom: 0;

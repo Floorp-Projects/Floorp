@@ -240,9 +240,7 @@ export const StepsIndicator = props => {
     let className = `${i === props.order ? "current" : ""} ${
       i < props.order ? "complete" : ""
     }`;
-    steps.push(
-      <div key={i} className={`indicator ${className}`} role="presentation" />
-    );
+    steps.push(<div key={i} className={`indicator ${className}`} />);
   }
   return steps;
 };
