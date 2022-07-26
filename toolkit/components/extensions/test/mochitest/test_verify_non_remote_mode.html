@@ -18,6 +18,7 @@ add_task(async function verify_extensions_in_parent_process() {
   SimpleTest.ok(!WebExtensionPolicy.useRemoteWebExtensions, "extensions running in-process");
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
+    /* eslint-env mozilla/chrome-script */
     const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
     Assert.ok(WebExtensionPolicy.isExtensionProcess, "parent is extension process");
     this.sendAsyncMessage("checks_done");

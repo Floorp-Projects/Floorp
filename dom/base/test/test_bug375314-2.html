@@ -23,6 +23,7 @@ var lastContentType = -1;
 const testURL = window.location.href + "/this/is/the/test/url";
 
 function createChromeScript() {
+  /* eslint-env mozilla/chrome-script */
   var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(
     Ci.nsICategoryManager
   );

@@ -1,4 +1,4 @@
-/* eslint-env mozilla/frame-script */
+/* eslint-env mozilla/chrome-script */
 
 "use strict";
 

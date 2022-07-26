@@ -17,8 +17,8 @@
  * type used for content policy checks is of TYPE_SUBDOCUMENT.
  */
 
-/* eslint-env mozilla/frame-script */
 function createChromeScript() {
+  /* eslint-env mozilla/chrome-script */
   const POLICYNAME = "@mozilla.org/testpolicy;1";
   const POLICYID = Components.ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
   const EXPECTED_URL =

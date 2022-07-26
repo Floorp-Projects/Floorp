@@ -1,6 +1,6 @@
-"use strict";
+/* eslint-env mozilla/chrome-script */
 
-/* global addMessageListener, sendAsyncMessage */
+"use strict";
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

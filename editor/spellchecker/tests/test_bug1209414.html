@@ -42,9 +42,8 @@ let { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.import(
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
-  /* global actorParent */
-  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
+    /* eslint-env mozilla/chrome-script */
     var chromeWin = actorParent.rootFrameLoader
                     .ownerElement.ownerGlobal.browsingContext.topChromeWindow;
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");

@@ -14,6 +14,7 @@ async function runTests() {
 
   var chromeScript;
   chromeScript = SpecialPowers.loadChromeScript(_ => {
+    /* eslint-env mozilla/chrome-script */
     function onExamResp(subject, topic, data) {
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
       let classifiedChannel = subject.QueryInterface(Ci.nsIClassifiedChannel);
@@ -27,20 +28,17 @@ async function runTests() {
         return;
       }
 
-      // eslint-disable-next-line no-undef
       sendAsyncMessage("last-channel-flags", {
         classified: Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING == classifiedChannel.classificationFlags,
       });
     }
 
-    // eslint-disable-next-line no-undef
     addMessageListener("done", __ => {
       Services.obs.removeObserver(onExamResp, "http-on-examine-response");
     });
 
     Services.obs.addObserver(onExamResp, "http-on-examine-response");
 
-    // eslint-disable-next-line no-undef
     sendAsyncMessage("start-test");
   });
 

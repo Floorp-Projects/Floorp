@@ -21,6 +21,7 @@ module.exports = {
   },
   environments: {
     "browser-window": require("../lib/environments/browser-window.js"),
+    "chrome-script": require("../lib/environments/chrome-script.js"),
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
     "frame-script": require("../lib/environments/frame-script.js"),
     jsm: require("../lib/environments/jsm.js"),

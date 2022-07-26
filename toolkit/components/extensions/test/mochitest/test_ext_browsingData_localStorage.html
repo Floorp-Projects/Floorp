@@ -269,12 +269,12 @@ add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
 
   await new Promise(resolve => {
     const chromeScript = SpecialPowers.loadChromeScript(async () => {
+      /* eslint-env mozilla/chrome-script */
       const { SiteDataTestUtils } = ChromeUtils.import(
         "resource://testing-common/SiteDataTestUtils.jsm"
       );
       await SiteDataTestUtils.addToIndexedDB("about:newtab");
       await SiteDataTestUtils.addToIndexedDB("file:///fake/file");
-      // eslint-disable-next-line no-undef
       sendAsyncMessage("done");
     });
 

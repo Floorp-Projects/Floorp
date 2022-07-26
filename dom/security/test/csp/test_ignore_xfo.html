@@ -23,6 +23,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var script = SpecialPowers.loadChromeScript(() => {
+/* eslint-env mozilla/chrome-script */
   let ignoreCount = 0;
   function listener(msg) {
     if(msg.message.includes("Content Security Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive.")) {

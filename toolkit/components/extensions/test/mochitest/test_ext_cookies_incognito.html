@@ -83,6 +83,7 @@ add_task(async function test_cookies_incognito_not_allowed() {
   await extension.awaitMessage("set-cookies");
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
+    /* eslint-env mozilla/chrome-script */
     Services.cookies.add("example.org", "/", "public", `foo${Math.random()}`,
                          false, false, false, Number.MAX_SAFE_INTEGER, {},
                          Ci.nsICookie.SAMESITE_NONE);

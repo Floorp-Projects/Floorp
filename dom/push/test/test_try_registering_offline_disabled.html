@@ -23,8 +23,6 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
-  /* eslint-env mozilla/frame-script */
-
   function debug(str) {
   //  console.log(str + "\n");
   }
@@ -92,6 +90,7 @@ http://creativecommons.org/licenses/publicdomain/
   // Load chrome script to change offline status in the
   // parent process.
   var offlineChromeScript = SpecialPowers.loadChromeScript(_ => {
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("change-status", function(offline) {
       // eslint-disable-next-line mozilla/use-services
       const ioService = Cc["@mozilla.org/network/io-service;1"]

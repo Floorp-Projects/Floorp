@@ -53,6 +53,7 @@
 // Until the blank attribute is removed, we can't send scroll events.
 SimpleTest.waitForFocus(function() {
   let chromeScript = SpecialPowers.loadChromeScript(_ => {
+    /* eslint-env mozilla/chrome-script */
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     win.requestAnimationFrame(() => {
       win.gBrowser.selectedBrowser.removeAttribute("blank");

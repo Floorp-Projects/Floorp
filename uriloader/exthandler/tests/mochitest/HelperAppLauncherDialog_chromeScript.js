@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
@@ -30,7 +32,6 @@ Services.prefs.setIntPref("browser.download.folderList", 2);
 Services.prefs.setCharPref("browser.download.dir", tmpDir.path);
 
 const FAKE_CID = Services.uuid.generateUUID();
-/* eslint-env mozilla/frame-script */
 function HelperAppLauncherDialog() {}
 HelperAppLauncherDialog.prototype = {
   show(aLauncher, aWindowContext, aReason) {

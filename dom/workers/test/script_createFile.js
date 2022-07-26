@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 Cu.importGlobalProperties(["File"]);
 
 addMessageListener("file.open", function(e) {
