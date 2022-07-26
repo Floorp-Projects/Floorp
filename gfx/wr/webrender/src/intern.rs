@@ -137,6 +137,8 @@ impl<I> Handle<I> {
             uid: ((self.index as u64) << 32) | self.epoch.0 as u64
         }
     }
+
+    pub const INVALID: Self = Handle { index: !0, epoch: Epoch(!0), _marker: PhantomData };
 }
 
 pub trait InternDebug {
