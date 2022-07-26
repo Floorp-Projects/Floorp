@@ -258,6 +258,8 @@ class ExternalEngineStateMachine final
 
   media::TimeUnit GetVideoThreshold();
 
+  bool ShouldRunEngineUpdateForRequest();
+
   UniquePtr<ExternalPlaybackEngine> mEngine;
 
   bool mHasEnoughAudio = false;
