@@ -19,8 +19,9 @@ DIRS += [
     "multitabs",
 ]
 
-if CONFIG["OS_TARGET"] == "Linux" or "WINNT":
- DIRS += ["floorp-system"]
-
-if CONFIG["OS_TARGET"] == "Darwin":
- DIRS += ["floorp-system-mac"]
+if CONFIG["OS_TARGET"] == "Linux":
+ DIRS += ["floorp-system/linux"]
+elif CONFIG["OS_TARGET"] == "WINNT":
+  DIRS += ["floorp-system/windows"]
+else:
+    DIRS += ["floorp-system/mac"]

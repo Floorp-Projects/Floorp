@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "Floorp システムアドオン",
+    "description": "拡張機能の名前です。"
+  },
+  "start": {
+    "message": "ダウンロードを開始しました",
+    "description": "ダウンロード開始"
+  },
+  "finish": {
+    "message": "ダウンロード完了です！",
+    "description": "ダウンロード完了"
+  }
+}
