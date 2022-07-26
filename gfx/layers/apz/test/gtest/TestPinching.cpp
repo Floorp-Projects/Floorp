@@ -142,6 +142,7 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
   ScreenIntPoint mFocus;
   float mSpan;
+  int mPinchLockBufferMaxAge;
 
  public:
   APZCPinchLockingTester()
@@ -150,6 +151,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
         mSpan(10.0) {}
 
   virtual void SetUp() {
+    mPinchLockBufferMaxAge =
+        StaticPrefs::apz_pinch_lock_buffer_max_age_AtStartup();
+
     APZCPinchTester::SetUp();
     tm->SetDPI(mDPI);
     apzc->SetFrameMetrics(GetPinchableFrameMetrics());
@@ -158,7 +162,7 @@ class APZCPinchLockingTester : public APZCPinchTester {
     auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
                                          mFocus, mSpan, mSpan, mcc->Time());
     apzc->ReceiveInputEvent(event);
-    mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(mPinchLockBufferMaxAge + 1));
   }
 
   void twoFingerPan() {
@@ -171,7 +175,7 @@ class APZCPinchLockingTester : public APZCPinchTester {
     auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
                                          mFocus, mSpan, mSpan, mcc->Time());
     apzc->ReceiveInputEvent(event);
-    mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(mPinchLockBufferMaxAge + 1));
   }
 
   void twoFingerZoom() {
@@ -184,7 +188,7 @@ class APZCPinchLockingTester : public APZCPinchTester {
     auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
                                          mFocus, newSpan, mSpan, mcc->Time());
     apzc->ReceiveInputEvent(event);
-    mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(mPinchLockBufferMaxAge + 1));
     mSpan = newSpan;
   }
 
