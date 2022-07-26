@@ -24,10 +24,12 @@ class Principal {
   Principal() = default;
 
   explicit Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
+  Principal(Principal&&) = default;
+
+  Principal& operator=(Principal&& aOther) = default;
+  Principal& operator=(const Principal& aOther) = delete;
 
   operator nsIPrincipal*() const { return mPrincipal.get(); }
-
-  Principal& operator=(const Principal& aOther) = delete;
 
  private:
   RefPtr<nsIPrincipal> mPrincipal;
