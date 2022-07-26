@@ -614,50 +614,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
 }
 
 template <class Derived>
-nsTArray<RemoteAccessible*> RemoteAccessibleBase<Derived>::RelationByType(
-    RelationType aType) const {
-  nsTArray<RemoteAccessible*> accs;
-
-  if (!mCachedFields) {
-    return accs;
-  }
-
-  for (auto data : kRelationTypeAtoms) {
-    if (data.mType != aType ||
-        (data.mValidTag && TagName() != data.mValidTag)) {
-      continue;
-    }
-
-    if (auto maybeIds =
-            mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom)) {
-      for (uint64_t id : *maybeIds) {
-        if (RemoteAccessible* acc = mDoc->GetAccessible(id)) {
-          accs.AppendElement(acc);
-        }
-      }
-    }
-    // Each relation type has only one relevant cached attribute,
-    // so break after we've handled the attr for this type,
-    // even if we didn't find any targets.
-    break;
-  }
-
-  if (auto accRelMapEntry = mDoc->mReverseRelations.Lookup(ID())) {
-    if (auto reverseIdsEntry =
-            accRelMapEntry.Data().Lookup(static_cast<uint64_t>(aType))) {
-      nsTArray<uint64_t>& reverseIds = reverseIdsEntry.Data();
-      for (uint64_t id : reverseIds) {
-        if (RemoteAccessible* acc = mDoc->GetAccessible(id)) {
-          accs.AppendElement(acc);
-        }
-      }
-    }
-  }
-
-  return accs;
-}
-
-template <class Derived>
 void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
                                                  uint32_t aStartOffset,
                                                  uint32_t aLength) {
@@ -684,78 +640,6 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
     aText += kImaginaryEmbeddedObjectChar;
   } else {
     aText += kEmbeddedObjectChar;
-  }
-}
-
-template <class Derived>
-nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
-    AccAttributes* aFields) {
-  nsTArray<bool> updateTracker(ArrayLength(kRelationTypeAtoms));
-  for (auto const& data : kRelationTypeAtoms) {
-    if (data.mValidTag && TagName() != data.mValidTag) {
-      // If the relation we're currently processing only applies to specific
-      // elements, and we are not one of them, do no pre-processing. Also,
-      // note in our updateTracker that we should do no post-processing.
-      updateTracker.AppendElement(false);
-      continue;
-    }
-
-    nsStaticAtom* const relAtom = data.mAtom;
-    auto newRelationTargets =
-        aFields->GetAttribute<nsTArray<uint64_t>>(relAtom);
-    bool shouldAddNewImplicitRels =
-        newRelationTargets && newRelationTargets->Length();
-
-    // Remove existing implicit relations if we need to perform an update, or
-    // if we've recieved a DeleteEntry().
-    if (shouldAddNewImplicitRels ||
-        aFields->GetAttribute<DeleteEntry>(relAtom)) {
-      if (auto maybeOldIDs =
-              mCachedFields->GetAttribute<nsTArray<uint64_t>>(relAtom)) {
-        for (uint64_t id : *maybeOldIDs) {
-          // For each target, fetch its reverse relation map
-          nsTHashMap<nsUint64HashKey, nsTArray<uint64_t>>& reverseRels =
-              Document()->mReverseRelations.LookupOrInsert(id);
-          // Then fetch its reverse relation's ID list
-          nsTArray<uint64_t>& reverseRelIDs = reverseRels.LookupOrInsert(
-              static_cast<uint64_t>(data.mReverseType));
-          //  There might be other reverse relations stored for this acc, so
-          //  remove our ID instead of deleting the array entirely.
-          DebugOnly<bool> removed = reverseRelIDs.RemoveElement(ID());
-          MOZ_ASSERT(removed, "Can't find old reverse relation");
-        }
-      }
-    }
-
-    updateTracker.AppendElement(shouldAddNewImplicitRels);
-  }
-
-  return updateTracker;
-}
-
-template <class Derived>
-void RemoteAccessibleBase<Derived>::PostProcessRelations(
-    const nsTArray<bool>& aToUpdate) {
-  size_t updateCount = aToUpdate.Length();
-  MOZ_ASSERT(updateCount == ArrayLength(kRelationTypeAtoms),
-             "Did not note update status for every relation type!");
-  for (size_t i = 0; i < updateCount; i++) {
-    if (aToUpdate.ElementAt(i)) {
-      // Since kRelationTypeAtoms was used to generate aToUpdate, we
-      // know the ith entry of aToUpdate corresponds to the relation type in
-      // the ith entry of kRelationTypeAtoms. Fetch the related data here.
-      auto const& data = kRelationTypeAtoms[i];
-
-      const nsTArray<uint64_t>& newIDs =
-          *mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom);
-      for (uint64_t id : newIDs) {
-        nsTHashMap<nsUint64HashKey, nsTArray<uint64_t>>& relations =
-            Document()->mReverseRelations.LookupOrInsert(id);
-        nsTArray<uint64_t>& ids =
-            relations.LookupOrInsert(static_cast<uint64_t>(data.mReverseType));
-        ids.AppendElement(ID());
-      }
-    }
   }
 }
 

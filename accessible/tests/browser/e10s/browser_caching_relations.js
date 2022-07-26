@@ -22,118 +22,6 @@ const attrRelationsSpec = [
   ["aria-flowto", RELATION_FLOWS_TO, RELATION_FLOWS_FROM],
 ];
 
-/**
- * Test the accessible relation.
- *
- * @param identifier          [in] identifier to get an accessible, may be ID
- *                             attribute or DOM element or accessible object
- * @param relType             [in] relation type (see constants above)
- * @param relatedIdentifiers  [in] identifier or array of identifiers of
- *                             expected related accessibles
- */
-async function testCachedRelation(identifier, relType, relatedIdentifiers) {
-  const relation = getRelationByType(identifier, relType);
-  const relDescr = getRelationErrorMsg(identifier, relType);
-  const relDescrStart = getRelationErrorMsg(identifier, relType, true);
-  info(`Testing ${relDescr}`);
-
-  if (!relatedIdentifiers) {
-    await untilCacheOk(function() {
-      let r = getRelationByType(identifier, relType);
-      if (r) {
-        info(`Fetched ${r.targetsCount} relations from cache`);
-      } else {
-        info("Could not fetch relations");
-      }
-      return r && !r.targetsCount;
-    }, relDescrStart + " has no targets, as expected");
-    return;
-  }
-
-  const relatedIds =
-    relatedIdentifiers instanceof Array
-      ? relatedIdentifiers
-      : [relatedIdentifiers];
-  await untilCacheOk(function() {
-    let r = getRelationByType(identifier, relType);
-    if (r) {
-      info(
-        `Fetched ${r.targetsCount} relations from cache, looking for ${relatedIds.length}`
-      );
-    } else {
-      info("Could not fetch relations");
-    }
-
-    return r && r.targetsCount == relatedIds.length;
-  }, "Found correct number of expected relations");
-
-  let targets = [];
-  for (let idx = 0; idx < relatedIds.length; idx++) {
-    targets.push(getAccessible(relatedIds[idx]));
-  }
-
-  if (targets.length != relatedIds.length) {
-    return;
-  }
-
-  await untilCacheOk(function() {
-    const actualTargets = relation ? relation.getTargets() : null;
-    if (!actualTargets) {
-      info("Could not fetch relations");
-      return false;
-    }
-
-    // Check if all given related accessibles are targets of obtained relation.
-    for (let idx = 0; idx < targets.length; idx++) {
-      let isFound = false;
-      for (let relatedAcc of actualTargets.enumerate(Ci.nsIAccessible)) {
-        if (targets[idx] == relatedAcc) {
-          isFound = true;
-          break;
-        }
-      }
-
-      if (!isFound) {
-        info(
-          prettyName(relatedIds[idx]) +
-            " could not be found in relation: " +
-            relDescr
-        );
-        return false;
-      }
-    }
-
-    return true;
-  }, "All given related accessibles are targets of fetched relation.");
-
-  await untilCacheOk(function() {
-    const actualTargets = relation ? relation.getTargets() : null;
-    if (!actualTargets) {
-      info("Could not fetch relations");
-      return false;
-    }
-
-    // Check if all obtained targets are given related accessibles.
-    for (let relatedAcc of actualTargets.enumerate(Ci.nsIAccessible)) {
-      let wasFound = false;
-      for (let idx = 0; idx < targets.length; idx++) {
-        if (relatedAcc == targets[idx]) {
-          wasFound = true;
-        }
-      }
-      if (!wasFound) {
-        info(
-          prettyName(relatedAcc) +
-            " was found, but shouldn't be in relation: " +
-            relDescr
-        );
-        return false;
-      }
-    }
-    return true;
-  }, "No unexpected targets found.");
-}
-
 async function testRelated(
   browser,
   accDoc,
@@ -185,9 +73,9 @@ async function testRelated(
       }
     }
 
-    await testCachedRelation(dependant1, dependantRelation, expected[0]);
-    await testCachedRelation(dependant2, dependantRelation, expected[1]);
-    await testCachedRelation(host, hostRelation, expected[2]);
+    testRelation(dependant1, dependantRelation, expected[0]);
+    testRelation(dependant2, dependantRelation, expected[1]);
+    testRelation(host, hostRelation, expected[2]);
   }
 }
 
@@ -203,48 +91,6 @@ addAccessibleTask(
     for (let spec of attrRelationsSpec) {
       await testRelated(browser, accDoc, ...spec);
     }
-  },
-  { iframe: true, remoteIframe: true }
-);
-
-/**
- * Test caching of relations with respect to label objects and their "for" attr.
- */
-addAccessibleTask(
-  `
-  <div role="checkbox" id="dependant1"></div>
-  <div role="checkbox" id="dependant2"></div>
-  <label id="host">label</label>`,
-  async function(browser, accDoc) {
-    await testRelated(
-      browser,
-      accDoc,
-      "for",
-      RELATION_LABEL_FOR,
-      RELATION_LABELLED_BY
-    );
-  },
-  { iframe: true, remoteIframe: true }
-);
-
-/**
- * Test caching of relations with respect to output objects and their "for" attr.
- */
-addAccessibleTask(
-  `
-  <form oninput="host.value=parseInt(dependant1.value)+parseInt(dependant2.value)">
-    <input type="number" id="dependant1" value="50"> +
-    <input type="number" id="dependant2" value="25"> =
-    <output name="host" id="host"></output>
-  </form>`,
-  async function(browser, accDoc) {
-    await testRelated(
-      browser,
-      accDoc,
-      "for",
-      RELATION_CONTROLLED_BY,
-      RELATION_CONTROLLER_FOR
-    );
   },
   { iframe: true, remoteIframe: true }
 );

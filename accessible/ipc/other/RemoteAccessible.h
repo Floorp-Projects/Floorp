@@ -77,15 +77,6 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual bool TableIsProbablyForLayout() override;
 
-  /**
-   * Get all relations for this accessible.
-   */
-  void Relations(nsTArray<RelationType>* aTypes,
-                 nsTArray<nsTArray<RemoteAccessible*>>* aTargetSets) const;
-
-  virtual nsTArray<RemoteAccessible*> RelationByType(
-      RelationType aType) const override;
-
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {
