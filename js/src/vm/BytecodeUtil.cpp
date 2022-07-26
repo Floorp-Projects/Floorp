@@ -1954,6 +1954,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::NewTarget:
       return write("new.target");
     case JSOp::Call:
+    case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter: {
       uint16_t argc = GET_ARGC(pc);
@@ -2001,7 +2002,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::StrictSpreadEval:
       return write("eval(...)");
 
-    case JSOp::New: {
+    case JSOp::New:
+    case JSOp::NewContent: {
       uint16_t argc = GET_ARGC(pc);
       return write("(new ") &&
              decompilePCForStackOperand(pc, -int32_t(argc + 3)) &&
@@ -2546,7 +2548,8 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
   /* Don't handle getters, setters or calls from fun.call/fun.apply. */
   JSOp op = JSOp(*current);
-  if (op != JSOp::Call && op != JSOp::CallIgnoresRv && op != JSOp::New) {
+  if (op != JSOp::Call && op != JSOp::CallContent &&
+      op != JSOp::CallIgnoresRv && op != JSOp::New && op != JSOp::NewContent) {
     return true;
   }
 
@@ -2560,7 +2563,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
     return false;
   }
 
-  bool pushedNewTarget = op == JSOp::New;
+  bool pushedNewTarget = op == JSOp::New || op == JSOp::NewContent;
   int formalStackIndex = parser.stackDepthAtPC(current) - GET_ARGC(current) -
                          pushedNewTarget + formalIndex;
   MOZ_ASSERT(formalStackIndex >= 0);

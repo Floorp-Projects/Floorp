@@ -4279,6 +4279,11 @@ bool BaselineCodeGen<Handler>::emit_Call() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CallContent() {
+  return emitCall(JSOp::CallContent);
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_CallIgnoresRv() {
   return emitCall(JSOp::CallIgnoresRv);
 }
@@ -4291,6 +4296,11 @@ bool BaselineCodeGen<Handler>::emit_CallIter() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_New() {
   return emitCall(JSOp::New);
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_NewContent() {
+  return emitCall(JSOp::NewContent);
 }
 
 template <typename Handler>

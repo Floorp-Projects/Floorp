@@ -1514,9 +1514,11 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::InitHiddenElemSetter:
     case JSOp::SpreadCall:
     case JSOp::Call:
+    case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
     case JSOp::New:
+    case JSOp::NewContent:
     case JSOp::Eval:
     case JSOp::StrictEval:
     case JSOp::Int8:
