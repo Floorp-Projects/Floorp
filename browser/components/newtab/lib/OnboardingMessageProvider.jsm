@@ -47,6 +47,132 @@ const ONBOARDING_MESSAGES = () => [
     trigger: { id: "protectionsPanelOpen" },
   },
   {
+    id: "FX_MR_106_UPGRADE",
+    template: "spotlight",
+    targeting: "true",
+    content: {
+      template: "multistage",
+      id: "FX_MR_106_UPGRADE",
+      transitions: true,
+      screens: [
+        {
+          id: "UPGRADE_PIN_FIREFOX",
+          content: {
+            position: "split",
+            progress_bar: "true",
+            background:
+              "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+            logo: {},
+            title: "Thank you for loving Firefox",
+            subtitle:
+              "Launch a healthier internet from anywhere with a single click. Our latest update is packed with new things we think you’ll adore. ",
+            primary_button: {
+              label: {
+                string_id: "mr1-onboarding-pin-primary-button-label",
+              },
+              action: {
+                navigate: true,
+                type: "PIN_FIREFOX_TO_TASKBAR",
+              },
+            },
+            secondary_button: {
+              label: "Skip this step",
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+        {
+          id: "UPGRADE_SET_DEFAULT",
+          content: {
+            position: "split",
+            progress_bar: "true",
+            background:
+              "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+            logo: {},
+            title: "Make Firefox your go-to browser",
+            subtitle:
+              "Use a browser backed by a non-profit. We defend your privacy while you zip around the web.",
+            primary_button: {
+              label: {
+                string_id:
+                  "mr1-onboarding-set-default-only-primary-button-label",
+              },
+              action: {
+                navigate: true,
+                type: "SET_DEFAULT_BROWSER",
+              },
+            },
+            secondary_button: {
+              label: "Skip this step",
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+        {
+          id: "UPGRADE_IMPORT_SETTINGS",
+          content: {
+            position: "split",
+            progress_bar: "true",
+            background:
+              "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+            logo: {},
+            title: "Lightning-fast setup",
+            subtitle:
+              "Set up Firefox how you like it. Add your bookmarks, passwords, and more from your old browser.",
+            primary_button: {
+              label: {
+                string_id:
+                  "mr1-onboarding-import-primary-button-label-no-attribution",
+              },
+              action: {
+                type: "SHOW_MIGRATION_WIZARD",
+                data: {},
+                navigate: true,
+              },
+            },
+            secondary_button: {
+              label: "Skip this step",
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+        {
+          id: "UPGRADE_GRATITUDE",
+          content: {
+            position: "split",
+            progress_bar: "true",
+            background:
+              "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+            logo: {},
+            title: "You’re helping us build a better web",
+            subtitle:
+              "Thank you for using Firefox, backed by the Mozilla Foundation. With your support, we're working to make the internet more open, accessible, and better for everyone.",
+            primary_button: {
+              label: "See what’s new",
+              action: {
+                type: "OPEN_ABOUT_PAGE",
+                data: { args: "firefoxview", where: "current" },
+                navigate: true,
+              },
+            },
+            secondary_button: {
+              label: "Start browsing",
+              action: {
+                navigate: true,
+              },
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
     id: "FX_100_UPGRADE",
     template: "spotlight",
     targeting: "false",
@@ -386,30 +512,57 @@ const OnboardingMessageProvider = {
   },
   async getUpgradeMessage() {
     let message = (await OnboardingMessageProvider.getMessages()).find(
-      ({ id }) => id === "FX_100_UPGRADE"
+      ({ id }) => id === "FX_MR_106_UPGRADE"
     );
+
     let { content } = message;
+    // Helper to find screens and remove them where applicable.
+    function removeScreens(check) {
+      const { screens } = content;
+      for (let i = 0; i < screens?.length; i++) {
+        if (check(screens[i])) {
+          screens.splice(i--, 1);
+        }
+      }
+    }
+
     let pinScreen = content.screens?.find(
       screen => screen.id === "UPGRADE_PIN_FIREFOX"
     );
     const needPin = await this._doesAppNeedPin();
     const needDefault = await this._doesAppNeedDefault();
+
+    //If a user has Firefox as default remove import screen
+    if (!needDefault) {
+      removeScreens(screen => screen.id?.startsWith("UPGRADE_IMPORT_SETTINGS"));
+    }
+
+    // If already pinned, convert "pin" screen to "welcome" with desired action.
+    let removeDefault = !needDefault;
     // If user doesn't need pin, update screen to set "default" or "get started" configuration
     if (!needPin && pinScreen) {
+      removeDefault = true;
       let primary = pinScreen.content.primary_button;
       if (needDefault) {
         pinScreen.id = "UPGRADE_ONLY_DEFAULT";
+        pinScreen.content.subtitle =
+          "Use a browser that defends your privacy while you zip around the web. Our latest update is packed with things that you adore.";
         primary.label.string_id =
           "mr1-onboarding-set-default-only-primary-button-label";
+
+        // The "pin" screen will now handle "default" so remove other "default."
         primary.action.type = "SET_DEFAULT_BROWSER";
       } else {
         pinScreen.id = "UPGRADE_GET_STARTED";
-        pinScreen.content.subtitle.string_id = "fx100-upgrade-thank-you-body";
-        primary.label.string_id = "mr2-onboarding-start-browsing-button-label";
-        pinScreen.auto_advance = "primary_button";
+        pinScreen.content.subtitle =
+          "Our latest version is built around you, making it easier than ever to zip around the web. It’s packed with features we think you’ll adore.";
+        primary.label = "Set up in seconds";
         delete primary.action.type;
-        delete pinScreen.content.secondary_button;
       }
+    }
+
+    if (removeDefault) {
+      removeScreens(screen => screen.id?.startsWith("UPGRADE_SET_DEFAULT"));
     }
 
     return message;
