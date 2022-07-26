@@ -412,8 +412,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsIFrame* GetFrameForStyle() const;
 
   // Compute all scroll snap related information and store eash snap target
-  // element in |aSnapTargets| if it's provided.
-  ScrollSnapInfo ComputeScrollSnapInfo(SnapTargetSet* aSnapTargets = nullptr);
+  // element in |mSnapTargets|.
+  ScrollSnapInfo ComputeScrollSnapInfo();
 
   bool NeedsScrollSnap() const;
 
