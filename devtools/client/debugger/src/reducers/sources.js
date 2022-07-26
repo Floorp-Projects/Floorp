@@ -27,13 +27,6 @@ export function initialSourcesState(state) {
     urls: {},
 
     /**
-     * List of all source ids whose source has a url attribute defined
-     *
-     * Array<source id>
-     */
-    sourcesWithUrls: [],
-
-    /**
      * Mapping of source id's to one or more source-actor id's.
      * Dictionary whose keys are source id's and values are arrays
      * made of all the related source-actor id's.
@@ -65,25 +58,6 @@ export function initialSourcesState(state) {
      * The location object should have a url attribute instead of a sourceId.
      */
     pendingSelectedLocation: prefs.pendingSelectedLocation,
-
-    /**
-     * Project root set from the Source Tree.
-     *
-     * This focused the source tree on a subset of sources.
-     */
-    projectDirectoryRoot: prefs.projectDirectoryRoot,
-    projectDirectoryRootName: prefs.projectDirectoryRootName,
-
-    /**
-     * Boolean, to be set to true in order to display WebExtension's content scripts
-     * that are applied to the current page we are debugging.
-     *
-     * Covered by: browser_dbg-content-script-sources.js
-     * Bound to: devtools.chrome.enabled
-     *
-     * boolean
-     */
-    chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
   };
 }
 
@@ -136,10 +110,6 @@ function update(state = initialSourcesState(), action) {
       prefs.pendingSelectedLocation = location;
       return { ...state, pendingSelectedLocation: location };
 
-    case "SET_PROJECT_DIRECTORY_ROOT":
-      const { url, name } = action;
-      return updateProjectDirectoryRoot(state, url, name);
-
     case "SET_ORIGINAL_BREAKABLE_LINES": {
       const { breakableLines, sourceId } = action;
       return {
@@ -187,8 +157,6 @@ function update(state = initialSourcesState(), action) {
  * - Add the source URL to the urls map
  */
 function addSources(state, sources) {
-  const originalState = state;
-
   state = {
     ...state,
     urls: { ...state.urls },
@@ -198,20 +166,10 @@ function addSources(state, sources) {
   for (const source of sources) {
     newSourceMap.set(source.id, source);
 
-    // 1. Update the source url map
+    // Update the source url map
     const existing = state.urls[source.url] || [];
     if (!existing.includes(source.id)) {
       state.urls[source.url] = [...existing, source.id];
-    }
-
-    // 2. Update the sourcesWithUrls map
-    if (source.url) {
-      // NOTE: we only want to copy the list once
-      if (originalState.sourcesWithUrls === state.sourcesWithUrls) {
-        state.sourcesWithUrls = [...state.sourcesWithUrls];
-      }
-
-      state.sourcesWithUrls.push(source.id);
     }
   }
   state.sources = newSourceMap;
@@ -239,11 +197,6 @@ function removeSourcesAndActors(state, sources) {
       if (state.urls[source.url]?.length == 0) {
         delete state.urls[source.url];
       }
-
-      // sourcesWithUrls
-      state.sourcesWithUrls = state.sourcesWithUrls.filter(
-        sourceId => sourceId !== source.id
-      );
     }
     // actors
     delete state.actors[source.id];
@@ -284,34 +237,6 @@ function insertSourceActors(state, action) {
   }
 
   return state;
-}
-
-/*
- * Update sources when the project directory root changes
- */
-function updateProjectDirectoryRoot(state, root, name) {
-  // Only update prefs when projectDirectoryRoot isn't a thread actor,
-  // because when debugger is reopened, thread actor will change. See bug 1596323.
-  if (actorType(root) !== "thread") {
-    prefs.projectDirectoryRoot = root;
-    prefs.projectDirectoryRootName = name;
-  }
-
-  state = {
-    ...state,
-    projectDirectoryRoot: root,
-    projectDirectoryRootName: name,
-  };
-
-  return state;
-}
-
-/* Checks if a path is a thread actor or not
- * e.g returns 'thread' for "server0.conn1.child1/workerTarget42/thread1"
- */
-function actorType(actor) {
-  const match = actor.match(/\/([a-z]+)\d+/);
-  return match ? match[1] : null;
 }
 
 export default update;

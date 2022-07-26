@@ -106,6 +106,47 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
 
   info("Assert that nested-source.js is still the selected source");
   await assertNodeIsFocused(dbg, 5);
+
+  info("Test the copy to clipboard context menu");
+  const mathMinTreeNode = findSourceNodeWithText(dbg, "math.min.js");
+  await triggerCopySourceContextMenu(dbg, mathMinTreeNode);
+  const clipboardData = SpecialPowers.getClipboardData("text/unicode");
+  is(
+    clipboardData,
+    EXAMPLE_URL + "math.min.js",
+    "The clipboard content is the selected source URL"
+  );
+
+  info("Test the download file context menu");
+  // Before trigerring the menu, mock the file picker
+  const MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+  const nsiFile = FileUtils.getFile("TmpD", [
+    `export_source_content_${Date.now()}.log`,
+  ]);
+  MockFilePicker.setFiles([nsiFile]);
+  const path = nsiFile.path;
+
+  await triggerDownloadFileContextMenu(dbg, mathMinTreeNode);
+
+  info("Wait for the downloaded file to be fully saved to disk");
+  await BrowserTestUtils.waitForCondition(() => IOUtils.exists(path));
+  await BrowserTestUtils.waitForCondition(async () => {
+    const { size } = await IOUtils.stat(path);
+    return size > 0;
+  });
+  const buffer = await IOUtils.read(path);
+  const savedFileContent = new TextDecoder().decode(buffer);
+
+  const mathMinRequest = await fetch(EXAMPLE_URL + "math.min.js");
+  const mathMinContent = await mathMinRequest.text();
+
+  is(
+    savedFileContent,
+    mathMinContent,
+    "The downloaded file has the expected content"
+  );
+
   dbg.toolbox.closeToolbox();
 });
 
@@ -445,4 +486,26 @@ function assertBreakpointHeading(dbg, label, index) {
   const breakpointHeading = findAllElements(dbg, "breakpointHeadings")[index]
     .innerText;
   is(breakpointHeading, label, `Breakpoint heading is ${label}`);
+}
+
+async function triggerCopySourceContextMenu(dbg, treeNode) {
+  const onContextMenu = waitForContextMenu(dbg);
+  rightClickEl(dbg, treeNode);
+  const menupopup = await onContextMenu;
+  const onHidden = new Promise(resolve => {
+    menupopup.addEventListener("popuphidden", resolve, { once: true });
+  });
+  selectContextMenuItem(dbg, "#node-menu-copy-source");
+  await onHidden;
+}
+
+async function triggerDownloadFileContextMenu(dbg, treeNode) {
+  const onContextMenu = waitForContextMenu(dbg);
+  rightClickEl(dbg, treeNode);
+  const menupopup = await onContextMenu;
+  const onHidden = new Promise(resolve => {
+    menupopup.addEventListener("popuphidden", resolve, { once: true });
+  });
+  selectContextMenuItem(dbg, "#node-menu-download-file");
+  await onHidden;
 }

@@ -50,11 +50,3 @@ export function getMainThreadHost(state) {
 export function getThread(state, threadActor) {
   return getAllThreads(state).find(thread => thread.actor === threadActor);
 }
-
-// checks if a path begins with a thread actor
-// e.g "server1.conn0.child1/workerTarget22/context1/dbg-workers.glitch.me"
-export function startsWithThreadActor(state, path) {
-  const threadActors = getAllThreads(state).map(t => t.actor);
-  const match = path.match(new RegExp(`(${threadActors.join("|")})\/(.*)`));
-  return match?.[1];
-}

@@ -12,7 +12,7 @@ import { getEditor } from "../utils/editor";
 import { highlightMatches } from "../utils/project-search";
 
 import { statusType } from "../reducers/project-text-search";
-import { getRelativePath } from "../utils/sources-tree";
+import { getRelativePath } from "../utils/sources-tree/utils";
 import {
   getActiveSearch,
   getTextSearchResults,

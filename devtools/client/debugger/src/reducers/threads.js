@@ -10,17 +10,11 @@
 export function initialThreadsState() {
   return {
     threads: [],
-    isWebExtension: false,
   };
 }
 
 export default function update(state = initialThreadsState(), action) {
   switch (action.type) {
-    case "CONNECT":
-      return {
-        ...state,
-        isWebExtension: action.isWebExtension,
-      };
     case "INSERT_THREAD":
       return {
         ...state,

@@ -4,15 +4,12 @@
 
 import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
-import { getPathParts } from "../utils/sources-tree/utils";
 
 import {
   getPrettySourceURL,
-  isDescendantOfRoot,
   isGenerated,
   isPretty,
   isJavaScript,
-  removeThreadActorId,
 } from "../utils/source";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
@@ -28,10 +25,6 @@ import {
   getBreakableLinesForSourceActors,
 } from "./source-actors";
 import { getSourceTextContent } from "./sources-content";
-import { getAllThreads, getMainThreadHost } from "./threads";
-
-const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
-const IGNORED_EXTENSIONS = ["css", "svg", "png"];
 
 export function hasSource(state, id) {
   return state.sources.sources.has(id);
@@ -141,10 +134,6 @@ export const getSourceList = createSelector(
   { equalityCheck: shallowEqual, resultEqualityCheck: shallowEqual }
 );
 
-export function getDisplayedSourcesList(state) {
-  return Object.values(getDisplayedSources(state)).flatMap(Object.values);
-}
-
 // This is only used by tests
 export function getSourceCount(state) {
   return getSourcesMap(state).size;
@@ -170,96 +159,6 @@ export const getSelectedSource = createSelector(
 export function getSelectedSourceId(state) {
   const source = getSelectedSource(state);
   return source?.id;
-}
-
-export function getProjectDirectoryRoot(state) {
-  return state.sources.projectDirectoryRoot;
-}
-
-export function getProjectDirectoryRootName(state) {
-  return state.sources.projectDirectoryRootName;
-}
-
-const getSourcesTreeList = createSelector(
-  getSourcesMap,
-  state => state.sources.sourcesWithUrls,
-  state => state.sources.projectDirectoryRoot,
-  state => state.sources.chromeAndExtensionsEnabled,
-  state => state.threads.isWebExtension,
-  getAllThreads,
-  (
-    sourcesMap,
-    sourcesWithUrls,
-    projectDirectoryRoot,
-    chromeAndExtensionsEnabled,
-    debuggeeIsWebExtension,
-    threads
-  ) => {
-    const rootWithoutThreadActor = removeThreadActorId(
-      projectDirectoryRoot,
-      threads
-    );
-    const list = [];
-
-    for (const id of sourcesWithUrls) {
-      const source = sourcesMap.get(id);
-
-      // This is the key part defining which sources appear in the SourcesTree
-      const displayed =
-        isDescendantOfRoot(source, rootWithoutThreadActor) &&
-        (!source.isExtension ||
-          chromeAndExtensionsEnabled ||
-          debuggeeIsWebExtension) &&
-        !isSourceHiddenInSourceTree(source);
-      if (!displayed) {
-        continue;
-      }
-
-      list.push(source);
-    }
-    return list;
-  },
-  // As the input arguments always change, even if we added/removed a hidden source,
-  // Use shallow equal to ensure returning the exact same array if nothing changed.
-  { memoizeOptions: { resultEqualityCheck: shallowEqual } }
-);
-
-export const getDisplayedSources = createSelector(
-  getSourcesTreeList,
-  getMainThreadHost,
-  (list, mainThreadHost) => {
-    const result = {};
-    for (const source of list) {
-      // Duplicate Source objects into a new dedicated type of "displayed source object"
-      // with two additional fields: parts and displayURL.
-      const displayedSource = {
-        thread: source.thread,
-        isExtension: source.isExtension,
-        isPrettyPrinted: source.isPrettyPrinted,
-        isOriginal: source.isOriginal,
-        url: source.url,
-        id: source.id,
-        displayURL: source.displayURL,
-        parts: getPathParts(source.displayURL, source.thread, mainThreadHost),
-      };
-      const thread = displayedSource.thread;
-
-      if (!result[thread]) {
-        result[thread] = {};
-      }
-      result[thread][displayedSource.id] = displayedSource;
-    }
-
-    return result;
-  }
-);
-
-function isSourceHiddenInSourceTree(source) {
-  return (
-    IGNORED_EXTENSIONS.includes(source.displayURL.fileExtension) ||
-    IGNORED_URLS.includes(source.url) ||
-    isPretty(source)
-  );
 }
 
 export function getSourceActorsForSource(state, id) {

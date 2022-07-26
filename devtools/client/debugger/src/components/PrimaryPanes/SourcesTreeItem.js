@@ -19,7 +19,6 @@ import {
 import actions from "../../actions";
 
 import { shouldBlackbox, sourceTypes } from "../../utils/source";
-import { isDirectory, getPathWithoutThread } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
 import { downloadFile } from "../../utils/utils";
@@ -41,14 +40,13 @@ class SourceTreeItem extends Component {
       item: PropTypes.object.isRequired,
       loadSourceText: PropTypes.func.isRequired,
       projectRoot: PropTypes.string.isRequired,
-      selectItem: PropTypes.func.isRequired,
+      selectSourceItem: PropTypes.func.isRequired,
       setExpanded: PropTypes.func.isRequired,
       setProjectDirectoryRoot: PropTypes.func.isRequired,
-      source: PropTypes.object,
       sourceContent: PropTypes.object,
-      threads: PropTypes.array.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
       isSourceBlackBoxed: PropTypes.bool.isRequired,
+      getParent: PropTypes.func.isRequired,
     };
   }
 
@@ -60,15 +58,15 @@ class SourceTreeItem extends Component {
   }
 
   onClick = e => {
-    const { item, focusItem, selectItem } = this.props;
+    const { item, focusItem, selectSourceItem } = this.props;
 
     focusItem(item);
-    if (!isDirectory(item)) {
-      selectItem(item);
+    if (item.type == "source") {
+      selectSourceItem(item);
     }
   };
 
-  onContextMenu = (event, item) => {
+  onContextMenu = event => {
     const copySourceUri2Label = L10N.getStr("copySourceUri2");
     const copySourceUri2Key = L10N.getStr("copySourceUri2.accesskey");
     const setDirectoryRootLabel = L10N.getStr("setDirectoryRoot.label");
@@ -80,52 +78,48 @@ class SourceTreeItem extends Component {
 
     const menuOptions = [];
 
-    if (!isDirectory(item)) {
-      // Flow requires some extra handling to ensure the value of contents.
-      const { contents } = item;
+    const { item } = this.props;
+    if (item.type == "source") {
+      const { source } = item;
 
-      if (!Array.isArray(contents)) {
-        const copySourceUri2 = {
-          id: "node-menu-copy-source",
-          label: copySourceUri2Label,
-          accesskey: copySourceUri2Key,
-          disabled: false,
-          click: () => copyToTheClipboard(contents.url),
-        };
+      const copySourceUri2 = {
+        id: "node-menu-copy-source",
+        label: copySourceUri2Label,
+        accesskey: copySourceUri2Key,
+        disabled: false,
+        click: () => copyToTheClipboard(source.url),
+      };
 
-        const { cx, source } = this.props;
-        if (source) {
-          const blackBoxMenuItem = {
-            id: "node-menu-blackbox",
-            label: this.props.isSourceBlackBoxed
-              ? L10N.getStr("ignoreContextItem.unignore")
-              : L10N.getStr("ignoreContextItem.ignore"),
-            accesskey: this.props.isSourceBlackBoxed
-              ? L10N.getStr("ignoreContextItem.unignore.accesskey")
-              : L10N.getStr("ignoreContextItem.ignore.accesskey"),
-            disabled: !shouldBlackbox(source),
-            click: () => this.props.toggleBlackBox(cx, source),
-          };
-          const downloadFileItem = {
-            id: "node-menu-download-file",
-            label: L10N.getStr("downloadFile.label"),
-            accesskey: L10N.getStr("downloadFile.accesskey"),
-            disabled: false,
-            click: () => this.handleDownloadFile(cx, source, item),
-          };
-          menuOptions.push(copySourceUri2, blackBoxMenuItem, downloadFileItem);
-        }
-      }
+      const { cx } = this.props;
+      const blackBoxMenuItem = {
+        id: "node-menu-blackbox",
+        label: this.props.isSourceBlackBoxed
+          ? L10N.getStr("ignoreContextItem.unignore")
+          : L10N.getStr("ignoreContextItem.ignore"),
+        accesskey: this.props.isSourceBlackBoxed
+          ? L10N.getStr("ignoreContextItem.unignore.accesskey")
+          : L10N.getStr("ignoreContextItem.ignore.accesskey"),
+        disabled: !shouldBlackbox(source),
+        click: () => this.props.toggleBlackBox(cx, source),
+      };
+      const downloadFileItem = {
+        id: "node-menu-download-file",
+        label: L10N.getStr("downloadFile.label"),
+        accesskey: L10N.getStr("downloadFile.accesskey"),
+        disabled: false,
+        click: () => this.handleDownloadFile(cx, source),
+      };
+      menuOptions.push(copySourceUri2, blackBoxMenuItem, downloadFileItem);
     }
 
-    if (isDirectory(item)) {
+    // All other types other than source are folder-like
+    if (item.type != "source") {
       this.addCollapseExpandAllOptions(menuOptions, item);
 
       if (features.root) {
-        const { path } = item;
         const { cx, depth, projectRoot } = this.props;
 
-        if (projectRoot.endsWith(path)) {
+        if (projectRoot == item.uniquePath) {
           menuOptions.push({
             id: "node-remove-directory-root",
             label: removeDirectoryRootLabel,
@@ -141,7 +135,7 @@ class SourceTreeItem extends Component {
             click: () =>
               this.props.setProjectDirectoryRoot(
                 cx,
-                path,
+                item.uniquePath,
                 this.renderItemName(depth)
               ),
           });
@@ -154,7 +148,7 @@ class SourceTreeItem extends Component {
     showMenu(event, menuOptions);
   };
 
-  handleDownloadFile = async (cx, source, item) => {
+  handleDownloadFile = async (cx, source) => {
     if (!source) {
       return;
     }
@@ -166,7 +160,7 @@ class SourceTreeItem extends Component {
     if (!data) {
       return;
     }
-    downloadFile(data, item.name);
+    downloadFile(data, source.displayURL.filename);
   };
 
   addBlackboxAllOption = (menuOptions, item) => {
@@ -256,7 +250,7 @@ class SourceTreeItem extends Component {
 
   renderItemArrow() {
     const { item, expanded } = this.props;
-    return isDirectory(item) ? (
+    return item.type != "source" ? (
       <AccessibleImage className={classnames("arrow", { expanded })} />
     ) : (
       <span className="img no-arrow" />
@@ -264,56 +258,31 @@ class SourceTreeItem extends Component {
   }
 
   renderIcon(item, depth) {
-    const { projectRoot, source, threads } = this.props;
-
-    if (item.name === "Webpack") {
-      return <AccessibleImage className="webpack" />;
-    } else if (item.name === "Angular") {
-      return <AccessibleImage className="angular" />;
+    if (item.type == "thread") {
+      const icon = item.thread.targetType.includes("worker")
+        ? "worker"
+        : "window";
+      return <AccessibleImage className={classnames(icon)} />;
     }
-
-    // Threads level
-    if (depth === 0 && projectRoot === "") {
-      const thread = threads.find(thrd => thrd.actor == item.name);
-
-      if (thread) {
-        const icon = thread.targetType.includes("worker") ? "worker" : "window";
-        return <AccessibleImage className={classnames(icon)} />;
+    if (item.type == "group") {
+      if (item.groupName === "Webpack") {
+        return <AccessibleImage className="webpack" />;
+      } else if (item.groupName === "Angular") {
+        return <AccessibleImage className="angular" />;
       }
+      // Check if the group relates to an extension.
+      // This happens when a webextension injects a content script.
+      if (item.isForExtensionSource) {
+        return <AccessibleImage className="extension" />;
+      }
+
+      return <AccessibleImage className="globe-small" />;
     }
-
-    // Check if the group relates to an extension.
-    // This happens when a webextension injects a content script.
-    if (depth == 1) {
-      // Retrieve the first source in this group, as there is nothing
-      // on `item` to know if we are on an extension
-      function findFirstSource(_item) {
-        if (_item.type == "source") {
-          return _item.contents;
-        }
-        if (_item.contents[0]) {
-          return findFirstSource(_item.contents[0]);
-        }
-        return null;
-      }
-      const firstSource = findFirstSource(item);
-      if (firstSource?.isExtension) {
-        return <AccessibleImage className={classnames("extension")} />;
-      }
-    }
-
-    if (isDirectory(item)) {
-      // Domain level
-      if (
-        (depth === 1 && projectRoot === "") ||
-        (depth === 0 && threads.find(thrd => thrd.actor === projectRoot))
-      ) {
-        return <AccessibleImage className="globe-small" />;
-      }
+    if (item.type == "directory") {
       return <AccessibleImage className="folder" />;
     }
-
-    if (source) {
+    if (item.type == "source") {
+      const { source } = item;
       return (
         <SourceIcon
           source={source}
@@ -332,27 +301,45 @@ class SourceTreeItem extends Component {
   }
 
   renderItemName(depth) {
-    const { item, threads } = this.props;
+    const { item } = this.props;
 
-    if (depth === 0) {
-      const thread = threads.find(({ actor }) => actor == item.name);
-      if (thread) {
-        return (
-          thread.name +
-          (thread.serviceWorkerStatus ? ` (${thread.serviceWorkerStatus})` : "")
-        );
-      }
+    if (item.type == "thread") {
+      const { thread } = item;
+      return (
+        thread.name +
+        (thread.serviceWorkerStatus ? ` (${thread.serviceWorkerStatus})` : "")
+      );
     }
-
-    return unescape(item.name);
+    if (item.type == "group") {
+      return unescape(item.groupName);
+    }
+    if (item.type == "directory") {
+      const parentItem = this.props.getParent(item);
+      return item.path.replace(parentItem.path, "").replace(/^\//, "");
+    }
+    if (item.type == "source") {
+      const { displayURL } = item.source;
+      const name =
+        displayURL.filename + (displayURL.search ? displayURL.search : "");
+      return unescape(name);
+    }
   }
 
   renderItemTooltip() {
     const { item } = this.props;
 
-    return item.type === "source"
-      ? unescape(item.contents.url)
-      : getPathWithoutThread(item.path);
+    if (item.type == "thread") {
+      return item.thread.name;
+    }
+    if (item.type == "group") {
+      return item.groupName;
+    }
+    if (item.type == "directory") {
+      return item.path;
+    }
+    if (item.type == "source") {
+      return item.source.url;
+    }
   }
 
   render() {
@@ -367,7 +354,7 @@ class SourceTreeItem extends Component {
         className={classnames("node", { focused })}
         key={item.path}
         onClick={this.onClick}
-        onContextMenu={e => this.onContextMenu(e, item)}
+        onContextMenu={this.onContextMenu}
         title={this.renderItemTooltip()}
       >
         {this.renderItemArrow()}
@@ -395,11 +382,17 @@ function getSourceContentValue(state, source) {
 }
 
 const mapStateToProps = (state, props) => {
-  const { source } = props;
+  const { item } = props;
+  if (item.type == "source") {
+    const { source } = item;
+    return {
+      cx: getContext(state),
+      hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
+      sourceContent: getSourceContentValue(state, source),
+    };
+  }
   return {
     cx: getContext(state),
-    hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
-    sourceContent: source ? getSourceContentValue(state, source) : null,
   };
 };
 

@@ -35,9 +35,7 @@ exports[`PrimaryPanes should not render the directory root header if the directo
     <div
       className="threads-list"
     >
-      <Connect(SourcesTree)
-        threads={Array []}
-      />
+      <Connect(SourcesTree) />
     </div>
     <Connect(Outline)
       alphabetizeOutline={false}
@@ -104,9 +102,7 @@ exports[`PrimaryPanes should render the directory root header if the directory r
           </span>
         </button>
       </div>
-      <Connect(SourcesTree)
-        threads={Array []}
-      />
+      <Connect(SourcesTree) />
     </div>
     <Connect(Outline)
       alphabetizeOutline={false}

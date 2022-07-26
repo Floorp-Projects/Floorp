@@ -64,11 +64,7 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
   // so only pass if that's a WebExtension toolbox.
   // And let actions.willNavigate/NAVIGATE pass the current/selected thread
   // from onTargetAvailable
-  await actions.connect(
-    targetFront.url,
-    targetFront.threadFront.actor,
-    targetFront.isWebExtension
-  );
+  await actions.connect(targetFront.url, targetFront.threadFront.actor);
 
   await targetCommand.watchTargets({
     types: targetCommand.ALL_TYPES,
