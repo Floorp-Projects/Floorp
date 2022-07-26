@@ -1679,6 +1679,20 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
 
+    if (ShouldApplyDelazifyStrategy(aRequest)) {
+      ApplyDelazifyStrategy(&options);
+      mTotalFullParseSize +=
+          aRequest->ScriptTextLength() > 0
+              ? static_cast<uint32_t>(aRequest->ScriptTextLength())
+              : 0;
+
+      LOG(
+          ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
+           "url=%s mTotalFullParseSize=%u",
+           aRequest, aRequest->mURI->GetSpecOrDefault().get(),
+           mTotalFullParseSize));
+    }
+
     MaybeSourceText maybeSource;
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2005,21 +2019,6 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   aOptions->borrowBuffer = true;
 
   aOptions->allocateInstantiationStorage = true;
-
-  // Checker whether a delazification strategy is requested from the preference
-  // in about:config, and allow to switch to it if we have not yet overflowed
-  // our document's quota of scripts to be parsed with a non-default strategy.
-  //
-  // Otherwise, the default is set either by the CompileOptions default field
-  // value or by the CompileOptions constructor which checks whether code
-  // coverage is enabled.
-  if (ShouldApplyDelazifyStrategy(aRequest, aOptions)) {
-    ApplyDelazifyStrategy(aOptions);
-    mTotalFullParseSize +=
-        aRequest->ScriptTextLength() > 0
-            ? static_cast<uint32_t>(aRequest->ScriptTextLength())
-            : 0;
-  }
 
   return NS_OK;
 }
@@ -3253,42 +3252,8 @@ static bool IsInternalURIScheme(nsIURI* uri) {
          uri->SchemeIs("chrome");
 }
 
-bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
-                                               JS::CompileOptions* aOptions) {
-  if (aOptions->forceFullParse()) {
-    // If code coverage is enabled, full-parsing is non revertable and asserts
-    // if any attempt to do so is made. Thus we should skip attempts to apply a
-    // different delazification strategy.
-    return false;
-  }
-
-  if (!aRequest->IsTextSource()) {
-    // Delazification strategy is only used while processing source input, as
-    // the bytecode cache already contains delazified functions.
-    return false;
-  }
-
-  if (aRequest->IsModuleRequest()) {
-    // Module do not yet support concurrent off-thread delazification.
-    // (see Bug 1760334)
-    return false;
-  }
-
-  if (aRequest->HasScriptLoadContext() &&
-      aRequest->GetScriptLoadContext()->mIsInline) {
-    // For inline script, we use the strategy defined in CompileOptions
-    // constructor, or its default value.
-    return false;
-  }
-
-  auto logEnabled = MakeScopeExit([&] {
-    LOG(
-        ("ScriptLoadRequest (%p): non-on-demand-only Parsing Enabled for "
-         "url=%s mTotalFullParseSize=%u",
-         aRequest, aRequest->mURI->GetSpecOrDefault().get(),
-         mTotalFullParseSize));
-  });
-
+bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
+  // Full parse everything if negative.
   if (StaticPrefs::dom_script_loader_delazification_max_size() < 0) {
     return true;
   }
@@ -3296,7 +3261,6 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
   // Be conservative on machines with 2GB or less of memory.
   if (PhysicalSizeOfMemoryInGB() <=
       StaticPrefs::dom_script_loader_delazification_min_mem()) {
-    logEnabled.release();
     return false;
   }
 
@@ -3311,7 +3275,6 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest,
     return true;
   }
 
-  logEnabled.release();
   if (LOG_ENABLED()) {
     nsCString url = aRequest->mURI->GetSpecOrDefault();
     LOG(
