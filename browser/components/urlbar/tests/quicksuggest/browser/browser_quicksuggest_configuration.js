@@ -7,11 +7,14 @@
  * Tests QuickSuggest configurations.
  */
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   EnterprisePolicyTesting:
     "resource://testing-common/EnterprisePolicyTesting.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 // We use this pref in enterprise preference policy tests. We specifically use a

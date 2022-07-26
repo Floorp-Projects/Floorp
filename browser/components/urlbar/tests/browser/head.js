@@ -13,6 +13,12 @@ const { AppConstants } = ChromeUtils.import(
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  UrlbarController: "resource:///modules/UrlbarController.sys.mjs",
+  UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -24,12 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
-  UrlbarController: "resource:///modules/UrlbarController.jsm",
-  UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 let sandbox;

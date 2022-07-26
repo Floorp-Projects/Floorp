@@ -13,11 +13,18 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+import {
+  UrlbarProvider,
+  UrlbarUtils,
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
@@ -25,9 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "updateManager", () => {

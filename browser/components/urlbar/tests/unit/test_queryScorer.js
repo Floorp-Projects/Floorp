@@ -3,8 +3,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  QueryScorer: "resource:///modules/UrlbarProviderInterventions.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  QueryScorer: "resource:///modules/UrlbarProviderInterventions.sys.mjs",
 });
 
 const DISTANCE_THRESHOLD = 1;

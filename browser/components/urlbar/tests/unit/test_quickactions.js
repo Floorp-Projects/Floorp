@@ -4,9 +4,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderQuickActions:
-    "resource:///modules/UrlbarProviderQuickActions.jsm",
+    "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
 const EXPECTED_MATCH = {

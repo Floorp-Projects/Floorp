@@ -62,6 +62,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -86,10 +90,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TransientPrefs: "resource:///modules/TransientPrefs.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   UIState: "resource://services-sync/UIState.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {

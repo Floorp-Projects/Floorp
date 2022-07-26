@@ -7,9 +7,12 @@
  * Tests the buttons in the onboarding dialog for quick suggest/Firefox Suggest.
  */
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 const OTHER_DIALOG_URI = getRootDirectory(gTestPath) + "subdialog.xhtml";

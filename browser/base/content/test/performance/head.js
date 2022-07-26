@@ -3,12 +3,12 @@
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   PerfTestHelpers: "resource://testing-common/PerfTestHelpers.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
 /**
