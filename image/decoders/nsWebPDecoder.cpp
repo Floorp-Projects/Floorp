@@ -361,14 +361,19 @@ LexerResult nsWebPDecoder::ReadHeader(WebPDemuxer* aDemuxer, bool aIsComplete) {
   if (!IsMetadataDecode() && !mGotColorProfile) {
     if (flags & WebPFeatureFlags::ICCP_FLAG) {
       WebPChunkIterator iter;
-      if (!WebPDemuxGetChunk(aDemuxer, "ICCP", 1, &iter)) {
-        return aIsComplete ? LexerResult(TerminalState::FAILURE)
-                           : LexerResult(Yield::NEED_MORE_DATA);
-      }
+      if (WebPDemuxGetChunk(aDemuxer, "ICCP", 1, &iter)) {
+        ApplyColorProfile(reinterpret_cast<const char*>(iter.chunk.bytes),
+                          iter.chunk.size);
+        WebPDemuxReleaseChunkIterator(&iter);
 
-      ApplyColorProfile(reinterpret_cast<const char*>(iter.chunk.bytes),
-                        iter.chunk.size);
-      WebPDemuxReleaseChunkIterator(&iter);
+      } else {
+        MOZ_LOG(sWebPLog, LogLevel::Warning,
+                ("[this=%p] nsWebPDecoder::ReadHeader header specified ICCP "
+                 "but no ICCP chunk found, ignoring\n",
+                 this));
+
+        ApplyColorProfile(nullptr, 0);
+      }
     } else {
       ApplyColorProfile(nullptr, 0);
     }
