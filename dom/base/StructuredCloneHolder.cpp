@@ -500,7 +500,11 @@ bool StructuredCloneHolder::WriteFullySerializableObjects(
   }
 
   // Don't know what this is
-  xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  ErrorResult rv;
+  const char* className = JS::GetClass(obj)->name;
+  rv.ThrowDataCloneError(nsDependentCString(className) +
+                         " object could not be cloned."_ns);
+  MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
   return false;
 }
 

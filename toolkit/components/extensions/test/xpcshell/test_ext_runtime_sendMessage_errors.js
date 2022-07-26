@@ -31,8 +31,8 @@ add_task(async function test_sendMessage_error() {
       ],
 
       // Structured cloning doesn't work with DOM objects
-      [[null, location, null], "The object could not be cloned."],
-      [[null, [circ, location], null], "The object could not be cloned."],
+      [[null, location, null], "Location object could not be cloned."],
+      [[null, [circ, location], null], "Location object could not be cloned."],
     ];
 
     // Repeat all tests with the undefined value instead of null.
