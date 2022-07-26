@@ -19,11 +19,12 @@ browser:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5065#issuecomment-894328647
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 103
+    expires: 119
   default_search_engine:
     type: string
     lifetime: application
@@ -33,11 +34,12 @@ browser:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5065#issuecomment-894328647
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 103
+    expires: 119
   locale_override:
     type: string
     lifetime: application
@@ -48,11 +50,12 @@ browser:
       - https://github.com/mozilla-mobile/focus-android/issues/4545
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5065#issuecomment-894328647
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - technical
     notification_emails:
       - android-probes@mozilla.com
-    expires: 103
+    expires: 119
   total_uri_count:
     type: counter
     description: |
@@ -241,11 +244,12 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/4967
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 103
+    expires: 119
   ad_clicks:
     type: labeled_counter
     description: |
@@ -257,11 +261,12 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/4967
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 103
+    expires: 119
   in_content:
     type: labeled_counter
     description: |
@@ -272,11 +277,12 @@ browser.search:
       - https://github.com/mozilla-mobile/fenix/issues/4967
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 103
+    expires: 119
 
   search_count:
     type: labeled_counter
@@ -312,12 +318,13 @@ mozilla_products:
       - https://github.com/mozilla-mobile/focus-android/issues/5295
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5303
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 105
+    expires: 119
   is_fenix_default_browser:
     type: boolean
     lifetime: application
@@ -347,11 +354,12 @@ settings_screen:
       - https://github.com/mozilla-mobile/focus-android/issues/5058
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5096
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
 
 autocomplete:
   domain_added:
@@ -441,11 +449,12 @@ shortcuts:
       - https://github.com/mozilla-mobile/focus-android/issues/5056
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5189
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
     unit: shortcut(s)
   shortcut_opened_counter:
     type: counter
@@ -456,11 +465,12 @@ shortcuts:
       - https://github.com/mozilla-mobile/focus-android/issues/5056
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5189
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
   shortcut_added_counter:
     type: counter
     description: |
@@ -470,11 +480,12 @@ shortcuts:
       - https://github.com/mozilla-mobile/focus-android/issues/5056
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5189
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
   shortcut_removed_counter:
     type: labeled_counter
     description: |
@@ -485,11 +496,12 @@ shortcuts:
       - https://github.com/mozilla-mobile/focus-android/issues/5056
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5189
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
     labels:
       - removed_from_browser_menu
       - removed_from_home_screen
@@ -503,11 +515,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
 
   tracking_protection_changed:
     type: event
@@ -517,11 +530,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
     extra_keys:
       is_enabled:
         description: The new setting for ETP, true for ON, false for OFF
@@ -553,11 +567,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
     extra_keys:
       source_of_change:
         description: The source of interaction, "Panel" or "Settings"
@@ -579,11 +594,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
 
   has_advertising_blocked:
     type: boolean
@@ -594,11 +610,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
 
   has_analytics_blocked:
     type: boolean
@@ -609,11 +626,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
 
   has_content_blocked:
     type: boolean
@@ -624,11 +642,12 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 104
+    expires: 119
 pro_tips:
   tip_displayed:
     type: event
@@ -696,11 +715,12 @@ preferences:
       - https://github.com/mozilla-mobile/focus-android/issues/5519
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5526
+      - https://github.com/mozilla-mobile/focus-android/pull/7418#issuecomment-1195518264
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 106
+    expires: 119
 
 app_opened:
   from_icons:
