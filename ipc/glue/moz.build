@@ -16,6 +16,7 @@ EXPORTS.mozilla.ipc += [
     "BackgroundStarterChild.h",
     "BackgroundStarterParent.h",
     "BackgroundUtils.h",
+    "BigBuffer.h",
     "BrowserProcessSubThread.h",
     "ByteBuf.h",
     "ByteBufUtils.h",
@@ -155,6 +156,7 @@ EXPORTS.ipc += [
 UNIFIED_SOURCES += [
     "BackgroundImpl.cpp",
     "BackgroundUtils.cpp",
+    "BigBuffer.cpp",
     "BrowserProcessSubThread.cpp",
     "CrashReporterClient.cpp",
     "CrashReporterHost.cpp",
