@@ -1315,7 +1315,7 @@ void ContentCacheInParent::OnSelectionEvent(
        mPendingCompositionCount, mPendingCommitCount,
        GetBoolName(mIsChildIgnoringCompositionEvents)));
 
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
   mDispatchedEventMessages.AppendElement(aSelectionEvent.mMessage);
 #endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
@@ -1337,7 +1337,7 @@ void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
        GetBoolName(mWidgetHasComposition), mPendingCompositionCount,
        mPendingCommitCount, GetBoolName(mIsChildIgnoringCompositionEvents)));
 
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
   mReceivedEventMessages.AppendElement(aMessage);
 #endif  // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
@@ -1349,14 +1349,14 @@ void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
        WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage));
 
   if (isCommittedInChild) {
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
     if (mPendingCompositionCount == 1) {
       RemoveUnnecessaryEventMessageLog();
     }
 #endif  // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
     if (NS_WARN_IF(!mPendingCompositionCount)) {
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
       nsPrintfCString info(
           "\nThere is no pending composition but received %s "
           "message from the remote child\n\n",
@@ -1393,7 +1393,7 @@ void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
     mIsChildIgnoringCompositionEvents = false;
 
     if (NS_WARN_IF(!mPendingCommitCount)) {
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
       nsPrintfCString info(
           "\nThere is no pending comment events but received "
           "%s message from the remote child\n\n",
@@ -1427,16 +1427,16 @@ void ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   }
 
   if (NS_WARN_IF(!mPendingEventsNeedingAck)) {
-#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED && !defined(FUZZING_SNAPSHOT)
     nsPrintfCString info(
         "\nThere is no pending events but received %s "
         "message from the remote child\n\n",
         ToChar(aMessage));
     AppendEventMessageLog(info);
     CrashReporter::AppendAppNotesToCrashReport(info);
-#endif  // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
     MOZ_DIAGNOSTIC_ASSERT(
         false, "No pending event message but received unexpected event");
+#endif  // #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mPendingEventsNeedingAck = 1;
   }
   if (--mPendingEventsNeedingAck) {
