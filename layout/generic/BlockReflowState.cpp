@@ -648,28 +648,12 @@ bool BlockReflowState::CanPlaceFloat(
 // NS_UNCONSTRAINEDSIZE, we're dealing with an orthogonal block that
 // has block-size:auto, and we'll need to actually reflow it to find out
 // how much inline-size it will occupy in the containing block's mode.
-static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
-                                nscoord aFloatAvailableISize, nsIFrame* aFloat,
-                                const SizeComputationInput& aFloatSizingInput) {
-  AutoMaybeDisableFontInflation an(aFloat);
-  WritingMode wm = aFloatSizingInput.GetWritingMode();
-
-  auto floatSize = aFloat->ComputeSize(
-      aCBReflowInput.mRenderingContext, wm, aCBReflowInput.ComputedSize(wm),
-      aFloatAvailableISize,
-      aFloatSizingInput.ComputedLogicalMargin(wm).Size(wm),
-      aFloatSizingInput.ComputedLogicalBorderPadding(wm).Size(wm), {},
-      ComputeSizeFlag::ShrinkWrap);
-
-  WritingMode cbwm = aCBReflowInput.GetWritingMode();
-  nscoord floatISize = floatSize.mLogicalSize.ConvertTo(cbwm, wm).ISize(cbwm);
-  if (floatISize == NS_UNCONSTRAINEDSIZE) {
+static nscoord FloatMarginISize(WritingMode aCBWM,
+                                const ReflowInput& aFloatRI) {
+  if (aFloatRI.ComputedSize(aCBWM).ISize(aCBWM) == NS_UNCONSTRAINEDSIZE) {
     return NS_UNCONSTRAINEDSIZE;  // reflow is needed to get the true size
   }
-
-  return floatISize +
-         aFloatSizingInput.ComputedLogicalMargin(cbwm).IStartEnd(cbwm) +
-         aFloatSizingInput.ComputedLogicalBorderPadding(cbwm).IStartEnd(cbwm);
+  return aFloatRI.ComputedSizeWithMarginBorderPadding(aCBWM).ISize(aCBWM);
 }
 
 // A frame property that stores the last shape source / margin / etc. if there's
@@ -753,14 +737,12 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
   }
 
   LogicalSize availSize = ComputeAvailableSizeForFloat();
-  SizeComputationInput sizingInput(aFloat, mReflowInput.mRenderingContext, wm,
-                                   mReflowInput.ComputedISize());
+  const WritingMode floatWM = aFloat->GetWritingMode();
+  Maybe<ReflowInput> floatRI(std::in_place, mPresContext, mReflowInput, aFloat,
+                             availSize.ConvertTo(floatWM, wm));
 
-  nscoord floatMarginISize =
-      FloatMarginISize(mReflowInput, availSize.ISize(wm), aFloat, sizingInput);
-
-  LogicalMargin floatMargin(wm);  // computed margin
-  LogicalMargin floatOffsets(wm);
+  nscoord floatMarginISize = FloatMarginISize(wm, *floatRI);
+  LogicalMargin floatMargin = floatRI->ComputedLogicalMargin(wm);
   nsReflowStatus reflowStatus;
 
   // If it's a floating first-letter, we need to reflow it before we
@@ -772,8 +754,8 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
   bool earlyFloatReflow =
       aFloat->IsLetterFrame() || floatMarginISize == NS_UNCONSTRAINEDSIZE;
   if (earlyFloatReflow) {
-    mBlock->ReflowFloat(*this, availSize, aFloat, floatMargin, floatOffsets,
-                        false, reflowStatus);
+    mBlock->ReflowFloat(*this, *floatRI, availSize, aFloat, false,
+                        reflowStatus);
     floatMarginISize = aFloat->ISize(wm) + floatMargin.IStartEnd(wm);
     NS_ASSERTION(reflowStatus.IsComplete(),
                  "letter frames and orthogonal floats with auto block-size "
@@ -853,9 +835,16 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
   // Reflow the float after computing its vertical position so it knows
   // where to break.
   if (!earlyFloatReflow) {
+    const LogicalSize oldAvailSize = availSize;
+    availSize = ComputeAvailableSizeForFloat();
+    if (oldAvailSize != availSize) {
+      floatRI.reset();
+      floatRI.emplace(mPresContext, mReflowInput, aFloat,
+                      availSize.ConvertTo(floatWM, wm));
+    }
     bool pushedDown = mBCoord != restoreBCoord.SavedValue();
-    mBlock->ReflowFloat(*this, ComputeAvailableSizeForFloat(), aFloat,
-                        floatMargin, floatOffsets, pushedDown, reflowStatus);
+    mBlock->ReflowFloat(*this, *floatRI, availSize, aFloat, pushedDown,
+                        reflowStatus);
   }
   if (aFloat->GetPrevInFlow()) {
     floatMargin.BStart(wm) = 0;
@@ -892,6 +881,7 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
                       floatMargin.BStart(wm) + floatPos.B(wm));
 
   // If float is relatively positioned, factor that in as well
+  const LogicalMargin floatOffsets = floatRI->ComputedLogicalOffsets(wm);
   ReflowInput::ApplyRelativePositioning(aFloat, wm, floatOffsets, &origin,
                                         ContainerSize());
 
