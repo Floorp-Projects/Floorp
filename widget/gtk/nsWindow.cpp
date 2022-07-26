@@ -5303,11 +5303,6 @@ static void GtkWidgetDisableUpdates(GtkWidget* aWidget) {
 void nsWindow::EnableRenderingToWindow() {
   LOG("nsWindow::EnableRenderingToWindow()");
 
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
-                                               GetShapedState());
-  }
-
   if (GdkIsWaylandDisplay()) {
 #ifdef MOZ_WAYLAND
     moz_container_wayland_add_initial_draw_callback(
@@ -5415,6 +5410,11 @@ void nsWindow::ConfigureGdkWindow() {
 
   if (mCompositorState == COMPOSITOR_PAUSED_INITIALLY) {
     mCompositorState = COMPOSITOR_PAUSED_MISSING_WINDOW;
+  }
+
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
+                                               GetShapedState());
   }
 
   EnableRenderingToWindow();
@@ -8503,15 +8503,18 @@ void nsWindow::DidGetNonBlankPaint() {
 /* nsWindow::SetCompositorWidgetDelegate() sets remote GtkCompositorWidget
  * to render into with compositor.
  *
- * If we're already visible we need to recreate compositor/vsync state.
+ * SetCompositorWidgetDelegate(delegate) is called from
+ * nsBaseWidget::CreateCompositor(), i.e. nsWindow::GetWindowRenderer().
+ *
+ * SetCompositorWidgetDelegate(null) is called from
+ * nsBaseWidget::DestroyCompositor().
  */
 void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
   LOG("nsWindow::SetCompositorWidgetDelegate %p\n", delegate);
 
-  // There's a change of remote widget - stop compositor and VSync as
-  // we're going re-init it.
-  if (mCompositorWidgetDelegate && mIsMapped) {
-    DisableRenderingToWindow();
+  // Remove reference to GdkWindow/XWindow from remote widget.
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->DisableRendering();
   }
 
   if (delegate) {
@@ -8519,10 +8522,10 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
-    // This is called from nsBaseWidget::CreateCompositor() in which case
-    // we need to create a new EGL surface in RenderCompositorEGL on X11
+    // Pass recent GdkWindow/XWindow to remote widget.
     if (mIsMapped) {
-      EnableRenderingToWindow();
+      mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
+                                                 GetShapedState());
     }
   } else {
     mCompositorWidgetDelegate = nullptr;
