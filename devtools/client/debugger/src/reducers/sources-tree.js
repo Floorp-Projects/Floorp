@@ -67,26 +67,71 @@ export function initialSourcesTreeState() {
 
 export default function update(state = initialSourcesTreeState(), action) {
   switch (action.type) {
-    case "ADD_SOURCES":
-      const newSources = action.sources.filter(source =>
-        isSourceVisibleInSourceTree(
-          source,
-          state.chromeAndExtensionsEnabled,
-          state.isWebExtension
-        )
+    case "ADD_SOURCES": {
+      // With this action, we only process the original sources.
+      // That's because original sources don't have any direct source actor.
+      const newSources = action.sources.filter(
+        source =>
+          source.isOriginal &&
+          isSourceVisibleInSourceTree(
+            source,
+            state.chromeAndExtensionsEnabled,
+            state.isWebExtension
+          )
       );
       if (newSources.length == 0) {
         return state;
       }
-      // We know that state will change in any case,
-      // so fork `state` right away.
-      const newState = { ...state };
+      let changed = false;
+      // Fork the array only once for all the sources
+      const threadItems = [...state.threadItems];
       for (const source of newSources) {
-        addSource(newState.threadItems, source);
+        changed |= addSource(threadItems, source.thread, source);
       }
-      // Copy the array once for all the sources in order to force updating react
-      newState.threadItems = [...newState.threadItems];
-      return newState;
+      if (changed) {
+        return {
+          ...state,
+          threadItems,
+        };
+      }
+      return state;
+    }
+    case "INSERT_SOURCE_ACTORS": {
+      // With this action, we only cover generated sources.
+      // (i.e. we need something else for sourcemapped/original sources)
+      // But we do want to process source actors in order to be able to display
+      // distinct Source Tree Items for sources with the same URL loaded in distinct thread.
+      // (And may be also later be able to highlight the many sources with the same URL loaded in a given thread)
+      const newSourceActors = action.items.filter(sourceActor =>
+        isSourceVisibleInSourceTree(
+          sourceActor.sourceObject,
+          state.chromeAndExtensionsEnabled,
+          state.isWebExtension
+        )
+      );
+      if (newSourceActors.length == 0) {
+        return state;
+      }
+      let changed = false;
+      // Fork the array only once for all the sources
+      const threadItems = [...state.threadItems];
+      for (const sourceActor of newSourceActors) {
+        // We mostly wanted to read the thread of the SourceActor,
+        // most of the interesting attributes are on the Source Object.
+        changed |= addSource(
+          threadItems,
+          sourceActor.thread,
+          sourceActor.sourceObject
+        );
+      }
+      if (changed) {
+        return {
+          ...state,
+          threadItems,
+        };
+      }
+      return state;
+    }
 
     case "NAVIGATE":
       return initialSourcesTreeState();
@@ -191,21 +236,20 @@ function isSourceVisibleInSourceTree(
   );
 }
 
-function addSource(threadItems, source) {
+function addSource(threadItems, thread, source) {
   // Ensure creating or fetching the related Thread Item
-  const { thread } = source;
-
   let threadItem = threadItems.find(item => {
     return item.threadActorID == thread;
   });
   if (!threadItem) {
     threadItem = createThreadTreeItem(thread);
-    // Note that threadItems will be clone once to force a state update
-    // by the callsite of addSource
+    // Note that threadItems will be cloned once to force a state update
+    // by the callsite of `addSourceActor`
     threadItems.push(threadItem);
   }
 
   // Then ensure creating or fetching the related Group Item
+  // About `source` versus `sourceActor`:
   const { displayURL } = source;
   const { group } = displayURL;
 
@@ -226,6 +270,16 @@ function addSource(threadItems, source) {
   const parentPath = path.substring(0, path.lastIndexOf("/"));
   const directoryItem = addOrGetParentDirectory(thread, groupItem, parentPath);
 
+  // Check if a previous source actor registered this source.
+  // It happens if we load the same url multiple times, or,
+  // for inline sources (=HTML pages with inline scripts).
+  const existing = directoryItem.children.find(item => {
+    return item.type == "source" && item.source == source;
+  });
+  if (existing) {
+    return false;
+  }
+
   // Finaly, create the Source Item and register it in its parent Directory Item
   const sourceItem = createSourceTreeItem(source, thread, group, directoryItem);
   // Copy children in order to force updating react in case we picked
@@ -233,6 +287,8 @@ function addSource(threadItems, source) {
   directoryItem.children = [...directoryItem.children, sourceItem];
   // Re-sort the items in this directory
   directoryItem.children.sort(sortItems);
+
+  return true;
 }
 
 function sortItems(a, b) {
