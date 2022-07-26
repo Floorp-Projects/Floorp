@@ -129,7 +129,8 @@ function ValidateTypedArray(obj) {
 // 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
 function TypedArrayCreateWithLength(constructor, length) {
     // Step 1.
-    var newTypedArray = new constructor(length);
+    var newTypedArray = constructContentFunction(constructor, constructor,
+                                                 length);
 
     // Step 2.
     var isTypedArray = ValidateTypedArray(newTypedArray);
@@ -154,7 +155,8 @@ function TypedArrayCreateWithLength(constructor, length) {
 // 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
 function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
     // Step 1.
-    var newTypedArray = new constructor(buffer, byteOffset, length);
+    var newTypedArray = constructContentFunction(constructor, constructor,
+                                                 buffer, byteOffset, length);
 
     // Step 2.
     ValidateTypedArray(newTypedArray);
@@ -1023,7 +1025,7 @@ function TypedArraySort(comparefn) {
     // the user supplied comparefn is wrapped.
     var wrappedCompareFn = function(x, y) {
         // Step a.
-        var v = +comparefn(x, y);
+        var v = +callContentFunction(comparefn, undefined, x, y);
 
         // Step b.
         if (v !== v)
@@ -1412,7 +1414,7 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
                 var len = TypedArrayLength(source);
 
                 // Step 7.c.
-                var targetObj = new C(len);
+                var targetObj = constructContentFunction(C, C, len);
 
                 // Steps 7.d-f.
                 for (var k = 0; k < len; k++) {
@@ -1428,7 +1430,7 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
                 ArrayIteratorPrototypeOptimizable())
             {
                 // Steps 7.b-c.
-                var targetObj = new C(source.length);
+                var targetObj = constructContentFunction(C, C, source.length);
 
                 // Steps 7.a, 7.d-f.
                 TypedArrayInitFromPackedArray(targetObj, source);
@@ -1610,7 +1612,7 @@ function ArrayBufferSlice(start, end) {
     var ctor = SpeciesConstructor(O, GetBuiltinConstructor("ArrayBuffer"));
 
     // Step 12.
-    var new_ = new ctor(newLen);
+    var new_ = constructContentFunction(ctor, ctor, newLen);
 
     // Steps 13-15.
     var isWrapped = false;
@@ -1708,7 +1710,7 @@ function SharedArrayBufferSlice(start, end) {
     var ctor = SpeciesConstructor(O, GetBuiltinConstructor("SharedArrayBuffer"));
 
     // Step 11.
-    var new_ = new ctor(newLen);
+    var new_ = constructContentFunction(ctor, ctor, newLen);
 
     // Steps 12-13.
     var isWrapped = false;

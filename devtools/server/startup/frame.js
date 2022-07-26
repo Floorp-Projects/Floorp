@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
-/* global content, docShell, addEventListener, addMessageListener, removeMessageListener,
-  sendAsyncMessage */
+/* global addEventListener */
 
 /*
  * Frame script that listens for requests to start a `DevToolsServer` for a frame in a

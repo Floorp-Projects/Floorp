@@ -2718,6 +2718,9 @@ bool nsContainerFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
 
 bool nsContainerFrame::ShouldAvoidBreakInside(
     const ReflowInput& aReflowInput) const {
+  MOZ_ASSERT(this == aReflowInput.mFrame,
+             "Caller should pass a ReflowInput for this frame!");
+
   const auto* disp = StyleDisplay();
   const bool mayAvoidBreak = [&] {
     switch (disp->mBreakInside) {

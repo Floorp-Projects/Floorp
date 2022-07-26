@@ -47,8 +47,19 @@ extern JSObject* ValueToCallable(JSContext* cx, HandleValue v,
                                  int numToSkip = -1,
                                  MaybeConstruct construct = NO_CONSTRUCT);
 
-// Reasons why a call could be performed, for passing onto the debugger.
-enum class CallReason { Call, Getter, Setter };
+// Reasons why a call could be performed, for passing onto the debugger's
+// `onNativeCall` hook.
+// `onNativeCall` hook disabled all JITs, and this needs to be handled only in
+// the interpreter.
+enum class CallReason {
+  Call,
+  // callContentFunction or constructContentFunction in self-hosted JS.
+  CallContent,
+  // Function.prototype.call or Function.prototype.apply.
+  FunCall,
+  Getter,
+  Setter,
+};
 
 /*
  * Call or construct arguments that are stored in rooted memory.
@@ -136,7 +147,8 @@ inline bool Call(JSContext* cx, HandleValue fval, JSObject* thisObj,
 // This internal operation is intended only for use with arguments known to be
 // on the JS stack, or at least in carefully-rooted memory. The vast majority of
 // potential users should instead use InvokeArgs in concert with Call().
-extern bool CallFromStack(JSContext* cx, const CallArgs& args);
+extern bool CallFromStack(JSContext* cx, const CallArgs& args,
+                          CallReason reason = CallReason::Call);
 
 // ES6 7.3.13 Construct(F, argumentsList, newTarget).  All parameters are
 // required, hopefully forcing callers to be careful not to (say) blindly pass
@@ -162,7 +174,8 @@ extern bool Construct(JSContext* cx, HandleValue fval,
 // This internal operation is intended only for use with arguments known to be
 // on the JS stack, or at least in carefully-rooted memory. The vast majority of
 // potential users should instead use ConstructArgs in concert with Construct().
-extern bool ConstructFromStack(JSContext* cx, const CallArgs& args);
+extern bool ConstructFromStack(JSContext* cx, const CallArgs& args,
+                               CallReason reason = CallReason::Call);
 
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
 // during construction of |fval|.

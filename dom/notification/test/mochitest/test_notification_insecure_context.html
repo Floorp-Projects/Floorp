@@ -19,9 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1429432
 
   // Add an allow permission for the mochitest origin to test this.
   let script = SpecialPowers.loadChromeScript(function() {
+    /* eslint-env mozilla/chrome-script */
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin("http://mochi.test:8888");
     Services.perms.addFromPrincipal(principal, "desktop-notification", Services.perms.ALLOW_ACTION);
-    /* global addMessageListener */
     addMessageListener("destroy", function() {
       Services.perms.removeFromPrincipal(principal, "desktop-notification");
     });

@@ -256,6 +256,10 @@ class ExternalEngineStateMachine final
 
   void SetBlankVideoToVideoContainer();
 
+  media::TimeUnit GetVideoThreshold();
+
+  bool ShouldRunEngineUpdateForRequest();
+
   UniquePtr<ExternalPlaybackEngine> mEngine;
 
   bool mHasEnoughAudio = false;

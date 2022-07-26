@@ -724,7 +724,7 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                                    Info().mVideo.mImage.height);
   perfRecorder.Start();
   RefPtr<ExternalEngineStateMachine> self = this;
-  mReader->RequestVideoData(mCurrentPosition.Ref(), false)
+  mReader->RequestVideoData(GetVideoThreshold(), false)
       ->Then(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
@@ -912,11 +912,15 @@ void ExternalEngineStateMachine::NotifyEventInternal(
       break;
     case ExternalEngineEvent::RequestForAudio:
       mHasEnoughAudio = false;
-      RunningEngineUpdate(MediaData::Type::AUDIO_DATA);
+      if (ShouldRunEngineUpdateForRequest()) {
+        RunningEngineUpdate(MediaData::Type::AUDIO_DATA);
+      }
       break;
     case ExternalEngineEvent::RequestForVideo:
       mHasEnoughVideo = false;
-      RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
+      if (ShouldRunEngineUpdateForRequest()) {
+        RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
+      }
       break;
     case ExternalEngineEvent::AudioEnough:
       mHasEnoughAudio = true;
@@ -928,6 +932,16 @@ void ExternalEngineStateMachine::NotifyEventInternal(
       MOZ_ASSERT_UNREACHABLE("Undefined event!");
       break;
   }
+}
+
+bool ExternalEngineStateMachine::ShouldRunEngineUpdateForRequest() {
+  // Running engine update will request new data, which could be run on
+  // `RunningEngine` or `SeekingData` state. However, in `SeekingData` we should
+  // only request new data after finishing reader seek, otherwise the reader
+  // would start requesting data from a wrong position.
+  return mState.IsRunningEngine() ||
+         (mState.AsSeekingData() &&
+          !mState.AsSeekingData()->mWaitingReaderSeeked);
 }
 
 void ExternalEngineStateMachine::NotifyErrorInternal(
@@ -942,6 +956,14 @@ void ExternalEngineStateMachine::NotifyErrorInternal(
   } else {
     DecodeError(aError);
   }
+}
+
+media::TimeUnit ExternalEngineStateMachine::GetVideoThreshold() {
+  AssertOnTaskQueue();
+  if (auto* state = mState.AsSeekingData()) {
+    return state->GetTargetTime();
+  }
+  return mCurrentPosition.Ref();
 }
 
 #undef FMT

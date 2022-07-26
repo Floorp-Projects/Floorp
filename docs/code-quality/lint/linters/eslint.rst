@@ -90,7 +90,7 @@ I have valid code that is failing the ``no-undef`` rule or can't be parsed
 * If you are adding a new test directory, make sure its name matches one of the
   `patterns in .eslintrc.js`_. If you really can't match those, then you may need
   to add a separate `test specific .eslintrc.js file (example)`_.
-* If you are writing a frame script you may need to tell ESLint to use the `frame script environment`_:
+* If you are writing a script loaded into special environment (e.g. frame script) you may need to tell ESLint to use the `environment definitions`_ for each case:
 
   * ``/* eslint-env mozilla/frame-script */``
 
@@ -139,7 +139,7 @@ Sources
 .. _seek help: ../index.html#getting-help
 .. _patterns in .eslintrc.js: https://searchfox.org/mozilla-central/rev/9399e5832979755cd340383f4ca4069dd5fc7774/.eslintrc.js#24-38
 .. _test specific .eslintrc.js file (example): https://searchfox.org/mozilla-central/source/browser/base/content/test/about/.eslintrc.js
-.. _frame script environment: http://localhost:5500/code-quality/lint/linters/eslint-plugin-mozilla/environment.html#frame-script
+.. _environment definitions: ./eslint-plugin-mozilla/environment.html
 .. _Configuration (YAML): https://searchfox.org/mozilla-central/source/tools/lint/eslint.yml
 .. _Source: https://searchfox.org/mozilla-central/source/tools/lint/eslint/__init__.py
 .. _known ones: https://searchfox.org/mozilla-central/rev/287583a4a605eee8cd2d41381ffaea7a93d7b987/.eslintrc.js#24-40

@@ -66,6 +66,8 @@
 
   async function testScopes() {
     function chromeScriptSource() {
+      /* eslint-env mozilla/chrome-script */
+
       let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
                   .getService(Ci.nsIServiceWorkerManager);
       let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]

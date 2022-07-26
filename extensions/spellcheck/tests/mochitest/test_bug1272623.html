@@ -23,8 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 </pre>
 <script>
 
-/* eslint-env mozilla/frame-script */
-
 /** Test for Bug 1272623 **/
 
   var maybeOnSpellCheck;
@@ -36,6 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 
     // Perform the spelling correction
     let mm = SpecialPowers.loadChromeScript(function() {
+      /* eslint-env mozilla/chrome-script */
       const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
       // Chrome scripts are run with synchronous messages, so make sure we're completely

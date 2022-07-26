@@ -30,9 +30,9 @@ function listener(callback) {
 // (in JSON string format) containing the counters.
 // The 'end' invocation tears down the listeners, and should be invoked once
 // at the end to clean up. Returns true on success, false on failure.
-/* eslint-env mozilla/frame-script */
 function chromeTouchEventCounter(operation) {
   function chromeProcessCounter() {
+    /* eslint-env mozilla/chrome-script */
     const PREFIX = "apz:ctec:";
 
     const LISTENERS = {

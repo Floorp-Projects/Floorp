@@ -32,6 +32,7 @@ function runTests() {
 
   // Register a word to the form history.
   let chromeScript = SpecialPowers.loadChromeScript(function addEntry() {
+    /* eslint-env mozilla/chrome-script */
     let {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
     FormHistory.update({ op: "add", fieldname: "test", value: "Mozilla" });
   });

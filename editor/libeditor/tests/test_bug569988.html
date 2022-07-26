@@ -25,8 +25,8 @@ SimpleTest.waitForFocus(runTest);
 
 
 function runTest() {
-  /* eslint-env mozilla/frame-script */
   var script = SpecialPowers.loadChromeScript(function() {
+    /* eslint-env mozilla/chrome-script */
     var gPromptInput = null;
     var os = Services.obs;
 

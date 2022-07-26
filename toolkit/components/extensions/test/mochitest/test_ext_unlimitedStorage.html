@@ -78,6 +78,7 @@ async function test_background_storagePersist(EXTENSION_ID) {
   await extension.awaitMessage("storage-local-called");
 
   let chromeScript = SpecialPowers.loadChromeScript(function test_country_data() {
+    /* eslint-env mozilla/chrome-script */
     const {addMessageListener, sendAsyncMessage} = this;
 
     addMessageListener("getPersistedStatus", (uuid) => {

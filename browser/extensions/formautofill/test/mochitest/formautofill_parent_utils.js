@@ -1,6 +1,4 @@
-// assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
-/* global assert */
-/* eslint-env mozilla/frame-script */
+/* eslint-env mozilla/chrome-script */
 
 "use strict";
 

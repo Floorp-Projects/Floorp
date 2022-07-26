@@ -132,6 +132,12 @@ bool PersistentBufferProviderAccelerated::ReturnDrawTarget(
   return result;
 }
 
+already_AddRefed<gfx::SourceSurface>
+PersistentBufferProviderAccelerated::BorrowSnapshot() {
+  mSnapshot = GetDrawTargetWebgl()->GetDataSnapshot();
+  return do_AddRef(mSnapshot);
+}
+
 bool PersistentBufferProviderAccelerated::RequiresRefresh() const {
   return GetDrawTargetWebgl()->RequiresRefresh();
 }

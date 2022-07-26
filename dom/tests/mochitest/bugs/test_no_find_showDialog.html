@@ -10,6 +10,7 @@
 
   async function checkForFindDialog() {
     let chromeScript = SpecialPowers.loadChromeScript(_ => {
+      /* eslint-env mozilla/chrome-script */
       addMessageListener("test:check", () => {
         let sawFind = false;
         let findDialog = Services.wm.getMostRecentWindow("findInPage");

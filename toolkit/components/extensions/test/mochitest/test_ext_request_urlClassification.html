@@ -18,6 +18,7 @@ add_task(async function setup() {
   });
 
   let chromeScript = SpecialPowers.loadChromeScript(async _ => {
+    /* eslint-env mozilla/chrome-script */
     const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
     await UrlClassifierTestUtils.addTestTrackers();
     sendAsyncMessage("trackersLoaded");
@@ -109,12 +110,12 @@ add_task(async function test_urlClassification() {
 
 add_task(async function teardown() {
   let chromeScript = SpecialPowers.loadChromeScript(async _ => {
+    /* eslint-env mozilla/chrome-script */
     // Cleanup cache
     await new Promise(resolve => {
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
 
-    /* global sendAsyncMessage */
     const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
     await UrlClassifierTestUtils.cleanupTestTrackers();
     sendAsyncMessage("trackersUnloaded");

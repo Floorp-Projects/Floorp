@@ -10,36 +10,30 @@
 
 module.exports = {
   globals: {
-    addMessageListener: false,
-    addWeakMessageListener: false,
+    // dom/chrome-webidl/MessageManager.webidl
+
+    // MessageManagerGlobal
+    dump: false,
     atob: false,
     btoa: false,
-    chromeOuterWindowID: false,
+
+    // MessageListenerManagerMixin
+    addMessageListener: false,
+    removeMessageListener: false,
+    addWeakMessageListener: false,
+    removeWeakMessageListener: false,
+
+    // MessageSenderMixin
+    sendAsyncMessage: false,
+    processMessageManager: false,
+    remoteType: false,
+
+    // SyncMessageSenderMixin
+    sendSyncMessage: false,
+
+    // ContentFrameMessageManager
     content: false,
     docShell: false,
-    processMessageManager: false,
-    removeMessageListener: false,
-    removeWeakMessageListener: false,
-    sendAsyncMessage: false,
-    sendSyncMessage: false,
     tabEventTarget: false,
-    RPMGetAppBuildID: false,
-    RPMGetInnerMostURI: false,
-    RPMGetIntPref: false,
-    RPMGetStringPref: false,
-    RPMGetBoolPref: false,
-    RPMSetBoolPref: false,
-    RPMGetFormatURLPref: false,
-    RPMIsWindowPrivate: false,
-    RPMSendAsyncMessage: false,
-    RPMSendQuery: false,
-    RPMAddMessageListener: false,
-    RPMRecordTelemetryEvent: false,
-    RPMCheckAlternateHostAvailable: false,
-    RPMAddToHistogram: false,
-    RPMRemoveMessageListener: false,
-    RPMGetHttpResponseHeader: false,
-    RPMTryPingSecureWWWLink: false,
-    RPMOpenSecureWWWLink: false,
   },
 };

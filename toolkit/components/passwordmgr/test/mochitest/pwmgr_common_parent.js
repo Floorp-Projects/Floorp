@@ -3,11 +3,9 @@
  * See pwmgr_common.js for the content process companion.
  */
 
-"use strict";
+/* eslint-env mozilla/chrome-script */
 
-// assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
-/* global assert */
-/* eslint-env mozilla/frame-script */
+"use strict";
 
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"

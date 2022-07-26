@@ -25,6 +25,7 @@ async function realTest(noneRequiresSecure) {
 
   info("Check cookies");
   let chromeScript = SpecialPowers.loadChromeScript(() => {
+    /* eslint-env mozilla/chrome-script */
     const {sendAsyncMessage} = this;
     let cookies = { test: null, test2: null, test3: null };
 

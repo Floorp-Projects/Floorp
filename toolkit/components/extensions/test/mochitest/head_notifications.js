@@ -3,6 +3,8 @@
 /* exported MockAlertsService */
 
 function mockServicesChromeScript() {
+  /* eslint-env mozilla/chrome-script */
+
   const MOCK_ALERTS_CID = Components.ID(
     "{48068bc2-40ab-4904-8afd-4cdfb3a385f3}"
   );

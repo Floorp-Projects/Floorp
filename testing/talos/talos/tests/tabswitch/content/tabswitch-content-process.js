@@ -1,3 +1,5 @@
+/* eslint-env mozilla/process-script */
+
 const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );

@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-/* eslint-env mozilla/frame-script */
 
 const ICON_DATAURL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
@@ -181,6 +180,7 @@ add_task(async function page_content_process() {
   await contentPage.spawn(PAGE_ICON_TEST_URLS, async URLS => {
     // We expect each of these URLs to produce an error event when
     // we attempt to load them in this process type.
+    /* global content */
     for (let url of URLS) {
       let img = content.document.createElement("img");
       img.src = url;

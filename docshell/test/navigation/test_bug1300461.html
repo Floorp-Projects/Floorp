@@ -20,17 +20,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
     let chromeScript = null;
     if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       chromeScript = SpecialPowers.loadChromeScript(() => {
+        /* eslint-env mozilla/chrome-script */
         function doSend(message, fn) {
           try {
-            // eslint-disable-next-line no-undef
             sendAsyncMessage(message, {success: true, value: fn()});
           } catch(_) {
-            // eslint-disable-next-line no-undef
             sendAsyncMessage(message, {success: false});
           }
         }
 
-        // eslint-disable-next-line no-undef
         addMessageListener("requestedIndex", (id) => {
           doSend("requestedIndex", () => {
             let shistory = BrowsingContext.get(id).top.sessionHistory;

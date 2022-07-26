@@ -34,8 +34,8 @@ var { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.import(
 /** Test for Bug 697981 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
-  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
+    /* eslint-env mozilla/chrome-script */
     // eslint-disable-next-line mozilla/use-services
     var dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)

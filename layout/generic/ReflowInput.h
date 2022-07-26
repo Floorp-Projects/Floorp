@@ -327,6 +327,12 @@ struct ReflowInput : public SizeComputationInput {
     return mComputedMaxSize.BSize(mWritingMode);
   }
 
+  // WARNING: In general, adjusting available inline-size or block-size is not
+  // safe because ReflowInput has members whose values depend on the available
+  // size passing through the constructor. For example,
+  // CalculateBlockSideMargins() is called during initialization, and uses
+  // AvailableSize(). Make sure your use case doesn't lead to stale member
+  // values in ReflowInput!
   void SetAvailableISize(nscoord aAvailableISize) {
     mAvailableSize.ISize(mWritingMode) = aAvailableISize;
   }

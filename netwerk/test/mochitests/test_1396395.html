@@ -11,8 +11,8 @@
   <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-/* eslint-env mozilla/frame-script */
 var script = SpecialPowers.loadChromeScript(() => {
+  /* eslint-env mozilla/chrome-script */
   Services.obs.addObserver(function onExamResp(subject, topic, data) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     if (!channel.URI.spec.startsWith("http://example.org")) {

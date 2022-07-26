@@ -778,18 +778,10 @@ class nsBlockFrame : public nsContainerFrame {
                          LineIterator aLine, nsIFrame* aFrame,
                          LineReflowStatus* aLineReflowStatus);
 
-  // @param aAvailableSize the result of
-  //        BlockReflowState::ComputeAvailableSizeForFloat().
-  // @param aFloatPushedDown whether the block-direction position available to
-  //        place a float has been pushed down due to the presence of other
-  //        floats.
   // @param aReflowStatus an incomplete status indicates the float should be
   //        split but only if the available block-size is constrained.
-  void ReflowFloat(BlockReflowState& aState,
-                   const mozilla::LogicalSize& aAvailableSize, nsIFrame* aFloat,
-                   mozilla::LogicalMargin& aFloatMargin,
-                   mozilla::LogicalMargin& aFloatOffsets, bool aFloatPushedDown,
-                   nsReflowStatus& aReflowStatus);
+  void ReflowFloat(BlockReflowState& aState, ReflowInput& aFloatRI,
+                   nsIFrame* aFloat, nsReflowStatus& aReflowStatus);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames

@@ -9,13 +9,11 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-/* eslint-env mozilla/frame-script */
-/* global assert */
-
 SimpleTest.waitForExplicitFinish();
 
 
 var script = SpecialPowers.loadChromeScript(function loadChromeScriptTest() {
+  /* eslint-env mozilla/chrome-script */
   // Copied from SpecialPowersLoadChromeScript.js
 
   // Just receive 'foo' message and forward it back

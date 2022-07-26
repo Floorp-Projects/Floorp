@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 (function() {
   sendAsyncMessage("CPStartup:BrowserChildReady", {
     time: Services.telemetry.msSystemNow(),
