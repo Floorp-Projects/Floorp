@@ -6673,14 +6673,10 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState, ReflowInput& aFloatRI,
     }
   }
 
-  if (!aReflowStatus.IsFullyComplete() && ShouldAvoidBreakInside(aFloatRI)) {
-    aReflowStatus.SetInlineLineBreakBeforeAndReset();
-  } else if (aReflowStatus.IsIncomplete() &&
-             aAvailableSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
-    // An incomplete reflow status means we should split the float
-    // if the height is constrained (bug 145305).
-    aReflowStatus.Reset();
-  }
+  NS_ASSERTION(aReflowStatus.IsFullyComplete() ||
+                   aFloatRI.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
+               "The status can only be incomplete or overflow-incomplete if "
+               "the available block-size is constrained!");
 
   if (aReflowStatus.NextInFlowNeedsReflow()) {
     aState.mReflowStatus.SetNextInFlowNeedsReflow();
