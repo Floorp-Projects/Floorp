@@ -1217,12 +1217,12 @@ void nsWindow::HideWaylandToplevelWindow() {
 }
 
 void nsWindow::ShowWaylandToplevelWindow() {
-  LOG("nsWindow::ShowWaylandToplevelWindow: [%p]\n", this);
+  LOG("nsWindow::ShowWaylandToplevelWindow");
   gtk_widget_show(mShell);
 }
 
 void nsWindow::WaylandPopupRemoveClosedPopups() {
-  LOG("nsWindow::WaylandPopupRemoveClosedPopups: [%p]\n", this);
+  LOG("nsWindow::WaylandPopupRemoveClosedPopups()");
   nsWindow* popup = this;
   while (popup) {
     nsWindow* next = popup->mWaylandPopupNext;
@@ -1371,7 +1371,7 @@ void nsWindow::WaylandPopupHierarchyValidateByLayout(
 }
 
 void nsWindow::WaylandPopupHierarchyHideTemporary() {
-  LOG("nsWindow::WaylandPopupHierarchyHideTemporary() [%p]", this);
+  LOG("nsWindow::WaylandPopupHierarchyHideTemporary()");
   nsWindow* popup = WaylandPopupFindLast(this);
   while (popup && popup != this) {
     LOG("  temporary hidding popup [%p]", popup);
