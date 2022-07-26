@@ -160,17 +160,6 @@ body[lwt-newtab-brighttext] {
   min-height: 500px;
   overflow: hidden;
 }
-.onboardingContainer .screen:is(.UPGRADE_PIN_FIREFOX, .UPGRADE_ONLY_DEFAULT, .UPGRADE_GET_STARTED) .brand-logo {
-  margin-top: 120px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .onboardingContainer .screen:is(.UPGRADE_PIN_FIREFOX, .UPGRADE_ONLY_DEFAULT, .UPGRADE_GET_STARTED) .brand-logo {
-    background-image: url("chrome://activity-stream/content/data/content/assets/heart.svg") !important;
-  }
-}
-.onboardingContainer .screen:is(.UPGRADE_PIN_FIREFOX, .UPGRADE_ONLY_DEFAULT, .UPGRADE_GET_STARTED) .no-steps {
-  padding-bottom: 12px;
-}
 .onboardingContainer .screen.light-text {
   --in-content-page-color: rgb(251, 251, 254);
   --in-content-primary-button-text-color: rgb(43, 42, 51);
@@ -372,6 +361,7 @@ body[lwt-newtab-brighttext] {
   .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text {
     text-align: center;
     margin-inline: 0;
+    padding-inline: 30px;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text .spacer-bottom,
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text .spacer-top {
@@ -387,7 +377,7 @@ body[lwt-newtab-brighttext] {
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .primary,
 .onboardingContainer .screen[pos=split] .section-main .main-content .secondary {
-    width: 240px;
+    min-width: 240px;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps {
     padding-block: 0;
