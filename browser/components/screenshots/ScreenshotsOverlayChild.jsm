@@ -1564,9 +1564,14 @@ class ScreenshotsContainerLayer extends AnonLayer {
 
     if (width < 1) {
       width = doc.scrollWidth;
+    } else if (width < innerWidth) {
+      width = innerWidth;
     }
+
     if (height < 1) {
       height = doc.scrollHeight;
+    } else if (height < innerHeight) {
+      height = innerHeight;
     }
 
     this.#selectionLayer.scrollWidth = width;
