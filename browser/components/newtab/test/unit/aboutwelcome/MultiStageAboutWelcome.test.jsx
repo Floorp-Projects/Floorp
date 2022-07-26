@@ -200,6 +200,20 @@ describe("MultiStageAboutWelcome module", () => {
         assert.ok(wrapper.find("div.indicator"));
       });
 
+      it("should assign the total number of screens and current screen to the aria-valuemax and aria-valuenow labels", () => {
+        const SCREEN_PROPS = {
+          totalNumberOfScreens: 3,
+          currentScreen: 1,
+        };
+        <StepsIndicator {...SCREEN_PROPS} />;
+        const wrapper = mount(<StepsIndicator {...SCREEN_PROPS} />);
+        assert.ok(
+          wrapper.find(
+            `div.steps[aria-valuemax=${SCREEN_PROPS.totalNumberOfScreens}][aria-valuenow=${SCREEN_PROPS.currentScreen}][aria-valuemin="1"]`
+          )
+        );
+      });
+
       it("should have a primary, secondary and secondary.top button in the rendered input", () => {
         const wrapper = mount(<WelcomeScreen {...GET_STARTED_SCREEN_PROPS} />);
         assert.ok(wrapper.find(".primary"));
