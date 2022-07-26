@@ -322,6 +322,7 @@ async function safeCloseBrowserConsole({ clearOutput = false } = {}) {
  * we listen to this message to cleanup the observer.
  */
 function highlighterTestActorBootstrap() {
+  /* eslint-env mozilla/process-script */
   const HIGHLIGHTER_TEST_ACTOR_URL =
     "chrome://mochitests/content/browser/devtools/client/shared/test/highlighter-test-actor.js";
 
