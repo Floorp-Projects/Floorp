@@ -6,7 +6,7 @@
         "downgrade-mangling-error_clang_12.patch",
         "bug47258-extract-symbols-mbcs.patch",
         "fuzzing_ccov_build_clang_12.patch",
-        "win64-no-symlink.patch",
+        "win64-no-symlink_clang_16.patch",
         "revert-llvmorg-15-init-13446-g7524fe962e47.patch",
         "revert-llvmorg-14-init-14141-gd6d3000a2f6d.patch",
         "revert-llvmorg-14-init-11890-gf86deb18cab6.patch"
