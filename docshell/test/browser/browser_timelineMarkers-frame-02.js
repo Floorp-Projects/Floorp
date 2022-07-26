@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/frame-script */
+
 // This file expects frame-head.js to be loaded in the environment.
 /* import-globals-from frame-head.js */
 
