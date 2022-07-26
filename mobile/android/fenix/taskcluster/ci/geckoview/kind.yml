@@ -4,12 +4,12 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     worker-type: always-optimized
     run:
         using: index-search
 
-jobs:
+tasks:
     nightly:
         description: "upstream nightly job"
         run:

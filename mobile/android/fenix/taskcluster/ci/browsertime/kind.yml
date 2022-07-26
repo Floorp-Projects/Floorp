@@ -19,7 +19,7 @@ only-for-abis:
     - armeabi-v7a
     - arm64-v8a
 
-job-defaults:
+task-defaults:
     attributes:
         artifact_prefix: public/test_info
         nightly: true
@@ -100,7 +100,7 @@ job-defaults:
             - linux64-minidump-stackwalk
             - linux64-node-16
 
-jobs:
+tasks:
     tp6m:
         page-load-tests:
             - amazon

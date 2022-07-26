@@ -9,7 +9,7 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     attributes:
         build-type: debug
         code-review: true
@@ -44,7 +44,7 @@ job-defaults:
                          "type": "mrkdwn",
                          "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
                     }
-                  },                  
+                  },
                   {
                     "type": "section",
                     "text": {
@@ -100,7 +100,7 @@ job-defaults:
         retry-exit-status: [20]
     worker-type: b-android
 
-jobs:
+tasks:
     x86-debug:
         description: Test Fenix
         run-on-tasks-for: [github-pull-request, github-push]

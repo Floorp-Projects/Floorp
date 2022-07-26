@@ -13,13 +13,13 @@ kind-dependencies:
     - toolchain
 
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
     description: Test Fenix
     extra:
         notify:
-            slackBlocks: | 
+            slackBlocks: |
                 [
                   {
                     "type": "header",
@@ -37,7 +37,7 @@ job-defaults:
                          "type": "mrkdwn",
                          "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
                     }
-                  },                  
+                  },
                   {
                     "type": "section",
                     "text": {
@@ -93,7 +93,7 @@ job-defaults:
         docker-image: {in-tree: base}
         max-run-time: 7200
 
-jobs:
+tasks:
     debug:
         attributes:
             build-type: debug

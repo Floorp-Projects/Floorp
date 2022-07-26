@@ -13,6 +13,6 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 
-jobs-from:
+tasks-from:
     - android.yml
     - gecko-derived.yml

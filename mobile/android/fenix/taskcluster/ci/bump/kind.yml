@@ -11,7 +11,7 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     treeherder:
         kind: build
         symbol: bump(a-c)
@@ -40,7 +40,7 @@ job-defaults:
         max-run-time: 7200
         chain-of-trust: true
 
-jobs:
+tasks:
     android-components:
         attributes:
             bump-type: android-components

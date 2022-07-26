@@ -13,7 +13,7 @@ kind-dependencies:
     - toolchain
 
 
-job-defaults:
+task-defaults:
     # Builds generate multiple APKs with different ABIs. For each APK described
     # by `gradlew printVariant`, an artifact will be generated. `variant` and
     # the per-apk config from `printVariant` can be used as substitutions in
@@ -44,7 +44,7 @@ job-defaults:
         chain-of-trust: true
 
 
-jobs:
+tasks:
     debug:
         attributes:
             code-review: true

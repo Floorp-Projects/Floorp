@@ -8,8 +8,8 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
-    description: Run a simple UI test to verify Nightly build can start 
+task-defaults:
+    description: Run a simple UI test to verify Nightly build can start
     treeherder:
         kind: test
         platform: 'nightly-start-test/opt'
@@ -35,7 +35,7 @@ job-defaults:
               json: true
     run-on-tasks-for: []
     attributes:
-        build-type: nightly 
+        build-type: nightly
         # cannot safely run this in Firebase
         # turning off til we can safely run test in taskcluster
         # https://github.com/mozilla-mobile/fenix/issues/7702
@@ -44,7 +44,7 @@ job-defaults:
         signing: signing-nightly
         signing-android-test: signing-android-test-nightly
 
-jobs:
+tasks:
     nightly-x86:
         run:
             commands:
