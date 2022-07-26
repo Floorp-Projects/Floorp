@@ -41,12 +41,6 @@ nsresult ToastNotification::Init() {
     }
   }
 
-  nsresult rv =
-      NS_NewNamedThread("ToastBgThread", getter_AddRefs(mBackgroundThread));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   nsCOMPtr<nsIObserverService> obsServ =
       mozilla::services::GetObserverService();
   if (obsServ) {
@@ -57,7 +51,7 @@ nsresult ToastNotification::Init() {
 }
 
 nsresult ToastNotification::BackgroundDispatch(nsIRunnable* runnable) {
-  return mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  return NS_DispatchBackgroundTask(runnable);
 }
 
 NS_IMETHODIMP
