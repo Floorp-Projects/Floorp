@@ -5411,9 +5411,7 @@ void nsWindow::ReleaseGdkWindow() {
   WaylandStopVsync();
   DestroyChildWindows();
 
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-  }
+  DestroyLayerManager();
 
   if (mGdkWindow) {
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
