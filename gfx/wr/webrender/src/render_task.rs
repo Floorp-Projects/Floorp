@@ -232,7 +232,7 @@ impl BlurTask {
     // In order to do the blur down-scaling passes without introducing errors, we need the
     // source of each down-scale pass to be a multuple of two. If need be, this inflates
     // the source size so that each down-scale pass will sample correctly.
-    pub fn adjusted_blur_source_size(original_size: DeviceSize, mut std_dev: DeviceSize) -> DeviceSize {
+    pub fn adjusted_blur_source_size(original_size: DeviceSize, mut std_dev: DeviceSize) -> DeviceIntSize {
         let mut adjusted_size = original_size;
         let mut scale_factor = 1.0;
         while std_dev.width > MAX_BLUR_STD_DEVIATION && std_dev.height > MAX_BLUR_STD_DEVIATION {
@@ -245,7 +245,7 @@ impl BlurTask {
             adjusted_size = (original_size.to_f32() / scale_factor).ceil();
         }
 
-        adjusted_size * scale_factor
+        (adjusted_size * scale_factor).round().to_i32()
     }
 }
 
