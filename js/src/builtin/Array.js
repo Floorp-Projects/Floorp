@@ -422,7 +422,8 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            accumulator = callbackfn(accumulator, O[k], k, O);
+            accumulator = callContentFunction(callbackfn, undefined,
+                                              accumulator, O[k], k, O);
         }
     }
 
@@ -481,7 +482,8 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            accumulator = callbackfn(accumulator, O[k], k, O);
+            accumulator = callContentFunction(callbackfn, undefined,
+                                              accumulator, O[k], k, O);
         }
     }
 
@@ -772,7 +774,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
             ThrowTypeError(JSMSG_NOT_ITERABLE, DecompileArg(0, items));
 
         // Steps 5.a-b.
-        var A = IsConstructor(C) ? new C() : [];
+        var A = IsConstructor(C) ? constructContentFunction(C, C) : [];
 
         // Step 5.c.
         var iterator = MakeIteratorWrapper(items, usingIterator);
@@ -814,7 +816,8 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
     var len = ToLength(arrayLike.length);
 
     // Steps 12-14.
-    var A = IsConstructor(C) ? new C(len) : std_Array(len);
+    var A = IsConstructor(C) ? constructContentFunction(C, C, len)
+                             : std_Array(len);
 
     // Steps 15-16.
     for (var k = 0; k < len; k++) {
@@ -971,7 +974,7 @@ function ArraySpeciesCreate(originalArray, length) {
         ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "constructor property");
 
     // Step 8.
-    return new C(length);
+    return constructContentFunction(C, C, length);
 }
 
 // ES 2017 draft (April 8, 2016) 22.1.3.1.1
