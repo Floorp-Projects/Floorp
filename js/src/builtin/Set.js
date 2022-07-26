@@ -40,7 +40,7 @@ function SetUnion(iterable) {
     var Ctr = SpeciesConstructor(set, GetBuiltinConstructor("Set"));
 
     // Step 4. Let newSet be ? Construct(Ctr, set).
-    var newSet = new Ctr(set);
+    var newSet = constructContentFunction(Ctr, Ctr, set);
 
     // Step 5. Let adder be ? Get(newSet, "add").
     var adder = newSet.add;
@@ -75,7 +75,7 @@ function SetIntersection(iterable) {
     var Ctr = SpeciesConstructor(set, GetBuiltinConstructor("Set"));
 
     // Step 4. Let newSet be ? Construct(Ctr).
-    var newSet = new Ctr();
+    var newSet = constructContentFunction(Ctr, Ctr);
 
     // Step 5. Let hasCheck be ? Get(set, "has").
     var hasCheck = set.has;
@@ -160,7 +160,7 @@ function SetDifference(iterable) {
     var Ctr = SpeciesConstructor(set, GetBuiltinConstructor("Set"));
 
     // Step 4. Let newSet be ? Construct(Ctr, set).
-    var newSet = new Ctr(set);
+    var newSet = constructContentFunction(Ctr, Ctr, set);
 
     // Step 5. Let remover be ? Get(newSet, "delete").
     var remover = newSet.delete;
@@ -220,7 +220,7 @@ function SetSymmetricDifference(iterable) {
     var Ctr = SpeciesConstructor(set, GetBuiltinConstructor("Set"));
 
     // Step 4. Let newSet be ? Construct(Ctr, set).
-    var newSet = new Ctr(set);
+    var newSet = constructContentFunction(Ctr, Ctr, set);
 
     // Step 5. Let remover be ? Get(newSet, "delete").
     var remover = newSet.delete;

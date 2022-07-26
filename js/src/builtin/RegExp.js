@@ -485,15 +485,25 @@ function RegExpGetComplexReplacement(result, matched, S, position,
         if (namedCaptures === undefined) {
             switch (nCaptures) {
               case 0:
-                return ToString(replaceValue(SPREAD(captures, 1), position, S));
+                return ToString(callContentFunction(replaceValue, undefined,
+                                                    SPREAD(captures, 1),
+                                                    position, S));
               case 1:
-                return ToString(replaceValue(SPREAD(captures, 2), position, S));
+                return ToString(callContentFunction(replaceValue, undefined,
+                                                    SPREAD(captures, 2),
+                                                    position, S));
               case 2:
-                return ToString(replaceValue(SPREAD(captures, 3), position, S));
+                return ToString(callContentFunction(replaceValue, undefined,
+                                                    SPREAD(captures, 3),
+                                                    position, S));
               case 3:
-                return ToString(replaceValue(SPREAD(captures, 4), position, S));
+                return ToString(callContentFunction(replaceValue, undefined,
+                                                    SPREAD(captures, 4),
+                                                    position, S));
               case 4:
-                return ToString(replaceValue(SPREAD(captures, 5), position, S));
+                return ToString(callContentFunction(replaceValue, undefined,
+                                                    SPREAD(captures, 5),
+                                                    position, S));
             }
         }
         // Steps 14.k.ii-v.
@@ -533,15 +543,25 @@ function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
     if (namedCaptures === undefined) {
         switch (nCaptures) {
           case 0:
-            return ToString(replaceValue(SPREAD(result, 1), position, S));
+            return ToString(callContentFunction(replaceValue, undefined,
+                                                SPREAD(result, 1),
+                                                position, S));
           case 1:
-            return ToString(replaceValue(SPREAD(result, 2), position, S));
+            return ToString(callContentFunction(replaceValue, undefined,
+                                                SPREAD(result, 2),
+                                                position, S));
           case 2:
-            return ToString(replaceValue(SPREAD(result, 3), position, S));
+            return ToString(callContentFunction(replaceValue, undefined,
+                                                SPREAD(result, 3),
+                                                position, S));
           case 3:
-            return ToString(replaceValue(SPREAD(result, 4), position, S));
+            return ToString(callContentFunction(replaceValue, undefined,
+                                                SPREAD(result, 4),
+                                                position, S));
           case 4:
-            return ToString(replaceValue(SPREAD(result, 5), position, S));
+            return ToString(callContentFunction(replaceValue, undefined,
+                                                SPREAD(result, 5),
+                                                position, S));
         }
     }
 
@@ -839,7 +859,7 @@ function RegExpSplit(string, limit) {
             newFlags = flags + "y";
 
         // Step 10.
-        splitter = new C(rx, newFlags);
+        splitter = constructContentFunction(C, C, rx, newFlags);
     }
 
     // Step 11.
@@ -1167,7 +1187,7 @@ function RegExpMatchAll(string) {
         flags = ToString(rx.flags);
 
         // Step 6.
-        matcher = new C(rx, flags);
+        matcher = constructContentFunction(C, C, rx, flags);
 
         // Steps 7-8.
         matcher.lastIndex = ToLength(rx.lastIndex);

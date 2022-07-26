@@ -30,7 +30,7 @@ function Promise_finally(onFinally) {
             // Steps 1-2 (implicit).
 
             // Step 3.
-            var result = onFinally();
+            var result = callContentFunction(onFinally, undefined);
 
             // Steps 4-5 (implicit).
 
@@ -50,7 +50,7 @@ function Promise_finally(onFinally) {
             // Steps 1-2 (implicit).
 
             // Step 3.
-            var result = onFinally();
+            var result = callContentFunction(onFinally, undefined);
 
             // Steps 4-5 (implicit).
 
