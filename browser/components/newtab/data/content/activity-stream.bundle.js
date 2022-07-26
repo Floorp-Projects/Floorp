@@ -14641,7 +14641,7 @@ const external_Redux_namespaceObject = Redux;
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env mozilla/frame-script */
+/* eslint-env mozilla/remote-page */
 
 
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
