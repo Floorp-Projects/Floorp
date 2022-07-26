@@ -50,6 +50,9 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
 
     private fun createJumpCRF(anchor: View): Dialog? {
         val context: Context = recyclerView.context
+        if (!context.settings().showSyncCFR) {
+            context.settings().shouldShowJumpBackInCFR = false
+        }
         if (!context.settings().shouldShowJumpBackInCFR) {
             return null
         }
@@ -59,7 +62,7 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
 
         popup.apply {
             setContentView(popupBinding.root)
-            setCancelable(false)
+            setCanceledOnTouchOutside(true)
             // removing title or setting it as an empty string does not prevent a11y services from assigning one
             setTitle(" ")
         }

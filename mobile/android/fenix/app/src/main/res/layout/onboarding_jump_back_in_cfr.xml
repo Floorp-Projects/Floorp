@@ -6,6 +6,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
     android:orientation="vertical">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -22,8 +24,8 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="16dp"
-            android:maxWidth="200dp"
-            android:text="@string/onboarding_home_screen_jump_back_contextual_hint"
+            android:maxWidth="279dp"
+            android:text="@string/onboarding_home_screen_jump_back_contextual_hint_2"
             android:textAppearance="@style/Body16TextStyle"
             android:textColor="@color/fx_mobile_private_text_color_primary"
             android:textSize="16sp"
