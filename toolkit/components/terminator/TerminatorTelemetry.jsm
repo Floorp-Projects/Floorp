@@ -13,7 +13,6 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "setTimeout",
@@ -52,26 +51,25 @@ nsTerminatorTelemetry.prototype = {
       //
       await new Promise(resolve => lazy.setTimeout(resolve, 3000));
 
-      let PATH = lazy.OS.Path.join(
-        lazy.OS.Constants.Path.localProfileDir,
+      let PATH = PathUtils.join(
+        Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
         "ShutdownDuration.json"
       );
-      let raw;
+      let data;
       try {
-        raw = await lazy.OS.File.read(PATH, { encoding: "utf-8" });
+        data = await IOUtils.readJSON(PATH);
       } catch (ex) {
-        if (!ex.becauseNoSuchFile) {
-          throw ex;
+        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+          return;
         }
-        return;
+        // Let other errors be reported by Promise's error-reporting.
+        throw ex;
       }
-      // Let other errors be reported by Promise's error-reporting.
 
       // Clean up
-      lazy.OS.File.remove(PATH);
-      lazy.OS.File.remove(PATH + ".tmp");
+      await IOUtils.remove(PATH);
+      await IOUtils.remove(PATH + ".tmp");
 
-      let data = JSON.parse(raw);
       for (let k of Object.keys(data)) {
         let id = HISTOGRAMS[k];
         try {
