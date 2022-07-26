@@ -3,11 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["getAddonAndLocalAPIsMocker"];
-
-const { LangPackMatcher } = ChromeUtils.import(
-  "resource://gre/modules/LangPackMatcher.jsm"
-);
+import { LangPackMatcher } from "resource://gre/modules/LangPackMatcher.sys.mjs";
 
 /**
  * LangPackMatcher.jsm calls out to to the addons store, which involves network requests.
@@ -28,7 +24,7 @@ const { LangPackMatcher } = ChromeUtils.import(
  *   appLocale, string,
  * }}
  */
-function getAddonAndLocalAPIsMocker(testScope, sandbox) {
+export function getAddonAndLocalAPIsMocker(testScope, sandbox) {
   const { info } = testScope;
   return function mockAddonAndLocaleAPIs({ systemLocale, appLocale }) {
     info("Mocking LangPackMatcher.jsm APIs");
