@@ -5406,11 +5406,16 @@
   mirror: always
 
 #ifdef XP_MACOSX
-  # Create specialized video-only layers for video content, and
-  # attempt to isolate video layers in fullscreen windows.
+  # Create specialized video-only layers for video content in
+  # fullscreen windows. Consistently works well on Apple Silicon,
+  # some issues remain on Intel hardware.
 -   name: gfx.core-animation.specialize-video
     type: RelaxedAtomicBool
-    value: @IS_EARLY_BETA_OR_EARLIER@
+#if defined(_ARM64_)
+    value: true
+#else
+    value: false
+#endif
     mirror: always
 #endif
 
