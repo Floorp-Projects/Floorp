@@ -40,7 +40,9 @@ class OriginTrials final {
   void UpdateFromToken(const nsAString& aBase64EncodedToken,
                        nsIPrincipal* aPrincipal);
 
-  bool IsEnabled(OriginTrial aTrial) const;
+  bool IsEnabled(OriginTrial aTrial) const {
+    return mEnabledTrials.contains(aTrial);
+  }
 
   // Checks whether a given origin trial is enabled for a given call.
   static bool IsEnabled(JSContext*, JSObject*, OriginTrial);

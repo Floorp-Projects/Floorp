@@ -17,7 +17,6 @@
 #include "ReferrerInfo.h"
 #include "mozIRemoteLazyInputStream.h"
 #include "mozIThirdPartyUtil.h"
-#include "mozilla/LoadInfo.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BinarySearch.h"
@@ -2404,11 +2403,7 @@ nsresult HttpBaseChannel::ProcessCrossOriginEmbedderPolicyHeader() {
 
   nsILoadInfo::CrossOriginEmbedderPolicy resultPolicy =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
-  bool isCoepCredentiallessEnabled;
-  rv = mLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-      &isCoepCredentiallessEnabled);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = GetResponseEmbedderPolicy(isCoepCredentiallessEnabled, &resultPolicy);
+  rv = GetResponseEmbedderPolicy(&resultPolicy);
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
@@ -2474,7 +2469,8 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   if (StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
     if (content.IsEmpty()) {
       if (mLoadInfo->GetLoadingEmbedderPolicy() ==
-          nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS) {
+              nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS &&
+          StaticPrefs::browser_tabs_remote_coep_credentialless()) {
         bool requestIncludesCredentials = false;
         nsresult rv = GetCorsIncludeCredentials(&requestIncludesCredentials);
         if (NS_FAILED(rv)) {
@@ -5674,7 +5670,6 @@ void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
 void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
 
 NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
-    bool aIsOriginTrialCoepCredentiallessEnabled,
     nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) {
   *aOutPolicy = nsILoadInfo::EMBEDDER_POLICY_NULL;
   if (!mResponseHead) {
@@ -5689,8 +5684,8 @@ NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
   nsAutoCString content;
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
                                      content);
-  *aOutPolicy = NS_GetCrossOriginEmbedderPolicyFromHeader(
-      content, aIsOriginTrialCoepCredentiallessEnabled);
+
+  *aOutPolicy = NS_GetCrossOriginEmbedderPolicyFromHeader(content);
   return NS_OK;
 }
 
@@ -5752,15 +5747,11 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
   } else if (openerPolicy.EqualsLiteral("same-origin-allow-popups")) {
     policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS;
   }
+
   if (policy == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) {
     nsILoadInfo::CrossOriginEmbedderPolicy coep =
         nsILoadInfo::EMBEDDER_POLICY_NULL;
-    bool isCoepCredentiallessEnabled;
-    rv = mLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-        &isCoepCredentiallessEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (NS_SUCCEEDED(
-            GetResponseEmbedderPolicy(isCoepCredentiallessEnabled, &coep)) &&
+    if (NS_SUCCEEDED(GetResponseEmbedderPolicy(&coep)) &&
         (coep == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP ||
          coep == nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS)) {
       policy =

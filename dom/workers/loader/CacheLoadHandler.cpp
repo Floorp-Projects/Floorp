@@ -382,9 +382,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
   headers->Get("cross-origin-embedder-policy"_ns, coepHeader, IgnoreErrors());
 
   nsILoadInfo::CrossOriginEmbedderPolicy coep =
-      NS_GetCrossOriginEmbedderPolicyFromHeader(
-          coepHeader,
-          mWorkerPrivate->Trials().IsEnabled(OriginTrial::CoepCredentialless));
+      NS_GetCrossOriginEmbedderPolicyFromHeader(coepHeader);
 
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
       mWorkerPrivate, coep, mLoader->IsMainScript());
