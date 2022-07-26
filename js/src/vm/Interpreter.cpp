@@ -3263,7 +3263,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(SpreadCall)
 
     CASE(New)
+    CASE(NewContent)
     CASE(Call)
+    CASE(CallContent)
     CASE(CallIgnoresRv)
     CASE(CallIter)
     CASE(SuperCall) {
@@ -3281,7 +3283,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       MaybeConstruct construct = MaybeConstruct(
-          JSOp(*REGS.pc) == JSOp::New || JSOp(*REGS.pc) == JSOp::SuperCall);
+          JSOp(*REGS.pc) == JSOp::New || JSOp(*REGS.pc) == JSOp::NewContent ||
+          JSOp(*REGS.pc) == JSOp::SuperCall);
       bool ignoresReturnValue = JSOp(*REGS.pc) == JSOp::CallIgnoresRv;
       unsigned argStackSlots = GET_ARGC(REGS.pc) + construct;
 

@@ -7082,7 +7082,7 @@ bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
   return true;
 }
 
-bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
+bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
   // Special-casing of callFunction to emit bytecode that directly
   // invokes the callee with the correct |this| object and arguments.
   // callFunction(fun, thisArg, arg0, arg1) thus becomes:
@@ -7099,16 +7099,12 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
     return false;
   }
 
-  JSOp callOp = callNode->callOp();
-  MOZ_ASSERT(callOp == JSOp::Call);
+  MOZ_ASSERT(callNode->callOp() == JSOp::Call);
 
   bool constructing =
       calleeNode->name() ==
       TaggedParserAtomIndex::WellKnown::constructContentFunction();
   ParseNode* funNode = argsList->head();
-  if (constructing) {
-    callOp = JSOp::New;
-  }
 
   if (!emitTree(funNode)) {
     return false;
@@ -7151,7 +7147,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   }
 
   uint32_t argc = argsList->count() - 2;
-  if (!emitCall(callOp, argc)) {
+  if (!emitCall(op, argc)) {
     return false;
   }
 
@@ -7952,11 +7948,15 @@ bool BytecodeEmitter::emitCallOrNew(
     // "callContentFunction", or "resumeGenerator" in self-hosted
     // code generate inline bytecode.
     auto calleeName = calleeNode->as<NameNode>().name();
-    if (calleeName == TaggedParserAtomIndex::WellKnown::callFunction() ||
-        calleeName == TaggedParserAtomIndex::WellKnown::callContentFunction() ||
-        calleeName ==
-            TaggedParserAtomIndex::WellKnown::constructContentFunction()) {
-      return emitSelfHostedCallFunction(callNode);
+    if (calleeName == TaggedParserAtomIndex::WellKnown::callFunction()) {
+      return emitSelfHostedCallFunction(callNode, JSOp::Call);
+    }
+    if (calleeName == TaggedParserAtomIndex::WellKnown::callContentFunction()) {
+      return emitSelfHostedCallFunction(callNode, JSOp::CallContent);
+    }
+    if (calleeName ==
+        TaggedParserAtomIndex::WellKnown::constructContentFunction()) {
+      return emitSelfHostedCallFunction(callNode, JSOp::NewContent);
     }
     if (calleeName == TaggedParserAtomIndex::WellKnown::resumeGenerator()) {
       return emitSelfHostedResumeGenerator(callNode);
