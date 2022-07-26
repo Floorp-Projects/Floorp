@@ -63,7 +63,6 @@ EXPORTS += [
     "nsStyleStructList.h",
     "nsStyleTransformMatrix.h",
     "nsStyleUtil.h",
-    "nsTimingFunction.h",
 ]
 
 EXPORTS.mozilla += [

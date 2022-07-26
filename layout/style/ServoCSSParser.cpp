@@ -44,7 +44,7 @@ already_AddRefed<RawServoDeclarationBlock> ServoCSSParser::ParseProperty(
 
 /* static */
 bool ServoCSSParser::ParseEasing(const nsACString& aValue,
-                                 nsTimingFunction& aResult) {
+                                 StyleComputedTimingFunction& aResult) {
   return Servo_ParseEasing(&aValue, &aResult);
 }
 

@@ -97,7 +97,7 @@ struct KeyframeValueEntry {
   AnimationValue mValue;
 
   float mOffset;
-  Maybe<ComputedTimingFunction> mTimingFunction;
+  Maybe<StyleComputedTimingFunction> mTimingFunction;
   dom::CompositeOperation mComposite;
 
   struct PropertyOffsetComparator {
@@ -1100,7 +1100,7 @@ static void GetKeyframeListFromPropertyIndexedKeyframe(
   //
   // This corresponds to step 5, "Otherwise," branch, substeps 7-11 of
   // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
-  FallibleTArray<Maybe<ComputedTimingFunction>> easings;
+  FallibleTArray<Maybe<StyleComputedTimingFunction>> easings;
   auto parseAndAppendEasing = [&](const nsACString& easingString,
                                   ErrorResult& aRv) {
     auto easing = TimingParams::ParseEasing(easingString, aRv);

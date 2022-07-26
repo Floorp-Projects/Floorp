@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_AnimationPropertySegment_h
 #define mozilla_dom_AnimationPropertySegment_h
 
-#include "mozilla/ComputedTimingFunction.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StyleAnimationValue.h"           // For AnimationValue
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For CompositeOperation
@@ -20,7 +20,7 @@ struct AnimationPropertySegment {
   // the unit of mFromValue or mToValue is eUnit_Null.
   AnimationValue mFromValue, mToValue;
 
-  Maybe<ComputedTimingFunction> mTimingFunction;
+  Maybe<StyleComputedTimingFunction> mTimingFunction;
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
   dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
 

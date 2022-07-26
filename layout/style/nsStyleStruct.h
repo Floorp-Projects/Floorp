@@ -25,7 +25,6 @@
 #include "nsStyleAutoArray.h"
 #include "nsStyleConsts.h"
 #include "nsChangeHint.h"
-#include "nsTimingFunction.h"
 #include "nsTArray.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
@@ -1153,7 +1152,9 @@ struct StyleTransition {
 
   // Delay and Duration are in milliseconds
 
-  const nsTimingFunction& GetTimingFunction() const { return mTimingFunction; }
+  const StyleComputedTimingFunction& GetTimingFunction() const {
+    return mTimingFunction;
+  }
   float GetDelay() const { return mDelay; }
   float GetDuration() const { return mDuration; }
   nsCSSPropertyID GetProperty() const { return mProperty; }
@@ -1165,7 +1166,7 @@ struct StyleTransition {
   }
 
  private:
-  nsTimingFunction mTimingFunction;
+  StyleComputedTimingFunction mTimingFunction;
   float mDuration;
   float mDelay;
   nsCSSPropertyID mProperty;
@@ -1183,7 +1184,9 @@ struct StyleAnimation {
 
   // Delay and Duration are in milliseconds
 
-  const nsTimingFunction& GetTimingFunction() const { return mTimingFunction; }
+  const StyleComputedTimingFunction& GetTimingFunction() const {
+    return mTimingFunction;
+  }
   float GetDelay() const { return mDelay; }
   float GetDuration() const { return mDuration; }
   nsAtom* GetName() const { return mName; }
@@ -1203,7 +1206,7 @@ struct StyleAnimation {
   }
 
  private:
-  nsTimingFunction mTimingFunction;
+  StyleComputedTimingFunction mTimingFunction;
   float mDuration;
   float mDelay;
   RefPtr<nsAtom> mName;  // nsGkAtoms::_empty for 'none'
@@ -1790,7 +1793,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   float GetTransitionDuration(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionDurationCount].GetDuration();
   }
-  const nsTimingFunction& GetTransitionTimingFunction(uint32_t aIndex) const {
+  const mozilla::StyleComputedTimingFunction& GetTransitionTimingFunction(
+      uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionTimingFunctionCount]
         .GetTimingFunction();
   }
@@ -1825,7 +1829,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
     return mAnimations[aIndex % mAnimationIterationCountCount]
         .GetIterationCount();
   }
-  const nsTimingFunction& GetAnimationTimingFunction(uint32_t aIndex) const {
+  const mozilla::StyleComputedTimingFunction& GetAnimationTimingFunction(
+      uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationTimingFunctionCount]
         .GetTimingFunction();
   }

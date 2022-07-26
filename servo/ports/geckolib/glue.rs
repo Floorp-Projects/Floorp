@@ -57,7 +57,6 @@ use style::gecko_bindings::structs::nsChangeHint;
 use style::gecko_bindings::structs::nsCompatibility;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
 use style::gecko_bindings::structs::nsTArray;
-use style::gecko_bindings::structs::nsTimingFunction;
 use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::structs::CallerType;
 use style::gecko_bindings::structs::CompositeOperation;
@@ -139,6 +138,7 @@ use style::values::animated::color::AnimatedRGBA;
 use style::values::generics::color::ColorInterpolationMethod;
 use style::values::generics::easing::BeforeFlag;
 use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily, FontWeight, FontStyle, FontStretch};
+use style::values::computed::easing::ComputedTimingFunction;
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
@@ -1089,7 +1089,7 @@ impl_basic_serde_funcs!(
 impl_basic_serde_funcs!(
     Servo_StyleComputedTimingFunction_Serialize,
     Servo_StyleComputedTimingFunction_Deserialize,
-    computed::easing::ComputedTimingFunction
+    ComputedTimingFunction
 );
 
 #[no_mangle]
@@ -4385,7 +4385,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseEasing(easing: &nsACString, output: &mut nsTimingFunction) -> bool {
+pub extern "C" fn Servo_ParseEasing(easing: &nsACString, output: &mut ComputedTimingFunction) -> bool {
     use style::properties::longhands::transition_timing_function;
 
     let context = ParserContext::new(
@@ -4404,8 +4404,7 @@ pub extern "C" fn Servo_ParseEasing(easing: &nsACString, output: &mut nsTimingFu
         parser.parse_entirely(|p| transition_timing_function::single_value::parse(&context, p));
     match result {
         Ok(parsed_easing) => {
-            // We store as computed value in nsTimingFunction.
-            (*output).mTiming = parsed_easing.to_computed_value_without_context();
+            *output = parsed_easing.to_computed_value_without_context();
             true
         },
         Err(_) => false,
@@ -4413,8 +4412,8 @@ pub extern "C" fn Servo_ParseEasing(easing: &nsACString, output: &mut nsTimingFu
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_SerializeEasing(easing: &nsTimingFunction, output: &mut nsACString) {
-    easing.mTiming.to_css(&mut CssWriter::new(output)).unwrap();
+pub extern "C" fn Servo_SerializeEasing(easing: &ComputedTimingFunction, output: &mut nsACString) {
+    easing.to_css(&mut CssWriter::new(output)).unwrap();
 }
 
 #[no_mangle]
@@ -6224,7 +6223,7 @@ enum Offset {
 
 fn fill_in_missing_keyframe_values(
     all_properties: &LonghandIdSet,
-    timing_function: &nsTimingFunction,
+    timing_function: &ComputedTimingFunction,
     longhands_at_offset: &LonghandIdSet,
     offset: Offset,
     keyframes: &mut nsTArray<structs::Keyframe>,
@@ -6268,7 +6267,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
     element: &RawGeckoElement,
     style: &ComputedValues,
     name: *mut nsAtom,
-    inherited_timing_function: &nsTimingFunction,
+    inherited_timing_function: &ComputedTimingFunction,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) -> bool {
     use style::gecko_bindings::structs::CompositeOperationOrAuto;
@@ -6307,11 +6306,9 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
         }
 
         // Override timing_function if the keyframe has an animation-timing-function.
-        let timing_function = nsTimingFunction {
-            mTiming: match step.get_animation_timing_function(&guard) {
-                Some(val) => val.to_computed_value_without_context(),
-                None => (*inherited_timing_function).mTiming.clone(),
-            },
+        let timing_function = match step.get_animation_timing_function(&guard) {
+            Some(val) => val.to_computed_value_without_context(),
+            None => (*inherited_timing_function).clone(),
         };
 
         // Override composite operation if the keyframe has an animation-composition.
@@ -7544,7 +7541,7 @@ pub extern "C" fn Servo_InterpolateColor(
 
 #[no_mangle]
 pub extern "C" fn Servo_EasingFunctionAt(
-    easing_function: &computed::easing::ComputedTimingFunction,
+    easing_function: &ComputedTimingFunction,
     progress: f64,
     before_flag: BeforeFlag
 ) -> f64 {

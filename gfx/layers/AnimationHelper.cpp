@@ -6,13 +6,13 @@
 
 #include "AnimationHelper.h"
 #include "base/process_util.h"
-#include "gfx2DGlue.h"                       // for ThebesRect
-#include "gfxLineSegment.h"                  // for gfxLineSegment
-#include "gfxPoint.h"                        // for gfxPoint
-#include "gfxQuad.h"                         // for gfxQuad
-#include "gfxRect.h"                         // for gfxRect
-#include "gfxUtils.h"                        // for gfxUtils::TransformToQuad
-#include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
+#include "gfx2DGlue.h"                 // for ThebesRect
+#include "gfxLineSegment.h"            // for gfxLineSegment
+#include "gfxPoint.h"                  // for gfxPoint
+#include "gfxQuad.h"                   // for gfxQuad
+#include "gfxRect.h"                   // for gfxRect
+#include "gfxUtils.h"                  // for gfxUtils::TransformToQuad
+#include "mozilla/ServoStyleConsts.h"  // for StyleComputedTimingFunction
 #include "mozilla/dom/AnimationEffectBinding.h"  // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h"   // for dom::IterationComposite
 #include "mozilla/dom/KeyframeEffect.h"       // for dom::KeyFrameEffectReadOnly
@@ -228,7 +228,7 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
         (computedTiming.mProgress.Value() - segment->mStartPortion) /
         (segment->mEndPortion - segment->mStartPortion);
 
-    double portion = ComputedTimingFunction::GetPortion(
+    double portion = StyleComputedTimingFunction::GetPortion(
         segment->mFunction, positionInSegment, computedTiming.mBeforeFlag);
 
     // Like above optimization, skip calculation if the target segment isn't
@@ -472,10 +472,6 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
 
     PropertyAnimation* propertyAnimation =
         currData->mAnimations.AppendElement();
-    Maybe<mozilla::ComputedTimingFunction> easingFunction;
-    if (animation.easingFunction().isSome()) {
-      easingFunction.emplace(*animation.easingFunction());
-    }
 
     propertyAnimation->mOriginTime = animation.originTime();
     propertyAnimation->mStartTime = animation.startTime();
@@ -493,23 +489,19 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
                      animation.iterationStart(),
                      static_cast<dom::PlaybackDirection>(animation.direction()),
                      GetAdjustedFillMode(animation),
-                     std::move(easingFunction)};
+                     animation.easingFunction()};
     propertyAnimation->mScrollTimelineOptions =
         animation.scrollTimelineOptions();
 
     nsTArray<PropertyAnimation::SegmentData>& segmentData =
         propertyAnimation->mSegments;
     for (const AnimationSegment& segment : animation.segments()) {
-      Maybe<mozilla::ComputedTimingFunction> sampleFn;
-      if (segment.sampleFn().isSome()) {
-        sampleFn.emplace(*segment.sampleFn());
-      }
       segmentData.AppendElement(PropertyAnimation::SegmentData{
           AnimationValue::FromAnimatable(animation.property(),
                                          segment.startState()),
           AnimationValue::FromAnimatable(animation.property(),
                                          segment.endState()),
-          std::move(sampleFn), segment.startPortion(), segment.endPortion(),
+          segment.sampleFn(), segment.startPortion(), segment.endPortion(),
           static_cast<dom::CompositeOperation>(segment.startComposite()),
           static_cast<dom::CompositeOperation>(segment.endComposite())});
     }

@@ -1110,7 +1110,7 @@ void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
 
 static void CreatePropertyValue(
     nsCSSPropertyID aProperty, float aOffset,
-    const Maybe<ComputedTimingFunction>& aTimingFunction,
+    const Maybe<StyleComputedTimingFunction>& aTimingFunction,
     const AnimationValue& aValue, dom::CompositeOperation aComposite,
     const RawServoStyleSet* aRawSet, AnimationPropertyValueDetails& aResult) {
   aResult.mOffset = aOffset;
