@@ -13811,10 +13811,7 @@ class BackgroundsSection extends (external_React_default()).PureComponent {
 class ContentSection extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
-    this.onPreferenceSelect = this.onPreferenceSelect.bind(this); // Refs are necessary for dynamically measuring drawer heights for slide animations
-
-    this.topSitesDrawerRef = /*#__PURE__*/external_React_default().createRef();
-    this.pocketDrawerRef = /*#__PURE__*/external_React_default().createRef();
+    this.onPreferenceSelect = this.onPreferenceSelect.bind(this);
   }
 
   inputUserEvent(eventSource, status) {
@@ -13830,8 +13827,7 @@ class ContentSection extends (external_React_default()).PureComponent {
 
   onPreferenceSelect(e) {
     let prefName = e.target.getAttribute("preference");
-    const eventSource = e.target.getAttribute("eventSource"); // TOP_SITES, TOP_STORIES, HIGHLIGHTS
-
+    const eventSource = e.target.getAttribute("eventSource");
     let value;
 
     if (e.target.nodeName === "SELECT") {
@@ -13845,39 +13841,6 @@ class ContentSection extends (external_React_default()).PureComponent {
     }
 
     this.props.setPref(prefName, value);
-  }
-
-  componentDidMount() {
-    this.setDrawerMargins();
-  }
-
-  componentDidUpdate() {
-    this.setDrawerMargins();
-  }
-
-  setDrawerMargins() {
-    this.setDrawerMargin(`TOP_SITES`, this.props.enabledSections.topSitesEnabled);
-    this.setDrawerMargin(`TOP_STORIES`, this.props.enabledSections.pocketEnabled);
-  }
-
-  setDrawerMargin(drawerID, isOpen) {
-    let drawerRef;
-
-    if (drawerID === `TOP_SITES`) {
-      drawerRef = this.topSitesDrawerRef.current;
-    } else if (drawerID === `TOP_STORIES`) {
-      drawerRef = this.pocketDrawerRef.current;
-    } else {
-      return;
-    }
-
-    let drawerHeight = parseFloat(getComputedStyle(drawerRef, null).height);
-
-    if (isOpen) {
-      drawerRef.style.marginTop = `0`;
-    } else {
-      drawerRef.style.marginTop = `-${drawerHeight}px`;
-    }
   }
 
   render() {
@@ -13928,10 +13891,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "subtitle",
       "data-l10n-id": "newtab-custom-shortcuts-subtitle"
     }), /*#__PURE__*/external_React_default().createElement("div", {
-      className: "more-info-top-wrapper"
+      className: `more-info-top-wrapper ${topSitesEnabled ? "" : "shrink"}`
     }, /*#__PURE__*/external_React_default().createElement("div", {
-      className: "more-information",
-      ref: this.topSitesDrawerRef
+      className: `more-information ${topSitesEnabled ? "expand" : "shrink"}`
     }, /*#__PURE__*/external_React_default().createElement("select", {
       id: "row-selector",
       className: "selector",
@@ -14001,10 +13963,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       className: "subtitle",
       "data-l10n-id": "newtab-custom-pocket-subtitle"
     }), (mayHaveSponsoredStories || mayHaveRecentSaves) && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "more-info-pocket-wrapper"
+      className: `more-info-pocket-wrapper ${pocketEnabled ? "" : "shrink"}`
     }, /*#__PURE__*/external_React_default().createElement("div", {
-      className: "more-information",
-      ref: this.pocketDrawerRef
+      className: `more-information ${pocketEnabled ? "expand" : "shrink"}`
     }, mayHaveSponsoredStories && /*#__PURE__*/external_React_default().createElement("div", {
       className: "check-wrapper",
       role: "presentation"
