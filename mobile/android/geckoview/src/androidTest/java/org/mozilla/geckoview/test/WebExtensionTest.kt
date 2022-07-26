@@ -16,7 +16,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate
 import org.mozilla.geckoview.WebExtension.*
 import org.mozilla.geckoview.WebExtension.BrowsingDataDelegate.Type.*
@@ -1628,7 +1627,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         mainSession.waitUntilCalled(object : NavigationDelegate, ProgressDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("Url should load example.com first",
                         url, equalTo("https://example.com/"))
             }
@@ -1645,7 +1644,7 @@ class WebExtensionTest : BaseSessionTest() {
         val pageStop = GeckoResult<Boolean>()
 
         mainSession.delegateUntilTestEnd(object : NavigationDelegate, ProgressDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
                 page = url
             }
 
