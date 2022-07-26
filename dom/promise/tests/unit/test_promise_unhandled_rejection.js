@@ -54,7 +54,7 @@ add_task(async function test_unhandled_dom_exception() {
   equal(msg.lineNumber, 2, "Got expected line number");
   equal(
     msg.errorMessage,
-    "DataCloneError: The object could not be cloned.",
+    "DataCloneError: Function object could not be cloned.",
     "Got expected error message"
   );
 });
