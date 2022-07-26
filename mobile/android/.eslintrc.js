@@ -17,12 +17,6 @@ module.exports = {
       },
     },
     {
-      files: ["chrome/geckoview/*Child.js"],
-      env: {
-        "mozilla/frame-script": true,
-      },
-    },
-    {
       files: [
         "chrome/geckoview/**",
         "components/geckoview/**",
