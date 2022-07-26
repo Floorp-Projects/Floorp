@@ -1009,11 +1009,6 @@ class Window extends WindowBase {
   }
 
   static getState(window) {
-    // NOTE(emilio): This is quite subtle: when instead of a Window object we
-    // get a windowData (like when using convertFromSessionStoreClosedData), we
-    // don't have the relevant properties in the object, so we end up doing
-    // { [undefined]: ..., }[undefined], so it's important that "normal" is the
-    // last property. We should do this more explicitly, probably.
     const STATES = {
       [window.STATE_MAXIMIZED]: "maximized",
       [window.STATE_MINIMIZED]: "minimized",
@@ -1177,8 +1172,9 @@ class Window extends WindowBase {
       focused: false,
       incognito: false,
       type: "normal", // this is always "normal" for a closed window
-      // Surely this does not actually work?
-      state: this.getState(windowData),
+      // Bug 1781226: we assert "state" is "normal" in tests, but we could use
+      // the "sizemode" property if we wanted.
+      state: "normal",
       alwaysOnTop: false,
     };
 
