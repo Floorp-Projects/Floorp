@@ -55,6 +55,8 @@ enum class CallReason {
   Call,
   // callContentFunction or constructContentFunction in self-hosted JS.
   CallContent,
+  // Function.prototype.call or Function.prototype.apply.
+  FunCall,
   Getter,
   Setter,
 };
