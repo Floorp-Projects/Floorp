@@ -31,7 +31,7 @@ pub unsafe extern "C" fn Rust_ObserveFromRust() -> *const interfaces::nsIObserve
             &self,
             _subject: *const interfaces::nsISupports,
             topic: *const c_char,
-            _data: *const u16,
+            _data: *const i16,
         ) -> nsresult {
             *self.run = true;
             assert!(CStr::from_ptr(topic).to_str() == Ok("test-rust-observe"));
