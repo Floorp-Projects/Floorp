@@ -392,6 +392,10 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
     RelationType aType) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::RelationByType(aType);
+  }
+
   RefPtr<IAccessible2_2> acc = QueryInterface<IAccessible2_2>(this);
   if (!acc) {
     return nsTArray<RemoteAccessible*>();
