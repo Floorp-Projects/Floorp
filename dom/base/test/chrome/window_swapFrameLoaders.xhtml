@@ -41,8 +41,8 @@ Test swapFrameLoaders with different frame types and remoteness
     400
   ];
 
-  /* eslint-env mozilla/frame-script */
   function frameScript() {
+    /* eslint-env mozilla/frame-script */
     addEventListener("load", function onLoad() {
       sendAsyncMessage("test:load");
     }, true);
@@ -110,6 +110,7 @@ Test swapFrameLoaders with different frame types and remoteness
       let frameB = await addFrame(typeB, options, heightB);
 
       let frameScriptFactory = function(name) {
+        /* eslint-env mozilla/frame-script */
         return `function() {
           addMessageListener("ping", function() {
             sendAsyncMessage("pong", "${name}");

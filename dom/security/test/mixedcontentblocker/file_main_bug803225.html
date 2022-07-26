@@ -113,6 +113,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     })
 
     var pScript = "data:,new " + function () {
+      /* eslint-env mozilla/process-script */
       var os = Cc["@mozilla.org/observer-service;1"]
         .getService(Ci.nsIObserverService);
       var observer = {

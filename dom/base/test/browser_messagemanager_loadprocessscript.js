@@ -30,6 +30,7 @@ function checkBaseProcessCount(description) {
 }
 
 function processScript() {
+  /* eslint-env mozilla/process-script */
   if (Services.cpmm !== this) {
     dump("Test failed: wrong global object\n");
     return;
@@ -46,6 +47,7 @@ function processScript() {
 var processScriptURL = "data:,(" + processScript.toString() + ").call(this)";
 
 function initTestScript() {
+  /* eslint-env mozilla/process-script */
   let init = initialProcessData;
   if (init.test123 != "hello") {
     dump("Initial data incorrect\n");

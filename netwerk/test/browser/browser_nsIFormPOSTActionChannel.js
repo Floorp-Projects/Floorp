@@ -3,8 +3,6 @@
  * should be able to accept form POST.
  */
 
-/* eslint-env mozilla/frame-script */
-
 "use strict";
 
 const SCHEME = "x-bug1241377";
@@ -198,6 +196,7 @@ document.getElementById('form').submit();
 };
 
 function frameScript() {
+  /* eslint-env mozilla/frame-script */
   addMessageListener("Test:WaitForIFrame", function() {
     var check = function() {
       if (content) {
