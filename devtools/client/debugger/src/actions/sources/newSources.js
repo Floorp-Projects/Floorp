@@ -273,7 +273,12 @@ export function newGeneratedSources(sourceResources) {
       // We are sometimes notified about a new source multiple times if we
       // request a new source list and also get a source event from the server.
       if (!hasSourceActor(getState(), actorId)) {
-        newSourceActors.push(createSourceActor(sourceResource));
+        newSourceActors.push(
+          createSourceActor(
+            sourceResource,
+            getSource(getState(), id) || newSourcesObj[id]
+          )
+        );
       }
 
       resultIds.push(id);

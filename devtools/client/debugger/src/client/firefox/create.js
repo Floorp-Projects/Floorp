@@ -311,8 +311,10 @@ export function createPrettyPrintOriginalSource(id, url, thread) {
  * @param {SOURCE} sourceResource
  *        SOURCE resource coming from the ResourceCommand API.
  *        This represents the `SourceActor` from the server codebase.
+ * @param {Object} sourceObject
+ *        Source object stored in redux, i.e. created via createSourceObject.
  */
-export function createSourceActor(sourceResource) {
+export function createSourceActor(sourceResource, sourceObject) {
   const actorId = sourceResource.actor;
 
   // As sourceResource is only SourceActor's form and not the SourceFront,
@@ -326,6 +328,7 @@ export function createSourceActor(sourceResource) {
     thread: threadActorID,
     // `source` is the reducer source ID
     source: makeSourceId(sourceResource),
+    sourceObject,
     sourceMapBaseURL: sourceResource.sourceMapBaseURL,
     sourceMapURL: sourceResource.sourceMapURL,
     url: sourceResource.url,
