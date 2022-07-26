@@ -284,6 +284,7 @@ class HomeFragment : Fragment() {
                         syncStore = requireComponents.backgroundServices.syncStore,
                         storage = requireComponents.backgroundServices.syncedTabsStorage,
                         accountManager = requireComponents.backgroundServices.accountManager,
+                        historyStorage = requireComponents.core.historyStorage,
                         coroutineScope = viewLifecycleOwner.lifecycleScope,
                     ),
                     owner = viewLifecycleOwner,

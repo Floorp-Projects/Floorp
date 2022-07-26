@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.lib.state.ext.flow
@@ -19,11 +20,13 @@ import mozilla.components.service.fxa.store.SyncStatus
 import mozilla.components.service.fxa.store.SyncStore
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import mozilla.telemetry.glean.GleanTimerId
 import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
+import java.util.concurrent.TimeUnit
 
 /**
  * Delegate to handle layout updates and dispatch actions related to the recent synced tab.
@@ -32,14 +35,17 @@ import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
  * @property syncStore Store to observe for changes to Sync and account status.
  * @property storage Storage layer for synced tabs.
  * @property accountManager Account manager to initiate Syncs and refresh devices.
+ * @property historyStorage Storage for searching history for preview image URLs matching synced tab.
  * @property coroutineScope The scope to collect Sync state Flow updates in.
  */
+@Suppress("LongParameterList")
 class RecentSyncedTabFeature(
     private val context: Context,
     private val appStore: AppStore,
     private val syncStore: SyncStore,
     private val storage: SyncedTabsStorage,
     private val accountManager: FxaAccountManager,
+    private val historyStorage: HistoryStorage,
     private val coroutineScope: CoroutineScope,
 ) : LifecycleAwareFeature {
 
@@ -109,12 +115,26 @@ class RecentSyncedTabFeature(
             .maxByOrNull { it.device.lastAccessTime ?: 0 }
             ?.let {
                 val tab = it.tabs.firstOrNull()?.active() ?: return
+
+                val currentTime = System.currentTimeMillis()
+                val maxAgeInMs = TimeUnit.DAYS.toMillis(DAYS_HISTORY_FOR_PREVIEW_IMAGE)
+                val history = historyStorage.getDetailedVisits(
+                    start = currentTime - maxAgeInMs,
+                    end = currentTime
+                )
+
+                // Searching history entries for any that share a top level domain and have a
+                // preview image URL available casts a wider net for finding a suitable image.
+                val previewImageUrl = history.find { entry ->
+                    entry.url.contains(tab.url.tryGetHostFromUrl()) && entry.previewImageUrl != null
+                }?.previewImageUrl
+
                 RecentSyncedTab(
                     deviceDisplayName = it.device.displayName,
                     deviceType = it.device.deviceType,
                     title = tab.title,
                     url = tab.url,
-                    iconUrl = tab.iconUrl
+                    previewImageUrl = previewImageUrl
                 )
             }
 
@@ -152,6 +172,15 @@ class RecentSyncedTabFeature(
     private fun isSyncedTabsEngineEnabled(): Boolean {
         return SyncEnginesStorage(context).getStatus()[SyncEngine.Tabs] ?: true
     }
+
+    companion object {
+        /**
+         * The number of days to search history for a preview image URL to display for a synced
+         * tab.
+         */
+
+        const val DAYS_HISTORY_FOR_PREVIEW_IMAGE = 3L
+    }
 }
 
 /**
@@ -180,12 +209,12 @@ sealed class RecentSyncedTabState {
  * @param deviceDisplayName The device the tab was viewed on.
  * @param title The title of the tab.
  * @param url The url of the tab.
- * @param iconUrl The url used to retrieve the icon of the tab.
+ * @param previewImageUrl The url used to retrieve the preview image of the tab.
  */
 data class RecentSyncedTab(
     val deviceDisplayName: String,
     val deviceType: DeviceType,
     val title: String,
     val url: String,
-    val iconUrl: String?,
+    val previewImageUrl: String?,
 )

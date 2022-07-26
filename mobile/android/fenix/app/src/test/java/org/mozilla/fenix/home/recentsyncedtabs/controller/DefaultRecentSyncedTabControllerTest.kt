@@ -64,7 +64,7 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = DeviceType.DESKTOP,
             title = "title",
             url = url,
-            iconUrl = null
+            previewImageUrl = null
         )
         val store = BrowserStore(
             initialState = BrowserState(
@@ -100,7 +100,7 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = DeviceType.DESKTOP,
             title = "title",
             url = url,
-            iconUrl = null
+            previewImageUrl = null
         )
         val store = BrowserStore(
             initialState = BrowserState(
@@ -155,7 +155,7 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = deviceType,
             title = "title",
             url = url,
-            iconUrl = null
+            previewImageUrl = null
         )
 
         every { tabsUseCases.selectOrAddTab } returns mockk(relaxed = true)
