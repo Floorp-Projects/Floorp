@@ -244,6 +244,7 @@ browsertime-benchmark:
             - [speedometer, sp]
             - [stylebench, sb]
             - [sunspider, ss]
+            - [twitch-animation, tw-a]
             - [unity-webgl, ugl]
             - [webaudio, wa]
     treeherder-symbol: Btime()
@@ -300,6 +301,7 @@ browsertime-benchmark:
             - assorted-dom
             - jetstream2
             - matrix-react-bench
+            - twitch-animation
             - unity-webgl
 
 browsertime-benchmark-wasm:

@@ -112,6 +112,7 @@ suites:
             speedometer: "FF, CH, CU, FE, GV, RB, CH-M"
             stylebench: "FF, CH, CU"
             sunspider: "FF, CH, CU"
+            twitch-animation: "FF"
             unity-webgl: "FF, CH, CU, FE, RB, FE, CH-M"
             wasm-godot-baseline: "FF"
             wasm-godot-optimizing: "FF"
