@@ -1,0 +1,32 @@
+diff --git a/llvm/cmake/modules/LLVMInstallSymlink.cmake b/llvm/cmake/modules/LLVMInstallSymlink.cmake
+index e9be04aceb3d..3c0bdc25bd46 100644
+--- a/llvm/cmake/modules/LLVMInstallSymlink.cmake
++++ b/llvm/cmake/modules/LLVMInstallSymlink.cmake
+@@ -6,6 +6,12 @@ include(GNUInstallDirs)
+ 
+ function(install_symlink name target outdir)
+   set(DESTDIR $ENV{DESTDIR})
++  if(CMAKE_HOST_UNIX)
++    set(LINK_OR_COPY create_symlink)
++  else()
++    set(LINK_OR_COPY copy)
++  endif()
++
+   if(NOT IS_ABSOLUTE "${outdir}")
+     set(outdir "${CMAKE_INSTALL_PREFIX}/${outdir}")
+   endif()
+@@ -14,12 +20,8 @@ function(install_symlink name target outdir)
+   message(STATUS "Creating ${name}")
+ 
+   execute_process(
+-    COMMAND "${CMAKE_COMMAND}" -E create_symlink "${target}" "${name}"
+-    WORKING_DIRECTORY "${outdir}" ERROR_VARIABLE has_err)
+-  if(CMAKE_HOST_WIN32 AND has_err)
+-    execute_process(
+-      COMMAND "${CMAKE_COMMAND}" -E copy "${target}" "${name}"
+-      WORKING_DIRECTORY "${outdir}")
++    COMMAND "${CMAKE_COMMAND}" -E ${LINK_OR_COPY} "${target}" "${name}"
++    WORKING_DIRECTORY "${outdir}")
+   endif()
+ 
+ endfunction()
