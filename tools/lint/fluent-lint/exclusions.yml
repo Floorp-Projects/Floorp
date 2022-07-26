@@ -135,3 +135,59 @@ ID02:
         - hf-url
         - hf-page
     files: []
+# Hard-coded brand names like Firefox or Mozilla should be used only in
+# specific cases, in all other cases the corresponding terms should be used.
+# Check with the localization team for advice.
+CO01:
+    messages:
+        # browser/branding/official/locales/en-US/brand.ftl
+        # browser/locales/en-US/browser/branding/brandings.ftl
+        - trademarkInfo
+        # browser/locales/en-US/browser/aboutCertError.ftl
+        - cert-error-mitm-mozilla
+        - cert-error-mitm-connection
+        # browser/locales/en-US/browser/appExtensionFields.ftl
+        - extension-firefox-alpenglow-name
+        # browser/locales/en-US/browser/browser.ftl
+        - identity-custom-root
+        - identity-description-custom-root
+        # browser/locales/en-US/browser/migration.ftl
+        - import-from-firefox
+        # browser/locales/en-US/browser/newtab/onboarding.ftl
+        - mr1-onboarding-welcome-image-caption
+        # browser/locales/en-US/browser/policies/policies-descriptions.ftl
+        - policy-DisableFirefoxScreenshots
+        # browser/locales/en-US/browser/preferences/preferences.ftl
+        - sync-engine-addons
+        - sync-mobile-promo
+        # browser/locales/en-US/browser/protectionsPanel.ftl
+        - protections-panel-content-blocking-breakage-report-view-description
+        # devtools/client/locales/en-US/aboutdebugging.ftl
+        - about-debugging-setup-usb-step-enable-debug-firefox2
+        - about-debugging-browser-version-too-old-fennec
+        - about-debugging-browser-version-too-recent
+        # devtools/client/locales/en-US/application.ftl
+        - manifest-loaded-devtools-error
+        # toolkit/locales/en-US/toolkit/about/aboutAddons.ftl
+        - addon-badge-line3
+        - recommended-theme-1
+        # toolkit/locales/en-US/toolkit/about/aboutGlean.ftl
+        - about-glean-description
+        # toolkit/locales/en-US/toolkit/about/aboutPlugins.ftl
+        - plugins-openh264-description
+        # toolkit/locales/en-US/toolkit/about/aboutRights.ftl
+        - rights-intro-point-1
+        - rights-intro-point-2
+        # toolkit/locales/en-US/toolkit/about/aboutSupport.ftl
+        - app-basics-key-mozilla
+        # toolkit/locales/en-US/toolkit/about/aboutTelemetry.ftl
+        - about-telemetry-firefox-data-doc
+        - about-telemetry-origins-explanation
+        - about-telemetry-telemetry-client-doc
+        - about-telemetry-telemetry-dashboard
+        # toolkit/locales/en-US/toolkit/global/processTypes.ftl
+        - process-type-privilegedmozilla
+    files:
+        - browser/components/ion/content/ion.ftl
+        - browser/locales/en-US/browser/profile/default-bookmarks.ftl
+        - toolkit/locales/en-US/toolkit/about/aboutMozilla.ftl

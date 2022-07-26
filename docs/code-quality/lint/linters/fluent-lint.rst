@@ -1,8 +1,12 @@
 Fluent Lint
 ===========
 
-Fluent lint is a linter for Fluent files. Currently, it checks for invalid strings in messages
-and enforces the preferred style for identifiers.
+Fluent lint is a linter for Fluent files (.ftl). Currently, it includes:
+
+* Checks for invalid typography in messages (e.g. straight single or double quotes).
+* Checks for comments layout.
+* Checks for identifiers (minimum length, allowed characters).
+* Hard-coded brand names.
 
 
 Run Locally
