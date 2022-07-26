@@ -87,3 +87,6 @@
 # Profiling, code coverage, and debugging
 # --dump-bytecode option implies --code-coverage
 --dump-bytecode
+
+# Shadow Realms
+--enable-shadow-realms
