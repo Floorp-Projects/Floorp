@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 (function() {
   const TRESIZE_PREFIX = "tresize@mozilla.org:";
 

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 // Note: This file is used at both tscrollx and tp5o_scroll. With the former as
 //       unprivileged code.
 // - Please make sure that any changes apply cleanly to all use cases.
