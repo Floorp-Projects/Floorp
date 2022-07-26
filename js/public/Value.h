@@ -723,10 +723,6 @@ class alignas(8) Value {
 #endif
   }
 
-  bool isNurseryAllocatableGCThing() const {
-    return hasObjectPayload() || isString() || isBigInt();
-  }
-
   bool isBoolean() const { return toTag() == JSVAL_TAG_BOOLEAN; }
 
   bool isTrue() const {
