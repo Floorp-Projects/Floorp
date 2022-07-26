@@ -24,4 +24,4 @@ if CONFIG["OS_TARGET"] == "Linux":
 elif CONFIG["OS_TARGET"] == "WINNT":
   DIRS += ["floorp-system/windows"]
 else:
-    DIRS += ["floorp-system/mac"]
+    DIRS += ["floorp-system/macOS"]
