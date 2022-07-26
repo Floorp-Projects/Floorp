@@ -52,11 +52,10 @@ NS_IMPL_ISUPPORTS(ToastNotificationHandler, nsIAlertNotificationImageListener)
 static bool SetNodeValueString(const nsString& aString, IXmlNode* node,
                                IXmlDocument* xml) {
   ComPtr<IXmlText> inputText;
-  if (NS_WARN_IF(FAILED(xml->CreateTextNode(
-          HStringReference(static_cast<const wchar_t*>(aString.get())).Get(),
-          &inputText)))) {
-    return false;
-  }
+  HRESULT hr;
+  hr = xml->CreateTextNode(HStringReference(aString.get()).Get(), &inputText);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
   ComPtr<IXmlNode> inputTextNode;
   if (NS_WARN_IF(FAILED(inputText.As(&inputTextNode)))) {
     return false;
@@ -69,14 +68,14 @@ static bool SetNodeValueString(const nsString& aString, IXmlNode* node,
   return true;
 }
 
-static bool SetAttribute(IXmlElement* element, const HSTRING name,
+static bool SetAttribute(IXmlElement* element, const HStringReference& name,
                          const nsAString& value) {
-  HSTRING valueStr = HStringReference(static_cast<const wchar_t*>(
-                                          PromiseFlatString(value).get()))
-                         .Get();
-  if (NS_WARN_IF(FAILED(element->SetAttribute(name, valueStr)))) {
-    return false;
-  }
+  HString valueStr;
+  valueStr.Set(PromiseFlatString(value).get());
+
+  HRESULT hr = element->SetAttribute(name.Get(), valueStr.Get());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
   return true;
 }
 
@@ -91,21 +90,18 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
     return false;
   }
 
-  if (NS_WARN_IF(!SetAttribute(action.Get(), HStringReference(L"content").Get(),
-                               actionTitle))) {
-    return false;
-  }
+  bool success =
+      SetAttribute(action.Get(), HStringReference(L"content"), actionTitle);
+  NS_ENSURE_TRUE(success, false);
 
-  if (NS_WARN_IF(!SetAttribute(
-          action.Get(), HStringReference(L"arguments").Get(), actionArgs))) {
-    return false;
-  }
+  success =
+      SetAttribute(action.Get(), HStringReference(L"arguments"), actionArgs);
+  NS_ENSURE_TRUE(success, false);
+
   if (!actionPlacement.IsEmpty()) {
-    if (NS_WARN_IF(!SetAttribute(action.Get(),
-                                 HStringReference(L"placement").Get(),
-                                 actionPlacement))) {
-      return false;
-    }
+    success = SetAttribute(action.Get(), HStringReference(L"placement"),
+                           actionPlacement);
+    NS_ENSURE_TRUE(success, false);
   }
 
   // Add <action> to <actions>
@@ -195,6 +191,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   }
 
   HRESULT hr;
+  bool success;
 
   if (mHasImage) {
     ComPtr<IXmlNodeList> toastImageElements;
@@ -213,10 +210,9 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     if (NS_WARN_IF(FAILED(hr))) {
       return nullptr;
     }
-    if (NS_WARN_IF(!SetAttribute(image.Get(), HStringReference(L"src").Get(),
-                                 mImageUri))) {
-      return nullptr;
-    }
+
+    success = SetAttribute(image.Get(), HStringReference(L"src"), mImageUri);
+    NS_ENSURE_TRUE(success, nullptr);
   }
 
   ComPtr<IXmlNodeList> toastTextElements;
@@ -266,8 +262,9 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
       return nullptr;
     }
 
-    SetAttribute(toastNode.Get(), HStringReference(L"scenario").Get(),
-                 u"reminder"_ns);
+    success = SetAttribute(toastNode.Get(), HStringReference(L"scenario"),
+                           u"reminder"_ns);
+    NS_ENSURE_TRUE(success, nullptr);
   }
 
   ComPtr<IXmlElement> actions;
@@ -317,7 +314,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
       hr = urlTextNodeRoot.As(&placementText);
       if (SUCCEEDED(hr)) {
         // placement is supported on Windows 10 Anniversary Update or later
-        SetAttribute(placementText.Get(), HStringReference(L"placement").Get(),
+        SetAttribute(placementText.Get(), HStringReference(L"placement"),
                      u"attribution"_ns);
       }
     }
@@ -380,19 +377,15 @@ nsresult ToastNotificationHandler::CreateToastXmlString(
     return NS_ERROR_FAILURE;
   }
 
-  HSTRING data;
-  hr = ser->GetXml(&data);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return NS_ERROR_FAILURE;
-  }
+  HString data;
+  hr = ser->GetXml(data.GetAddressOf());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   uint32_t len = 0;
-  const wchar_t* buffer = WindowsGetStringRawBuffer(data, &len);
-  if (!buffer) {
-    return NS_ERROR_FAILURE;
-  }
+  const wchar_t* rawData = data.GetRawBuffer(&len);
+  NS_ENSURE_TRUE(rawData, NS_ERROR_FAILURE);
+  aString.Assign(rawData, len);
 
-  aString.Assign(buffer);
   return NS_OK;
 }
 
@@ -507,11 +500,11 @@ ToastNotificationHandler::OnActivate(IToastNotification* notification,
       HRESULT hr = inspectable->QueryInterface(
           __uuidof(IToastActivatedEventArgs), (void**)&eventArgs);
       if (SUCCEEDED(hr)) {
-        HSTRING arguments;
-        hr = eventArgs->get_Arguments(&arguments);
+        HString arguments;
+        hr = eventArgs->get_Arguments(arguments.GetAddressOf());
         if (SUCCEEDED(hr)) {
           uint32_t len = 0;
-          const wchar_t* buffer = WindowsGetStringRawBuffer(arguments, &len);
+          const wchar_t* buffer = arguments.GetRawBuffer(&len);
           if (buffer) {
             argString.Assign(buffer, len);
           }
