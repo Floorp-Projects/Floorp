@@ -9,10 +9,8 @@ import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
 import {
-  getActiveSearch,
   getProjectDirectoryRootName,
   getSelectedPrimaryPaneTab,
-  getAllThreads,
   getContext,
 } from "../../selectors";
 import { features, prefs } from "../../utils/prefs";
@@ -41,7 +39,6 @@ class PrimaryPanes extends Component {
       projectRootName: PropTypes.string.isRequired,
       selectedTab: PropTypes.oneOf(["sources", "outline"]).isRequired,
       setPrimaryPaneTab: PropTypes.func.isRequired,
-      threads: PropTypes.array.isRequired,
     };
   }
 
@@ -112,7 +109,7 @@ class PrimaryPanes extends Component {
   }
 
   renderThreadSources() {
-    return <SourcesTree threads={this.props.threads} />;
+    return <SourcesTree />;
   }
 
   render() {
@@ -152,8 +149,6 @@ const mapStateToProps = state => {
   return {
     cx: getContext(state),
     selectedTab: getSelectedPrimaryPaneTab(state),
-    sourceSearchOn: getActiveSearch(state) === "source",
-    threads: getAllThreads(state),
     projectRootName: getProjectDirectoryRootName(state),
   };
 };

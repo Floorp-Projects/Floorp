@@ -25,7 +25,7 @@ import projectTextSearch, {
   initialProjectTextSearchState,
 } from "./project-text-search";
 import quickOpen, { initialQuickOpenState } from "./quick-open";
-import sourceTree, { initialSourcesTreeState } from "./source-tree";
+import sourcesTree, { initialSourcesTreeState } from "./sources-tree";
 import threads, { initialThreadsState } from "./threads";
 import eventListenerBreakpoints, {
   initialEventListenerState,
@@ -56,7 +56,7 @@ export function initialState() {
     ast: initialASTState(),
     projectTextSearch: initialProjectTextSearchState(),
     quickOpen: initialQuickOpenState(),
-    sourceTree: initialSourcesTreeState(),
+    sourcesTree: initialSourcesTreeState(),
     threads: initialThreadsState(),
     objectInspector: objectInspector.reducer.initialOIState(),
     eventListenerBreakpoints: initialEventListenerState(),
@@ -81,7 +81,7 @@ export default {
   ast,
   projectTextSearch,
   quickOpen,
-  sourceTree,
+  sourcesTree,
   threads,
   objectInspector: objectInspector.reducer.default,
   eventListenerBreakpoints,

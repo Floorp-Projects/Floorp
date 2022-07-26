@@ -35,12 +35,11 @@ export function willNavigate(event) {
   };
 }
 
-export function connect(url, actor, isWebExtension) {
+export function connect(url, actor) {
   return async function({ dispatch, getState }) {
     dispatch({
       type: "CONNECT",
       mainThreadActorID: actor,
-      isWebExtension,
     });
 
     const cx = getThreadContext(getState());

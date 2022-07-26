@@ -352,6 +352,7 @@ export function createThread(actor, target) {
     targetType: target.targetType,
     name,
     serviceWorkerStatus: target.debuggerServiceWorkerStatus,
+    isWebExtension: target.isWebExtension,
   };
 }
 
