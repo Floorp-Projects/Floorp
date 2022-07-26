@@ -1,4 +1,3 @@
-/* eslint-env mozilla/frame-script */
 var MIDITestUtils = {
   permissionSetup: allow => {
     let permPromiseRes;

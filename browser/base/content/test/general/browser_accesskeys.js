@@ -1,5 +1,3 @@
-/* eslint-env mozilla/frame-script */
-
 add_task(async function() {
   await pushPrefs(["ui.key.contentAccess", 5], ["ui.key.chromeAccess", 5]);
 

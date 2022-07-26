@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-env mozilla/frame-script */
-
 const { TabStateFlusher } = ChromeUtils.import(
   "resource:///modules/sessionstore/TabStateFlusher.jsm"
 );
