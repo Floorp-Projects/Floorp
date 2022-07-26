@@ -16,16 +16,16 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * - listen to node picker events from all walkers and relay them to subscribers
  *
  *
- * @param {TargetCommand} targetCommand
- *        The TargetCommand component referencing all the targets to be debugged
+ * @param {Commands} commands
+ *        The commands object with all interfaces defined from devtools/shared/commands/
  * @param {Selection} selection
  *        The global Selection object
  */
 class NodePicker extends EventEmitter {
-  constructor(targetCommand, selection) {
+  constructor(commands, selection) {
     super();
-
-    this.targetCommand = targetCommand;
+    this.commands = commands;
+    this.targetCommand = commands.targetCommand;
 
     // Whether or not the node picker is active.
     this.isPicking = false;
@@ -48,6 +48,31 @@ class NodePicker extends EventEmitter {
       return this.stop({ canceled: true });
     }
     return this.start(doFocus);
+  };
+
+  /**
+   * This DOCUMENT_EVENT resource callback is only used for webextension targets
+   * to workaround the fact that some navigations will not create/destroy any
+   * target (eg when jumping from a background document to a popup document).
+   **/
+  #onDocumentEventResourceAvailable = async resources => {
+    const { DOCUMENT_EVENT } = this.commands.resourceCommand.TYPES;
+
+    for (const resource of resources) {
+      if (
+        resource.resourceType == DOCUMENT_EVENT &&
+        resource.name === "dom-complete" &&
+        resource.targetFront.isTopLevel
+      ) {
+        const inspectorFront = await resource.targetFront.getFront("inspector");
+        // When a webextension target navigates, it will typically be between
+        // documents which are not under the same root (fallback-document,
+        // devtools-panel, popup). Even though we are not switching targets, we
+        // need to restart the node picker.
+        await inspectorFront.walker.cancelPick();
+        await inspectorFront.walker.pick(this.doFocus);
+      }
+    }
   };
 
   /**
@@ -146,6 +171,15 @@ class NodePicker extends EventEmitter {
       onAvailable: this.#onTargetAvailable,
     });
 
+    if (this.targetCommand.descriptorFront.isWebExtension) {
+      await this.commands.resourceCommand.watchResources(
+        [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+        {
+          onAvailable: this.#onDocumentEventResourceAvailable,
+        }
+      );
+    }
+
     this.emit("picker-started");
   };
 
@@ -184,6 +218,15 @@ class NodePicker extends EventEmitter {
 
     this.#currentInspectorFronts.clear();
 
+    if (this.targetCommand.descriptorFront.isWebExtension) {
+      await this.commands.resourceCommand.unwatchResources(
+        [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+        {
+          onAvailable: this.#onDocumentEventResourceAvailable,
+        }
+      );
+    }
+
     this.emit("picker-stopped");
 
     if (canceled) {
@@ -196,6 +239,7 @@ class NodePicker extends EventEmitter {
     // and we want to avoid having an async destroy
     this.stop({ isDestroyCodepath: true });
     this.targetCommand = null;
+    this.commands = null;
   }
 
   /**
