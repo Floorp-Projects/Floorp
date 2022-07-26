@@ -486,7 +486,6 @@ class nsWindow final : public nsBaseWidget {
   void EnableRenderingToWindow();
   void DisableRenderingToWindow();
   void ResumeCompositorHiddenWindow();
-  void PauseCompositorHiddenWindow();
   void WaylandStartVsync();
   void WaylandStopVsync();
   void DestroyChildWindows();
@@ -790,7 +789,6 @@ class nsWindow final : public nsBaseWidget {
   bool IsWidgetOverflowWindow();
   void RemovePopupFromHierarchyList();
   void ShowWaylandWindow();
-  void HideWaylandWindow();
   void HideWaylandPopupWindow(bool aTemporaryHidden, bool aRemoveFromPopupList);
   void HideWaylandToplevelWindow();
   void WaylandPopupHideTooltips();
