@@ -78,7 +78,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   // Whether or not Skia layering over the WebGL context is enabled
   bool mSkiaLayer = false;
   // Whether or not the WebGL context has valid contents and is being drawn to
-  bool mWebglValid = true;
+  bool mWebglValid = false;
   // Whether or not the clip state has changed since last used by SharedContext.
   bool mClipDirty = true;
   // The framebuffer has been modified and should be copied to the swap chain.
