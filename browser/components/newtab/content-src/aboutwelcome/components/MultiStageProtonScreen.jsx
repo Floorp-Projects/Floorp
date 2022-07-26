@@ -268,25 +268,24 @@ export class ProtonScreen extends React.PureComponent {
               </div>
             </div>
             {hideStepsIndicator ? null : (
-              <div
+              <nav
                 className={`steps ${
                   content.progress_bar ? "progress-bar" : ""
                 }`}
-                data-l10n-id={"onboarding-welcome-steps-indicator2"}
+                data-l10n-id={"onboarding-welcome-steps-indicator"}
                 data-l10n-args={JSON.stringify({
                   current: this.props.order,
                   total,
                 })}
-                role="meter"
-                aria-valuenow={this.props.order}
-                aria-valuemin={1}
-                aria-valuemax={total}
               >
+                {/* These empty elements are here to help trigger the nav for screen readers. */}
+                <br />
+                <p />
                 <StepsIndicator
                   order={this.props.stepOrder}
                   totalNumberOfScreens={total}
                 />
-              </div>
+              </nav>
             )}
           </div>
         </div>
