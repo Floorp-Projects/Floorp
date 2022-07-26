@@ -1375,7 +1375,8 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     SendCache(CacheDomain::Actions, CacheUpdateType::Update);
   }
 
-  if (aAttribute == nsGkAtoms::aria_controls) {
+  if (aAttribute == nsGkAtoms::aria_controls ||
+      aAttribute == nsGkAtoms::aria_flowto) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
 
