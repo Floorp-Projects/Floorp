@@ -20,6 +20,16 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
+var { loader } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
+
+loader.lazyImporter(
+  this,
+  "BrowserToolboxLauncher",
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
+);
+
 const FEATURES = {
   paintDumping: "nglayout.debug.paint_dumping",
   invalidateDumping: "nglayout.debug.invalidate_dumping",
@@ -99,6 +109,10 @@ class Debugger {
 
   setPagedMode(v) {
     this._sendMessage("setPagedMode", v);
+  }
+
+  openDevTools() {
+    BrowserToolboxLauncher.init();
   }
 
   async _sendMessage(name, arg) {
