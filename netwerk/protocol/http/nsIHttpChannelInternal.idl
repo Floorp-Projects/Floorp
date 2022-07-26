@@ -442,7 +442,7 @@ interface nsIHttpChannelInternal : nsISupports
     bool hasCrossOriginOpenerPolicyMismatch();
 
     [noscript]
-    nsILoadInfo_CrossOriginEmbedderPolicy getResponseEmbedderPolicy();
+    nsILoadInfo_CrossOriginEmbedderPolicy getResponseEmbedderPolicy(in boolean aIsOriginTrialCoepCredentiallessEnabled);
 
     [noscript, notxpcom, nostdcall]
     void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
