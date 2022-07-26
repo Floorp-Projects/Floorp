@@ -401,7 +401,10 @@ Toolbox.prototype = {
 
   get nodePicker() {
     if (!this._nodePicker) {
-      this._nodePicker = new NodePicker(this.commands, this.selection);
+      this._nodePicker = new NodePicker(
+        this.commands.targetCommand,
+        this.selection
+      );
       this._nodePicker.on("picker-starting", this._onPickerStarting);
       this._nodePicker.on("picker-started", this._onPickerStarted);
       this._nodePicker.on("picker-stopped", this._onPickerStopped);
