@@ -1,5 +1,6 @@
 == filter-grayscale.yaml filter-grayscale-ref.yaml
 platform(linux,mac) == draw_calls(7) color_targets(7) alpha_targets(0) filter-blur.yaml filter-blur.png
+platform(linux,mac) == filter-blur-downscale-fractional.yaml filter-blur-downscale-fractional.png
 == isolated.yaml isolated-ref.yaml
 == invisible.yaml invisible-ref.yaml
 fuzzy-if(platform(swgl),1,10000) == opacity.yaml opacity-ref.yaml

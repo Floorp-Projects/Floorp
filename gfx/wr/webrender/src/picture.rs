@@ -5351,27 +5351,25 @@ impl PicturePrimitive {
                             height_std_deviation,
                         );
 
-                        let mut device_rect = surface_rects.clipped;
-                        let original_size = device_rect.size();
+                        let original_size = surface_rects.clipped.size();
 
                         // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
                         // what would be even better is to rasterize the picture at the down-scaled size
                         // directly.
                         let adjusted_size = BlurTask::adjusted_blur_source_size(
-                            device_rect.size(),
+                            original_size,
                             blur_std_deviation,
                         );
-                        device_rect.set_size(adjusted_size);
 
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
 
                         let picture_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
-                                surface_rects.task_size,
+                                adjusted_size,
                                 RenderTaskKind::new_picture(
-                                    surface_rects.task_size,
+                                    adjusted_size,
                                     surface_rects.needs_scissor_rect,
-                                    device_rect.min,
+                                    surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
                                     device_pixel_scale,
