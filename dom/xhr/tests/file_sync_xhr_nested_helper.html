@@ -13,6 +13,7 @@
         setTimeout(function() {
           input.focus();
           SpecialPowers.loadChromeScript(() => {
+            /* eslint-env mozilla/chrome-script */
             const { EventUtils } = ChromeUtils.import(
               "resource://specialpowers/SpecialPowersEventUtils.jsm"
             );

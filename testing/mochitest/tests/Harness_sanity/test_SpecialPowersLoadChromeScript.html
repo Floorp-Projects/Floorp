@@ -9,8 +9,6 @@
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-/* eslint-env mozilla/frame-script */
-/* global assert */
 
 SimpleTest.waitForExplicitFinish();
 
@@ -38,6 +36,7 @@ function endOfFirstTest() {
   // wantGlobalProperties should add the specified properties to the sandbox
   // that is used to run the chrome script.
   script2 = SpecialPowers.loadChromeScript(_ => {
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("valid-assert", function (message) {
       assert.equal(typeof XMLHttpRequest, "function", "XMLHttpRequest is defined");
       assert.equal(typeof CSS, "undefined", "CSS is not defined");

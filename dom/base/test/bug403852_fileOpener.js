@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 Cu.importGlobalProperties(["File"]);
 
 var testFile = Cc["@mozilla.org/file/directory_service;1"]

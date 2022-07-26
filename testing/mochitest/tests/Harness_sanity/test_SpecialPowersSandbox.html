@@ -97,6 +97,7 @@ add_task(async function() {
     },
     "SpecialPowers.loadChromeScript": async () => {
       let script = SpecialPowers.loadChromeScript(() => {
+        /* eslint-env mozilla/chrome-script */
         this.addMessageListener("ping", () => "pong");
 
         Assert.equal(1, 2, "Thing");

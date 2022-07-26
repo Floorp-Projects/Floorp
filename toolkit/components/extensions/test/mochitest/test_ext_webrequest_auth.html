@@ -12,7 +12,6 @@
 "use strict";
 
 // This file defines content scripts.
-/* eslint-env mozilla/frame-script */
 
 let baseUrl = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/mochitest/authenticate.sjs";
 function testXHR(url) {
@@ -67,6 +66,7 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
   // if the authorization is not handled by the onAuthRequired handler.
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
+    /* eslint-env mozilla/chrome-script */
     let observer = channel => {
       if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test" &&
             channel.URI.spec.includes("authenticate.sjs"))) {
@@ -127,6 +127,7 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
   // if the authorization is not handled by the onAuthRequired handler.
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
+    /* eslint-env mozilla/chrome-script */
     let observer = channel => {
       if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test" &&
             channel.URI.spec.includes("authenticate.sjs"))) {

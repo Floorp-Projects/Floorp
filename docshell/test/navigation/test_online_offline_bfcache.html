@@ -24,9 +24,11 @@
 
     function offlineOnline(online) {
       function offlineFn() {
+        /* eslint-env mozilla/chrome-script */
         Services.io.offline = true;
       }
       function onlineFn() {
+        /* eslint-env mozilla/chrome-script */
         Services.io.offline = false;
       }
       SpecialPowers.loadChromeScript(online ? onlineFn : offlineFn);

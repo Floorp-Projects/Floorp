@@ -15,6 +15,7 @@
 
 var chromeScript;
 chromeScript = SpecialPowers.loadChromeScript(_ => {
+  /* eslint-env mozilla/chrome-script */
   Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
 });
 

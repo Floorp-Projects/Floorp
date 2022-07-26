@@ -566,8 +566,8 @@ async function waitUntilApzStable() {
 
     // Sadly this helper function cannot reuse any code from other places because
     // it must be totally self-contained to be shipped over to the parent process.
-    /* eslint-env mozilla/frame-script */
     function parentProcessFlush() {
+      /* eslint-env mozilla/chrome-script */
       function apzFlush() {
         var topWin = Services.wm.getMostRecentWindow("navigator:browser");
         if (!topWin) {
@@ -697,6 +697,7 @@ function isKeyApzEnabled() {
 // The snapshot is returned in the form of a data URL.
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("snapshot", function(parentRect) {
       var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {

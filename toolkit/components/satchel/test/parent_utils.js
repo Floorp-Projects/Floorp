@@ -1,6 +1,4 @@
-/* eslint-env mozilla/frame-script */
-// assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
-/* global assert */
+/* eslint-env mozilla/chrome-script */
 
 const { FormHistory } = ChromeUtils.import(
   "resource://gre/modules/FormHistory.jsm"

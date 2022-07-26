@@ -17,6 +17,7 @@
   async function testBrowserChildCoalescing() {
     var ret = new Promise(function(resolve) {
       SpecialPowers.loadChromeScript(function() {
+        /* eslint-env mozilla/chrome-script */
         var element = this.actorParent.rootFrameLoader.ownerElement;
         var rect = element.getBoundingClientRect();
         var win = element.ownerDocument.defaultView;

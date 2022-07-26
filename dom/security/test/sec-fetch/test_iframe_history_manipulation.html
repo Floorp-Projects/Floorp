@@ -17,6 +17,7 @@ let testCounter = 0;
 let testFrame;
 
 var script = SpecialPowers.loadChromeScript(() => {
+  /* eslint-env mozilla/chrome-script */
   Services.obs.addObserver(function onExamResp(subject, topic, data) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     info("request observed: " + channel.URI.spec);
@@ -36,7 +37,6 @@ var script = SpecialPowers.loadChromeScript(() => {
 
     ok(!headerPresent, "testing sec-fetch-user header is not set");
 
-    // eslint-disable-next-line no-undef
     sendAsyncMessage("test-pass");
   }, "http-on-stop-request");
 });
