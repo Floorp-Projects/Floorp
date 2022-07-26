@@ -724,7 +724,7 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                                    Info().mVideo.mImage.height);
   perfRecorder.Start();
   RefPtr<ExternalEngineStateMachine> self = this;
-  mReader->RequestVideoData(mCurrentPosition.Ref(), false)
+  mReader->RequestVideoData(GetVideoThreshold(), false)
       ->Then(
           OwnerThread(), __func__,
           [this, self, perfRecorder(std::move(perfRecorder))](
@@ -942,6 +942,14 @@ void ExternalEngineStateMachine::NotifyErrorInternal(
   } else {
     DecodeError(aError);
   }
+}
+
+media::TimeUnit ExternalEngineStateMachine::GetVideoThreshold() {
+  AssertOnTaskQueue();
+  if (auto* state = mState.AsSeekingData()) {
+    return state->GetTargetTime();
+  }
+  return mCurrentPosition.Ref();
 }
 
 #undef FMT
