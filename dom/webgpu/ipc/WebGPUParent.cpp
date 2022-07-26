@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGPUParent.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -206,7 +207,9 @@ static void FreeSurface(RawId id, void* param) {
 }
 
 static ffi::WGPUIdentityRecyclerFactory MakeFactory(void* param) {
-  ffi::WGPUIdentityRecyclerFactory factory = {param};
+  ffi::WGPUIdentityRecyclerFactory factory;
+  PodZero(&factory);
+  factory.param = param;
   factory.free_adapter = FreeAdapter;
   factory.free_device = FreeDevice;
   factory.free_pipeline_layout = FreePipelineLayout;
