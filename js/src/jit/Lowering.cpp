@@ -901,12 +901,13 @@ void LIRGenerator::visitTest(MTest* test) {
       return;
     }
 
-    // Compare and branch Int32, Symbol or Object pointers.
+    // Compare and branch Int32, Symbol, Object, or RefOrNull pointers.
     if (comp->isInt32Comparison() ||
         comp->compareType() == MCompare::Compare_UInt32 ||
         comp->compareType() == MCompare::Compare_UIntPtr ||
         comp->compareType() == MCompare::Compare_Object ||
-        comp->compareType() == MCompare::Compare_Symbol) {
+        comp->compareType() == MCompare::Compare_Symbol ||
+        comp->compareType() == MCompare::Compare_RefOrNull) {
       JSOp op = ReorderComparison(comp->jsop(), &left, &right);
       LAllocation lhs = useRegister(left);
       LAllocation rhs;

@@ -501,12 +501,14 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
   const Assembler::Condition cond = JSOpToCondition(type, comp->jsop());
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
-      type == MCompare::Compare_UIntPtr) {
+      type == MCompare::Compare_UIntPtr ||
+      type == MCompare::Compare_RefOrNull) {
     if (rhs->isConstant()) {
       emitBranch(ToRegister(lhs), Imm32(ToInt32(rhs)), cond, ifTrue, ifFalse);
     } else if (rhs->isGeneralReg()) {
       emitBranch(lhsReg, ToRegister(rhs), cond, ifTrue, ifFalse);
     } else {
+      MOZ_CRASH("NYI");
     }
     return;
   }
