@@ -782,8 +782,9 @@ class nsWindow final : public nsBaseWidget {
   bool WaylandPopupIsPermanent();
   bool IsWidgetOverflowWindow();
   void RemovePopupFromHierarchyList();
-  void ShowWaylandWindow();
+  void ShowWaylandPopupWindow();
   void HideWaylandPopupWindow(bool aTemporaryHidden, bool aRemoveFromPopupList);
+  void ShowWaylandToplevelWindow();
   void HideWaylandToplevelWindow();
   void WaylandPopupHideTooltips();
   void AppendPopupToHierarchyList(nsWindow* aToplevelWindow);

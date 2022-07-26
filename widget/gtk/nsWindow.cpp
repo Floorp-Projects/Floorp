@@ -1118,13 +1118,9 @@ bool nsWindow::WaylandPopupRemoveNegativePosition(int* aX, int* aY) {
   return true;
 }
 
-void nsWindow::ShowWaylandWindow() {
-  LOG("nsWindow::ShowWaylandWindow: [%p]\n", this);
-  if (!IsWaylandPopup()) {
-    LOG("  toplevel, show it now");
-    gtk_widget_show(mShell);
-    return;
-  }
+void nsWindow::ShowWaylandPopupWindow() {
+  LOG("nsWindow::ShowWaylandPopupWindow: [%p]\n", this);
+  MOZ_ASSERT(IsWaylandPopup());
 
   if (!mPopupTrackInHierarchy) {
     LOG("  popup is not tracked in popup hierarchy, show it now");
@@ -1217,6 +1213,13 @@ void nsWindow::HideWaylandToplevelWindow() {
     }
   }
   gtk_widget_hide(mShell);
+  WaylandStopVsync();
+}
+
+void nsWindow::ShowWaylandToplevelWindow() {
+  LOG("nsWindow::ShowWaylandToplevelWindow: [%p]\n", this);
+  gtk_widget_show(mShell);
+  WaylandStartVsync();
 }
 
 void nsWindow::WaylandPopupRemoveClosedPopups() {
@@ -1387,7 +1390,7 @@ void nsWindow::WaylandPopupHierarchyShowTemporaryHidden() {
     if (popup->mPopupTemporaryHidden) {
       popup->mPopupTemporaryHidden = false;
       LOG("  showing temporary hidden popup [%p]", popup);
-      popup->ShowWaylandWindow();
+      popup->ShowWaylandPopupWindow();
     }
     popup = popup->mWaylandPopupNext;
   }
@@ -6225,7 +6228,11 @@ void nsWindow::NativeShow(bool aAction) {
       SetUserTimeAndStartupIDForActivatedWindow(mShell);
     }
     if (GdkIsWaylandDisplay()) {
-      ShowWaylandWindow();
+      if (IsWaylandPopup()) {
+        ShowWaylandPopupWindow();
+      } else {
+        ShowWaylandToplevelWindow();
+      }
     } else {
       LOG("  calling gtk_widget_show(mShell)\n");
       gtk_widget_show(mShell);
