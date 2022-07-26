@@ -57,14 +57,13 @@ static bool SetNodeValueString(const nsString& aString, IXmlNode* node,
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   ComPtr<IXmlNode> inputTextNode;
-  if (NS_WARN_IF(FAILED(inputText.As(&inputTextNode)))) {
-    return false;
-  }
+  hr = inputText.As(&inputTextNode);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
   ComPtr<IXmlNode> appendedChild;
-  if (NS_WARN_IF(
-          FAILED(node->AppendChild(inputTextNode.Get(), &appendedChild)))) {
-    return false;
-  }
+  hr = node->AppendChild(inputTextNode.Get(), &appendedChild);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
   return true;
 }
 
@@ -86,9 +85,7 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
   ComPtr<IXmlElement> action;
   HRESULT hr =
       toastXml->CreateElement(HStringReference(L"action").Get(), &action);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   bool success =
       SetAttribute(action.Get(), HStringReference(L"content"), actionTitle);
@@ -107,9 +104,7 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
   // Add <action> to <actions>
   ComPtr<IXmlNode> actionNode;
   hr = action.As(&actionNode);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   ComPtr<IXmlNode> appendedChild;
   hr = actionsNode->AppendChild(actionNode.Get(), &appendedChild);
@@ -190,6 +185,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     return nullptr;
   }
 
+  nsresult ns;
   HRESULT hr;
   bool success;
 
@@ -197,19 +193,15 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     ComPtr<IXmlNodeList> toastImageElements;
     hr = toastXml->GetElementsByTagName(HStringReference(L"image").Get(),
                                         &toastImageElements);
-    if (NS_WARN_IF(FAILED(hr))) {
-      return nullptr;
-    }
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
     ComPtr<IXmlNode> imageNode;
     hr = toastImageElements->Item(0, &imageNode);
-    if (NS_WARN_IF(FAILED(hr))) {
-      return nullptr;
-    }
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
     ComPtr<IXmlElement> image;
     hr = imageNode.As(&image);
-    if (NS_WARN_IF(FAILED(hr))) {
-      return nullptr;
-    }
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
     success = SetAttribute(image.Get(), HStringReference(L"src"), mImageUri);
     NS_ENSURE_TRUE(success, nullptr);
@@ -218,49 +210,35 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   ComPtr<IXmlNodeList> toastTextElements;
   hr = toastXml->GetElementsByTagName(HStringReference(L"text").Get(),
                                       &toastTextElements);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   ComPtr<IXmlNode> titleTextNodeRoot;
   hr = toastTextElements->Item(0, &titleTextNodeRoot);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
   ComPtr<IXmlNode> msgTextNodeRoot;
   hr = toastTextElements->Item(1, &msgTextNodeRoot);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  if (NS_WARN_IF(!SetNodeValueString(mTitle, titleTextNodeRoot.Get(),
-                                     toastXml.Get()))) {
-    return nullptr;
-  }
-  if (NS_WARN_IF(
-          !SetNodeValueString(mMsg, msgTextNodeRoot.Get(), toastXml.Get()))) {
-    return nullptr;
-  }
+  success = SetNodeValueString(mTitle, titleTextNodeRoot.Get(), toastXml.Get());
+  NS_ENSURE_TRUE(success, nullptr);
+
+  success = SetNodeValueString(mMsg, msgTextNodeRoot.Get(), toastXml.Get());
+  NS_ENSURE_TRUE(success, nullptr);
 
   ComPtr<IXmlNodeList> toastElements;
   hr = toastXml->GetElementsByTagName(HStringReference(L"toast").Get(),
                                       &toastElements);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   ComPtr<IXmlNode> toastNodeRoot;
   hr = toastElements->Item(0, &toastNodeRoot);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   if (mRequireInteraction) {
     ComPtr<IXmlElement> toastNode;
     hr = toastNodeRoot.As(&toastNode);
-    if (NS_WARN_IF(FAILED(hr))) {
-      return nullptr;
-    }
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
     success = SetAttribute(toastNode.Get(), HStringReference(L"scenario"),
                            u"reminder"_ns);
@@ -269,45 +247,34 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
 
   ComPtr<IXmlElement> actions;
   hr = toastXml->CreateElement(HStringReference(L"actions").Get(), &actions);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   ComPtr<IXmlNode> actionsNode;
   hr = actions.As(&actionsNode);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   nsCOMPtr<nsIStringBundleService> sbs =
       do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  if (NS_WARN_IF(!sbs)) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(sbs, nullptr);
 
   nsCOMPtr<nsIStringBundle> bundle;
   sbs->CreateBundle("chrome://alerts/locale/alert.properties",
                     getter_AddRefs(bundle));
-  if (NS_WARN_IF(!bundle)) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(bundle, nullptr);
 
   if (!mHostPort.IsEmpty()) {
     AutoTArray<nsString, 1> formatStrings = {mHostPort};
 
     ComPtr<IXmlNode> urlTextNodeRoot;
     hr = toastTextElements->Item(2, &urlTextNodeRoot);
-    if (NS_WARN_IF(FAILED(hr))) {
-      return nullptr;
-    }
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
     nsAutoString urlReference;
     bundle->FormatStringFromName("source.label", formatStrings, urlReference);
 
-    if (NS_WARN_IF(!SetNodeValueString(urlReference, urlTextNodeRoot.Get(),
-                                       toastXml.Get()))) {
-      return nullptr;
-    }
+    success =
+        SetNodeValueString(urlReference, urlTextNodeRoot.Get(), toastXml.Get());
+    NS_ENSURE_TRUE(success, nullptr);
 
     if (IsWin10AnniversaryUpdateOrLater()) {
       ComPtr<IXmlElement> placementText;
@@ -320,8 +287,9 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     }
 
     nsAutoString disableButtonTitle;
-    bundle->FormatStringFromName("webActions.disableForOrigin.label",
-                                 formatStrings, disableButtonTitle);
+    ns = bundle->FormatStringFromName("webActions.disableForOrigin.label",
+                                      formatStrings, disableButtonTitle);
+    NS_ENSURE_SUCCESS(ns, nullptr);
 
     AddActionNode(toastXml.Get(), actionsNode.Get(), disableButtonTitle,
                   u"snooze"_ns, u"contextmenu"_ns);
@@ -329,29 +297,29 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
 
   nsAutoString settingsButtonTitle;
   bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
-  AddActionNode(toastXml.Get(), actionsNode.Get(), settingsButtonTitle,
-                u"settings"_ns, u"contextmenu"_ns);
+  success =
+      AddActionNode(toastXml.Get(), actionsNode.Get(), settingsButtonTitle,
+                    u"settings"_ns, u"contextmenu"_ns);
+  NS_ENSURE_TRUE(success, nullptr);
 
   for (const auto& action : mActions) {
     // Bug 1778596: include per-action icon from image URL.
     nsString title;
-    if (NS_WARN_IF(NS_FAILED(action->GetTitle(title)))) {
-      return nullptr;
-    }
+    ns = action->GetTitle(title);
+    NS_ENSURE_SUCCESS(ns, nullptr);
 
     nsString actionString;
-    if (NS_WARN_IF(NS_FAILED(action->GetAction(actionString)))) {
-      return nullptr;
-    }
+    ns = action->GetAction(actionString);
+    NS_ENSURE_SUCCESS(ns, nullptr);
 
-    AddActionNode(toastXml.Get(), actionsNode.Get(), title, actionString);
+    success =
+        AddActionNode(toastXml.Get(), actionsNode.Get(), title, actionString);
+    NS_ENSURE_TRUE(success, nullptr);
   }
 
   ComPtr<IXmlNode> appendedChild;
   hr = toastNodeRoot->AppendChild(actionsNode.Get(), &appendedChild);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return toastXml;
 }
@@ -373,9 +341,7 @@ nsresult ToastNotificationHandler::CreateToastXmlString(
 
   ComPtr<IXmlNodeSerializer> ser;
   hr = toastXml.As(&ser);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   HString data;
   hr = ser->GetXml(data.GetAddressOf());
@@ -406,18 +372,16 @@ bool ToastNotificationHandler::ShowAlert() {
 bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
     IXmlDocument* aXml) {
   ComPtr<IToastNotificationFactory> factory;
-  HRESULT hr = GetActivationFactory(
+  HRESULT hr;
+
+  hr = GetActivationFactory(
       HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification)
           .Get(),
       &factory);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = factory->CreateToastNotification(aXml, &mNotification);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   RefPtr<ToastNotificationHandler> self = this;
 
@@ -427,9 +391,7 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
         return self->OnActivate(aNotification, aInspectable);
       }).Get(),
       &mActivatedToken);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = mNotification->add_Dismissed(
       Callback<ToastDismissedHandler>([self](IToastNotification* aNotification,
@@ -437,9 +399,7 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
         return self->OnDismiss(aNotification, aArgs);
       }).Get(),
       &mDismissedToken);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = mNotification->add_Failed(
       Callback<ToastFailedHandler>([self](IToastNotification* aNotification,
@@ -447,15 +407,11 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
         return self->OnFail(aNotification, aArgs);
       }).Get(),
       &mFailedToken);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics =
       GetToastNotificationManagerStatics();
-  if (NS_WARN_IF(!toastNotificationManagerStatics)) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   nsAutoString uid;
   if (NS_WARN_IF(!WinTaskbar::GetAppUserModelID(uid))) {
@@ -466,14 +422,10 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       HStringReference(static_cast<const wchar_t*>(uid.get())).Get();
   hr = toastNotificationManagerStatics->CreateToastNotifierWithId(uidStr,
                                                                   &mNotifier);
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = mNotifier->Show(mNotification.Get());
-  if (NS_WARN_IF(FAILED(hr))) {
-    return false;
-  }
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   if (mAlertListener) {
     mAlertListener->Observe(nullptr, "alertshow", mCookie.get());
@@ -582,14 +534,10 @@ ToastNotificationHandler::OnImageReady(nsISupports*, imgIRequest* aRequest) {
 nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
   nsresult rv =
       NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mImageFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mImageFile->Append(u"notificationimages"_ns);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mImageFile->Create(nsIFile::DIRECTORY_TYPE, 0500);
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) {
@@ -598,9 +546,7 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
 
   nsID uuid;
   rv = nsID::GenerateUUIDInPlace(uuid);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NSID_TrimBracketsASCII uuidStr(uuid);
   uuidStr.AppendLiteral(".bmp");
@@ -608,9 +554,7 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
 
   nsCOMPtr<imgIContainer> imgContainer;
   rv = aRequest->GetImage(getter_AddRefs(imgContainer));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsMainThreadPtrHandle<ToastNotificationHandler> self(
       new nsMainThreadPtrHolder<ToastNotificationHandler>(
@@ -655,15 +599,11 @@ nsresult ToastNotificationHandler::OnWriteBitmapSuccess() {
 
   nsCOMPtr<nsIURI> fileURI;
   rv = NS_NewFileURI(getter_AddRefs(fileURI), mImageFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString uriStr;
   rv = fileURI->GetSpec(uriStr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   AppendUTF8toUTF16(uriStr, mImageUri);
 
