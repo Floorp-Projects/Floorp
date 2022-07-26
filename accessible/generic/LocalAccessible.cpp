@@ -1374,6 +1374,10 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     SendCache(CacheDomain::Actions, CacheUpdateType::Update);
   }
 
+  if (aAttribute == nsGkAtoms::aria_controls) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
+  }
+
   if (aAttribute == nsGkAtoms::alt &&
       !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_label) &&
       !elm->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_labelledby)) {
