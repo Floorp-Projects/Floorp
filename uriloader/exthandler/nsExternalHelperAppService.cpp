@@ -703,7 +703,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
 
   uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
-  SanitizeFileName(fileName, EmptyCString(), 0);
+  SanitizeFileName(fileName, 0);
 
   RefPtr<nsExternalAppHandler> handler =
       new nsExternalAppHandler(nullptr, u""_ns, aContentContext, aWindowContext,
@@ -3283,13 +3283,7 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
 
   // Just sanitize the filename only.
   if (aFlags & VALIDATE_SANITIZE_ONLY) {
-    nsAutoString extension;
-    int32_t dotidx = fileName.RFind(".");
-    if (dotidx != -1) {
-      extension = Substring(fileName, dotidx + 1);
-    }
-
-    SanitizeFileName(fileName, NS_ConvertUTF16toUTF8(extension), aFlags);
+    SanitizeFileName(fileName, aFlags);
   } else {
     nsCOMPtr<nsIMIMEInfo> mimeInfo = ValidateFileNameForSaving(
         fileName, aType, nullptr, nullptr, aFlags, true);
@@ -3397,6 +3391,8 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
     return mimeInfo.forget();
   }
 
+  // This section modifies the extension on the filename if it isn't valid for
+  // the given content type.
   if (mimeInfo) {
     bool isValidExtension;
     if (extension.IsEmpty() ||
@@ -3436,6 +3432,8 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
           }
         }
 
+        // If an suitable extension was found, we will append to or replace the
+        // existing extension.
         if (!extension.IsEmpty()) {
           ModifyExtensionType modify =
               ShouldModifyExtension(mimeInfo, originalExtension);
@@ -3469,7 +3467,6 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
   if (StringEndsWith(fileName, u".lnk"_ns) ||
       StringEndsWith(fileName, u".local"_ns)) {
     fileName.AppendLiteral(".download");
-    extension.AssignLiteral("download");
   }
 
   // If no filename is present, use a default filename.
@@ -3495,19 +3492,18 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
     }
   }
 
-  // Make the filename safe for the filesystem
-  SanitizeFileName(fileName, extension, aFlags);
+  // Make the filename safe for the filesystem.
+  SanitizeFileName(fileName, aFlags);
 
   aFileName = fileName;
   return mimeInfo.forget();
 }
 
 void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
-                                                  const nsACString& aExtension,
                                                   uint32_t aFlags) {
   nsAutoString fileName(aFileName);
 
-  // Replace characters
+  // Replace known invalid characters.
   fileName.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
   fileName.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
   fileName.StripChar(char16_t(0));
@@ -3525,16 +3521,12 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   //  Mac (APFS) stores filenames with a maximum 255 of UTF-8 code units.
   //  Linux (ext3/ext4...) stores filenames with a maximum 255 bytes.
   // So here we just use the maximum of 255 bytes.
-  uint32_t maxBytes = 0;  // 0 means don't truncate at a maximum size.
-  if (!(aFlags & VALIDATE_DONT_TRUNCATE)) {
-    maxBytes = 255 - aExtension.Length() - 1;
-  }
+  // 0 means don't truncate at a maximum size.
+  const uint32_t maxBytes =
+      (aFlags & VALIDATE_DONT_TRUNCATE) ? 0 : kDefaultMaxFileNameLength;
 
   // True if the last character added was whitespace.
   bool lastWasWhitespace = false;
-
-  // True if the filename is too long and must be truncated.
-  bool longFileName = false;
 
   // Length of the filename that fits into the maximum size excluding the
   // extension and period.
@@ -3549,6 +3541,9 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
 
   // The number of bytes that the string would occupy if encoded in UTF-8.
   uint32_t bytesLength = 0;
+
+  // The length of the extension.
+  int32_t extensionBytesLength = 0;
 
   // This algorithm iterates over each character in the string and appends it
   // or a replacement character if needed to outFileName.
@@ -3570,24 +3565,6 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
         unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_PARAGRAPH_SEPARATOR) {
       // Skip over any control characters and separators.
       continue;
-    }
-
-    if (maxBytes) {
-      // UTF16CharEnumerator already converts surrogate pairs, so we can use
-      // a simple computation of byte length here.
-      bytesLength += nextChar < 0x80      ? 1
-                     : nextChar < 0x800   ? 2
-                     : nextChar < 0x10000 ? 3
-                                          : 4;
-      if (bytesLength > maxBytes) {
-        if (longFileNameEnd == -1) {
-          longFileNameEnd = int32_t(outFileName.Length());
-        }
-        if (bytesLength > 255) {
-          longFileName = true;
-          break;
-        }
-      }
     }
 
     if (unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR ||
@@ -3627,43 +3604,79 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
       }
     }
 
+    if (maxBytes) {
+      // UTF16CharEnumerator already converts surrogate pairs, so we can use
+      // a simple computation of byte length here.
+      bytesLength += nextChar < 0x80      ? 1
+                     : nextChar < 0x800   ? 2
+                     : nextChar < 0x10000 ? 3
+                                          : 4;
+      if (bytesLength > maxBytes) {
+        if (longFileNameEnd == -1) {
+          longFileNameEnd = int32_t(outFileName.Length());
+        }
+      }
+
+      // If we encounter a period, it could be the start of an extension, so
+      // start counting the number of bytes in the extension.
+      if (nextChar == u'.') {
+        extensionBytesLength = 1;  // 1 byte for the period.
+      } else if (extensionBytesLength) {
+        extensionBytesLength++;
+      }
+    }
+
     AppendUCS4ToUTF16(nextChar, outFileName);
   }
 
-  // There are two ways in which the filename should be truncated:
-  //   - If the filename was too long, truncate the name at the length
-  //     of the filename minus the space needed for the extension and period.
-  //     This position is indicated by longFileNameEnd.
-  //   - lastNonTrimmable will indicate the last character that was not
-  //     whitespace, a period, or a vowel separator at the end of the
-  //     the string, so the string should be truncated there as well.
-  // If both apply, use the earliest position.
-  if (lastNonTrimmable >= 0) {
-    outFileName.Truncate(longFileName
-                             ? std::min(longFileNameEnd, lastNonTrimmable)
-                             : lastNonTrimmable);
-  }
-
-  // If the filename is too long, truncate it, but preserve the desired
-  // extension.
-  if (!maxBytes && !(aFlags & VALIDATE_DONT_TRUNCATE) &&
-      outFileName.Length() > kDefaultMaxFileNameLength) {
-    // This is extremely unlikely, but if the extension is larger than the
-    // maximum size, just get rid of it.
-    if (aExtension.Length() >= kDefaultMaxFileNameLength) {
-      outFileName.Truncate(kDefaultMaxFileNameLength - 1);
-    } else {
-      outFileName.Truncate(kDefaultMaxFileNameLength - aExtension.Length() - 1);
-      longFileName = true;
-    }
-  }
-
-  if (longFileName && !outFileName.IsEmpty()) {
-    if (outFileName.Last() != '.') {
-      outFileName.AppendLiteral(".");
+  // If the filename is longer than the maximum allowed filename size,
+  // truncate it, but preserve the desired extension that is currently
+  // on the filename.
+  if (bytesLength > maxBytes && !outFileName.IsEmpty()) {
+    // Get the sanitized extension from the filename without the dot.
+    nsAutoCString extension;
+    int32_t dotidx = outFileName.RFind(".");
+    if (dotidx != -1) {
+      extension = NS_ConvertUTF16toUTF8(Substring(outFileName, dotidx + 1));
     }
 
-    outFileName.Append(NS_ConvertUTF8toUTF16(aExtension));
+    // There are two ways in which the filename should be truncated:
+    //   - If the filename was too long, truncate the name at the length
+    //     of the filename.
+    //     This position is indicated by longFileNameEnd.
+    //   - lastNonTrimmable will indicate the last character that was not
+    //     whitespace, a period, or a vowel separator at the end of the
+    //     the string, so the string should be truncated there as well.
+    // If both apply, use the earliest position.
+    if (lastNonTrimmable >= 0) {
+      // Subtract off the amount for the extension and the period.
+      // Note that the extension length is in bytes but longFileNameEnd is in
+      // characters, but if they don't match, it just means we crop off
+      // more than is necessary. This is OK since it is better than cropping
+      // off too little.
+      longFileNameEnd -= extensionBytesLength;
+      if (longFileNameEnd <= 0) {
+        // This is extremely unlikely, but if the extension is larger than the
+        // maximum size, just get rid of it.
+        outFileName.Truncate(maxBytes);
+      } else {
+        outFileName.Truncate(std::min(longFileNameEnd, lastNonTrimmable));
+      }
+
+      // Now that the filename has been truncated, re-append the extension
+      // again.
+      if (!extension.IsEmpty()) {
+        if (outFileName.Last() != '.') {
+          outFileName.AppendLiteral(".");
+        }
+
+        outFileName.Append(NS_ConvertUTF8toUTF16(extension));
+      }
+    }
+  } else if (lastNonTrimmable >= 0) {
+    // Otherwise, the filename wasn't too long, so just trim off the
+    // extra whitespace and periods at the end.
+    outFileName.Truncate(lastNonTrimmable);
   }
 
   aFileName = outFileName;

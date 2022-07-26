@@ -207,8 +207,11 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
       nsAString& aFileName, const nsACString& aMimeType, nsIURI* aURI,
       nsIURI* aOriginalURI, uint32_t aFlags, bool aAllowURLExtension);
 
-  void SanitizeFileName(nsAString& aFileName, const nsACString& aExtension,
-                        uint32_t aFlags);
+  // Ensure that the filename is safe for the file system. This will remove or
+  // replace any invalid characters and trim extra whitespace as needed. If the
+  // filename is too long, it will be truncated but the existing period and
+  // extension, if any, will be preserved.
+  void SanitizeFileName(nsAString& aFileName, uint32_t aFlags);
 
   /**
    * Helper routine that checks how we should modify an extension
