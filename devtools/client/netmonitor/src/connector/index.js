@@ -162,6 +162,7 @@ class Connector {
     this.dataProvider.destroy();
 
     this.toolbox.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
+    this.emitForTests("clear-network-resources");
 
     // Disable the realted network logs in the webconsole
     this.toolbox.disableAllConsoleNetworkLogs();
