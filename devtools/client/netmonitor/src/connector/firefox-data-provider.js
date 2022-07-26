@@ -41,8 +41,14 @@ class FirefoxDataProvider {
     this.actionsEnabled = true;
 
     // Allow requesting of on-demand network data, this would be `false` when requests
-    // are cleared (as we clear also on the backend), and
-    this.requestDataEnabled = true;
+    // are cleared (as we clear also on the backend), and will be flipped back
+    // to true on the next `onNetworkResourceAvailable` call.
+    this._requestDataEnabled = true;
+
+    // `_requestDataEnabled` can only be used to prevent new calls to
+    // requestData. For pending/already started calls, we need to check if
+    // clear() was called during the call, which is the purpose of this counter.
+    this._lastRequestDataClearId = 0;
 
     this.owner = owner;
 
@@ -81,18 +87,25 @@ class FirefoxDataProvider {
     this.onEventReceived = this.onEventReceived.bind(this);
     this.setEventStreamFlag = this.setEventStreamFlag.bind(this);
   }
+
   /*
    * Cleans up all the internal states, this usually done before navigation
-   * (without the persist flag on), or just before the data provider is
-   * nulled out.
+   * (without the persist flag on).
    */
-
-  destroy() {
+  clear() {
     this.stackTraces.clear();
     this.pendingRequests.clear();
     this.lazyRequestData.clear();
     this.stackTraceRequestInfoByActorID.clear();
-    this.requestDataEnabled = false;
+    this._requestDataEnabled = false;
+    this._lastRequestDataClearId++;
+  }
+
+  destroy() {
+    // TODO: clear() is called in the middle of the lifecycle of the
+    // FirefoxDataProvider, for clarity we are exposing it as a separate method.
+    // `destroy` should be updated to nullify relevant instance properties.
+    this.clear();
   }
 
   /**
@@ -384,8 +397,8 @@ class FirefoxDataProvider {
   async onNetworkResourceAvailable(resource) {
     const { actor, stacktraceResourceId, cause } = resource;
 
-    if (!this.requestDataEnabled) {
-      this.requestDataEnabled = true;
+    if (!this._requestDataEnabled) {
+      this._requestDataEnabled = true;
     }
 
     // Check if a stacktrace resource already exists for this network resource.
@@ -517,7 +530,7 @@ class FirefoxDataProvider {
   requestData(actor, method) {
     // if this is `false`, do not try to request data as requests on the backend
     // might no longer exist (usually `false` after requests are cleared).
-    if (!this.requestDataEnabled) {
+    if (!this._requestDataEnabled) {
       return Promise.resolve();
     }
     // Key string used in `lazyRequestData`. We use this Map to prevent requesting
@@ -569,6 +582,9 @@ class FirefoxDataProvider {
    * @return {Promise} return a promise resolved when data is received.
    */
   async _requestData(actor, method) {
+    // Backup the lastRequestDataClearId before doing any async processing.
+    const lastRequestDataClearId = this._lastRequestDataClearId;
+
     // Calculate real name of the client getter.
     const clientMethodName = `get${method
       .charAt(0)
@@ -612,9 +628,20 @@ class FirefoxDataProvider {
         };
         response = await this.commands.client.request(packet);
       } catch (e) {
-        throw new Error(
-          `Error while calling method ${clientMethodName}: ${e.message}`
-        );
+        if (this._lastRequestDataClearId !== lastRequestDataClearId) {
+          // If lastRequestDataClearId was updated, FirefoxDataProvider:clear()
+          // was called and all network event actors have been destroyed.
+          // Swallow errors to avoid unhandled promise rejections in tests.
+          console.warn(
+            `Firefox Data Provider destroyed while requesting data: ${e.message}`
+          );
+          // Return an empty response packet to avoid too many callback errors.
+          response = { from: actor };
+        } else {
+          throw new Error(
+            `Error while calling method ${clientMethodName}: ${e.message}`
+          );
+        }
       }
     }
 
