@@ -611,6 +611,24 @@ this.tabs = class extends ExtensionAPIPersistent {
       return tab;
     }
 
+    function setContentTriggeringPrincipal(url, browser, options) {
+      // For urls that we want to allow an extension to open in a tab, but
+      // that it may not otherwise have access to, we set the triggering
+      // principal to the url that is being opened.  This is used for newtab,
+      // about: and moz-extension: protocols.
+      // We also prevent discarded, or lazy tabs by setting allowInheritPrincipal to false.
+      options.allowInheritPrincipal = false;
+      options.triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(url),
+        {
+          userContextId: options.userContextId,
+          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser)
+            ? 1
+            : 0,
+        }
+      );
+    }
+
     let tabsApi = {
       tabs: {
         onActivated: new EventManager({
@@ -706,9 +724,11 @@ this.tabs = class extends ExtensionAPIPersistent {
             }
           }).then(window => {
             let url;
-            let principal = context.principal;
 
-            let options = {};
+            let options = {
+              allowInheritPrincipal: true,
+              triggeringPrincipal: context.principal,
+            };
             if (createProperties.cookieStoreId) {
               // May throw if validation fails.
               options.userContextId = getUserContextIdForCookieStoreId(
@@ -721,7 +741,10 @@ this.tabs = class extends ExtensionAPIPersistent {
             if (createProperties.url !== null) {
               url = context.uri.resolve(createProperties.url);
 
-              if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+              if (
+                !url.startsWith("moz-extension://") &&
+                !context.checkLoadURL(url, { dontReportErrors: true })
+              ) {
                 return Promise.reject({ message: `Illegal URL: ${url}` });
               }
 
@@ -731,30 +754,10 @@ this.tabs = class extends ExtensionAPIPersistent {
             } else {
               url = window.BROWSER_NEW_TAB_URL;
             }
-            // Only set allowInheritPrincipal on discardable urls as it
-            // will override creating a lazy browser.  Setting triggeringPrincipal
-            // will ensure other cases are handled, but setting it may prevent
-            // creating about and data urls.
             let discardable = url && !url.startsWith("about:");
-            if (!discardable) {
-              // Make sure things like about:blank and data: URIs never inherit,
-              // and instead always get a NullPrincipal.
-              options.allowInheritPrincipal = false;
-              // Falling back to content here as about: requires it, however is safe.
-              principal = Services.scriptSecurityManager.createContentPrincipal(
-                Services.io.newURI(url),
-                {
-                  userContextId: options.userContextId,
-                  privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(
-                    window.gBrowser
-                  )
-                    ? 1
-                    : 0,
-                }
-              );
-            } else {
-              options.allowInheritPrincipal = true;
-              options.triggeringPrincipal = context.principal;
+            // Handle moz-ext separately from the discardable flag to retain prior behavior.
+            if (!discardable || url?.startsWith("moz-extension://")) {
+              setContentTriggeringPrincipal(url, window.gBrowser, options);
             }
 
             tabListener.initTabReady();
@@ -814,7 +817,6 @@ this.tabs = class extends ExtensionAPIPersistent {
               });
             }
 
-            options.triggeringPrincipal = principal;
             let nativeTab = window.gBrowser.addTab(url, options);
 
             if (active) {
@@ -888,16 +890,21 @@ this.tabs = class extends ExtensionAPIPersistent {
           if (updateProperties.url !== null) {
             let url = context.uri.resolve(updateProperties.url);
 
-            if (!context.checkLoadURL(url, { dontReportErrors: true })) {
-              return Promise.reject({ message: `Illegal URL: ${url}` });
-            }
-
             let options = {
               flags: updateProperties.loadReplace
                 ? Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY
                 : Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
               triggeringPrincipal: context.principal,
             };
+
+            if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+              // We allow loading top level tabs for "other" extensions.
+              if (url.startsWith("moz-extension://")) {
+                setContentTriggeringPrincipal(url, tabbrowser, options);
+              } else {
+                return Promise.reject({ message: `Illegal URL: ${url}` });
+              }
+            }
 
             let browser = nativeTab.linkedBrowser;
             if (nativeTab.linkedPanel) {
