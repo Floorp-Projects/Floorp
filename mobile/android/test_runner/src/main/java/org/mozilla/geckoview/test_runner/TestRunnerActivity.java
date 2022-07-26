@@ -75,8 +75,7 @@ public class TestRunnerActivity extends Activity {
 
     public void attach(final GeckoSession session) {
       sessionDisplay = session.acquireDisplay();
-      sessionDisplay.surfaceChanged(
-          new GeckoDisplay.SurfaceInfo.Builder(surface).size(width, height).build());
+      sessionDisplay.surfaceChanged(surface, width, height);
     }
 
     public void release(final GeckoSession session) {
