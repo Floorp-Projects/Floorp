@@ -230,6 +230,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     bool SupportsPattern(const Pattern& aPattern);
 
+    void SetTexFilter(WebGLTextureJS* aTex, bool aFilter);
     void InitTexParameters(WebGLTextureJS* aTex);
 
     bool ReadInto(uint8_t* aDstData, int32_t aDstStride, SurfaceFormat aFormat,
