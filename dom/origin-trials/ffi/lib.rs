@@ -10,6 +10,7 @@ pub enum OriginTrial {
     // NOTE(emilio): 0 is reserved for WebIDL usage.
     TestTrial = 1,
     OffscreenCanvas = 2,
+    CoepCredentialless = 3,
 
     MAX,
 }
@@ -19,6 +20,7 @@ impl OriginTrial {
         Some(match s {
             "TestTrial" => Self::TestTrial,
             "OffscreenCanvas" => Self::OffscreenCanvas,
+            "CoepCredentialless" => Self::CoepCredentialless,
             _ => return None,
         })
     }
