@@ -15,8 +15,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

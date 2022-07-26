@@ -9,16 +9,20 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  L10nCache: "resource:///modules/UrlbarUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
-  UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

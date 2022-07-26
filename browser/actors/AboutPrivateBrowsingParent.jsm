@@ -32,8 +32,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });

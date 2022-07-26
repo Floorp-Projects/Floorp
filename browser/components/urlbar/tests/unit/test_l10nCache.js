@@ -5,8 +5,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  L10nCache: "resource:///modules/UrlbarUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 add_task(async function comprehensive() {

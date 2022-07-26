@@ -16,17 +16,17 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  SkippableTimer: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarMuxer: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProvider: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

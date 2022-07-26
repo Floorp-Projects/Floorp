@@ -14,15 +14,19 @@ const { EventEmitter } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  QUICK_SUGGEST_SOURCE:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
-  TaskQueue: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
 });
 
 const log = console.createInstance({

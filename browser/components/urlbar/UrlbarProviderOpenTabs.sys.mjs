@@ -9,23 +9,17 @@
  * It is also used to register and unregister open tabs.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+import {
+  UrlbarProvider,
+  UrlbarUtils,
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
 const PRIVATE_USER_CONTEXT_ID = -1;

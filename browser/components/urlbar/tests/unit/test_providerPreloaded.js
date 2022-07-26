@@ -9,9 +9,9 @@ const PREF_FEATURE_ENABLED = "browser.urlbar.usepreloadedtopurls.enabled";
 const PREF_FEATURE_EXPIRE_DAYS =
   "browser.urlbar.usepreloadedtopurls.expire_days";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderPreloadedSites:
-    "resource:///modules/UrlbarProviderPreloadedSites.jsm",
+    "resource:///modules/UrlbarProviderPreloadedSites.sys.mjs",
 });
 
 Cu.importGlobalProperties(["fetch"]);

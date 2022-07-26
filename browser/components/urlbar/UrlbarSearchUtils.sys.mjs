@@ -17,9 +17,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";

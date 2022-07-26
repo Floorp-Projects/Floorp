@@ -14,19 +14,22 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProviderInterventions:
+    "resource:///modules/UrlbarProviderInterventions.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
-  UrlbarProviderInterventions:
-    "resource:///modules/UrlbarProviderInterventions.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
-  const { UrlbarTestUtils: module } = ChromeUtils.import(
-    "resource://testing-common/UrlbarTestUtils.jsm"
+  const { UrlbarTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/UrlbarTestUtils.sys.mjs"
   );
   module.init(this);
   return module;

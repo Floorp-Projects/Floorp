@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { UrlbarTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlbarTestUtils.jsm"
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
 );
 
 const keyword = "VeryUniqueKeywordThatDoesNeverMatchAnyTestUrl";

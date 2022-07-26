@@ -11,10 +11,14 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

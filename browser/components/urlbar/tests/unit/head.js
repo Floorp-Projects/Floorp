@@ -13,12 +13,20 @@ var {
   UrlbarProvider,
   UrlbarQueryContext,
   UrlbarUtils,
-} = ChromeUtils.import("resource:///modules/UrlbarUtils.jsm");
+} = ChromeUtils.importESModule("resource:///modules/UrlbarUtils.sys.mjs");
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
+  UrlbarController: "resource:///modules/UrlbarController.sys.mjs",
+  UrlbarInput: "resource:///modules/UrlbarInput.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -26,20 +34,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "resource://testing-common/httpd.js",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
-  UrlbarController: "resource:///modules/UrlbarController.jsm",
-  UrlbarInput: "resource:///modules/UrlbarInput.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.import(
-    "resource://testing-common/QuickSuggestTestUtils.jsm"
+  const { QuickSuggestTestUtils: module } = ChromeUtils.importESModule(
+    "resource://testing-common/QuickSuggestTestUtils.sys.mjs"
   );
   module.init(this);
   return module;

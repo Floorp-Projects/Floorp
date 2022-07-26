@@ -8,11 +8,17 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+import {
+  UrlbarProvider,
+  UrlbarUtils,
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AppUpdater: "resource:///modules/AppUpdater.jsm",
@@ -21,8 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "appUpdater", () => new lazy.AppUpdater());

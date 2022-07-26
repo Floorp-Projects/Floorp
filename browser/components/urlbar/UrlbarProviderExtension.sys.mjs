@@ -9,21 +9,19 @@
  * extensions.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { SkippableTimer, UrlbarProvider, UrlbarUtils } = ChromeUtils.import(
-  "resource:///modules/UrlbarUtils.jsm"
-);
+import {
+  SkippableTimer,
+  UrlbarProvider,
+  UrlbarUtils,
+} from "resource:///modules/UrlbarUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
 });
 
 /**

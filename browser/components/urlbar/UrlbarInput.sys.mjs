@@ -19,6 +19,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
   SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  UrlbarController: "resource:///modules/UrlbarController.sys.mjs",
+  UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.sys.mjs",
+  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -30,16 +40,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
-  UrlbarController: "resource:///modules/UrlbarController.jsm",
-  UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
-  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
-  UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
-  UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

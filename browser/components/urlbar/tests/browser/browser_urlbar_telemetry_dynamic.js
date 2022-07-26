@@ -8,11 +8,11 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
-  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
-  UrlbarView: "resource:///modules/UrlbarView.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 const DYNAMIC_TYPE_NAME = "test";
