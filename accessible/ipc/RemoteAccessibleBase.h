@@ -265,6 +265,15 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
         // DeleteEntry entries.
         mCachedFields = new AccAttributes();
       }
+    }
+
+    // We need to pre-process relations for both ::Initial and ::Update update
+    // types. When handling an ::Update, we need to ensure our pre-processing
+    // happens before `Update` is called but after mCachedFields is
+    // initialized, hence the slightly odd `if` split here.
+    const nsTArray<bool>& updatesNeeded = PreProcessRelations(aFields);
+
+    if (aUpdateType == CacheUpdateType::Update) {
       mCachedFields->Update(aFields);
       if (IsTextLeaf()) {
         Derived* parent = RemoteParent();
@@ -273,6 +282,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
         }
       }
     }
+
+    PostProcessRelations(updatesNeeded);
   }
 
   void UpdateStateCache(uint64_t aState, bool aEnabled) {
@@ -302,6 +313,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                             uint32_t aLength = UINT32_MAX) override;
 
   virtual bool TableIsProbablyForLayout();
+
+  nsTArray<bool> PreProcessRelations(AccAttributes* aFields);
+  void PostProcessRelations(const nsTArray<bool>& aToUpdate);
 
   uint32_t GetCachedTextLength();
   Maybe<const nsTArray<int32_t>&> GetCachedTextLines();

@@ -644,6 +644,78 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
 }
 
 template <class Derived>
+nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
+    AccAttributes* aFields) {
+  nsTArray<bool> updateTracker(ArrayLength(kRelationTypeAtoms));
+  for (auto const& data : kRelationTypeAtoms) {
+    if (data.mValidTag && TagName() != data.mValidTag) {
+      // If the relation we're currently processing only applies to specific
+      // elements, and we are not one of them, do no pre-processing. Also,
+      // note in our updateTracker that we should do no post-processing.
+      updateTracker.AppendElement(false);
+      continue;
+    }
+
+    nsStaticAtom* const relAtom = data.mAtom;
+    auto newRelationTargets =
+        aFields->GetAttribute<nsTArray<uint64_t>>(relAtom);
+    bool shouldAddNewImplicitRels =
+        newRelationTargets && newRelationTargets->Length();
+
+    // Remove existing implicit relations if we need to perform an update, or
+    // if we've recieved a DeleteEntry().
+    if (shouldAddNewImplicitRels ||
+        aFields->GetAttribute<DeleteEntry>(relAtom)) {
+      if (auto maybeOldIDs =
+              mCachedFields->GetAttribute<nsTArray<uint64_t>>(relAtom)) {
+        for (uint64_t id : *maybeOldIDs) {
+          // For each target, fetch its reverse relation map
+          nsTHashMap<nsUint64HashKey, nsTArray<uint64_t>>& reverseRels =
+              Document()->mReverseRelations.LookupOrInsert(id);
+          // Then fetch its reverse relation's ID list
+          nsTArray<uint64_t>& reverseRelIDs = reverseRels.LookupOrInsert(
+              static_cast<uint64_t>(data.mReverseType));
+          //  There might be other reverse relations stored for this acc, so
+          //  remove our ID instead of deleting the array entirely.
+          DebugOnly<bool> removed = reverseRelIDs.RemoveElement(ID());
+          MOZ_ASSERT(removed, "Can't find old reverse relation");
+        }
+      }
+    }
+
+    updateTracker.AppendElement(shouldAddNewImplicitRels);
+  }
+
+  return updateTracker;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::PostProcessRelations(
+    const nsTArray<bool>& aToUpdate) {
+  size_t updateCount = aToUpdate.Length();
+  MOZ_ASSERT(updateCount == ArrayLength(kRelationTypeAtoms),
+             "Did not note update status for every relation type!");
+  for (size_t i = 0; i < updateCount; i++) {
+    if (aToUpdate.ElementAt(i)) {
+      // Since kRelationTypeAtoms was used to generate aToUpdate, we
+      // know the ith entry of aToUpdate corresponds to the relation type in
+      // the ith entry of kRelationTypeAtoms. Fetch the related data here.
+      auto const& data = kRelationTypeAtoms[i];
+
+      const nsTArray<uint64_t>& newIDs =
+          *mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom);
+      for (uint64_t id : newIDs) {
+        nsTHashMap<nsUint64HashKey, nsTArray<uint64_t>>& relations =
+            Document()->mReverseRelations.LookupOrInsert(id);
+        nsTArray<uint64_t>& ids =
+            relations.LookupOrInsert(static_cast<uint64_t>(data.mReverseType));
+        ids.AppendElement(ID());
+      }
+    }
+  }
+}
+
+template <class Derived>
 uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
   MOZ_ASSERT(!HasChildren());
   if (!mCachedFields) {

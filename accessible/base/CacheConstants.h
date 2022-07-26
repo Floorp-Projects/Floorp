@@ -50,22 +50,25 @@ struct RelationData {
   nsStaticAtom* const mAtom;
   nsStaticAtom* const mValidTag;
   RelationType mType;
+  RelationType mReverseType;
 };
 
 /**
- * This array of RelationData lists our relation types and the cache
- * attribute atoms that store their targets. Attributes may describe
- * different kinds of relations, depending on the element they originate on.
- * For example, an <output> element's `for` attribute describes a CONTROLLER_FOR
- * relation, while the `for` attribute of a <label> describes a LABEL_FOR
- * relation.
- * To ensure we process these attributes appropriately, RelationData.mValidTag
- * contains the atom for the tag this attribute/relation type paring is valid
- * on. If the pairing is valid for all tag types, this field is null.
+ * This array of RelationData lists our relation types (explicit and reverse)
+ * and the cache attribute atoms that store their targets. Attributes may
+ * describe different kinds of relations, depending on the element they
+ * originate on. For example, an <output> element's `for` attribute describes a
+ * CONTROLLER_FOR relation, while the `for` attribute of a <label> describes a
+ * LABEL_FOR relation. To ensure we process these attributes appropriately,
+ * RelationData.mValidTag contains the atom for the tag this attribute/relation
+ * type paring is valid on. If the pairing is valid for all tag types, this
+ * field is null.
  */
 static constexpr RelationData kRelationTypeAtoms[] = {
-    {nsGkAtoms::aria_labelledby, nullptr, RelationType::LABELLED_BY},
-    {nsGkAtoms::_for, nsGkAtoms::label, RelationType::LABEL_FOR},
+    {nsGkAtoms::aria_labelledby, nullptr, RelationType::LABELLED_BY,
+     RelationType::LABEL_FOR},
+    {nsGkAtoms::_for, nsGkAtoms::label, RelationType::LABEL_FOR,
+     RelationType::LABELLED_BY},
 };
 
 }  // namespace a11y
