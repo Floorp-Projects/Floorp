@@ -665,12 +665,12 @@
 # Fetch displayport updates early from the message queue.
 - name: apz.pinch_lock.mode
   type: RelaxedAtomicInt32
-  value: 1
+  value: 2
   mirror: always
 
 - name: apz.pinch_lock.scroll_lock_threshold
   type: AtomicFloat
-  value: 1.0f / 32.0f   # 1/32 inches
+  value: 1.0f / 16.0f   # 1/16 inches
   mirror: always
 
 - name: apz.pinch_lock.span_breakout_threshold
@@ -685,7 +685,7 @@
 
 - name: apz.pinch_lock.buffer_max_age
   type: int32_t
-  value: 50   # milliseconds
+  value: 80   # milliseconds
   mirror: once
 
 - name: apz.popups.enabled
