@@ -13,10 +13,9 @@ interface mozIDOMWindow;
  * layout debugging functions to be used from chrome.
  */
 
-[scriptable, uuid(f336d8d3-9721-4ad3-85d0-a7018c0a3383)]
+[builtinclass, scriptable, uuid(f336d8d3-9721-4ad3-85d0-a7018c0a3383)]
 interface nsILayoutDebuggingTools : nsISupports
 {
-
     /*
      * Initialize debugger object to act on a docshell.
      */
@@ -26,8 +25,6 @@ interface nsILayoutDebuggingTools : nsISupports
     void forceRefresh();
 
     /* Toggle various debugging states */
-    void setVisualDebugging(in boolean enabled);
-    void setVisualEventDebugging(in boolean enabled);
     void setReflowCounts(in boolean enabled);
     void setPagedMode(in boolean enabled);
 

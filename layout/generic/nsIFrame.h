@@ -5503,14 +5503,6 @@ class nsIFrame : public nsQueryFrame {
   static void DisplayReflowShutdown();
 
   static mozilla::LazyLogModule sFrameLogModule;
-
-  // Show frame borders when rendering
-  static void ShowFrameBorders(bool aEnable);
-  static bool GetShowFrameBorders();
-
-  // Show frame border of event target
-  static void ShowEventTargetFrameBorder(bool aEnable);
-  static bool GetShowEventTargetFrameBorder();
 #endif
 };
 

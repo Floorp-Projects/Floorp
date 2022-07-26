@@ -15,10 +15,6 @@
 <!ENTITY ldb.ToggleMenu.label "Toggle">
 <!ENTITY ldb.ToggleMenu.accesskey "T">
 
-<!ENTITY ldb.visualDebugging.label "Visual Debugging">
-<!ENTITY ldb.visualDebugging.accesskey "V">
-<!ENTITY ldb.visualEventDebugging.label "Visual Event Debugging">
-<!ENTITY ldb.visualEventDebugging.accesskey "E">
 <!ENTITY ldb.paintDumping.label "Paint Dumping">
 <!ENTITY ldb.paintDumping.accesskey "P">
 <!ENTITY ldb.invalidateDumping.label "Invalidate Dumping">
