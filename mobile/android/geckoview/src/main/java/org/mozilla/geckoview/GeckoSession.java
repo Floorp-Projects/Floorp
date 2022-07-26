@@ -26,9 +26,7 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.PointerIcon;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewStructure;
 import android.view.inputmethod.CursorAnchorInfo;
@@ -2674,7 +2672,7 @@ public class GeckoSession {
 
   /**
    * Acquire the GeckoDisplay instance for providing the session with a drawing Surface. Be sure to
-   * call {@link GeckoDisplay#surfaceChanged(Surface, int, int)} on the acquired display if there is
+   * call {@link GeckoDisplay#surfaceChanged(SurfaceInfo)} on the acquired display if there is
    * already a valid Surface.
    *
    * @return GeckoDisplay instance.
@@ -3707,18 +3705,6 @@ public class GeckoSession {
      *
      * @param session The GeckoSession that initiated the callback.
      * @param url The resource being loaded.
-     */
-    @UiThread
-    @Deprecated
-    @DeprecationSchedule(id = "location-permissions", version = 104)
-    default void onLocationChange(
-        @NonNull final GeckoSession session, @Nullable final String url) {}
-
-    /**
-     * A view has started loading content from the network.
-     *
-     * @param session The GeckoSession that initiated the callback.
-     * @param url The resource being loaded.
      * @param perms The permissions currently associated with this url.
      */
     @UiThread
@@ -3726,7 +3712,7 @@ public class GeckoSession {
         @NonNull GeckoSession session,
         @Nullable String url,
         final @NonNull List<PermissionDelegate.ContentPermission> perms) {
-      session.getNavigationDelegate().onLocationChange(session, url);
+      session.getNavigationDelegate().onLocationChange(session, url, perms);
     }
 
     /**
@@ -6510,19 +6496,6 @@ public class GeckoSession {
   @UiThread
   public @Nullable Autofill.Delegate getAutofillDelegate() {
     return getAutofillSupport().getDelegate();
-  }
-
-  /**
-   * Perform autofill using the specified values.
-   *
-   * @param values Map of autofill IDs to values.
-   * @deprecated Use {@link Autofill.Session#autofill} instead.
-   */
-  @UiThread
-  @Deprecated
-  @DeprecationSchedule(id = "autofill-node", version = 104)
-  public void autofill(final @NonNull SparseArray<CharSequence> values) {
-    getAutofillSession().autofill(values);
   }
 
   /**
