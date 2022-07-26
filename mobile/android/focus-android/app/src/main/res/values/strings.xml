@@ -300,8 +300,6 @@
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string name="preference_security_biometric_summary" moz:removedIn="102" tools:ignore="UnusedResources">Your fingerprint can unlock %1$s if a URL is already opened in the app.
-    Stealth will be turned on.</string>
     <string name="preference_security_biometric_summary2">Unlock using fingerprint if you’ve added Shortcuts or when a website is already open in %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
