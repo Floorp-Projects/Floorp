@@ -143,12 +143,24 @@ WebAccessibleResource::WebAccessibleResource(
     return;
   }
 
-  if (aInit.mMatches.WasPassed()) {
+  if (!aInit.mMatches.IsNull()) {
     MatchPatternOptions options;
     options.mRestrictSchemes = true;
     mMatches = ParseMatches(aGlobal, aInit.mMatches.Value(), options,
                             ErrorBehavior::CreateEmptyPattern, aRv);
   }
+
+  if (!aInit.mExtension_ids.IsNull()) {
+    mExtensionIDs = new AtomSet(aInit.mExtension_ids.Value());
+  }
+}
+
+bool WebAccessibleResource::IsExtensionMatch(const URLInfo& aURI) {
+  if (!mExtensionIDs) {
+    return false;
+  }
+  WebExtensionPolicy* policy = EPS().GetByHost(aURI.Host());
+  return policy && mExtensionIDs->Contains(policy->Id());
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAccessibleResource)
