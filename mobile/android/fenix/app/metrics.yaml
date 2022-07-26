@@ -7508,6 +7508,45 @@ recent_tabs:
     notification_emails:
       - android-probes@mozilla.com
     expires: 107
+  jump_back_in_cfr_shown:
+    type: event
+    description: |
+      Jump back in CFR has been displayed to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26191
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26202
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+  jump_back_in_cfr_dismissed:
+    type: event
+    description: |
+      Jump back in CFR has been dismissed clicking the X button.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26191
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26202
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+  jump_back_in_cfr_cancelled:
+    type: event
+    description: |
+      Jump back in CFR has been cancelled clicking the outside the CFR.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26191
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26202
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
 
 recent_bookmarks:
   shown:

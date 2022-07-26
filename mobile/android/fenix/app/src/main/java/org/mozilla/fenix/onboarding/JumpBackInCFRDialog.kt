@@ -12,6 +12,8 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.databinding.OnboardingJumpBackInCfrBinding
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTabViewHolder
@@ -30,6 +32,8 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
         jumpBackInView?.let {
             val crfDialog = createJumpCRF(anchor = jumpBackInView)
             crfDialog?.let {
+                RecentTabs.jumpBackInCfrShown.record(NoExtras())
+
                 val context = jumpBackInView.context
                 context.settings().shouldShowJumpBackInCFR = false
                 it.show()
@@ -80,10 +84,14 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
         popup.apply {
             setContentView(popupBinding.root)
             setCanceledOnTouchOutside(true)
+            setOnCancelListener {
+                RecentTabs.jumpBackInCfrCancelled.record(NoExtras())
+            }
             // removing title or setting it as an empty string does not prevent a11y services from assigning one
             setTitle(" ")
         }
         popupBinding.closeInfoBanner.setOnClickListener {
+            RecentTabs.jumpBackInCfrDismissed.record(NoExtras())
             popup.dismiss()
         }
 
