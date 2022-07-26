@@ -118,15 +118,18 @@ void GtkCompositorWidget::RemoteLayoutSizeUpdated(
 }
 
 EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
+  EGLNativeWindowType window = nullptr;
   if (mWidget) {
-    return (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
+    window = (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
   }
 #if defined(MOZ_X11)
   if (mXWindow) {
-    return (EGLNativeWindowType)mXWindow;
+    window = (EGLNativeWindowType)mXWindow;
   }
 #endif
-  return nullptr;
+  LOG("GtkCompositorWidget::GetEGLNativeWindow [%p] mWidget %p window %p\n",
+      (void*)mWidget.get(), mWidget.get(), window);
+  return window;
 }
 
 #if defined(MOZ_WAYLAND)
