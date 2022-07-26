@@ -2145,7 +2145,8 @@ bool nsStyleBackground::IsTransparent(const ComputedStyle* aStyle) const {
 StyleTransition::StyleTransition(const StyleTransition& aCopy) = default;
 
 void StyleTransition::SetInitialValues() {
-  mTimingFunction = nsTimingFunction(StyleTimingKeyword::Ease);
+  mTimingFunction =
+      StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease);
   mDuration = 0.0;
   mDelay = 0.0;
   mProperty = eCSSPropertyExtra_all_properties;
@@ -2162,7 +2163,8 @@ bool StyleTransition::operator==(const StyleTransition& aOther) const {
 StyleAnimation::StyleAnimation(const StyleAnimation& aCopy) = default;
 
 void StyleAnimation::SetInitialValues() {
-  mTimingFunction = nsTimingFunction(StyleTimingKeyword::Ease);
+  mTimingFunction =
+      StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease);
   mDuration = 0.0;
   mDelay = 0.0;
   mName = nsGkAtoms::_empty;

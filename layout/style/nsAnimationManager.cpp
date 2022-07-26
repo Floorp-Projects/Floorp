@@ -75,7 +75,8 @@ class MOZ_STACK_CLASS ServoCSSAnimationBuilder final {
   }
 
   bool BuildKeyframes(const Element& aElement, nsPresContext* aPresContext,
-                      nsAtom* aName, const nsTimingFunction& aTimingFunction,
+                      nsAtom* aName,
+                      const StyleComputedTimingFunction& aTimingFunction,
                       nsTArray<Keyframe>& aKeyframes) {
     return aPresContext->StyleSet()->GetKeyframesForName(
         aElement, *mComputedStyle, aName, aTimingFunction, aKeyframes);

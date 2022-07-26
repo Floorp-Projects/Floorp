@@ -1936,21 +1936,6 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   return textDrawResult ? ImgDrawResult::SUCCESS : ImgDrawResult::NOT_READY;
 }
 
-#ifdef DEBUG
-static void PaintDebugImageMap(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                               const nsRect& aDirtyRect, nsPoint aPt) {
-  nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
-  nsRect inner = f->GetContentRectRelativeToSelf() + aPt;
-  gfxPoint devPixelOffset = nsLayoutUtils::PointToGfxPoint(
-      inner.TopLeft(), aFrame->PresContext()->AppUnitsPerDevPixel());
-  AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-  aDrawTarget->SetTransform(
-      aDrawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
-  f->GetImageMap()->Draw(aFrame, *aDrawTarget,
-                         ColorPattern(ToDeviceColor(sRGBColor::OpaqueBlack())));
-}
-#endif
-
 // We want to sync-decode in this case, as otherwise we either need to flash
 // white while waiting to decode the new image, or paint the old image with a
 // different aspect-ratio, which would be bad as it'd be stretched.
@@ -2294,14 +2279,6 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         gIconLoad->RemoveIconObserver(this);
         mDisplayingIcon = false;
       }
-
-#ifdef DEBUG
-      if (GetShowFrameBorders() && GetImageMap()) {
-        aLists.Outlines()->AppendNewToTop<nsDisplayGeneric>(
-            aBuilder, this, PaintDebugImageMap, "DebugImageMap",
-            DisplayItemType::TYPE_DEBUG_IMAGE_MAP);
-      }
-#endif
     }
   }
 

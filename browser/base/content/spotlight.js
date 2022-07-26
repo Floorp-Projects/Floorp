@@ -140,6 +140,7 @@ function renderMultistage(ready) {
   window.AWFinish = () => {
     window.close();
   };
+  window.AWWaitForMigrationClose = receive("WAIT_FOR_MIGRATION_CLOSE");
 
   // Update styling to be compatible with about:welcome.
   addStylesheet(

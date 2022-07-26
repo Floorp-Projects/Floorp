@@ -176,11 +176,7 @@ void ResizeObservation::Unlink(RemoveFromObserver aRemoveFromObserver) {
   nsCOMPtr<Element> target = std::move(mTarget);
   if (observer && target) {
     if (aRemoveFromObserver == RemoveFromObserver::Yes) {
-      IgnoredErrorResult rv;
-      observer->Unobserve(*target, rv);
-      MOZ_DIAGNOSTIC_ASSERT(!rv.Failed(),
-                            "How could we keep the observer and target around "
-                            "without being in the observation map?");
+      observer->Unobserve(*target);
     }
     target->UnbindObject(observer);
   }
@@ -243,10 +239,10 @@ already_AddRefed<ResizeObserver> ResizeObserver::Constructor(
 }
 
 void ResizeObserver::Observe(Element& aTarget,
-                             const ResizeObserverOptions& aOptions,
-                             ErrorResult& aRv) {
+                             const ResizeObserverOptions& aOptions) {
   if (MOZ_UNLIKELY(!mDocument)) {
-    return aRv.Throw(NS_ERROR_FAILURE);
+    MOZ_ASSERT_UNREACHABLE("How did we call observe() after unlink?");
+    return;
   }
 
   // NOTE(emilio): Per spec, this is supposed to happen on construction, but the
@@ -289,7 +285,7 @@ void ResizeObserver::Observe(Element& aTarget,
   mDocument->ScheduleResizeObserversNotification();
 }
 
-void ResizeObserver::Unobserve(Element& aTarget, ErrorResult& aRv) {
+void ResizeObserver::Unobserve(Element& aTarget) {
   RefPtr<ResizeObservation> observation;
   if (!mObservationMap.Remove(&aTarget, getter_AddRefs(observation))) {
     return;

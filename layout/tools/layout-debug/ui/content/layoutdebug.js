@@ -20,6 +20,16 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
+var { loader } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
+
+loader.lazyImporter(
+  this,
+  "BrowserToolboxLauncher",
+  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
+);
+
 const FEATURES = {
   paintDumping: "nglayout.debug.paint_dumping",
   invalidateDumping: "nglayout.debug.invalidate_dumping",
@@ -45,8 +55,6 @@ const COMMANDS = [
 class Debugger {
   constructor() {
     this._flags = new Map();
-    this._visualDebugging = false;
-    this._visualEventDebugging = false;
     this._pagedMode = false;
     this._attached = false;
 
@@ -89,26 +97,6 @@ class Debugger {
     }
   }
 
-  get visualDebugging() {
-    return this._visualDebugging;
-  }
-
-  set visualDebugging(v) {
-    v = !!v;
-    this._visualDebugging = v;
-    this._sendMessage("setVisualDebugging", v);
-  }
-
-  get visualEventDebugging() {
-    return this._visualEventDebugging;
-  }
-
-  set visualEventDebugging(v) {
-    v = !!v;
-    this._visualEventDebugging = v;
-    this._sendMessage("setVisualEventDebugging", v);
-  }
-
   get pagedMode() {
     return this._pagedMode;
   }
@@ -121,6 +109,10 @@ class Debugger {
 
   setPagedMode(v) {
     this._sendMessage("setPagedMode", v);
+  }
+
+  openDevTools() {
+    BrowserToolboxLauncher.init();
   }
 
   async _sendMessage(name, arg) {

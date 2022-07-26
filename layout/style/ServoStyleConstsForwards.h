@@ -45,7 +45,6 @@ class nsPresContext;
 class nsSimpleContentList;
 class imgRequestProxy;
 struct nsCSSValueSharedList;
-struct nsTimingFunction;
 
 class gfxFontFeatureValueSet;
 struct gfxFontFeature;

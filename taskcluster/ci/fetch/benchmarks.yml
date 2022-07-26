@@ -58,3 +58,11 @@ matrix-react-bench:
         url: https://github.com/mozilla/perf-automation/releases/download/matrix-react-bench-v1.1/matrix-react-bench-c51ca3fc73cd.zip
         sha256: eef4503db50ee7e156225124b50b4e2af471ac76467078d17a7cdd24359e3d0c
         size: 57514835
+
+twitch-animation:
+    description: Twitch animation benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/twitch-animation-v1/twitch-animation-61332db58402.zip
+        sha256: d071642d84a00d49ea0a8f2a5a631ce4267f514182d376a48810b9f32e6f076f
+        size: 466119

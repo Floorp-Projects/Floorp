@@ -37,13 +37,13 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/BasicEvents.h"        // for Modifiers, MODIFIER_*
 #include "mozilla/ClearOnShutdown.h"    // for ClearOnShutdown
-#include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
-#include "mozilla/EventForwards.h"           // for nsEventStatus_*
-#include "mozilla/EventStateManager.h"       // for EventStateManager
-#include "mozilla/MouseEvents.h"             // for WidgetWheelEvent
-#include "mozilla/Preferences.h"             // for Preferences
-#include "mozilla/RecursiveMutex.h"          // for RecursiveMutexAutoLock, etc
-#include "mozilla/RefPtr.h"                  // for RefPtr
+#include "mozilla/ServoStyleConsts.h"   // for StyleComputedTimingFunction
+#include "mozilla/EventForwards.h"      // for nsEventStatus_*
+#include "mozilla/EventStateManager.h"  // for EventStateManager
+#include "mozilla/MouseEvents.h"        // for WidgetWheelEvent
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/RecursiveMutex.h"     // for RecursiveMutexAutoLock, etc
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_general.h"
@@ -80,7 +80,6 @@
 #include "nsMathUtils.h"  // for NS_hypot
 #include "nsPoint.h"      // for nsIntPoint
 #include "nsStyleConsts.h"
-#include "nsTimingFunction.h"
 #include "nsTArray.h"        // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"   // for NS_IsMainThread
 #include "nsViewportInfo.h"  // for kViewportMinScale, kViewportMaxScale
@@ -505,12 +504,12 @@ typedef PlatformSpecificStateBase
 /**
  * Computed time function used for sampling frames of a zoom to animation.
  */
-StaticAutoPtr<ComputedTimingFunction> gZoomAnimationFunction;
+StaticAutoPtr<StyleComputedTimingFunction> gZoomAnimationFunction;
 
 /**
  * Computed time function used for curving up velocity when it gets high.
  */
-StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
+StaticAutoPtr<StyleComputedTimingFunction> gVelocityCurveFunction;
 
 /**
  * The estimated duration of a paint for the purposes of calculating a new
@@ -648,8 +647,8 @@ class ZoomAnimation : public AsyncPanZoomAnimation {
 
     // Sample the zoom at the current time point.  The sampled zoom
     // will affect the final computed resolution.
-    float sampledPosition = gZoomAnimationFunction->GetValue(
-        animPosition, StyleEasingBeforeFlag::Unset);
+    float sampledPosition =
+        gZoomAnimationFunction->At(animPosition, /* aBeforeFlag = */ false);
 
     // We scale the scrollOffset linearly with sampledPosition, so the zoom
     // needs to scale inversely to match.
@@ -699,14 +698,15 @@ void AsyncPanZoomController::InitializeGlobalState() {
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  gZoomAnimationFunction =
-      new ComputedTimingFunction(nsTimingFunction(StyleTimingKeyword::Ease));
+  gZoomAnimationFunction = new StyleComputedTimingFunction(
+      StyleComputedTimingFunction::Keyword(StyleTimingKeyword::Ease));
   ClearOnShutdown(&gZoomAnimationFunction);
-  gVelocityCurveFunction = new ComputedTimingFunction(
-      nsTimingFunction(StaticPrefs::apz_fling_curve_function_x1_AtStartup(),
-                       StaticPrefs::apz_fling_curve_function_y1_AtStartup(),
-                       StaticPrefs::apz_fling_curve_function_x2_AtStartup(),
-                       StaticPrefs::apz_fling_curve_function_y2_AtStartup()));
+  gVelocityCurveFunction =
+      new StyleComputedTimingFunction(StyleComputedTimingFunction::CubicBezier(
+          StaticPrefs::apz_fling_curve_function_x1_AtStartup(),
+          StaticPrefs::apz_fling_curve_function_y1_AtStartup(),
+          StaticPrefs::apz_fling_curve_function_x2_AtStartup(),
+          StaticPrefs::apz_fling_curve_function_y2_AtStartup()));
   ClearOnShutdown(&gVelocityCurveFunction);
 
   uint64_t sysmem = PR_GetPhysicalMemorySize();

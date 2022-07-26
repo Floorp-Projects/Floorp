@@ -156,7 +156,11 @@ class Optional_base {
  public:
   Optional_base() = default;
 
+  Optional_base(Optional_base&&) = default;
+  Optional_base& operator=(Optional_base&&) = default;
+
   explicit Optional_base(const T& aValue) { mImpl.emplace(aValue); }
+  explicit Optional_base(T&& aValue) { mImpl.emplace(std::move(aValue)); }
 
   bool operator==(const Optional_base<T, InternalType>& aOther) const {
     return mImpl == aOther.mImpl;
@@ -209,6 +213,7 @@ class Optional : public Optional_base<T, T> {
   MOZ_ALLOW_TEMPORARY Optional() : Optional_base<T, T>() {}
 
   explicit Optional(const T& aValue) : Optional_base<T, T>(aValue) {}
+  Optional(Optional&&) = default;
 };
 
 template <typename T>

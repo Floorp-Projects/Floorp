@@ -640,8 +640,7 @@ double Gecko_GetProgressFromComputedTiming(const ComputedTiming* aTiming) {
 }
 
 double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
-                                  double aProgress,
-                                  StyleEasingBeforeFlag aBeforeFlag) {
+                                  double aProgress, bool aBeforeFlag) {
   MOZ_ASSERT(aSegment->mFromKey < aSegment->mToKey,
              "The segment from key should be less than to key");
 
@@ -651,8 +650,8 @@ double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
                              // denominator using double precision.
                              (double(aSegment->mToKey) - aSegment->mFromKey);
 
-  return ComputedTimingFunction::GetPortion(aSegment->mTimingFunction,
-                                            positionInSegment, aBeforeFlag);
+  return StyleComputedTimingFunction::GetPortion(
+      aSegment->mTimingFunction, positionInSegment, aBeforeFlag);
 }
 
 const RawServoAnimationValue* Gecko_AnimationGetBaseStyle(
@@ -1096,7 +1095,7 @@ enum class KeyframeInsertPosition {
 
 static Keyframe* GetOrCreateKeyframe(
     nsTArray<Keyframe>* aKeyframes, float aOffset,
-    const nsTimingFunction* aTimingFunction,
+    const StyleComputedTimingFunction* aTimingFunction,
     const CompositeOperationOrAuto aComposition,
     KeyframeSearchDirection aSearchDirection,
     KeyframeInsertPosition aInsertPosition) {
@@ -1127,7 +1126,7 @@ static Keyframe* GetOrCreateKeyframe(
   Keyframe* keyframe = aKeyframes->InsertElementAt(
       aInsertPosition == KeyframeInsertPosition::Prepend ? 0 : keyframeIndex);
   keyframe->mOffset.emplace(aOffset);
-  if (!aTimingFunction->IsLinear()) {
+  if (!aTimingFunction->IsLinearKeyword()) {
     keyframe->mTimingFunction.emplace(*aTimingFunction);
   }
   keyframe->mComposite = aComposition;
@@ -1137,7 +1136,7 @@ static Keyframe* GetOrCreateKeyframe(
 
 Keyframe* Gecko_GetOrCreateKeyframeAtStart(
     nsTArray<Keyframe>* aKeyframes, float aOffset,
-    const nsTimingFunction* aTimingFunction,
+    const StyleComputedTimingFunction* aTimingFunction,
     const CompositeOperationOrAuto aComposition) {
   MOZ_ASSERT(aKeyframes->IsEmpty() ||
                  aKeyframes->ElementAt(0).mOffset.value() >= aOffset,
@@ -1150,7 +1149,8 @@ Keyframe* Gecko_GetOrCreateKeyframeAtStart(
 }
 
 Keyframe* Gecko_GetOrCreateInitialKeyframe(
-    nsTArray<Keyframe>* aKeyframes, const nsTimingFunction* aTimingFunction,
+    nsTArray<Keyframe>* aKeyframes,
+    const StyleComputedTimingFunction* aTimingFunction,
     const CompositeOperationOrAuto aComposition) {
   return GetOrCreateKeyframe(aKeyframes, 0., aTimingFunction, aComposition,
                              KeyframeSearchDirection::Forwards,
@@ -1158,7 +1158,8 @@ Keyframe* Gecko_GetOrCreateInitialKeyframe(
 }
 
 Keyframe* Gecko_GetOrCreateFinalKeyframe(
-    nsTArray<Keyframe>* aKeyframes, const nsTimingFunction* aTimingFunction,
+    nsTArray<Keyframe>* aKeyframes,
+    const StyleComputedTimingFunction* aTimingFunction,
     const CompositeOperationOrAuto aComposition) {
   return GetOrCreateKeyframe(aKeyframes, 1., aTimingFunction, aComposition,
                              KeyframeSearchDirection::Backwards,

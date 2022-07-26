@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "UnitConverterSimple.jsm",
-    "UnitConverterTemperature.jsm",
-    "UnitConverterTimezone.jsm",
+    "UnitConverterSimple.sys.mjs",
+    "UnitConverterTemperature.sys.mjs",
+    "UnitConverterTimezone.sys.mjs",
 ]

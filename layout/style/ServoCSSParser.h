@@ -18,7 +18,6 @@
 #include "nsStringFwd.h"
 
 struct nsCSSRect;
-struct nsTimingFunction;
 struct RawServoDeclarationBlock;
 template <class T>
 class RefPtr;
@@ -32,6 +31,12 @@ struct StyleFontStretch;
 struct StyleFontWeight;
 struct StyleFontStyle;
 union StyleComputedFontStyleDescriptor;
+
+template <typename Integer, typename Number, typename LinearStops>
+struct StyleTimingFunction;
+struct StylePiecewiseLinearFunction;
+using StyleComputedTimingFunction =
+    StyleTimingFunction<int32_t, float, StylePiecewiseLinearFunction>;
 
 namespace css {
 class Loader;
@@ -97,7 +102,8 @@ class ServoCSSParser {
    * @param aResult The output timing function. (output)
    * @return Whether the value was successfully parsed.
    */
-  static bool ParseEasing(const nsACString& aValue, nsTimingFunction& aResult);
+  static bool ParseEasing(const nsACString& aValue,
+                          StyleComputedTimingFunction& aResult);
 
   /**
    * Parse a specified transform list into a gfx matrix.
