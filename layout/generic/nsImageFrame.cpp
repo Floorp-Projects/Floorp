@@ -2294,6 +2294,14 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         gIconLoad->RemoveIconObserver(this);
         mDisplayingIcon = false;
       }
+
+#ifdef DEBUG
+      if (GetShowFrameBorders() && GetImageMap()) {
+        aLists.Outlines()->AppendNewToTop<nsDisplayGeneric>(
+            aBuilder, this, PaintDebugImageMap, "DebugImageMap",
+            DisplayItemType::TYPE_DEBUG_IMAGE_MAP);
+      }
+#endif
     }
   }
 
