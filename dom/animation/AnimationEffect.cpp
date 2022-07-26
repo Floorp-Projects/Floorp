@@ -139,14 +139,8 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
       aProgressTimelinePosition ==
       Animation::ProgressTimelinePosition::Boundary;
 
-  StickyTimeDuration beforeActiveBoundary =
-      std::max(std::min(StickyTimeDuration(aTiming.Delay()), result.mEndTime),
-               zeroDuration);
-
-  StickyTimeDuration activeAfterBoundary = std::max(
-      std::min(StickyTimeDuration(aTiming.Delay() + result.mActiveDuration),
-               result.mEndTime),
-      zeroDuration);
+  StickyTimeDuration beforeActiveBoundary = aTiming.CalcBeforeActiveBoundary();
+  StickyTimeDuration activeAfterBoundary = aTiming.CalcActiveAfterBoundary();
 
   if (localTime > activeAfterBoundary ||
       (aPlaybackRate >= 0 && localTime == activeAfterBoundary &&
