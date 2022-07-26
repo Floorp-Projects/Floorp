@@ -100,7 +100,6 @@ struct ModuleEnvironment {
            IsHugeMemoryEnabled(memory->indexType());
   }
   bool simdAvailable() const { return features.simd; }
-  bool simdWormholeEnabled() const { return features.simdWormhole; }
   bool intrinsicsEnabled() const { return features.intrinsics; }
 
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }

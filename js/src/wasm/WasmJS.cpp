@@ -114,12 +114,6 @@ static inline bool IsFuzzingCranelift(JSContext* cx) {
 // These functions read flags and apply fuzzing intercession policies.  Never go
 // directly to the flags in code below, always go via these accessors.
 
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-static inline bool WasmSimdWormholeFlag(JSContext* cx) {
-  return cx->options().wasmSimdWormhole();
-}
-#endif
-
 static inline bool WasmThreadsFlag(JSContext* cx) {
   return cx->realm() &&
          cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
@@ -387,18 +381,6 @@ bool wasm::IsSimdPrivilegedContext(JSContext* cx) {
 
 bool wasm::SimdAvailable(JSContext* cx) {
   return js::jit::JitSupportsWasmSimd();
-}
-
-bool wasm::SimdWormholeAvailable(JSContext* cx) {
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-  // The #ifdef ensures that we only enable the wormhole on hardware that
-  // supports it and if SIMD support is compiled in.
-  return js::jit::JitSupportsWasmSimd() &&
-         (WasmSimdWormholeFlag(cx) || IsSimdPrivilegedContext(cx)) &&
-         (IonAvailable(cx) || BaselineAvailable(cx)) && !CraneliftAvailable(cx);
-#else
-  return false;
-#endif
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
@@ -692,29 +674,7 @@ static bool DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller,
   return true;
 }
 
-// Parse the options bag that is optionally passed to functions that compile
-// wasm.  This is for internal experimentation purposes.  See comments about the
-// SIMD wormhole in WasmConstants.h.
-
-static bool ParseCompileOptions(JSContext* cx, HandleValue maybeOptions,
-                                FeatureOptions* options) {
-  if (SimdWormholeAvailable(cx)) {
-    if (maybeOptions.isObject()) {
-      RootedValue wormholeVal(cx);
-      RootedObject obj(cx, &maybeOptions.toObject());
-      if (!JS_GetProperty(cx, obj, "simdWormhole", &wormholeVal)) {
-        return false;
-      }
-      if (wormholeVal.isBoolean()) {
-        options->simdWormhole = wormholeVal.toBoolean();
-      }
-    }
-  }
-  return true;
-}
-
 static SharedCompileArgs InitCompileArgs(JSContext* cx,
-                                         HandleValue maybeOptions,
                                          const char* introducer) {
   ScriptedCaller scriptedCaller;
   if (!DescribeScriptedCaller(cx, &scriptedCaller, introducer)) {
@@ -722,9 +682,6 @@ static SharedCompileArgs InitCompileArgs(JSContext* cx,
   }
 
   FeatureOptions options;
-  if (!ParseCompileOptions(cx, maybeOptions, &options)) {
-    return nullptr;
-  }
   return CompileArgs::buildAndReport(cx, std::move(scriptedCaller), options);
 }
 
@@ -732,7 +689,7 @@ static SharedCompileArgs InitCompileArgs(JSContext* cx,
 // Testing / Fuzzing support
 
 bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
-                HandleObject importObj, HandleValue maybeOptions,
+                HandleObject importObj,
                 MutableHandle<WasmInstanceObject*> instanceObj) {
   if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly)) {
     return false;
@@ -749,8 +706,7 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
     return false;
   }
 
-  SharedCompileArgs compileArgs =
-      InitCompileArgs(cx, maybeOptions, "wasm_eval");
+  SharedCompileArgs compileArgs = InitCompileArgs(cx, "wasm_eval");
   if (!compileArgs) {
     return false;
   }
@@ -1814,8 +1770,7 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  SharedCompileArgs compileArgs =
-      InitCompileArgs(cx, callArgs.get(1), "WebAssembly.Module");
+  SharedCompileArgs compileArgs = InitCompileArgs(cx, "WebAssembly.Module");
   if (!compileArgs) {
     return false;
   }
@@ -4663,8 +4618,8 @@ struct CompileBufferTask : PromiseHelperTask {
   CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise)
       : PromiseHelperTask(cx, promise), instantiate(false) {}
 
-  bool init(JSContext* cx, HandleValue maybeOptions, const char* introducer) {
-    compileArgs = InitCompileArgs(cx, maybeOptions, introducer);
+  bool init(JSContext* cx, const char* introducer) {
+    compileArgs = InitCompileArgs(cx, introducer);
     if (!compileArgs) {
       return false;
     }
@@ -4746,7 +4701,7 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   auto task = cx->make_unique<CompileBufferTask>(cx, promise);
-  if (!task || !task->init(cx, callArgs.get(1), "WebAssembly.compile")) {
+  if (!task || !task->init(cx, "WebAssembly.compile")) {
     return false;
   }
 
@@ -4814,7 +4769,7 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
-    if (!task || !task->init(cx, callArgs.get(2), "WebAssembly.instantiate")) {
+    if (!task || !task->init(cx, "WebAssembly.instantiate")) {
       return false;
     }
 
@@ -4841,7 +4796,6 @@ static bool WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   FeatureOptions options;
-  ParseCompileOptions(cx, callArgs.get(1), &options);
   UniqueChars error;
   bool validated = Validate(cx, *bytecode, options, &error);
 
@@ -5330,8 +5284,7 @@ static bool ResolveResponse(JSContext* cx, CallArgs callArgs,
   const char* introducer = instantiate ? "WebAssembly.instantiateStreaming"
                                        : "WebAssembly.compileStreaming";
 
-  SharedCompileArgs compileArgs =
-      InitCompileArgs(cx, callArgs.get(instantiate ? 2 : 1), introducer);
+  SharedCompileArgs compileArgs = InitCompileArgs(cx, introducer);
   if (!compileArgs) {
     return false;
   }

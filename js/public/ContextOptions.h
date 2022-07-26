@@ -33,7 +33,6 @@ class JS_PUBLIC_API ContextOptions {
         JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
 #undef WASM_DEFAULT_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
-        wasmSimdWormhole_(false),
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
         disableIon_(false),
@@ -121,10 +120,6 @@ class JS_PUBLIC_API ContextOptions {
   }
   JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
-
-  bool wasmSimdWormhole() const { return wasmSimdWormhole_; }
-  // Defined out-of-line because it depends on a compile-time option
-  ContextOptions& setWasmSimdWormhole(bool flag);
 
   bool throwOnAsmJSValidationFailure() const {
     return throwOnAsmJSValidationFailure_;
@@ -260,7 +255,6 @@ class JS_PUBLIC_API ContextOptions {
 #define WASM_FEATURE(NAME, ...) bool wasm##NAME##_ : 1;
   JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
-  bool wasmSimdWormhole_ : 1;
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;
   bool disableIon_ : 1;

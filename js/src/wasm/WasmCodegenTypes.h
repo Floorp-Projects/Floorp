@@ -47,11 +47,6 @@ using mozilla::EnumeratedArray;
 struct TableDesc;
 struct V128;
 
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-bool IsWormholeTrigger(const V128& shuffleMask);
-jit::SimdConstant WormholeSignature();
-#endif
-
 // ArgTypeVector type.
 //
 // Functions usually receive one ABI argument per WebAssembly argument.  However
