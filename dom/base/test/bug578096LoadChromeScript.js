@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 var file;
 Cu.importGlobalProperties(["File"]);
 

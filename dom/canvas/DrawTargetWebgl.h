@@ -230,6 +230,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     bool SupportsPattern(const Pattern& aPattern);
 
+    void SetTexFilter(WebGLTextureJS* aTex, bool aFilter);
     void InitTexParameters(WebGLTextureJS* aTex);
 
     bool ReadInto(uint8_t* aDstData, int32_t aDstStride, SurfaceFormat aFormat,
@@ -304,6 +305,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   BackendType GetBackendType() const override { return BackendType::WEBGL; }
   IntSize GetSize() const override { return mSize; }
 
+  already_AddRefed<SourceSurface> GetDataSnapshot();
   already_AddRefed<SourceSurface> Snapshot() override;
   already_AddRefed<SourceSurface> GetBackingSurface() override;
   void DetachAllSnapshots() override;

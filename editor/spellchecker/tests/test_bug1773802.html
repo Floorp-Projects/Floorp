@@ -34,9 +34,8 @@ function getMisspelledWords(editor) {
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(start);
 async function start() {
-  /* global actorParent */
-  /* eslint-env mozilla/frame-script */
   let script = SpecialPowers.loadChromeScript(() => {
+    /* eslint-env mozilla/chrome-script */
     // eslint-disable-next-line mozilla/use-services
     let dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)

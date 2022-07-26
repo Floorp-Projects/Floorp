@@ -2,8 +2,6 @@
  * This test checks that focus is adjusted properly when switching tabs.
  */
 
-/* eslint-env mozilla/frame-script */
-
 var testPage1 =
   "<html id='html1'><body id='body1'><button id='button1'>Tab 1</button></body></html>";
 var testPage2 =

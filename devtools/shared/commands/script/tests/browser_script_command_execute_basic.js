@@ -35,6 +35,8 @@ add_task(async () => {
     for (let i = 0; i < ${MAX_AUTOCOMPLETIONS} * 2; i++) {
       window.largeObject2["a" + i] = i;
     }
+
+    var originalExec = RegExp.prototype.exec;
   </script>`);
 
   const commands = await CommandsFactory.forTab(tab);
@@ -48,6 +50,9 @@ add_task(async () => {
   await doEvalLongString(commands);
   await doEvalWithBinding(commands);
   await forceLexicalInit(commands);
+  await doSimpleEagerEval(commands);
+  await doEagerEvalWithSideEffect(commands);
+  await doEagerEvalWithSideEffectMonkeyPatched(commands);
 
   await commands.destroy();
 });
@@ -221,4 +226,119 @@ async function forceLexicalInit(commands) {
       ok(!response2.exception, "unexpected exception");
     }
   }
+}
+
+async function doSimpleEagerEval(commands) {
+  const testData = [
+    {
+      code: "2+2",
+      result: 4,
+    },
+    {
+      code: "(x => x * 2)(3)",
+      result: 6,
+    },
+    {
+      code: "[1, 2, 3].map(x => x * 2).join()",
+      result: "2,4,6",
+    },
+    {
+      code: `"abc".match(/a./)[0]`,
+      result: "ab",
+    },
+  ];
+
+  for (const { code, result } of testData) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(response, {
+      input: code,
+      result,
+    });
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+}
+
+async function doEagerEvalWithSideEffect(commands) {
+  const testData = [
+    // Modify environment.
+    "var a = 10; a;",
+
+    // Directly call a funtion with side effect.
+    "prompt();",
+
+    // Call a funtion with side effect inside a scripted function.
+    "(() => { prompt(); })()",
+
+    // Call a funtion with side effect from self-hosted JS function.
+    "[1, 2, 3].map(prompt)",
+
+    // Call a function with Function.prototype.call.
+    "Function.prototype.call.bind(Function.prototype.call)(prompt);",
+
+    // Call a function with Function.prototype.apply.
+    "Function.prototype.apply.bind(Function.prototype.apply)(prompt);",
+
+    // Indirectly call a function with Function.prototype.apply.
+    "Reflect.apply(prompt, null, []);",
+    "'aaaaaaaa'.replace(/(a)(a)(a)(a)(a)(a)(a)(a)/, prompt)",
+  ];
+
+  for (const code of testData) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(response, {
+      input: code,
+      result: { type: "undefined" },
+    });
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+}
+
+async function doEagerEvalWithSideEffectMonkeyPatched(commands) {
+  // Patch the built-in function without eager evaluation.
+  let response = await commands.scriptCommand.execute(
+    `RegExp.prototype.exec = prompt; "patched"`
+  );
+  checkObject(response, {
+    result: "patched",
+  });
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
+
+  // Test eager evaluation, where the patched built-in is called internally.
+  // This should be aborted.
+  const code = `"abc".match(/a./)[0]`;
+  response = await commands.scriptCommand.execute(code, { eager: true });
+  checkObject(response, {
+    input: code,
+    result: { type: "undefined" },
+  });
+
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
+
+  // Undo the patch without eager evaluation.
+  response = await commands.scriptCommand.execute(
+    `RegExp.prototype.exec = originalExec; "unpatched"`
+  );
+  checkObject(response, {
+    result: "unpatched",
+  });
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
+
+  // Test eager evaluation again, without the patch.
+  // This should be evaluated.
+  response = await commands.scriptCommand.execute(code, { eager: true });
+  checkObject(response, {
+    input: code,
+    result: "ab",
+  });
 }

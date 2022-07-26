@@ -601,15 +601,20 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::WrapSnapshot(
   return handle.forget();
 }
 
+void DrawTargetWebgl::SharedContext::SetTexFilter(WebGLTextureJS* aTex,
+                                                  bool aFilter) {
+  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
+                        aFilter ? LOCAL_GL_LINEAR : LOCAL_GL_NEAREST);
+  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
+                        aFilter ? LOCAL_GL_LINEAR : LOCAL_GL_NEAREST);
+}
+
 void DrawTargetWebgl::SharedContext::InitTexParameters(WebGLTextureJS* aTex) {
   mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
                         LOCAL_GL_CLAMP_TO_EDGE);
   mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
                         LOCAL_GL_CLAMP_TO_EDGE);
-  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
-                        LOCAL_GL_LINEAR);
-  mWebgl->TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
-                        LOCAL_GL_LINEAR);
+  SetTexFilter(aTex, true);
 }
 
 // Copy the contents of the WebGL framebuffer into a WebGL texture.
@@ -645,27 +650,28 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::CopySnapshot() {
   return mSharedContext->CopySnapshot();
 }
 
+// Borrow a snapshot that may be used by another thread for composition. Only
+// Skia snapshots are safe to pass around.
+already_AddRefed<SourceSurface> DrawTargetWebgl::GetDataSnapshot() {
+  if (!mSkiaValid) {
+    ReadIntoSkia();
+  } else if (mSkiaLayer) {
+    FlattenSkia();
+  }
+  return mSkia->Snapshot(mFormat);
+}
+
 already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   // If already using the Skia fallback, then just snapshot that.
   if (mSkiaValid) {
-    if (mSkiaLayer) {
-      FlattenSkia();
-    }
-    return mSkia->Snapshot(mFormat);
+    return GetDataSnapshot();
   }
 
   // There's no valid Skia snapshot, so we need to get one from the WebGL
   // context.
   if (!mSnapshot) {
-    // First just try to create a copy-on-write reference to this target.
-    RefPtr<SourceSurfaceWebgl> snapshot = new SourceSurfaceWebgl;
-    if (snapshot->Init(this)) {
-      mSnapshot = snapshot;
-    } else {
-      // Otherwse, we have to just read back the framebuffer contents. This may
-      // fail if the WebGL context is lost.
-      mSnapshot = ReadSnapshot();
-    }
+    // Create a copy-on-write reference to this target.
+    mSnapshot = new SourceSurfaceWebgl(this);
   }
   return do_AddRef(mSnapshot);
 }
@@ -1321,6 +1327,16 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
   return true;
 }
 
+static inline SamplingFilter GetSamplingFilter(const Pattern& aPattern) {
+  return aPattern.GetType() == PatternType::SURFACE
+             ? static_cast<const SurfacePattern&>(aPattern).mSamplingFilter
+             : SamplingFilter::GOOD;
+}
+
+static inline bool UseNearestFilter(const Pattern& aPattern) {
+  return GetSamplingFilter(aPattern) == SamplingFilter::POINT;
+}
+
 // Common rectangle and pattern drawing function shared by many DrawTarget
 // commands. If aMaskColor is specified, the provided surface pattern will be
 // treated as a mask. If aHandle is specified, then the surface pattern's
@@ -1708,9 +1724,20 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC4, mImageProgramTexBounds, false,
                           {(const uint8_t*)texBounds, sizeof(texBounds)});
 
+      // Ensure we use nearest filtering when no antialiasing is requested.
+      if (UseNearestFilter(surfacePattern)) {
+        SetTexFilter(tex, false);
+      }
+
       // Finally draw the image rectangle.
       mWebgl->DrawArrays(
           aStrokeOptions ? LOCAL_GL_LINE_LOOP : LOCAL_GL_TRIANGLE_FAN, 0, 4);
+
+      // Restore the default linear filter if overridden.
+      if (UseNearestFilter(surfacePattern)) {
+        SetTexFilter(tex, true);
+      }
+
       success = true;
       break;
     }
@@ -2027,6 +2054,8 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
       shadowColor->a *= color->a;
     }
   }
+  SamplingFilter filter =
+      aShadow ? SamplingFilter::GOOD : GetSamplingFilter(aPattern);
   if (handle && handle->IsValid()) {
     // If the entry has a valid texture handle still, use it. However, the
     // entry texture is assumed to be located relative to its previous bounds.
@@ -2037,7 +2066,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
     Point offset =
         (bounds.TopLeft() - entry->GetOrigin()) + entry->GetBounds().TopLeft();
     SurfacePattern pathPattern(nullptr, ExtendMode::CLAMP,
-                               Matrix::Translation(offset));
+                               Matrix::Translation(offset), filter);
     if (DrawRectAccel(Rect(intBounds), pathPattern, aOptions, shadowColor,
                       &handle, false, true, true)) {
       return true;
@@ -2064,6 +2093,9 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
       static const ColorPattern maskPattern(
           DeviceColor(1.0f, 1.0f, 1.0f, 1.0f));
       const Pattern& cachePattern = color ? maskPattern : aPattern;
+      // If the source pattern is a DrawTargetWebgl snapshot, we may shift
+      // targets when drawing the path, so back up the old target.
+      DrawTargetWebgl* oldTarget = mCurrentTarget;
       if (aStrokeOptions) {
         pathDT->Stroke(aPath, cachePattern, *aStrokeOptions, drawOptions);
       } else {
@@ -2084,8 +2116,13 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
       }
       RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();
       if (pathSurface) {
+        // If the target changed, try to restore it.
+        if (mCurrentTarget != oldTarget && !oldTarget->PrepareContext()) {
+          return false;
+        }
         SurfacePattern pathPattern(pathSurface, ExtendMode::CLAMP,
-                                   Matrix::Translation(intBounds.TopLeft()));
+                                   Matrix::Translation(intBounds.TopLeft()),
+                                   filter);
         // Try and upload the rasterized path to a texture. If there is a
         // valid texture handle after this, then link it to the entry.
         // Otherwise, we might have to fall back to software drawing the

@@ -12,11 +12,11 @@ Test that the preallocated process starts up.
 
 <script type="application/javascript">
 "use strict";
-/* eslint-env mozilla/frame-script */
 
 SimpleTest.waitForExplicitFinish();
 
 function expectProcessCreated() {
+  /* eslint-env mozilla/chrome-script */
   return new Promise(resolve => {
     function parentExpectProcessCreated() {
       let topic = "ipc:content-initializing";

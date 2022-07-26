@@ -42,6 +42,7 @@ add_task(async function setup() {
   let cache = imgTools.getImgCacheForDocument(document);
   cache.clearCache(false);
   function clearCache() {
+    /* eslint-env mozilla/chrome-script */
     Services.cache2.clear();
   }
   SpecialPowers.loadChromeScript(clearCache);

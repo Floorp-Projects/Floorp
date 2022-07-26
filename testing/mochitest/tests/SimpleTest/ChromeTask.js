@@ -6,9 +6,9 @@
 
 "use strict";
 
-/* eslint-env mozilla/frame-script */
-
 function ChromeTask_ChromeScript() {
+  /* eslint-env mozilla/chrome-script */
+
   "use strict";
 
   const { Assert: AssertCls } = ChromeUtils.import(

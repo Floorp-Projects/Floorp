@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env mozilla/frame-script */
+
 // - NOTE: This file is duplicated verbatim at:
 //         - talos/pageloader/chrome/Profiler.js
 //         - talos/tests/tart/addon/content/Profiler.js

@@ -28,6 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
   // processes (with Fission), since the default content-process alerts service
   // relays messages to the parent process.
   function mockServicesChromeScript() {
+    /* eslint-env mozilla/chrome-script */
     const MOCK_CID = Components.ID("{dbe37e64-d9a3-402c-8d8a-0826c619f7ad}");
     const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 

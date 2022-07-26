@@ -13,7 +13,7 @@ function InsertionSort(array, from, to, comparefn) {
         item = array[i];
         for (j = i - 1; j >= from; j--) {
             swap = array[j];
-            if (comparefn(swap, item) <= 0)
+            if (callContentFunction(comparefn, undefined, swap, item) <= 0)
                 break;
             array[j + 1] = swap;
         }
@@ -28,7 +28,8 @@ function InsertionSort(array, from, to, comparefn) {
 function Merge(list, out, start, mid, end, comparefn) {
     // Skip lopsided runs to avoid doing useless work.
     // Skip calling the comparator if the sub-list is already sorted.
-    if (mid >= end || comparefn(list[mid], list[mid + 1]) <= 0) {
+    if (mid >= end || callContentFunction(comparefn, undefined,
+                                          list[mid], list[mid + 1]) <= 0) {
         for (var i = start; i <= end; i++) {
             DefineDataProperty(out, i, list[i]);
         }
@@ -41,7 +42,7 @@ function Merge(list, out, start, mid, end, comparefn) {
     while (i <= mid && j <= end) {
         var lvalue = list[i];
         var rvalue = list[j];
-        if (comparefn(lvalue, rvalue) <= 0) {
+        if (callContentFunction(comparefn, undefined, lvalue, rvalue) <= 0) {
             DefineDataProperty(out, k++, lvalue);
             i++;
         } else {
@@ -129,7 +130,8 @@ function MergeSort(array, len, comparefn) {
 function MergeTypedArray(list, out, start, mid, end, comparefn) {
     // Skip lopsided runs to avoid doing useless work.
     // Skip calling the comparator if the sub-list is already sorted.
-    if (mid >= end || comparefn(list[mid], list[mid + 1]) <= 0) {
+    if (mid >= end || callContentFunction(comparefn, undefined,
+                                          list[mid], list[mid + 1]) <= 0) {
         for (var i = start; i <= end; i++) {
             out[i] = list[i];
         }
@@ -142,7 +144,7 @@ function MergeTypedArray(list, out, start, mid, end, comparefn) {
     while (i <= mid && j <= end) {
         var lvalue = list[i];
         var rvalue = list[j];
-        if (comparefn(lvalue, rvalue) <= 0) {
+        if (callContentFunction(comparefn, undefined, lvalue, rvalue) <= 0) {
             out[k++] = lvalue;
             i++;
         } else {

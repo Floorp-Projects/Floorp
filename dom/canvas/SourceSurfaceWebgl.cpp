@@ -9,23 +9,17 @@
 
 namespace mozilla::gfx {
 
-SourceSurfaceWebgl::SourceSurfaceWebgl() = default;
+SourceSurfaceWebgl::SourceSurfaceWebgl(DrawTargetWebgl* aDT)
+    : mFormat(aDT->GetFormat()),
+      mSize(aDT->GetSize()),
+      mDT(aDT),
+      mSharedContext(aDT->mSharedContext) {}
 
 SourceSurfaceWebgl::~SourceSurfaceWebgl() {
   if (mHandle) {
     // Signal that the texture handle is not being used now.
     mHandle->SetSurface(nullptr);
   }
-}
-
-bool SourceSurfaceWebgl::Init(DrawTargetWebgl* aDT) {
-  MOZ_ASSERT(!mDT);
-  MOZ_ASSERT(aDT);
-  mDT = aDT;
-  mSharedContext = aDT->mSharedContext;
-  mSize = aDT->GetSize();
-  mFormat = aDT->GetFormat();
-  return true;
 }
 
 // Read back the contents of the target or texture handle for data use.

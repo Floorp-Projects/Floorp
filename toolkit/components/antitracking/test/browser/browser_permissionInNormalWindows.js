@@ -12,10 +12,9 @@ AntiTracking.runTest(
     try {
       // We load the test script in the parent process to check permissions.
       let chromeScript = SpecialPowers.loadChromeScript(_ => {
-        // eslint-disable-next-line no-undef
+        /* eslint-env mozilla/chrome-script */
         addMessageListener("go", _ => {
           function ok(what, msg) {
-            // eslint-disable-next-line no-undef
             sendAsyncMessage("ok", { what: !!what, msg });
           }
 
@@ -42,7 +41,6 @@ AntiTracking.runTest(
             ok(perm.expireTime > 0, "Permission must have a expiry time");
           }
 
-          // eslint-disable-next-line no-undef
           sendAsyncMessage("done");
         });
       });

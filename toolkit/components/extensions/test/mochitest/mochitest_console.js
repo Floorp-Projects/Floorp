@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-script */
+
 "use strict";
 
 const { addMessageListener, sendAsyncMessage } = this;

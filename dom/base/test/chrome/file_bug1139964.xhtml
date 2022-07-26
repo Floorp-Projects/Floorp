@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
   var msgName = "TEST:Global_has_Promise";
 
   function mmScriptForPromiseTest() {
+    /* eslint-env mozilla/process-script */
     sendAsyncMessage("TEST:Global_has_Promise",
                      {
                        hasPromise: ("Promise" in this),

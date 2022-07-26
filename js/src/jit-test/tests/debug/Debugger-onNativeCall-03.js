@@ -21,4 +21,10 @@ gdbg.executeInGlobal(`
   x.sort((a, b) => {print(a)});
 `);
 
-assertEqArray(rv, ["EnterFrame", "sort", "EnterFrame", "print", "EnterFrame", "print"]);
+assertEqArray(rv, [
+  "EnterFrame", "sort",
+  "comparefn",
+  "EnterFrame", "print",
+  "comparefn",
+  "EnterFrame", "print",
+]);

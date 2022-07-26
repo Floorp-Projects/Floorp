@@ -25,6 +25,7 @@
         // so that we can dispatch key event in the parent to test
         // InputTaskManager properly
         SpecialPowers.loadChromeScript(() => {
+          /* eslint-env mozilla/chrome-script */
           const { EventUtils } = ChromeUtils.import(
             "resource://specialpowers/SpecialPowersEventUtils.jsm"
           );

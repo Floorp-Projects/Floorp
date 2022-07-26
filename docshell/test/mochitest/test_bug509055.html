@@ -81,12 +81,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=509055
         sheTitle = sh.legacySHistory.getEntryAtIndex(sh.index).title;
       } else {
         let chromeScript = SpecialPowers.loadChromeScript(() => {
-          // eslint-disable-next-line no-undef
+          /* eslint-env mozilla/chrome-script */
           addMessageListener("getTitle", browsingContext => {
             // eslint-disable-next-line no-shadow
             let sh = browsingContext.sessionHistory;
             let title = sh.getEntryAtIndex(sh.index).title;
-            // eslint-disable-next-line no-undef
             sendAsyncMessage("title", title);
           });
         });

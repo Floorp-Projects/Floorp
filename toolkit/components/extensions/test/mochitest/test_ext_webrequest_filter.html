@@ -19,6 +19,7 @@ let windowData, testWindow;
 
 add_task(async function setup() {
   let chromeScript = SpecialPowers.loadChromeScript(function() {
+    /* eslint-env mozilla/chrome-script */
     Services.cache2.clear();
   });
   chromeScript.destroy();

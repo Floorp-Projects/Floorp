@@ -4,14 +4,13 @@ const BLOCKED = 1;
 async function cleanupData() {
   await new Promise(resolve => {
     const chromeScript = SpecialPowers.loadChromeScript(_ => {
-      // eslint-disable-next-line no-undef
+      /* eslint-env mozilla/chrome-script */
       addMessageListener("go", __ => {
         Services.clearData.deleteData(
           Services.clearData.CLEAR_COOKIES |
             Services.clearData.CLEAR_ALL_CACHES |
             Services.clearData.CLEAR_DOM_STORAGES,
           ___ => {
-            // eslint-disable-next-line no-undef
             sendAsyncMessage("done");
           }
         );

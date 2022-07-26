@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 function debug(msg) {
   dump("[mmMessageChannelChild]" + msg + "\n");
 }

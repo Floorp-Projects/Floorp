@@ -285,6 +285,7 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
     setKind(JSOp::GetIntrinsic, BaselineICFallbackKind::GetIntrinsic);
 
     setKind(JSOp::Call, BaselineICFallbackKind::Call);
+    setKind(JSOp::CallContent, BaselineICFallbackKind::Call);
     setKind(JSOp::CallIgnoresRv, BaselineICFallbackKind::Call);
     setKind(JSOp::CallIter, BaselineICFallbackKind::Call);
     setKind(JSOp::Eval, BaselineICFallbackKind::Call);
@@ -292,6 +293,7 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
 
     setKind(JSOp::SuperCall, BaselineICFallbackKind::CallConstructing);
     setKind(JSOp::New, BaselineICFallbackKind::CallConstructing);
+    setKind(JSOp::NewContent, BaselineICFallbackKind::CallConstructing);
 
     setKind(JSOp::SpreadCall, BaselineICFallbackKind::SpreadCall);
     setKind(JSOp::SpreadEval, BaselineICFallbackKind::SpreadCall);
@@ -1509,7 +1511,8 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub,
   FallbackICSpew(cx, stub, "Call(%s)", CodeName(op));
 
   MOZ_ASSERT(argc == GET_ARGC(pc));
-  bool constructing = (op == JSOp::New || op == JSOp::SuperCall);
+  bool constructing =
+      (op == JSOp::New || op == JSOp::NewContent || op == JSOp::SuperCall);
   bool ignoresReturnValue = (op == JSOp::CallIgnoresRv);
 
   // Ensure vp array is rooted - we may GC in here.
@@ -1568,9 +1571,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICFallbackStub* stub,
       return false;
     }
   } else {
-    MOZ_ASSERT(op == JSOp::Call || op == JSOp::CallIgnoresRv ||
-               op == JSOp::CallIter || op == JSOp::Eval ||
-               op == JSOp::StrictEval);
+    MOZ_ASSERT(op == JSOp::Call || op == JSOp::CallContent ||
+               op == JSOp::CallIgnoresRv || op == JSOp::CallIter ||
+               op == JSOp::Eval || op == JSOp::StrictEval);
     if (op == JSOp::CallIter && callee.isPrimitive()) {
       MOZ_ASSERT(argc == 0, "thisv must be on top of the stack");
       ReportValueError(cx, JSMSG_NOT_ITERABLE, -1, callArgs.thisv(), nullptr);

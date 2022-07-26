@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // This file spawns content tasks.
-/* eslint-env mozilla/frame-script */
 
 "use strict";
 

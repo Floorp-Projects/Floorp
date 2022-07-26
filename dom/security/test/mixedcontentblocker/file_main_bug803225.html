@@ -98,6 +98,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
   // Test 6: mailto protocol
   let mm = SpecialPowers.loadChromeScript(function launchHandler() {
+    /* eslint-env mozilla/chrome-script */
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
 
@@ -113,6 +114,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     })
 
     var pScript = "data:,new " + function () {
+      /* eslint-env mozilla/process-script */
       var os = Cc["@mozilla.org/observer-service;1"]
         .getService(Ci.nsIObserverService);
       var observer = {

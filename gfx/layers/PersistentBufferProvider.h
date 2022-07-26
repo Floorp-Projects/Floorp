@@ -156,6 +156,8 @@ class PersistentBufferProviderAccelerated
 
   bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
 
+  already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
+
   bool RequiresRefresh() const override;
 
   void OnMemoryPressure() override;

@@ -9,8 +9,6 @@
 <body>
 <script class="testbody" type="text/javascript">
 
-/* eslint-env mozilla/frame-script */
-
 var tests = [
   // All disabled.
   { config: [ false, false ], loadExpected: true },
@@ -98,6 +96,7 @@ async function runTest(test) {
 
 async function runTests() {
   let chromeScript = SpecialPowers.loadChromeScript(_ => {
+    /* eslint-env mozilla/chrome-script */
     const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
     addMessageListener("loadTrackers", __ => {

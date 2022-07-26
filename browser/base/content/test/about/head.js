@@ -1,5 +1,3 @@
-/* eslint-env mozilla/frame-script */
-
 ChromeUtils.defineESModuleGetters(this, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
 });

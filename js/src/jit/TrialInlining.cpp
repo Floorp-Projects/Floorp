@@ -434,9 +434,11 @@ static uint32_t GetMaxCalleeNumActuals(BytecodeLocation loc) {
       return 1;
 
     case JSOp::Call:
+    case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
     case JSOp::New:
+    case JSOp::NewContent:
     case JSOp::SuperCall:
       return loc.getCallArgc();
 
@@ -753,9 +755,11 @@ bool TrialInliner::tryInlining() {
     JSOp op = loc.getOp();
     switch (op) {
       case JSOp::Call:
+      case JSOp::CallContent:
       case JSOp::CallIgnoresRv:
       case JSOp::CallIter:
       case JSOp::New:
+      case JSOp::NewContent:
       case JSOp::SuperCall:
         if (!maybeInlineCall(entry, fallback, loc)) {
           return false;

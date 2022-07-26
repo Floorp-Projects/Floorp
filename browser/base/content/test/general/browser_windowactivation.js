@@ -2,8 +2,6 @@
  * This test checks that window activation state is set properly with multiple tabs.
  */
 
-/* eslint-env mozilla/frame-script */
-
 const testPageChrome =
   getRootDirectory(gTestPath) + "file_window_activation.html";
 const testPageHttp = testPageChrome.replace(

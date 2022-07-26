@@ -9270,7 +9270,9 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
   if (!isFirstStub_) {
     return AttachDecision::NoAction;
   }
-  if (JSOp(*pc_) != JSOp::Call && JSOp(*pc_) != JSOp::CallIgnoresRv) {
+  JSOp op = JSOp(*pc_);
+  if (op != JSOp::Call && op != JSOp::CallContent &&
+      op != JSOp::CallIgnoresRv) {
     return AttachDecision::NoAction;
   }
   if (cx_->realm() != calleeFunc->realm()) {
@@ -9393,7 +9395,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
 
   // Special case functions are only optimized for normal calls.
-  if (op_ != JSOp::Call && op_ != JSOp::New && op_ != JSOp::CallIgnoresRv &&
+  if (op_ != JSOp::Call && op_ != JSOp::CallContent && op_ != JSOp::New &&
+      op_ != JSOp::NewContent && op_ != JSOp::CallIgnoresRv &&
       op_ != JSOp::SpreadCall) {
     return AttachDecision::NoAction;
   }
@@ -10082,10 +10085,12 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   // Some opcodes are not yet supported.
   switch (op_) {
     case JSOp::Call:
+    case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
     case JSOp::SpreadCall:
     case JSOp::New:
+    case JSOp::NewContent:
     case JSOp::SpreadNew:
     case JSOp::SuperCall:
     case JSOp::SpreadSuperCall:
@@ -10119,7 +10124,8 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   // Try inlining Function.prototype.{call,apply}. We don't use the
   // InlinableNative mechanism for this because we want to optimize these more
   // aggressively than other natives.
-  if (op_ == JSOp::Call || op_ == JSOp::CallIgnoresRv) {
+  if (op_ == JSOp::Call || op_ == JSOp::CallContent ||
+      op_ == JSOp::CallIgnoresRv) {
     TRY_ATTACH(tryAttachFunCall(calleeFunc));
     TRY_ATTACH(tryAttachFunApply(calleeFunc));
   }

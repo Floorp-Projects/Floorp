@@ -6617,11 +6617,8 @@ const nsStyleText* nsBlockFrame::StyleTextForLineLayout() {
   return StyleText();
 }
 
-void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
-                               const LogicalSize& aAvailableSize,
-                               nsIFrame* aFloat, LogicalMargin& aFloatMargin,
-                               LogicalMargin& aFloatOffsets,
-                               bool aFloatPushedDown,
+void nsBlockFrame::ReflowFloat(BlockReflowState& aState, ReflowInput& aFloatRI,
+                               nsIFrame* aFloat,
                                nsReflowStatus& aReflowStatus) {
   MOZ_ASSERT(aReflowStatus.IsEmpty(),
              "Caller should pass a fresh reflow status!");
@@ -6630,18 +6627,6 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
 
   WritingMode wm = aState.mReflowInput.GetWritingMode();
 
-  ReflowInput floatRS(aState.mPresContext, aState.mReflowInput, aFloat,
-                      aAvailableSize.ConvertTo(aFloat->GetWritingMode(), wm));
-
-  // Normally the mIsTopOfPage state is copied from the parent reflow
-  // input.  However, when reflowing a float, if we've placed other
-  // floats that force this float *down* or *narrower*, we should unset
-  // the mIsTopOfPage state.
-  if (floatRS.mFlags.mIsTopOfPage &&
-      (aFloatPushedDown || aAvailableSize.ISize(wm) != aState.ContentISize())) {
-    floatRS.mFlags.mIsTopOfPage = false;
-  }
-
   // Setup a block reflow context to reflow the float.
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowInput);
 
@@ -6649,14 +6634,14 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
   do {
     nsCollapsingMargin margin;
     bool mayNeedRetry = false;
-    floatRS.mDiscoveredClearance = nullptr;
+    aFloatRI.mDiscoveredClearance = nullptr;
     // Only first in flow gets a block-start margin.
     if (!aFloat->GetPrevInFlow()) {
-      brc.ComputeCollapsedBStartMargin(floatRS, &margin, clearanceFrame,
+      brc.ComputeCollapsedBStartMargin(aFloatRI, &margin, clearanceFrame,
                                        &mayNeedRetry);
 
       if (mayNeedRetry && !clearanceFrame) {
-        floatRS.mDiscoveredClearance = &clearanceFrame;
+        aFloatRI.mDiscoveredClearance = &clearanceFrame;
         // We don't need to push the float manager state because the the block
         // has its own float manager that will be destroyed and recreated
       }
@@ -6665,7 +6650,7 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
     // When reflowing a float, aSpace argument doesn't matter because we pass
     // nullptr to aLine and we don't call nsBlockReflowContext::PlaceBlock()
     // later.
-    brc.ReflowBlock(LogicalRect(wm), true, margin, 0, nullptr, floatRS,
+    brc.ReflowBlock(LogicalRect(wm), true, margin, 0, nullptr, aFloatRI,
                     aReflowStatus, aState);
   } while (clearanceFrame);
 
@@ -6678,24 +6663,14 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
     }
   }
 
-  if (!aReflowStatus.IsFullyComplete() && ShouldAvoidBreakInside(floatRS)) {
-    aReflowStatus.SetInlineLineBreakBeforeAndReset();
-  } else if (aReflowStatus.IsIncomplete() &&
-             aAvailableSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
-    // An incomplete reflow status means we should split the float
-    // if the height is constrained (bug 145305).
-    aReflowStatus.Reset();
-  }
+  NS_ASSERTION(aReflowStatus.IsFullyComplete() ||
+                   aFloatRI.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
+               "The status can only be incomplete or overflow-incomplete if "
+               "the available block-size is constrained!");
 
   if (aReflowStatus.NextInFlowNeedsReflow()) {
     aState.mReflowStatus.SetNextInFlowNeedsReflow();
   }
-
-  // Capture the margin and offsets information for the caller
-  aFloatMargin =
-      // float margins don't collapse
-      floatRS.ComputedLogicalMargin(wm);
-  aFloatOffsets = floatRS.ComputedLogicalOffsets(wm);
 
   const ReflowOutput& metrics = brc.GetMetrics();
 
@@ -6712,9 +6687,7 @@ void nsBlockFrame::ReflowFloat(BlockReflowState& aState,
         aState.mPresContext, aFloat, aFloat->GetView(), metrics.InkOverflow(),
         ReflowChildFlags::NoMoveView);
   }
-  // Pass floatRS so the frame hierarchy can be used (redoFloatRS has the same
-  // hierarchy)
-  aFloat->DidReflow(aState.mPresContext, &floatRS);
+  aFloat->DidReflow(aState.mPresContext, &aFloatRI);
 }
 
 StyleClear nsBlockFrame::FindTrailingClear() {
