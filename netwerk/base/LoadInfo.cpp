@@ -513,11 +513,6 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
   RefPtr<WindowContext> ctx = WindowContext::GetById(mInnerWindowID);
   if (ctx) {
     mLoadingEmbedderPolicy = ctx->GetEmbedderPolicy();
-
-    if (Document* document = ctx->GetDocument()) {
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel =
-          document->Trials().IsEnabled(OriginTrial::CoepCredentialless);
-    }
   }
 }
 
@@ -606,8 +601,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mIsMediaInitialRequest(rhs.mIsMediaInitialRequest),
       mIsFromObjectOrEmbed(rhs.mIsFromObjectOrEmbed),
       mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy),
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-          rhs.mIsOriginTrialCoepCredentiallessEnabledForTopLevel),
       mUnstrippedURI(rhs.mUnstrippedURI) {}
 
 LoadInfo::LoadInfo(
@@ -647,7 +640,6 @@ LoadInfo::LoadInfo(
     nsILoadInfo::StoragePermissionState aStoragePermission, bool aIsMetaRefresh,
     uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
-    bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
     nsIURI* aUnstrippedURI)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
@@ -715,8 +707,6 @@ LoadInfo::LoadInfo(
       mIsMetaRefresh(aIsMetaRefresh),
 
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy),
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-          aIsOriginTrialCoepCredentiallessEnabledForTopLevel),
       mUnstrippedURI(aUnstrippedURI) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
@@ -2111,22 +2101,6 @@ NS_IMETHODIMP
 LoadInfo::SetLoadingEmbedderPolicy(
     nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
   mLoadingEmbedderPolicy = aPolicy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-    bool* aIsOriginTrialCoepCredentiallessEnabledForTopLevel) {
-  *aIsOriginTrialCoepCredentiallessEnabledForTopLevel =
-      mIsOriginTrialCoepCredentiallessEnabledForTopLevel;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetIsOriginTrialCoepCredentiallessEnabledForTopLevel(
-    bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel) {
-  mIsOriginTrialCoepCredentiallessEnabledForTopLevel =
-      aIsOriginTrialCoepCredentiallessEnabledForTopLevel;
   return NS_OK;
 }
 

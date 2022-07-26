@@ -212,8 +212,6 @@ static int32_t PrefState(OriginTrial aTrial) {
       return StaticPrefs::dom_origin_trials_test_trial_state();
     case OriginTrial::OffscreenCanvas:
       return StaticPrefs::dom_origin_trials_offscreen_canvas_state();
-    case OriginTrial::CoepCredentialless:
-      return StaticPrefs::dom_origin_trials_coep_credentialless_state();
     case OriginTrial::MAX:
       MOZ_ASSERT_UNREACHABLE("Unknown trial!");
       break;
@@ -221,7 +219,13 @@ static int32_t PrefState(OriginTrial aTrial) {
   return 0;
 }
 
-bool OriginTrials::IsEnabled(OriginTrial aTrial) const {
+bool OriginTrials::IsEnabled(JSContext* aCx, JSObject* aObject,
+                             OriginTrial aTrial) {
+  if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
+    return true;
+  }
+  LOG("OriginTrials::IsEnabled(%d)\n", int(aTrial));
+
   switch (PrefState(aTrial)) {
     case 1:
       return true;
@@ -231,15 +235,6 @@ bool OriginTrials::IsEnabled(OriginTrial aTrial) const {
       break;
   }
 
-  return mEnabledTrials.contains(aTrial);
-}
-
-bool OriginTrials::IsEnabled(JSContext* aCx, JSObject* aObject,
-                             OriginTrial aTrial) {
-  if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
-    return true;
-  }
-  LOG("OriginTrials::IsEnabled(%d)\n", int(aTrial));
   nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
   MOZ_ASSERT(global);
   return global && global->Trials().IsEnabled(aTrial);

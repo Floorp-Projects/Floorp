@@ -330,7 +330,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
       nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) override;
   NS_IMETHOD HasCrossOriginOpenerPolicyMismatch(bool* aIsMismatch) override;
   NS_IMETHOD GetResponseEmbedderPolicy(
-      bool aIsOriginTrialCoepCredentiallessEnabled,
       nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) override;
 
   inline void CleanRedirectCacheChainIfNecessary() {

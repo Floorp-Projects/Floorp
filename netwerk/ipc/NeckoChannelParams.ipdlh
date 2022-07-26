@@ -166,7 +166,6 @@ struct LoadInfoArgs
   StoragePermissionState      storagePermission;
   bool                        isMetaRefresh;
   CrossOriginEmbedderPolicy   loadingEmbedderPolicy;
-  bool                        originTrialCoepCredentiallessEnabledForTopLevel;
   nsIURI                      unstrippedURI;
 };
 
