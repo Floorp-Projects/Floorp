@@ -9,6 +9,7 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
 );
 
 const TEST_PAGE = TEST_ROOT + "test-page.html";
+const SHORT_TEST_PAGE = TEST_ROOT + "short-test-page.html";
 
 const gScreenshotUISelectors = {
   panelButtons: "#screenshotsPagePanel",
