@@ -127,8 +127,8 @@ EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
     window = (EGLNativeWindowType)mXWindow;
   }
 #endif
-  LOG("GtkCompositorWidget::GetEGLNativeWindow [%p] mWidget %p window %p\n",
-      (void*)mWidget.get(), mWidget.get(), window);
+  LOG("GtkCompositorWidget::GetEGLNativeWindow [%p] window %p\n", mWidget.get(),
+      window);
   return window;
 }
 
@@ -212,7 +212,7 @@ bool GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
 
 void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
                                           const bool aShaped) {
-  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", (void*)mWidget.get());
+  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", mWidget.get());
 
   if (!mIsRenderingSuspended) {
     LOG("  quit, mIsRenderingSuspended = false\n");
