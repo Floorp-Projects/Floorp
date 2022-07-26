@@ -51,3 +51,6 @@ skip-if(useDrawSnapshot) include downscaling/reftest.list
 
 # Lossless encoders
 include encoders-lossless/reftest.list
+
+# webp tests
+include webp/reftest.list
