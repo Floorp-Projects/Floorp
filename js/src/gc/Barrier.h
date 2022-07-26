@@ -374,22 +374,19 @@ struct InternalBarrierMethods<Value> {
 
     // If the target needs an entry, add it.
     js::gc::StoreBuffer* sb;
-    if (next.isNurseryAllocatableGCThing() &&
-        (sb = next.toGCThing()->storeBuffer())) {
+    if (next.isGCThing() && (sb = next.toGCThing()->storeBuffer())) {
       // If we know that the prev has already inserted an entry, we can
       // skip doing the lookup to add the new entry. Note that we cannot
       // safely assert the presence of the entry because it may have been
       // added via a different store buffer.
-      if (prev.isNurseryAllocatableGCThing() &&
-          prev.toGCThing()->storeBuffer()) {
+      if (prev.isGCThing() && prev.toGCThing()->storeBuffer()) {
         return;
       }
       sb->putValue(vp);
       return;
     }
     // Remove the prev entry if the new value does not need it.
-    if (prev.isNurseryAllocatableGCThing() &&
-        (sb = prev.toGCThing()->storeBuffer())) {
+    if (prev.isGCThing() && (sb = prev.toGCThing()->storeBuffer())) {
       sb->unputValue(vp);
     }
   }
@@ -999,7 +996,7 @@ class HeapSlot : public WriteBarriered<Value> {
 #ifdef DEBUG
     assertPreconditionForPostWriteBarrier(owner, kind, slot, target);
 #endif
-    if (this->value.isNurseryAllocatableGCThing()) {
+    if (this->value.isGCThing()) {
       gc::Cell* cell = this->value.toGCThing();
       if (cell->storeBuffer()) {
         cell->storeBuffer()->putSlot(owner, kind, slot, 1);
