@@ -234,37 +234,11 @@ ComputedStyle* nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(
   return *aProviderFrame ? (*aProviderFrame)->Style() : nullptr;
 }
 
-#ifdef DEBUG
-static void PaintDebugPlaceholder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
-                                  const nsRect& aDirtyRect, nsPoint aPt) {
-  ColorPattern cyan(ToDeviceColor(sRGBColor(0.f, 1.f, 1.f, 1.f)));
-  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-
-  nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);
-  nsRect r(aPt.x + x, aPt.y, nsPresContext::CSSPixelsToAppUnits(13),
-           nsPresContext::CSSPixelsToAppUnits(3));
-  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
-
-  nscoord y = nsPresContext::CSSPixelsToAppUnits(-10);
-  r = nsRect(aPt.x, aPt.y + y, nsPresContext::CSSPixelsToAppUnits(3),
-             nsPresContext::CSSPixelsToAppUnits(10));
-  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
-}
-#endif  // DEBUG
-
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
 
 void nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame");
-
-#  ifdef DEBUG
-  if (GetShowFrameBorders()) {
-    aLists.Outlines()->AppendNewToTop<nsDisplayGeneric>(
-        aBuilder, this, PaintDebugPlaceholder, "DebugPlaceholder",
-        DisplayItemType::TYPE_DEBUG_PLACEHOLDER);
-  }
-#  endif
 }
 #endif  // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 
