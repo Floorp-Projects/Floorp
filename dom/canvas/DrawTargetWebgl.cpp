@@ -650,27 +650,28 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::CopySnapshot() {
   return mSharedContext->CopySnapshot();
 }
 
+// Borrow a snapshot that may be used by another thread for composition. Only
+// Skia snapshots are safe to pass around.
+already_AddRefed<SourceSurface> DrawTargetWebgl::GetDataSnapshot() {
+  if (!mSkiaValid) {
+    ReadIntoSkia();
+  } else if (mSkiaLayer) {
+    FlattenSkia();
+  }
+  return mSkia->Snapshot(mFormat);
+}
+
 already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   // If already using the Skia fallback, then just snapshot that.
   if (mSkiaValid) {
-    if (mSkiaLayer) {
-      FlattenSkia();
-    }
-    return mSkia->Snapshot(mFormat);
+    return GetDataSnapshot();
   }
 
   // There's no valid Skia snapshot, so we need to get one from the WebGL
   // context.
   if (!mSnapshot) {
-    // First just try to create a copy-on-write reference to this target.
-    RefPtr<SourceSurfaceWebgl> snapshot = new SourceSurfaceWebgl;
-    if (snapshot->Init(this)) {
-      mSnapshot = snapshot;
-    } else {
-      // Otherwse, we have to just read back the framebuffer contents. This may
-      // fail if the WebGL context is lost.
-      mSnapshot = ReadSnapshot();
-    }
+    // Create a copy-on-write reference to this target.
+    mSnapshot = new SourceSurfaceWebgl(this);
   }
   return do_AddRef(mSnapshot);
 }
