@@ -33,7 +33,7 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
     sandbox.restore();
   });
 
-  await onButtonClick(browser, "button.secondary");
+  await onButtonClick(browser, ".action-buttons button.secondary");
 
   const { callCount } = messageStub;
   ok(callCount >= 1, `${callCount} Stub was called`);
