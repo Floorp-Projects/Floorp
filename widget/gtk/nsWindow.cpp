@@ -1102,12 +1102,6 @@ void nsWindow::RemovePopupFromHierarchyList() {
   mWaylandPopupNext = mWaylandPopupPrev = nullptr;
 }
 
-void nsWindow::HideWaylandWindow() {
-  LOG("nsWindow::HideWaylandWindow: [%p]\n", this);
-  PauseCompositorHiddenWindow();
-  gtk_widget_hide(mShell);
-}
-
 // Gtk refuses to map popup window with x < 0 && y < 0 relative coordinates
 // see https://gitlab.gnome.org/GNOME/gtk/-/issues/4071
 // as a workaround just fool around and place the popup temporary to 0,0.
@@ -1209,7 +1203,7 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
 
   // Hide only visible popups or popups closed pernamently.
   if (visible) {
-    HideWaylandWindow();
+    gtk_widget_hide(mShell);
 
     // If there's pending Move-To-Rect callback and we hide the popup
     // the callback won't be called any more.
@@ -1238,7 +1232,7 @@ void nsWindow::HideWaylandToplevelWindow() {
       popup = prev;
     }
   }
-  HideWaylandWindow();
+  gtk_widget_hide(mShell);
 }
 
 void nsWindow::WaylandPopupRemoveClosedPopups() {
@@ -5322,7 +5316,6 @@ void nsWindow::EnableRenderingToWindow() {
 void nsWindow::DisableRenderingToWindow() {
   LOG("nsWindow::DisableRenderingToWindow()");
 
-  PauseCompositorHiddenWindow();
   WaylandStopVsync();
   if (mCompositorWidgetDelegate) {
     mCompositorWidgetDelegate->DisableRendering();
@@ -6127,34 +6120,6 @@ void nsWindow::ResumeCompositorHiddenWindow() {
   } else {
     LOG("  quit, failed to get remote renderer.\n");
   }
-}
-
-// Because wl_egl_window is destroyed on moz_container_unmap(),
-// the current compositor cannot use it anymore. To avoid crash,
-// pause the compositor and destroy EGLSurface & resume the compositor
-// and re-create EGLSurface on next expose event.
-void nsWindow::PauseCompositorHiddenWindow() {
-  LOG("nsWindow::PauseCompositorHiddenWindow");
-
-  if (mCompositorState != COMPOSITOR_ENABLED) {
-    LOG("  quit early, compositor is disabled");
-    return;
-  }
-
-  mCompositorState = COMPOSITOR_PAUSED_MISSING_WINDOW;
-
-  // Without remote widget / renderer we can't pause compositor.
-  // So delete LayerManager to avoid EGLSurface access.
-  CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-  if (!remoteRenderer || !mCompositorWidgetDelegate) {
-    LOG("  deleted layer manager");
-    DestroyLayerManager();
-    return;
-  }
-
-  // XXX slow sync IPC
-  LOG("  paused compositor");
-  remoteRenderer->SendPause();
 }
 
 static int WindowResumeCompositor(void* data) {
