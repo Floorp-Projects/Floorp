@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<head>
+  <meta charset=utf-8>
+  <title>Test a simple import map with a script creates a base element</title>
+</head>
+<body onload='testLoaded()'>
+
+<!--This script will create a base element.-->
+<script src="insert_a_base_element.js"></script>
+
+<!--
+With the <base> element, the correct "module_simpleExport.js" should be mapped
+to "scope1/module_simpleExport.js", instead of "./module_simpleExport.js".
+-->
+
+<script type="importmap">
+{
+  "imports": {
+    "simple": "./module_simpleExport.js"
+  }
+}
+</script>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="module">
+  import { x } from "simple";
+  result2 = x;
+</script>
+
+<script type="module" src="module_simpleImportMap.js"></script>
+
+<script>
+  var result_scope1, result2;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(result_scope1 == 84, 'Check imported value result_scope1: ' + result_scope1);
+    ok(result2 == 84, 'Check imported value result2: ' + result2);
+
+    import("simple").then((ns) => {
+      ok(ns.x == 84, 'Check simple imported value result: ' + ns.x);
+    }).catch((e) => {
+      ok(false, "throws " + e);
+    }).then(() => {
+      SimpleTest.finish();
+    });
+  }
+</script>
+</body>
