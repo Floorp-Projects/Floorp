@@ -1635,9 +1635,12 @@ impl ClipChainId {
 
 /// A reference to a clipping node defining how an item is clipped.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, PeekPoke)]
-pub enum ClipId {
-    Clip(usize, PipelineId),
-    ClipChain(ClipChainId),
+pub struct ClipId(pub usize, pub PipelineId);
+
+impl Default for ClipId {
+    fn default() -> Self {
+        ClipId::invalid()
+    }
 }
 
 const ROOT_CLIP_ID: usize = 0;
@@ -1645,33 +1648,30 @@ const ROOT_CLIP_ID: usize = 0;
 impl ClipId {
     /// Return the root clip ID - effectively doing no clipping.
     pub fn root(pipeline_id: PipelineId) -> Self {
-        ClipId::Clip(ROOT_CLIP_ID, pipeline_id)
+        ClipId(ROOT_CLIP_ID, pipeline_id)
     }
 
     /// Return an invalid clip ID - needed in places where we carry
     /// one but need to not attempt to use it.
     pub fn invalid() -> Self {
-        ClipId::Clip(!0, PipelineId::dummy())
+        ClipId(!0, PipelineId::dummy())
     }
 
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
-            ClipId::Clip(_, pipeline_id) |
-            ClipId::ClipChain(ClipChainId(_, pipeline_id)) => pipeline_id,
+            ClipId(_, pipeline_id) => pipeline_id,
         }
     }
 
     pub fn is_root(&self) -> bool {
         match *self {
-            ClipId::Clip(id, _) => id == ROOT_CLIP_ID,
-            ClipId::ClipChain(_) => false,
+            ClipId(id, _) => id == ROOT_CLIP_ID,
         }
     }
 
     pub fn is_valid(&self) -> bool {
         match *self {
-            ClipId::Clip(id, _) => id != !0,
-            _ => true,
+            ClipId(id, _) => id != !0,
         }
     }
 }
@@ -1788,7 +1788,6 @@ impl_default_for_enums! {
     ComponentTransferFuncType => Identity,
     ClipMode => Clip,
     FillRule => Nonzero,
-    ClipId => ClipId::invalid(),
     ReferenceFrameKind => Transform {
         is_2d_scale_translation: false,
         should_snap: false,

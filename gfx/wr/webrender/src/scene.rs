@@ -8,7 +8,7 @@ use api::units::*;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::render_api::MemoryReport;
 use crate::composite::CompositorKind;
-use crate::clip::{ClipStore, ClipStoreStats};
+use crate::clip::{ClipStore, ClipTree};
 use crate::spatial_tree::SpatialTree;
 use crate::frame_builder::{FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
@@ -292,6 +292,7 @@ pub struct BuiltScene {
     pub plane_splitters: Vec<PlaneSplitter>,
     pub prim_instances: Vec<PrimitiveInstance>,
     pub surfaces: Vec<SurfaceInfo>,
+    pub clip_tree: ClipTree,
 }
 
 impl BuiltScene {
@@ -302,7 +303,7 @@ impl BuiltScene {
             output_rect: DeviceIntRect::zero(),
             background_color: None,
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
-            clip_store: ClipStore::new(&ClipStoreStats::empty()),
+            clip_store: ClipStore::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             tile_cache_config: TileCacheConfig::new(0),
             tile_cache_pictures: Vec::new(),
@@ -310,6 +311,7 @@ impl BuiltScene {
             plane_splitters: Vec::new(),
             prim_instances: Vec::new(),
             surfaces: Vec::new(),
+            clip_tree: ClipTree::new(),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
@@ -339,7 +341,6 @@ impl BuiltScene {
         SceneStats {
             prim_store_stats: self.prim_store.get_stats(),
             hit_test_stats: self.hit_testing_scene.get_stats(),
-            clip_store_stats: self.clip_store.get_stats(),
         }
     }
 
@@ -361,7 +362,6 @@ impl BuiltScene {
 pub struct SceneStats {
     pub prim_store_stats: PrimitiveStoreStats,
     pub hit_test_stats: HitTestingSceneStats,
-    pub clip_store_stats: ClipStoreStats,
 }
 
 impl SceneStats {
@@ -369,7 +369,6 @@ impl SceneStats {
         SceneStats {
             prim_store_stats: PrimitiveStoreStats::empty(),
             hit_test_stats: HitTestingSceneStats::empty(),
-            clip_store_stats: ClipStoreStats::empty(),
         }
     }
 }
