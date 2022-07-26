@@ -132,6 +132,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "fetch",            // IDX_FETCH
     "crypto",           // IDX_CRYPTO
     "indexedDB",        // IDX_INDEXEDDB
+    "structuredClone",  // IDX_STRUCTUREDCLONE
 };
 
 /***************************************************************************/

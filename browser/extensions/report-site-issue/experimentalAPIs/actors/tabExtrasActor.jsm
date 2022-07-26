@@ -5,11 +5,6 @@
 
 "use strict";
 
-// Bug 1777268 - This is currently not available in the globals, but we
-// may consider adding it.
-// eslint-disable-next-line mozilla/reject-importGlobalProperties
-Cu.importGlobalProperties(["structuredClone"]);
-
 var EXPORTED_SYMBOLS = ["ReportSiteIssueHelperChild"];
 
 const PREVIEW_MAX_ITEMS = 10;
