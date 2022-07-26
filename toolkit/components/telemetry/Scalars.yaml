@@ -2254,8 +2254,7 @@ mediarecorder:
     expires: "72"
     kind: uint
     notification_emails:
-      - bvandyk@mozilla.com
-      - nohlmeier@mozilla.com
+      - media-alerts@mozilla.com
     release_channel_collection: opt-in
     products:
       - 'firefox'
@@ -2276,8 +2275,7 @@ media:
     expires: never
     kind: uint
     notification_emails:
-      - alwu@mozilla.com
-      - nohlmeier@mozilla.com
+      - media-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2293,8 +2291,7 @@ media:
     kind: uint
     keyed: true
     notification_emails:
-      - alwu@mozilla.com
-      - nohlmeier@mozilla.com
+      - media-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2310,8 +2307,7 @@ media:
     kind: uint
     keyed: true
     notification_emails:
-      - alwu@mozilla.com
-      - bvandyk@mozilla.com
+      - media-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2328,8 +2324,7 @@ media:
     kind: boolean
     keyed: true
     notification_emails:
-      - alwu@mozilla.com
-      - bvandyk@mozilla.com
+      - media-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2347,8 +2342,7 @@ media:
     kind: boolean
     keyed: true
     notification_emails:
-      - alwu@mozilla.com
-      - bvandyk@mozilla.com
+      - media-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
