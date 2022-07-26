@@ -50,21 +50,6 @@ loader.lazyGetter(this, "L10N", function() {
   return new LocalizationHelper("devtools/client/locales/startup.properties");
 });
 
-function renderApp({ app, store, commands, root }) {
-  return ReactDOM.render(
-    createElement(
-      Provider,
-      { store },
-      createElement(
-        createProvider(commands.targetCommand.storeId),
-        { store: commands.targetCommand.store },
-        app
-      )
-    ),
-    root
-  );
-}
-
 let store = null;
 
 class WebConsoleWrapper {
@@ -129,17 +114,31 @@ class WebConsoleWrapper {
 
       // Render the root Application component.
       if (this.parentNode) {
-        this.body = renderApp({
-          app,
-          store,
-          root: this.parentNode,
-          commands: this.hud.commands,
-        });
+        this.body = ReactDOM.render(
+          createElement(
+            Provider,
+            { store },
+            createElement(
+              createProvider(this.hud.commands.targetCommand.storeId),
+              { store: this.hud.commands.targetCommand.store },
+              app
+            )
+          ),
+          this.parentNode
+        );
       } else {
         // If there's no parentNode, we are in a test. So we can resolve immediately.
         resolve();
       }
     });
+  }
+
+  destroy() {
+    // This component can be instantiated from mocha test, in which case we don't have
+    // a parentNode reference.
+    if (this.parentNode) {
+      ReactDOM.unmountComponentAtNode(this.parentNode);
+    }
   }
 
   dispatchMessageAdd(packet) {

@@ -143,12 +143,7 @@ class WebConsoleUI {
 
     if (this.wrapper) {
       this.wrapper.getStore().dispatch(START_IGNORE_ACTION);
-    }
-
-    if (this.outputNode) {
-      // We do this because it's much faster than letting React handle the ConsoleOutput
-      // unmounting.
-      this.outputNode.innerHTML = "";
+      this.wrapper.destroy();
     }
 
     if (this.jsterm) {
