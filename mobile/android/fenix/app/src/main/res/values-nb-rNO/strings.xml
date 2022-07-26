@@ -754,7 +754,7 @@
     <string name="pwa_site_controls_title_private">%1$s (privatmodus)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Andre faner</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Andre faner</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -788,6 +788,13 @@
     <string name="history_synced_from_other_devices">Synkronisert fra andre enheter</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Fra andre enheter</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Logg på for å se historikken synkronisert fra de andre enhetene dine.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Logg inn</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Eller opprett en Firefox-konto for å begynne å synkronisere</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1869,4 +1876,5 @@
     <string name="experiments_snackbar">Aktiver telemetri for å sende data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Gå til innstillinger</string>
+    <string name="firefox_suggest_header">Firefox-forslag</string>
 </resources>

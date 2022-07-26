@@ -40,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">ที่คั่นหน้าล่าสุด</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">แสดงหมด</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
@@ -357,7 +355,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ปรับแต่ง</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">ซิงค์ที่คั่นหน้า, ประวัติ, และอื่น ๆ ด้วยบัญชี Firefox ของคุณ</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ซิงค์ที่คั่นหน้า, ประวัติ, และอื่น ๆ ด้วยบัญชี Firefox ของคุณ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">บัญชี Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -529,7 +527,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">เปิด Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">เปิด Sync</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ลงชื่อเข้าเพื่อเชื่อมต่ออีกครั้ง</string>
     <!-- Preference for removing FxA account -->
@@ -748,7 +746,7 @@
     <string name="pwa_site_controls_title_private">%1$s (โหมดส่วนตัว)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">แท็บอื่น ๆ</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">แท็บอื่น ๆ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -781,6 +779,9 @@
     <string name="history_synced_from_other_devices">ซิงค์จากอุปกรณ์อื่น</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">จากอุปกรณ์อื่นๆ</string>
+
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">ลงชื่อเข้า</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1067,8 +1068,6 @@
     <string name="snackbar_tabs_closed">ปิดแท็บแล้ว</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">บันทึกที่คั่นหน้าแล้ว!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">เพิ่มไปยังไซต์เด่นแล้ว!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">เพิ่มทางลัดแล้ว!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1148,7 +1147,16 @@
     <string name="delete_browsing_data_on_quit_action">ออก</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">การดำเนินการนี้จะเป็นการลบข้อมูลการเรียกดูทั้งหมดของคุณ</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">การดำเนินการนี้จะเป็นการลบข้อมูลการเรียกดูทั้งหมดของคุณ</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">ช่วงเวลาที่จะลบ</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">ชั่วโมงที่แล้ว</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">วันนี้และเมื่อวานนี้</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">ทั้งหมด</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s จะลบข้อมูลการเรียกดูที่เลือก</string>
 
@@ -1161,8 +1169,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">กำลังลบข้อมูลการเรียกดู…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">การดำเนินการนี้จะลบรายการทั้งหมด</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">ต้องการลบไซต์ทั้งหมดใน “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">ยกเลิก</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1685,10 +1693,6 @@
     <string name="no_site_exceptions">ไม่มีข้อยกเว้นไซต์</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">คุณแน่ใจหรือไม่ว่าต้องการลบที่คั่นหน้านี้?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">เพิ่มไปยังไซต์เด่น</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">เอาออกจากไซต์เด่น</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">เพิ่มทางลัด</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1765,12 +1769,8 @@
     <string name="synced_tabs_collapse_group">ยุบกลุ่มของแท็บที่ซิงค์</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ถึงขีดจำกัดของไซต์เด่นแล้ว</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">ถึงขีดจำกัดของทางลัดแล้ว</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">การเพิ่มไซต์ยอดนิยมต้องลบอันเก่าออก แตะค้างที่ไซต์และเลือกลบ</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">การเพิ่มทางลัดต้องลบอันเก่าออก แตะค้างที่ไซต์และเลือกลบ</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1780,8 +1780,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">ทางลัด</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ชื่อ</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ชื่อเว็บไซต์เด่น</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">ชื่อทางลัด</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
@@ -1854,4 +1852,5 @@
     <string name="experiments_snackbar">เปิดใช้งานการส่งข้อมูลทางไกลเพื่อส่งข้อมูล</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">ไปยังการตั้งค่า</string>
+    <string name="firefox_suggest_header">Firefox Suggest</string>
 </resources>

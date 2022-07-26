@@ -752,7 +752,7 @@
     <string name="pwa_site_controls_title_private">‏%1$s (מצב פרטי)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">לשוניות אחרות</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">לשוניות אחרות</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1163,7 +1163,18 @@
     <string name="delete_browsing_data_on_quit_action">יציאה</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">פעולה זו תמחק את כל נתוני הגלישה שלך.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">פעולה זו תמחק את כל נתוני הגלישה שלך.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">טווח זמן למחיקה</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">מסיר היסטוריה (כולל היסטוריה מסונכרנת ממכשירים אחרים), עוגיות ונתוני גלישה אחרים.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">שעה אחרונה</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">היום ואתמול</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">הכול</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s ימחק את נתוני הגלישה שנבחרו.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1176,8 +1187,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">בתהליך מחיקת נתוני גלישה…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">פעולה זו תמחק את כל הפריטים.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">מחיקת כל האתרים תחת ״%s״</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">ביטול</string>
     <!-- Text for the allow button for the history group dialog -->

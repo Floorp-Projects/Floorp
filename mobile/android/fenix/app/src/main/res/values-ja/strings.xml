@@ -761,7 +761,7 @@
     <string name="pwa_site_controls_title_private">%1$s (プライベートモード)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">他のタブ</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">他のタブ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -795,6 +795,13 @@
     <string name="history_synced_from_other_devices">他の端末から同期</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">他の端末から</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">他の端末と同期した履歴を表示するにはログインしてください。</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">ログイン</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>または Firefox アカウントを作成して同期を開始します</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1873,4 +1880,5 @@
     <string name="experiments_snackbar">データを送信するにはテレメトリーを有効にしてください。</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">設定を開く</string>
+    <string name="firefox_suggest_header">Firefox Suggest</string>
 </resources>
