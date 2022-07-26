@@ -138,10 +138,8 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
       const GlobalObject& aGlobal, ResizeObserverCallback& aCb,
       ErrorResult& aRv);
 
-  void Observe(Element& aTarget, const ResizeObserverOptions& aOptions,
-               ErrorResult& aRv);
-
-  void Unobserve(Element& target, ErrorResult& aRv);
+  void Observe(Element&, const ResizeObserverOptions&);
+  void Unobserve(Element&);
 
   void Disconnect();
 
