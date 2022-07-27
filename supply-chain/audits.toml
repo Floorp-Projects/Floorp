@@ -27,6 +27,17 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.0 -> 1.1.1"
 
+[[audits.ashmem]]
+who = "Matthew Gregan <kinetik@flim.org>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = """
+Small unsafe wrapper around Android 8.0's ASharedMemory native API that falls
+back to older private ioctl-based API at runtime on earlier OS releases.  The
+shim code is small and doesn't inspect the API arguments, so is unlikely to
+expose any safety issues beyond those presented by the native OS API.
+"""
+
 [[audits.atomic_refcell]]
 who = "Bobby Holley <bholley@mozilla.com>"
 criteria = "safe-to-deploy"
