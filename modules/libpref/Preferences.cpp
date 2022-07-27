@@ -5867,6 +5867,8 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("browser.translation.yandex.apiKeyOverride"),
     PREF_LIST_ENTRY("browser.translation.yandex.translateURLOverride"),
     PREF_LIST_ENTRY("browser.uitour.testingOrigins"),
+    PREF_LIST_ENTRY("browser.urlbar.loglevel"),
+    PREF_LIST_ENTRY("browser.urlbar.opencompanionsearch.enabled"),
     PREF_LIST_ENTRY("capability.policy.policynames"),
     PREF_LIST_ENTRY("dom.securecontext.allowlist"),
     PREF_LIST_ENTRY("extensions.foobaz"),

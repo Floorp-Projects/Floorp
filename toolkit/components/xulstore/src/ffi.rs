@@ -201,7 +201,7 @@ impl ProfileChangeObserver {
         &self,
         _subject: *const nsISupports,
         _topic: *const c_char,
-        _data: *const i16,
+        _data: *const u16,
     ) -> nsresult {
         update_profile_dir();
         NS_OK

@@ -776,7 +776,7 @@ function setCertErrorDetails(event) {
         desc,
         "cert-error-symantec-distrust-description",
         {
-          HOST_NAME,
+          hostname: HOST_NAME,
         }
       );
 

@@ -13,8 +13,7 @@ from buildconfig import substs
 
 """
 Scans the given directories for binaries referencing the AddressSanitizer
-runtime library, copies it to the main directory and rewrites binaries to not
-reference it with absolute paths but with @executable_path instead.
+runtime library, copies it to the main directory.
 """
 
 # This is the dylib name pattern
@@ -83,10 +82,6 @@ def scan_directory(path):
                 dylibName = match.group(0)
                 absDylibPath = line.split()[0]
 
-                # Don't try to rewrite binaries twice
-                if absDylibPath.startswith("@executable_path/"):
-                    continue
-
                 dylibsRequired.add(dylibName)
 
                 if dylibName not in dylibsCopied:
@@ -100,16 +95,6 @@ def scan_directory(path):
                         # Copy the runtime once to the main directory, which is passed
                         # as the argument to this function.
                         shutil.copy(copyDylibPath, str(path))
-
-                        # Now rewrite the library itself
-                        subprocess.check_call(
-                            [
-                                substs["INSTALL_NAME_TOOL"],
-                                "-id",
-                                f"@executable_path/{dylibName}",
-                                str(path / dylibName),
-                            ]
-                        )
                         dylibsCopied.add(dylibName)
                     else:
                         print(
@@ -117,20 +102,6 @@ def scan_directory(path):
                             file=sys.stderr,
                         )
 
-                # Now use install_name_tool to rewrite the path in our binary
-                if file.parent == path:
-                    relpath = ""
-                else:
-                    relpath = f"{os.path.relpath(str(path), str(file.parent))}/"
-                subprocess.check_call(
-                    [
-                        substs["INSTALL_NAME_TOOL"],
-                        "-change",
-                        absDylibPath,
-                        f"@executable_path/{relpath}{dylibName}",
-                        str(file),
-                    ]
-                )
                 break
 
     dylibsMissing = dylibsRequired - dylibsCopied
