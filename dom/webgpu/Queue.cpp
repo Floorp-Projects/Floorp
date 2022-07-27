@@ -112,6 +112,11 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
     availableSize = ab.Length();
     data = ab.Data();
   }
+
+  if (!availableSize) {
+    aRv.ThrowAbortError("Input size cannot be zero.");
+    return;
+  }
   MOZ_ASSERT(data != nullptr);
 
   const auto checkedSize =
