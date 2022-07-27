@@ -29,27 +29,6 @@ using mozilla::PodZero;
 using namespace js;
 using namespace js::wasm;
 
-#ifdef ENABLE_WASM_SIMD_WORMHOLE
-static const int8_t WormholeTrigger[] = {31, 0, 30, 2,  29, 4,  28, 6,
-                                         27, 8, 26, 10, 25, 12, 24};
-static_assert(sizeof(WormholeTrigger) == 15);
-
-static const int8_t WormholeSignatureBytes[16] = {0xD, 0xE, 0xA, 0xD, 0xD, 0x0,
-                                                  0x0, 0xD, 0xC, 0xA, 0xF, 0xE,
-                                                  0xB, 0xA, 0xB, 0xE};
-static_assert(sizeof(WormholeSignatureBytes) == 16);
-
-bool wasm::IsWormholeTrigger(const V128& shuffleMask) {
-  return memcmp(shuffleMask.bytes, WormholeTrigger, sizeof(WormholeTrigger)) ==
-         0;
-}
-
-jit::SimdConstant wasm::WormholeSignature() {
-  return jit::SimdConstant::CreateX16(WormholeSignatureBytes);
-}
-
-#endif
-
 ArgTypeVector::ArgTypeVector(const FuncType& funcType)
     : args_(funcType.args()),
       hasStackResults_(ABIResultIter::HasStackResults(

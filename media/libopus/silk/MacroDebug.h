@@ -101,9 +101,9 @@ static OPUS_INLINE opus_int16 silk_SUB16_(opus_int16 a, opus_int16 b, char *file
 #undef silk_SUB32
 #define silk_SUB32(a,b) silk_SUB32_((a), (b), __FILE__, __LINE__)
 static OPUS_INLINE opus_int32 silk_SUB32_(opus_int32 a, opus_int32 b, char *file, int line){
-    opus_int32 ret;
+    opus_int64 ret;
 
-    ret = a - b;
+    ret = a - (opus_int64)b;
     if ( ret != silk_SUB_SAT32( a, b ) )
     {
         fprintf (stderr, "silk_SUB32(%d, %d) in %s: line %d\n", a, b, file, line);
@@ -333,8 +333,8 @@ static OPUS_INLINE opus_int32 silk_SMULWB_(opus_int32 a32, opus_int32 b32, char 
 #define silk_SMLAWB(a,b,c) silk_SMLAWB_((a), (b), (c), __FILE__, __LINE__)
 static OPUS_INLINE opus_int32 silk_SMLAWB_(opus_int32 a32, opus_int32 b32, opus_int32 c32, char *file, int line){
     opus_int32 ret;
-    ret = silk_ADD32( a32, silk_SMULWB( b32, c32 ) );
-    if ( silk_ADD32( a32, silk_SMULWB( b32, c32 ) ) != silk_ADD_SAT32( a32, silk_SMULWB( b32, c32 ) ) )
+    ret = silk_ADD32_ovflw( a32, silk_SMULWB( b32, c32 ) );
+    if ( ret != silk_ADD_SAT32( a32, silk_SMULWB( b32, c32 ) ) )
     {
         fprintf (stderr, "silk_SMLAWB(%d, %d, %d) in %s: line %d\n", a32, b32, c32, file, line);
 #ifdef FIXED_DEBUG_ASSERT
@@ -465,7 +465,7 @@ static OPUS_INLINE opus_int32 silk_SMULWW_(opus_int32 a32, opus_int32 b32, char 
 
     if ( fail )
     {
-        fprintf (stderr, "silk_SMULWT(%d, %d) in %s: line %d\n", a32, b32, file, line);
+        fprintf (stderr, "silk_SMULWW(%d, %d) in %s: line %d\n", a32, b32, file, line);
 #ifdef FIXED_DEBUG_ASSERT
         silk_assert( 0 );
 #endif
@@ -723,7 +723,7 @@ static OPUS_INLINE int silk_ADD_LSHIFT_(int a, int b, int shift, char *file, int
 #define silk_ADD_LSHIFT32(a,b,c) silk_ADD_LSHIFT32_((a), (b), (c), __FILE__, __LINE__)
 static OPUS_INLINE opus_int32 silk_ADD_LSHIFT32_(opus_int32 a, opus_int32 b, opus_int32 shift, char *file, int line){
     opus_int32 ret;
-    ret = a + (opus_int32)((opus_uint32)b << shift);
+    ret = silk_ADD32_ovflw(a, (opus_int32)((opus_uint32)b << shift));
     if ( (shift < 0) || (shift>31) || ((opus_int64)ret != (opus_int64)a + (opus_int64)(((opus_uint64)b) << shift)) )
     {
         fprintf (stderr, "silk_ADD_LSHIFT32(%d, %d, %d) in %s: line %d\n", a, b, shift, file, line);
@@ -768,7 +768,7 @@ static OPUS_INLINE int silk_ADD_RSHIFT_(int a, int b, int shift, char *file, int
 #define silk_ADD_RSHIFT32(a,b,c) silk_ADD_RSHIFT32_((a), (b), (c), __FILE__, __LINE__)
 static OPUS_INLINE opus_int32 silk_ADD_RSHIFT32_(opus_int32 a, opus_int32 b, opus_int32 shift, char *file, int line){
     opus_int32 ret;
-    ret = a + (b >> shift);
+    ret = silk_ADD32_ovflw(a, (b >> shift));
     if ( (shift < 0) || (shift>31) || ((opus_int64)ret != (opus_int64)a + (((opus_int64)b) >> shift)) )
     {
         fprintf (stderr, "silk_ADD_RSHIFT32(%d, %d, %d) in %s: line %d\n", a, b, shift, file, line);
@@ -798,7 +798,7 @@ static OPUS_INLINE opus_uint32 silk_ADD_RSHIFT_uint_(opus_uint32 a, opus_uint32 
 #define silk_SUB_LSHIFT32(a,b,c) silk_SUB_LSHIFT32_((a), (b), (c), __FILE__, __LINE__)
 static OPUS_INLINE opus_int32 silk_SUB_LSHIFT32_(opus_int32 a, opus_int32 b, opus_int32 shift, char *file, int line){
     opus_int32 ret;
-    ret = a - (opus_int32)((opus_uint32)b << shift);
+    ret = silk_SUB32_ovflw(a, (opus_int32)((opus_uint32)b << shift));
     if ( (shift < 0) || (shift>31) || ((opus_int64)ret != (opus_int64)a - (opus_int64)(((opus_uint64)b) << shift)) )
     {
         fprintf (stderr, "silk_SUB_LSHIFT32(%d, %d, %d) in %s: line %d\n", a, b, shift, file, line);
@@ -813,7 +813,7 @@ static OPUS_INLINE opus_int32 silk_SUB_LSHIFT32_(opus_int32 a, opus_int32 b, opu
 #define silk_SUB_RSHIFT32(a,b,c) silk_SUB_RSHIFT32_((a), (b), (c), __FILE__, __LINE__)
 static OPUS_INLINE opus_int32 silk_SUB_RSHIFT32_(opus_int32 a, opus_int32 b, opus_int32 shift, char *file, int line){
     opus_int32 ret;
-    ret = a - (b >> shift);
+    ret = silk_SUB32_ovflw(a, (b >> shift));
     if ( (shift < 0) || (shift>31) || ((opus_int64)ret != (opus_int64)a - (((opus_int64)b) >> shift)) )
     {
         fprintf (stderr, "silk_SUB_RSHIFT32(%d, %d, %d) in %s: line %d\n", a, b, shift, file, line);

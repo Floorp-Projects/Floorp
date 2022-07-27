@@ -245,7 +245,7 @@ body > main > aside {
 
 .placeholder-content {
   text-align: center;
-  padding: 20px 0 10px;
+  padding: 24px 16px;
 }
 
 .placeholder-text, .synced-tabs, .history {

@@ -94,6 +94,12 @@ BackstagePass::Resolve(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
       return NS_ERROR_FAILURE;
     }
     *resolvedp = true;
+  } else if (id == xpccx->GetStringID(XPCJSContext::IDX_STRUCTUREDCLONE)) {
+    *_retval = xpc::SandboxCreateStructuredClone(cx, obj);
+    if (!*_retval) {
+      return NS_ERROR_FAILURE;
+    }
+    *resolvedp = true;
   }
 
   return NS_OK;
@@ -105,6 +111,16 @@ BackstagePass::NewEnumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
                             JS::MutableHandleIdVector properties,
                             bool enumerableOnly, bool* _retval) {
   JS::RootedObject obj(cx, objArg);
+
+  XPCJSContext* xpccx = XPCJSContext::Get();
+  if (!properties.append(xpccx->GetStringID(XPCJSContext::IDX_FETCH)) ||
+      !properties.append(xpccx->GetStringID(XPCJSContext::IDX_CRYPTO)) ||
+      !properties.append(xpccx->GetStringID(XPCJSContext::IDX_INDEXEDDB)) ||
+      !properties.append(
+          xpccx->GetStringID(XPCJSContext::IDX_STRUCTUREDCLONE))) {
+    return NS_ERROR_FAILURE;
+  }
+
   *_retval = WebIDLGlobalNameHash::NewEnumerateSystemGlobal(cx, obj, properties,
                                                             enumerableOnly);
   return *_retval ? NS_OK : NS_ERROR_FAILURE;

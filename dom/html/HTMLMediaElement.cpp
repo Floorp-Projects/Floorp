@@ -3803,7 +3803,7 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
     MediaTrackGraph* aGraph) {
   MOZ_ASSERT(CanBeCaptured(aStreamCaptureType));
 
-  MarkAsContentSource(CallerAPI::CAPTURE_STREAM);
+  LogVisibility(CallerAPI::CAPTURE_STREAM);
   MarkAsTainted();
 
   if (mTracksCaptured.Ref() &&
@@ -7291,18 +7291,15 @@ void HTMLMediaElement::NotifyCueDisplayStatesChanged() {
   mTextTrackManager->DispatchUpdateCueDisplay();
 }
 
-void HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI) {
+void HTMLMediaElement::LogVisibility(CallerAPI aAPI) {
   const bool isVisible = mVisibilityState == Visibility::ApproximatelyVisible;
 
-  LOG(LogLevel::Debug,
-      ("%p Log VIDEO_AS_CONTENT_SOURCE: visibility = %u, API: '%d' and 'All'",
-       this, isVisible, static_cast<int>(aAPI)));
+  LOG(LogLevel::Debug, ("%p visibility = %u, API: '%d' and 'All'", this,
+                        isVisible, static_cast<int>(aAPI)));
 
   if (!isVisible) {
-    LOG(LogLevel::Debug,
-        ("%p Log VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT: inTree = %u, API: "
-         "'%d' and 'All'",
-         this, IsInComposedDoc(), static_cast<int>(aAPI)));
+    LOG(LogLevel::Debug, ("%p inTree = %u, API: '%d' and 'All'", this,
+                          IsInComposedDoc(), static_cast<int>(aAPI)));
   }
 }
 

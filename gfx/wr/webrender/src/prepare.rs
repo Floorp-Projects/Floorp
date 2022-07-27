@@ -753,7 +753,7 @@ fn prepare_interned_prim_for_render(
                         frame_context.spatial_tree,
                         prim_spatial_node_index,
                         local_prim_rect,
-                        &prim_instance.vis.combined_local_clip_rect,
+                        &prim_instance.vis.clip_chain.local_clip_rect,
                         dirty_rect,
                         plane_split_anchor,
                     );
@@ -852,7 +852,8 @@ fn decompose_repeated_gradient(
     // produce primitives that are partially covering the original image
     // rect and we want to clip these extra parts out.
     if let Some(tight_clip_rect) = prim_vis
-        .combined_local_clip_rect
+        .clip_chain
+        .local_clip_rect
         .intersection(prim_local_rect) {
 
         let visible_rect = compute_conservative_visible_rect(
@@ -1218,7 +1219,6 @@ pub fn update_brush_segment_clip_task(
 
 fn write_brush_segment_description(
     prim_local_rect: LayoutRect,
-    prim_local_clip_rect: LayoutRect,
     clip_chain: &ClipChainInstance,
     segment_builder: &mut SegmentBuilder,
     clip_store: &ClipStore,
@@ -1233,7 +1233,7 @@ fn write_brush_segment_description(
     segment_builder.initialize(
         prim_local_rect,
         None,
-        prim_local_clip_rect
+        clip_chain.local_clip_rect
     );
 
     // Segment the primitive on all the local-space clip sources that we can.
@@ -1378,7 +1378,6 @@ fn build_segments_if_needed(
 
         if write_brush_segment_description(
             prim_local_rect,
-            instance.clip_set.local_clip_rect,
             prim_clip_chain,
             &mut frame_state.segment_builder,
             frame_state.clip_store,

@@ -408,6 +408,7 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
     IDX_FETCH,
     IDX_CRYPTO,
     IDX_INDEXEDDB,
+    IDX_STRUCTUREDCLONE,
     IDX_TOTAL_COUNT  // just a count of the above
   };
 
@@ -2858,6 +2859,7 @@ void DestructValue(const nsXPTType& aType, void* aValue,
 
 bool SandboxCreateCrypto(JSContext* cx, JS::Handle<JSObject*> obj);
 bool SandboxCreateFetch(JSContext* cx, JS::Handle<JSObject*> obj);
+bool SandboxCreateStructuredClone(JSContext* cx, JS::Handle<JSObject*> obj);
 
 }  // namespace xpc
 

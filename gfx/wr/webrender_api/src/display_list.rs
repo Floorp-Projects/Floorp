@@ -1868,7 +1868,7 @@ impl DisplayListBuilder {
 
     fn generate_clip_index(&mut self) -> di::ClipId {
         self.next_clip_index += 1;
-        di::ClipId::Clip(self.next_clip_index - 1, self.pipeline_id)
+        di::ClipId(self.next_clip_index - 1, self.pipeline_id)
     }
 
     fn generate_spatial_index(&mut self) -> di::SpatialId {

@@ -13,6 +13,7 @@ import {
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
+import { INITIAL_STATE } from "common/Reducers.jsm";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
 import { shallow, mount } from "enzyme";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
@@ -23,6 +24,7 @@ const DEFAULT_PROPS = {
   App: {
     isForStartupCache: false,
   },
+  DiscoveryStream: INITIAL_STATE.DiscoveryStream,
 };
 
 describe("<DSCard>", () => {
@@ -111,9 +113,17 @@ describe("<DSCard>", () => {
     assert.equal(contextFooter.find(".story-sponsored-label").text(), context);
   });
 
-  it("should render Sponsored Context for a spoc element", () => {
+  it("should render time to read", () => {
+    const discoveryStream = {
+      ...INITIAL_STATE.DiscoveryStream,
+      readTime: true,
+    };
     wrapper = mount(
-      <DSCard displayReadTime={true} time_to_read={4} {...DEFAULT_PROPS} />
+      <DSCard
+        time_to_read={4}
+        {...DEFAULT_PROPS}
+        DiscoveryStream={discoveryStream}
+      />
     );
     wrapper.setState({ isSeen: true });
     const defaultMeta = wrapper.find(DefaultMeta);
@@ -301,6 +311,7 @@ describe("<DSCard>", () => {
         App: {
           isForStartupCache: true,
         },
+        DiscoveryStream: INITIAL_STATE.DiscoveryStream,
       };
       wrapper = mount(<DSCard {...props} />);
     });

@@ -1729,7 +1729,7 @@
   "AVIF_DECODE_RESULT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1768,7 +1768,7 @@
   "AVIF_AOM_DECODE_ERROR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1788,7 +1788,7 @@
   "AVIF_DECODER": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1799,7 +1799,7 @@
   "AVIF_YUV_COLOR_SPACE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1810,7 +1810,7 @@
   "AVIF_BIT_DEPTH": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1821,7 +1821,7 @@
   "AVIF_ALPHA": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1832,7 +1832,7 @@
   "AVIF_COLR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1843,7 +1843,7 @@
   "AVIF_CICP_CP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1879,7 +1879,7 @@
   "AVIF_CICP_TC": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1911,7 +1911,7 @@
   "AVIF_CICP_MC": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1939,7 +1939,7 @@
   "AVIF_ISPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1950,7 +1950,7 @@
   "AVIF_PIXI": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1961,7 +1961,7 @@
   "AVIF_PASP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1972,7 +1972,7 @@
   "AVIF_MAJOR_BRAND": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1983,7 +1983,7 @@
   "AVIF_SEQUENCE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -1994,7 +1994,7 @@
   "AVIF_A1LX": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -2005,7 +2005,7 @@
   "AVIF_A1OP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -2016,7 +2016,7 @@
   "AVIF_CLAP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -2027,7 +2027,7 @@
   "AVIF_GRID": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -2038,7 +2038,7 @@
   "AVIF_IPRO": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -2049,7 +2049,7 @@
   "AVIF_LSEL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -10772,7 +10772,7 @@
   "MEDIA_GMP_UPDATE_XML_FETCH_RESULT": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["bvandyk@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -10798,7 +10798,7 @@
   "MEDIA_MKV_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bvandyk@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "112",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
@@ -10807,7 +10807,7 @@
   "MEDIA_HLS_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["jolin@mozilla.com", "bvandyk@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "92",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a HLS media type.",
@@ -10816,7 +10816,7 @@
   "MEDIA_HLS_CANPLAY_SUPPORTED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["jolin@mozilla.com", "bvandyk@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "92",
     "kind": "boolean",
     "description": "Reports a true value when a canPlayType request supports HLS.",
@@ -10825,7 +10825,7 @@
   "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["bvandyk@mozilla.com", "padenotmozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "bug_numbers": [1513651],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -10834,7 +10834,7 @@
   "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CRYPTO": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["bvandyk@mozilla.com", "alwu@mozilla.comcom"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "bug_numbers": [1513651],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -10843,7 +10843,7 @@
   "MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["bvandyk@mozilla.com", "padenotmozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "bug_numbers": [1513651],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -10853,7 +10853,7 @@
   "MEDIA_DECODING_PROCESS_CRASH": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["jolin@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "bug_numbers": [1304268],
     "expires_in_version": "never",
     "kind": "count",
@@ -10863,7 +10863,7 @@
   "MEDIA_AUDIO_INIT_FAILURE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org", "cchang@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -10877,7 +10877,7 @@
   "MEDIA_AUDIO_BACKEND": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org", "cchang@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -10903,7 +10903,7 @@
   "MEDIA_SNIFFER_MP4_BRAND_PATTERN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
-    "alert_emails": ["jolin@mozilla.com", "jbauman@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
@@ -11466,7 +11466,7 @@
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["bvandyk@mozilla.com", "pehrsons@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "112",
     "kind": "exponential",
     "high": 3600,
@@ -13608,7 +13608,7 @@
   "VIDEO_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing video in milliseconds.",
     "kind": "exponential",
@@ -13620,7 +13620,7 @@
   "MEDIA_PLAY_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing media in milliseconds, keyed by its content (Audio and video, audio only, video only, audio and video but audio inaudible, audio and video but audio muted).",
     "keyed": true,
@@ -13633,7 +13633,7 @@
   "AUDIBLE_PLAY_TIME_PERCENT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Percentage of time spent playing media with an audible audio track, regardless of the volume. Keyed by audio-only or video presence.",
     "keyed": true,
@@ -13646,7 +13646,7 @@
   "MUTED_PLAY_TIME_PERCENT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Percentage of time spent playing media that has an audio track, with the audio muted. Keyed by audio-only or video presence.",
     "keyed": true,
@@ -13659,7 +13659,7 @@
   "VIDEO_VISIBLE_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing visible video in milliseconds.",
     "keyed": true,
@@ -13672,7 +13672,7 @@
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing video while element is hidden, in milliseconds.",
     "kind": "exponential",
@@ -13684,7 +13684,7 @@
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever the decoder stops. (eg. pausing media, encountering an error, changing to a new resource, page goes to the bf-cached or page gets discarded)",
     "keyed": true,
@@ -13697,7 +13697,7 @@
   "VIDEO_ENCRYPTED_PLAY_TIME_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bvandyk@mozilla.com", "padenot@mozilla.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing encrypted video in milliseconds.",
     "kind": "exponential",
@@ -13709,7 +13709,7 @@
   "VIDEO_CLEARKEY_PLAY_TIME_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bvandyk@mozilla.com", "alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing Clearkey encrypted video in milliseconds.",
     "kind": "exponential",
@@ -13721,7 +13721,7 @@
   "VIDEO_WIDEVINE_PLAY_TIME_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bvandyk@mozilla.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "description": "Total time spent playing Widevine encrypted video in milliseconds.",
     "kind": "exponential",
@@ -13733,7 +13733,7 @@
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "110",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
@@ -13746,7 +13746,7 @@
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "110",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages.",
     "keyed": true,
@@ -13758,7 +13758,7 @@
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "92",
     "description": "Maximum interval between video keyframes in played videos, in milliseconds; '0' means only 1 keyframe found. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever the decoder stops. (eg. pausing media, encountering an error, changing to a new resource, page goes to the bf-cached or page gets discarded)",
     "keyed": true,
@@ -13770,7 +13770,7 @@
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "100",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
@@ -13782,7 +13782,7 @@
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "keyed": true,
     "kind": "count",
@@ -13792,7 +13792,7 @@
   "MSE_SOURCE_BUFFER_TYPE": {
     "products": ["firefox", "geckoview_streaming"],
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["alwu@mozilla.com", "bryce@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "bug_numbers": [1699249],
     "expires_in_version": "never",
     "kind": "categorical",
@@ -14624,7 +14624,7 @@
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -14635,7 +14635,7 @@
   "VIDEO_DROPPED_FRAMES_PROPORTION_EXPONENTIAL" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -14647,7 +14647,7 @@
   "VIDEO_DROPPED_DECODED_FRAMES_PROPORTION_EXPONENTIAL" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -14659,7 +14659,7 @@
   "VIDEO_DROPPED_SINK_FRAMES_PROPORTION_EXPONENTIAL" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -14671,7 +14671,7 @@
   "VIDEO_DROPPED_COMPOSITOR_FRAMES_PROPORTION_EXPONENTIAL" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -15221,7 +15221,7 @@
   "TAB_AUDIO_INDICATOR_USED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["alwu@mozilla.com", "padenot@mozilla.com"],
+    "alert_emails": ["media-alerts@mozilla.com"],
     "expires_in_version": "100",
     "kind": "enumerated",
     "n_values": 6,
@@ -16293,10 +16293,7 @@
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "padenot@mozilla.com"
-    ],
+    "alert_emails": [ "media-alerts@mozilla.com" ],
     "expires_in_version": "100",
     "kind": "linear",
     "high": 60,
@@ -16308,10 +16305,7 @@
   "AUTOPLAY_DEFAULT_SETTING_CHANGE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "padenot@mozilla.com"
-    ],
+    "alert_emails": [ "media-alerts@mozilla.com" ],
     "expires_in_version": "100",
     "kind": "categorical",
     "labels": ["allow", "blockAudible", "blockAll"],
@@ -16322,11 +16316,7 @@
   "WEB_AUDIO_AUTOPLAY": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": [
-      "alwu@mozilla.com",
-      "padenot@mozilla.com",
-      "ktomlinson@mozilla.com"
-    ],
+    "alert_emails": [ "media-alerts@mozilla.com" ],
     "expires_in_version": "96",
     "kind": "categorical",
     "labels": ["NeverBlocked", "AllowedAfterBlocked", "NeverAllowed"],
@@ -16337,9 +16327,7 @@
   "TABS_AUDIO_COMPETITION": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": [
-      "alwu@mozilla.com"
-    ],
+    "alert_emails": [ "media-alerts@mozilla.com" ],
     "bug_numbers": [1683788],
     "expires_in_version": "91",
     "kind": "categorical",

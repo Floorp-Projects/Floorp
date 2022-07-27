@@ -186,19 +186,12 @@ export class _CardGrid extends React.PureComponent {
       hybridLayout,
       hideCardBackground,
       fourCardLayout,
-      hideDescriptions,
-      saveToPocketCard,
       compactGrid,
-      compactImages,
-      imageGradient,
-      newSponsoredLabel,
-      titleLines,
-      descLines,
-      readTime,
       essentialReadsHeader,
       editorsPicksHeader,
       widgets,
       recentSavesEnabled,
+      hideDescriptions,
     } = this.props;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
 
@@ -221,7 +214,6 @@ export class _CardGrid extends React.PureComponent {
             raw_image_src={rec.raw_image_src}
             word_count={rec.word_count}
             time_to_read={rec.time_to_read}
-            displayReadTime={readTime}
             title={rec.title}
             excerpt={rec.excerpt}
             url={rec.url}
@@ -236,14 +228,6 @@ export class _CardGrid extends React.PureComponent {
             pocket_id={rec.pocket_id}
             context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
-            pocket_button_enabled={this.props.pocket_button_enabled}
-            hideDescriptions={hideDescriptions}
-            saveToPocketCard={saveToPocketCard}
-            compactImages={compactImages}
-            imageGradient={imageGradient}
-            newSponsoredLabel={newSponsoredLabel}
-            titleLines={titleLines}
-            descLines={descLines}
             is_collection={this.props.is_collection}
           />
         )
@@ -397,10 +381,8 @@ export class _CardGrid extends React.PureComponent {
 
 _CardGrid.defaultProps = {
   items: 4, // Number of stories to display
-  saveToPocketCard: false,
 };
 
 export const CardGrid = connect(state => ({
   Prefs: state.Prefs,
-  DiscoveryStream: state.DiscoveryStream,
 }))(_CardGrid);

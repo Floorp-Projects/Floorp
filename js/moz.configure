@@ -908,41 +908,6 @@ def wasm_avx(value, wasm_simd_enabled, simulator, target):
 set_config("ENABLE_WASM_AVX", wasm_avx)
 set_define("ENABLE_WASM_AVX", wasm_avx)
 
-
-# Wormhole opcodes are Intel-only.  They are private to Firefox, but we need them for some
-# experiments on release and so they ride the trains.
-
-
-@depends("--enable-simulator", "--enable-wasm-simd", target)
-def default_wasm_simd_wormhole(simulator, wasm_simd, target):
-    if wasm_simd and target.cpu in ("x86", "x86_64") and not simulator:
-        return True
-
-
-option(
-    "--enable-wasm-simd-wormhole",
-    default=default_wasm_simd_wormhole,
-    help="{Enable|Disable} WebAssembly SIMD wormhole opcodes",
-)
-
-
-@depends(
-    "--enable-wasm-simd-wormhole", "--enable-wasm-simd", "--enable-simulator", target
-)
-def wasm_simd_wormhole(value, wasm_simd, simulator, target):
-    if not value:
-        return
-
-    if wasm_simd and target.cpu in ("x86", "x86_64") and not simulator:
-        return True
-
-    die("SIMD wormhole currently supported on native x86/x64 only, with --wasm-simd")
-
-
-set_config("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
-set_define("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
-
-
 # Support for WebAssembly relaxed SIMD
 # =====================================================
 

@@ -873,8 +873,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   decoder:
@@ -890,8 +889,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   aom_decode_error:
@@ -913,8 +911,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1690406#c3
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   # dav1d_decode_error is replaced by avif.dav1d_get_picture in Events.yaml
@@ -936,8 +933,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   bit_depth:
@@ -956,8 +952,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1670827#c9
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   alpha:
@@ -973,8 +968,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   colr:
@@ -994,8 +988,7 @@ avif:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1729071#c15
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   cicp_cp:
@@ -1033,8 +1026,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   cicp_tc:
@@ -1068,8 +1060,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   cicp_mc:
@@ -1099,8 +1090,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   ispe:
@@ -1117,8 +1107,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   pixi:
@@ -1135,8 +1124,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1696045#c5
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   pasp:
@@ -1154,8 +1142,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   major_brand:
@@ -1171,8 +1158,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   sequence:
@@ -1187,8 +1173,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   a1lx:
@@ -1204,8 +1189,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   a1op:
@@ -1221,8 +1205,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   clap:
@@ -1238,8 +1221,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   grid:
@@ -1255,8 +1237,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   ipro:
@@ -1272,8 +1253,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   lsel:
@@ -1289,8 +1269,7 @@ avif:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1745608#c2
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
 network:
@@ -2043,9 +2022,7 @@ media.audio:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714#c10
     notification_emails:
-      - padenot@mozilla.com
-      - kinetik@flim.org
-      - cchang@mozilla.com
+      - media-alerts@mozilla.com
     expires: never
 
   backend:
@@ -2073,7 +2050,5 @@ media.audio:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1671714#c10
     notification_emails:
-      - padenot@mozilla.com
-      - kinetik@flim.org
-      - cchang@mozilla.com
+      - media-alerts@mozilla.com
     expires: never

@@ -3051,8 +3051,7 @@ avif:
     release_channel_collection: opt-out
     expiry_version: never
     notification_emails:
-      - cchang@mozilla.com
-      - jbauman@mozilla.com
+      - media-alerts@mozilla.com
 
 installation:
   first_seen:

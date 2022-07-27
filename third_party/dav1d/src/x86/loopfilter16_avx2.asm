@@ -761,7 +761,6 @@ SECTION .text
     psubw         m8, m15
     paddw         m8, m0
     psrlw        m10, m8, 4
-    pand         m10, m1
 %ifidn %2, v
     mova          m9, [tmpq+strideq*1]
 %else

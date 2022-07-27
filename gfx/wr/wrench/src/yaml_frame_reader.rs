@@ -337,6 +337,7 @@ pub struct YamlFrameReader {
     /// A HashMap that allows specifying a numeric id for clip and clip chains in YAML
     /// and having each of those ids correspond to a unique ClipId.
     user_clip_id_map: HashMap<u64, ClipId>,
+    user_clipchain_id_map: HashMap<u64, ClipChainId>,
     user_spatial_id_map: HashMap<u64, SpatialId>,
 
     spatial_id_stack: Vec<SpatialId>,
@@ -368,6 +369,7 @@ impl YamlFrameReader {
             allow_mipmaps: false,
             image_map: HashMap::new(),
             user_clip_id_map: HashMap::new(),
+            user_clipchain_id_map: HashMap::new(),
             user_spatial_id_map: HashMap::new(),
             spatial_id_stack: Vec::new(),
             yaml_string: String::new(),
@@ -461,6 +463,7 @@ impl YamlFrameReader {
     ) {
         // Don't allow referencing clips between pipelines for now.
         self.user_clip_id_map.clear();
+        self.user_clipchain_id_map.clear();
         self.user_spatial_id_map.clear();
         self.spatial_id_stack.clear();
         self.spatial_id_stack.push(SpatialId::root_scroll_node(pipeline_id));
@@ -479,15 +482,6 @@ impl YamlFrameReader {
         assert_eq!(self.spatial_id_stack.len(), 1);
     }
 
-    fn to_clip_id(&self, item: &Yaml, pipeline_id: PipelineId) -> Option<ClipId> {
-        match *item {
-            Yaml::Integer(value) => Some(self.user_clip_id_map[&(value as u64)]),
-            Yaml::String(ref id_string) if id_string == "root_clip" =>
-                Some(ClipId::root(pipeline_id)),
-            _ => None,
-        }
-    }
-
     fn to_clip_chain_id(
         &self,
         item: &Yaml,
@@ -495,11 +489,7 @@ impl YamlFrameReader {
     ) -> Option<ClipChainId> {
         match *item {
             Yaml::Integer(value) => {
-                let clip_id = self.user_clip_id_map[&(value as u64)];
-                match clip_id {
-                    ClipId::ClipChain(id) => Some(id),
-                    ClipId::Clip(..) => panic!("bug: must be a valid clip-chain id"),
-                }
+                Some(self.user_clipchain_id_map[&(value as u64)])
             }
             Yaml::Array(ref array) => {
                 let clip_ids: Vec<ClipId> = array
@@ -534,6 +524,11 @@ impl YamlFrameReader {
     fn add_clip_id_mapping(&mut self, numeric_id: u64, real_id: ClipId) {
         assert_ne!(numeric_id, 0, "id=0 is reserved for the root clip");
         self.user_clip_id_map.insert(numeric_id, real_id);
+    }
+
+    fn add_clip_chain_id_mapping(&mut self, numeric_id: u64, real_id: ClipChainId) {
+        assert_ne!(numeric_id, 0, "id=0 is reserved for the root clip-chain");
+        self.user_clipchain_id_map.insert(numeric_id, real_id);
     }
 
     fn add_spatial_id_mapping(&mut self, numeric_id: u64, real_id: SpatialId) {
@@ -1792,15 +1787,9 @@ impl YamlFrameReader {
             .map(|id| self.user_clip_id_map[id])
             .collect();
 
-        let parent = self.to_clip_id(&yaml["parent"], builder.pipeline_id);
-        let parent = match parent {
-            Some(ClipId::ClipChain(clip_chain_id)) => Some(clip_chain_id),
-            Some(_) => panic!("Tried to create a ClipChain with a non-ClipChain parent"),
-            None => None,
-        };
-
+        let parent = self.to_clip_chain_id(&yaml["parent"], builder);
         let real_id = builder.define_clip_chain(parent, clip_ids);
-        self.add_clip_id_mapping(numeric_id as u64, ClipId::ClipChain(real_id));
+        self.add_clip_chain_id_mapping(numeric_id as u64, real_id);
     }
 
     fn handle_clip(&mut self, dl: &mut DisplayListBuilder, wrench: &mut Wrench, yaml: &Yaml) {

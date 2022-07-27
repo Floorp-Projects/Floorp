@@ -154,11 +154,6 @@ const I16x8RelaxedQ15MulrS = 0x111;
 const I16x8DotI8x16I7x16S = 0x112;
 const I32x4DotI8x16I7x16AddS = 0x113;
 
-// SIMD wormhole opcodes.
-const WORMHOLE_SELFTEST = 0;
-const WORMHOLE_PMADDUBSW = 1;
-const WORMHOLE_PMADDWD = 2;
-
 const FirstInvalidOpcode = 0xc5;
 const LastInvalidOpcode = 0xfa;
 const GcPrefix = 0xfb;

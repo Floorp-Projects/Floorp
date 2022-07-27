@@ -5,7 +5,7 @@
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, PrimitiveKeyKind};
 use api::PropertyBinding;
 use api::units::*;
-use crate::clip::{ClipItemKey, ClipItemKeyKind, ClipChainId};
+use crate::clip::{ClipItemKey, ClipItemKeyKind, ClipNodeId};
 use crate::scene_building::SceneBuilder;
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::gpu_types::BoxShadowStretchMode;
@@ -74,7 +74,7 @@ impl<'a> SceneBuilder<'a> {
     pub fn add_box_shadow(
         &mut self,
         spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
+        clip_node_id: ClipNodeId,
         prim_info: &LayoutPrimitiveInfo,
         box_offset: &LayoutVector2D,
         color: ColorF,
@@ -163,7 +163,7 @@ impl<'a> SceneBuilder<'a> {
 
             self.add_primitive(
                 spatial_node_index,
-                clip_chain_id,
+                clip_node_id,
                 &LayoutPrimitiveInfo::with_clip_rect(final_prim_rect, prim_info.clip_rect),
                 clips,
                 PrimitiveKeyKind::Rectangle {
@@ -246,7 +246,7 @@ impl<'a> SceneBuilder<'a> {
 
             self.add_primitive(
                 spatial_node_index,
-                clip_chain_id,
+                clip_node_id,
                 &prim_info,
                 extra_clips,
                 prim,
