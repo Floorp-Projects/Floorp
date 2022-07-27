@@ -146,6 +146,9 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     case nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION:
     case nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL:
     case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
+    case nsIWebProgressListener::STATE_BLOCKED_EMAILTRACKING_CONTENT:
+    case nsIWebProgressListener::STATE_LOADED_EMAILTRACKING_LEVEL_1_CONTENT:
+    case nsIWebProgressListener::STATE_LOADED_EMAILTRACKING_LEVEL_2_CONTENT:
       RecordLogInternal(aOrigin, aType, blockedValue);
       break;
 
