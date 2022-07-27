@@ -714,6 +714,7 @@ struct LegacyFactoryFunction {
  *             ignored. If this is null and constructorClass is also null then
  *             we should not create an interface object at all.
  * ctorNargs is the length of the constructor function; 0 if no constructor
+ * isConstructorChromeOnly if true, the constructor is ChromeOnly.
  * constructorCache a pointer to a JSObject pointer where we should cache the
  *                  interface object. This must be null if both constructorClass
  *                  and constructor are null, and non-null otherwise.
@@ -756,6 +757,7 @@ void CreateInterfaceObjects(
     JS::Handle<JSObject*> protoProto, const JSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
     const JSClass* constructorClass, unsigned ctorNargs,
+    bool isConstructorChromeOnly,
     const LegacyFactoryFunction* namedConstructors,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,

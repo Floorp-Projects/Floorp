@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1776790
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1776790</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1776790">Mozilla Bug 1776790</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+/* global TestInterfaceLength */
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
+});
+
+/** Test for Bug 1776790 **/
+add_task(function test_interface_length() {
+  is(TestInterfaceLength.length, 0, "TestInterfaceLength.length");
+});
+
+</script>
+</pre>
+</body>
+</html>
