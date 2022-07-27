@@ -7,7 +7,7 @@
     <dimen name="mozac_browser_icons_size_launcher">48dp</dimen>
     <dimen name="mozac_browser_icons_size_launcher_adaptive">102dp</dimen>
 
-    <dimen name="mozac_browser_icons_maximum_size" tools:ignore="PxUsage">512px</dimen>
+    <dimen name="mozac_browser_icons_maximum_size" tools:ignore="PxUsage">1024px</dimen>
     <dimen name="mozac_browser_icons_minimum_size" tools:ignore="PxUsage">32px</dimen>
     <dimen name="mozac_browser_icons_generator_default_corner_radius">2dp</dimen>
 </resources>
