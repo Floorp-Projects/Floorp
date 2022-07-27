@@ -7,6 +7,7 @@
 #include "UrlClassifierFeatureEmailTrackingDataCollection.h"
 
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -183,11 +184,30 @@ UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel(
         isTopEmailWebApp
             ? Telemetry::LABELS_EMAIL_TRACKER_COUNT::content_email_webapp
             : Telemetry::LABELS_EMAIL_TRACKER_COUNT::content_normal);
+
+    // Notify the load event to record the content blocking log.
+    //
+    // Note that we need to change the code here if we decided to block content
+    // email trackers in the future.
+    ContentBlockingNotifier::OnEvent(
+        aChannel,
+        nsIWebProgressListener::STATE_LOADED_EMAILTRACKING_LEVEL_2_CONTENT);
   } else {
     Telemetry::AccumulateCategorical(
         isTopEmailWebApp
             ? Telemetry::LABELS_EMAIL_TRACKER_COUNT::base_email_webapp
             : Telemetry::LABELS_EMAIL_TRACKER_COUNT::base_normal);
+    // Notify to record content blocking log. Note that we don't need to notify
+    // if email tracking is enabled because the email tracking protection
+    // feature will be responsible for notifying the blocking event.
+    //
+    // Note that we need to change the code here if we decided to block content
+    // email trackers in the future.
+    if (!StaticPrefs::privacy_trackingprotection_emailtracking_enabled()) {
+      ContentBlockingNotifier::OnEvent(
+          aChannel,
+          nsIWebProgressListener::STATE_LOADED_EMAILTRACKING_LEVEL_1_CONTENT);
+    }
   }
 
   return NS_OK;
