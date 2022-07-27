@@ -656,6 +656,10 @@ skip script test262/intl402/PluralRules/prototype/selectRange/x-greater-than-y-t
 skip script test262/intl402/NumberFormat/prototype/formatRange/x-greater-than-y-throws.js
 skip script test262/intl402/NumberFormat/prototype/formatRangeToParts/x-greater-than-y-throws.js
 
+# https://github.com/tc39/test262/pull/3609
+skip script test262/intl402/DateTimeFormat/prototype/formatRange/date-x-greater-than-y-throws.js
+skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/date-x-greater-than-y-throws.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
