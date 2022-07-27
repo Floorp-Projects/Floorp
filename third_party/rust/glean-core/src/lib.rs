@@ -498,6 +498,19 @@ fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfoMetrics) {
     }
     core_metrics::internal_metrics::os_version.set_sync(glean, system::get_os_version());
     core_metrics::internal_metrics::architecture.set_sync(glean, system::ARCH.to_string());
+
+    if let Some(android_sdk_version) = client_info.android_sdk_version.as_ref() {
+        core_metrics::internal_metrics::android_sdk_version.set_sync(glean, android_sdk_version);
+    }
+    if let Some(device_manufacturer) = client_info.device_manufacturer.as_ref() {
+        core_metrics::internal_metrics::device_manufacturer.set_sync(glean, device_manufacturer);
+    }
+    if let Some(device_model) = client_info.device_model.as_ref() {
+        core_metrics::internal_metrics::device_model.set_sync(glean, device_model);
+    }
+    if let Some(locale) = client_info.locale.as_ref() {
+        core_metrics::internal_metrics::locale.set_sync(glean, locale);
+    }
 }
 
 /// Checks if [`initialize`] was ever called.
