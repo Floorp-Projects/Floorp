@@ -24,3 +24,5 @@ if (Services.prefs.getBoolPref("toolkit.legacyUserProfileCustomizations.script",
     Cu.import('chrome://userchromejs/content/userChrome.jsm');
   } catch (ex) {};
 }
+
+defaultPref("browser.contentblocking.category", "strict")
