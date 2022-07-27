@@ -651,15 +651,6 @@ fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype
 skip script test262/built-ins/Date/year-zero.js
 skip script test262/built-ins/Date/parse/year-zero.js
 
-# https://github.com/tc39/test262/pull/3608
-skip script test262/intl402/PluralRules/prototype/selectRange/x-greater-than-y-throws.js
-skip script test262/intl402/NumberFormat/prototype/formatRange/x-greater-than-y-throws.js
-skip script test262/intl402/NumberFormat/prototype/formatRangeToParts/x-greater-than-y-throws.js
-
-# https://github.com/tc39/test262/pull/3609
-skip script test262/intl402/DateTimeFormat/prototype/formatRange/date-x-greater-than-y-throws.js
-skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/date-x-greater-than-y-throws.js
-
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
