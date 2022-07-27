@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/lib/ASRouterTriggerListeners.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Downloader: "resource://services-settings/Attachments.jsm",
+  RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
@@ -96,6 +97,14 @@ const TOPIC_EXPERIMENT_FORCE_ENROLLED = "nimbus:force-enroll";
 // To observe the pref that controls if ASRouter should use the remote Fluent files for l10n.
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
+
+const MESSAGING_EXPERIMENTS_DEFAULT_FEATURES = [
+  "cfr",
+  "infobar",
+  "moments-page",
+  "pbNewtab",
+  "spotlight",
+];
 
 // Experiment groups that need to report the reach event in Messaging-Experiments.
 // If you're adding new groups to it, make sure they're also added in the
@@ -325,15 +334,27 @@ const MessageLoaderUtils = {
     return RemoteSettings(bucket).get();
   },
 
+  /**
+   * Return messages from active Nimbus experiments.
+   *
+   * @param {object} provider A messaging experiments provider.
+   * @param {string[]?} provider.featureIds
+   *                    An optional array of Nimbus feature IDs to check for
+   *                    messaging experiments. If not provided, we will fall
+   *                    back to the set of default features. Otherwise, if
+   *                    provided and empty, we will not ingest messages from any
+   *                    features.
+   *
+   * @return {object[]} The list of messages from active experiments, as well as
+   *                    the messages defined in unenrolled branches so that they
+   *                    reach events can be recorded (if we record reach events
+   *                    for that feature).
+   */
   async _experimentsAPILoader(provider) {
     // Allow tests to override the set of featureIds
-    const featureIds = provider.featureIds ?? [
-      "cfr",
-      "infobar",
-      "moments-page",
-      "pbNewtab",
-      "spotlight",
-    ];
+    const featureIds = Array.isArray(provider.featureIds)
+      ? provider.featureIds
+      : MESSAGING_EXPERIMENTS_DEFAULT_FEATURES;
     let experiments = [];
     for (const featureId of featureIds) {
       let featureAPI = lazy.NimbusFeatures[featureId];
@@ -552,6 +573,7 @@ class _ASRouter {
       errors: [],
       localeInUse: Services.locale.appLocaleAsBCP47,
     };
+    this._experimentChangedListeners = new Map();
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
     this.blockMessageById = this.blockMessageById.bind(this);
@@ -636,6 +658,13 @@ class _ASRouter {
           );
           provider.url = Services.urlFormatter.formatURL(provider.url);
         }
+        if (provider.id === "messaging-experiments") {
+          // By default, the messaging-experiments provider lacks a featureIds
+          // property, so fall back to the list of default features.
+          if (!provider.featureIds) {
+            provider.featureIds = MESSAGING_EXPERIMENTS_DEFAULT_FEATURES;
+          }
+        }
         // Reset provider update timestamp to force message refresh
         provider.lastUpdated = undefined;
         return provider;
@@ -650,6 +679,21 @@ class _ASRouter {
       if (!providerIDs.includes(prevProvider.id)) {
         invalidProviders.push(prevProvider.id);
       }
+    }
+
+    {
+      // If the feature IDs of the messaging-experiments provider has changed,
+      // then we need to update which features for which we are listening to
+      // changes.
+      const prevExpts = previousProviders.find(
+        p => p.id === "messaging-experiments"
+      );
+      const expts = providers.find(p => p.id === "messaging-experiments");
+
+      this._onFeatureListChanged(
+        prevExpts?.enabled ? prevExpts.featureIds : [],
+        expts?.enabled ? expts.featureIds : []
+      );
     }
 
     return this.setState(prevState => ({
@@ -1848,7 +1892,7 @@ class _ASRouter {
     await lazy.ToolbarPanelHub._hideToolbarButton(win);
   }
 
-  async _onExperimentForceEnrolled(subject, topic, data) {
+  async _onExperimentForceEnrolled(subject, topic, slug) {
     const experimentProvider = this.state.providers.find(
       p => p.id === "messaging-experiments"
     );
@@ -1856,7 +1900,88 @@ class _ASRouter {
       return;
     }
 
+    const branch = lazy.ExperimentAPI.getActiveBranch({ slug });
+    const features = branch.features ?? [branch.feature];
+    const featureIds = features.map(feature => feature.featureId);
+
+    this._onFeaturesUpdated(...featureIds);
+
     await this.loadMessagesFromAllProviders([experimentProvider]);
+  }
+
+  /**
+   * Handle a change to the list of featureIds that the messaging-experiments
+   * provider is watching.
+   *
+   * This normally occurs when ASRouter update message providers, which happens
+   * every startup and when the messaging-experiment provider pref changes.
+   *
+   * On startup, |oldFeatures| will be an empty array and we will subscribe to
+   * everything in |newFeatures|.
+   *
+   * When the pref changes, we unsubscribe from |oldFeatures - newFeatures| and
+   * subscribe to |newFeatures - oldFeatures|. Features that are listed in both
+   * sets do not have their subscription status changed. Pref changes are mostly
+   * during unit tests.
+   *
+   * @param {string[]} oldFeatures The list of feature IDs we were previously
+   *                               listening to for new experiments.
+   * @param {string[]} newFeatures The list of feature IDs we are now listening
+   *                               to for new experiments.
+   */
+  _onFeatureListChanged(oldFeatures, newFeatures) {
+    for (const featureId of oldFeatures) {
+      if (!newFeatures.includes(featureId)) {
+        const listener = this._experimentChangedListeners.get(featureId);
+        this._experimentChangedListeners.delete(featureId);
+        lazy.NimbusFeatures[featureId].off(listener);
+      }
+    }
+
+    const newlySubscribed = [];
+
+    for (const featureId of newFeatures) {
+      if (!oldFeatures.includes(featureId)) {
+        const listener = () => this._onFeaturesUpdated(featureId);
+        this._experimentChangedListeners.set(featureId, listener);
+        lazy.NimbusFeatures[featureId].onUpdate(listener);
+
+        newlySubscribed.push(featureId);
+      }
+    }
+
+    // Check for any messages present in the newly subscribed to Nimbus features
+    // so we can prefetch their remote images (if any).
+    this._onFeaturesUpdated(...newlySubscribed);
+  }
+
+  /**
+   * Handle updated experiment features.
+   *
+   * If there are messages for the feature, RemoteImages will prefetch any
+   * images.
+   *
+   * @param {string[]} featureIds The feature IDs that have been updated.
+   */
+  _onFeaturesUpdated(...featureIds) {
+    const messages = [];
+
+    for (const featureId of featureIds) {
+      const featureAPI = lazy.NimbusFeatures[featureId];
+      // If there is no active experiment for the feature, this will return
+      // null.
+      if (lazy.ExperimentAPI.getExperimentMetaData({ featureId })) {
+        // Otherwise, getAllVariables() will return the JSON blob for the
+        // message.
+        messages.push(featureAPI.getAllVariables());
+      }
+    }
+
+    // We are not awaiting this because we want these images to load in the
+    // background.
+    if (messages.length) {
+      lazy.RemoteImages.prefetchImagesFor(messages);
+    }
   }
 }
 
