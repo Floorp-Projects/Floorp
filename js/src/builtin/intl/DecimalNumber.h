@@ -38,6 +38,9 @@ namespace js::intl {
  * Note: Internally we leave the decimal point where it lies to avoid copying
  * the string, but otherwise ignore it once we calculate the normalized
  * exponent.
+ *
+ * TODO: Remove unused capabilities once there's a concrete PR for
+ * <https://github.com/tc39/proposal-intl-numberformat-v3/issues/98>.
  */
 class MOZ_STACK_CLASS DecimalNumber final {
   using Latin1String = mozilla::Span<const JS::Latin1Char>;
