@@ -653,6 +653,8 @@ skip script test262/built-ins/Date/parse/year-zero.js
 
 # https://github.com/tc39/test262/pull/3608
 skip script test262/intl402/PluralRules/prototype/selectRange/x-greater-than-y-throws.js
+skip script test262/intl402/NumberFormat/prototype/formatRange/x-greater-than-y-throws.js
+skip script test262/intl402/NumberFormat/prototype/formatRangeToParts/x-greater-than-y-throws.js
 
 
 ##############################################
