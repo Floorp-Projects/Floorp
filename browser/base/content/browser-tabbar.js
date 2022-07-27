@@ -35,11 +35,17 @@ const CustomCssPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings"
    Tag.innerText = `@import url(chrome://browser/skin/customcss/tabs_on_bottom.css);`
    document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
    break;
- case 5:
-    var Tag = document.createElement("style");
+
+ case 6:
+      var Tag = document.createElement("style");
       Tag.setAttribute("id", "tabbardesgin");
-      Tag.innerText = `@import url(chrome://browser/skin/customcss/classic_firefox_menu_button.css);`
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);   
+      Tag.innerText = `@import url(chrome://browser/skin/customcss/tabbar_on_window_bottom.css);`
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag); 
+      
+      var script = document.createElement("script");
+      script.setAttribute("id", "tabbar-script");
+      script.src = "chrome://browser/skin/customcss/tabbar_on_window_bottom.js"; 
+      document.head.appendChild(script);         
     break;
  }
  
@@ -47,8 +53,13 @@ const CustomCssPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings"
 
  Services.prefs.addObserver("floorp.browser.tabbar.settings", function(){
    const CustomCssPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings")
-   var menuid = document.getElementById("tabbardesgin");
-   menuid.remove(); 
+   document.getElementById("tabbardesgin").remove();
+
+   try {
+    document.getElementById("tabbar-script").remove();
+    document.getElementById("navigator-toolbox").insertBefore(document.getElementById("titlebar"), document.getElementById("navigator-toolbox").firstChild);
+   } catch(e) {
+   }
 
    switch(CustomCssPref){
       case 1: 
@@ -81,14 +92,17 @@ const CustomCssPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings"
       Tag.innerText = `@import url(chrome://browser/skin/customcss/tabs_on_bottom.css);`
       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
       break;
-   
-   
-    case 5:
-       var Tag = document.createElement("style");
-       Tag.setAttribute("id", "tabbardesgin");
-       Tag.innerText = `@import url(chrome://browser/skin/customcss/classic_firefox_menu_button.css);`
-       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);   
-       break;
+
+    case 6:
+      var Tag = document.createElement("style");
+      Tag.setAttribute("id", "tabbardesgin");
+      Tag.innerText = `@import url(chrome://browser/skin/customcss/tabbar_on_window_bottom.css);`
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag); 
+      var script = document.createElement("script");
+      script.setAttribute("id", "tabbar-script");
+      script.src = "chrome://browser/skin/customcss/tabbar_on_window_bottom.js"; 
+      document.head.appendChild(script);         
+      break;
     } 
   }   
 )

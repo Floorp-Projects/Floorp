@@ -15,14 +15,14 @@
   skin/classic/browser/optioncss/msbutton.css                               (../shared/theme/optioncss/msbutton.css)
   skin/classic/browser/optioncss/treestyletab.css                           (../shared/theme/optioncss/treestyletab.css)
   skin/classic/browser/optioncss/bookmarkbar_autohide.css                   (../shared/theme/optioncss/bookmarkbar_autohide.css)
-  skin/classic/browser/optioncss/legacy_firefox_menu_mode.css               (../shared/theme/optioncss/legacy_firefox_menu_mode.css)
 
 # CustomCss
 
   skin/classic/browser/customcss/hide-tabbrowser.css                        (../shared/theme/customcss/hide-tabbrowser.css)
   skin/classic/browser/customcss/verticaltab.css                            (../shared/theme/customcss/verticaltab.css)
   skin/classic/browser/customcss/tabs_on_bottom.css                         (../shared/theme/customcss/tabs_on_bottom.css)
-  skin/classic/browser/customcss/classic_firefox_menu_button.css            (../shared/theme/customcss/classic_firefox_menu_button.css)
+  skin/classic/browser/customcss/tabbar_on_window_bottom.css                (../shared/theme/customcss/tabbar_on_window_bottom.css)
+  skin/classic/browser/customcss/tabbar_on_window_bottom.js                (../shared/theme/customcss/tabbar_on_window_bottom.js)
 
 # Lepton (Waterfox)
 # please see "browser\themes\shared\theme\lepton\CREDITS"
