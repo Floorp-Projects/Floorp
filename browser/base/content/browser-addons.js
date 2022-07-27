@@ -1223,23 +1223,16 @@ var gUnifiedExtensions = {
     if (unifiedExtensionsEnabled) {
       MozXULElement.insertFTLIfNeeded("preview/unifiedExtensions.ftl");
 
-      // Lazy-load the panel view.
-      const template = document.getElementById("unified-extensions-template");
-      if (template) {
-        template.replaceWith(template.content);
-      }
-
-      let listView = document.getElementById("unified-extensions-view");
-      listView.addEventListener("ViewShowing", this);
-      listView.addEventListener("ViewHiding", this);
-
+      this._button = document.getElementById("unified-extensions-button");
       // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
-      document.getElementById(
-        "unified-extensions-button"
-      ).hidden = !unifiedExtensionsEnabled;
+      this._button.hidden = !unifiedExtensionsEnabled;
     }
 
     this._initialized = true;
+  },
+
+  get button() {
+    return this._button;
   },
 
   /**
@@ -1291,7 +1284,7 @@ var gUnifiedExtensions = {
     }
   },
 
-  async togglePanel(anchor, aEvent) {
+  async togglePanel(aEvent) {
     // The button should directly open `about:addons` when there is no active
     // extension to show in the panel.
     if ((await this.getActiveExtensions()).length === 0) {
@@ -1299,10 +1292,20 @@ var gUnifiedExtensions = {
       return;
     }
 
-    if (anchor.getAttribute("open") == "true") {
-      PanelUI.hide();
+    if (!this._listView) {
+      this._listView = PanelMultiView.getViewNode(
+        document,
+        "unified-extensions-view"
+      );
+      this._listView.addEventListener("ViewShowing", this);
+      this._listView.addEventListener("ViewHiding", this);
+    }
+
+    if (this._button.open) {
+      PanelMultiView.hidePopup(this._listView.closest("panel"));
+      this._button.open = false;
     } else {
-      PanelUI.showSubView("unified-extensions-view", anchor, aEvent);
+      PanelUI.showSubView("unified-extensions-view", this._button, aEvent);
     }
   },
 };

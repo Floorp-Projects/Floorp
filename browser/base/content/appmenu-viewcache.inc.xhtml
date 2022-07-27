@@ -680,4 +680,25 @@
               onclick="ToolbarPanelHub.toggleWhatsNewPref(event)"
               data-l10n-id="whatsnew-panel-footer-checkbox"/>
   </panelview>
+
+  <panelview id="unified-extensions-view"
+             class="cui-widget-panelview PanelUI-subView"
+             flex="1">
+    <vbox class="unified-extensions-panel-header">
+      <html:h1 data-l10n-id="unified-extensions-header-title"/>
+    </vbox>
+
+    <toolbarseparator />
+
+    <vbox class="panel-subview-body unified-extensions-list">
+      <!-- active visible extensions go here -->
+    </vbox>
+
+    <toolbarseparator />
+
+    <toolbarbutton id="unified-extensions-manage-extensions"
+                   class="subviewbutton panel-subview-footer-button unified-extensions-manage-extensions"
+                   data-l10n-id="unified-extensions-manage-extensions"
+                   oncommand="BrowserOpenAddonsMgr('addons://list/extension');" />
+  </panelview>
 </html:template>
