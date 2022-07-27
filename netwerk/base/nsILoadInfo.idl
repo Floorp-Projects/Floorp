@@ -1395,6 +1395,11 @@ interface nsILoadInfo : nsISupports
         loadingEmbedderPolicy;
 
   /**
+   * This attribute will be true if the top level document has COEP:
+   * credentialless enabled in Origin Trial.
+   */
+  [infallible] attribute boolean isOriginTrialCoepCredentiallessEnabledForTopLevel;
+  /**
    * This attribute will be true if this is a load triggered by a media
    * element.
    */
