@@ -150,4 +150,13 @@ add_task(async function validate_filename_method() {
     checkFilename(repeatStr + ext, mimeService.VALIDATE_SANITIZE_ONLY),
     repeatStr.substring(0, 234) + ".long_invalid% ch_ars"
   );
+
+  Assert.equal(
+    checkFilename("test_ﾃｽﾄ_T\x83E\\S\x83T.png", 0),
+    "test_ﾃｽﾄ_T E_S T.png"
+  );
+  Assert.equal(
+    checkFilename("test_ﾃｽﾄ_T\x83E\\S\x83T.pﾃ\x83ng", 0),
+    "test_ﾃｽﾄ_T E_S T.png"
+  );
 });
