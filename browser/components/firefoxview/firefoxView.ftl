@@ -48,7 +48,7 @@ firefoxview-closed-tabs-collapse-button =
   .title = Show or hide recently closed tabs list
 
 firefoxview-closed-tabs-description = Reopen pages you’ve closed on this device.
-firefoxview-closed-tabs-placeholder = History is empty <br/> The next time you close a tab, you can reopen it here.
+firefoxview-closed-tabs-placeholder = <strong>No recently closed pages</strong><br/>Never fear losing a closed tab again. You can always retrieve it here.
 
 # refers to the last tab that was used
 firefoxview-pickup-tabs-badge = Last active
@@ -67,4 +67,4 @@ firefoxview-change-colorway-button = Change colorway
 #  $collection (String): Colorway Collection name
 firefoxview-colorway-description = { $intensity } · { $collection }
 
-firefoxview-synced-tabs-placeholder = No tabs open on other devices <br/> When you use { -brand-product-name } on another device, those tabs will show up here.
+firefoxview-synced-tabs-placeholder = <strong>Nothing to see yet</strong><br/>The next time you open a page in { -brand-product-name } on another device, grab it here like magic.

@@ -90,6 +90,8 @@ this.ui = (function() {
           this.element = initializeIframe();
           this.element.id = "firefox-screenshots-selection-iframe";
           this.element.style.display = "none";
+          this.element.style.setProperty("max-width", "100%", "important");
+          this.element.style.setProperty("max-height", "100%", "important");
           this.element.style.setProperty("position", "absolute", "important");
           this.element.setAttribute("role", "dialog");
           this.updateElementSize();
@@ -244,6 +246,8 @@ this.ui = (function() {
           this.element.style.setProperty("position", "fixed", "important");
           this.element.style.width = "100%";
           this.element.style.height = "100%";
+          this.element.style.setProperty("max-width", "100%", "important");
+          this.element.style.setProperty("max-width", "100%", "important");
           this.element.setAttribute("role", "dialog");
           this.element.addEventListener(
             "load",
@@ -386,6 +390,8 @@ this.ui = (function() {
           this.element.style.setProperty("position", "fixed", "important");
           this.element.style.height = "100%";
           this.element.style.width = "100%";
+          this.element.style.setProperty("max-width", "100%", "important");
+          this.element.style.setProperty("max-width", "100%", "important");
           this.element.setAttribute("role", "dialog");
           this.element.onload = watchFunction(() => {
             msgsPromise.then(([cancelTitle, copyTitle, downloadTitle]) => {

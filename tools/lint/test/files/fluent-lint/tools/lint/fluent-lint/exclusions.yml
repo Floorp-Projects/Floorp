@@ -10,3 +10,8 @@ ID01:
 ID02:
     messages: []
     files: []
+CO01:
+    messages:
+        - bad-firefox-excluded
+    files:
+        - brand-names-excluded.ftl

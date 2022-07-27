@@ -5,7 +5,7 @@
 use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU};
 use api::{NormalBorder as ApiNormalBorder, RepeatMode};
 use api::units::*;
-use crate::clip::ClipChainId;
+use crate::clip::ClipNodeId;
 use crate::ellipse::Ellipse;
 use euclid::vec2;
 use crate::scene_building::SceneBuilder;
@@ -217,14 +217,14 @@ impl<'a> SceneBuilder<'a> {
         border: &ApiNormalBorder,
         widths: LayoutSideOffsets,
         spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId,
+        clip_node_id: ClipNodeId,
     ) {
         let mut border = *border;
         ensure_no_corner_overlap(&mut border.radius, info.rect.size());
 
         self.add_primitive(
             spatial_node_index,
-            clip_chain_id,
+            clip_node_id,
             info,
             Vec::new(),
             NormalBorderPrim {

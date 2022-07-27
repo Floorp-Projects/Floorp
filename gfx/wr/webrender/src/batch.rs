@@ -917,7 +917,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -984,7 +984,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -1048,7 +1048,7 @@ impl BatchBuilder {
                         min: prim_rect.min - run.reference_frame_relative_offset,
                         max: run.snapped_reference_frame_relative_offset.to_point(),
                     },
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -1320,7 +1320,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -1362,7 +1362,7 @@ impl BatchBuilder {
                         let brush_flags = brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION;
 
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
-                        let mut local_clip_rect = prim_info.combined_local_clip_rect;
+                        let mut local_clip_rect = prim_info.clip_chain.local_clip_rect;
 
                         // If we are drawing with snapping enabled, form a simple transform that just applies
                         // the scale / translation from the raster transform. Otherwise, in edge cases where the
@@ -1391,7 +1391,7 @@ impl BatchBuilder {
                             let transform = ScaleOffset::new(sx, sy, tx, ty);
 
                             let raster_clip_rect = map_local_to_raster
-                                .map(&prim_info.combined_local_clip_rect)
+                                .map(&prim_info.clip_chain.local_clip_rect)
                                 .unwrap();
                             local_clip_rect = transform.unmap_rect(&raster_clip_rect);
 
@@ -1926,7 +1926,7 @@ impl BatchBuilder {
 
                                         let prim_header = PrimitiveHeader {
                                             local_rect: prim_rect,
-                                            local_clip_rect: prim_info.combined_local_clip_rect,
+                                            local_clip_rect: prim_info.clip_chain.local_clip_rect,
                                             specific_prim_address: GpuCacheAddress::INVALID,
                                             transform_id: transforms
                                                 .get_id(
@@ -2130,7 +2130,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -2200,7 +2200,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -2305,7 +2305,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };
@@ -2394,7 +2394,7 @@ impl BatchBuilder {
 
                     let prim_header = PrimitiveHeader {
                         local_rect: prim_rect,
-                        local_clip_rect: prim_info.combined_local_clip_rect,
+                        local_clip_rect: prim_info.clip_chain.local_clip_rect,
                         specific_prim_address: prim_cache_address,
                         transform_id,
                     };
@@ -2493,7 +2493,7 @@ impl BatchBuilder {
 
                 let mut prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: GpuCacheAddress::INVALID,
                     transform_id,
                 };
@@ -2598,7 +2598,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: gpu_cache.get_address(&common_data.gpu_cache_handle),
                     transform_id,
                 };
@@ -2715,7 +2715,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: gpu_cache.get_address(&common_data.gpu_cache_handle),
                     transform_id,
                 };
@@ -2834,7 +2834,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: gpu_cache.get_address(&common_data.gpu_cache_handle),
                     transform_id,
                 };
@@ -2943,7 +2943,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
-                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    local_clip_rect: prim_info.clip_chain.local_clip_rect,
                     specific_prim_address: prim_cache_address,
                     transform_id,
                 };

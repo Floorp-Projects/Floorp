@@ -302,7 +302,8 @@ impl ImageData {
                 // produce primitives that are partially covering the original image
                 // rect and we want to clip these extra parts out.
                 let tight_clip_rect = visibility
-                    .combined_local_clip_rect
+                    .clip_chain
+                    .local_clip_rect
                     .intersection(&common.prim_rect).unwrap();
                 image_instance.tight_local_clip_rect = tight_clip_rect;
 

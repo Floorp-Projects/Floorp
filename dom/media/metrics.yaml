@@ -47,5 +47,5 @@ gmp:
     data_sensitivity:
       - technical
     notification_emails:
-      - bvandyk@mozilla.com
+      - media-alerts@mozilla.com
     expires: never

@@ -10361,6 +10361,9 @@ class MWasmBinarySimd128 : public MBinaryInstruction,
   }
 #ifdef ENABLE_WASM_SIMD
   MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  // Checks if pmaddubsw operation is supported.
+  bool canPmaddubsw();
 #endif
 
   wasm::SimdOp simdOp() const { return simdOp_; }

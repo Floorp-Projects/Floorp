@@ -27,5 +27,6 @@ module.exports = {
     fetch: false,
     crypto: false,
     indexedDB: false,
+    structuredClone: false,
   },
 };

@@ -184,7 +184,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             placement={component.placement}
             type={component.type}
             items={component.properties.items}
-            pocket_button_enabled={component.pocketButtonEnabled}
             dismissible={this.props.DiscoveryStream.isCollectionDismissible}
             dispatch={this.props.dispatch}
           />
@@ -202,19 +201,11 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             hybridLayout={component.properties.hybridLayout}
             hideCardBackground={component.properties.hideCardBackground}
             fourCardLayout={component.properties.fourCardLayout}
-            hideDescriptions={component.properties.hideDescriptions}
             compactGrid={component.properties.compactGrid}
-            compactImages={component.properties.compactImages}
-            imageGradient={component.properties.imageGradient}
-            newSponsoredLabel={component.properties.newSponsoredLabel}
-            titleLines={component.properties.titleLines}
-            descLines={component.properties.descLines}
             essentialReadsHeader={component.properties.essentialReadsHeader}
             editorsPicksHeader={component.properties.editorsPicksHeader}
-            readTime={component.properties.readTime}
-            saveToPocketCard={component.saveToPocketCard}
-            pocket_button_enabled={component.pocketButtonEnabled}
             recentSavesEnabled={this.props.DiscoveryStream.recentSavesEnabled}
+            hideDescriptions={this.props.DiscoveryStream.hideDescriptions}
           />
         );
       case "HorizontalRule":

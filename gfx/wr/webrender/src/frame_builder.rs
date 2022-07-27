@@ -5,7 +5,7 @@
 use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer, CommandBufferList};
-use crate::clip::{ClipStore, ClipChainStack};
+use crate::clip::ClipStore;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
@@ -111,7 +111,6 @@ impl FrameGlobalResources {
 pub struct FrameScratchBuffer {
     dirty_region_stack: Vec<DirtyRegion>,
     surface_stack: Vec<(PictureIndex, SurfaceIndex)>,
-    clip_chain_stack: ClipChainStack,
 }
 
 impl Default for FrameScratchBuffer {
@@ -119,7 +118,6 @@ impl Default for FrameScratchBuffer {
         FrameScratchBuffer {
             dirty_region_stack: Vec::new(),
             surface_stack: Vec::new(),
-            clip_chain_stack: ClipChainStack::new(),
         }
     }
 }
@@ -128,7 +126,6 @@ impl FrameScratchBuffer {
     pub fn begin_frame(&mut self) {
         self.dirty_region_stack.clear();
         self.surface_stack.clear();
-        self.clip_chain_stack.clear();
     }
 }
 
@@ -190,7 +187,6 @@ impl<'a> FrameBuildingState<'a> {
 #[derive(Debug)]
 pub struct PictureContext {
     pub pic_index: PictureIndex,
-    pub apply_local_clip_rect: bool,
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub raster_spatial_node_index: SpatialNodeIndex,
     /// The surface that this picture will render on.
@@ -305,7 +301,6 @@ impl FrameBuilder {
                             .expect("bug: non-existent tile cache");
 
                         let mut visibility_state = FrameVisibilityState {
-                            clip_chain_stack: scratch.frame.clip_chain_stack.take(),
                             surface_stack: scratch.frame.surface_stack.take(),
                             resource_cache,
                             gpu_cache,
@@ -313,6 +308,7 @@ impl FrameBuilder {
                             scratch,
                             data_stores,
                             composite_state,
+                            clip_tree: &mut scene.clip_tree,
                         };
 
                         // If we have a tile cache for this picture, see if any of the
@@ -331,9 +327,8 @@ impl FrameBuilder {
                         visibility_state.push_surface(
                             *pic_index,
                             surface_index,
-                            &tile_cache.shared_clips,
-                            frame_context.spatial_tree,
                         );
+                        visibility_state.clip_tree.push_clip_root_node(tile_cache.shared_clip_node_id);
 
                         update_prim_visibility(
                             *pic_index,
@@ -354,8 +349,8 @@ impl FrameBuilder {
                             &mut visibility_state,
                         );
 
+                        visibility_state.clip_tree.pop_clip_root();
                         visibility_state.pop_surface();
-                        visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
                         visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
                     }
                     _ => {

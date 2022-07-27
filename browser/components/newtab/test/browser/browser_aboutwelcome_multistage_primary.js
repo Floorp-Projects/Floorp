@@ -135,7 +135,7 @@ add_task(async function test_AWMultistage_RemovePinScreen() {
   // Ensure step indicator is not displayed
   await test_element_styles(
     browser,
-    "nav.steps",
+    "div.steps",
     // Expected styles:
     {
       display: "none",

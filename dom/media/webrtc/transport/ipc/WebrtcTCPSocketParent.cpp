@@ -24,6 +24,10 @@ mozilla::ipc::IPCResult WebrtcTCPSocketParent::RecvAsyncOpen(
        PromiseFlatCString(aHost).get(), aPort));
 
   MOZ_ASSERT(mChannel, "webrtc TCP socket should be non-null");
+  if (!mChannel) {
+    return IPC_FAIL(this, "Called with null channel.");
+  }
+
   mChannel->Open(aHost, aPort, aLocalAddress, aLocalPort, aUseTls,
                  aProxyConfig);
 

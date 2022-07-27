@@ -143,10 +143,28 @@ struct TimingParams {
   }
 
   StickyTimeDuration EndTime() const {
-    MOZ_ASSERT(mEndTime == std::max(mDelay + ActiveDuration() + mEndDelay,
-                                    StickyTimeDuration()),
+    MOZ_ASSERT(mEndTime == CalcEndTime(),
                "Cached value of end time should be up to date");
     return mEndTime;
+  }
+
+  StickyTimeDuration CalcBeforeActiveBoundary() const {
+    static constexpr StickyTimeDuration zeroDuration;
+    // https://drafts.csswg.org/web-animations-1/#before-active-boundary-time
+    return std::max(std::min(StickyTimeDuration(mDelay), mEndTime),
+                    zeroDuration);
+  }
+
+  StickyTimeDuration CalcActiveAfterBoundary() const {
+    if (mActiveDuration == StickyTimeDuration::Forever()) {
+      return StickyTimeDuration::Forever();
+    }
+
+    static constexpr StickyTimeDuration zeroDuration;
+    // https://drafts.csswg.org/web-animations-1/#active-after-boundary-time
+    return std::max(
+        std::min(StickyTimeDuration(mDelay + mActiveDuration), mEndTime),
+        zeroDuration);
   }
 
   bool operator==(const TimingParams& aOther) const;
@@ -209,9 +227,14 @@ struct TimingParams {
  private:
   void Update() {
     mActiveDuration = CalcActiveDuration(mDuration, mIterations);
+    mEndTime = CalcEndTime();
+  }
 
-    mEndTime =
-        std::max(mDelay + mActiveDuration + mEndDelay, StickyTimeDuration());
+  StickyTimeDuration CalcEndTime() const {
+    if (mActiveDuration == StickyTimeDuration::Forever()) {
+      return StickyTimeDuration::Forever();
+    }
+    return std::max(mDelay + mActiveDuration + mEndDelay, StickyTimeDuration());
   }
 
   // mDuration.isNothing() represents the "auto" value

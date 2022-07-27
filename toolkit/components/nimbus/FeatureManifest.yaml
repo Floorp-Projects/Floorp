@@ -24,7 +24,7 @@ testFeature:
       description: Int pref used by platform API tests
 search:
   description: The Search Services
-  owner: standard8@mozilla.com
+  owner: search-and-suggest-program@mozilla.com
   hasExposure: false
   variables:
     experiment:
@@ -402,7 +402,7 @@ password-autocomplete:
       description: Enable direct migration?
 shellService:
   description: "Interface with OS, e.g., pinning and set default"
-  owner: bhearsum@mozilla.com
+  owner: desktop-integrations@mozilla.com
   hasExposure: false
   isEarlyStartup: true
   variables:
@@ -531,7 +531,7 @@ backgroundTaskMessage:
   variables: {}
 syncAfterTabChange:
   description: "Schedule a sync after any tab change"
-  owner: mhammond@mozilla.com
+  owner: sync-team@mozilla.com
   hasExposure: false
   isEarlyStartup: false
   variables:
@@ -557,7 +557,7 @@ pictureinpicture:
       description: Whether to show the first time PiP toggle or show the PiP icon only
 glean:
   description: "The Glean data collection SDK within Firefox Desktop"
-  owner: chutten@mozilla.com
+  owner: glean-team@mozilla.com
   hasExposure: false
   variables:
     newtabPingEnabled:

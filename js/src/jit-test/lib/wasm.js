@@ -49,15 +49,13 @@ if (largeArrayBufferEnabled()) {
 }
 var MaxPagesIn32BitMemory = Math.floor(MaxBytesIn32BitMemory / PageSizeInBytes);
 
-// "options" is an extension to facilitate the SIMD wormhole
-
-function wasmEvalText(str, imports, options) {
+function wasmEvalText(str, imports) {
     let binary = wasmTextToBinary(str);
-    let valid = WebAssembly.validate(binary, options);
+    let valid = WebAssembly.validate(binary);
 
     let m;
     try {
-        m = new WebAssembly.Module(binary, options);
+        m = new WebAssembly.Module(binary);
         assertEq(valid, true);
     } catch(e) {
         if (!e.toString().match(/out of memory/))

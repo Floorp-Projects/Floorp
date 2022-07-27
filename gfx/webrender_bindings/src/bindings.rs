@@ -3927,14 +3927,11 @@ pub struct WrClipId {
 
 impl WrClipId {
     fn to_webrender(&self, pipeline_id: WrPipelineId) -> ClipId {
-        ClipId::Clip(self.id, pipeline_id)
+        ClipId(self.id, pipeline_id)
     }
 
     fn from_webrender(clip_id: ClipId) -> Self {
-        match clip_id {
-            ClipId::Clip(id, _) => WrClipId { id },
-            ClipId::ClipChain(_) => panic!("Unexpected clip chain"),
-        }
+        WrClipId { id: clip_id.0 }
     }
 }
 

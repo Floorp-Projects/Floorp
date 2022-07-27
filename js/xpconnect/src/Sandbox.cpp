@@ -412,7 +412,7 @@ static bool SandboxStructuredClone(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool SandboxCreateStructuredClone(JSContext* cx, HandleObject obj) {
+bool xpc::SandboxCreateStructuredClone(JSContext* cx, HandleObject obj) {
   MOZ_ASSERT(JS_IsGlobalObject(obj));
 
   return JS_DefineFunction(cx, obj, "structuredClone", SandboxStructuredClone,

@@ -55,6 +55,7 @@ class Linter(visitor.Visitor):
         self.double_quote_re = re.compile(r"\".+\"")
         self.ellipsis_re = re.compile(r"\.\.\.")
 
+        self.brand_names = ["Firefox", "Mozilla"]
         self.minimum_id_length = 9
 
         self.state = {
@@ -103,11 +104,15 @@ class Linter(visitor.Visitor):
     def visit_Message(self, node):
         # There must be at least one message or term between group comments.
         self.state["can_have_group_comment"] = True
+        self.last_message_id = node.id.name
+
         super().generic_visit(node)
 
     def visit_Term(self, node):
         # There must be at least one message or term between group comments.
         self.state["can_have_group_comment"] = True
+        self.last_message_id = None
+
         super().generic_visit(node)
 
     def visit_MessageReference(self, node):
@@ -122,7 +127,9 @@ class Linter(visitor.Visitor):
             and not self.identifier_re.fullmatch(node.name)
         ):
             self.add_error(
-                node, "ID01", "Identifiers may only contain lowercase characters and -"
+                node,
+                "ID01",
+                "Identifiers may only contain lowercase characters and -",
             )
         if (
             len(node.name) < self.minimum_id_length
@@ -173,6 +180,24 @@ class Linter(visitor.Visitor):
                     "Strings with an ellipsis should use the Unicode \u2026 character"
                     " instead of three periods",
                 )
+
+            # If part of a message, check for brand names
+            if (
+                self.last_message_id is not None
+                and self.path not in self.exclusions["CO01"]["files"]
+                and self.last_message_id not in self.exclusions["CO01"]["messages"]
+            ):
+                found_brands = []
+                for brand in self.brand_names:
+                    if brand in text:
+                        found_brands.append(brand)
+                if found_brands:
+                    self.add_error(
+                        node,
+                        "CO01",
+                        "Strings should use the corresponding terms instead of"
+                        f" hard-coded brand names ({', '.join(found_brands)})",
+                    )
 
     def visit_ResourceComment(self, node):
         # This node is a comment with: "###"
