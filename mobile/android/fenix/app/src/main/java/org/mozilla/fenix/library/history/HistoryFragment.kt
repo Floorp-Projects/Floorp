@@ -200,7 +200,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             }
         }
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             history.collect {
                 historyView.historyAdapter.submitData(it)
             }
