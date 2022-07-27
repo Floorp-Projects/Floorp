@@ -1152,7 +1152,7 @@ class ArenaCollection {
     // The main arena allows more dirty pages than the default for other arenas.
     params.mMaxDirty = opt_dirty_max;
     mDefaultArena =
-        mLock.Init() ? CreateArena(/* IsPrivate = */ false, &params) : nullptr;
+        mLock.Init() ? CreateArena(/* aIsPrivate = */ false, &params) : nullptr;
     return bool(mDefaultArena);
   }
 
@@ -1757,7 +1757,7 @@ void* AddressRadixTree<Bits>::Get(void* aKey) {
 template <size_t Bits>
 bool AddressRadixTree<Bits>::Set(void* aKey, void* aValue) {
   MutexAutoLock lock(mLock);
-  void** slot = GetSlot(aKey, /* create = */ true);
+  void** slot = GetSlot(aKey, /* aCreate = */ true);
   if (slot) {
     *slot = aValue;
   }
@@ -1769,11 +1769,11 @@ bool AddressRadixTree<Bits>::Set(void* aKey, void* aValue) {
 
 // Return the offset between a and the nearest aligned address at or below a.
 #define ALIGNMENT_ADDR2OFFSET(a, alignment) \
-  ((size_t)((uintptr_t)(a) & (alignment - 1)))
+  ((size_t)((uintptr_t)(a) & ((alignment)-1)))
 
 // Return the smallest alignment multiple that is >= s.
 #define ALIGNMENT_CEILING(s, alignment) \
-  (((s) + (alignment - 1)) & (~(alignment - 1)))
+  (((s) + ((alignment)-1)) & (~((alignment)-1)))
 
 static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
                         size_t size) {
@@ -1953,7 +1953,7 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
 // awkward to recycle allocations of varying sizes. Therefore we only allow
 // recycling when the size equals the chunksize, unless deallocation is entirely
 // disabled.
-#  define CAN_RECYCLE(size) (size == kChunkSize)
+#  define CAN_RECYCLE(size) ((size) == kChunkSize)
 #else
 #  define CAN_RECYCLE(size) true
 #endif
@@ -2129,7 +2129,7 @@ static inline arena_t* thread_local_arena(bool enabled) {
     // because in practice nothing actually calls this function
     // with `false`, except maybe at shutdown.
     arena =
-        gArenas.CreateArena(/* IsPrivate = */ false, /* Params = */ nullptr);
+        gArenas.CreateArena(/* aIsPrivate = */ false, /* aParams = */ nullptr);
   } else {
     arena = gArenas.GetDefault();
   }
@@ -3991,7 +3991,6 @@ static size_t GetKernelPageSize() {
 static bool malloc_init_hard() {
   unsigned i;
   const char* opts;
-  long result;
 
   AutoLock<StaticMutex> lock(gInitLock);
 
@@ -4006,18 +4005,18 @@ static bool malloc_init_hard() {
   }
 
   // Get page size and number of CPUs
-  result = GetKernelPageSize();
+  const size_t result = GetKernelPageSize();
   // We assume that the page size is a power of 2.
   MOZ_ASSERT(((result - 1) & result) == 0);
 #ifdef MALLOC_STATIC_PAGESIZE
-  if (gPageSize % (size_t)result) {
+  if (gPageSize % result) {
     _malloc_message(
         _getprogname(),
         "Compile-time page size does not divide the runtime one.\n");
     MOZ_CRASH();
   }
 #else
-  gRealPageSize = gPageSize = (size_t)result;
+  gRealPageSize = gPageSize = result;
 #endif
 
   // Get runtime configuration.
@@ -4195,7 +4194,7 @@ inline void* BaseAllocator::malloc(size_t aSize) {
     aSize = 1;
   }
   arena = mArena ? mArena : choose_arena(aSize);
-  ret = arena->Malloc(aSize, /* zero = */ false);
+  ret = arena->Malloc(aSize, /* aZero = */ false);
 
 RETURN:
   if (!ret) {
@@ -4232,7 +4231,7 @@ inline void* BaseAllocator::calloc(size_t aNum, size_t aSize) {
         allocSize = 1;
       }
       arena_t* arena = mArena ? mArena : choose_arena(allocSize);
-      ret = arena->Malloc(allocSize, /* zero = */ true);
+      ret = arena->Malloc(allocSize, /* aZero = */ true);
     } else {
       ret = nullptr;
     }
@@ -4266,7 +4265,7 @@ inline void* BaseAllocator::realloc(void* aPtr, size_t aSize) {
       ret = nullptr;
     } else {
       arena_t* arena = mArena ? mArena : choose_arena(aSize);
-      ret = arena->Malloc(aSize, /* zero = */ false);
+      ret = arena->Malloc(aSize, /* aZero = */ false);
     }
   }
 
