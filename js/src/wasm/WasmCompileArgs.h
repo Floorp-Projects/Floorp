@@ -135,7 +135,6 @@ struct CompileArgs : ShareableBase<CompileArgs> {
 
   bool baselineEnabled;
   bool ionEnabled;
-  bool craneliftEnabled;
   bool debugEnabled;
   bool forceTiering;
 
@@ -161,7 +160,6 @@ struct CompileArgs : ShareableBase<CompileArgs> {
       : scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
         ionEnabled(false),
-        craneliftEnabled(false),
         debugEnabled(false),
         forceTiering(false) {}
 };

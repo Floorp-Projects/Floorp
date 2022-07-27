@@ -417,13 +417,6 @@ JS_PUBLIC_API JS::ContextOptions& JS::ContextOptionsRef(JSContext* cx) {
   return cx->options();
 }
 
-JS::ContextOptions& JS::ContextOptions::setWasmCranelift(bool flag) {
-#ifdef ENABLE_WASM_CRANELIFT
-  wasmCranelift_ = flag;
-#endif
-  return *this;
-}
-
 JS::ContextOptions& JS::ContextOptions::setFuzzing(bool flag) {
 #ifdef FUZZING
   fuzzing_ = flag;
@@ -4146,13 +4139,7 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
       JS::ContextOptionsRef(cx).setWasmBaseline(!!value);
       break;
     case JSJITCOMPILER_WASM_JIT_OPTIMIZING:
-#ifdef ENABLE_WASM_CRANELIFT
-      JS::ContextOptionsRef(cx).setWasmCranelift(!!value);
-      JS::ContextOptionsRef(cx).setWasmIon(!value);
-#else
       JS::ContextOptionsRef(cx).setWasmIon(!!value);
-      JS::ContextOptionsRef(cx).setWasmCranelift(!value);
-#endif
       break;
 #ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:
@@ -4223,11 +4210,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       *valueOut = JS::ContextOptionsRef(cx).wasmBaseline() ? 1 : 0;
       break;
     case JSJITCOMPILER_WASM_JIT_OPTIMIZING:
-#  ifdef ENABLE_WASM_CRANELIFT
-      *valueOut = JS::ContextOptionsRef(cx).wasmCranelift() ? 1 : 0;
-#  else
       *valueOut = JS::ContextOptionsRef(cx).wasmIon() ? 1 : 0;
-#  endif
       break;
 #  ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:

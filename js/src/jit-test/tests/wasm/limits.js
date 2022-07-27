@@ -1,8 +1,3 @@
-// |jit-test| skip-if: wasmCompilersPresent().match('cranelift') && !getBuildConfiguration()['arm64']
-//
-// (Reason: the Cranelift backend does not support shared memory on non-AArch64
-// hosts yet.)
-//
 // Tests of limits of memory and table types
 
 const PageSize = PageSizeInBytes;
