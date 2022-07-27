@@ -3998,7 +3998,8 @@ nsresult Document::InitCOEP(nsIChannel* aChannel) {
 
   nsILoadInfo::CrossOriginEmbedderPolicy policy =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
-  if (NS_SUCCEEDED(intChannel->GetResponseEmbedderPolicy(&policy))) {
+  if (NS_SUCCEEDED(intChannel->GetResponseEmbedderPolicy(
+          mTrials.IsEnabled(OriginTrial::CoepCredentialless), &policy))) {
     mEmbedderPolicy = Some(policy);
   }
 
@@ -6874,6 +6875,15 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
 
   if (aHeaderField == nsGkAtoms::origin_trial) {
     mTrials.UpdateFromToken(aData, NodePrincipal());
+    if (mTrials.IsEnabled(OriginTrial::CoepCredentialless)) {
+      InitCOEP(mChannel);
+
+      WindowContext* ctx = GetWindowContext();
+      MOZ_ASSERT(ctx);
+      if (mEmbedderPolicy) {
+        Unused << ctx->SetEmbedderPolicy(mEmbedderPolicy.value());
+      }
+    }
   }
 
   if (aHeaderField == nsGkAtoms::headerDefaultStyle) {
