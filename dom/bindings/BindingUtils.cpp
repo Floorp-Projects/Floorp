@@ -1042,6 +1042,7 @@ void CreateInterfaceObjects(
     JS::Handle<JSObject*> protoProto, const JSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
     const JSClass* constructorClass, unsigned ctorNargs,
+    bool isConstructorChromeOnly,
     const LegacyFactoryFunction* namedConstructors,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
@@ -1097,7 +1098,8 @@ void CreateInterfaceObjects(
   JSObject* interface;
   if (constructorClass) {
     interface = CreateInterfaceObject(
-        cx, global, constructorProto, constructorClass, ctorNargs,
+        cx, global, constructorProto, constructorClass,
+        (isChrome || !isConstructorChromeOnly) ? ctorNargs : 0,
         namedConstructors, proto, properties, chromeOnlyProperties, nameStr,
         isChrome, defineOnGlobal, legacyWindowAliases, isNamespace);
     if (!interface) {

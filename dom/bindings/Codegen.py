@@ -3625,8 +3625,10 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         if self.descriptor.interface.ctor():
             constructArgs = methodLength(self.descriptor.interface.ctor())
+            isConstructorChromeOnly = isChromeOnly(self.descriptor.interface.ctor())
         else:
             constructArgs = 0
+            isConstructorChromeOnly = False
         if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
             namedConstructors = "namedConstructors"
         else:
@@ -3687,7 +3689,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
             dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
-                                        ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${namedConstructors},
+                                        ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${isConstructorChromeOnly}, ${namedConstructors},
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
@@ -3703,6 +3705,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructorProto=constructorProto,
             interfaceClass=interfaceClass,
             constructArgs=constructArgs,
+            isConstructorChromeOnly=toStringBool(isConstructorChromeOnly),
             namedConstructors=namedConstructors,
             interfaceCache=interfaceCache,
             properties=properties,
