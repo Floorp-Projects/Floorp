@@ -32,6 +32,7 @@ class nsHttpRequestHead {
  public:
   nsHttpRequestHead();
   explicit nsHttpRequestHead(const nsHttpRequestHead& aRequestHead);
+  nsHttpRequestHead(nsHttpRequestHead&& aRequestHead);
   ~nsHttpRequestHead();
 
   nsHttpRequestHead& operator=(const nsHttpRequestHead& aRequestHead);
@@ -129,6 +130,7 @@ class nsHttpRequestHead {
 
   // mRequestURI and mPath are strings instead of an nsIURI
   // because this is used off the main thread
+  // TODO: nsIURI is thread-safe now, should be fixable.
   nsCString mRequestURI GUARDED_BY(mRecursiveMutex);
   nsCString mPath GUARDED_BY(mRecursiveMutex);
 
