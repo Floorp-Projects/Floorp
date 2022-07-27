@@ -1705,9 +1705,12 @@ this.VideoControlsImplWidget = class {
       },
 
       toggleFullscreen() {
-        this.isVideoInFullScreen
-          ? this.document.exitFullscreen()
-          : this.video.requestFullscreen();
+        // audio tags cannot toggle fullscreen
+        if (!this.isAudioOnly) {
+          this.isVideoInFullScreen
+            ? this.document.exitFullscreen()
+            : this.video.requestFullscreen();
+        }
       },
 
       setFullscreenButtonState() {
