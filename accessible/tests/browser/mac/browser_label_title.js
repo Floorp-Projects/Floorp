@@ -89,3 +89,23 @@ addAccessibleTask(
     ok(!article.getAttributeValue("AXTitle"));
   }
 );
+
+/**
+ * Test text and number inputs supply only labels not titles
+ */
+addAccessibleTask(
+  `<label for="input">Your favorite number?</label><input type="text" name="input" value="11" id="input" aria-label="The best number you know of">`,
+  async (browser, accDoc) => {
+    let input = getNativeInterface(accDoc, "input");
+    is(input.getAttributeValue("AXDescription"), "The best number you know of");
+    ok(!input.getAttributeValue("AXTitle"));
+    let evt = waitForEvent(EVENT_SHOW, "input");
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("input").setAttribute("type", "number");
+    });
+    await evt;
+    input = getNativeInterface(accDoc, "input");
+    is(input.getAttributeValue("AXDescription"), "The best number you know of");
+    ok(!input.getAttributeValue("AXTitle"));
+  }
+);
