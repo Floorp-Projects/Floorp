@@ -561,8 +561,6 @@ void nsBoxFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
 #endif
 
   ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 nsSize nsBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) {

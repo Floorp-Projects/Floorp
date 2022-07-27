@@ -249,22 +249,6 @@ static bool IsXULBoxWrapped(const nsIFrame* aFrame) {
          !aFrame->IsXULBoxFrame();
 }
 
-void nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
-                                     const ReflowOutput& aMetrics) {
-  const WritingMode containerWM = aMetrics.GetWritingMode();
-  if (aReflowInput.GetWritingMode().IsOrthogonalTo(containerWM)) {
-    // Orthogonal flows are always reflowed with an unconstrained dimension,
-    // so should never end up truncated (see ReflowInput::Init()).
-    mTruncated = false;
-  } else if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
-             aReflowInput.AvailableBSize() < aMetrics.BSize(containerWM) &&
-             !aReflowInput.mFlags.mIsTopOfPage) {
-    mTruncated = true;
-  } else {
-    mTruncated = false;
-  }
-}
-
 /* static */
 void nsIFrame::DestroyAnonymousContent(
     nsPresContext* aPresContext, already_AddRefed<nsIContent>&& aContent) {
@@ -295,7 +279,6 @@ std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus) {
   aStream << "["
           << "Complete=" << complete << ","
           << "NIF=" << (aStatus.NextInFlowNeedsReflow() ? 'Y' : 'N') << ","
-          << "Truncated=" << (aStatus.IsTruncated() ? 'Y' : 'N') << ","
           << "Break=" << brk << ","
           << "FirstLetter=" << (aStatus.FirstLetterComplete() ? 'Y' : 'N')
           << "]";
@@ -6815,7 +6798,6 @@ void nsIFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
   DO_GLOBAL_REFLOW_COUNT("nsFrame");
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   aDesiredSize.ClearSize();
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 bool nsIFrame::IsContentDisabled() const {

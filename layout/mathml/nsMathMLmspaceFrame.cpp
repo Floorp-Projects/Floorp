@@ -109,8 +109,6 @@ void nsMathMLmspaceFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.Height() = mBoundingMetrics.ascent + mBoundingMetrics.descent;
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 /* virtual */

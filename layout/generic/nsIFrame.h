@@ -210,7 +210,6 @@ class nsReflowStatus final {
         mInlineBreak(InlineBreak::None),
         mCompletion(Completion::FullyComplete),
         mNextInFlowNeedsReflow(false),
-        mTruncated(false),
         mFirstLetterComplete(false) {}
 
   // Reset all the member variables.
@@ -219,14 +218,13 @@ class nsReflowStatus final {
     mInlineBreak = InlineBreak::None;
     mCompletion = Completion::FullyComplete;
     mNextInFlowNeedsReflow = false;
-    mTruncated = false;
     mFirstLetterComplete = false;
   }
 
   // Return true if all member variables have their default values.
   bool IsEmpty() const {
     return (IsFullyComplete() && !IsInlineBreak() && !mNextInFlowNeedsReflow &&
-            !mTruncated && !mFirstLetterComplete);
+            !mFirstLetterComplete);
   }
 
   // There are three possible completion statuses, represented by
@@ -273,15 +271,6 @@ class nsReflowStatus final {
   bool NextInFlowNeedsReflow() const { return mNextInFlowNeedsReflow; }
   void SetNextInFlowNeedsReflow() { mNextInFlowNeedsReflow = true; }
 
-  // mTruncated bit flag means that the part of the frame before the first
-  // possible break point was unable to fit in the available space.
-  // Therefore, the entire frame should be moved to the next continuation of
-  // the parent frame. A frame that begins at the top of the page must never
-  // be truncated. Doing so would likely cause an infinite loop.
-  bool IsTruncated() const { return mTruncated; }
-  void UpdateTruncated(const mozilla::ReflowInput& aReflowInput,
-                       const mozilla::ReflowOutput& aMetrics);
-
   // Merge the frame completion status bits from aStatus into this.
   void MergeCompletionStatusFrom(const nsReflowStatus& aStatus) {
     if (mCompletion < aStatus.mCompletion) {
@@ -296,7 +285,6 @@ class nsReflowStatus final {
         "mCompletion merging won't work without this!");
 
     mNextInFlowNeedsReflow |= aStatus.mNextInFlowNeedsReflow;
-    mTruncated |= aStatus.mTruncated;
   }
 
   // There are three possible inline-break statuses, represented by
@@ -324,6 +312,12 @@ class nsReflowStatus final {
   // Set the inline line-break-before status, and reset other bit flags. The
   // break type is StyleClear::Line. Note that other frame completion status
   // isn't expected to matter after calling this method.
+  //
+  // Here's one scenario where a child frame would report this status. Suppose
+  // the child has "break-inside:avoid" in its style, and the child (and its
+  // content) won't fit in the available block-size. This child would want to
+  // report this status so that it gets pushed (in its entirety) to the next
+  // column/page where it will hopefully fit.
   void SetInlineLineBreakBeforeAndReset() {
     Reset();
     mBreakType = StyleClear::Line;
@@ -349,12 +343,8 @@ class nsReflowStatus final {
   InlineBreak mInlineBreak;
   Completion mCompletion;
   bool mNextInFlowNeedsReflow : 1;
-  bool mTruncated : 1;
   bool mFirstLetterComplete : 1;
 };
-
-#define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
-  aStatus.UpdateTruncated(aReflowInput, aMetrics);
 
 // Convert nsReflowStatus to a human-readable string.
 std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);

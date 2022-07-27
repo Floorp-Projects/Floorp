@@ -888,7 +888,6 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
                                  aStatus);
 
   NS_FRAME_TRACE_REFLOW_OUT("nsCanvasFrame::Reflow", aStatus);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 nsresult nsCanvasFrame::GetContentForEvent(const WidgetEvent* aEvent,

@@ -1720,8 +1720,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     printf("%s\n", buf);
   }
 #endif
-
-  NS_FRAME_SET_TRUNCATION(aStatus, (*reflowInput), aMetrics);
 }
 
 bool nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine() {
