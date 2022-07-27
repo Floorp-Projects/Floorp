@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Sanity check for Touchpad pinch zooming and panning</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  var initial_resolution = await getResolution();
+  var initial_page_left = window.visualViewport.pageLeft;
+  var initial_page_top = window.visualViewport.pageTop;
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  is(initial_page_left, 0,
+      "The initial_page_left is " + initial_page_left + ", which is correct");
+  is(initial_page_top, 0,
+      "The initial_page_top is " + initial_page_top + ", which is correct");
+  await pinchZoomInAndPanWithTouchpad();
+  // Flush state and get the resolution we're at now
+  await promiseApzFlushedRepaints();
+  let final_resolution = await getResolution();
+
+  let final_page_left = window.visualViewport.pageLeft;
+  let final_page_top = window.visualViewport.pageTop;
+  ok(final_resolution > initial_resolution,
+      "The final resolution (" + final_resolution + ") is greater after zooming in");
+  ok(final_page_left > 300,
+      "The final pageLeft (" + final_page_left + ") is greater than 300 after panning");
+  ok(final_page_top > 200,
+      "The final pageTop (" + final_page_top + ") is greater than 200 after panning");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  Here is some text to stare at as the test runs. It serves no functional
+  purpose, but gives you an idea of the zoom level. It's harder to tell what
+  the zoom level is when the page is just solid white.
+</body>
+</html>
