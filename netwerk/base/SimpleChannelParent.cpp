@@ -9,6 +9,12 @@
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 
+#ifdef FUZZING_SNAPSHOT
+#  define MOZ_ALWAYS_SUCCEEDS_FUZZING(...) (void)__VA_ARGS__
+#else
+#  define MOZ_ALWAYS_SUCCEEDS_FUZZING(...) MOZ_ALWAYS_SUCCEEDS(__VA_ARGS__)
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -16,7 +22,8 @@ NS_IMPL_ISUPPORTS(SimpleChannelParent, nsIParentChannel, nsIStreamListener)
 
 bool SimpleChannelParent::Init(const uint64_t& aChannelId) {
   nsCOMPtr<nsIChannel> channel;
-  MOZ_ALWAYS_SUCCEEDS(
+
+  MOZ_ALWAYS_SUCCEEDS_FUZZING(
       NS_LinkRedirectChannels(aChannelId, this, getter_AddRefs(channel)));
 
   return true;
