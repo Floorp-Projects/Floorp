@@ -1,0 +1,14 @@
+diff --git a/compiler-rt/lib/sanitizer_common/sanitizer_win.cpp b/compiler-rt/lib/sanitizer_common/sanitizer_win.cpp
+index 7c84cdc22ce4..e13fff03489e 100644
+--- a/compiler-rt/lib/sanitizer_common/sanitizer_win.cpp
++++ b/compiler-rt/lib/sanitizer_common/sanitizer_win.cpp
+@@ -157,7 +157,8 @@ void UnmapOrDie(void *addr, uptr size) {
+ static void *ReturnNullptrOnOOMOrDie(uptr size, const char *mem_type,
+                                      const char *mmap_type) {
+   error_t last_error = GetLastError();
+-  if (last_error == ERROR_NOT_ENOUGH_MEMORY)
++  if (last_error == ERROR_NOT_ENOUGH_MEMORY ||
++      last_error == ERROR_COMMITMENT_LIMIT)
+     return nullptr;
+   ReportMmapFailureAndDie(size, mem_type, mmap_type, last_error);
+ }
