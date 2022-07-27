@@ -32,7 +32,7 @@
       testStates("button", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
       testStates("button-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
       testStates("checkbutton",
-                 STATE_FOCUSABLE | STATE_CHECKABLE | STATE_PRESSED);
+                 STATE_FOCUSABLE | STATE_PRESSED, 0, STATE_CHECKABLE);
       testStates("fakecheckbutton", STATE_FOCUSABLE | STATE_PRESSED, 0, 
                  STATE_CHECKABLE);
       testStates("combobox", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
