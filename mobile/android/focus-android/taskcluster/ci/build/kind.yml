@@ -125,6 +125,7 @@ tasks:
         description: 'Nightly build for UI tests'
         disable-optimization: true
         run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new nightly
+        run-on-git-branches: [main]
         run:
             gradle-build-type: nightly
             gradle-build-name: focusNightly
@@ -137,6 +138,7 @@ tasks:
         description: 'Beta build for UI tests'
         disable-optimization: true
         run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new nightly
+        run-on-git-branches: [main, releases_v]
         run:
             gradle-build-type: beta
             gradle-build-name: focusBeta
@@ -170,6 +172,7 @@ tasks:
     android-test-nightly:
         description: 'Nightly Android Test for debugging'
         run-on-tasks-for: [github-push]
+        run-on-git-branches: [main]
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
@@ -184,6 +187,7 @@ tasks:
     android-test-beta:
         description: 'Beta Android Test for debugging'
         run-on-tasks-for: [github-push]
+        run-on-git-branches: [main, releases_v]
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
