@@ -1,9 +1,7 @@
-// |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode().indexOf("cranelift") >= 0
+// |jit-test| skip-if: !wasmSimdEnabled()
 
 // Do not include this in the preamble, it must be loaded after lib/wasm.js
 load(scriptdir + "ad-hack-preamble.js")
-
-// New instructions, not yet supported by cranelift
 
 // Widening multiplication.
 // This is to be moved into ad-hack.js

@@ -13,7 +13,6 @@ clippy:
         - gfx/wr/wr_malloc_size_of/
         - js/src/frontend/smoosh/
         - js/src/rust/shared/
-        - js/src/wasm/cranelift/
         - modules/libpref/init/static_prefs/
         - mozglue/static/rust/
         - netwerk/base/mozurl/

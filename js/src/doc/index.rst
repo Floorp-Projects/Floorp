@@ -187,13 +187,6 @@ This engine translates the WASM input into same *MIR* form that *WarpMonkey*
 uses and uses the *IonBackend* to optimize. These optimizations (and in
 particular, the register allocation) generate very fast native machine code.
 
-Cranelift
----------
-
-This experimental alternative to *BaldrMonkey* is an optimizing WASM compiler
-written in Rust. This currently is used on ARM64-based platforms (which do
-not support *BaldrMonkey*).
-
 
 .. _gc::Cell: https://searchfox.org/mozilla-central/search?q=[SMDOC]+GC+Cell
 .. _JSObject: https://searchfox.org/mozilla-central/search?q=[SMDOC]+JSObject+layout

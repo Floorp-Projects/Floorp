@@ -821,14 +821,7 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setWasm(Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm"))
       .setWasmForTrustedPrinciples(
           Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_trustedprincipals"))
-#ifdef ENABLE_WASM_CRANELIFT
-      .setWasmCranelift(
-          Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_optimizingjit"))
-      .setWasmIon(false)
-#else
-      .setWasmCranelift(false)
       .setWasmIon(Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_optimizingjit"))
-#endif
       .setWasmBaseline(
           Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit"))
 #define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \

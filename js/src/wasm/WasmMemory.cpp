@@ -158,9 +158,6 @@ bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
  * On x64 and arm64 with Baseline and Ion, we allow 32-bit memories up to 4GB,
  * and 64-bit memories can be larger.
  *
- * On arm64 with Cranelift, memories limited to 4GB-128K, since new code would
- * have to be written to deal with the 64-bit limit.
- *
  * On mips64, memories are limited to 2GB, for now.
  *
  * Asm.js memories are limited to 2GB even on 64-bit platforms, and we can
@@ -246,27 +243,12 @@ static_assert(MaxInlineMemoryCopyLength < MinOffsetGuardLimit, "precondition");
 static_assert(MaxInlineMemoryFillLength < MinOffsetGuardLimit, "precondition");
 
 #ifdef JS_64BIT
-#  ifdef ENABLE_WASM_CRANELIFT
-// TODO (large ArrayBuffer): Cranelift needs to be updated to use more than the
-// low 32 bits of the boundsCheckLimit, so for now we limit its heap size to
-// something that satisfies the 32-bit invariants.
-//
-// The "-2" here accounts for the !huge-memory case in CreateSpecificWasmBuffer,
-// which is guarding against an overflow.  Also see
-// WasmMemoryObject::boundsCheckLimit() for related assertions.
-wasm::Pages wasm::MaxMemoryPages(IndexType) {
-  size_t desired = MaxMemory32LimitField - 2;
-  size_t actual = ArrayBufferObject::maxBufferByteLength() / PageSize;
-  return wasm::Pages(std::min(desired, actual));
-}
-#  else
 wasm::Pages wasm::MaxMemoryPages(IndexType t) {
   MOZ_ASSERT_IF(t == IndexType::I64, !IsHugeMemoryEnabled(t));
   size_t desired = MaxMemoryLimitField(t);
   size_t actual = ArrayBufferObject::maxBufferByteLength() / PageSize;
   return wasm::Pages(std::min(desired, actual));
 }
-#  endif
 
 size_t wasm::MaxMemoryBoundsCheckLimit(IndexType t) {
   return MaxMemoryPages(t).byteLength();
@@ -334,16 +316,6 @@ Pages wasm::ClampedMaxPages(IndexType t, Pages initialPages,
     // There is a specified maximum, clamp it to the implementation limit of
     // maximum pages
     clampedMaxPages = std::min(*sourceMaxPages, wasm::MaxMemoryPages(t));
-
-#if defined(JS_64BIT) && defined(ENABLE_WASM_CRANELIFT)
-    // On 64-bit platforms when we aren't using huge memory and we're using
-    // Cranelift, we must satisfy the 32-bit invariants that:
-    //    clampedMaxSize + wasm::PageSize < UINT32_MAX
-    // This is ensured by clamping sourceMaxPages to wasm::MaxMemoryPages(),
-    // which has special logic for cranelift.
-    MOZ_ASSERT_IF(!useHugeMemory,
-                  clampedMaxPages.byteLength() + wasm::PageSize < UINT32_MAX);
-#endif
 
 #ifndef JS_64BIT
     static_assert(sizeof(uintptr_t) == 4, "assuming not 64 bit implies 32 bit");

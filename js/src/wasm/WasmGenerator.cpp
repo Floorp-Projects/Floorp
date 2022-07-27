@@ -33,7 +33,6 @@
 #include "vm/Time.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"
-#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmStubs.h"
@@ -57,15 +56,6 @@ bool CompiledCode::swap(MacroAssembler& masm) {
   symbolicAccesses.swap(masm.symbolicAccesses());
   tryNotes.swap(masm.tryNotes());
   codeLabels.swap(masm.codeLabels());
-  return true;
-}
-
-bool CompiledCode::swapCranelift(MacroAssembler& masm,
-                                 CraneliftReusableData& data) {
-  if (!swap(masm)) {
-    return false;
-  }
-  std::swap(data, craneliftReusableData);
   return true;
 }
 
@@ -727,13 +717,6 @@ static bool ExecuteCompileTask(CompileTask* task, UniqueChars* error) {
   switch (task->compilerEnv.tier()) {
     case Tier::Optimized:
       switch (task->compilerEnv.optimizedBackend()) {
-        case OptimizedBackend::Cranelift:
-          if (!CraneliftCompileFunctions(task->moduleEnv, task->compilerEnv,
-                                         task->lifo, task->inputs,
-                                         &task->output, error)) {
-            return false;
-          }
-          break;
         case OptimizedBackend::Ion:
           if (!IonCompileFunctions(task->moduleEnv, task->compilerEnv,
                                    task->lifo, task->inputs, &task->output,
@@ -885,9 +868,6 @@ bool ModuleGenerator::compileFuncDef(uint32_t funcIndex,
       switch (compilerEnv_->optimizedBackend()) {
         case OptimizedBackend::Ion:
           threshold = JitOptions.wasmBatchIonThreshold;
-          break;
-        case OptimizedBackend::Cranelift:
-          threshold = JitOptions.wasmBatchCraneliftThreshold;
           break;
         default:
           MOZ_CRASH("Invalid optimizedBackend value");

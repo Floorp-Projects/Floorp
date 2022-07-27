@@ -26,9 +26,6 @@
 #include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"
 #include "vm/Runtime.h"
-#ifdef ENABLE_WASM_CRANELIFT
-#  include "wasm/cranelift/clifapi.h"
-#endif
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmInstance.h"
@@ -404,10 +401,6 @@ bool wasm::Init() {
   MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
 
   ConfigureHugeMemory();
-
-#ifdef ENABLE_WASM_CRANELIFT
-  cranelift_initialize();
-#endif
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
   ProcessCodeSegmentMap* map = js_new<ProcessCodeSegmentMap>();
