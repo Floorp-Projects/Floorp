@@ -867,7 +867,6 @@ void nsMathMLmtableWrapperFrame::Reflow(nsPresContext* aPresContext,
   mBoundingMetrics.rightBearing = aDesiredSize.Width();
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 nsContainerFrame* NS_NewMathMLmtableFrame(PresShell* aPresShell,

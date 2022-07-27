@@ -437,7 +437,6 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   CenterPages();
 
   NS_FRAME_TRACE_REFLOW_OUT("nsPageSequenceFrame::Reflow", aStatus);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput);
 }
 
 //----------------------------------------------------------------------

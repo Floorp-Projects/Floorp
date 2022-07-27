@@ -145,7 +145,6 @@ void nsMathMLTokenFrame::Reflow(nsPresContext* aPresContext,
   FinalizeReflow(aReflowInput.mRenderingContext->GetDrawTarget(), aDesiredSize);
 
   aStatus.Reset();  // This type of frame can't be split.
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 // For token elements, mBoundingMetrics is computed at the ReflowToken

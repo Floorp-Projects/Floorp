@@ -166,8 +166,6 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
 
     mRemainingOverflow = std::max(remainingOverflow, 0);
   }
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aReflowOutput);
 }
 
 using PageAndOffset = std::pair<nsPageContentFrame*, nscoord>;

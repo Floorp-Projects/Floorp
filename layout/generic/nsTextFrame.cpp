@@ -9339,8 +9339,6 @@ void nsTextFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   ReflowText(*aReflowInput.mLineLayout, aReflowInput.AvailableWidth(),
              aReflowInput.mRenderingContext->GetDrawTarget(), aMetrics,
              aStatus);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
 #ifdef ACCESSIBILITY

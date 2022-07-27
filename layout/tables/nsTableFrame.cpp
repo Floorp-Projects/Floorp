@@ -1861,7 +1861,6 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.mOverflowAreas.UnionAllWith(tableRect);
 
   FinishAndStoreOverflow(&aDesiredSize);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
