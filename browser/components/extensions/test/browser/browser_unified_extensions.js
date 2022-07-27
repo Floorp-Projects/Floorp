@@ -51,11 +51,11 @@ const promiseDisableUnifiedExtensions = async () => {
 };
 
 const getListView = win => {
-  return win.document.getElementById("unified-extensions-view");
+  return PanelMultiView.getViewNode(win.document, "unified-extensions-view");
 };
 
 const openExtensionsPanel = async win => {
-  const button = win.document.getElementById("unified-extensions-button");
+  const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
   const listView = getListView(win);
@@ -67,15 +67,15 @@ const openExtensionsPanel = async win => {
 };
 
 const closeExtensionsPanel = async win => {
-  const listView = getListView(win);
-  ok(listView, "expected list view");
+  const { button } = win.gUnifiedExtensions;
+  ok(button, "expected button");
 
   const hidden = BrowserTestUtils.waitForEvent(
     win.document,
     "popuphidden",
     true
   );
-  listView.closest("panel").hidePopup();
+  button.click();
   await hidden;
 };
 
@@ -107,7 +107,7 @@ const createExtensions = (
 add_task(async function test_button_enabled_by_pref() {
   const win = await promiseEnableUnifiedExtensions();
 
-  const button = win.document.getElementById("unified-extensions-button");
+  const { button } = win.gUnifiedExtensions;
   is(button.hidden, false, "expected button to be visible");
 
   await BrowserTestUtils.closeWindow(win);
@@ -403,7 +403,7 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
   BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
-  const button = win.document.getElementById("unified-extensions-button");
+  const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
   const tabPromise = BrowserTestUtils.waitForNewTab(
