@@ -2278,7 +2278,7 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
     element = img;
   } else if (aSource.IsHTMLVideoElement()) {
     auto& video = aSource.GetAsHTMLVideoElement();
-    video.MarkAsContentSource(
+    video.LogVisibility(
         mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_PATTERN);
     element = &video;
   } else if (aSource.IsOffscreenCanvas()) {
@@ -4840,7 +4840,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       element = img;
     } else {
       HTMLVideoElement* video = &aImage.GetAsHTMLVideoElement();
-      video->MarkAsContentSource(
+      video->LogVisibility(
           mozilla::dom::HTMLVideoElement::CallerAPI::DRAW_IMAGE);
       element = video;
     }

@@ -1052,7 +1052,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl,
     const Maybe<IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
     ErrorResult& aRv) {
-  aVideoEl.MarkAsContentSource(
+  aVideoEl.LogVisibility(
       mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_IMAGEBITMAP);
 
   // Check network state.
