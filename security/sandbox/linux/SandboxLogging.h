@@ -7,7 +7,7 @@
 #ifndef mozilla_SandboxLogging_h
 #define mozilla_SandboxLogging_h
 
-// This header defines the SANDBOX_LOG_ERROR macro used in the Linux
+// This header defines the SANDBOX_LOG macro used in the Linux
 // sandboxing code.  It uses Android logging on Android and writes to
 // stderr otherwise.  Android logging has severity levels; currently
 // only "error" severity is exposed here, and this isn't marked when
@@ -43,7 +43,7 @@ void SandboxLogError(const char* aMessage);
 // Note that SafeSPrintf doesn't accept size modifiers or %u; all
 // decimal integers are %d, because it uses C++11 variadic templates
 // to use the actual argument type.
-#define SANDBOX_LOG_ERROR(fmt, args...)                        \
+#define SANDBOX_LOG(fmt, args...)                              \
   do {                                                         \
     char _sandboxLogBuf[SANDBOX_LOG_LEN];                      \
     ::base::strings::SafeSPrintf(_sandboxLogBuf, fmt, ##args); \

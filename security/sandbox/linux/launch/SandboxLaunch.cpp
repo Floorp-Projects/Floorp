@@ -130,7 +130,7 @@ static bool IsGraphicsOkWithoutNetwork() {
       accessFlags = R_OK | W_OK;
     }
     if (access(socketPath.get(), accessFlags) != 0) {
-      SANDBOX_LOG_ERROR(
+      SANDBOX_LOG(
           "%s is inaccessible (%s); can't isolate network namespace in"
           " content processes",
           socketPath.get(), strerror(errno));
@@ -417,7 +417,7 @@ SandboxFork::SandboxFork(int aFlags, bool aChroot, int aServerFd, int aClientFd)
     int fds[2];
     int rv = socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, fds);
     if (rv != 0) {
-      SANDBOX_LOG_ERROR("socketpair: %s", strerror(errno));
+      SANDBOX_LOG("socketpair: %s", strerror(errno));
       MOZ_CRASH("socketpair failed");
     }
     mChrootClient = fds[0];
@@ -452,7 +452,7 @@ static void BlockAllSignals(sigset_t* aOldSigs) {
   MOZ_RELEASE_ASSERT(rv == 0);
   rv = pthread_sigmask(SIG_BLOCK, &allSigs, aOldSigs);
   if (rv != 0) {
-    SANDBOX_LOG_ERROR("pthread_sigmask (block all): %s", strerror(rv));
+    SANDBOX_LOG("pthread_sigmask (block all): %s", strerror(rv));
     MOZ_CRASH("pthread_sigmask");
   }
 }
@@ -463,7 +463,7 @@ static void RestoreSignals(const sigset_t* aOldSigs) {
   // state right now:
   int rv = pthread_sigmask(SIG_SETMASK, aOldSigs, nullptr);
   if (rv != 0) {
-    SANDBOX_LOG_ERROR("pthread_sigmask (restore): %s", strerror(rv));
+    SANDBOX_LOG("pthread_sigmask (restore): %s", strerror(rv));
     MOZ_CRASH("pthread_sigmask");
   }
 }
@@ -592,7 +592,7 @@ static void ConfigureUserNamespace(uid_t uid, gid_t gid) {
 
 static void DropAllCaps() {
   if (!LinuxCapabilities().SetCurrent()) {
-    SANDBOX_LOG_ERROR("capset (drop all): %s", strerror(errno));
+    SANDBOX_LOG("capset (drop all): %s", strerror(errno));
   }
 }
 
@@ -656,7 +656,7 @@ void SandboxFork::StartChrootServer() {
   LinuxCapabilities caps;
   caps.Effective(CAP_SYS_CHROOT) = true;
   if (!caps.SetCurrent()) {
-    SANDBOX_LOG_ERROR("capset (chroot helper): %s", strerror(errno));
+    SANDBOX_LOG("capset (chroot helper): %s", strerror(errno));
     MOZ_DIAGNOSTIC_ASSERT(false);
   }
 
