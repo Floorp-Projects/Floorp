@@ -3504,8 +3504,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   nsAutoString fileName(aFileName);
 
   // Replace known invalid characters.
-  fileName.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
-  fileName.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
+  fileName.ReplaceChar(u"" KNOWN_PATH_SEPARATORS, '_');
+  fileName.ReplaceChar(u"" FILE_ILLEGAL_CHARACTERS, ' ');
   fileName.StripChar(char16_t(0));
 
   const char16_t *startStr, *endStr;
