@@ -4,8 +4,8 @@
 
 // This file contains branding-specific prefs.
 
-pref("startup.homepage_override_url", "");
-pref("startup.homepage_welcome_url", "https://floorp.ablaze.one/welcome.html");
+pref("startup.homepage_override_url", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+pref("startup.homepage_welcome_url", "https://floorp.ablaze.one/welcome/ | https://blog.ablaze.one/1932/2022-06-22/");
 pref("startup.homepage_welcome_url.additional", "https://ablaze.one/privacy_policy");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours

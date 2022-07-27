@@ -128,6 +128,12 @@ pref("toolkit.telemetry.updatePing.enabled", false, locked);
 //Firefox調査を無効化
 pref("app.shield.optoutstudies.enabled", false, locked);
 
+//拡張機能の推奨を削除
+pref("browser.discovery.enabled", false);
+
+//クラッシュレポートの自動送信無効
+pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
+
 // CPUのコア数を偽装し、正しい値をウェブサイトに返さないようにします。
 pref("dom.maxHardwareConcurrency",	2);
 
