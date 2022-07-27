@@ -274,23 +274,14 @@ void XRE_SetProcessType(const char* aProcessTypeString) {
   }
   called = true;
 
-  sChildProcessType = [&] {
-    for (GeckoProcessType t :
-         MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
-      if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
-        return t;
-      }
+  sChildProcessType = GeckoProcessType_Invalid;
+  for (GeckoProcessType t :
+       MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
+    if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
+      sChildProcessType = t;
+      return;
     }
-    return GeckoProcessType_Invalid;
-  }();
-
-  // For the parent process, we're probably willing to accept an apparent
-  // lockup in preference to a crash. Always stall and retry.
-  //
-  // For child processes, an obvious OOM-crash may be preferable to slow
-  // performance. Retry at most once per process, then give up.
-  mozjemalloc_experiment_set_always_stall(sChildProcessType ==
-                                          GeckoProcessType_Default);
+  }
 }
 
 #if defined(XP_WIN)
