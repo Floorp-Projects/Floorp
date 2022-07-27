@@ -500,7 +500,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     auto buf = reinterpret_cast<char*>(aArgs.args[2]);
     auto size = static_cast<size_t>(aArgs.args[3]);
     if (fd != AT_FDCWD && path[0] != '/') {
-      SANDBOX_LOG_ERROR("unsupported fd-relative readlinkat(%d, %s, %p, %u)",
+      SANDBOX_LOG_ERROR("unsupported fd-relative readlinkat(%d, %s, %p, %d)",
                         fd, path, buf, size);
       return BlockedSyscallTrap(aArgs, nullptr);
     }
