@@ -232,6 +232,7 @@ class LoadInfo final : public nsILoadInfo {
       bool aIsMetaRefresh, uint32_t aRequestBlockingReason,
       nsINode* aLoadingContext,
       nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
+      bool aIsOriginTrialCoepCredentiallessEnabledForTopLevel,
       nsIURI* aUnstrippedURI);
   LoadInfo(const LoadInfo& rhs);
 
@@ -358,6 +359,8 @@ class LoadInfo final : public nsILoadInfo {
   // See https://wicg.github.io/cross-origin-embedder-policy/#corp-check.
   nsILoadInfo::CrossOriginEmbedderPolicy mLoadingEmbedderPolicy =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
+
+  bool mIsOriginTrialCoepCredentiallessEnabledForTopLevel = false;
 
   nsCOMPtr<nsIURI> mUnstrippedURI;
 };

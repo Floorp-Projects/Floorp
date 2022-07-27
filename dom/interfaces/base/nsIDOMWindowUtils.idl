@@ -2211,6 +2211,8 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void resetMobileViewportManager();
 
+  bool isCoepCredentialless();
+
   /**
    * NOTE: Currently works only on GTK+.
    */

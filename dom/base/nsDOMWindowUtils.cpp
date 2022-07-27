@@ -4707,6 +4707,18 @@ nsDOMWindowUtils::IsCssPropertyRecordedInUseCounter(const nsACString& aPropName,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::IsCoepCredentialless(bool* aResult) {
+  Document* doc = GetDocument();
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = IsCoepCredentiallessEnabled(
+      doc->Trials().IsEnabled(OriginTrial::CoepCredentialless));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetLayersId(uint64_t* aOutLayersId) {
   nsIWidget* widget = GetWidget();
   if (!widget) {
