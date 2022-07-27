@@ -411,6 +411,7 @@ class CallSiteDesc {
     Indirect,      // dynamic callee called via register, context on stack
     IndirectFast,  // dynamically determined to be same-instance
     FuncRef,       // call using direct function reference
+    FuncRefFast,   // call using direct function reference within same-instance
     Symbolic,      // call to a single symbolic callee
     EnterFrame,    // call to a enter frame handler
     LeaveFrame,    // call to a leave frame handler
