@@ -777,6 +777,20 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "LaPresse.ca",
+    platform: "all",
+    name: "LaPresse.ca",
+    bug: "1779490",
+    contentScripts: [
+      {
+        js: "lapresse.js",
+        matches: ["*://www.lapresse.ca/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "MaxMindGeoIP",
     platform: "all",
     name: "MaxMind GeoIP",
