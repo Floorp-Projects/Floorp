@@ -667,33 +667,28 @@ function Intl_DateTimeFormat_formatRange(startDate, endDate) {
     // Step 1.
     var dtf = this;
 
-    // Steps 2-3.
+    // Step 2.
     if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
         return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
                             "Intl_DateTimeFormat_formatRange");
     }
 
-    // Step 4.
+    // Step 3.
     if (startDate === undefined || endDate === undefined) {
         ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end",
                        "formatRange");
     }
 
-    // Step 5.
+    // Step 4.
     var x = ToNumber(startDate);
 
-    // Step 6.
+    // Step 5.
     var y = ToNumber(endDate);
-
-    // Step 7.
-    if (x > y) {
-        ThrowRangeError(JSMSG_START_AFTER_END_DATE, "formatRange");
-    }
 
     // Ensure the DateTimeFormat internals are resolved.
     getDateTimeFormatInternals(dtf);
 
-    // Step 8.
+    // Step 6.
     return intl_FormatDateTimeRange(dtf, x, y, /* formatToParts = */ false);
 }
 
@@ -706,33 +701,28 @@ function Intl_DateTimeFormat_formatRangeToParts(startDate, endDate) {
     // Step 1.
     var dtf = this;
 
-    // Steps 2-3.
+    // Step 2.
     if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
         return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
                             "Intl_DateTimeFormat_formatRangeToParts");
     }
 
-    // Step 4.
+    // Step 3.
     if (startDate === undefined || endDate === undefined) {
         ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end",
                        "formatRangeToParts");
     }
 
-    // Step 5.
+    // Step 4.
     var x = ToNumber(startDate);
 
-    // Step 6.
+    // Step 5.
     var y = ToNumber(endDate);
-
-    // Step 7.
-    if (x > y) {
-        ThrowRangeError(JSMSG_START_AFTER_END_DATE, "formatRangeToParts");
-    }
 
     // Ensure the DateTimeFormat internals are resolved.
     getDateTimeFormatInternals(dtf);
 
-    // Step 8.
+    // Step 6.
     return intl_FormatDateTimeRange(dtf, x, y, /* formatToParts = */ true);
 }
 

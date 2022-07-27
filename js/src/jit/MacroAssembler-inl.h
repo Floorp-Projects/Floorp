@@ -1038,12 +1038,7 @@ void MacroAssembler::assertStackAlignment(uint32_t alignment,
 }
 
 void MacroAssembler::storeCallBoolResult(Register reg) {
-  if (reg != ReturnReg) {
-    mov(ReturnReg, reg);
-  }
-  // C++ compilers like to only use the bottom byte for bools, but we
-  // need to maintain the entire register.
-  and32(Imm32(0xFF), reg);
+  convertBoolToInt32(ReturnReg, reg);
 }
 
 void MacroAssembler::storeCallInt32Result(Register reg) {

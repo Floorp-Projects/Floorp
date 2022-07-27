@@ -45,11 +45,35 @@ const REMOTE_IMAGES_DB_PATH = PathUtils.join(REMOTE_IMAGES_PATH, "db.json");
 
 const IMAGE_EXPIRY_DURATION = 30 * 24 * 60 * 60; // 30 days in seconds.
 
+const PREFETCH_FINISHED_TOPIC = "remote-images:prefetch-finished";
+
+/**
+ * Inspectors for FxMS messages.
+ *
+ * Each member is the name of a FxMS template (spotlight, infobar, etc.) and
+ * corresponds to a function that accepts a message and returns all record IDs
+ * for remote images.
+ */
+const MessageInspectors = {
+  spotlight(message) {
+    if (
+      message.content.template === "logo-and-content" &&
+      message.content.logo?.imageId
+    ) {
+      return [message.content.logo.imageId];
+    }
+    return [];
+  },
+};
+
 class _RemoteImages {
   #dbPromise;
 
+  #fetching;
+
   constructor() {
     this.#dbPromise = null;
+    this.#fetching = new Map();
 
     RemoteSettings(RS_COLLECTION).on("sync", () => this.#onSync());
 
@@ -193,6 +217,12 @@ class _RemoteImages {
   async #loadImpl(db, imageId) {
     const recordId = this.#getRecordId(imageId);
 
+    // If we are pre-fetching an image, we can piggy-back on that request.
+    if (this.#fetching.has(imageId)) {
+      const { record, arrayBuffer } = await this.#fetching.get(imageId);
+      return new Blob([arrayBuffer], { type: record.data.attachment.mimetype });
+    }
+
     let blob;
     if (db.data.images[recordId]) {
       // We have previously fetched this image, we can load it from disk.
@@ -231,6 +261,9 @@ class _RemoteImages {
   }
 
   #onSync() {
+    // This is OK to run while pre-fetches are ocurring. Pre-fetches don't check
+    // if there is a new version available, so there will be no race between
+    // syncing an updated image and pre-fetching
     return this.withDb(async db => {
       await this.#cleanup(db);
 
@@ -245,7 +278,7 @@ class _RemoteImages {
           .filter(
             entry => recordsById[entry.recordId]?.attachment.hash !== entry.hash
           )
-          .map(entry => this.#download(db, entry.recordId, { refresh: true }))
+          .map(entry => this.#download(db, entry.recordId, { fetchOnly: true }))
       );
     });
   }
@@ -261,6 +294,8 @@ class _RemoteImages {
    *                               finished.
    */
   async #cleanup(db) {
+    // This may run while background fetches are happening. However, that
+    // doesn't matter because those images will definitely not be expired.
     const now = Date.now();
     await Promise.all(
       Object.values(db.data.images)
@@ -330,39 +365,19 @@ class _RemoteImages {
    * @param {JSONFile} db The RemoteImages database.
    * @param {string} recordId The record ID of the image.
    * @param {object} options Options for downloading the image.
-   * @param {boolean} options.refresh Whether or not the image is being
-   *                                  downloaded because it is out of sync with
-   *                                  Remote Settings. If true, the blob will be
-   *                                  written to disk and not returned.
-   *                                  Additionally, the |lastLoaded| field will
-   *                                  not be updated in its db entry.
+   * @param {boolean} options.fetchOnly Whether or not to only fetch the image.
    *
-   * @returns A promise that resolves with a Blob of the image data or rejects
-   *          with an Error.
+   * @returns If |fetchOnly| is true, a promise that resolves to undefined.
+   *          If |fetchOnly| is false, a promise that resolves to a Blob of the
+   *          image data.
    */
-  async #download(db, recordId, { refresh = false } = {}) {
-    const client = new lazy.KintoHttpClient(lazy.Utils.SERVER_URL);
-    const record = await client
-      .bucket(RS_MAIN_BUCKET)
-      .collection(RS_COLLECTION)
-      .getRecord(recordId);
-
-    const downloader = new lazy.Downloader(RS_MAIN_BUCKET, RS_COLLECTION);
-    const arrayBuffer = await downloader.downloadAsBytes(record.data, {
-      retries: RS_DOWNLOAD_MAX_RETRIES,
-    });
-
-    // Cache to disk.
-    const path = PathUtils.join(REMOTE_IMAGES_PATH, recordId);
-
-    // We do not await this promise because any other attempt to interact with
-    // the file via IOUtils will have to synchronize via the IOUtils event queue
-    // anyway.
-    IOUtils.write(path, new Uint8Array(arrayBuffer));
-
+  async #download(db, recordId, { fetchOnly = false } = {}) {
+    // It is safe to call #unsafeDownload here because we hold the db while the
+    // entire download runs.
+    const { record, arrayBuffer } = await this.#unsafeDownload(recordId);
     const { mimetype, hash } = record.data.attachment;
 
-    if (refresh) {
+    if (fetchOnly) {
       Object.assign(db.data.images[recordId], { mimetype, hash });
     } else {
       db.data.images[recordId] = {
@@ -375,11 +390,177 @@ class _RemoteImages {
 
     db.saveSoon();
 
-    if (!refresh) {
-      return new Blob([arrayBuffer], { type: record.data.attachment.mimetype });
+    if (fetchOnly) {
+      return undefined;
     }
 
-    return undefined;
+    return new Blob([arrayBuffer], { type: record.data.attachment.mimetype });
+  }
+
+  /**
+   * Download an image *without* holding a handle to the database.
+   *
+   * @param {string} recordId The record ID of the image to download
+   *
+   * @returns A promise that resolves to the RemoteSettings record and the
+   *          downloaded ArrayBuffer.
+   */
+  async #unsafeDownload(recordId) {
+    const client = new lazy.KintoHttpClient(lazy.Utils.SERVER_URL);
+
+    const record = await client
+      .bucket(RS_MAIN_BUCKET)
+      .collection(RS_COLLECTION)
+      .getRecord(recordId);
+
+    const downloader = new lazy.Downloader(RS_MAIN_BUCKET, RS_COLLECTION);
+    const arrayBuffer = await downloader.downloadAsBytes(record.data, {
+      retries: RS_DOWNLOAD_MAX_RETRIES,
+    });
+
+    const path = PathUtils.join(REMOTE_IMAGES_PATH, recordId);
+
+    // Cache to disk.
+    //
+    // We do not await this promise because any other attempt to interact with
+    // the file via IOUtils will have to synchronize via the IOUtils event queue
+    // anyway.
+    //
+    // This is OK to do without holding the db because cleanup will not touch
+    // this image.
+    IOUtils.write(path, new Uint8Array(arrayBuffer));
+
+    return { record, arrayBuffer };
+  }
+
+  /**
+   * Prefetch images for the given messages.
+   *
+   * This will only acquire the db handle when we need to handle internal state
+   * so that other consumers can interact with RemoteImages while pre-fetches
+   * are happening.
+   *
+   * NB: This function is not intended to be awaited so that it can run the
+   * fetches in the background.
+   *
+   * @param {object[]} messages The FxMS messages to prefetch images for.
+   */
+  async prefetchImagesFor(messages) {
+    // Collect the list of record IDs from the message, if we have an inspector
+    // for it.
+    const recordIds = messages
+      .filter(
+        message =>
+          message.template && Object.hasOwn(MessageInspectors, message.template)
+      )
+      .flatMap(message => MessageInspectors[message.template](message))
+      .map(imageId => this.#getRecordId(imageId));
+
+    // If we find some messages, grab the db lock and queue the downloads of
+    // each.
+    if (recordIds.length) {
+      const promises = await this.withDb(
+        db =>
+          new Map(
+            recordIds.reduce((entries, recordId) => {
+              const promise = this.#beginPrefetch(db, recordId);
+
+              // If we already have the image, #beginPrefetching will return
+              // null instead of a promise.
+              if (promise !== null) {
+                this.#fetching.set(recordId, promise);
+                entries.push([recordId, promise]);
+              }
+
+              return entries;
+            }, [])
+          )
+      );
+
+      // We have dropped db lock and the fetches will continue in the background.
+      // If we do not drop the lock here, nothing can interact with RemoteImages
+      // while we are pre-fetching.
+      //
+      // As each prefetch request finishes, they will individually grab the db
+      // lock (inside #finishPrefetch or #handleFailedPrefetch) to update
+      // internal state.
+      const prefetchesFinished = Array.from(promises.entries()).map(
+        ([recordId, promise]) =>
+          promise.then(
+            result => this.#finishPrefetch(result),
+            () => this.#handleFailedPrefetch(recordId)
+          )
+      );
+
+      // Wait for all prefetches to finish before we send our notification.
+      await Promise.all(prefetchesFinished);
+
+      Services.obs.notifyObservers(null, PREFETCH_FINISHED_TOPIC);
+    }
+  }
+
+  /**
+   * Ensure the image for the given record ID has a database entry.
+   * Begin pre-fetching the requested image if we do not already have it locally.
+   *
+   * @param {JSONFile} db The database.
+   * @param {string} recordId The record ID of the image.
+   *
+   * @returns If the image is already cached locally, null is returned.
+   *          Otherwise, a promise that resolves to an object including the
+   *          recordId, the Remote Settings record, and the ArrayBuffer of the
+   *          downloaded file.
+   */
+  #beginPrefetch(db, recordId) {
+    if (!Object.hasOwn(db.data.images, recordId)) {
+      // We kick off the download while we hold the db (so we can record the
+      // promise in #fetches), but we do not ensure that the download completes
+      // while we hold it.
+      //
+      // It is safe to call #unsafeDownload here and let the promises resolve
+      // outside this function because we record the recordId and promise in
+      // #fetching so any concurrent request to load the same image will re-use
+      // that promise and not trigger a second download (and therefore IO).
+      const promise = this.#unsafeDownload(recordId);
+      this.#fetching.set(recordId, promise);
+
+      return promise;
+    }
+
+    return null;
+  }
+
+  /**
+   * Finish prefetching an image.
+   *
+   * @param {object} options
+   * @param {object} options.record The Remote Settings record.
+   */
+  #finishPrefetch({ record }) {
+    return this.withDb(db => {
+      const { id: recordId } = record.data;
+      const { mimetype, hash } = record.data.attachment;
+
+      this.#fetching.delete(recordId);
+
+      db.data.images[recordId] = {
+        recordId,
+        mimetype,
+        hash,
+        lastLoaded: Date.now(),
+      };
+
+      db.saveSoon();
+    });
+  }
+
+  /**
+   * Remove the prefetch entry for a fetch that failed.
+   */
+  #handleFailedPrefetch(recordId) {
+    return this.withDb(db => {
+      this.#fetching.delete(recordId);
+    });
   }
 
   /**

@@ -528,6 +528,11 @@ already_AddRefed<PerformanceMeasure> Performance::Measure(
     JSContext* aCx, const nsAString& aName,
     const StringOrPerformanceMeasureOptions& aStartOrMeasureOptions,
     const Optional<nsAString>& aEndMark, ErrorResult& aRv) {
+  if (!GetParentObject()) {
+    aRv.ThrowInvalidStateError("Global object is unavailable");
+    return nullptr;
+  }
+
   // When resisting fingerprinting, we don't add marks to the buffer. Since
   // measure relies on relationships between marks in the buffer, this method
   // will throw if we look for user-entered marks so we return a dummy measure

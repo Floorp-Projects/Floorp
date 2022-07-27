@@ -225,10 +225,6 @@ add_task(async function test_https_proxy() {
       equal(req.status, Cr.NS_OK);
       equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
       equal(buff, server.constructor.name);
-      equal(
-        req.QueryInterface(Ci.nsIHttpChannel).protocolVersion,
-        server.constructor.name == "NodeHTTP2Server" ? "h2" : "http/1.1"
-      );
     }
   );
 });
@@ -275,10 +271,6 @@ add_task(async function test_http2_proxy() {
       equal(req.status, Cr.NS_OK);
       equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
       equal(buff, server.constructor.name);
-      equal(
-        req.QueryInterface(Ci.nsIHttpChannel).protocolVersion,
-        server.constructor.name == "NodeHTTP2Server" ? "h2" : "http/1.1"
-      );
     }
   );
 });

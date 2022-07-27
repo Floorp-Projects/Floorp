@@ -3,11 +3,23 @@
 
 "use strict";
 
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
+const { BrowserUtils } = ChromeUtils.import(
+  "resource://gre/modules/BrowserUtils.jsm"
+);
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
 const { Downloader } = ChromeUtils.import(
   "resource://services-settings/Attachments.jsm"
+);
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
+const { PanelTestProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
 const {
   RemoteImages,
@@ -20,6 +32,11 @@ const { RemoteImagesTestUtils, RemoteSettingsServer } = ChromeUtils.import(
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
+const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
+);
+
+const PREFETCH_FINISHED_TOPIC = "remote-images:prefetch-finished";
 
 function dbWriteFinished(db) {
   // RemoteImages calls JSONFile.saveSoon(), so make sure that the DeferredTask
@@ -223,7 +240,7 @@ add_task(async function test_remoteImages_load_dedup() {
     );
   } finally {
     await stop();
-    await RemoteImagesTestUtils.triggerCleanup();
+    await RemoteImagesTestUtils.wipeCache();
     sandbox.restore();
   }
 });
@@ -305,8 +322,109 @@ add_task(async function test_remoteImages_sync() {
     });
   } finally {
     await server.stop();
-    await RemoteImagesTestUtils.triggerCleanup();
+    await RemoteImagesTestUtils.wipeCache();
     sandbox.restore();
     client.verifySignatures = true;
+  }
+});
+
+add_task(async function test_remoteImages_prefetch() {
+  const { AboutRobots } = RemoteImagesTestUtils.images;
+  const sandbox = sinon.createSandbox();
+
+  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
+  sandbox.stub(RemoteSettingsExperimentLoader, "updateRecipes").resolves();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["app.shield.optoutstudies.enabled", true],
+      ["datareporting.healthreport.uploadEnabled", true],
+      [
+        "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
+        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","updateCycleInMs":0}`,
+      ],
+    ],
+  });
+
+  const stop = await RemoteImagesTestUtils.serveRemoteImages(AboutRobots);
+
+  const message = await PanelTestProvider.getMessages().then(msgs =>
+    msgs.find(m => m.id === "SPOTLIGHT_MESSAGE_93")
+  );
+  message.content.logo = { imageId: AboutRobots.recordId };
+  const recipe = ExperimentFakes.recipe("spotlight-test", {
+    branches: [
+      {
+        slug: "snail",
+        ratio: 1,
+        features: [
+          {
+            featureId: "spotlight",
+            value: message,
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      start: 0,
+      count: 100,
+      total: 100,
+      namespace: "mochitest",
+      randomizationUnit: "normandy_id",
+    },
+  });
+
+  Assert.ok(ASRouter.initialized, "ASRouter should be initialized");
+
+  const prefetchFinished = BrowserUtils.promiseObserved(
+    PREFETCH_FINISHED_TOPIC
+  );
+
+  const {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(recipe);
+
+  await Promise.all([enrollmentPromise, prefetchFinished]);
+
+  try {
+    await RemoteImages.withDb(async db => {
+      const entry = db.data.images[AboutRobots.recordId];
+
+      Assert.equal(
+        entry.recordId,
+        AboutRobots.recordId,
+        "Prefetched image DB entry should exist"
+      );
+      Assert.equal(
+        entry.mimetype,
+        AboutRobots.mimetype,
+        "Prefetched image should have correct mimetype"
+      );
+      Assert.equal(
+        entry.hash,
+        AboutRobots.hash,
+        "Prefetched image should have correct hash"
+      );
+    });
+
+    const path = PathUtils.join(REMOTE_IMAGES_PATH, AboutRobots.recordId);
+    await BrowserTestUtils.waitForCondition(
+      () => IOUtils.exists(path),
+      "Prefetched image should be written to disk"
+    );
+
+    Assert.equal(
+      await IOUtils.computeHexDigest(path, "sha256"),
+      AboutRobots.hash,
+      "AboutRobots image should have correct hash"
+    );
+  } finally {
+    await doExperimentCleanup();
+    await stop();
+    await SpecialPowers.popPrefEnv();
+    await ASRouter._updateMessageProviders();
+    await RemoteImagesTestUtils.wipeCache();
+    sandbox.reset();
   }
 });
