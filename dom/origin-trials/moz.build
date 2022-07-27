@@ -24,7 +24,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         entry_point="generate",
     )
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 
 EXPORTS.mozilla += [
     "OriginTrials.h",

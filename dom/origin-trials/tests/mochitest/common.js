@@ -1,4 +1,4 @@
-/* import-globals-from ../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
+/* import-globals-from ../../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
 
 // This would be a bit nicer with `self`, but Worklet doesn't have that, so
 // `globalThis` it is, see https://github.com/whatwg/html/issues/7696
