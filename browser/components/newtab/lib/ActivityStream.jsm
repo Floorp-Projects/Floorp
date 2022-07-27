@@ -539,7 +539,7 @@ const FEEDS_DATA = [
         FR: ["fr"],
         ES: ["es"],
         PL: ["pl"],
-        JP: ["ja", "ja-JP-mac"],
+        JP: ["ja", "ja-JP-mac", "ja-ka"],
       }[geo];
 
       const regionBlocked = preffedBlockRegions.includes(geo);
