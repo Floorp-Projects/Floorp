@@ -222,21 +222,20 @@ static void InstallSigSysHandler(void) {
     if (!aUseTSync && errno == ETXTBSY) {
       return false;
     }
-    SANDBOX_LOG("prctl(PR_SET_NO_NEW_PRIVS) failed: %s", strerror(errno));
+    SANDBOX_LOG_ERRNO("prctl(PR_SET_NO_NEW_PRIVS) failed");
     MOZ_CRASH("prctl(PR_SET_NO_NEW_PRIVS)");
   }
 
   if (aUseTSync) {
     if (syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER,
                 SECCOMP_FILTER_FLAG_TSYNC, aProg) != 0) {
-      SANDBOX_LOG("thread-synchronized seccomp failed: %s", strerror(errno));
+      SANDBOX_LOG_ERRNO("thread-synchronized seccomp failed");
       MOZ_CRASH("seccomp+tsync failed, but kernel supports tsync");
     }
   } else {
     if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, (unsigned long)aProg, 0,
               0)) {
-      SANDBOX_LOG("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER) failed: %s",
-                  strerror(errno));
+      SANDBOX_LOG_ERRNO("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER) failed");
       MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER)");
     }
   }
@@ -316,7 +315,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
   myTid = syscall(__NR_gettid);
   taskdp = opendir("/proc/self/task");
   if (taskdp == nullptr) {
-    SANDBOX_LOG("opendir /proc/self/task: %s\n", strerror(errno));
+    SANDBOX_LOG_ERRNO("opendir /proc/self/task");
     MOZ_CRASH("failed while trying to open directory /proc/self/task");
   }
 
@@ -352,7 +351,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
           sandboxProgress = true;
           continue;
         }
-        SANDBOX_LOG("tgkill(%d,%d): %s\n", pid, tid, strerror(errno));
+        SANDBOX_LOG_ERRNO("tgkill(%d,%d)", pid, tid);
         MOZ_CRASH("failed while trying to send a signal to a thread");
       }
       // It's unlikely, but if the thread somehow manages to exit
@@ -380,7 +379,7 @@ static void BroadcastSetThreadSandbox(const sock_fprog* aFilter) {
         if (syscall(__NR_futex, reinterpret_cast<int*>(&gSetSandboxDone),
                     FUTEX_WAIT, 0, &futexTimeout) != 0) {
           if (errno != EWOULDBLOCK && errno != ETIMEDOUT && errno != EINTR) {
-            SANDBOX_LOG("FUTEX_WAIT: %s\n", strerror(errno));
+            SANDBOX_LOG_ERRNO("FUTEX_WAIT");
             MOZ_CRASH("failed during FUTEX_WAIT");
           }
         }
@@ -664,8 +663,7 @@ void SetMediaPluginSandbox(const char* aFilePath) {
 
   SandboxOpenedFile plugin(aFilePath);
   if (!plugin.IsOpen()) {
-    SANDBOX_LOG("failed to open plugin file %s: %s", aFilePath,
-                strerror(errno));
+    SANDBOX_LOG_ERRNO("failed to open plugin file %s", aFilePath);
     MOZ_CRASH("failed while trying to open the plugin file ");
   }
 

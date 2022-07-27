@@ -45,7 +45,7 @@ int SandboxOpenedFile::GetDesc() const {
     if (fd >= 0) {
       fd = dup(fd);
       if (fd < 0) {
-        SANDBOX_LOG("dup: %s", strerror(errno));
+        SANDBOX_LOG_ERRNO("dup");
       }
     }
   } else {

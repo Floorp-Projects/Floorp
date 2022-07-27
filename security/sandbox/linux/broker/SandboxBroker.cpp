@@ -47,7 +47,7 @@ SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
     : mChildPid(aChildPid), mPolicy(std::move(aPolicy)) {
   int fds[2];
   if (0 != socketpair(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0, fds)) {
-    SANDBOX_LOG("SandboxBroker: socketpair failed: %s", strerror(errno));
+    SANDBOX_LOG_ERRNO("SandboxBroker: socketpair failed");
     mFileDesc = -1;
     aClientFd = -1;
     return;
@@ -56,7 +56,7 @@ SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
   aClientFd = fds[1];
 
   if (!PlatformThread::Create(0, this, &mThread)) {
-    SANDBOX_LOG("SandboxBroker: thread creation failed: %s", strerror(errno));
+    SANDBOX_LOG_ERRNO("SandboxBroker: thread creation failed");
     close(mFileDesc);
     close(aClientFd);
     mFileDesc = -1;
@@ -728,7 +728,7 @@ void SandboxBroker::ThreadMain(void) {
     // at least in some cases, but protocol violation indicates a
     // hostile client, so terminate the broker instead.
     if (recvd < 0) {
-      SANDBOX_LOG("bad read from pid %d: %s", mChildPid, strerror(errno));
+      SANDBOX_LOG_ERRNO("bad read from pid %d", mChildPid);
       shutdown(mFileDesc, SHUT_RD);
       break;
     }
@@ -1027,8 +1027,7 @@ void SandboxBroker::ThreadMain(void) {
     const size_t numIO = ios[1].iov_len > 0 ? 2 : 1;
     const ssize_t sent = SendWithFd(respfd, ios, numIO, openedFd);
     if (sent < 0) {
-      SANDBOX_LOG("failed to send broker response to pid %d: %s", mChildPid,
-                  strerror(errno));
+      SANDBOX_LOG_ERRNO("failed to send broker response to pid %d", mChildPid);
     } else {
       MOZ_ASSERT(static_cast<size_t>(sent) == ios[0].iov_len + ios[1].iov_len);
     }
@@ -1071,12 +1070,10 @@ void SandboxBroker::AuditPermissive(int aOp, int aFlags, int aPerms,
     errno = 0;
   }
 
-  SANDBOX_LOG(
+  SANDBOX_LOG_ERRNO(
       "SandboxBroker: would have denied op=%s rflags=%o perms=%d path=%s for "
-      "pid=%d"
-      " permissive=1 error=\"%s\"",
-      OperationDescription[aOp], aFlags, aPerms, aPath, mChildPid,
-      strerror(errno));
+      "pid=%d permissive=1; real status",
+      OperationDescription[aOp], aFlags, aPerms, aPath, mChildPid);
 }
 
 void SandboxBroker::AuditDenial(int aOp, int aFlags, int aPerms,
