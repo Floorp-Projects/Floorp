@@ -16,6 +16,36 @@
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
+  const video = document.getElementById("video");
+
+  class EventLogger {
+    constructor() {
+      this._log = [];
+      this._xEventsPromise = new Promise(r => this._xReached = r);
+      this._x = Number.MAX_VALUE;
+    }
+    createListener() {
+      return e => {
+        this._log.push(e);
+        if (this._log.length >= this._x) {
+          this._xReached(this._log);
+        }
+      }
+    }
+    waitForXEvents(x) {
+      this._x = x;
+      return this._xEventsPromise;
+    }
+    clearEvents() {
+      this._log = [];
+    }
+  }
+  const logger = new EventLogger();
+
+  video.addEventListener("play", logger.createListener());
+  video.addEventListener("pause", logger.createListener());
+  document.addEventListener("mozfullscreenchange", logger.createListener());
+
   const InspectorUtils = SpecialPowers.InspectorUtils;
 
   function findElementByAttribute(element, aName, aValue) {
@@ -37,14 +67,21 @@
   }
 
   function loadedmetadata(event) {
-    SimpleTest.executeSoon(function() {
-      var controlBar = findElementByAttribute(video, "class", "controlBar");
+    SimpleTest.executeSoon(async function test_fullscreen_unavailable() {
+      const { x, y } = video.getBoundingClientRect();
+      const controlBar = findElementByAttribute(video, "class", "controlBar");
       is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
+      logger.clearEvents();
+      synthesizeMouse(video, x, y, { clickCount: 2 });
+      const events = await logger.waitForXEvents(2);
+      ok(
+        !events.find(e => e.type === "mozfullscreenchange"),
+        "Double clicking should not trigger fullscreen event"
+      );
+      is(events.length, 2, "Two events should have been fired.");
       SimpleTest.finish();
     });
   }
-
-  var video = document.getElementById("video");
 
   SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
   function startTest() {

@@ -445,6 +445,14 @@ add_task(async function ensure_fullscreen_button() {
   document.getElementById("content").appendChild(video);
 });
 
+add_task(async function ensure_doubleclick_triggers_fullscreen() {
+  const { x, y } = video.getBoundingClientRect();
+  info("attempt double click");
+  synthesizeMouse(video, x, y, { clickCount: 2 });
+  await waitForEvent("play");
+  await waitForEvent("mozfullscreenchange");
+});
+
 </script>
 </pre>
 </body>
