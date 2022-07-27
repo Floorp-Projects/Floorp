@@ -1285,27 +1285,32 @@ var gUnifiedExtensions = {
   },
 
   async togglePanel(aEvent) {
-    // The button should directly open `about:addons` when there is no active
-    // extension to show in the panel.
-    if ((await this.getActiveExtensions()).length === 0) {
-      await BrowserOpenAddonsMgr("addons://discover/");
-      return;
+    if (!CustomizationHandler.isCustomizing()) {
+      // The button should directly open `about:addons` when there is no active
+      // extension to show in the panel.
+      if ((await this.getActiveExtensions()).length === 0) {
+        await BrowserOpenAddonsMgr("addons://discover/");
+        return;
+      }
+
+      if (!this._listView) {
+        this._listView = PanelMultiView.getViewNode(
+          document,
+          "unified-extensions-view"
+        );
+        this._listView.addEventListener("ViewShowing", this);
+        this._listView.addEventListener("ViewHiding", this);
+      }
+
+      if (this._button.open) {
+        PanelMultiView.hidePopup(this._listView.closest("panel"));
+        this._button.open = false;
+      } else {
+        PanelUI.showSubView("unified-extensions-view", this._button, aEvent);
+      }
     }
 
-    if (!this._listView) {
-      this._listView = PanelMultiView.getViewNode(
-        document,
-        "unified-extensions-view"
-      );
-      this._listView.addEventListener("ViewShowing", this);
-      this._listView.addEventListener("ViewHiding", this);
-    }
-
-    if (this._button.open) {
-      PanelMultiView.hidePopup(this._listView.closest("panel"));
-      this._button.open = false;
-    } else {
-      PanelUI.showSubView("unified-extensions-view", this._button, aEvent);
-    }
+    // We always dispatch an event (useful for testing purposes).
+    window.dispatchEvent(new CustomEvent("UnifiedExtensionsTogglePanel"));
   },
 };
