@@ -167,12 +167,10 @@ urlbar-star-add-bookmark =
 
 ## Page Action Context Menu
 
-page-action-manage-extension2 =
+page-action-manage-extension =
     .label = Manage Extension…
-    .accesskey = E
-page-action-remove-extension2 =
+page-action-remove-extension =
     .label = Remove Extension
-    .accesskey = v
 
 ## Auto-hide Context Menu
 
