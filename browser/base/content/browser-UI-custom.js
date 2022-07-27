@@ -69,6 +69,7 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
   document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend',Tag);
   Tag.setAttribute("id", "bookmarkbarfocus");
 }
+
 Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
  if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
    var Tag = document.createElement("style");
@@ -80,27 +81,22 @@ Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
    const menuid =document.getElementById("bookmarkbarfocus");
    menuid.remove();
  }
-}
-)
-  if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {    
-    var Tag = document.createElement("style");
-    Tag.innerText = `@import url(chrome://browser/skin/optioncss/move_bookmarkbar.css)`
-    document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend',Tag);
-    Tag.setAttribute("id", "bottombookmarkbar");
- }
+})
+
+
+if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", true)) {
+  window.setTimeout(function(){document.body.appendChild(document.getElementById('PersonalToolbar'));}, 250);
+  }
+
  Services.prefs.addObserver("floorp.bookmarks.fakestatus.mode", function(){
    if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
-     var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/optioncss/move_bookmarkbar.css)`
-     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-     Tag.setAttribute("id", "bottombookmarkbar");
+    document.body.appendChild(document.getElementById("PersonalToolbar"));
    }
    else {
-     const menuid =document.getElementById("bottombookmarkbar");
-     menuid.remove();
+    document.getElementById("nav-bar").after(document.getElementById("PersonalToolbar"));
    }
-  }
-)
+ })
+
   if (Services.prefs.getBoolPref("floorp.search.top.mode", false)) {    
      var Tag = document.createElement("style");
      Tag.innerText = `@import url(chrome://browser/skin/optioncss/move_page_inside_searchbar.css)` 
