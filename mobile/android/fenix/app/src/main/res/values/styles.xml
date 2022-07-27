@@ -679,7 +679,7 @@
     <style name="topSiteFavicon">
         <item name="android:layout_width">@dimen/top_sites_favicon_size</item>
         <item name="android:layout_height">@dimen/top_sites_favicon_size</item>
-        <item name="android:scaleType">fitCenter</item>
+        <item name="android:scaleType">centerCrop</item>
         <item name="android:layout_gravity">center</item>
         <item name="shapeAppearanceOverlay">@style/topSiteFaviconShape</item>
     </style>

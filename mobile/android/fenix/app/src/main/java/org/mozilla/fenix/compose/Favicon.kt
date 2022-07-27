@@ -67,7 +67,7 @@ fun Favicon(
                     modifier = modifier
                         .size(size)
                         .clip(RoundedCornerShape(2.dp)),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop,
                 )
             }
         }

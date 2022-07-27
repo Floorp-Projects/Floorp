@@ -164,7 +164,7 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Crop,
                         )
                     }
                 }

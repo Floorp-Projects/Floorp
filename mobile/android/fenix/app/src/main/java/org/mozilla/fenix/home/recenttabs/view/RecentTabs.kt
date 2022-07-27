@@ -159,7 +159,8 @@ private fun RecentTabItem(
                     RecentTabIcon(
                         url = tab.state.content.url,
                         modifier = Modifier.size(18.dp).clip(RoundedCornerShape(2.dp)),
-                        icon = tab.state.content.icon
+                        contentScale = ContentScale.Crop,
+                        icon = tab.state.content.icon,
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))

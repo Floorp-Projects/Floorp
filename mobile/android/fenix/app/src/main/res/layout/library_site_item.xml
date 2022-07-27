@@ -19,11 +19,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/favicon"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="8dp"
+                android:scaleType="centerCrop"
                 android:importantForAccessibility="no"
                 tools:src="@drawable/ic_folder_icon" />
         <ImageView
