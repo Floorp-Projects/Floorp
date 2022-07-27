@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2021 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -7,6 +8,7 @@ info: |
   This property has the attributes { [[Writable]]: false, [[Enumerable]]:
   false, [[Configurable]]: false }.
 includes: [propertyHelper.js]
+features: [SharedArrayBuffer]
 ---*/
 
 verifyProperty(SharedArrayBuffer, 'prototype', {
