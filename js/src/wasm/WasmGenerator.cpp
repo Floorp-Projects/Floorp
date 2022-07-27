@@ -478,6 +478,7 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::EnterFrame:
       case CallSiteDesc::LeaveFrame:
       case CallSiteDesc::FuncRef:
+      case CallSiteDesc::FuncRefFast:
         break;
       case CallSiteDesc::Func: {
         if (funcIsCompiled(target.funcIndex())) {
