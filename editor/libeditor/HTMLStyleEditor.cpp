@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ErrorList.h"
 #include "HTMLEditor.h"
 
 #include "EditAction.h"
@@ -1097,6 +1098,11 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     return EditResult(NS_ERROR_INVALID_ARG);
   }
 
+  // TODO: We should rewrite this to stop unnecessary element creation and
+  //       deleting it later because it causes the original element may be
+  //       removed from the DOM tree even if same element is still in the
+  //       DOM tree from point of view of users.
+
   // First, split inline elements at the point.
   // E.g., if aProperty is nsGkAtoms::b and `<p><b><i>a[]bc</i></b></p>`,
   //       we want to make it as `<p><b><i>a</i></b><b><i>bc</i></b></p>`.
@@ -1119,7 +1125,10 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
 
   // If it did split nodes, but topmost ancestor inline element is split
   // at start of it, we don't need the empty inline element.  Let's remove
-  // it now.
+  // it now.  Then, we'll get the following DOM tree if there is no "a" in the
+  // above case:
+  // <p><b><i>bc</i></b></p>
+  //   ^^
   if (splitResult.GetPreviousContent() &&
       HTMLEditUtils::IsEmptyNode(
           *splitResult.GetPreviousContent(),
@@ -1183,23 +1192,38 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // selection so that just ignore it.
   splitResultAtStartOfNextNode.IgnoreCaretPointSuggestion();
 
-  // Let's remove the next node if it becomes empty by splitting it.
-  // XXX Is this possible case without mutation event listener?
   if (splitResultAtStartOfNextNode.Handled() &&
-      splitResultAtStartOfNextNode.GetNextContent() &&
-      HTMLEditUtils::IsEmptyNode(
-          *splitResultAtStartOfNextNode.GetNextContent(),
-          {EmptyCheckOption::TreatSingleBRElementAsVisible,
-           EmptyCheckOption::TreatListItemAsVisible,
-           EmptyCheckOption::TreatTableCellAsVisible})) {
-    // Delete next node if it's empty.
-    // MOZ_KnownLive(splitResultAtStartOfNextNode.GetNextContent()):
-    // It's grabbed by splitResultAtStartOfNextNode.
-    nsresult rv = DeleteNodeWithTransaction(
-        MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextContent()));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-      return EditResult(rv);
+      splitResultAtStartOfNextNode.GetNextContent()) {
+    // If the right inline elements are empty, we should remove them.  E.g.,
+    // if the split point is at end of a text node (or end of an inline
+    // element), e.g., <div><b><i>abc[]</i></b></div>, then now, it's been
+    // changed to:
+    // <div><b><i>abc</i></b><b><i>[]</i></b><b><i></i></b></div>
+    //                                       ^^^^^^^^^^^^^^
+    // We will change it to:
+    // <div><b><i>abc</i></b><b><i>[]</i></b></div>
+    //                                      ^^
+    // And if it has only padding <br> element, we should move it into the
+    // previous <i> which will have new content.
+    bool seenBR = false;
+    if (HTMLEditUtils::IsEmptyNode(
+            *splitResultAtStartOfNextNode.GetNextContent(),
+            {EmptyCheckOption::TreatListItemAsVisible,
+             EmptyCheckOption::TreatTableCellAsVisible},
+            &seenBR)) {
+      // Delete next node if it's empty.
+      // MOZ_KnownLive(splitResultAtStartOfNextNode.GetNextContent()):
+      // It's grabbed by splitResultAtStartOfNextNode.
+      nsresult rv = DeleteNodeWithTransaction(
+          MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextContent()));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+        return EditResult(rv);
+      }
+      if (seenBR && !brElement) {
+        brElement = HTMLEditUtils::GetFirstBRElement(
+            *splitResultAtStartOfNextNode.GetNextContent()->AsElement());
+      }
     }
   }
 
@@ -1227,6 +1251,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
           ? firstLeafChildOfPreviousNode
           : splitResultAtStartOfNextNode.GetPreviousContent(),
       0);
+
   // If the right node starts with a `<br>`, suck it out of right node and into
   // the left node left node.  This is so we you don't revert back to the
   // previous style if you happen to click at the end of a line.
@@ -1248,6 +1273,60 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     NS_WARNING_ASSERTION(
         rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
         "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
+
+    if (splitResultAtStartOfNextNode.GetNextContent() &&
+        splitResultAtStartOfNextNode.GetNextContent()->IsInComposedDoc()) {
+      // If we split inline elements at immediately before <br> element which is
+      // the last visible content in the right element, we don't need the right
+      // element anymore.  Otherwise, we'll create the following DOM tree:
+      // - <b>abc</b>{}<br><b></b>
+      //                   ^^^^^^^
+      // - <b><i>abc</i></b><i><br></i><b></b>
+      //                               ^^^^^^^
+      if (HTMLEditUtils::IsEmptyNode(
+              *splitResultAtStartOfNextNode.GetNextContent(),
+              {EmptyCheckOption::TreatSingleBRElementAsVisible,
+               EmptyCheckOption::TreatListItemAsVisible,
+               EmptyCheckOption::TreatTableCellAsVisible})) {
+        // MOZ_KnownLive because the result is grabbed by
+        // splitResultAtStartOfNextNode.
+        nsresult rv = DeleteNodeWithTransaction(
+            MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextContent()));
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          return EditResult(rv);
+        }
+      }
+      // If the next content has only one <br> element, there may be empty
+      // inline elements around it.  We don't need them anymore because user
+      // cannot put caret into them.  E.g., <b><i>abc[]<br></i><br></b> has
+      // been changed to <b><i>abc</i></b><i>{}<br></i><b><i></i><br></b> now.
+      //                                               ^^^^^^^^^^^^^^^^^^
+      // We don't need the empty <i>.
+      else if (HTMLEditUtils::IsEmptyNode(
+                   *splitResultAtStartOfNextNode.GetNextContent(),
+                   {EmptyCheckOption::TreatListItemAsVisible,
+                    EmptyCheckOption::TreatTableCellAsVisible})) {
+        AutoTArray<OwningNonNull<nsIContent>, 4> emptyInlineContainerElements;
+        HTMLEditUtils::CollectEmptyInlineContainerDescendants(
+            *splitResultAtStartOfNextNode.GetNextContent()->AsElement(),
+            emptyInlineContainerElements,
+            {EmptyCheckOption::TreatSingleBRElementAsVisible,
+             EmptyCheckOption::TreatListItemAsVisible,
+             EmptyCheckOption::TreatTableCellAsVisible});
+        for (const OwningNonNull<nsIContent>& emptyInlineContainerElement :
+             emptyInlineContainerElements) {
+          // MOZ_KnownLive(emptyInlineContainerElement) due to bug 1622253.
+          nsresult rv = DeleteNodeWithTransaction(
+              MOZ_KnownLive(emptyInlineContainerElement));
+          if (NS_FAILED(rv)) {
+            NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+            return EditResult(rv);
+          }
+        }
+      }
+    }
+
     // Update the child.
     pointToPutCaret.Set(pointToPutCaret.GetContainer(), 0);
   }

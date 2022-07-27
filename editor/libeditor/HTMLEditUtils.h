@@ -455,14 +455,14 @@ class HTMLEditUtils final {
   }
 
   /**
-   * IsEmptyInlineContent() returns true if aContent is an inline node and it
-   * does not have meaningful content.
+   * IsEmptyInlineContainer() returns true if aContent is an inline element
+   * which can have children and does not have meaningful content.
    */
-  static bool IsEmptyInlineContent(const nsIContent& aContent) {
+  static bool IsEmptyInlineContainer(const nsIContent& aContent,
+                                     const EmptyCheckOptions& aOptions) {
     return HTMLEditUtils::IsInlineElement(aContent) &&
            HTMLEditUtils::IsContainerNode(aContent) &&
-           HTMLEditUtils::IsEmptyNode(
-               aContent, {EmptyCheckOption::TreatSingleBRElementAsVisible});
+           HTMLEditUtils::IsEmptyNode(aContent, aOptions);
   }
 
   /**
@@ -500,7 +500,8 @@ class HTMLEditUtils final {
         brElementHasFound = true;
         continue;
       }
-      if (!HTMLEditUtils::IsEmptyInlineContent(content)) {
+      if (!HTMLEditUtils::IsEmptyInlineContainer(
+              content, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
         return false;
       }
     }
@@ -2013,6 +2014,24 @@ class HTMLEditUtils final {
   static size_t CollectChildren(
       nsINode& aNode, nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
       size_t aIndexToInsertChildren, const CollectChildrenOptions& aOptions);
+
+  /**
+   * CollectEmptyInlineContainerDescendants() appends empty inline elements in
+   * aNode to aOutArrayOfContents.  Although it's array of nsIContent, the
+   * instance will be elements.
+   *
+   * @param aNode               The node whose descendants may have empty inline
+   *                            elements.
+   * @param aOutArrayOfContents [out] This method will append found descendants
+   *                            into this array.
+   * @param aOptions            The option which element should be treated as
+   *                            empty.
+   * @return                    Number of found elements.
+   */
+  static size_t CollectEmptyInlineContainerDescendants(
+      const nsINode& aNode,
+      nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+      const EmptyCheckOptions& aOptions);
 
  private:
   static bool CanNodeContain(nsHTMLTag aParentTagId, nsHTMLTag aChildTagId);
