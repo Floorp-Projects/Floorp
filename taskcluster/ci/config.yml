@@ -545,12 +545,7 @@ workers:
             implementation: generic-worker
             os: linux-bitbar
             worker-type: 'gecko-{alias}'
-        t-linux-large:
-            provisioner: '{trust-domain}-t'
-            implementation: docker-worker
-            os: linux
-            worker-type: 't-linux-xlarge-gcp'  # Bug 1623747
-        t-linux(-xlarge|-xlarge-source):
+        t-linux(-large|-xlarge|-xlarge-source):
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
