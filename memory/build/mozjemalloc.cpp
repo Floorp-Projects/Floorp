@@ -1364,6 +1364,83 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
   }
 }
 
+// Experiment under bug 1716727. (See ./moz.build for details.)
+#ifdef XP_WIN
+#  ifdef MOZ_STALL_ON_OOM
+
+// Implementation of VirtualAlloc wrapper (bug 1716727).
+namespace MozAllocRetries {
+
+// Maximum retry count on OOM.
+constexpr size_t kMaxAttempts = 10;
+// Minimum delay time between retries. (The actual delay time may be larger. See
+// Microsoft's documentation for ::Sleep() for details.)
+constexpr size_t kDelayMs = 50;
+
+// Drop-in wrapper around VirtualAlloc. When out of memory, attempts to stall
+// and retry rather than returning immediately, in hopes that the page file is
+// about to be expanded by Windows.
+//
+// Ref: https://docs.microsoft.com/en-us/troubleshoot/windows-client/performance/slow-page-file-growth-memory-allocation-errors
+[[nodiscard]] void* MozVirtualAlloc(LPVOID lpAddress, SIZE_T dwSize,
+                                    DWORD flAllocationType, DWORD flProtect) {
+  constexpr auto IsOOMError = [] {
+    switch (::GetLastError()) {
+      // This is the usual error result from VirtualAlloc for OOM.
+      case ERROR_COMMITMENT_LIMIT:
+      // Although rare, this has also been observed in low-memory situations.
+      // (Presumably this means Windows can't allocate enough kernel-side space
+      // for its own internal representation of the process's virtual address
+      // space.)
+      case ERROR_NOT_ENOUGH_MEMORY:
+        return true;
+    }
+    return false;
+  };
+
+  {
+    void* ptr = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
+    if (MOZ_LIKELY(ptr)) return ptr;
+
+    // We can't do anything for errors other than OOM...
+    if (!IsOOMError()) return nullptr;
+    // ... or if this wasn't a request to commit memory in the first place.
+    // (This function has no strategy for resolving MEM_RESERVE failures.)
+    if (!(flAllocationType & MEM_COMMIT)) return nullptr;
+  }
+
+  // Unconditionally retry. (At this level, we don't know whether the allocation
+  // is fallible, and arguably we should retry even if we knew that it was.)
+  for (size_t i = 0; i < kMaxAttempts; ++i) {
+    ::Sleep(kDelayMs);
+    void* ptr = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
+
+    if (ptr) {
+      // The OOM status has been handled, and should not be reported to
+      // telemetry.
+      if (IsOOMError()) {
+        ::SetLastError(0);
+      }
+      return ptr;
+    }
+
+    // Failure for some reason other than OOM.
+    if (!IsOOMError()) {
+      return nullptr;
+    }
+  }
+
+  // Ah, well. We tried.
+  return nullptr;
+}
+}  // namespace MozAllocRetries
+
+using MozAllocRetries::MozVirtualAlloc;
+#  else
+using MozVirtualAlloc = VirtualAlloc;
+#  endif  // MOZ_STALL_ON_OOM
+#endif    // XP_WIN
+
 // ***************************************************************************
 
 static inline void pages_decommit(void* aAddr, size_t aSize) {
@@ -1413,7 +1490,7 @@ static inline void pages_decommit(void* aAddr, size_t aSize) {
   // time, we may touch any region in chunksized increments.
   size_t pages_size = std::min(aSize, kChunkSize - GetChunkOffsetForPtr(aAddr));
   while (aSize > 0) {
-    if (!VirtualAlloc(aAddr, pages_size, MEM_COMMIT, PAGE_READWRITE)) {
+    if (!MozVirtualAlloc(aAddr, pages_size, MEM_COMMIT, PAGE_READWRITE)) {
       return false;
     }
     aAddr = (void*)((uintptr_t)aAddr + pages_size);
@@ -1558,7 +1635,7 @@ using UniqueBaseNode =
 
 static void* pages_map(void* aAddr, size_t aSize) {
   void* ret = nullptr;
-  ret = VirtualAlloc(aAddr, aSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+  ret = MozVirtualAlloc(aAddr, aSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
   return ret;
 }
 
