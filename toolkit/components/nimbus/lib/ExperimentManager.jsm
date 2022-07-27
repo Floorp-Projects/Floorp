@@ -405,17 +405,18 @@ class _ExperimentManager {
 
     recipe.userFacingName = `${recipe.userFacingName} - Forced enrollment`;
 
+    const slug = `optin-${recipe.slug}`;
     const experiment = this._enroll(
       {
         ...recipe,
-        slug: `optin-${recipe.slug}`,
+        slug,
       },
       branch,
       source,
       { force: true }
     );
 
-    Services.obs.notifyObservers(null, "nimbus:force-enroll");
+    Services.obs.notifyObservers(null, "nimbus:force-enroll", slug);
 
     return experiment;
   }
