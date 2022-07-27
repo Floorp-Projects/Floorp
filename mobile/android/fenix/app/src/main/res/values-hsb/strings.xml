@@ -756,7 +756,7 @@
     <string name="pwa_site_controls_title_private">%1$s (priwatny modus)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Druhe rajtarki</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Druhe rajtarki</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1164,7 +1164,18 @@
     <string name="delete_browsing_data_on_quit_action">Skónčić</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">To wšě waše přehladowanske daty zhaša.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">To wšě waše přehladowanske daty zhaša.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Časowy wotrězk za zhašenje</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Wotstronja historiju (mjez njej historiju, kotraž je so z druhich gratow synchronizowała), placki a druhe přehladowanske daty.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Zańdźena hodźina</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Dźensa a wčera</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Wšitko</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s wubrane přehladowanske daty zhaša.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1176,9 +1187,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Přehladowanske daty so hašeja…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">To wšě zapiski zhaša.</string>
-
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Wšě sydła w „%s“ zhašeć</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Přetorhnyć</string>
     <!-- Text for the allow button for the history group dialog -->

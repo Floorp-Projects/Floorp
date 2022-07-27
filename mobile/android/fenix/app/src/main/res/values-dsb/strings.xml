@@ -751,7 +751,7 @@
     <string name="pwa_site_controls_title_private">%1$s (priwatny modus)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Druge rejtariki</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Druge rejtariki</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1157,7 +1157,18 @@
     <string name="delete_browsing_data_on_quit_action">Skóńcyś</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">To wšykne waše pśeglědowańske daty wulašujo.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">To wšykne waše pśeglědowańske daty wulašujo.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Casowy wótrězk za lašowanje</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Wótwónoźijo historiju (mjazy njeju historiju, kótaraž jo se synchronizěrowała z drugich rědow), cookieje a druge pśeglědowańske daty.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Zachadna góźina</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Źinsa a cora</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Wšykno</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s wubrane pśeglědowańske daty wulašujo.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1169,8 +1180,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Pśeglědowańske daty se lašuju…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">To wšykne zapiski wulašujo.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Wšykne sedła w „%s“ lašowaś</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Pśetergnuś</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1589,8 +1600,6 @@
     <string name="addresses_edit_address">Adresu wobźěłaś</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Adrese zastojaś</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Dopołne mě</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Pśedmě</string>
     <!-- The header for the middle name of an address -->

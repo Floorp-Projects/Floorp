@@ -750,7 +750,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Реҷаи хусусӣ)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Варақаҳои дигар</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Варақаҳои дигар</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1163,7 +1163,19 @@
     <string name="delete_browsing_data_on_quit_action">Баромадан</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Ин амал маълумоти тамошокуниро нест мекунад.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Ин амал маълумоти тамошокуниро нест мекунад.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Фосилаи вақте, ки нест карда мешавад</string>
+
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Таърих (аз он ҷумла, таърихи ҳамоҳангшуда аз дастгоҳҳои дигар), кукиҳо ва иттилооти тамошокунии дигарро тоза мекунад.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Як соати охир</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Имрӯз ва дирӯз</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Комилан</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s маълумоти тамошокунии интихобшударо нест мекунад.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1176,8 +1188,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Несткунии маълумоти тамошокунӣ…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Ин амал ҳамаи унсурҳоро нест мекунад.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Нест кардани ҳамаи сомонаҳо аз «%s»</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Бекор кардан</string>
     <!-- Text for the allow button for the history group dialog -->

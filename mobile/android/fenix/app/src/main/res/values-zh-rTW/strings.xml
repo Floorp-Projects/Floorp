@@ -761,7 +761,7 @@
     <string name="pwa_site_controls_title_private">%1$s（隱私瀏覽模式）</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">其他分頁</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">其他分頁</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1193,7 +1193,18 @@
     <string name="delete_browsing_data_on_quit_action">離開</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">將刪除您的所有瀏覽資料。</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">將刪除您的所有瀏覽資料。</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">要清除的時間範圍</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">清除瀏覽紀錄（包含同步自其他裝置的紀錄）、Cookie 及其他瀏覽資料。</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">一小時內</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">今天和昨天</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">所有歷史記錄</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s 將刪除選擇的瀏覽資料。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1206,8 +1217,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">正在刪除上網資料…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">將刪除所有項目。</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">要刪除「%s」中的所有網站？</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">取消</string>
     <!-- Text for the allow button for the history group dialog -->

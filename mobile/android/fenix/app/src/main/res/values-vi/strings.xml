@@ -746,7 +746,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Chế độ riêng tư)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Các thẻ khác</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Các thẻ khác</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1151,7 +1151,18 @@
     <string name="delete_browsing_data_on_quit_action">Thoát</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Điều này sẽ xóa tất cả dữ liệu duyệt web của bạn.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Điều này sẽ xóa tất cả dữ liệu duyệt web của bạn.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Khoảng thời gian để xóa</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Xóa lịch sử (bao gồm cả lịch sử được đồng bộ hóa từ các thiết bị khác), cookie và dữ liệu duyệt web khác.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Một tiếng gần đây</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Hôm nay và hôm qua</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Mọi thứ</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s sẽ xóa dữ liệu duyệt đã chọn.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1163,8 +1174,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Đang xóa dữ liệu duyệt web…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Điều này sẽ xóa tất cả các mục.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Xóa tất cả trang web trong “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Hủy bỏ</string>
     <!-- Text for the allow button for the history group dialog -->

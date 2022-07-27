@@ -760,7 +760,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Privat läge)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Andra flikar</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Andra flikar</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1172,7 +1172,14 @@
     <string name="delete_browsing_data_on_quit_action">Avsluta</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Detta kommer att ta bort all dina surfdata.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Detta kommer att ta bort all dina surfdata.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Senaste timmen</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Idag och igår</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Allt</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s kommer att ta bort vald surfdata.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1185,8 +1192,6 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Tar bort surfsdata…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Detta tar bort alla objekt.</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Avbryt</string>
     <!-- Text for the allow button for the history group dialog -->

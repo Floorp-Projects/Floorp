@@ -755,7 +755,7 @@
     <string name="pwa_site_controls_title_private">%1$s (modu pribatua)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Beste fitxak</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Beste fitxak</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1165,7 +1165,18 @@
     <string name="delete_browsing_data_on_quit_action">Irten</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Zure nabigatze-datu guztiak ezabatuko ditu honek.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Zure nabigatze-datu guztiak ezabatuko ditu honek.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Ezabatu beharreko denbora-tartea</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Historia (beste gailuetatik sinkronizatutakoa barne), cookieak eta bestelako nabigazio-datuak ezabatzen ditu.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Azken ordua</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Gaur eta atzo</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Guztia</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s(e)k hautatutako nabigazio datuak ezabatuko ditu.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1178,8 +1189,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Nabigatze-datuak ezabatzen…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Elementu guztiak ezabatuko ditu.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Ezabatu &quot;%s&quot; taldeko gune guztiak?</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Utzi</string>
     <!-- Text for the allow button for the history group dialog -->
