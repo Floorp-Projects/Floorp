@@ -537,7 +537,9 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsFromObjectOrEmbed(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
       aLoadInfo->GetStoragePermission(), aLoadInfo->GetIsMetaRefresh(),
-      aLoadInfo->GetLoadingEmbedderPolicy(), unstrippedURI));
+      aLoadInfo->GetLoadingEmbedderPolicy(),
+      aLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(),
+      unstrippedURI));
 
   return NS_OK;
 }
@@ -779,7 +781,9 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.isInDevToolsContext(), loadInfoArgs.parserCreatedScript(),
       loadInfoArgs.storagePermission(), loadInfoArgs.isMetaRefresh(),
       loadInfoArgs.requestBlockingReason(), loadingContext,
-      loadInfoArgs.loadingEmbedderPolicy(), loadInfoArgs.unstrippedURI());
+      loadInfoArgs.loadingEmbedderPolicy(),
+      loadInfoArgs.originTrialCoepCredentiallessEnabledForTopLevel(),
+      loadInfoArgs.unstrippedURI());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
