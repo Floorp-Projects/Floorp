@@ -1366,6 +1366,13 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
 
 // Experiment under bug 1716727. (See ./moz.build for details.)
 #ifdef XP_WIN
+
+// Whether the current process should always stall, or only stall once.
+static bool sShouldAlwaysStall = true;
+MOZ_JEMALLOC_API void mozjemalloc_experiment_set_always_stall(bool aVal) {
+  sShouldAlwaysStall = aVal;
+}
+
 #  ifdef MOZ_STALL_ON_OOM
 
 // Implementation of VirtualAlloc wrapper (bug 1716727).
@@ -1377,7 +1384,16 @@ constexpr size_t kMaxAttempts = 10;
 // Microsoft's documentation for ::Sleep() for details.)
 constexpr size_t kDelayMs = 50;
 
-// Drop-in wrapper around VirtualAlloc. When out of memory, attempts to stall
+Atomic<bool> sHasStalled{false};
+static bool ShouldStallAndRetry() {
+  if (sShouldAlwaysStall) {
+    return true;
+  }
+  // Otherwise, stall at most once.
+  return sHasStalled.compareExchange(false, true);
+}
+
+// Drop-in wrapper around VirtualAlloc. When out of memory, may attempt to stall
 // and retry rather than returning immediately, in hopes that the page file is
 // about to be expanded by Windows.
 //
@@ -1409,8 +1425,11 @@ constexpr size_t kDelayMs = 50;
     if (!(flAllocationType & MEM_COMMIT)) return nullptr;
   }
 
-  // Unconditionally retry. (At this level, we don't know whether the allocation
-  // is fallible, and arguably we should retry even if we knew that it was.)
+  // Also return if we just aren't supposed to be retrying at the moment, for
+  // whatever reason.
+  if (!ShouldStallAndRetry()) return nullptr;
+
+  // Otherwise, retry.
   for (size_t i = 0; i < kMaxAttempts; ++i) {
     ::Sleep(kDelayMs);
     void* ptr = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
