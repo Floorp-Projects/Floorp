@@ -365,21 +365,13 @@ bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Step 6.
-  if (x > y) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_START_AFTER_END_NUMBER, "PluralRules",
-                              "selectRange");
-    return false;
-  }
-
   using PluralRules = mozilla::intl::PluralRules;
   PluralRules* pr = GetOrCreatePluralRules(cx, pluralRules);
   if (!pr) {
     return false;
   }
 
-  // Steps 7-11.
+  // Steps 6-10.
   auto keywordResult = pr->SelectRange(x, y);
   if (keywordResult.isErr()) {
     intl::ReportInternalError(cx, keywordResult.unwrapErr());
