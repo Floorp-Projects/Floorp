@@ -33,14 +33,17 @@ class WebSocketFrameData final {
  public:
   WebSocketFrameData();
 
-  explicit WebSocketFrameData(const WebSocketFrameData& aData);
+  explicit WebSocketFrameData(const WebSocketFrameData&) = default;
+  WebSocketFrameData(WebSocketFrameData&&) = default;
+  WebSocketFrameData& operator=(WebSocketFrameData&&) = default;
+  WebSocketFrameData& operator=(const WebSocketFrameData&) = default;
 
   WebSocketFrameData(DOMHighResTimeStamp aTimeStamp, bool aFinBit,
                      bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
                      uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
                      const nsCString& aPayload);
 
-  ~WebSocketFrameData();
+  ~WebSocketFrameData() = default;
 
   // For IPC serialization
   void WriteIPCParams(IPC::MessageWriter* aWriter) const;

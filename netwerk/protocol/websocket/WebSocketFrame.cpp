@@ -73,9 +73,7 @@ WebSocketFrameData::WebSocketFrameData()
       mRsvBit1(false),
       mRsvBit2(false),
       mRsvBit3(false),
-      mMaskBit(false) {
-  MOZ_COUNT_CTOR(WebSocketFrameData);
-}
+      mMaskBit(false) {}
 
 WebSocketFrameData::WebSocketFrameData(DOMHighResTimeStamp aTimeStamp,
                                        bool aFinBit, bool aRsvBit1,
@@ -91,26 +89,7 @@ WebSocketFrameData::WebSocketFrameData(DOMHighResTimeStamp aTimeStamp,
       mMaskBit(aMaskBit),
       mOpCode(aOpCode),
       mMask(aMask),
-      mPayload(aPayload) {
-  MOZ_COUNT_CTOR(WebSocketFrameData);
-}
-
-WebSocketFrameData::WebSocketFrameData(const WebSocketFrameData& aData)
-    : mTimeStamp(aData.mTimeStamp),
-      mFinBit(aData.mFinBit),
-      mRsvBit1(aData.mRsvBit1),
-      mRsvBit2(aData.mRsvBit2),
-      mRsvBit3(aData.mRsvBit3),
-      mMaskBit(aData.mMaskBit),
-      mOpCode(aData.mOpCode),
-      mMask(aData.mMask),
-      mPayload(aData.mPayload) {
-  MOZ_COUNT_CTOR(WebSocketFrameData);
-}
-
-WebSocketFrameData::~WebSocketFrameData() {
-  MOZ_COUNT_DTOR(WebSocketFrameData);
-}
+      mPayload(aPayload) {}
 
 void WebSocketFrameData::WriteIPCParams(IPC::MessageWriter* aWriter) const {
   WriteParam(aWriter, mTimeStamp);
