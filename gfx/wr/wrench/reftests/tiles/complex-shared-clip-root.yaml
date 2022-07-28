@@ -1,0 +1,25 @@
+# verify that we don't select a shared clip root for a tile cache that has an ancestor complex clip
+---
+root:
+  items:
+    -
+      type: clip
+      id: 2
+      complex:
+        - rect: [50, 50, 200, 200]
+          radius: 16
+    -
+      type: clip
+      id: 3
+      bounds: [50, 50, 200, 200]
+
+    - type: scroll-frame
+      bounds: 50 50 200 200
+      scroll-offset: [0, 0]
+      id: 10
+      items:
+        - type: rect
+          bounds: [50, 50, 200, 200]
+          color: red
+          spatial-id: 10
+          clip-chain: [3, 2]

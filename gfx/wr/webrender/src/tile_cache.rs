@@ -555,10 +555,17 @@ fn find_shared_clip_root(
         let clip_node_data = &interners.clip[node.handle];
 
         if let ClipNodeKind::Rectangle = clip_node_data.key.kind.node_kind() {
-            if spatial_tree.is_ancestor(
+            let is_ancestor = spatial_tree.is_ancestor(
                 clip_node_data.key.spatial_node_index,
                 scroll_root,
-            ) {
+            );
+
+            let has_complex_clips = clip_tree_builder.clip_node_has_complex_clips(
+                current_node_id,
+                interners,
+            );
+
+            if is_ancestor && !has_complex_clips {
                 break;
             }
         }
