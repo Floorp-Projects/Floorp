@@ -59,6 +59,7 @@ body > header {
 }
 
 figure {
+  align-items: center;
   margin: 0;
   display: flex;
   justify-content: center;
@@ -74,6 +75,7 @@ figure > img {
 }
 
 #colorway-customization-panel {
+  align-self: center;
   padding-inline: var(--customization-panel-padding-inline);
   grid-column: var(--customization-panel-column);
 }
