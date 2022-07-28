@@ -3109,11 +3109,8 @@ bool Debugger::updateExecutionObservabilityOfFrames(
     IsObserving observing) {
   AutoSuppressProfilerSampling suppressProfilerSampling(cx);
 
-  {
-    jit::JitContext jctx(cx, nullptr);
-    if (!jit::RecompileOnStackBaselineScriptsForDebugMode(cx, obs, observing)) {
-      return false;
-    }
+  if (!jit::RecompileOnStackBaselineScriptsForDebugMode(cx, obs, observing)) {
+    return false;
   }
 
   AbstractFramePtr oldestEnabledFrame;
