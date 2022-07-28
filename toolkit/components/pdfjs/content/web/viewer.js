@@ -4398,7 +4398,8 @@ class AnnotationEditorParams {
     editorFreeTextFontSize,
     editorFreeTextColor,
     editorInkColor,
-    editorInkThickness
+    editorInkThickness,
+    editorInkOpacity
   }) {
     editorFreeTextFontSize.addEventListener("input", evt => {
       this.eventBus.dispatch("switchannotationeditorparams", {
@@ -4428,6 +4429,13 @@ class AnnotationEditorParams {
         value: editorInkThickness.valueAsNumber
       });
     });
+    editorInkOpacity.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: _pdfjsLib.AnnotationEditorParamsType.INK_OPACITY,
+        value: editorInkOpacity.valueAsNumber
+      });
+    });
 
     this.eventBus._on("annotationeditorparamschanged", evt => {
       for (const [type, value] of evt.details) {
@@ -4446,6 +4454,10 @@ class AnnotationEditorParams {
 
           case _pdfjsLib.AnnotationEditorParamsType.INK_THICKNESS:
             editorInkThickness.value = value;
+            break;
+
+          case _pdfjsLib.AnnotationEditorParamsType.INK_OPACITY:
+            editorInkOpacity.value = value;
             break;
         }
       }
@@ -9724,7 +9736,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.303';
+    const viewerVersion = '2.15.322';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -14821,8 +14833,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.15.303';
-const pdfjsBuild = 'bf0006873';
+const pdfjsVersion = '2.15.322';
+const pdfjsBuild = 'b06d19045';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
@@ -14949,7 +14961,8 @@ function getViewerConfiguration() {
       editorFreeTextFontSize: document.getElementById("editorFreeTextFontSize"),
       editorFreeTextColor: document.getElementById("editorFreeTextColor"),
       editorInkColor: document.getElementById("editorInkColor"),
-      editorInkThickness: document.getElementById("editorInkThickness")
+      editorInkThickness: document.getElementById("editorInkThickness"),
+      editorInkOpacity: document.getElementById("editorInkOpacity")
     },
     errorWrapper,
     printContainer: document.getElementById("printContainer"),
