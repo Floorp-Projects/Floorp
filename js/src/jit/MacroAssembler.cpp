@@ -2644,12 +2644,6 @@ MacroAssembler::MacroAssembler()
       emitProfilingInstrumentation_(false) {
   JitContext* jcx = GetJitContext();
   moveResolver_.setAllocator(jcx->temp);
-
-#if defined(JS_CODEGEN_ARM)
-  m_buffer.id = jcx->getNextAssemblerId();
-#elif defined(JS_CODEGEN_ARM64)
-  armbuffer_.id = jcx->getNextAssemblerId();
-#endif
 }
 
 MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
@@ -2662,13 +2656,10 @@ MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
       emitProfilingInstrumentation_(false) {
   moveResolver_.setAllocator(alloc);
 
-#if defined(JS_CODEGEN_ARM)
-  m_buffer.id = 0;
-#elif defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM64)
   // Stubs + builtins + the baseline compiler all require the native SP,
   // not the PSP.
   SetStackPointer64(sp);
-  armbuffer_.id = 0;
 #endif
 }
 

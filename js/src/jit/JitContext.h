@@ -81,7 +81,6 @@ static_assert(sizeof(AbortReasonOr<uint16_t*>) == sizeof(uintptr_t),
 
 class JitContext {
   CompileRealm* realm_ = nullptr;
-  int assemblerCount_ = 0;
 
 #ifdef DEBUG
   // Whether this thread is actively Ion compiling (does not include Wasm or
@@ -114,8 +113,6 @@ class JitContext {
   explicit JitContext(TempAllocator& temp);
 
   ~JitContext();
-
-  int getNextAssemblerId() { return assemblerCount_++; }
 
   CompileRealm* maybeRealm() const { return realm_; }
   CompileRealm* realm() const {
