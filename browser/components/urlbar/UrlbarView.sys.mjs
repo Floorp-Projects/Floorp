@@ -37,6 +37,9 @@ const DEFAULT_REMOVE_STALE_ROWS_TIMEOUT = 400;
 // Query selector for selectable elements in tip and dynamic results.
 const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable=true]";
 
+// Query selector that prevents rows from being selectable.
+const UNSELECTABLE_ELEMENT_SELECTOR = "[selectable=false]";
+
 const getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
 
@@ -308,7 +311,9 @@ export class UrlbarView {
     let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
     if (!closest) {
       let row = element.closest(".urlbarView-row");
-      if (row && !row.querySelector(SELECTABLE_ELEMENT_SELECTOR)) {
+      if (row && row.querySelector(UNSELECTABLE_ELEMENT_SELECTOR)) {
+        return null;
+      } else if (row && !row.querySelector(SELECTABLE_ELEMENT_SELECTOR)) {
         closest = row;
       }
     }

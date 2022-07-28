@@ -147,18 +147,21 @@
 .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
   display: flex;
   flex-wrap: wrap;
-  gap: 1em;
+  gap: 2em;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row {
-  background: rgba(255, 255, 255, .1);
-  border-radius: 8px;
+  box-shadow: 0px 0px 1px rgba(128, 128, 142, 0.9), 0px 0px 4px rgba(128, 128, 142, 0.5);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   padding: .5em;
-  border: .5px solid rgba(207,207,216, .6);
   margin-top: 2px;
   position: relative;
+}
+
+.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[disabled] {
+  opacity: .4;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-label {
@@ -182,9 +185,8 @@
   margin-inline-start: 12px;
 }
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row:hover {
+.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row:hover:not([disabled]) {
   background-color: var(--autocomplete-popup-highlight-background);
-  border: .5px solid #CFCFD8;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[selected] {
