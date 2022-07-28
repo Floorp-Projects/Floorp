@@ -2645,25 +2645,13 @@ MacroAssembler::MacroAssembler(TempAllocator& alloc)
   moveResolver_.setAllocator(alloc);
 }
 
-MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
-    : wasmMaxOffsetGuardLimit_(0),
-      framePushed_(0),
-#ifdef DEBUG
-      inCall_(false),
-#endif
-      dynamicAlignment_(false),
-      emitProfilingInstrumentation_(false) {
-  moveResolver_.setAllocator(alloc);
-
+WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc, bool limitedSize)
+    : MacroAssembler(alloc) {
 #if defined(JS_CODEGEN_ARM64)
   // Stubs + builtins + the baseline compiler all require the native SP,
   // not the PSP.
   SetStackPointer64(sp);
 #endif
-}
-
-WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc, bool limitedSize)
-    : MacroAssembler(WasmToken(), alloc) {
   if (!limitedSize) {
     setUnlimitedBuffer();
   }
@@ -2672,7 +2660,12 @@ WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc, bool limitedSize)
 WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc,
                                        const wasm::ModuleEnvironment& env,
                                        bool limitedSize)
-    : MacroAssembler(WasmToken(), alloc) {
+    : MacroAssembler(alloc) {
+#if defined(JS_CODEGEN_ARM64)
+  // Stubs + builtins + the baseline compiler all require the native SP,
+  // not the PSP.
+  SetStackPointer64(sp);
+#endif
   setWasmMaxOffsetGuardLimit(
       wasm::GetMaxOffsetGuardLimit(env.hugeMemoryEnabled()));
   if (!limitedSize) {

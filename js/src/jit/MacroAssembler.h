@@ -338,12 +338,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   NonAssertingLabel failureLabel_;
 
  protected:
-  // Constructors are protected. Use one of the derived classes!
+  // Constructor is protected. Use one of the derived classes!
   explicit MacroAssembler(TempAllocator& alloc);
-
-  // wasm compilation handles its own JitContext-pushing
-  struct WasmToken {};
-  explicit MacroAssembler(WasmToken, TempAllocator& alloc);
 
  public:
   MoveResolver& moveResolver() {
