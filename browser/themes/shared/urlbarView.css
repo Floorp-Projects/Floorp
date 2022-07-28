@@ -837,7 +837,7 @@
 
 .urlbarView-row[source="actions"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
 #urlbar-engine-one-off-item-actions {
-  list-style-image: url("chrome://devtools/skin/images/command-console.svg");
+  list-style-image: url("chrome://browser/skin/quickactions.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
