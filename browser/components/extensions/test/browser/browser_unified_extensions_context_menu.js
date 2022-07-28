@@ -365,3 +365,80 @@ add_task(async function test_remove_extension_cancelled() {
     TELEMETRY_EVENTS_FILTERS
   );
 });
+
+add_task(async function test_open_context_menu_on_click() {
+  const win = await promiseEnableUnifiedExtensions();
+
+  const [extension] = createExtensions([{ name: "an extension" }]);
+  await extension.startup();
+
+  // Open the extension panel.
+  await openExtensionsPanel(win);
+
+  const button = getUnifiedExtensionsItem(win, extension.id).querySelector(
+    ".unified-extensions-item-open-menu"
+  );
+  ok(button, "expected 'open menu' button");
+
+  const contextMenu = win.document.getElementById(
+    "unified-extensions-context-menu"
+  );
+  ok(contextMenu, "expected menu");
+
+  // Open the context menu with a "right-click".
+  const shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(button, { type: "contextmenu" }, win);
+  await shown;
+
+  await closeChromeContextMenu(contextMenu.id, null, win);
+  await closeExtensionsPanel(win);
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_open_context_menu_with_keyboard() {
+  const win = await promiseEnableUnifiedExtensions();
+
+  const [extension] = createExtensions([{ name: "an extension" }]);
+  await extension.startup();
+
+  // Open the extension panel.
+  await openExtensionsPanel(win);
+
+  const button = getUnifiedExtensionsItem(win, extension.id).querySelector(
+    ".unified-extensions-item-open-menu"
+  );
+  ok(button, "expected 'open menu' button");
+  // Make this button focusable because those (toolbar) buttons are only made
+  // focusable when a user is navigating with the keyboard, which isn't exactly
+  // what we are doing in this test.
+  button.setAttribute("tabindex", "-1");
+
+  const contextMenu = win.document.getElementById(
+    "unified-extensions-context-menu"
+  );
+  ok(contextMenu, "expected menu");
+
+  // Open the context menu by focusing the button and pressing the SPACE key.
+  let shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  button.focus();
+  is(win.document.activeElement, button, "expected button to be focused");
+  EventUtils.synthesizeKey(" ", {}, win);
+  await shown;
+
+  await closeChromeContextMenu(contextMenu.id, null, win);
+
+  // Open the context menu by focusing the button and pressing the ENTER key.
+  shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  button.focus();
+  is(win.document.activeElement, button, "expected button to be focused");
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  await shown;
+
+  await closeChromeContextMenu(contextMenu.id, null, win);
+  await closeExtensionsPanel(win);
+
+  await extension.unload();
+  await BrowserTestUtils.closeWindow(win);
+});
