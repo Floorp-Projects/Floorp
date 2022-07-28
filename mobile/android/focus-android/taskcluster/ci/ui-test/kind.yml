@@ -32,7 +32,6 @@ task-defaults:
             - name: public
               path: /builds/worker/artifacts
               type: directory
-    run-on-tasks-for: [github-pull-request, github-push]
     treeherder:
         kind: test
         platform: 'ui-test/opt'
@@ -55,6 +54,7 @@ task-defaults:
 tasks:
     x86-debug:
         description: 'UI tests with firebase'
+        run-on-tasks-for: [github-pull-request, github-push]
         run:
             commands:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '-1']
