@@ -499,7 +499,7 @@ function pedanticChecks(report) {
       );
 
       // jitterBufferEmittedCount
-      let expectedJitterBufferEmmitedCount = stat.kind == "video" ? 10 : 1000;
+      let expectedJitterBufferEmmitedCount = stat.kind == "video" ? 7 : 1000;
       ok(
         stat.jitterBufferEmittedCount > expectedJitterBufferEmmitedCount,
         `${stat.type}.jitterBufferEmittedCount is a sane number for a short ` +
