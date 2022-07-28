@@ -141,9 +141,6 @@ pref("signon.debug", false);
 /* form helper (scroll to and optionally zoom into editable fields)  */
 pref("formhelper.autozoom", true);
 
-/* find helper */
-pref("findhelper.autozoom", true);
-
 /* autocomplete */
 pref("browser.formfill.enable", true);
 
