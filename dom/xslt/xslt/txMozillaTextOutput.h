@@ -22,19 +22,20 @@ class Element;
 
 class txMozillaTextOutput : public txAOutputXMLEventHandler {
  public:
-  explicit txMozillaTextOutput(nsITransformObserver* aObserver);
+  explicit txMozillaTextOutput(mozilla::dom::Document* aSourceDocument,
+                               nsITransformObserver* aObserver);
   explicit txMozillaTextOutput(mozilla::dom::DocumentFragment* aDest);
   virtual ~txMozillaTextOutput();
 
   TX_DECL_TXAXMLEVENTHANDLER
   TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-  nsresult createResultDocument(mozilla::dom::Document* aSourceDocument,
-                                bool aLoadedAsData);
+  nsresult createResultDocument(bool aLoadedAsData);
 
  private:
   nsresult createXHTMLElement(nsAtom* aName, mozilla::dom::Element** aResult);
 
+  nsCOMPtr<mozilla::dom::Document> mSourceDocument;
   nsCOMPtr<nsIContent> mTextParent;
   nsWeakPtr mObserver;
   RefPtr<mozilla::dom::Document> mDocument;
