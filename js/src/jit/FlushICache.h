@@ -40,6 +40,33 @@ inline void FlushICache(void* code, size_t size,
 #  error "Unknown architecture!"
 #endif
 
+#if (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)) ||       \
+    (defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)) || \
+    defined(JS_CODEGEN_LOONG64)
+
+inline void FlushExecutionContext() {
+  // No-op. Execution context is coherent with instruction cache.
+}
+
+#elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
+
+inline void FlushExecutionContext() { MOZ_CRASH(); }
+
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+
+// ARM and ARM64 must flush the instruction pipeline of the current core
+// before executing newly JIT'ed code. This will remove any stale data from
+// the pipeline that may have referenced invalidated instructions.
+//
+// `FlushICache` will perform this for the thread that compiles the code, but
+// other threads that may execute the code are responsible to call
+// this method.
+extern void FlushExecutionContext();
+
+#else
+#  error "Unknown architecture!"
+#endif
+
 }  // namespace jit
 }  // namespace js
 
