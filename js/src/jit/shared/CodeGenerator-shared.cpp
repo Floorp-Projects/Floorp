@@ -40,7 +40,7 @@ MacroAssembler& CodeGeneratorShared::ensureMasm(MacroAssembler* masmArg) {
   if (masmArg) {
     return *masmArg;
   }
-  maybeMasm_.emplace();
+  maybeMasm_.emplace(GetJitContext()->temp);
   return *maybeMasm_;
 }
 

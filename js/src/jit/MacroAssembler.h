@@ -339,7 +339,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
  protected:
   // Constructors are protected. Use one of the derived classes!
-  MacroAssembler();
+  explicit MacroAssembler(TempAllocator& alloc);
 
   // wasm compilation handles its own JitContext-pushing
   struct WasmToken {};
@@ -5269,7 +5269,7 @@ class MOZ_RAII StackMacroAssembler : public MacroAssembler {
   JS::AutoCheckCannotGC nogc;
 
  public:
-  StackMacroAssembler() = default;
+  explicit StackMacroAssembler(TempAllocator& alloc) : MacroAssembler(alloc) {}
 };
 
 // WasmMacroAssembler does not contain GC pointers, so it doesn't need the no-GC
@@ -5287,7 +5287,7 @@ class MOZ_RAII WasmMacroAssembler : public MacroAssembler {
 // GC cancels off-thread compilations.
 class IonHeapMacroAssembler : public MacroAssembler {
  public:
-  IonHeapMacroAssembler() : MacroAssembler() {
+  explicit IonHeapMacroAssembler(TempAllocator& alloc) : MacroAssembler(alloc) {
     MOZ_ASSERT(CurrentThreadIsIonCompiling());
   }
 };

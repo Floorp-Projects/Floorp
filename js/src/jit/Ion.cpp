@@ -135,7 +135,7 @@ bool JitRuntime::initialize(JSContext* cx) {
 }
 
 bool JitRuntime::generateTrampolines(JSContext* cx) {
-  StackMacroAssembler masm;
+  StackMacroAssembler masm(GetJitContext()->temp);
 
   Label bailoutTail;
   JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");
