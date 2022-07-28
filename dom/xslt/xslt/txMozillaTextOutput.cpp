@@ -21,8 +21,11 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-txMozillaTextOutput::txMozillaTextOutput(nsITransformObserver* aObserver)
-    : mObserver(do_GetWeakReference(aObserver)), mCreatedDocument(false) {
+txMozillaTextOutput::txMozillaTextOutput(Document* aSourceDocument,
+                                         nsITransformObserver* aObserver)
+    : mSourceDocument(aSourceDocument),
+      mObserver(do_GetWeakReference(aObserver)),
+      mCreatedDocument(false) {
   MOZ_COUNT_CTOR(txMozillaTextOutput);
 }
 
@@ -86,7 +89,7 @@ nsresult txMozillaTextOutput::endDocument(nsresult aResult) {
   if (NS_SUCCEEDED(aResult)) {
     nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
     if (observer) {
-      observer->OnTransformDone(aResult, mDocument);
+      observer->OnTransformDone(mSourceDocument, aResult, mDocument);
     }
   }
 
@@ -102,8 +105,7 @@ nsresult txMozillaTextOutput::processingInstruction(const nsString& aTarget,
 
 nsresult txMozillaTextOutput::startDocument() { return NS_OK; }
 
-nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
-                                                   bool aLoadedAsData) {
+nsresult txMozillaTextOutput::createResultDocument(bool aLoadedAsData) {
   /*
    * Create an XHTML document to hold the text.
    *
@@ -131,13 +133,13 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
   mDocument->SetReadyStateInternal(Document::READYSTATE_LOADING);
   bool hasHadScriptObject = false;
   nsIScriptGlobalObject* sgo =
-      aSourceDocument->GetScriptHandlingObject(hasHadScriptObject);
+      mSourceDocument->GetScriptHandlingObject(hasHadScriptObject);
   NS_ENSURE_STATE(sgo || !hasHadScriptObject);
 
   NS_ASSERTION(mDocument, "Need document");
 
   // Reset and set up document
-  URIUtils::ResetWithSource(mDocument, aSourceDocument);
+  URIUtils::ResetWithSource(mDocument, mSourceDocument);
   // Only do this after resetting the document to ensure we have the
   // correct principal.
   mDocument->SetScriptHandlingObject(sgo);
@@ -154,7 +156,7 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
   // Notify the contentsink that the document is created
   nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
   if (observer) {
-    rv = observer->OnDocumentCreated(mDocument);
+    rv = observer->OnDocumentCreated(mSourceDocument, mDocument);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
