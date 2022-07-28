@@ -2225,7 +2225,6 @@ bool Instance::constantRefFunc(uint32_t funcIndex,
   return true;
 }
 
-
 JSAtom* Instance::getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const {
   // The "display name" of a function is primarily shown in Error.stack which
   // also includes location, so use getFuncNameBeforeLocation.
