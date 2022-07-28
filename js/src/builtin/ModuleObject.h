@@ -272,16 +272,18 @@ enum class ModuleStatus : int32_t {
 // true', as well as the order in which the field was set to true for async
 // evaluating modules.
 //
-// This is arranged by using an integer to record the order. Both undefined and
-// ASYNC_EVALUATING_POST_ORDER_FALSE are used to mean false, with undefined also
-// meaning never previously set to true.
+// This is arranged by using an integer to record the order. Undefined is used
+// to mean false and any integer value true. While a module is async evaluating
+// the integer value gives the order that the field was set to true. After
+// evaluation is complete the value is set to ASYNC_EVALUATING_POST_ORDER_TRUE,
+// which still signifies true but loses the order information.
 //
 // See https://tc39.es/ecma262/#sec-cyclic-module-records for field defintion.
 // See https://tc39.es/ecma262/#sec-async-module-execution-fulfilled for sort
 // requirement.
 
-// False value that also indicates that the field was previously true.
-constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_FALSE = 0;
+// True value that also indicates that the field was previously true.
+constexpr uint32_t ASYNC_EVALUATING_POST_ORDER_TRUE = 0;
 
 // Initial value for the runtime's counter used to generate these values; the
 // first non-false value.
@@ -369,9 +371,7 @@ class ModuleObject : public NativeObject {
                                                  Handle<ModuleObject*> module);
   bool hasTopLevelAwait() const;
   bool isAsyncEvaluating() const;
-  bool wasAsyncEvaluating() const;
   void setAsyncEvaluating();
-  void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
   void setPendingAsyncDependencies(uint32_t newValue);
   void setInitialTopLevelCapability(Handle<PromiseObject*> capability);
@@ -381,8 +381,10 @@ class ModuleObject : public NativeObject {
   ListObject* asyncParentModules() const;
   mozilla::Maybe<uint32_t> maybePendingAsyncDependencies() const;
   uint32_t pendingAsyncDependencies() const;
+  bool hasAsyncEvaluatingPostOrder() const;
   mozilla::Maybe<uint32_t> maybeAsyncEvaluatingPostOrder() const;
   uint32_t getAsyncEvaluatingPostOrder() const;
+  void clearAsyncEvaluatingPostOrder();
   void setCycleRoot(ModuleObject* cycleRoot);
   ModuleObject* getCycleRoot() const;
 
