@@ -4318,8 +4318,10 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
 
   // Column-oriented case, with size-containment in block axis:
   // Behave as if we had no content and just use our MinBSize.
-  if (aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
-    return aReflowInput.ComputedMinBSize();
+  if (Maybe<nscoord> containBSize =
+          aReflowInput.mFrame->ContainIntrinsicBSize()) {
+    return NS_CSS_MINMAX(*containBSize, aReflowInput.ComputedMinBSize(),
+                         aReflowInput.ComputedMaxBSize());
   }
 
   const AuCoord64 largestLineMainSize = GetLargestLineMainSize(aLines);
@@ -4379,9 +4381,11 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
 
   // Row-oriented case, with size-containment in block axis:
   // Behave as if we had no content and just use our MinBSize.
-  if (aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
+  if (Maybe<nscoord> containBSize =
+          aReflowInput.mFrame->ContainIntrinsicBSize()) {
     *aIsDefinite = true;
-    return aReflowInput.ComputedMinBSize();
+    return NS_CSS_MINMAX(*containBSize, aReflowInput.ComputedMinBSize(),
+                         aReflowInput.ComputedMaxBSize());
   }
 
   // The cross size must not be definite in the following cases.
@@ -5810,10 +5814,12 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
 nscoord nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
-    mCachedMinISize =
-        StyleDisplay()->GetContainSizeAxes().mIContained
-            ? 0
-            : IntrinsicISize(aRenderingContext, IntrinsicISizeType::MinISize);
+    if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
+      mCachedMinISize = *containISize;
+    } else {
+      mCachedMinISize =
+          IntrinsicISize(aRenderingContext, IntrinsicISizeType::MinISize);
+    }
   }
 
   return mCachedMinISize;
@@ -5823,10 +5829,12 @@ nscoord nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext) {
 nscoord nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
-    mCachedPrefISize =
-        StyleDisplay()->GetContainSizeAxes().mIContained
-            ? 0
-            : IntrinsicISize(aRenderingContext, IntrinsicISizeType::PrefISize);
+    if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
+      mCachedPrefISize = *containISize;
+    } else {
+      mCachedPrefISize =
+          IntrinsicISize(aRenderingContext, IntrinsicISizeType::PrefISize);
+    }
   }
 
   return mCachedPrefISize;
