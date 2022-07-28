@@ -51,6 +51,7 @@ function checkSandboxOriginAttributes(arr, attrs, options) {
 }
 
 // utility function useful for debugging
+// eslint-disable-next-line no-unused-vars
 function printAttrs(name, attrs) {
   info(
     name +
