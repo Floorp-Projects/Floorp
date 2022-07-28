@@ -3,7 +3,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_get_profile();
@@ -15,7 +14,7 @@ add_task(
     skip_if: () => !AppConstants.MOZ_NEW_XULSTORE,
   },
   async function test_create_old_datastore() {
-    const path = OS.Path.join(OS.Constants.Path.profileDir, "xulstore.json");
+    const path = PathUtils.join(PathUtils.profileDir, "xulstore.json");
 
     // Valid JSON, but invalid data: attr1's value is a number, not a string.
     const xulstoreJSON = {
@@ -31,7 +30,7 @@ add_task(
       },
     };
 
-    await OS.File.writeAtomic(path, JSON.stringify(xulstoreJSON));
+    await IOUtils.writeJSON(path, xulstoreJSON);
   }
 );
 
