@@ -51,7 +51,7 @@ Form History test: form field autocomplete
 
 /** Test for Form History autocomplete **/
 
-var input = $_(1, "field1");
+var input = getFormElementByName(1, "field1");
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
@@ -238,7 +238,7 @@ async function runTest() {
       // Trigger autocomplete popup
       // Look at form 3, try to trigger autocomplete popup
       input.value = "";
-      input = $_(3, "field2");
+      input = getFormElementByName(3, "field2");
       testNum = 99;
       expectPopup();
       restoreForm();
@@ -527,7 +527,7 @@ async function runTest() {
       });
 
       testNum = 499;
-      input = $_(5, "field3");
+      input = getFormElementByName(5, "field3");
       checkForm("");
       expectPopup();
       restoreForm();
