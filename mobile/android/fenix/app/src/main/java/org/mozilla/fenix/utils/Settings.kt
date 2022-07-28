@@ -574,6 +574,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val enabledTotalCookieProtectionSetting: Boolean
         get() = mr2022Sections[Mr2022Section.TCP_CFR] == true
 
+    /**
+     * Indicates if the total cookie protection CRF should be shown.
+     */
+    var shouldShowTotalCookieProtectionCFR by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_total_cookie_protection_popup),
+        default = FxNimbus.features.engineSettings.value().totalCookieProtectionEnabled
+    )
+
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
         default = if (enabledTotalCookieProtectionSetting) {

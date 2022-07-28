@@ -54,11 +54,11 @@ data class CFRPopupProperties(
  * @param action Optional other composable to show just below the popup text.
  */
 class CFRPopup(
-    private val text: String,
-    private val anchor: View,
-    private val properties: CFRPopupProperties = CFRPopupProperties(),
-    private val onDismiss: (Boolean) -> Unit = {},
-    private val action: @Composable (() -> Unit) = {}
+    @get:VisibleForTesting internal val text: String,
+    @get:VisibleForTesting internal val anchor: View,
+    @get:VisibleForTesting internal val properties: CFRPopupProperties = CFRPopupProperties(),
+    @get:VisibleForTesting internal val onDismiss: (Boolean) -> Unit = {},
+    @get:VisibleForTesting internal val action: @Composable (() -> Unit) = {}
 ) {
     // This is just a facade for the CFRPopupFullScreenLayout composable offering a cleaner API.
 

@@ -241,6 +241,8 @@
     <string name="pref_key_should_show_home_onboarding_dialog" translatable="false">pref_key_should_show_home_onboarding_dialog</string>
     <!-- A value  of `true` means the first run onboarding updates should be shown -->
     <string name="pref_key_show_first_run_onboarding_update" translatable="false">pref_key_show_first_run_onboarding_update</string>
+    <!-- A value  of `true` means the total cookie protection popup has not been shown yet -->
+    <string name="pref_key_should_show_total_cookie_protection_popup" translatable="false">pref_key_should_show_total_cookie_protection_popup</string>
 
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
@@ -95,6 +96,15 @@ class DefaultToolbarIntegration(
     renderStyle = ToolbarFeature.RenderStyle.UncoloredUrl
 ) {
 
+    @VisibleForTesting
+    internal var cfrPresenter = BrowserToolbarCFRPresenter(
+        context = context,
+        browserStore = context.components.core.store,
+        settings = context.settings(),
+        toolbar = toolbar,
+        sessionId = sessionId
+    )
+
     init {
         toolbar.display.menuBuilder = toolbarMenu.menuBuilder
         toolbar.private = isPrivate
@@ -149,5 +159,15 @@ class DefaultToolbarIntegration(
                 addHistoryStorageProvider(historyStorage)
             }
         }
+    }
+
+    override fun start() {
+        super.start()
+        cfrPresenter.start()
+    }
+
+    override fun stop() {
+        cfrPresenter.stop()
+        super.stop()
     }
 }
