@@ -151,7 +151,6 @@ struct Stk {
       case ValType::F64:
         k = Stk::MemF64;
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         k = Stk::MemRef;
         break;

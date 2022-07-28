@@ -653,22 +653,6 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
       return isRefEquivalent(first.refType(), second.refType(), cache);
     }
 
-#ifdef ENABLE_WASM_GC
-    // An rtt may be a equal to another rtt
-    if (first.isRtt() && second.isRtt()) {
-      // Equivalent rtts must both have depths or not have depths
-      if (first.hasRttDepth() != second.hasRttDepth()) {
-        return TypeResult::False;
-      }
-      // Equivalent rtts must have the same depth, if any
-      if (second.hasRttDepth() && first.rttDepth() != second.rttDepth()) {
-        return TypeResult::False;
-      }
-      return isTypeIndexEquivalent(first.typeIndex(), second.typeIndex(),
-                                   cache);
-    }
-#endif
-
     return TypeResult::False;
   }
 
@@ -704,23 +688,6 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
     if (subType.isRefType() && superType.isRefType()) {
       return isRefSubtypeOf(subType.refType(), superType.refType(), cache);
     }
-
-    // An rtt may be a subtype of another rtt
-#ifdef ENABLE_WASM_GC
-    if (subType.isRtt() && superType.isRtt()) {
-      // A subtype must have a depth if the supertype has depth
-      if (!subType.hasRttDepth() && superType.hasRttDepth()) {
-        return TypeResult::False;
-      }
-      // A subtype must have the same depth as the supertype, if it has any
-      if (superType.hasRttDepth() &&
-          subType.rttDepth() != superType.rttDepth()) {
-        return TypeResult::False;
-      }
-      return isTypeIndexEquivalent(subType.typeIndex(), superType.typeIndex(),
-                                   cache);
-    }
-#endif
 
     return TypeResult::False;
   }

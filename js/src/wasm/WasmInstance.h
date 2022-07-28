@@ -339,11 +339,6 @@ class alignas(16) Instance {
 
   [[nodiscard]] bool constantRefFunc(uint32_t funcIndex,
                                      MutableHandleFuncRef result);
-  [[nodiscard]] bool constantRttCanon(JSContext* cx, uint32_t sourceTypeIndex,
-                                      MutableHandle<RttValue*> result);
-  [[nodiscard]] bool constantRttSub(JSContext* cx, Handle<RttValue*> parentRtt,
-                                    uint32_t sourceChildTypeIndex,
-                                    MutableHandle<RttValue*> result);
 
   // Return the name associated with a given function index, or generate one
   // if none was given by the module.
@@ -455,8 +450,6 @@ class alignas(16) Instance {
   static int32_t throwException(Instance* instance, JSObject* exn);
   static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);
-  static void* rttSub(Instance* instance, void* rttParentPtr,
-                      void* rttSubCanonPtr);
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,
                               uint32_t src2, uint32_t len, uint8_t* memBase);
 };

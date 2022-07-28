@@ -1595,17 +1595,15 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTableSetAnyRef(uint32_t tableIndex);
 
 #ifdef ENABLE_WASM_GC
-  [[nodiscard]] bool emitStructNewWithRtt();
-  [[nodiscard]] bool emitStructNewDefaultWithRtt();
+  [[nodiscard]] bool emitStructNew();
+  [[nodiscard]] bool emitStructNewDefault();
   [[nodiscard]] bool emitStructGet(FieldExtension extension);
   [[nodiscard]] bool emitStructSet();
-  [[nodiscard]] bool emitArrayNewWithRtt();
-  [[nodiscard]] bool emitArrayNewDefaultWithRtt();
+  [[nodiscard]] bool emitArrayNew();
+  [[nodiscard]] bool emitArrayNewDefault();
   [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen();
-  [[nodiscard]] bool emitRttCanon();
-  [[nodiscard]] bool emitRttSub();
   [[nodiscard]] bool emitRefTest();
   [[nodiscard]] bool emitRefCast();
   [[nodiscard]] bool emitBrOnCast();

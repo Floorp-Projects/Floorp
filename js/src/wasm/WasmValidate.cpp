@@ -555,15 +555,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           return iter.unrecognizedOpcode(&op);
         }
         switch (op.b1) {
-          case uint32_t(GcOp::StructNewWithRtt): {
+          case uint32_t(GcOp::StructNew): {
             uint32_t unusedUint;
             NothingVector unusedArgs{};
-            CHECK(
-                iter.readStructNewWithRtt(&unusedUint, &nothing, &unusedArgs));
+            CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
           }
-          case uint32_t(GcOp::StructNewDefaultWithRtt): {
+          case uint32_t(GcOp::StructNewDefault): {
             uint32_t unusedUint;
-            CHECK(iter.readStructNewDefaultWithRtt(&unusedUint, &nothing));
+            CHECK(iter.readStructNewDefault(&unusedUint));
           }
           case uint32_t(GcOp::StructGet): {
             uint32_t unusedUint1, unusedUint2;
@@ -585,15 +584,13 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
                                      &nothing));
           }
-          case uint32_t(GcOp::ArrayNewWithRtt): {
+          case uint32_t(GcOp::ArrayNew): {
             uint32_t unusedUint;
-            CHECK(iter.readArrayNewWithRtt(&unusedUint, &nothing, &nothing,
-                                           &nothing));
+            CHECK(iter.readArrayNew(&unusedUint, &nothing, &nothing));
           }
-          case uint32_t(GcOp::ArrayNewDefaultWithRtt): {
+          case uint32_t(GcOp::ArrayNewDefault): {
             uint32_t unusedUint;
-            CHECK(iter.readArrayNewDefaultWithRtt(&unusedUint, &nothing,
-                                                  &nothing));
+            CHECK(iter.readArrayNewDefault(&unusedUint, &nothing));
           }
           case uint32_t(GcOp::ArrayGet): {
             uint32_t unusedUint1;
@@ -619,32 +616,18 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             uint32_t unusedUint1;
             CHECK(iter.readArrayLen(&unusedUint1, &nothing));
           }
-          case uint16_t(GcOp::RttCanon): {
-            ValType unusedTy;
-            CHECK(iter.readRttCanon(&unusedTy));
-          }
-          case uint16_t(GcOp::RttSub): {
-            uint32_t unusedRttTypeIndex;
-            CHECK(iter.readRttSub(&nothing, &unusedRttTypeIndex));
-          }
           case uint16_t(GcOp::RefTest): {
-            uint32_t unusedRttTypeIndex;
-            uint32_t unusedRttDepth;
-            CHECK(iter.readRefTest(&nothing, &unusedRttTypeIndex,
-                                   &unusedRttDepth, &nothing));
+            uint32_t typeIndex;
+            CHECK(iter.readRefTest(&typeIndex, &nothing));
           }
           case uint16_t(GcOp::RefCast): {
-            uint32_t unusedRttTypeIndex;
-            uint32_t unusedRttDepth;
-            CHECK(iter.readRefCast(&nothing, &unusedRttTypeIndex,
-                                   &unusedRttDepth, &nothing));
+            uint32_t typeIndex;
+            CHECK(iter.readRefCast(&typeIndex, &nothing));
           }
           case uint16_t(GcOp::BrOnCast): {
             uint32_t unusedRelativeDepth;
-            uint32_t unusedRttTypeIndex;
-            uint32_t unusedRttDepth;
-            CHECK(iter.readBrOnCast(&unusedRelativeDepth, &nothing,
-                                    &unusedRttTypeIndex, &unusedRttDepth,
+            uint32_t typeIndex;
+            CHECK(iter.readBrOnCast(&unusedRelativeDepth, &typeIndex,
                                     &unusedType, &nothings));
           }
           default:

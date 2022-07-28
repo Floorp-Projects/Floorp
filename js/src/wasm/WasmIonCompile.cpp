@@ -337,7 +337,6 @@ class FunctionCompiler {
         case ValType::F64:
           ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
           break;
-        case ValType::Rtt:
         case ValType::Ref:
           ins = MWasmNullConstant::New(alloc());
           break;
@@ -1939,7 +1938,6 @@ class FunctionCompiler {
             def = MWasmFloatRegisterResult::New(alloc(), MIRType::Double,
                                                 result.fpr());
             break;
-          case wasm::ValType::Rtt:
           case wasm::ValType::Ref:
             def = MWasmRegisterResult::New(alloc(), MIRType::RefOrNull,
                                            result.gpr());
