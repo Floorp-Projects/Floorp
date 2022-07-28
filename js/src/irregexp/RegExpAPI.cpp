@@ -47,7 +47,6 @@ using frontend::DummyTokenStream;
 using frontend::TokenStreamAnyChars;
 
 using v8::internal::DisallowGarbageCollection;
-using v8::internal::FlatStringReader;
 using v8::internal::HandleScope;
 using v8::internal::InputOutputData;
 using v8::internal::IrregexpInterpreter;
@@ -280,25 +279,29 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
   }
 }
 
-static bool CheckPatternSyntaxImpl(JSContext* cx, FlatStringReader* pattern,
-                                   JS::RegExpFlags flags,
-                                   RegExpCompileData* result) {
+template <typename CharT>
+static bool CheckPatternSyntaxImpl(JSContext* cx, const CharT* input,
+                                   uint32_t inputLength, JS::RegExpFlags flags,
+                                   RegExpCompileData* result,
+                                   JS::AutoAssertNoGC& nogc) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   Zone zone(allocScope.alloc());
 
+  uintptr_t stackLimit = cx->stackLimit(JS::StackForSystemCode);
+
   HandleScope handleScope(cx->isolate);
-  DisallowGarbageCollection no_gc;
-  return RegExpParser::VerifyRegExpSyntax(cx->isolate, &zone, pattern, flags,
-                                          result, no_gc);
+  return RegExpParser::VerifyRegExpSyntax(&zone, stackLimit, input, inputLength,
+                                          flags, result, nogc);
 }
 
 bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
                         JS::RegExpFlags flags, mozilla::Maybe<uint32_t> line,
                         mozilla::Maybe<uint32_t> column) {
-  FlatStringReader reader(chars);
   RegExpCompileData result;
-  if (!CheckPatternSyntaxImpl(cx, &reader, flags, &result)) {
+  JS::AutoAssertNoGC nogc(cx);
+  if (!CheckPatternSyntaxImpl(cx, chars.begin().get(), chars.length(), flags,
+                              &result, nogc)) {
     ReportSyntaxError(ts, line, column, result, chars.begin().get(),
                       chars.length());
     return false;
@@ -308,9 +311,18 @@ bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
 
 bool CheckPatternSyntax(JSContext* cx, TokenStreamAnyChars& ts,
                         Handle<JSAtom*> pattern, JS::RegExpFlags flags) {
-  FlatStringReader reader(cx, pattern);
   RegExpCompileData result;
-  if (!CheckPatternSyntaxImpl(cx, &reader, flags, &result)) {
+  JS::AutoAssertNoGC nogc(cx);
+  if (pattern->hasLatin1Chars()) {
+    if (!CheckPatternSyntaxImpl(cx, pattern->latin1Chars(nogc),
+                                pattern->length(), flags, &result, nogc)) {
+      ReportSyntaxError(ts, result, pattern);
+      return false;
+    }
+    return true;
+  }
+  if (!CheckPatternSyntaxImpl(cx, pattern->twoByteChars(nogc),
+                              pattern->length(), flags, &result, nogc)) {
     ReportSyntaxError(ts, result, pattern);
     return false;
   }
@@ -357,7 +369,7 @@ static bool UseBoyerMoore(Handle<JSAtom*> pattern, JS::AutoAssertNoGC& nogc) {
 }
 
 // Sample character frequency information for use in Boyer-Moore.
-static void SampleCharacters(FlatStringReader* sample_subject,
+static void SampleCharacters(Handle<JSLinearString*> sample_subject,
                              RegExpCompiler& compiler) {
   static const int kSampleSize = 128;
   int chars_sampled = 0;
@@ -367,7 +379,8 @@ static void SampleCharacters(FlatStringReader* sample_subject,
   int half_way = (length - kSampleSize) / 2;
   for (int i = std::max(0, half_way); i < length && chars_sampled < kSampleSize;
        i++, chars_sampled++) {
-    compiler.frequency_collator()->CountCharacter(sample_subject->Get(i));
+    compiler.frequency_collator()->CountCharacter(
+        sample_subject->latin1OrTwoByteChar(i));
   }
 }
 
@@ -658,9 +671,9 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
 
   RegExpCompileData data;
   {
-    FlatStringReader patternBytes(cx, pattern);
-    if (!RegExpParser::ParseRegExp(cx->isolate, &zone, &patternBytes, flags,
-                                   &data)) {
+    V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
+    if (!RegExpParser::ParseRegExpFromHeapString(
+            cx->isolate, &zone, wrappedPattern, flags, &data)) {
       MainThreadErrorContext ec(cx);
       JS::CompileOptions options(cx);
       DummyTokenStream dummyTokenStream(cx, &ec, options);
@@ -713,15 +726,14 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
 
   MOZ_ASSERT(re->kind() == RegExpShared::Kind::RegExp);
 
-  RegExpCompiler compiler(cx->isolate, &zone, data.capture_count,
+  RegExpCompiler compiler(cx->isolate, &zone, data.capture_count, flags,
                           input->hasLatin1Chars());
 
   bool isLatin1 = input->hasLatin1Chars();
 
-  FlatStringReader sample_subject(cx, input);
-  SampleCharacters(&sample_subject, compiler);
+  SampleCharacters(input, compiler);
   data.node = compiler.PreprocessRegExp(&data, flags, isLatin1);
-  data.error = AnalyzeRegExp(cx->isolate, isLatin1, data.node);
+  data.error = AnalyzeRegExp(cx->isolate, isLatin1, flags, data.node);
   if (data.error != RegExpError::kNone) {
     MOZ_ASSERT(data.error == RegExpError::kAnalysisStackOverflow);
     ReportOverRecursed(cx);
