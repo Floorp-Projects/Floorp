@@ -1058,7 +1058,7 @@ struct JSRuntime {
   js::ExclusiveData<js::wasm::InstanceVector> wasmInstances;
 
   // A counter used when recording the order in which modules had their
-  // AsyncEvaluating field set to true. This is used to order queued
+  // AsyncEvaluation field set to true. This is used to order queued
   // evaluations. This is reset when the last module that was async evaluating
   // is finished.
   //

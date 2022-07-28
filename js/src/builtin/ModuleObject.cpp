@@ -817,6 +817,7 @@ bool ModuleObject::initAsyncSlots(JSContext* cx, bool hasTopLevelAwait,
 
 static uint32_t NextPostOrder(JSRuntime* rt) {
   uint32_t ordinal = rt->moduleAsyncEvaluatingPostOrder;
+  MOZ_ASSERT(ordinal != ASYNC_EVALUATING_POST_ORDER_TRUE);
   MOZ_ASSERT(ordinal < MAX_UINT32);
   rt->moduleAsyncEvaluatingPostOrder++;
   return ordinal;
@@ -971,20 +972,7 @@ bool ModuleObject::hasTopLevelAwait() const {
 }
 
 bool ModuleObject::isAsyncEvaluating() const {
-  return !getReservedSlot(AsyncEvaluatingPostOrderSlot).isUndefined() &&
-         !wasAsyncEvaluating();
-}
-
-bool ModuleObject::wasAsyncEvaluating() const {
-  return getReservedSlot(AsyncEvaluatingPostOrderSlot) ==
-         PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_FALSE);
-}
-
-void ModuleObject::setAsyncEvaluatingFalse() {
-  JSRuntime* rt = runtimeFromMainThread();
-  MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
-  return setReservedSlot(AsyncEvaluatingPostOrderSlot,
-                         PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_FALSE));
+  return !getReservedSlot(AsyncEvaluatingPostOrderSlot).isUndefined();
 }
 
 Maybe<uint32_t> ModuleObject::maybeDfsIndex() const {
@@ -1085,18 +1073,34 @@ uint32_t ModuleObject::pendingAsyncDependencies() const {
   return maybePendingAsyncDependencies().value();
 }
 
+bool ModuleObject::hasAsyncEvaluatingPostOrder() const {
+  Value value = getReservedSlot(AsyncEvaluatingPostOrderSlot);
+  return !value.isUndefined() &&
+         value.toPrivateUint32() != ASYNC_EVALUATING_POST_ORDER_TRUE;
+}
+
 Maybe<uint32_t> ModuleObject::maybeAsyncEvaluatingPostOrder() const {
   Value value = getReservedSlot(AsyncEvaluatingPostOrderSlot);
   if (value.isUndefined()) {
     return Nothing();
   }
 
-  MOZ_ASSERT(isAsyncEvaluating());
   return Some(value.toPrivateUint32());
 }
 
 uint32_t ModuleObject::getAsyncEvaluatingPostOrder() const {
+  MOZ_ASSERT(hasAsyncEvaluatingPostOrder());
   return maybeAsyncEvaluatingPostOrder().value();
+}
+
+void ModuleObject::clearAsyncEvaluatingPostOrder() {
+  MOZ_ASSERT(status() == ModuleStatus::Evaluated);
+
+  JSRuntime* rt = runtimeFromMainThread();
+  MaybeResetPostOrderCounter(rt, getAsyncEvaluatingPostOrder());
+
+  return setReservedSlot(AsyncEvaluatingPostOrderSlot,
+                         PrivateUint32Value(ASYNC_EVALUATING_POST_ORDER_TRUE));
 }
 
 void ModuleObject::setPendingAsyncDependencies(uint32_t newValue) {
