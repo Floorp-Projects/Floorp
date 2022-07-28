@@ -1525,13 +1525,13 @@ class Document : public nsINode,
 
   void DoNotifyPossibleTitleChange();
 
+  nsresult InitFeaturePolicy(nsIChannel* aChannel);
+
  protected:
   friend class nsUnblockOnloadEvent;
 
   nsresult InitCSP(nsIChannel* aChannel);
   nsresult InitCOEP(nsIChannel* aChannel);
-
-  nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
   nsresult InitReferrerInfo(nsIChannel* aChannel);
 
