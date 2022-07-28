@@ -435,7 +435,7 @@ void TestOneLineObject() {
 void TestOneLineJson() {
   const char* expected =
       "\
-{\"i\": 1, \"array\": [null, [{}], {\"o\": {}}, \"s\"], \"d\": 3.33}\
+{\"i\":1,\"array\":[null,[{}],{\"o\":{}},\"s\"],\"d\":3.33}\
 ";
 
   JSONWriter w(MakeUnique<StringWriteFunc>(), JSONWriter::SingleLineStyle);
