@@ -335,7 +335,6 @@ struct AllocSiteInput
 // lifoAlloc use if one will be destroyed before the other.
 class MacroAssembler : public MacroAssemblerSpecific {
  public:
-  mozilla::Maybe<JitContext> jitContext_;
   mozilla::Maybe<AutoJitContextAlloc> alloc_;
 
  private:
