@@ -222,6 +222,9 @@ class JSONWriter {
   // specified. If a collection is printed in single-line style, every nested
   // collection within it is also printed in single-line style, even if
   // multi-line style is requested.
+  // If SingleLineStyle is set in the constructer, all JSON whitespace is
+  // eliminated, including spaces after colons and commas, for the most compact
+  // encoding possible.
   enum CollectionStyle {
     MultiLineStyle,  // the default
     SingleLineStyle
@@ -239,8 +242,7 @@ class JSONWriter {
   static constexpr Span<const char> scObjectEndString = MakeStringSpan("}");
   static constexpr Span<const char> scPropertyBeginString =
       MakeStringSpan("\"");
-  static constexpr Span<const char> scPropertyEndString =
-      MakeStringSpan("\": ");
+  static constexpr Span<const char> scPropertyEndString = MakeStringSpan("\":");
   static constexpr Span<const char> scQuoteString = MakeStringSpan("\"");
   static constexpr Span<const char> scSpaceString = MakeStringSpan(" ");
   static constexpr Span<const char> scTopObjectBeginString =
@@ -269,7 +271,7 @@ class JSONWriter {
     if (mDepth > 0 && mNeedNewlines[mDepth]) {
       mWriter->Write(scNewLineString);
       Indent();
-    } else if (mNeedComma[mDepth]) {
+    } else if (mNeedComma[mDepth] && mNeedNewlines[0]) {
       mWriter->Write(scSpaceString);
     }
   }
@@ -278,6 +280,9 @@ class JSONWriter {
     mWriter->Write(scPropertyBeginString);
     mWriter->Write(EscapedString(aName).SpanRef());
     mWriter->Write(scPropertyEndString);
+    if (mNeedNewlines[0]) {
+      mWriter->Write(scSpaceString);
+    }
   }
 
   void Scalar(const Span<const char>& aMaybePropertyName,

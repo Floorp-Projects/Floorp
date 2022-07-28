@@ -1252,8 +1252,8 @@ TEST(BaseProfiler, BlocksRingBuffer)
 
 // Common JSON checks.
 
-// Check that the given JSON string only includes up to a certain proportion of
-// JSON whitespace characters (excluding those in property names and strings).
+// Check that the given JSON string include no JSON whitespace characters
+// (excluding those in property names and strings).
 void JSONWhitespaceCheck(const char* aOutput) {
   ASSERT_NE(aOutput, nullptr);
 
@@ -1288,7 +1288,8 @@ void JSONWhitespaceCheck(const char* aOutput) {
     }
   }
 
-  EXPECT_LE(double(whitespaces) / double(length), 0.1);
+  EXPECT_EQ(whitespaces, 0u);
+  EXPECT_GT(length, 0u);
 }
 
 // Does the GETTER return a non-null TYPE? (Non-critical)
