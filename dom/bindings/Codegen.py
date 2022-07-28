@@ -12673,15 +12673,15 @@ class CGUnionStruct(CGThing):
             )
         ]
         destructorCases = [CGCase("eUninitialized", None)]
-        assignmentCases = [
-            CGCase(
-                "eUninitialized",
-                CGGeneric(
-                    "MOZ_ASSERT(mType == eUninitialized,\n"
-                    '           "We need to destroy ourselves?");\n'
-                ),
-            )
-        ]
+        assignmentCase = CGCase(
+            "eUninitialized",
+            CGGeneric(
+                "MOZ_ASSERT(mType == eUninitialized,\n"
+                '           "We need to destroy ourselves?");\n'
+            ),
+        )
+        assignmentCases = [assignmentCase]
+        moveCases = [assignmentCase]
         traceCases = []
         unionValues = []
         if self.type.hasNullableType:
@@ -12708,14 +12708,14 @@ class CGUnionStruct(CGThing):
                 )
             )
             destructorCases.append(CGCase("eNull", None))
-            assignmentCases.append(
-                CGCase(
-                    "eNull",
-                    CGGeneric(
-                        "MOZ_ASSERT(mType == eUninitialized);\n" "mType = eNull;\n"
-                    ),
-                )
+            assignmentCase = CGCase(
+                "eNull",
+                CGGeneric(
+                    "MOZ_ASSERT(mType == eUninitialized);\n" "mType = eNull;\n"
+                ),
             )
+            assignmentCases.append(assignmentCase)
+            moveCases.append(assignmentCase)
             toJSValCases.append(
                 CGCase(
                     "eNull",
@@ -12885,6 +12885,15 @@ class CGUnionStruct(CGThing):
                     ),
                 )
             )
+            moveCases.append(
+                CGCase(
+                    "e" + vars["name"],
+                    CGGeneric(
+                        "mType = e%s;\n" % vars["name"] +
+                        "mValue.m%s.SetValue(std::move(aOther.mValue.m%s.Value()));\n" % (vars["name"], vars["name"])
+                    ),
+                )
+            )
             if self.ownsMembers and typeNeedsRooting(t):
                 if t.isObject():
                     traceCases.append(
@@ -12985,6 +12994,26 @@ class CGUnionStruct(CGThing):
                         body=traceBody,
                     )
                 )
+
+            op_body = CGList([])
+            op_body.append(CGSwitch("aOther.mType", moveCases))
+            constructors.append(
+                ClassConstructor(
+                    [Argument("%s&&" % selfName, "aOther")],
+                    visibility="public",
+                    body=op_body.define(),
+                )
+            )
+
+            methods.append(
+                ClassMethod(
+                    "operator=",
+                    "%s&" % selfName,
+                    [Argument("%s&&" % selfName, "aOther")],
+                    body="this->~%s();\nnew (this) %s (std::move(aOther));\nreturn *this;\n" % (selfName, selfName),
+                )
+            )
+
             if CGUnionStruct.isUnionCopyConstructible(self.type):
                 constructors.append(
                     ClassConstructor(
@@ -13376,6 +13405,9 @@ class ClassConstructor(ClassItem):
     bodyInHeader should be True if the body should be placed in the class
     declaration in the header.
 
+    default should be True if the definition of the constructor should be
+    `= default;`.
+
     visibility determines the visibility of the constructor (public,
     protected, private), defaults to private.
 
@@ -13392,6 +13424,7 @@ class ClassConstructor(ClassItem):
         args,
         inline=False,
         bodyInHeader=False,
+        default=False,
         visibility="private",
         explicit=False,
         constexpr=False,
@@ -13400,9 +13433,11 @@ class ClassConstructor(ClassItem):
     ):
         assert not (inline and constexpr)
         assert not (bodyInHeader and constexpr)
+        assert not (default and body)
         self.args = args
         self.inline = inline or bodyInHeader
-        self.bodyInHeader = bodyInHeader or constexpr
+        self.bodyInHeader = bodyInHeader or constexpr or default
+        self.default = default
         self.explicit = explicit
         self.constexpr = constexpr
         self.baseConstructors = baseConstructors or []
@@ -13411,12 +13446,13 @@ class ClassConstructor(ClassItem):
 
     def getDecorators(self, declaring):
         decorators = []
-        if self.explicit:
-            decorators.append("explicit")
-        if self.inline and declaring:
-            decorators.append("inline")
-        if self.constexpr and declaring:
-            decorators.append("constexpr")
+        if declaring:
+            if self.explicit:
+                decorators.append("explicit")
+            if self.inline:
+                decorators.append("inline")
+            if self.constexpr:
+                decorators.append("constexpr")
         if decorators:
             return " ".join(decorators) + " "
         return ""
@@ -13439,12 +13475,15 @@ class ClassConstructor(ClassItem):
     def declare(self, cgClass):
         args = ", ".join([a.declare() for a in self.args])
         if self.bodyInHeader:
-            body = (
-                self.getInitializationList(cgClass)
-                + "\n{\n"
-                + indent(self.getBody())
-                + "}\n"
-            )
+            if self.default:
+                body = " = default;\n"
+            else:
+                body = (
+                    self.getInitializationList(cgClass)
+                    + "\n{\n"
+                    + indent(self.getBody())
+                    + "}\n"
+                )
         else:
             body = ";\n"
 
@@ -17229,6 +17268,15 @@ class CGDictionary(CGThing):
             # our cycle collection overloads, so attempts to CC us will fail to
             # compile instead of misbehaving.
             pass
+
+        ctors.append(
+            ClassConstructor(
+                [Argument("%s&&" % selfName, "aOther")],
+                default=True,
+                visibility="public",
+                baseConstructors=baseConstructors,
+            )
+        )
 
         if CGDictionary.isDictionaryCopyConstructible(d):
             disallowCopyConstruction = False
