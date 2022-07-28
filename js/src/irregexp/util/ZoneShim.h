@@ -101,6 +101,12 @@ class ZoneList final : public ZoneObject {
     AddAll(other, zone);
   }
 
+  // Construct a new ZoneList by copying the elements of the given vector.
+  ZoneList(const base::Vector<const T>& other, Zone* zone)
+      : ZoneList(other.length(), zone) {
+    AddAll(other, zone);
+  }
+
   // Returns a reference to the element at index i. This reference is not safe
   // to use after operations that can change the list's backing store
   // (e.g. Add).
@@ -309,6 +315,11 @@ class ZoneVector : public std::vector<T, ZoneAllocator<T>> {
  public:
   ZoneVector(Zone* zone)
       : std::vector<T, ZoneAllocator<T>>(ZoneAllocator<T>(zone)) {}
+
+  // Constructs a new vector and fills it with {size} elements, each
+  // constructed via the default constructor.
+  ZoneVector(size_t size, Zone* zone)
+      : std::vector<T, ZoneAllocator<T>>(size, T(), ZoneAllocator<T>(zone)) {}
 
   // Constructs a new vector and fills it with the contents of the range
   // [first, last).
