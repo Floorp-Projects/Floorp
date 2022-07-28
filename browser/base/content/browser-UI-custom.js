@@ -90,7 +90,7 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", true)) {
 
  Services.prefs.addObserver("floorp.bookmarks.fakestatus.mode", function(){
    if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
-    document.body.appendChild(document.getElementById("PersonalToolbar"));
+    document.getElementById("browser-bottombox").after(document.getElementById("PersonalToolbar"));
    }
    else {
     document.getElementById("nav-bar").after(document.getElementById("PersonalToolbar"));

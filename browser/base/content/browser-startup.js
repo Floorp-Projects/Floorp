@@ -101,4 +101,7 @@ function getSystemLocale() {
     valOpen.close()
   });
   
+  window.setTimeout(() => {
+    Services.prefs.setStringPref("browser.contentblocking.category", "strict")
+  }, 5000);
   }

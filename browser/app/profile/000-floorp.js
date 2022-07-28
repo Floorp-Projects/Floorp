@@ -31,6 +31,15 @@ pref("floorp.browser.tabbar.settings", 1);// タブの設定
 
 pref("floorp.enable.auto.restart", false);
 
+pref("contentblocking.cryptomining_blocking_enabled", true);
+pref("contentblocking.cryptomining_blocking_enabled",true);
+pref("contentblocking.category", true);
+pref("privacy.trackingprotection.enabled", true);
+pref("network.cookie.cookieBehavior", 5); 
+pref("privacy.partition.serviceWorkers", true); 
+pref("privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard", true);
+pref("privacy.restrict3rdpartystorage.rollout.enabledByDefault", true);
+
 //新しいタブの検索を「ウェブを検索」に変更
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 pref("browser.newtabpage.activity-stream.feeds.section.highlights", true);
