@@ -22,6 +22,9 @@ class ModuleLoader {
   bool registerTestModule(JSContext* cx, HandleObject moduleRequest,
                           Handle<ModuleObject*> module);
 
+  // Testing hook to clear all loaded modules.
+  void clearModules(JSContext* cx);
+
  private:
   static JSObject* ResolveImportedModule(JSContext* cx,
                                          HandleValue referencingPrivate,

@@ -309,6 +309,8 @@ DEFINE_GETTER_FUNCTIONS(ModuleObject, hasTopLevelAwait, BooleanValue,
                         IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeTopLevelCapability,
                         ObjectOrUndefinedValue, IdentFilter)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, isAsyncEvaluating, BooleanValue,
+                        IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeAsyncEvaluatingPostOrder,
                         Uint32OrUndefinedValue, IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, asyncParentModules, ObjectOrNullValue,
@@ -337,6 +339,8 @@ static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
            0),
     JS_PSG("topLevelCapability",
            ShellModuleObjectWrapper_maybeTopLevelCapabilityGetter, 0),
+    JS_PSG("isAsyncEvaluating",
+           ShellModuleObjectWrapper_isAsyncEvaluatingGetter, 0),
     JS_PSG("asyncEvaluatingPostOrder",
            ShellModuleObjectWrapper_maybeAsyncEvaluatingPostOrderGetter, 0),
     JS_PSG("asyncParentModules",
