@@ -235,18 +235,32 @@ browsertime-benchmark:
     raptor:
         apps: [firefox, chrome, chromium]
         subtests:
-            - ares6
-            - [assorted-dom, dom]
-            - [jetstream2, js2]
-            - [matrix-react-bench, mrb]
-            - [motionmark-animometer, mm-a]
-            - [motionmark-htmlsuite, mm-h]
-            - [speedometer, sp]
-            - [stylebench, sb]
-            - [sunspider, ss]
-            - [twitch-animation, tw-a]
-            - [unity-webgl, ugl]
-            - [webaudio, wa]
+            by-app:
+                firefox:
+                    - ares6
+                    - [assorted-dom, dom]
+                    - [jetstream2, js2]
+                    - [matrix-react-bench, mrb]
+                    - [motionmark-animometer, mm-a]
+                    - [motionmark-htmlsuite, mm-h]
+                    - [speedometer, sp]
+                    - [stylebench, sb]
+                    - [sunspider, ss]
+                    - [twitch-animation, tw-a]
+                    - [unity-webgl, ugl]
+                    - [webaudio, wa]
+                default:
+                    - ares6
+                    - [assorted-dom, dom]
+                    - [jetstream2, js2]
+                    - [matrix-react-bench, mrb]
+                    - [motionmark-animometer, mm-a]
+                    - [motionmark-htmlsuite, mm-h]
+                    - [speedometer, sp]
+                    - [stylebench, sb]
+                    - [sunspider, ss]
+                    - [unity-webgl, ugl]
+                    - [webaudio, wa]
     treeherder-symbol: Btime()
     tier:
         by-app:
