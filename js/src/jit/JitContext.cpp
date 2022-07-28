@@ -61,23 +61,21 @@ JitContext* jit::GetJitContext() {
 
 JitContext* jit::MaybeGetJitContext() { return CurrentJitContext(); }
 
-JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
-                       TempAllocator& temp)
-    : realm_(realm), temp(temp), runtime(rt) {
+JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm)
+    : realm_(realm), runtime(rt) {
   MOZ_ASSERT(rt);
   MOZ_ASSERT(realm);
   SetJitContext(this);
 }
 
-JitContext::JitContext(JSContext* cx, TempAllocator& temp)
+JitContext::JitContext(JSContext* cx)
     : realm_(CompileRealm::get(cx->realm())),
       cx(cx),
-      temp(temp),
       runtime(CompileRuntime::get(cx->runtime())) {
   SetJitContext(this);
 }
 
-JitContext::JitContext(TempAllocator& temp) : temp(temp) {
+JitContext::JitContext() {
 #ifdef DEBUG
   isCompilingWasm_ = true;
 #endif

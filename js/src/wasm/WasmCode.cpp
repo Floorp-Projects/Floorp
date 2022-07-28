@@ -505,7 +505,7 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
 
   LifoAlloc lifo(LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
-  JitContext jitContext(alloc);
+  JitContext jitContext;
   WasmMacroAssembler masm(alloc);
 
   if (funcExportIndices.length() == 1) {

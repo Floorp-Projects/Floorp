@@ -85,23 +85,25 @@ BaselineInterpreterHandler::BaselineInterpreterHandler(JSContext* cx,
 
 template <typename Handler>
 template <typename... HandlerArgs>
-BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
+BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
+                                          HandlerArgs&&... args)
     : handler(cx, masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
-      masm(GetJitContext()->temp),
+      masm(alloc),
       frame(handler.frame()) {}
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
-    : BaselineCodeGen(cx, /* HandlerArgs = */ alloc, script),
+    : BaselineCodeGen(cx, alloc, /* HandlerArgs = */ alloc, script),
       profilerPushToggleOffset_() {
 #ifdef JS_CODEGEN_NONE
   MOZ_CRASH();
 #endif
 }
 
-BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx)
-    : BaselineCodeGen(cx /* no handlerArgs */) {}
+BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx,
+                                                           TempAllocator& alloc)
+    : BaselineCodeGen(cx, alloc /* no handlerArgs */) {}
 
 bool BaselineCompilerHandler::init(JSContext* cx) {
   if (!analysis_.init(alloc_)) {
@@ -6676,7 +6678,8 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
 
 JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
                                               DebugTrapHandlerKind kind) {
-  StackMacroAssembler masm(GetJitContext()->temp);
+  TempAllocator temp(&cx->tempLifoAlloc());
+  StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRuntime::generateDebugTrapHandler");
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());

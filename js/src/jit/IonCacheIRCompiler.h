@@ -41,7 +41,8 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   friend class AutoSaveLiveRegisters;
   friend class AutoCallVM;
 
-  IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic,
+  IonCacheIRCompiler(JSContext* cx, TempAllocator& alloc,
+                     const CacheIRWriter& writer, IonIC* ic,
                      IonScript* ionScript, uint32_t stubDataOffset);
 
   [[nodiscard]] bool init();
