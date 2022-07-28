@@ -142,8 +142,8 @@ class StorageEventsObserver {
     );
   }
 
-  cleanup() {
-    gChromeScript.sendAsyncMessage("removeObserver");
+  async cleanup() {
+    await gChromeScript.sendQuery("removeObserver");
   }
 
   observe({ subject, topic, data }) {
@@ -339,16 +339,10 @@ function satchelCommonSetup() {
 
   gStorageEventsObserver = new StorageEventsObserver();
 
-  SimpleTest.registerCleanupFunction(() => {
-    gStorageEventsObserver.cleanup();
-    gChromeScript.sendAsyncMessage("cleanup");
-    return new Promise(resolve => {
-      gChromeScript.addMessageListener("cleanup-done", function done() {
-        gChromeScript.removeMessageListener("cleanup-done", done);
-        gChromeScript.destroy();
-        resolve();
-      });
-    });
+  SimpleTest.registerCleanupFunction(async () => {
+    await gStorageEventsObserver.cleanup();
+    await gChromeScript.sendQuery("cleanup");
+    gChromeScript.destroy();
   });
 }
 
