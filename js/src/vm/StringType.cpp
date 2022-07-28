@@ -214,25 +214,24 @@ mozilla::Maybe<mozilla::Tuple<size_t, size_t> > JSString::encodeUTF8Partial(
         }
         pendingLeadSurrogate = 0;
       }
-      if (src.IsEmpty()) {
-        return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
-      }
-      char16_t last = src[src.Length() - 1];
-      if (unicode::IsLeadSurrogate(last)) {
-        src = src.To(src.Length() - 1);
-        pendingLeadSurrogate = last;
-      } else {
-        MOZ_ASSERT(!pendingLeadSurrogate);
-      }
-      size_t read;
-      size_t written;
-      mozilla::Tie(read, written) =
-          mozilla::ConvertUtf16toUtf8Partial(src, buffer);
-      buffer = buffer.From(written);
-      totalRead += read;
-      totalWritten += written;
-      if (read < src.Length()) {
-        return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+      if (!src.IsEmpty()) {
+        char16_t last = src[src.Length() - 1];
+        if (unicode::IsLeadSurrogate(last)) {
+          src = src.To(src.Length() - 1);
+          pendingLeadSurrogate = last;
+        } else {
+          MOZ_ASSERT(!pendingLeadSurrogate);
+        }
+        size_t read;
+        size_t written;
+        mozilla::Tie(read, written) =
+            mozilla::ConvertUtf16toUtf8Partial(src, buffer);
+        buffer = buffer.From(written);
+        totalRead += read;
+        totalWritten += written;
+        if (read < src.Length()) {
+          return mozilla::Some(mozilla::MakeTuple(totalRead, totalWritten));
+        }
       }
     }
     if (stack.empty()) {
