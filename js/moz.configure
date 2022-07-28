@@ -581,47 +581,6 @@ def rust_simd(value, target):
 set_config("MOZ_RUST_SIMD", rust_simd)
 set_define("MOZ_RUST_SIMD", rust_simd)
 
-
-# Support for wasm code generation with Cranelift
-# ==============================================================
-
-option(
-    "--enable-cranelift",
-    default=False,
-    help="{Enable|Disable} Cranelift code generator for wasm",
-)
-
-
-@depends(
-    "--enable-cranelift",
-    "--enable-jit",
-    "--enable-simulator",
-    target,
-    target_is_windows,
-)
-def enable_cranelift(value, jit_enabled, simulator, target, is_windows):
-    if not value:
-        return
-
-    if not jit_enabled:
-        die("--enable-cranelift requires --enable-jit")
-
-    if not (
-        target.cpu == "aarch64"
-        or (target.cpu == "x86_64" and simulator and simulator[0] == "arm64")
-    ):
-        die("--enable-cranelift is only supported on arm64")
-
-    if is_windows:
-        die("--enable-cranelift is not supported on windows")
-
-    return True
-
-
-set_config("ENABLE_WASM_CRANELIFT", enable_cranelift)
-set_define("ENABLE_WASM_CRANELIFT", enable_cranelift)
-
-
 # Telemetry to measure compile time and generated-code runtime
 # ============================================================
 
@@ -737,9 +696,7 @@ set_define(
 
 # Support for WebAssembly shared memory and atomics.
 #
-# This affects the JS shell only and here to allow the use of
-# Cranelift in the shell.  Once Cranelift supports shared memory
-# and atomics it can go away.
+# This affects the JS shell only.
 # =====================================================
 
 option(
@@ -786,12 +743,9 @@ set_define("ENABLE_WASM_EXTENDED_CONST", wasm_extended_const)
 # =====================================================
 
 
-@depends("--enable-jit", "--enable-simulator", "--enable-cranelift", target)
-def default_wasm_simd(jit_enabled, simulator, cranelift_enabled, target):
+@depends("--enable-jit", "--enable-simulator", target)
+def default_wasm_simd(jit_enabled, simulator, target):
     if not jit_enabled:
-        return
-
-    if cranelift_enabled:
         return
 
     if simulator and (simulator[0] != "arm64"):
@@ -812,18 +766,14 @@ option(
     "--enable-wasm-simd",
     "--enable-jit",
     "--enable-simulator",
-    "--enable-cranelift",
     target,
 )
-def wasm_simd(value, jit_enabled, simulator, cranelift_enabled, target):
+def wasm_simd(value, jit_enabled, simulator, target):
     if not value:
         return
 
     if not jit_enabled:
         die("--enable-wasm-simd requires --enable-jit")
-
-    if cranelift_enabled:
-        die("--enable-wasm-simd is not supported for --enable-cranelift")
 
     if simulator and (simulator[0] != "arm64"):
         die("--enable-wasm-simd is not supported for simulators, except arm64")
@@ -969,11 +919,8 @@ set_define("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
 # ===========================
 
 
-@depends(milestone.is_nightly, "--enable-cranelift", "--enable-simulator", target)
-def default_wasm_memory64(is_nightly, cranelift, simulator, target):
-    if cranelift:
-        return
-
+@depends(milestone.is_nightly, "--enable-simulator", target)
+def default_wasm_memory64(is_nightly, simulator, target):
     if target.cpu == "mips32":
         return
 
@@ -991,13 +938,10 @@ option(
 )
 
 
-@depends("--enable-wasm-memory64", "--enable-cranelift", "--enable-simulator", target)
-def wasm_memory64(value, cranelift, simulator, target):
+@depends("--enable-wasm-memory64", "--enable-simulator", target)
+def wasm_memory64(value, simulator, target):
     if not value:
         return
-
-    if cranelift:
-        die("Memory64 is incompatible with Cranelift")
 
     if target.cpu == "mips32":
         die("Memory64 is incompatible with MIPS32 target")

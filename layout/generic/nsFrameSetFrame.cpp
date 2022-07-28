@@ -811,7 +811,6 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   // will be re-created.
   if (mNumRows != rows || mNumCols != cols) {
     mDrag.UnSet();
-    NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
     return;
   }
 
@@ -1050,8 +1049,6 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 #ifdef DEBUG_FRAME_DUMP

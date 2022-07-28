@@ -25,16 +25,16 @@ const TelemetryFilterPropsAC = Object.freeze({
 /*
  * Returns the element with the specified |name| attribute.
  */
-function $_(formNum, name) {
+function getFormElementByName(formNum, name) {
   let form = document.getElementById("form" + formNum);
   if (!form) {
-    ok(false, "$_ couldn't find requested form " + formNum);
+    ok(false, "getFormElementByName couldn't find requested form " + formNum);
     return null;
   }
 
   let element = form.elements.namedItem(name);
   if (!element) {
-    ok(false, "$_ couldn't find requested element " + name);
+    ok(false, "getFormElementByName couldn't find requested element " + name);
     return null;
   }
 
@@ -43,7 +43,7 @@ function $_(formNum, name) {
   // the element.
 
   if (element.hasAttribute("name") && element.getAttribute("name") != name) {
-    ok(false, "$_ got confused.");
+    ok(false, "getFormElementByName got confused.");
     return null;
   }
 
@@ -79,7 +79,7 @@ function checkArrayValues(actualValues, expectedValues, msg) {
   }
 }
 
-var checkObserver = {
+var gCheckObserver = {
   verifyStack: [],
   callback: null,
 
@@ -122,17 +122,41 @@ var checkObserver = {
 
     countEntries(expected.name, expected.value, function(num) {
       ok(num > 0, expected.message);
-      if (!checkObserver.verifyStack.length) {
-        let callback = checkObserver.callback;
-        checkObserver.callback = null;
+      if (!gCheckObserver.verifyStack.length) {
+        let callback = gCheckObserver.callback;
+        gCheckObserver.callback = null;
         callback();
       }
     });
   },
 };
 
+class StorageEventsObserver {
+  promisesToResolve = [];
+
+  constructor() {
+    gChromeScript.sendAsyncMessage("addObserver");
+    gChromeScript.addMessageListener(
+      "satchel-storage-changed",
+      this.observe.bind(this)
+    );
+  }
+
+  async cleanup() {
+    await gChromeScript.sendQuery("removeObserver");
+  }
+
+  observe({ subject, topic, data }) {
+    this.promisesToResolve.shift()?.({ subject, topic, data });
+  }
+
+  promiseNextStorageEvent() {
+    return new Promise(resolve => this.promisesToResolve.push(resolve));
+  }
+}
+
 function checkForSave(name, value, message) {
-  checkObserver.verifyStack.push({ name, value, message });
+  gCheckObserver.verifyStack.push({ name, value, message });
 }
 
 function getFormSubmitButton(formNum) {
@@ -297,6 +321,12 @@ function checkACTelemetryEvent(actualEvent, input, augmentedExtra) {
   isDeeply(actualEvent[5], expectedExtra, "Check event extra object");
 }
 
+let gStorageEventsObserver;
+
+function promiseNextStorageEvent() {
+  return gStorageEventsObserver.promiseNextStorageEvent();
+}
+
 function satchelCommonSetup() {
   let chromeURL = SimpleTest.getTestFileURL("parent_utils.js");
   gChromeScript = SpecialPowers.loadChromeScript(chromeURL);
@@ -307,15 +337,12 @@ function satchelCommonSetup() {
     }
   });
 
-  SimpleTest.registerCleanupFunction(() => {
-    gChromeScript.sendAsyncMessage("cleanup");
-    return new Promise(resolve => {
-      gChromeScript.addMessageListener("cleanup-done", function done() {
-        gChromeScript.removeMessageListener("cleanup-done", done);
-        gChromeScript.destroy();
-        resolve();
-      });
-    });
+  gStorageEventsObserver = new StorageEventsObserver();
+
+  SimpleTest.registerCleanupFunction(async () => {
+    await gStorageEventsObserver.cleanup();
+    await gChromeScript.sendQuery("cleanup");
+    gChromeScript.destroy();
   });
 }
 

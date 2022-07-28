@@ -347,7 +347,6 @@ void nsTableColGroupFrame::Reflow(nsPresContext* aPresContext,
   }
 
   aDesiredSize.ClearSize();
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 void nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,

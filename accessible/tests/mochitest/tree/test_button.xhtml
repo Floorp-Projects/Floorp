@@ -40,6 +40,16 @@
       };
       testAccessibleTree("button2", accTree);
 
+      //////////////////////////////////////////////////////////////////////////
+      // toolbarbutton with type="checkbox"
+
+      accTree = {
+        role: ROLE_TOGGLE_BUTTON,
+        name: "hello",
+        children: [ ]
+      };
+      testAccessibleTree("button3", accTree);
+
       SimpleTest.finish()
     }
 
@@ -65,6 +75,7 @@
     <vbox flex="1">
       <button id="button1" label="hello"/>
       <toolbarbutton id="button2" label="hello"/>
+      <toolbarbutton id="button3" type="checkbox" label="hello"/>
     </vbox>
   </hbox>
 

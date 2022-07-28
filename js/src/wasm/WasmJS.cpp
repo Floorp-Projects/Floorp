@@ -57,7 +57,6 @@
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompile.h"
-#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIntrinsic.h"
@@ -103,12 +102,7 @@ using mozilla::Span;
 
 static inline bool IsFuzzingIon(JSContext* cx) {
   return IsFuzzing() && !cx->options().wasmBaseline() &&
-         cx->options().wasmIon() && !cx->options().wasmCranelift();
-}
-
-static inline bool IsFuzzingCranelift(JSContext* cx) {
-  return IsFuzzing() && !cx->options().wasmBaseline() &&
-         !cx->options().wasmIon() && cx->options().wasmCranelift();
+         cx->options().wasmIon();
 }
 
 // These functions read flags and apply fuzzing intercession policies.  Never go
@@ -128,7 +122,7 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE);
 #undef WASM_FEATURE
 
 static inline bool WasmDebuggerActive(JSContext* cx) {
-  if (IsFuzzingIon(cx) || IsFuzzingCranelift(cx)) {
+  if (IsFuzzingIon(cx)) {
     return false;
   }
   return cx->realm() && cx->realm()->debuggerObservesWasm();
@@ -158,7 +152,7 @@ static inline bool WasmDebuggerActive(JSContext* cx) {
  *     implementations have additional baseline translators, eg from wasm
  *     bytecode to an internal code processed by an interpreter.
  *
- * [**] Currently we have two, "ion" aka "Baldr", and "Cranelift".
+ * [**] Currently we have only one, "ion" aka "Baldr".
  *
  *
  * Compiler availability:
@@ -182,25 +176,9 @@ static inline bool WasmDebuggerActive(JSContext* cx) {
  * default on the platform.  We MUST by-default disable features on a platform
  * that are not supported by all the compilers on the platform.
  *
- * As an example:
- *
- *   On ARM64 the default compilers are Baseline and Cranelift.  Say Cranelift
- *   does not support feature X.  Thus X cannot be enabled by default on ARM64.
- *   However, X support can be compiled-in to SpiderMonkey, and the user can opt
- *   to enable X.  Doing so will disable Cranelift.
- *
- *   In contrast, X can be enabled by default on x64, where the default
- *   compilers are Baseline and Ion, both of which support X.
- *
- *   A subtlety is worth noting: on x64, enabling Cranelift (thus disabling Ion)
- *   will not disable X.  Instead, the presence of X in the selected feature set
- *   will disable Cranelift, leaving only Baseline.  This follows from the logic
- *   described above.
- *
  * In a shell build, the testing functions wasmCompilersPresent,
- * wasmCompileMode, wasmCraneliftDisabledByFeatures, and
- * wasmIonDisabledByFeatures can be used to probe compiler availability and the
- * reasons for a compiler being unavailable.
+ * wasmCompileMode, and wasmIonDisabledByFeatures can be used to probe compiler
+ * availability and the reasons for a compiler being unavailable.
  *
  *
  * Feature availability:
@@ -222,15 +200,6 @@ static inline bool WasmDebuggerActive(JSContext* cx) {
 // back to these predicates.  So there will be a small amount of duplicated
 // logic here, but as compilers reach feature parity that duplication will go
 // away.
-//
-// There's a static precedence order between the optimizing compilers.  This
-// order currently ranks Cranelift over Ion on all platforms because Cranelift
-// is disabled by default on all platforms: anyone who has enabled Cranelift
-// will wish to use it instead of Ion.
-//
-// The precedence order is implemented by guards in IonAvailable() and
-// CraneliftAvailable().  We expect that it will become more complex as the
-// default settings change.  But it should remain static.
 
 bool wasm::BaselineAvailable(JSContext* cx) {
   if (!cx->options().wasmBaseline() || !BaselinePlatformSupport()) {
@@ -247,11 +216,10 @@ bool wasm::IonAvailable(JSContext* cx) {
   }
   bool isDisabled = false;
   MOZ_ALWAYS_TRUE(IonDisabledByFeatures(cx, &isDisabled));
-  return !isDisabled && !CraneliftAvailable(cx);
+  return !isDisabled;
 }
 
 bool wasm::WasmCompilerForAsmJSAvailable(JSContext* cx) {
-  // For now, restrict this to Ion - we have not tested Cranelift properly.
   return IonAvailable(cx);
 }
 
@@ -301,59 +269,8 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
   return true;
 }
 
-bool wasm::CraneliftAvailable(JSContext* cx) {
-  if (!cx->options().wasmCranelift() || !CraneliftPlatformSupport()) {
-    return false;
-  }
-  bool isDisabled = false;
-  MOZ_ALWAYS_TRUE(CraneliftDisabledByFeatures(cx, &isDisabled));
-  return !isDisabled;
-}
-
-bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
-                                       JSStringBuilder* reason) {
-  // Cranelift has no debugging support, no serialization support, no gc
-  // support, no simd, and no exceptions support.
-  bool debug = WasmDebuggerActive(cx);
-  bool testSerialization = WasmTestSerializationFlag(cx);
-  bool functionReferences = WasmFunctionReferencesFlag(cx);
-  bool gc = WasmGcFlag(cx);
-  // Cranelift aarch64 has full SIMD support.
-#if !defined(ENABLE_WASM_SIMD) || defined(JS_CODEGEN_ARM64)
-  bool simdOnNonAarch64 = false;
-#else
-  bool simdOnNonAarch64 = true;
-#endif
-  bool exn = WasmExceptionsFlag(cx);
-  if (reason) {
-    char sep = 0;
-    if (debug && !Append(reason, "debug", &sep)) {
-      return false;
-    }
-    if (testSerialization && !Append(reason, "testSerialization", &sep)) {
-      return false;
-    }
-    if (functionReferences && !Append(reason, "function-references", &sep)) {
-      return false;
-    }
-    if (gc && !Append(reason, "gc", &sep)) {
-      return false;
-    }
-    if (simdOnNonAarch64 && !Append(reason, "simd", &sep)) {
-      return false;
-    }
-    if (exn && !Append(reason, "exceptions", &sep)) {
-      return false;
-    }
-  }
-  *isDisabled = debug || testSerialization || functionReferences || gc ||
-                simdOnNonAarch64 || exn;
-  return true;
-}
-
 bool wasm::AnyCompilerAvailable(JSContext* cx) {
-  return wasm::BaselineAvailable(cx) || wasm::IonAvailable(cx) ||
-         wasm::CraneliftAvailable(cx);
+  return wasm::BaselineAvailable(cx) || wasm::IonAvailable(cx);
 }
 
 // Feature predicates.  These must be kept in sync with the predicates in the
@@ -422,8 +339,7 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
 
   // Test only whether the compilers are supported on the hardware, not whether
   // they are enabled.
-  return BaselinePlatformSupport() || IonPlatformSupport() ||
-         CraneliftPlatformSupport();
+  return BaselinePlatformSupport() || IonPlatformSupport();
 #endif
 }
 
@@ -2852,11 +2768,11 @@ size_t WasmMemoryObject::boundsCheckLimit() const {
     return buffer().byteLength();
   }
   size_t mappedSize = buffer().wasmMappedSize();
-#if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
+#if !defined(JS_64BIT)
   // See clamping performed in CreateSpecificWasmBuffer().  On 32-bit systems
-  // and on 64-bit with Cranelift, we do not want to overflow a uint32_t.  For
-  // the other 64-bit compilers, all constraints are implied by the largest
-  // accepted value for a memory's max field.
+  // we do not want to overflow a uint32_t.  For the other 64-bit compilers,
+  // all constraints are implied by the largest accepted value for a memory's
+  // max field.
   MOZ_ASSERT(mappedSize < UINT32_MAX);
 #endif
   MOZ_ASSERT(mappedSize % wasm::PageSize == 0);
@@ -2914,9 +2830,8 @@ uint64_t WasmMemoryObject::grow(Handle<WasmMemoryObject*> memory,
 
   RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
-#if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
-  // TODO (large ArrayBuffer): For Cranelift, limit the memory size to something
-  // that fits in a uint32_t.  See more information at the definition of
+#if !defined(JS_64BIT)
+  // TODO (large ArrayBuffer): See more information at the definition of
   // MaxMemoryBytes().
   MOZ_ASSERT(MaxMemoryBytes(memory->indexType()) <= UINT32_MAX,
              "Avoid 32-bit overflows");

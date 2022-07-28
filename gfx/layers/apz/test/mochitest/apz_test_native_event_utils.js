@@ -662,6 +662,17 @@ function promiseNativeWheelAndWaitForScrollEvent(
 }
 
 async function synthesizeTouchpadPinch(scales, focusX, focusY, options) {
+  var scalesAndFoci = [];
+
+  for (let i = 0; i < scales.length; i++) {
+    scalesAndFoci.push([scales[i], focusX, focusY]);
+  }
+
+  await synthesizeTouchpadGesture(scalesAndFoci, options);
+}
+
+// scalesAndFoci is an array of [scale, focusX, focuxY] tuples.
+async function synthesizeTouchpadGesture(scalesAndFoci, options) {
   // Check for options, fill in defaults if appropriate.
   let waitForTransformEnd =
     options.waitForTransformEnd !== undefined
@@ -674,22 +685,28 @@ async function synthesizeTouchpadPinch(scales, focusX, focusY, options) {
   let transformEndPromise = promiseTransformEnd();
 
   var modifierFlags = 0;
-  var pt = await coordinatesRelativeToScreen({
-    offsetX: focusX,
-    offsetY: focusY,
-    target: document.body,
-  });
   var utils = utilsForTarget(document.body);
-  for (let i = 0; i < scales.length; i++) {
+  for (let i = 0; i < scalesAndFoci.length; i++) {
+    var pt = await coordinatesRelativeToScreen({
+      offsetX: scalesAndFoci[i][1],
+      offsetY: scalesAndFoci[i][2],
+      target: document.body,
+    });
     var phase;
     if (i === 0) {
       phase = SpecialPowers.DOMWindowUtils.PHASE_BEGIN;
-    } else if (i === scales.length - 1) {
+    } else if (i === scalesAndFoci.length - 1) {
       phase = SpecialPowers.DOMWindowUtils.PHASE_END;
     } else {
       phase = SpecialPowers.DOMWindowUtils.PHASE_UPDATE;
     }
-    utils.sendNativeTouchpadPinch(phase, scales[i], pt.x, pt.y, modifierFlags);
+    utils.sendNativeTouchpadPinch(
+      phase,
+      scalesAndFoci[i][0],
+      pt.x,
+      pt.y,
+      modifierFlags
+    );
     if (waitForFrames) {
       await promiseFrame();
     }
@@ -1550,6 +1567,25 @@ async function pinchZoomInWithTouchpad(focusX, focusY, options = {}) {
     1.0,
   ];
   await synthesizeTouchpadPinch(zoomIn, focusX, focusY, options);
+}
+
+async function pinchZoomInAndPanWithTouchpad(options = {}) {
+  var x = 584;
+  var y = 347;
+  var scalesAndFoci = [];
+  // Zoom
+  for (var scale = 1.0; scale <= 2.0; scale += 0.2) {
+    scalesAndFoci.push([scale, x, y]);
+  }
+  // Pan (due to a limitation of the current implementation, events
+  // for which the scale doesn't change are dropped, so vary the
+  // scale slightly as well).
+  for (var i = 1; i <= 20; i++) {
+    x -= 4;
+    y -= 5;
+    scalesAndFoci.push([scale + 0.01 * i, x, y]);
+  }
+  await synthesizeTouchpadGesture(scalesAndFoci, options);
 }
 
 async function pinchZoomOutWithTouchpad(focusX, focusY, options = {}) {

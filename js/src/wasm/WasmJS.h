@@ -102,7 +102,6 @@ bool HasSupport(JSContext* cx);
 
 bool BaselineAvailable(JSContext* cx);
 bool IonAvailable(JSContext* cx);
-bool CraneliftAvailable(JSContext* cx);
 
 // Test all three.
 
@@ -130,8 +129,6 @@ bool BaselineDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                 JSStringBuilder* reason = nullptr);
 bool IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
                            JSStringBuilder* reason = nullptr);
-bool CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
-                                 JSStringBuilder* reason = nullptr);
 
 // Predicates for feature availability.
 //

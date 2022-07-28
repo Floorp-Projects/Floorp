@@ -49,7 +49,9 @@ nsresult ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
   }
 
   nsILoadInfo::CrossOriginEmbedderPolicy coep;
-  MOZ_TRY(httpChannel->GetResponseEmbedderPolicy(&coep));
+  MOZ_TRY(httpChannel->GetResponseEmbedderPolicy(
+      mWorkerPrivate->Trials().IsEnabled(OriginTrial::CoepCredentialless),
+      &coep));
 
   return ProcessCrossOriginEmbedderPolicyHeader(mWorkerPrivate, coep,
                                                 mIsMainScript);

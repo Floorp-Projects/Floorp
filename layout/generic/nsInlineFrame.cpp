@@ -362,8 +362,6 @@ void nsInlineFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   // Note: the line layout code will properly compute our
   // overflow-rect state for us.
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
 nsresult nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,

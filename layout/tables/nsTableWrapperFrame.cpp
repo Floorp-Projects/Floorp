@@ -1039,10 +1039,6 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   }
 
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aOuterRI, aStatus);
-
-  // Return our desired rect
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aOuterRI, aDesiredSize);
 }
 
 /* ----- global methods ----- */

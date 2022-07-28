@@ -50,16 +50,14 @@ bool SandboxReporter::Init() {
   int fds[2];
 
   if (0 != socketpair(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0, fds)) {
-    SANDBOX_LOG_ERROR("SandboxReporter: socketpair failed: %s",
-                      strerror(errno));
+    SANDBOX_LOG_ERRNO("SandboxReporter: socketpair failed");
     return false;
   }
   mClientFd = fds[0];
   mServerFd = fds[1];
 
   if (!PlatformThread::Create(0, this, &mThread)) {
-    SANDBOX_LOG_ERROR("SandboxReporter: thread creation failed: %s",
-                      strerror(errno));
+    SANDBOX_LOG_ERRNO("SandboxReporter: thread creation failed");
     close(mClientFd);
     close(mServerFd);
     mClientFd = mServerFd = -1;
@@ -261,19 +259,19 @@ void SandboxReporter::ThreadMain(void) {
       if (errno == EINTR) {
         continue;
       }
-      SANDBOX_LOG_ERROR("SandboxReporter: recvmsg: %s", strerror(errno));
+      SANDBOX_LOG_ERRNO("SandboxReporter: recvmsg");
     }
     if (recvd <= 0) {
       break;
     }
 
     if (static_cast<size_t>(recvd) < sizeof(rep)) {
-      SANDBOX_LOG_ERROR("SandboxReporter: packet too short (%d < %d)", recvd,
-                        sizeof(rep));
+      SANDBOX_LOG("SandboxReporter: packet too short (%d < %d)", recvd,
+                  sizeof(rep));
       continue;
     }
     if (msg.msg_flags & MSG_TRUNC) {
-      SANDBOX_LOG_ERROR("SandboxReporter: packet too long");
+      SANDBOX_LOG("SandboxReporter: packet too long");
       continue;
     }
 

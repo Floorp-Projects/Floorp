@@ -126,7 +126,6 @@
 #include "vm/StringType.h"
 #include "wasm/AsmJS.h"
 #include "wasm/WasmBaselineCompile.h"
-#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
@@ -918,21 +917,12 @@ static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
   if (wasm::BaselinePlatformSupport()) {
     strcat(buf, "baseline");
   }
-#ifdef ENABLE_WASM_CRANELIFT
-  if (wasm::CraneliftPlatformSupport()) {
-    if (*buf) {
-      strcat(buf, ",");
-    }
-    strcat(buf, "cranelift");
-  }
-#else
   if (wasm::IonPlatformSupport()) {
     if (*buf) {
       strcat(buf, ",");
     }
     strcat(buf, "ion");
   }
-#endif
 
   JSString* result = JS_NewStringCopyZ(cx, buf);
   if (!result) {
@@ -950,11 +940,8 @@ static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
   // zero or one optimizing compiler.
   bool baseline = wasm::BaselineAvailable(cx);
   bool ion = wasm::IonAvailable(cx);
-  bool cranelift = wasm::CraneliftAvailable(cx);
-  bool none = !baseline && !ion && !cranelift;
-  bool tiered = baseline && (ion || cranelift);
-
-  MOZ_ASSERT(!(ion && cranelift));
+  bool none = !baseline && !ion;
+  bool tiered = baseline && ion;
 
   JSStringBuilder result(cx);
   if (none && !result.append("none")) {
@@ -967,9 +954,6 @@ static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   if (ion && !result.append("ion")) {
-    return false;
-  }
-  if (cranelift && !result.append("cranelift")) {
     return false;
   }
   if (JSString* str = result.finishString()) {
@@ -985,26 +969,6 @@ static bool WasmBaselineDisabledByFeatures(JSContext* cx, unsigned argc,
   bool isDisabled = false;
   JSStringBuilder reason(cx);
   if (!wasm::BaselineDisabledByFeatures(cx, &isDisabled, &reason)) {
-    return false;
-  }
-  if (isDisabled) {
-    JSString* result = reason.finishString();
-    if (!result) {
-      return false;
-    }
-    args.rval().setString(result);
-  } else {
-    args.rval().setBoolean(false);
-  }
-  return true;
-}
-
-static bool WasmCraneliftDisabledByFeatures(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  bool isDisabled = false;
-  JSStringBuilder reason(cx);
-  if (!wasm::CraneliftDisabledByFeatures(cx, &isDisabled, &reason)) {
     return false;
   }
   if (isDisabled) {
@@ -8450,26 +8414,19 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
     JS_FN_HELP("wasmCompilersPresent", WasmCompilersPresent, 0, 0,
 "wasmCompilersPresent()",
 "  Returns a string indicating the present wasm compilers: a comma-separated list\n"
-"  of 'baseline', 'ion', and 'cranelift'.  A compiler is present in the executable\n"
-"  if it is compiled in and can generate code for the current architecture."),
+"  of 'baseline', 'ion'.  A compiler is present in the executable if it is compiled\n"
+"  in and can generate code for the current architecture."),
 
     JS_FN_HELP("wasmCompileMode", WasmCompileMode, 0, 0,
 "wasmCompileMode()",
 "  Returns a string indicating the available wasm compilers: 'baseline', 'ion',\n"
-"  'cranelift', 'baseline+ion', 'baseline+cranelift', or 'none'.  A compiler is\n"
-"  available if it is present in the executable and not disabled by switches\n"
-"  or runtime conditions.  At most one baseline and one optimizing compiler can\n"
-"  be available."),
+"  'baseline+ion', or 'none'.  A compiler is available if it is present in the\n"
+"  executable and not disabled by switches or runtime conditions.  At most one\n"
+"  baseline and one optimizing compiler can be available."),
 
     JS_FN_HELP("wasmBaselineDisabledByFeatures", WasmBaselineDisabledByFeatures, 0, 0,
 "wasmBaselineDisabledByFeatures()",
 "  If some feature is enabled at compile-time or run-time that prevents baseline\n"
-"  from being used then this returns a truthy string describing the features that\n."
-"  are disabling it.  Otherwise it returns false."),
-
-    JS_FN_HELP("wasmCraneliftDisabledByFeatures", WasmCraneliftDisabledByFeatures, 0, 0,
-"wasmCraneliftDisabledByFeatures()",
-"  If some feature is enabled at compile-time or run-time that prevents Cranelift\n"
 "  from being used then this returns a truthy string describing the features that\n."
 "  are disabling it.  Otherwise it returns false."),
 

@@ -139,7 +139,6 @@ def check(command_context, all_crates=None, crates=None, jobs=0, verbose=False):
     crates_and_roots = {
         "gkrust": "toolkit/library/rust",
         "gkrust-gtest": "toolkit/library/gtest/rust",
-        "baldrdash": "js/src/wasm/cranelift",
         "geckodriver": "testing/geckodriver",
     }
 

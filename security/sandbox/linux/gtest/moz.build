@@ -10,6 +10,7 @@ UNIFIED_SOURCES = [
     "../SandboxBrokerClient.cpp",
     "TestBroker.cpp",
     "TestBrokerPolicy.cpp",
+    "TestLogging.cpp",
 ]
 
 LOCAL_INCLUDES += [

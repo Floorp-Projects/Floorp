@@ -20,6 +20,13 @@ interface TestTrialInterface {
   constructor();
 };
 
+[Pref="dom.expose_test_interfaces",
+ Exposed=Window]
+interface TestInterfaceLength {
+  [ChromeOnly]
+  constructor(boolean arg);
+};
+
 // The type of string C++ sees.
 enum StringType {
   "literal",      // A string with the LITERAL flag.

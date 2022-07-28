@@ -13,7 +13,6 @@ trojan-source:
         - modules/freetype2/builds/amiga/src/base/ftsystem.c
         - third_party/rust/chardetng/src/data.rs
         - third_party/rust/error-chain/tests/tests.rs
-        - third_party/rust/target-lexicon/src/targets.rs
         - third_party/rust/unicode-width/src/tests.rs
         - security/nss/gtests/mozpkix_gtest/pkixnames_tests.cpp
     extensions:

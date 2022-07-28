@@ -903,8 +903,6 @@ void nsMathMLContainerFrame::Reflow(nsPresContext* aPresContext,
   /////////////
   // Place children now by re-adjusting the origins to align the baselines
   FinalizeReflow(drawTarget, aDesiredSize);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 static nscoord AddInterFrameSpacingToSize(ReflowOutput& aDesiredSize,

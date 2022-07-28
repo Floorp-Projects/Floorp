@@ -1608,13 +1608,14 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 }
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-CodeOffset BaseCompiler::callRef(const Stk& calleeRef,
-                                 const FunctionCall& call) {
+void BaseCompiler::callRef(const Stk& calleeRef, const FunctionCall& call,
+                           CodeOffset* fastCallOffset,
+                           CodeOffset* slowCallOffset) {
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::FuncRef);
   CalleeDesc callee = CalleeDesc::wasmFuncRef();
 
   loadRef(calleeRef, RegRef(WasmCallRefReg));
-  return masm.wasmCallRef(desc, callee);
+  masm.wasmCallRef(desc, callee, fastCallOffset, slowCallOffset);
 }
 #endif
 
@@ -4790,8 +4791,13 @@ bool BaseCompiler::emitCallRef() {
   }
 
   const Stk& callee = peek(results.count());
-  CodeOffset raOffset = callRef(callee, baselineCall);
-  if (!createStackMap("emitCallRef", raOffset)) {
+  CodeOffset fastCallOffset;
+  CodeOffset slowCallOffset;
+  callRef(callee, baselineCall, &fastCallOffset, &slowCallOffset);
+  if (!createStackMap("emitCallRef", fastCallOffset)) {
+    return false;
+  }
+  if (!createStackMap("emitCallRef", slowCallOffset)) {
     return false;
   }
 

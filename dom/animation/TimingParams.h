@@ -132,7 +132,17 @@ struct TimingParams {
       return zeroDuration;
     }
 
-    return aDuration->MultDouble(aIterations);
+    MOZ_ASSERT(*aDuration >= zeroDuration && aIterations >= 0.0,
+               "Both animation duration and ieration count should be greater "
+               "than zero");
+
+    StickyTimeDuration result = aDuration->MultDouble(aIterations);
+    if (result < zeroDuration) {
+      // If the result of multiplying above is less than zero, it's likely an
+      // overflow happened. we consider it's +Inf here.
+      return StickyTimeDuration::Forever();
+    }
+    return result;
   }
   // Return the duration of the active interval calculated by duration and
   // iteration count.

@@ -17,6 +17,12 @@
 
 #include "base/posix/eintr_wrapper.h"
 
+#ifdef __GLIBC_PREREQ
+#  if __GLIBC_PREREQ(2, 32)
+#    define HAVE_STRERRORNAME_NP 1
+#  endif
+#endif
+
 namespace mozilla {
 
 // Alters an iovec array to remove the first `toDrop` bytes.  This
@@ -51,6 +57,85 @@ void SandboxLogError(const char* message) {
     }
     IOVecDrop(iovs, 3, static_cast<size_t>(written));
   }
+}
+
+ssize_t GetLibcErrorName(char* aBuf, size_t aSize, int aErr) {
+  const char* errStr;
+
+#ifdef HAVE_STRERRORNAME_NP
+  // This is the function we'd like to have, but it's a glibc
+  // extension and present only in newer versions.
+  errStr = strerrorname_np(aErr);
+#else
+  // Otherwise, handle most of the basic / common errors with a big
+  // switch statement.
+  switch (aErr) {
+
+#  define HANDLE_ERR(x) \
+    case x:             \
+      errStr = #x;      \
+      break
+
+    // errno-base.h
+    HANDLE_ERR(EPERM);
+    HANDLE_ERR(ENOENT);
+    HANDLE_ERR(ESRCH);
+    HANDLE_ERR(EINTR);
+    HANDLE_ERR(EIO);
+    HANDLE_ERR(ENXIO);
+    HANDLE_ERR(E2BIG);
+    HANDLE_ERR(ENOEXEC);
+    HANDLE_ERR(EBADF);
+    HANDLE_ERR(ECHILD);
+    HANDLE_ERR(EAGAIN);
+    HANDLE_ERR(ENOMEM);
+    HANDLE_ERR(EACCES);
+    HANDLE_ERR(EFAULT);
+    HANDLE_ERR(ENOTBLK);
+    HANDLE_ERR(EBUSY);
+    HANDLE_ERR(EEXIST);
+    HANDLE_ERR(EXDEV);
+    HANDLE_ERR(ENODEV);
+    HANDLE_ERR(ENOTDIR);
+    HANDLE_ERR(EISDIR);
+    HANDLE_ERR(EINVAL);
+    HANDLE_ERR(ENFILE);
+    HANDLE_ERR(EMFILE);
+    HANDLE_ERR(ENOTTY);
+    HANDLE_ERR(ETXTBSY);
+    HANDLE_ERR(EFBIG);
+    HANDLE_ERR(ENOSPC);
+    HANDLE_ERR(ESPIPE);
+    HANDLE_ERR(EROFS);
+    HANDLE_ERR(EMLINK);
+    HANDLE_ERR(EPIPE);
+    HANDLE_ERR(EDOM);
+    HANDLE_ERR(ERANGE);
+
+    // selected other errors
+    HANDLE_ERR(ENAMETOOLONG);
+    HANDLE_ERR(ENOSYS);
+    HANDLE_ERR(ENOTEMPTY);
+    HANDLE_ERR(ELOOP);
+    HANDLE_ERR(ENOTSOCK);
+    HANDLE_ERR(EMSGSIZE);
+    HANDLE_ERR(ECONNRESET);
+    HANDLE_ERR(ECONNREFUSED);
+    HANDLE_ERR(EHOSTUNREACH);
+    HANDLE_ERR(ESTALE);
+
+#  undef HANDLE_ERR
+
+    default:
+      errStr = nullptr;
+  }
+#endif  // no strerrorname_np
+
+  if (errStr) {
+    return base::strings::SafeSNPrintf(aBuf, aSize, "%s", errStr);
+  }
+
+  return base::strings::SafeSNPrintf(aBuf, aSize, "error %d", aErr);
 }
 
 }  // namespace mozilla

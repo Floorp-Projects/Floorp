@@ -737,7 +737,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     // Build a continuation column if necessary
     nsIFrame* kidNextInFlow = child->GetNextInFlow();
 
-    if (aStatus.IsFullyComplete() && !aStatus.IsTruncated()) {
+    if (aStatus.IsFullyComplete()) {
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
       child = nullptr;
       break;
@@ -924,8 +924,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
     aDesiredSize.UnionOverflowAreasWithDesiredBounds();
   }
 
-  colData.mFeasible =
-      allFit && aStatus.IsFullyComplete() && !aStatus.IsTruncated();
+  colData.mFeasible = allFit && aStatus.IsFullyComplete();
 
   COLUMN_SET_LOG(
       "%s: Done column reflow pass: %s, mMaxBSize=%d, mSumBSize=%d, "
@@ -1251,8 +1250,6 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(!HasAbsolutelyPositionedChildren(),
              "ColumnSetWrapperFrame should be the abs.pos container!");
   FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 void nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: wasmCompilersPresent().match('cranelift')
-
 const oob = /index out of bounds/;
 const unaligned = /unaligned memory access/;
 const RuntimeError = WebAssembly.RuntimeError;

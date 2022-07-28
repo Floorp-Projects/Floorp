@@ -22,17 +22,15 @@ Form History test: Test for events while the form history popup is open
 <pre id="test">
 <script class="testbody">
 var form = document.getElementById("form1");
-var input = $_(1, "field1");
+var input = getFormElementByName(1, "field1");
 var expectedValue = "value1";
 
-function setupFormHistory(aCallback) {
-  updateFormHistory([
+add_task(async function setup() {
+  await updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },
-  ], aCallback);
-}
-
-registerPopupShownListener(popupShownListener);
+  ]);
+});
 
 function handleEnter(evt) {
   if (evt.keyCode != KeyEvent.DOM_VK_RETURN) {
@@ -49,23 +47,20 @@ function handleEnter(evt) {
   }
 }
 
-function popupShownListener(evt) {
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter"); // select the first entry in the popup
-  synthesizeKey("KEY_Enter"); // try to submit the form with the filled value
-}
+add_task(async function popupEnterEvent() {
+  const submitTested = new Promise(resolve => {
+    SpecialPowers.addSystemEventListener(input, "keypress", handleEnter, true);
+    form.addEventListener("submit", evt => {
+      evt.preventDefault();
 
-function runTest() {
-  SpecialPowers.addSystemEventListener(input, "keypress", handleEnter, true);
-  form.addEventListener("submit", function submitCallback(evt) {
-    is(input.value, expectedValue, "Check input value in the submit handler");
-    evt.preventDefault();
+      is(input.value, expectedValue, "Check input value in the submit handler");
 
-    input.removeEventListener("keypress", handleEnter, true);
-    form.removeEventListener("submit", submitCallback);
+      SpecialPowers.removeSystemEventListener(input, "keypress", handleEnter, true);
 
-    SimpleTest.finish();
+      resolve();
+    }, { once: true });
   });
+  const autocompleteShown = promiseACShown();
 
   // Focus the input before adjusting.value so that the caret goes to the end
   // (since OS X doesn't show the dropdown otherwise).
@@ -73,17 +68,13 @@ function runTest() {
   input.value = "value";
   input.focus();
   synthesizeKey("KEY_ArrowDown");
-}
+  await autocompleteShown;
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter"); // select the first entry in the popup
+  synthesizeKey("KEY_Enter"); // try to submit the form with the filled value
+  await submitTested;
+});
 
-function startTest() {
-  setupFormHistory(function() {
-    runTest();
-  });
-}
-
-window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

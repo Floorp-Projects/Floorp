@@ -3743,8 +3743,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // This function takes care of loading the callee's instance and address from
   // pinned reg.
-  CodeOffset wasmCallRef(const wasm::CallSiteDesc& desc,
-                         const wasm::CalleeDesc& callee);
+  void wasmCallRef(const wasm::CallSiteDesc& desc,
+                   const wasm::CalleeDesc& callee, CodeOffset* fastCallOffset,
+                   CodeOffset* slowCallOffset);
 
   // WasmTableCallIndexReg must contain the index of the indirect call.
   // This is for asm.js calls only.
