@@ -27,18 +27,35 @@
   /* align the base font-size on root element with that of <body>
      so rem-based layout widths and break-points behave predictably */
   font-size: 15px;
+  /* override --in-content-page-background from common-shared.css */
+  background-color: transparent;
 }
 
 body {
+  --fxview-background-color: var(--newtab-background-color, var(--in-content-page-background));
+  --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
+  --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
+  --fxview-contrast-border: color-mix(in hsl, currentColor 45%, transparent);
+  --fxview-text-secondary-color: color-mix(in srgb, currentColor 80%, transparent);
+  --newtab-background-color-secondary: #FFF;
   display: flex;
   justify-content: center;
   padding-block: var(--header-spacing) var(--footer-spacing);
   padding-inline: var(--content-area-gutter);
   max-width: 96rem;
   margin-inline: auto;
+  background-color: var(--fxview-background-color);
+  color: var(--newtab-text-primary-color);
+}
+
+body[lwt-newtab-brighttext] {
+  --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 80%, white);
+  --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 60%, white);
+  --newtab-background-color-secondary: #42414d;
 }
 
 h1 {
+  color: var(--newtab-text-primary-color);
   font-weight: 500;
   font-size: 1.5em;
 }
@@ -173,7 +190,6 @@ body > main > aside {
 }
 
 #no-current-colorway-collection-notice {
-  color: #FFF;
   font-size: 2em;
   text-align: center;
   margin: 0 1em 1em;
@@ -213,8 +229,7 @@ body > main > aside {
 
 #colorways-collection-expiry-date > span {
   display: inline-block;
-  color: var(--in-content-page-color);
-  background: var(--in-content-page-background);
+  background: var(--fxview-background-color);
   border-radius: 1.5em;
   padding: .3em 1em;
 }
@@ -239,17 +254,21 @@ body > main > aside {
   display: none !important;
 }
 
+.card,
+.synced-tab-li,
+.synced-tab-li-placeholder,
 .empty-container {
-  background-color: rgba(240, 240, 244, 0.4);
+  background-color: var(--newtab-background-color-secondary);
+  border: 1px solid var(--fxview-contrast-border);
+}
+
+.empty-container {
+  border-radius: 4px;
 }
 
 .placeholder-content {
   text-align: center;
   padding: 24px 16px;
-}
-
-.placeholder-text, .synced-tabs, .history {
-  color: var(--in-content-deemphasized-text);
 }
 
 .page-section-header {
@@ -264,14 +283,12 @@ body > main > aside {
 }
 
 .page-section-header > h1 {
-  color: var(--in-content-deemphasized-text);
   grid-area: head;
   margin: 0;
   padding-block: 4px;
 }
 
 .page-section-header > .twisty {
-  color: var(--in-content-deemphasized-text);
   grid-area: twisty;
   justify-self: end;
   margin-block: 0;
@@ -281,7 +298,6 @@ body > main > aside {
 
 .page-section-header > .section-description {
   grid-area: desc;
-  color: var(--in-content-deemphasized-text)
 }
 
 .setup-step {
@@ -378,13 +394,14 @@ body > main > aside {
   cursor: pointer;
 }
 
-.closed-tab-li:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
+.closed-tab-li:hover,
+.ghost-button:hover {
+  background-color: var(--fxview-element-hover-color) !important;
 }
 
-.closed-tab-li:hover:active {
-  background-color: var(--in-content-button-background-active);
+.ghost-button:active,
+.closed-tab-li:active {
+  background-color: var(--fxview-element-active-color) !important;
 }
 
 .closed-tab-li-title {
@@ -408,8 +425,8 @@ body > main > aside {
 .synced-tab-li-url,
 .synced-tab-li-time,
 .synced-tab-li-url-device {
-  color: var(--in-content-deemphasized-text);
   font-weight: 400;
+  color: var(--fxview-text-secondary-color);
 }
 
 .closed-tab-li-title,
@@ -448,8 +465,7 @@ body > main > aside {
 .synced-tab-li,
 .synced-tab-li-placeholder {
   box-sizing: border-box;
-  border: 1px solid #CFCFD8;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px;
   display: grid;
   grid-template-columns: min-content repeat(2, 1fr) minmax(min-content, auto);
@@ -460,7 +476,7 @@ body > main > aside {
 }
 
 .synced-tab-li:hover {
-  box-shadow: 0px 2px 6px rgba(58, 57, 68, 0.2);
+  box-shadow: 0px 2px 14px var(--fxview-contrast-border);
   cursor: pointer;
 }
 
@@ -575,7 +591,6 @@ body > main > aside {
 .synced-tab-li-time {
   grid-area: time;
   justify-self: end;
-  color: var(--in-content-deemphasized-text);
   align-self: end;
 }
 
