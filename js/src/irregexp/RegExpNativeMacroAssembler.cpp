@@ -506,14 +506,14 @@ void SMRegExpMacroAssembler::CheckPosition(int cp_offset,
 // This function attempts to generate special case code for character classes.
 // Returns true if a special case is generated.
 // Otherwise returns false and generates no code.
-bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
-                                                        Label* on_no_match) {
+bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(
+    StandardCharacterSet type, Label* on_no_match) {
   js::jit::Label* no_match = LabelOrBacktrack(on_no_match);
 
   // Note: throughout this function, range checks (c in [min, max])
   // are implemented by an unsigned (c - min) <= (max - min) check.
   switch (type) {
-    case 's': {
+    case StandardCharacterSet::kWhitespace: {
       // Match space-characters
       if (mode_ != LATIN1) {
         return false;
@@ -537,21 +537,21 @@ bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
       masm_.bind(&success);
       return true;
     }
-    case 'S':
+    case StandardCharacterSet::kNotWhitespace:
       // The emitted code for generic character classes is good enough.
       return false;
-    case 'd':
+    case StandardCharacterSet::kDigit:
       // Match latin1 digits ('0'-'9')
       masm_.computeEffectiveAddress(Address(current_character_, -'0'), temp0_);
       masm_.branch32(Assembler::Above, temp0_, Imm32('9' - '0'), no_match);
       return true;
-    case 'D':
+    case StandardCharacterSet::kNotDigit:
       // Match anything except latin1 digits ('0'-'9')
       masm_.computeEffectiveAddress(Address(current_character_, -'0'), temp0_);
       masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32('9' - '0'),
                      no_match);
       return true;
-    case '.':
+    case StandardCharacterSet::kNotLineTerminator:
       // Match non-newlines. This excludes '\n' (0x0a), '\r' (0x0d),
       // U+2028 LINE SEPARATOR, and U+2029 PARAGRAPH SEPARATOR.
       // See https://tc39.es/ecma262/#prod-LineTerminator
@@ -574,7 +574,7 @@ bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
                        no_match);
       }
       return true;
-    case 'w':
+    case StandardCharacterSet::kWord:
       // \w matches the set of 63 characters defined in Runtime Semantics:
       // WordCharacters. We use a static lookup table, which is defined in
       // regexp-macro-assembler.cc.
@@ -590,7 +590,7 @@ bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
           BaseIndex(temp0_, current_character_, js::jit::TimesOne), temp0_);
       masm_.branchTest32(Assembler::Zero, temp0_, temp0_, no_match);
       return true;
-    case 'W': {
+    case StandardCharacterSet::kNotWord: {
       // See 'w' above.
       js::jit::Label done;
       if (mode_ != LATIN1) {
@@ -609,10 +609,10 @@ bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
       ////////////////////////////////////////////////////////////////////////
       // Non-standard classes (with no syntactic shorthand) used internally //
       ////////////////////////////////////////////////////////////////////////
-    case '*':
+    case StandardCharacterSet::kEverything:
       // Match any character
       return true;
-    case 'n':
+    case StandardCharacterSet::kLineTerminator:
       // Match newlines. The opposite of '.'. See '.' above.
       masm_.move32(current_character_, temp0_);
       masm_.xor32(Imm32(0x01), temp0_);
@@ -634,11 +634,8 @@ bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
         masm_.bind(&done);
       }
       return true;
-
-      // No custom implementation
-    default:
-      return false;
   }
+  return false;
 }
 
 void SMRegExpMacroAssembler::Fail() {
@@ -1284,7 +1281,7 @@ bool SMRegExpMacroAssembler::GrowBacktrackStack(RegExpStack* regexp_stack) {
   return !!regexp_stack->EnsureCapacity(size * 2);
 }
 
-bool SMRegExpMacroAssembler::CanReadUnaligned() {
+bool SMRegExpMacroAssembler::CanReadUnaligned() const {
 #if defined(JS_CODEGEN_ARM)
   return !js::jit::HasAlignmentFault();
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
