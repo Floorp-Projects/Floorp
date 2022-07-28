@@ -207,13 +207,7 @@ int AcmReceiver::GetAudio(int desired_freq_hz,
          sizeof(int16_t) * audio_frame->samples_per_channel_ *
              audio_frame->num_channels_);
 
-  // Added MutexLock to fix tsan warnings.  GetDecodingCallStatistics
-  // protects call_stats_, but protection here was missing. (mjf)
-  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-  {
-    MutexLock lock(&mutex_);
-    call_stats_.DecodedByNetEq(audio_frame->speech_type_, *muted);
-  }
+  call_stats_.DecodedByNetEq(audio_frame->speech_type_, *muted);
 
   return 0;
 }
