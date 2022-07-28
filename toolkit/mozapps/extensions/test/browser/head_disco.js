@@ -21,8 +21,6 @@ const {
   ExtensionUtils: { promiseEvent, promiseObserved },
 } = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 AddonTestUtils.initMochitest(this);
 
 // The response to the discovery API, as documented at:
@@ -36,7 +34,12 @@ AddonTestUtils.initMochitest(this);
 // https://addons.allizom.org/api/v4/discovery/?lang=en-US
 //
 // The response must contain at least one theme, and one extension.
-const DISCOAPI_DEFAULT_FIXTURE = RELATIVE_DIR + "discovery/api_response.json";
+const DISCOAPI_DEFAULT_FIXTURE = PathUtils.join(
+  Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+  ...RELATIVE_DIR.split("/"),
+  "discovery",
+  "api_response.json"
+);
 
 // Read the content of API_RESPONSE_FILE, and replaces any embedded URLs with
 // URLs that point to the `amoServer` test server.
@@ -44,7 +47,7 @@ async function readAPIResponseFixture(
   amoTestHost,
   fixtureFilePath = DISCOAPI_DEFAULT_FIXTURE
 ) {
-  let apiText = await OS.File.read(fixtureFilePath, { encoding: "utf-8" });
+  let apiText = await IOUtils.readUTF8(fixtureFilePath);
   apiText = apiText.replace(/\bhttps?:\/\/[^"]+(?=")/g, url => {
     try {
       url = new URL(url);

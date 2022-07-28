@@ -36,7 +36,7 @@ const ID1 = "addon1@tests.mozilla.org";
 const ID2 = "addon2@tests.mozilla.org";
 const ID3 = "addon3@tests.mozilla.org";
 const ID4 = "addon4@tests.mozilla.org";
-const PATH4 = OS.Path.join(globalDir.path, `${ID4}.xpi`);
+const PATH4 = PathUtils.join(globalDir.path, `${ID4}.xpi`);
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
