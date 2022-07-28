@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoSession
 
 @RunWith(AndroidJUnit4::class)
-class ChoicePromptUpdateDelegateTest {
+class ChoicePromptDelegateTest {
 
     @Test
     fun `WHEN onPromptUpdate is called from GeckoView THEN notifyObservers is invoked with onPromptUpdate`() {
@@ -41,7 +41,7 @@ class ChoicePromptUpdateDelegateTest {
             { isOnConfirmCalled = true },
             { isOnDismissCalled = true }
         )
-        val delegate = ChoicePromptUpdateDelegate(mockSession, prompt)
+        val delegate = ChoicePromptDelegate(mockSession, prompt)
         val updatedPrompt = mock<GeckoSession.PromptDelegate.ChoicePrompt>()
         ReflectionUtils.setField(updatedPrompt, "choices", arrayOf<GeckoChoice>())
 
@@ -54,5 +54,24 @@ class ChoicePromptUpdateDelegateTest {
         (observedPrompt as PromptRequest.SingleChoice).onDismiss()
         assertTrue(isOnDismissCalled)
         assertTrue(isOnConfirmCalled)
+    }
+
+    @Test
+    fun `WHEN onPromptDismiss is called from GeckoView THEN notifyObservers is invoked with onPromptDismissed`() {
+        val mockSession = GeckoEngineSession(mock())
+        var isOnDismissCalled = false
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptDismissed(promptRequest: PromptRequest) {
+                super.onPromptDismissed(promptRequest)
+                isOnDismissCalled = true
+            }
+        })
+        val basePrompt: GeckoSession.PromptDelegate.ChoicePrompt = mock()
+        val prompt: PromptRequest = mock()
+        val delegate = ChoicePromptDelegate(mockSession, prompt)
+
+        delegate.onPromptDismiss(basePrompt)
+
+        assertTrue(isOnDismissCalled)
     }
 }

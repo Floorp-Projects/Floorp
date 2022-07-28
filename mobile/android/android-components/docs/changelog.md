@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-prompts**:
+  * Added prompt dismiss listener to `ChoicePromptDelegate`. [#12562](https://github.com/mozilla-mobile/android-components/issues/12562)
+
 * **browser-storage-sync**:
   * Stop reporting to the crash servers the expected `OperationInterrupted` exceptions for when interrupting in progress reads/writes from Application-Services. [#12557](https://github.com/mozilla-mobile/android-components/issues/12557), [#12569](https://github.com/mozilla-mobile/android-components/issues/12569).
 

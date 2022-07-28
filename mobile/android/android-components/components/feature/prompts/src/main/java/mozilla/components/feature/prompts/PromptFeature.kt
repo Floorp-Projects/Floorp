@@ -319,6 +319,11 @@ class PromptFeature private constructor(
                                         activePromptRequest as SelectAddress
                                     )
                                 }
+                                is SingleChoice,
+                                is MultipleChoice,
+                                is MenuChoice -> {
+                                    (activePrompt?.get() as? ChoiceDialogFragment)?.dismissAllowingStateLoss()
+                                }
                                 else -> {
                                     // no-op
                                 }

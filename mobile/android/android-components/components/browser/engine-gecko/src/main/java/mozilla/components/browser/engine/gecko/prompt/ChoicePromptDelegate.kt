@@ -19,10 +19,16 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptInstanceDelegate
  * with the onPromptUpdate callback.
  * @param previousPrompt [PromptRequest] to be updated.
  */
-internal class ChoicePromptUpdateDelegate(
+internal class ChoicePromptDelegate(
     private val geckoSession: GeckoEngineSession,
     private var previousPrompt: PromptRequest,
 ) : PromptInstanceDelegate {
+
+    override fun onPromptDismiss(prompt: BasePrompt) {
+        geckoSession.notifyObservers {
+            onPromptDismissed(previousPrompt)
+        }
+    }
 
     override fun onPromptUpdate(prompt: BasePrompt) {
         if (prompt is ChoicePrompt) {

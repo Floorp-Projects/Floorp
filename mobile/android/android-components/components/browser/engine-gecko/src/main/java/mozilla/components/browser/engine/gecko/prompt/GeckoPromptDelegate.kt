@@ -258,7 +258,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             else -> throw InvalidParameterException("${geckoPrompt.type} is not a valid Gecko @Choice.ChoiceType")
         }
 
-        geckoPrompt.delegate = ChoicePromptUpdateDelegate(
+        geckoPrompt.delegate = ChoicePromptDelegate(
             geckoEngineSession,
             promptRequest
         )
