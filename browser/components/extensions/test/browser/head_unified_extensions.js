@@ -7,6 +7,7 @@
             createExtensions,
             getUnifiedExtensionsItem,
             openExtensionsPanel,
+            openUnifiedExtensionsContextMenu,
             promiseDisableUnifiedExtensions,
             promiseEnableUnifiedExtensions,
             promiseUnifiedExtensionsInitialized,
@@ -85,6 +86,22 @@ const getUnifiedExtensionsItem = (win, extensionId) => {
   return getListView(win).querySelector(
     `unified-extensions-item[extension-id="${extensionId}"]`
   );
+};
+
+const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
+  const button = getUnifiedExtensionsItem(win, extensionId).querySelector(
+    ".unified-extensions-item-open-menu"
+  );
+  ok(button, "expected 'open menu' button");
+
+  const menu = win.document.getElementById("unified-extensions-context-menu");
+  ok(menu, "expected menu");
+
+  const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(button, { type: "contextmenu" }, win);
+  await shown;
+
+  return menu;
 };
 
 let extensionsCreated = 0;
