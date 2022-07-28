@@ -164,7 +164,7 @@ class UniqueJSONStrings;
 class SpliceableJSONWriter : public JSONWriter {
  public:
   explicit SpliceableJSONWriter(UniquePtr<JSONWriteFunc> aWriter)
-      : JSONWriter(std::move(aWriter)) {}
+      : JSONWriter(std::move(aWriter), JSONWriter::SingleLineStyle) {}
 
   void StartBareList(CollectionStyle aStyle = MultiLineStyle) {
     StartCollection(scEmptyString, scEmptyString, aStyle);
@@ -325,7 +325,7 @@ class SpliceableJSONWriter : public JSONWriter {
 
 class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
  public:
-  explicit SpliceableChunkedJSONWriter()
+  SpliceableChunkedJSONWriter()
       : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>()) {}
 
   // Access the ChunkedJSONWriteFunc as reference-to-const, usually to copy data
