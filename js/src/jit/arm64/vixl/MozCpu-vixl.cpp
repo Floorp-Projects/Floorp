@@ -294,4 +294,21 @@ void CPU::EnsureIAndDCacheCoherency(void *address, size_t length, bool codeIsThr
 #endif
 }
 
+void CPU::FlushExecutionContext() {
+#if defined(JS_SIMULATOR_ARM64) && defined(JS_CACHE_SIMULATOR_ARM64)
+  // Performing an 'isb' will ensure the current core instruction pipeline is
+  // synchronized with an icache flush executed by another core.
+  using js::jit::SimulatorProcess;
+  js::jit::AutoLockSimulatorCache alsc;
+  Simulator* sim = vixl::Simulator::Current();
+  if (sim) {
+    sim->FlushICache();
+  }
+#elif defined(__aarch64__)
+  // Ensure that any instructions already in the pipeline are discarded and
+  // reloaded from the icache.
+  __asm__ __volatile__("isb\n" : : : "memory");
+#endif
+}
+
 }  // namespace vixl
