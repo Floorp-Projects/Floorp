@@ -128,7 +128,6 @@ void nsMathMLSelectedFrame::Reflow(nsPresContext* aPresContext,
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
   }
   FinalizeReflow(aReflowInput.mRenderingContext->GetDrawTarget(), aDesiredSize);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 // Only place the selected child ...

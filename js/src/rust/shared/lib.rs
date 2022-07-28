@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#[cfg(feature = "baldrdash")]
-extern crate baldrdash;
-
 extern crate encoding_c;
 extern crate encoding_c_mem;
 extern crate mozglue_static;

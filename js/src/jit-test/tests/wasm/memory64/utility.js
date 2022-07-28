@@ -13,11 +13,6 @@ if (conf["mips64"]) {
     quit(0);
 }
 
-// Cranelift tops out below 4GB
-if (wasmCompilersPresent().match(/cranelift/)) {
-    quit(0);
-}
-
 var eightGB = 8 * 1024 * 1024 * 1024;
 var pageSize = 65536;
 assertEq(wasmMaxMemoryPages("i64") >= eightGB / pageSize, true);

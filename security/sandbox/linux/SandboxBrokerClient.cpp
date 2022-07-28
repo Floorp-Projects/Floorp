@@ -47,11 +47,11 @@ int SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
                                              getpid(), aPath + kProcSelfLen);
     if (static_cast<size_t>(len) < sizeof(rewrittenPath)) {
       if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
-        SANDBOX_LOG_ERROR("rewriting %s -> %s", aPath, rewrittenPath);
+        SANDBOX_LOG("rewriting %s -> %s", aPath, rewrittenPath);
       }
       path = rewrittenPath;
     } else {
-      SANDBOX_LOG_ERROR("not rewriting unexpectedly long path %s", aPath);
+      SANDBOX_LOG("not rewriting unexpectedly long path %s", aPath);
     }
   }
 
@@ -113,8 +113,8 @@ int SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
     return -recvErrno;
   }
   if (recvd == 0) {
-    SANDBOX_LOG_ERROR("Unexpected EOF, op %d flags 0%o path %s", aReq->mOp,
-                      aReq->mFlags, path);
+    SANDBOX_LOG("Unexpected EOF, op %d flags 0%o path %s", aReq->mOp,
+                aReq->mFlags, path);
     return -EIO;
   }
   MOZ_ASSERT(static_cast<size_t>(recvd) <= ios[0].iov_len + ios[1].iov_len);
@@ -132,8 +132,8 @@ int SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
     // actually exist, if it's something that's optional or part of a
     // search path (e.g., shared libraries).  In those cases, this
     // error message is expected.
-    SANDBOX_LOG_ERROR("Failed errno %d op %s flags 0%o path %s", resp.mError,
-                      OperationDescription[aReq->mOp], aReq->mFlags, path);
+    SANDBOX_LOG("Failed errno %d op %s flags 0%o path %s", resp.mError,
+                OperationDescription[aReq->mOp], aReq->mFlags, path);
   }
   if (openedFd >= 0) {
     close(openedFd);

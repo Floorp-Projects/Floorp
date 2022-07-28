@@ -105,15 +105,14 @@
       /* lower case name    */ exceptions,                                    \
       /* compile predicate  */ true,                                          \
       /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
-      /* flag predicate     */ !IsFuzzingCranelift(cx),                       \
+      /* flag predicate     */ true,                                          \
       /* shell flag         */ "exceptions",                                  \
       /* preference name    */ "exceptions")                                  \
   EXPERIMENTAL(/* capitalized name   */ FunctionReferences,                   \
                /* lower case name    */ functionReferences,                   \
                /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,     \
                /* compiler predicate */ BaselineAvailable(cx),                \
-               /* flag predicate     */ !IsFuzzingIon(cx) &&                  \
-                   !IsFuzzingCranelift(cx),                                   \
+               /* flag predicate     */ !IsFuzzingIon(cx),                    \
                /* shell flag         */ "function-references",                \
                /* preference name    */ "function_references")                \
   EXPERIMENTAL(/* capitalized name   */ Gc,                                   \
@@ -127,8 +126,7 @@
             /* lower case name    */ v128Relaxed,                             \
             /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,               \
             /* compiler predicate */ AnyCompilerAvailable(cx),                \
-            /* flag predicate     */ !IsFuzzingCranelift(cx) &&               \
-                js::jit::JitSupportsWasmSimd(),                               \
+            /* flag predicate     */ js::jit::JitSupportsWasmSimd(),          \
             /* shell flag         */ "relaxed-simd",                          \
             /* preference name    */ "relaxed_simd")                          \
   TENTATIVE(                                                                  \
@@ -136,7 +134,7 @@
       /* lower case name    */ memory64,                                      \
       /* compile predicate  */ WASM_MEMORY64_ENABLED,                         \
       /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
-      /* flag predicate     */ !IsFuzzingCranelift(cx),                       \
+      /* flag predicate     */ true,                                          \
       /* shell flag         */ "memory64",                                    \
       /* preference name    */ "memory64")                                    \
   EXPERIMENTAL(/* capitalized name   */ MozIntGemm,                           \
@@ -144,8 +142,7 @@
                /* compile predicate  */ WASM_MOZ_INTGEMM_ENABLED,             \
                /* compiler predicate */ BaselineAvailable(cx) ||              \
                   IonAvailable(cx),                                           \
-               /* flag predicate     */ IsSimdPrivilegedContext(cx) &&        \
-                  !IsFuzzingCranelift(cx),                                    \
+               /* flag predicate     */ IsSimdPrivilegedContext(cx),          \
                /* shell flag         */ "moz-intgemm",                        \
                /* preference name    */ "moz_intgemm")                        \
   EXPERIMENTAL(/* capitalized name   */ TestSerialization,                    \

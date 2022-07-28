@@ -137,7 +137,7 @@ function startTest() {
   // Fill in values for the various fields. We could just set the <input>'s
   // value attribute, but we don't save default form values (and we want to
   // ensure unsaved values are because of autocomplete=off or whatever).
-  $_(1, "test" + numInputFields).value = numInputFields + " changed";
+  getFormElementByName(1, "test" + numInputFields).value = numInputFields + " changed";
 
   // submit the first form.
   let button = getFormSubmitButton(1);

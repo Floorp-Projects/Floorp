@@ -12,11 +12,6 @@ LOCAL_INCLUDES += ["!..", ".."]
 include("../js-config.mozbuild")
 include("../js-cxxflags.mozbuild")
 
-if CONFIG["ENABLE_WASM_CRANELIFT"]:
-    UNIFIED_SOURCES += [
-        "WasmCraneliftCompile.cpp",
-    ]
-
 UNIFIED_SOURCES += [
     "AsmJS.cpp",
     "TypedObject.cpp",

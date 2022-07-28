@@ -362,7 +362,6 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                                         aMetrics.Width(), aMetrics.Height()));
 
   MOZ_ASSERT(aStatus.IsEmpty(), "This type of frame can't be split.");
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
 #ifdef ACCESSIBILITY

@@ -5,6 +5,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsXULAppAPI.h"
+#include "mozmemory.h"
 
 #include <stdlib.h>
 #if defined(MOZ_WIDGET_GTK)
@@ -274,14 +275,25 @@ void XRE_SetProcessType(const char* aProcessTypeString) {
   }
   called = true;
 
-  sChildProcessType = GeckoProcessType_Invalid;
-  for (GeckoProcessType t :
-       MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
-    if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
-      sChildProcessType = t;
-      return;
+  sChildProcessType = [&] {
+    for (GeckoProcessType t :
+         MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
+      if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
+        return t;
+      }
     }
-  }
+    return GeckoProcessType_Invalid;
+  }();
+
+#ifdef MOZ_MEMORY
+  // For the parent process, we're probably willing to accept an apparent
+  // lockup in preference to a crash. Always stall and retry.
+  //
+  // For child processes, an obvious OOM-crash may be preferable to slow
+  // performance. Retry at most once per process, then give up.
+  mozjemalloc_experiment_set_always_stall(sChildProcessType ==
+                                          GeckoProcessType_Default);
+#endif
 }
 
 #if defined(XP_WIN)

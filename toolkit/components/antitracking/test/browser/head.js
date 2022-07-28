@@ -25,6 +25,7 @@ const TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS =
 const TEST_ANOTHER_3RD_PARTY_DOMAIN = SpecialPowers.useRemoteSubframes
   ? TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTP
   : TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS;
+const TEST_EMAIL_TRACKER_DOMAIN = "http://email-tracking.example.org/";
 
 const TEST_PATH = "browser/toolkit/components/antitracking/test/browser/";
 

@@ -1055,7 +1055,6 @@ static const unsigned MaxVarU32DecodedBytes = 5;
 
 enum class OptimizedBackend {
   Ion,
-  Cranelift,
 };
 
 // The CompileMode controls how compilation of a module is performed (notably,

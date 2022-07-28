@@ -425,34 +425,6 @@ criteria = "safe-to-deploy"
 version = "0.2.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.cranelift-bforest]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cranelift-codegen]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cranelift-codegen-meta]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cranelift-codegen-shared]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cranelift-entity]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cranelift-frontend]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cranelift-wasm]]
-version = "0.74.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.crc32fast]]
 version = "1.3.2"
 criteria = "safe-to-deploy"

@@ -796,7 +796,7 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
       GetFloatAvailableSpaceForPlacingFloat(mBCoord);
 
   for (;;) {
-    if (mReflowInput.AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
+    if (mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
         floatAvailableSpace.mRect.BSize(wm) <= 0 && !mustPlaceFloat) {
       // No space, nowhere to put anything.
       PushFloatPastBreak(aFloat);
@@ -868,9 +868,18 @@ BlockReflowState::PlaceFloatResult BlockReflowState::FlowAndPlaceFloat(
     floatMargin.BEnd(wm) = 0;
   }
 
-  // If none of the float fit, and it needs to be pushed in its entirety to the
-  // next page, we need to bail.
-  if (reflowStatus.IsTruncated() || reflowStatus.IsInlineBreakBefore()) {
+  // If the float cannot fit (e.g. via fragmenting itself if applicable), or if
+  // we're forced to break before it for CSS break-* reasons, then it needs to
+  // be pushed in its entirety to the next column/page.
+  //
+  // Note we use the available block-size in floatRI rather than use
+  // availSize.BSize() because nsBlockReflowContext::ReflowBlock() might adjust
+  // floatRI's available size.
+  const nscoord availBSize = floatRI->AvailableSize(floatWM).BSize(floatWM);
+  const bool isTruncated =
+      availBSize != NS_UNCONSTRAINEDSIZE && aFloat->BSize(floatWM) > availBSize;
+  if ((!floatRI->mFlags.mIsTopOfPage && isTruncated) ||
+      reflowStatus.IsInlineBreakBefore()) {
     PushFloatPastBreak(aFloat);
     return PlaceFloatResult::ShouldPlaceInNextContinuation;
   }

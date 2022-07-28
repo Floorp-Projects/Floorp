@@ -259,6 +259,19 @@ function Tester(aTests, structuredLogger, aCallback) {
       this._scriptLoader
     ),
   });
+
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+
+  // ensure the mouse is reset before each test run
+  if (env.exists("MOZ_AUTOMATION")) {
+    this.EventUtils.synthesizeNativeMouseEvent({
+      type: "mousemove",
+      screenX: 1000,
+      screenY: 10,
+    });
+  }
 }
 Tester.prototype = {
   EventUtils: {},

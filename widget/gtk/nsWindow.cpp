@@ -5019,6 +5019,9 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
     case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
       pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
       currentSpan = aEvent->scale;
+      mCurrentTouchpadFocus = ViewAs<ScreenPixel>(
+          GetRefPoint(this, aEvent),
+          PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
       // Assign PreviousSpan --> 0.999 to make mDeltaY field of the
       // WidgetWheelEvent that this PinchGestureInput event will be converted
@@ -5029,6 +5032,7 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
 
     case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
       pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+      mCurrentTouchpadFocus += ScreenPoint(aEvent->dx, aEvent->dy);
       if (aEvent->scale == mLastPinchEventSpan) {
         return FALSE;
       }
@@ -5046,11 +5050,10 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
       return FALSE;
   }
 
-  LayoutDeviceIntPoint touchpadPoint = GetRefPoint(this, aEvent);
   PinchGestureInput event(
       pinchGestureType, PinchGestureInput::TRACKPAD, aEvent->time,
       GetEventTimeStamp(aEvent->time), ExternalPoint(0, 0),
-      ScreenPoint(touchpadPoint.x, touchpadPoint.y),
+      mCurrentTouchpadFocus,
       100.0 * ((aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_END)
                    ? ScreenCoord(1.f)
                    : currentSpan),
@@ -8926,11 +8929,23 @@ nsresult nsWindow::SynthesizeNativeTouchPadPinch(
       reinterpret_cast<GdkEventTouchpadPinch*>(&event);
   touchpad_event->type = GDK_TOUCHPAD_PINCH;
 
+  const LayoutDeviceIntPoint widgetToScreenOffset = WidgetToScreenOffset();
+
+  ScreenPoint pointInWindow = ViewAs<ScreenPixel>(
+      aPoint - widgetToScreenOffset,
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
+  gdouble dx = 0, dy = 0;
+
   switch (aEventPhase) {
     case PHASE_BEGIN:
       touchpad_event->phase = GDK_TOUCHPAD_GESTURE_PHASE_BEGIN;
+      mCurrentSynthesizedTouchpadPinch = {pointInWindow, pointInWindow};
       break;
     case PHASE_UPDATE:
+      dx = pointInWindow.x - mCurrentSynthesizedTouchpadPinch.mCurrentFocus.x;
+      dy = pointInWindow.y - mCurrentSynthesizedTouchpadPinch.mCurrentFocus.y;
+      mCurrentSynthesizedTouchpadPinch.mCurrentFocus = pointInWindow;
       touchpad_event->phase = GDK_TOUCHPAD_GESTURE_PHASE_UPDATE;
       break;
     case PHASE_END:
@@ -8944,17 +8959,24 @@ nsresult nsWindow::SynthesizeNativeTouchPadPinch(
   touchpad_event->window = mGdkWindow;
   // We only set the fields of GdkEventTouchpadPinch which are
   // actually used in OnTouchpadPinchEvent().
-  // GdkEventTouchpadPinch has additional fields (for example, `dx` and `dy`).
+  // GdkEventTouchpadPinch has additional fields.
   // If OnTouchpadPinchEvent() is changed to use other fields, this function
   // will need to change to set them as well.
   touchpad_event->time = GDK_CURRENT_TIME;
   touchpad_event->scale = aScale;
-  touchpad_event->x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
-  touchpad_event->y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
+  touchpad_event->x_root = DevicePixelsToGdkCoordRoundDown(
+      mCurrentSynthesizedTouchpadPinch.mBeginFocus.x + widgetToScreenOffset.x);
+  touchpad_event->y_root = DevicePixelsToGdkCoordRoundDown(
+      mCurrentSynthesizedTouchpadPinch.mBeginFocus.y + widgetToScreenOffset.y);
 
-  LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
-  touchpad_event->x = DevicePixelsToGdkCoordRoundDown(pointInWindow.x);
-  touchpad_event->y = DevicePixelsToGdkCoordRoundDown(pointInWindow.y);
+  touchpad_event->x = DevicePixelsToGdkCoordRoundDown(
+      mCurrentSynthesizedTouchpadPinch.mBeginFocus.x);
+  touchpad_event->y = DevicePixelsToGdkCoordRoundDown(
+      mCurrentSynthesizedTouchpadPinch.mBeginFocus.y);
+
+  touchpad_event->dx = dx;
+  touchpad_event->dy = dy;
+
   touchpad_event->state = aModifierFlags;
 
   gdk_event_put(&event);

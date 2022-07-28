@@ -628,7 +628,8 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
            SelectionRef().GetFocusNode()->InclusiveAncestorsOfType<Element>()) {
         if (!ancestor->IsHTMLElement() ||
             !HTMLEditUtils::IsRemovableFromParentNode(*ancestor) ||
-            !HTMLEditUtils::IsEmptyInlineContent(*ancestor)) {
+            !HTMLEditUtils::IsEmptyInlineContainer(
+                *ancestor, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
           break;
         }
         mostDistantEmptyInlineAncestor = ancestor;
@@ -3126,7 +3127,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   for (auto& content : arrayOfContents) {
     // if content is not a Break or empty inline, we're done
     if (!content->IsHTMLElement(nsGkAtoms::br) &&
-        !HTMLEditUtils::IsEmptyInlineContent(content)) {
+        !HTMLEditUtils::IsEmptyInlineContainer(
+            content, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
       bOnlyBreaks = false;
       break;
     }
@@ -3266,7 +3268,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     // If current node is an empty inline node, just delete it.
     if (EditorUtils::IsEditableContent(content, EditorType::HTML) &&
         (content->IsHTMLElement(nsGkAtoms::br) ||
-         HTMLEditUtils::IsEmptyInlineContent(content))) {
+         HTMLEditUtils::IsEmptyInlineContainer(
+             content, {EmptyCheckOption::TreatSingleBRElementAsVisible}))) {
       nsresult rv = DeleteNodeWithTransaction(*content);
       if (NS_FAILED(rv)) {
         NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");

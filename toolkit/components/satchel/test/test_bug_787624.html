@@ -60,7 +60,7 @@ function waitForNextPopup() {
 }
 
 add_task(async function test_popup_not_move_input() {
-  let input = $_(1, "field1");
+  let input = getFormElementByName(1, "field1");
   let rect = input.getBoundingClientRect();
 
   await new Promise(resolve => updateFormHistory([

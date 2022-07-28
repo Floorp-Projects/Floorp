@@ -51,11 +51,11 @@ const promiseDisableUnifiedExtensions = async () => {
 };
 
 const getListView = win => {
-  return win.document.getElementById("unified-extensions-view");
+  return PanelMultiView.getViewNode(win.document, "unified-extensions-view");
 };
 
 const openExtensionsPanel = async win => {
-  const button = win.document.getElementById("unified-extensions-button");
+  const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
   const listView = getListView(win);
@@ -67,21 +67,47 @@ const openExtensionsPanel = async win => {
 };
 
 const closeExtensionsPanel = async win => {
-  const listView = getListView(win);
-  ok(listView, "expected list view");
+  const { button } = win.gUnifiedExtensions;
+  ok(button, "expected button");
 
   const hidden = BrowserTestUtils.waitForEvent(
     win.document,
     "popuphidden",
     true
   );
-  listView.closest("panel").hidePopup();
+  button.click();
   await hidden;
 };
 
 const getUnifiedExtensionsItem = (win, extensionId) => {
   return getListView(win).querySelector(
     `unified-extensions-item[extension-id="${extensionId}"]`
+  );
+};
+
+const openCustomizationUI = async win => {
+  const customizationReady = BrowserTestUtils.waitForEvent(
+    win.gNavToolbox,
+    "customizationready"
+  );
+  win.gCustomizeMode.enter();
+  await customizationReady;
+  ok(
+    win.CustomizationHandler.isCustomizing(),
+    "expected customizing mode to be enabled"
+  );
+};
+
+const closeCustomizationUI = async win => {
+  const afterCustomization = BrowserTestUtils.waitForEvent(
+    win.gNavToolbox,
+    "aftercustomization"
+  );
+  win.gCustomizeMode.exit();
+  await afterCustomization;
+  ok(
+    !win.CustomizationHandler.isCustomizing(),
+    "expected customizing mode to be disabled"
   );
 };
 
@@ -107,7 +133,7 @@ const createExtensions = (
 add_task(async function test_button_enabled_by_pref() {
   const win = await promiseEnableUnifiedExtensions();
 
-  const button = win.document.getElementById("unified-extensions-button");
+  const { button } = win.gUnifiedExtensions;
   is(button.hidden, false, "expected button to be visible");
 
   await BrowserTestUtils.closeWindow(win);
@@ -403,7 +429,7 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
   BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
 
-  const button = win.document.getElementById("unified-extensions-button");
+  const { button } = win.gUnifiedExtensions;
   ok(button, "expected button");
 
   const tabPromise = BrowserTestUtils.waitForNewTab(
@@ -431,3 +457,33 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(
+  async function test_unified_extensions_panel_not_open_in_customization_mode() {
+    let win = await promiseEnableUnifiedExtensions();
+
+    const listView = getListView(win);
+    ok(listView, "expected list view");
+    const throwIfExecuted = () => {
+      throw new Error("panel should not have been shown");
+    };
+    listView.addEventListener("ViewShown", throwIfExecuted);
+
+    await openCustomizationUI(win);
+
+    const unifiedExtensionsButtonToggled = BrowserTestUtils.waitForEvent(
+      win,
+      "UnifiedExtensionsTogglePanel"
+    );
+    const button = win.document.getElementById("unified-extensions-button");
+
+    button.click();
+    await unifiedExtensionsButtonToggled;
+
+    await closeCustomizationUI(win);
+
+    listView.removeEventListener("ViewShown", throwIfExecuted);
+
+    await BrowserTestUtils.closeWindow(win);
+  }
+);

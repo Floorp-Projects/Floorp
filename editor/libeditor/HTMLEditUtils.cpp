@@ -1823,4 +1823,37 @@ size_t HTMLEditUtils::CollectChildren(
   return numberOfFoundChildren;
 }
 
+// static
+size_t HTMLEditUtils::CollectEmptyInlineContainerDescendants(
+    const nsINode& aNode,
+    nsTArray<OwningNonNull<nsIContent>>& aOutArrayOfContents,
+    const EmptyCheckOptions& aOptions) {
+  size_t numberOfFoundElements = 0;
+  for (Element* element = aNode.GetFirstElementChild(); element;) {
+    if (HTMLEditUtils::IsEmptyInlineContainer(*element, aOptions)) {
+      aOutArrayOfContents.AppendElement(*element);
+      numberOfFoundElements++;
+      nsIContent* nextContent = element->GetNextNonChildNode(&aNode);
+      element = nullptr;
+      for (; nextContent; nextContent = nextContent->GetNextNode(&aNode)) {
+        if (nextContent->IsElement()) {
+          element = nextContent->AsElement();
+          break;
+        }
+      }
+      continue;
+    }
+
+    nsIContent* nextContent = element->GetNextNode(&aNode);
+    element = nullptr;
+    for (; nextContent; nextContent = nextContent->GetNextNode(&aNode)) {
+      if (nextContent->IsElement()) {
+        element = nextContent->AsElement();
+        break;
+      }
+    }
+  }
+  return numberOfFoundElements;
+}
+
 }  // namespace mozilla

@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "104.1.0",
+  "version": "104.2.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -129,6 +129,7 @@
     "shims/iam.js",
     "shims/iaspet.js",
     "shims/kinja.js",
+    "shims/lapresse.js",
     "shims/live-test-shim.js",
     "shims/maxmind-geoip.js",
     "shims/microsoftLogin.js",

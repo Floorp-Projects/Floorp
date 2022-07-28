@@ -7,7 +7,6 @@
 members = [
   "js/src/frontend/smoosh",
   "js/src/rust",
-  "js/src/wasm/cranelift",
   "netwerk/test/http3server",
   "security/manager/ssl/ipcclientcerts",
   "security/manager/ssl/osclientcerts",

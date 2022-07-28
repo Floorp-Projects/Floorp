@@ -141,9 +141,6 @@ pref("signon.debug", false);
 /* form helper (scroll to and optionally zoom into editable fields)  */
 pref("formhelper.autozoom", true);
 
-/* find helper */
-pref("findhelper.autozoom", true);
-
 /* autocomplete */
 pref("browser.formfill.enable", true);
 
@@ -448,9 +445,6 @@ pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);
 
 pref("full-screen-api.enabled", true);
-
-pref("direct-texture.force.enabled", false);
-pref("direct-texture.force.disabled", false);
 
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
 pref("ui.scrolling.friction_slow", -1);

@@ -1542,6 +1542,7 @@
   type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
   mirror: always
+  do_not_use_directly: true
 
 # When this pref is enabled top level loads with a mismatched
 # Cross-Origin-Opener-Policy header will be loaded in a separate process.
@@ -2993,6 +2994,13 @@
 # Origin trial state for OffscreenCanvas.
 # 0: normal, 1: always-enabled, 2: always-disabled
 - name: dom.origin-trials.offscreen-canvas.state
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+
+# Origin trial state for COEP: Credentialless.
+# 0: normal, 1: always-enabled, 2: always-disabled
+- name: dom.origin-trials.coep-credentialless.state
   type: RelaxedAtomicInt32
   value: 0
   mirror: always

@@ -777,7 +777,6 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput,
                                  aStatus);
   InvalidateFrame();
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 void nsFieldSetFrame::SetInitialChildList(ChildListID aListID,

@@ -30,7 +30,6 @@
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
 #include "wasm/WasmBaselineCompile.h"
-#include "wasm/WasmCraneliftCompile.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmOpIter.h"
@@ -104,10 +103,6 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
                                      CompileArgsError* error) {
   bool baseline = BaselineAvailable(cx);
   bool ion = IonAvailable(cx);
-  bool cranelift = CraneliftAvailable(cx);
-
-  // At most one optimizing compiler.
-  MOZ_RELEASE_ASSERT(!(ion && cranelift));
 
   // Debug information such as source view or debug traps will require
   // additional memory and permanently stay in baseline code, so we try to
@@ -121,19 +116,19 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   // The <Compiler>Available() predicates should ensure no failure here, but
   // when we're fuzzing we allow inconsistent switches and the check may thus
   // fail.  Let it go to a run-time error instead of crashing.
-  if (debug && (ion || cranelift)) {
+  if (debug && ion) {
     *error = CompileArgsError::NoCompiler;
     return nullptr;
   }
 
-  if (forceTiering && !(baseline && (cranelift || ion))) {
+  if (forceTiering && !(baseline && ion)) {
     // This can happen only in testing, and in this case we don't have a
     // proper way to signal the error, so just silently override the default,
     // instead of adding a skip-if directive to every test using debug/gc.
     forceTiering = false;
   }
 
-  if (!(baseline || ion || cranelift)) {
+  if (!(baseline || ion)) {
     *error = CompileArgsError::NoCompiler;
     return nullptr;
   }
@@ -146,7 +141,6 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
 
   target->baselineEnabled = baseline;
   target->ionEnabled = ion;
-  target->craneliftEnabled = cranelift;
   target->debugEnabled = debug;
   target->forceTiering = forceTiering;
   target->features = FeatureArgs::build(cx, options);
@@ -163,8 +157,7 @@ SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
   if (args) {
     Log(cx, "available wasm compilers: tier1=%s tier2=%s",
         args->baselineEnabled ? "baseline" : "none",
-        args->ionEnabled ? "ion"
-                         : (args->craneliftEnabled ? "cranelift" : "none"));
+        args->ionEnabled ? "ion" : "none");
     return args;
   }
 
@@ -608,16 +601,14 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   bool baselineEnabled = args_->baselineEnabled;
   bool ionEnabled = args_->ionEnabled;
   bool debugEnabled = args_->debugEnabled;
-  bool craneliftEnabled = args_->craneliftEnabled;
   bool forceTiering = args_->forceTiering;
 
-  bool hasSecondTier = ionEnabled || craneliftEnabled;
+  bool hasSecondTier = ionEnabled;
   MOZ_ASSERT_IF(debugEnabled, baselineEnabled);
   MOZ_ASSERT_IF(forceTiering, baselineEnabled && hasSecondTier);
 
   // Various constraints in various places should prevent failure here.
-  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled || craneliftEnabled);
-  MOZ_RELEASE_ASSERT(!(ionEnabled && craneliftEnabled));
+  MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
 
   uint32_t codeSectionSize = 0;
 
@@ -635,8 +626,7 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
     tier_ = hasSecondTier ? Tier::Optimized : Tier::Baseline;
   }
 
-  optimizedBackend_ =
-      craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
+  optimizedBackend_ = OptimizedBackend::Ion;
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
 
@@ -737,9 +727,7 @@ bool wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
                         UniqueCharsVector* warnings, Atomic<bool>* cancelled) {
   Decoder d(bytecode, 0, error);
 
-  OptimizedBackend optimizedBackend = args.craneliftEnabled
-                                          ? OptimizedBackend::Cranelift
-                                          : OptimizedBackend::Ion;
+  OptimizedBackend optimizedBackend = OptimizedBackend::Ion;
 
   ModuleEnvironment moduleEnv(args.features);
   if (!DecodeModuleEnvironment(d, &moduleEnv)) {

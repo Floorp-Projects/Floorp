@@ -185,8 +185,6 @@ void nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   // so we shouldn't have a next-in-flow ever.
   aStatus.Reset();
   MOZ_ASSERT(!GetNextInFlow());
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
 void nsHTMLButtonControlFrame::ReflowButtonContents(

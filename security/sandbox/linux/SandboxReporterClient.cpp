@@ -81,7 +81,7 @@ void SandboxReporterClient::SendReport(const SandboxReport& aReport) {
 
   if (sent != sizeof(SandboxReport)) {
     MOZ_DIAGNOSTIC_ASSERT(sent == -1);
-    SANDBOX_LOG_ERROR("Failed to report rejected syscall: %s", strerror(errno));
+    SANDBOX_LOG_ERRNO("Failed to report rejected syscall");
   }
 }
 
