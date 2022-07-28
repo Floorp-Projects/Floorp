@@ -31,6 +31,7 @@
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
+#include "vm/PlainObject.h"
 #include "vm/RegExpShared.h"
 
 namespace js {
@@ -52,6 +53,7 @@ using v8::internal::InputOutputData;
 using v8::internal::IrregexpInterpreter;
 using v8::internal::NativeRegExpMacroAssembler;
 using v8::internal::RegExpBytecodeGenerator;
+using v8::internal::RegExpCapture;
 using v8::internal::RegExpCompileData;
 using v8::internal::RegExpCompiler;
 using v8::internal::RegExpError;
@@ -61,6 +63,7 @@ using v8::internal::RegExpNode;
 using v8::internal::RegExpParser;
 using v8::internal::SMRegExpMacroAssembler;
 using v8::internal::Zone;
+using v8::internal::ZoneVector;
 
 using V8HandleString = v8::internal::Handle<v8::internal::String>;
 using V8HandleRegExp = v8::internal::Handle<v8::internal::JSRegExp>;
@@ -585,6 +588,65 @@ enum class AssembleResult {
   return AssembleResult::Success;
 }
 
+struct RegExpCaptureIndexLess {
+  bool operator()(const RegExpCapture* lhs, const RegExpCapture* rhs) const {
+    return lhs->index() < rhs->index();
+  }
+};
+
+bool InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
+                             ZoneVector<RegExpCapture*>* namedCaptures) {
+  // The irregexp parser returns named capture information in the form
+  // of a ZoneVector of RegExpCaptures nodes, each of which stores the
+  // capture name and the corresponding capture index. We create a
+  // template object with a property for each capture name, and store
+  // the capture indices as a heap-allocated array.
+  uint32_t numNamedCaptures = namedCaptures->size();
+
+  // Named captures are sorted by name (because the set is used to ensure
+  // name uniqueness). But the capture name map must be sorted by index.
+  std::sort(namedCaptures->begin(), namedCaptures->end(),
+            RegExpCaptureIndexLess{});
+
+  // Create a plain template object.
+  Rooted<js::PlainObject*> templateObject(
+      cx, js::NewPlainObjectWithProto(cx, nullptr, TenuredObject));
+  if (!templateObject) {
+    return false;
+  }
+
+  // Allocate the capture index array.
+  uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
+  uint32_t* captureIndices = static_cast<uint32_t*>(js_malloc(arraySize));
+  if (!captureIndices) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Initialize the properties of the template and populate the
+  // capture index array.
+  RootedId id(cx);
+  RootedValue dummyString(cx, StringValue(cx->runtime()->emptyString));
+  for (uint32_t i = 0; i < numNamedCaptures; i++) {
+    RegExpCapture* capture = (*namedCaptures)[i];
+    JSAtom* name =
+        js::AtomizeChars(cx, capture->name()->data(), capture->name()->size());
+    if (!name) {
+      return false;
+    }
+    id = NameToId(name->asPropertyName());
+    if (!NativeDefineDataProperty(cx, templateObject, id, dummyString,
+                                  JSPROP_ENUMERATE)) {
+      return false;
+    }
+    captureIndices[i] = capture->index();
+  }
+
+  RegExpShared::InitializeNamedCaptures(cx, re, numNamedCaptures,
+                                        templateObject, captureIndices);
+  return true;
+}
+
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
                     Handle<JSLinearString*> input,
                     RegExpShared::CodeKind codeKind) {
@@ -638,9 +700,8 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
         return true;
       }
     }
-    if (!data.capture_name_map.is_null()) {
-      Rooted<NativeObject*> namedCaptures(cx, data.capture_name_map->inner());
-      if (!RegExpShared::initializeNamedCaptures(cx, re, namedCaptures)) {
+    if (data.named_captures) {
+      if (!InitializeNamedCaptures(cx, re, data.named_captures)) {
         return false;
       }
     }

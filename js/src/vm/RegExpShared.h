@@ -172,8 +172,10 @@ class RegExpShared
   // Use the regular expression engine for this regexp.
   void useRegExpMatch(size_t parenCount);
 
-  static bool initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
-                                      Handle<NativeObject*> namedCaptures);
+  static void InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
+                                      uint32_t numNamedCaptures,
+                                      Handle<PlainObject*> templateObject,
+                                      uint32_t* captureIndices);
   PlainObject* getGroupsTemplate() { return groupsTemplate_; }
 
   void tierUpTick();
