@@ -98,7 +98,7 @@ fn init_threads(
         None,
         move || {
             trace!("Starting {} thread", callback_name);
-            if let Err(e) = promote_current_thread_to_real_time(0, 48000) {
+            if let Err(e) = promote_current_thread_to_real_time(256, 48000) {
                 debug!(
                     "Failed to promote {} thread to real-time: {:?}",
                     callback_name, e

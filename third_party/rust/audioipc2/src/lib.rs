@@ -27,6 +27,8 @@ use std::os::unix::io::IntoRawFd;
 #[cfg(windows)]
 use std::os::windows::io::IntoRawHandle;
 
+use std::io::Result;
+
 // This must match the definition of
 // ipc::FileDescriptor::PlatformHandleType in Gecko.
 #[cfg(windows)]
@@ -78,7 +80,7 @@ impl PlatformHandle {
     }
 
     #[cfg(unix)]
-    pub fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
+    pub fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle> {
         unsafe {
             let newfd = libc::dup(h);
             if !valid_handle(newfd) {
@@ -90,7 +92,7 @@ impl PlatformHandle {
 
     #[allow(clippy::missing_safety_doc)]
     #[cfg(windows)]
-    pub unsafe fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle, std::io::Error> {
+    pub unsafe fn duplicate(h: PlatformHandleType) -> Result<PlatformHandle> {
         let dup = duplicate_platform_handle(h, None)?;
         Ok(PlatformHandle::new(dup))
     }
@@ -113,21 +115,19 @@ unsafe fn close_platform_handle(handle: PlatformHandleType) {
 }
 
 #[cfg(windows)]
-use winapi::shared::minwindef::DWORD;
+use winapi::shared::minwindef::{DWORD, FALSE};
+#[cfg(windows)]
+use winapi::um::{handleapi, processthreadsapi, winnt};
 
-// Duplicate `source_handle`.
-// - If `target_pid` is `Some(...)`, `source_handle` is closed.
-// - If `target_pid` is `None`, `source_handle` is not closed.
+// Duplicate `source_handle` to `target_pid`.  Returns the value of the new handle inside the target process.
+// If `target_pid` is `None`, `source_handle` is duplicated in the current process.
 #[cfg(windows)]
 pub(crate) unsafe fn duplicate_platform_handle(
     source_handle: PlatformHandleType,
     target_pid: Option<DWORD>,
-) -> Result<PlatformHandleType, std::io::Error> {
-    use winapi::shared::minwindef::FALSE;
-    use winapi::um::{handleapi, processthreadsapi, winnt};
-
-    let source = processthreadsapi::GetCurrentProcess();
-    let (target, close_source) = if let Some(pid) = target_pid {
+) -> Result<PlatformHandleType> {
+    let source_process = processthreadsapi::GetCurrentProcess();
+    let target_process = if let Some(pid) = target_pid {
         let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, pid);
         if !valid_handle(target) {
             return Err(std::io::Error::new(
@@ -135,26 +135,24 @@ pub(crate) unsafe fn duplicate_platform_handle(
                 "invalid target process",
             ));
         }
-        (target, true)
+        Some(target)
     } else {
-        (source, false)
+        None
     };
 
     let mut target_handle = std::ptr::null_mut();
-    let mut options = winnt::DUPLICATE_SAME_ACCESS;
-    if close_source {
-        options |= winnt::DUPLICATE_CLOSE_SOURCE;
-    }
     let ok = handleapi::DuplicateHandle(
-        source,
+        source_process,
         source_handle,
-        target,
+        target_process.unwrap_or(source_process),
         &mut target_handle,
         0,
         FALSE,
-        options,
+        winnt::DUPLICATE_SAME_ACCESS,
     );
-    handleapi::CloseHandle(target);
+    if let Some(target) = target_process {
+        handleapi::CloseHandle(target);
+    };
     if ok == FALSE {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -162,6 +160,42 @@ pub(crate) unsafe fn duplicate_platform_handle(
         ));
     }
     Ok(target_handle)
+}
+
+// Close `target_handle_to_close` inside target process `target_pid` using a
+// special invocation of `DuplicateHandle`. See
+// https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-duplicatehandle#:~:text=Normally%20the%20target,dwOptions%20to%20DUPLICATE_CLOSE_SOURCE.
+#[cfg(windows)]
+pub(crate) unsafe fn close_target_handle(
+    target_handle_to_close: PlatformHandleType,
+    target_pid: DWORD,
+) -> Result<()> {
+    let target_process =
+        processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, target_pid);
+    if !valid_handle(target_process) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "invalid target process",
+        ));
+    }
+
+    let ok = handleapi::DuplicateHandle(
+        target_process,
+        target_handle_to_close,
+        std::ptr::null_mut(),
+        std::ptr::null_mut(),
+        0,
+        FALSE,
+        winnt::DUPLICATE_CLOSE_SOURCE,
+    );
+    handleapi::CloseHandle(target_process);
+    if ok == FALSE {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "DuplicateHandle failed",
+        ));
+    }
+    Ok(())
 }
 
 #[cfg(windows)]

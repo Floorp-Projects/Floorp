@@ -82,7 +82,7 @@ fn promote_thread(rpc: &rpccore::Proxy<ServerMessage, ClientMessage>) {
 
 #[cfg(not(target_os = "linux"))]
 fn promote_thread(_rpc: &rpccore::Proxy<ServerMessage, ClientMessage>) {
-    match promote_current_thread_to_real_time(0, 48000) {
+    match promote_current_thread_to_real_time(256, 48000) {
         Ok(_) => {
             info!("Audio thread promoted to real-time.");
         }

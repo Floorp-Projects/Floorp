@@ -6,7 +6,8 @@
 //! `Encoder`s and `Decoder`s from items to/from `BytesMut` buffers.
 
 use bincode::{self, Options};
-use bytes::{BufMut, ByteOrder, BytesMut, LittleEndian};
+use byteorder::{ByteOrder, LittleEndian};
+use bytes::{Buf, BufMut, BytesMut};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::convert::TryInto;

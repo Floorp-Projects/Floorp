@@ -3,12 +3,15 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use std::io::Result;
+use std::{collections::VecDeque, io::Result};
 
+use bytes::BytesMut;
 use mio::{event::Source, Interest, Registry, Token};
 
 #[cfg(unix)]
 mod unix;
+use crate::messages::RemoteHandle;
+
 #[cfg(unix)]
 pub use self::unix::*;
 
@@ -19,15 +22,45 @@ pub use self::windows::*;
 
 impl Source for Pipe {
     fn register(&mut self, registry: &Registry, token: Token, interests: Interest) -> Result<()> {
-        self.0.register(registry, token, interests)
+        self.io.register(registry, token, interests)
     }
 
     fn reregister(&mut self, registry: &Registry, token: Token, interests: Interest) -> Result<()> {
-        self.0.reregister(registry, token, interests)
+        self.io.reregister(registry, token, interests)
     }
 
     fn deregister(&mut self, registry: &Registry) -> Result<()> {
-        self.0.deregister(registry)
+        self.io.deregister(registry)
+    }
+}
+
+const HANDLE_QUEUE_LIMIT: usize = 16;
+
+#[derive(Debug)]
+pub struct ConnectionBuffer {
+    pub buf: BytesMut,
+    handles: VecDeque<RemoteHandle>,
+}
+
+impl ConnectionBuffer {
+    pub fn with_capacity(cap: usize) -> Self {
+        ConnectionBuffer {
+            buf: BytesMut::with_capacity(cap),
+            handles: VecDeque::with_capacity(HANDLE_QUEUE_LIMIT),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.buf.is_empty()
+    }
+
+    pub fn push_handle(&mut self, handle: RemoteHandle) {
+        assert!(self.handles.len() < self.handles.capacity());
+        self.handles.push_back(handle)
+    }
+
+    pub fn pop_handle(&mut self) -> Option<RemoteHandle> {
+        self.handles.pop_front()
     }
 }
 

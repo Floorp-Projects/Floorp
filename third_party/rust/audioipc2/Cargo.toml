@@ -11,7 +11,8 @@ edition = "2018"
 
 [dependencies]
 bincode = "1.3"
-bytes = "0.4"
+byteorder = "1"
+bytes = "1"
 cubeb = "0.10"
 log = "0.4"
 serde = "1"
@@ -24,16 +25,15 @@ scopeguard = "1.1.0"
 [target.'cfg(unix)'.dependencies]
 iovec = "0.1"
 libc = "0.2"
-memmap2 = "0.2"
+memmap2 = "0.5"
 arrayvec = "0.7"
 
 [target.'cfg(target_os = "linux")'.dependencies.audio_thread_priority]
-version = "0.26.0"
-default_features = false
-features = ["winapi"]
+version = "0.26.1"
+default-features = false
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["combaseapi", "memoryapi", "objbase"] }
+winapi = { version = "0.3", features = ["combaseapi", "handleapi", "memoryapi", "objbase"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 ashmem = "0.1.2"

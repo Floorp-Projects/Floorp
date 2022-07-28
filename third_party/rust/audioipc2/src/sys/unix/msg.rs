@@ -3,6 +3,7 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
+use bytes::buf::UninitSlice;
 use iovec::unix;
 use iovec::IoVec;
 use std::os::unix::io::RawFd;
@@ -29,15 +30,15 @@ fn cvt_r<F: FnMut() -> libc::ssize_t>(mut f: F) -> io::Result<usize> {
 pub(crate) fn recv_msg_with_flags(
     socket: RawFd,
     bufs: &mut [&mut IoVec],
-    cmsg: &mut [u8],
+    cmsg: &mut UninitSlice,
     flags: libc::c_int,
 ) -> io::Result<(usize, usize, libc::c_int)> {
     let slice = unix::as_os_slice_mut(bufs);
     let len = cmp::min(<libc::c_int>::max_value() as usize, slice.len());
-    let (control, controllen) = if cmsg.is_empty() {
+    let (control, controllen) = if cmsg.len() == 0 {
         (ptr::null_mut(), 0)
     } else {
-        (cmsg.as_ptr() as *mut _, cmsg.len())
+        (cmsg.as_mut_ptr() as _, cmsg.len())
     };
 
     let mut msghdr: libc::msghdr = unsafe { mem::zeroed() };
