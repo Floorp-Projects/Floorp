@@ -37,7 +37,6 @@
 #include "jit/ABIArgGenerator.h"
 #include "jit/ABIFunctions.h"
 #include "jit/AtomicOp.h"
-#include "jit/AutoJitContextAlloc.h"
 #include "jit/IonTypes.h"
 #include "jit/MoveResolver.h"
 #include "jit/VMFunctions.h"
