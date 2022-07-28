@@ -1170,14 +1170,14 @@ void CheckJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
 void TestJSONTimeOutput() {
   printf("TestJSONTimeOutput...\n");
 
-#  define TEST(in, out)                                        \
-    do {                                                       \
-      mozilla::baseprofiler::SpliceableJSONWriter writer(      \
-          mozilla::MakeUnique<StringWriteFunc>());             \
-      writer.Start(mozilla::JSONWriter::SingleLineStyle);      \
-      writer.TimeDoubleMsProperty("time_ms", (in));            \
-      writer.End();                                            \
-      CheckJSON(writer, "{\"time_ms\": " out "}\n", __LINE__); \
+#  define TEST(in, out)                                      \
+    do {                                                     \
+      mozilla::baseprofiler::SpliceableJSONWriter writer(    \
+          mozilla::MakeUnique<StringWriteFunc>());           \
+      writer.Start(mozilla::JSONWriter::SingleLineStyle);    \
+      writer.TimeDoubleMsProperty("time_ms", (in));          \
+      writer.End();                                          \
+      CheckJSON(writer, "{\"time_ms\": " out "}", __LINE__); \
     } while (false);
 
   TEST(0, "0");
@@ -4861,7 +4861,7 @@ static void VerifyUniqueStringContents(
   expected += aExpectedData;
   expected += "], \"stringTable\": [";
   expected += aExpectedUniqueStrings;
-  expected += "]}\n";
+  expected += "]}";
   if (jsonStringView != expected) {
     fprintf(stderr,
             "Expected:\n"
