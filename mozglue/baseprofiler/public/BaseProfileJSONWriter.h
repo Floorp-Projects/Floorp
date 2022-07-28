@@ -317,6 +317,28 @@ class SpliceableJSONWriter : public JSONWriter {
   // index as an array element.
   inline void UniqueStringElement(const Span<const char>& aStr);
 
+  // THe following functions override JSONWriter functions non-virtually. The
+  // goal is to try and prevent calls that specify a style, which would be
+  // ignored anyway because the whole thing is single-lined. It's fine if some
+  // calls still make it through a `JSONWriter&`, no big deal.
+  void Start() { JSONWriter::Start(); }
+  void StartArrayProperty(const Span<const char>& aName) {
+    JSONWriter::StartArrayProperty(aName);
+  }
+  template <size_t N>
+  void StartArrayProperty(const char (&aName)[N]) {
+    JSONWriter::StartArrayProperty(Span<const char>(aName, N));
+  }
+  void StartArrayElement() { JSONWriter::StartArrayElement(); }
+  void StartObjectProperty(const Span<const char>& aName) {
+    JSONWriter::StartObjectProperty(aName);
+  }
+  template <size_t N>
+  void StartObjectProperty(const char (&aName)[N]) {
+    JSONWriter::StartObjectProperty(Span<const char>(aName, N));
+  }
+  void StartObjectElement() { JSONWriter::StartObjectElement(); }
+
  private:
   UniqueJSONStrings* mUniqueStrings = nullptr;
 };

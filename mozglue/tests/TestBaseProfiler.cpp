@@ -1174,7 +1174,7 @@ void TestJSONTimeOutput() {
     do {                                                    \
       mozilla::baseprofiler::SpliceableJSONWriter writer(   \
           mozilla::MakeUnique<StringWriteFunc>());          \
-      writer.Start(mozilla::JSONWriter::SingleLineStyle);   \
+      writer.Start();                                       \
       writer.TimeDoubleMsProperty("time_ms", (in));         \
       writer.End();                                         \
       CheckJSON(writer, "{\"time_ms\":" out "}", __LINE__); \
@@ -4838,14 +4838,13 @@ static void VerifyUniqueStringContents(
   mozilla::baseprofiler::UniqueJSONStrings& uniqueStrings =
       aUniqueStringsOrNull ? *aUniqueStringsOrNull : localUniqueStrings;
 
-  writer.Start(mozilla::JSONWriter::SingleLineStyle);
+  writer.Start();
   {
-    writer.StartArrayProperty("data", mozilla::JSONWriter::SingleLineStyle);
+    writer.StartArrayProperty("data");
     { std::forward<F>(aF)(writer, uniqueStrings); }
     writer.EndArray();
 
-    writer.StartArrayProperty("stringTable",
-                              mozilla::JSONWriter::SingleLineStyle);
+    writer.StartArrayProperty("stringTable");
     { uniqueStrings.SpliceStringTableElements(writer); }
     writer.EndArray();
   }
@@ -4931,7 +4930,7 @@ void TestUniqueJSONStrings() {
   VerifyUniqueStringContents(
       [](SCJW& aWriter, UJS& aUniqueStrings) {
         aUniqueStrings.WriteElement(aWriter, "string0");
-        aWriter.StartObjectElement(mozilla::JSONWriter::SingleLineStyle);
+        aWriter.StartObjectElement();
         {
           aUniqueStrings.WriteProperty(aWriter, "p0", "prop");
           aUniqueStrings.WriteProperty(aWriter, "p1", "string0");
@@ -4986,7 +4985,7 @@ void TestUniqueJSONStrings() {
       [](SCJW& aWriter, UJS& aUniqueStrings) {
         aWriter.SetUniqueStrings(aUniqueStrings);
         aWriter.UniqueStringElement("string0");
-        aWriter.StartObjectElement(mozilla::JSONWriter::SingleLineStyle);
+        aWriter.StartObjectElement();
         {
           aWriter.UniqueStringProperty("p0", "prop");
           aWriter.UniqueStringProperty("p1", "string0");
