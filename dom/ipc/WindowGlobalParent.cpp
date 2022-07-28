@@ -1297,7 +1297,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSetDocumentDomain(
     }
   }
 
-  if (!Document::IsValidDomain(uri, aDomain)) {
+  if (!aDomain || !Document::IsValidDomain(uri, aDomain)) {
     // Error: illegal domain
     return IPC_FAIL(
         this, "Setting domain that's not a suffix of existing domain value.");
