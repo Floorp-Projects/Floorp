@@ -8,16 +8,13 @@
 
 namespace mozilla::baseprofiler {
 
-UniqueJSONStrings::UniqueJSONStrings(JSONWriter::CollectionStyle aStyle) {
-  mStringTableWriter.StartBareList(aStyle);
-}
+UniqueJSONStrings::UniqueJSONStrings() { mStringTableWriter.StartBareList(); }
 
 UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther,
-                                     ProgressLogger aProgressLogger,
-                                     JSONWriter::CollectionStyle aStyle) {
+                                     ProgressLogger aProgressLogger) {
   using namespace mozilla::literals::ProportionValue_literals;  // For `10_pc`.
 
-  mStringTableWriter.StartBareList(aStyle);
+  mStringTableWriter.StartBareList();
   uint32_t count = aOther.mStringHashToIndexMap.count();
   if (count != 0) {
     MOZ_ALWAYS_TRUE(mStringHashToIndexMap.reserve(count));
