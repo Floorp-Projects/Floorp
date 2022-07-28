@@ -28,9 +28,9 @@ def is_release_promotion_available(parameters):
 
 @register_callback_action(
     name="release-promotion",
-    title="Ship Fenix",
+    title="Release Promotion",
     symbol="${input.release_promotion_flavor}",
-    description="Ship Fenix",
+    description="Promote a release.",
     generic=False,
     order=500,
     context=[],
