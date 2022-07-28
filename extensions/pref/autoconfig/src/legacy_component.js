@@ -25,4 +25,4 @@ if (Services.prefs.getBoolPref("toolkit.legacyUserProfileCustomizations.script",
   } catch (ex) {};
 }
 
-defaultPref("browser.contentblocking.category", "strict")
+Pref("browser.contentblocking.category", "strict")

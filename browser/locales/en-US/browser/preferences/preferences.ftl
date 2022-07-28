@@ -1455,7 +1455,7 @@ tabbar-on-bottom =
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings = Expand when mouse focus
 
-bookmarks-bar-settings = Bookmark Bar Settings
+bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
 bookmarks-focus-mode = Show the bookmark bar when the mouse is focused on the toolbar
 bookmarks-bottom-mode = Bookmark bar at the bottom of the browser
 
