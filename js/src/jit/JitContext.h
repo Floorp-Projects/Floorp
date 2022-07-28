@@ -93,26 +93,25 @@ class JitContext {
 #endif
 
  public:
-  // Running context when executing on the main thread. Not available during
-  // compilation.
+  // Running context when compiling on the main thread. Not available during
+  // off-thread compilation.
   JSContext* cx = nullptr;
 
   // Allocator for temporary memory during compilation.
-  TempAllocator* temp = nullptr;
+  TempAllocator& temp;
 
   // Wrappers with information about the current runtime/realm for use
   // during compilation.
   CompileRuntime* runtime = nullptr;
 
   // Constructor for compilations happening on the main thread.
-  JitContext(JSContext* cx, TempAllocator* temp);
+  JitContext(JSContext* cx, TempAllocator& temp);
 
   // Constructor for off-thread Ion compilations.
-  JitContext(CompileRuntime* rt, CompileRealm* realm, TempAllocator* temp);
+  JitContext(CompileRuntime* rt, CompileRealm* realm, TempAllocator& temp);
 
-  // Constructors for Wasm compilation.
-  explicit JitContext(TempAllocator* temp);
-  JitContext();
+  // Constructor for Wasm compilation.
+  explicit JitContext(TempAllocator& temp);
 
   ~JitContext();
 

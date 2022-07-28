@@ -3035,7 +3035,7 @@ bool wasm::GenerateStubs(const ModuleEnvironment& env,
                          const FuncExportVector& exports, CompiledCode* code) {
   LifoAlloc lifo(STUBS_LIFO_DEFAULT_CHUNK_SIZE);
   TempAllocator alloc(&lifo);
-  JitContext jcx(&alloc);
+  JitContext jcx(alloc);
   WasmMacroAssembler masm(alloc, env);
   AutoCreatedBy acb(masm, "wasm::GenerateStubs");
 

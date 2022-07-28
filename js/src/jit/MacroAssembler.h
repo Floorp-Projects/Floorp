@@ -334,9 +334,6 @@ struct AllocSiteInput
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
 class MacroAssembler : public MacroAssemblerSpecific {
- public:
-  mozilla::Maybe<AutoJitContextAlloc> alloc_;
-
  private:
   // Labels for handling exceptions and failures.
   NonAssertingLabel failureLabel_;
@@ -344,10 +341,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
  protected:
   // Constructors are protected. Use one of the derived classes!
   MacroAssembler();
-
-  // This constructor should only be used when there is no JitContext active
-  // (for example when generating string and regexp stubs).
-  explicit MacroAssembler(JSContext* cx);
 
   // wasm compilation handles its own JitContext-pushing
   struct WasmToken {};
@@ -5277,8 +5270,7 @@ class MOZ_RAII StackMacroAssembler : public MacroAssembler {
   JS::AutoCheckCannotGC nogc;
 
  public:
-  StackMacroAssembler() : MacroAssembler() {}
-  explicit StackMacroAssembler(JSContext* cx) : MacroAssembler(cx) {}
+  StackMacroAssembler() = default;
 };
 
 // WasmMacroAssembler does not contain GC pointers, so it doesn't need the no-GC

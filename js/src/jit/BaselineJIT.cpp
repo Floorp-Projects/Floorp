@@ -215,7 +215,7 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
       JS::ProfilingCategoryPair::JS_BaselineCompilation);
 
   TempAllocator temp(&cx->tempLifoAlloc());
-  JitContext jctx(cx, nullptr);
+  JitContext jctx(cx, temp);
 
   BaselineCompiler compiler(cx, temp, script);
   if (!compiler.init()) {

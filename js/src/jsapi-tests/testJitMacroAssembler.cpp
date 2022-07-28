@@ -27,8 +27,9 @@ using mozilla::PositiveInfinity;
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 
 BEGIN_TEST(testJitMacroAssembler_flexibleDivMod) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -85,8 +86,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleDivMod) {
 END_TEST(testJitMacroAssembler_flexibleDivMod)
 
 BEGIN_TEST(testJitMacroAssembler_flexibleRemainder) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -134,8 +136,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleRemainder) {
 END_TEST(testJitMacroAssembler_flexibleRemainder)
 
 BEGIN_TEST(testJitMacroAssembler_flexibleQuotient) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -190,8 +193,9 @@ bool shiftTest(JSContext* cx, const char* name,
                void (*operation)(StackMacroAssembler& masm, Register, Register),
                const uintptr_t* lhsInput, const uintptr_t* rhsInput,
                const uintptr_t* result) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -385,8 +389,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleLshift) {
 END_TEST(testJitMacroAssembler_flexibleLshift)
 
 BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -433,8 +438,9 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64) {
 END_TEST(testJitMacroAssembler_truncateDoubleToInt64)
 
 BEGIN_TEST(testJitMacroAssembler_truncateDoubleToUInt64) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -486,8 +492,9 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToUInt64) {
 END_TEST(testJitMacroAssembler_truncateDoubleToUInt64)
 
 BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -540,8 +547,9 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range) {
 END_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range)
 
 BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -597,8 +605,9 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range) {
 END_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range)
 
 BEGIN_TEST(testJitMacroAssembler_lshift64) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -666,8 +675,9 @@ BEGIN_TEST(testJitMacroAssembler_lshift64) {
 END_TEST(testJitMacroAssembler_lshift64)
 
 BEGIN_TEST(testJitMacroAssembler_rshift64Arithmetic) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
@@ -735,8 +745,9 @@ BEGIN_TEST(testJitMacroAssembler_rshift64Arithmetic) {
 END_TEST(testJitMacroAssembler_rshift64Arithmetic)
 
 BEGIN_TEST(testJitMacroAssembler_rshift64) {
-  JitContext jcx(cx, nullptr);
-  StackMacroAssembler masm(cx);
+  TempAllocator tempAlloc(&cx->tempLifoAlloc());
+  JitContext jcx(cx, tempAlloc);
+  StackMacroAssembler masm;
   AutoCreatedBy acb(masm, __func__);
 
   PrepareJit(masm);
