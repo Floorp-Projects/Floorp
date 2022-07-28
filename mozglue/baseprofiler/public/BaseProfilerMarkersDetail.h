@@ -361,7 +361,7 @@ void DeserializeAfterKindAndStream(
             aEntryReader.ReadObject<mozilla::base_profiler_markers_detail::
                                         Streaming::DeserializerTag>();
         tag != 0) {
-      writer->StartObjectElement(JSONWriter::SingleLineStyle);
+      writer->StartObjectElement();
       {
         // Stream "common props".
 

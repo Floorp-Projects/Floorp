@@ -169,7 +169,7 @@ class MOZ_RAII AutoArraySchemaWriter {
  public:
   explicit AutoArraySchemaWriter(SpliceableJSONWriter& aWriter)
       : mJSONWriter(aWriter), mNextFreeIndex(0) {
-    mJSONWriter.StartArrayElement(SpliceableJSONWriter::SingleLineStyle);
+    mJSONWriter.StartArrayElement();
   }
 
   ~AutoArraySchemaWriter() { mJSONWriter.EndArray(); }

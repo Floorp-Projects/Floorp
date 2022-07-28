@@ -1044,7 +1044,7 @@ class ActivePS {
     }
 
     {
-      aWriter.StartArrayProperty("features", aWriter.SingleLineStyle);
+      aWriter.StartArrayProperty("features");
 #define WRITE_ACTIVE_FEATURES(n_, str_, Name_, desc_)    \
   if (profiler_feature_active(ProfilerFeature::Name_)) { \
     aWriter.StringElement(str_);                         \
@@ -1055,7 +1055,7 @@ class ActivePS {
       aWriter.EndArray();
     }
     {
-      aWriter.StartArrayProperty("threads", aWriter.SingleLineStyle);
+      aWriter.StartArrayProperty("threads");
       for (const auto& filter : sInstance->mFilters) {
         aWriter.StringElement(filter);
       }
@@ -2933,7 +2933,7 @@ static void StreamMetaJSCustomObject(
         ExtensionPolicyService::GetSingleton().GetAll(exts);
 
         for (auto& ext : exts) {
-          aWriter.StartArrayElement(JSONWriter::SingleLineStyle);
+          aWriter.StartArrayElement();
 
           nsAutoString id;
           ext->GetId(id);
