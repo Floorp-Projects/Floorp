@@ -86,13 +86,10 @@ class ProviderQuickActions extends UrlbarProvider {
    *       is done searching AND returning results.
    */
   async startQuery(queryContext, addCallback) {
-    let results = this.#keywords.get(
-      queryContext.trimmedSearchString.toLowerCase()
-    );
-    results = results?.filter(key => {
-      let action = this.#actions.get(key);
-      return !("isActive" in action) || !action.isActive();
-    });
+    let results = [
+      ...(this.#keywords.get(queryContext.trimmedSearchString.toLowerCase()) ??
+        []),
+    ];
     if (!results?.length) {
       return;
     }
@@ -121,52 +118,64 @@ class ProviderQuickActions extends UrlbarProvider {
 
   getViewTemplate(result) {
     return {
-      children: result.payload.results.map((el, i) => ({
-        name: `button-${i}`,
-        tag: "span",
-        attributes: {
-          class: "urlbarView-quickaction-row",
-          role: "button",
-        },
-        children: [
-          {
-            name: `icon-${i}`,
-            tag: "div",
-            attributes: { class: "urlbarView-favicon" },
-            children: [
-              {
-                name: `image-${i}`,
-                tag: "img",
-                attributes: { class: "urlbarView-favicon-img" },
-              },
-            ],
+      attributes: {
+        selectable: false,
+      },
+      children: result.payload.results.map(({ key }, i) => {
+        let action = this.#actions.get(key);
+        let inActive = "isActive" in action && !action.isActive();
+        let row = {
+          name: `button-${i}`,
+          tag: "span",
+          attributes: {
+            "data-key": key,
+            class: "urlbarView-quickaction-row",
+            role: inActive ? "" : "button",
           },
-          {
-            name: `div-${i}`,
-            tag: "div",
-            children: [
-              {
-                name: `label-${i}`,
-                tag: "span",
-                attributes: { class: "urlbarView-label" },
-              },
-            ],
-          },
-        ],
-      })),
+          children: [
+            {
+              name: `icon-${i}`,
+              tag: "div",
+              attributes: { class: "urlbarView-favicon" },
+              children: [
+                {
+                  name: `image-${i}`,
+                  tag: "img",
+                  attributes: {
+                    class: "urlbarView-favicon-img",
+                    src: action.icon || DEFAULT_ICON,
+                  },
+                },
+              ],
+            },
+            {
+              name: `div-${i}`,
+              tag: "div",
+              children: [
+                {
+                  name: `label-${i}`,
+                  tag: "span",
+                  attributes: { class: "urlbarView-label" },
+                },
+              ],
+            },
+          ],
+        };
+        if (inActive) {
+          row.attributes.disabled = "disabled";
+        }
+        return row;
+      }),
     };
   }
 
   getViewUpdate(result) {
     let viewUpdate = {};
     result.payload.results.forEach(({ key }, i) => {
-      let data = this.#actions.get(key) || { icon: "", label: " " };
-      let buttonAttributes = { "data-key": key };
-      viewUpdate[`button-${i}`] = { attributes: buttonAttributes };
-      viewUpdate[`image-${i}`] = {
-        attributes: { src: data.icon || DEFAULT_ICON },
+      let action = this.#actions.get(key);
+      viewUpdate[`label-${i}`] = {
+        l10n: { id: action.label, cacheable: true },
       };
-      viewUpdate[`label-${i}`] = { l10n: { id: data.label, cacheable: true } };
     });
     return viewUpdate;
   }
