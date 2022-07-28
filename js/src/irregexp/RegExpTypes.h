@@ -23,6 +23,30 @@ class ByteArrayData {
  public:
   uint32_t length;
   uint8_t* data();
+
+  uint8_t get(uint32_t index) {
+    MOZ_ASSERT(index < length);
+    return data()[index];
+  }
+  void set(uint32_t index, uint8_t val) {
+    MOZ_ASSERT(index < length);
+    data()[index] = val;
+  }
+  uint16_t get_uint16(uint32_t index) {
+    MOZ_ASSERT(index < length / 2);
+    MOZ_ASSERT(length % 2 == 0);
+    uint32_t hi = index * 2;
+    uint32_t lo = hi + 1;
+    return uint16_t(get(hi)) << 8 | get(lo);
+  }
+  void set_uint16(uint32_t index, uint16_t value) {
+    MOZ_ASSERT(index < length / 2);
+    MOZ_ASSERT(length % 2 == 0);
+    uint32_t hi = index * 2;
+    uint32_t lo = hi + 1;
+    set(hi, value >> 8);
+    set(lo, value & 0xff);
+  }
 };
 class Isolate;
 class RegExpStack;
