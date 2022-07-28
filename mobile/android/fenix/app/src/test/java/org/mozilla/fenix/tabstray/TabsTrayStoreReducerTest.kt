@@ -10,18 +10,6 @@ import org.junit.Test
 import org.mozilla.fenix.tabstray.syncedtabs.getFakeSyncedTabList
 
 class TabsTrayStoreReducerTest {
-    @Test
-    fun `GIVEN focusGroupTabId WHEN ConsumeFocusGroupTabIdAction THEN focusGroupTabId must be consumed`() {
-        val initialState = TabsTrayState(focusGroupTabId = "id")
-        val expectedState = initialState.copy(focusGroupTabId = null)
-
-        val resultState = TabsTrayReducer.reduce(
-            initialState,
-            TabsTrayAction.ConsumeFocusGroupTabId
-        )
-
-        assertEquals(expectedState, resultState)
-    }
 
     @Test
     fun `WHEN UpdateInactiveTabs THEN inactive tabs are added`() {

@@ -12,11 +12,10 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.ext.recentSearchGroup
+import org.mozilla.fenix.gleanplumb.state.MessagingReducer
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
-import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
-import org.mozilla.fenix.gleanplumb.state.MessagingReducer
 
 /**
  * Reducer for [AppStore].
@@ -44,12 +43,7 @@ internal object AppStoreReducer {
             topSites = action.topSites,
             recentBookmarks = action.recentBookmarks,
             recentTabs = action.recentTabs,
-            recentHistory = if (action.recentHistory.isNotEmpty() && action.recentTabs.isNotEmpty()) {
-                val recentSearchGroup = action.recentTabs.find { it is RecentTab.SearchGroup } as RecentTab.SearchGroup?
-                action.recentHistory.filterOut(recentSearchGroup?.searchTerm)
-            } else {
-                action.recentHistory
-            }
+            recentHistory = action.recentHistory,
         )
         is AppAction.CollectionExpanded -> {
             val newExpandedCollection = state.expandedCollections.toMutableSet()
@@ -69,10 +63,9 @@ internal object AppStoreReducer {
             state.copy(showCollectionPlaceholder = false)
         }
         is AppAction.RecentTabsChange -> {
-            val recentSearchGroup = action.recentTabs.find { it is RecentTab.SearchGroup } as RecentTab.SearchGroup?
             state.copy(
                 recentTabs = action.recentTabs,
-                recentHistory = state.recentHistory.filterOut(recentSearchGroup?.searchTerm)
+                recentHistory = state.recentHistory,
             )
         }
         is AppAction.RemoveRecentTab -> {
@@ -90,7 +83,7 @@ internal object AppStoreReducer {
             state.copy(recentBookmarks = state.recentBookmarks.filterNot { it.url == action.recentBookmark.url })
         }
         is AppAction.RecentHistoryChange -> state.copy(
-            recentHistory = action.recentHistory.filterOut(state.recentSearchGroup?.searchTerm)
+            recentHistory = action.recentHistory
         )
         is AppAction.RemoveRecentHistoryHighlight -> state.copy(
             recentHistory = state.recentHistory.filterNot {

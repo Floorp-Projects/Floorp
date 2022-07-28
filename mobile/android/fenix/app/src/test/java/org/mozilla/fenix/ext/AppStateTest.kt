@@ -21,7 +21,6 @@ import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
-import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
@@ -496,24 +495,6 @@ class AppStateTest {
                 it is PocketRecommendedStory && it.category != anotherStoriesCategory.name
             }
         )
-    }
-
-    @Test
-    fun `GIVEN recentTabs contains a SearchGroup WHEN recentSearchGroup is called THEN return the group`() {
-        val searchGroup: RecentTab.SearchGroup = mockk()
-        val normalTab: RecentTab.Tab = mockk()
-        val state = AppState(recentTabs = listOf(normalTab, searchGroup))
-
-        assertEquals(searchGroup, state.recentSearchGroup)
-    }
-
-    @Test
-    fun `GIVEN recentTabs does not contains SearchGroup WHEN recentSearchGroup is called THEN return null`() {
-        val normalTab1: RecentTab.Tab = mockk()
-        val normalTab2: RecentTab.Tab = mockk()
-        val state = AppState(recentTabs = listOf(normalTab1, normalTab2))
-
-        assertNull(state.recentSearchGroup)
     }
 
     @Test
