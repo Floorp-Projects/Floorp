@@ -34,26 +34,14 @@ add_task(async function test_profile_multi_frame_page_info() {
     const activeTabID = win.gBrowser.selectedBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const profile = await Services.profiler.getProfileDataAsync();
-    await Services.profiler.StopProfiler();
-
-    let foundPage = 0;
-    // We need to find the correct content process for that tab.
-    let contentProcess = profile.processes.find(
-      p => p.threads[0].pid == contentPid
-    );
-
-    if (!contentProcess) {
-      throw new Error(
-        `Could not find the content process with given pid: ${contentPid}`
-      );
-    }
+    const { contentProcess } = await stopProfilerNowAndGetThreads(contentPid);
 
     info(
       "Check if the captured pages are the ones with correct values we created."
     );
 
     let parentPage;
+    let foundPage = 0;
     for (const page of contentProcess.pages) {
       // Parent page
       if (page.url == url) {

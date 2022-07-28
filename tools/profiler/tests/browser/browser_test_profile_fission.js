@@ -41,29 +41,20 @@ add_task(async function test_profile_fission_no_private_browsing() {
     const activeTabID = contentBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const profile = await Services.profiler.getProfileDataAsync();
-    await Services.profiler.StopProfiler();
-
-    let pageFound = false;
-    // We need to find the correct content process for that tab.
-    let contentProcess = profile.processes.find(
-      p => p.threads[0].pid == contentPid
-    );
-
-    if (!contentProcess) {
-      throw new Error(
-        `Could not find the content process with given pid: ${contentPid}`
-      );
-    }
+    const {
+      profile,
+      contentProcess,
+      contentThread,
+    } = await stopProfilerNowAndGetThreads(contentPid);
 
     Assert.equal(
-      contentProcess.threads[0].isPrivateBrowsing,
+      contentThread.isPrivateBrowsing,
       false,
       "The content process has the private browsing flag set to false."
     );
 
     Assert.equal(
-      contentProcess.threads[0].userContextId,
+      contentThread.userContextId,
       0,
       "The content process has the information about the container used for this process"
     );
@@ -72,6 +63,7 @@ add_task(async function test_profile_fission_no_private_browsing() {
       "Check if the captured page is the one with correct values we created."
     );
 
+    let pageFound = false;
     for (const page of contentProcess.pages) {
       if (page.url == url) {
         Assert.equal(page.url, url);
@@ -161,29 +153,19 @@ add_task(async function test_profile_fission_private_browsing() {
     const activeTabID = contentBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const profile = await Services.profiler.getProfileDataAsync();
-    await Services.profiler.StopProfiler();
-
-    let pageFound = false;
-    // We need to find the correct content process for that tab.
-    let contentProcess = profile.processes.find(
-      p => p.threads[0].pid == contentPid
-    );
-
-    if (!contentProcess) {
-      throw new Error(
-        `Could not find the content process with given pid: ${contentPid}`
-      );
-    }
+    const {
+      contentProcess,
+      contentThread,
+    } = await stopProfilerNowAndGetThreads(contentPid);
 
     Assert.equal(
-      contentProcess.threads[0].isPrivateBrowsing,
+      contentThread.isPrivateBrowsing,
       true,
       "The content process has the private browsing flag set to true."
     );
 
     Assert.equal(
-      contentProcess.threads[0].userContextId,
+      contentThread.userContextId,
       0,
       "The content process has the information about the container used for this process"
     );
@@ -192,6 +174,7 @@ add_task(async function test_profile_fission_private_browsing() {
       "Check if the captured page is the one with correct values we created."
     );
 
+    let pageFound = false;
     for (const page of contentProcess.pages) {
       if (page.url == url) {
         Assert.equal(page.url, url);

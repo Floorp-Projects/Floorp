@@ -17,7 +17,7 @@ add_task(async () => {
   // functionA -> functionB -> functionC
   const sampleIndex = await functionA();
 
-  const profile = await Services.profiler.getProfileDataAsync();
+  const profile = await stopNowAndGetProfile();
   const [thread] = profile.threads;
   const { samples } = thread;
 
@@ -61,11 +61,11 @@ add_task(async () => {
   );
 });
 
-function functionA() {
+async function functionA() {
   return functionB();
 }
 
-function functionB() {
+async function functionB() {
   return functionC();
 }
 

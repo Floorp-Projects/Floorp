@@ -54,9 +54,10 @@ add_task(async function test_profile_feature_nostacksampling() {
 
     // Check that stack samples were recorded.
     {
-      const { parentThread, contentThread } = await stopProfilerAndGetThreads(
-        contentPid
-      );
+      const {
+        parentThread,
+        contentThread,
+      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.greater(
         parentThread.samples.data.length,
         0,

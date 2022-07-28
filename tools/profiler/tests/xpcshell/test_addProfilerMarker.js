@@ -198,7 +198,7 @@ add_task(async () => {
   testCategory([{ category: "does not exist" }], "Other");
 
   info("Capture the profile");
-  const profile = await stopAndGetProfile();
+  const profile = await stopNowAndGetProfile();
   const mainThread = profile.threads.find(({ name }) => name === "GeckoMain");
   const markers = getInflatedMarkerData(mainThread).filter(m =>
     m.name.startsWith(markerNamePrefix)

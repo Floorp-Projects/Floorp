@@ -16,7 +16,7 @@ add_task(async () => {
 
   await functionA();
 
-  const profile = await Services.profiler.getProfileDataAsync();
+  const profile = await stopNowAndGetProfile();
   const [thread] = profile.threads;
   const { samples } = thread;
   const message = "eventDelay > 0 not found.";
@@ -44,7 +44,7 @@ function doSyncWork(milliseconds) {
   }
 }
 
-function functionA() {
+async function functionA() {
   doSyncWork(100);
-  captureAtLeastOneJsSample();
+  return captureAtLeastOneJsSample();
 }

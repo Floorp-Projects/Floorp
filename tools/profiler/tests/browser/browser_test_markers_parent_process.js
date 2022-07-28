@@ -12,7 +12,7 @@ add_task(async function test_markers_parent_process() {
   window.dispatchEvent(new Event("synthetic"));
 
   info("Stop the profiler and get the profile.");
-  const profile = await stopAndGetProfile();
+  const profile = await stopNowAndGetProfile();
 
   const markers = getInflatedMarkerData(profile.threads[0]);
   {

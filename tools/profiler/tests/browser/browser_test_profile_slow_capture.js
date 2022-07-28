@@ -24,7 +24,7 @@ add_task(async function browser_test_profile_slow_capture() {
     const activeTabID = win.gBrowser.selectedBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const profile = await stopAndGetProfile();
+    const profile = await waitSamplingAndStopAndGetProfile();
 
     let pageFound = false;
     // We need to find the correct content process for that tab.
@@ -61,7 +61,7 @@ add_task(async function browser_test_profile_slow_capture() {
     for (let i = 0; i < 10; ++i) {
       await Services.profiler.waitOnePeriodicSampling();
     }
-    await stopAndGetProfile();
+    await stopNowAndGetProfile();
   });
 });
 
@@ -85,7 +85,7 @@ add_task(async function browser_test_profile_very_slow_capture() {
     });
 
     info("Capture the profile data.");
-    const profile = await stopAndGetProfile();
+    const profile = await waitSamplingAndStopAndGetProfile();
 
     info("Check that the content process is missing.");
 
@@ -99,6 +99,6 @@ add_task(async function browser_test_profile_very_slow_capture() {
     for (let i = 0; i < 10; ++i) {
       await Services.profiler.waitOnePeriodicSampling();
     }
-    await stopAndGetProfile();
+    await stopNowAndGetProfile();
   });
 });
