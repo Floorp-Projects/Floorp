@@ -777,6 +777,9 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
   if (mNotifier) {
     rv = mNotifier->SetOutputDocument(mDocument);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDocument->InitFeaturePolicy(mDocument->GetChannel());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Do this after calling OnDocumentCreated to ensure that the
