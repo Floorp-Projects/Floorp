@@ -83,7 +83,7 @@ Http2PushedStreamWrapper::~Http2PushedStreamWrapper() {
 Http2PushedStream* Http2PushedStreamWrapper::GetStream() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (mStream) {
-    Http2Stream* stream = mStream;
+    Http2StreamBase* stream = mStream;
     return static_cast<Http2PushedStream*>(stream);
   }
   return nullptr;
@@ -92,7 +92,7 @@ Http2PushedStream* Http2PushedStreamWrapper::GetStream() {
 void Http2PushedStreamWrapper::OnPushFailed() {
   if (OnSocketThread()) {
     if (mStream) {
-      Http2Stream* stream = mStream;
+      Http2StreamBase* stream = mStream;
       static_cast<Http2PushedStream*>(stream)->OnPushFailed();
     }
   } else {
@@ -109,10 +109,10 @@ void Http2PushedStreamWrapper::OnPushFailed() {
 
 Http2PushedStream::Http2PushedStream(
     Http2PushTransactionBuffer* aTransaction, Http2Session* aSession,
-    Http2Stream* aAssociatedStream, uint32_t aID,
+    Http2StreamBase* aAssociatedStream, uint32_t aID,
     uint64_t aCurrentForegroundTabOuterContentWindowId)
-    : Http2Stream(aTransaction, aSession, 0,
-                  aCurrentForegroundTabOuterContentWindowId),
+    : Http2StreamBase(aTransaction, aSession, 0,
+                      aCurrentForegroundTabOuterContentWindowId),
       mAssociatedTransaction(aAssociatedStream->Transaction()),
       mBufferedPush(aTransaction) {
   LOG3(("Http2PushedStream ctor this=%p 0x%X\n", this, aID));
@@ -140,7 +140,7 @@ bool Http2PushedStream::GetPushComplete() { return mPushCompleted; }
 nsresult Http2PushedStream::WriteSegments(nsAHttpSegmentWriter* writer,
                                           uint32_t count,
                                           uint32_t* countWritten) {
-  nsresult rv = Http2Stream::WriteSegments(writer, count, countWritten);
+  nsresult rv = Http2StreamBase::WriteSegments(writer, count, countWritten);
   if (NS_SUCCEEDED(rv) && *countWritten) {
     mLastRead = TimeStamp::Now();
   }
@@ -196,9 +196,9 @@ bool Http2PushedStream::TryOnPush() {
   return true;
 }
 
-// side effect free static method to determine if Http2Stream implements
+// side effect free static method to determine if Http2StreamBase implements
 // nsIHttpPushListener
-bool Http2PushedStream::TestOnPush(Http2Stream* stream) {
+bool Http2PushedStream::TestOnPush(Http2StreamBase* stream) {
   if (!stream) {
     return false;
   }
@@ -234,9 +234,9 @@ nsresult Http2PushedStream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t,
       // the write side of a pushed transaction just involves manipulating a
       // little state
       SetSentFin(true);
-      Http2Stream::mRequestHeadersDone = 1;
-      Http2Stream::mOpenGenerated = 1;
-      Http2Stream::ChangeState(UPSTREAM_COMPLETE);
+      Http2StreamBase::mRequestHeadersDone = 1;
+      Http2StreamBase::mOpenGenerated = 1;
+      Http2StreamBase::ChangeState(UPSTREAM_COMPLETE);
     } break;
 
     case UPSTREAM_COMPLETE:
@@ -265,7 +265,7 @@ void Http2PushedStream::AdjustInitialWindow() {
         ("Http2PushStream::AdjustInitialWindow %p 0x%X "
          "calling super consumer %p 0x%X\n",
          this, mStreamID, mConsumerStream, mConsumerStream->StreamID()));
-    Http2Stream::AdjustInitialWindow();
+    Http2StreamBase::AdjustInitialWindow();
     // Http2PushedStream::ReadSegments is needed to call TransmitFrame()
     // and actually get this information into the session bytestream
     RefPtr<Http2Session> session = Session();
@@ -275,7 +275,7 @@ void Http2PushedStream::AdjustInitialWindow() {
   // anyway, so we're good to go.
 }
 
-void Http2PushedStream::SetConsumerStream(Http2Stream* consumer) {
+void Http2PushedStream::SetConsumerStream(Http2StreamBase* consumer) {
   LOG3(("Http2PushedStream::SetConsumerStream this=%p consumer=%p", this,
         consumer));
 
@@ -290,7 +290,7 @@ bool Http2PushedStream::GetHashKey(nsCString& key) {
   return true;
 }
 
-void Http2PushedStream::ConnectPushedStream(Http2Stream* stream) {
+void Http2PushedStream::ConnectPushedStream(Http2StreamBase* stream) {
   RefPtr<Http2Session> session = Session();
   session->ConnectPushedStream(stream);
 }
@@ -434,7 +434,7 @@ nsresult Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter* writer,
   }
 
   if (Available() || mIsDone) {
-    Http2Stream* consumer = mPushStream->GetConsumerStream();
+    Http2StreamBase* consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
       LOG3(

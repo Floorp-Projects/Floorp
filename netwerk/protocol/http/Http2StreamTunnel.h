@@ -4,20 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_Http2Stream_h
-#define mozilla_net_Http2Stream_h
+#ifndef mozilla_net_Http2StreamTunnel_h
+#define mozilla_net_Http2StreamTunnel_h
 
 #include "Http2StreamBase.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
-class Http2Stream : public Http2StreamBase {
+class Http2StreamTunnel : public Http2StreamBase {
  public:
-  Http2Stream(nsAHttpTransaction* httpTransaction, Http2Session* session,
-              int32_t priority, uint64_t bcId)
+  Http2StreamTunnel(nsAHttpTransaction* httpTransaction, Http2Session* session,
+                    int32_t priority, uint64_t bcId)
       : Http2StreamBase(httpTransaction, session, priority, bcId) {}
 };
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
 
-#endif  // mozilla_net_Http2Stream_h
+#endif  // mozilla_net_Http2StreamTunnel_h
