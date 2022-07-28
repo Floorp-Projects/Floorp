@@ -105,12 +105,6 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   }
 
  public:
-  // Helper function for use with the ARMBuffer.
-  // The MacroAssembler must create an AutoJitContextAlloc before initializing the buffer.
-  void initWithAllocator() {
-    armbuffer_.initWithAllocator();
-  }
-
   // Return the Instruction at a given byte offset.
   Instruction* getInstructionAt(BufferOffset offset) {
     return armbuffer_.getInst(offset);

@@ -640,10 +640,6 @@ struct AssemblerBufferWithConstantPools
   Slice* getTail() const { return this->tail; }
 
  public:
-  // Create an assembler buffer.
-  // Note that this constructor is not allowed to actually allocate memory from
-  // this->lifoAlloc_ because the MacroAssembler constructor has not yet created
-  // an AutoJitContextAlloc.
   AssemblerBufferWithConstantPools(unsigned guardSize, unsigned headerSize,
                                    size_t instBufferAlign, size_t poolMaxOffset,
                                    unsigned pcBias, uint32_t alignFillInst,
@@ -667,15 +663,6 @@ struct AssemblerBufferWithConstantPools
         nopFill_(nopFill),
         inhibitNops_(false),
         id(-1) {
-  }
-
-  // We need to wait until an AutoJitContextAlloc is created by the
-  // MacroAssembler before allocating any space.
-  void initWithAllocator() {
-    // We hand out references to lifoAlloc_ in the constructor.
-    // Check that no allocations were made then.
-    MOZ_ASSERT(this->lifoAlloc_.isEmpty(),
-               "Illegal LIFO allocations before AutoJitContextAlloc");
   }
 
  private:
