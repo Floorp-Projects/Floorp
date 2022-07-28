@@ -316,7 +316,8 @@ nsProfiler::GetSharedLibraries(JSContext* aCx,
   JS::Rooted<JS::Value> val(aCx);
   {
     nsString buffer;
-    JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
+    JSONWriter w(MakeUnique<StringWriteFunc>(buffer),
+                 JSONWriter::SingleLineStyle);
     w.StartArrayElement();
     AppendSharedLibraries(w);
     w.EndArray();
@@ -338,7 +339,8 @@ nsProfiler::GetActiveConfiguration(JSContext* aCx,
   JS::Rooted<JS::Value> jsValue(aCx);
   {
     nsString buffer;
-    JSONWriter writer(MakeUnique<StringWriteFunc>(buffer));
+    JSONWriter writer(MakeUnique<StringWriteFunc>(buffer),
+                      JSONWriter::SingleLineStyle);
     profiler_write_active_configuration(writer);
     MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx,
                                  static_cast<const char16_t*>(buffer.get()),
