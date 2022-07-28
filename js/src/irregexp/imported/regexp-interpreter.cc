@@ -28,13 +28,12 @@ namespace internal {
 namespace {
 
 bool BackRefMatchesNoCase(Isolate* isolate, int from, int current, int len,
-                          base::Vector<const base::uc16> subject,
-                          bool unicode) {
+                          Vector<const uc16> subject, bool unicode) {
   Address offset_a =
-      reinterpret_cast<Address>(const_cast<base::uc16*>(&subject.at(from)));
+      reinterpret_cast<Address>(const_cast<uc16*>(&subject.at(from)));
   Address offset_b =
-      reinterpret_cast<Address>(const_cast<base::uc16*>(&subject.at(current)));
-  size_t length = len * base::kUC16Size;
+      reinterpret_cast<Address>(const_cast<uc16*>(&subject.at(current)));
+  size_t length = len * kUC16Size;
 
   bool result = unicode
                     ? RegExpMacroAssembler::CaseInsensitiveCompareUnicode(
@@ -45,7 +44,7 @@ bool BackRefMatchesNoCase(Isolate* isolate, int from, int current, int len,
 }
 
 bool BackRefMatchesNoCase(Isolate* isolate, int from, int current, int len,
-                          base::Vector<const uint8_t> subject, bool unicode) {
+                          Vector<const uint8_t> subject, bool unicode) {
   // For Latin1 characters the unicode flag makes no difference.
   for (int i = 0; i < len; i++) {
     unsigned int old_char = subject[from++];
@@ -171,7 +170,7 @@ class InterpreterRegisters {
         output_register_count_(output_register_count) {
     // TODO(jgruber): Use int32_t consistently for registers. Currently, CSA
     // uses int32_t while runtime uses int.
-    static_assert(sizeof(int) == sizeof(int32_t));
+    STATIC_ASSERT(sizeof(int) == sizeof(int32_t));
     DCHECK_GE(output_register_count, 2);  // At least 2 for the match itself.
     DCHECK_GE(total_register_count, output_register_count);
     DCHECK_LE(total_register_count, RegExpMacroAssembler::kMaxRegisterCount);
@@ -223,7 +222,7 @@ void UpdateCodeAndSubjectReferences(
     Isolate* isolate, Handle<ByteArray> code_array,
     Handle<String> subject_string, ByteArray* code_array_out,
     const byte** code_base_out, const byte** pc_out, String* subject_string_out,
-    base::Vector<const Char>* subject_string_vector_out) {
+    Vector<const Char>* subject_string_vector_out) {
   DisallowGarbageCollection no_gc;
 
   if (*code_base_out != code_array->GetDataStartAddress()) {
@@ -245,7 +244,7 @@ template <typename Char>
 IrregexpInterpreter::Result HandleInterrupts(
     Isolate* isolate, RegExp::CallOrigin call_origin, ByteArray* code_array_out,
     String* subject_string_out, const byte** code_base_out,
-    base::Vector<const Char>* subject_string_vector_out, const byte** pc_out) {
+    Vector<const Char>* subject_string_vector_out, const byte** pc_out) {
   DisallowGarbageCollection no_gc;
 
   StackLimitCheck check(isolate);
@@ -283,8 +282,8 @@ IrregexpInterpreter::Result HandleInterrupts(
         return IrregexpInterpreter::EXCEPTION;
       }
 
-      // If we changed between a LATIN1 and a UC16 string, we need to
-      // restart regexp matching with the appropriate template instantiation of
+      // If we changed between a LATIN1 and a UC16 string, we need to restart
+      // regexp matching with the appropriate template instantiation of
       // RawMatch.
       if (String::IsOneByteRepresentationUnderneath(*subject_handle) !=
           was_one_byte) {
@@ -374,7 +373,7 @@ bool IndexIsInBounds(int index, int length) {
 template <typename Char>
 IrregexpInterpreter::Result RawMatch(
     Isolate* isolate, ByteArray code_array, String subject_string,
-    base::Vector<const Char> subject, int* output_registers,
+    Vector<const Char> subject, int* output_registers,
     int output_register_count, int total_register_count, int current,
     uint32_t current_char, RegExp::CallOrigin call_origin,
     const uint32_t backtrack_limit) {
@@ -415,8 +414,8 @@ IrregexpInterpreter::Result RawMatch(
             base::bits::RoundUpToPowerOfTwo32(kRegExpBytecodeCount));
 
   // Make sure every bytecode we get by using BYTECODE_MASK is well defined.
-  static_assert(kRegExpBytecodeCount <= kRegExpPaddedBytecodeCount);
-  static_assert(kRegExpBytecodeCount + kRegExpBytecodeFillerCount ==
+  STATIC_ASSERT(kRegExpBytecodeCount <= kRegExpPaddedBytecodeCount);
+  STATIC_ASSERT(kRegExpBytecodeCount + kRegExpBytecodeFillerCount ==
                 kRegExpPaddedBytecodeCount);
 
 #define DECLARE_DISPATCH_TABLE_ENTRY(name, ...) &&BC_##name,
@@ -513,7 +512,7 @@ IrregexpInterpreter::Result RawMatch(
       DISPATCH();
     }
     BYTECODE(POP_BT) {
-      static_assert(JSRegExp::kNoBacktrackLimit == 0);
+      STATIC_ASSERT(JSRegExp::kNoBacktrackLimit == 0);
       if (++backtrack_count == backtrack_limit) {
         int return_code = LoadPacked24Signed(insn);
         return static_cast<IrregexpInterpreter::Result>(return_code);
@@ -1051,12 +1050,12 @@ IrregexpInterpreter::Result IrregexpInterpreter::Match(
   if (FLAG_regexp_tier_up) regexp.TierUpTick();
 
   bool is_one_byte = String::IsOneByteRepresentationUnderneath(subject_string);
-  ByteArray code_array = ByteArray::cast(regexp.bytecode(is_one_byte));
-  int total_register_count = regexp.max_register_count();
+  ByteArray code_array = ByteArray::cast(regexp.Bytecode(is_one_byte));
+  int total_register_count = regexp.MaxRegisterCount();
 
   return MatchInternal(isolate, code_array, subject_string, output_registers,
                        output_register_count, total_register_count,
-                       start_position, call_origin, regexp.backtrack_limit());
+                       start_position, call_origin, regexp.BacktrackLimit());
 }
 
 IrregexpInterpreter::Result IrregexpInterpreter::MatchInternal(
@@ -1066,9 +1065,6 @@ IrregexpInterpreter::Result IrregexpInterpreter::MatchInternal(
     uint32_t backtrack_limit) {
   DCHECK(subject_string.IsFlat());
 
-  // TODO(chromium:1262676): Remove this CHECK once fixed.
-  CHECK(code_array.IsByteArray());
-
   // Note: Heap allocation *is* allowed in two situations if calling from
   // Runtime:
   // 1. When creating & throwing a stack overflow exception. The interpreter
@@ -1077,15 +1073,10 @@ IrregexpInterpreter::Result IrregexpInterpreter::MatchInternal(
   //    after interrupts have run.
   DisallowGarbageCollection no_gc;
 
-  base::uc16 previous_char = '\n';
+  uc16 previous_char = '\n';
   String::FlatContent subject_content = subject_string.GetFlatContent(no_gc);
-  // Because interrupts can result in GC and string content relocation, the
-  // checksum verification in FlatContent may fail even though this code is
-  // safe. See (2) above.
-  subject_content.UnsafeDisableChecksumVerification();
   if (subject_content.IsOneByte()) {
-    base::Vector<const uint8_t> subject_vector =
-        subject_content.ToOneByteVector();
+    Vector<const uint8_t> subject_vector = subject_content.ToOneByteVector();
     if (start_position != 0) previous_char = subject_vector[start_position - 1];
     return RawMatch(isolate, code_array, subject_string, subject_vector,
                     output_registers, output_register_count,
@@ -1093,8 +1084,7 @@ IrregexpInterpreter::Result IrregexpInterpreter::MatchInternal(
                     call_origin, backtrack_limit);
   } else {
     DCHECK(subject_content.IsTwoByte());
-    base::Vector<const base::uc16> subject_vector =
-        subject_content.ToUC16Vector();
+    Vector<const uc16> subject_vector = subject_content.ToUC16Vector();
     if (start_position != 0) previous_char = subject_vector[start_position - 1];
     return RawMatch(isolate, code_array, subject_string, subject_vector,
                     output_registers, output_register_count,
@@ -1109,7 +1099,7 @@ IrregexpInterpreter::Result IrregexpInterpreter::MatchInternal(
 // builtin.
 IrregexpInterpreter::Result IrregexpInterpreter::MatchForCallFromJs(
     Address subject, int32_t start_position, Address, Address,
-    int* output_registers, int32_t output_register_count,
+    int* output_registers, int32_t output_register_count, Address,
     RegExp::CallOrigin call_origin, Isolate* isolate, Address regexp) {
   DCHECK_NOT_NULL(isolate);
   DCHECK_NOT_NULL(output_registers);

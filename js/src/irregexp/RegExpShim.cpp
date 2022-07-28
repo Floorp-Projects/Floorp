@@ -51,7 +51,7 @@ template std::ostream& StdoutStream::operator<<(char const* c);
 // Writes the given character to the output escaping everything outside
 // of printable ASCII range.
 std::ostream& operator<<(std::ostream& os, const AsUC16& c) {
-  base::uc16 v = c.value;
+  uc16 v = c.value;
   bool isPrint = 0x20 < v && v <= 0x7e;
   char buf[10];
   const char* format = isPrint ? "%c" : (v <= 0xFF) ? "\\x%02x" : "\\u%04x";
@@ -113,13 +113,6 @@ void* Isolate::allocatePseudoHandle(size_t bytes) {
 
 template <typename T>
 PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
-  PseudoHandle<T> result = maybeTakeOwnership<T>(ptr);
-  MOZ_ASSERT(result);
-  return result;
-}
-
-template <typename T>
-PseudoHandle<T> Isolate::maybeTakeOwnership(void* ptr) {
   for (auto iter = uniquePtrArena_.IterFromLast(); !iter.Done(); iter.Prev()) {
     auto& entry = iter.Get();
     if (entry.get() == ptr) {
@@ -128,19 +121,13 @@ PseudoHandle<T> Isolate::maybeTakeOwnership(void* ptr) {
       return result;
     }
   }
-  return PseudoHandle<T>();
-}
-
-PseudoHandle<ByteArrayData> ByteArray::maybeTakeOwnership(Isolate* isolate) {
-  PseudoHandle<ByteArrayData> result =
-      isolate->maybeTakeOwnership<ByteArrayData>(value().toPrivate());
-  setValue(JS::PrivateValue(nullptr));
-  return result;
+  MOZ_CRASH("Tried to take ownership of pseudohandle that is not in the arena");
 }
 
 PseudoHandle<ByteArrayData> ByteArray::takeOwnership(Isolate* isolate) {
-  PseudoHandle<ByteArrayData> result = maybeTakeOwnership(isolate);
-  MOZ_ASSERT(result);
+  PseudoHandle<ByteArrayData> result =
+      isolate->takeOwnership<ByteArrayData>(value().toPrivate());
+  setValue(JS::PrivateValue(nullptr));
   return result;
 }
 
@@ -156,8 +143,12 @@ void Isolate::trace(JSTracer* trc) {
 size_t Isolate::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = mallocSizeOf(this);
 
+  // The RegExpStack code is imported from V8, so we peek inside it to
+  // measure its memory from here.
   size += mallocSizeOf(regexpStack_);
-  size += ExternalReference::SizeOfExcludingThis(mallocSizeOf, regexpStack_);
+  if (regexpStack_->thread_local_.owns_memory_) {
+    size += mallocSizeOf(regexpStack_->thread_local_.memory_);
+  }
 
   size += handleArena_.SizeOfExcludingThis(mallocSizeOf);
   size += uniquePtrArena_.SizeOfExcludingThis(mallocSizeOf);
@@ -207,19 +198,8 @@ Isolate::~Isolate() {
   }
 }
 
-/* static */
-const void* ExternalReference::TopOfRegexpStack(Isolate* isolate) {
-  return reinterpret_cast<const void*>(
-      isolate->regexp_stack()->memory_top_address_address());
-}
-
-/* static */
-size_t ExternalReference::SizeOfExcludingThis(
-    mozilla::MallocSizeOf mallocSizeOf, RegExpStack* regexpStack) {
-  if (regexpStack->thread_local_.owns_memory_) {
-    return mallocSizeOf(regexpStack->thread_local_.memory_);
-  }
-  return 0;
+byte* Isolate::top_of_regexp_stack() const {
+  return reinterpret_cast<byte*>(regexpStack_->memory_top_address_address());
 }
 
 Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
@@ -250,8 +230,7 @@ Handle<FixedArray> Isolate::NewFixedArray(int length) {
 }
 
 template <typename CharT>
-Handle<String> Isolate::InternalizeString(
-    const base::Vector<const CharT>& str) {
+Handle<String> Isolate::InternalizeString(const Vector<const CharT>& str) {
   js::AutoEnterOOMUnsafeRegion oomUnsafe;
   JSAtom* atom = js::AtomizeChars(cx(), str.begin(), str.length());
   if (!atom) {
@@ -261,9 +240,9 @@ Handle<String> Isolate::InternalizeString(
 }
 
 template Handle<String> Isolate::InternalizeString(
-    const base::Vector<const uint8_t>& str);
+    const Vector<const uint8_t>& str);
 template Handle<String> Isolate::InternalizeString(
-    const base::Vector<const char16_t>& str);
+    const Vector<const char16_t>& str);
 
 static_assert(JSRegExp::RegistersForCaptureCount(JSRegExp::kMaxCaptures) <=
               RegExpMacroAssembler::kMaxRegisterCount);

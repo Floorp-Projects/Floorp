@@ -13,6 +13,7 @@ namespace internal {
 class AlternativeGenerationList;
 class BoyerMooreLookahead;
 class GreedyLoopState;
+class Label;
 class NodeVisitor;
 class QuickCheckDetails;
 class RegExpCompiler;
@@ -203,9 +204,7 @@ class RegExpNode : public ZoneObject {
   // If we know that the input is one-byte then there are some nodes that can
   // never match.  This method returns a node that can be substituted for
   // itself, or nullptr if the node can never match.
-  virtual RegExpNode* FilterOneByte(int depth, RegExpFlags flags) {
-    return this;
-  }
+  virtual RegExpNode* FilterOneByte(int depth) { return this; }
   // Helper for FilterOneByte.
   RegExpNode* replacement() {
     DCHECK(info()->replacement_calculated);
@@ -294,7 +293,7 @@ class SeqRegExpNode : public RegExpNode {
       : RegExpNode(on_success->zone()), on_success_(on_success) {}
   RegExpNode* on_success() { return on_success_; }
   void set_on_success(RegExpNode* node) { on_success_ = node; }
-  RegExpNode* FilterOneByte(int depth, RegExpFlags flags) override;
+  RegExpNode* FilterOneByte(int depth) override;
   void FillInBMInfo(Isolate* isolate, int offset, int budget,
                     BoyerMooreLookahead* bm, bool not_at_start) override {
     on_success_->FillInBMInfo(isolate, offset, budget - 1, bm, not_at_start);
@@ -302,7 +301,7 @@ class SeqRegExpNode : public RegExpNode {
   }
 
  protected:
-  RegExpNode* FilterSuccessor(int depth, RegExpFlags flags);
+  RegExpNode* FilterSuccessor(int depth);
 
  private:
   RegExpNode* on_success_;
@@ -406,17 +405,15 @@ class TextNode : public SeqRegExpNode {
   static TextNode* CreateForCharacterRanges(Zone* zone,
                                             ZoneList<CharacterRange>* ranges,
                                             bool read_backward,
-                                            RegExpNode* on_success);
-  // Create TextNode for a surrogate pair (i.e. match a sequence of two uc16
-  // code unit ranges).
-  static TextNode* CreateForSurrogatePair(
-      Zone* zone, CharacterRange lead, ZoneList<CharacterRange>* trail_ranges,
-      bool read_backward, RegExpNode* on_success);
-  static TextNode* CreateForSurrogatePair(Zone* zone,
-                                          ZoneList<CharacterRange>* lead_ranges,
+                                            RegExpNode* on_success,
+                                            JSRegExp::Flags flags);
+  // Create TextNode for a surrogate pair with a range given for the
+  // lead and the trail surrogate each.
+  static TextNode* CreateForSurrogatePair(Zone* zone, CharacterRange lead,
                                           CharacterRange trail,
                                           bool read_backward,
-                                          RegExpNode* on_success);
+                                          RegExpNode* on_success,
+                                          JSRegExp::Flags flags);
   void Accept(NodeVisitor* visitor) override;
   void Emit(RegExpCompiler* compiler, Trace* trace) override;
   void GetQuickCheckDetails(QuickCheckDetails* details,
@@ -424,15 +421,14 @@ class TextNode : public SeqRegExpNode {
                             bool not_at_start) override;
   ZoneList<TextElement>* elements() { return elms_; }
   bool read_backward() { return read_backward_; }
-  void MakeCaseIndependent(Isolate* isolate, bool is_one_byte,
-                           RegExpFlags flags);
+  void MakeCaseIndependent(Isolate* isolate, bool is_one_byte);
   int GreedyLoopTextLength() override;
   RegExpNode* GetSuccessorOfOmnivorousTextNode(
       RegExpCompiler* compiler) override;
   void FillInBMInfo(Isolate* isolate, int offset, int budget,
                     BoyerMooreLookahead* bm, bool not_at_start) override;
   void CalculateOffsets();
-  RegExpNode* FilterOneByte(int depth, RegExpFlags flags) override;
+  RegExpNode* FilterOneByte(int depth) override;
   int Length();
 
  private:
@@ -500,7 +496,7 @@ class AssertionNode : public SeqRegExpNode {
 
 class BackReferenceNode : public SeqRegExpNode {
  public:
-  BackReferenceNode(int start_reg, int end_reg, RegExpFlags flags,
+  BackReferenceNode(int start_reg, int end_reg, JSRegExp::Flags flags,
                     bool read_backward, RegExpNode* on_success)
       : SeqRegExpNode(on_success),
         start_reg_(start_reg),
@@ -523,7 +519,7 @@ class BackReferenceNode : public SeqRegExpNode {
  private:
   int start_reg_;
   int end_reg_;
-  RegExpFlags flags_;
+  JSRegExp::Flags flags_;
   bool read_backward_;
 };
 
@@ -625,7 +621,7 @@ class ChoiceNode : public RegExpNode {
   virtual bool try_to_emit_quick_check_for_alternative(bool is_first) {
     return true;
   }
-  RegExpNode* FilterOneByte(int depth, RegExpFlags flags) override;
+  RegExpNode* FilterOneByte(int depth) override;
   virtual bool read_backward() { return false; }
 
  protected:
@@ -697,7 +693,7 @@ class NegativeLookaroundChoiceNode : public ChoiceNode {
     return !is_first;
   }
   void Accept(NodeVisitor* visitor) override;
-  RegExpNode* FilterOneByte(int depth, RegExpFlags flags) override;
+  RegExpNode* FilterOneByte(int depth) override;
 };
 
 class LoopChoiceNode : public ChoiceNode {
@@ -730,7 +726,7 @@ class LoopChoiceNode : public ChoiceNode {
   int min_loop_iterations() const { return min_loop_iterations_; }
   bool read_backward() override { return read_backward_; }
   void Accept(NodeVisitor* visitor) override;
-  RegExpNode* FilterOneByte(int depth, RegExpFlags flags) override;
+  RegExpNode* FilterOneByte(int depth) override;
 
  private:
   // AddAlternative is made private for loop nodes because alternatives

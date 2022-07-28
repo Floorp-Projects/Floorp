@@ -20,7 +20,7 @@ namespace regexp_compiler_constants {
 // The '2' variant is has inclusive from and exclusive to.
 // This covers \s as defined in ECMA-262 5.1, 15.10.2.12,
 // which include WhiteSpace (7.2) or LineTerminator (7.3) values.
-constexpr base::uc32 kRangeEndMarker = 0x110000;
+constexpr uc32 kRangeEndMarker = 0x110000;
 constexpr int kSpaceRanges[] = {
     '\t',   '\r' + 1, ' ',    ' ' + 1, 0x00A0, 0x00A1, 0x1680,
     0x1681, 0x2000,   0x200B, 0x2028,  0x202A, 0x202F, 0x2030,
@@ -47,10 +47,34 @@ constexpr int kPatternTooShortForBoyerMoore = 2;
 
 }  // namespace regexp_compiler_constants
 
-inline bool NeedsUnicodeCaseEquivalents(RegExpFlags flags) {
+inline bool IgnoreCase(JSRegExp::Flags flags) {
+  return (flags & JSRegExp::kIgnoreCase) != 0;
+}
+
+inline bool IsUnicode(JSRegExp::Flags flags) {
+  return (flags & JSRegExp::kUnicode) != 0;
+}
+
+inline bool IsSticky(JSRegExp::Flags flags) {
+  return (flags & JSRegExp::kSticky) != 0;
+}
+
+inline bool IsGlobal(JSRegExp::Flags flags) {
+  return (flags & JSRegExp::kGlobal) != 0;
+}
+
+inline bool DotAll(JSRegExp::Flags flags) {
+  return (flags & JSRegExp::kDotAll) != 0;
+}
+
+inline bool Multiline(JSRegExp::Flags flags) {
+  return (flags & JSRegExp::kMultiline) != 0;
+}
+
+inline bool NeedsUnicodeCaseEquivalents(JSRegExp::Flags flags) {
   // Both unicode and ignore_case flags are set. We need to use ICU to find
   // the closure over case equivalents.
-  return IsUnicode(flags) && IsIgnoreCase(flags);
+  return IsUnicode(flags) && IgnoreCase(flags);
 }
 
 // Details of a quick mask-compare check that can look ahead in the
@@ -71,8 +95,8 @@ class QuickCheckDetails {
   void set_cannot_match() { cannot_match_ = true; }
   struct Position {
     Position() : mask(0), value(0), determines_perfectly(false) {}
-    base::uc32 mask;
-    base::uc32 value;
+    uc32 mask;
+    uc32 value;
     bool determines_perfectly;
   };
   int characters() { return characters_; }
@@ -398,8 +422,7 @@ struct PreloadState {
 // Analysis performs assertion propagation and computes eats_at_least_ values.
 // See the comments on AssertionPropagator and EatsAtLeastPropagator for more
 // details.
-RegExpError AnalyzeRegExp(Isolate* isolate, bool is_one_byte, RegExpFlags flags,
-                          RegExpNode* node);
+RegExpError AnalyzeRegExp(Isolate* isolate, bool is_one_byte, RegExpNode* node);
 
 class FrequencyCollator {
  public:
@@ -449,7 +472,7 @@ class FrequencyCollator {
 class RegExpCompiler {
  public:
   RegExpCompiler(Isolate* isolate, Zone* zone, int capture_count,
-                 RegExpFlags flags, bool is_one_byte);
+                 bool is_one_byte);
 
   int AllocateRegister() {
     if (next_register_ >= RegExpMacroAssembler::kMaxRegister) {
@@ -501,12 +524,13 @@ class RegExpCompiler {
   // - Inserting the implicit .* before/after the regexp if necessary.
   // - If the input is a one-byte string, filtering out nodes that can't match.
   // - Fixing up regexp matches that start within a surrogate pair.
-  RegExpNode* PreprocessRegExp(RegExpCompileData* data, RegExpFlags flags,
+  RegExpNode* PreprocessRegExp(RegExpCompileData* data, JSRegExp::Flags flags,
                                bool is_one_byte);
 
   // If the regexp matching starts within a surrogate pair, step back to the
   // lead surrogate and start matching from there.
-  RegExpNode* OptionallyStepBackToLeadSurrogate(RegExpNode* on_success);
+  RegExpNode* OptionallyStepBackToLeadSurrogate(RegExpNode* on_success,
+                                                JSRegExp::Flags flags);
 
   inline void AddWork(RegExpNode* node) {
     if (!node->on_work_list() && !node->label()->is_bound()) {
@@ -527,8 +551,6 @@ class RegExpCompiler {
   inline void IncrementRecursionDepth() { recursion_depth_++; }
   inline void DecrementRecursionDepth() { recursion_depth_--; }
 
-  RegExpFlags flags() const { return flags_; }
-
   void SetRegExpTooBig() { reg_exp_too_big_ = true; }
 
   inline bool one_byte() { return one_byte_; }
@@ -547,18 +569,6 @@ class RegExpCompiler {
     current_expansion_factor_ = value;
   }
 
-  // The recursive nature of ToNode node generation means we may run into stack
-  // overflow issues. We introduce periodic checks to detect these, and the
-  // tick counter helps limit overhead of these checks.
-  // TODO(jgruber): This is super hacky and should be replaced by an abort
-  // mechanism or iterative node generation.
-  void ToNodeMaybeCheckForStackOverflow() {
-    if ((to_node_overflow_check_ticks_++ % 16 == 0)) {
-      ToNodeCheckForStackOverflow();
-    }
-  }
-  void ToNodeCheckForStackOverflow();
-
   Isolate* isolate() const { return isolate_; }
   Zone* zone() const { return zone_; }
 
@@ -571,12 +581,10 @@ class RegExpCompiler {
   int unicode_lookaround_position_register_;
   ZoneVector<RegExpNode*>* work_list_;
   int recursion_depth_;
-  const RegExpFlags flags_;
   RegExpMacroAssembler* macro_assembler_;
   bool one_byte_;
   bool reg_exp_too_big_;
   bool limiting_recursion_;
-  int to_node_overflow_check_ticks_ = 0;
   bool optimize_;
   bool read_backward_;
   int current_expansion_factor_;
