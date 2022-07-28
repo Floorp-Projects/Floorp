@@ -60,7 +60,7 @@ fn collect_test_files(path: &Path, list: &mut Vec<BenchmarkInput>) -> Result<()>
                 };
                 for directive in wast.directives {
                     match directive {
-                        wast::WastDirective::Module(mut module) => {
+                        wast::WastDirective::Wat(mut module) => {
                             let wasm = module.encode()?;
                             list.push(BenchmarkInput::new(path.clone(), wasm));
                         }
@@ -92,18 +92,6 @@ fn read_all_wasm(wasm: &[u8]) -> Result<()> {
                     item?;
                 }
             }
-            AliasSection(s) => {
-                for item in s {
-                    item?;
-                }
-            }
-            InstanceSection(s) => {
-                for item in s {
-                    for arg in item?.args()? {
-                        arg?;
-                    }
-                }
-            }
             FunctionSection(s) => {
                 for item in s {
                     item?;
@@ -119,7 +107,7 @@ fn read_all_wasm(wasm: &[u8]) -> Result<()> {
                     item?;
                 }
             }
-            EventSection(s) => {
+            TagSection(s) => {
                 for item in s {
                     item?;
                 }
@@ -168,15 +156,63 @@ fn read_all_wasm(wasm: &[u8]) -> Result<()> {
                 }
             }
 
+            // Component sections
+            ModuleSection { .. } => {}
+            InstanceSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            AliasSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            CoreTypeSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ComponentSection { .. } => {}
+            ComponentInstanceSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ComponentAliasSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ComponentTypeSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ComponentCanonicalSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ComponentStartSection { .. } => {}
+            ComponentImportSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+            ComponentExportSection(s) => {
+                for item in s {
+                    item?;
+                }
+            }
+
             Version { .. }
             | StartSection { .. }
             | DataCountSection { .. }
             | UnknownSection { .. }
             | CustomSection { .. }
             | CodeSectionStart { .. }
-            | ModuleSectionStart { .. }
-            | ModuleSectionEntry { .. }
-            | End => {}
+            | End(_) => {}
         }
     }
     Ok(())
@@ -205,21 +241,24 @@ fn it_works_benchmark(c: &mut Criterion) {
 
 fn validate_benchmark(c: &mut Criterion) {
     fn validator() -> Validator {
-        let mut ret = Validator::new();
-        ret.wasm_features(WasmFeatures {
+        Validator::new_with_features(WasmFeatures {
             reference_types: true,
             multi_value: true,
             simd: true,
+            relaxed_simd: true,
             exceptions: true,
-            module_linking: true,
+            component_model: true,
             bulk_memory: true,
             threads: true,
             tail_call: true,
             multi_memory: true,
             memory64: true,
+            extended_const: true,
             deterministic_only: false,
-        });
-        return ret;
+            mutable_global: true,
+            saturating_float_to_int: true,
+            sign_extension: true,
+        })
     }
     let mut inputs = collect_benchmark_inputs();
     // Filter out all benchmark inputs that fail to validate via `wasmparser`.

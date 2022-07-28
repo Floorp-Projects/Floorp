@@ -1,7 +1,9 @@
+use crate::annotation;
 use crate::component::*;
 use crate::core;
 use crate::kw;
 use crate::parser::{Parse, Parser, Result};
+use crate::token::Index;
 use crate::token::{Id, NameAnnotation, Span};
 
 /// A parsed WebAssembly component module.
@@ -135,15 +137,21 @@ impl<'a> Parse<'a> for Component<'a> {
 #[allow(missing_docs)]
 #[derive(Debug)]
 pub enum ComponentField<'a> {
-    Type(TypeField<'a>),
-    Import(ComponentImport<'a>),
-    Func(ComponentFunc<'a>),
-    Export(ComponentExport<'a>),
-    Start(Start<'a>),
-    Instance(Instance<'a>),
-    Module(Module<'a>),
+    CoreModule(CoreModule<'a>),
+    CoreInstance(CoreInstance<'a>),
+    CoreAlias(CoreAlias<'a>),
+    CoreType(CoreType<'a>),
     Component(NestedComponent<'a>),
+    Instance(Instance<'a>),
     Alias(Alias<'a>),
+    Type(Type<'a>),
+    CanonicalFunc(CanonicalFunc<'a>),
+    CoreFunc(CoreFunc<'a>), // Supports inverted forms of other items
+    Func(Func<'a>),         // Supports inverted forms of other items
+    Start(Start<'a>),
+    Import(ComponentImport<'a>),
+    Export(ComponentExport<'a>),
+    Custom(Custom<'a>),
 }
 
 impl<'a> ComponentField<'a> {
@@ -158,46 +166,52 @@ impl<'a> ComponentField<'a> {
 
 impl<'a> Parse<'a> for ComponentField<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::r#type>() {
-            return Ok(ComponentField::Type(parser.parse()?));
-        }
-        if parser.peek::<kw::import>() {
-            return Ok(ComponentField::Import(parser.parse()?));
-        }
-        if parser.peek::<kw::func>() {
-            return Ok(ComponentField::Func(parser.parse()?));
-        }
-        if parser.peek::<kw::export>() {
-            return Ok(ComponentField::Export(parser.parse()?));
-        }
-        if parser.peek::<kw::start>() {
-            return Ok(ComponentField::Start(parser.parse()?));
-        }
-        if parser.peek::<kw::instance>() {
-            return Ok(ComponentField::Instance(parser.parse()?));
-        }
-        if parser.peek::<kw::module>() {
-            return Ok(ComponentField::Module(parser.parse()?));
-        }
-        if parser.peek::<kw::component>() {
-            return Ok(ComponentField::Component(parser.parse()?));
-        }
-        if parser.peek::<kw::alias>() {
-            return Ok(ComponentField::Alias(parser.parse()?));
+        if parser.peek::<kw::core>() {
+            if parser.peek2::<kw::module>() {
+                return Ok(Self::CoreModule(parser.parse()?));
+            }
+            if parser.peek2::<kw::instance>() {
+                return Ok(Self::CoreInstance(parser.parse()?));
+            }
+            if parser.peek2::<kw::alias>() {
+                return Ok(Self::CoreAlias(parser.parse()?));
+            }
+            if parser.peek2::<kw::r#type>() {
+                return Ok(Self::CoreType(parser.parse()?));
+            }
+            if parser.peek2::<kw::func>() {
+                return Ok(Self::CoreFunc(parser.parse()?));
+            }
+        } else {
+            if parser.peek::<kw::component>() {
+                return Ok(Self::Component(parser.parse()?));
+            }
+            if parser.peek::<kw::instance>() {
+                return Ok(Self::Instance(parser.parse()?));
+            }
+            if parser.peek::<kw::alias>() {
+                return Ok(Self::Alias(parser.parse()?));
+            }
+            if parser.peek::<kw::r#type>() {
+                return Ok(Self::Type(parser.parse()?));
+            }
+            if parser.peek::<kw::import>() {
+                return Ok(Self::Import(parser.parse()?));
+            }
+            if parser.peek::<kw::func>() {
+                return Ok(Self::Func(parser.parse()?));
+            }
+            if parser.peek::<kw::export>() {
+                return Ok(Self::Export(parser.parse()?));
+            }
+            if parser.peek::<kw::start>() {
+                return Ok(Self::Start(parser.parse()?));
+            }
+            if parser.peek::<annotation::custom>() {
+                return Ok(Self::Custom(parser.parse()?));
+            }
         }
         Err(parser.error("expected valid component field"))
-    }
-}
-
-impl<'a> From<TypeField<'a>> for ComponentField<'a> {
-    fn from(field: TypeField<'a>) -> ComponentField<'a> {
-        ComponentField::Type(field)
-    }
-}
-
-impl<'a> From<Alias<'a>> for ComponentField<'a> {
-    fn from(field: Alias<'a>) -> ComponentField<'a> {
-        ComponentField::Alias(field)
     }
 }
 
@@ -205,7 +219,7 @@ impl<'a> From<Alias<'a>> for ComponentField<'a> {
 #[derive(Debug)]
 pub struct Start<'a> {
     /// The function to call.
-    pub func: ItemRef<'a, kw::func>,
+    pub func: Index<'a>,
     /// The arguments to pass to the function.
     pub args: Vec<ItemRef<'a, kw::value>>,
     /// Name of the result value.
@@ -215,10 +229,10 @@ pub struct Start<'a> {
 impl<'a> Parse<'a> for Start<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.parse::<kw::start>()?;
-        let func = parser.parse::<IndexOrRef<_>>()?.0;
+        let func = parser.parse()?;
         let mut args = Vec::new();
         while !parser.is_empty() && !parser.peek2::<kw::result>() {
-            args.push(parser.parse()?);
+            args.push(parser.parens(|parser| parser.parse())?);
         }
         let result = if !parser.is_empty() {
             parser.parens(|parser| {
@@ -240,7 +254,7 @@ impl<'a> Parse<'a> for Start<'a> {
     }
 }
 
-/// A parsed WebAssembly component module.
+/// A nested WebAssembly component.
 #[derive(Debug)]
 pub struct NestedComponent<'a> {
     /// Where this `component` was defined
@@ -273,6 +287,8 @@ pub enum NestedComponentKind<'a> {
 
 impl<'a> Parse<'a> for NestedComponent<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.depth_check()?;
+
         let span = parser.parse::<kw::component>()?.0;
         let id = parser.parse()?;
         let name = parser.parse()?;

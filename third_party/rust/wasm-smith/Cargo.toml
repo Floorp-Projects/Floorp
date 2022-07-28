@@ -10,24 +10,34 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "wasm-smith"
-version = "0.8.0"
+version = "0.11.2"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 exclude = ["/benches/corpus"]
 description = "A WebAssembly test case generator"
 documentation = "https://docs.rs/wasm-smith"
 readme = "./README.md"
-categories = ["command-line-utilities", "development-tools", "development-tools::testing", "wasm"]
+categories = [
+    "command-line-utilities",
+    "development-tools",
+    "development-tools::testing",
+    "wasm",
+]
 license = "Apache-2.0 WITH LLVM-exception"
-repository = "https://github.com/bytecodealliance/wasm-tools"
+repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-smith"
+resolver = "2"
 
 [[bench]]
 name = "corpus"
 harness = false
+
 [dependencies.arbitrary]
-version = "1.0.0"
+version = "1.1.0"
 features = ["derive"]
+
+[dependencies.flagset]
+version = "0.4"
 
 [dependencies.indexmap]
 version = "1.6"
@@ -35,8 +45,17 @@ version = "1.6"
 [dependencies.leb128]
 version = "0.2.4"
 
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
 [dependencies.wasm-encoder]
-version = "0.7.0"
+version = "0.14.0"
+
+[dependencies.wasmparser]
+version = "0.87.0"
+
 [dev-dependencies.criterion]
 version = "0.3.3"
 
@@ -44,5 +63,11 @@ version = "0.3.3"
 version = "0.4.0"
 
 [dev-dependencies.rand]
-version = "0.7.3"
+version = "0.8.0"
 features = ["small_rng"]
+
+[features]
+_internal_cli = [
+    "serde",
+    "flagset/serde",
+]
