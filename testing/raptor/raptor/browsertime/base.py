@@ -706,7 +706,10 @@ class Browsertime(Perftest):
 
             # Double the timeouts on live sites and when running with Fenix
             if self.config["live_sites"] or self.config["app"] in ("fenix",):
-                output_timeout *= 2
+                # Since output_timeout is None for benchmark tests we should
+                # not perform any operations on it.
+                if output_timeout is not None:
+                    output_timeout *= 2
                 proc_timeout *= 2
 
             proc = self.process_handler(cmd, processOutputLine=_line_handler, env=env)

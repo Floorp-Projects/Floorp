@@ -2,7 +2,8 @@ use crate::component::*;
 use crate::core;
 use crate::gensym;
 use crate::kw;
-use crate::token::{Id, Index, Span};
+use crate::token::Id;
+use crate::token::{Index, Span};
 use std::collections::HashMap;
 use std::mem;
 
@@ -20,12 +21,44 @@ pub fn expand(fields: &mut Vec<ComponentField<'_>>) {
     Expander::default().expand_component_fields(fields)
 }
 
+enum AnyType<'a> {
+    Core(CoreType<'a>),
+    Component(Type<'a>),
+}
+
+impl<'a> From<AnyType<'a>> for ComponentTypeDecl<'a> {
+    fn from(t: AnyType<'a>) -> Self {
+        match t {
+            AnyType::Core(t) => Self::CoreType(t),
+            AnyType::Component(t) => Self::Type(t),
+        }
+    }
+}
+
+impl<'a> From<AnyType<'a>> for InstanceTypeDecl<'a> {
+    fn from(t: AnyType<'a>) -> Self {
+        match t {
+            AnyType::Core(t) => Self::CoreType(t),
+            AnyType::Component(t) => Self::Type(t),
+        }
+    }
+}
+
+impl<'a> From<AnyType<'a>> for ComponentField<'a> {
+    fn from(t: AnyType<'a>) -> Self {
+        match t {
+            AnyType::Core(t) => Self::CoreType(t),
+            AnyType::Component(t) => Self::Type(t),
+        }
+    }
+}
+
 #[derive(Default)]
 struct Expander<'a> {
     /// Fields, during processing, which should be prepended to the
     /// currently-being-processed field. This should always be empty after
     /// processing is complete.
-    to_prepend: Vec<TypeField<'a>>,
+    types_to_prepend: Vec<AnyType<'a>>,
     component_fields_to_prepend: Vec<ComponentField<'a>>,
 
     /// Fields that are appended to the end of the module once everything has
@@ -38,218 +71,292 @@ impl<'a> Expander<'a> {
         let mut cur = 0;
         while cur < fields.len() {
             self.expand_field(&mut fields[cur]);
-            let amt = self.to_prepend.len() + self.component_fields_to_prepend.len();
+            let amt = self.types_to_prepend.len() + self.component_fields_to_prepend.len();
             fields.splice(cur..cur, self.component_fields_to_prepend.drain(..));
-            fields.splice(cur..cur, self.to_prepend.drain(..).map(|f| f.into()));
+            fields.splice(cur..cur, self.types_to_prepend.drain(..).map(Into::into));
             cur += 1 + amt;
         }
-        fields.extend(self.component_fields_to_append.drain(..));
+        fields.append(&mut self.component_fields_to_append);
     }
 
-    fn expand_fields<T>(&mut self, fields: &mut Vec<T>, expand: fn(&mut Self, &mut T))
+    fn expand_decls<T>(&mut self, decls: &mut Vec<T>, expand: fn(&mut Self, &mut T))
     where
-        T: From<TypeField<'a>>,
+        T: From<AnyType<'a>>,
     {
         let mut cur = 0;
-        while cur < fields.len() {
-            expand(self, &mut fields[cur]);
+        while cur < decls.len() {
+            expand(self, &mut decls[cur]);
             assert!(self.component_fields_to_prepend.is_empty());
             assert!(self.component_fields_to_append.is_empty());
-            let amt = self.to_prepend.len();
-            fields.splice(cur..cur, self.to_prepend.drain(..).map(T::from));
+            let amt = self.types_to_prepend.len();
+            decls.splice(cur..cur, self.types_to_prepend.drain(..).map(From::from));
             cur += 1 + amt;
         }
     }
 
     fn expand_field(&mut self, item: &mut ComponentField<'a>) {
-        match item {
-            ComponentField::Type(t) => self.expand_type_field(t),
-            ComponentField::Import(t) => {
-                self.expand_item_sig(&mut t.item);
+        let expanded = match item {
+            ComponentField::CoreModule(m) => self.expand_core_module(m),
+            ComponentField::CoreInstance(i) => {
+                self.expand_core_instance(i);
+                None
             }
-            ComponentField::Component(c) => {
-                for name in c.exports.names.drain(..) {
-                    self.component_fields_to_append.push(export(
-                        c.span,
-                        name,
-                        DefTypeKind::Component,
-                        &mut c.id,
-                    ));
-                }
-                match &mut c.kind {
-                    NestedComponentKind::Inline(fields) => expand(fields),
-                    NestedComponentKind::Import { import, ty } => {
-                        let idx = self.expand_component_type_use(ty);
-                        *item = ComponentField::Import(ComponentImport {
-                            span: c.span,
-                            name: import.name,
-                            item: ItemSig {
-                                span: c.span,
-                                id: c.id,
-                                name: None,
-                                kind: ItemKind::Component(ComponentTypeUse::Ref(idx)),
-                            },
-                        });
-                    }
-                }
+            ComponentField::CoreType(t) => {
+                self.expand_core_type(t);
+                None
             }
+            ComponentField::Component(c) => self.expand_nested_component(c),
+            ComponentField::Instance(i) => self.expand_instance(i),
+            ComponentField::Type(t) => {
+                self.expand_type(t);
+                None
+            }
+            ComponentField::CanonicalFunc(f) => {
+                self.expand_canonical_func(f);
+                None
+            }
+            ComponentField::CoreFunc(f) => self.expand_core_func(f),
+            ComponentField::Func(f) => self.expand_func(f),
+            ComponentField::Import(i) => {
+                self.expand_item_sig(&mut i.item);
+                None
+            }
+            ComponentField::Start(_)
+            | ComponentField::CoreAlias(_)
+            | ComponentField::Alias(_)
+            | ComponentField::Export(_)
+            | ComponentField::Custom(_) => None,
+        };
 
-            ComponentField::Func(f) => {
-                for name in f.exports.names.drain(..) {
-                    self.component_fields_to_append.push(export(
-                        f.span,
-                        name,
-                        DefTypeKind::Func,
-                        &mut f.id,
-                    ));
-                }
-                match &mut f.kind {
-                    ComponentFuncKind::Import { import, ty } => {
-                        let idx = self.expand_component_type_use(ty);
-                        *item = ComponentField::Import(ComponentImport {
-                            span: f.span,
-                            name: import.name,
-                            item: ItemSig {
-                                span: f.span,
-                                id: f.id,
-                                name: None,
-                                kind: ItemKind::Func(ComponentTypeUse::Ref(idx)),
-                            },
-                        });
-                    }
-                    ComponentFuncKind::Inline { body } => match body {
-                        ComponentFuncBody::CanonLift(lift) => {
-                            self.expand_component_type_use(&mut lift.type_);
-                        }
-                        ComponentFuncBody::CanonLower(_) => {}
+        if let Some(expanded) = expanded {
+            *item = expanded;
+        }
+    }
+
+    fn expand_core_module(&mut self, module: &mut CoreModule<'a>) -> Option<ComponentField<'a>> {
+        for name in module.exports.names.drain(..) {
+            let id = gensym::fill(module.span, &mut module.id);
+            self.component_fields_to_append
+                .push(ComponentField::Export(ComponentExport {
+                    span: module.span,
+                    name,
+                    kind: ComponentExportKind::module(module.span, id),
+                }));
+        }
+        match &mut module.kind {
+            // inline modules are expanded later during resolution
+            CoreModuleKind::Inline { .. } => None,
+            CoreModuleKind::Import { import, ty } => {
+                let idx = self.expand_core_type_use(ty);
+                Some(ComponentField::Import(ComponentImport {
+                    span: module.span,
+                    name: import.name,
+                    item: ItemSig {
+                        span: module.span,
+                        id: module.id,
+                        name: None,
+                        kind: ItemSigKind::CoreModule(CoreTypeUse::Ref(idx)),
                     },
-                }
+                }))
             }
-
-            ComponentField::Module(m) => {
-                for name in m.exports.names.drain(..) {
-                    self.component_fields_to_append.push(export(
-                        m.span,
-                        name,
-                        DefTypeKind::Module,
-                        &mut m.id,
-                    ));
-                }
-                match &mut m.kind {
-                    // inline modules are expanded later during resolution
-                    ModuleKind::Inline { .. } => {}
-                    ModuleKind::Import { import, ty } => {
-                        let idx = self.expand_component_type_use(ty);
-                        *item = ComponentField::Import(ComponentImport {
-                            span: m.span,
-                            name: import.name,
-                            item: ItemSig {
-                                span: m.span,
-                                id: m.id,
-                                name: None,
-                                kind: ItemKind::Module(ComponentTypeUse::Ref(idx)),
-                            },
-                        });
-                    }
-                }
-            }
-
-            ComponentField::Instance(i) => {
-                for name in i.exports.names.drain(..) {
-                    self.component_fields_to_append.push(export(
-                        i.span,
-                        name,
-                        DefTypeKind::Instance,
-                        &mut i.id,
-                    ));
-                }
-                match &mut i.kind {
-                    InstanceKind::Import { import, ty } => {
-                        let idx = self.expand_component_type_use(ty);
-                        *item = ComponentField::Import(ComponentImport {
-                            span: i.span,
-                            name: import.name,
-                            item: ItemSig {
-                                span: i.span,
-                                id: i.id,
-                                name: None,
-                                kind: ItemKind::Instance(ComponentTypeUse::Ref(idx)),
-                            },
-                        });
-                    }
-                    InstanceKind::Module { args, .. } => {
-                        for arg in args {
-                            self.expand_module_arg(&mut arg.arg);
-                        }
-                    }
-                    InstanceKind::Component { args, .. } => {
-                        for arg in args {
-                            self.expand_component_arg(&mut arg.arg);
-                        }
-                    }
-                    InstanceKind::BundleOfExports { .. }
-                    | InstanceKind::BundleOfComponentExports { .. } => {}
-                }
-            }
-
-            ComponentField::Export(e) => {
-                self.expand_component_arg(&mut e.arg);
-            }
-
-            ComponentField::Alias(_) | ComponentField::Start(_) => {}
-        }
-
-        fn export<'a>(
-            span: Span,
-            name: &'a str,
-            kind: DefTypeKind,
-            id: &mut Option<Id<'a>>,
-        ) -> ComponentField<'a> {
-            let id = gensym::fill(span, id);
-            ComponentField::Export(ComponentExport {
-                span,
-                name,
-                arg: ComponentArg::Def(ItemRef {
-                    idx: Index::Id(id),
-                    kind,
-                    export_names: Vec::new(),
-                }),
-            })
         }
     }
 
-    fn expand_type_field(&mut self, field: &mut TypeField<'a>) {
+    fn expand_core_instance(&mut self, instance: &mut CoreInstance<'a>) {
+        match &mut instance.kind {
+            CoreInstanceKind::Instantiate { args, .. } => {
+                for arg in args {
+                    self.expand_core_instantiation_arg(&mut arg.kind);
+                }
+            }
+            CoreInstanceKind::BundleOfExports { .. } => {}
+        }
+    }
+
+    fn expand_nested_component(
+        &mut self,
+        component: &mut NestedComponent<'a>,
+    ) -> Option<ComponentField<'a>> {
+        for name in component.exports.names.drain(..) {
+            let id = gensym::fill(component.span, &mut component.id);
+            self.component_fields_to_append
+                .push(ComponentField::Export(ComponentExport {
+                    span: component.span,
+                    name,
+                    kind: ComponentExportKind::component(component.span, id),
+                }));
+        }
+        match &mut component.kind {
+            NestedComponentKind::Inline(fields) => {
+                expand(fields);
+                None
+            }
+            NestedComponentKind::Import { import, ty } => {
+                let idx = self.expand_component_type_use(ty);
+                Some(ComponentField::Import(ComponentImport {
+                    span: component.span,
+                    name: import.name,
+                    item: ItemSig {
+                        span: component.span,
+                        id: component.id,
+                        name: None,
+                        kind: ItemSigKind::Component(ComponentTypeUse::Ref(idx)),
+                    },
+                }))
+            }
+        }
+    }
+
+    fn expand_instance(&mut self, instance: &mut Instance<'a>) -> Option<ComponentField<'a>> {
+        for name in instance.exports.names.drain(..) {
+            let id = gensym::fill(instance.span, &mut instance.id);
+            self.component_fields_to_append
+                .push(ComponentField::Export(ComponentExport {
+                    span: instance.span,
+                    name,
+                    kind: ComponentExportKind::instance(instance.span, id),
+                }));
+        }
+        match &mut instance.kind {
+            InstanceKind::Import { import, ty } => {
+                let idx = self.expand_component_type_use(ty);
+                Some(ComponentField::Import(ComponentImport {
+                    span: instance.span,
+                    name: import.name,
+                    item: ItemSig {
+                        span: instance.span,
+                        id: instance.id,
+                        name: None,
+                        kind: ItemSigKind::Instance(ComponentTypeUse::Ref(idx)),
+                    },
+                }))
+            }
+            InstanceKind::Instantiate { args, .. } => {
+                for arg in args {
+                    self.expand_instantiation_arg(&mut arg.kind);
+                }
+                None
+            }
+            InstanceKind::BundleOfExports { .. } => None,
+        }
+    }
+
+    fn expand_canonical_func(&mut self, func: &mut CanonicalFunc<'a>) {
+        match &mut func.kind {
+            CanonicalFuncKind::Lift { ty, .. } => {
+                self.expand_component_type_use(ty);
+            }
+            CanonicalFuncKind::Lower(_) => {}
+        }
+    }
+
+    fn expand_core_func(&mut self, func: &mut CoreFunc<'a>) -> Option<ComponentField<'a>> {
+        match &mut func.kind {
+            CoreFuncKind::Alias(a) => Some(ComponentField::CoreAlias(CoreAlias {
+                span: func.span,
+                id: func.id,
+                name: func.name,
+                target: CoreAliasTarget::Export {
+                    instance: a.instance,
+                    name: a.name,
+                    kind: core::ExportKind::Func,
+                },
+            })),
+            CoreFuncKind::Lower(info) => Some(ComponentField::CanonicalFunc(CanonicalFunc {
+                span: func.span,
+                id: func.id,
+                name: func.name,
+                kind: CanonicalFuncKind::Lower(mem::take(info)),
+            })),
+        }
+    }
+
+    fn expand_func(&mut self, func: &mut Func<'a>) -> Option<ComponentField<'a>> {
+        for name in func.exports.names.drain(..) {
+            let id = gensym::fill(func.span, &mut func.id);
+            self.component_fields_to_append
+                .push(ComponentField::Export(ComponentExport {
+                    span: func.span,
+                    name,
+                    kind: ComponentExportKind::func(func.span, id),
+                }));
+        }
+        match &mut func.kind {
+            FuncKind::Import { import, ty } => {
+                let idx = self.expand_component_type_use(ty);
+                Some(ComponentField::Import(ComponentImport {
+                    span: func.span,
+                    name: import.name,
+                    item: ItemSig {
+                        span: func.span,
+                        id: func.id,
+                        name: None,
+                        kind: ItemSigKind::Func(ComponentTypeUse::Ref(idx)),
+                    },
+                }))
+            }
+            FuncKind::Lift { ty, info } => {
+                let idx = self.expand_component_type_use(ty);
+                Some(ComponentField::CanonicalFunc(CanonicalFunc {
+                    span: func.span,
+                    id: func.id,
+                    name: func.name,
+                    kind: CanonicalFuncKind::Lift {
+                        ty: ComponentTypeUse::Ref(idx),
+                        info: mem::take(info),
+                    },
+                }))
+            }
+            FuncKind::Alias(a) => Some(ComponentField::Alias(Alias {
+                span: func.span,
+                id: func.id,
+                name: func.name,
+                target: AliasTarget::Export {
+                    instance: a.instance,
+                    name: a.name,
+                    kind: ComponentExportAliasKind::Func,
+                },
+            })),
+        }
+    }
+
+    fn expand_core_type(&mut self, field: &mut CoreType<'a>) {
         match &mut field.def {
-            ComponentTypeDef::DefType(t) => self.expand_deftype(t),
-            ComponentTypeDef::InterType(t) => self.expand_intertype(t),
+            CoreTypeDef::Def(_) => {}
+            CoreTypeDef::Module(m) => self.expand_module_ty(m),
         }
-        let name = gensym::fill(field.span, &mut field.id);
-        let name = Index::Id(name);
+
+        let id = gensym::fill(field.span, &mut field.id);
+        let index = Index::Id(id);
         match &field.def {
-            ComponentTypeDef::DefType(DefType::Func(t)) => t.key().insert(self, name),
-            ComponentTypeDef::DefType(DefType::Module(t)) => t.key().insert(self, name),
-            ComponentTypeDef::DefType(DefType::Component(t)) => t.key().insert(self, name),
-            ComponentTypeDef::DefType(DefType::Instance(t)) => t.key().insert(self, name),
-            ComponentTypeDef::DefType(DefType::Value(t)) => t.key().insert(self, name),
-            ComponentTypeDef::InterType(t) => t.key().insert(self, name),
+            CoreTypeDef::Def(_) => {}
+            CoreTypeDef::Module(t) => t.key().insert(self, index),
         }
     }
 
-    fn expand_deftype(&mut self, ty: &mut DefType<'a>) {
-        match ty {
-            DefType::Func(t) => self.expand_func_ty(t),
-            DefType::Module(m) => self.expand_module_ty(m),
-            DefType::Component(c) => self.expand_component_ty(c),
-            DefType::Instance(i) => self.expand_instance_ty(i),
-            DefType::Value(v) => self.expand_value_ty(v),
+    fn expand_type(&mut self, field: &mut Type<'a>) {
+        match &mut field.def {
+            TypeDef::Defined(d) => self.expand_defined_ty(d),
+            TypeDef::Func(f) => self.expand_func_ty(f),
+            TypeDef::Component(c) => self.expand_component_ty(c),
+            TypeDef::Instance(i) => self.expand_instance_ty(i),
+        }
+
+        let id = gensym::fill(field.span, &mut field.id);
+        let index = Index::Id(id);
+        match &field.def {
+            TypeDef::Defined(t) => t.key().insert(self, index),
+            TypeDef::Func(t) => t.key().insert(self, index),
+            TypeDef::Component(t) => t.key().insert(self, index),
+            TypeDef::Instance(t) => t.key().insert(self, index),
         }
     }
 
     fn expand_func_ty(&mut self, ty: &mut ComponentFunctionType<'a>) {
         for param in ty.params.iter_mut() {
-            self.expand_intertype_ref(&mut param.type_);
+            self.expand_component_val_ty(&mut param.ty);
         }
-        self.expand_intertype_ref(&mut ty.result);
+        self.expand_component_val_ty(&mut ty.result);
     }
 
     fn expand_module_ty(&mut self, ty: &mut ModuleType<'a>) {
@@ -263,9 +370,9 @@ impl<'a> Expander<'a> {
         let mut func_type_to_idx = HashMap::new();
         let mut to_prepend = Vec::new();
         let mut i = 0;
-        while i < ty.defs.len() {
-            match &mut ty.defs[i] {
-                ModuleTypeDef::Type(ty) => match &ty.def {
+        while i < ty.decls.len() {
+            match &mut ty.decls[i] {
+                ModuleTypeDecl::Type(ty) => match &ty.def {
                     core::TypeDef::Func(f) => {
                         let id = gensym::fill(ty.span, &mut ty.id);
                         func_type_to_idx.insert(f.key(), Index::Id(id));
@@ -273,20 +380,21 @@ impl<'a> Expander<'a> {
                     core::TypeDef::Struct(_) => {}
                     core::TypeDef::Array(_) => {}
                 },
-                ModuleTypeDef::Import(ty) => {
+                ModuleTypeDecl::Alias(_) => {},
+                ModuleTypeDecl::Import(ty) => {
                     expand_sig(&mut ty.item, &mut to_prepend, &mut func_type_to_idx);
                 }
-                ModuleTypeDef::Export(_, item) => {
+                ModuleTypeDecl::Export(_, item) => {
                     expand_sig(item, &mut to_prepend, &mut func_type_to_idx);
                 }
             }
-            ty.defs.splice(i..i, to_prepend.drain(..));
+            ty.decls.splice(i..i, to_prepend.drain(..));
             i += 1;
         }
 
         fn expand_sig<'a>(
             item: &mut core::ItemSig<'a>,
-            to_prepend: &mut Vec<ModuleTypeDef<'a>>,
+            to_prepend: &mut Vec<ModuleTypeDecl<'a>>,
             func_type_to_idx: &mut HashMap<FuncKey<'a>, Index<'a>>,
         ) {
             match &mut item.kind {
@@ -304,15 +412,16 @@ impl<'a> Expander<'a> {
                     let ty = t.inline.take().unwrap_or_default();
                     let key = ty.key();
                     if let Some(idx) = func_type_to_idx.get(&key) {
-                        t.index = Some(idx.clone());
+                        t.index = Some(*idx);
                         return;
                     }
                     let id = gensym::gen(item.span);
-                    to_prepend.push(ModuleTypeDef::Type(core::Type {
+                    to_prepend.push(ModuleTypeDecl::Type(core::Type {
                         span: item.span,
                         id: Some(id),
                         name: None,
                         def: key.to_def(item.span),
+                        parent: None,
                     }));
                     let idx = Index::Id(id);
                     t.index = Some(idx);
@@ -325,98 +434,161 @@ impl<'a> Expander<'a> {
     }
 
     fn expand_component_ty(&mut self, ty: &mut ComponentType<'a>) {
-        Expander::default().expand_fields(&mut ty.fields, |e, field| match field {
-            ComponentTypeField::Type(t) => e.expand_type_field(t),
-            ComponentTypeField::Alias(_) => {}
-            ComponentTypeField::Export(t) => e.expand_item_sig(&mut t.item),
-            ComponentTypeField::Import(t) => e.expand_item_sig(&mut t.item),
+        Expander::default().expand_decls(&mut ty.decls, |e, decl| match decl {
+            ComponentTypeDecl::CoreType(t) => e.expand_core_type(t),
+            ComponentTypeDecl::Type(t) => e.expand_type(t),
+            ComponentTypeDecl::Alias(_) => {}
+            ComponentTypeDecl::Export(t) => e.expand_item_sig(&mut t.item),
+            ComponentTypeDecl::Import(t) => e.expand_item_sig(&mut t.item),
         })
     }
 
     fn expand_instance_ty(&mut self, ty: &mut InstanceType<'a>) {
-        Expander::default().expand_fields(&mut ty.fields, |e, field| match field {
-            InstanceTypeField::Type(t) => e.expand_type_field(t),
-            InstanceTypeField::Alias(_) => {}
-            InstanceTypeField::Export(t) => e.expand_item_sig(&mut t.item),
+        Expander::default().expand_decls(&mut ty.decls, |e, decl| match decl {
+            InstanceTypeDecl::CoreType(t) => e.expand_core_type(t),
+            InstanceTypeDecl::Type(t) => e.expand_type(t),
+            InstanceTypeDecl::Alias(_) => {}
+            InstanceTypeDecl::Export(t) => e.expand_item_sig(&mut t.item),
         })
     }
 
-    fn expand_item_sig(&mut self, sig: &mut ItemSig<'a>) {
-        match &mut sig.kind {
-            ItemKind::Component(t) => self.expand_component_type_use(t),
-            ItemKind::Module(t) => self.expand_component_type_use(t),
-            ItemKind::Instance(t) => self.expand_component_type_use(t),
-            ItemKind::Value(t) => self.expand_component_type_use(t),
-            ItemKind::Func(t) => self.expand_component_type_use(t),
-        };
+    fn expand_item_sig(&mut self, ext: &mut ItemSig<'a>) {
+        match &mut ext.kind {
+            ItemSigKind::CoreModule(t) => {
+                self.expand_core_type_use(t);
+            }
+            ItemSigKind::Func(t) => {
+                self.expand_component_type_use(t);
+            }
+            ItemSigKind::Component(t) => {
+                self.expand_component_type_use(t);
+            }
+            ItemSigKind::Instance(t) => {
+                self.expand_component_type_use(t);
+            }
+            ItemSigKind::Value(t) => {
+                self.expand_component_val_ty(t);
+            }
+            ItemSigKind::Type(_) => {}
+        }
     }
 
-    fn expand_value_ty(&mut self, ty: &mut ValueType<'a>) {
-        self.expand_intertype_ref(&mut ty.value_type);
-    }
-
-    fn expand_intertype(&mut self, ty: &mut InterType<'a>) {
+    fn expand_defined_ty(&mut self, ty: &mut ComponentDefinedType<'a>) {
         match ty {
-            InterType::Primitive(_) | InterType::Flags(_) | InterType::Enum(_) => {}
-            InterType::Record(r) => {
+            ComponentDefinedType::Primitive(_)
+            | ComponentDefinedType::Flags(_)
+            | ComponentDefinedType::Enum(_) => {}
+            ComponentDefinedType::Record(r) => {
                 for field in r.fields.iter_mut() {
-                    self.expand_intertype_ref(&mut field.type_);
+                    self.expand_component_val_ty(&mut field.ty);
                 }
             }
-            InterType::Variant(v) => {
+            ComponentDefinedType::Variant(v) => {
                 for case in v.cases.iter_mut() {
-                    self.expand_intertype_ref(&mut case.type_);
+                    self.expand_component_val_ty(&mut case.ty);
                 }
             }
-            InterType::List(t) => {
-                self.expand_intertype_ref(&mut t.element);
+            ComponentDefinedType::List(t) => {
+                self.expand_component_val_ty(&mut t.element);
             }
-            InterType::Tuple(t) => {
+            ComponentDefinedType::Tuple(t) => {
                 for field in t.fields.iter_mut() {
-                    self.expand_intertype_ref(field);
+                    self.expand_component_val_ty(field);
                 }
             }
-            InterType::Union(u) => {
-                for arm in u.arms.iter_mut() {
-                    self.expand_intertype_ref(arm);
+            ComponentDefinedType::Union(u) => {
+                for ty in u.types.iter_mut() {
+                    self.expand_component_val_ty(ty);
                 }
             }
-            InterType::Option(t) => {
-                self.expand_intertype_ref(&mut t.element);
+            ComponentDefinedType::Option(t) => {
+                self.expand_component_val_ty(&mut t.element);
             }
-            InterType::Expected(e) => {
-                self.expand_intertype_ref(&mut e.ok);
-                self.expand_intertype_ref(&mut e.err);
+            ComponentDefinedType::Expected(e) => {
+                self.expand_component_val_ty(&mut e.ok);
+                self.expand_component_val_ty(&mut e.err);
             }
         }
     }
 
-    fn expand_intertype_ref(&mut self, ty: &mut InterTypeRef<'a>) {
+    fn expand_component_val_ty(&mut self, ty: &mut ComponentValType<'a>) {
         let inline = match ty {
-            InterTypeRef::Primitive(_) | InterTypeRef::Ref(_) => return,
-            InterTypeRef::Inline(inline) => {
-                mem::replace(inline, InterType::Primitive(Primitive::Unit))
+            ComponentValType::Primitive(_) | ComponentValType::Ref(_) => return,
+            ComponentValType::Inline(inline) => {
+                self.expand_defined_ty(inline);
+                mem::take(inline)
             }
         };
         // If this inline type has already been defined within this context
         // then reuse the previously defined type to avoid injecting too many
         // types into the type index space.
         if let Some(idx) = inline.key().lookup(self) {
-            *ty = InterTypeRef::Ref(idx);
+            *ty = ComponentValType::Ref(idx);
             return;
         }
+
         // And if this type isn't already defined we append it to the index
         // space with a fresh and unique name.
         let span = Span::from_offset(0); // FIXME(#613): don't manufacture
         let id = gensym::gen(span);
-        self.to_prepend.push(TypeField {
-            span,
-            id: Some(id),
-            name: None,
-            def: inline.into_def(),
-        });
+
+        self.types_to_prepend.push(inline.into_any_type(span, id));
+
         let idx = Index::Id(id);
-        *ty = InterTypeRef::Ref(idx);
+        *ty = ComponentValType::Ref(idx);
+    }
+
+    fn expand_core_type_use<T>(
+        &mut self,
+        item: &mut CoreTypeUse<'a, T>,
+    ) -> CoreItemRef<'a, kw::r#type>
+    where
+        T: TypeReference<'a>,
+    {
+        let span = Span::from_offset(0); // FIXME(#613): don't manufacture
+        let mut inline = match mem::take(item) {
+            // If this type-use was already a reference to an existing type
+            // then we put it back the way it was and return the corresponding
+            // index.
+            CoreTypeUse::Ref(idx) => {
+                *item = CoreTypeUse::Ref(idx.clone());
+                return idx;
+            }
+
+            // ... otherwise with an inline type definition we go into
+            // processing below.
+            CoreTypeUse::Inline(inline) => inline,
+        };
+        inline.expand(self);
+
+        // If this inline type has already been defined within this context
+        // then reuse the previously defined type to avoid injecting too many
+        // types into the type index space.
+        if let Some(idx) = inline.key().lookup(self) {
+            let ret = CoreItemRef {
+                idx,
+                kind: kw::r#type(span),
+                export_name: None,
+            };
+            *item = CoreTypeUse::Ref(ret.clone());
+            return ret;
+        }
+
+        // And if this type isn't already defined we append it to the index
+        // space with a fresh and unique name.
+        let id = gensym::gen(span);
+
+        self.types_to_prepend.push(inline.into_any_type(span, id));
+
+        let idx = Index::Id(id);
+        let ret = CoreItemRef {
+            idx,
+            kind: kw::r#type(span),
+            export_name: None,
+        };
+
+        *item = CoreTypeUse::Ref(ret.clone());
+        ret
     }
 
     fn expand_component_type_use<T>(
@@ -427,12 +599,7 @@ impl<'a> Expander<'a> {
         T: TypeReference<'a>,
     {
         let span = Span::from_offset(0); // FIXME(#613): don't manufacture
-        let dummy = ComponentTypeUse::Ref(ItemRef {
-            idx: Index::Num(0, span),
-            kind: kw::r#type(span),
-            export_names: Vec::new(),
-        });
-        let mut inline = match mem::replace(item, dummy) {
+        let mut inline = match mem::take(item) {
             // If this type-use was already a reference to an existing type
             // then we put it back the way it was and return the corresponding
             // index.
@@ -463,47 +630,44 @@ impl<'a> Expander<'a> {
         // And if this type isn't already defined we append it to the index
         // space with a fresh and unique name.
         let id = gensym::gen(span);
-        self.to_prepend.push(TypeField {
-            span,
-            id: Some(id),
-            name: None,
-            def: inline.into_def(),
-        });
+
+        self.types_to_prepend.push(inline.into_any_type(span, id));
+
         let idx = Index::Id(id);
         let ret = ItemRef {
             idx,
             kind: kw::r#type(span),
             export_names: Vec::new(),
         };
+
         *item = ComponentTypeUse::Ref(ret.clone());
-        return ret;
+        ret
     }
 
-    fn expand_module_arg(&mut self, arg: &mut ModuleArg<'a>) {
-        let (span, args) = match arg {
-            ModuleArg::Def(_) => return,
-            ModuleArg::BundleOfExports(span, exports) => (*span, mem::take(exports)),
+    fn expand_core_instantiation_arg(&mut self, arg: &mut CoreInstantiationArgKind<'a>) {
+        let (span, exports) = match arg {
+            CoreInstantiationArgKind::Instance(_) => return,
+            CoreInstantiationArgKind::BundleOfExports(span, exports) => (*span, mem::take(exports)),
         };
         let id = gensym::gen(span);
         self.component_fields_to_prepend
-            .push(ComponentField::Instance(Instance {
+            .push(ComponentField::CoreInstance(CoreInstance {
                 span,
                 id: Some(id),
                 name: None,
-                exports: Default::default(),
-                kind: InstanceKind::BundleOfExports { args },
+                kind: CoreInstanceKind::BundleOfExports(exports),
             }));
-        *arg = ModuleArg::Def(ItemRef {
-            idx: Index::Id(id),
+        *arg = CoreInstantiationArgKind::Instance(CoreItemRef {
             kind: kw::instance(span),
-            export_names: Vec::new(),
+            idx: Index::Id(id),
+            export_name: None,
         });
     }
 
-    fn expand_component_arg(&mut self, arg: &mut ComponentArg<'a>) {
-        let (span, args) = match arg {
-            ComponentArg::Def(_) => return,
-            ComponentArg::BundleOfExports(span, exports) => (*span, mem::take(exports)),
+    fn expand_instantiation_arg(&mut self, arg: &mut InstantiationArgKind<'a>) {
+        let (span, exports) = match arg {
+            InstantiationArgKind::Item(_) => return,
+            InstantiationArgKind::BundleOfExports(span, exports) => (*span, mem::take(exports)),
         };
         let id = gensym::gen(span);
         self.component_fields_to_prepend
@@ -512,13 +676,9 @@ impl<'a> Expander<'a> {
                 id: Some(id),
                 name: None,
                 exports: Default::default(),
-                kind: InstanceKind::BundleOfComponentExports { args },
+                kind: InstanceKind::BundleOfExports(exports),
             }));
-        *arg = ComponentArg::Def(ItemRef {
-            idx: Index::Id(id),
-            kind: DefTypeKind::Instance,
-            export_names: Vec::new(),
-        });
+        *arg = InstantiationArgKind::Item(ComponentExportKind::instance(span, id));
     }
 }
 
@@ -526,10 +686,10 @@ trait TypeReference<'a> {
     type Key: TypeKey<'a>;
     fn key(&self) -> Self::Key;
     fn expand(&mut self, cx: &mut Expander<'a>);
-    fn into_def(self) -> ComponentTypeDef<'a>;
+    fn into_any_type(self, span: Span, id: Id<'a>) -> AnyType<'a>;
 }
 
-impl<'a> TypeReference<'a> for InterType<'a> {
+impl<'a> TypeReference<'a> for ComponentDefinedType<'a> {
     type Key = Todo; // FIXME(#598): should implement this
 
     fn key(&self) -> Self::Key {
@@ -537,11 +697,17 @@ impl<'a> TypeReference<'a> for InterType<'a> {
     }
 
     fn expand(&mut self, cx: &mut Expander<'a>) {
-        cx.expand_intertype(self)
+        cx.expand_defined_ty(self)
     }
 
-    fn into_def(self) -> ComponentTypeDef<'a> {
-        ComponentTypeDef::InterType(self)
+    fn into_any_type(self, span: Span, id: Id<'a>) -> AnyType<'a> {
+        AnyType::Component(Type {
+            span,
+            id: Some(id),
+            name: None,
+            exports: Default::default(),
+            def: TypeDef::Defined(self),
+        })
     }
 }
 
@@ -556,8 +722,14 @@ impl<'a> TypeReference<'a> for ComponentType<'a> {
         cx.expand_component_ty(self)
     }
 
-    fn into_def(self) -> ComponentTypeDef<'a> {
-        ComponentTypeDef::DefType(DefType::Component(self))
+    fn into_any_type(self, span: Span, id: Id<'a>) -> AnyType<'a> {
+        AnyType::Component(Type {
+            span,
+            id: Some(id),
+            name: None,
+            exports: Default::default(),
+            def: TypeDef::Component(self),
+        })
     }
 }
 
@@ -572,8 +744,13 @@ impl<'a> TypeReference<'a> for ModuleType<'a> {
         cx.expand_module_ty(self)
     }
 
-    fn into_def(self) -> ComponentTypeDef<'a> {
-        ComponentTypeDef::DefType(DefType::Module(self))
+    fn into_any_type(self, span: Span, id: Id<'a>) -> AnyType<'a> {
+        AnyType::Core(CoreType {
+            span,
+            id: Some(id),
+            name: None,
+            def: CoreTypeDef::Module(self),
+        })
     }
 }
 
@@ -588,8 +765,14 @@ impl<'a> TypeReference<'a> for InstanceType<'a> {
         cx.expand_instance_ty(self)
     }
 
-    fn into_def(self) -> ComponentTypeDef<'a> {
-        ComponentTypeDef::DefType(DefType::Instance(self))
+    fn into_any_type(self, span: Span, id: Id<'a>) -> AnyType<'a> {
+        AnyType::Component(Type {
+            span,
+            id: Some(id),
+            name: None,
+            exports: Default::default(),
+            def: TypeDef::Instance(self),
+        })
     }
 }
 
@@ -604,30 +787,20 @@ impl<'a> TypeReference<'a> for ComponentFunctionType<'a> {
         cx.expand_func_ty(self)
     }
 
-    fn into_def(self) -> ComponentTypeDef<'a> {
-        ComponentTypeDef::DefType(DefType::Func(self))
-    }
-}
-
-impl<'a> TypeReference<'a> for ValueType<'a> {
-    type Key = Todo; // FIXME(#598): should implement this
-
-    fn key(&self) -> Self::Key {
-        Todo
-    }
-
-    fn expand(&mut self, cx: &mut Expander<'a>) {
-        cx.expand_value_ty(self)
-    }
-
-    fn into_def(self) -> ComponentTypeDef<'a> {
-        ComponentTypeDef::DefType(DefType::Value(self))
+    fn into_any_type(self, span: Span, id: Id<'a>) -> AnyType<'a> {
+        AnyType::Component(Type {
+            span,
+            id: Some(id),
+            name: None,
+            exports: Default::default(),
+            def: TypeDef::Func(self),
+        })
     }
 }
 
 trait TypeKey<'a> {
     fn lookup(&self, cx: &Expander<'a>) -> Option<Index<'a>>;
-    fn insert(&self, cx: &mut Expander<'a>, id: Index<'a>);
+    fn insert(&self, cx: &mut Expander<'a>, index: Index<'a>);
 }
 
 struct Todo;
@@ -636,7 +809,8 @@ impl<'a> TypeKey<'a> for Todo {
     fn lookup(&self, _cx: &Expander<'a>) -> Option<Index<'a>> {
         None
     }
-    fn insert(&self, cx: &mut Expander<'a>, id: Index<'a>) {
-        drop((cx, id));
+
+    fn insert(&self, cx: &mut Expander<'a>, index: Index<'a>) {
+        drop((cx, index));
     }
 }

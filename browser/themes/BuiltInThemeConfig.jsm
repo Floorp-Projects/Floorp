@@ -462,7 +462,7 @@ const BuiltInThemeConfig = new Map([
   [
     "innovator-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.1.1",
       path: "resource://builtin-themes/colorways/2022innovator/balanced/",
       collection: "independent-voices",
       l10nId: {

@@ -69,7 +69,6 @@ class DebugFrame {
         case ValType::F32:
         case ValType::F64:
         case ValType::V128:
-        case ValType::Rtt:
           return;
         case ValType::Ref:
           switch (type.refTypeKind()) {

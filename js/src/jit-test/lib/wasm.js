@@ -427,8 +427,7 @@ if (wasmGcEnabled()) {
       (module
         (type $s (struct))
         (func (export "newStruct") (result eqref)
-            rtt.canon $s
-            struct.new_with_rtt $s)
+            struct.new $s)
       )`).exports;
     WasmNonNullEqrefValues.push(newStruct());
     WasmEqrefValues.push(null, ...WasmNonNullEqrefValues);

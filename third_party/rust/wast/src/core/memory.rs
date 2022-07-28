@@ -62,10 +62,8 @@ impl<'a> Parse<'a> for Memory<'a> {
         } else if l.peek::<LParen>() || parser.peek2::<LParen>() {
             let is_32 = if parser.parse::<Option<kw::i32>>()?.is_some() {
                 true
-            } else if parser.parse::<Option<kw::i64>>()?.is_some() {
-                false
             } else {
-                true
+                parser.parse::<Option<kw::i64>>()?.is_none()
             };
             let data = parser.parens(|parser| {
                 parser.parse::<kw::data>()?;

@@ -4,12 +4,14 @@ use crate::kw;
 use crate::parser::{Parse, Parser, Result};
 use crate::token::{Id, NameAnnotation, Span};
 
-/// A nested WebAssembly module to be created as part of a component.
+/// A core WebAssembly module to be created as part of a component.
+///
+/// This is a member of the core module section.
 #[derive(Debug)]
-pub struct Module<'a> {
-    /// Where this `nested module` was defined.
+pub struct CoreModule<'a> {
+    /// Where this `core module` was defined.
     pub span: Span,
-    /// An identifier that this nested module is resolved with (optionally) for name
+    /// An identifier that this module is resolved with (optionally) for name
     /// resolution.
     pub id: Option<Id<'a>>,
     /// An optional name for this module stored in the custom `name` section.
@@ -17,50 +19,40 @@ pub struct Module<'a> {
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
     pub exports: core::InlineExport<'a>,
-    /// What kind of nested module this is, be it an inline-defined or imported one.
-    pub kind: ModuleKind<'a>,
+    /// What kind of module this is, be it an inline-defined or imported one.
+    pub kind: CoreModuleKind<'a>,
 }
 
-/// Possible ways to define a nested module in the text format.
+/// Possible ways to define a core module in the text format.
 #[derive(Debug)]
-pub enum ModuleKind<'a> {
-    /// An nested module which is actually defined as an import, such as:
+pub enum CoreModuleKind<'a> {
+    /// A core module which is actually defined as an import
     Import {
-        /// Where this nested module is imported from
+        /// Where this core module is imported from
         import: InlineImport<'a>,
-        /// The type that this nested module will have.
-        ty: ComponentTypeUse<'a, ModuleType<'a>>,
+        /// The type that this core module will have.
+        ty: CoreTypeUse<'a, ModuleType<'a>>,
     },
 
-    ///  modules whose instantiation is defined inline.
+    /// Modules that are defined inline.
     Inline {
-        /// Fields in the nested module.
+        /// Fields in the core module.
         fields: Vec<core::ModuleField<'a>>,
     },
 }
 
-impl<'a> Parse<'a> for Module<'a> {
+impl<'a> Parse<'a> for CoreModule<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        // This is sort of a fundamental limitation of the way this crate is
-        // designed. Everything is done through recursive descent parsing which
-        // means, well, that we're recursively going down the stack as we parse
-        // nested data structures. While we can handle this for wasm expressions
-        // since that's a pretty local decision, handling this for nested
-        // modules which be far trickier. For now we just say that when the
-        // parser goes too deep we return an error saying there's too many
-        // nested modules. It would be great to not return an error here,
-        // though!
-        if parser.parens_depth() > 100 {
-            return Err(parser.error("module nesting too deep"));
-        }
+        parser.depth_check()?;
 
-        let span = parser.parse::<kw::module>()?.0;
+        let span = parser.parse::<kw::core>()?.0;
+        parser.parse::<kw::module>()?;
         let id = parser.parse()?;
         let name = parser.parse()?;
         let exports = parser.parse()?;
 
         let kind = if let Some(import) = parser.parse()? {
-            ModuleKind::Import {
+            CoreModuleKind::Import {
                 import,
                 ty: parser.parse()?,
             }
@@ -69,10 +61,10 @@ impl<'a> Parse<'a> for Module<'a> {
             while !parser.is_empty() {
                 fields.push(parser.parens(|p| p.parse())?);
             }
-            ModuleKind::Inline { fields }
+            CoreModuleKind::Inline { fields }
         };
 
-        Ok(Module {
+        Ok(Self {
             span,
             id,
             name,

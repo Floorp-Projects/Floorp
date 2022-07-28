@@ -2,13 +2,75 @@ use crate::component::*;
 use crate::core;
 use crate::kw;
 use crate::parser::{Parse, Parser, Result};
-use crate::token::{Id, LParen, NameAnnotation, Span};
+use crate::token::{Id, Index, LParen, NameAnnotation, Span};
 
-/// A WebAssembly function to be inserted into a module.
+/// A declared core function.
 ///
-/// This is a member of both the function and code sections.
+/// This is a member of both the core alias and canon sections.
 #[derive(Debug)]
-pub struct ComponentFunc<'a> {
+pub struct CoreFunc<'a> {
+    /// Where this `core func` was defined.
+    pub span: Span,
+    /// An identifier that this function is resolved with (optionally) for name
+    /// resolution.
+    pub id: Option<Id<'a>>,
+    /// An optional name for this function stored in the custom `name` section.
+    pub name: Option<NameAnnotation<'a>>,
+    /// The kind of core function.
+    pub kind: CoreFuncKind<'a>,
+}
+
+impl<'a> Parse<'a> for CoreFunc<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let span = parser.parse::<kw::core>()?.0;
+        parser.parse::<kw::func>()?;
+        let id = parser.parse()?;
+        let name = parser.parse()?;
+        let kind = parser.parse()?;
+
+        Ok(Self {
+            span,
+            id,
+            name,
+            kind,
+        })
+    }
+}
+
+/// Represents the kind of core functions.
+#[derive(Debug)]
+pub enum CoreFuncKind<'a> {
+    /// The core function is defined in terms of lowering a component function.
+    ///
+    /// The core function is actually a member of the canon section.
+    Lower(CanonLower<'a>),
+    /// The core function is defined in terms of aliasing a module instance export.
+    ///
+    /// The core function is actually a member of the core alias section.
+    Alias(InlineExportAlias<'a>),
+}
+
+impl<'a> Parse<'a> for CoreFuncKind<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parens(|parser| {
+            let mut l = parser.lookahead1();
+            if l.peek::<kw::canon>() {
+                parser.parse::<kw::canon>()?;
+                Ok(Self::Lower(parser.parse()?))
+            } else if l.peek::<kw::alias>() {
+                Ok(Self::Alias(parser.parse()?))
+            } else {
+                Err(l.error())
+            }
+        })
+    }
+}
+
+/// A declared component function.
+///
+/// This may be a member of the import, alias, or canon sections.
+#[derive(Debug)]
+pub struct Func<'a> {
     /// Where this `func` was defined.
     pub span: Span,
     /// An identifier that this function is resolved with (optionally) for name
@@ -19,52 +81,19 @@ pub struct ComponentFunc<'a> {
     /// If present, inline export annotations which indicate names this
     /// definition should be exported under.
     pub exports: core::InlineExport<'a>,
-    /// What kind of function this is, be it an inline-defined or imported
-    /// function.
-    pub kind: ComponentFuncKind<'a>,
+    /// The kind of function.
+    pub kind: FuncKind<'a>,
 }
 
-/// Possible ways to define a function in the text format.
-#[derive(Debug)]
-pub enum ComponentFuncKind<'a> {
-    /// A function which is actually defined as an import, such as:
-    ///
-    /// ```text
-    /// (func (import "foo") (type 3))
-    /// ```
-    Import {
-        /// The import name of this import
-        import: InlineImport<'a>,
-        /// The type that this function will have.
-        ty: ComponentTypeUse<'a, ComponentFunctionType<'a>>,
-    },
-
-    /// Almost all functions, those defined inline in a wasm module.
-    Inline {
-        /// The body of the function.
-        body: ComponentFuncBody<'a>,
-    },
-}
-
-impl<'a> Parse<'a> for ComponentFunc<'a> {
+impl<'a> Parse<'a> for Func<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::func>()?.0;
         let id = parser.parse()?;
         let name = parser.parse()?;
         let exports = parser.parse()?;
+        let kind = parser.parse()?;
 
-        let kind = if let Some(import) = parser.parse()? {
-            ComponentFuncKind::Import {
-                import,
-                ty: parser.parse()?,
-            }
-        } else {
-            ComponentFuncKind::Inline {
-                body: parser.parens(|p| p.parse())?,
-            }
-        };
-
-        Ok(ComponentFunc {
+        Ok(Self {
             span,
             id,
             name,
@@ -74,76 +103,196 @@ impl<'a> Parse<'a> for ComponentFunc<'a> {
     }
 }
 
-/// The body of a `ComponentFunc`.
+/// Represents the kind of component functions.
 #[derive(Debug)]
-pub enum ComponentFuncBody<'a> {
-    /// A `canon.lift`.
-    CanonLift(CanonLift<'a>),
-    /// A `canon.lower`.
-    CanonLower(CanonLower<'a>),
+pub enum FuncKind<'a> {
+    /// A function which is actually defined as an import, such as:
+    ///
+    /// ```text
+    /// (func (import "foo") (param string))
+    /// ```
+    Import {
+        /// The import name of this import.
+        import: InlineImport<'a>,
+        /// The type that this function will have.
+        ty: ComponentTypeUse<'a, ComponentFunctionType<'a>>,
+    },
+    /// The function is defined in terms of lifting a core function.
+    ///
+    /// The function is actually a member of the canon section.
+    Lift {
+        /// The lifted function's type.
+        ty: ComponentTypeUse<'a, ComponentFunctionType<'a>>,
+        /// Information relating to the lifting of the core function.
+        info: CanonLift<'a>,
+    },
+    /// The function is defined in terms of aliasing a component instance export.
+    ///
+    /// The function is actually a member of the alias section.
+    Alias(InlineExportAlias<'a>),
 }
 
-impl<'a> Parse<'a> for ComponentFuncBody<'a> {
+impl<'a> Parse<'a> for FuncKind<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::canon_lift>() {
-            Ok(ComponentFuncBody::CanonLift(parser.parse()?))
-        } else if parser.peek::<kw::canon_lower>() {
-            Ok(ComponentFuncBody::CanonLower(parser.parse()?))
+        if let Some(import) = parser.parse()? {
+            Ok(Self::Import {
+                import,
+                ty: parser.parse()?,
+            })
+        } else if parser.peek::<LParen>() && parser.peek2::<kw::alias>() {
+            parser.parens(|parser| Ok(Self::Alias(parser.parse()?)))
         } else {
-            Err(parser.error("Expected canon.lift or canon.lower"))
+            Ok(Self::Lift {
+                ty: parser.parse()?,
+                info: parser.parens(|parser| {
+                    parser.parse::<kw::canon>()?;
+                    parser.parse()
+                })?,
+            })
         }
     }
 }
 
-/// Extra information associated with canon.lift instructions.
+/// A WebAssembly canonical function to be inserted into a component.
+///
+/// This is a member of the canonical section.
+#[derive(Debug)]
+pub struct CanonicalFunc<'a> {
+    /// Where this `func` was defined.
+    pub span: Span,
+    /// An identifier that this function is resolved with (optionally) for name
+    /// resolution.
+    pub id: Option<Id<'a>>,
+    /// An optional name for this function stored in the custom `name` section.
+    pub name: Option<NameAnnotation<'a>>,
+    /// What kind of function this is, be it a lowered or lifted function.
+    pub kind: CanonicalFuncKind<'a>,
+}
+
+impl<'a> Parse<'a> for CanonicalFunc<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let span = parser.parse::<kw::canon>()?.0;
+
+        if parser.peek::<kw::lift>() {
+            let info = parser.parse()?;
+            let (id, name, ty) = parser.parens(|parser| {
+                parser.parse::<kw::func>()?;
+                let id = parser.parse()?;
+                let name = parser.parse()?;
+                let ty = parser.parse()?;
+                Ok((id, name, ty))
+            })?;
+
+            Ok(Self {
+                span,
+                id,
+                name,
+                kind: CanonicalFuncKind::Lift { info, ty },
+            })
+        } else if parser.peek::<kw::lower>() {
+            let info = parser.parse()?;
+            let (id, name) = parser.parens(|parser| {
+                parser.parse::<kw::core>()?;
+                parser.parse::<kw::func>()?;
+                let id = parser.parse()?;
+                let name = parser.parse()?;
+                Ok((id, name))
+            })?;
+
+            Ok(Self {
+                span,
+                id,
+                name,
+                kind: CanonicalFuncKind::Lower(info),
+            })
+        } else {
+            Err(parser.error("expected `canon lift` or `canon lower`"))
+        }
+    }
+}
+
+/// Possible ways to define a canonical function in the text format.
+#[derive(Debug)]
+pub enum CanonicalFuncKind<'a> {
+    /// A canonical function that is defined in terms of lifting a core function.
+    Lift {
+        /// The lifted function's type.
+        ty: ComponentTypeUse<'a, ComponentFunctionType<'a>>,
+        /// Information relating to the lifting of the core function.
+        info: CanonLift<'a>,
+    },
+    /// A canonical function that is defined in terms of lowering a component function.
+    Lower(CanonLower<'a>),
+}
+
+/// Information relating to lifting a core function.
 #[derive(Debug)]
 pub struct CanonLift<'a> {
-    /// The type exported to other components
-    pub type_: ComponentTypeUse<'a, ComponentFunctionType<'a>>,
-    /// Configuration options
+    /// The core function being lifted.
+    pub func: CoreItemRef<'a, kw::func>,
+    /// The canonical options for the lifting.
     pub opts: Vec<CanonOpt<'a>>,
-    /// The function to wrap
-    pub func: ItemRef<'a, kw::func>,
 }
 
 impl<'a> Parse<'a> for CanonLift<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        parser.parse::<kw::canon_lift>()?;
-        let type_ = if parser.peek2::<kw::func>() {
-            ComponentTypeUse::Inline(parser.parens(|p| {
-                p.parse::<kw::func>()?;
-                p.parse()
-            })?)
-        } else {
-            ComponentTypeUse::Ref(parser.parse()?)
-        };
-        let mut opts = Vec::new();
-        while !parser.peek2::<kw::func>() {
-            opts.push(parser.parse()?);
-        }
-        let func = parser.parse()?;
-        Ok(CanonLift { type_, opts, func })
+        parser.parse::<kw::lift>()?;
+
+        Ok(Self {
+            func: parser.parens(|parser| {
+                parser.parse::<kw::core>()?;
+                parser.parse()
+            })?,
+            opts: parser.parse()?,
+        })
     }
 }
 
-/// Extra information associated with canon.lower instructions.
+impl Default for CanonLift<'_> {
+    fn default() -> Self {
+        let span = Span::from_offset(0);
+        Self {
+            func: CoreItemRef {
+                kind: kw::func(span),
+                idx: Index::Num(0, span),
+                export_name: None,
+            },
+            opts: Vec::new(),
+        }
+    }
+}
+
+/// Information relating to lowering a component function.
 #[derive(Debug)]
 pub struct CanonLower<'a> {
-    /// Configuration options
-    pub opts: Vec<CanonOpt<'a>>,
-    /// The function being wrapped
+    /// The function being lowered.
     pub func: ItemRef<'a, kw::func>,
+    /// The canonical options for the lowering.
+    pub opts: Vec<CanonOpt<'a>>,
 }
 
 impl<'a> Parse<'a> for CanonLower<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        parser.parse::<kw::canon_lower>()?;
-        let mut opts = Vec::new();
-        while !parser.is_empty() && (!parser.peek::<LParen>() || !parser.peek2::<kw::func>()) {
-            opts.push(parser.parse()?);
+        parser.parse::<kw::lower>()?;
+
+        Ok(Self {
+            func: parser.parens(|parser| parser.parse())?,
+            opts: parser.parse()?,
+        })
+    }
+}
+
+impl Default for CanonLower<'_> {
+    fn default() -> Self {
+        let span = Span::from_offset(0);
+        Self {
+            func: ItemRef {
+                kind: kw::func(span),
+                idx: Index::Num(0, span),
+                export_names: Vec::new(),
+            },
+            opts: Vec::new(),
         }
-        let func = parser.parse()?;
-        Ok(CanonLower { opts, func })
     }
 }
 
@@ -156,10 +305,12 @@ pub enum CanonOpt<'a> {
     StringUtf16,
     /// Encode strings as "compact UTF-16".
     StringLatin1Utf16,
-    /// A target instance which supplies the memory that the canonical ABI
-    /// should operate on as well as functions that the canonical ABI can call
-    /// to allocate, reallocate and free linear memory
-    Into(ItemRef<'a, kw::instance>),
+    /// Use the specified memory for canonical ABI memory access.
+    Memory(CoreItemRef<'a, kw::memory>),
+    /// Use the specified reallocation function for memory allocations.
+    Realloc(CoreItemRef<'a, kw::func>),
+    /// Call the specified function after the lifted function has returned.
+    PostReturn(CoreItemRef<'a, kw::func>),
 }
 
 impl<'a> Parse<'a> for CanonOpt<'a> {
@@ -167,19 +318,32 @@ impl<'a> Parse<'a> for CanonOpt<'a> {
         let mut l = parser.lookahead1();
         if l.peek::<kw::string_utf8>() {
             parser.parse::<kw::string_utf8>()?;
-            Ok(CanonOpt::StringUtf8)
+            Ok(Self::StringUtf8)
         } else if l.peek::<kw::string_utf16>() {
             parser.parse::<kw::string_utf16>()?;
-            Ok(CanonOpt::StringUtf16)
+            Ok(Self::StringUtf16)
         } else if l.peek::<kw::string_latin1_utf16>() {
             parser.parse::<kw::string_latin1_utf16>()?;
-            Ok(CanonOpt::StringLatin1Utf16)
+            Ok(Self::StringLatin1Utf16)
         } else if l.peek::<LParen>() {
             parser.parens(|parser| {
                 let mut l = parser.lookahead1();
-                if l.peek::<kw::into>() {
-                    parser.parse::<kw::into>()?;
-                    Ok(CanonOpt::Into(parser.parse::<IndexOrRef<'_, _>>()?.0))
+                if l.peek::<kw::memory>() {
+                    let span = parser.parse::<kw::memory>()?.0;
+                    Ok(CanonOpt::Memory(parse_trailing_item_ref(
+                        kw::memory(span),
+                        parser,
+                    )?))
+                } else if l.peek::<kw::realloc>() {
+                    parser.parse::<kw::realloc>()?;
+                    Ok(CanonOpt::Realloc(
+                        parser.parse::<IndexOrCoreRef<'_, _>>()?.0,
+                    ))
+                } else if l.peek::<kw::post_return>() {
+                    parser.parse::<kw::post_return>()?;
+                    Ok(CanonOpt::PostReturn(
+                        parser.parse::<IndexOrCoreRef<'_, _>>()?.0,
+                    ))
                 } else {
                     Err(l.error())
                 }
@@ -190,8 +354,20 @@ impl<'a> Parse<'a> for CanonOpt<'a> {
     }
 }
 
-impl Default for kw::instance {
-    fn default() -> kw::instance {
-        kw::instance(Span::from_offset(0))
+fn parse_trailing_item_ref<'a, T>(kind: T, parser: Parser<'a>) -> Result<CoreItemRef<'a, T>> {
+    Ok(CoreItemRef {
+        kind,
+        idx: parser.parse()?,
+        export_name: parser.parse()?,
+    })
+}
+
+impl<'a> Parse<'a> for Vec<CanonOpt<'a>> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let mut funcs = Vec::new();
+        while !parser.is_empty() {
+            funcs.push(parser.parse()?);
+        }
+        Ok(funcs)
     }
 }

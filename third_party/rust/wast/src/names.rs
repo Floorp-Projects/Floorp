@@ -47,7 +47,7 @@ impl<'a> Namespace<'a> {
     pub fn alloc(&mut self) -> u32 {
         let index = self.count;
         self.count += 1;
-        return index;
+        index
     }
 
     pub fn register_specific(&mut self, name: Id<'a>, index: u32, desc: &str) -> Result<(), Error> {

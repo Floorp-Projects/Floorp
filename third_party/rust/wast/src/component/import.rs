@@ -1,6 +1,7 @@
 use crate::component::*;
 use crate::kw;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
+use crate::token::Index;
 use crate::token::{Id, NameAnnotation, Span};
 
 /// An `import` statement and entry in a WebAssembly component.
@@ -23,8 +24,8 @@ impl<'a> Parse<'a> for ComponentImport<'a> {
     }
 }
 
+/// An item signature for imported items.
 #[derive(Debug)]
-#[allow(missing_docs)]
 pub struct ItemSig<'a> {
     /// Where this item is defined in the source.
     pub span: Span,
@@ -35,42 +36,38 @@ pub struct ItemSig<'a> {
     /// custom `name` section.
     pub name: Option<NameAnnotation<'a>>,
     /// What kind of item this is.
-    pub kind: ItemKind<'a>,
-}
-
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub enum ItemKind<'a> {
-    Component(ComponentTypeUse<'a, ComponentType<'a>>),
-    Module(ComponentTypeUse<'a, ModuleType<'a>>),
-    Instance(ComponentTypeUse<'a, InstanceType<'a>>),
-    Value(ComponentTypeUse<'a, ValueType<'a>>),
-    Func(ComponentTypeUse<'a, ComponentFunctionType<'a>>),
+    pub kind: ItemSigKind<'a>,
 }
 
 impl<'a> Parse<'a> for ItemSig<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
-        let (span, parse_kind): (_, fn(Parser<'a>) -> Result<ItemKind>) =
-            if l.peek::<kw::component>() {
-                let span = parser.parse::<kw::component>()?.0;
-                (span, |parser| Ok(ItemKind::Component(parser.parse()?)))
-            } else if l.peek::<kw::module>() {
-                let span = parser.parse::<kw::module>()?.0;
-                (span, |parser| Ok(ItemKind::Module(parser.parse()?)))
-            } else if l.peek::<kw::instance>() {
-                let span = parser.parse::<kw::instance>()?.0;
-                (span, |parser| Ok(ItemKind::Instance(parser.parse()?)))
-            } else if l.peek::<kw::func>() {
-                let span = parser.parse::<kw::func>()?.0;
-                (span, |parser| Ok(ItemKind::Func(parser.parse()?)))
-            } else if l.peek::<kw::value>() {
-                let span = parser.parse::<kw::value>()?.0;
-                (span, |parser| Ok(ItemKind::Value(parser.parse()?)))
-            } else {
-                return Err(l.error());
-            };
-        Ok(ItemSig {
+        let (span, parse_kind): (_, fn(Parser<'a>) -> Result<ItemSigKind>) = if l.peek::<kw::core>()
+        {
+            let span = parser.parse::<kw::core>()?.0;
+            parser.parse::<kw::module>()?;
+            (span, |parser| Ok(ItemSigKind::CoreModule(parser.parse()?)))
+        } else if l.peek::<kw::func>() {
+            let span = parser.parse::<kw::func>()?.0;
+            (span, |parser| Ok(ItemSigKind::Func(parser.parse()?)))
+        } else if l.peek::<kw::component>() {
+            let span = parser.parse::<kw::component>()?.0;
+            (span, |parser| Ok(ItemSigKind::Component(parser.parse()?)))
+        } else if l.peek::<kw::instance>() {
+            let span = parser.parse::<kw::instance>()?.0;
+            (span, |parser| Ok(ItemSigKind::Instance(parser.parse()?)))
+        } else if l.peek::<kw::value>() {
+            let span = parser.parse::<kw::value>()?.0;
+            (span, |parser| Ok(ItemSigKind::Value(parser.parse()?)))
+        } else if l.peek::<kw::r#type>() {
+            let span = parser.parse::<kw::r#type>()?.0;
+            (span, |parser| {
+                Ok(ItemSigKind::Type(parser.parens(|parser| parser.parse())?))
+            })
+        } else {
+            return Err(l.error());
+        };
+        Ok(Self {
             span,
             id: parser.parse()?,
             name: parser.parse()?,
@@ -79,13 +76,45 @@ impl<'a> Parse<'a> for ItemSig<'a> {
     }
 }
 
+/// The kind of signatures for imported items.
+#[derive(Debug)]
+pub enum ItemSigKind<'a> {
+    /// The item signature is for a core module.
+    CoreModule(CoreTypeUse<'a, ModuleType<'a>>),
+    /// The item signature is for a function.
+    Func(ComponentTypeUse<'a, ComponentFunctionType<'a>>),
+    /// The item signature is for a component.
+    Component(ComponentTypeUse<'a, ComponentType<'a>>),
+    /// The item signature is for an instance.
+    Instance(ComponentTypeUse<'a, InstanceType<'a>>),
+    /// The item signature is for a value.
+    Value(ComponentValType<'a>),
+    /// The item signature is for a type.
+    Type(TypeBounds<'a>),
+}
+
+/// Represents the bounds applied to types being imported.
+#[derive(Debug)]
+pub enum TypeBounds<'a> {
+    /// The equality type bounds.
+    Eq(Index<'a>),
+}
+
+impl<'a> Parse<'a> for TypeBounds<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        // Currently this is the only supported type bounds.
+        parser.parse::<kw::eq>()?;
+        Ok(Self::Eq(parser.parse()?))
+    }
+}
+
 /// A listing of a inline `(import "foo")` statement.
 ///
 /// This is the same as `core::InlineImport` except only one string import is
 /// required.
 #[derive(Debug, Copy, Clone)]
-#[allow(missing_docs)]
 pub struct InlineImport<'a> {
+    /// The name of the item being imported.
     pub name: &'a str,
 }
 

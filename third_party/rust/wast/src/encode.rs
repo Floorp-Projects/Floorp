@@ -57,7 +57,7 @@ impl Encode for i32 {
 
 impl Encode for u64 {
     fn encode(&self, e: &mut Vec<u8>) {
-        leb128::write::unsigned(e, (*self).into()).unwrap();
+        leb128::write::unsigned(e, *self).unwrap();
     }
 }
 

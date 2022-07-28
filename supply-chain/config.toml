@@ -1693,20 +1693,8 @@ criteria = "safe-to-run"
 version = "0.11.0+wasi-snapshot-preview1"
 criteria = "safe-to-deploy"
 
-[[exemptions.wasm-encoder]]
-version = "0.7.0"
-criteria = "safe-to-run"
-
-[[exemptions.wasm-smith]]
-version = "0.8.0"
-criteria = "safe-to-run"
-
 [[exemptions.wasmparser]]
 version = "0.78.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.wast]]
-version = "41.0.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.webrtc-sdp]]

@@ -199,6 +199,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
 
             ModuleField::Import(_)
             | ModuleField::Type(_)
+            | ModuleField::Rec(_)
             | ModuleField::Export(_)
             | ModuleField::Start(_)
             | ModuleField::Elem(_)

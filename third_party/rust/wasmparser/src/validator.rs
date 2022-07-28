@@ -13,30 +13,29 @@
  * limitations under the License.
  */
 
-use crate::limits::*;
-use crate::ResizableLimits64;
-use crate::WasmModuleResources;
-use crate::{Alias, ExternalKind, Import, ImportSectionEntryType};
-use crate::{BinaryReaderError, EventType, GlobalType, MemoryType, Range, Result, TableType, Type};
-use crate::{DataKind, ElementItem, ElementKind, InitExpr, Instance, Operator};
-use crate::{FuncType, ResizableLimits, SectionReader, SectionWithLimitedItems};
-use crate::{FunctionBody, Parser, Payload};
-use std::collections::{HashMap, HashSet};
+use crate::{
+    limits::*, BinaryReaderError, Encoding, FunctionBody, Parser, Payload, Result, SectionReader,
+    SectionWithLimitedItems, ValType, WASM_COMPONENT_VERSION, WASM_MODULE_VERSION,
+};
 use std::mem;
+use std::ops::Range;
 use std::sync::Arc;
 
-/// Test whether the given buffer contains a valid WebAssembly module,
+/// Test whether the given buffer contains a valid WebAssembly module or component,
 /// analogous to [`WebAssembly.validate`][js] in the JS API.
 ///
-/// This functions requires the wasm module is entirely resident in memory and
-/// is specified by `bytes`. Additionally this validates the given bytes with
-/// the default set of WebAssembly features implemented by `wasmparser`.
+/// This functions requires the bytes to validate are entirely resident in memory.
+/// Additionally this validates the given bytes with the default set of WebAssembly
+/// features implemented by `wasmparser`.
 ///
 /// For more fine-tuned control over validation it's recommended to review the
 /// documentation of [`Validator`].
 ///
+/// Upon success, the type information for the top-level module or component will
+/// be returned.
+///
 /// [js]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/validate
-pub fn validate(bytes: &[u8]) -> Result<()> {
+pub fn validate(bytes: &[u8]) -> Result<Types> {
     Validator::new().validate_all(bytes)
 }
 
@@ -46,10 +45,48 @@ fn test_validate() {
     assert!(validate(&[0x0, 0x61, 0x73, 0x6d, 0x2, 0x0, 0x0, 0x0]).is_err());
 }
 
+mod component;
+mod core;
 mod func;
+mod operators;
+pub mod types;
+
+use self::component::*;
+pub use self::core::ValidatorResources;
+use self::core::*;
+use self::types::{TypeList, Types};
 pub use func::FuncValidator;
 
-/// Validator for a WebAssembly binary module.
+fn check_max(cur_len: usize, amt_added: u32, max: usize, desc: &str, offset: usize) -> Result<()> {
+    if max
+        .checked_sub(cur_len)
+        .and_then(|amt| amt.checked_sub(amt_added as usize))
+        .is_none()
+    {
+        if max == 1 {
+            return Err(BinaryReaderError::new(format!("multiple {}", desc), offset));
+        }
+
+        return Err(BinaryReaderError::new(
+            format!("{} count exceeds limit of {}", desc, max),
+            offset,
+        ));
+    }
+
+    Ok(())
+}
+
+fn combine_type_sizes(a: usize, b: usize, offset: usize) -> Result<usize> {
+    match a.checked_add(b) {
+        Some(sum) if sum < MAX_WASM_TYPE_SIZE => Ok(sum),
+        _ => Err(BinaryReaderError::new(
+            format!("effective type size exceeds the limit of {MAX_WASM_TYPE_SIZE}"),
+            offset,
+        )),
+    }
+}
+
+/// Validator for a WebAssembly binary module or component.
 ///
 /// This structure encapsulates state necessary to validate a WebAssembly
 /// binary. This implements validation as defined by the [core
@@ -76,96 +113,116 @@ pub use func::FuncValidator;
 /// [core]: https://webassembly.github.io/spec/core/valid/index.html
 #[derive(Default)]
 pub struct Validator {
-    /// The current module that we're validating.
-    cur: Module,
+    /// The current state of the validator.
+    state: State,
 
-    /// With module linking this is the list of parent modules to this module,
-    /// sorted from oldest to most recent.
-    parents: Vec<Module>,
+    /// The global type space used by the validator and any sub-validators.
+    types: TypeList,
 
-    /// This is the global list of all types shared by this validator which all
-    /// modules will reference.
-    types: SnapshotList<TypeDef>,
+    /// The module state when parsing a WebAssembly module.
+    module: Option<ModuleState>,
+
+    /// With the component model enabled, this stores the pushed component states.
+    /// The top of the stack is the current component state.
+    components: Vec<ComponentState>,
 
     /// Enabled WebAssembly feature flags, dictating what's valid and what
     /// isn't.
     features: WasmFeatures,
-
-    /// The current byte-level offset in the wasm binary. This is updated to
-    /// produce error messages in `create_error`.
-    offset: usize,
 }
 
-#[derive(Default)]
-struct Module {
-    /// Internal state that is incrementally built-up for the module being
-    /// validate. This houses type information for all wasm items, like
-    /// functions. Note that this starts out as a solely owned `Arc<T>` so we can
-    /// get mutable access, but after we get to the code section this is never
-    /// mutated to we can clone it cheaply and hand it to sub-validators.
-    state: arc::MaybeOwned<ModuleState>,
-
-    /// Where we are, order-wise, in the wasm binary.
-    order: Order,
-
-    /// The number of data segments we ended up finding in this module, or 0 if
-    /// they either weren't present or none were found.
-    data_found: u32,
-
-    /// The number of functions we expect to be defined in the code section, or
-    /// basically the length of the function section if it was found. The next
-    /// index is where we are, in the code section index space, for the next
-    /// entry in the code section (used to figure out what type is next for the
-    /// function being validated).
-    expected_code_bodies: Option<u32>,
-    code_section_index: usize,
-}
-
-#[derive(Default)]
-struct ModuleState {
-    /// This is a snapshot of `validator.types` when it is created. This is not
-    /// initially filled in but once everything in a module except the code
-    /// section has been parsed then this will be filled in.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+enum State {
+    /// A header has not yet been parsed.
     ///
-    /// Note that this `ModuleState` will be a separately-owned structure living
-    /// in each function's validator. This is done to allow parallel validation
-    /// of functions while the main module is possibly still being parsed.
-    all_types: Option<Arc<SnapshotList<TypeDef>>>,
+    /// The value is the expected encoding for the header.
+    Unparsed(Option<Encoding>),
+    /// A module header has been parsed.
+    ///
+    /// The associated module state is available via [`Validator::module`].
+    Module,
+    /// A component header has been parsed.
+    ///
+    /// The associated component state exists at the top of the
+    /// validator's [`Validator::components`] stack.
+    Component,
+    /// The parse has completed and no more data is expected.
+    End,
+}
 
-    types: Vec<usize>, // pointer into `validator.types`
-    tables: Vec<TableType>,
-    memories: Vec<MemoryType>,
-    globals: Vec<GlobalType>,
-    element_types: Vec<Type>,
-    data_count: Option<u32>,
-    code_type_indexes: Vec<u32>, // pointer into `types` above
-    func_types: Vec<usize>,      // pointer into `validator.types`
-    events: Vec<usize>,          // pointer into `validator.types`
-    submodules: Vec<usize>,      // pointer into `validator.types`
-    instances: Vec<usize>,       // pointer into `validator.types`
-    function_references: HashSet<u32>,
+impl State {
+    fn ensure_parsable(&self, offset: usize) -> Result<()> {
+        match self {
+            Self::Module | Self::Component => Ok(()),
+            Self::Unparsed(_) => Err(BinaryReaderError::new(
+                "unexpected section before header was parsed",
+                offset,
+            )),
+            Self::End => Err(BinaryReaderError::new(
+                "unexpected section after parsing has completed",
+                offset,
+            )),
+        }
+    }
 
-    // This is populated when we hit the export section
-    exports: NameSet,
+    fn ensure_module(&self, section: &str, offset: usize) -> Result<()> {
+        self.ensure_parsable(offset)?;
 
-    // This is populated as we visit import sections, which might be
-    // incrementally in the face of a module-linking-using module.
-    imports: NameSet,
+        match self {
+            Self::Module => Ok(()),
+            Self::Component => Err(BinaryReaderError::new(
+                format!(
+                    "unexpected module {} section while parsing a component",
+                    section
+                ),
+                offset,
+            )),
+            _ => unreachable!(),
+        }
+    }
+
+    fn ensure_component(&self, section: &str, offset: usize) -> Result<()> {
+        self.ensure_parsable(offset)?;
+
+        match self {
+            Self::Component => Ok(()),
+            Self::Module => Err(BinaryReaderError::new(
+                format!(
+                    "unexpected component {} section while parsing a module",
+                    section
+                ),
+                offset,
+            )),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self::Unparsed(None)
+    }
 }
 
 /// Flags for features that are enabled for validation.
 #[derive(Hash, Debug, Copy, Clone)]
 pub struct WasmFeatures {
+    /// The WebAssembly `mutable-global` proposal (enabled by default)
+    pub mutable_global: bool,
+    /// The WebAssembly `nontrapping-float-to-int-conversions` proposal (enabled by default)
+    pub saturating_float_to_int: bool,
+    /// The WebAssembly `sign-extension-ops` proposal (enabled by default)
+    pub sign_extension: bool,
     /// The WebAssembly reference types proposal (enabled by default)
     pub reference_types: bool,
     /// The WebAssembly multi-value proposal (enabled by default)
     pub multi_value: bool,
     /// The WebAssembly bulk memory operations proposal (enabled by default)
     pub bulk_memory: bool,
-    /// The WebAssembly module linking proposal
-    pub module_linking: bool,
     /// The WebAssembly SIMD proposal
     pub simd: bool,
+    /// The WebAssembly Relaxed SIMD proposal
+    pub relaxed_simd: bool,
     /// The WebAssembly threads proposal
     pub threads: bool,
     /// The WebAssembly tail-call proposal
@@ -178,122 +235,80 @@ pub struct WasmFeatures {
     pub exceptions: bool,
     /// The WebAssembly memory64 proposal
     pub memory64: bool,
+    /// The WebAssembly extended_const proposal
+    pub extended_const: bool,
+    /// The WebAssembly component model proposal.
+    pub component_model: bool,
+}
+
+impl WasmFeatures {
+    pub(crate) fn check_value_type(&self, ty: ValType) -> Result<(), &'static str> {
+        match ty {
+            ValType::I32 | ValType::I64 | ValType::F32 | ValType::F64 => Ok(()),
+            ValType::FuncRef | ValType::ExternRef => {
+                if self.reference_types {
+                    Ok(())
+                } else {
+                    Err("reference types support is not enabled")
+                }
+            }
+            ValType::V128 => {
+                if self.simd {
+                    Ok(())
+                } else {
+                    Err("SIMD support is not enabled")
+                }
+            }
+        }
+    }
 }
 
 impl Default for WasmFeatures {
     fn default() -> WasmFeatures {
         WasmFeatures {
             // off-by-default features
-            module_linking: false,
-            simd: false,
+            relaxed_simd: false,
             threads: false,
             tail_call: false,
             multi_memory: false,
             exceptions: false,
             memory64: false,
+            extended_const: false,
+            component_model: false,
             deterministic_only: cfg!(feature = "deterministic"),
 
             // on-by-default features
+            mutable_global: true,
+            saturating_float_to_int: true,
+            sign_extension: true,
             bulk_memory: true,
             multi_value: true,
             reference_types: true,
+            simd: true,
         }
     }
-}
-
-#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Debug)]
-enum Order {
-    Initial,
-    AfterHeader,
-    Type,
-    Import,
-    ModuleLinkingHeader,
-    Function,
-    Table,
-    Memory,
-    Event,
-    Global,
-    Export,
-    Start,
-    Element,
-    DataCount,
-    Code,
-    Data,
-}
-
-impl Default for Order {
-    fn default() -> Order {
-        Order::Initial
-    }
-}
-
-enum TypeDef {
-    Func(FuncType),
-    Module(ModuleType),
-    Instance(InstanceType),
-}
-
-impl TypeDef {
-    fn unwrap_func(&self) -> &FuncType {
-        match self {
-            TypeDef::Func(f) => f,
-            _ => panic!("not a function type"),
-        }
-    }
-
-    fn unwrap_module(&self) -> &ModuleType {
-        match self {
-            TypeDef::Module(f) => f,
-            _ => panic!("not a module type"),
-        }
-    }
-
-    fn unwrap_instance(&self) -> &InstanceType {
-        match self {
-            TypeDef::Instance(f) => f,
-            _ => panic!("not an instance type"),
-        }
-    }
-}
-
-struct ModuleType {
-    type_size: u32,
-    imports: HashMap<String, EntityType>,
-    exports: HashMap<String, EntityType>,
-}
-
-#[derive(Default)]
-struct InstanceType {
-    type_size: u32,
-    exports: HashMap<String, EntityType>,
-}
-
-#[derive(Clone)]
-enum EntityType {
-    Global(GlobalType),
-    Memory(MemoryType),
-    Table(TableType),
-    Func(usize),     // pointer into `validator.types`
-    Module(usize),   // pointer into `validator.types`
-    Instance(usize), // pointer into `validator.types`
-    Event(usize),    // pointer into `validator.types`
 }
 
 /// Possible return values from [`Validator::payload`].
+#[allow(clippy::large_enum_variant)]
 pub enum ValidPayload<'a> {
     /// The payload validated, no further action need be taken.
     Ok,
-    /// The payload validated, but it started a nested module.
+    /// The payload validated, but it started a nested module or component.
     ///
     /// This result indicates that the specified parser should be used instead
     /// of the currently-used parser until this returned one ends.
-    Submodule(Parser),
+    Parser(Parser),
     /// A function was found to be validate.
     Func(FuncValidator<ValidatorResources>, FunctionBody<'a>),
+    /// The end payload was validated and the types known to the validator
+    /// are provided.
+    End(Types),
 }
 
 impl Validator {
-    /// Creates a new [`Validator`] ready to validate a WebAssembly module.
+    /// Creates a new [`Validator`] ready to validate a WebAssembly module
+    /// or component.
     ///
     /// The new validator will receive payloads parsed from
     /// [`Parser`], and expects the first payload received to be
@@ -302,31 +317,53 @@ impl Validator {
         Validator::default()
     }
 
-    /// Configures the enabled WebAssembly features for this `Validator`.
-    pub fn wasm_features(&mut self, features: WasmFeatures) -> &mut Validator {
-        self.features = features;
-        self
+    /// Creates a new [`Validator`] which has the specified set of wasm
+    /// features activated for validation.
+    ///
+    /// This function is the same as [`Validator::new`] except it also allows
+    /// you to customize the active wasm features in use for validation. This
+    /// can allow enabling experimental proposals or also turning off
+    /// on-by-default wasm proposals.
+    pub fn new_with_features(features: WasmFeatures) -> Validator {
+        let mut ret = Validator::new();
+        ret.features = features;
+        ret
     }
 
-    /// Validates an entire in-memory module with this validator.
+    /// Returns the wasm features used for this validator.
+    pub fn features(&self) -> &WasmFeatures {
+        &self.features
+    }
+
+    /// Validates an entire in-memory module or component with this validator.
     ///
     /// This function will internally create a [`Parser`] to parse the `bytes`
-    /// provided. The entire wasm module specified by `bytes` will be parsed and
-    /// validated. Parse and validation errors will be returned through
-    /// `Err(_)`, and otherwise a successful validation means `Ok(())` is
-    /// returned.
-    pub fn validate_all(&mut self, bytes: &[u8]) -> Result<()> {
+    /// provided. The entire module or component specified by `bytes` will be
+    /// parsed and validated.
+    ///
+    /// Upon success, the type information for the top-level module or component
+    /// will be returned.
+    pub fn validate_all(&mut self, bytes: &[u8]) -> Result<Types> {
         let mut functions_to_validate = Vec::new();
+        let mut last_types = None;
         for payload in Parser::new(0).parse_all(bytes) {
-            if let ValidPayload::Func(a, b) = self.payload(&payload?)? {
-                functions_to_validate.push((a, b));
+            match self.payload(&payload?)? {
+                ValidPayload::Func(a, b) => {
+                    functions_to_validate.push((a, b));
+                }
+                ValidPayload::End(types) => {
+                    // Only the last (top-level) type information will be returned
+                    last_types = Some(types);
+                }
+                _ => {}
             }
         }
 
         for (mut validator, body) in functions_to_validate {
             validator.validate(&body)?;
         }
-        Ok(())
+
+        Ok(last_types.unwrap())
     }
 
     /// Convenience function to validate a single [`Payload`].
@@ -345,15 +382,19 @@ impl Validator {
     pub fn payload<'a>(&mut self, payload: &Payload<'a>) -> Result<ValidPayload<'a>> {
         use crate::Payload::*;
         match payload {
-            Version { num, range } => self.version(*num, range)?,
+            Version {
+                num,
+                encoding,
+                range,
+            } => self.version(*num, *encoding, range)?,
+
+            // Module sections
             TypeSection(s) => self.type_section(s)?,
             ImportSection(s) => self.import_section(s)?,
-            AliasSection(s) => self.alias_section(s)?,
-            InstanceSection(s) => self.instance_section(s)?,
             FunctionSection(s) => self.function_section(s)?,
             TableSection(s) => self.table_section(s)?,
             MemorySection(s) => self.memory_section(s)?,
-            EventSection(s) => self.event_section(s)?,
+            TagSection(s) => self.tag_section(s)?,
             GlobalSection(s) => self.global_section(s)?,
             ExportSection(s) => self.export_section(s)?,
             StartSection { func, range } => self.start_section(*func, range)?,
@@ -365,1131 +406,403 @@ impl Validator {
                 size: _,
             } => self.code_section_start(*count, range)?,
             CodeSectionEntry(body) => {
-                let func_validator = self.code_section_entry()?;
-                return Ok(ValidPayload::Func(func_validator, body.clone()));
+                let func_validator = self.code_section_entry(body)?;
+                return Ok(ValidPayload::Func(func_validator, *body));
             }
-            ModuleSectionStart {
-                count,
-                range,
-                size: _,
-            } => self.module_section_start(*count, range)?,
             DataSection(s) => self.data_section(s)?,
-            End => self.end()?,
+
+            // Component sections
+            ModuleSection { parser, range, .. } => {
+                self.module_section(range)?;
+                return Ok(ValidPayload::Parser(parser.clone()));
+            }
+            InstanceSection(s) => self.instance_section(s)?,
+            AliasSection(s) => self.alias_section(s)?,
+            CoreTypeSection(s) => self.core_type_section(s)?,
+            ComponentSection { parser, range, .. } => {
+                self.component_section(range)?;
+                return Ok(ValidPayload::Parser(parser.clone()));
+            }
+            ComponentInstanceSection(s) => self.component_instance_section(s)?,
+            ComponentAliasSection(s) => self.component_alias_section(s)?,
+            ComponentTypeSection(s) => self.component_type_section(s)?,
+            ComponentCanonicalSection(s) => self.component_canonical_section(s)?,
+            ComponentStartSection(s) => self.component_start_section(s)?,
+            ComponentImportSection(s) => self.component_import_section(s)?,
+            ComponentExportSection(s) => self.component_export_section(s)?,
+
+            End(offset) => return Ok(ValidPayload::End(self.end(*offset)?)),
 
             CustomSection { .. } => {} // no validation for custom sections
             UnknownSection { id, range, .. } => self.unknown_section(*id, range)?,
-            ModuleSectionEntry { parser, .. } => {
-                self.module_section_entry();
-                return Ok(ValidPayload::Submodule(parser.clone()));
-            }
         }
         Ok(ValidPayload::Ok)
     }
 
-    fn create_error<T>(&self, msg: impl Into<String>) -> Result<T> {
-        Err(BinaryReaderError::new(msg.into(), self.offset))
-    }
-
-    /// Validates [`Payload::Version`](crate::Payload)
-    pub fn version(&mut self, num: u32, range: &Range) -> Result<()> {
-        self.offset = range.start;
-        if self.cur.order != Order::Initial {
-            return self.create_error("wasm version header out of order");
-        }
-        self.cur.order = Order::AfterHeader;
-        if num != 1 {
-            return self.create_error("bad wasm file version");
-        }
-        Ok(())
-    }
-
-    fn update_order(&mut self, order: Order) -> Result<()> {
-        let prev = mem::replace(&mut self.cur.order, order);
-        // If the previous section came before this section, then that's always
-        // valid.
-        if prev < order {
-            return Ok(());
-        }
-        // ... otherwise if this is a repeated section then only the "module
-        // linking header" is allows to have repeats
-        if prev == self.cur.order && self.cur.order == Order::ModuleLinkingHeader {
-            return Ok(());
-        }
-        self.create_error("section out of order")
-    }
-
-    fn header_order(&mut self, order: Order) -> Order {
-        if self.features.module_linking {
-            Order::ModuleLinkingHeader
-        } else {
-            order
-        }
-    }
-
-    fn get_type(&self, idx: u32) -> Result<&TypeDef> {
-        match self.cur.state.types.get(idx as usize) {
-            Some(t) => Ok(&self.types[*t]),
-            None => self.create_error(format!("unknown type {}: type index out of bounds", idx)),
-        }
-    }
-
-    fn get_table(&self, idx: u32) -> Result<&TableType> {
-        match self.cur.state.tables.get(idx as usize) {
-            Some(t) => Ok(t),
-            None => self.create_error(format!("unknown table {}: table index out of bounds", idx)),
-        }
-    }
-
-    fn get_memory(&self, idx: u32) -> Result<&MemoryType> {
-        match self.cur.state.memories.get(idx as usize) {
-            Some(t) => Ok(t),
-            None => self.create_error(format!(
-                "unknown memory {}: memory index out of bounds",
-                idx,
-            )),
-        }
-    }
-
-    fn get_global(&self, idx: u32) -> Result<&GlobalType> {
-        match self.cur.state.globals.get(idx as usize) {
-            Some(t) => Ok(t),
-            None => self.create_error(format!(
-                "unknown global {}: global index out of bounds",
-                idx,
-            )),
-        }
-    }
-
-    fn get_func_type(&self, func_idx: u32) -> Result<&FuncType> {
-        match self.cur.state.func_types.get(func_idx as usize) {
-            Some(t) => Ok(self.types[*t].unwrap_func()),
-            None => self.create_error(format!(
-                "unknown function {}: func index out of bounds",
-                func_idx,
-            )),
-        }
-    }
-
-    fn get_module_type(&self, module_idx: u32) -> Result<&ModuleType> {
-        match self.cur.state.submodules.get(module_idx as usize) {
-            Some(t) => Ok(self.types[*t].unwrap_module()),
-            None => self.create_error("unknown module: module index out of bounds"),
-        }
-    }
-
-    fn get_instance_type(&self, instance_idx: u32) -> Result<&InstanceType> {
-        match self.cur.state.instances.get(instance_idx as usize) {
-            Some(t) => Ok(self.types[*t].unwrap_instance()),
-            None => self.create_error("unknown instance: instance index out of bounds"),
-        }
-    }
-
-    fn func_type_at(&self, type_index: u32) -> Result<&FuncType> {
-        let def = self.get_type(type_index)?;
-        match def {
-            TypeDef::Func(item) => Ok(item),
-            _ => self.create_error("type index is not a function"),
-        }
-    }
-
-    fn module_type_at(&self, type_index: u32) -> Result<&ModuleType> {
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        let ty = self.get_type(type_index)?;
-        match ty {
-            TypeDef::Module(item) => Ok(item),
-            _ => self.create_error("type index is not a module"),
-        }
-    }
-
-    fn instance_type_at(&self, type_index: u32) -> Result<&InstanceType> {
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        let ty = self.get_type(type_index)?;
-        match ty {
-            TypeDef::Instance(item) => Ok(item),
-            _ => self.create_error("type index is not an instance"),
-        }
-    }
-
-    fn check_max(&self, cur_len: usize, amt_added: u32, max: usize, desc: &str) -> Result<()> {
-        let overflow = max
-            .checked_sub(cur_len)
-            .and_then(|amt| amt.checked_sub(amt_added as usize))
-            .is_none();
-        if overflow {
-            return if max == 1 {
-                self.create_error(format!("multiple {}", desc))
-            } else {
-                self.create_error(format!("{} count is out of bounds", desc))
-            };
-        }
-        Ok(())
-    }
-
-    fn section<T>(
-        &mut self,
-        order: Order,
-        section: &T,
-        mut validate_item: impl FnMut(&mut Self, T::Item) -> Result<()>,
-    ) -> Result<()>
-    where
-        T: SectionReader + Clone + SectionWithLimitedItems,
-    {
-        self.offset = section.range().start;
-        self.update_order(order)?;
-
-        let mut section = section.clone();
-        for _ in 0..section.get_count() {
-            self.offset = section.original_position();
-            let item = section.read()?;
-            validate_item(self, item)?;
-        }
-        self.offset = section.range().end;
-        section.ensure_end()?;
-        Ok(())
-    }
-
-    /// Validates [`Payload::TypeSection`](crate::Payload)
-    pub fn type_section(&mut self, section: &crate::TypeSectionReader<'_>) -> Result<()> {
-        let order = self.header_order(Order::Type);
-        self.check_max(
-            self.cur.state.types.len(),
-            section.get_count(),
-            MAX_WASM_TYPES,
-            "types",
-        )?;
-        self.section(order, section, |me, item| me.type_def(item))
-    }
-
-    fn type_def(&mut self, def: crate::TypeDef<'_>) -> Result<()> {
-        let def = match def {
-            crate::TypeDef::Func(t) => {
-                for ty in t.params.iter().chain(t.returns.iter()) {
-                    self.value_type(*ty)?;
-                }
-                if t.returns.len() > 1 && !self.features.multi_value {
-                    return self
-                        .create_error("invalid result arity: func type returns multiple values");
-                }
-                TypeDef::Func(t)
-            }
-            crate::TypeDef::Module(t) => {
-                if !self.features.module_linking {
-                    return self.create_error("module linking proposal not enabled");
-                }
-                let mut imports = NameSet::default();
-                for i in t.imports.iter() {
-                    let ty = self.import_entry_type(&i.ty)?;
-                    imports.push(
-                        self.offset,
-                        i.module,
-                        i.field,
-                        ty,
-                        &mut self.types,
-                        "import",
-                    )?;
-                }
-
-                let mut exports = NameSet::default();
-                for e in t.exports.iter() {
-                    let ty = self.import_entry_type(&e.ty)?;
-                    exports.push(self.offset, e.name, None, ty, &mut self.types, "export")?;
-                }
-                TypeDef::Module(ModuleType {
-                    type_size: combine_type_sizes(
-                        self.offset,
-                        imports.type_size,
-                        exports.type_size,
-                    )?,
-                    imports: imports.set,
-                    exports: exports.set,
-                })
-            }
-            crate::TypeDef::Instance(t) => {
-                if !self.features.module_linking {
-                    return self.create_error("module linking proposal not enabled");
-                }
-                let mut exports = NameSet::default();
-                for e in t.exports.iter() {
-                    let ty = self.import_entry_type(&e.ty)?;
-                    exports.push(self.offset, e.name, None, ty, &mut self.types, "export")?;
-                }
-                TypeDef::Instance(InstanceType {
-                    type_size: exports.type_size,
-                    exports: exports.set,
-                })
-            }
-        };
-        self.cur.state.assert_mut().types.push(self.types.len());
-        self.types.push(def);
-        Ok(())
-    }
-
-    fn value_type(&self, ty: Type) -> Result<()> {
-        match self.features.check_value_type(ty) {
-            Ok(()) => Ok(()),
-            Err(e) => self.create_error(e),
-        }
-    }
-
-    fn import_entry_type(&self, import_type: &ImportSectionEntryType) -> Result<EntityType> {
-        match import_type {
-            ImportSectionEntryType::Function(type_index) => {
-                self.func_type_at(*type_index)?;
-                Ok(EntityType::Func(self.cur.state.types[*type_index as usize]))
-            }
-            ImportSectionEntryType::Table(t) => {
-                self.table_type(t)?;
-                Ok(EntityType::Table(t.clone()))
-            }
-            ImportSectionEntryType::Memory(t) => {
-                self.memory_type(t)?;
-                Ok(EntityType::Memory(t.clone()))
-            }
-            ImportSectionEntryType::Event(t) => {
-                self.event_type(t)?;
-                Ok(EntityType::Event(
-                    self.cur.state.types[t.type_index as usize],
-                ))
-            }
-            ImportSectionEntryType::Global(t) => {
-                self.global_type(t)?;
-                Ok(EntityType::Global(t.clone()))
-            }
-            ImportSectionEntryType::Module(type_index) => {
-                self.module_type_at(*type_index)?;
-                Ok(EntityType::Module(
-                    self.cur.state.types[*type_index as usize],
-                ))
-            }
-            ImportSectionEntryType::Instance(type_index) => {
-                self.instance_type_at(*type_index)?;
-                Ok(EntityType::Instance(
-                    self.cur.state.types[*type_index as usize],
-                ))
-            }
-        }
-    }
-
-    fn table_type(&self, ty: &TableType) -> Result<()> {
-        match ty.element_type {
-            Type::FuncRef => {}
-            Type::ExternRef => {
-                if !self.features.reference_types {
-                    return self.create_error("element is not anyfunc");
-                }
-            }
-            _ => return self.create_error("element is not reference type"),
-        }
-        self.limits(&ty.limits)?;
-        if ty.limits.initial > MAX_WASM_TABLE_ENTRIES as u32 {
-            return self.create_error("minimum table size is out of bounds");
-        }
-        Ok(())
-    }
-
-    fn memory_type(&self, ty: &MemoryType) -> Result<()> {
-        match ty {
-            MemoryType::M32 { limits, shared } => {
-                self.limits(limits)?;
-                let initial = limits.initial;
-                if initial as usize > MAX_WASM_MEMORY_PAGES {
-                    return self.create_error("memory size must be at most 65536 pages (4GiB)");
-                }
-                if let Some(maximum) = limits.maximum {
-                    if maximum as usize > MAX_WASM_MEMORY_PAGES {
-                        return self.create_error("memory size must be at most 65536 pages (4GiB)");
-                    }
-                }
-                if *shared {
-                    if !self.features.threads {
-                        return self.create_error("threads must be enabled for shared memories");
-                    }
-                    if limits.maximum.is_none() {
-                        return self.create_error("shared memory must have maximum size");
-                    }
-                }
-            }
-            MemoryType::M64 { limits, shared } => {
-                if !self.features.memory64 {
-                    return self.create_error("memory64 must be enabled for 64-bit memories");
-                }
-                self.limits64(&limits)?;
-                let initial = limits.initial;
-                if initial > MAX_WASM_MEMORY64_PAGES {
-                    return self.create_error("memory initial size too large");
-                }
-                if let Some(maximum) = limits.maximum {
-                    if maximum > MAX_WASM_MEMORY64_PAGES {
-                        return self.create_error("memory initial size too large");
-                    }
-                }
-                if *shared {
-                    if !self.features.threads {
-                        return self.create_error("threads must be enabled for shared memories");
-                    }
-                    if limits.maximum.is_none() {
-                        return self.create_error("shared memory must have maximum size");
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn event_type(&self, ty: &EventType) -> Result<()> {
-        let ty = self.func_type_at(ty.type_index)?;
-        if ty.returns.len() > 0 {
-            return self.create_error("invalid result arity for exception type");
-        }
-        Ok(())
-    }
-
-    fn global_type(&self, ty: &GlobalType) -> Result<()> {
-        self.value_type(ty.content_type)
-    }
-
-    fn limits(&self, limits: &ResizableLimits) -> Result<()> {
-        if let Some(max) = limits.maximum {
-            if limits.initial > max {
-                return self.create_error("size minimum must not be greater than maximum");
-            }
-        }
-        Ok(())
-    }
-
-    fn limits64(&self, limits: &ResizableLimits64) -> Result<()> {
-        if let Some(max) = limits.maximum {
-            if limits.initial > max {
-                return self.create_error("size minimum must not be greater than maximum");
-            }
-        }
-        Ok(())
-    }
-
-    /// Validates [`Payload::ImportSection`](crate::Payload)
-    pub fn import_section(&mut self, section: &crate::ImportSectionReader<'_>) -> Result<()> {
-        let order = self.header_order(Order::Import);
-        self.section(order, section, |me, item| me.import(item))?;
-
-        // Clear the list of implicit imports after the import section is
-        // finished since later import sections cannot append further to the
-        // pseudo-instances defined in this import section.
-        self.cur.state.assert_mut().imports.implicit.drain();
-        Ok(())
-    }
-
-    fn import(&mut self, entry: Import<'_>) -> Result<()> {
-        if !self.features.module_linking && entry.field.is_none() {
-            return self.create_error("module linking proposal is not enabled");
-        }
-        let ty = self.import_entry_type(&entry.ty)?;
-        let state = self.cur.state.assert_mut();
-
-        // Build up a map of what this module imports, for when this module is a
-        // nested module it'll be needed to infer the type signature of the
-        // nested module. Note that this does not happen unless the module
-        // linking proposal is enabled.
-        //
-        // This is a breaking change! This will disallow multiple imports that
-        // import from the same item twice. We can't turn module linking
-        // on-by-default as-is without some sort of recourse for consumers that
-        // want to backwards-compatibly parse older modules still. Unclear how
-        // to do this.
-        if self.features.module_linking {
-            let implicit_instance_type = state.imports.push(
-                self.offset,
-                entry.module,
-                entry.field,
-                ty,
-                &mut self.types,
-                "import",
-            )?;
-            if let Some(idx) = implicit_instance_type {
-                state.instances.push(idx);
-            }
-        }
-        let (len, max, desc) = match entry.ty {
-            ImportSectionEntryType::Function(type_index) => {
-                let ty = state.types[type_index as usize];
-                state.func_types.push(ty);
-                (state.func_types.len(), MAX_WASM_FUNCTIONS, "funcs")
-            }
-            ImportSectionEntryType::Table(ty) => {
-                state.tables.push(ty);
-                (state.tables.len(), self.max_tables(), "tables")
-            }
-            ImportSectionEntryType::Memory(ty) => {
-                state.memories.push(ty);
-                (state.memories.len(), self.max_memories(), "memories")
-            }
-            ImportSectionEntryType::Event(ty) => {
-                let ty = state.types[ty.type_index as usize];
-                state.events.push(ty);
-                (state.events.len(), MAX_WASM_EVENTS, "events")
-            }
-            ImportSectionEntryType::Global(ty) => {
-                state.globals.push(ty);
-                (state.globals.len(), MAX_WASM_GLOBALS, "globals")
-            }
-            ImportSectionEntryType::Instance(type_idx) => {
-                let index = state.types[type_idx as usize];
-                state.instances.push(index);
-                (state.instances.len(), MAX_WASM_INSTANCES, "instances")
-            }
-            ImportSectionEntryType::Module(type_index) => {
-                let index = state.types[type_index as usize];
-                state.submodules.push(index);
-                (state.submodules.len(), MAX_WASM_MODULES, "modules")
-            }
-        };
-        self.check_max(len, 0, max, desc)?;
-        Ok(())
-    }
-
-    /// Validates [`Payload::ModuleSectionStart`](crate::Payload)
-    pub fn module_section_start(&mut self, count: u32, range: &Range) -> Result<()> {
-        drop(count);
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        self.offset = range.start;
-        self.update_order(Order::ModuleLinkingHeader)?;
-        self.check_max(
-            self.cur.state.submodules.len(),
-            count,
-            MAX_WASM_MODULES,
-            "modules",
-        )?;
-        Ok(())
-    }
-
-    /// Validates [`Payload::ModuleSectionEntry`](crate::Payload).
-    ///
-    /// Note that this does not actually perform any validation itself. The
-    /// `ModuleSectionEntry` payload is associated with a sub-parser for the
-    /// sub-module, and it's expected that the events from the [`Parser`]
-    /// are fed into this validator.
-    pub fn module_section_entry(&mut self) {
-        // Start a new module...
-        let prev = mem::replace(&mut self.cur, Module::default());
-        // ... and record the current module as its parent.
-        self.parents.push(prev);
-    }
-
-    /// Validates [`Payload::AliasSection`](crate::Payload)
-    pub fn alias_section(&mut self, section: &crate::AliasSectionReader<'_>) -> Result<()> {
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        self.section(Order::ModuleLinkingHeader, section, |me, a| me.alias(a))
-    }
-
-    fn alias(&mut self, alias: Alias) -> Result<()> {
-        match alias {
-            Alias::InstanceExport {
-                instance,
-                kind,
-                export,
-            } => {
-                let ty = self.get_instance_type(instance)?;
-                let export = match ty.exports.get(export) {
-                    Some(e) => e,
-                    None => {
-                        return self.create_error(format!(
-                            "aliased name `{}` does not exist in instance",
-                            export
+    /// Validates [`Payload::Version`](crate::Payload).
+    pub fn version(&mut self, num: u32, encoding: Encoding, range: &Range<usize>) -> Result<()> {
+        match &self.state {
+            State::Unparsed(expected) => {
+                if let Some(expected) = expected {
+                    if *expected != encoding {
+                        return Err(BinaryReaderError::new(
+                            format!(
+                                "expected a version header for a {}",
+                                match expected {
+                                    Encoding::Module => "module",
+                                    Encoding::Component => "component",
+                                }
+                            ),
+                            range.start,
                         ));
                     }
-                };
-                match (export, kind) {
-                    (EntityType::Func(ty), ExternalKind::Function) => {
-                        let ty = *ty;
-                        self.cur.state.assert_mut().func_types.push(ty);
-                    }
-                    (EntityType::Table(ty), ExternalKind::Table) => {
-                        let ty = ty.clone();
-                        self.cur.state.assert_mut().tables.push(ty);
-                    }
-                    (EntityType::Memory(ty), ExternalKind::Memory) => {
-                        let ty = ty.clone();
-                        self.cur.state.assert_mut().memories.push(ty);
-                    }
-                    (EntityType::Event(ty), ExternalKind::Event) => {
-                        let ty = *ty;
-                        self.cur.state.assert_mut().events.push(ty);
-                    }
-                    (EntityType::Global(ty), ExternalKind::Global) => {
-                        let ty = ty.clone();
-                        self.cur.state.assert_mut().globals.push(ty);
-                    }
-                    (EntityType::Instance(ty), ExternalKind::Instance) => {
-                        let ty = *ty;
-                        self.cur.state.assert_mut().instances.push(ty);
-                    }
-                    (EntityType::Module(ty), ExternalKind::Module) => {
-                        let ty = *ty;
-                        self.cur.state.assert_mut().submodules.push(ty);
-                    }
-                    _ => return self.create_error("alias kind mismatch with export kind"),
                 }
             }
-            Alias::OuterType {
-                relative_depth,
-                index,
-            } => {
-                let i = self
-                    .parents
-                    .len()
-                    .checked_sub(relative_depth as usize)
-                    .and_then(|i| i.checked_sub(1))
-                    .ok_or_else(|| {
-                        BinaryReaderError::new("relative depth too large", self.offset)
-                    })?;
-                let ty = match self.parents[i].state.types.get(index as usize) {
-                    Some(m) => *m,
-                    None => return self.create_error("alias to type not defined in parent yet"),
-                };
-                self.cur.state.assert_mut().types.push(ty);
-            }
-            Alias::OuterModule {
-                relative_depth,
-                index,
-            } => {
-                let i = self
-                    .parents
-                    .len()
-                    .checked_sub(relative_depth as usize)
-                    .and_then(|i| i.checked_sub(1))
-                    .ok_or_else(|| {
-                        BinaryReaderError::new("relative depth too large", self.offset)
-                    })?;
-                let module = match self.parents[i].state.submodules.get(index as usize) {
-                    Some(m) => *m,
-                    None => return self.create_error("alias to module not defined in parent yet"),
-                };
-                self.cur.state.assert_mut().submodules.push(module);
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Validates [`Payload::InstanceSection`](crate::Payload)
-    pub fn instance_section(&mut self, section: &crate::InstanceSectionReader<'_>) -> Result<()> {
-        if !self.features.module_linking {
-            return self.create_error("module linking proposal not enabled");
-        }
-        self.check_max(
-            self.cur.state.instances.len(),
-            section.get_count(),
-            MAX_WASM_INSTANCES,
-            "instances",
-        )?;
-        self.section(Order::ModuleLinkingHeader, section, |me, i| me.instance(i))
-    }
-
-    fn instance(&mut self, instance: Instance<'_>) -> Result<()> {
-        // Fetch the type of the instantiated module so we can typecheck all of
-        // the import items.
-        let module_idx = instance.module();
-
-        // Build up the set of what we're providing as imports.
-        let mut set = NameSet::default();
-        for arg in instance.args()? {
-            let arg = arg?;
-            let ty = self.check_external_kind("instance argument", arg.kind, arg.index)?;
-            set.push(self.offset, arg.name, None, ty, &mut self.types, "arg")?;
-        }
-
-        // Check our provided `set` to ensure it's a subtype of the expected set
-        // of imports from the module's import types.
-        let ty = self.get_module_type(module_idx)?;
-        self.check_type_sets_match(&set.set, &ty.imports, "import")?;
-
-        // Create a synthetic type declaration for this instance's type and
-        // record its type in the global type list. We might not have another
-        // `TypeDef::Instance` to point to if the module was locally declared.
-        //
-        // Note that the predicted size of this type is inflated due to
-        // accounting for the imports on the original module, but that should be
-        // ok for now since it's only used to limit the size of larger types.
-        let instance_ty = InstanceType {
-            type_size: ty.type_size,
-            exports: ty.exports.clone(),
-        };
-        self.cur.state.assert_mut().instances.push(self.types.len());
-        self.types.push(TypeDef::Instance(instance_ty));
-        Ok(())
-    }
-
-    // Note that this function is basically implementing
-    // https://webassembly.github.io/spec/core/exec/modules.html#import-matching
-    fn check_subtypes(&self, a: &EntityType, b: &EntityType) -> Result<()> {
-        macro_rules! limits_match {
-            ($a:expr, $b:expr) => {{
-                let a = $a;
-                let b = $b;
-                a.initial >= b.initial
-                    && match b.maximum {
-                        Some(b_max) => match a.maximum {
-                            Some(a_max) => a_max <= b_max,
-                            None => false,
-                        },
-                        None => true,
-                    }
-            }};
-        }
-        match a {
-            EntityType::Global(a) => {
-                let b = match b {
-                    EntityType::Global(b) => b,
-                    _ => return self.create_error("item type mismatch"),
-                };
-                if a == b {
-                    Ok(())
-                } else {
-                    self.create_error("global type mismatch")
-                }
-            }
-            EntityType::Table(a) => {
-                let b = match b {
-                    EntityType::Table(b) => b,
-                    _ => return self.create_error("item type mismatch"),
-                };
-                if a.element_type == b.element_type && limits_match!(&a.limits, &b.limits) {
-                    Ok(())
-                } else {
-                    self.create_error("table type mismatch")
-                }
-            }
-            EntityType::Func(a) => {
-                let b = match b {
-                    EntityType::Func(b) => b,
-                    _ => return self.create_error("item type mismatch"),
-                };
-                if self.types[*a].unwrap_func() == self.types[*b].unwrap_func() {
-                    Ok(())
-                } else {
-                    self.create_error("func type mismatch")
-                }
-            }
-            EntityType::Event(a) => {
-                let b = match b {
-                    EntityType::Event(b) => b,
-                    _ => return self.create_error("item type mismatch"),
-                };
-                if self.types[*a].unwrap_func() == self.types[*b].unwrap_func() {
-                    Ok(())
-                } else {
-                    self.create_error("event type mismatch")
-                }
-            }
-            EntityType::Memory(MemoryType::M32 { limits, shared }) => {
-                let (b_limits, b_shared) = match b {
-                    EntityType::Memory(MemoryType::M32 { limits, shared }) => (limits, shared),
-                    _ => return self.create_error("item type mismatch"),
-                };
-                if limits_match!(limits, b_limits) && shared == b_shared {
-                    Ok(())
-                } else {
-                    self.create_error("memory type mismatch")
-                }
-            }
-            EntityType::Memory(MemoryType::M64 { limits, shared }) => {
-                let (b_limits, b_shared) = match b {
-                    EntityType::Memory(MemoryType::M64 { limits, shared }) => (limits, shared),
-                    _ => return self.create_error("item type mismatch"),
-                };
-                if limits_match!(limits, b_limits) && shared == b_shared {
-                    Ok(())
-                } else {
-                    self.create_error("memory type mismatch")
-                }
-            }
-            EntityType::Instance(a) => {
-                let b = match b {
-                    EntityType::Instance(b) => b,
-                    _ => return self.create_error("item type mismatch"),
-                };
-                let a = self.types[*a].unwrap_instance();
-                let b = self.types[*b].unwrap_instance();
-                self.check_type_sets_match(&a.exports, &b.exports, "export")?;
-                Ok(())
-            }
-            EntityType::Module(a) => {
-                let b = match b {
-                    EntityType::Module(b) => b,
-                    _ => return self.create_error("item type mismatch"),
-                };
-                let a = self.types[*a].unwrap_module();
-                let b = self.types[*b].unwrap_module();
-                // Note the order changing between imports and exports! This is
-                // a live demonstration of variance in action.
-                self.check_type_sets_match(&b.imports, &a.imports, "import")?;
-                self.check_type_sets_match(&a.exports, &b.exports, "export")?;
-                Ok(())
-            }
-        }
-    }
-
-    fn check_type_sets_match(
-        &self,
-        a: &HashMap<String, EntityType>,
-        b: &HashMap<String, EntityType>,
-        desc: &str,
-    ) -> Result<()> {
-        for (name, b) in b {
-            match a.get(name) {
-                Some(a) => self.check_subtypes(a, b)?,
-                None => return self.create_error(&format!("no {} named `{}`", desc, name)),
-            }
-        }
-        Ok(())
-    }
-
-    /// Validates [`Payload::FunctionSection`](crate::Payload)
-    pub fn function_section(&mut self, section: &crate::FunctionSectionReader<'_>) -> Result<()> {
-        self.cur.expected_code_bodies = Some(section.get_count());
-        self.check_max(
-            self.cur.state.func_types.len(),
-            section.get_count(),
-            MAX_WASM_FUNCTIONS,
-            "funcs",
-        )?;
-        // Assert that each type index is indeed a function type, and otherwise
-        // just push it for handling later.
-        self.section(Order::Function, section, |me, i| {
-            me.func_type_at(i)?;
-            let state = me.cur.state.assert_mut();
-            state.func_types.push(state.types[i as usize]);
-            state.code_type_indexes.push(i);
-            Ok(())
-        })
-    }
-
-    fn max_tables(&self) -> usize {
-        if self.features.reference_types || self.features.module_linking {
-            MAX_WASM_TABLES
-        } else {
-            1
-        }
-    }
-
-    /// Validates [`Payload::TableSection`](crate::Payload)
-    pub fn table_section(&mut self, section: &crate::TableSectionReader<'_>) -> Result<()> {
-        self.check_max(
-            self.cur.state.tables.len(),
-            section.get_count(),
-            self.max_tables(),
-            "tables",
-        )?;
-        self.section(Order::Table, section, |me, ty| {
-            me.table_type(&ty)?;
-            me.cur.state.assert_mut().tables.push(ty);
-            Ok(())
-        })
-    }
-
-    fn max_memories(&self) -> usize {
-        if self.features.multi_memory {
-            MAX_WASM_MEMORIES
-        } else {
-            1
-        }
-    }
-
-    pub fn memory_section(&mut self, section: &crate::MemorySectionReader<'_>) -> Result<()> {
-        self.check_max(
-            self.cur.state.memories.len(),
-            section.get_count(),
-            self.max_memories(),
-            "memories",
-        )?;
-        self.section(Order::Memory, section, |me, ty| {
-            me.memory_type(&ty)?;
-            me.cur.state.assert_mut().memories.push(ty);
-            Ok(())
-        })
-    }
-
-    pub fn event_section(&mut self, section: &crate::EventSectionReader<'_>) -> Result<()> {
-        self.check_max(
-            self.cur.state.events.len(),
-            section.get_count(),
-            MAX_WASM_EVENTS,
-            "events",
-        )?;
-        self.section(Order::Event, section, |me, ty| {
-            me.event_type(&ty)?;
-            let state = me.cur.state.assert_mut();
-            state.events.push(state.types[ty.type_index as usize]);
-            Ok(())
-        })
-    }
-
-    /// Validates [`Payload::GlobalSection`](crate::Payload)
-    pub fn global_section(&mut self, section: &crate::GlobalSectionReader<'_>) -> Result<()> {
-        self.check_max(
-            self.cur.state.globals.len(),
-            section.get_count(),
-            MAX_WASM_GLOBALS,
-            "globals",
-        )?;
-        self.section(Order::Global, section, |me, g| {
-            me.global_type(&g.ty)?;
-            me.init_expr(&g.init_expr, g.ty.content_type)?;
-            me.cur.state.assert_mut().globals.push(g.ty);
-            Ok(())
-        })
-    }
-
-    fn init_expr(&mut self, expr: &InitExpr<'_>, expected_ty: Type) -> Result<()> {
-        let mut ops = expr.get_operators_reader().into_iter_with_offsets();
-        let (op, offset) = match ops.next() {
-            Some(Err(e)) => return Err(e),
-            Some(Ok(pair)) => pair,
-            None => return self.create_error("type mismatch: init_expr is empty"),
-        };
-        self.offset = offset;
-        let mut function_reference = None;
-        let ty = match op {
-            Operator::I32Const { .. } => Type::I32,
-            Operator::I64Const { .. } => Type::I64,
-            Operator::F32Const { .. } => Type::F32,
-            Operator::F64Const { .. } => Type::F64,
-            Operator::RefNull { ty } => ty,
-            Operator::V128Const { .. } => Type::V128,
-            Operator::GlobalGet { global_index } => {
-                let global = self.get_global(global_index)?;
-                if global.mutable {
-                    return self.create_error(
-                        "constant expression required: global.get of mutable global",
-                    );
-                }
-                global.content_type
-            }
-            Operator::RefFunc { function_index } => {
-                function_reference = Some(function_index);
-                self.get_func_type(function_index)?;
-                Type::FuncRef
-            }
-            Operator::End => return self.create_error("type mismatch: init_expr is empty"),
             _ => {
-                return self
-                    .create_error("constant expression required: invalid init_expr operator")
-            }
-        };
-        if ty != expected_ty {
-            return self.create_error("type mismatch: invalid init_expr type");
-        }
-
-        if let Some(index) = function_reference {
-            self.cur
-                .state
-                .assert_mut()
-                .function_references
-                .insert(index);
-        }
-
-        // Make sure the next instruction is an `end`
-        match ops.next() {
-            Some(Err(e)) => return Err(e),
-            Some(Ok((Operator::End, _))) => {}
-            Some(Ok(_)) => {
-                return self
-                    .create_error("constant expression required: type mismatch: only one init_expr operator is expected")
-            }
-            None => return self.create_error("type mismatch: init_expr is not terminated"),
-        }
-
-        // ... and verify we're done after that
-        match ops.next() {
-            Some(Err(e)) => Err(e),
-            Some(Ok(_)) => {
-                self.create_error("constant expression required: invalid init_expr operator")
-            }
-            None => Ok(()),
-        }
-    }
-
-    /// Validates [`Payload::ExportSection`](crate::Payload)
-    pub fn export_section(&mut self, section: &crate::ExportSectionReader<'_>) -> Result<()> {
-        self.section(Order::Export, section, |me, e| {
-            if let ExternalKind::Type = e.kind {
-                return me.create_error("cannot export types");
-            }
-            let ty = me.check_external_kind("exported", e.kind, e.index)?;
-            let state = me.cur.state.assert_mut();
-            state
-                .exports
-                .push(me.offset, e.field, None, ty, &mut me.types, "export")?;
-            Ok(())
-        })
-    }
-
-    fn check_external_kind(
-        &mut self,
-        desc: &str,
-        kind: ExternalKind,
-        index: u32,
-    ) -> Result<EntityType> {
-        let check = |ty: &str, total: usize| {
-            if index as usize >= total {
-                self.create_error(&format!(
-                    "unknown {ty} {index}: {desc} {ty} index out of bounds",
-                    desc = desc,
-                    index = index,
-                    ty = ty,
+                return Err(BinaryReaderError::new(
+                    "wasm version header out of order",
+                    range.start,
                 ))
-            } else {
-                Ok(())
+            }
+        }
+
+        self.state = match (encoding, num) {
+            (Encoding::Module, WASM_MODULE_VERSION) => {
+                assert!(self.module.is_none());
+                self.module = Some(ModuleState::default());
+                State::Module
+            }
+            (Encoding::Component, WASM_COMPONENT_VERSION) => {
+                if !self.features.component_model {
+                    return Err(BinaryReaderError::new(
+                        "WebAssembly component model feature not enabled",
+                        range.start,
+                    ));
+                }
+
+                self.components.push(ComponentState::default());
+                State::Component
+            }
+            _ => {
+                return Err(BinaryReaderError::new(
+                    "unknown binary version",
+                    range.start,
+                ));
             }
         };
-        Ok(match kind {
-            ExternalKind::Function => {
-                check("function", self.cur.state.func_types.len())?;
-                self.cur
-                    .state
-                    .assert_mut()
-                    .function_references
-                    .insert(index);
-                EntityType::Func(self.cur.state.func_types[index as usize])
-            }
-            ExternalKind::Table => {
-                check("table", self.cur.state.tables.len())?;
-                EntityType::Table(self.cur.state.tables[index as usize].clone())
-            }
-            ExternalKind::Memory => {
-                check("memory", self.cur.state.memories.len())?;
-                EntityType::Memory(self.cur.state.memories[index as usize].clone())
-            }
-            ExternalKind::Global => {
-                check("global", self.cur.state.globals.len())?;
-                EntityType::Global(self.cur.state.globals[index as usize].clone())
-            }
-            ExternalKind::Event => {
-                check("event", self.cur.state.events.len())?;
-                EntityType::Event(self.cur.state.events[index as usize])
-            }
-            ExternalKind::Module => {
-                check("module", self.cur.state.submodules.len())?;
-                EntityType::Module(self.cur.state.submodules[index as usize])
-            }
-            ExternalKind::Instance => {
-                check("instance", self.cur.state.instances.len())?;
-                EntityType::Instance(self.cur.state.instances[index as usize])
-            }
-            ExternalKind::Type => return self.create_error("cannot export types"),
-        })
-    }
 
-    /// Validates [`Payload::StartSection`](crate::Payload)
-    pub fn start_section(&mut self, func: u32, range: &Range) -> Result<()> {
-        self.offset = range.start;
-        self.update_order(Order::Start)?;
-        let ty = self.get_func_type(func)?;
-        if !ty.params.is_empty() || !ty.returns.is_empty() {
-            return self.create_error("invalid start function type");
-        }
         Ok(())
     }
 
-    /// Validates [`Payload::ElementSection`](crate::Payload)
-    pub fn element_section(&mut self, section: &crate::ElementSectionReader<'_>) -> Result<()> {
-        self.section(Order::Element, section, |me, e| {
-            match e.ty {
-                Type::FuncRef => {}
-                Type::ExternRef if me.features.reference_types => {}
-                Type::ExternRef => {
-                    return me
-                        .create_error("reference types must be enabled for anyref elem segment");
-                }
-                _ => return me.create_error("invalid reference type"),
-            }
-            match e.kind {
-                ElementKind::Active {
-                    table_index,
-                    init_expr,
-                } => {
-                    let table = me.get_table(table_index)?;
-                    if e.ty != table.element_type {
-                        return me.create_error("element_type != table type");
-                    }
-                    me.init_expr(&init_expr, Type::I32)?;
-                }
-                ElementKind::Passive | ElementKind::Declared => {
-                    if !me.features.bulk_memory {
-                        return me.create_error("reference types must be enabled");
-                    }
-                }
-            }
-            let mut items = e.items.get_items_reader()?;
-            if items.get_count() > MAX_WASM_TABLE_ENTRIES as u32 {
-                return me.create_error("num_elements is out of bounds");
-            }
-            for _ in 0..items.get_count() {
-                me.offset = items.original_position();
-                match items.read()? {
-                    ElementItem::Null(ty) => {
-                        if ty != e.ty {
-                            return me.create_error(
-                                "type mismatch: null type doesn't match element type",
-                            );
-                        }
-                    }
-                    ElementItem::Func(f) => {
-                        if e.ty != Type::FuncRef {
-                            return me
-                                .create_error("type mismatch: segment does not have funcref type");
-                        }
-                        me.get_func_type(f)?;
-                        me.cur.state.assert_mut().function_references.insert(f);
-                    }
-                }
-            }
-
-            me.cur.state.assert_mut().element_types.push(e.ty);
-            Ok(())
-        })
+    /// Validates [`Payload::TypeSection`](crate::Payload).
+    pub fn type_section(&mut self, section: &crate::TypeSectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Type,
+            section,
+            "type",
+            |state, _, types, count, offset| {
+                check_max(
+                    state.module.types.len(),
+                    count,
+                    MAX_WASM_TYPES,
+                    "types",
+                    offset,
+                )?;
+                types.reserve(count as usize);
+                state.module.assert_mut().types.reserve(count as usize);
+                Ok(())
+            },
+            |state, features, types, def, offset| {
+                state
+                    .module
+                    .assert_mut()
+                    .add_type(def, features, types, offset, false /* checked above */)
+            },
+        )
     }
 
-    /// Validates [`Payload::DataCountSection`](crate::Payload)
-    pub fn data_count_section(&mut self, count: u32, range: &Range) -> Result<()> {
-        self.offset = range.start;
-        self.update_order(Order::DataCount)?;
-        self.cur.state.assert_mut().data_count = Some(count);
-        if count > MAX_WASM_DATA_SEGMENTS as u32 {
-            return self.create_error("data count section specifies too many data segments");
+    /// Validates [`Payload::ImportSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn import_section(&mut self, section: &crate::ImportSectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Import,
+            section,
+            "import",
+            |_, _, _, _, _| Ok(()), // add_import will check limits
+            |state, features, types, import, offset| {
+                state
+                    .module
+                    .assert_mut()
+                    .add_import(import, features, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::FunctionSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn function_section(&mut self, section: &crate::FunctionSectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Function,
+            section,
+            "function",
+            |state, _, _, count, offset| {
+                check_max(
+                    state.module.functions.len(),
+                    count,
+                    MAX_WASM_FUNCTIONS,
+                    "functions",
+                    offset,
+                )?;
+                state.module.assert_mut().functions.reserve(count as usize);
+                debug_assert!(state.expected_code_bodies.is_none());
+                state.expected_code_bodies = Some(count);
+                Ok(())
+            },
+            |state, _, types, ty, offset| state.module.assert_mut().add_function(ty, types, offset),
+        )
+    }
+
+    /// Validates [`Payload::TableSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn table_section(&mut self, section: &crate::TableSectionReader<'_>) -> Result<()> {
+        let features = self.features;
+        self.process_module_section(
+            Order::Table,
+            section,
+            "table",
+            |state, _, _, count, offset| {
+                check_max(
+                    state.module.tables.len(),
+                    count,
+                    state.module.max_tables(&features),
+                    "tables",
+                    offset,
+                )?;
+                state.module.assert_mut().tables.reserve(count as usize);
+                Ok(())
+            },
+            |state, features, _, ty, offset| {
+                state.module.assert_mut().add_table(ty, features, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::MemorySection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn memory_section(&mut self, section: &crate::MemorySectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Memory,
+            section,
+            "memory",
+            |state, features, _, count, offset| {
+                check_max(
+                    state.module.memories.len(),
+                    count,
+                    state.module.max_memories(features),
+                    "memories",
+                    offset,
+                )?;
+                state.module.assert_mut().memories.reserve(count as usize);
+                Ok(())
+            },
+            |state, features, _, ty, offset| {
+                state.module.assert_mut().add_memory(ty, features, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::TagSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn tag_section(&mut self, section: &crate::TagSectionReader<'_>) -> Result<()> {
+        if !self.features.exceptions {
+            return Err(BinaryReaderError::new(
+                "exceptions proposal not enabled",
+                section.range().start,
+            ));
         }
+
+        self.process_module_section(
+            Order::Tag,
+            section,
+            "tag",
+            |state, _, _, count, offset| {
+                check_max(
+                    state.module.tags.len(),
+                    count,
+                    MAX_WASM_TAGS,
+                    "tags",
+                    offset,
+                )?;
+                state.module.assert_mut().tags.reserve(count as usize);
+                Ok(())
+            },
+            |state, features, types, ty, offset| {
+                state
+                    .module
+                    .assert_mut()
+                    .add_tag(ty, features, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::GlobalSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn global_section(&mut self, section: &crate::GlobalSectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Global,
+            section,
+            "global",
+            |state, _, _, count, offset| {
+                check_max(
+                    state.module.globals.len(),
+                    count,
+                    MAX_WASM_GLOBALS,
+                    "globals",
+                    offset,
+                )?;
+                state.module.assert_mut().globals.reserve(count as usize);
+                Ok(())
+            },
+            |state, features, types, global, offset| {
+                state.add_global(global, features, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::ExportSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn export_section(&mut self, section: &crate::ExportSectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Export,
+            section,
+            "export",
+            |state, _, _, count, offset| {
+                check_max(
+                    state.module.exports.len(),
+                    count,
+                    MAX_WASM_EXPORTS,
+                    "exports",
+                    offset,
+                )?;
+                state.module.assert_mut().exports.reserve(count as usize);
+                Ok(())
+            },
+            |state, features, _, e, offset| {
+                let state = state.module.assert_mut();
+                let ty = state.export_to_entity_type(&e, offset)?;
+                state.add_export(e.name, ty, features, offset, false /* checked above */)
+            },
+        )
+    }
+
+    /// Validates [`Payload::StartSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn start_section(&mut self, func: u32, range: &Range<usize>) -> Result<()> {
+        let offset = range.start;
+        self.state.ensure_module("start", offset)?;
+        let state = self.module.as_mut().unwrap();
+        state.update_order(Order::Start, offset)?;
+
+        let ty = state.module.get_func_type(func, &self.types, offset)?;
+        if !ty.params.is_empty() || !ty.returns.is_empty() {
+            return Err(BinaryReaderError::new(
+                "invalid start function type",
+                offset,
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Validates [`Payload::ElementSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn element_section(&mut self, section: &crate::ElementSectionReader<'_>) -> Result<()> {
+        self.process_module_section(
+            Order::Element,
+            section,
+            "element",
+            |state, _, _, count, offset| {
+                check_max(
+                    state.module.element_types.len(),
+                    count,
+                    MAX_WASM_ELEMENT_SEGMENTS,
+                    "element segments",
+                    offset,
+                )?;
+                state
+                    .module
+                    .assert_mut()
+                    .element_types
+                    .reserve(count as usize);
+                Ok(())
+            },
+            |state, features, types, e, offset| {
+                state.add_element_segment(e, features, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::DataCountSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn data_count_section(&mut self, count: u32, range: &Range<usize>) -> Result<()> {
+        let offset = range.start;
+        self.state.ensure_module("data count", offset)?;
+
+        let state = self.module.as_mut().unwrap();
+        state.update_order(Order::DataCount, offset)?;
+
+        if count > MAX_WASM_DATA_SEGMENTS as u32 {
+            return Err(BinaryReaderError::new(
+                "data count section specifies too many data segments",
+                offset,
+            ));
+        }
+
+        state.module.assert_mut().data_count = Some(count);
         Ok(())
     }
 
     /// Validates [`Payload::CodeSectionStart`](crate::Payload).
-    pub fn code_section_start(&mut self, count: u32, range: &Range) -> Result<()> {
-        self.offset = range.start;
-        self.update_order(Order::Code)?;
-        match self.cur.expected_code_bodies.take() {
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn code_section_start(&mut self, count: u32, range: &Range<usize>) -> Result<()> {
+        let offset = range.start;
+        self.state.ensure_module("code", offset)?;
+
+        let state = self.module.as_mut().unwrap();
+        state.update_order(Order::Code, offset)?;
+
+        match state.expected_code_bodies.take() {
             Some(n) if n == count => {}
             Some(_) => {
-                return self.create_error("function and code section have inconsistent lengths");
+                return Err(BinaryReaderError::new(
+                    "function and code section have inconsistent lengths",
+                    offset,
+                ));
             }
             // empty code sections are allowed even if the function section is
             // missing
             None if count == 0 => {}
-            None => return self.create_error("code section without function section"),
+            None => {
+                return Err(BinaryReaderError::new(
+                    "code section without function section",
+                    offset,
+                ))
+            }
         }
 
-        // Prepare our module's view into the global `types` array. This enables
-        // parallel function validation to accesss our built-so-far list off
-        // types. Note that all the `WasmModuleResources` methods rely on
-        // `all_types` being filled in, and this is the point at which they're
-        // filled in.
-        let types = self.types.commit();
-        self.cur.state.assert_mut().all_types = Some(Arc::new(types));
+        // Take a snapshot of the types when we start the code section.
+        state.module.assert_mut().snapshot = Some(Arc::new(self.types.commit()));
 
         Ok(())
     }
@@ -1507,576 +820,610 @@ impl Validator {
     /// validating the function. The [`FuncValidator`] can be sent to
     /// another thread, for example, to offload actual processing of functions
     /// elsewhere.
-    pub fn code_section_entry(&mut self) -> Result<FuncValidator<ValidatorResources>> {
-        let ty = self.cur.state.code_type_indexes[self.cur.code_section_index];
-        self.cur.code_section_index += 1;
-        let resources = ValidatorResources(self.cur.state.arc().clone());
-        Ok(FuncValidator::new(ty, 0, resources, &self.features).unwrap())
+    ///
+    /// This method should only be called when parsing a module.
+    pub fn code_section_entry(
+        &mut self,
+        body: &crate::FunctionBody,
+    ) -> Result<FuncValidator<ValidatorResources>> {
+        let offset = body.range().start;
+        self.state.ensure_module("code", offset)?;
+
+        let state = self.module.as_mut().unwrap();
+
+        Ok(FuncValidator::new(
+            state.next_code_entry_type(offset)?,
+            0,
+            ValidatorResources(state.module.arc().clone()),
+            &self.features,
+        )
+        .unwrap())
     }
 
     /// Validates [`Payload::DataSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a module.
     pub fn data_section(&mut self, section: &crate::DataSectionReader<'_>) -> Result<()> {
-        self.cur.data_found = section.get_count();
-        self.check_max(0, section.get_count(), MAX_WASM_DATA_SEGMENTS, "segments")?;
-        let mut section = section.clone();
-        section.forbid_bulk_memory(!self.features.bulk_memory);
-        self.section(Order::Data, &section, |me, d| {
-            match d.kind {
-                DataKind::Passive => {}
-                DataKind::Active {
-                    memory_index,
-                    init_expr,
-                } => {
-                    let ty = me.get_memory(memory_index)?.index_type();
-                    me.init_expr(&init_expr, ty)?;
+        self.process_module_section(
+            Order::Data,
+            section,
+            "data",
+            |state, _, _, count, offset| {
+                state.data_segment_count = count;
+                check_max(
+                    state.module.data_count.unwrap_or(0) as usize,
+                    count,
+                    MAX_WASM_DATA_SEGMENTS,
+                    "data segments",
+                    offset,
+                )
+            },
+            |state, features, types, d, offset| state.add_data_segment(d, features, types, offset),
+        )
+    }
+
+    /// Validates [`Payload::ModuleSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn module_section(&mut self, range: &Range<usize>) -> Result<()> {
+        self.state.ensure_component("module", range.start)?;
+
+        let current = self.components.last_mut().unwrap();
+        check_max(
+            current.core_modules.len(),
+            1,
+            MAX_WASM_MODULES,
+            "modules",
+            range.start,
+        )?;
+
+        match mem::replace(&mut self.state, State::Unparsed(Some(Encoding::Module))) {
+            State::Component => {}
+            _ => unreachable!(),
+        }
+
+        Ok(())
+    }
+
+    /// Validates [`Payload::InstanceSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn instance_section(&mut self, section: &crate::InstanceSectionReader) -> Result<()> {
+        self.process_component_section(
+            section,
+            "core instance",
+            |components, _, count, offset| {
+                let current = components.last_mut().unwrap();
+                check_max(
+                    current.instance_count(),
+                    count,
+                    MAX_WASM_INSTANCES,
+                    "instances",
+                    offset,
+                )?;
+                current.core_instances.reserve(count as usize);
+                Ok(())
+            },
+            |components, types, _, instance, offset| {
+                components
+                    .last_mut()
+                    .unwrap()
+                    .add_core_instance(instance, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::AliasSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn alias_section(&mut self, section: &crate::AliasSectionReader) -> Result<()> {
+        self.process_component_section(
+            section,
+            "core alias",
+            |_, _, _, _| Ok(()), // maximums checked via `add_alias`
+            |components, types, _, alias, offset| -> Result<(), BinaryReaderError> {
+                ComponentState::add_core_alias(components, alias, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::CoreTypeSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn core_type_section(&mut self, section: &crate::CoreTypeSectionReader<'_>) -> Result<()> {
+        self.process_component_section(
+            section,
+            "core type",
+            |components, types, count, offset| {
+                let current = components.last_mut().unwrap();
+                check_max(current.type_count(), count, MAX_WASM_TYPES, "types", offset)?;
+                types.reserve(count as usize);
+                current.core_types.reserve(count as usize);
+                Ok(())
+            },
+            |components, types, features, ty, offset| {
+                ComponentState::add_core_type(
+                    components, ty, features, types, offset, false, /* checked above */
+                )
+            },
+        )
+    }
+
+    /// Validates [`Payload::ComponentSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_section(&mut self, range: &Range<usize>) -> Result<()> {
+        self.state.ensure_component("component", range.start)?;
+
+        let current = self.components.last_mut().unwrap();
+        check_max(
+            current.components.len(),
+            1,
+            MAX_WASM_COMPONENTS,
+            "components",
+            range.start,
+        )?;
+
+        match mem::replace(&mut self.state, State::Unparsed(Some(Encoding::Component))) {
+            State::Component => {}
+            _ => unreachable!(),
+        }
+
+        Ok(())
+    }
+
+    /// Validates [`Payload::ComponentInstanceSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_instance_section(
+        &mut self,
+        section: &crate::ComponentInstanceSectionReader,
+    ) -> Result<()> {
+        self.process_component_section(
+            section,
+            "instance",
+            |components, _, count, offset| {
+                let current = components.last_mut().unwrap();
+                check_max(
+                    current.instance_count(),
+                    count,
+                    MAX_WASM_INSTANCES,
+                    "instances",
+                    offset,
+                )?;
+                current.instances.reserve(count as usize);
+                Ok(())
+            },
+            |components, types, _, instance, offset| {
+                components
+                    .last_mut()
+                    .unwrap()
+                    .add_instance(instance, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::ComponentAliasSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_alias_section(
+        &mut self,
+        section: &crate::ComponentAliasSectionReader,
+    ) -> Result<()> {
+        self.process_component_section(
+            section,
+            "alias",
+            |_, _, _, _| Ok(()), // maximums checked via `add_alias`
+            |components, types, _, alias, offset| -> Result<(), BinaryReaderError> {
+                ComponentState::add_alias(components, alias, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::ComponentTypeSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_type_section(
+        &mut self,
+        section: &crate::ComponentTypeSectionReader,
+    ) -> Result<()> {
+        self.process_component_section(
+            section,
+            "type",
+            |components, types, count, offset| {
+                let current = components.last_mut().unwrap();
+                check_max(current.type_count(), count, MAX_WASM_TYPES, "types", offset)?;
+                types.reserve(count as usize);
+                current.types.reserve(count as usize);
+                Ok(())
+            },
+            |components, types, features, ty, offset| {
+                ComponentState::add_type(
+                    components, ty, features, types, offset, false, /* checked above */
+                )
+            },
+        )
+    }
+
+    /// Validates [`Payload::ComponentCanonicalSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_canonical_section(
+        &mut self,
+        section: &crate::ComponentCanonicalSectionReader,
+    ) -> Result<()> {
+        self.process_component_section(
+            section,
+            "function",
+            |components, _, count, offset| {
+                let current = components.last_mut().unwrap();
+                check_max(
+                    current.function_count(),
+                    count,
+                    MAX_WASM_FUNCTIONS,
+                    "functions",
+                    offset,
+                )?;
+                current.funcs.reserve(count as usize);
+                Ok(())
+            },
+            |components, types, _, func, offset| {
+                let current = components.last_mut().unwrap();
+                match func {
+                    crate::CanonicalFunction::Lift {
+                        core_func_index,
+                        type_index,
+                        options,
+                    } => current.lift_function(
+                        core_func_index,
+                        type_index,
+                        options.into_vec(),
+                        types,
+                        offset,
+                    ),
+                    crate::CanonicalFunction::Lower {
+                        func_index,
+                        options,
+                    } => current.lower_function(func_index, options.into_vec(), types, offset),
                 }
-            }
-            Ok(())
-        })
+            },
+        )
+    }
+
+    /// Validates [`Payload::ComponentStartSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_start_section(
+        &mut self,
+        section: &crate::ComponentStartSectionReader,
+    ) -> Result<()> {
+        let range = section.range();
+        self.state.ensure_component("start", range.start)?;
+
+        let f = section.clone().read()?;
+
+        self.components.last_mut().unwrap().add_start(
+            f.func_index,
+            &f.arguments,
+            &self.types,
+            range.start,
+        )
+    }
+
+    /// Validates [`Payload::ComponentImportSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_import_section(
+        &mut self,
+        section: &crate::ComponentImportSectionReader,
+    ) -> Result<()> {
+        self.process_component_section(
+            section,
+            "import",
+            |_, _, _, _| Ok(()), // add_import will check limits
+            |components, types, _, import, offset| {
+                components
+                    .last_mut()
+                    .unwrap()
+                    .add_import(import, types, offset)
+            },
+        )
+    }
+
+    /// Validates [`Payload::ComponentExportSection`](crate::Payload).
+    ///
+    /// This method should only be called when parsing a component.
+    pub fn component_export_section(
+        &mut self,
+        section: &crate::ComponentExportSectionReader,
+    ) -> Result<()> {
+        self.process_component_section(
+            section,
+            "export",
+            |components, _, count, offset| {
+                let current = components.last_mut().unwrap();
+                check_max(
+                    current.exports.len(),
+                    count,
+                    MAX_WASM_EXPORTS,
+                    "exports",
+                    offset,
+                )?;
+                current.exports.reserve(count as usize);
+                Ok(())
+            },
+            |components, _, _, export, offset| {
+                let current = components.last_mut().unwrap();
+                let ty = current.export_to_entity_type(&export, offset)?;
+                current.add_export(export.name, ty, offset, false /* checked above */)
+            },
+        )
     }
 
     /// Validates [`Payload::UnknownSection`](crate::Payload).
     ///
     /// Currently always returns an error.
-    pub fn unknown_section(&mut self, id: u8, range: &Range) -> Result<()> {
-        self.offset = range.start;
-        self.create_error(format!("invalid section code: {}", id))
+    pub fn unknown_section(&mut self, id: u8, range: &Range<usize>) -> Result<()> {
+        Err(BinaryReaderError::new(
+            format!("malformed section id: {}", id),
+            range.start,
+        ))
     }
 
     /// Validates [`Payload::End`](crate::Payload).
-    pub fn end(&mut self) -> Result<()> {
-        // Ensure that the data count section, if any, was correct.
-        if let Some(data_count) = self.cur.state.data_count {
-            if data_count != self.cur.data_found {
-                return self.create_error("data count section and passive data mismatch");
-            }
-        }
-        // Ensure that the function section, if nonzero, was paired with a code
-        // section with the appropriate length.
-        if let Some(n) = self.cur.expected_code_bodies.take() {
-            if n > 0 {
-                return self.create_error("function and code sections have inconsistent lengths");
-            }
-        }
+    ///
+    /// Returns the types known to the validator for the module or component.
+    pub fn end(&mut self, offset: usize) -> Result<Types> {
+        match std::mem::replace(&mut self.state, State::End) {
+            State::Unparsed(_) => Err(BinaryReaderError::new(
+                "cannot call `end` before a header has been parsed",
+                offset,
+            )),
+            State::End => Err(BinaryReaderError::new(
+                "cannot call `end` after parsing has completed",
+                offset,
+            )),
+            State::Module => {
+                let mut state = self.module.take().unwrap();
+                state.validate_end(offset)?;
 
-        // Ensure that the effective type size of this module is of a bounded
-        // size. This is primarily here for the module linking proposal, and
-        // we'll record this in the module type below if we're part of a nested
-        // module.
-        let type_size = combine_type_sizes(
-            self.offset,
-            self.cur.state.imports.type_size,
-            self.cur.state.exports.type_size,
+                // If there's a parent component, we'll add a module to the parent state
+                // and continue to validate the component
+                if let Some(parent) = self.components.last_mut() {
+                    parent.add_core_module(&state.module, &mut self.types, offset)?;
+                    self.state = State::Component;
+                }
+
+                Ok(Types::from_module(
+                    self.types.commit(),
+                    state.module.arc().clone(),
+                ))
+            }
+            State::Component => {
+                let mut component = self.components.pop().unwrap();
+
+                // Validate that all values were used for the component
+                if let Some(index) = component.values.iter().position(|(_, used)| !*used) {
+                    return Err(BinaryReaderError::new(
+                        format!("value index {index} was not used as part of an instantiation, start function, or export"),
+                        offset,
+                    ));
+                }
+
+                // If there's a parent component, pop the stack, add it to the parent,
+                // and continue to validate the component
+                if let Some(parent) = self.components.last_mut() {
+                    parent.add_component(&mut component, &mut self.types);
+                    self.state = State::Component;
+                }
+
+                Ok(Types::from_component(self.types.commit(), component))
+            }
+        }
+    }
+
+    fn process_module_section<T>(
+        &mut self,
+        order: Order,
+        section: &T,
+        name: &str,
+        validate_section: impl FnOnce(
+            &mut ModuleState,
+            &WasmFeatures,
+            &mut TypeList,
+            u32,
+            usize,
+        ) -> Result<()>,
+        mut validate_item: impl FnMut(
+            &mut ModuleState,
+            &WasmFeatures,
+            &mut TypeList,
+            T::Item,
+            usize,
+        ) -> Result<()>,
+    ) -> Result<()>
+    where
+        T: SectionReader + Clone + SectionWithLimitedItems,
+    {
+        let offset = section.range().start;
+        self.state.ensure_module(name, offset)?;
+
+        let state = self.module.as_mut().unwrap();
+        state.update_order(order, offset)?;
+
+        validate_section(
+            state,
+            &self.features,
+            &mut self.types,
+            section.get_count(),
+            offset,
         )?;
 
-        // If we have a parent then we're going to exit this module's context
-        // and resume where we left off in the parent. We inject a new type for
-        // our module we just validated in the parent's module index space, and
-        // then we reset our current state to the parent.
-        if let Some(mut parent) = self.parents.pop() {
-            let module_type = self.types.len();
-            self.types.push(TypeDef::Module(ModuleType {
-                type_size,
-                imports: self.cur.state.imports.set.clone(),
-                exports: self.cur.state.exports.set.clone(),
-            }));
-            parent.state.assert_mut().submodules.push(module_type);
-            self.cur = parent;
+        let mut section = section.clone();
+        for _ in 0..section.get_count() {
+            let offset = section.original_position();
+            let item = section.read()?;
+            validate_item(state, &self.features, &mut self.types, item, offset)?;
         }
+
+        section.ensure_end()?;
+
+        Ok(())
+    }
+
+    fn process_component_section<T>(
+        &mut self,
+        section: &T,
+        name: &str,
+        validate_section: impl FnOnce(&mut Vec<ComponentState>, &mut TypeList, u32, usize) -> Result<()>,
+        mut validate_item: impl FnMut(
+            &mut Vec<ComponentState>,
+            &mut TypeList,
+            &WasmFeatures,
+            T::Item,
+            usize,
+        ) -> Result<()>,
+    ) -> Result<()>
+    where
+        T: SectionReader + Clone + SectionWithLimitedItems,
+    {
+        let offset = section.range().start;
+
+        if !self.features.component_model {
+            return Err(BinaryReaderError::new(
+                "component model feature is not enabled",
+                offset,
+            ));
+        }
+
+        self.state.ensure_component(name, offset)?;
+        validate_section(
+            &mut self.components,
+            &mut self.types,
+            section.get_count(),
+            offset,
+        )?;
+
+        let mut section = section.clone();
+        for _ in 0..section.get_count() {
+            let offset = section.original_position();
+            let item = section.read()?;
+            validate_item(
+                &mut self.components,
+                &mut self.types,
+                &self.features,
+                item,
+                offset,
+            )?;
+        }
+
+        section.ensure_end()?;
+
         Ok(())
     }
 }
 
-impl WasmModuleResources for Validator {
-    type FuncType = crate::FuncType;
+#[cfg(test)]
+mod tests {
+    use crate::{GlobalType, MemoryType, TableType, ValType, Validator, WasmFeatures};
+    use anyhow::Result;
 
-    fn table_at(&self, at: u32) -> Option<TableType> {
-        self.cur.state.table_at(at)
-    }
+    #[test]
+    fn test_module_type_information() -> Result<()> {
+        let bytes = wat::parse_str(
+            r#"
+            (module
+                (type (func (param i32 i64) (result i32)))
+                (memory 1 5)
+                (table 10 funcref)
+                (global (mut i32) (i32.const 0))
+                (func (type 0) (i32.const 0))
+                (tag (param i64 i32))
+                (elem funcref (ref.func 0))
+            )
+        "#,
+        )?;
 
-    fn memory_at(&self, at: u32) -> Option<MemoryType> {
-        self.cur.state.memory_at(at)
-    }
+        let mut validator = Validator::new_with_features(WasmFeatures {
+            exceptions: true,
+            ..Default::default()
+        });
 
-    fn event_at(&self, at: u32) -> Option<&Self::FuncType> {
-        self.cur.state.event_at(at)
-    }
+        let types = validator.validate_all(&bytes)?;
 
-    fn global_at(&self, at: u32) -> Option<GlobalType> {
-        self.cur.state.global_at(at)
-    }
+        assert_eq!(types.type_count(), 2);
+        assert_eq!(types.memory_count(), 1);
+        assert_eq!(types.table_count(), 1);
+        assert_eq!(types.global_count(), 1);
+        assert_eq!(types.function_count(), 1);
+        assert_eq!(types.tag_count(), 1);
+        assert_eq!(types.element_count(), 1);
+        assert_eq!(types.module_count(), 0);
+        assert_eq!(types.component_count(), 0);
+        assert_eq!(types.instance_count(), 0);
+        assert_eq!(types.value_count(), 0);
 
-    fn func_type_at(&self, type_idx: u32) -> Option<&Self::FuncType> {
-        self.cur.state.func_type_at(type_idx)
-    }
-
-    fn type_of_function(&self, func_idx: u32) -> Option<&Self::FuncType> {
-        self.cur.state.type_of_function(func_idx)
-    }
-
-    fn element_type_at(&self, at: u32) -> Option<Type> {
-        self.cur.state.element_type_at(at)
-    }
-
-    fn element_count(&self) -> u32 {
-        self.cur.state.element_count()
-    }
-
-    fn data_count(&self) -> u32 {
-        self.cur.state.data_count()
-    }
-
-    fn is_function_referenced(&self, idx: u32) -> bool {
-        self.cur.state.is_function_referenced(idx)
-    }
-}
-
-fn combine_type_sizes(offset: usize, a: u32, b: u32) -> Result<u32> {
-    match a.checked_add(b) {
-        Some(sum) if sum < MAX_TYPE_SIZE => Ok(sum),
-        _ => Err(BinaryReaderError::new(
-            "effective type size too large".to_string(),
-            offset,
-        )),
-    }
-}
-
-impl WasmFeatures {
-    pub(crate) fn check_value_type(&self, ty: Type) -> Result<(), &'static str> {
-        match ty {
-            Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
-            Type::FuncRef | Type::ExternRef => {
-                if self.reference_types {
-                    Ok(())
-                } else {
-                    Err("reference types support is not enabled")
-                }
+        match types.func_type_at(0) {
+            Some(ty) => {
+                assert_eq!(ty.params.as_ref(), [ValType::I32, ValType::I64]);
+                assert_eq!(ty.returns.as_ref(), [ValType::I32]);
             }
-            Type::ExnRef => {
-                if self.exceptions {
-                    Ok(())
-                } else {
-                    Err("exceptions support is not enabled")
-                }
+            _ => unreachable!(),
+        }
+
+        match types.func_type_at(1) {
+            Some(ty) => {
+                assert_eq!(ty.params.as_ref(), [ValType::I64, ValType::I32]);
+                assert_eq!(ty.returns.as_ref(), []);
             }
-            Type::V128 => {
-                if self.simd {
-                    Ok(())
-                } else {
-                    Err("SIMD support is not enabled")
-                }
+            _ => unreachable!(),
+        }
+
+        assert_eq!(
+            types.memory_at(0),
+            Some(MemoryType {
+                memory64: false,
+                shared: false,
+                initial: 1,
+                maximum: Some(5)
+            })
+        );
+
+        assert_eq!(
+            types.table_at(0),
+            Some(TableType {
+                initial: 10,
+                maximum: None,
+                element_type: ValType::FuncRef,
+            })
+        );
+
+        assert_eq!(
+            types.global_at(0),
+            Some(GlobalType {
+                content_type: ValType::I32,
+                mutable: true
+            })
+        );
+
+        match types.function_at(0) {
+            Some(ty) => {
+                assert_eq!(ty.params.as_ref(), [ValType::I32, ValType::I64]);
+                assert_eq!(ty.returns.as_ref(), [ValType::I32]);
             }
-            _ => Err("invalid value type"),
+            _ => unreachable!(),
         }
-    }
-}
 
-impl WasmModuleResources for ModuleState {
-    type FuncType = crate::FuncType;
-
-    fn table_at(&self, at: u32) -> Option<TableType> {
-        self.tables.get(at as usize).cloned()
-    }
-
-    fn memory_at(&self, at: u32) -> Option<MemoryType> {
-        self.memories.get(at as usize).cloned()
-    }
-
-    fn event_at(&self, at: u32) -> Option<&Self::FuncType> {
-        let types = self.all_types.as_ref().unwrap();
-        let i = *self.events.get(at as usize)?;
-        match &types[i] {
-            TypeDef::Func(f) => Some(f),
-            _ => None,
-        }
-    }
-
-    fn global_at(&self, at: u32) -> Option<GlobalType> {
-        self.globals.get(at as usize).cloned()
-    }
-
-    fn func_type_at(&self, at: u32) -> Option<&Self::FuncType> {
-        let types = self.all_types.as_ref().unwrap();
-        let i = *self.types.get(at as usize)?;
-        match &types[i] {
-            TypeDef::Func(f) => Some(f),
-            _ => None,
-        }
-    }
-
-    fn type_of_function(&self, at: u32) -> Option<&Self::FuncType> {
-        let types = self.all_types.as_ref().unwrap();
-        let i = *self.func_types.get(at as usize)?;
-        match &types[i] {
-            TypeDef::Func(f) => Some(f),
-            _ => None,
-        }
-    }
-
-    fn element_type_at(&self, at: u32) -> Option<Type> {
-        self.element_types.get(at as usize).cloned()
-    }
-
-    fn element_count(&self) -> u32 {
-        self.element_types.len() as u32
-    }
-
-    fn data_count(&self) -> u32 {
-        self.data_count.unwrap_or(0)
-    }
-
-    fn is_function_referenced(&self, idx: u32) -> bool {
-        self.function_references.contains(&idx)
-    }
-}
-
-/// The implementation of [`WasmModuleResources`] used by [`Validator`].
-pub struct ValidatorResources(Arc<ModuleState>);
-
-impl WasmModuleResources for ValidatorResources {
-    type FuncType = crate::FuncType;
-
-    fn table_at(&self, at: u32) -> Option<TableType> {
-        self.0.table_at(at)
-    }
-
-    fn memory_at(&self, at: u32) -> Option<MemoryType> {
-        self.0.memory_at(at)
-    }
-
-    fn event_at(&self, at: u32) -> Option<&Self::FuncType> {
-        self.0.event_at(at)
-    }
-
-    fn global_at(&self, at: u32) -> Option<GlobalType> {
-        self.0.global_at(at)
-    }
-
-    fn func_type_at(&self, at: u32) -> Option<&Self::FuncType> {
-        self.0.func_type_at(at)
-    }
-
-    fn type_of_function(&self, at: u32) -> Option<&Self::FuncType> {
-        self.0.type_of_function(at)
-    }
-
-    fn element_type_at(&self, at: u32) -> Option<Type> {
-        self.0.element_type_at(at)
-    }
-
-    fn element_count(&self) -> u32 {
-        self.0.element_count()
-    }
-
-    fn data_count(&self) -> u32 {
-        self.0.data_count()
-    }
-
-    fn is_function_referenced(&self, idx: u32) -> bool {
-        self.0.is_function_referenced(idx)
-    }
-}
-
-mod arc {
-    use std::ops::Deref;
-    use std::sync::Arc;
-
-    pub struct MaybeOwned<T> {
-        owned: bool,
-        arc: Arc<T>,
-    }
-
-    impl<T> MaybeOwned<T> {
-        pub fn as_mut(&mut self) -> Option<&mut T> {
-            if !self.owned {
-                return None;
+        match types.tag_at(0) {
+            Some(ty) => {
+                assert_eq!(ty.params.as_ref(), [ValType::I64, ValType::I32]);
+                assert_eq!(ty.returns.as_ref(), []);
             }
-            debug_assert!(Arc::get_mut(&mut self.arc).is_some());
-            Some(unsafe { &mut *(&*self.arc as *const T as *mut T) })
+            _ => unreachable!(),
         }
 
-        pub fn assert_mut(&mut self) -> &mut T {
-            self.as_mut().unwrap()
-        }
+        assert_eq!(types.element_at(0), Some(ValType::FuncRef));
 
-        pub fn arc(&mut self) -> &Arc<T> {
-            self.owned = false;
-            &self.arc
-        }
-    }
-
-    impl<T: Default> Default for MaybeOwned<T> {
-        fn default() -> MaybeOwned<T> {
-            MaybeOwned {
-                owned: true,
-                arc: Arc::default(),
-            }
-        }
-    }
-
-    impl<T> Deref for MaybeOwned<T> {
-        type Target = T;
-
-        fn deref(&self) -> &T {
-            &self.arc
-        }
-    }
-}
-
-/// This is a helper structure to create a map from names to types.
-///
-/// The main purpose of this structure is to handle the two-level imports found
-/// in wasm modules pre-module-linking. A two-level import is equivalent to a
-/// single-level import of an instance, and that mapping happens here.
-#[derive(Default)]
-struct NameSet {
-    set: HashMap<String, EntityType>,
-    implicit: HashSet<String>,
-    type_size: u32,
-}
-
-impl NameSet {
-    /// Pushes a new name into this typed set off names, internally handling the
-    /// mapping of two-level namespaces into a single-level namespace.
-    ///
-    /// * `offset` - the binary offset in the original wasm file of where to
-    ///   report errors about.
-    /// * `module` - the first-level name in the namespace
-    /// * `name` - the optional second-level namespace
-    /// * `ty` - the type of the item being pushed
-    /// * `types` - our global list of types
-    /// * `desc` - a human-readable description of the item being pushed, used
-    ///   for generating errors.
-    ///
-    /// Returns an error if the name was a duplicate. Returns `Ok(Some(idx))` if
-    /// this push was the first push to define an implicit instance with the
-    /// type `idx` into the global list of types. Returns `Ok(None)` otherwise.
-    fn push(
-        &mut self,
-        offset: usize,
-        module: &str,
-        name: Option<&str>,
-        ty: EntityType,
-        types: &mut SnapshotList<TypeDef>,
-        desc: &str,
-    ) -> Result<Option<usize>> {
-        self.type_size = combine_type_sizes(offset, self.type_size, ty.size(types))?;
-        let name = match name {
-            Some(name) => name,
-            // If the `name` is not provided then this is a module-linking style
-            // definition with only one level of a name rather than two. This
-            // means we can insert the `ty` into the set of imports directly,
-            // error-ing out on duplicates.
-            None => {
-                let prev = self.set.insert(module.to_string(), ty);
-                return if prev.is_some() {
-                    Err(BinaryReaderError::new(
-                        format!("duplicate {} name `{}` already defined", desc, module),
-                        offset,
-                    ))
-                } else {
-                    Ok(None)
-                };
-            }
-        };
-        match self.set.get(module) {
-            // If `module` was previously defined and we implicitly defined it,
-            // then we know that it points to an instance type. We update the
-            // set of exports of the instance type here since we're adding a new
-            // entry. Note that nothing, at the point that we're building this
-            // set, should point to this instance type so it should be safe to
-            // mutate.
-            Some(instance) if self.implicit.contains(module) => {
-                let instance = match instance {
-                    EntityType::Instance(i) => match &mut types[*i] {
-                        TypeDef::Instance(i) => i,
-                        _ => unreachable!(),
-                    },
-                    _ => unreachable!(),
-                };
-                let prev = instance.exports.insert(name.to_string(), ty);
-                if prev.is_some() {
-                    return Err(BinaryReaderError::new(
-                        format!(
-                            "duplicate {} name `{}::{}` already defined",
-                            desc, module, name
-                        ),
-                        offset,
-                    ));
-                }
-                Ok(None)
-            }
-
-            // Otherwise `module` was previously defined, but it *wasn't*
-            // implicitly defined through a two level import (rather was
-            // explicitly defined with a single-level import), then that's an
-            // error.
-            Some(_) => {
-                return Err(BinaryReaderError::new(
-                    format!("cannot define the {} `{}` twice", desc, module),
-                    offset,
-                ))
-            }
-
-            // And finally if `module` wasn't already defined then we go ahead
-            // and define it here as a instance type with a single export, our
-            // `name`.
-            None => {
-                let idx = types.len();
-                let mut instance = InstanceType::default();
-                instance.exports.insert(name.to_string(), ty);
-                types.push(TypeDef::Instance(instance));
-                assert!(self.implicit.insert(module.to_string()));
-                self.set
-                    .insert(module.to_string(), EntityType::Instance(idx));
-                Ok(Some(idx))
-            }
-        }
-    }
-}
-
-impl EntityType {
-    fn size(&self, list: &SnapshotList<TypeDef>) -> u32 {
-        let recursive_size = match self {
-            // Note that this function computes the size of the *type*, not the
-            // size of the value, so these "leaves" all count as 1
-            EntityType::Global(_) | EntityType::Memory(_) | EntityType::Table(_) => 1,
-
-            // These types have recursive sizes so we look up the size in the
-            // type tables.
-            EntityType::Func(i)
-            | EntityType::Module(i)
-            | EntityType::Instance(i)
-            | EntityType::Event(i) => match &list[*i] {
-                TypeDef::Func(f) => (f.params.len() + f.returns.len()) as u32,
-                TypeDef::Module(m) => m.type_size,
-                TypeDef::Instance(i) => i.type_size,
-            },
-        };
-        recursive_size.saturating_add(1)
-    }
-}
-
-/// This is a type which mirrors a subset of the `Vec<T>` API, but is intended
-/// to be able to be cheaply snapshotted and cloned.
-///
-/// When each module's code sections start we "commit" the current list of types
-/// in the global list of types. This means that the temporary `cur` vec here is
-/// pushed onto `snapshots` and wrapped up in an `Arc`. At that point we clone
-/// this entire list (which is then O(modules), not O(types in all modules)) and
-/// pass out as a context to each function validator.
-///
-/// Otherwise, though, this type behaves as if it were a large `Vec<T>`, but
-/// it's represented by lists of contiguous chunks.
-struct SnapshotList<T> {
-    // All previous snapshots, the "head" of the list that this type represents.
-    // The first entry in this pair is the starting index for all elements
-    // contained in the list, and the second element is the list itself. Note
-    // the `Arc` wrapper around sub-lists, which makes cloning time for this
-    // `SnapshotList` O(snapshots) rather than O(snapshots_total), which for
-    // us in this context means the number of modules, not types.
-    //
-    // Note that this list is sorted least-to-greatest in order of the index for
-    // binary searching.
-    snapshots: Vec<(usize, Arc<Vec<T>>)>,
-
-    // This is the total length of all lists in the `snapshots` array.
-    snapshots_total: usize,
-
-    // The current list of types for the current snapshot that are being built.
-    cur: Vec<T>,
-}
-
-impl<T> SnapshotList<T> {
-    /// Same as `<&[T]>::get`
-    fn get(&self, index: usize) -> Option<&T> {
-        // Check to see if this index falls on our local list
-        if index >= self.snapshots_total {
-            return self.cur.get(index - self.snapshots_total);
-        }
-        // ... and failing that we do a binary search to figure out which bucket
-        // it's in. Note the `i-1` in the `Err` case because if we don't find an
-        // exact match the type is located in the previous bucket.
-        let i = match self.snapshots.binary_search_by_key(&index, |(i, _)| *i) {
-            Ok(i) => i,
-            Err(i) => i - 1,
-        };
-        let (len, list) = &self.snapshots[i];
-        Some(&list[index - len])
-    }
-
-    /// Same as `<&mut [T]>::get_mut`, except only works for indexes into the
-    /// current snapshot being built.
-    ///
-    /// # Panics
-    ///
-    /// Panics if an index is passed in which falls within the
-    /// previously-snapshotted list of types. This should never happen in our
-    /// contesxt and the panic is intended to weed out possible bugs in
-    /// wasmparser.
-    fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        if index >= self.snapshots_total {
-            return self.cur.get_mut(index - self.snapshots_total);
-        }
-        panic!("cannot get a mutable reference in snapshotted part of list")
-    }
-
-    /// Same as `Vec::push`
-    fn push(&mut self, val: T) {
-        self.cur.push(val);
-    }
-
-    /// Same as `<[T]>::len`
-    fn len(&self) -> usize {
-        self.cur.len() + self.snapshots_total
-    }
-
-    /// Commits previously pushed types into this snapshot vector, and returns a
-    /// clone of this list.
-    ///
-    /// The returned `SnapshotList` can be used to access all the same types as
-    /// this list itself. This list also is not changed (from an external
-    /// perspective) and can continue to access all the same types.
-    fn commit(&mut self) -> SnapshotList<T> {
-        // If the current chunk has new elements, commit them in to an
-        // `Arc`-wrapped vector in the snapshots list. Note the `shrink_to_fit`
-        // ahead of time to hopefully keep memory usage lower than it would
-        // otherwise be.
-        let len = self.cur.len();
-        if len > 0 {
-            self.cur.shrink_to_fit();
-            self.snapshots
-                .push((self.snapshots_total, Arc::new(mem::take(&mut self.cur))));
-            self.snapshots_total += len;
-        }
-        SnapshotList {
-            snapshots: self.snapshots.clone(),
-            snapshots_total: self.snapshots_total,
-            cur: Vec::new(),
-        }
-    }
-}
-
-impl<T> std::ops::Index<usize> for SnapshotList<T> {
-    type Output = T;
-
-    fn index(&self, index: usize) -> &T {
-        self.get(index).unwrap()
-    }
-}
-
-impl<T> std::ops::IndexMut<usize> for SnapshotList<T> {
-    fn index_mut(&mut self, index: usize) -> &mut T {
-        self.get_mut(index).unwrap()
-    }
-}
-
-impl<T> Default for SnapshotList<T> {
-    fn default() -> SnapshotList<T> {
-        SnapshotList {
-            snapshots: Vec::new(),
-            snapshots_total: 0,
-            cur: Vec::new(),
-        }
+        Ok(())
     }
 }

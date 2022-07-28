@@ -72,6 +72,18 @@ use std::collections::HashMap;
 use std::fmt;
 use std::usize;
 
+/// The maximum recursive depth of parens to parse.
+///
+/// This is sort of a fundamental limitation of the way this crate is
+/// designed. Everything is done through recursive descent parsing which
+/// means, well, that we're recursively going down the stack as we parse
+/// nested data structures. While we can handle this for wasm expressions
+/// since that's a pretty local decision, handling this for nested
+/// modules/components which be far trickier. For now we just say that when
+/// the parser goes too deep we return an error saying there's too many
+/// nested items. It would be great to not return an error here, though!
+pub(crate) const MAX_PARENS_DEPTH: usize = 100;
+
 /// A top-level convenience parseing function that parss a `T` from `buf` and
 /// requires that all tokens in `buf` are consume.
 ///
@@ -388,7 +400,7 @@ impl ParseBuffer<'_> {
 
                 // If the previous state was an `LParen`, we may have an
                 // annotation if the next keyword is reserved
-                (Reserved(s), State::LParen) if s.starts_with("@") && s.len() > 0 => {
+                (Reserved(s), State::LParen) if s.starts_with('@') && !s.is_empty() => {
                     let offset = self.input_pos(s);
                     State::Annotation {
                         span: Span { offset },
@@ -415,7 +427,7 @@ impl ParseBuffer<'_> {
             };
         }
         if let State::Annotation { span, .. } = state {
-            return Err(Error::new(span, format!("unclosed annotation")));
+            return Err(Error::new(span, "unclosed annotation".to_string()));
         }
         Ok(())
     }
@@ -702,7 +714,7 @@ impl<'a> Parser<'a> {
         if res.is_err() {
             self.buf.cur.set(before);
         }
-        return res;
+        res
     }
 
     /// Return the depth of nested parens we've parsed so far.
@@ -711,6 +723,15 @@ impl<'a> Parser<'a> {
     /// recursion limits in custom parsers.
     pub fn parens_depth(&self) -> usize {
         self.buf.depth.get()
+    }
+
+    /// Checks that the parser parens depth hasn't exceeded the maximum depth.
+    pub(crate) fn depth_check(&self) -> Result<()> {
+        if self.parens_depth() > MAX_PARENS_DEPTH {
+            Err(self.error("item nesting too deep"))
+        } else {
+            Ok(())
+        }
     }
 
     fn cursor(self) -> Cursor<'a> {
@@ -756,7 +777,9 @@ impl<'a> Parser<'a> {
 
     /// Returns the span of the previous token
     pub fn prev_span(&self) -> Span {
-        self.cursor().prev_span().unwrap_or(Span::from_offset(0))
+        self.cursor()
+            .prev_span()
+            .unwrap_or_else(|| Span::from_offset(0))
     }
 
     /// Registers a new known annotation with this parser to allow parsing
@@ -1087,7 +1110,7 @@ impl<'a> Cursor<'a> {
     /// [annotation]: https://github.com/WebAssembly/annotations
     pub fn annotation(self) -> Option<(&'a str, Self)> {
         let (token, cursor) = self.reserved()?;
-        if !token.starts_with("@") || token.len() <= 1 {
+        if !token.starts_with('@') || token.len() <= 1 {
             return None;
         }
         match &self.parser.buf.tokens.get(self.cur.wrapping_sub(1))?.0 {
@@ -1183,7 +1206,7 @@ impl<'a> Cursor<'a> {
             Some(Token::Reserved(n)) => n,
             _ => return None,
         };
-        if reserved.starts_with("@") && reserved.len() > 1 {
+        if reserved.starts_with('@') && reserved.len() > 1 {
             Some(&reserved[1..])
         } else {
             None
