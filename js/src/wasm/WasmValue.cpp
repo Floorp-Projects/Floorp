@@ -53,7 +53,6 @@ Val::Val(const LitVal& val) {
     case ValType::V128:
       cell_.v128_ = val.v128();
       return;
-    case ValType::Rtt:
     case ValType::Ref:
       cell_.ref_ = val.ref();
       return;
@@ -370,8 +369,6 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
       return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc, mustWrite64);
     case FieldType::V128:
       break;
-    case FieldType::Rtt:
-      break;
     case FieldType::Ref:
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       if (!type.isNullable() && val.isNull()) {
@@ -506,8 +503,6 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
       return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
                                   dst);
     case FieldType::V128:
-      break;
-    case FieldType::Rtt:
       break;
     case FieldType::Ref:
       switch (type.refTypeKind()) {

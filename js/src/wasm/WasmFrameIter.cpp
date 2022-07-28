@@ -1620,8 +1620,6 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.new (in wasm)";
     case SymbolicAddress::RefTest:
       return "call to native ref.test (in wasm)";
-    case SymbolicAddress::RttSub:
-      return "call to native rtt.sub (in wasm)";
     case SymbolicAddress::InlineTypedObjectClass:
       MOZ_CRASH();
 #define OP(op, export, sa_name, abitype, entry, idx) \

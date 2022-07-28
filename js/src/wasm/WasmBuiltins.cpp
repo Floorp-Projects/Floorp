@@ -291,8 +291,6 @@ const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 {_PTR, _I32, _RoN, _END}};
 const SymbolicAddressSignature SASigRefTest = {
     SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
-const SymbolicAddressSignature SASigRttSub = {
-    SymbolicAddress::RttSub, _RoN, _FailOnNullPtr, 3, {_PTR, _RoN, _RoN, _END}};
 #define DECL_SAS_FOR_INTRINSIC(op, export, sa_name, abitype, entry, idx) \
   const SymbolicAddressSignature SASig##sa_name = {                      \
       SymbolicAddress::sa_name, _VOID, _FailOnNegI32,                    \
@@ -1267,10 +1265,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigRefTest));
       return FuncCast(Instance::refTest, *abiType);
-    case SymbolicAddress::RttSub:
-      *abiType = Args_General3;
-      MOZ_ASSERT(*abiType == ToABIType(SASigRttSub));
-      return FuncCast(Instance::rttSub, *abiType);
     case SymbolicAddress::InlineTypedObjectClass:
       // The ABI type is not used here, but assigning one to avoid garbage.
       *abiType = Args_General1;
@@ -1453,7 +1447,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ThrowException:
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:
-    case SymbolicAddress::RttSub:
 #define OP(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:
       FOR_EACH_INTRINSIC(OP)

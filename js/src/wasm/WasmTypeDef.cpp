@@ -465,8 +465,6 @@ static bool IsImmediateType(ValType vt) {
           return false;
       }
       break;
-    case ValType::Rtt:
-      return false;
   }
   MOZ_CRASH("bad ValType");
 }
@@ -495,8 +493,6 @@ static unsigned EncodeImmediateType(ValType vt) {
         case RefType::TypeIndex:
           break;
       }
-      break;
-    case ValType::Rtt:
       break;
   }
   MOZ_CRASH("bad ValType");
