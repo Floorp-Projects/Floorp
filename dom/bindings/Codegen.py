@@ -12710,9 +12710,7 @@ class CGUnionStruct(CGThing):
             destructorCases.append(CGCase("eNull", None))
             assignmentCase = CGCase(
                 "eNull",
-                CGGeneric(
-                    "MOZ_ASSERT(mType == eUninitialized);\n" "mType = eNull;\n"
-                ),
+                CGGeneric("MOZ_ASSERT(mType == eUninitialized);\n" "mType = eNull;\n"),
             )
             assignmentCases.append(assignmentCase)
             moveCases.append(assignmentCase)
@@ -12889,8 +12887,9 @@ class CGUnionStruct(CGThing):
                 CGCase(
                     "e" + vars["name"],
                     CGGeneric(
-                        "mType = e%s;\n" % vars["name"] +
-                        "mValue.m%s.SetValue(std::move(aOther.mValue.m%s.Value()));\n" % (vars["name"], vars["name"])
+                        "mType = e%s;\n" % vars["name"]
+                        + "mValue.m%s.SetValue(std::move(aOther.mValue.m%s.Value()));\n"
+                        % (vars["name"], vars["name"])
                     ),
                 )
             )
@@ -13010,7 +13009,8 @@ class CGUnionStruct(CGThing):
                     "operator=",
                     "%s&" % selfName,
                     [Argument("%s&&" % selfName, "aOther")],
-                    body="this->~%s();\nnew (this) %s (std::move(aOther));\nreturn *this;\n" % (selfName, selfName),
+                    body="this->~%s();\nnew (this) %s (std::move(aOther));\nreturn *this;\n"
+                    % (selfName, selfName),
                 )
             )
 
