@@ -152,6 +152,7 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   } else if (value.isBigInt()) {
     post = JS::BigIntValue(onBigIntEdge(value.toBigInt()));
   } else {
+    MOZ_ASSERT_IF(value.isGCThing(), !IsInsideNursery(value.toGCThing()));
     return;
   }
 
