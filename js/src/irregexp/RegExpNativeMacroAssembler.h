@@ -75,7 +75,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckNotAtStart(int cp_offset, Label* on_not_at_start);
   virtual void CheckPosition(int cp_offset, Label* on_outside_input);
   virtual void CheckBitInTable(Handle<ByteArray> table, Label* on_bit_set);
-  virtual bool CheckSpecialCharacterClass(uc16 type, Label* on_no_match);
+  virtual bool CheckSpecialCharacterClass(StandardCharacterSet type,
+                                          Label* on_no_match);
   virtual void CheckNotBackReference(int start_reg, bool read_backward,
                                      Label* on_no_match);
   virtual void CheckNotBackReferenceIgnoreCase(int start_reg,
@@ -102,7 +103,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
 
   virtual Handle<HeapObject> GetCode(Handle<String> source);
 
-  virtual bool CanReadUnaligned();
+  virtual bool CanReadUnaligned() const;
 
  private:
   size_t frameSize_ = 0;
