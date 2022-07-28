@@ -1195,6 +1195,26 @@ customElements.define(
       this._openMenuButton.addEventListener("mouseout", () => {
         this.classList.remove("no-hover");
       });
+      this._openMenuButton.addEventListener("click", event => {
+        const { target } = event;
+
+        if (event.button !== 0) {
+          return;
+        }
+
+        const popup = target.ownerDocument.getElementById(
+          "unified-extensions-context-menu"
+        );
+        popup.openPopup(
+          target,
+          "after_end",
+          0,
+          0,
+          true /* isContextMenu */,
+          false /* attributesOverride */,
+          event
+        );
+      });
 
       this.render();
     }
