@@ -32,12 +32,11 @@ class Http2PushedStream final : public Http2StreamBase {
                     uint32_t aID,
                     uint64_t aCurrentForegroundTabOuterContentWindowId);
 
+  Http2PushedStream* GetHttp2PushedStream() override { return this; }
   bool GetPushComplete();
 
   // The consumer stream is the synthetic pull stream hooked up to this push
-  virtual Http2StreamBase* GetConsumerStream() override {
-    return mConsumerStream;
-  };
+  Http2StreamBase* GetConsumerStream() { return mConsumerStream; };
 
   void SetConsumerStream(Http2StreamBase* consumer);
   [[nodiscard]] bool GetHashKey(nsCString& key);
@@ -69,11 +68,14 @@ class Http2PushedStream final : public Http2StreamBase {
 
   // overload of Http2StreamBase
   virtual bool HasSink() override { return !!mConsumerStream; }
-  virtual void SetPushComplete() override { mPushCompleted = true; }
+  void SetPushComplete() { mPushCompleted = true; }
   virtual void TopBrowsingContextIdChanged(uint64_t) override;
 
   nsCString& GetRequestString() { return mRequestString; }
   nsCString& GetResourceUrl() { return mResourceUrl; }
+
+  nsresult ConvertPushHeaders(Http2Decompressor* decompressor,
+                              nsACString& aHeadersIn, nsACString& aHeadersOut);
 
  private:
   virtual ~Http2PushedStream() = default;

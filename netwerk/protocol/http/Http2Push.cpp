@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "Http2Push.h"
+#include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpTransaction.h"
 #include "nsIHttpPushListener.h"
@@ -357,6 +358,50 @@ void Http2PushedStream::TopBrowsingContextIdChanged(uint64_t id) {
   if (mPriorityDependency != oldDependency) {
     session->SendPriorityFrame(mStreamID, mPriorityDependency, mPriorityWeight);
   }
+}
+
+// ConvertPushHeaders is used to convert the pushed request headers
+// into HTTP/1 format and report some telemetry
+nsresult Http2PushedStream::ConvertPushHeaders(Http2Decompressor* decompressor,
+                                               nsACString& aHeadersIn,
+                                               nsACString& aHeadersOut) {
+  nsresult rv = decompressor->DecodeHeaderBlock(
+      reinterpret_cast<const uint8_t*>(aHeadersIn.BeginReading()),
+      aHeadersIn.Length(), aHeadersOut, true);
+  if (NS_FAILED(rv)) {
+    LOG3(("Http2PushedStream::ConvertPushHeaders %p Error\n", this));
+    return rv;
+  }
+
+  nsCString method;
+  decompressor->GetHost(mHeaderHost);
+  decompressor->GetScheme(mHeaderScheme);
+  decompressor->GetPath(mHeaderPath);
+
+  if (mHeaderHost.IsEmpty() || mHeaderScheme.IsEmpty() ||
+      mHeaderPath.IsEmpty()) {
+    LOG3(
+        ("Http2PushedStream::ConvertPushHeaders %p Error - missing required "
+         "host=%s scheme=%s path=%s\n",
+         this, mHeaderHost.get(), mHeaderScheme.get(), mHeaderPath.get()));
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  decompressor->GetMethod(method);
+  if (!method.EqualsLiteral("GET")) {
+    LOG3(
+        ("Http2PushedStream::ConvertPushHeaders %p Error - method not "
+         "supported: "
+         "%s\n",
+         this, method.get()));
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  aHeadersIn.Truncate();
+  LOG(("id 0x%X decoded push headers %s %s %s are:\n%s", mStreamID,
+       mHeaderScheme.get(), mHeaderHost.get(), mHeaderPath.get(),
+       aHeadersOut.BeginReading()));
+  return NS_OK;
 }
 
 //////////////////////////////////////////
