@@ -23,31 +23,6 @@ const TELEMETRY_EVENTS_FILTERS = {
 
 loadTestSubscript("head_unified_extensions.js");
 
-const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
-  const button = getUnifiedExtensionsItem(win, extensionId).querySelector(
-    ".unified-extensions-item-open-menu"
-  );
-  ok(button, "expected 'open menu' button");
-
-  const menu = win.document.getElementById("unified-extensions-context-menu");
-  ok(menu, "expected menu");
-
-  const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(button, { type: "contextmenu" }, win);
-  await shown;
-
-  return menu;
-};
-
-const closeUnifiedExtensionsContextMenu = async win => {
-  const menu = win.document.getElementById("unified-extensions-context-menu");
-  ok(menu, "expected menu");
-
-  const hidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
-  menu.hidePopup();
-  await hidden;
-};
-
 const promiseExtensionUninstalled = extensionId => {
   return new Promise(resolve => {
     let listener = {};
@@ -92,7 +67,7 @@ add_task(async function test_context_menu() {
   is(reportButton.hidden, false, "expected report button to be visible");
   is(reportButton.disabled, false, "expected report button to be enabled");
 
-  await closeUnifiedExtensionsContextMenu(win);
+  await closeChromeContextMenu(contextMenu.id, null, win);
   await closeExtensionsPanel(win);
 
   await extension.unload();
@@ -122,7 +97,7 @@ add_task(
     ok(reportButton, "expected report button");
     is(reportButton.hidden, true, "expected report button to be hidden");
 
-    await closeUnifiedExtensionsContextMenu(win);
+    await closeChromeContextMenu(contextMenu.id, null, win);
     await closeExtensionsPanel(win);
 
     await extension.unload();
@@ -158,7 +133,7 @@ add_task(
     ok(removeButton, "expected remove button");
     is(removeButton.disabled, true, "expected remove button to be disabled");
 
-    await closeUnifiedExtensionsContextMenu(win);
+    await closeChromeContextMenu(contextMenu.id, null, win);
     await closeExtensionsPanel(win);
 
     await extension.unload();

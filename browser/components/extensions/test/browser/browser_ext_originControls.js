@@ -4,6 +4,8 @@ const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
+loadTestSubscript("head_unified_extensions.js");
+
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
@@ -54,12 +56,34 @@ async function makeExtension({ id, permissions, host_permissions, granted }) {
 
 async function testOriginControls(
   extension,
+  { win, contextMenuId },
   { items, selected, click, granted, revoked }
 ) {
-  info(`Testing ${extension.id} on ${gBrowser.currentURI.spec}.`);
+  info(
+    `Testing ${extension.id} on ${gBrowser.currentURI.spec} with contextMenuId=${contextMenuId}.`
+  );
 
-  let target = `#${CSS.escape(makeWidgetId(extension.id))}-browser-action`;
-  let menu = await openChromeContextMenu("toolbar-context-menu", target);
+  let menu;
+  let manageExtensionClassName;
+
+  switch (contextMenuId) {
+    case "toolbar-context-menu":
+      let target = `#${CSS.escape(makeWidgetId(extension.id))}-browser-action`;
+      menu = await openChromeContextMenu(contextMenuId, target);
+      manageExtensionClassName = "customize-context-manageExtension";
+      break;
+
+    case "unified-extensions-context-menu":
+      await openExtensionsPanel(win);
+      menu = await openUnifiedExtensionsContextMenu(win, extension.id);
+      manageExtensionClassName =
+        "unified-extensions-context-menu-manage-extension";
+      break;
+
+    default:
+      throw new Error(`unexpected context menu "${contextMenuId}"`);
+  }
+
   let doc = menu.ownerDocument;
 
   info("Check expected menu items.");
@@ -74,7 +98,7 @@ async function testOriginControls(
   is(menu.children[items.length].nodeName, "menuseparator", "Found separator.");
   is(
     menu.children[items.length + 1].className,
-    "customize-context-manageExtension",
+    manageExtensionClassName,
     "All items accounted for."
   );
 
@@ -82,7 +106,11 @@ async function testOriginControls(
   if (click) {
     itemToClick = menu.children[click];
   }
-  await closeChromeContextMenu("toolbar-context-menu", itemToClick);
+  await closeChromeContextMenu(contextMenuId, itemToClick, win);
+
+  if (contextMenuId === "unified-extensions-context-menu") {
+    await closeExtensionsPanel(win);
+  }
 
   if (granted) {
     info("Waiting for the permissions.onAdded event.");
@@ -96,7 +124,7 @@ async function testOriginControls(
   }
 }
 
-add_task(async function originControls_in_browserAction_contextMenu() {
+const originControlsInContextMenu = async options => {
   // Has no permissions.
   let ext1 = await makeExtension({ id: "ext1@test" });
 
@@ -132,10 +160,10 @@ add_task(async function originControls_in_browserAction_contextMenu() {
   };
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
-    await testOriginControls(ext1, { items: [NO_ACCESS] });
-    await testOriginControls(ext2, { items: [NO_ACCESS] });
-    await testOriginControls(ext3, { items: [NO_ACCESS] });
-    await testOriginControls(ext4, { items: [NO_ACCESS] });
+    await testOriginControls(ext1, options, { items: [NO_ACCESS] });
+    await testOriginControls(ext2, options, { items: [NO_ACCESS] });
+    await testOriginControls(ext3, options, { items: [NO_ACCESS] });
+    await testOriginControls(ext4, options, { items: [NO_ACCESS] });
   });
 
   await BrowserTestUtils.withNewTab("http://mochi.test:8888/", async () => {
@@ -144,22 +172,22 @@ add_task(async function originControls_in_browserAction_contextMenu() {
       args: { domain: "mochi.test" },
     };
 
-    await testOriginControls(ext1, { items: [NO_ACCESS] });
+    await testOriginControls(ext1, options, { items: [NO_ACCESS] });
 
     // Has activeTab.
-    await testOriginControls(ext2, {
+    await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED],
       selected: 1,
     });
 
     // Could access mochi.test when clicked.
-    await testOriginControls(ext3, {
+    await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
     });
 
     // Has <all_urls> granted.
-    await testOriginControls(ext4, {
+    await testOriginControls(ext4, options, {
       items: [ACCESS_OPTIONS, ALL_SITES],
       selected: 1,
     });
@@ -171,33 +199,33 @@ add_task(async function originControls_in_browserAction_contextMenu() {
       args: { domain: "example.com" },
     };
 
-    await testOriginControls(ext1, { items: [NO_ACCESS] });
+    await testOriginControls(ext1, options, { items: [NO_ACCESS] });
 
     // Click alraedy selected options, expect no permission changes.
-    await testOriginControls(ext2, {
+    await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
       click: 1,
     });
-    await testOriginControls(ext3, {
+    await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
       click: 2,
     });
-    await testOriginControls(ext4, {
+    await testOriginControls(ext4, options, {
       items: [ACCESS_OPTIONS, ALL_SITES],
       selected: 1,
       click: 1,
     });
 
     // Click the other option, expect example.com permission granted/revoked.
-    await testOriginControls(ext2, {
+    await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
       click: 2,
       granted: ["*://example.com/*"],
     });
-    await testOriginControls(ext3, {
+    await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
       click: 1,
@@ -205,15 +233,38 @@ add_task(async function originControls_in_browserAction_contextMenu() {
     });
 
     // Other option is now selected.
-    await testOriginControls(ext2, {
+    await testOriginControls(ext2, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 2,
     });
-    await testOriginControls(ext3, {
+    await testOriginControls(ext3, options, {
       items: [ACCESS_OPTIONS, WHEN_CLICKED, ALWAYS_ON],
       selected: 1,
     });
   });
 
   await Promise.all(extensions.map(e => e.unload()));
+};
+
+add_task(async function originControls_in_browserAction_contextMenu() {
+  await originControlsInContextMenu({
+    win: window,
+    contextMenuId: "toolbar-context-menu",
+  });
+});
+
+add_task(async function originControls_in_unifiedExtensions_contextMenu() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.unifiedExtensions.enabled", true]],
+  });
+
+  const win = await promiseEnableUnifiedExtensions();
+
+  await originControlsInContextMenu({
+    win,
+    contextMenuId: "unified-extensions-context-menu",
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });
