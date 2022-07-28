@@ -4,3 +4,4 @@ fuzzy(1,2000) ** simple-gradient.yaml
 !* prim-suite.yaml
 == mix-blend-clip.yaml mix-blend-clip-ref.yaml
 platform(linux) == tile-cache-raster-root.yaml tile-cache-raster-root.png
+== complex-shared-clip-root.yaml complex-shared-clip-root-ref.yaml
