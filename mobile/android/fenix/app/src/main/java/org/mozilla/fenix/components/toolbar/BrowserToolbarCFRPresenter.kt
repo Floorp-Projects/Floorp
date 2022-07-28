@@ -20,6 +20,8 @@ import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.cfr.CFRPopup
 import org.mozilla.fenix.compose.cfr.CFRPopup.PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR
@@ -103,6 +105,12 @@ class BrowserToolbarCFRPresenter(
                 },
                 popupVerticalOffset = CFR_TO_ANCHOR_VERTICAL_PADDING.dp
             ),
+            onDismiss = {
+                when (it) {
+                    true -> TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
+                    false -> TrackingProtection.tcpCfrImplicitDismissal.record(NoExtras())
+                }
+            }
         ) {
             Text(
                 text = context.getString(R.string.tcp_cfr_learn_more),
@@ -114,6 +122,7 @@ class BrowserToolbarCFRPresenter(
                             TOTAL_COOKIE_PROTECTION
                         )
                     )
+                    TrackingProtection.tcpSumoLinkClicked.record(NoExtras())
                     tcpCfrPopup?.dismiss()
                 },
                 style = FirefoxTheme.typography.body2.copy(
@@ -124,6 +133,7 @@ class BrowserToolbarCFRPresenter(
             settings.shouldShowTotalCookieProtectionCFR = false
             tcpCfrPopup = this
             show()
+            TrackingProtection.tcpCfrShown.record(NoExtras())
         }
     }
 }

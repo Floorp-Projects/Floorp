@@ -4578,6 +4578,73 @@ tracking_protection:
     metadata:
       tags:
         - TrackingProtection
+  tcp_cfr_shown:
+    type: event
+    description: |
+      The Total Cookie Protection CFR was shown to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26226#issuecomment-1204007332
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - TrackingProtection
+  tcp_cfr_implicit_dismissal:
+    type: event
+    description: |
+      The Total Cookie Protection CFR was dismissed by the user by interacting
+      with the outside of the popup.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26226#issuecomment-1204007332
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - TrackingProtection
+  tcp_cfr_explicit_dismissal:
+    type: event
+    description: |
+      The Total Cookie Protection CFR was dismissed by the user by clicking on
+      the "X" button to close the popup.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26226#issuecomment-1204007332
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - TrackingProtection
+  tcp_sumo_link_clicked:
+    type: event
+    description: |
+      A user clicked the link in the Total Cookie Protection CFR to open a new
+      SUMO tab detailing the Total Cookie Protection feature.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26226#issuecomment-1204007332
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - TrackingProtection
 tab:
   media_play:
     type: event

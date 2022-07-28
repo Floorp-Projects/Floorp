@@ -24,6 +24,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,10 +36,17 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.cfr.CFRPopup
 import org.mozilla.fenix.utils.Settings
+import mozilla.telemetry.glean.testing.GleanTestRule
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.TrackingProtection
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class)
 class BrowserToolbarCFRPresenterTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Test
     fun `GIVEN the TCP CFR should be shown for a custom tab WHEN the custom tab is fully loaded THEN the TCP CFR is shown`() {
@@ -192,6 +200,36 @@ class BrowserToolbarCFRPresenterTest {
             assertFalse(it.properties.overlapAnchor)
             assertEquals(CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp, it.properties.indicatorArrowStartOffset)
         }
+    }
+
+    @Test
+    fun `WHEN the TCP CFR is shown THEN log telemetry`() {
+        val presenter = createPresenter(
+            anchor = mockk(relaxed = true),
+        )
+
+        assertNull(TrackingProtection.tcpCfrShown.testGetValue())
+
+        presenter.showTcpCfr()
+
+        assertNotNull(TrackingProtection.tcpCfrShown.testGetValue())
+    }
+
+    @Test
+    fun `WHEN the TCP CFR is dismissed THEN log telemetry`() {
+        val presenter = createPresenter(
+            anchor = mockk(relaxed = true)
+        )
+
+        presenter.showTcpCfr()
+
+        assertNull(TrackingProtection.tcpCfrExplicitDismissal.testGetValue())
+        presenter.tcpCfrPopup!!.onDismiss.invoke(true)
+        assertNotNull(TrackingProtection.tcpCfrExplicitDismissal.testGetValue())
+
+        assertNull(TrackingProtection.tcpCfrImplicitDismissal.testGetValue())
+        presenter.tcpCfrPopup!!.onDismiss.invoke(false)
+        assertNotNull(TrackingProtection.tcpCfrImplicitDismissal.testGetValue())
     }
 
     /**
