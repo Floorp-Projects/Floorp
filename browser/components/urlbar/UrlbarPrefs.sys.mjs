@@ -229,6 +229,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include QuickActions.
   ["quickactions.enabled", false],
 
+  // Whether we will match QuickActions within a phrase and not only a prefix.
+  ["quickactions.matchInPhrase", true],
+
   // Whether results will include non-sponsored quick suggest suggestions.
   ["suggest.quicksuggest.nonsponsored", false],
 

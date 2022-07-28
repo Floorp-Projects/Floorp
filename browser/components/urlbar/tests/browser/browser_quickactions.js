@@ -170,3 +170,24 @@ add_task(async function test_screenshot_disabled() {
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
 });
+
+add_task(async function match_in_phrase() {
+  UrlbarProviderQuickActions.addAction("newtestaction", {
+    commands: ["matchingstring"],
+    label: "quickactions-downloads",
+  });
+
+  info("The action is matched when at end of input");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "Test we match at end of matchingstring",
+  });
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "We matched the action"
+  );
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+  UrlbarProviderQuickActions.removeAction("newtestaction");
+});

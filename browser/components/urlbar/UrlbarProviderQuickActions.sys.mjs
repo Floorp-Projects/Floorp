@@ -19,6 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 // These prefs are relative to the `browser.urlbar` branch.
 const ENABLED_PREF = "quickactions.enabled";
+const MATCH_IN_PHRASE_PREF = "quickactions.matchInPhrase";
 const DYNAMIC_TYPE_NAME = "quickactions";
 
 // When the urlbar is first focused and no search term has been
@@ -86,10 +87,16 @@ class ProviderQuickActions extends UrlbarProvider {
    *       is done searching AND returning results.
    */
   async startQuery(queryContext, addCallback) {
-    let results = [
-      ...(this.#keywords.get(queryContext.trimmedSearchString.toLowerCase()) ??
-        []),
-    ];
+    let input = queryContext.trimmedSearchString.toLowerCase();
+    let results = [...(this.#prefixes.get(input) ?? [])];
+
+    if (lazy.UrlbarPrefs.get(MATCH_IN_PHRASE_PREF)) {
+      for (let [keyword, key] of this.#keywords) {
+        if (input.includes(keyword)) {
+          results.push(key);
+        }
+      }
+    }
     if (!results?.length) {
       return;
     }
@@ -191,8 +198,9 @@ class ProviderQuickActions extends UrlbarProvider {
    */
   addAction(key, definition) {
     this.#actions.set(key, definition);
+    definition.commands.forEach(cmd => this.#keywords.set(cmd, key));
     this.#loopOverPrefixes(definition.commands, prefix => {
-      let result = this.#keywords.get(prefix);
+      let result = this.#prefixes.get(prefix);
       if (result) {
         if (!result.includes(key)) {
           result.push(key);
@@ -200,7 +208,7 @@ class ProviderQuickActions extends UrlbarProvider {
       } else {
         result = [key];
       }
-      this.#keywords.set(prefix, result);
+      this.#prefixes.set(prefix, result);
     });
   }
 
@@ -211,24 +219,32 @@ class ProviderQuickActions extends UrlbarProvider {
   removeAction(key) {
     let definition = this.#actions.get(key);
     this.#actions.delete(key);
+    definition.commands.forEach(cmd => this.#keywords.delete(cmd));
     this.#loopOverPrefixes(definition.commands, prefix => {
-      let result = this.#keywords.get(prefix);
+      let result = this.#prefixes.get(prefix);
       if (result) {
         result = result.filter(val => val == key);
       }
-      this.#keywords.set(prefix, result);
+      this.#prefixes.set(prefix, result);
     });
   }
 
   // A map from keywords to an action.
   #keywords = new Map();
 
+  // A map of all prefixes to an array of actions.
+  #prefixes = new Map();
+
   // The actions that have been added.
   #actions = new Map();
 
   #loopOverPrefixes(commands, fun) {
     for (const command of commands) {
-      for (let i = 0; i <= command.length; i++) {
+      // Loop over all the prefixes of the word, ie
+      // "", "w", "wo", "wor", stopping just before the full
+      // word itself which will be matched by the whole
+      // phrase matching.
+      for (let i = 1; i <= command.length; i++) {
         let prefix = command.substring(0, command.length - i);
         fun(prefix);
       }
