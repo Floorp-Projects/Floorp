@@ -2642,9 +2642,8 @@ MacroAssembler::MacroAssembler(JSContext* cx)
 #endif
       dynamicAlignment_(false),
       emitProfilingInstrumentation_(false) {
-  jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
   alloc_.emplace(&cx->tempLifoAlloc());
-  moveResolver_.setAllocator(*jitContext_->temp);
+  moveResolver_.setAllocator(*GetJitContext()->temp);
 #if defined(JS_CODEGEN_ARM)
   initWithAllocator();
   m_buffer.id = GetJitContext()->getNextAssemblerId();

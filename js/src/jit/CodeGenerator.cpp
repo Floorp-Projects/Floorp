@@ -2550,6 +2550,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   MOZ_ASSERT(ObjectElements::VALUES_PER_HEADER + RegExpObject::MaxPairCount ==
              gc::GetGCKindSlots(templateObj.getAllocKind()));
 
+  JitContext jcx(cx, nullptr);
   StackMacroAssembler masm(cx);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpMatcherStub");
 
@@ -2929,6 +2930,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   Register temp2 = regs.takeAny();
   Register temp3 = regs.takeAny();
 
+  JitContext jcx(cx, nullptr);
   StackMacroAssembler masm(cx);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpSearcherStub");
 
@@ -3102,6 +3104,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   Register lastIndex = RegExpTesterLastIndexReg;
   Register result = ReturnReg;
 
+  JitContext jcx(cx, nullptr);
   StackMacroAssembler masm(cx);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpTesterStub");
 
@@ -10513,6 +10516,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
 JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting StringConcat stub");
 
+  JitContext jcx(cx, nullptr);
   StackMacroAssembler masm(cx);
   AutoCreatedBy acb(masm, "JitRealm::generateStringConcatStub");
 
