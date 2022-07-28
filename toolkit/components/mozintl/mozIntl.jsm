@@ -703,7 +703,7 @@ const nativeLocaleNames = new Map(
     it: "Italiano",
     ja: "日本語",
     "ja-JP-mac": "日本語",
-    "ja-ka": "関西弁",
+    "ja-KA": "関西弁",
     ka: "ქართული",
     kab: "Taqbaylit",
     kk: "қазақ тілі",
