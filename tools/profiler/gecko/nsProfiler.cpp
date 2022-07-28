@@ -1364,7 +1364,7 @@ void nsProfiler::FinishGathering() {
     {
       nsAutoCString pid;
       pid.AppendInt(int64_t(profiler_current_process_id().ToNumber()));
-      Json::String logString = mGatheringLog->toStyledString();
+      Json::String logString = ToCompactString(*mGatheringLog);
       mGatheringLog = nullptr;
       mWriter->SplicedJSONProperty(pid, logString);
     }

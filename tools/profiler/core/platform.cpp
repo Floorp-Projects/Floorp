@@ -370,6 +370,19 @@ static constexpr uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::FileIOAll | ProfilerFeature::IPCMessages;
 }
 
+Json::String ToCompactString(const Json::Value& aJsonValue) {
+  Json::StreamWriterBuilder builder;
+  // No indentations, and no newlines.
+  builder["indentation"] = "";
+  // This removes spaces after colons.
+  builder["enableYAMLCompatibility"] = false;
+  // Only 6 digits after the decimal point; timestamps in ms have ns precision.
+  builder["precision"] = 6;
+  builder["precisionType"] = "decimal";
+
+  return Json::writeString(builder, aJsonValue);
+}
+
 /* static */ mozilla::baseprofiler::detail::BaseProfilerMutex
     ProfilingLog::gMutex;
 /* static */ mozilla::UniquePtr<Json::Value> ProfilingLog::gLog;
@@ -3343,7 +3356,7 @@ static void locked_profiler_stream_json_for_this_process(
     {
       nsAutoCString pid;
       pid.AppendInt(int64_t(profiler_current_process_id().ToNumber()));
-      Json::String logString = aProfilingLogObject.toStyledString();
+      Json::String logString = ToCompactString(aProfilingLogObject);
       aWriter.SplicedJSONProperty(pid, logString);
     }
     aWriter.EndObject();

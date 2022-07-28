@@ -1288,7 +1288,7 @@ void JSONWhitespaceCheck(const char* aOutput) {
     }
   }
 
-  EXPECT_LE(double(whitespaces) / double(length), 0.125);
+  EXPECT_LE(double(whitespaces) / double(length), 0.1);
 }
 
 // Does the GETTER return a non-null TYPE? (Non-critical)
