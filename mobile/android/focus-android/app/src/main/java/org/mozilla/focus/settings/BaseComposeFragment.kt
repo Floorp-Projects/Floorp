@@ -13,13 +13,12 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
 import com.google.accompanist.insets.LocalWindowInsets
@@ -98,7 +97,7 @@ abstract class BaseComposeFragment : Fragment() {
                                                 onClick = onNavigateUp()
                                             ) {
                                                 Icon(
-                                                    Icons.Filled.ArrowBack,
+                                                    painterResource(id = R.drawable.mozac_ic_back),
                                                     stringResource(R.string.go_back),
                                                     tint = focusColors.toolbarColor
                                                 )
