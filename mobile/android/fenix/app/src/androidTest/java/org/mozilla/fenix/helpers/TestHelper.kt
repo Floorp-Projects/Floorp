@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.helpers
 
+import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -45,6 +46,7 @@ import org.hamcrest.Matcher
 import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -238,6 +240,19 @@ object TestHelper {
         } else {
             BrowserRobot().verifyUrl(url)
         }
+    }
+
+    /**
+     * Checks whether the latest activity of the application is used for custom tabs or PWAs.
+     *
+     * @return Boolean value that helps us know if the current activity supports custom tabs or PWAs.
+     */
+    fun isExternalAppBrowserActivityInCurrentTask(): Boolean {
+        val activityManager = appContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+        mDevice.waitForIdle(waitingTimeShort)
+
+        return activityManager.appTasks[0].taskInfo.topActivity!!.className == ExternalAppBrowserActivity::class.java.name
     }
 
     // exit from Menus to home screen or browser
