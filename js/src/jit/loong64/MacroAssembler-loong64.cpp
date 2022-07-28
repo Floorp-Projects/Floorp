@@ -2352,7 +2352,7 @@ void MacroAssemblerLOONG64Compat::profilerEnterFrame(Register framePtr,
 }
 
 void MacroAssemblerLOONG64Compat::profilerExitFrame() {
-  jump(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
+  jump(asMasm().runtime()->jitRuntime()->getProfilerExitFrameTail());
 }
 
 MacroAssembler& MacroAssemblerLOONG64::asMasm() {
@@ -5330,7 +5330,7 @@ void MacroAssemblerLOONG64Compat::handleFailureWithHandlerTail(
     Label skipProfilingInstrumentation;
     // Test if profiler enabled.
     AbsoluteAddress addressOfEnabled(
-        GetJitContext()->runtime->geckoProfiler().addressOfEnabled());
+        asMasm().runtime()->geckoProfiler().addressOfEnabled());
     asMasm().branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
                       &skipProfilingInstrumentation);
     jump(profilerExitTail);

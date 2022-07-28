@@ -80,8 +80,6 @@ static_assert(sizeof(AbortReasonOr<uint16_t*>) == sizeof(uintptr_t),
 // JIT contexts must not be nested.
 
 class JitContext {
-  CompileRealm* realm_ = nullptr;
-
 #ifdef DEBUG
   // Whether this thread is actively Ion compiling (does not include Wasm or
   // WarpOracle).
@@ -96,26 +94,20 @@ class JitContext {
   // off-thread compilation.
   JSContext* cx = nullptr;
 
-  // Wrappers with information about the current runtime/realm for use
-  // during compilation.
+  // Wrapper with information about the current runtime. nullptr for Wasm
+  // compilations.
   CompileRuntime* runtime = nullptr;
 
   // Constructor for compilations happening on the main thread.
   explicit JitContext(JSContext* cx);
 
   // Constructor for off-thread Ion compilations.
-  JitContext(CompileRuntime* rt, CompileRealm* realm);
+  explicit JitContext(CompileRuntime* rt);
 
   // Constructor for Wasm compilation.
   JitContext();
 
   ~JitContext();
-
-  CompileRealm* maybeRealm() const { return realm_; }
-  CompileRealm* realm() const {
-    MOZ_ASSERT(maybeRealm());
-    return maybeRealm();
-  }
 
 #ifdef DEBUG
   bool isCompilingWasm() { return isCompilingWasm_; }

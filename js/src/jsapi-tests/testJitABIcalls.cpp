@@ -638,7 +638,7 @@ class JitABICall final : public JSAPITest, public DefineCheckArgs<Sig> {
 
     TempAllocator temp(&cx->tempLifoAlloc());
     JitContext jcx(cx);
-    StackMacroAssembler masm(temp);
+    StackMacroAssembler masm(cx, temp);
     AutoCreatedBy acb(masm, __func__);
     PrepareJit(masm);
 

@@ -61,17 +61,13 @@ JitContext* jit::GetJitContext() {
 
 JitContext* jit::MaybeGetJitContext() { return CurrentJitContext(); }
 
-JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm)
-    : realm_(realm), runtime(rt) {
+JitContext::JitContext(CompileRuntime* rt) : runtime(rt) {
   MOZ_ASSERT(rt);
-  MOZ_ASSERT(realm);
   SetJitContext(this);
 }
 
 JitContext::JitContext(JSContext* cx)
-    : realm_(CompileRealm::get(cx->realm())),
-      cx(cx),
-      runtime(CompileRuntime::get(cx->runtime())) {
+    : cx(cx), runtime(CompileRuntime::get(cx->runtime())) {
   SetJitContext(this);
 }
 

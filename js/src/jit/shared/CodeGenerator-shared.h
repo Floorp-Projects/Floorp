@@ -39,7 +39,8 @@ struct ReciprocalMulConstants {
 class CodeGeneratorShared : public LElementVisitor {
   js::Vector<OutOfLineCode*, 0, SystemAllocPolicy> outOfLineCode_;
 
-  MacroAssembler& ensureMasm(MacroAssembler* masm, TempAllocator& alloc);
+  MacroAssembler& ensureMasm(MacroAssembler* masm, TempAllocator& alloc,
+                             CompileRealm* realm);
   mozilla::Maybe<IonHeapMacroAssembler> maybeMasm_;
 
  public:
