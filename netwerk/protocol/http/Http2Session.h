@@ -31,6 +31,7 @@ namespace net {
 
 class Http2PushedStream;
 class Http2StreamBase;
+class Http2StreamTunnel;
 class nsHttpTransaction;
 
 enum Http2StreamBaseType { Normal, WebSocket, Tunnel, ServerPush };
@@ -594,8 +595,8 @@ class Http2Session final : public ASpdySession,
   void DispatchOnTunnel(nsAHttpTransaction*, nsIInterfaceRequestor*);
   void CreateTunnel(nsHttpTransaction*, nsHttpConnectionInfo*,
                     nsIInterfaceRequestor*);
-  void RegisterTunnel(Http2StreamBase*);
-  void UnRegisterTunnel(Http2StreamBase*);
+  void RegisterTunnel(Http2StreamTunnel*);
+  void UnRegisterTunnel(Http2StreamTunnel*);
   uint32_t FindTunnelCount(nsHttpConnectionInfo*);
   uint32_t FindTunnelCount(nsCString const&);
   nsTHashMap<nsCStringHashKey, uint32_t> mTunnelHash;

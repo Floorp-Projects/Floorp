@@ -16,6 +16,26 @@ class Http2Stream : public Http2StreamBase {
   Http2Stream(nsAHttpTransaction* httpTransaction, Http2Session* session,
               int32_t priority, uint64_t bcId)
       : Http2StreamBase(httpTransaction, session, priority, bcId) {}
+
+  void Close(nsresult reason) override;
+  Http2Stream* GetHttp2Stream() override { return this; }
+  uint32_t GetWireStreamId() override;
+
+  nsresult OnWriteSegment(char* buf, uint32_t count,
+                          uint32_t* countWritten) override;
+
+  nsresult CheckPushCache();
+  Http2PushedStream* PushSource() { return mPushSource; }
+  bool IsReadingFromPushStream();
+  void ClearPushSource();
+
+ protected:
+  ~Http2Stream();
+
+ private:
+  // For Http2Push
+  void AdjustPushedPriority();
+  Http2PushedStream* mPushSource{nullptr};
 };
 
 }  // namespace mozilla::net
