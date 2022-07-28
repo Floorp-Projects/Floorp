@@ -80,7 +80,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
 
     case eHTMLOutput: {
       UniquePtr<txMozillaXMLOutput> handler(
-          new txMozillaXMLOutput(aFormat, mObserver));
+          new txMozillaXMLOutput(mSourceDocument, aFormat, mObserver));
 
       nsresult rv = handler->createResultDocument(
           u""_ns, kNameSpaceID_None, mSourceDocument, mDocumentIsData);
@@ -93,10 +93,9 @@ nsresult txToDocHandlerFactory::createHandlerWith(
 
     case eTextOutput: {
       UniquePtr<txMozillaTextOutput> handler(
-          new txMozillaTextOutput(mObserver));
+          new txMozillaTextOutput(mSourceDocument, mObserver));
 
-      nsresult rv =
-          handler->createResultDocument(mSourceDocument, mDocumentIsData);
+      nsresult rv = handler->createResultDocument(mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
         *aHandler = handler.release();
       }
@@ -123,7 +122,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
     case eXMLOutput:
     case eHTMLOutput: {
       UniquePtr<txMozillaXMLOutput> handler(
-          new txMozillaXMLOutput(aFormat, mObserver));
+          new txMozillaXMLOutput(mSourceDocument, aFormat, mObserver));
 
       nsresult rv = handler->createResultDocument(aName, aNsID, mSourceDocument,
                                                   mDocumentIsData);
@@ -136,10 +135,9 @@ nsresult txToDocHandlerFactory::createHandlerWith(
 
     case eTextOutput: {
       UniquePtr<txMozillaTextOutput> handler(
-          new txMozillaTextOutput(mObserver));
+          new txMozillaTextOutput(mSourceDocument, mObserver));
 
-      nsresult rv =
-          handler->createResultDocument(mSourceDocument, mDocumentIsData);
+      nsresult rv = handler->createResultDocument(mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
         *aHandler = handler.release();
       }
@@ -1024,8 +1022,7 @@ void txMozillaXSLTProcessor::notifyError() {
   MOZ_ASSERT(document->GetReadyStateEnum() == Document::READYSTATE_LOADING,
              "Bad readyState.");
   document->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
-
-  mObserver->OnTransformDone(mTransformResult, document);
+  mObserver->OnTransformDone(mSource->OwnerDoc(), mTransformResult, document);
 }
 
 nsresult txMozillaXSLTProcessor::ensureStylesheet() {

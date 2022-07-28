@@ -33,10 +33,13 @@ class nsITransformObserver : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITRANSFORMOBSERVER_IID)
 
-  NS_IMETHOD OnDocumentCreated(mozilla::dom::Document* aResultDocument) = 0;
+  virtual nsresult OnDocumentCreated(
+      mozilla::dom::Document* aSourceDocument,
+      mozilla::dom::Document* aResultDocument) = 0;
 
-  NS_IMETHOD OnTransformDone(nsresult aResult,
-                             mozilla::dom::Document* aResultDocument) = 0;
+  virtual nsresult OnTransformDone(mozilla::dom::Document* aSourceDocument,
+                                   nsresult aResult,
+                                   mozilla::dom::Document* aResultDocument) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITransformObserver, NS_ITRANSFORMOBSERVER_IID)
