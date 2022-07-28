@@ -156,12 +156,8 @@ void Isolate::trace(JSTracer* trc) {
 size_t Isolate::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = mallocSizeOf(this);
 
-  // The RegExpStack code is imported from V8, so we peek inside it to
-  // measure its memory from here.
   size += mallocSizeOf(regexpStack_);
-  if (regexpStack_->thread_local_.owns_memory_) {
-    size += mallocSizeOf(regexpStack_->thread_local_.memory_);
-  }
+  size += ExternalReference::SizeOfExcludingThis(mallocSizeOf, regexpStack_);
 
   size += handleArena_.SizeOfExcludingThis(mallocSizeOf);
   size += uniquePtrArena_.SizeOfExcludingThis(mallocSizeOf);
@@ -211,8 +207,19 @@ Isolate::~Isolate() {
   }
 }
 
-byte* Isolate::top_of_regexp_stack() const {
-  return reinterpret_cast<byte*>(regexpStack_->memory_top_address_address());
+/* static */
+const void* ExternalReference::TopOfRegexpStack(Isolate* isolate) {
+  return reinterpret_cast<const void*>(
+      isolate->regexp_stack()->memory_top_address_address());
+}
+
+/* static */
+size_t ExternalReference::SizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf, RegExpStack* regexpStack) {
+  if (regexpStack->thread_local_.owns_memory_) {
+    return mallocSizeOf(regexpStack->thread_local_.memory_);
+  }
+  return 0;
 }
 
 Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
