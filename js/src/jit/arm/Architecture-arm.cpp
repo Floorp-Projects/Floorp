@@ -481,7 +481,7 @@ uint32_t FloatRegisters::ActualTotalPhys() {
   return 16;
 }
 
-void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
+void FlushICache(void* code, size_t size) {
 #if defined(JS_SIMULATOR_ARM)
   js::jit::SimulatorProcess::FlushICache(code, size);
 

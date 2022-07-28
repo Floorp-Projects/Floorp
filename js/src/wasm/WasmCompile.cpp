@@ -26,6 +26,7 @@
 #  include "jit/ProcessExecutableMemory.h"
 #endif
 
+#include "jit/FlushICache.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
@@ -572,6 +573,11 @@ static bool TieringBeneficial(uint32_t codeSize) {
   return true;
 }
 
+// Ensure that we have the non-compiler requirements to tier safely.
+static bool PlatformCanTier() {
+  return CanUseExtraThreads() && jit::CanFlushExecutionContextForAllThreads();
+}
+
 CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
     : state_(InitialWithArgs), args_(&args) {}
 
@@ -588,20 +594,6 @@ void CompilerEnvironment::computeParameters() {
   MOZ_ASSERT(state_ == InitialWithModeTierDebug);
 
   state_ = Computed;
-}
-
-// Check that this architecture either:
-// - is cache-coherent, which is the case for most tier-1 architectures we care
-// about.
-// - or has the ability to invalidate the instruction cache of all threads, so
-// background compilation in tiered compilation can be synchronized across all
-// threads.
-static bool IsICacheSafe() {
-#ifdef JS_CODEGEN_ARM64
-  return jit::CanFlushICacheFromBackgroundThreads();
-#else
-  return true;
-#endif
 }
 
 void CompilerEnvironment::computeParameters(Decoder& d) {
@@ -633,8 +625,9 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
     codeSectionSize = range.size;
   }
 
-  if (baselineEnabled && hasSecondTier && CanUseExtraThreads() &&
-      (TieringBeneficial(codeSectionSize) || forceTiering) && IsICacheSafe()) {
+  if (baselineEnabled && hasSecondTier &&
+      (TieringBeneficial(codeSectionSize) || forceTiering) &&
+      PlatformCanTier()) {
     mode_ = CompileMode::Tier1;
     tier_ = Tier::Baseline;
   } else {

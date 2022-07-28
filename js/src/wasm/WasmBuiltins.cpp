@@ -1756,9 +1756,8 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.trapSites().empty());
   MOZ_ASSERT(masm.tryNotes().empty());
 
-  if (!ExecutableAllocator::makeExecutableAndFlushICache(
-          FlushICacheSpec::LocalThreadOnly, thunks->codeBase,
-          thunks->codeSize)) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(thunks->codeBase,
+                                                         thunks->codeSize)) {
     return false;
   }
 

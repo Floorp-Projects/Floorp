@@ -18,8 +18,7 @@ namespace jit {
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 
-inline void FlushICache(void* code, size_t size,
-                        bool codeIsThreadLocal = true) {
+inline void FlushICache(void* code, size_t size) {
   // No-op. Code and data caches are coherent on x86 and x64.
 }
 
@@ -27,14 +26,15 @@ inline void FlushICache(void* code, size_t size,
     (defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)) || \
     defined(JS_CODEGEN_LOONG64)
 
-extern void FlushICache(void* code, size_t size, bool codeIsThreadLocal = true);
+// Invalidate the given code range from the icache. This will also flush the
+// execution context for this core. If this code is to be executed on another
+// thread, that thread must perform an execution context flush first using
+// `FlushExecutionContext` below.
+extern void FlushICache(void* code, size_t size);
 
 #elif defined(JS_CODEGEN_NONE)
 
-inline void FlushICache(void* code, size_t size,
-                        bool codeIsThreadLocal = true) {
-  MOZ_CRASH();
-}
+inline void FlushICache(void* code, size_t size) { MOZ_CRASH(); }
 
 #else
 #  error "Unknown architecture!"
@@ -47,10 +47,16 @@ inline void FlushICache(void* code, size_t size,
 inline void FlushExecutionContext() {
   // No-op. Execution context is coherent with instruction cache.
 }
+inline bool CanFlushExecutionContextForAllThreads() { return true; }
+inline void FlushExecutionContextForAllThreads() {
+  // No-op. Execution context is coherent with instruction cache.
+}
 
 #elif defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_WASM32)
 
 inline void FlushExecutionContext() { MOZ_CRASH(); }
+inline bool CanFlushExecutionContextForAllThreads() { MOZ_CRASH(); }
+inline void FlushExecutionContextForAllThreads() { MOZ_CRASH(); }
 
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
 
@@ -62,6 +68,19 @@ inline void FlushExecutionContext() { MOZ_CRASH(); }
 // other threads that may execute the code are responsible to call
 // this method.
 extern void FlushExecutionContext();
+
+// Some platforms can flush the excecution context for other threads using a
+// syscall. This is required when JIT'ed code will be published to multiple
+// threads without a synchronization point where a `FlushExecutionContext`
+// could be inserted.
+extern bool CanFlushExecutionContextForAllThreads();
+
+// Flushes the execution context of all threads in this process, equivalent to
+// running `FlushExecutionContext` on every thread.
+//
+// Callers must ensure `CanFlushExecutionContextForAllThreads` is true, or
+// else this will crash.
+extern void FlushExecutionContextForAllThreads();
 
 #else
 #  error "Unknown architecture!"
