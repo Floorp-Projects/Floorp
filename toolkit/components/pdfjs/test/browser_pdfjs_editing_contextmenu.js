@@ -213,7 +213,12 @@ async function addFreeText(browser, text, box) {
   const { x, y, width, height } = box;
   await clickAt(browser, x + 0.1 * width, y + 0.5 * height);
   await write(browser, text);
-  await clickAt(browser, x + 0.1 * width, y + 2 * height);
+
+  // Commit.
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  // Unselect.
+  EventUtils.synthesizeKey("KEY_Escape");
 }
 
 /**

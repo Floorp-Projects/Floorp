@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.15.303';
+    const workerVersion = '2.15.322';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -773,10 +773,12 @@ const AnnotationEditorType = {
 };
 exports.AnnotationEditorType = AnnotationEditorType;
 const AnnotationEditorParamsType = {
-  FREETEXT_SIZE: 0,
-  FREETEXT_COLOR: 1,
-  INK_COLOR: 2,
-  INK_THICKNESS: 3
+  FREETEXT_SIZE: 1,
+  FREETEXT_COLOR: 2,
+  FREETEXT_OPACITY: 3,
+  INK_COLOR: 11,
+  INK_THICKNESS: 12,
+  INK_OPACITY: 13
 };
 exports.AnnotationEditorParamsType = AnnotationEditorParamsType;
 const PermissionFlag = {
@@ -9459,7 +9461,8 @@ class InkAnnotation extends MarkupAnnotation {
       rect,
       rotation,
       paths,
-      thickness
+      thickness,
+      opacity
     } = annotation;
     const [x1, y1, x2, y2] = rect;
     let w = x2 - x1;
@@ -9470,6 +9473,11 @@ class InkAnnotation extends MarkupAnnotation {
     }
 
     const appearanceBuffer = [`${thickness} w 1 J 1 j`, `${(0, _default_appearance.getPdfColor)(color, false)}`];
+
+    if (opacity !== 1) {
+      appearanceBuffer.push("/R0 gs");
+    }
+
     const buffer = [];
 
     for (const {
@@ -9499,6 +9507,17 @@ class InkAnnotation extends MarkupAnnotation {
       const matrix = WidgetAnnotation._getRotationMatrix(rotation, w, h);
 
       appearanceStreamDict.set("Matrix", matrix);
+    }
+
+    if (opacity !== 1) {
+      const resources = new _primitives.Dict(xref);
+      const extGState = new _primitives.Dict(xref);
+      const r0 = new _primitives.Dict(xref);
+      r0.set("CA", opacity);
+      r0.set("Type", _primitives.Name.get("ExtGState"));
+      extGState.set("R0", r0);
+      resources.set("ExtGState", extGState);
+      appearanceStreamDict.set("Resources", resources);
     }
 
     const ap = new _stream.StringStream(appearance);
@@ -41827,24 +41846,33 @@ class PDFImage {
     this.image = image;
     const dict = image.dict;
     const filter = dict.get("F", "Filter");
+    let filterName;
 
     if (filter instanceof _primitives.Name) {
-      switch (filter.name) {
-        case "JPXDecode":
-          const jpxImage = new _jpx.JpxImage();
-          jpxImage.parseImageProperties(image.stream);
-          image.stream.reset();
-          image.width = jpxImage.width;
-          image.height = jpxImage.height;
-          image.bitsPerComponent = jpxImage.bitsPerComponent;
-          image.numComps = jpxImage.componentsCount;
-          break;
+      filterName = filter.name;
+    } else if (Array.isArray(filter)) {
+      const filterZero = xref.fetchIfRef(filter[0]);
 
-        case "JBIG2Decode":
-          image.bitsPerComponent = 1;
-          image.numComps = 1;
-          break;
+      if (filterZero instanceof _primitives.Name) {
+        filterName = filterZero.name;
       }
+    }
+
+    switch (filterName) {
+      case "JPXDecode":
+        const jpxImage = new _jpx.JpxImage();
+        jpxImage.parseImageProperties(image.stream);
+        image.stream.reset();
+        image.width = jpxImage.width;
+        image.height = jpxImage.height;
+        image.bitsPerComponent = jpxImage.bitsPerComponent;
+        image.numComps = jpxImage.componentsCount;
+        break;
+
+      case "JBIG2Decode":
+        image.bitsPerComponent = 1;
+        image.numComps = 1;
+        break;
     }
 
     let width = dict.get("W", "Width");
@@ -63270,8 +63298,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.303';
-const pdfjsBuild = 'bf0006873';
+const pdfjsVersion = '2.15.322';
+const pdfjsBuild = 'b06d19045';
 })();
 
 /******/ 	return __webpack_exports__;

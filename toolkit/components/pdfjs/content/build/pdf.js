@@ -106,10 +106,12 @@ const AnnotationEditorType = {
 };
 exports.AnnotationEditorType = AnnotationEditorType;
 const AnnotationEditorParamsType = {
-  FREETEXT_SIZE: 0,
-  FREETEXT_COLOR: 1,
-  INK_COLOR: 2,
-  INK_THICKNESS: 3
+  FREETEXT_SIZE: 1,
+  FREETEXT_COLOR: 2,
+  FREETEXT_OPACITY: 3,
+  INK_COLOR: 11,
+  INK_THICKNESS: 12,
+  INK_OPACITY: 13
 };
 exports.AnnotationEditorParamsType = AnnotationEditorParamsType;
 const PermissionFlag = {
@@ -1537,6 +1539,10 @@ function getRGB(color) {
     return color.slice(4, -1).split(",").map(x => parseInt(x));
   }
 
+  if (color.startsWith("rgba(")) {
+    return color.slice(5, -1).split(",").map(x => parseInt(x)).slice(0, 3);
+  }
+
   (0, _util.warn)(`Not a valid color format: "${color}"`);
   return [0, 0, 0];
 }
@@ -2026,7 +2032,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.15.303',
+    apiVersion: '2.15.322',
     source: {
       data: source.data,
       url: source.url,
@@ -4059,9 +4065,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.15.303';
+const version = '2.15.322';
 exports.version = version;
-const build = 'bf0006873';
+const build = 'b06d19045';
 exports.build = build;
 
 /***/ }),
@@ -4383,11 +4389,14 @@ class AnnotationEditor {
   }
 
   pointerdown(event) {
-    if (event.button !== 0) {
+    const isMac = _tools.KeyboardManager.platform.isMac;
+
+    if (event.button !== 0 || event.ctrlKey && isMac) {
       event.preventDefault();
+      return;
     }
 
-    if (event.ctrlKey || event.shiftKey) {
+    if (event.ctrlKey && !isMac || event.shiftKey || event.metaKey && isMac) {
       this.parent.toggleSelected(this);
     } else {
       this.parent.setSelected(this);
@@ -4563,6 +4572,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.KeyboardManager = exports.CommandManager = exports.ColorManager = exports.AnnotationEditorUIManager = void 0;
 exports.bindEvents = bindEvents;
+exports.opacityToHex = opacityToHex;
 
 var _util = __w_pdfjs_require__(1);
 
@@ -4572,6 +4582,10 @@ function bindEvents(obj, element, names) {
   for (const name of names) {
     element.addEventListener(name, obj[name].bind(obj));
   }
+}
+
+function opacityToHex(opacity) {
+  return Math.round(Math.min(255, Math.max(1, 255 * opacity))).toString(16).padStart(2, "0");
 }
 
 class IdManager {
@@ -4585,6 +4599,7 @@ class IdManager {
 
 class CommandManager {
   #commands = [];
+  #locked = false;
   #maxSize;
   #position = -1;
 
@@ -4604,6 +4619,10 @@ class CommandManager {
       cmd();
     }
 
+    if (this.#locked) {
+      return;
+    }
+
     const save = {
       cmd,
       undo,
@@ -4611,6 +4630,10 @@ class CommandManager {
     };
 
     if (this.#position === -1) {
+      if (this.#commands.length > 0) {
+        this.#commands.length = 0;
+      }
+
       this.#position = 0;
       this.#commands.push(save);
       return;
@@ -4645,14 +4668,18 @@ class CommandManager {
       return;
     }
 
+    this.#locked = true;
     this.#commands[this.#position].undo();
+    this.#locked = false;
     this.#position -= 1;
   }
 
   redo() {
     if (this.#position < this.#commands.length - 1) {
       this.#position += 1;
+      this.#locked = true;
       this.#commands[this.#position].cmd();
+      this.#locked = false;
     }
   }
 
@@ -4737,6 +4764,7 @@ class KeyboardManager {
     }
 
     callback.bind(self)();
+    event.stopPropagation();
     event.preventDefault();
   }
 
@@ -4844,7 +4872,7 @@ class AnnotationEditorUIManager {
     hasSelectedEditor: false
   };
   #container = null;
-  static _keyboardManager = new KeyboardManager([[["ctrl+a", "mac+meta+a"], AnnotationEditorUIManager.prototype.selectAll], [["ctrl+c", "mac+meta+c"], AnnotationEditorUIManager.prototype.copy], [["ctrl+v", "mac+meta+v"], AnnotationEditorUIManager.prototype.paste], [["ctrl+x", "mac+meta+x"], AnnotationEditorUIManager.prototype.cut], [["ctrl+z", "mac+meta+z"], AnnotationEditorUIManager.prototype.undo], [["ctrl+y", "ctrl+shift+Z", "mac+meta+shift+Z"], AnnotationEditorUIManager.prototype.redo], [["Backspace", "alt+Backspace", "ctrl+Backspace", "shift+Backspace", "mac+Backspace", "mac+alt+Backspace", "mac+ctrl+Backspace", "Delete", "ctrl+Delete", "shift+Delete"], AnnotationEditorUIManager.prototype.delete], [["Escape"], AnnotationEditorUIManager.prototype.unselectAll]]);
+  static _keyboardManager = new KeyboardManager([[["ctrl+a", "mac+meta+a"], AnnotationEditorUIManager.prototype.selectAll], [["ctrl+c", "mac+meta+c"], AnnotationEditorUIManager.prototype.copy], [["ctrl+v", "mac+meta+v"], AnnotationEditorUIManager.prototype.paste], [["ctrl+x", "mac+meta+x"], AnnotationEditorUIManager.prototype.cut], [["ctrl+z", "mac+meta+z"], AnnotationEditorUIManager.prototype.undo], [["ctrl+y", "ctrl+shift+Z", "mac+meta+shift+Z"], AnnotationEditorUIManager.prototype.redo], [["Backspace", "alt+Backspace", "ctrl+Backspace", "shift+Backspace", "mac+Backspace", "mac+alt+Backspace", "mac+ctrl+Backspace", "Delete", "ctrl+Delete", "shift+Delete"], AnnotationEditorUIManager.prototype.delete], [["Escape", "mac+Escape"], AnnotationEditorUIManager.prototype.unselectAll]]);
 
   constructor(container, eventBus) {
     this.#container = container;
@@ -10501,9 +10529,9 @@ exports.AnnotationEditorLayer = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(4);
-
 var _tools = __w_pdfjs_require__(9);
+
+var _display_utils = __w_pdfjs_require__(4);
 
 var _freetext = __w_pdfjs_require__(22);
 
@@ -10927,6 +10955,12 @@ class AnnotationEditorLayer {
   }
 
   pointerup(event) {
+    const isMac = _tools.KeyboardManager.platform.isMac;
+
+    if (event.button !== 0 || event.ctrlKey && isMac) {
+      return;
+    }
+
     if (event.target !== this.div) {
       return;
     }
@@ -10940,6 +10974,12 @@ class AnnotationEditorLayer {
   }
 
   pointerdown(event) {
+    const isMac = _tools.KeyboardManager.platform.isMac;
+
+    if (event.button !== 0 || event.ctrlKey && isMac) {
+      return;
+    }
+
     if (event.target !== this.div) {
       return;
     }
@@ -11195,6 +11235,10 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
 
   enableEditMode() {
+    if (this.isInEditMode()) {
+      return;
+    }
+
     this.parent.setEditingState(false);
     this.parent.updateToolbar(_util.AnnotationEditorType.FREETEXT);
     super.enableEditMode();
@@ -11207,6 +11251,10 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   }
 
   disableEditMode() {
+    if (!this.isInEditMode()) {
+      return;
+    }
+
     this.parent.setEditingState(true);
     super.disableEditMode();
     this.overlayDiv.classList.add("enabled");
@@ -11215,6 +11263,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     this.editorDiv.removeEventListener("keydown", this.#boundEditorDivKeydown);
     this.editorDiv.removeEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.removeEventListener("blur", this.#boundEditorDivBlur);
+    this.div.focus();
     this.isEditing = false;
   }
 
@@ -11228,7 +11277,6 @@ class FreeTextEditor extends _editor.AnnotationEditor {
 
   onceAdded() {
     if (this.width) {
-      this.parent.setActiveEditor(this);
       return;
     }
 
@@ -11439,6 +11487,8 @@ var _editor = __w_pdfjs_require__(8);
 
 var _pdfjsFitCurve = __w_pdfjs_require__(24);
 
+var _tools = __w_pdfjs_require__(9);
+
 const RESIZER_SIZE = 16;
 
 class InkEditor extends _editor.AnnotationEditor {
@@ -11451,10 +11501,13 @@ class InkEditor extends _editor.AnnotationEditor {
   #boundCanvasPointerdown = this.canvasPointerdown.bind(this);
   #disableEditing = false;
   #isCanvasInitialized = false;
+  #lastPoint = null;
   #observer = null;
   #realWidth = 0;
   #realHeight = 0;
+  #requestFrameCallback = null;
   static _defaultColor = null;
+  static _defaultOpacity = 1;
   static _defaultThickness = 1;
   static _l10nPromise;
 
@@ -11464,6 +11517,7 @@ class InkEditor extends _editor.AnnotationEditor {
     });
     this.color = params.color || null;
     this.thickness = params.thickness || null;
+    this.opacity = params.opacity || null;
     this.paths = [];
     this.bezierPath2D = [];
     this.currentPath = [];
@@ -11486,6 +11540,10 @@ class InkEditor extends _editor.AnnotationEditor {
       case _util.AnnotationEditorParamsType.INK_COLOR:
         InkEditor._defaultColor = value;
         break;
+
+      case _util.AnnotationEditorParamsType.INK_OPACITY:
+        InkEditor._defaultOpacity = value / 100;
+        break;
     }
   }
 
@@ -11498,15 +11556,19 @@ class InkEditor extends _editor.AnnotationEditor {
       case _util.AnnotationEditorParamsType.INK_COLOR:
         this.#updateColor(value);
         break;
+
+      case _util.AnnotationEditorParamsType.INK_OPACITY:
+        this.#updateOpacity(value);
+        break;
     }
   }
 
   static get defaultPropertiesToUpdate() {
-    return [[_util.AnnotationEditorParamsType.INK_THICKNESS, InkEditor._defaultThickness], [_util.AnnotationEditorParamsType.INK_COLOR, InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor]];
+    return [[_util.AnnotationEditorParamsType.INK_THICKNESS, InkEditor._defaultThickness], [_util.AnnotationEditorParamsType.INK_COLOR, InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor], [_util.AnnotationEditorParamsType.INK_OPACITY, Math.round(InkEditor._defaultOpacity * 100)]];
   }
 
   get propertiesToUpdate() {
-    return [[_util.AnnotationEditorParamsType.INK_THICKNESS, this.thickness || InkEditor._defaultThickness], [_util.AnnotationEditorParamsType.INK_COLOR, this.color || InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor]];
+    return [[_util.AnnotationEditorParamsType.INK_THICKNESS, this.thickness || InkEditor._defaultThickness], [_util.AnnotationEditorParamsType.INK_COLOR, this.color || InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor], [_util.AnnotationEditorParamsType.INK_OPACITY, Math.round(100 * (this.opacity ?? InkEditor._defaultOpacity))]];
   }
 
   #updateThickness(thickness) {
@@ -11540,6 +11602,25 @@ class InkEditor extends _editor.AnnotationEditor {
       },
       mustExec: true,
       type: _util.AnnotationEditorParamsType.INK_COLOR,
+      overwriteIfSameType: true,
+      keepUndo: true
+    });
+  }
+
+  #updateOpacity(opacity) {
+    opacity /= 100;
+    const savedOpacity = this.opacity;
+    this.parent.addCommands({
+      cmd: () => {
+        this.opacity = opacity;
+        this.#redraw();
+      },
+      undo: () => {
+        this.opacity = savedOpacity;
+        this.#redraw();
+      },
+      mustExec: true,
+      type: _util.AnnotationEditorParamsType.INK_OPACITY,
       overwriteIfSameType: true,
       keepUndo: true
     });
@@ -11640,7 +11721,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this.ctx.lineCap = "round";
     this.ctx.lineJoin = "round";
     this.ctx.miterLimit = 10;
-    this.ctx.strokeStyle = this.color;
+    this.ctx.strokeStyle = `${this.color}${(0, _tools.opacityToHex)(this.opacity)}`;
   }
 
   #startDrawing(x, y) {
@@ -11651,27 +11732,64 @@ class InkEditor extends _editor.AnnotationEditor {
       this.#setCanvasDims();
       this.thickness ||= InkEditor._defaultThickness;
       this.color ||= InkEditor._defaultColor || _editor.AnnotationEditor._defaultLineColor;
+      this.opacity ??= InkEditor._defaultOpacity;
     }
 
     this.currentPath.push([x, y]);
+    this.#lastPoint = null;
     this.#setStroke();
     this.ctx.beginPath();
     this.ctx.moveTo(x, y);
+
+    this.#requestFrameCallback = () => {
+      if (!this.#requestFrameCallback) {
+        return;
+      }
+
+      if (this.#lastPoint) {
+        if (this.isEmpty()) {
+          this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+          this.#redraw();
+        }
+
+        this.ctx.lineTo(...this.#lastPoint);
+        this.#lastPoint = null;
+        this.ctx.stroke();
+      }
+
+      window.requestAnimationFrame(this.#requestFrameCallback);
+    };
+
+    window.requestAnimationFrame(this.#requestFrameCallback);
   }
 
   #draw(x, y) {
+    const [lastX, lastY] = this.currentPath.at(-1);
+
+    if (x === lastX && y === lastY) {
+      return;
+    }
+
     this.currentPath.push([x, y]);
-    this.ctx.lineTo(x, y);
-    this.ctx.stroke();
+    this.#lastPoint = [x, y];
   }
 
   #stopDrawing(x, y) {
+    this.ctx.closePath();
+    this.#requestFrameCallback = null;
     x = Math.min(Math.max(x, 0), this.canvas.width);
     y = Math.min(Math.max(y, 0), this.canvas.height);
-    this.currentPath.push([x, y]);
+    const [lastX, lastY] = this.currentPath.at(-1);
+
+    if (x !== lastX || y !== lastY) {
+      this.currentPath.push([x, y]);
+    }
+
     let bezier;
 
-    if (this.currentPath.length !== 2 || this.currentPath[0][0] !== x || this.currentPath[0][1] !== y) {
+    if (this.currentPath.length !== 1) {
       bezier = (0, _pdfjsFitCurve.fitCurve)(this.currentPath, 30, null);
     } else {
       const xy = [x, y];
@@ -11711,21 +11829,18 @@ class InkEditor extends _editor.AnnotationEditor {
   }
 
   #redraw() {
-    this.#setStroke();
-
     if (this.isEmpty()) {
       this.#updateTransform();
       return;
     }
 
-    const [parentWidth, parentHeight] = this.parent.viewportBaseDimensions;
+    this.#setStroke();
     const {
-      ctx,
-      height,
-      width
+      canvas,
+      ctx
     } = this;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, width * parentWidth, height * parentHeight);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.#updateTransform();
 
     for (const path of this.bezierPath2D) {
@@ -12080,6 +12195,7 @@ class InkEditor extends _editor.AnnotationEditor {
     const editor = super.deserialize(data, parent);
     editor.thickness = data.thickness;
     editor.color = _util.Util.makeHexColor(...data.color);
+    editor.opacity = data.opacity;
     const [pageWidth, pageHeight] = parent.pageDimensions;
     const width = editor.width * pageWidth;
     const height = editor.height * pageHeight;
@@ -12135,6 +12251,7 @@ class InkEditor extends _editor.AnnotationEditor {
       annotationType: _util.AnnotationEditorType.INK,
       color,
       thickness: this.thickness,
+      opacity: this.opacity,
       paths: this.#serializePaths(this.scaleFactor / this.parent.scaleFactor, this.translationX, this.translationY, height),
       pageIndex: this.parent.pageIndex,
       rect,
@@ -16325,8 +16442,8 @@ var _svg = __w_pdfjs_require__(30);
 
 var _xfa_layer = __w_pdfjs_require__(28);
 
-const pdfjsVersion = '2.15.303';
-const pdfjsBuild = 'bf0006873';
+const pdfjsVersion = '2.15.322';
+const pdfjsBuild = 'b06d19045';
 ;
 })();
 
