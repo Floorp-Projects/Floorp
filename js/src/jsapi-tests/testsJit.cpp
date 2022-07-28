@@ -68,8 +68,8 @@ bool ExecuteJit(JSContext* cx, js::jit::MacroAssembler& masm) {
   if (!code) {
     return false;
   }
-  if (!ExecutableAllocator::makeExecutableAndFlushICache(
-          FlushICacheSpec::LocalThreadOnly, code->raw(), code->bufferSize())) {
+  if (!ExecutableAllocator::makeExecutableAndFlushICache(code->raw(),
+                                                         code->bufferSize())) {
     return false;
   }
 
