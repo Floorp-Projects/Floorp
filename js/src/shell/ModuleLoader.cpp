@@ -139,6 +139,11 @@ bool ModuleLoader::registerTestModule(JSContext* cx, HandleObject moduleRequest,
   return addModuleToRegistry(cx, path, module);
 }
 
+void ModuleLoader::clearModules(JSContext* cx) {
+  Handle<GlobalObject*> global = cx->global();
+  global->setReservedSlot(GlobalAppSlotModuleRegistry, UndefinedValue());
+}
+
 bool ModuleLoader::loadAndExecute(JSContext* cx, HandleString path,
                                   MutableHandleValue rval) {
   RootedObject module(cx, loadAndParse(cx, path));
