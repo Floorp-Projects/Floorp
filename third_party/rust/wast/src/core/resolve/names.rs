@@ -45,6 +45,40 @@ impl<'a> Resolver<'a> {
         Ok(())
     }
 
+    fn register_type(&mut self, ty: &Type<'a>) -> Result<(), Error> {
+        match &ty.def {
+            // For GC structure types we need to be sure to populate the
+            // field namespace here as well.
+            //
+            // The field namespace is global, but the resolved indices
+            // are relative to the struct they are defined in
+            TypeDef::Struct(r#struct) => {
+                for (i, field) in r#struct.fields.iter().enumerate() {
+                    if let Some(id) = field.id {
+                        self.fields.register_specific(id, i as u32, "field")?;
+                    }
+                }
+            }
+
+            TypeDef::Array(_) | TypeDef::Func(_) => {}
+        }
+
+        // Record function signatures as we see them to so we can
+        // generate errors for mismatches in references such as
+        // `call_indirect`.
+        match &ty.def {
+            TypeDef::Func(f) => {
+                let params = f.params.iter().map(|p| p.2).collect();
+                let results = f.results.clone();
+                self.type_info.push(TypeInfo::Func { params, results });
+            }
+            _ => self.type_info.push(TypeInfo::Other),
+        }
+
+        self.types.register(ty.id, "type")?;
+        Ok(())
+    }
+
     fn register(&mut self, item: &ModuleField<'a>) -> Result<(), Error> {
         match item {
             ModuleField::Import(i) => match &i.item.kind {
@@ -60,36 +94,13 @@ impl<'a> Resolver<'a> {
             ModuleField::Table(i) => self.tables.register(i.id, "table")?,
 
             ModuleField::Type(i) => {
-                match &i.def {
-                    // For GC structure types we need to be sure to populate the
-                    // field namespace here as well.
-                    //
-                    // The field namespace is global, but the resolved indices
-                    // are relative to the struct they are defined in
-                    TypeDef::Struct(r#struct) => {
-                        for (i, field) in r#struct.fields.iter().enumerate() {
-                            if let Some(id) = field.id {
-                                self.fields.register_specific(id, i as u32, "field")?;
-                            }
-                        }
-                    }
-
-                    TypeDef::Array(_) | TypeDef::Func(_) => {}
+                return self.register_type(i);
+            },
+            ModuleField::Rec(i) => {
+                for ty in &i.types {
+                    self.register_type(ty)?;
                 }
-
-                // Record function signatures as we see them to so we can
-                // generate errors for mismatches in references such as
-                // `call_indirect`.
-                match &i.def {
-                    TypeDef::Func(f) => {
-                        let params = f.params.iter().map(|p| p.2).collect();
-                        let results = f.results.clone();
-                        self.type_info.push(TypeInfo::Func { params, results });
-                    }
-                    _ => self.type_info.push(TypeInfo::Other),
-                }
-
-                self.types.register(i.id, "type")?
+                return Ok(())
             }
             ModuleField::Elem(e) => self.elems.register(e.id, "elem")?,
             ModuleField::Data(d) => self.datas.register(d.id, "data")?,
@@ -104,6 +115,22 @@ impl<'a> Resolver<'a> {
         Ok(())
     }
 
+    fn resolve_type(&self, ty: &mut Type<'a>) -> Result<(), Error> {
+        match &mut ty.def {
+            TypeDef::Func(func) => func.resolve(self)?,
+            TypeDef::Struct(struct_) => {
+                for field in &mut struct_.fields {
+                    self.resolve_storagetype(&mut field.ty)?;
+                }
+            }
+            TypeDef::Array(array) => self.resolve_storagetype(&mut array.ty)?,
+        }
+        if let Some(parent) = &mut ty.parent {
+            self.resolve(parent, Ns::Type)?;
+        }
+        Ok(())
+    }
+
     fn resolve_field(&self, field: &mut ModuleField<'a>) -> Result<(), Error> {
         match field {
             ModuleField::Import(i) => {
@@ -111,15 +138,10 @@ impl<'a> Resolver<'a> {
                 Ok(())
             }
 
-            ModuleField::Type(ty) => {
-                match &mut ty.def {
-                    TypeDef::Func(func) => func.resolve(self)?,
-                    TypeDef::Struct(struct_) => {
-                        for field in &mut struct_.fields {
-                            self.resolve_storagetype(&mut field.ty)?;
-                        }
-                    }
-                    TypeDef::Array(array) => self.resolve_storagetype(&mut array.ty)?,
+            ModuleField::Type(ty) => self.resolve_type(ty),
+            ModuleField::Rec(rec) => {
+                for ty in &mut rec.types {
+                    self.resolve_type(ty)?;
                 }
                 Ok(())
             }
@@ -217,7 +239,6 @@ impl<'a> Resolver<'a> {
                         ExportKind::Memory => Ns::Memory,
                         ExportKind::Global => Ns::Global,
                         ExportKind::Tag => Ns::Tag,
-                        ExportKind::Type => Ns::Type,
                     },
                 )?;
                 Ok(())
@@ -254,9 +275,6 @@ impl<'a> Resolver<'a> {
     fn resolve_valtype(&self, ty: &mut ValType<'a>) -> Result<(), Error> {
         match ty {
             ValType::Ref(ty) => self.resolve_heaptype(&mut ty.heap)?,
-            ValType::Rtt(_d, i) => {
-                self.resolve(i, Ns::Type)?;
-            }
             _ => {}
         }
         Ok(())
@@ -583,7 +601,13 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolve_label(i)?;
             }
 
-            BrOnCast(l) | BrOnFunc(l) | BrOnData(l) | BrOnI31(l) => {
+            BrOnCast(i) | BrOnCastFail(i) => {
+                self.resolve_label(&mut i.label)?;
+                self.resolver.resolve(&mut i.r#type, Ns::Type)?;
+            }
+
+            BrOnFunc(l) | BrOnData(l) | BrOnI31(l) | BrOnArray(l) |
+            BrOnNonFunc(l) | BrOnNonData(l) | BrOnNonI31(l) | BrOnNonArray(l) => {
                 self.resolve_label(l)?;
             }
 
@@ -595,11 +619,12 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 }
             }
 
-            StructNew(i)
-            | StructNewWithRtt(i)
-            | StructNewDefaultWithRtt(i)
-            | ArrayNewWithRtt(i)
-            | ArrayNewDefaultWithRtt(i)
+            RefTest(i)
+            | RefCast(i)
+            | StructNew(i)
+            | StructNewDefault(i)
+            | ArrayNew(i)
+            | ArrayNewDefault(i)
             | ArrayGet(i)
             | ArrayGetS(i)
             | ArrayGetU(i)
@@ -607,16 +632,26 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
             | ArrayLen(i) => {
                 self.resolver.resolve(i, Ns::Type)?;
             }
-            RTTCanon(i) => {
-                self.resolver.resolve(i, Ns::Type)?;
-            }
-            RTTSub(i) => {
-                self.resolver.resolve(i, Ns::Type)?;
-            }
 
             StructSet(s) | StructGet(s) | StructGetS(s) | StructGetU(s) => {
                 self.resolver.resolve(&mut s.r#struct, Ns::Type)?;
                 self.resolver.fields.resolve(&mut s.field, "field")?;
+            }
+
+            ArrayNewFixed(a) => {
+                self.resolver.resolve(&mut a.array, Ns::Type)?;
+            }
+            ArrayNewData(a) => {
+                self.resolver.resolve(&mut a.array, Ns::Type)?;
+                self.resolver.datas.resolve(&mut a.data_idx, "data")?;
+            }
+            ArrayNewElem(a) => {
+                self.resolver.resolve(&mut a.array, Ns::Type)?;
+                self.resolver.elems.resolve(&mut a.elem_idx, "elem")?;
+            }
+            ArrayCopy(a) => {
+                self.resolver.resolve(&mut a.dest_array, Ns::Type)?;
+                self.resolver.resolve(&mut a.src_array, Ns::Type)?;
             }
 
             RefNull(ty) => self.resolver.resolve_heaptype(ty)?,

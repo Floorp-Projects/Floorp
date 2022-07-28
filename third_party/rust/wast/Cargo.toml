@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wast"
-version = "41.0.0"
+version = "44.0.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = """
 Customizable Rust parsers for the WebAssembly Text formats WAT and WAST
@@ -36,6 +36,9 @@ version = "2.4.1"
 
 [dependencies.unicode-width]
 version = "0.1.9"
+
+[dependencies.wasm-encoder]
+version = "0.14.0"
 
 [dev-dependencies.anyhow]
 version = "1.0"

@@ -14,7 +14,6 @@ pub enum ValType<'a> {
     F64,
     V128,
     Ref(RefType<'a>),
-    Rtt(Option<u32>, Index<'a>),
 }
 
 impl<'a> Parse<'a> for ValType<'a> {
@@ -37,16 +36,6 @@ impl<'a> Parse<'a> for ValType<'a> {
             Ok(ValType::V128)
         } else if l.peek::<RefType>() {
             Ok(ValType::Ref(parser.parse()?))
-        } else if l.peek::<LParen>() {
-            parser.parens(|p| {
-                let mut l = p.lookahead1();
-                if l.peek::<kw::rtt>() {
-                    p.parse::<kw::rtt>()?;
-                    Ok(ValType::Rtt(p.parse()?, p.parse()?))
-                } else {
-                    Err(l.error())
-                }
-            })
         } else {
             Err(l.error())
         }
@@ -60,7 +49,6 @@ impl<'a> Peek for ValType<'a> {
             || kw::f32::peek(cursor)
             || kw::f64::peek(cursor)
             || kw::v128::peek(cursor)
-            || (LParen::peek(cursor) && kw::rtt::peek2(cursor))
             || RefType::peek(cursor)
     }
     fn display() -> &'static str {
@@ -86,6 +74,8 @@ pub enum HeapType<'a> {
     Eq,
     /// A reference to a GC object. This is part of the GC proposal.
     Data,
+    /// A reference to a GC array. This is part of the GC proposal.
+    Array,
     /// An unboxed 31-bit integer: i31ref. This may be going away if there is no common
     /// supertype of all reference types. Part of the GC proposal.
     I31,
@@ -112,6 +102,9 @@ impl<'a> Parse<'a> for HeapType<'a> {
         } else if l.peek::<kw::data>() {
             parser.parse::<kw::data>()?;
             Ok(HeapType::Data)
+        } else if l.peek::<kw::array>() {
+            parser.parse::<kw::array>()?;
+            Ok(HeapType::Array)
         } else if l.peek::<kw::i31>() {
             parser.parse::<kw::i31>()?;
             Ok(HeapType::I31)
@@ -130,6 +123,7 @@ impl<'a> Peek for HeapType<'a> {
             || kw::any::peek(cursor)
             || kw::eq::peek(cursor)
             || kw::data::peek(cursor)
+            || kw::array::peek(cursor)
             || kw::i31::peek(cursor)
             || (LParen::peek(cursor) && kw::r#type::peek2(cursor))
     }
@@ -187,6 +181,14 @@ impl<'a> RefType<'a> {
         }
     }
 
+    /// An `arrayref` as an abbreviation for `(ref null array)`.
+    pub fn array() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::Array,
+        }
+    }
+
     /// An `i31ref` as an abbreviation for `(ref null i31)`.
     pub fn i31() -> Self {
         RefType {
@@ -217,6 +219,9 @@ impl<'a> Parse<'a> for RefType<'a> {
         } else if l.peek::<kw::dataref>() {
             parser.parse::<kw::dataref>()?;
             Ok(RefType::data())
+        } else if l.peek::<kw::arrayref>() {
+            parser.parse::<kw::arrayref>()?;
+            Ok(RefType::array())
         } else if l.peek::<kw::i31ref>() {
             parser.parse::<kw::i31ref>()?;
             Ok(RefType::i31())
@@ -254,6 +259,7 @@ impl<'a> Peek for RefType<'a> {
             || kw::anyref::peek(cursor)
             || kw::eqref::peek(cursor)
             || kw::dataref::peek(cursor)
+            || kw::arrayref::peek(cursor)
             || kw::i31ref::peek(cursor)
             || (LParen::peek(cursor) && kw::r#ref::peek2(cursor))
     }
@@ -633,45 +639,104 @@ pub enum TypeDef<'a> {
     Array(ArrayType<'a>),
 }
 
+impl<'a> Parse<'a> for TypeDef<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let mut l = parser.lookahead1();
+        if l.peek::<kw::func>() {
+            parser.parse::<kw::func>()?;
+            Ok(TypeDef::Func(parser.parse()?))
+        } else if l.peek::<kw::r#struct>() {
+            parser.parse::<kw::r#struct>()?;
+            Ok(TypeDef::Struct(parser.parse()?))
+        } else if l.peek::<kw::array>() {
+            parser.parse::<kw::array>()?;
+            Ok(TypeDef::Array(parser.parse()?))
+        } else {
+            Err(l.error())
+        }
+    }
+}
+
 /// A type declaration in a module
 #[derive(Debug)]
 pub struct Type<'a> {
     /// Where this type was defined.
     pub span: Span,
-    /// An optional identifer to refer to this `type` by as part of name
+    /// An optional identifier to refer to this `type` by as part of name
     /// resolution.
     pub id: Option<Id<'a>>,
     /// An optional name for this function stored in the custom `name` section.
     pub name: Option<NameAnnotation<'a>>,
     /// The type that we're declaring.
     pub def: TypeDef<'a>,
+    /// The declared parent type of this definition.
+    pub parent: Option<Index<'a>>,
 }
 
-impl<'a> Parse<'a> for Type<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
+impl<'a> Type<'a> {
+    fn parse_inner(parser: Parser<'a>, parent: Option<Index<'a>>) -> Result<Self> {
         let span = parser.parse::<kw::r#type>()?.0;
         let id = parser.parse()?;
         let name = parser.parse()?;
-        let def = parser.parens(|parser| {
-            let mut l = parser.lookahead1();
-            if l.peek::<kw::func>() {
-                parser.parse::<kw::func>()?;
-                Ok(TypeDef::Func(parser.parse()?))
-            } else if l.peek::<kw::r#struct>() {
-                parser.parse::<kw::r#struct>()?;
-                Ok(TypeDef::Struct(parser.parse()?))
-            } else if l.peek::<kw::array>() {
-                parser.parse::<kw::array>()?;
-                Ok(TypeDef::Array(parser.parse()?))
-            } else {
-                Err(l.error())
-            }
-        })?;
+        let def = parser.parens(|parser| parser.parse())?;
         Ok(Type {
             span,
             id,
             name,
             def,
+            parent,
+        })
+    }
+}
+
+impl<'a> Peek for Type<'a> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        kw::r#type::peek(cursor) ||
+        kw::sub::peek(cursor)
+    }
+    fn display() -> &'static str {
+        "type"
+    }
+}
+
+impl<'a> Parse<'a> for Type<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        if parser.peek::<kw::sub>() {
+            parser.parse::<kw::sub>()?;
+            let parent = if parser.peek::<Index<'a>>() {
+                parser.parse()?
+            } else {
+                None
+            };
+            return parser.parens(|parser| {
+                Type::parse_inner(parser, parent)
+            });
+        }
+        Type::parse_inner(parser, None)
+    }
+}
+
+/// A recursion group declaration in a module
+#[derive(Debug)]
+pub struct Rec<'a> {
+    /// Where this recursion group was defined.
+    pub span: Span,
+    /// The types that we're defining in this group.
+    pub types: Vec<Type<'a>>,
+}
+
+impl<'a> Parse<'a> for Rec<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let span = parser.parse::<kw::r#rec>()?.0;
+        let mut types = Vec::new();
+        while parser.peek2::<Type<'a>>() {
+            types.push(parser.parens(|p| {
+                p.parse()
+            })?);
+        }
+        Ok(Rec {
+            span,
+            types
         })
     }
 }

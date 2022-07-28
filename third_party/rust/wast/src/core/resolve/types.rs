@@ -44,7 +44,7 @@ impl<'a> Expander<'a> {
         for field in fields.iter_mut() {
             self.expand(field);
         }
-        fields.extend(self.to_prepend.drain(..));
+        fields.append(&mut self.to_prepend);
     }
 
     fn expand_header(&mut self, item: &mut ModuleField<'a>) {
@@ -66,6 +66,7 @@ impl<'a> Expander<'a> {
         match item {
             // This is pre-expanded above
             ModuleField::Type(_) => {}
+            ModuleField::Rec(_) => {}
 
             ModuleField::Import(i) => {
                 self.expand_item_sig(&mut i.item);
@@ -179,7 +180,7 @@ impl<'a> Expander<'a> {
         T: TypeReference<'a>,
     {
         if let Some(idx) = &item.index {
-            return idx.clone();
+            return *idx;
         }
         let key = match item.inline.as_mut() {
             Some(ty) => {
@@ -191,7 +192,7 @@ impl<'a> Expander<'a> {
         let span = Span::from_offset(0); // FIXME(#613): don't manufacture
         let idx = self.key_to_idx(span, key);
         item.index = Some(idx);
-        return idx;
+        idx
     }
 
     fn key_to_idx(&mut self, span: Span, key: impl TypeKey<'a>) -> Index<'a> {
@@ -208,11 +209,11 @@ impl<'a> Expander<'a> {
             id: Some(id),
             name: None,
             def: key.to_def(span),
+            parent: None,
         }));
         let idx = Index::Id(id);
         key.insert(self, idx);
-
-        return idx;
+        idx
     }
 }
 

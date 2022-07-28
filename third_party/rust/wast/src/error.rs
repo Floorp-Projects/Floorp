@@ -50,7 +50,7 @@ impl Error {
             }),
         };
         ret.set_text(content);
-        return ret;
+        ret
     }
 
     pub(crate) fn parse(span: Span, content: &str, message: String) -> Error {
@@ -63,7 +63,7 @@ impl Error {
             }),
         };
         ret.set_text(content);
-        return ret;
+        ret
     }
 
     /// Creates a new error with the given `message` which is targeted at the
