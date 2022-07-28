@@ -113,6 +113,13 @@ void* Isolate::allocatePseudoHandle(size_t bytes) {
 
 template <typename T>
 PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
+  PseudoHandle<T> result = maybeTakeOwnership<T>(ptr);
+  MOZ_ASSERT(result);
+  return result;
+}
+
+template <typename T>
+PseudoHandle<T> Isolate::maybeTakeOwnership(void* ptr) {
   for (auto iter = uniquePtrArena_.IterFromLast(); !iter.Done(); iter.Prev()) {
     auto& entry = iter.Get();
     if (entry.get() == ptr) {
@@ -121,13 +128,19 @@ PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
       return result;
     }
   }
-  MOZ_CRASH("Tried to take ownership of pseudohandle that is not in the arena");
+  return PseudoHandle<T>();
+}
+
+PseudoHandle<ByteArrayData> ByteArray::maybeTakeOwnership(Isolate* isolate) {
+  PseudoHandle<ByteArrayData> result =
+      isolate->maybeTakeOwnership<ByteArrayData>(value().toPrivate());
+  setValue(JS::PrivateValue(nullptr));
+  return result;
 }
 
 PseudoHandle<ByteArrayData> ByteArray::takeOwnership(Isolate* isolate) {
-  PseudoHandle<ByteArrayData> result =
-      isolate->takeOwnership<ByteArrayData>(value().toPrivate());
-  setValue(JS::PrivateValue(nullptr));
+  PseudoHandle<ByteArrayData> result = maybeTakeOwnership(isolate);
+  MOZ_ASSERT(result);
   return result;
 }
 

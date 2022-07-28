@@ -71,6 +71,10 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckCharacterInRange(uc16 from, uc16 to, Label* on_in_range);
   virtual void CheckCharacterNotInRange(uc16 from, uc16 to,
                                         Label* on_not_in_range);
+  virtual bool CheckCharacterInRangeArray(
+      const ZoneList<CharacterRange>* ranges, Label* on_in_range);
+  virtual bool CheckCharacterNotInRangeArray(
+      const ZoneList<CharacterRange>* ranges, Label* on_not_in_range);
   virtual void CheckAtStart(int cp_offset, Label* on_at_start);
   virtual void CheckNotAtStart(int cp_offset, Label* on_not_at_start);
   virtual void CheckPosition(int cp_offset, Label* on_outside_input);
@@ -132,6 +136,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   void CheckNotBackReferenceImpl(int start_reg, bool read_backward,
                                  bool unicode, Label* on_no_match,
                                  bool ignore_case);
+  void CallIsCharacterInRangeArray(const ZoneList<CharacterRange>* ranges);
 
   void LoadCurrentCharacterUnchecked(int cp_offset, int characters);
 
@@ -156,6 +161,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   static uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
                                                 const char16_t* substring2,
                                                 size_t byteLength);
+  static bool IsCharacterInRangeArray(uint32_t c, ByteArrayData* ranges);
 
  private:
   inline int char_size() { return static_cast<int>(mode_); }
