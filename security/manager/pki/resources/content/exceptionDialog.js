@@ -16,6 +16,11 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 );
 
 function initExceptionDialog() {
+  Services.telemetry.keyedScalarSet(
+    "security.psm_ui_interaction",
+    "add_cert_exception_dialog",
+    true
+  );
   gNeedReset = false;
   gDialog = document.getElementById("exceptiondialog");
   let warningText = document.getElementById("warningText");
@@ -115,6 +120,11 @@ async function checkCert() {
   let uri = getURI();
 
   if (uri) {
+    Services.telemetry.keyedScalarSet(
+      "security.psm_ui_interaction",
+      "add_cert_exception_dialog_get",
+      true
+    );
     let req = new XMLHttpRequest();
     req.open("GET", uri.prePath);
     req.onerror = grabCert.bind(this, req);
@@ -320,6 +330,11 @@ function updateCertStatus() {
  */
 function viewCertButtonClick() {
   if (gCert) {
+    Services.telemetry.keyedScalarSet(
+      "security.psm_ui_interaction",
+      "add_cert_exception_dialog_view",
+      true
+    );
     viewCertHelper(this, gCert);
   }
 }
@@ -331,6 +346,12 @@ function addException() {
   if (!gCert || !gSecInfo) {
     return;
   }
+
+  Services.telemetry.keyedScalarSet(
+    "security.psm_ui_interaction",
+    "add_cert_exception_dialog_confirm",
+    true
+  );
 
   var overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
     Ci.nsICertOverrideService

@@ -581,6 +581,12 @@ async function backupCerts() {
     return;
   }
 
+  Services.telemetry.keyedScalarSet(
+    "security.psm_ui_interaction",
+    "backup_client_auth_cert",
+    true
+  );
+
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   let [backupFileDialog, filePkcs12Spec] = await document.l10n.formatValues([
     { id: "choose-p12-backup-file-dialog" },
