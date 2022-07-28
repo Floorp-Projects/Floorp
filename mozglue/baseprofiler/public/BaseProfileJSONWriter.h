@@ -166,9 +166,7 @@ class SpliceableJSONWriter : public JSONWriter {
   explicit SpliceableJSONWriter(UniquePtr<JSONWriteFunc> aWriter)
       : JSONWriter(std::move(aWriter), JSONWriter::SingleLineStyle) {}
 
-  void StartBareList(CollectionStyle aStyle = MultiLineStyle) {
-    StartCollection(scEmptyString, scEmptyString, aStyle);
-  }
+  void StartBareList() { StartCollection(scEmptyString, scEmptyString); }
 
   void EndBareList() { EndCollection(scEmptyString); }
 
@@ -407,13 +405,11 @@ class JSONSchemaWriter {
 class UniqueJSONStrings {
  public:
   // Start an empty list of unique strings.
-  MFBT_API explicit UniqueJSONStrings(
-      JSONWriter::CollectionStyle aStyle = JSONWriter::MultiLineStyle);
+  MFBT_API UniqueJSONStrings();
 
   // Start with a copy of the strings from another list.
-  MFBT_API explicit UniqueJSONStrings(
-      const UniqueJSONStrings& aOther, ProgressLogger aProgressLogger,
-      JSONWriter::CollectionStyle aStyle = JSONWriter::MultiLineStyle);
+  MFBT_API UniqueJSONStrings(const UniqueJSONStrings& aOther,
+                             ProgressLogger aProgressLogger);
 
   MFBT_API ~UniqueJSONStrings();
 
