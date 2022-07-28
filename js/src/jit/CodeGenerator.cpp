@@ -2552,7 +2552,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx, temp);
-  StackMacroAssembler masm;
+  StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpMatcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
@@ -2933,7 +2933,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx, temp);
-  StackMacroAssembler masm;
+  StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpSearcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
@@ -3108,7 +3108,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx, temp);
-  StackMacroAssembler masm;
+  StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpTesterStub");
 
 #ifdef JS_USE_LINK_REGISTER
@@ -10521,7 +10521,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx, temp);
-  StackMacroAssembler masm;
+  StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateStringConcatStub");
 
   Register lhs = CallTempReg0;

@@ -88,6 +88,7 @@ template <typename... HandlerArgs>
 BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
     : handler(cx, masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
+      masm(GetJitContext()->temp),
       frame(handler.frame()) {}
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
@@ -6675,7 +6676,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
 
 JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
                                               DebugTrapHandlerKind kind) {
-  StackMacroAssembler masm;
+  StackMacroAssembler masm(GetJitContext()->temp);
   AutoCreatedBy acb(masm, "JitRuntime::generateDebugTrapHandler");
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());

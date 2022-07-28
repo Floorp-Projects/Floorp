@@ -478,7 +478,7 @@ enum class AssembleResult {
     // If we are compiling native code, we need a macroassembler,
     // which needs a jit context.
     jctx.emplace(cx, temp);
-    stack_masm.emplace();
+    stack_masm.emplace(temp);
 #ifdef DEBUG
     // It would be much preferable to use `class AutoCreatedBy` here, but we
     // may be operating without an assembler at all if `useNativeCode` is

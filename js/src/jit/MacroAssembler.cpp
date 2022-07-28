@@ -2634,7 +2634,7 @@ void MacroAssembler::alignJitStackBasedOnNArgs(uint32_t argc) {
 
 // ===============================================================
 
-MacroAssembler::MacroAssembler()
+MacroAssembler::MacroAssembler(TempAllocator& alloc)
     : wasmMaxOffsetGuardLimit_(0),
       framePushed_(0),
 #ifdef DEBUG
@@ -2642,8 +2642,7 @@ MacroAssembler::MacroAssembler()
 #endif
       dynamicAlignment_(false),
       emitProfilingInstrumentation_(false) {
-  JitContext* jcx = GetJitContext();
-  moveResolver_.setAllocator(jcx->temp);
+  moveResolver_.setAllocator(alloc);
 }
 
 MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
