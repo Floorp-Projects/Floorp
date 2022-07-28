@@ -86,7 +86,7 @@ Registers::Code Registers::FromName(const char* name) {
   return Invalid;
 }
 
-void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
+void FlushICache(void* code, size_t size) {
 #if defined(JS_SIMULATOR)
   js::jit::SimulatorProcess::FlushICache(code, size);
 

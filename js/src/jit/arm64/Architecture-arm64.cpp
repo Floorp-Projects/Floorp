@@ -119,12 +119,8 @@ uint32_t GetARM64Flags() { return 0; }
 // computed".
 bool CPUFlagsHaveBeenComputed() { return true; }
 
-void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
-  vixl::CPU::EnsureIAndDCacheCoherency(code, size, codeIsThreadLocal);
-}
-
-bool CanFlushICacheFromBackgroundThreads() {
-  return vixl::CPU::CanFlushICacheFromBackgroundThreads();
+void FlushICache(void* code, size_t size) {
+  vixl::CPU::EnsureIAndDCacheCoherency(code, size);
 }
 
 void FlushExecutionContext() { vixl::CPU::FlushExecutionContext(); }

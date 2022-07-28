@@ -68,7 +68,7 @@ bool CPUFlagsHaveBeenComputed() {
 
 uint32_t GetLOONG64Flags() { return 0; }
 
-void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
+void FlushICache(void* code, size_t size) {
 #if defined(JS_SIMULATOR)
   js::jit::SimulatorProcess::FlushICache(code, size);
 
