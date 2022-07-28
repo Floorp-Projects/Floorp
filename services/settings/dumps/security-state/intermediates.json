@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1658926111792,
+      "derHash": "VUSiT+sh9oHxmH0w4K9cSen5//1VUKiJtAseycyB5mc=",
+      "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
+      "subjectDN": "MG8xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEgMB4GA1UEAxMXSG9uZ2tvbmcgUG9zdCBSb290IENBIDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4c5b0700bc71b4e78f0834cea51449926e4366fc6bd55fe838cb5acad8f51f36",
+        "size": 2020,
+        "filename": "JUHlO6WzsHrL5wl6xKA-BAwRz3ptSmfLIT1Vi1AWegY=.pem",
+        "location": "security-state-staging/intermediates/34ab8f6d-6a63-4e28-b53b-850c3ac5899d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "JUHlO6WzsHrL5wl6xKA+BAwRz3ptSmfLIT1Vi1AWegY=",
+      "crlite_enrolled": false,
+      "id": "00188779-96d0-4934-89ac-f7b56f182eef",
+      "last_modified": 1658926623098
+    },
+    {
+      "schema": 1658926112639,
+      "derHash": "Hd/d+IPjlFsssk+luDeIN5xasFhCKrl532bHdHOYhoc=",
+      "subject": "CN=Aetna Inc. Secure EV CA2,O=Aetna Inc,C=US",
+      "subjectDN": "MEQxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlBZXRuYSBJbmMxITAfBgNVBAMTGEFldG5hIEluYy4gU2VjdXJlIEVWIENBMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e6068e6a00cb2a48657b0008e9ab5e6e47917580dc4400c9d7210b278ef98854",
+        "size": 1626,
+        "filename": "u6NyIqjq8NgZ5VkAyKFRk6mJ-QeTmwgG2SNmXrkK7vE=.pem",
+        "location": "security-state-staging/intermediates/0a4750b1-d9fb-4d20-8e86-0a6d40d82ece.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "u6NyIqjq8NgZ5VkAyKFRk6mJ+QeTmwgG2SNmXrkK7vE=",
+      "crlite_enrolled": false,
+      "id": "d84be73b-937b-4c91-b80e-a6cd1de6e276",
+      "last_modified": 1658926623087
+    },
+    {
+      "schema": 1658926112507,
+      "derHash": "1Gkx4Bgt1lXqDBbm3Zn45hr/5AH3NMbKjqAFapaOr4E=",
+      "subject": "CN=DigiCert Baltimore EV CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
+      "subjectDN": "MGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lDZXJ0IEJhbHRpbW9yZSBFViBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "71b566b9248c134842c94e190eb959e767923e037257d37b3e855d67a010ab2d",
+        "size": 1577,
+        "filename": "VOipUY1UDQFkU3SLv8yqRqnSAXgf2u64AGItxQco2LY=.pem",
+        "location": "security-state-staging/intermediates/fb866139-1efa-47a1-b0a2-afca62bb7d30.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VOipUY1UDQFkU3SLv8yqRqnSAXgf2u64AGItxQco2LY=",
+      "crlite_enrolled": false,
+      "id": "3395f234-9055-4caa-a4d5-11b4a7f375a3",
+      "last_modified": 1658926623075
+    },
+    {
       "schema": 1658342923546,
       "derHash": "XLiObv8xXidXRbPHKIBkpWFCqz75rHBn8bs9KY+675U=",
       "subject": "CN=GlobalSign Atlas R3 DV ACME CA 2022 Q4,O=GlobalSign nv-sa,C=BE",
@@ -12313,24 +12367,6 @@
       "last_modified": 1641513441078
     },
     {
-      "schema": 1641502407949,
-      "derHash": "1Gkx4Bgt1lXqDBbm3Zn45hr/5AH3NMbKjqAFapaOr4E=",
-      "subject": "CN=DigiCert Baltimore EV CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
-      "subjectDN": "MGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lDZXJ0IEJhbHRpbW9yZSBFViBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "71b566b9248c134842c94e190eb959e767923e037257d37b3e855d67a010ab2d",
-        "size": 1577,
-        "filename": "VOipUY1UDQFkU3SLv8yqRqnSAXgf2u64AGItxQco2LY=.pem",
-        "location": "security-state-staging/intermediates/fb866139-1efa-47a1-b0a2-afca62bb7d30.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "VOipUY1UDQFkU3SLv8yqRqnSAXgf2u64AGItxQco2LY=",
-      "crlite_enrolled": true,
-      "id": "3395f234-9055-4caa-a4d5-11b4a7f375a3",
-      "last_modified": 1641513440903
-    },
-    {
       "schema": 1641502404955,
       "derHash": "sm6zEPj68O9bDQtxqmXsBQ+jreKRNPtDirZEAoj6bmc=",
       "subject": "CN=Secure Site CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
@@ -12869,24 +12905,6 @@
       "crlite_enrolled": true,
       "id": "f1601a66-8fd4-4b53-9279-cb7e19b76aa6",
       "last_modified": 1641481037519
-    },
-    {
-      "schema": 1641477705736,
-      "derHash": "Hd/d+IPjlFsssk+luDeIN5xasFhCKrl532bHdHOYhoc=",
-      "subject": "CN=Aetna Inc. Secure EV CA2,O=Aetna Inc,C=US",
-      "subjectDN": "MEQxCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlBZXRuYSBJbmMxITAfBgNVBAMTGEFldG5hIEluYy4gU2VjdXJlIEVWIENBMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e6068e6a00cb2a48657b0008e9ab5e6e47917580dc4400c9d7210b278ef98854",
-        "size": 1626,
-        "filename": "u6NyIqjq8NgZ5VkAyKFRk6mJ-QeTmwgG2SNmXrkK7vE=.pem",
-        "location": "security-state-staging/intermediates/0a4750b1-d9fb-4d20-8e86-0a6d40d82ece.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "u6NyIqjq8NgZ5VkAyKFRk6mJ+QeTmwgG2SNmXrkK7vE=",
-      "crlite_enrolled": true,
-      "id": "d84be73b-937b-4c91-b80e-a6cd1de6e276",
-      "last_modified": 1641481037326
     },
     {
       "schema": 1641477717476,
@@ -25579,5 +25597,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1658343423322
+  "timestamp": 1658926623098
 }
