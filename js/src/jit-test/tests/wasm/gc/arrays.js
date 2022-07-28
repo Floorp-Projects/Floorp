@@ -34,22 +34,19 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (func (export "create") (param i32 ${valtype}) (result eqref)
       local.get 1
       local.get 0
-      rtt.canon $a
-      array.new_with_rtt $a
+      array.new $a
     )
 
     (; new T[0] ;)
     (func (export "createDefault") (param i32) (result eqref)
       local.get 0
-      rtt.canon $a
-      array.new_default_with_rtt $a
+      array.new_default $a
     )
 
     (; 0[1] ;)
     (func (export "get") (param eqref i32) (result ${valtype})
       local.get 0
-      rtt.canon $a
-      ref.cast
+      ref.cast $a
       local.get 1
       array.get $a
     )
@@ -57,8 +54,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (; 0[1] = 2 ;)
     (func (export "set") (param eqref i32 ${valtype})
       local.get 0
-      rtt.canon $a
-      ref.cast
+      ref.cast $a
       local.get 1
       local.get 2
       array.set $a
@@ -67,8 +63,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (; len(a) ;)
     (func (export "len") (param eqref) (result i32)
       local.get 0
-      rtt.canon $a
-      ref.cast
+      ref.cast $a
       array.len $a
     )
   )`).exports;
@@ -130,15 +125,13 @@ for (let [fieldtype, max] of [
     (func (export "create") (param i32 i32) (result eqref)
       local.get 1
       local.get 0
-      rtt.canon $a
-      array.new_with_rtt $a
+      array.new $a
     )
 
     (; 0[1] ;)
     (func (export "getS") (param eqref i32) (result i32)
       local.get 0
-      rtt.canon $a
-      ref.cast
+      ref.cast $a
       local.get 1
       array.get_s $a
     )
@@ -146,8 +139,7 @@ for (let [fieldtype, max] of [
     (; 0[1] ;)
     (func (export "getU") (param eqref i32) (result i32)
       local.get 0
-      rtt.canon $a
-      ref.cast
+      ref.cast $a
       local.get 1
       array.get_u $a
     )
@@ -155,8 +147,7 @@ for (let [fieldtype, max] of [
     (; 0[1] = 2 ;)
     (func (export "set") (param eqref i32 i32)
       local.get 0
-      rtt.canon $a
-      ref.cast
+      ref.cast $a
       local.get 1
       local.get 2
       array.set $a
@@ -193,10 +184,9 @@ assertErrorMessage(() => wasmEvalText(`(module
     (type $a (array i32))
     (func
       (array.set $a
-        (array.new_with_rtt $a
+        (array.new $a
           i32.const 0xff
-          i32.const 10
-          rtt.canon $a)
+          i32.const 10)
         i32.const 0
         i32.const 0
       )

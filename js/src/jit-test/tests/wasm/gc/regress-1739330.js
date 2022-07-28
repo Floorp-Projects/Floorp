@@ -12,8 +12,7 @@ try {
     (type $e (struct))
       (func (export "newStruct")
         (result eqref)
-        rtt.canon $e
-        struct.new_with_rtt $e
+        struct.new $e
       )
   `).exports
   d.push(newStruct());
