@@ -201,9 +201,14 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
     return NS_OK;
   }
 
+  auto outBuffer = MakeUniqueFallible<uint8_t[]>(kOutSize);
+  if (outBuffer == nullptr) {
+    self->mBrotli->mStatus = NS_ERROR_OUT_OF_MEMORY;
+    return self->mBrotli->mStatus;
+  }
   do {
-    outSize = 0;
-    outPtr = nullptr;
+    outSize = kOutSize;
+    outPtr = outBuffer.get();
 
     // brotli api is documented in brotli/dec/decode.h and brotli/dec/decode.c
     LOG(("nsHttpCompresssConv %p brotlihandler decompress %zu\n", self, avail));
@@ -212,11 +217,13 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
         &self->mBrotli->mState, &avail,
         reinterpret_cast<const unsigned char**>(&dataIn), &outSize, &outPtr,
         &totalOut);
+    outSize = kOutSize - outSize;
     self->mBrotli->mTotalOut = totalOut;
     self->mBrotli->mBrotliStateIsStreamEnd =
         BrotliDecoderIsFinished(&self->mBrotli->mState);
-    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32, self,
-         static_cast<uint32_t>(res)));
+    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32
+         " out=%zu\n",
+         self, static_cast<uint32_t>(res), outSize));
 
     if (res == BROTLI_DECODER_RESULT_ERROR) {
       LOG(("nsHttpCompressConv %p marking invalid encoding", self));
@@ -235,17 +242,35 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
       }
     }
 
-    while (::BrotliDecoderHasMoreOutput(&self->mBrotli->mState)) {
-      outSize = kOutSize;
-      const uint8_t* buffer =
-          ::BrotliDecoderTakeOutput(&self->mBrotli->mState, &outSize);
-      nsresult rv = self->do_OnDataAvailable(
-          self->mBrotli->mRequest, self->mBrotli->mSourceOffset,
-          reinterpret_cast<const char*>(buffer), outSize);
+    auto callOnDataAvailable = [&](uint64_t aSourceOffset, const char* aBuffer,
+                                   uint32_t aCount) {
+      nsresult rv = self->do_OnDataAvailable(self->mBrotli->mRequest,
+                                             aSourceOffset, aBuffer, aCount);
       LOG(("nsHttpCompressConv %p BrotliHandler ODA rv=%" PRIx32, self,
            static_cast<uint32_t>(rv)));
       if (NS_FAILED(rv)) {
         self->mBrotli->mStatus = rv;
+      }
+
+      return rv;
+    };
+
+    if (outSize > 0) {
+      if (NS_FAILED(callOnDataAvailable(
+              self->mBrotli->mSourceOffset,
+              reinterpret_cast<const char*>(outBuffer.get()), outSize))) {
+        return self->mBrotli->mStatus;
+      }
+    }
+
+    // See bug 1759745. If the decoder has more output data, take it.
+    while (::BrotliDecoderHasMoreOutput(&self->mBrotli->mState)) {
+      outSize = kOutSize;
+      const uint8_t* buffer =
+          ::BrotliDecoderTakeOutput(&self->mBrotli->mState, &outSize);
+      if (NS_FAILED(callOnDataAvailable(self->mBrotli->mSourceOffset,
+                                        reinterpret_cast<const char*>(buffer),
+                                        outSize))) {
         return self->mBrotli->mStatus;
       }
     }
