@@ -2138,7 +2138,8 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
   JitCode* code = jitZone->getBaselineCacheIRStubCode(lookup, &stubInfo);
   if (!code) {
     // We have to generate stub code.
-    JitContext jctx(cx, nullptr);
+    TempAllocator temp(&cx->tempLifoAlloc());
+    JitContext jctx(cx, temp);
     BaselineCacheIRCompiler comp(cx, writer, stubDataOffset);
     if (!comp.init(kind)) {
       return ICAttachResult::OOM;

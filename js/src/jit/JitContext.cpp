@@ -62,15 +62,14 @@ JitContext* jit::GetJitContext() {
 JitContext* jit::MaybeGetJitContext() { return CurrentJitContext(); }
 
 JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
-                       TempAllocator* temp)
+                       TempAllocator& temp)
     : realm_(realm), temp(temp), runtime(rt) {
   MOZ_ASSERT(rt);
   MOZ_ASSERT(realm);
-  MOZ_ASSERT(temp);
   SetJitContext(this);
 }
 
-JitContext::JitContext(JSContext* cx, TempAllocator* temp)
+JitContext::JitContext(JSContext* cx, TempAllocator& temp)
     : realm_(CompileRealm::get(cx->realm())),
       cx(cx),
       temp(temp),
@@ -78,14 +77,12 @@ JitContext::JitContext(JSContext* cx, TempAllocator* temp)
   SetJitContext(this);
 }
 
-JitContext::JitContext(TempAllocator* temp) : temp(temp) {
+JitContext::JitContext(TempAllocator& temp) : temp(temp) {
 #ifdef DEBUG
   isCompilingWasm_ = true;
 #endif
   SetJitContext(this);
 }
-
-JitContext::JitContext() : JitContext(nullptr) {}
 
 JitContext::~JitContext() {
   MOZ_ASSERT(TlsJitContext.get() == this);

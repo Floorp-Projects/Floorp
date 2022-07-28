@@ -1878,7 +1878,8 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
       new (newStubMem) IonICStub(fallbackAddr(ionScript), stubInfo);
   writer.copyStubData(newStub->stubDataStart());
 
-  JitContext jctx(cx, nullptr);
+  TempAllocator temp(&cx->tempLifoAlloc());
+  JitContext jctx(cx, temp);
   IonCacheIRCompiler compiler(cx, writer, this, ionScript, stubDataOffset);
   if (!compiler.init()) {
     return;

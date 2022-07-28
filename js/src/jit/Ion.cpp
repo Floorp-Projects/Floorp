@@ -106,7 +106,8 @@ bool JitRuntime::initialize(JSContext* cx) {
 
   AutoAllocInAtomsZone az(cx);
 
-  JitContext jctx(cx, nullptr);
+  TempAllocator temp(&cx->tempLifoAlloc());
+  JitContext jctx(cx, temp);
 
   if (!generateTrampolines(cx)) {
     return false;
@@ -316,7 +317,7 @@ static bool LinkBackgroundCodeGen(JSContext* cx, IonCompileTask* task) {
     return false;
   }
 
-  JitContext jctx(cx, &task->alloc());
+  JitContext jctx(cx, task->alloc());
   RootedScript script(cx, task->script());
   return LinkCodeGen(cx, codegen, script, task->snapshot());
 }
@@ -1638,7 +1639,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   bool succeeded = false;
   {
     gc::AutoSuppressGC suppressGC(cx);
-    JitContext jctx(cx, temp);
+    JitContext jctx(cx, *temp);
     UniquePtr<CodeGenerator> codegen(CompileBackEnd(mirGen, snapshot));
     if (!codegen) {
       JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");

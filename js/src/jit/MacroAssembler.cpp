@@ -2634,25 +2634,6 @@ void MacroAssembler::alignJitStackBasedOnNArgs(uint32_t argc) {
 
 // ===============================================================
 
-MacroAssembler::MacroAssembler(JSContext* cx)
-    : wasmMaxOffsetGuardLimit_(0),
-      framePushed_(0),
-#ifdef DEBUG
-      inCall_(false),
-#endif
-      dynamicAlignment_(false),
-      emitProfilingInstrumentation_(false) {
-  alloc_.emplace(&cx->tempLifoAlloc());
-  moveResolver_.setAllocator(*GetJitContext()->temp);
-#if defined(JS_CODEGEN_ARM)
-  initWithAllocator();
-  m_buffer.id = GetJitContext()->getNextAssemblerId();
-#elif defined(JS_CODEGEN_ARM64)
-  initWithAllocator();
-  armbuffer_.id = GetJitContext()->getNextAssemblerId();
-#endif
-}
-
 MacroAssembler::MacroAssembler()
     : wasmMaxOffsetGuardLimit_(0),
       framePushed_(0),
@@ -2662,14 +2643,7 @@ MacroAssembler::MacroAssembler()
       dynamicAlignment_(false),
       emitProfilingInstrumentation_(false) {
   JitContext* jcx = GetJitContext();
-
-  if (!jcx->temp) {
-    JSContext* cx = jcx->cx;
-    MOZ_ASSERT(cx);
-    alloc_.emplace(&cx->tempLifoAlloc());
-  }
-
-  moveResolver_.setAllocator(*jcx->temp);
+  moveResolver_.setAllocator(jcx->temp);
 
 #if defined(JS_CODEGEN_ARM)
   initWithAllocator();

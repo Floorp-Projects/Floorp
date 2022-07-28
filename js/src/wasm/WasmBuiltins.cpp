@@ -1714,7 +1714,7 @@ bool wasm::EnsureBuiltinThunksInitialized() {
 #ifdef DEBUG
   // We need to allow this machine code to bake in a C++ code pointer, so we
   // disable the wasm restrictions while generating this stub.
-  JitContext jitContext(&tempAlloc);
+  JitContext jitContext(tempAlloc);
   bool oldFlag = jitContext.setIsCompilingWasm(false);
 #endif
 

@@ -10452,7 +10452,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
   // The MacroAssembler will sometimes access the jitContext.
 
   TempAllocator alloc(&lifo);
-  JitContext jitContext(&alloc);
+  JitContext jitContext(alloc);
   MOZ_ASSERT(IsCompilingWasm());
   WasmMacroAssembler masm(alloc, moduleEnv);
 
