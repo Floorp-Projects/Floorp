@@ -73,13 +73,13 @@ static_assert(sizeof(AbortReasonOr<uint16_t*>) == sizeof(uintptr_t),
               "Unexpected size of AbortReasonOr<uint16_t*>");
 
 // A JIT context is needed for parts of the compiler backend such as the
-// MacroAssembler. It points to a temporary allocator and the active JSContext,
-// either of which may be nullptr, and the active realm, which will not be
-// nullptr.
+// MacroAssembler. It points to the JSContext (nullptr for off-thread
+// compilations or Wasm compilations) and also stores some extra information,
+// most of it only used in debug builds.
 //
 // JIT contexts must not be nested.
 
-class JitContext {
+class MOZ_RAII JitContext {
 #ifdef DEBUG
   // Whether this thread is actively Ion compiling (does not include Wasm or
   // WarpOracle).
