@@ -1,7 +1,6 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
@@ -15,7 +14,7 @@ add_task(async function test_non_ascii_path() {
     Ci.nsIEnvironment
   );
   const PROFILE_VAR = "XPCSHELL_TEST_PROFILE_DIR";
-  let profileDir = OS.Path.join(
+  let profileDir = PathUtils.join(
     env.get(PROFILE_VAR),
     "\u00ce \u00e5m \u00f1\u00f8t \u00e5s\u00e7ii"
   );
@@ -51,9 +50,8 @@ add_task(async function test_non_ascii_path() {
   await AddonTestUtils.promiseInstallFile(xpi2);
   await AddonTestUtils.promiseShutdownManager();
 
-  let dbfile = OS.Path.join(profileDir, "extensions.json");
-  let raw = new TextDecoder().decode(await OS.File.read(dbfile));
-  let data = JSON.parse(raw);
+  let dbfile = PathUtils.join(profileDir, "extensions.json");
+  let data = await IOUtils.readJSON(dbfile);
 
   let addons = data.addons.filter(a => a.id !== DEFAULT_THEME_ID);
   Assert.ok(Array.isArray(addons), "extensions.json has addons array");
