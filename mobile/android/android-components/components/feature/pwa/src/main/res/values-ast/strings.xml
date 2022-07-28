@@ -8,7 +8,7 @@
     <!-- Text shown on the second row of the site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_notification_text">Toca pa copiar la URL d\'esta aplicación</string>
     <!-- Refresh button in site controls notification. -->
-    <string name="mozac_feature_pwa_site_controls_refresh">Refrescar</string>
+    <string name="mozac_feature_pwa_site_controls_refresh">Anovar</string>
     <!-- Toast displayed when the website URL is copied. -->
     <string name="mozac_feature_pwa_copy_success">Copióse la URL.</string>
 </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">D\'acuerdu</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Nun guardar</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Nun guardar enxamás</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Agora non</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Guardar</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -90,7 +92,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">¿Quies volver unviar los datos a esti sitiu?</string>
-    <string name="mozac_feature_prompt_repost_message">Refrescar esta páxina podría duplicar les aiciones de recién como l\'unviu d\'un pagu o l\'espublizamientu d\'un artículu dos vegaes.</string>
+    <string name="mozac_feature_prompt_repost_message">Anovar esta páxina podría duplicar les aiciones de recién, como unviar un pagu o espublizar dos vegaes un artículu.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Volver unviar</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
@@ -98,11 +100,30 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Esbilla una tarxeta de creitu</string>
+    <string name="mozac_feature_prompts_select_credit_card">Seleiciona una tarxeta de creitu</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Espander les tarxetes de creitu</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Recoyer les tarxetes de creitu</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Xestión de tarxetes de creitu</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">¿Quies guardar esta tarxeta?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">¿Quies anovar la data de caducidá de la tarxeta?</string>
+
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Cífrase\'l númberu de la tarxeta, mas nun se guarda\'l códigu de seguranza.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">Seleiciona unes señes</string>
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">Seleición d\'unes señes</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Espander les señes suxeríes</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Recoyer les señes suxeríes</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Xestionar les señes</string>
 </resources>

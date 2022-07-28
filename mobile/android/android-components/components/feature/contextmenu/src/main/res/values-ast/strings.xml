@@ -15,7 +15,7 @@
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Copiar l\'enllaz</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_image_location">Copiar l\'allugamientu de la imaxe</string>
+    <string name="mozac_feature_contextmenu_copy_image_location">Copiar la llocalización de la imaxe</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Guardar la imaxe</string>
     <!-- Text for context menu item to save / download the file. -->
@@ -29,9 +29,9 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Cambiar</string>
     <!-- Text for context menu item to open the link in an external app. -->
-    <string name="mozac_feature_contextmenu_open_link_in_external_app">Abrir l\'enllaz nun aplicación esterna</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Abrir l\'enllaz nuna aplicación esterna</string>
     <!-- Text for context menu item to share the email with another app. -->
-    <string name="mozac_feature_contextmenu_share_email_address">Compartir la direición de corréu</string>
+    <string name="mozac_feature_contextmenu_share_email_address">Compartir la direición de corréu electrónicu</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_email_address">Copiar la direición de corréu electrónicu</string>
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
