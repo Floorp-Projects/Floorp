@@ -428,6 +428,8 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     // this process, we just disable the cache to prevent that.
     mLaunchOptions->env_map["MESA_GLSL_CACHE_DISABLE"] = "true";
     mLaunchOptions->env_map["MESA_SHADER_CACHE_DISABLE"] = "true";
+    // In case the nvidia driver is also loaded:
+    mLaunchOptions->env_map["__GL_SHADER_DISK_CACHE"] = "0";
   }
 #endif
 #if defined(MOZ_ENABLE_FORKSERVER)
