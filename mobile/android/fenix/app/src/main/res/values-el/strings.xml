@@ -759,7 +759,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Ιδιωτική λειτουργία)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Άλλες καρτέλες</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Άλλες καρτέλες</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1170,7 +1170,18 @@
     <string name="delete_browsing_data_on_quit_action">Έξοδος</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Αυτό θα διαγράψει όλα τα δεδομένα περιήγησής σας.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Αυτό θα διαγράψει όλα τα δεδομένα περιήγησής σας.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Χρονικό διάστημα διαγραφής</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Διαγράφει το ιστορικό (και το συγχρονισμένο ιστορικό άλλων συσκευών), τα cookies και άλλα δεδομένα περιήγησης.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Τελευταία ώρα</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Σήμερα και χθες</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Όλα</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">Το %s θα διαγράψει τα επιλεγμένα δεδομένα περιήγησης.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1183,8 +1194,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Διαγραφή δεδομένων περιήγησης…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Αυτό θα διαγράψει όλα τα στοιχεία.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Διαγραφή όλων των ιστοτόπων στο «%s»</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Ακύρωση</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1606,8 +1617,6 @@
     <string name="addresses_edit_address">Επεξεργασία διεύθυνσης</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Διαχείριση διευθύνσεων</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Πλήρες όνομα</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Όνομα</string>
     <!-- The header for the middle name of an address -->

@@ -1177,7 +1177,18 @@
     <string name="delete_browsing_data_on_quit_action">ਬਾਹਰ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">ਇਹ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਸਾਰੇ ਡਾਟੇ ਨੂੰ ਹਟਾਏਗਾ।</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ਇਹ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਸਾਰੇ ਡਾਟੇ ਨੂੰ ਹਟਾਏਗਾ।</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">ਹਟਾਉਣ ਲਈ ਸਮਾਂ ਹੱਦ</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">ਅਤੀਤ (ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੇ ਅਤੀਤ ਦੇ ਸਮੇਤ), ਕੂਕੀਜ਼ ਤੇ ਹੋਰ ਬਰਾਊਜ਼ਰ ਡਾਟੇ ਨੂੰ ਮਿਟਾਓ।</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">ਆਖਰੀ ਘੰਟਾ</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">ਅੱਜ ਅਤੇ ਕੱਲ੍ਹ</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">ਹਰ ਚੀਜ਼</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s ਚੁਣੇ ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲੇ ਡਾਟੇ ਨੂੰ ਹਟਾਏਗਾ।</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1190,8 +1201,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">…ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਇਆ ਜਾ ਰਿਹਾ ਹੈ</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">ਇਹ ਸਭ ਚੀਜ਼ਾਂ ਨੂੰ ਹਟਾਏਗਾ।</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">“%s” ਵਿੱਚ ਹਰ ਸਾਈਟ ਨੂੰ ਹਟਾਓ</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">ਰੱਦ ਕਰੋ</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1606,8 +1617,6 @@
     <string name="addresses_edit_address">ਸਿਰਨਾਵੇਂ ਨੂੰ ਸੋਧੋ</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">ਪੂਰਾ ਨਾਂ</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">ਨਾਂ ਦਾ ਪਹਿਲਾਂ ਹਿੱਸਾ</string>
     <!-- The header for the middle name of an address -->
