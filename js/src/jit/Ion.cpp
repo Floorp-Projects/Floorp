@@ -1551,19 +1551,17 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Error;
   }
 
-  TempAllocator* temp = alloc->new_<TempAllocator>(alloc.get());
-  if (!temp) {
-    return AbortReason::Alloc;
-  }
-
-  JitContext jctx(cx, temp);
-
   if (!cx->realm()->ensureJitRealmExists(cx)) {
     return AbortReason::Error;
   }
 
   if (!cx->realm()->jitRealm()->ensureIonStubsExist(cx)) {
     return AbortReason::Error;
+  }
+
+  TempAllocator* temp = alloc->new_<TempAllocator>(alloc.get());
+  if (!temp) {
+    return AbortReason::Alloc;
   }
 
   MIRGraph* graph = alloc->new_<MIRGraph>(temp);
@@ -1640,6 +1638,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   bool succeeded = false;
   {
     gc::AutoSuppressGC suppressGC(cx);
+    JitContext jctx(cx, temp);
     UniquePtr<CodeGenerator> codegen(CompileBackEnd(mirGen, snapshot));
     if (!codegen) {
       JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");

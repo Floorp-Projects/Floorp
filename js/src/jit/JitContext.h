@@ -72,13 +72,14 @@ static_assert(sizeof(AbortReasonOr<bool>) <= sizeof(uintptr_t),
 static_assert(sizeof(AbortReasonOr<uint16_t*>) == sizeof(uintptr_t),
               "Unexpected size of AbortReasonOr<uint16_t*>");
 
-// A JIT context is needed to enter into either an JIT method or an instance
-// of a JIT compiler. It points to a temporary allocator and the active
-// JSContext, either of which may be nullptr, and the active realm, which
-// will not be nullptr.
+// A JIT context is needed for parts of the compiler backend such as the
+// MacroAssembler. It points to a temporary allocator and the active JSContext,
+// either of which may be nullptr, and the active realm, which will not be
+// nullptr.
+//
+// JIT contexts must not be nested.
 
 class JitContext {
-  JitContext* prev_ = nullptr;
   CompileRealm* realm_ = nullptr;
   int assemblerCount_ = 0;
 
