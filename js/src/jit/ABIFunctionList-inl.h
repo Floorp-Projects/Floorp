@@ -23,8 +23,7 @@
 #include "irregexp/RegExpAPI.h"
 // js::irregexp::CaseInsensitiveCompareNonUnicode,
 // js::irregexp::CaseInsensitiveCompareUnicode,
-// js::irregexp::GrowBacktrackStack,
-// js::irregexp::IsCharacterInRangeArray
+// js::irregexp::GrowBacktrackStack
 
 #include "jit/ABIFunctions.h"
 #include "jit/Bailouts.h"  // js::jit::FinishBailoutToBaseline, js::jit::Bailout,
@@ -99,7 +98,6 @@ namespace jit {
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)                   \
   _(js::irregexp::CaseInsensitiveCompareUnicode)                      \
   _(js::irregexp::GrowBacktrackStack)                                 \
-  _(js::irregexp::IsCharacterInRangeArray)                            \
   _(js::jit::AllocateAndInitTypedArrayBuffer)                         \
   _(js::jit::AllocateBigIntNoGC)                                      \
   _(js::jit::AllocateFatInlineString)                                 \

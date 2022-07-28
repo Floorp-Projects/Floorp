@@ -77,8 +77,6 @@ uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
 uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
                                        const char16_t* substring2,
                                        size_t byteLength);
-bool IsCharacterInRangeArray(uint32_t c, ByteArrayData* ranges);
-
 #ifdef DEBUG
 bool IsolateShouldSimulateInterrupt(Isolate* isolate);
 void IsolateSetShouldSimulateInterrupt(Isolate* isolate);

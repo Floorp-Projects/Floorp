@@ -12,8 +12,6 @@
 namespace v8 {
 namespace internal {
 
-class ByteArray;
-
 class V8_EXPORT_PRIVATE IrregexpInterpreter : public AllStatic {
  public:
   enum Result {
@@ -36,8 +34,9 @@ class V8_EXPORT_PRIVATE IrregexpInterpreter : public AllStatic {
   // RETRY is returned if a retry through the runtime is needed (e.g. when
   // interrupts have been scheduled or the regexp is marked for tier-up).
   //
-  // Arguments input_start and input_end are unused. They are only passed to
-  // match the signature of the native irregex code.
+  // Arguments input_start, input_end and backtrack_stack are
+  // unused. They are only passed to match the signature of the native irregex
+  // code.
   //
   // Arguments output_registers and output_register_count describe the results
   // array, which will contain register values of all captures if SUCCESS is
@@ -46,6 +45,7 @@ class V8_EXPORT_PRIVATE IrregexpInterpreter : public AllStatic {
                                    Address input_start, Address input_end,
                                    int* output_registers,
                                    int32_t output_register_count,
+                                   Address backtrack_stack,
                                    RegExp::CallOrigin call_origin,
                                    Isolate* isolate, Address regexp);
 

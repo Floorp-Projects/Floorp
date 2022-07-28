@@ -733,19 +733,56 @@ void RegExpShared::useRegExpMatch(size_t pairCount) {
 }
 
 /* static */
-void RegExpShared::InitializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
-                                           uint32_t numNamedCaptures,
-                                           Handle<PlainObject*> templateObject,
-                                           uint32_t* captureIndices) {
+bool RegExpShared::initializeNamedCaptures(
+    JSContext* cx, HandleRegExpShared re, Handle<NativeObject*> namedCaptures) {
   MOZ_ASSERT(!re->groupsTemplate_);
   MOZ_ASSERT(!re->namedCaptureIndices_);
+
+  // The irregexp parser returns named capture information in the form
+  // of an ArrayObject, where even elements store the capture name and
+  // odd elements store the corresponding capture index. We create a
+  // template object with a property for each capture name, and store
+  // the capture indices as a heap-allocated array.
+  MOZ_ASSERT(namedCaptures->getDenseInitializedLength() % 2 == 0);
+  uint32_t numNamedCaptures = namedCaptures->getDenseInitializedLength() / 2;
+
+  // Create a plain template object.
+  Rooted<PlainObject*> templateObject(
+      cx, NewPlainObjectWithProto(cx, nullptr, TenuredObject));
+  if (!templateObject) {
+    return false;
+  }
+
+  // Initialize the properties of the template.
+  RootedId id(cx);
+  RootedValue dummyString(cx, StringValue(cx->runtime()->emptyString));
+  for (uint32_t i = 0; i < numNamedCaptures; i++) {
+    JSString* name = namedCaptures->getDenseElement(i * 2).toString();
+    id = NameToId(name->asAtom().asPropertyName());
+    if (!NativeDefineDataProperty(cx, templateObject, id, dummyString,
+                                  JSPROP_ENUMERATE)) {
+      return false;
+    }
+  }
+
+  // Allocate the capture index array.
+  uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
+  uint32_t* captureIndices = static_cast<uint32_t*>(js_malloc(arraySize));
+  if (!captureIndices) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Populate the capture index array
+  for (uint32_t i = 0; i < numNamedCaptures; i++) {
+    captureIndices[i] = namedCaptures->getDenseElement(i * 2 + 1).toInt32();
+  }
 
   re->numNamedCaptures_ = numNamedCaptures;
   re->groupsTemplate_ = templateObject;
   re->namedCaptureIndices_ = captureIndices;
-
-  uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
   js::AddCellMemory(re, arraySize, MemoryUse::RegExpSharedNamedCaptureData);
+  return true;
 }
 
 void RegExpShared::tierUpTick() {
