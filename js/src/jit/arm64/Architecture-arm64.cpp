@@ -127,5 +127,7 @@ bool CanFlushICacheFromBackgroundThreads() {
   return vixl::CPU::CanFlushICacheFromBackgroundThreads();
 }
 
+void FlushExecutionContext() { vixl::CPU::FlushExecutionContext(); }
+
 }  // namespace jit
 }  // namespace js

@@ -31,6 +31,7 @@
 #include "ds/IdValuePair.h"  // js::IdValuePair
 #include "gc/GCContext.h"
 #include "jit/AtomicOperations.h"
+#include "jit/FlushICache.h"
 #include "jit/JitContext.h"
 #include "jit/JitOptions.h"
 #include "jit/Simulator.h"
@@ -1726,6 +1727,16 @@ WasmModuleObject* WasmModuleObject::create(JSContext* cx, const Module& module,
   if (!obj) {
     return nullptr;
   }
+
+  // The pipeline state on some architectures may retain stale instructions
+  // even after we invalidate the instruction cache. There is no generally
+  // available method to broadcast this pipeline flush to all threads after
+  // we've compiled new code, so conservatively perform one here when we're
+  // receiving a module that may have been compiled from another thread.
+  //
+  // The cost of this flush is expected to minimal enough to not be worth
+  // optimizing away in the case the module was compiled on this thread.
+  jit::FlushExecutionContext();
 
   // This accounts for module allocation size (excluding code which is handled
   // separately - see below). This assumes that the size of associated data

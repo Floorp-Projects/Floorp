@@ -527,5 +527,15 @@ void FlushICache(void* code, size_t size, bool codeIsThreadLocal) {
 #endif
 }
 
+void FlushExecutionContext() {
+#ifndef JS_SIMULATOR_ARM
+  // Ensure that any instructions already in the pipeline are discarded and
+  // reloaded from the icache.
+  asm volatile("isb\n" : : : "memory");
+#else
+  // We assume the icache flushing routines on other platforms take care of this
+#endif
+}
+
 }  // namespace jit
 }  // namespace js
