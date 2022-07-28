@@ -85,7 +85,11 @@
     <action
         android:id="@+id/action_global_historyFragment"
         app:destination="@id/historyFragment" />
-
+    <action
+        android:id="@+id/action_global_history_search_dialog"
+        app:destination="@id/historySearchDialogFragment"
+        app:popUpTo="@id/historySearchDialogFragment"
+        app:popUpToInclusive="true" />
     <action
         android:id="@+id/action_global_downloadsFragment"
         app:destination="@id/downloadsFragment" />
@@ -271,14 +275,27 @@
         android:label="@string/library_history"
         tools:layout="@layout/fragment_history">
 
+        <argument
+            android:name="isSyncedHistory"
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
-            android:id="@+id/action_global_history_search_dialog"
-            app:destination="@id/historySearchDialogFragment"
-            app:popUpTo="@id/historySearchDialogFragment"
-            app:popUpToInclusive="true" />
+            android:id="@+id/action_synced_historyFragment"
+            app:destination="@id/syncedHistoryFragment" />
+    </fragment>
 
+    <fragment
+        android:id="@+id/syncedHistoryFragment"
+        android:name="org.mozilla.fenix.library.history.HistoryFragment"
+        android:label="@string/history_from_other_devices"
+        tools:layout="@layout/fragment_history">
+
+        <argument
+            android:name="isSyncedHistory"
+            android:defaultValue="true"
+            app:argType="boolean" />
         <action
-            android:id="@+id/action_historyFragment_to_syncedHistoryFragment"
+            android:id="@+id/action_synced_historyFragment"
             app:destination="@id/syncedHistoryFragment" />
     </fragment>
 
@@ -297,13 +314,6 @@
         <argument
             android:name="historyMetadataItems"
             app:argType="org.mozilla.fenix.library.history.History[]" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/syncedHistoryFragment"
-        android:name="org.mozilla.fenix.library.syncedhistory.SyncedHistoryFragment"
-        android:label="@string/history_from_other_devices"
-        tools:layout="@layout/fragment_synced_history">
     </fragment>
 
     <fragment

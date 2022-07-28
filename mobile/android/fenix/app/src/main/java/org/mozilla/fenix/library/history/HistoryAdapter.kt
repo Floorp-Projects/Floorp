@@ -16,6 +16,7 @@ import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
  */
 class HistoryAdapter(
     private val historyInteractor: HistoryInteractor,
+    private val isSyncedHistory: Boolean,
     private val onEmptyStateChanged: (Boolean) -> Unit,
 ) : PagingDataAdapter<History, HistoryListItemViewHolder>(historyDiffCallback),
     SelectionHolder<History> {
@@ -116,12 +117,12 @@ class HistoryAdapter(
         }
 
         holder.bind(
-            current,
-            timeGroup,
-            position == 0,
-            mode,
-            isPendingDeletion,
-            groupPendingDeletionCount
+            item = current,
+            timeGroup = timeGroup,
+            showTopContent = !isSyncedHistory && position == 0,
+            mode = mode,
+            isPendingDeletion = isPendingDeletion,
+            groupPendingDeletionCount = groupPendingDeletionCount,
         )
     }
 
