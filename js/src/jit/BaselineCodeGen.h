@@ -66,7 +66,8 @@ class BaselineCodeGen {
 #endif
 
   template <typename... HandlerArgs>
-  explicit BaselineCodeGen(JSContext* cx, HandlerArgs&&... args);
+  explicit BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
+                           HandlerArgs&&... args);
 
   template <typename T>
   void pushArg(const T& t) {
@@ -506,7 +507,7 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
   uint32_t debugTrapHandlerOffset_ = 0;
 
  public:
-  explicit BaselineInterpreterGenerator(JSContext* cx);
+  explicit BaselineInterpreterGenerator(JSContext* cx, TempAllocator& alloc);
 
   [[nodiscard]] bool generate(BaselineInterpreter& interpreter);
 

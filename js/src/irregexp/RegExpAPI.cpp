@@ -477,7 +477,7 @@ enum class AssembleResult {
                  : NativeRegExpMacroAssembler::UC16;
     // If we are compiling native code, we need a macroassembler,
     // which needs a jit context.
-    jctx.emplace(cx, temp);
+    jctx.emplace(cx);
     stack_masm.emplace(temp);
 #ifdef DEBUG
     // It would be much preferable to use `class AutoCreatedBy` here, but we

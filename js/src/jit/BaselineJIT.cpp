@@ -215,7 +215,7 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
       JS::ProfilingCategoryPair::JS_BaselineCompilation);
 
   TempAllocator temp(&cx->tempLifoAlloc());
-  JitContext jctx(cx, temp);
+  JitContext jctx(cx);
 
   BaselineCompiler compiler(cx, temp, script);
   if (!compiler.init()) {
@@ -946,10 +946,9 @@ uint8_t* BaselineInterpreter::retAddrForIC(JSOp op) const {
 
 bool jit::GenerateBaselineInterpreter(JSContext* cx,
                                       BaselineInterpreter& interpreter) {
-  // Temporary IsBaselineInterpreterEnabled check to not generate the
-  // interpreter code (until it's enabled by default).
   if (IsBaselineInterpreterEnabled()) {
-    BaselineInterpreterGenerator generator(cx);
+    TempAllocator temp(&cx->tempLifoAlloc());
+    BaselineInterpreterGenerator generator(cx, temp);
     return generator.generate(interpreter);
   }
 

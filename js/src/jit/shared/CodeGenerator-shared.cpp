@@ -36,18 +36,19 @@ using mozilla::DebugOnly;
 namespace js {
 namespace jit {
 
-MacroAssembler& CodeGeneratorShared::ensureMasm(MacroAssembler* masmArg) {
+MacroAssembler& CodeGeneratorShared::ensureMasm(MacroAssembler* masmArg,
+                                                TempAllocator& alloc) {
   if (masmArg) {
     return *masmArg;
   }
-  maybeMasm_.emplace(GetJitContext()->temp);
+  maybeMasm_.emplace(alloc);
   return *maybeMasm_;
 }
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
                                          MacroAssembler* masmArg)
     : maybeMasm_(),
-      masm(ensureMasm(masmArg)),
+      masm(ensureMasm(masmArg, gen->alloc())),
       gen(gen),
       graph(*graph),
       current(nullptr),

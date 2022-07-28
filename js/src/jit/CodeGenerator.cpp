@@ -2551,7 +2551,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
              gc::GetGCKindSlots(templateObj.getAllocKind()));
 
   TempAllocator temp(&cx->tempLifoAlloc());
-  JitContext jcx(cx, temp);
+  JitContext jcx(cx);
   StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpMatcherStub");
 
@@ -2932,7 +2932,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   Register temp3 = regs.takeAny();
 
   TempAllocator temp(&cx->tempLifoAlloc());
-  JitContext jcx(cx, temp);
+  JitContext jcx(cx);
   StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpSearcherStub");
 
@@ -3107,7 +3107,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   Register result = ReturnReg;
 
   TempAllocator temp(&cx->tempLifoAlloc());
-  JitContext jcx(cx, temp);
+  JitContext jcx(cx);
   StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpTesterStub");
 
@@ -10520,7 +10520,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting StringConcat stub");
 
   TempAllocator temp(&cx->tempLifoAlloc());
-  JitContext jcx(cx, temp);
+  JitContext jcx(cx);
   StackMacroAssembler masm(temp);
   AutoCreatedBy acb(masm, "JitRealm::generateStringConcatStub");
 
