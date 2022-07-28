@@ -2552,7 +2552,7 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
-  StackMacroAssembler masm(temp);
+  StackMacroAssembler masm(cx, temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpMatcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
@@ -2933,7 +2933,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
-  StackMacroAssembler masm(temp);
+  StackMacroAssembler masm(cx, temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpSearcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
@@ -3108,7 +3108,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
-  StackMacroAssembler masm(temp);
+  StackMacroAssembler masm(cx, temp);
   AutoCreatedBy acb(masm, "JitRealm::generateRegExpTesterStub");
 
 #ifdef JS_USE_LINK_REGISTER
@@ -10521,7 +10521,7 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
-  StackMacroAssembler masm(temp);
+  StackMacroAssembler masm(cx, temp);
   AutoCreatedBy acb(masm, "JitRealm::generateStringConcatStub");
 
   Register lhs = CallTempReg0;
@@ -11969,7 +11969,7 @@ void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
     // Check for length == 0
     Label notEmpty;
     masm.branch32(Assembler::NotEqual, length, Imm32(0), &notEmpty);
-    const JSAtomState& names = GetJitContext()->runtime->names();
+    const JSAtomState& names = gen->runtime->names();
     masm.movePtr(ImmGCPtr(names.empty), output);
     masm.jump(&skipCall);
 

@@ -780,7 +780,7 @@ class MOZ_RAII CacheIRCompiler {
       : enteredStubFrame_(false),
         cx_(cx),
         writer_(writer),
-        masm(alloc),
+        masm(cx, alloc),
         allocator(writer_),
         liveFloatRegs_(FloatRegisterSet::All()),
         mode_(mode),

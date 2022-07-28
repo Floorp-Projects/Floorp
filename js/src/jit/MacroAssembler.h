@@ -334,12 +334,22 @@ struct AllocSiteInput
 // lifoAlloc use if one will be destroyed before the other.
 class MacroAssembler : public MacroAssemblerSpecific {
  private:
+  // Information about the current JSRuntime. This is nullptr only for Wasm
+  // compilations.
+  CompileRuntime* maybeRuntime_ = nullptr;
+
+  // Information about the current Realm. This is nullptr for Wasm compilations
+  // and when compiling JitRuntime trampolines.
+  CompileRealm* maybeRealm_ = nullptr;
+
   // Labels for handling exceptions and failures.
   NonAssertingLabel failureLabel_;
 
  protected:
   // Constructor is protected. Use one of the derived classes!
-  explicit MacroAssembler(TempAllocator& alloc);
+  explicit MacroAssembler(TempAllocator& alloc,
+                          CompileRuntime* maybeRuntime = nullptr,
+                          CompileRealm* maybeRealm = nullptr);
 
  public:
   MoveResolver& moveResolver() {
@@ -352,6 +362,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
   }
 
   size_t instructionsSize() const { return size(); }
+
+  CompileRealm* realm() const {
+    MOZ_ASSERT(maybeRealm_);
+    return maybeRealm_;
+  }
+  CompileRuntime* runtime() const {
+    MOZ_ASSERT(maybeRuntime_);
+    return maybeRuntime_;
+  }
 
 #ifdef JS_HAS_HIDDEN_SP
   void Push(RegisterOrSP reg);
@@ -5265,7 +5284,7 @@ class MOZ_RAII StackMacroAssembler : public MacroAssembler {
   JS::AutoCheckCannotGC nogc;
 
  public:
-  explicit StackMacroAssembler(TempAllocator& alloc) : MacroAssembler(alloc) {}
+  StackMacroAssembler(JSContext* cx, TempAllocator& alloc);
 };
 
 // WasmMacroAssembler does not contain GC pointers, so it doesn't need the no-GC
@@ -5283,9 +5302,7 @@ class MOZ_RAII WasmMacroAssembler : public MacroAssembler {
 // GC cancels off-thread compilations.
 class IonHeapMacroAssembler : public MacroAssembler {
  public:
-  explicit IonHeapMacroAssembler(TempAllocator& alloc) : MacroAssembler(alloc) {
-    MOZ_ASSERT(CurrentThreadIsIonCompiling());
-  }
+  IonHeapMacroAssembler(TempAllocator& alloc, CompileRealm* realm);
 };
 
 //{{{ check_macroassembler_style

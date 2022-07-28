@@ -134,7 +134,7 @@ bool JitRuntime::initialize(JSContext* cx) {
 
 bool JitRuntime::generateTrampolines(JSContext* cx) {
   TempAllocator temp(&cx->tempLifoAlloc());
-  StackMacroAssembler masm(temp);
+  StackMacroAssembler masm(cx, temp);
 
   Label bailoutTail;
   JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");
