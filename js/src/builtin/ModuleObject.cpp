@@ -830,7 +830,7 @@ static uint32_t NextPostOrder(JSRuntime* rt) {
 // this one.
 static void MaybeResetPostOrderCounter(JSRuntime* rt,
                                        uint32_t finishedPostOrder) {
-  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder) {
+  if (rt->moduleAsyncEvaluatingPostOrder == finishedPostOrder + 1) {
     rt->moduleAsyncEvaluatingPostOrder = ASYNC_EVALUATING_POST_ORDER_INIT;
   }
 }
