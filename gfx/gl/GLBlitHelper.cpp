@@ -231,6 +231,7 @@ ScopedSaveMultiTex::ScopedSaveMultiTex(GLContext* const gl,
       break;
     default:
       gfxCriticalError() << "Unhandled texTarget: " << texTarget;
+      MOZ_CRASH();
   }
 
   for (uint8_t i = 0; i < mTexCount; i++) {
