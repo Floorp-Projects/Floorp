@@ -171,6 +171,10 @@ class CPU {
   // cache on a background thread.
   static bool CanFlushICacheFromBackgroundThreads();
 
+  // Flush the local instruction pipeline, forcing a reload of any instructions
+  // beyond this barrier from the icache.
+  static void FlushExecutionContext();
+
   // Read and interpret the ID registers. This requires
   // CPUFeatures::kIDRegisterEmulation, and therefore cannot be called on
   // non-AArch64 platforms.
