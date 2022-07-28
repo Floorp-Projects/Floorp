@@ -133,13 +133,15 @@ using byte = uint8_t;
 using Address = uintptr_t;
 static const Address kNullAddress = 0;
 
+namespace base {
+
 // Latin1/UTF-16 constants
 // Code-point values in Unicode 4.0 are 21 bits wide.
 // Code units in UTF-16 are 16 bits wide.
 using uc16 = char16_t;
 using uc32 = uint32_t;
 
-namespace base {
+constexpr int kUC16Size = sizeof(base::uc16);
 
 // Origin:
 // https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/base/macros.h#L247-L258
@@ -213,6 +215,36 @@ class LazyInstance {
   using type = LazyInstanceImpl<T>;
 };
 
+// Origin:
+// https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/utils/utils.h#L40-L48
+// Returns the value (0 .. 15) of a hexadecimal character c.
+// If c is not a legal hexadecimal character, returns a value < 0.
+// Used in regexp-parser.cc
+inline int HexValue(base::uc32 c) {
+  c -= '0';
+  if (static_cast<unsigned>(c) <= 9) return c;
+  c = (c | 0x20) - ('a' - '0');  // detect 0x11..0x16 and 0x31..0x36.
+  if (static_cast<unsigned>(c) <= 5) return c + 10;
+  return -1;
+}
+
+template <typename... Args>
+[[nodiscard]] uint32_t hash_combine(uint32_t aHash, Args... aArgs) {
+  return mozilla::AddToHash(aHash, aArgs...);
+}
+
+template <typename T>
+class Optional {
+  mozilla::Maybe<T> inner_;
+
+ public:
+  Optional() = default;
+  Optional(T t) { inner_.emplace(t); }
+
+  bool has_value() const { return inner_.isSome(); }
+  const T& value() const { return inner_.ref(); }
+};
+
 namespace bits {
 
 inline uint64_t CountTrailingZeros(uint64_t value) {
@@ -239,10 +271,10 @@ using uchar = unsigned int;
 // https://github.com/v8/v8/blob/1f1e4cdb04c75eab77adbecd5f5514ddc3eb56cf/src/strings/unicode.h#L133-L150
 class Latin1 {
  public:
-  static const uc16 kMaxChar = 0xff;
+  static const base::uc16 kMaxChar = 0xff;
 
   // Convert the character to Latin-1 case equivalent if possible.
-  static inline uc16 TryConvertToLatin1(uc16 c) {
+  static inline base::uc16 TryConvertToLatin1(base::uc16 c) {
     // "GREEK CAPITAL LETTER MU" case maps to "MICRO SIGN".
     // "GREEK SMALL LETTER MU" case maps to "MICRO SIGN".
     if (c == 0x039C || c == 0x03BC) {
@@ -267,10 +299,10 @@ class Utf16 {
   static inline bool IsTrailSurrogate(int code) {
     return js::unicode::IsTrailSurrogate(code);
   }
-  static inline uc16 LeadSurrogate(uint32_t char_code) {
+  static inline base::uc16 LeadSurrogate(uint32_t char_code) {
     return js::unicode::LeadSurrogate(char_code);
   }
-  static inline uc16 TrailSurrogate(uint32_t char_code) {
+  static inline base::uc16 TrailSurrogate(uint32_t char_code) {
     return js::unicode::TrailSurrogate(char_code);
   }
   static inline uint32_t CombineSurrogatePair(char16_t lead, char16_t trail) {
@@ -405,9 +437,10 @@ constexpr int kBitsPerByte = 8;
 constexpr int kBitsPerByteLog2 = 3;
 constexpr int kUInt32Size = sizeof(uint32_t);
 constexpr int kInt64Size = sizeof(int64_t);
-constexpr int kUC16Size = sizeof(uc16);
 
-inline constexpr bool IsDecimalDigit(uc32 c) { return c >= '0' && c <= '9'; }
+inline constexpr bool IsDecimalDigit(base::uc32 c) {
+  return c >= '0' && c <= '9';
+}
 
 inline bool is_uint24(int64_t val) { return (val >> 24) == 0; }
 inline bool is_int24(int64_t val) {
@@ -415,10 +448,10 @@ inline bool is_int24(int64_t val) {
   return (-limit <= val) && (val < limit);
 }
 
-inline bool IsIdentifierStart(uc32 c) {
+inline bool IsIdentifierStart(base::uc32 c) {
   return js::unicode::IsIdentifierStart(uint32_t(c));
 }
-inline bool IsIdentifierPart(uc32 c) {
+inline bool IsIdentifierPart(base::uc32 c) {
   return js::unicode::IsIdentifierPart(uint32_t(c));
 }
 
@@ -534,19 +567,6 @@ inline bool CompareCharsEqual(const lchar* lhs, const rchar* rhs,
   using urchar = typename std::make_unsigned<rchar>::type;
   return CompareCharsEqualUnsigned(reinterpret_cast<const ulchar*>(lhs),
                                    reinterpret_cast<const urchar*>(rhs), chars);
-}
-
-// Origin:
-// https://github.com/v8/v8/blob/855591a54d160303349a5f0a32fab15825c708d1/src/utils/utils.h#L40-L48
-// Returns the value (0 .. 15) of a hexadecimal character c.
-// If c is not a legal hexadecimal character, returns a value < 0.
-// Used in regexp-parser.cc
-inline int HexValue(uc32 c) {
-  c -= '0';
-  if (static_cast<unsigned>(c) <= 9) return c;
-  c = (c | 0x20) - ('a' - '0');  // detect 0x11..0x16 and 0x31..0x36.
-  if (static_cast<unsigned>(c) <= 5) return c + 10;
-  return -1;
 }
 
 // V8::Object ~= JS::Value
@@ -838,7 +858,7 @@ class String : public HeapObject {
   static const uint32_t kMaxOneByteCharCodeU = unibrow::Latin1::kMaxChar;
   static const int kMaxUtf16CodeUnit = 0xffff;
   static const uint32_t kMaxUtf16CodeUnitU = kMaxUtf16CodeUnit;
-  static const uc32 kMaxCodePoint = 0x10ffff;
+  static const base::uc32 kMaxCodePoint = 0x10ffff;
 
   MOZ_ALWAYS_INLINE int length() const { return str()->length(); }
   bool IsFlat() { return str()->isLinear(); };
@@ -852,15 +872,15 @@ class String : public HeapObject {
     inline bool IsOneByte() const { return string_->hasLatin1Chars(); }
     inline bool IsTwoByte() const { return !string_->hasLatin1Chars(); }
 
-    Vector<const uint8_t> ToOneByteVector() const {
+    base::Vector<const uint8_t> ToOneByteVector() const {
       MOZ_ASSERT(IsOneByte());
-      return Vector<const uint8_t>(string_->latin1Chars(no_gc_),
-                                   string_->length());
+      return base::Vector<const uint8_t>(string_->latin1Chars(no_gc_),
+                                         string_->length());
     }
-    Vector<const uc16> ToUC16Vector() const {
+    base::Vector<const base::uc16> ToUC16Vector() const {
       MOZ_ASSERT(IsTwoByte());
-      return Vector<const uc16>(string_->twoByteChars(no_gc_),
-                                string_->length());
+      return base::Vector<const base::uc16>(string_->twoByteChars(no_gc_),
+                                            string_->length());
     }
 
    private:
@@ -891,11 +911,12 @@ class String : public HeapObject {
   std::unique_ptr<char[]> ToCString();
 
   template <typename Char>
-  Vector<const Char> GetCharVector(const DisallowGarbageCollection& no_gc);
+  base::Vector<const Char> GetCharVector(
+      const DisallowGarbageCollection& no_gc);
 };
 
 template <>
-inline Vector<const uint8_t> String::GetCharVector(
+inline base::Vector<const uint8_t> String::GetCharVector(
     const DisallowGarbageCollection& no_gc) {
   String::FlatContent flat = GetFlatContent(no_gc);
   MOZ_ASSERT(flat.IsOneByte());
@@ -903,7 +924,7 @@ inline Vector<const uint8_t> String::GetCharVector(
 }
 
 template <>
-inline Vector<const uc16> String::GetCharVector(
+inline base::Vector<const base::uc16> String::GetCharVector(
     const DisallowGarbageCollection& no_gc) {
   String::FlatContent flat = GetFlatContent(no_gc);
   MOZ_ASSERT(flat.IsTwoByte());
@@ -1045,7 +1066,7 @@ class Isolate {
   Handle<FixedArray> NewFixedArray(int length);
 
   template <typename Char>
-  Handle<String> InternalizeString(const Vector<const Char>& str);
+  Handle<String> InternalizeString(const base::Vector<const Char>& str);
 
   //********** Stack guard code **********//
   inline StackGuard* stack_guard() { return this; }
