@@ -26,38 +26,36 @@ registerCleanupFunction(async () => {
  * This is a helper function that will stop the profiler and returns the main
  * threads for the parent process and the content process with PID contentPid.
  * This happens immediately, without waiting for any sampling to happen or
- * finish. Use stopProfilerAndGetThreads (without "Now") below instead to wait
+ * finish. Use waitSamplingAndStopProfilerAndGetThreads below instead to wait
  * for samples before stopping.
  * This returns also the full profile in case the caller wants more information.
  *
  * @param {number} contentPid
- * @returns {Promise}
+ * @returns {Promise<{profile, parentThread, contentProcess, contentThread}>}
  */
 async function stopProfilerNowAndGetThreads(contentPid) {
-  // Don't await the pause, because each process will handle it before it
-  // receives the following `getProfileDataAsync()`.
-  Services.profiler.Pause();
-  const profile = await Services.profiler.getProfileDataAsync();
-  await Services.profiler.StopProfiler();
+  const profile = await stopNowAndGetProfile();
 
   const parentThread = profile.threads[0];
   const contentProcess = profile.processes.find(
     p => p.threads[0].pid == contentPid
   );
   if (!contentProcess) {
-    throw new Error("Could not find the content process.");
+    throw new Error(
+      `Could not find the content process with given pid: ${contentPid}`
+    );
   }
-  const contentThread = contentProcess.threads[0];
 
   if (!parentThread) {
     throw new Error("The parent thread was not found in the profile.");
   }
 
+  const contentThread = contentProcess.threads[0];
   if (!contentThread) {
     throw new Error("The content thread was not found in the profile.");
   }
 
-  return { parentThread, contentThread, profile };
+  return { profile, parentThread, contentProcess, contentThread };
 }
 
 /**
@@ -67,9 +65,9 @@ async function stopProfilerNowAndGetThreads(contentPid) {
  * in that PID will not stop until there is at least one periodic sample taken.
  *
  * @param {number} contentPid
- * @returns {Promise}
+ * @returns {Promise<{profile, parentThread, contentProcess, contentThread}>}
  */
-async function stopProfilerAndGetThreads(contentPid) {
+async function waitSamplingAndStopProfilerAndGetThreads(contentPid) {
   await Services.profiler.waitOnePeriodicSampling();
 
   return stopProfilerNowAndGetThreads(contentPid);

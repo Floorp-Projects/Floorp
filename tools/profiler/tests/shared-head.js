@@ -219,17 +219,28 @@ function captureAtLeastOneJsSample() {
 }
 
 /**
- * This function pauses the profiler before getting the profile. Then after the
+ * This function pauses the profiler before getting the profile. Then after
  * getting the data, the profiler is stopped, and all profiler data is removed.
  * @returns {Promise<Profile>}
  */
-async function stopAndGetProfile() {
+async function stopNowAndGetProfile() {
   // Don't await the pause, because each process will handle it before it
   // receives the following `getProfileDataAsync()`.
   Services.profiler.Pause();
   const profile = await Services.profiler.getProfileDataAsync();
   await Services.profiler.StopProfiler();
   return profile;
+}
+
+/**
+ * This function ensures there's at least one sample, then pauses the profiler
+ * before getting the profile. Then after getting the data, the profiler is
+ * stopped, and all profiler data is removed.
+ * @returns {Promise<Profile>}
+ */
+async function waitSamplingAndStopAndGetProfile() {
+  await Services.profiler.waitOnePeriodicSampling();
+  return stopNowAndGetProfile();
 }
 
 /**

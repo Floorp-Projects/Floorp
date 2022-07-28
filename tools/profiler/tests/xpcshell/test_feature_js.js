@@ -17,8 +17,7 @@ add_task(async () => {
   // functionA -> functionB -> functionC -> captureAtLeastOneJsSample
   const sampleIndex = await functionA();
 
-  const profile = await Services.profiler.getProfileDataAsync();
-  await Services.profiler.StopProfiler();
+  const profile = await stopNowAndGetProfile();
 
   const [thread] = profile.threads;
   const { samples } = thread;

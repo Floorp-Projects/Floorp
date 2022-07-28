@@ -33,7 +33,7 @@ add_task(async function test_profile_feature_jsallocations() {
       const {
         parentThread,
         contentThread,
-      } = await stopProfilerNowAndGetThreads(contentPid);
+      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.greater(
         getPayloadsOfType(parentThread, "JS allocation").length,
         0,
@@ -59,7 +59,7 @@ add_task(async function test_profile_feature_jsallocations() {
       const {
         parentThread,
         contentThread,
-      } = await stopProfilerNowAndGetThreads(contentPid);
+      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.equal(
         getPayloadsOfType(parentThread, "JS allocation").length,
         0,

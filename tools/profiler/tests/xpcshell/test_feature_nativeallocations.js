@@ -36,7 +36,7 @@ add_task(async () => {
     doWork();
 
     info("Get the profile data and analyze it.");
-    const profile = await stopAndGetProfile();
+    const profile = await waitSamplingAndStopAndGetProfile();
 
     const {
       allocationPayloads,
@@ -75,9 +75,7 @@ add_task(async () => {
     info("Do some work again.");
     doWork();
     info("Wait for the periodic sampling.");
-    await Services.profiler.waitOnePeriodicSampling();
-
-    const profile = await stopAndGetProfile();
+    const profile = await waitSamplingAndStopAndGetProfile();
     const allocationPayloads = getPayloadsOfType(
       profile.threads[0],
       "Native allocation"
