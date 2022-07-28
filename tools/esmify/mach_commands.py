@@ -64,39 +64,16 @@ excluded_from_imports_prefix = list(
         path_sep_to_native,
         [
             # Vendored or auto-generated files.
-            "browser/components/newtab/vendor/",
             "browser/components/pocket/content/panels/js/vendor.bundle.js",
-            "browser/components/pocket/content/panels/js/vendor/",
-            "browser/components/translation/cld2/cld-worker.js",
             "devtools/client/debugger/dist/parser-worker.js",
             "devtools/client/debugger/packages/devtools-source-map/src/tests/fixtures/bundle.js",
             "devtools/client/debugger/test/mochitest/examples/react/build/main.js",
             "devtools/client/debugger/test/mochitest/examples/sourcemapped/polyfill-bundle.js",
-            "devtools/client/inspector/markup/test/lib_",
             "devtools/client/inspector/markup/test/shadowdom_open_debugger.min.js",
-            "devtools/client/shared/build/babel.js",
-            "devtools/client/shared/source-map/index.js",
-            "devtools/client/shared/source-map/worker.js",
-            "devtools/client/shared/sourceeditor/codemirror/",
-            "devtools/client/shared/vendor/",
-            "dom/canvas/test/webgl-conf/",
-            "dom/tests/mochitest/ajax/jquery/dist/jquery.js",
-            "dom/tests/mochitest/ajax/scriptaculous/",
             "layout/style/test/property_database.js",
-            "modules/freetype2/docs/reference/assets/javascripts/",
-            "remote/cdp/test/browser/chrome-remote-interface.js",
             "services/fxaccounts/FxAccountsPairingChannel.js",
-            "testing/mochitest/MochiKit/Controls.js",
-            "testing/mochitest/tests/MochiKit-1.4.2/MochiKit/Base.js",
-            "testing/mochitest/tests/MochiKit-1.4.2/MochiKit/DOM.js",
-            "testing/modules/sinon-7.2.7.js",
             "testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/static/js/main.js",  # noqa E501
-            "testing/talos/talos/tests/v8_7/earley-boyer.js",
             "testing/web-platform/",
-            "third_party/webkit/",
-            "toolkit/components/certviewer/content/vendor/",
-            "toolkit/components/normandy/vendor/",
-            "toolkit/components/utils/mozjexl.js",
             # Unrelated testcases that has edge case syntax.
             "browser/components/sessionstore/test/unit/data/",
             "devtools/client/debugger/src/workers/parser/tests/fixtures/",
@@ -114,9 +91,6 @@ excluded_from_imports_prefix = list(
             "dom/media/webrtc/tests/mochitests/identity/idp-bad.js",
             "dom/serviceworkers/test/file_js_cache_syntax_error.js",
             "dom/serviceworkers/test/parse_error_worker.js",
-            "dom/tests/mochitest/ajax/jquery/test/data/json_obj.js",
-            "dom/tests/mochitest/ajax/jquery/test/data/test.js",
-            "dom/tests/mochitest/ajax/jquery/test/unit/core.js",
             "dom/workers/test/importScripts_worker_imported3.js",
             "dom/workers/test/invalid.js",
             "dom/workers/test/threadErrors_worker1.js",
@@ -137,8 +111,6 @@ excluded_from_imports_prefix = list(
             "remote/shared/messagehandler/test/browser/resources/modules/root/invalid.jsm",
             "testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js",
             "testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js",
-            "testing/talos/talos/tests/dromaeo/",
-            "third_party/libwebrtc/tools/grit/grit/testdata/test_js.js",
             "toolkit/components/workerloader/tests/moduleF-syntax-error.js",
             "tools/lint/test/",
             "tools/update-packaging/test/",
@@ -160,6 +132,19 @@ excluded_from_imports_prefix = list(
         ],
     )
 )
+
+EXCLUSION_FILES = [
+    os.path.join("tools", "rewriting", "Generated.txt"),
+    os.path.join("tools", "rewriting", "ThirdPartyPaths.txt"),
+]
+
+
+def load_exclusion_files():
+    for path in EXCLUSION_FILES:
+        with open(path, "r") as f:
+            for line in f:
+                p = path_sep_to_native(re.sub("\*$", "", line.strip()))
+                excluded_from_imports_prefix.append(p)
 
 
 def is_excluded_from_imports(path):
@@ -382,6 +367,8 @@ def esmify(command_context, path=None, convert=False, imports=False, prefix=""):
             "checkout of either mercurial or git."
         )
         return 1
+
+    load_exclusion_files()
 
     info("Setting up jscodeshift...")
     setup_jscodeshift()
