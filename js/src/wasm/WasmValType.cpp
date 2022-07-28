@@ -145,11 +145,6 @@ UniqueChars wasm::ToString(ValType type) {
       break;
     case ValType::Ref:
       return ToString(type.refType());
-    case ValType::Rtt:
-      if (!type.hasRttDepth()) {
-        return JS_smprintf("(rtt %d)", type.typeIndex());
-      }
-      return JS_smprintf("(rtt %d %d)", type.rttDepth(), type.typeIndex());
   }
   return DuplicateString(literal);
 }

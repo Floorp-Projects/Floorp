@@ -12,7 +12,7 @@
 
 // Struct fields of externref type can receive their value in these ways:
 //
-// - the struct.new_with_rtt and struct.set instructions
+// - the struct.new and struct.set instructions
 // - storing into mutable fields from JS
 // - from a constructor called from JS
 //
@@ -25,7 +25,7 @@
 // into a field, in this case there should be boxing; and where JS reads a
 // non-pointer value from a field, in this case there should be unboxing.
 
-// Write with struct.new_with_rtt, read with the JS getter
+// Write with struct.new, read with the JS getter
 
 for (let v of WasmExternrefValues)
 {
@@ -33,7 +33,7 @@ for (let v of WasmExternrefValues)
         `(module
            (type $S (struct (field $S.x (mut externref))))
            (func (export "make") (param $v externref) (result eqref)
-             (struct.new_with_rtt $S (local.get $v) (rtt.canon $S))))`);
+             (struct.new $S (local.get $v))))`);
     let x = ins.exports.make(v);
     assertEq(x[0], v);
 }
@@ -47,7 +47,7 @@ for (let v of WasmExternrefValues)
     let txt = `(module
                  (type $S (struct ${fields}))
                  (func (export "make") ${params} (result eqref)
-                   (struct.new_with_rtt $S ${args} (rtt.canon $S))))`;
+                   (struct.new $S ${args})))`;
     let ins = wasmEvalText(txt);
     let x = ins.exports.make({x:0}, {x:1}, {x:2}, {x:3}, {x:4}, {x:5}, {x:6}, {x:7}, {x:8}, {x:9})
     gc('shrinking');

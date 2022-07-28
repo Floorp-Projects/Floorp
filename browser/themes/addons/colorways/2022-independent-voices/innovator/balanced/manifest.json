@@ -7,7 +7,7 @@
   },
   "name": "Innovator – Balanced",
   "author": "Mozilla",
-  "version": "1.1",
+  "version": "1.1.1",
   "icons": {
     "32": "icon.svg"
   },
@@ -26,7 +26,7 @@
       "popup_highlight": "hsla(17, 89%, 79%, 0.3)",
       "popup_highlight_text": "hsl(0, 0%, 0%)",
       "toolbar": "hsl(14, 93%, 83%)",
-      "toolbar_text": "hsl(0, 0%, 100%)",
+      "toolbar_text": "hsl(0, 0%, 0%)",
       "toolbar_field": "hsl(12, 100%, 91%)",
       "toolbar_field_text": "hsl(0, 0%, 0%)",
       "toolbar_field_focus": "hsl(0, 0%, 100%)",

@@ -24,7 +24,8 @@ pub fn encode(
     let mut customs = Vec::new();
     for field in fields {
         match field {
-            ModuleField::Type(i) => types.push(i),
+            ModuleField::Type(i) => types.push(RecOrType::Type(i)),
+            ModuleField::Rec(i) => types.push(RecOrType::Rec(i)),
             ModuleField::Import(i) => imports.push(i),
             ModuleField::Func(i) => funcs.push(i),
             ModuleField::Table(i) => tables.push(i),
@@ -159,8 +160,27 @@ impl Encode for ExportType<'_> {
     }
 }
 
+enum RecOrType<'a> {
+    Type(&'a Type<'a>),
+    Rec(&'a Rec<'a>),
+}
+
+impl Encode for RecOrType<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        match self {
+            RecOrType::Type(ty) => ty.encode(e),
+            RecOrType::Rec(rec) => rec.encode(e),
+        }
+    }
+}
+
 impl Encode for Type<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
+        if let Some(parent) = &self.parent {
+            e.push(0x50);
+            (1 as usize).encode(e);
+            parent.encode(e);
+        }
         match &self.def {
             TypeDef::Func(func) => {
                 e.push(0x60);
@@ -174,6 +194,21 @@ impl Encode for Type<'_> {
                 e.push(0x5e);
                 array.encode(e)
             }
+        }
+    }
+}
+
+impl Encode for Rec<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        if self.types.len() == 1 {
+            self.types[0].encode(e);
+            return;
+        }
+
+        e.push(0x45);
+        self.types.len().encode(e);
+        for ty in &self.types {
+            ty.encode(e);
         }
     }
 }
@@ -192,15 +227,6 @@ impl<'a> Encode for ValType<'a> {
             ValType::F32 => e.push(0x7d),
             ValType::F64 => e.push(0x7c),
             ValType::V128 => e.push(0x7b),
-            ValType::Rtt(Some(depth), index) => {
-                e.push(0x69);
-                depth.encode(e);
-                index.encode(e);
-            }
-            ValType::Rtt(None, index) => {
-                e.push(0x68);
-                index.encode(e);
-            }
             ValType::Ref(ty) => {
                 ty.encode(e);
             }
@@ -216,6 +242,7 @@ impl<'a> Encode for HeapType<'a> {
             HeapType::Any => e.push(0x6e),
             HeapType::Eq => e.push(0x6d),
             HeapType::Data => e.push(0x67),
+            HeapType::Array => e.push(0x66),
             HeapType::I31 => e.push(0x6a),
             HeapType::Index(index) => {
                 index.encode(e);
@@ -446,7 +473,6 @@ impl Encode for ExportKind {
             ExportKind::Memory => e.push(0x02),
             ExportKind::Global => e.push(0x03),
             ExportKind::Tag => e.push(0x04),
-            ExportKind::Type => e.push(0x07),
         }
     }
 }
@@ -644,8 +670,8 @@ impl Encode for MemArg<'_> {
             }
             _ => {
                 (self.align.trailing_zeros() | (1 << 6)).encode(e);
-                self.offset.encode(e);
                 self.memory.encode(e);
+                self.offset.encode(e);
             }
         }
     }
@@ -775,6 +801,7 @@ fn find_names<'a>(
 
     let mut ret = Names::default();
     ret.module = get_name(module_id, module_name);
+    let mut names = Vec::new();
     for field in fields {
         // Extract the kind/id/name from whatever kind of field this is...
         let (kind, id, name) = match field {
@@ -794,12 +821,21 @@ fn find_names<'a>(
             ModuleField::Memory(m) => (Name::Memory, &m.id, &m.name),
             ModuleField::Tag(t) => (Name::Tag, &t.id, &t.name),
             ModuleField::Type(t) => (Name::Type, &t.id, &t.name),
+            ModuleField::Rec(r) => {
+                for ty in &r.types {
+                    names.push((Name::Type, &ty.id, &ty.name, field));
+                }
+                continue;
+            },
             ModuleField::Elem(e) => (Name::Elem, &e.id, &e.name),
             ModuleField::Data(d) => (Name::Data, &d.id, &d.name),
             ModuleField::Func(f) => (Name::Func, &f.id, &f.name),
             ModuleField::Export(_) | ModuleField::Start(_) | ModuleField::Custom(_) => continue,
         };
+        names.push((kind, id, name, field));
+    }
 
+    for (kind, id, name, field) in names {
         // .. and using the kind we can figure out where to place this name
         let (list, idx) = match kind {
             Name::Func => (&mut ret.funcs, &mut ret.func_idx),
@@ -1009,5 +1045,40 @@ impl Encode for StructAccess<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.r#struct.encode(e);
         self.field.encode(e);
+    }
+}
+
+impl Encode for ArrayCopy<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.dest_array.encode(e);
+        self.src_array.encode(e);
+    }
+}
+
+impl Encode for ArrayNewFixed<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.array.encode(e);
+        self.length.encode(e);
+    }
+}
+
+impl Encode for ArrayNewData<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.array.encode(e);
+        self.data_idx.encode(e);
+    }
+}
+
+impl Encode for ArrayNewElem<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.array.encode(e);
+        self.elem_idx.encode(e);
+    }
+}
+
+impl Encode for BrOnCast<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.label.encode(e);
+        self.r#type.encode(e);
     }
 }

@@ -176,35 +176,6 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
         break;
       }
 #endif
-#ifdef ENABLE_WASM_GC
-      case uint16_t(Op::GcPrefix): {
-        if (!env->gcEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
-        switch (op.b1) {
-          case uint16_t(GcOp::RttCanon): {
-            ValType unusedTy;
-            if (!iter.readRttCanon(&unusedTy)) {
-              return false;
-            }
-            *literal = Nothing();
-            break;
-          }
-          case uint16_t(GcOp::RttSub): {
-            uint32_t unusedRttTypeIndex;
-            if (!iter.readRttSub(&nothing, &unusedRttTypeIndex)) {
-              return false;
-            }
-            *literal = Nothing();
-            break;
-          }
-          default: {
-            return iter.unrecognizedOpcode(&op);
-          }
-        }
-        break;
-      }
-#endif
       default: {
         return iter.unrecognizedOpcode(&op);
       }
@@ -248,10 +219,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   bool pushFuncRef(HandleFuncRef ref) {
     return stack.append(Val(RefType::func(), ref));
   }
-  bool pushRtt(Handle<RttValue*> rtt) {
-    // The exact rtt type is not important, evaluation won't use it
-    return stack.append(Val(ValType::fromRtt(0, 0), AnyRef::fromJSObject(rtt)));
-  }
 
 #ifdef ENABLE_WASM_EXTENDED_CONST
   int32_t popI32() {
@@ -263,13 +230,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     uint64_t result = stack.back().i64();
     stack.popBack();
     return int64_t(result);
-  }
-#endif
-#ifdef ENABLE_WASM_GC
-  RttValue* popRtt(JSContext* cx) {
-    RootedAnyRef result(cx, stack.back().ref());
-    stack.popBack();
-    return &result.get().asJSObject()->as<RttValue>();
   }
 #endif
 
@@ -325,23 +285,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     uint64_t b = popI64();
     pushI64(a * b);
     return true;
-  }
-#endif
-#ifdef ENABLE_WASM_GC
-  bool evalRttCanon(JSContext* cx, uint32_t typeIndex) {
-    Rooted<RttValue*> result(cx, nullptr);
-    if (!instance().constantRttCanon(cx, typeIndex, &result)) {
-      return false;
-    }
-    return pushRtt(result);
-  }
-  bool evalRttSub(JSContext* cx, uint32_t typeIndex) {
-    Rooted<RttValue*> parentRtt(cx, popRtt(cx));
-    Rooted<RttValue*> result(cx, nullptr);
-    if (!instance().constantRttSub(cx, parentRtt, typeIndex, &result)) {
-      return false;
-    }
-    return pushRtt(result);
   }
 #endif
 };
@@ -456,32 +399,6 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
           return false;
         }
         CHECK(evalI64Mul());
-      }
-#endif
-#ifdef ENABLE_WASM_GC
-      case uint16_t(Op::GcPrefix): {
-        switch (op.b1) {
-          case uint16_t(GcOp::RttCanon): {
-            uint32_t typeIndex;
-            if (!d.readTypeIndex(&typeIndex)) {
-              return false;
-            }
-            CHECK(evalRttCanon(cx, typeIndex));
-            break;
-          }
-          case uint16_t(GcOp::RttSub): {
-            uint32_t typeIndex;
-            if (!d.readTypeIndex(&typeIndex)) {
-              return false;
-            }
-            CHECK(evalRttSub(cx, typeIndex));
-            break;
-          }
-          default: {
-            MOZ_CRASH();
-          }
-        }
-        break;
       }
 #endif
       default: {

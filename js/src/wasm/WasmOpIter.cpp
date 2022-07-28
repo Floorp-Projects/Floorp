@@ -297,20 +297,20 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::Limit:
           // Reject Limit for GcPrefix encoding
           break;
-        case GcOp::StructNewWithRtt:
-          WASM_GC_OP(OpKind::StructNewWithRtt);
-        case GcOp::StructNewDefaultWithRtt:
-          WASM_GC_OP(OpKind::StructNewDefaultWithRtt);
+        case GcOp::StructNew:
+          WASM_GC_OP(OpKind::StructNew);
+        case GcOp::StructNewDefault:
+          WASM_GC_OP(OpKind::StructNewDefault);
         case GcOp::StructGet:
         case GcOp::StructGetS:
         case GcOp::StructGetU:
           WASM_GC_OP(OpKind::StructGet);
         case GcOp::StructSet:
           WASM_GC_OP(OpKind::StructSet);
-        case GcOp::ArrayNewWithRtt:
-          WASM_GC_OP(OpKind::ArrayNewWithRtt);
-        case GcOp::ArrayNewDefaultWithRtt:
-          WASM_GC_OP(OpKind::ArrayNewDefaultWithRtt);
+        case GcOp::ArrayNew:
+          WASM_GC_OP(OpKind::ArrayNew);
+        case GcOp::ArrayNewDefault:
+          WASM_GC_OP(OpKind::ArrayNewDefault);
         case GcOp::ArrayGet:
         case GcOp::ArrayGetS:
         case GcOp::ArrayGetU:
@@ -319,10 +319,6 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_GC_OP(OpKind::ArraySet);
         case GcOp::ArrayLen:
           WASM_GC_OP(OpKind::ArrayLen);
-        case GcOp::RttCanon:
-          WASM_GC_OP(OpKind::RttCanon);
-        case GcOp::RttSub:
-          WASM_GC_OP(OpKind::RttSub);
         case GcOp::RefTest:
           WASM_GC_OP(OpKind::RefTest);
         case GcOp::RefCast:

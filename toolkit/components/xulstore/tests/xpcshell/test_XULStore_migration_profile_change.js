@@ -3,7 +3,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
@@ -27,7 +26,7 @@ add_task(
     // Register an observer before the XULStore service registers its observer,
     // so we can observe the profile-after-change notification first and create
     // an old store for it to migrate.  We need to write synchronously to avoid
-    // racing XULStore, so we use FileUtils instead of OS.File.
+    // racing XULStore, so we use FileUtils instead of IOUtils.
     Services.obs.addObserver(
       {
         observe() {

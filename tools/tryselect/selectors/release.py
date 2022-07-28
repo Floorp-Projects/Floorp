@@ -7,6 +7,7 @@ import os
 
 import attr
 from mozilla_version.gecko import FirefoxVersion
+import yaml
 
 from ..cli import BaseTryParser
 from ..push import push_to_try, vcs
@@ -75,13 +76,6 @@ class ReleaseParser(BaseTryParser):
         self.set_defaults(migrations=[])
 
 
-_UNSET_EARLY_BETA_OR_EARLIER = """\
-# Define indicating that this build is prior to one of the early betas. To be
-# unset mid-way through the beta cycle.
-EARLY_BETA_OR_EARLIER=
-"""
-
-
 def run(
     version,
     migrations,
@@ -100,9 +94,17 @@ def run(
         "browser/config/version_display.txt": "{}\n".format(version),
         "config/milestone.txt": "{}\n".format(app_version),
     }
+    with open("browser/config/version.txt") as f:
+        current_version = FirefoxVersion.parse(f.read())
+    format_options = {
+        "current_major_version": current_version.major_number,
+        "next_major_version": version.major_number,
+        "current_weave_version": current_version.major_number + 2,
+        "next_weave_version": version.major_number + 2,
+    }
 
-    if "beta-to-release" in migrations:
-        files_to_change["build/defines.sh"] = _UNSET_EARLY_BETA_OR_EARLIER
+    if "beta-to-release" in migrations and "early-to-late-beta" not in migrations:
+        migrations.append("early-to-late-beta")
 
     release_type = version.version_type.name.lower()
     if release_type not in ("beta", "release", "esr"):
@@ -124,21 +126,17 @@ def run(
     if try_config:
         task_config["parameters"]["try_task_config"] = try_config
 
+    with open(os.path.join(vcs.path, "taskcluster/ci/config.yml")) as f:
+        migration_configs = yaml.safe_load(f)
     for migration in migrations:
-        migration_path = os.path.join(
-            vcs.path,
-            "testing/mozharness/configs/merge_day",
-            "{}.py".format(migration.replace("-", "_")),
-        )
-        migration_config = {}
-        with open(migration_path) as f:
-            code = compile(f.read(), migration_path, "exec")
-            exec(code, migration_config, migration_config)
-        for (path, from_, to) in migration_config["config"]["replacements"]:
+        migration_config = migration_configs["merge-automation"]["behaviors"][migration]
+        for (path, from_, to) in migration_config["replacements"]:
             if path in files_to_change:
                 contents = files_to_change[path]
             else:
                 contents = read_file(path)
+            from_ = from_.format(**format_options)
+            to = to.format(**format_options)
             files_to_change[path] = contents.replace(from_, to)
 
     if limit_locales:

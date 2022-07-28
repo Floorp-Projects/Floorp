@@ -1,6 +1,8 @@
 //! Configuring the shape of generated Wasm modules.
 
+use crate::InstructionKinds;
 use arbitrary::{Arbitrary, Result, Unstructured};
+use std::borrow::Cow;
 
 /// Configuration for a generated module.
 ///
@@ -58,6 +60,41 @@ pub trait Config: 'static + std::fmt::Debug {
         100
     }
 
+    /// The imports that may be used when generating the module.
+    ///
+    /// Defaults to `None` which means that any arbitrary import can be generated.
+    ///
+    /// To only allow specific imports, override this method to return a WebAssembly module which
+    /// describes the imports allowed.
+    ///
+    /// Note that [`Self::min_imports`] is ignored when `available_imports` are enabled.
+    ///
+    /// # Panics
+    ///
+    /// The returned value must be a valid binary encoding of a WebAssembly module. `wasm-smith`
+    /// will panic if the module cannot be parsed.
+    ///
+    /// # Example
+    ///
+    /// An implementation of this method could use the `wat` crate to provide a human-readable and
+    /// maintainable description:
+    ///
+    /// ```rust
+    /// Some(wat::parse_str(r#"
+    ///     (module
+    ///         (import "env" "ping" (func (param i32)))
+    ///         (import "env" "pong" (func (result i32)))
+    ///         (import "env" "memory" (memory 1))
+    ///         (import "env" "table" (table 1))
+    ///         (import "env" "tag" (tag (param i32)))
+    ///     )
+    /// "#))
+    /// # ;
+    /// ```
+    fn available_imports(&self) -> Option<Cow<'_, [u8]>> {
+        None
+    }
+
     /// The minimum number of functions to generate. Defaults to 0.  This
     /// includes imported functions.
     fn min_funcs(&self) -> usize {
@@ -90,6 +127,12 @@ pub trait Config: 'static + std::fmt::Debug {
     /// The maximum number of exports to generate. Defaults to 100.
     fn max_exports(&self) -> usize {
         100
+    }
+
+    /// Export all WebAssembly objects in the module. This overrides
+    /// [`Config::min_exports`] and [`Config::max_exports`]. Defaults to false.
+    fn export_everything(&self) -> bool {
+        false
     }
 
     /// The minimum number of element segments to generate. Defaults to 0.
@@ -180,6 +223,19 @@ pub trait Config: 'static + std::fmt::Debug {
         false
     }
 
+    /// The maximum, elements, of any table's initial or maximum size.
+    ///
+    /// Defaults to 1 million.
+    fn max_table_elements(&self) -> u32 {
+        1_000_000
+    }
+
+    /// Whether every Wasm table must have a maximum size specified. Defaults
+    /// to `false`.
+    fn table_max_size_required(&self) -> bool {
+        false
+    }
+
     /// The maximum number of instances to use. Defaults to 10. This includes
     /// imported instances.
     ///
@@ -191,8 +247,24 @@ pub trait Config: 'static + std::fmt::Debug {
     /// The maximum number of modules to use. Defaults to 10. This includes
     /// imported modules.
     ///
-    /// Note that this is irrelevant unless module linking is enabled.
+    /// Note that this is irrelevant unless component model support is enabled.
     fn max_modules(&self) -> usize {
+        10
+    }
+
+    /// The maximum number of components to use. Defaults to 10. This includes
+    /// imported components.
+    ///
+    /// Note that this is irrelevant unless component model support is enabled.
+    fn max_components(&self) -> usize {
+        10
+    }
+
+    /// The maximum number of values to use. Defaults to 10. This includes
+    /// imported values.
+    ///
+    /// Note that this is irrelevant unless value model support is enabled.
+    fn max_values(&self) -> usize {
         10
     }
 
@@ -236,34 +308,64 @@ pub trait Config: 'static + std::fmt::Debug {
     }
 
     /// Determines whether the bulk memory proposal is enabled for generating
-    /// insructions. Defaults to `false`.
+    /// instructions.
+    ///
+    /// Defaults to `false`.
     fn bulk_memory_enabled(&self) -> bool {
         false
     }
 
     /// Determines whether the reference types proposal is enabled for
-    /// generating insructions. Defaults to `false`.
+    /// generating instructions.
+    ///
+    /// Defaults to `false`.
     fn reference_types_enabled(&self) -> bool {
         false
     }
 
     /// Determines whether the SIMD proposal is enabled for
-    /// generating insructions. Defaults to `false`.
+    /// generating instructions.
+    ///
+    /// Defaults to `false`.
     fn simd_enabled(&self) -> bool {
         false
     }
 
+    /// Determines whether the Relaxed SIMD proposal is enabled for
+    /// generating instructions.
+    ///
+    /// Defaults to `false`.
+    fn relaxed_simd_enabled(&self) -> bool {
+        false
+    }
+
     /// Determines whether the exception-handling proposal is enabled for
-    /// generating insructions. Defaults to `false`.
+    /// generating instructions.
+    ///
+    /// Defaults to `false`.
     fn exceptions_enabled(&self) -> bool {
         false
     }
 
-    /// Determines whether the module linking proposal is enabled.
+    /// Determines whether the multi-value results are enabled.
     ///
-    /// Defaults to `false`.
-    fn module_linking_enabled(&self) -> bool {
-        false
+    /// Defaults to `true`.
+    fn multi_value_enabled(&self) -> bool {
+        true
+    }
+
+    /// Determines whether the nontrapping-float-to-int-conversions propsal is enabled.
+    ///
+    /// Defaults to `true`.
+    fn saturating_float_to_int_enabled(&self) -> bool {
+        true
+    }
+
+    /// Determines whether the sign-extension-ops propsal is enabled.
+    ///
+    /// Defaults to `true`.
+    fn sign_extension_ops_enabled(&self) -> bool {
+        true
     }
 
     /// Determines whether a `start` export may be included. Defaults to `true`.
@@ -313,6 +415,40 @@ pub trait Config: 'static + std::fmt::Debug {
     fn canonicalize_nans(&self) -> bool {
         false
     }
+
+    /// Returns the kinds of instructions allowed in the generated wasm
+    /// programs.
+    ///
+    /// The categories of instructions match the categories used by the
+    /// [WebAssembly
+    /// specification](https://webassembly.github.io/spec/core/syntax/instructions.html);
+    /// e.g., numeric, vector, control, memory, etc. Note that modifying this
+    /// setting is separate from the proposal flags; that is, if `simd_enabled()
+    /// == true` but `allowed_instruction()` does not include vector
+    /// instructions, the generated programs will not include these instructions
+    /// but could contain vector types.
+    fn allowed_instructions(&self) -> InstructionKinds {
+        InstructionKinds::all()
+    }
+
+    /// Returns whether we should generate custom sections or not.
+    ///
+    /// This is false by default.
+    fn generate_custom_sections(&self) -> bool {
+        false
+    }
+
+    /// Determines whether the threads proposal is enabled.
+    ///
+    /// The [threads proposal] involves shared linear memory, new atomic
+    /// instructions, and new `wait` and `notify` instructions.
+    ///
+    /// [threads proposal]: https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md
+    ///
+    /// Defaults to `false`.
+    fn threads_enabled(&self) -> bool {
+        false
+    }
 }
 
 /// The default configuration.
@@ -336,50 +472,57 @@ impl Config for DefaultConfig {}
 #[derive(Clone, Debug)]
 #[allow(missing_docs)]
 pub struct SwarmConfig {
-    // These fields are configured via `Arbitrary`
-    pub max_types: usize,
-    pub max_imports: usize,
-    pub max_tags: usize,
-    pub max_funcs: usize,
-    pub max_globals: usize,
-    pub max_exports: usize,
+    pub allow_start_export: bool,
+    pub available_imports: Option<Vec<u8>>,
+    pub bulk_memory_enabled: bool,
+    pub canonicalize_nans: bool,
+    pub exceptions_enabled: bool,
+    pub export_everything: bool,
+    pub max_aliases: usize,
+    pub max_components: usize,
+    pub max_data_segments: usize,
     pub max_element_segments: usize,
     pub max_elements: usize,
-    pub max_data_segments: usize,
+    pub max_exports: usize,
+    pub max_funcs: usize,
+    pub max_globals: usize,
+    pub max_imports: usize,
+    pub max_instances: usize,
     pub max_instructions: usize,
     pub max_memories: usize,
-    pub min_uleb_size: u8,
-    pub max_tables: usize,
     pub max_memory_pages: u64,
-    pub bulk_memory_enabled: bool,
-    pub reference_types_enabled: bool,
-    pub module_linking_enabled: bool,
-    pub max_aliases: usize,
+    pub max_modules: usize,
     pub max_nesting_depth: usize,
-
-    // These fields are always set to their default value as specified in the
-    // default trait implementation.
+    pub max_tables: usize,
+    pub max_tags: usize,
+    pub max_type_size: u32,
+    pub max_types: usize,
+    pub max_values: usize,
     pub memory64_enabled: bool,
-    pub min_types: usize,
-    pub min_imports: usize,
-    pub min_tags: usize,
-    pub min_funcs: usize,
-    pub min_globals: usize,
-    pub min_exports: usize,
+    pub memory_max_size_required: bool,
+    pub memory_offset_choices: (u32, u32, u32),
     pub min_data_segments: usize,
     pub min_element_segments: usize,
     pub min_elements: usize,
+    pub min_exports: usize,
+    pub min_funcs: usize,
+    pub min_globals: usize,
+    pub min_imports: usize,
     pub min_memories: u32,
     pub min_tables: u32,
-    pub max_instances: usize,
-    pub max_modules: usize,
-    pub memory_offset_choices: (u32, u32, u32),
-    pub memory_max_size_required: bool,
+    pub min_tags: usize,
+    pub min_types: usize,
+    pub min_uleb_size: u8,
+    pub multi_value_enabled: bool,
+    pub reference_types_enabled: bool,
+    pub relaxed_simd_enabled: bool,
+    pub saturating_float_to_int_enabled: bool,
+    pub sign_extension_enabled: bool,
     pub simd_enabled: bool,
-    pub exceptions_enabled: bool,
-    pub allow_start_export: bool,
-    pub max_type_size: u32,
-    pub canonicalize_nans: bool,
+    pub threads_enabled: bool,
+    pub allowed_instructions: InstructionKinds,
+    pub max_table_elements: u32,
+    pub table_max_size_required: bool,
 }
 
 impl<'a> Arbitrary<'a> for SwarmConfig {
@@ -404,10 +547,26 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             max_tables,
             max_memory_pages: u.arbitrary()?,
             min_uleb_size: u.int_in_range(0..=5)?,
-            bulk_memory_enabled: u.arbitrary()?,
+            bulk_memory_enabled: reference_types_enabled || u.arbitrary()?,
             reference_types_enabled,
+            simd_enabled: u.arbitrary()?,
+            multi_value_enabled: u.arbitrary()?,
             max_aliases: u.int_in_range(0..=MAX_MAXIMUM)?,
             max_nesting_depth: u.int_in_range(0..=10)?,
+            saturating_float_to_int_enabled: u.arbitrary()?,
+            sign_extension_enabled: u.arbitrary()?,
+            allowed_instructions: {
+                use flagset::Flags;
+                let mut allowed = Vec::new();
+                for kind in crate::core::InstructionKind::LIST {
+                    if u.arbitrary()? {
+                        allowed.push(*kind);
+                    }
+                }
+                InstructionKinds::new(&allowed)
+            },
+            table_max_size_required: u.arbitrary()?,
+            max_table_elements: u.int_in_range(0..=1_000_000)?,
 
             // These fields, unlike the ones above, are less useful to set.
             // They either make weird inputs or are for features not widely
@@ -426,14 +585,18 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             memory_max_size_required: false,
             max_instances: 0,
             max_modules: 0,
+            max_components: 0,
+            max_values: 0,
             memory_offset_choices: (75, 24, 1),
             allow_start_export: true,
-            simd_enabled: false,
+            relaxed_simd_enabled: false,
             exceptions_enabled: false,
             memory64_enabled: false,
             max_type_size: 1000,
-            module_linking_enabled: false,
             canonicalize_nans: false,
+            available_imports: None,
+            threads_enabled: false,
+            export_everything: false,
         })
     }
 }
@@ -453,6 +616,12 @@ impl Config for SwarmConfig {
 
     fn max_imports(&self) -> usize {
         self.max_imports
+    }
+
+    fn available_imports(&self) -> Option<Cow<'_, [u8]>> {
+        self.available_imports
+            .as_ref()
+            .map(|is| Cow::Borrowed(&is[..]))
     }
 
     fn min_funcs(&self) -> usize {
@@ -477,6 +646,10 @@ impl Config for SwarmConfig {
 
     fn max_exports(&self) -> usize {
         self.max_exports
+    }
+
+    fn export_everything(&self) -> bool {
+        self.export_everything
     }
 
     fn min_element_segments(&self) -> usize {
@@ -559,16 +732,28 @@ impl Config for SwarmConfig {
         self.reference_types_enabled
     }
 
-    fn module_linking_enabled(&self) -> bool {
-        self.module_linking_enabled
-    }
-
     fn simd_enabled(&self) -> bool {
         self.simd_enabled
     }
 
+    fn relaxed_simd_enabled(&self) -> bool {
+        self.relaxed_simd_enabled
+    }
+
     fn exceptions_enabled(&self) -> bool {
         self.exceptions_enabled
+    }
+
+    fn multi_value_enabled(&self) -> bool {
+        self.multi_value_enabled
+    }
+
+    fn saturating_float_to_int_enabled(&self) -> bool {
+        self.saturating_float_to_int_enabled
+    }
+
+    fn sign_extension_ops_enabled(&self) -> bool {
+        self.sign_extension_enabled
     }
 
     fn allow_start_export(&self) -> bool {
@@ -583,11 +768,31 @@ impl Config for SwarmConfig {
         self.max_nesting_depth
     }
 
+    fn max_type_size(&self) -> u32 {
+        self.max_type_size
+    }
+
     fn memory64_enabled(&self) -> bool {
         self.memory64_enabled
     }
 
     fn canonicalize_nans(&self) -> bool {
         self.canonicalize_nans
+    }
+
+    fn threads_enabled(&self) -> bool {
+        self.threads_enabled
+    }
+
+    fn allowed_instructions(&self) -> InstructionKinds {
+        self.allowed_instructions
+    }
+
+    fn max_table_elements(&self) -> u32 {
+        self.max_table_elements
+    }
+
+    fn table_max_size_required(&self) -> bool {
+        self.table_max_size_required
     }
 }

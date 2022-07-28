@@ -814,7 +814,6 @@ void BaseCompiler::saveRegisterReturnValues(const ResultType& resultType) {
       case ValType::F32:
         masm.storeFloat32(RegF32(result.fpr()), dest);
         break;
-      case ValType::Rtt:
       case ValType::Ref: {
         uint32_t flag =
             DebugFrame::hasSpilledRegisterRefResultBitMask(registerResultIdx);
@@ -867,7 +866,6 @@ void BaseCompiler::restoreRegisterReturnValues(const ResultType& resultType) {
       case ValType::F32:
         masm.loadFloat32(src, RegF32(result.fpr()));
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         masm.loadPtr(src, RegRef(result.gpr()));
         break;
@@ -934,7 +932,6 @@ void BaseCompiler::popRegisterResults(ABIResultIter& iter) {
       case ValType::F64:
         popF64(RegF64(result.fpr()));
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         popRef(RegRef(result.gpr()));
         break;
@@ -1201,7 +1198,6 @@ bool BaseCompiler::pushResults(ResultType type, StackHeight resultsBase) {
       case ValType::F64:
         pushF64(RegF64(result.fpr()));
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         pushRef(RegRef(result.gpr()));
         break;
@@ -1531,7 +1527,6 @@ void BaseCompiler::passArg(ValType type, const Stk& arg, FunctionCall* call) {
       }
       break;
     }
-    case ValType::Rtt:
     case ValType::Ref: {
       ABIArg argLoc = call->abi.next(MIRType::RefOrNull);
       if (argLoc.kind() == ABIArg::Stack) {
@@ -4026,7 +4021,6 @@ bool BaseCompiler::emitCatch() {
         MOZ_CRASH("No SIMD support");
 #endif
       }
-      case ValType::Rtt:
       case ValType::Ref: {
         // TODO/AnyRef-boxing: With boxed immediates and strings, this may need
         // to handle other kinds of values.
@@ -4379,7 +4373,6 @@ bool BaseCompiler::emitThrow() {
         MOZ_CRASH("No SIMD support");
 #endif
       }
-      case ValType::Rtt:
       case ValType::Ref: {
         RegPtr valueAddr(PreBarrierReg);
         needPtr(valueAddr);
@@ -5059,7 +5052,6 @@ bool BaseCompiler::emitGetLocal() {
     case ValType::F32:
       pushLocalF32(slot);
       break;
-    case ValType::Rtt:
     case ValType::Ref:
       pushLocalRef(slot);
       break;
@@ -5135,7 +5127,6 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
       MOZ_CRASH("No SIMD support");
 #endif
     }
-    case ValType::Rtt:
     case ValType::Ref: {
       RegRef rv = popRef();
       syncLocal(slot);
@@ -5240,7 +5231,6 @@ bool BaseCompiler::emitGetGlobal() {
       pushF64(rv);
       break;
     }
-    case ValType::Rtt:
     case ValType::Ref: {
       RegRef rv = needRef();
       ScratchPtr tmp(*this);
@@ -5306,7 +5296,6 @@ bool BaseCompiler::emitSetGlobal() {
       freeF64(rv);
       break;
     }
-    case ValType::Rtt:
     case ValType::Ref: {
       RegPtr valueAddr(PreBarrierReg);
       needPtr(valueAddr);
@@ -6531,13 +6520,12 @@ bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
   return true;
 }
 
-bool BaseCompiler::emitStructNewWithRtt() {
+bool BaseCompiler::emitStructNew() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t typeIndex;
-  Nothing rtt;
   BaseNothingVector args{};
-  if (!iter_.readStructNewWithRtt(&typeIndex, &rtt, &args)) {
+  if (!iter_.readStructNew(&typeIndex, &args)) {
     return false;
   }
 
@@ -6547,10 +6535,9 @@ bool BaseCompiler::emitStructNewWithRtt() {
 
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
-  // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
-  // guaranteed to be at the top of the stack by validation.
-  //
-  // Traps on OOM.
+  // Allocate a default initialized struct. This requires the rtt value for the
+  // struct to be pushed on the stack. This will trap on OOM.
+  emitGcCanon(typeIndex);
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
@@ -6611,18 +6598,21 @@ bool BaseCompiler::emitStructNewWithRtt() {
   return true;
 }
 
-bool BaseCompiler::emitStructNewDefaultWithRtt() {
-  // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
-  // guaranteed to be at the top of the stack by validation.
-  //
-  // Traps on OOM.
+bool BaseCompiler::emitStructNewDefault() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
-  // (rtt) -> ref; the type index is just dropped on the floor
-  return emitInstanceCallOp(SASigStructNew, [this]() -> bool {
-    uint32_t unusedTypeIndex;
-    Nothing unusedRtt;
-    return iter_.readStructNewDefaultWithRtt(&unusedTypeIndex, &unusedRtt);
-  });
+  uint32_t typeIndex;
+  if (!iter_.readStructNewDefault(&typeIndex)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  // Allocate a default initialized struct. This requires the rtt value for the
+  // struct to be pushed on the stack. This will trap on OOM.
+  emitGcCanon(typeIndex);
+  return emitInstanceCall(lineOrBytecode, SASigStructNew);
 }
 
 bool BaseCompiler::emitStructGet(FieldExtension extension) {
@@ -6743,12 +6733,12 @@ bool BaseCompiler::emitStructSet() {
   return true;
 }
 
-bool BaseCompiler::emitArrayNewWithRtt() {
+bool BaseCompiler::emitArrayNew() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t typeIndex;
   Nothing nothing;
-  if (!iter_.readArrayNewWithRtt(&typeIndex, &nothing, &nothing, &nothing)) {
+  if (!iter_.readArrayNew(&typeIndex, &nothing, &nothing)) {
     return false;
   }
 
@@ -6758,10 +6748,9 @@ bool BaseCompiler::emitArrayNewWithRtt() {
 
   const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
-  // Allocate zeroed storage.  The parameter to ArrayNew is a rtt value and
-  // length that are guaranteed to be at the top of the stack by validation.
-  //
-  // Traps on OOM.
+  // Allocate a default initialized array. This requires the rtt value for the
+  // array to be pushed on the stack. This will trap on OOM.
+  emitGcCanon(typeIndex);
   if (!emitInstanceCall(lineOrBytecode, SASigArrayNew)) {
     return false;
   }
@@ -6815,19 +6804,23 @@ bool BaseCompiler::emitArrayNewWithRtt() {
   return true;
 }
 
-bool BaseCompiler::emitArrayNewDefaultWithRtt() {
-  // Allocate zeroed storage. The parameter to ArrayNew is a rtt value that is
-  // guaranteed to be at the top of the stack by validation.
-  //
-  // Traps on OOM.
+bool BaseCompiler::emitArrayNewDefault() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
-  // (rtt) -> ref; the type index is dropped on the floor.
-  return emitInstanceCallOp(SASigArrayNew, [this]() -> bool {
-    uint32_t unusedTypeIndex;
-    Nothing nothing;
-    return iter_.readArrayNewDefaultWithRtt(&unusedTypeIndex, &nothing,
-                                            &nothing);
-  });
+  uint32_t typeIndex;
+  Nothing nothing;
+  if (!iter_.readArrayNewDefault(&typeIndex, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  // Allocate a default initialized array. This requires the rtt value for the
+  // array to be pushed on the stack. This will trap on OOM.
+  emitGcCanon(typeIndex);
+  return emitInstanceCall(lineOrBytecode, SASigArrayNew);
 }
 
 bool BaseCompiler::emitArrayGet(FieldExtension extension) {
@@ -6969,26 +6962,12 @@ bool BaseCompiler::emitArrayLen() {
   return true;
 }
 
-bool BaseCompiler::emitRttCanon() {
-  ValType rttType;
-  if (!iter_.readRttCanon(&rttType)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  emitGcCanon(rttType.typeIndex());
-  return true;
-}
-
-bool BaseCompiler::emitRttSub() {
+bool BaseCompiler::emitRefTest() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Nothing nothing;
-  uint32_t rttSubTypeIndex;
-  if (!iter_.readRttSub(&nothing, &rttSubTypeIndex)) {
+  uint32_t typeIndex;
+  if (!iter_.readRefTest(&typeIndex, &nothing)) {
     return false;
   }
 
@@ -6996,36 +6975,16 @@ bool BaseCompiler::emitRttSub() {
     return true;
   }
 
-  // rtt.sub $t; [(rtt $t' _)] -> [(rtt $t _)]
-  // Push (rtt.canon $t) so that we can cache the result and yield the
-  // same rtt value for the same $t operand.
-  emitGcCanon(rttSubTypeIndex);
-
-  if (!emitInstanceCall(lineOrBytecode, SASigRttSub)) {
-    return false;
-  }
-  return true;
-}
-
-bool BaseCompiler::emitRefTest() {
-  // refTest builtin has same signature as ref.test instruction, stack is
-  // guaranteed to be in the right condition due to validation.
-  return emitInstanceCallOp(SASigRefTest, [this]() -> bool {
-    Nothing nothing;
-    uint32_t unusedRttTypeIndex;
-    uint32_t unusedRttDepth;
-    return iter_.readRefTest(&nothing, &unusedRttTypeIndex, &unusedRttDepth,
-                             &nothing);
-  });
+  emitGcCanon(typeIndex);
+  return emitInstanceCall(lineOrBytecode, SASigRefTest);
 }
 
 bool BaseCompiler::emitRefCast() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Nothing nothing;
-  uint32_t rttTypeIndex;
-  uint32_t rttDepth;
-  if (!iter_.readRefCast(&nothing, &rttTypeIndex, &rttDepth, &nothing)) {
+  uint32_t typeIndex;
+  if (!iter_.readRefCast(&typeIndex, &nothing)) {
     return false;
   }
 
@@ -7033,7 +6992,6 @@ bool BaseCompiler::emitRefCast() {
     return true;
   }
 
-  RegRef rttPtr = popRef();
   RegRef refPtr = popRef();
 
   // 1. duplicate and shuffle from [ref, rtt] to [ref, ref, rtt]
@@ -7041,7 +6999,7 @@ bool BaseCompiler::emitRefCast() {
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
-  pushRef(rttPtr);
+  emitGcCanon(typeIndex);
 
   // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
@@ -7064,13 +7022,11 @@ bool BaseCompiler::emitBrOnCast() {
 
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t relativeDepth;
-  Nothing unused{};
   BaseNothingVector unused_values{};
-  uint32_t rttTypeIndex;
-  uint32_t rttDepth;
+  uint32_t typeIndex;
   ResultType branchTargetType;
-  if (!iter_.readBrOnCast(&relativeDepth, &unused, &rttTypeIndex, &rttDepth,
-                          &branchTargetType, &unused_values)) {
+  if (!iter_.readBrOnCast(&relativeDepth, &typeIndex, &branchTargetType,
+                          &unused_values)) {
     return false;
   }
 
@@ -7081,7 +7037,6 @@ bool BaseCompiler::emitBrOnCast() {
   Control& target = controlItem(relativeDepth);
   target.bceSafeOnExit &= bceSafe_;
 
-  RegRef rttPtr = popRef();
   RegRef refPtr = popRef();
 
   // 1. duplicate and shuffle from [T*, ref, rtt] to [T*, ref, ref, rtt]
@@ -7089,7 +7044,7 @@ bool BaseCompiler::emitBrOnCast() {
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
-  pushRef(rttPtr);
+  emitGcCanon(typeIndex);
 
   // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
@@ -9200,10 +9155,10 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         switch (op.b1) {
-          case uint32_t(GcOp::StructNewWithRtt):
-            CHECK_NEXT(emitStructNewWithRtt());
-          case uint32_t(GcOp::StructNewDefaultWithRtt):
-            CHECK_NEXT(emitStructNewDefaultWithRtt());
+          case uint32_t(GcOp::StructNew):
+            CHECK_NEXT(emitStructNew());
+          case uint32_t(GcOp::StructNewDefault):
+            CHECK_NEXT(emitStructNewDefault());
           case uint32_t(GcOp::StructGet):
             CHECK_NEXT(emitStructGet(FieldExtension::None));
           case uint32_t(GcOp::StructGetS):
@@ -9212,10 +9167,10 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStructGet(FieldExtension::Unsigned));
           case uint32_t(GcOp::StructSet):
             CHECK_NEXT(emitStructSet());
-          case uint32_t(GcOp::ArrayNewWithRtt):
-            CHECK_NEXT(emitArrayNewWithRtt());
-          case uint32_t(GcOp::ArrayNewDefaultWithRtt):
-            CHECK_NEXT(emitArrayNewDefaultWithRtt());
+          case uint32_t(GcOp::ArrayNew):
+            CHECK_NEXT(emitArrayNew());
+          case uint32_t(GcOp::ArrayNewDefault):
+            CHECK_NEXT(emitArrayNewDefault());
           case uint32_t(GcOp::ArrayGet):
             CHECK_NEXT(emitArrayGet(FieldExtension::None));
           case uint32_t(GcOp::ArrayGetS):
@@ -9226,10 +9181,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArraySet());
           case uint32_t(GcOp::ArrayLen):
             CHECK_NEXT(emitArrayLen());
-          case uint32_t(GcOp::RttCanon):
-            CHECK_NEXT(emitRttCanon());
-          case uint32_t(GcOp::RttSub):
-            CHECK_NEXT(emitRttSub());
           case uint32_t(GcOp::RefTest):
             CHECK_NEXT(emitRefTest());
           case uint32_t(GcOp::RefCast):
@@ -10219,7 +10170,6 @@ void BaseCompiler::assertResultRegistersAvailable(ResultType type) {
       case ValType::F64:
         MOZ_ASSERT(isAvailableF64(RegF64(result.fpr())));
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         MOZ_ASSERT(isAvailableRef(RegRef(result.gpr())));
         break;

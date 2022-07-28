@@ -25,7 +25,6 @@ pub enum ExportKind {
     Memory,
     Global,
     Tag,
-    Type,
 }
 
 impl<'a> Parse<'a> for Export<'a> {
@@ -60,9 +59,6 @@ impl<'a> Parse<'a> for ExportKind {
         } else if l.peek::<kw::tag>() {
             parser.parse::<kw::tag>()?;
             Ok(ExportKind::Tag)
-        } else if l.peek::<kw::r#type>() {
-            parser.parse::<kw::r#type>()?;
-            Ok(ExportKind::Type)
         } else {
             Err(l.error())
         }
@@ -76,7 +72,6 @@ impl Peek for ExportKind {
             || kw::memory::peek(cursor)
             || kw::global::peek(cursor)
             || kw::tag::peek(cursor)
-            || kw::r#type::peek(cursor)
     }
     fn display() -> &'static str {
         "export kind"
@@ -105,7 +100,6 @@ kw_conversions! {
     global => Global
     tag => Tag
     memory => Memory
-    r#type => Type
 }
 
 /// A listing of inline `(export "foo")` statements on a WebAssembly item in

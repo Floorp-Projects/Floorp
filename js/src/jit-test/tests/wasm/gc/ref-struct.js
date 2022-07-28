@@ -15,7 +15,7 @@ function checkInvalid(body, errorMessage) {
                        errorMessage);
 }
 
-// General test case for struct.new_with_rtt, struct.get, and struct.set: binary tree
+// General test case for struct.new, struct.get, and struct.set: binary tree
 // manipulation.
 
 {
@@ -42,13 +42,12 @@ function checkInvalid(body, errorMessage) {
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
                 (if (result (ref null $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
-                    (struct.new_with_rtt $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit) (rtt.canon $wabbit))
+                    (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
                     (block (result (ref null $wabbit))
-                      (struct.new_with_rtt $wabbit
+                      (struct.new $wabbit
                                   (local.get $tmp)
                                   (call $make (i32.sub (local.get $n) (i32.const 1)))
-                                  (call $make (i32.sub (local.get $n) (i32.const 2)))
-                                  (rtt.canon $wabbit)))))
+                                  (call $make (i32.sub (local.get $n) (i32.const 2)))))))
 
           (func (export "accumulate") (result i32)
                 (call $accum (global.get $g)))
@@ -129,7 +128,7 @@ assertErrorMessage(() => wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast (local.get $p) rtt.canon $node2))
+       (ref.cast $node2 (local.get $p)))
       (func (export "test") (result eqref)
        (call $f (ref.null $node))))`).exports.test(),
          WebAssembly.RuntimeError,
@@ -142,10 +141,10 @@ assertEq(wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast (local.get $p) rtt.canon $node2))
+       (ref.cast $node2 (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new_with_rtt $node2 (i32.const 0) (f32.const 12) (rtt.canon $node2)))
+       (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -156,10 +155,10 @@ assertEq(wasmEvalText(
       (type $node (struct (field (mut i32))))
       (type $node2 (struct (field (mut i32)) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast (local.get $p) rtt.canon $node2))
+       (ref.cast $node2 (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new_with_rtt $node2 (i32.const 0) (f32.const 12) (rtt.canon $node2)))
+       (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -170,10 +169,10 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (func $f (param $p eqref) (result (ref null $node))
-       (ref.cast (local.get $p) rtt.canon $node))
+       (ref.cast $node (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new_with_rtt $node (i32.const 0) (rtt.canon $node)))
+       (local.set $n (struct.new $node (i32.const 0)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -187,16 +186,13 @@ assertEq(wasmEvalText(
    (type $c (struct (field eqref)))
 
    (func (export "makeA") (result eqref)
-     rtt.canon $a
-     struct.new_default_with_rtt $a
+     struct.new_default $a
    )
    (func (export "makeB") (result eqref)
-     rtt.canon $b
-     struct.new_default_with_rtt $b
+     struct.new_default $b
    )
    (func (export "makeC") (result eqref)
-     rtt.canon $c
-     struct.new_default_with_rtt $c
+     struct.new_default $c
    )
   )`).exports;
   let a = makeA();
@@ -209,21 +205,19 @@ assertEq(wasmEvalText(
   assertEq(c[0], null);
 }
 
-// struct.new_default_with_rtt: valid if all struct fields are defaultable
+// struct.new_default: valid if all struct fields are defaultable
 
 wasmFailValidateText(`(module
   (type $a (struct (field (ref $a))))
   (func
-    rtt.canon $a
-    struct.new_default_with_rtt $a
+    struct.new_default $a
   )
 )`, /defaultable/);
 
 wasmFailValidateText(`(module
   (type $a (struct (field i32) (field i32) (field (ref $a))))
   (func
-    rtt.canon $a
-    struct.new_default_with_rtt $a
+    struct.new_default $a
   )
 )`, /defaultable/);
 

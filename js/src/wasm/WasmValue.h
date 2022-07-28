@@ -321,9 +321,6 @@ class LitVal {
         cell_.ref_ = AnyRef::null();
         break;
       }
-      case ValType::Kind::Rtt: {
-        MOZ_CRASH("not defaultable");
-      }
     }
   }
 
@@ -416,7 +413,6 @@ class MOZ_NON_PARAM Val : public LitVal {
         return cell_.f64_ == rhs.cell_.f64_;
       case ValType::V128:
         return cell_.v128_ == rhs.cell_.v128_;
-      case ValType::Rtt:
       case ValType::Ref:
         return cell_.ref_ == rhs.cell_.ref_;
     }

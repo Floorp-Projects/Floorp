@@ -3,27 +3,38 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "wasmparser"
-version = "0.78.2"
+version = "0.87.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
-description = "A simple event-driven library for parsing WebAssembly binary files.\n"
+description = """
+A simple event-driven library for parsing WebAssembly binary files.
+"""
 homepage = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser"
-keywords = ["parser", "WebAssembly", "wasm"]
+readme = "README.md"
+keywords = [
+    "parser",
+    "WebAssembly",
+    "wasm",
+]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser"
+resolver = "2"
 
 [[bench]]
 name = "benchmark"
 harness = false
+
+[dependencies.indexmap]
+version = "1.8.0"
+
 [dev-dependencies.anyhow]
 version = "1.0"
 

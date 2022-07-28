@@ -3,7 +3,6 @@
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_get_profile();
@@ -15,12 +14,12 @@ add_task(
     skip_if: () => !AppConstants.MOZ_NEW_XULSTORE,
   },
   async function test_create_old_datastore() {
-    const path = OS.Path.join(OS.Constants.Path.profileDir, "xulstore.json");
+    const path = PathUtils.join(PathUtils.profileDir, "xulstore.json");
 
     // Invalid JSON: it's missing the final closing brace.
     const xulstoreJSON = '{ doc: { id: { attr: "value" } }';
 
-    await OS.File.writeAtomic(path, xulstoreJSON);
+    await IOUtils.writeUTF8(path, xulstoreJSON);
   }
 );
 

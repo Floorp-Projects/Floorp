@@ -32,7 +32,7 @@ const wat = `
 
   (func $main
     (struct.set $S 18
-      (struct.new_with_rtt $S
+      (struct.new $S
         (i64.const 0)
         (i64.const 0)
         (i64.const 0)
@@ -51,9 +51,8 @@ const wat = `
         (i64.const 0)
         (i64.const 0)
         (i64.const 0)
-        (ref.null eq)
-        (rtt.canon $S))
-      (struct.new_with_rtt $S2 (rtt.canon $S2))))
+        (ref.null eq))
+      (struct.new $S2)))
   (start $main))
 `
 wasmEvalText(wat);
@@ -97,7 +96,7 @@ wasmEvalText(`
     (local $inline (ref null $inline))
 
     (; create an outline object and acquire multiple views to it ;)
-    (struct.new_with_rtt $outline
+    (struct.new $outline
           (i64.const 0xFF)
           (i64.const 0)
           (i64.const 0)
@@ -116,8 +115,7 @@ wasmEvalText(`
           (i64.const 0)
           (i64.const 0)
           (i64.const 0)
-          (i64.const 0)
-          (rtt.canon $outline))
+          (i64.const 0))
     local.tee $outline
     local.set $inline
 

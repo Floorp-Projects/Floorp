@@ -10,18 +10,23 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "wasm-encoder"
-version = "0.7.0"
+version = "0.14.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
-description = "A low-level WebAssembly encoder.\n"
+description = """
+A low-level WebAssembly encoder.
+"""
 homepage = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-encoder"
 documentation = "https://docs.rs/wasm-encoder"
 readme = "README.md"
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-encoder"
+resolver = "2"
+
 [dependencies.leb128]
 version = "0.2.4"
+
 [dev-dependencies.anyhow]
 version = "1.0.38"
 

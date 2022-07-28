@@ -81,10 +81,6 @@ enum class TypeCode {
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
 
-  // Type constructors for rtt types.
-  RttWithDepth = 0x69,  // SLEB128(-0x17)
-  Rtt = 0x68,           // SLEB128(-0x18)
-
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
 
@@ -115,11 +111,6 @@ static constexpr TypeCode AbstractReferenceTypeCode = TypeCode::ExternRef;
 // is encoded with 'Ref' or 'NullableRef'.
 
 static constexpr TypeCode AbstractReferenceTypeIndexCode = TypeCode::Ref;
-
-// A type code used to represent (rtt depth? typeindex) whether or not the type
-// is encoded with 'Rtt' or 'RttWithDepth'.
-
-static constexpr TypeCode AbstractRttCode = TypeCode::Rtt;
 
 enum class TypeIdDescKind { None, Immediate, Global };
 
@@ -458,30 +449,26 @@ inline bool IsPrefixByte(uint8_t b) { return b >= uint8_t(Op::FirstPrefix); }
 // Opcodes in the GC opcode space.
 enum class GcOp {
   // Structure operations
-  StructNewWithRtt = 0x1,
-  StructNewDefaultWithRtt = 0x2,
+  StructNew = 0x7,
+  StructNewDefault = 0x8,
   StructGet = 0x03,
   StructGetS = 0x04,
   StructGetU = 0x05,
   StructSet = 0x06,
 
   // Array operations
-  ArrayNewWithRtt = 0x11,
-  ArrayNewDefaultWithRtt = 0x12,
+  ArrayNew = 0x1b,
+  ArrayNewDefault = 0x1c,
   ArrayGet = 0x13,
   ArrayGetS = 0x14,
   ArrayGetU = 0x15,
   ArraySet = 0x16,
   ArrayLen = 0x17,
 
-  // Rtt operations
-  RttCanon = 0x30,
-  RttSub = 0x31,
-
   // Ref operations
-  RefTest = 0x40,
-  RefCast = 0x41,
-  BrOnCast = 0x42,
+  RefTest = 0x44,
+  RefCast = 0x45,
+  BrOnCast = 0x46,
 
   Limit
 };
@@ -1019,10 +1006,8 @@ static const unsigned MaxFunctionBytes = 7654321;
 // platform
 #ifdef JS_64BIT
 static const unsigned MaxTypeIndex = 1000000;
-static const unsigned MaxRttDepth = 1000;
 #else
 static const unsigned MaxTypeIndex = 15000;
-static const unsigned MaxRttDepth = 100;
 #endif
 
 static const unsigned MaxTags = 1000000;
@@ -1042,10 +1027,6 @@ static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
 // At sizeof(int64) bytes per slot this works out to about 480KiB.
 
 static const unsigned MaxFrameSize = 512 * 1024;
-
-// A magic value of rtt depth to signify that it was not specified.
-
-static const uint32_t RttDepthNone = MaxRttDepth + 1;
 
 // Asserted by Decoder::readVarU32.
 

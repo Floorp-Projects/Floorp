@@ -139,6 +139,7 @@ impl<'a> Parse<'a> for Module<'a> {
 #[derive(Debug)]
 pub enum ModuleField<'a> {
     Type(Type<'a>),
+    Rec(Rec<'a>),
     Import(Import<'a>),
     Func(Func<'a>),
     Table(Table<'a>),
@@ -164,8 +165,11 @@ impl<'a> ModuleField<'a> {
 
 impl<'a> Parse<'a> for ModuleField<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::r#type>() {
+        if parser.peek::<Type<'a>>() {
             return Ok(ModuleField::Type(parser.parse()?));
+        }
+        if parser.peek::<kw::rec>() {
+            return Ok(ModuleField::Rec(parser.parse()?));
         }
         if parser.peek::<kw::import>() {
             return Ok(ModuleField::Import(parser.parse()?));

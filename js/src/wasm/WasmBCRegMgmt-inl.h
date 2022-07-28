@@ -357,7 +357,6 @@ void BaseCompiler::needResultRegisters(ResultType type, ResultRegKind which) {
           needF64(RegF64(result.fpr()));
         }
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         needRef(RegRef(result.gpr()));
         break;
@@ -418,7 +417,6 @@ void BaseCompiler::freeResultRegisters(ResultType type, ResultRegKind which) {
           freeF64(RegF64(result.fpr()));
         }
         break;
-      case ValType::Rtt:
       case ValType::Ref:
         freeRef(RegRef(result.gpr()));
         break;

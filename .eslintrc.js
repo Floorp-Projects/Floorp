@@ -205,7 +205,6 @@ module.exports = {
       excludedFiles: [
         // These are suitable as good first bugs, take one or two related lines
         // per bug.
-        "caps/tests/unit/test_origin.js",
         "extensions/permissions/**",
         "image/test/unit/**",
         "intl/uconv/tests/unit/test_bug340714.js",

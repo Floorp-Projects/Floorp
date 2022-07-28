@@ -5,17 +5,19 @@
 :root {
   height: 100%;
   --body-columns: 1fr;
-  --body-rows: auto 2fr 1fr 40px;
+  --body-rows: auto 2fr 1fr auto;
   --colorway-name-font-size: 1.5em;
   --colorway-selector-align: center;
   --figure-height: 200px;
   --figure-width: 200px;
+  --homepage-reset-column: 1;
+  --homepage-reset-align: space-between;
 }
 
 @media (min-width: 50em) {
   :root {
     --body-columns: 24px repeat(2, 1fr);
-    --body-rows: auto 1fr 64px;
+    --body-rows: auto 1fr auto;
     --colorway-name-font-size: 2.5em;
     --colorway-selector-align: start;
     --customization-panel-column: 3;
@@ -25,6 +27,8 @@
     --figure-row: 2;
     --figure-width: 288px;
     --header-column: 2/4;
+    --homepage-reset-column: 1/4;
+    --homepage-reset-align: end;
   }
 
   #colorway-name,
@@ -38,7 +42,8 @@ body {
   display: grid;
   grid-template-columns: var(--body-columns);
   grid-template-rows: var(--body-rows);
-  padding: 0 24px;
+  padding: 0 2em 1em;
+  box-sizing: border-box;
 }
 
 fieldset {
@@ -54,6 +59,7 @@ body > header {
 }
 
 figure {
+  align-items: center;
   margin: 0;
   display: flex;
   justify-content: center;
@@ -69,6 +75,7 @@ figure > img {
 }
 
 #colorway-customization-panel {
+  align-self: center;
   padding-inline: var(--customization-panel-padding-inline);
   grid-column: var(--customization-panel-column);
 }
@@ -101,9 +108,22 @@ figure > img {
 
 #homepage-reset-container:not([hidden]) {
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 2em;
+  grid-column: var(--homepage-reset-column);
+  text-align: end;
+}
+
+.reset-prompt,
+.success-prompt {
+  width: 100%;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: var(--homepage-reset-align);
+}
+
+.reset-prompt > span,
+.success-prompt > span {
+  padding-inline-end: 1em;
 }
 
 #homepage-reset-container:not(.success) > .success-prompt,
@@ -111,7 +131,7 @@ figure > img {
   display: none;
 }
 
-#homepage-reset-container > .success-prompt::before {
+#homepage-reset-container > .success-prompt span::before {
   display: inline-block;
   content: "";
   background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;

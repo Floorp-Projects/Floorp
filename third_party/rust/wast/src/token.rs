@@ -38,6 +38,11 @@ impl Span {
         }
         (text.lines().count(), 0)
     }
+
+    /// Returns the byte offset of this span.
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
 }
 
 /// An identifier in a WebAssembly module, prefixed by `$` in the textual
