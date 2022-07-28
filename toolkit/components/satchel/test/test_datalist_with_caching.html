@@ -29,7 +29,7 @@ Form History test: form field autocomplete
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let input = $_(1, "field1");
+let input = getFormElementByName(1, "field1");
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
