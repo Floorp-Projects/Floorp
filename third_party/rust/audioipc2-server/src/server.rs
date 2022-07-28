@@ -273,15 +273,12 @@ impl ServerStreamCallbacks {
             }
             _ => {
                 debug!("Unexpected message {:?} during data_callback", r);
-                // TODO: Return a CUBEB_ERROR result here once
-                // https://github.com/kinetiknz/cubeb/issues/553 is
-                // fixed.
-                0
+                cubeb::ffi::CUBEB_ERROR.try_into().unwrap()
             }
         }
     }
 
-    fn state_callback(&mut self, state: cubeb::State) {
+    fn state_callback(&self, state: cubeb::State) {
         trace!("Stream state callback: {:?}", state);
         let r = self
             .state_callback_rpc
@@ -295,7 +292,7 @@ impl ServerStreamCallbacks {
         }
     }
 
-    fn device_change_callback(&mut self) {
+    fn device_change_callback(&self) {
         trace!("Stream device change callback");
         let r = self
             .device_change_callback_rpc
@@ -637,7 +634,7 @@ impl CubebServer {
             #[cfg(target_os = "linux")]
             ServerMessage::PromoteThreadToRealTime(thread_info) => {
                 let info = RtPriorityThreadInfo::deserialize(thread_info);
-                match promote_thread_to_real_time(info, 0, 48000) {
+                match promote_thread_to_real_time(info, 256, 48000) {
                     Ok(_) => {
                         info!("Promotion of content process thread to real-time OK");
                     }
@@ -710,6 +707,7 @@ impl CubebServer {
             let out_rate = params.output_stream_params.map(|p| p.rate).unwrap_or(0);
             let rate = out_rate.max(in_rate);
             // 1s of audio, rounded up to the nearest 64kB.
+            // Stream latency is capped at 1s in process_stream_init.
             (((rate * frame_size) + 0xffff) & !0xffff) as usize
         } else {
             self.shm_area_size
@@ -777,7 +775,26 @@ impl CubebServer {
             cubeb::StreamParamsRef::from_ptr(osp as *const StreamParams as *mut _)
         });
 
-        let latency = params.latency_frames;
+        // TODO: Manage stream latency requests with respect to the RT deadlines the callback_thread was configured for.
+        fn round_up_pow2(v: u32) -> u32 {
+            debug_assert!(v >= 1);
+            1 << (32 - (v - 1).leading_zeros())
+        }
+        let rate = params
+            .output_stream_params
+            .map(|p| p.rate)
+            .unwrap_or_else(|| params.input_stream_params.map(|p| p.rate).unwrap());
+        // Note: minimum latency supported by AudioIPC is currently ~5ms.  This restriction may be reduced by later IPC improvements.
+        let min_latency = round_up_pow2(5 * rate / 1000);
+        // Note: maximum latency is restricted by the SharedMem size.
+        let max_latency = rate;
+        let latency = params.latency_frames.max(min_latency).min(max_latency);
+        trace!(
+            "stream rate={} latency requested={} calculated={}",
+            rate,
+            params.latency_frames,
+            latency
+        );
 
         let server_stream = &mut self.streams[stm_tok];
         assert!(size_of::<Box<ServerStreamCallbacks>>() == size_of::<usize>());
@@ -842,9 +859,7 @@ unsafe extern "C" fn data_cb_c(
         };
         cbs.data_callback(input, output, nframes as isize) as c_long
     });
-    // TODO: Return a CUBEB_ERROR result here once
-    // https://github.com/kinetiknz/cubeb/issues/553 is fixed.
-    ok.unwrap_or(0)
+    ok.unwrap_or(cubeb::ffi::CUBEB_ERROR as c_long)
 }
 
 unsafe extern "C" fn state_cb_c(

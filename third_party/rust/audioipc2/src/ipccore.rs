@@ -21,13 +21,6 @@ use crate::{
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
-#[cfg(windows)]
-use crate::duplicate_platform_handle;
-#[cfg(unix)]
-use crate::sys::cmsg;
-#[cfg(unix)]
-use crate::PlatformHandle;
-
 const WAKE_TOKEN: Token = Token(!0);
 
 thread_local!(static IN_EVENTLOOP: std::cell::RefCell<Option<thread::ThreadId>> = std::cell::RefCell::new(None));
@@ -608,16 +601,24 @@ where
         // Repeatedly call `decode` as long as it produces items, passing each produced item to the handler to action.
         #[allow(unused_mut)]
         while let Some(mut item) = self.codec.decode(&mut inbound.buf)? {
-            #[cfg(unix)]
-            item.receive_owned_message_handle(|| {
-                if let Some(handle) = self.extra_handle.take() {
-                    unsafe { handle.into_raw() }
-                } else {
-                    let handles = cmsg::decode_handles(&mut inbound.cmsg);
-                    self.extra_handle = handles.get(1).map(|h| PlatformHandle::new(*h));
-                    handles[0]
+            if item.has_associated_handle() {
+                // On Unix, dequeue a handle from the connection and update the item's handle.
+                #[cfg(unix)]
+                {
+                    let new = inbound
+                        .pop_handle()
+                        .expect("inbound handle expected for item");
+                    unsafe { item.set_local_handle(new.take()) };
                 }
-            });
+                // On Windows, the deserialized item contains the correct handle value, so
+                // convert it to an owned handle on the item.
+                #[cfg(windows)]
+                {
+                    assert!(inbound.pop_handle().is_none());
+                    unsafe { item.set_local_handle() };
+                }
+            }
+
             self.handler.consume(item)?;
         }
 
@@ -630,21 +631,25 @@ where
 
         // Repeatedly grab outgoing items from the handler, passing each to `encode` for serialization into `outbound`.
         while let Some(mut item) = self.handler.produce()? {
-            item.prepare_send_message_handle(|handle, _target| {
-                // On Unix, the handle is encoded into a cmsg buffer for out-of-band transport via sendmsg.
-                #[cfg(unix)]
-                {
-                    cmsg::encode_handle(&mut outbound.cmsg, handle);
-                    Ok(handle)
-                }
-                // On Windows, the handle is transferred by duplicating it into the target remote process during message send.
+            let handle = if item.has_associated_handle() {
+                #[allow(unused_mut)]
+                let mut handle = item.take_handle();
+                // On Windows, the handle is transferred by duplicating it into the target remote process.
                 #[cfg(windows)]
                 unsafe {
-                    duplicate_platform_handle(handle, Some(_target))
+                    item.set_remote_handle(handle.send_to_target()?);
                 }
-            })?;
+                Some(handle)
+            } else {
+                None
+            };
 
             self.codec.encode(item, &mut outbound.buf)?;
+            if let Some(handle) = handle {
+                // `outbound` retains ownership of the handle until the associated
+                // encoded item in `outbound.buf` is sent to the remote process.
+                outbound.push_handle(handle);
+            }
         }
         Ok(())
     }
@@ -653,8 +658,6 @@ where
 struct FramedDriver<T: Handler> {
     codec: LengthDelimitedCodec<T::Out, T::In>,
     handler: T,
-    #[cfg(unix)]
-    extra_handle: Option<PlatformHandle>,
 }
 
 impl<T: Handler> FramedDriver<T> {
@@ -662,8 +665,6 @@ impl<T: Handler> FramedDriver<T> {
         FramedDriver {
             codec: Default::default(),
             handler,
-            #[cfg(unix)]
-            extra_handle: None,
         }
     }
 }

@@ -15,6 +15,6 @@ cubeb-backend = "0.10"
 log = "0.4"
 
 [dependencies.audio_thread_priority]
-version = "0.26.0"
-default_features = false
+version = "0.26.1"
+default-features = false
 features = ["winapi"]

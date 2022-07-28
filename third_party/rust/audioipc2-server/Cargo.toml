@@ -21,6 +21,6 @@ version = "0.12.0"
 default-features = false
 
 [dependencies.audio_thread_priority]
-version = "0.26.0"
-default_features = false
+version = "0.26.1"
+default-features = false
 features = ["winapi"]
