@@ -56,6 +56,7 @@ class RegExpStack;
 #define V8_EXPORT_PRIVATE
 #define V8_FALLTHROUGH [[fallthrough]]
 #define V8_NODISCARD [[nodiscard]]
+#define V8_NOEXCEPT noexcept
 
 #define FATAL(x) MOZ_CRASH(x)
 #define UNREACHABLE() MOZ_CRASH("unreachable code")
@@ -73,6 +74,7 @@ class RegExpStack;
 #define DCHECK_NOT_NULL(val) MOZ_ASSERT((val) != nullptr)
 #define DCHECK_IMPLIES(lhs, rhs) MOZ_ASSERT_IF(lhs, rhs)
 #define CHECK MOZ_RELEASE_ASSERT
+#define CHECK_EQ(lhs, rhs) MOZ_RELEASE_ASSERT((lhs) == (rhs))
 #define CHECK_LE(lhs, rhs) MOZ_RELEASE_ASSERT((lhs) <= (rhs))
 #define CHECK_GE(lhs, rhs) MOZ_RELEASE_ASSERT((lhs) >= (rhs))
 #define CONSTEXPR_DCHECK MOZ_ASSERT
@@ -435,8 +437,11 @@ constexpr double kMaxSafeInteger = 9007199254740991.0;  // 2^53-1
 
 constexpr int kBitsPerByte = 8;
 constexpr int kBitsPerByteLog2 = 3;
+constexpr int kUInt16Size = sizeof(uint16_t);
 constexpr int kUInt32Size = sizeof(uint32_t);
 constexpr int kInt64Size = sizeof(int64_t);
+
+constexpr int kMaxUInt16 = (1 << 16) - 1;
 
 inline constexpr bool IsDecimalDigit(base::uc32 c) {
   return c >= '0' && c <= '9';
@@ -577,6 +582,10 @@ class Object {
   constexpr Object() : asBits_(JS::Int32Value(0).asRawBits()) {}
 
   Object(const JS::Value& value) : asBits_(value.asRawBits()) {}
+
+  // This constructor is only used in an unused implementation of
+  // IsCharacterInRangeArray in regexp-macro-assembler.cc.
+  Object(uintptr_t raw) : asBits_(raw) { MOZ_CRASH("unused"); }
 
   // Used in regexp-interpreter.cc to check the return value of
   // isolate->stack_guard()->HandleInterrupts(). We want to handle
@@ -882,6 +891,9 @@ class String : public HeapObject {
       return base::Vector<const base::uc16>(string_->twoByteChars(no_gc_),
                                             string_->length());
     }
+    void UnsafeDisableChecksumVerification() {
+      // Intentional no-op. See the comment for AllowGarbageCollection above.
+    }
 
    private:
     const JSLinearString* string_;
@@ -944,12 +956,12 @@ class JSRegExp : public HeapObject {
   Object Code(bool is_latin1) const {
     return Object(JS::PrivateGCThingValue(inner()->getJitCode(is_latin1)));
   }
-  Object Bytecode(bool is_latin1) const {
+  Object bytecode(bool is_latin1) const {
     return Object(JS::PrivateValue(inner()->getByteCode(is_latin1)));
   }
 
   // TODO: should we expose this?
-  uint32_t BacktrackLimit() const { return 0; }
+  uint32_t backtrack_limit() const { return 0; }
 
   static JSRegExp cast(Object object) {
     JSRegExp regexp;
@@ -964,7 +976,9 @@ class JSRegExp : public HeapObject {
     return (count + 1) * 2;
   }
 
-  inline int MaxRegisterCount() const { return inner()->getMaxRegisters(); }
+  inline uint32_t max_register_count() const {
+    return inner()->getMaxRegisters();
+  }
 
   // ******************************
   // Static constants
@@ -1070,6 +1084,8 @@ class Isolate {
 
   //********** Stack guard code **********//
   inline StackGuard* stack_guard() { return this; }
+
+  uintptr_t real_climit() { return cx_->stackLimit(JS::StackForSystemCode); }
 
   // This is called from inside no-GC code. V8 runs the interrupt
   // inside the no-GC code and then "manually relocates unhandlified
@@ -1275,5 +1291,15 @@ const bool FLAG_regexp_tier_up = true;
 
 }  // namespace internal
 }  // namespace v8
+
+namespace V8 {
+
+inline void FatalProcessOutOfMemory(v8::internal::Isolate* isolate,
+                                    const char* msg) {
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+  oomUnsafe.crash(msg);
+}
+
+}  // namespace V8
 
 #endif  // RegexpShim_h

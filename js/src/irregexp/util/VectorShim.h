@@ -205,9 +205,12 @@ class SmallVector {
   inline size_t size() const { return inner_.length(); }
   inline const T& at(size_t index) const { return inner_[index]; }
   T* data() { return inner_.begin(); }
+  T* begin() { return inner_.begin(); }
 
   T& operator[](size_t index) { return inner_[index]; }
   const T& operator[](size_t index) const { return inner_[index]; }
+
+  inline void clear() { inner_.clear(); }
 
   void resize_no_init(size_t new_size) {
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
