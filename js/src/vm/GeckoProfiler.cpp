@@ -51,20 +51,14 @@ void GeckoProfilerRuntime::setEventMarker(void (*fn)(const char*,
 }
 
 // Get a pointer to the top-most profiling frame, given the exit frame pointer.
-static jit::JitFrameLayout* GetTopProfilingJitFrame(Activation* act) {
-  if (!act || !act->isJit()) {
-    return nullptr;
-  }
-
-  jit::JitActivation* jitActivation = act->asJit();
-
+static jit::JitFrameLayout* GetTopProfilingJitFrame(jit::JitActivation* act) {
   // If there is no exit frame set, just return.
-  if (!jitActivation->hasExitFP()) {
+  if (!act->hasExitFP()) {
     return nullptr;
   }
 
   // Skip wasm frames that might be in the way.
-  OnlyJSJitFrameIter iter(jitActivation);
+  OnlyJSJitFrameIter iter(act);
   if (iter.done()) {
     return nullptr;
   }
@@ -118,16 +112,12 @@ void GeckoProfilerRuntime::enable(bool enabled) {
     // Walk through all activations, and set their lastProfilingFrame
     // appropriately.
     if (enabled) {
-      Activation* act = cx->activation();
-      auto* lastProfilingFrame = GetTopProfilingJitFrame(act);
-
       jit::JitActivation* jitActivation = cx->jitActivation;
       while (jitActivation) {
+        auto* lastProfilingFrame = GetTopProfilingJitFrame(jitActivation);
         jitActivation->setLastProfilingFrame(lastProfilingFrame);
         jitActivation->setLastProfilingCallSite(nullptr);
-
         jitActivation = jitActivation->prevJitActivation();
-        lastProfilingFrame = GetTopProfilingJitFrame(jitActivation);
       }
     } else {
       jit::JitActivation* jitActivation = cx->jitActivation;
