@@ -218,6 +218,44 @@ function captureAtLeastOneJsSample() {
   }
 }
 
+function isJSONWhitespace(c) {
+  return ["\n", "\r", " ", "\t"].includes(c);
+}
+
+function verifyJSONStringIsCompact(s) {
+  const stateData = 0;
+  const stateString = 1;
+  const stateEscapedChar = 2;
+  let state = stateData;
+  for (let i = 0; i < s.length; ++i) {
+    let c = s[i];
+    switch (state) {
+      case stateData:
+        if (isJSONWhitespace(c)) {
+          Assert.ok(
+            false,
+            `"Unexpected JSON whitespace at index ${i} in profile: <<<${s}>>>"`
+          );
+          return;
+        }
+        if (c == '"') {
+          state = stateString;
+        }
+        break;
+      case stateString:
+        if (c == '"') {
+          state = stateData;
+        } else if (c == "\\") {
+          state = stateEscapedChar;
+        }
+        break;
+      case stateEscapedChar:
+        state = stateString;
+        break;
+    }
+  }
+}
+
 /**
  * This function pauses the profiler before getting the profile. Then after
  * getting the data, the profiler is stopped, and all profiler data is removed.
@@ -225,11 +263,18 @@ function captureAtLeastOneJsSample() {
  */
 async function stopNowAndGetProfile() {
   // Don't await the pause, because each process will handle it before it
-  // receives the following `getProfileDataAsync()`.
+  // receives the following `getProfileDataAsArrayBuffer()`.
   Services.profiler.Pause();
-  const profile = await Services.profiler.getProfileDataAsync();
+
+  const profileArrayBuffer = await Services.profiler.getProfileDataAsArrayBuffer();
   await Services.profiler.StopProfiler();
-  return profile;
+
+  const profileUint8Array = new Uint8Array(profileArrayBuffer);
+  const textDecoder = new TextDecoder("utf-8", { fatal: true });
+  const profileString = textDecoder.decode(profileUint8Array);
+  verifyJSONStringIsCompact(profileString);
+
+  return JSON.parse(profileString);
 }
 
 /**
