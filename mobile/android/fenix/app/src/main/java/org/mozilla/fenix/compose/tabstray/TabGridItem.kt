@@ -48,6 +48,7 @@ import mozilla.components.browser.state.state.createTab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
+import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -197,9 +198,12 @@ private fun Thumbnail(
             .fillMaxSize()
             .background(FirefoxTheme.colors.layer2)
     ) {
-        GridTabThumbnail(
-            tabId = tab.id,
-            size = LocalConfiguration.current.screenWidthDp.dp
+        ThumbnailCard(
+            url = tab.content.url,
+            key = tab.id,
+            size = LocalConfiguration.current.screenWidthDp.dp,
+            backgroundColor = FirefoxTheme.colors.layer2,
+            modifier = Modifier.fillMaxSize()
         )
 
         if (multiSelectionSelected) {

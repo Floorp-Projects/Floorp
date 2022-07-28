@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -24,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
@@ -40,6 +42,8 @@ import org.mozilla.fenix.theme.Theme
  *
  * @param url Url to display thumbnail for.
  * @param key Key used to remember the thumbnail for future compositions.
+ * @param size [Dp] size of the thumbnail.
+ * @param backgroundColor [Color] used for the background of the favicon.
  * @param modifier [Modifier] used to draw the image content.
  * @param contentDescription Text used by accessibility services
  * to describe what this image represents.
@@ -50,6 +54,8 @@ import org.mozilla.fenix.theme.Theme
 fun ThumbnailCard(
     url: String,
     key: String,
+    size: Dp = 108.dp,
+    backgroundColor: Color = colorResource(id = R.color.photonGrey20),
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     contentScale: ContentScale = ContentScale.FillWidth,
@@ -57,7 +63,7 @@ fun ThumbnailCard(
 ) {
     Card(
         modifier = modifier,
-        backgroundColor = colorResource(id = R.color.photonGrey20)
+        backgroundColor = backgroundColor
     ) {
         if (inComposePreview) {
             Box(
@@ -90,6 +96,7 @@ fun ThumbnailCard(
 
             ThumbnailImage(
                 key = key,
+                size = size,
                 modifier = modifier,
                 contentScale = contentScale,
                 alignment = alignment
@@ -101,13 +108,14 @@ fun ThumbnailCard(
 @Composable
 private fun ThumbnailImage(
     key: String,
+    size: Dp,
     modifier: Modifier,
     contentScale: ContentScale,
     alignment: Alignment
 ) {
     val rememberBitmap = remember(key) { mutableStateOf<ImageBitmap?>(null) }
-    val size = LocalDensity.current.run { 108.dp.toPx().toInt() }
-    val request = ImageLoadRequest(key, size)
+    val thumbnailSize = LocalDensity.current.run { size.toPx().toInt() }
+    val request = ImageLoadRequest(key, thumbnailSize)
     val storage = components.core.thumbnailStorage
     val bitmap = rememberBitmap.value
 
