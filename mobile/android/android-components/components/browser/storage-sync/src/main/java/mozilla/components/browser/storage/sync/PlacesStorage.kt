@@ -100,7 +100,6 @@ abstract class PlacesStorage(
         } catch (e: PlacesException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception for explicit writer interrupt call", e)
         } catch (e: PlacesException) {
-            crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring PlacesException while interrupting writes", e)
         }
     }
@@ -115,7 +114,6 @@ abstract class PlacesStorage(
         } catch (e: PlacesException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception for explicit reader interrupt call", e)
         } catch (e: PlacesException) {
-            crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring PlacesException while interrupting reads", e)
         }
     }
