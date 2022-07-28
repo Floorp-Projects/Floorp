@@ -432,6 +432,47 @@ void TestOneLineObject() {
   Check(w.WriteFunc(), expected);
 }
 
+void TestOneLineJson() {
+  const char* expected =
+      "\
+{\"i\": 1, \"array\": [null, [{}], {\"o\": {}}, \"s\"], \"d\": 3.33}\
+";
+
+  JSONWriter w(MakeUnique<StringWriteFunc>(), JSONWriter::SingleLineStyle);
+
+  w.Start(w.MultiLineStyle);  // style overridden from above
+
+  w.IntProperty("i", 1);
+
+  w.StartArrayProperty("array");
+  {
+    w.NullElement();
+
+    w.StartArrayElement(w.MultiLineStyle);  // style overridden from above
+    {
+      w.StartObjectElement();
+      w.EndObject();
+    }
+    w.EndArray();
+
+    w.StartObjectElement();
+    {
+      w.StartObjectProperty("o");
+      w.EndObject();
+    }
+    w.EndObject();
+
+    w.StringElement("s");
+  }
+  w.EndArray();
+
+  w.DoubleProperty("d", 3.33);
+
+  w.End();  // No newline in this case.
+
+  Check(w.WriteFunc(), expected);
+}
+
 void TestStringEscaping() {
   // This test uses hexadecimal character escapes because UTF8 literals cause
   // problems for some compilers (see bug 1069726).
@@ -605,6 +646,7 @@ int main(void) {
   TestBasicProperties();
   TestBasicElements();
   TestOneLineObject();
+  TestOneLineJson();
   TestStringEscaping();
   TestDeepNesting();
   TestEscapedPropertyNames();
