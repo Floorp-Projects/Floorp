@@ -1456,7 +1456,7 @@ static bool ShouldStallAndRetry() {
 
 using MozAllocRetries::MozVirtualAlloc;
 #  else
-using MozVirtualAlloc = VirtualAlloc;
+#    define MozVirtualAlloc VirtualAlloc
 #  endif  // MOZ_STALL_ON_OOM
 #endif    // XP_WIN
 
