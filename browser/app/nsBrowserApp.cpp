@@ -9,8 +9,6 @@
 #include "XREShellData.h"
 #include "application.ini.h"
 #include "mozilla/Bootstrap.h"
-#include "mozilla/ProcessType.h"
-#include "mozilla/RuntimeExceptionModule.h"
 #if defined(XP_WIN)
 #  include <windows.h>
 #  include <stdlib.h>
@@ -30,7 +28,6 @@
 #  include "freestanding/SharedSection.h"
 #  include "LauncherProcessWin.h"
 #  include "mozilla/GeckoArgs.h"
-#  include "mozilla/mscom/ProcessRuntime.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsDpiInitialization.h"
 #  include "mozilla/WindowsProcessMitigations.h"
@@ -298,15 +295,6 @@ int main(int argc, char* argv[], char* envp[]) {
   // We are launching as a content process, delegate to the appropriate
   // main
   if (argc > 1 && IsArg(argv[1], "contentproc")) {
-    // Set the process type. We don't remove the arg here as that will be done
-    // later in common code.
-    SetGeckoProcessType(argv[argc - 1]);
-
-    // Register an external module to report on otherwise uncatchable
-    // exceptions. Note that in child processes this must be called after Gecko
-    // process type has been set.
-    CrashReporter::RegisterRuntimeExceptionModule();
-
 #  ifdef HAS_DLL_BLOCKLIST
     uint32_t initFlags =
         gBlocklistInitFlags | eDllBlocklistInitFlagIsChildProcess;
@@ -367,9 +355,6 @@ int main(int argc, char* argv[], char* envp[]) {
     return result;
   }
 #endif
-
-  // Register an external module to report on otherwise uncatchable exceptions.
-  CrashReporter::RegisterRuntimeExceptionModule();
 
 #ifdef HAS_DLL_BLOCKLIST
   DllBlocklist_Initialize(gBlocklistInitFlags);
