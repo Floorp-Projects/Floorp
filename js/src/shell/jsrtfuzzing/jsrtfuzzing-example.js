@@ -26,14 +26,17 @@ function JSFuzzIterate() {
 
   try {
     // This is a very simple UTF-16 string conversion for example purposes only.
-    let input = String.fromCharCode.apply(null, new Uint16Array(fuzzBuf.buffer));
+    let input = String.fromCharCode.apply(
+      null,
+      new Uint16Array(fuzzBuf.buffer)
+    );
 
     // Pass the input through the JSON code as an example. Note that this
     // particular example could probably be implemented more efficiently
     // directly in fuzz-tests on a C++ level. This is purely for demonstration
     // purposes.
     print(JSON.stringify(JSON.parse(input)));
-  } catch(exc) {
+  } catch (exc) {
     print(exc);
   }
 }
