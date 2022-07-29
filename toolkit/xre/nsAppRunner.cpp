@@ -117,7 +117,6 @@
 #  include "mozilla/WinHeaderOnlyUtils.h"
 #  include "mozilla/mscom/ProcessRuntime.h"
 #  include "mozilla/mscom/ProfilerMarkers.h"
-#  include "mozilla/widget/AudioSession.h"
 #  include "WinTokenUtils.h"
 
 #  if defined(MOZ_LAUNCHER_PROCESS)
@@ -5941,18 +5940,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
 #ifdef MOZ_X11
   XRE_CleanupX11ErrorHandler();
-#endif
-
-#if defined(XP_WIN)
-  bool wantAudio = true;
-#  ifdef MOZ_BACKGROUNDTASKS
-  if (BackgroundTasks::IsBackgroundTaskMode()) {
-    wantAudio = false;
-  }
-#  endif
-  if (MOZ_LIKELY(wantAudio)) {
-    mozilla::widget::StopAudioSession();
-  }
 #endif
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
