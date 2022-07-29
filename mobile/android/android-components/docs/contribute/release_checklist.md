@@ -87,28 +87,10 @@ These are instructions for preparing a release branch for Android Components and
     +
     ```
 
-5. Create a commit named `Update to GeckoView [nightly_version].0` that bumps the GeckoView `version` in [Gecko.kt](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt) to the latest `[nightly_version]` build when available in [maven/geckoview-nightly](https://maven.mozilla.org/?prefix=maven2/org/mozilla/geckoview/geckoview-nightly/).
-
-    ```diff
-    diff --git a/buildSrc/src/main/java/Gecko.kt b/buildSrc/src/main/java/Gecko.kt
-    index 991dd702bb5..6f6c4471a26 100644
-    --- a/buildSrc/src/main/java/Gecko.kt
-    +++ b/buildSrc/src/main/java/Gecko.kt
-    @@ -9,7 +9,7 @@ object Gecko {
-        /**
-          * GeckoView Version.
-          */
-    -    const val version = "98.0.20220207065816"
-    +    const val version = "99.0.20220208070047"
-
-        /**
-          * GeckoView channel
-    ```
-
-6. Create a pull request with these 3 commits and land.
+5. Create a pull request with these 2 commits and land.
   - If this is landed after the scheduled [cron task](https://github.com/mozilla-mobile/android-components/blob/main/.cron.yml#L13) that will build and bump AC automatically, trigger a manual AC build through the [hook](https://firefox-ci-tc.services.mozilla.com/hooks/project-releng/cron-task-mozilla-mobile-android-components%2Fnightly). At time of writing, the morning cron task is schedule to run at 14:30 UTC (9:30AM EST).
   - When the manual AC build is complete, trigger the [hook](https://firefox-ci-tc.services.mozilla.com/hooks/project-releng/cron-task-mozilla-mobile-fenix%2Fbump-android-components) to bump AC in Fenix.
-6. After an hour, follow up by checking if a new `[nightly_version]` AC build is available in [nightly.maven/components](https://nightly.maven.mozilla.org/?prefix=maven2/org/mozilla/components/). Fenix will automatically receive the Nightlly AC bump.
+6. After an hour, follow up by checking if a new `[nightly_version]` AC build is available in [nightly.maven/components](https://nightly.maven.mozilla.org/?prefix=maven2/org/mozilla/components/). Fenix will automatically receive the Nightly AC bump.
 
 See [https://github.com/mozilla-mobile/android-components/pull/11519](https://github.com/mozilla-mobile/android-components/pull/11519) for an example.
 
