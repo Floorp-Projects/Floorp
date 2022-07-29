@@ -64,10 +64,6 @@ const void* CompileRuntime::mainContextPtr() {
   return runtime()->mainContextFromAnyThread();
 }
 
-uint32_t* CompileRuntime::addressOfTenuredAllocCount() {
-  return runtime()->mainContextFromAnyThread()->addressOfTenuredAllocCount();
-}
-
 const void* CompileRuntime::addressOfJitStackLimit() {
   return runtime()->mainContextFromAnyThread()->addressOfJitStackLimit();
 }
@@ -110,6 +106,10 @@ const uint32_t* CompileZone::addressOfNeedsIncrementalBarrier() {
   const mozilla::Atomic<uint32_t, mozilla::Relaxed>* ptr =
       zone()->addressOfNeedsIncrementalBarrier();
   return reinterpret_cast<const uint32_t*>(ptr);
+}
+
+uint32_t* CompileZone::addressOfTenuredAllocCount() {
+  return zone()->addressOfTenuredAllocCount();
 }
 
 gc::FreeSpan** CompileZone::addressOfFreeList(gc::AllocKind allocKind) {

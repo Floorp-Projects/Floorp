@@ -211,7 +211,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::ZoneOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
 
   // Number of allocations since the most recent minor GC for this thread.
-  mozilla::Atomic<uint32_t, mozilla::Relaxed> tenuredAllocsSinceMinorGC_;
+  uint32_t tenuredAllocsSinceMinorGC_ = 0;
 
   // Live weakmaps in this zone.
   js::ZoneOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;
@@ -420,12 +420,14 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void notifyObservingDebuggers();
 
-  void addTenuredAllocsSinceMinorGC(uint32_t allocs) {
-    tenuredAllocsSinceMinorGC_ += allocs;
-  }
+  void noteTenuredAlloc() { tenuredAllocsSinceMinorGC_++; }
+
+  uint32_t* addressOfTenuredAllocCount() { return &tenuredAllocsSinceMinorGC_; }
 
   uint32_t getAndResetTenuredAllocsSinceMinorGC() {
-    return tenuredAllocsSinceMinorGC_.exchange(0);
+    uint32_t res = tenuredAllocsSinceMinorGC_;
+    tenuredAllocsSinceMinorGC_ = 0;
+    return res;
   }
 
   mozilla::LinkedList<js::WeakMapBase>& gcWeakMapList() {

@@ -376,7 +376,7 @@ T* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
   // We count this regardless of the profiler's state, assuming that it costs
   // just as much to count it, as to check the profiler's state and decide not
   // to count it.
-  cx->noteTenuredAlloc();
+  zone->noteTenuredAlloc();
   return t;
 }
 
