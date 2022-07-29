@@ -164,7 +164,7 @@ static void FontListPrefChanged(const char* aPref, void* aData = nullptr) {
   // XXX this could be made to only clear out the cache for the prefs that were
   // changed but it probably isn't that big a deal.
   gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
-  gfxFontCache::GetCache()->AgeAllGenerations();
+  gfxFontCache::GetCache()->Flush();
 }
 
 static gfxFontListPrefObserver* gFontListPrefObserver = nullptr;
