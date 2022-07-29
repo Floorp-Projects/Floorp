@@ -113,6 +113,8 @@ extern JS_PUBLIC_API JSObject* GetRealmErrorPrototype(JSContext* cx);
 
 extern JS_PUBLIC_API JSObject* GetRealmIteratorPrototype(JSContext* cx);
 
+extern JS_PUBLIC_API JSObject* GetRealmAsyncIteratorPrototype(JSContext* cx);
+
 // Returns an object that represents the realm, that can be referred from
 // other realm/compartment.
 // See the consumer in `MaybeCrossOriginObjectMixins::EnsureHolder` for details.

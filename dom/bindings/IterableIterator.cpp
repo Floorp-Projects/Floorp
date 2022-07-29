@@ -30,4 +30,80 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IterableIteratorBase)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+namespace iterator_utils {
+void DictReturn(JSContext* aCx, JS::MutableHandle<JSObject*> aResult,
+                bool aDone, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
+  RootedDictionary<IterableKeyOrValueResult> dict(aCx);
+  dict.mDone = aDone;
+  dict.mValue = aValue;
+  JS::Rooted<JS::Value> dictValue(aCx);
+  if (!ToJSValue(aCx, dict, &dictValue)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  aResult.set(&dictValue.toObject());
+}
+
+void KeyAndValueReturn(JSContext* aCx, JS::Handle<JS::Value> aKey,
+                       JS::Handle<JS::Value> aValue,
+                       JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv) {
+  RootedDictionary<IterableKeyAndValueResult> dict(aCx);
+  dict.mDone = false;
+  // Dictionary values are a Sequence, which is a FallibleTArray, so we need
+  // to check returns when appending.
+  if (!dict.mValue.AppendElement(aKey, mozilla::fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  if (!dict.mValue.AppendElement(aValue, mozilla::fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  JS::Rooted<JS::Value> dictValue(aCx);
+  if (!ToJSValue(aCx, dict, &dictValue)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  aResult.set(&dictValue.toObject());
+}
+
+void ResolvePromiseForFinished(JSContext* aCx, Promise* aPromise,
+                               ErrorResult& aRv) {
+  MOZ_ASSERT(aPromise);
+
+  JS::Rooted<JSObject*> dict(aCx);
+  DictReturn(aCx, &dict, true, JS::UndefinedHandleValue, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  aPromise->MaybeResolve(dict);
+}
+
+void ResolvePromiseWithKeyOrValue(JSContext* aCx, Promise* aPromise,
+                                  JS::Handle<JS::Value> aKeyOrValue,
+                                  ErrorResult& aRv) {
+  MOZ_ASSERT(aPromise);
+
+  JS::Rooted<JSObject*> dict(aCx);
+  DictReturn(aCx, &dict, false, aKeyOrValue, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  aPromise->MaybeResolve(dict);
+}
+
+void ResolvePromiseWithKeyAndValue(JSContext* aCx, Promise* aPromise,
+                                   JS::Handle<JS::Value> aKey,
+                                   JS::Handle<JS::Value> aValue,
+                                   ErrorResult& aRv) {
+  MOZ_ASSERT(aPromise);
+
+  JS::Rooted<JSObject*> dict(aCx);
+  KeyAndValueReturn(aCx, aKey, aValue, &dict, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  aPromise->MaybeResolve(dict);
+}
+}  // namespace iterator_utils
 }  // namespace mozilla::dom
