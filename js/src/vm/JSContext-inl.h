@@ -309,7 +309,6 @@ inline void JSContext::setZone(js::Zone* zone) {
   allocsThisZoneSinceMinorGC_ = 0;
 
   zone_ = zone;
-  freeLists_ = zone ? &zone_->arenas.freeLists() : nullptr;
 }
 
 inline void JSContext::enterRealmOf(JSObject* target) {
