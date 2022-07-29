@@ -10,7 +10,7 @@
 
 var path = require("path");
 
-const selfHostedRegex = /js\/src\/(?:builtin|shell)\/.*?\.js$/;
+const selfHostedRegex = /js\/src\/builtin\/.*?\.js$/;
 const macroRegex = /\s*\#(if|ifdef|else|elif|endif|include|define|undef).*/;
 
 module.exports = {

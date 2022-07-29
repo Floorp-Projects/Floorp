@@ -43,7 +43,6 @@ dom/base/test/file_bug687859-inherit.js
 
 # Ignore preprocessed files.
 js/src/builtin/**/*.js
-js/src/shell/**/*.js
 
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.prettierignore

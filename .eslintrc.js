@@ -144,7 +144,6 @@ module.exports = {
         "*.xhtml",
         "*.xml",
         "js/src/builtin/**/*.js",
-        "js/src/shell/**/*.js",
       ],
       rules: {
         // Curly brackets are required for all the tree via recommended.js,
