@@ -589,8 +589,8 @@ nsresult nsAppShell::Init() {
 
 NS_IMETHODIMP
 nsAppShell::Run(void) {
+  bool wantAudio = true;
   if (XRE_IsParentProcess()) {
-    bool wantAudio = true;
 #ifdef MOZ_BACKGROUNDTASKS
     if (BackgroundTasks::IsBackgroundTaskMode()) {
       wantAudio = false;
@@ -599,13 +599,11 @@ nsAppShell::Run(void) {
     if (MOZ_LIKELY(wantAudio)) {
       mozilla::widget::StartAudioSession();
     }
-  }
 
-  // Add an observer that disables the screen saver when requested by Gecko.
-  // For example when we're playing video in the foreground tab. Whole firefox
-  // only needs one wakelock instance, so we would only create one listener in
-  // chrome process to prevent requesting unnecessary wakelock.
-  if (XRE_IsParentProcess()) {
+    // Add an observer that disables the screen saver when requested by Gecko.
+    // For example when we're playing video in the foreground tab. Whole firefox
+    // only needs one wakelock instance, so we would only create one listener in
+    // chrome process to prevent requesting unnecessary wakelock.
     AddScreenWakeLockListener();
   }
 
@@ -613,6 +611,10 @@ nsAppShell::Run(void) {
 
   if (XRE_IsParentProcess()) {
     RemoveScreenWakeLockListener();
+
+    if (MOZ_LIKELY(wantAudio)) {
+      mozilla::widget::StopAudioSession();
+    }
   }
 
   return rv;
