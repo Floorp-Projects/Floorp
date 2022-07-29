@@ -952,7 +952,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       kind_(ContextKind::Uninitialized),
       nurserySuppressions_(this),
       options_(this, options),
-      freeLists_(this, nullptr),
       freeUnusedMemory(false),
       measuringExecutionTime_(this, false),
       jitActivation(this, nullptr),

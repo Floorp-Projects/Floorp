@@ -349,7 +349,8 @@ template <typename T, AllowGC allowGC>
 T* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
                                  size_t thingSize) {
   // Bump allocate in the arena's current free-list span.
-  auto* t = reinterpret_cast<T*>(cx->freeLists().allocate(kind));
+  Zone* zone = cx->zone();
+  auto* t = reinterpret_cast<T*>(zone->arenas.freeLists().allocate(kind));
   if (MOZ_UNLIKELY(!t)) {
     // Get the next available free list and allocate out of it. This may
     // acquire a new arena, which will lock the chunk list. If there are no
@@ -490,7 +491,7 @@ void GCRuntime::startBackgroundAllocTaskIfIdle() {
 
 /* static */
 TenuredCell* GCRuntime::refillFreeList(JSContext* cx, AllocKind thingKind) {
-  MOZ_ASSERT(cx->freeLists().isEmpty(thingKind));
+  MOZ_ASSERT(cx->zone()->arenas.freeLists().isEmpty(thingKind));
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   // It should not be possible to allocate on the main thread while we are
@@ -498,7 +499,8 @@ TenuredCell* GCRuntime::refillFreeList(JSContext* cx, AllocKind thingKind) {
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy(), "allocating while under GC");
 
   return cx->zone()->arenas.refillFreeListAndAllocate(
-      cx->freeLists(), thingKind, ShouldCheckThresholds::CheckThresholds);
+      cx->zone()->arenas.freeLists(), thingKind,
+      ShouldCheckThresholds::CheckThresholds);
 }
 
 /* static */

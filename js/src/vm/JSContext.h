@@ -179,9 +179,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   js::ContextData<JS::ContextOptions> options_;
 
-  // Free lists for allocating in the current zone.
-  js::ContextData<js::gc::FreeLists*> freeLists_;
-
   // This is reset each time we switch zone, then added to the variable in the
   // zone when we switch away from it.  This would be a js::ThreadData but we
   // need to take its address.
@@ -248,11 +245,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   bool isHelperThreadContext() const {
     return kind_ == js::ContextKind::HelperThread;
-  }
-
-  js::gc::FreeLists& freeLists() {
-    MOZ_ASSERT(freeLists_);
-    return *freeLists_;
   }
 
   template <typename T>
