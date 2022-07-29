@@ -314,6 +314,16 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetEmbedderColorScheme(GetEmbedderColorScheme());
   txn.SetHasRestoreData(GetHasRestoreData());
   txn.SetShouldDelayMediaFromStart(GetShouldDelayMediaFromStart());
+
+  // Propagate some settings on BrowsingContext replacement so they're not lost
+  // on bfcached navigations. These are important for GeckoView (see bug
+  // 1781936).
+  txn.SetAllowJavascript(GetAllowJavascript());
+  txn.SetForceEnableTrackingProtection(GetForceEnableTrackingProtection());
+  txn.SetUserAgentOverride(GetUserAgentOverride());
+  txn.SetSuspendMediaWhenInactive(GetSuspendMediaWhenInactive());
+  txn.SetDisplayMode(GetDisplayMode());
+
   // As this is a different BrowsingContext, set InitialSandboxFlags to the
   // current flags in the new context so that they also apply to any initial
   // about:blank documents created in it.
