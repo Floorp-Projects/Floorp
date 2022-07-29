@@ -59,7 +59,7 @@ class AudioSession final : public IAudioSessionEvents {
   STDMETHODIMP OnStateChanged(AudioSessionState aState);
 
   void Start();
-  void Stop();
+  void Stop(bool shouldRestart = false);
 
   nsresult GetSessionData(nsID& aID, nsString& aSessionName,
                           nsString& aIconPath);
@@ -69,7 +69,8 @@ class AudioSession final : public IAudioSessionEvents {
  private:
   ~AudioSession() = default;
 
-  void StopInternal(const MutexAutoLock& aProofOfLock);
+  void StopInternal(const MutexAutoLock& aProofOfLock,
+                    bool shouldRestart = false);
 
  protected:
   RefPtr<IAudioSessionControl> mAudioSessionControl;
@@ -232,14 +233,15 @@ void AudioSession::Start() {
   scopeExit.release();
 }
 
-void AudioSession::Stop() {
+void AudioSession::Stop(bool shouldRestart) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
   MutexAutoLock lock(mMutex);
-  StopInternal(lock);
+  StopInternal(lock, shouldRestart);
 }
 
-void AudioSession::StopInternal(const MutexAutoLock& aProofOfLock) {
+void AudioSession::StopInternal(const MutexAutoLock& aProofOfLock,
+                                bool shouldRestart) {
   if (!mAudioSessionControl) {
     return;
   }
@@ -258,14 +260,22 @@ void AudioSession::StopInternal(const MutexAutoLock& aProofOfLock) {
       IID_IAudioSessionControl, mAudioSessionControl);
   mAudioSessionControl = nullptr;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "FreeAudioSession",
-      [agileAsc = std::move(agileAsc), IID_IAudioSessionControl] {
+      "FreeAudioSession", [agileAsc = std::move(agileAsc),
+                           IID_IAudioSessionControl, shouldRestart] {
         RefPtr<IAudioSessionControl> toDelete;
         [[maybe_unused]] HRESULT hr = agileAsc->Resolve(
             IID_IAudioSessionControl, getter_AddRefs(toDelete));
         MOZ_ASSERT(SUCCEEDED(hr));
         // Now release the AgileReference which holds our only reference to the
-        // IAudioSessionControl.
+        // IAudioSessionControl, then maybe restart.
+        if (shouldRestart) {
+          NS_DispatchBackgroundTask(
+              NS_NewCancelableRunnableFunction("RestartAudioSession", [] {
+                AudioSession* as = AudioSession::GetSingleton();
+                MOZ_ASSERT(as);
+                as->Start();
+              }));
+        }
       }));
 }
 
@@ -322,8 +332,7 @@ AudioSession::OnIconPathChanged(LPCWSTR aIconPath, LPCGUID aContext) {
 
 STDMETHODIMP
 AudioSession::OnSessionDisconnected(AudioSessionDisconnectReason aReason) {
-  Stop();
-  Start();
+  Stop(true /* shouldRestart */);
   return S_OK;
 }
 
