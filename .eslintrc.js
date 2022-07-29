@@ -118,15 +118,17 @@ module.exports = {
         "import/no-named-as-default-member": "error",
         "import/no-self-import": "error",
         "import/no-unassigned-import": "error",
-        "import/no-unresolved": "error",
+        "import/no-unresolved": [
+          "error",
+          // Bug 1773473 - Ignore resolver URLs for chrome and resource as we
+          // do not yet have a resolver for them.
+          { ignore: ["chrome://", "resource://"] },
+        ],
         "import/no-useless-path-segments": "error",
       },
     },
     {
       files: [
-        // Bug 1773473 - Turn off no-unresolved for system mjs modules, as we
-        // do not yet have a resolver for resource:// uris.
-        "*.sys.mjs",
         // Bug 1773475 - For now, turn off no-unresolved on some paths where we import
         // from node_modules, as the ESLint setup only installs modules at the
         // top-level.
