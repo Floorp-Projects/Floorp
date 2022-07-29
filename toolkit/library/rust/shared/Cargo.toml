@@ -27,8 +27,8 @@ cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="1f1fe1e0
 cubeb-sys = { version = "0.10", optional = true, features=["gecko-in-tree"] }
 audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "499b95580c8b276e52bd9757d735249504202e5c", optional = true } # macos (v2) branch
 audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "499b95580c8b276e52bd9757d735249504202e5c", optional = true } # macos (v2) branch
-audioipc-client = { git = "https://github.com/mozilla/audioipc", rev = "6848974a4a91ebd3e18333c9a96a421d619a2dc8", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc", rev = "6848974a4a91ebd3e18333c9a96a421d619a2dc8", optional = true }
+audioipc-client = { git = "https://github.com/mozilla/audioipc", rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc", rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39", optional = true }
 # Force tokio-reactor on an old version to avoid new dependencies of newer versions.
 # Remove when audioipc-client and audioipc-server above are replaced with
 # audioipc2-client and audioipc2-server.
