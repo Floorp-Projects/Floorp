@@ -13,7 +13,6 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewStructure;
-import android.view.autofill.AutofillManager;
 import android.view.autofill.AutofillValue;
 import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
@@ -37,67 +36,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 public class Autofill {
   private static final boolean DEBUG = false;
 
-  @Deprecated
-  @DeprecationSchedule(id = "autofill-node", version = 104)
-  public static final class Notify {
-    private Notify() {}
-
-    /** An autofill session has started. Usually triggered by page load. */
-    public static final int SESSION_STARTED = 0;
-
-    /** An autofill session has been committed. Triggered by form submission or navigation. */
-    public static final int SESSION_COMMITTED = 1;
-
-    /** An autofill session has been canceled. Triggered by page unload. */
-    public static final int SESSION_CANCELED = 2;
-
-    /** A node within the autofill session has been added. */
-    public static final int NODE_ADDED = 3;
-
-    /** A node within the autofill session has been removed. */
-    public static final int NODE_REMOVED = 4;
-
-    /** A node within the autofill session has been updated. */
-    public static final int NODE_UPDATED = 5;
-
-    /** A node within the autofill session has gained focus. */
-    public static final int NODE_FOCUSED = 6;
-
-    /** A node within the autofill session has lost focus. */
-    public static final int NODE_BLURRED = 7;
-
-    @AnyThread
-    @SuppressWarnings("checkstyle:javadocmethod")
-    public static @Nullable String toString(final @AutofillNotify int notification) {
-      final String[] map =
-          new String[] {
-            "SESSION_STARTED",
-            "SESSION_COMMITTED",
-            "SESSION_CANCELED",
-            "NODE_ADDED",
-            "NODE_REMOVED",
-            "NODE_UPDATED",
-            "NODE_FOCUSED",
-            "NODE_BLURRED"
-          };
-      if (notification < 0 || notification >= map.length) {
-        return null;
-      }
-      return map[notification];
-    }
-  }
-
-  @Retention(RetentionPolicy.SOURCE)
-  @IntDef({
-    Notify.SESSION_STARTED,
-    Notify.SESSION_COMMITTED,
-    Notify.SESSION_CANCELED,
-    Notify.NODE_ADDED,
-    Notify.NODE_REMOVED,
-    Notify.NODE_UPDATED,
-    Notify.NODE_FOCUSED,
-    Notify.NODE_BLURRED
-  })
   public @interface AutofillNotify {}
 
   public static final class Hint {
@@ -605,18 +543,6 @@ public class Autofill {
     private final @NonNull String mDomain;
     private final String mSessionId;
 
-    /**
-     * Get the unique (within this page) ID for this node.
-     *
-     * @return The unique ID of this node.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-node", version = 104)
-    public int getId() {
-      return 0;
-    }
-
     /* package */
     @NonNull
     String getUuid() {
@@ -636,22 +562,8 @@ public class Autofill {
     }
 
     /**
-     * Get whether this node is visible. Nodes are visible, when they are part of a focused branch.
-     * A focused branch includes the focused node, its siblings, its parent and the session root
-     * node.
-     *
-     * @return True if this node is visible, false otherwise.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-node", version = 104)
-    public boolean getVisible() {
-      return false;
-    }
-
-    /**
      * Get the dimensions of this node in CSS coordinates. Note: Invisible nodes will report their
-     * proper dimensions, see {@link #getVisible} for details.
+     * proper dimensions.
      *
      * @return The dimensions of this node.
      */
@@ -714,18 +626,6 @@ public class Autofill {
     }
 
     /**
-     * Get whether or not this node is focused.
-     *
-     * @return True if this node is focused, false otherwise.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-node", version = 104)
-    public boolean getFocused() {
-      return false;
-    }
-
-    /**
      * Get the hint for the type of data contained in this node.
      *
      * @return The input data hint for this node, one of {@link Hint}.
@@ -763,18 +663,6 @@ public class Autofill {
     @AnyThread
     public @NonNull String getDomain() {
       return mDomain;
-    }
-
-    /**
-     * Get the value assigned to this node.
-     *
-     * @return The value of this node.
-     */
-    @AnyThread
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-node", version = 104)
-    public @NonNull String getValue() {
-      return null;
     }
 
     /* package */
@@ -839,21 +727,6 @@ public class Autofill {
 
       return builder.toString();
     }
-
-    /**
-     * @param view The {@link View} instance
-     * @param structure The {@link ViewStructure} instance
-     * @param flags Flags for this structure
-     * @deprecated This method is deprecated and does nothing, use {@link Session#fillViewStructure}
-     *     instead.
-     */
-    @TargetApi(23)
-    @UiThread
-    @SuppressWarnings("checkstyle:javadocmethod")
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-node", version = 104)
-    public void fillViewStructure(
-        @NonNull final View view, @NonNull final ViewStructure structure, final int flags) {}
 
     /* package */ Node(
         @NonNull final GeckoBundle bundle, final Rect defaultDimensions, final String sessionId) {
@@ -985,24 +858,6 @@ public class Autofill {
   }
 
   public interface Delegate {
-    /**
-     * Notify that an autofill event has occurred.
-     *
-     * <p>The default implementation in {@link GeckoView} forwards the notification to the system
-     * {@link AutofillManager}. This method is only called on Android 6.0 and above and it is called
-     * in viewless mode as well.
-     *
-     * @param session The {@link GeckoSession} instance.
-     * @param notification Notification type, one of {@link Notify}.
-     * @param node The target node for this event, or null for {@link Notify#SESSION_CANCELED}.
-     */
-    @UiThread
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-node", version = 104)
-    default void onAutofill(
-        @NonNull final GeckoSession session,
-        @AutofillNotify final int notification,
-        @Nullable final Node node) {}
 
     /**
      * An autofill session has started. Usually triggered by page load.
@@ -1178,6 +1033,10 @@ public class Autofill {
 
       final String value = message.getString("value");
       final Node node = getAutofillSession().getNode(uuid);
+      if (node == null) {
+        Log.w(LOGTAG, "Cannot find node uuid=" + uuid);
+        return;
+      }
       Objects.requireNonNull(node);
       final NodeData data = getAutofillSession().dataFor(node);
       Objects.requireNonNull(data);

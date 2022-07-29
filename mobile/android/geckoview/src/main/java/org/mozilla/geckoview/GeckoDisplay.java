@@ -136,60 +136,6 @@ public class GeckoDisplay {
    * application main thread. GeckoSession may block this call to ensure the Surface is valid while
    * resuming drawing.
    *
-   * @param surface The new Surface.
-   * @param width New width of the Surface. Can not be negative.
-   * @param height New height of the Surface. Can not be negative.
-   * @deprecated Use {@link #surfaceChanged(SurfaceInfo)} instead.
-   */
-  @UiThread
-  @Deprecated
-  @DeprecationSchedule(id = "surfaceChanged", version = 104)
-  public void surfaceChanged(@NonNull final Surface surface, final int width, final int height) {
-    surfaceChanged(surface, 0, 0, width, height);
-  }
-
-  /**
-   * Sets a surface for the compositor render a surface.
-   *
-   * <p>Required call. The display's Surface has been created or changed. Must be called on the
-   * application main thread. GeckoSession may block this call to ensure the Surface is valid while
-   * resuming drawing. The origin of the content window (0, 0) is the top left corner of the screen.
-   *
-   * @param surface The new Surface.
-   * @param left The compositor origin offset in the X axis. Can not be negative.
-   * @param top The compositor origin offset in the Y axis. Can not be negative.
-   * @param width New width of the Surface. Can not be negative.
-   * @param height New height of the Surface. Can not be negative.
-   * @throws IllegalArgumentException if left or top are negative.
-   * @deprecated Use {@link #surfaceChanged(SurfaceInfo)} instead.
-   */
-  @UiThread
-  @Deprecated
-  @DeprecationSchedule(id = "surfaceChanged", version = 104)
-  public void surfaceChanged(
-      @NonNull final Surface surface,
-      final int left,
-      final int top,
-      final int width,
-      final int height) {
-    ThreadUtils.assertOnUiThread();
-
-    if ((left < 0) || (top < 0)) {
-      throw new IllegalArgumentException("Parameters can not be negative.");
-    }
-    if (mSession.getDisplay() == this) {
-      mSession.onSurfaceChanged(
-          new SurfaceInfo.Builder(surface).offset(left, top).size(width, height).build());
-    }
-  }
-
-  /**
-   * Sets a surface for the compositor render a surface.
-   *
-   * <p>Required call. The display's Surface has been created or changed. Must be called on the
-   * application main thread. GeckoSession may block this call to ensure the Surface is valid while
-   * resuming drawing.
-   *
    * <p>If rendering in to a {@link android.view.SurfaceView} on SDK level 29 or above, please
    * ensure that the SurfaceControl field of the {@link SurfaceInfo} object is set.
    *

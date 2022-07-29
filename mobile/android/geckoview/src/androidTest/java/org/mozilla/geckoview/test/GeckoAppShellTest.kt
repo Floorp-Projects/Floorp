@@ -88,12 +88,12 @@ class GeckoAppShellTest : BaseSessionTest() {
             goHomeAndReturnWithPageLoad()
 
             // This is waiting and holding the test harness open while Android Lifecycle events complete
-            mainSession.waitUntilCalled(object : GeckoSession.NavigationDelegate {
+            mainSession.waitUntilCalled(object : GeckoSession.ContentDelegate, GeckoSession.NavigationDelegate {
                 @GeckoSessionTestRule.AssertCalled(count = 2)
-                override fun onLoadRequest(session: GeckoSession,
-                                           request: GeckoSession.NavigationDelegate.LoadRequest):
-                        GeckoResult<AllowOrDeny>? {
-
+                override fun onLocationChange(
+                        session: GeckoSession,
+                        url: String?,
+                        perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                     // Result of first clock settings change
                     if(onLoadRequestCount == 0) {
                         assertThat("Should use a 24 hour clock.",
@@ -110,8 +110,6 @@ class GeckoAppShellTest : BaseSessionTest() {
                         assertThat("Should use a 12 hour clock.",
                                 GeckoAppShell.getIs24HourFormat(), equalTo(false))
                     }
-                    return null
-
                 }
             })
         }
