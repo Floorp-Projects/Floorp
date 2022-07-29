@@ -608,7 +608,7 @@ class Editor extends PureComponent {
     return showSourceText(
       editor,
       selectedSource,
-      selectedSourceTextContent.value,
+      selectedSourceTextContent,
       symbols
     );
   }
