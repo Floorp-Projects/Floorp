@@ -129,6 +129,8 @@ class TsBase(Test):
         "filters",
         "setup",
         "cleanup",
+        "pine",
+        "skip_reason",
         "webextensions",
         "webextensions_folder",
         "reinstall",  # A list of files from the profile directory that
@@ -195,6 +197,7 @@ class ts_paint_heavy(ts_paint):
 @register_test()
 class ts_paint_flex(ts_paint):
     preferences = {"layout.css.emulate-moz-box-with-flex": True}
+    pine = False
 
 
 @register_test()
@@ -213,6 +216,7 @@ class startup_about_home_paint(ts_paint):
     preferences = {
         "browser.startup.homepage.abouthome_cache.enabled": False,
     }
+    pine = False
 
 
 @register_test()
@@ -229,6 +233,7 @@ class startup_about_home_paint_cached(ts_paint):
     preferences = {
         "browser.startup.homepage.abouthome_cache.enabled": True,
     }
+    pine = False
 
 
 @register_test()
@@ -244,6 +249,7 @@ class startup_about_home_paint_realworld_webextensions(ts_paint):
     preferences = {
         "browser.startup.homepage.abouthome_cache.enabled": False,
     }
+    pine = False
 
 
 @register_test()
@@ -268,6 +274,7 @@ class sessionrestore(TsBase):
     url = "about:home"
     preferences = {"browser.startup.page": 3}
     unit = "ms"
+    pine = False
 
 
 @register_test()
@@ -359,6 +366,8 @@ class PageloaderTest(Test):
         "extensions",
         "setup",
         "cleanup",
+        "pine",
+        "skip_reason",
         "lower_is_better",
         "alert_threshold",
         "unit",
@@ -563,11 +572,13 @@ class tart(PageloaderTest):
     }
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = "ms"
+    pine = False
 
 
 @register_test()
 class tart_flex(tart):
     preferences = {"layout.css.emulate-moz-box-with-flex": True}
+    pine = False
 
 
 @register_test()
@@ -1003,6 +1014,7 @@ class tscrollx(PageloaderTest):
     }
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = "ms"
+    pine = False
 
 
 @register_test()
@@ -1218,3 +1230,4 @@ class about_preferences_basic(PageloaderTest):
     unit = "ms"
     lower_is_better = True
     fnbpaint = True
+    pine = False

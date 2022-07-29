@@ -217,6 +217,15 @@ class Talos(
                 },
             ],
             [
+                ["--project"],
+                {
+                    "dest": "project",
+                    "type": "str",
+                    "help": "The project branch we're running tests on. Used for "
+                    "disabling/skipping tests.",
+                },
+            ],
+            [
                 ["--setpref"],
                 {
                     "action": "append",
@@ -511,6 +520,8 @@ class Talos(
             kw_options["title"] = self.config["title"]
         if self.symbols_path:
             kw_options["symbolsPath"] = self.symbols_path
+        if self.config.get("project", None):
+            kw_options["project"] = self.config["project"]
 
         kw_options.update(kw)
         # talos expects tests to be in the format (e.g.) 'ts:tp5:tsvg'
