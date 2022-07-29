@@ -165,7 +165,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       stringStats(this),
       pretenuring(this),
       uniqueIds_(this),
-      tenuredAllocsSinceMinorGC_(0),
       gcWeakMapList_(this),
       compartments_(),
       crossZoneStringWrappers_(this),

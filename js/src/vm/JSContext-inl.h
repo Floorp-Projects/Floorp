@@ -301,13 +301,6 @@ inline void JSContext::enterAtomsZone() {
 
 inline void JSContext::setZone(js::Zone* zone) {
   MOZ_ASSERT(!isHelperThreadContext());
-
-  if (zone_) {
-    zone_->addTenuredAllocsSinceMinorGC(allocsThisZoneSinceMinorGC_);
-  }
-
-  allocsThisZoneSinceMinorGC_ = 0;
-
   zone_ = zone;
 }
 

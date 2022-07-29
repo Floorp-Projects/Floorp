@@ -381,7 +381,7 @@ void MacroAssembler::freeListAllocate(Register result, Register temp,
   bind(&success);
 
   if (runtime()->geckoProfiler().enabled()) {
-    uint32_t* countAddress = runtime()->addressOfTenuredAllocCount();
+    uint32_t* countAddress = zone->addressOfTenuredAllocCount();
     movePtr(ImmPtr(countAddress), temp);
     add32(Imm32(1), Address(temp, 0));
   }
