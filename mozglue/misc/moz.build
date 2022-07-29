@@ -48,6 +48,15 @@ SOURCES += [
     "Uptime.cpp",
 ]
 
+if not CONFIG["JS_STANDALONE"]:
+    EXPORTS.mozilla += [
+        "ProcessType.h",
+    ]
+
+    SOURCES += [
+        "ProcessType.cpp",
+    ]
+
 OS_LIBS += CONFIG["REALTIME_LIBS"]
 
 if CONFIG["OS_ARCH"] == "WINNT":

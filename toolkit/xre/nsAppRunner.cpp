@@ -21,6 +21,7 @@
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Printf.h"
+#include "mozilla/ProcessType.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_browser.h"
@@ -6023,9 +6024,7 @@ nsresult XRE_DeinitCommandLine() {
   return rv;
 }
 
-GeckoProcessType XRE_GetProcessType() {
-  return mozilla::startup::sChildProcessType;
-}
+GeckoProcessType XRE_GetProcessType() { return GetGeckoProcessType(); }
 
 const char* XRE_GetProcessTypeString() {
   return XRE_GeckoProcessTypeToString(XRE_GetProcessType());
