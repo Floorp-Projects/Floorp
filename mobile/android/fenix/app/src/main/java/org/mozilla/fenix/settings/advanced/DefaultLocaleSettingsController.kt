@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
+import org.mozilla.fenix.nimbus.FxNimbus
 import java.util.Locale
 
 interface LocaleSettingsController {
@@ -31,6 +32,9 @@ class DefaultLocaleSettingsController(
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(locale))
         LocaleManager.setNewLocale(activity, localeUseCase, locale)
         LocaleManager.updateBaseConfiguration(activity, locale)
+
+        // Invalidate cached values to use the new locale
+        FxNimbus.features.nimbusValidation.withCachedValue(null)
         activity.recreate()
         activity.overridePendingTransition(0, 0)
     }
@@ -42,6 +46,9 @@ class DefaultLocaleSettingsController(
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(localeSettingsStore.state.localeList[0]))
         LocaleManager.resetToSystemDefault(activity, localeUseCase)
         LocaleManager.updateBaseConfiguration(activity, localeSettingsStore.state.localeList[0])
+
+        // Invalidate cached values to use the default locale
+        FxNimbus.features.nimbusValidation.withCachedValue(null)
         activity.recreate()
         activity.overridePendingTransition(0, 0)
     }
