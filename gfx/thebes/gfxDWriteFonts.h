@@ -28,7 +28,6 @@ class gfxDWriteFont final : public gfxFont {
                 gfxFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
                 RefPtr<IDWriteFontFace> aFontFace = nullptr,
                 AntialiasOption = kAntialiasDefault);
-  ~gfxDWriteFont();
 
   static bool InitDWriteSupport();
 
@@ -74,6 +73,8 @@ class gfxDWriteFont final : public gfxFont {
   bool ShouldRoundXOffset(cairo_t* aCairo) const override;
 
  protected:
+  ~gfxDWriteFont() override;
+
   const Metrics& GetHorizontalMetrics() const override { return mMetrics; }
 
   bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS* aFontMetrics);

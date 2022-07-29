@@ -2230,7 +2230,7 @@ void gfxPlatform::FontsPrefsChanged(const char* aPref) {
       !strcmp("gfx.font_rendering.ahem_antialias_none", aPref)) {
     FlushFontAndWordCaches();
   } else if (!strcmp(GFX_PREF_OPENTYPE_SVG, aPref)) {
-    gfxFontCache::GetCache()->AgeAllGenerations();
+    gfxFontCache::GetCache()->Flush();
     gfxFontCache::GetCache()->NotifyGlyphsChanged();
   }
 }
