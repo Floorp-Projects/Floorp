@@ -70,10 +70,18 @@ class DevToolsFrameParent extends JSWindowActorParent {
     });
   }
 
-  destroyTarget({ watcherActorID, sessionContext }) {
+  /**
+   * @param {object} arg
+   * @param {object} arg.sessionContext
+   * @param {object} arg.options
+   * @param {boolean} arg.options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+   */
+  destroyTarget({ watcherActorID, sessionContext, options }) {
     this.sendAsyncMessage("DevToolsFrameParent:destroy", {
       watcherActorID,
       sessionContext,
+      options,
     });
   }
 
@@ -191,10 +199,14 @@ class DevToolsFrameParent extends JSWindowActorParent {
    * When navigating away, we will destroy them and call this method.
    * Then when navigating back, we will reuse the same instances.
    * So that we should be careful to keep the class fully function and only clear all its state.
+   *
+   * @param {object} options
+   * @param {boolean} options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  _closeAllConnections() {
+  _closeAllConnections(options) {
     for (const { actor, watcher } of this._connections.values()) {
-      watcher.notifyTargetDestroyed(actor);
+      watcher.notifyTargetDestroyed(actor, options);
       this._unregisterWatcher(watcher.conn.prefix);
     }
     this._connections.clear();
@@ -225,7 +237,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
           // we may easily receive the target destruction notification *after*
           // the watcher has been removed from the registry.
           if (watcher) {
-            watcher.notifyTargetDestroyed(form);
+            watcher.notifyTargetDestroyed(form, message.data.options);
             this._unregisterWatcher(watcher.conn.prefix);
           }
         }

@@ -230,18 +230,29 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *
    * @param {string} targetType
    *        Type of context to observe. See Targets.TYPES object.
+   * @param {object} options
+   * @param {boolean} options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  unwatchTargets(targetType) {
-    const isWatchingTargets = WatcherRegistry.unwatchTargets(this, targetType);
+  unwatchTargets(targetType, options = {}) {
+    const isWatchingTargets = WatcherRegistry.unwatchTargets(
+      this,
+      targetType,
+      options
+    );
     if (!isWatchingTargets) {
       return;
     }
 
     const targetHelperModule = TARGET_HELPERS[targetType];
-    targetHelperModule.destroyTargets(this);
+    targetHelperModule.destroyTargets(this, options);
 
-    // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
-    WatcherRegistry.maybeUnregisteringJSWindowActor();
+    // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource,
+    // unless we're switching mode (having both condition at the same time should only
+    // happen in tests).
+    if (!options.isModeSwitching) {
+      WatcherRegistry.maybeUnregisteringJSWindowActor();
+    }
   },
 
   /**
@@ -295,12 +306,18 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
   /**
    * Called by a Watcher module, whenever a target has been destroyed
+   *
+   * @param {object} actor
+   *        the actor form of the target being destroyed
+   * @param {object} options
+   * @param {boolean} options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  async notifyTargetDestroyed(actor) {
+  async notifyTargetDestroyed(actor, options = {}) {
     // Emit immediately for worker, process & extension targets
     // as they don't have a parent browsing context.
     if (!actor.innerWindowId) {
-      this.emit("target-destroyed-form", actor);
+      this.emit("target-destroyed-form", actor, options);
       return;
     }
     // Flush all iframe targets if we are destroying a top level target.
@@ -314,7 +331,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // Ignore the top level target itself, because its topInnerWindowId will be its innerWindowId
           form.innerWindowId != actor.innerWindowId
       );
-      childrenActors.map(form => this.notifyTargetDestroyed(form));
+      childrenActors.map(form => this.notifyTargetDestroyed(form, options));
     }
     if (this._earlyIframeTargets[actor.innerWindowId]) {
       delete this._earlyIframeTargets[actor.innerWindowId];
@@ -347,7 +364,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     ) {
       await documentEventWatcher.onceWillNavigateIsEmitted(actor.innerWindowId);
     }
-    this.emit("target-destroyed-form", actor);
+    this.emit("target-destroyed-form", actor, options);
   },
 
   /**

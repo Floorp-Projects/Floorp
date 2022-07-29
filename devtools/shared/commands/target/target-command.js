@@ -157,7 +157,10 @@ class TargetCommand extends EventEmitter {
       // The related targets will be destroyed by the server
       // and reported as destroyed to the frontend.
       for (const type of disabledTargetTypes) {
-        this.stopListeningForType(type, { isTargetSwitching: false });
+        this.stopListeningForType(type, {
+          isTargetSwitching: false,
+          isModeSwitching: true,
+        });
       }
     }
   }
@@ -316,19 +319,26 @@ class TargetCommand extends EventEmitter {
    *
    * @param {TargetFront} targetFront
    *        The target that just got destroyed.
-   * @param Object options
-   *        Dictionary object with:
-   *        - `isTargetSwitching` optional boolean. To be set to true when this
-   *           is about the top level target which is being replaced by a new one.
-   *           The passed target should be still the one store in TargetCommand.targetFront
-   *           and will be replaced via a call to onTargetAvailable with a new target front.
-   *        - `shouldDestroyTargetFront` optional boolean. By default, the passed target
-   *           front will be destroyed. But in some cases like legacy listeners for service workers
-   *           we want to keep the front alive.
+   * @param {Object} options
+   * @param {Boolean} [options.isTargetSwitching]
+   *        To be set to true when this is about the top level target which is being replaced
+   *        by a new one.
+   *        The passed target should be still the one store in TargetCommand.targetFront
+   *        and will be replaced via a call to onTargetAvailable with a new target front.
+   * @param {Boolean} [options.isModeSwitching]
+   *        To be set to true when the target was destroyed was called as the result of a
+   *        change to the devtools.browsertoolbox.scope pref.
+   * @param {Boolean} [options.shouldDestroyTargetFront]
+   *        By default, the passed target front will be destroyed. But in some cases like
+   *        legacy listeners for service workers we want to keep the front alive.
    */
   _onTargetDestroyed(
     targetFront,
-    { isTargetSwitching = false, shouldDestroyTargetFront = true } = {}
+    {
+      isModeSwitching = false,
+      isTargetSwitching = false,
+      shouldDestroyTargetFront = true,
+    } = {}
   ) {
     // The watcher actor may notify us about the destruction of the top level target.
     // But second argument to this method, isTargetSwitching is only passed from the frontend.
@@ -340,6 +350,7 @@ class TargetCommand extends EventEmitter {
     this._destroyListeners.emit(targetFront.targetType, {
       targetFront,
       isTargetSwitching,
+      isModeSwitching,
     });
     this._targets.delete(targetFront);
 
@@ -618,7 +629,21 @@ class TargetCommand extends EventEmitter {
     }
   }
 
-  stopListeningForType(type, { isTargetSwitching }) {
+  /**
+   * Stop listening for targets of a given type from the server
+   *
+   * @param String type
+   *        target type we want to stop listening for
+   * @param Object options
+   * @param Boolean options.isTargetSwitching
+   *        Set to true when this is called while a target switching happens. In such case,
+   *        we won't unregister listener set on the Watcher Actor, but still unregister
+   *        listeners set via Legacy Listeners.
+   * @param Boolean options.isModeSwitching
+   *        Set to true when this is called as the result of a change to the
+   *        devtools.browsertoolbox.scope pref.
+   */
+  stopListeningForType(type, { isTargetSwitching, isModeSwitching }) {
     if (!this._isListening(type)) {
       return;
     }
@@ -633,10 +658,13 @@ class TargetCommand extends EventEmitter {
       // Also, TargetCommand.destroy may be called after the client is closed.
       // So avoid calling the RDP method in that situation.
       if (!isTargetSwitching && !this.watcherFront.isDestroyed()) {
-        this.watcherFront.unwatchTargets(type);
+        this.watcherFront.unwatchTargets(type, { isModeSwitching });
       }
     } else if (this.legacyImplementation[type]) {
-      this.legacyImplementation[type].unlisten({ isTargetSwitching });
+      this.legacyImplementation[type].unlisten({
+        isTargetSwitching,
+        isModeSwitching,
+      });
     } else {
       throw new Error(`Unsupported target type '${type}'`);
     }

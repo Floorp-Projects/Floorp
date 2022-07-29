@@ -35,10 +35,15 @@ class JsWindowActorTransport {
     this._addListener();
   }
 
-  close() {
+  /**
+   * @param {object} options
+   * @param {boolean} options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+   */
+  close(options) {
     this._removeListener();
     if (this.hooks.onTransportClosed) {
-      this.hooks.onTransportClosed();
+      this.hooks.onTransportClosed(null, options);
     }
   }
 
