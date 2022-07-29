@@ -22,6 +22,7 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/mscom/AgileReference.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/WindowsVersion.h"
@@ -249,9 +250,23 @@ void AudioSession::StopInternal(const MutexAutoLock& aProofOfLock) {
   // Deleting the IAudioSessionControl COM object requires the STA/main thread.
   // Audio code may concurrently be running on the main thread and it may
   // block waiting for this to complete, creating deadlock.  So we destroy the
-  // IAudioSessionControl on the main thread instead.
+  // IAudioSessionControl on the main thread instead.  In order to do that, we
+  // need to marshall the object to the main thread's apartment with an
+  // AgileReference.
+  const IID IID_IAudioSessionControl = __uuidof(IAudioSessionControl);
+  auto agileAsc = MakeUnique<mozilla::mscom::AgileReference>(
+      IID_IAudioSessionControl, mAudioSessionControl);
+  mAudioSessionControl = nullptr;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "FreeAudioSession", [asc = std::move(mAudioSessionControl)] { /* */ }));
+      "FreeAudioSession",
+      [agileAsc = std::move(agileAsc), IID_IAudioSessionControl] {
+        RefPtr<IAudioSessionControl> toDelete;
+        [[maybe_unused]] HRESULT hr = agileAsc->Resolve(
+            IID_IAudioSessionControl, getter_AddRefs(toDelete));
+        MOZ_ASSERT(SUCCEEDED(hr));
+        // Now release the AgileReference which holds our only reference to the
+        // IAudioSessionControl.
+      }));
 }
 
 void CopynsID(nsID& lhs, const nsID& rhs) {
