@@ -66,6 +66,9 @@ int main(int argc, char* argv[]) {
   if (UseForkServer(argc, argv)) {
     ret = RunForkServer(std::move(bootstrap), argc, argv);
   } else {
+    // Set the process type. We don't remove the arg here as that will be done
+    // later in common code.
+    SetGeckoProcessType(argv[argc - 1]);
 #ifdef HAS_DLL_BLOCKLIST
     uint32_t initFlags = eDllBlocklistInitFlagIsChildProcess;
 #  if defined(MOZ_SANDBOX)
