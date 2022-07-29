@@ -967,7 +967,8 @@ def set_retry_exit_status(config, tasks):
     """Set the retry exit status to TBPL_RETRY, the value returned by mozharness
     scripts to indicate a transient failure that should be retried."""
     for task in tasks:
-        task["retry-exit-status"] = [4]
+        # add in 137 as it is an error with GCP workers
+        task["retry-exit-status"] = [4, 137]
         yield task
 
 
