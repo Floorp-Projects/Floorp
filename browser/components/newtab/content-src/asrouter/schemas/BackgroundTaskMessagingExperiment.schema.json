@@ -142,19 +142,8 @@
                 "type": "object",
                 "properties": {
                   "period": {
-                    "oneOf": [
-                      {
-                        "type": "integer",
-                        "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
-                      },
-                      {
-                        "type": "string",
-                        "description": "One of a preset list of short forms for period of time (e.g. 'daily' for one day)",
-                        "enum": [
-                          "daily"
-                        ]
-                      }
-                    ]
+                    "type": "integer",
+                    "description": "Period of time in milliseconds (e.g. 86400000 for one day)"
                   },
                   "cap": {
                     "type": "integer",

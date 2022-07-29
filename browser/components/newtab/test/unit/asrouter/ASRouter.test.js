@@ -2057,29 +2057,6 @@ describe("ASRouter", () => {
   });
 
   describe("impressions", () => {
-    describe("frequency normalisation", () => {
-      beforeEach(async () => {
-        const messages = [
-          { frequency: { custom: [{ period: "daily", cap: 10 }] } },
-        ];
-        const provider = {
-          id: "foo",
-          frequency: { custom: [{ period: "daily", cap: 100 }] },
-          messages,
-          enabled: true,
-        };
-        await createRouterAndInit([provider]);
-      });
-      it("period aliases in provider frequency caps should be normalised", () => {
-        const [provider] = Router.state.providers;
-        assert.equal(provider.frequency.custom[0].period, "daily");
-      });
-      it("period aliases in message frequency caps should be normalised", async () => {
-        const [message] = Router.state.messages;
-        assert.equal(message.frequency.custom[0].period, "daily");
-      });
-    });
-
     describe("#isBelowFrequencyCaps", () => {
       it("should call #_isBelowItemFrequencyCap for the message and for the provider with the correct impressions and arguments", async () => {
         sinon.spy(Router, "_isBelowItemFrequencyCap");
