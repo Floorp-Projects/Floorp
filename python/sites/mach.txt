@@ -84,6 +84,7 @@ vendored:third_party/python/Jinja2
 vendored:third_party/python/jsmin
 vendored:third_party/python/json-e
 vendored:third_party/python/jsonschema
+vendored:third_party/python/looseversion
 vendored:third_party/python/MarkupSafe/src
 vendored:third_party/python/mohawk
 vendored:third_party/python/mozilla_version
