@@ -285,21 +285,6 @@ ContentAreaDropListener.prototype = {
     return true;
   },
 
-  dropLink(aEvent, aName, aDisallowInherit) {
-    aName.value = "";
-    let links = this.dropLinks(aEvent, aDisallowInherit);
-    let url = "";
-    if (links.length > 0) {
-      url = links[0].url;
-      let name = links[0].name;
-      if (name) {
-        aName.value = name;
-      }
-    }
-
-    return url;
-  },
-
   dropLinks(aEvent, aDisallowInherit) {
     if (aEvent && this._eventTargetIsDisabled(aEvent)) {
       return [];
