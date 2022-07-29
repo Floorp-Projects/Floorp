@@ -1557,3 +1557,6 @@ always-notify =
  .label = Notify Both at Start and End
 do-not-notify =
  .label = Do not Enable Notifications
+
+floorp-translater = Built-in Translation Function Settings
+click-to-option = Open the Settings Site

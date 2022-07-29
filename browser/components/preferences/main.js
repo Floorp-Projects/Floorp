@@ -3863,3 +3863,14 @@ const AppearanceChooser = {
     this.warning.hidden = !forcingColorsAndNoColorSchemeSupport;
   },
 };
+
+window.setTimeout(function(){
+
+  async function opentranslateroption(){
+    const addon = await AddonManager.getAddonByID("{036a55b4-5e72-4d05-a06c-cba2dfcc134a}");
+    await window.open(addon.optionsURL, '_blank');
+  }
+  const el = document.getElementById("translateoption");
+  console.log(el)
+  el.addEventListener("click", opentranslateroption, false);
+}, 2000);
