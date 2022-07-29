@@ -1173,6 +1173,10 @@
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Detta kommer att ta bort all dina surfdata.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Tidsintervall att radera</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Tar bort historik (inklusive historik som synkroniserats från andra enheter), kakor och annan webbinformation.</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Senaste timmen</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1192,6 +1196,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Tar bort surfsdata…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Ta bort alla webbplatser i &quot;%s&quot;</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Avbryt</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1607,8 +1613,6 @@
     <string name="addresses_edit_address">Redigera adress</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Hantera adresser</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Fullständigt namn</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Förnamn</string>
     <!-- The header for the middle name of an address -->

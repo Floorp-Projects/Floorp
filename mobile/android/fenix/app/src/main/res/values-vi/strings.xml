@@ -1587,8 +1587,6 @@
     <string name="addresses_edit_address">Sửa địa chỉ</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Quản lý địa chỉ</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Họ và tên</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Tên</string>
     <!-- The header for the middle name of an address -->
@@ -1854,5 +1852,5 @@
     <string name="experiments_snackbar">Bật telemetry để gửi dữ liệu.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Đi đến cài đặt</string>
-    <string name="firefox_suggest_header">Firefox Suggest</string>
+    <string name="firefox_suggest_header">Đề xuất của Firefox</string>
 </resources>
