@@ -150,10 +150,13 @@ Asynchronous panning and zooming
     * - Peer(s)
       -
         | `Timothy Nikkel (tnikkel) <https://people.mozilla.org/s?query=tnikkel>`__
-        | `Ryan Hunt (rhunt) <https://people.mozilla.org/s?query=rhunt>`__
+        | `Dan Robertson (dlrobertson) <https://people.mozilla.org/s?query=dlrobertson>`__
+        | `Hiroyuki Ikezoe (hiro) <https://people.mozilla.org/s?query=hiro>`__
         | `Markus Stange (mstange) <https://people.mozilla.org/s?query=mstange>`__
     * - Owner(s) Emeritus
       - Kartikaya Gupta
+    * - Peer(s) Emeritus
+      - Ryan Hunt
     * - Includes
       -
         | `gfx/layers/apz/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=gfx/layers/apz/\*\*/\*>`__
@@ -737,7 +740,7 @@ Framework for embedding Gecko into Android applications
 
     * - Owner(s)
       -
-        | `Agi Sferro (agi) <https://people.mozilla.org/s?query=agi>`__
+        | `agi <https://people.mozilla.org/s?query=agi>`__
     * - Peer(s)
       -
         | `Makoto Kato (m_kato) <https://people.mozilla.org/s?query=m_kato>`__
@@ -1490,7 +1493,7 @@ Advises on the use of NodeJS and npm packages at build and runtime. Reviews addi
 
     * - Owner(s)
       -
-        | `Dan Mosedale (dmosedale) <https://people.mozilla.org/s?query=dmosedale>`__
+        | `Dan Mosedale - Away From Bugmail Until Aug 9th (dmosedale) <https://people.mozilla.org/s?query=dmosedale>`__
     * - Peer(s)
       -
         | `Mark Banner (standard8) <https://people.mozilla.org/s?query=standard8>`__
@@ -2361,7 +2364,7 @@ This is part of the [https://wiki.mozilla.org/Modules/Core#GeckoView GeckoView] 
 
     * - Owner(s)
       -
-        | `Agi Sferro (agi) <https://people.mozilla.org/s?query=agi>`__
+        | `agi <https://people.mozilla.org/s?query=agi>`__
 
 Core: Widget - GTK
 ~~~~~~~~~~~~~~~~~~
@@ -3593,7 +3596,7 @@ The core infrastructure in the Firefox client to send back Telemetry and FHR dat
 
     * - Owner(s)
       -
-        | `Chris H-C (chutten) <https://people.mozilla.org/s?query=chutten>`__
+        | `Chris H-C (chutten|PTO) <https://people.mozilla.org/s?query=chutten|PTO>`__
     * - Peer(s)
       -
         | `aplacitelli <https://people.mozilla.org/s?query=aplacitelli>`__
