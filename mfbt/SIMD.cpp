@@ -6,11 +6,18 @@
 
 #include "mozilla/SIMD.h"
 
+#include <cstring>
 #include <stdint.h>
 #include <type_traits>
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/SSE.h"
+
+#ifdef MOZILLA_PRESUME_SSE2
+
+#  include <immintrin.h>
+
+#endif
 
 namespace mozilla {
 
@@ -29,14 +36,8 @@ const TValue* FindInBufferNaive(const TValue* ptr, TValue value,
 
 #ifdef MOZILLA_PRESUME_SSE2
 
-#  include <immintrin.h>
-
 const __m128i* Cast128(uintptr_t ptr) {
   return reinterpret_cast<const __m128i*>(ptr);
-}
-
-const __m256i* Cast256(uintptr_t ptr) {
-  return reinterpret_cast<const __m256i*>(ptr);
 }
 
 template <typename T>
@@ -50,10 +51,6 @@ uintptr_t AlignDown16(uintptr_t ptr) { return ptr & ~0xf; }
 
 uintptr_t AlignUp16(uintptr_t ptr) { return AlignDown16(ptr + 0xf); }
 
-uintptr_t AlignDown32(uintptr_t ptr) { return ptr & ~0x1f; }
-
-uintptr_t AlignUp32(uintptr_t ptr) { return AlignDown32(ptr + 0x1f); }
-
 template <typename TValue>
 __m128i CmpEq128(__m128i a, __m128i b) {
   static_assert(sizeof(TValue) == 1 || sizeof(TValue) == 2);
@@ -61,20 +58,6 @@ __m128i CmpEq128(__m128i a, __m128i b) {
     return _mm_cmpeq_epi8(a, b);
   }
   return _mm_cmpeq_epi16(a, b);
-}
-
-template <typename TValue>
-__m256i CmpEq256(__m256i a, __m256i b) {
-  static_assert(sizeof(TValue) == 1 || sizeof(TValue) == 2 ||
-                sizeof(TValue) == 8);
-  if (sizeof(TValue) == 1) {
-    return _mm256_cmpeq_epi8(a, b);
-  }
-  if (sizeof(TValue) == 2) {
-    return _mm256_cmpeq_epi16(a, b);
-  }
-
-  return _mm256_cmpeq_epi64(a, b);
 }
 
 #  ifdef __GNUC__
@@ -89,22 +72,10 @@ __m128i Load32BitsIntoXMM(uintptr_t ptr) {
   return _mm_cvtsi32_si128(tmp);  // efficient on GCC/clang/MSVC
 }
 
-// This is just adapted from the above workaround. Testing this, it also yields
-// the correct instructions across all tested compilers.
-__m128i Load64BitsIntoXMM(uintptr_t ptr) {
-  int64_t tmp;
-  memcpy(&tmp, reinterpret_cast<const void*>(ptr), sizeof(tmp));
-  return _mm_cvtsi64_si128(tmp);
-}
-
 #  else
 
 __m128i Load32BitsIntoXMM(uintptr_t ptr) {
   return _mm_loadu_si32(Cast128(ptr));
-}
-
-__m128i Load64BitsIntoXMM(uintptr_t ptr) {
-  return _mm_loadu_si64(Cast128(ptr));
 }
 
 #  endif
@@ -147,44 +118,6 @@ const char* Check4x4Chars(__m128i needle, uintptr_t a, uintptr_t b, uintptr_t c,
 }
 
 template <typename TValue>
-const TValue* Check4x8Bytes(__m128i needle, uintptr_t a, uintptr_t b,
-                            uintptr_t c, uintptr_t d) {
-  __m128i haystackA = Load64BitsIntoXMM(a);
-  __m128i cmpA = CmpEq128<TValue>(needle, haystackA);
-  __m128i haystackB = Load64BitsIntoXMM(b);
-  __m128i cmpB = CmpEq128<TValue>(needle, haystackB);
-  __m128i haystackC = Load64BitsIntoXMM(c);
-  __m128i cmpC = CmpEq128<TValue>(needle, haystackC);
-  __m128i haystackD = Load64BitsIntoXMM(d);
-  __m128i cmpD = CmpEq128<TValue>(needle, haystackD);
-  __m128i or_ab = _mm_or_si128(cmpA, cmpB);
-  __m128i or_cd = _mm_or_si128(cmpC, cmpD);
-  __m128i or_abcd = _mm_or_si128(or_ab, or_cd);
-  int orMask = _mm_movemask_epi8(or_abcd);
-  if (orMask & 0xff) {
-    int cmpMask;
-    cmpMask = _mm_movemask_epi8(cmpA);
-    if (cmpMask & 0xff) {
-      return reinterpret_cast<const TValue*>(a + __builtin_ctz(cmpMask));
-    }
-    cmpMask = _mm_movemask_epi8(cmpB);
-    if (cmpMask & 0xff) {
-      return reinterpret_cast<const TValue*>(b + __builtin_ctz(cmpMask));
-    }
-    cmpMask = _mm_movemask_epi8(cmpC);
-    if (cmpMask & 0xff) {
-      return reinterpret_cast<const TValue*>(c + __builtin_ctz(cmpMask));
-    }
-    cmpMask = _mm_movemask_epi8(cmpD);
-    if (cmpMask & 0xff) {
-      return reinterpret_cast<const TValue*>(d + __builtin_ctz(cmpMask));
-    }
-  }
-
-  return nullptr;
-}
-
-template <typename TValue>
 const TValue* Check4x16Bytes(__m128i needle, uintptr_t a, uintptr_t b,
                              uintptr_t c, uintptr_t d) {
   __m128i haystackA = _mm_loadu_si128(Cast128(a));
@@ -214,44 +147,6 @@ const TValue* Check4x16Bytes(__m128i needle, uintptr_t a, uintptr_t b,
       return reinterpret_cast<const TValue*>(c + __builtin_ctz(cmpMask));
     }
     cmpMask = _mm_movemask_epi8(cmpD);
-    if (cmpMask) {
-      return reinterpret_cast<const TValue*>(d + __builtin_ctz(cmpMask));
-    }
-  }
-
-  return nullptr;
-}
-
-template <typename TValue>
-const TValue* Check4x32Bytes(__m256i needle, uintptr_t a, uintptr_t b,
-                             uintptr_t c, uintptr_t d) {
-  __m256i haystackA = _mm256_loadu_si256(Cast256(a));
-  __m256i cmpA = CmpEq256<TValue>(needle, haystackA);
-  __m256i haystackB = _mm256_loadu_si256(Cast256(b));
-  __m256i cmpB = CmpEq256<TValue>(needle, haystackB);
-  __m256i haystackC = _mm256_loadu_si256(Cast256(c));
-  __m256i cmpC = CmpEq256<TValue>(needle, haystackC);
-  __m256i haystackD = _mm256_loadu_si256(Cast256(d));
-  __m256i cmpD = CmpEq256<TValue>(needle, haystackD);
-  __m256i or_ab = _mm256_or_si256(cmpA, cmpB);
-  __m256i or_cd = _mm256_or_si256(cmpC, cmpD);
-  __m256i or_abcd = _mm256_or_si256(or_ab, or_cd);
-  int orMask = _mm256_movemask_epi8(or_abcd);
-  if (orMask) {
-    int cmpMask;
-    cmpMask = _mm256_movemask_epi8(cmpA);
-    if (cmpMask) {
-      return reinterpret_cast<const TValue*>(a + __builtin_ctz(cmpMask));
-    }
-    cmpMask = _mm256_movemask_epi8(cmpB);
-    if (cmpMask) {
-      return reinterpret_cast<const TValue*>(b + __builtin_ctz(cmpMask));
-    }
-    cmpMask = _mm256_movemask_epi8(cmpC);
-    if (cmpMask) {
-      return reinterpret_cast<const TValue*>(c + __builtin_ctz(cmpMask));
-    }
-    cmpMask = _mm256_movemask_epi8(cmpD);
     if (cmpMask) {
       return reinterpret_cast<const TValue*>(d + __builtin_ctz(cmpMask));
     }
@@ -423,97 +318,6 @@ const TValue* FindInBuffer(const TValue* ptr, TValue value, size_t length) {
 }
 
 template <typename TValue>
-const TValue* FindInBufferAVX2(const TValue* ptr, TValue value, size_t length) {
-  static_assert(sizeof(TValue) == 1 || sizeof(TValue) == 2 ||
-                sizeof(TValue) == 8);
-  static_assert(std::is_unsigned<TValue>::value);
-
-  // Load our needle into a 32-byte register
-  __m256i needle;
-  if (sizeof(TValue) == 1) {
-    needle = _mm256_set1_epi8(value);
-  } else if (sizeof(TValue) == 2) {
-    needle = _mm256_set1_epi16(value);
-  } else {
-    needle = _mm256_set1_epi64x(value);
-  }
-
-  size_t numBytes = length * sizeof(TValue);
-  uintptr_t cur = reinterpret_cast<uintptr_t>(ptr);
-  uintptr_t end = cur + numBytes;
-
-  if (numBytes < 8 || (sizeof(TValue) == 8 && numBytes < 32)) {
-    while (cur < end) {
-      if (GetAs<TValue>(cur) == value) {
-        return reinterpret_cast<const TValue*>(cur);
-      }
-      cur += sizeof(TValue);
-    }
-    return nullptr;
-  }
-
-  if constexpr (sizeof(TValue) != 8) {
-    if (numBytes < 32) {
-      __m128i needle_narrow;
-      if (sizeof(TValue) == 1) {
-        needle_narrow = _mm_set1_epi8(value);
-      } else {
-        needle_narrow = _mm_set1_epi16(value);
-      }
-      uintptr_t a = cur;
-      uintptr_t b = cur + ((numBytes & 16) >> 1);
-      uintptr_t c = end - 8 - ((numBytes & 16) >> 1);
-      uintptr_t d = end - 8;
-      return Check4x8Bytes<TValue>(needle_narrow, a, b, c, d);
-    }
-  }
-
-  if (numBytes < 128) {
-    // NOTE: see the above explanation of the similar chunk of code, but in
-    // this case, replace 16 with 64 and 8 with 32.
-    uintptr_t a = cur;
-    uintptr_t b = cur + ((numBytes & 64) >> 1);
-    uintptr_t c = end - 32 - ((numBytes & 64) >> 1);
-    uintptr_t d = end - 32;
-    return Check4x32Bytes<TValue>(needle, a, b, c, d);
-  }
-
-  // Get the initial unaligned load out of the way. This will overlap with the
-  // aligned stuff below, but the overlapped part should effectively be free
-  // (relative to a mispredict from doing a byte-by-byte loop).
-  __m256i haystack = _mm256_loadu_si256(Cast256(cur));
-  __m256i cmp = CmpEq256<TValue>(needle, haystack);
-  int cmpMask = _mm256_movemask_epi8(cmp);
-  if (cmpMask) {
-    return reinterpret_cast<const TValue*>(cur + __builtin_ctz(cmpMask));
-  }
-
-  // Now we're working with aligned memory. Hooray! \o/
-  cur = AlignUp32(cur);
-
-  uintptr_t tailStartPtr = AlignDown32(end - 96);
-  uintptr_t tailEndPtr = end - 32;
-
-  while (cur < tailStartPtr) {
-    uintptr_t a = cur;
-    uintptr_t b = cur + 32;
-    uintptr_t c = cur + 64;
-    uintptr_t d = cur + 96;
-    const TValue* result = Check4x32Bytes<TValue>(needle, a, b, c, d);
-    if (result) {
-      return result;
-    }
-    cur += 128;
-  }
-
-  uintptr_t a = tailStartPtr;
-  uintptr_t b = tailStartPtr + 32;
-  uintptr_t c = tailStartPtr + 64;
-  uintptr_t d = tailEndPtr;
-  return Check4x32Bytes<TValue>(needle, a, b, c, d);
-}
-
-template <typename TValue>
 const TValue* TwoByteLoop(uintptr_t start, uintptr_t end, TValue v1, TValue v2);
 
 template <>
@@ -645,11 +449,7 @@ const char* SIMD::memchr8SSE2(const char* ptr, char value, size_t length) {
 
 const char* SIMD::memchr8(const char* ptr, char value, size_t length) {
   if (supports_avx2()) {
-    const unsigned char* uptr = reinterpret_cast<const unsigned char*>(ptr);
-    unsigned char uvalue = static_cast<unsigned char>(value);
-    const unsigned char* uresult =
-        FindInBufferAVX2<unsigned char>(uptr, uvalue, length);
-    return reinterpret_cast<const char*>(uresult);
+    return memchr8AVX2(ptr, value, length);
   }
   return memchr8SSE2(ptr, value, length);
 }
@@ -662,7 +462,7 @@ const char16_t* SIMD::memchr16SSE2(const char16_t* ptr, char16_t value,
 const char16_t* SIMD::memchr16(const char16_t* ptr, char16_t value,
                                size_t length) {
   if (supports_avx2()) {
-    return FindInBufferAVX2<char16_t>(ptr, value, length);
+    return memchr16AVX2(ptr, value, length);
   }
   return memchr16SSE2(ptr, value, length);
 }
@@ -670,7 +470,7 @@ const char16_t* SIMD::memchr16(const char16_t* ptr, char16_t value,
 const uint64_t* SIMD::memchr64(const uint64_t* ptr, uint64_t value,
                                size_t length) {
   if (supports_avx2()) {
-    return FindInBufferAVX2<uint64_t>(ptr, value, length);
+    return memchr64AVX2(ptr, value, length);
   }
   return FindInBufferNaive<uint64_t>(ptr, value, length);
 }
@@ -692,8 +492,6 @@ const char16_t* SIMD::memchr2x16(const char16_t* ptr, char16_t v1, char16_t v2,
 }
 
 #else
-
-#  include <cstring>
 
 const char* SIMD::memchr8(const char* ptr, char value, size_t length) {
   const void* result = ::memchr(reinterpret_cast<const void*>(ptr),
