@@ -57,10 +57,10 @@ ChildDebuggerTransport.prototype = {
     this._addListener();
   },
 
-  close: function() {
+  close: function(options) {
     this._removeListener();
     if (this.hooks.onTransportClosed) {
-      this.hooks.onTransportClosed();
+      this.hooks.onTransportClosed(null, options);
     }
   },
 

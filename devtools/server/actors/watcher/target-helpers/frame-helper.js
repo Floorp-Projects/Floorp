@@ -158,8 +158,11 @@ async function createTargetForBrowsingContext({
  *
  * @param WatcherActor watcher
  *        The Watcher Actor requesting to stop watching for new targets.
+ * @param {object} options
+ * @param {boolean} options.isModeSwitching
+ *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
  */
-function destroyTargets(watcher) {
+function destroyTargets(watcher, options) {
   // Go over all existing BrowsingContext in order to destroy all targets
   const browsingContexts = watcher.getAllBrowsingContexts();
 
@@ -178,6 +181,7 @@ function destroyTargets(watcher) {
       .destroyTarget({
         watcherActorID: watcher.actorID,
         sessionContext: watcher.sessionContext,
+        options,
       });
   }
 

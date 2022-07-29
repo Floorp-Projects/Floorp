@@ -32,10 +32,12 @@ add_task(async function() {
   const { TYPES } = targetCommand;
 
   const targets = new Set();
+  const destroyedTargetIsModeSwitchingMap = new Map();
   const onAvailable = async ({ targetFront }) => {
     targets.add(targetFront);
   };
-  const onDestroyed = ({ targetFront }) => {
+  const onDestroyed = ({ targetFront, isModeSwitching }) => {
+    destroyedTargetIsModeSwitchingMap.set(targetFront, isModeSwitching);
     targets.delete(targetFront);
   };
   await targetCommand.watchTargets({
@@ -91,7 +93,15 @@ add_task(async function() {
   );
 
   ok(processTarget.isDestroyed(), "The process target is destroyed");
+  ok(
+    destroyedTargetIsModeSwitchingMap.get(processTarget),
+    "isModeSwitching was passed to onTargetDestroyed and is true for the process target"
+  );
   ok(windowGlobalTarget.isDestroyed(), "The window global target is destroyed");
+  ok(
+    destroyedTargetIsModeSwitchingMap.get(windowGlobalTarget),
+    "isModeSwitching was passed to onTargetDestroyed and is true for the window global target"
+  );
 
   info("Open a second tab in a new content process");
   const parentProcessTargetCount = targets.size;

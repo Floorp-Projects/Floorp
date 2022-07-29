@@ -46,11 +46,11 @@ class ContentProcessStartup {
     }
   }
 
-  destroy() {
+  destroy(options) {
     this.removeListeners();
 
     for (const [, connectionInfo] of this._connections) {
-      connectionInfo.connection.close();
+      connectionInfo.connection.close(options);
     }
     this._connections.clear();
   }
@@ -133,7 +133,7 @@ class ContentProcessStartup {
         );
         break;
       case "debug:destroy-process-script":
-        this.destroy();
+        this.destroy(msg.data.options);
         break;
       default:
         throw new Error(`Unsupported message name ${msg.name}`);
