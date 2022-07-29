@@ -66,6 +66,9 @@ add_task(async () => {
       );
 
       await BrowserTestUtils.closeWindow(pipWin);
+
+      // Workaround bug 1782134.
+      window.restore();
     }
   );
 });
