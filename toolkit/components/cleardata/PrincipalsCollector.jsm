@@ -17,6 +17,18 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIServiceWorkerManager"
 );
 
+let logConsole;
+function log(msg) {
+  if (!logConsole) {
+    logConsole = console.createInstance({
+      prefix: "** PrincipalsCollector.jsm",
+      maxLogLevelPref: "browser.sanitizer.loglevel",
+    });
+  }
+
+  logConsole.log(msg);
+}
+
 /**
  * A helper module to collect all principals that have any of the following:
  *  * cookies
@@ -134,10 +146,19 @@ class PrincipalsCollector {
     hosts.forEach(host => {
       // Cookies and permissions are handled by origin/host. Doesn't matter if we
       // use http: or https: schema here.
-      const principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        "https://" + host
-      );
-      principals.set(principal.origin, principal);
+      let principal;
+      try {
+        principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          "https://" + host
+        );
+      } catch (e) {
+        log(
+          `ERROR: Could not create content principal for host '${host}' ${e.message}`
+        );
+      }
+      if (principal) {
+        principals.set(principal.origin, principal);
+      }
     });
 
     progress.step = "total-principals:" + principals.length;
