@@ -95,12 +95,8 @@ abstract class PlacesStorage(
      * Allows immediately dismissing all write operations and clearing the write queue.
      */
     internal fun interruptCurrentWrites() {
-        try {
+        handlePlacesExceptions("interruptCurrentWrites") {
             writer.interrupt()
-        } catch (e: PlacesException.OperationInterrupted) {
-            logger.debug("Ignoring expected OperationInterrupted exception for explicit writer interrupt call", e)
-        } catch (e: PlacesException) {
-            logger.warn("Ignoring PlacesException while interrupting writes", e)
         }
     }
 
@@ -109,12 +105,8 @@ abstract class PlacesStorage(
      * Allows avoiding having to wait for stale queries responses and clears the queries queue.
      */
     internal fun interruptCurrentReads() {
-        try {
+        handlePlacesExceptions("interruptCurrentReads") {
             reader.interrupt()
-        } catch (e: PlacesException.OperationInterrupted) {
-            logger.debug("Ignoring expected OperationInterrupted exception for explicit reader interrupt call", e)
-        } catch (e: PlacesException) {
-            logger.warn("Ignoring PlacesException while interrupting reads", e)
         }
     }
 
@@ -129,6 +121,8 @@ abstract class PlacesStorage(
             block()
         } catch (e: PlacesException.UnexpectedPlacesException) {
             throw e
+        } catch (e: PlacesException.OperationInterrupted) {
+            logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring PlacesException while running $operation", e)
@@ -153,6 +147,9 @@ abstract class PlacesStorage(
             block()
         } catch (e: PlacesException.UnexpectedPlacesException) {
             throw e
+        } catch (e: PlacesException.OperationInterrupted) {
+            logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
+            default
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring PlacesException while running $operation", e)

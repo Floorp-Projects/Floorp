@@ -12,7 +12,7 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 * **browser-storage-sync**:
-  * Stop loading to the crash servers the expected `OperationInterrupted` exceptions for when interrupting in progress reads/writes from Application-Services. [#12557](https://github.com/mozilla-mobile/android-components/issues/12557)
+  * Stop reporting to the crash servers the expected `OperationInterrupted` exceptions for when interrupting in progress reads/writes from Application-Services. [#12557](https://github.com/mozilla-mobile/android-components/issues/12557), [#12569](https://github.com/mozilla-mobile/android-components/issues/12569).
 
 # 104.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v103.0.0...v104.0.0)

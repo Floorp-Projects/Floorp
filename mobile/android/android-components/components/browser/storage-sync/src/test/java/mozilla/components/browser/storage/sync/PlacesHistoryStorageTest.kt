@@ -22,6 +22,7 @@ import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -38,6 +39,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import java.io.File
 
 @ExperimentalCoroutinesApi // for runTestOnMain
@@ -50,7 +53,7 @@ class PlacesHistoryStorageTest {
 
     @Before
     fun setup() = runTestOnMain {
-        history = PlacesHistoryStorage(testContext)
+        history = PlacesHistoryStorage(testContext, mock())
         // There's a database on disk which needs to be cleaned up between tests.
         history.deleteEverything()
     }
@@ -1306,6 +1309,16 @@ class PlacesHistoryStorageTest {
             // Can be any PlacesException error
             throw PlacesException.PlacesConnectionBusy("test")
         }
+        assertEquals(emptyList<HistoryMetadata>(), result)
+    }
+
+    @Test
+    fun `interrupted read from places is not reported to crash services and returns the default`() = runTestOnMain {
+        val result = history.handlePlacesExceptions("test", default = emptyList<HistoryMetadata>()) {
+            throw PlacesException.OperationInterrupted("An interrupted in progress query will throw")
+        }
+
+        verify(history.crashReporter!!, never()).submitCaughtException(any())
         assertEquals(emptyList<HistoryMetadata>(), result)
     }
 
