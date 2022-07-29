@@ -177,21 +177,19 @@ UNIFIED_SOURCES += [
     "Poison.cpp",
     "RandomNum.cpp",
     "SHA1.cpp",
+    "SIMD.cpp",
     "TaggedAnonymousMemory.cpp",
     "UniquePtrExtensions.cpp",
     "Unused.cpp",
     "Utf8.cpp",
 ]
 
-SOURCES += [
-    "SIMD.cpp",
-]
-SOURCES["SIMD.cpp"].flags += ["-mavx2"]
-
 if CONFIG["CPU_ARCH"].startswith("x86"):
     SOURCES += [
+        "SIMD_avx2.cpp",
         "SSE.cpp",
     ]
+    SOURCES["SIMD_avx2.cpp"].flags += ["-mavx2"]
 
 if CONFIG["MOZ_BUILD_APP"] not in (
     "memory",
