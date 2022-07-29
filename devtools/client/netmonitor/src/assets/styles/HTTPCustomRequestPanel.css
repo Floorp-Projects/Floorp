@@ -107,7 +107,7 @@
   overflow: auto;
 }
 
-.http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) {
+.network-monitor .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) {
   position: relative;
   display: flex;
   flex-wrap: nowrap;
@@ -118,13 +118,13 @@
   padding-inline-end: 0;
 }
 
-.http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-name {
+.network-monitor .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-name {
   width: 25%;
   align-self: stretch;
   min-width: min-content;
 }
 
-.http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-value {
+.network-monitor .http-custom-input-and-map-form :is(.http-custom-input, .map-add-new-inputs) .tabpanel-summary-input-value {
   width: 75%;
   align-self: stretch;
 }
