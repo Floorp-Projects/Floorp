@@ -32,6 +32,9 @@ class TalosResults(object):
     def add_extra_option(self, extra_option):
         self.extra_options.append(extra_option)
 
+    def has_results(self):
+        return len(self.results) > 0
+
     def output(self, output_formats):
         """
         output all results to appropriate URLs

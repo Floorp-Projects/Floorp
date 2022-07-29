@@ -293,6 +293,17 @@ function FindProxyForURL(url, host) {
             testname = test["name"]
             LOG.test_start(testname)
 
+            # Skip test if necessary
+            skip_reason = test.get("skip_reason", None)
+            if skip_reason is not None and skip_reason != "":
+                LOG.info("Skipping %s, reason: %s" % (testname, skip_reason))
+                LOG.test_end(
+                    testname,
+                    status="SKIP",
+                    message="Test skipped: %s" % skip_reason,
+                )
+                continue
+
             if not test.get("url"):
                 # set browser prefs for pageloader test setings (doesn't use cmd line args / url)
                 test["url"] = None
@@ -364,24 +375,28 @@ function FindProxyForURL(url, host) {
 
     LOG.info("Completed test suite (%s)" % timer.elapsed())
 
-    # output results
-    if results_urls and not browser_config["no_upload_results"]:
-        talos_results.output(results_urls)
-        if browser_config["develop"] or config["gecko_profile"]:
-            print(
-                "Thanks for running Talos locally. Results are in %s"
-                % (results_urls["output_urls"])
-            )
+    if talos_results.has_results():
+        # output results
+        if results_urls and not browser_config["no_upload_results"]:
+            talos_results.output(results_urls)
+            if browser_config["develop"] or config["gecko_profile"]:
+                print(
+                    "Thanks for running Talos locally. Results are in %s"
+                    % (results_urls["output_urls"])
+                )
 
-    # when running talos locally with gecko profiling on, use the view-gecko-profile
-    # tool to automatically load the latest gecko profile in profiler.firefox.com
-    if config["gecko_profile"] and browser_config["develop"]:
-        if os.environ.get("DISABLE_PROFILE_LAUNCH", "0") == "1":
-            LOG.info(
-                "Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1"
-            )
-        else:
-            view_gecko_profile_from_talos()
+        # when running talos locally with gecko profiling on, use the view-gecko-profile
+        # tool to automatically load the latest gecko profile in profiler.firefox.com
+        if config["gecko_profile"] and browser_config["develop"]:
+            if os.environ.get("DISABLE_PROFILE_LAUNCH", "0") == "1":
+                LOG.info(
+                    "Not launching profiler.firefox.com because DISABLE_PROFILE_LAUNCH=1"
+                )
+            else:
+                view_gecko_profile_from_talos()
+    else:
+        LOG.error("No tests ran")
+        return 2
 
     # we will stop running tests on a failed test, or we will return 0 for
     # green

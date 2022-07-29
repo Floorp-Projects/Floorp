@@ -318,6 +318,13 @@ def create_parser(mach_interface=False):
         default=True,
         help="Disable Fission (site isolation) in Gecko.",
     )
+    add_arg(
+        "--project",
+        type=str,
+        default="mozilla-central",
+        help="The project branch we're running tests on. Used for "
+        "disabling/skipping tests.",
+    )
 
     add_logging_group(parser)
     return parser

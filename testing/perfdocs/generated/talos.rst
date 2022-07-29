@@ -709,6 +709,7 @@ Talos test lists
    * gecko_profile_entries: 2000000
    * gecko_profile_interval: 1
    * lower_is_better: True
+   * pine: False
    * tpcycles: 25
    * tpmanifest: ${talos}/tests/about-preferences/about_preferences_basic.manifest
    * tppagecycles: 1
@@ -4310,6 +4311,7 @@ Talos test lists
    * extensions: ['${talos}/startup_test/sessionrestore/addon']
    * gecko_profile_entries: 10000000
    * gecko_profile_startup: True
+   * pine: False
    * preferences: {'browser.startup.page': 3}
    * profile_path: ${talos}/startup_test/sessionrestore/profile
    * reinstall: ['sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
@@ -4822,6 +4824,7 @@ Talos test lists
       [1503.0, 1497.0, 1523.0, 1536.0, 1511.0, 1485.0, 1594.0, 1580.0, 1531.0, 1471.0, 1502.0, 1520.0, 1488.0, 1533.0, 1531.0, 1502.0, 1486.0, 1489.0, 1487.0, 1475.0]
    * cycles: 20
    * extensions: ['${talos}/startup_test/startup_about_home_paint/addon']
+   * pine: False
    * preferences: {'browser.startup.homepage.abouthome_cache.enabled': False}
    * timeout: 600
    * tpmanifest: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
@@ -4994,6 +4997,7 @@ Talos test lists
    * description: Tests loading about:home on startup with the about:home startup cache enabled.
    * cycles: 20
    * extensions: ['${talos}/startup_test/startup_about_home_paint/addon']
+   * pine: False
    * preferences: {'browser.startup.homepage.abouthome_cache.enabled': True}
    * tpmanifest: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
    * url: None
@@ -5172,6 +5176,7 @@ Talos test lists
       [1503.0, 1497.0, 1523.0, 1536.0, 1511.0, 1485.0, 1594.0, 1580.0, 1531.0, 1471.0, 1502.0, 1520.0, 1488.0, 1533.0, 1531.0, 1502.0, 1486.0, 1489.0, 1487.0, 1475.0]
    * cycles: 20
    * extensions: ['${talos}/startup_test/startup_about_home_paint/addon', '${talos}/getinfooffline']
+   * pine: False
    * preferences: {'browser.startup.homepage.abouthome_cache.enabled': False}
    * tpmanifest: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
    * url: None
@@ -5801,6 +5806,7 @@ Talos test lists
    * gecko_profile_interval: 10
    * linux_counters: None
    * mac_counters: None
+   * pine: False
    * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
    * tpcycles: 1
    * tploadnocache: True
@@ -5975,6 +5981,7 @@ Talos test lists
 
    * description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
    * Contact: No longer being maintained by any team/individual
+   * pine: False
    * preferences: {'layout.css.emulate-moz-box-with-flex': True}
    * **Test Task**:
 
@@ -7181,6 +7188,7 @@ Talos test lists
 
    * description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
    * Contact: No longer being maintained by any team/individual
+   * pine: False
    * preferences: {'layout.css.emulate-moz-box-with-flex': True}
    * **Test Task**:
 
@@ -7424,6 +7432,7 @@ Talos test lists
       5;reader.htm;10.72;10.62;10.23;10.48;10.42;10.64;10.40;10.40;10.14;10.60;10.51;10.36;10.57;10.41;10.52;10.75;10.19;10.72;10.44;9.75;10.49;10.07;10.54;10.46;10.44
    * gecko_profile_entries: 1000000
    * gecko_profile_interval: 1
+   * pine: False
    * preferences: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': True, 'apz.paint_skipping.enabled': False, 'layout.css.scroll-behavior.spring-constant': "'10'", 'toolkit.framesRecording.bufferSize': 10000}
    * timeout: 600
    * tpchrome: False
