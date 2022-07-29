@@ -534,7 +534,7 @@ var DownloadsPanel = {
     }
     let focusOptions = {};
     if (this._preventFocusRing) {
-      focusOptions.focusRing = false;
+      focusOptions.focusVisible = false;
     }
     if (DownloadsView.richListBox.itemCount > 0) {
       DownloadsView.richListBox.selectedIndex = 0;
