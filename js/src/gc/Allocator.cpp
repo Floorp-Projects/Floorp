@@ -499,8 +499,7 @@ TenuredCell* GCRuntime::refillFreeList(JSContext* cx, AllocKind thingKind) {
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy(), "allocating while under GC");
 
   return cx->zone()->arenas.refillFreeListAndAllocate(
-      cx->zone()->arenas.freeLists(), thingKind,
-      ShouldCheckThresholds::CheckThresholds);
+      thingKind, ShouldCheckThresholds::CheckThresholds);
 }
 
 /* static */
@@ -511,14 +510,12 @@ TenuredCell* GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind) {
                 !zone->runtimeFromMainThread()->gc.isBackgroundSweeping());
 
   return zone->arenas.refillFreeListAndAllocate(
-      zone->arenas.freeLists(), thingKind,
-      ShouldCheckThresholds::DontCheckThresholds);
+      thingKind, ShouldCheckThresholds::DontCheckThresholds);
 }
 
 TenuredCell* ArenaLists::refillFreeListAndAllocate(
-    FreeLists& freeLists, AllocKind thingKind,
-    ShouldCheckThresholds checkThresholds) {
-  MOZ_ASSERT(freeLists.isEmpty(thingKind));
+    AllocKind thingKind, ShouldCheckThresholds checkThresholds) {
+  MOZ_ASSERT(freeLists().isEmpty(thingKind));
 
   JSRuntime* rt = runtimeFromAnyThread();
 
@@ -534,7 +531,7 @@ TenuredCell* ArenaLists::refillFreeListAndAllocate(
     // Empty arenas should be immediately freed.
     MOZ_ASSERT(!arena->isEmpty());
 
-    return freeLists.setArenaAndAllocate(arena, thingKind);
+    return freeLists().setArenaAndAllocate(arena, thingKind);
   }
 
   // Parallel threads have their own ArenaLists, but chunks are shared;
@@ -560,7 +557,7 @@ TenuredCell* ArenaLists::refillFreeListAndAllocate(
   MOZ_ASSERT(al.isCursorAtEnd());
   al.insertBeforeCursor(arena);
 
-  return freeLists.setArenaAndAllocate(arena, thingKind);
+  return freeLists().setArenaAndAllocate(arena, thingKind);
 }
 
 inline TenuredCell* FreeLists::setArenaAndAllocate(Arena* arena,
