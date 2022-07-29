@@ -647,6 +647,8 @@ body > main > aside {
 
 .favicon {
   background-size: cover;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .favicon, .icon, .synced-tab-li-favicon {
