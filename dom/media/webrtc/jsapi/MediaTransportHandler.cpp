@@ -1211,7 +1211,7 @@ void MediaTransportHandler::OnPacketReceived(const std::string& aTransportId,
     mCallbackThread->Dispatch(
         // This is being called from sigslot, which does not hold a strong ref.
         WrapRunnable(this, &MediaTransportHandler::OnPacketReceived,
-                     aTransportId, const_cast<MediaPacket&>(aPacket)),
+                     aTransportId, aPacket.Clone()),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -1225,7 +1225,7 @@ void MediaTransportHandler::OnEncryptedSending(const std::string& aTransportId,
     mCallbackThread->Dispatch(
         // This is being called from sigslot, which does not hold a strong ref.
         WrapRunnable(this, &MediaTransportHandler::OnEncryptedSending,
-                     aTransportId, const_cast<MediaPacket&>(aPacket)),
+                     aTransportId, aPacket.Clone()),
         NS_DISPATCH_NORMAL);
     return;
   }
