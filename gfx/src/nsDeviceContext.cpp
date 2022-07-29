@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=4 expandtab: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 expandtab: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,10 +7,10 @@
 #include "nsDeviceContext.h"
 #include <algorithm>  // for max
 #include "gfxContext.h"
-#include "gfxImageSurface.h"     // for gfxImageSurface
-#include "gfxPoint.h"            // for gfxSize
-#include "gfxTextRun.h"          // for gfxFontGroup
-#include "mozilla/Attributes.h"  // for final
+#include "gfxImageSurface.h"  // for gfxImageSurface
+#include "gfxPoint.h"         // for gfxSize
+#include "gfxTextRun.h"       // for gfxFontGroup
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/PrintTarget.h"
 #include "mozilla/Preferences.h"  // for Preferences
@@ -421,9 +421,22 @@ bool nsDeviceContext::SetFullZoom(float aScale) {
   return oldAppUnitsPerDevPixel != mAppUnitsPerDevPixel;
 }
 
+static int32_t ApplyFullZoom(int32_t aUnzoomedAppUnits, float aFullZoom) {
+  if (aFullZoom == 1.0f) {
+    return aUnzoomedAppUnits;
+  }
+  return std::max(1, NSToIntRound(float(aUnzoomedAppUnits) / aFullZoom));
+}
+
+int32_t nsDeviceContext::AppUnitsPerDevPixelInTopLevelChromePage() const {
+  // The only zoom that applies to chrome pages is the system zoom, if any.
+  return ApplyFullZoom(mAppUnitsPerDevPixelAtUnitFullZoom,
+                       LookAndFeel::SystemZoomSettings().mFullZoom);
+}
+
 void nsDeviceContext::UpdateAppUnitsForFullZoom() {
-  mAppUnitsPerDevPixel = std::max(
-      1, NSToIntRound(float(mAppUnitsPerDevPixelAtUnitFullZoom) / mFullZoom));
+  mAppUnitsPerDevPixel =
+      ApplyFullZoom(mAppUnitsPerDevPixelAtUnitFullZoom, mFullZoom);
   // adjust mFullZoom to reflect appunit rounding
   mFullZoom = float(mAppUnitsPerDevPixelAtUnitFullZoom) / mAppUnitsPerDevPixel;
 }

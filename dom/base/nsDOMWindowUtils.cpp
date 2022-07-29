@@ -1899,25 +1899,20 @@ nsDOMWindowUtils::ToScreenRectInCSSUnits(float aX, float aY, float aWidth,
   nsPresContext* presContext = GetPresContext();
   MOZ_ASSERT(presContext);
 
-  auto devRect = ViewAs<LayoutDevicePixel>(
+  const auto devRect = ViewAs<LayoutDevicePixel>(
       rect, PixelCastJustification::ScreenIsParentLayerForRoot);
 
-  // We want to return the screen rect in CSS units of the browser chrome. The
-  // browser chrome doesn't have any built-in zoom, except for the text scale
-  // factor.
+  // We want to return the screen rect in CSS units of the browser chrome.
   //
   // TODO(emilio): It'd be cleaner to convert callers to use plain toScreenRect,
   // and perform the screen -> CSS rect in the parent process instead, probably.
-  LayoutDeviceToCSSScale scale = [&] {
-    float auPerDev =
-        presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
-    auPerDev /= LookAndFeel::SystemZoomSettings().mFullZoom;
-    return LayoutDeviceToCSSScale(auPerDev / AppUnitsPerCSSPixel());
-  }();
+  const nsRect appUnitsRect = LayoutDeviceRect::ToAppUnits(
+      devRect,
+      presContext->DeviceContext()->AppUnitsPerDevPixelInTopLevelChromePage());
 
-  CSSRect cssRect = devRect * scale;
   RefPtr<DOMRect> outRect = new DOMRect(mWindow);
-  outRect->SetRect(cssRect.x, cssRect.y, cssRect.width, cssRect.height);
+  outRect->SetLayoutRect(appUnitsRect);
+
   outRect.forget(aResult);
   return NS_OK;
 }

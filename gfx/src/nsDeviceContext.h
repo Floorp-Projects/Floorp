@@ -108,6 +108,12 @@ class nsDeviceContext final {
   }
 
   /**
+   * Get the ratio of app units to dev pixels that would be used in a top-level
+   * chrome page such as browser.xhtml.
+   */
+  int32_t AppUnitsPerDevPixelInTopLevelChromePage() const;
+
+  /**
    * Return the bit depth of the device.
    */
   uint32_t GetDepth();
