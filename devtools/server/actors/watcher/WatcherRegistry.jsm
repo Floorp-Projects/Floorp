@@ -183,12 +183,20 @@ const WatcherRegistry = {
   /**
    * Notify that a given watcher removed an entry in a given data type.
    *
-   * See `addSessionDataEntry` for argument definition.
+   * @param WatcherActor watcher
+   *               The WatcherActor which stops observing.
+   * @param string type
+   *               The type of data to be removed
+   * @param Array<Object> entries
+   *               The values to be removed to this type of data
+   * @params {Object} options
+   * @params {Boolean} options.isModeSwitching: Set to true true when this is called as the
+   *         result of a change to the devtools.browsertoolbox.scope pref.
    *
    * @return boolean
    *         True if we such entry was already registered, for this watcher actor.
    */
-  removeSessionDataEntry(watcher, type, entries) {
+  removeSessionDataEntry(watcher, type, entries, options) {
     const sessionData = this.getSessionData(watcher);
     if (!sessionData) {
       return false;
@@ -207,7 +215,12 @@ const WatcherRegistry = {
     const isWatchingSomething = SUPPORTED_DATA_TYPES.some(
       dataType => sessionData[dataType] && sessionData[dataType].length > 0
     );
-    if (!isWatchingSomething) {
+
+    // Remove the watcher reference if it's not watching for anything anymore, unless we're
+    // doing a mode switch; in such case we don't mean to end the DevTools session, so we
+    // still want to have access to the underlying data (furthermore, such case should only
+    // happen in tests, in a regular workflow we'd still be watching for resources).
+    if (!isWatchingSomething && !options?.isModeSwitching) {
       sessionDataByWatcherActor.delete(watcher.actorID);
       watcherActors.delete(watcher.actorID);
     }
@@ -246,15 +259,23 @@ const WatcherRegistry = {
   /**
    * Notify that a given watcher stops observing a given target type.
    *
-   * See `watchTargets` for argument definition.
-   *
+   * @param WatcherActor watcher
+   *               The WatcherActor which stops observing.
+   * @param string targetType
+   *               The new target type to stop listening to.
+   * @params {Object} options
+   * @params {Boolean} options.isModeSwitching: Set to true true when this is called as the
+   *         result of a change to the devtools.browsertoolbox.scope pref.
    * @return boolean
    *         True if we were watching for this target type, for this watcher actor.
    */
-  unwatchTargets(watcher, targetType) {
-    return this.removeSessionDataEntry(watcher, SUPPORTED_DATA.TARGETS, [
-      targetType,
-    ]);
+  unwatchTargets(watcher, targetType, options) {
+    return this.removeSessionDataEntry(
+      watcher,
+      SUPPORTED_DATA.TARGETS,
+      [targetType],
+      options
+    );
   },
 
   /**

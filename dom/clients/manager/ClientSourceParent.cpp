@@ -116,6 +116,11 @@ IPCResult ClientSourceParent::RecvExecutionReady(
 };
 
 IPCResult ClientSourceParent::RecvFreeze() {
+#ifdef FUZZING_SNAPSHOT
+  if (mFrozen) {
+    return IPC_FAIL(this, "Freezing when already frozen");
+  }
+#endif
   MOZ_DIAGNOSTIC_ASSERT(!mFrozen);
   mFrozen = true;
 
@@ -123,6 +128,11 @@ IPCResult ClientSourceParent::RecvFreeze() {
 }
 
 IPCResult ClientSourceParent::RecvThaw() {
+#ifdef FUZZING_SNAPSHOT
+  if (!mFrozen) {
+    return IPC_FAIL(this, "Thawing when not already frozen");
+  }
+#endif
   MOZ_DIAGNOSTIC_ASSERT(mFrozen);
   mFrozen = false;
   return IPC_OK();

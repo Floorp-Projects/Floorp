@@ -19,6 +19,7 @@ const watcherSpecPrototype = {
     unwatchTargets: {
       request: {
         targetType: Arg(0, "string"),
+        options: Arg(1, "nullable:json"),
       },
       oneway: true,
     },
@@ -97,6 +98,7 @@ const watcherSpecPrototype = {
     "target-destroyed-form": {
       type: "target-destroyed-form",
       target: Arg(0, "json"),
+      options: Arg(1, "nullable:json"),
     },
 
     "resource-available-form": {

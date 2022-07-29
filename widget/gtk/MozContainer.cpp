@@ -165,6 +165,9 @@ void moz_container_map(GtkWidget* widget) {
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
   container = MOZ_CONTAINER(widget);
 
+  LOGCONTAINER(("moz_container_map() [%p]",
+                (void*)moz_container_get_nsWindow(container)));
+
   gtk_widget_set_mapped(widget, TRUE);
 
   tmp_list = container->children;
@@ -184,6 +187,9 @@ void moz_container_map(GtkWidget* widget) {
 
 void moz_container_unmap(GtkWidget* widget) {
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
+
+  LOGCONTAINER(("moz_container_unmap() [%p]",
+                (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget))));
 
   gtk_widget_set_mapped(widget, FALSE);
 

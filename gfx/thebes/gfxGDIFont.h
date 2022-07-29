@@ -15,12 +15,10 @@
 
 #include "usp10.h"
 
-class gfxGDIFont : public gfxFont {
+class gfxGDIFont final : public gfxFont {
  public:
   gfxGDIFont(GDIFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
              AntialiasOption anAAOption = kAntialiasDefault);
-
-  virtual ~gfxGDIFont();
 
   HFONT GetHFONT() const { return mFont; }
 
@@ -59,6 +57,8 @@ class gfxGDIFont : public gfxFont {
   FontType GetType() const override { return FONT_TYPE_GDI; }
 
  protected:
+  ~gfxGDIFont() override;
+
   const Metrics& GetHorizontalMetrics() const override { return *mMetrics; }
 
   bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,

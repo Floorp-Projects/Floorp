@@ -4800,7 +4800,13 @@ already_AddRefed<nsICSSDeclaration> nsGlobalWindowInner::GetComputedStyleHelper(
 
 Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
   nsIPrincipal* principal = GetPrincipal();
-  nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
+  nsIPrincipal* storagePrincipal;
+  if (StaticPrefs::
+          privacy_partition_always_partition_third_party_non_cookie_storage_exempt_sessionstorage()) {
+    storagePrincipal = GetEffectiveCookiePrincipal();
+  } else {
+    storagePrincipal = GetEffectiveStoragePrincipal();
+  }
   BrowsingContext* browsingContext = GetBrowsingContext();
 
   if (!principal || !storagePrincipal || !browsingContext ||

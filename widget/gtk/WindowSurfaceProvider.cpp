@@ -170,7 +170,7 @@ void WindowSurfaceProvider::EndRemoteDrawingInRegion(
   if (GdkIsWaylandDisplay()) {
     // We're called too early or we're unmapped.
     // Don't draw anything.
-    if (!mWidget) {
+    if (!mWidget || mWidget->IsDestroyed()) {
       return;
     }
     if (moz_container_wayland_is_commiting_to_parent(
@@ -179,7 +179,10 @@ void WindowSurfaceProvider::EndRemoteDrawingInRegion(
       // in main thread to sync with Gtk access to it.
       NS_DispatchToMainThread(NS_NewRunnableFunction(
           "WindowSurfaceProvider::EndRemoteDrawingInRegion",
-          [RefPtr{mWidget}, this, aInvalidRegion]() {
+          [widget = RefPtr{mWidget}, this, aInvalidRegion]() {
+            if (widget->IsDestroyed()) {
+              return;
+            }
             MutexAutoLock lock(mMutex);
             // Commit to mWindowSurface only when we have a valid one.
             if (mWindowSurface && mWindowSurfaceValid) {

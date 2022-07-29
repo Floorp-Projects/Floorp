@@ -16,13 +16,12 @@
 
 class FT2FontEntry;
 
-class gfxFT2Font : public gfxFT2FontBase {
+class gfxFT2Font final : public gfxFT2FontBase {
  public:  // new functions
   gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
              RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace,
              FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
              int aLoadFlags);
-  virtual ~gfxFT2Font();
 
   FT2FontEntry* GetFontEntry();
 
@@ -37,6 +36,8 @@ class gfxFT2Font : public gfxFT2FontBase {
                               FontCacheSizes* aSizes) const override;
 
  protected:
+  ~gfxFT2Font() override;
+
   struct CachedGlyphData {
     CachedGlyphData() : glyphIndex(0xffffffffU) {}
 

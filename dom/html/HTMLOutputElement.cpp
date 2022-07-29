@@ -52,7 +52,10 @@ void HTMLOutputElement::SetCustomValidity(const nsAString& aError) {
 NS_IMETHODIMP
 HTMLOutputElement::Reset() {
   mValueModeFlag = eModeDefault;
-  return nsContentUtils::SetNodeTextContent(this, mDefaultValue, true);
+  // We can't pass mDefaultValue, because it'll be truncated when
+  // the element's descendants are changed, so pass a copy instead.
+  const nsAutoString currentDefaultValue(mDefaultValue);
+  return nsContentUtils::SetNodeTextContent(this, currentDefaultValue, true);
 }
 
 bool HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,

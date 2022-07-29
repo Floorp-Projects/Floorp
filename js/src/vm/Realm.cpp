@@ -750,6 +750,11 @@ JS_PUBLIC_API JSObject* JS::GetRealmIteratorPrototype(JSContext* cx) {
   return GlobalObject::getOrCreateIteratorPrototype(cx, cx->global());
 }
 
+JS_PUBLIC_API JSObject* JS::GetRealmAsyncIteratorPrototype(JSContext* cx) {
+  CHECK_THREAD(cx);
+  return GlobalObject::getOrCreateAsyncIteratorPrototype(cx, cx->global());
+}
+
 JS_PUBLIC_API JSObject* JS::GetRealmKeyObject(JSContext* cx) {
   return GlobalObject::getOrCreateRealmKeyObject(cx, cx->global());
 }

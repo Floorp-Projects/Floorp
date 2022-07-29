@@ -658,8 +658,10 @@ const windowGlobalTargetPrototype = {
    * @params {Object} options
    * @params {Boolean} options.isTargetSwitching: Set to true when this is called during
    *         a target switch.
+   * @params {Boolean} options.isModeSwitching: Set to true true when this is called as the
+   *         result of a change to the devtools.browsertoolbox.scope pref.
    */
-  destroy({ isTargetSwitching = false } = {}) {
+  destroy({ isTargetSwitching = false, isModeSwitching = false } = {}) {
     // Avoid reentrancy. We will destroy the Transport when emitting "destroyed",
     // which will force destroying all actors.
     if (this.destroying) {
@@ -727,7 +729,7 @@ const windowGlobalTargetPrototype = {
 
     // Emit a last event before calling Actor.destroy
     // which will destroy the EventEmitter API
-    this.emit("destroyed");
+    this.emit("destroyed", { isTargetSwitching, isModeSwitching });
 
     Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);

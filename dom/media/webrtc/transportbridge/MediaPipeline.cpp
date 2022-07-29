@@ -599,7 +599,7 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtp, false, packet.data(),
                       packet.len());
 
-  mRtpReceiveEvent.Notify(packet, header);
+  mRtpReceiveEvent.Notify(packet.Clone(), header);
 }
 
 void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
@@ -636,9 +636,9 @@ void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
   }
 
   if (mDirection == DirectionType::TRANSMIT) {
-    mSenderRtcpReceiveEvent.Notify(std::move(packet));
+    mSenderRtcpReceiveEvent.Notify(packet.Clone());
   } else {
-    mReceiverRtcpReceiveEvent.Notify(std::move(packet));
+    mReceiverRtcpReceiveEvent.Notify(packet.Clone());
   }
 }
 
