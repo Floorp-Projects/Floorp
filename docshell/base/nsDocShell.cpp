@@ -390,7 +390,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mTitleValidForCurrentURI(false),
       mWillChangeProcess(false),
       mIsNavigating(false),
-      mSuspendMediaWhenInactive(false),
       mForcedAutodetection(false),
       mCheckingSessionHistory(false),
       mNeedToReportActiveAfterLoadingBecomesActive(false) {
