@@ -87,7 +87,7 @@ import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
+import mozilla.components.support.ktx.android.view.exitImmersiveMode
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -1381,7 +1381,7 @@ abstract class BaseBrowserFragment :
 
             MediaState.fullscreen.record(NoExtras())
         } else {
-            activity?.exitImmersiveModeIfNeeded()
+            activity?.exitImmersiveMode()
             (activity as? HomeActivity)?.let { activity ->
                 activity.themeManager.applyStatusBarTheme(activity)
             }
