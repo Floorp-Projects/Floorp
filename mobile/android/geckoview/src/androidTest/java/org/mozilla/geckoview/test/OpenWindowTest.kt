@@ -61,7 +61,7 @@ class OpenWindowTest : BaseSessionTest() {
     @NullDelegate(ServiceWorkerDelegate::class)
     fun openWindowNullDelegate() {
         sessionRule.delegateUntilTestEnd(object : ContentDelegate, NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
                 // we should not open the target url
                 assertThat("URL should notmatch", url, not(createTestUrl(OPEN_WINDOW_TARGET_PATH)))
             }
@@ -73,7 +73,7 @@ class OpenWindowTest : BaseSessionTest() {
     @Test
     fun openWindowNullResult() {
         sessionRule.delegateUntilTestEnd(object : ContentDelegate, NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
                 // we should not open the target url
                 assertThat("URL should notmatch", url, not(createTestUrl(OPEN_WINDOW_TARGET_PATH)))
             }
@@ -100,7 +100,7 @@ class OpenWindowTest : BaseSessionTest() {
         openPageClickNotification()
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("Should be on the main session", session, equalTo(mainSession))
                 assertThat("URL should match", url, equalTo(createTestUrl(OPEN_WINDOW_TARGET_PATH)))
             }
@@ -127,7 +127,7 @@ class OpenWindowTest : BaseSessionTest() {
         openPageClickNotification()
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("Should be on the target session", session, equalTo(targetSession))
                 assertThat("URL should match", url, equalTo(createTestUrl(OPEN_WINDOW_TARGET_PATH)))
             }

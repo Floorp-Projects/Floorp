@@ -140,7 +140,7 @@ public class GeckoSessionTestRule implements TestRule {
     displayTexture.setDefaultBufferSize(x, y);
 
     final Surface displaySurface = new Surface(displayTexture);
-    display.surfaceChanged(displaySurface, x, y);
+    display.surfaceChanged(new GeckoDisplay.SurfaceInfo.Builder(displaySurface).size(x, y).build());
 
     mDisplays.put(session, display);
     mDisplayTextures.put(session, displayTexture);
@@ -2141,6 +2141,7 @@ public class GeckoSessionTestRule implements TestRule {
     Intent intent = new Intent();
     intent.setAction(Intent.ACTION_MAIN);
     intent.addCategory(Intent.CATEGORY_HOME);
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     context.startActivity(intent);
   }
 
@@ -2154,6 +2155,7 @@ public class GeckoSessionTestRule implements TestRule {
     Intent notificationIntent = new Intent(context, GeckoViewTestActivity.class);
     notificationIntent.setAction(Intent.ACTION_MAIN);
     notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+    notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     context.startActivity(notificationIntent);
   }
 
