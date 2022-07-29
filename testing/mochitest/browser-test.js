@@ -556,23 +556,6 @@ Tester.prototype = {
     }
   },
 
-  async ensureVsyncDisabled() {
-    try {
-      await this.TestUtils.waitForCondition(
-        () => !ChromeUtils.vsyncEnabled(),
-        "waiting for vsync to be disabled"
-      );
-    } catch (e) {
-      this.Assert.ok(false, e);
-      this.Assert.ok(
-        false,
-        "vsync remained enabled at the end of the test. " +
-          "Is there an animation still running? " +
-          "Consider talking to the performance team for tips to solve this."
-      );
-    }
-  },
-
   async nextTest() {
     if (this.currentTest) {
       if (this._coverageCollector) {
@@ -653,7 +636,6 @@ Tester.prototype = {
       this.PromiseTestUtils.ensureDOMPromiseRejectionsProcessed();
       this.PromiseTestUtils.assertNoUncaughtRejections();
       this.PromiseTestUtils.assertNoMoreExpectedRejections();
-      await this.ensureVsyncDisabled();
 
       Object.keys(window).forEach(function(prop) {
         if (parseInt(prop) == prop) {
