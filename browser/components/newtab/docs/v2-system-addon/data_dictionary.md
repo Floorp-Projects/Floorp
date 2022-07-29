@@ -204,7 +204,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 | ``url``                    | [Optional] The URL of the recommendation shown in one of the highlights spots, if any.                                                               | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
-| ``value`` (event)          | [Optional] An object with keys "icon\_type" and "card\_type" to record the extra information for event ping                                          | :one:            |
+| ``value`` (event)          | [Optional] An object with keys "icon\_type", "card\_type" and "pocket\_logged\_in\_status" to record the extra information for event ping            | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+
 | ``ver``                    | [Auto populated by Onyx] The version of the Onyx API the ping was sent to.                                                                           | :one:            |
 +----------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+------------------+

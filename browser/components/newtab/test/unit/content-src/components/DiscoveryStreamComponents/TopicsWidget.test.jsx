@@ -117,7 +117,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
       );
       assert.calledWith(
         third,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "CARDGRID_WIDGET",
           action_position: 2,
@@ -171,7 +171,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
       );
       assert.calledWith(
         third,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "CARDGRID_WIDGET",
           action_position: 2,
@@ -225,7 +225,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
       );
       assert.calledWith(
         third,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "CARDGRID_WIDGET",
           action_position: 2,

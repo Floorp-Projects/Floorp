@@ -74,6 +74,7 @@ for (const type of [
   "DISCOVERY_STREAM_SPOCS_UPDATE",
   "DISCOVERY_STREAM_SPOC_BLOCKED",
   "DISCOVERY_STREAM_SPOC_IMPRESSION",
+  "DISCOVERY_STREAM_USER_EVENT",
   "DOWNLOAD_CHANGED",
   "FAKE_FOCUS_SEARCH",
   "FILL_SEARCH_TERM",
@@ -291,6 +292,20 @@ function UserEvent(data) {
 }
 
 /**
+ * DiscoveryStreamUserEvent - A telemetry ping indicating a user action from Discovery Stream. This should only
+ *                     be sent from the UI during a user session.
+ *
+ * @param  {object} data Fields to include in the ping (source, etc.)
+ * @return {object} An AlsoToMain action
+ */
+function DiscoveryStreamUserEvent(data) {
+  return AlsoToMain({
+    type: actionTypes.DISCOVERY_STREAM_USER_EVENT,
+    data,
+  });
+}
+
+/**
  * ASRouterUserEvent - A telemetry ping indicating a user action from AS router. This should only
  *                     be sent from the UI during a user session.
  *
@@ -373,6 +388,7 @@ function WebExtEvent(type, data, importContext = globalImportContext) {
 const actionCreators = {
   BroadcastToContent,
   UserEvent,
+  DiscoveryStreamUserEvent,
   ASRouterUserEvent,
   ImpressionStats,
   AlsoToOneContent,

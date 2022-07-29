@@ -24,7 +24,7 @@ export class DSTextPromo extends React.PureComponent {
       // Grab the first item in the array as we only have 1 spoc position.
       const [spoc] = data.spocs;
       this.props.dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source,
           action_position: 0,
@@ -67,7 +67,7 @@ export class DSTextPromo extends React.PureComponent {
 
       this.props.dispatch(action);
       this.props.dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: userEvent,
           source,
           action_position: index,

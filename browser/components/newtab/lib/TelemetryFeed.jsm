@@ -35,6 +35,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   lazy,
+  "pktApi",
+  "chrome://pocket/content/pktApi.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
   "UTEventReporting",
   "resource://activity-stream/lib/UTEventReporting.jsm"
 );
@@ -915,6 +920,19 @@ class TelemetryFeed {
     this.sendUTEvent(userEvent, this.utEvents.sendUserEvent);
   }
 
+  handleDiscoveryStreamUserEvent(action) {
+    this.handleUserEvent({
+      ...action,
+      data: {
+        ...(action.data || {}),
+        value: {
+          ...(action.data?.value || {}),
+          pocket_logged_in_status: lazy.pktApi.isUserLoggedIn(),
+        },
+      },
+    });
+  }
+
   async handleASRouterUserEvent(action) {
     const { ping, pingType } = await this.createASRouterEvent(action);
     if (!pingType) {
@@ -1036,6 +1054,9 @@ class TelemetryFeed {
           au.getPortIdOfSender(action),
           action.data
         );
+        break;
+      case at.DISCOVERY_STREAM_USER_EVENT:
+        this.handleDiscoveryStreamUserEvent(action);
         break;
       case at.TELEMETRY_USER_EVENT:
         this.handleUserEvent(action);

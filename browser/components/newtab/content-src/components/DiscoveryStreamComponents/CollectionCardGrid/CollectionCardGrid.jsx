@@ -39,7 +39,7 @@ export class CollectionCardGrid extends React.PureComponent {
       this.props.dispatch(action);
 
       this.props.dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: userEvent,
           source,
           action_position: pos,

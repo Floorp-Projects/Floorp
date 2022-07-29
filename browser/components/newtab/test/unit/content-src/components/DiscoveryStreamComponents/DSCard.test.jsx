@@ -154,7 +154,7 @@ describe("<DSCard>", () => {
       assert.calledTwice(dispatch);
       assert.calledWith(
         dispatch,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "FOO",
           action_position: 1,
@@ -181,7 +181,7 @@ describe("<DSCard>", () => {
       assert.calledTwice(dispatch);
       assert.calledWith(
         dispatch,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "FOO",
           action_position: 1,
@@ -215,7 +215,7 @@ describe("<DSCard>", () => {
       assert.calledTwice(dispatch);
       assert.calledWith(
         dispatch,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "FOO",
           action_position: 1,
@@ -336,7 +336,7 @@ describe("<DSCard>", () => {
       );
       assert.calledWith(
         dispatch,
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "SAVE_TO_POCKET",
           source: "CARDGRID_HOVER",
           action_position: 1,

@@ -118,7 +118,7 @@ export function RecentSavesContainer({
 
   function onMyListClicked() {
     dispatch(
-      ac.UserEvent({
+      ac.DiscoveryStreamUserEvent({
         event: "CLICK",
         source: `${source}_VIEW_LIST`,
       })
