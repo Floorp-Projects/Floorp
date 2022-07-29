@@ -89,9 +89,9 @@ DevToolsServerConnection.prototype = {
    */
   parentMessageManager: null,
 
-  close() {
+  close(options) {
     if (this._transport) {
-      this._transport.close();
+      this._transport.close(options);
     }
   },
 
@@ -471,8 +471,11 @@ DevToolsServerConnection.prototype = {
    * @param status nsresult
    *        The status code that corresponds to the reason for closing
    *        the stream.
+   * @param {object} options
+   * @param {boolean} options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  onTransportClosed(status) {
+  onTransportClosed(status, options) {
     dumpn("Cleaning up connection.");
     if (!this._actorPool) {
       // Ignore this call if the connection is already closed.
@@ -490,7 +493,7 @@ DevToolsServerConnection.prototype = {
     // See test_connection_closes_all_pools.js for practical examples of Pool
     // hierarchies.
     const topLevelPools = this._extraPools.filter(p => p.isTopPool());
-    topLevelPools.forEach(p => p.destroy());
+    topLevelPools.forEach(p => p.destroy(options));
 
     this._extraPools = null;
 

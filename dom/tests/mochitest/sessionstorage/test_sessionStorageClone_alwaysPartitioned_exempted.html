@@ -30,7 +30,7 @@ async function doNextTest()
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.partition.always_partition_third_party_non_cookie_storage", true],
-      ["privacy.partition.always_partition_third_party_non_cookie_storage.exempt_sessionstorage", false]
+      ["privacy.partition.always_partition_third_party_non_cookie_storage.exempt_sessionstorage", true]
     ],
   });
 
@@ -39,7 +39,7 @@ async function doNextTest()
   currentStep = 1;
   doStep();
 
-  let hash = "#aps";
+  let hash = "#";
   if (isXOrigin) hash += "xorigin";
 
   switch (currentTest)
@@ -48,7 +48,7 @@ async function doNextTest()
       // Open a window from the same origin and check data
       // are copied but not further modified on our side
       slaveOrigin = "http://mochi.test:8888";
-      slave = window.open(slaveOrigin + slavePath + "frameNotEqual.html" + hash);
+      slave = window.open(slaveOrigin + slavePath + "frameEqual.html" + hash);
       break;
 
     case 2:

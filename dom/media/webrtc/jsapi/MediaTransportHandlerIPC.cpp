@@ -386,15 +386,13 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnConnectionStateChange(
 
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnPacketReceived(
     const string& transportId, const MediaPacket& packet) {
-  MediaPacket copy(packet);  // Laaaaaame! Might be safe to const_cast?
-  mUser->OnPacketReceived(transportId, copy);
+  mUser->OnPacketReceived(transportId, packet);
   return ipc::IPCResult::Ok();
 }
 
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnEncryptedSending(
     const string& transportId, const MediaPacket& packet) {
-  MediaPacket copy(packet);  // Laaaaaame! Might be safe to const_cast?
-  mUser->OnEncryptedSending(transportId, copy);
+  mUser->OnEncryptedSending(transportId, packet);
   return ipc::IPCResult::Ok();
 }
 

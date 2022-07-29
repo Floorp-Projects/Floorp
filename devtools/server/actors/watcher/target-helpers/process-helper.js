@@ -118,8 +118,14 @@ function onMessageManagerClose(messageManager, topic, data) {
  * - clear up things from `actors` WeakMap,
  * - notify all related target actors as being destroyed,
  * - close all DevTools Transports being created for each Message Manager.
+ *
+ * @param {WatcherActor} watcher
+ * @param {MessageManager}
+ * @param {object} options
+ * @param {boolean} options.isModeSwitching
+ *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
  */
-function unregisterWatcherForMessageManager(watcher, messageManager) {
+function unregisterWatcherForMessageManager(watcher, messageManager, options) {
   const targetActorDescriptions = actors.get(messageManager);
   if (!targetActorDescriptions || targetActorDescriptions.length == 0) {
     return;
@@ -134,7 +140,7 @@ function unregisterWatcherForMessageManager(watcher, messageManager) {
     childTransport,
     actor,
   } of matchingTargetActorDescriptions) {
-    watcher.notifyTargetDestroyed(actor);
+    watcher.notifyTargetDestroyed(actor, options);
 
     childTransport.close();
     watcher.conn.cancelForwarding(prefix);
@@ -154,11 +160,16 @@ function unregisterWatcherForMessageManager(watcher, messageManager) {
 /**
  * Destroy everything related to a given watcher that has been created in this module:
  * (See unregisterWatcherForMessageManager)
+ *
+ * @param {WatcherActor} watcher
+ * @param {object} options
+ * @param {boolean} options.isModeSwitching
+ *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
  */
-function closeWatcherTransports(watcher) {
+function closeWatcherTransports(watcher, options) {
   for (let i = 0; i < Services.ppmm.childCount; i++) {
     const messageManager = Services.ppmm.getChildAt(i);
-    unregisterWatcherForMessageManager(watcher, messageManager);
+    unregisterWatcherForMessageManager(watcher, messageManager, options);
   }
 }
 
@@ -189,10 +200,17 @@ function maybeRegisterMessageListeners(watcher) {
     }
   }
 }
-function maybeUnregisterMessageListeners(watcher) {
+
+/**
+ * @param {WatcherActor} watcher
+ * @param {object} options
+ * @param {boolean} options.isModeSwitching
+ *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+ */
+function maybeUnregisterMessageListeners(watcher, options = {}) {
   const sizeBefore = watchers.size;
   watchers.delete(watcher);
-  closeWatcherTransports(watcher);
+  closeWatcherTransports(watcher, options);
 
   if (sizeBefore == 1 && watchers.size == 0) {
     Services.ppmm.removeMessageListener(
@@ -212,7 +230,9 @@ function maybeUnregisterMessageListeners(watcher) {
     // module unregister the last watcher of all.
     Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SCRIPT);
 
-    Services.ppmm.broadcastAsyncMessage("debug:destroy-process-script");
+    Services.ppmm.broadcastAsyncMessage("debug:destroy-process-script", {
+      options,
+    });
   }
 }
 
@@ -263,8 +283,14 @@ async function createTargets(watcher) {
   await onTargetsCreated;
 }
 
-function destroyTargets(watcher) {
-  maybeUnregisterMessageListeners(watcher);
+/**
+ * @param {WatcherActor} watcher
+ * @param {object} options
+ * @param {boolean} options.isModeSwitching
+ *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+ */
+function destroyTargets(watcher, options) {
+  maybeUnregisterMessageListeners(watcher, options);
 
   Services.ppmm.broadcastAsyncMessage("debug:destroy-target", {
     watcherActorID: watcher.actorID,

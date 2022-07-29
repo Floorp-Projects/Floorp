@@ -237,9 +237,9 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const form = targetActor.form();
     // Ensure unregistering and destroying the related DevToolsServerConnection+Transport
     // on both content and parent process JSWindowActors.
-    targetActor.once("destroyed", () => {
+    targetActor.once("destroyed", options => {
       // This will destroy the content process one
-      this._destroyTargetActor(watcherActorID);
+      this._destroyTargetActor(watcherActorID, options);
       // And this will destroy the parent process one
       try {
         this.sendAsyncMessage("DevToolsFrameChild:destroy", {
@@ -249,6 +249,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
               form,
             },
           ],
+          options,
         });
       } catch (e) {
         // Ignore exception when the JSWindowActorChild has already been destroyed.
@@ -295,7 +296,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  _destroyTargetActor(watcherActorID) {
+  /**
+   * @param {string} watcherActorID
+   * @param {object} options
+   * @param {boolean} options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+   */
+  _destroyTargetActor(watcherActorID, options) {
     const connectionInfo = this._connections.get(watcherActorID);
     // This connection has already been cleaned?
     if (!connectionInfo) {
@@ -303,10 +310,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
         `Trying to destroy a target actor that doesn't exists, or has already been destroyed. Watcher Actor ID:${watcherActorID}`
       );
     }
-    connectionInfo.connection.close();
+    connectionInfo.connection.close(options);
     this._connections.delete(watcherActorID);
     if (this._connections.size == 0) {
-      this.didDestroy();
+      this.didDestroy(options);
     }
   }
 
@@ -429,8 +436,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
         });
       }
       case "DevToolsFrameParent:destroy": {
-        const { watcherActorID } = message.data;
-        return this._destroyTargetActor(watcherActorID);
+        const { watcherActorID, options } = message.data;
+        return this._destroyTargetActor(watcherActorID, options);
       }
       case "DevToolsFrameParent:addSessionDataEntry": {
         const { watcherActorID, sessionContext, type, entries } = message.data;
@@ -672,10 +679,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  didDestroy() {
+  didDestroy(options) {
     logWindowGlobal(this.manager, "Destroy WindowGlobalTarget");
     for (const [, connectionInfo] of this._connections) {
-      connectionInfo.connection.close();
+      connectionInfo.connection.close(options);
     }
     this._connections.clear();
 

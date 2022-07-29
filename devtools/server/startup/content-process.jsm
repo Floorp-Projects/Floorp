@@ -60,7 +60,7 @@ function initContentProcessTarget(msg) {
   const response = { watcherActorID, prefix, actor: actor.form() };
   mm.sendAsyncMessage("debug:content-process-actor", response);
 
-  function onDestroy() {
+  function onDestroy(options) {
     mm.removeMessageListener(
       "debug:content-process-disconnect",
       onContentProcessDisconnect
@@ -75,7 +75,7 @@ function initContentProcessTarget(msg) {
     // Call DevToolsServerConnection.close to destroy all child actors. It should end up
     // calling DevToolsServerConnection.onTransportClosed that would actually cleanup all actor
     // pools.
-    conn.close();
+    conn.close(options);
 
     // Destroy the related loader when the target is destroyed
     // and we were the last user of the special loader

@@ -60,7 +60,7 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     this.emit("target-available", front);
   }
 
-  _onTargetDestroyed(form) {
+  _onTargetDestroyed(form, options = {}) {
     const front = this._getTargetFront(form);
 
     // When server side target switching is off,
@@ -71,7 +71,7 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     // existing targets.
     // https://searchfox.org/mozilla-central/rev/af8e5d37fd56be90ccddae2203e7b875d3f3ae87/devtools/shared/commands/target/target-command.js#166-173
     if (front) {
-      this.emit("target-destroyed", front);
+      this.emit("target-destroyed", front, options);
     }
   }
 

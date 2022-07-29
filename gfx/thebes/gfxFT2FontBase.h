@@ -45,7 +45,6 @@ class gfxFT2FontBase : public gfxFont {
       const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
       RefPtr<mozilla::gfx::SharedFTFace>&& aFTFace, gfxFontEntry* aFontEntry,
       const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden);
-  virtual ~gfxFT2FontBase();
 
   uint32_t GetGlyph(uint32_t aCharCode) {
     auto* entry = static_cast<gfxFT2FontEntryBase*>(mFontEntry.get());
@@ -85,6 +84,7 @@ class gfxFT2FontBase : public gfxFont {
                          mozilla::gfx::IntRect* aBounds = nullptr) const;
 
  protected:
+  ~gfxFT2FontBase() override;
   void InitMetrics();
   const Metrics& GetHorizontalMetrics() const override { return mMetrics; }
   FT_Vector GetEmboldenStrength(FT_Face aFace) const;

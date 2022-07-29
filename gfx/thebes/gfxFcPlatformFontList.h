@@ -228,7 +228,7 @@ class gfxFontconfigFont final : public gfxFT2FontBase {
   bool ShouldHintMetrics() const override;
 
  private:
-  virtual ~gfxFontconfigFont();
+  ~gfxFontconfigFont() override;
 
   RefPtr<FcPattern> mPattern;
 };

@@ -580,10 +580,6 @@ void nsWindow::Destroy() {
   /** Need to clean our LayerManager up while still alive */
   DestroyLayerManager();
 
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-  }
-
   // Ensure any resources assigned to the window get cleaned up first
   // to avoid double-freeing.
   mSurfaceProvider.CleanupResources();
@@ -5306,8 +5302,48 @@ bool nsWindow::GetShapedState() {
   return mIsTransparent && !mHasAlphaVisual && !mTransparencyBitmapForTitlebar;
 }
 
+void nsWindow::ConfigureCompositor() {
+  MOZ_DIAGNOSTIC_ASSERT(mCompositorState == COMPOSITOR_ENABLED);
+  MOZ_DIAGNOSTIC_ASSERT(mIsMapped);
+
+  LOG("nsWindow::ConfigureCompositor()");
+  auto startCompositing = [self = RefPtr{this}, this]() -> void {
+    LOG("  moz_container_wayland_add_initial_draw_callback "
+        "ConfigureCompositor");
+
+    // too late
+    if (mIsDestroyed || !mIsMapped) {
+      LOG("  quit, mIsDestroyed = %d mIsMapped = %d", mIsDestroyed, mIsMapped);
+      return;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(mCompositorState == COMPOSITOR_ENABLED);
+    MOZ_ASSERT(mCompositorWidgetDelegate);
+    mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
+                                               GetShapedState());
+
+    // As WaylandStartVsync needs mCompositorWidgetDelegate this is the right
+    // time to start it.
+    WaylandStartVsync();
+
+    CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+    MOZ_ASSERT(remoteRenderer);
+    remoteRenderer->SendResumeAsync();
+    remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
+  };
+
+  if (GdkIsWaylandDisplay()) {
+#ifdef MOZ_WAYLAND
+    moz_container_wayland_add_initial_draw_callback(mContainer,
+                                                    startCompositing);
+#endif
+  } else {
+    startCompositing();
+  }
+}
+
 void nsWindow::ConfigureGdkWindow() {
-  LOG("nsWindow::ConfigureGdkWindow() [%p]", this);
+  LOG("nsWindow::ConfigureGdkWindow()");
 
   EnsureGdkWindow();
 
@@ -5364,42 +5400,9 @@ void nsWindow::ConfigureGdkWindow() {
 
   RefreshWindowClass();
 
-  if (mCompositorState == COMPOSITOR_PAUSED_INITIALLY) {
-    auto startCompositing = [self = RefPtr{this}, this]() -> void {
-      LOG("  moz_container_wayland_add_initial_draw_callback start initial "
-          "compositing");
-
-      // Call GetWindowRenderer() to make sure we have
-      // mCompositorWidgetDelegate & mCompositorBridgeChild
-      // (a.k.a remoteRenderer).
-      (void)GetWindowRenderer();
-
-      CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-      MOZ_ASSERT(mCompositorWidgetDelegate);
-      MOZ_ASSERT(remoteRenderer);
-
-      // If we're missing mCompositorWidgetDelegate here, EnableRendering()
-      // will be called later by SetCompositorWidgetDelegate(), which is
-      // fired by GetWindowRenderer()/CreateCompositor().
-      if (mCompositorWidgetDelegate) {
-        mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
-                                                   GetShapedState());
-        WaylandStartVsync();
-      }
-
-      remoteRenderer->SendResumeAsync();
-      remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
-      mCompositorState = COMPOSITOR_ENABLED;
-    };
-
-    if (GdkIsWaylandDisplay()) {
-#ifdef MOZ_WAYLAND
-      moz_container_wayland_add_initial_draw_callback(mContainer,
-                                                      startCompositing);
-#endif
-    } else {
-      startCompositing();
-    }
+  // We're not mapped yet but we have already created compositor.
+  if (mCompositorWidgetDelegate) {
+    ConfigureCompositor();
   }
 
   if (mHasMappedToplevel) {
@@ -5410,12 +5413,13 @@ void nsWindow::ConfigureGdkWindow() {
 }
 
 void nsWindow::ReleaseGdkWindow() {
-  LOG("nsWindow::ReleaseGdkWindow() [%p]", this);
+  LOG("nsWindow::ReleaseGdkWindow()");
 
-  WaylandStopVsync();
   DestroyChildWindows();
 
-  DestroyLayerManager();
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->DisableRendering();
+  }
 
   if (mGdkWindow) {
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
@@ -6150,17 +6154,11 @@ void nsWindow::ResumeCompositor() {
     mCompositorPauseTimeoutID = 0;
   }
 
-  // We're expected to have mCompositorWidgetDelegate present
-  // as we don't delete LayerManager (in PauseCompositor())
-  // to avoid flickering.
-  MOZ_RELEASE_ASSERT(mCompositorWidgetDelegate);
-
   CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-  if (remoteRenderer) {
-    mCompositorState = COMPOSITOR_ENABLED;
-    remoteRenderer->SendResumeAsync();
-    remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
-  }
+  MOZ_RELEASE_ASSERT(remoteRenderer);
+  remoteRenderer->SendResumeAsync();
+  remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
+  mCompositorState = COMPOSITOR_ENABLED;
 }
 
 void nsWindow::ResumeCompositorFromCompositorThread() {
@@ -8450,46 +8448,13 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
       "mCompositorWidgetDelegate %p\n",
       delegate, mIsMapped, mCompositorWidgetDelegate);
 
-  // Remove reference to GdkWindow/XWindow from remote widget.
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-    WaylandStopVsync();
-  }
-
   if (delegate) {
     mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
-
-    // If we're mapped we only need to submit XWindow/shape to newly
-    // created compositor.
-    // If we're not mapped, leave compolete config to ConfigureGdkWindow().
     if (mIsMapped) {
-      auto startCompositing = [self = RefPtr{this}, this]() -> void {
-        LOG("  moz_container_wayland_add_initial_draw_callback resume "
-            "compositor from SetCompositorWidgetDelegate()");
-        // Pass recent GdkWindow/XWindow to remote widget.
-        mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
-                                                   GetShapedState());
-        // CompositorBridgeChild::Resume() creates a new surface
-        // based on GetX11Window()/GetShapedState() set above.
-        // Resume() is effective even without compositor pause.
-        if (mCompositorState == COMPOSITOR_ENABLED) {
-          CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-          remoteRenderer->SendResumeAsync();
-          remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
-        }
-        WaylandStartVsync();
-      };
-      if (GdkIsWaylandDisplay()) {
-#ifdef MOZ_WAYLAND
-        moz_container_wayland_add_initial_draw_callback(mContainer,
-                                                        startCompositing);
-#endif
-      } else {
-        startCompositing();
-      }
+      ConfigureCompositor();
     }
   } else {
     mCompositorWidgetDelegate = nullptr;
