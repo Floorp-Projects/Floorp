@@ -2495,6 +2495,8 @@ var gBrowserInit = {
 
     gAccessibilityServiceIndicator.uninit();
 
+    FirefoxViewHandler.uninit();
+
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.uninit();
     }
@@ -9911,18 +9913,29 @@ var ConfirmationHint = {
 var FirefoxViewHandler = {
   tab: null,
   init() {
+    const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
+      "resource:///modules/firefox-view-notification-manager.sys.mjs"
+    );
     if (
       AppConstants.NIGHTLY_BUILD &&
       !Services.prefs.getBoolPref("browser.tabs.firefox-view")
     ) {
       document.getElementById("menu_openFirefoxView").hidden = true;
+    } else {
+      let shouldShow = FirefoxViewNotificationManager.shouldNotificationDotBeShowing();
+      this.toggleNotificationDot(shouldShow);
     }
+    Services.obs.addObserver(this, "firefoxview-notification-dot-update");
+  },
+  uninit() {
+    Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
   },
   openTab() {
     if (!this.tab) {
       this.tab = gBrowser.addTrustedTab("about:firefoxview", { index: 0 });
       this.tab.addEventListener("TabClose", this, { once: true });
       gBrowser.tabContainer.addEventListener("TabSelect", this);
+      window.addEventListener("activate", this);
       gBrowser.hideTab(this.tab);
     }
     gBrowser.selectedTab = this.tab;
@@ -9938,6 +9951,25 @@ var FirefoxViewHandler = {
         this.tab = null;
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
         break;
+      case "activate":
+        if (this.tab?.selected) {
+          Services.obs.notifyObservers(
+            null,
+            "firefoxview-notification-dot-update",
+            "false"
+          );
+        }
+        break;
     }
+  },
+  observe(sub, topic, data) {
+    if (topic === "firefoxview-notification-dot-update") {
+      let shouldShow = data === "true";
+      this.toggleNotificationDot(shouldShow);
+    }
+  },
+  toggleNotificationDot(shouldShow) {
+    let fxViewButton = document.getElementById("firefox-view-button");
+    fxViewButton?.setAttribute("attention", shouldShow);
   },
 };

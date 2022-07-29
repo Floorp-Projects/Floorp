@@ -292,4 +292,19 @@ var SyncedTabs = {
       extraOptions
     );
   },
+
+  async getRecentTabs(maxCount) {
+    let tabs = [];
+    let clients = await this.getTabClients();
+
+    for (let client of clients) {
+      for (let tab of client.tabs) {
+        tab.device = client.name;
+        tab.deviceType = client.clientType;
+      }
+      tabs = [...tabs, ...client.tabs.reverse()];
+    }
+    tabs = tabs.sort((a, b) => b.lastUsed - a.lastUsed).slice(0, maxCount);
+    return tabs;
+  },
 };
