@@ -11,7 +11,6 @@ import androidx.test.uiautomator.Until
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
@@ -152,21 +151,6 @@ class HomeScreenTest {
             verifyKeyboardVisibility()
         }.dismissSearchBar {
             verifyWelcomeHeader()
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun tapLogoToChangeWallpaperTest() {
-        homeScreen {
-            clickFirefoxLogo()
-            verifyWallpaperImageApplied(true)
-            clickFirefoxLogo()
-            verifyWallpaperImageApplied(true)
-            clickFirefoxLogo()
-            verifyWallpaperImageApplied(true)
-            clickFirefoxLogo()
-            verifyWallpaperImageApplied(false)
         }
     }
 }

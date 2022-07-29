@@ -49,8 +49,8 @@ class WallpaperSettingsFragment : Fragment() {
                     WallpaperSettings(
                         wallpapers = wallpaperManager.wallpapers,
                         defaultWallpaper = WallpaperManager.defaultWallpaper,
-                        loadWallpaperResource = {
-                            wallpaperManager.loadSavedWallpaper(requireContext(), it)
+                        loadWallpaperResource = { wallpaper ->
+                            with(wallpaperManager) { wallpaper.load(context) }
                         },
                         selectedWallpaper = currentWallpaper,
                         onSelectWallpaper = { selectedWallpaper: Wallpaper ->

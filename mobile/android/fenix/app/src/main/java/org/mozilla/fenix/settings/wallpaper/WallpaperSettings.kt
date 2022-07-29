@@ -297,8 +297,8 @@ private fun WallpaperThumbnailsPreview() {
 
         WallpaperSettings(
             defaultWallpaper = WallpaperManager.defaultWallpaper,
-            loadWallpaperResource = {
-                wallpaperManager.loadSavedWallpaper(context, it)
+            loadWallpaperResource = { wallpaper ->
+                with(wallpaperManager) { wallpaper.load(context) }
             },
             wallpapers = wallpaperManager.wallpapers,
             selectedWallpaper = wallpaperManager.currentWallpaper,

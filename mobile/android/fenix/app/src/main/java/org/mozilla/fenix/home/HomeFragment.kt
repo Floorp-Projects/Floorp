@@ -120,7 +120,7 @@ import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import org.mozilla.fenix.utils.allowUndo
-import org.mozilla.fenix.wallpapers.WallpaperManager
+import org.mozilla.fenix.wallpapers.Wallpaper
 import java.lang.ref.WeakReference
 import kotlin.math.min
 
@@ -754,10 +754,6 @@ class HomeFragment : Fragment() {
                         themeCollection = newWallpaper::class.simpleName
                     )
                 )
-                manager.updateWallpaper(
-                    wallpaperContainer = binding.wallpaperImageView,
-                    newWallpaper = newWallpaper
-                )
             }
         }
     }
@@ -967,12 +963,17 @@ class HomeFragment : Fragment() {
                 .onEach { state ->
                     // We only want to update the wallpaper when it's different from the default one
                     // as the default is applied already on xml by default.
-                    val currentWallpaper = state.wallpaperState.currentWallpaper
-                    if (currentWallpaper != WallpaperManager.defaultWallpaper) {
-                        requireComponents.wallpaperManager.updateWallpaper(
-                            binding.wallpaperImageView,
-                            currentWallpaper
-                        )
+                    when (val currentWallpaper = state.wallpaperState.currentWallpaper) {
+                        is Wallpaper.Default -> {
+                            binding.wallpaperImageView.visibility = View.GONE
+                        }
+                        else -> {
+                            with(requireComponents.wallpaperManager) {
+                                val bitmap = currentWallpaper.load(requireContext()) ?: return@onEach
+                                bitmap.scaleBitmapToBottomOfView(binding.wallpaperImageView)
+                            }
+                            binding.wallpaperImageView.visibility = View.VISIBLE
+                        }
                     }
                 }
                 .launchIn(viewLifecycleOwner.lifecycleScope)
