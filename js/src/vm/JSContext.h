@@ -327,8 +327,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   inline void enterAtomsZone();
   inline void leaveAtomsZone(JS::Realm* oldRealm);
-  enum IsAtomsZone { AtomsZone, NotAtomsZone };
-  inline void setZone(js::Zone* zone, IsAtomsZone isAtomsZone);
+  inline void setZone(js::Zone* zone);
 
   friend class js::AutoAllocInAtomsZone;
   friend class js::AutoMaybeLeaveAtomsZone;
