@@ -39,27 +39,33 @@ const closeCustomizationUI = async win => {
   );
 };
 
-add_task(async function test_button_enabled_by_pref() {
-  const win = await promiseEnableUnifiedExtensions();
+let win;
 
+add_setup(async function() {
+  win = await promiseEnableUnifiedExtensions();
+
+  registerCleanupFunction(async () => {
+    await BrowserTestUtils.closeWindow(win);
+  });
+});
+
+add_task(async function test_button_enabled_by_pref() {
   const { button } = win.gUnifiedExtensions;
   is(button.hidden, false, "expected button to be visible");
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_button_disabled_by_pref() {
-  const win = await promiseDisableUnifiedExtensions();
+  const anotherWindow = await promiseDisableUnifiedExtensions();
 
-  const button = win.document.getElementById("unified-extensions-button");
+  const button = anotherWindow.document.getElementById(
+    "unified-extensions-button"
+  );
   is(button.hidden, true, "expected button to be hidden");
 
-  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(anotherWindow);
 });
 
 add_task(async function test_open_panel_on_button_click() {
-  const win = await promiseEnableUnifiedExtensions();
-
   const extensions = createExtensions([
     { name: "Extension #1" },
     { name: "Another extension", icons: { 16: "test-icon-16.png" } },
@@ -115,13 +121,9 @@ add_task(async function test_open_panel_on_button_click() {
   await closeExtensionsPanel(win);
 
   await Promise.all(extensions.map(extension => extension.unload()));
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_item_shows_the_best_addon_icon() {
-  const win = await promiseEnableUnifiedExtensions();
-
   const extensions = createExtensions([
     {
       name: "Extension with different icons",
@@ -163,13 +165,9 @@ add_task(async function test_item_shows_the_best_addon_icon() {
   }
 
   await Promise.all(extensions.map(extension => extension.unload()));
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_panel_has_a_manage_extensions_button() {
-  const win = await promiseEnableUnifiedExtensions();
-
   // Navigate away from the initial page so that about:addons always opens in a
   // new tab during tests.
   BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, "about:robots");
@@ -207,13 +205,9 @@ add_task(async function test_panel_has_a_manage_extensions_button() {
     "expected about:addons to show the list of extensions"
   );
   BrowserTestUtils.removeTab(tab);
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_list_active_extensions_only() {
-  const win = await promiseEnableUnifiedExtensions();
-
   const arrayOfManifestData = [
     { name: "hidden addon", hidden: true },
     { name: "regular addon", hidden: false },
@@ -275,15 +269,13 @@ add_task(async function test_list_active_extensions_only() {
 
   await Promise.all(extensions.map(extension => extension.unload()));
   mockProvider.unregister();
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_unified_extensions_and_addons_themes_widget() {
   const addonsAndThemesWidgetId = "add-ons-button";
 
   // Let's start with the unified extensions feature is disabled.
-  let win = await promiseDisableUnifiedExtensions();
+  let anotherWindow = await promiseDisableUnifiedExtensions();
 
   // Add the button to the navbar.
   CustomizableUI.addWidgetToArea(
@@ -301,33 +293,33 @@ add_task(async function test_unified_extensions_and_addons_themes_widget() {
   };
   registerCleanupFunction(cleanup);
 
-  let addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
+  let addonsButton = anotherWindow.document.getElementById(
+    addonsAndThemesWidgetId
+  );
   ok(addonsButton, "expected add-ons and themes button");
 
-  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(anotherWindow);
   // Now we enable the unified extensions feature, which should remove the
   // add-ons button.
-  win = await promiseEnableUnifiedExtensions();
+  anotherWindow = await promiseEnableUnifiedExtensions();
 
-  addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
+  addonsButton = anotherWindow.document.getElementById(addonsAndThemesWidgetId);
   is(addonsButton, null, "expected no add-ons and themes button");
 
-  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(anotherWindow);
   // Disable the unified extensions feature again. We expect the add-ons and
   // themes button to be back (i.e. visible).
-  win = await promiseDisableUnifiedExtensions();
+  anotherWindow = await promiseDisableUnifiedExtensions();
 
-  addonsButton = win.document.getElementById(addonsAndThemesWidgetId);
+  addonsButton = anotherWindow.document.getElementById(addonsAndThemesWidgetId);
   ok(addonsButton, "expected add-ons and themes button");
 
   cleanup();
 
-  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(anotherWindow);
 });
 
 add_task(async function test_button_opens_discopane_when_no_extension() {
-  const win = await promiseEnableUnifiedExtensions();
-
   // The test harness registers regular extensions so we need to mock the
   // `getActiveExtensions` extension to simulate zero extensions installed.
   const origGetActionExtensions = win.gUnifiedExtensions.getActiveExtensions;
@@ -363,14 +355,10 @@ add_task(async function test_button_opens_discopane_when_no_extension() {
   BrowserTestUtils.removeTab(tab);
 
   win.gUnifiedExtensions.getActiveExtensions = origGetActionExtensions;
-
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(
   async function test_unified_extensions_panel_not_open_in_customization_mode() {
-    let win = await promiseEnableUnifiedExtensions();
-
     const listView = getListView(win);
     ok(listView, "expected list view");
     const throwIfExecuted = () => {
@@ -392,7 +380,5 @@ add_task(
     await closeCustomizationUI(win);
 
     listView.removeEventListener("ViewShown", throwIfExecuted);
-
-    await BrowserTestUtils.closeWindow(win);
   }
 );
