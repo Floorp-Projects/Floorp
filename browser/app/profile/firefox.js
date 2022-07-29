@@ -345,7 +345,11 @@ pref("browser.warnOnQuit", true);
 
 pref("browser.overlink-delay", 80);
 
+#ifdef NIGHTLY_BUILD
+pref("browser.theme.colorway-closet", true);
+#else
 pref("browser.theme.colorway-closet", false);
+#endif
 
 // Whether using `ctrl` when hitting return/enter in the URL bar
 // (or clicking 'go') should prefix 'www.' and suffix

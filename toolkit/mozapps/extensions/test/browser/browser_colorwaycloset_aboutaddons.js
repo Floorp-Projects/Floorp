@@ -153,12 +153,14 @@ add_setup(async function() {
   // its expiry date. Bug 1774432 aims to improve the ways BuiltInThemes and BuiltInThemeConfig
   // are mocked for tests that rely on an active collection, even after a collection expires.
   if (collection) {
-    info("Found a collection");
+    info("Found an active collection");
     ok(collection.l10nId, "Collection in BuiltInThemeConfig has l10n data");
     ok(
-      collection.l10nId.title,
+      collection.l10nId?.title,
       "Collection in BuiltInThemeConfig has valid l10n title"
     );
+  } else {
+    info("Couldn't find an active collection");
   }
 });
 

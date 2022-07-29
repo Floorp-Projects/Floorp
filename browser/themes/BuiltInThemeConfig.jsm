@@ -536,7 +536,7 @@ function _applyColorwayConfig(collections) {
       });
     }
   }
-  BuiltInThemeConfig.findActiveColorwayCollection = now => {
+  BuiltInThemeConfig.findActiveColorwayCollection = (now = new Date()) => {
     let collection = null;
     let start = 0;
     let end = collectionsSorted.length - 1;
