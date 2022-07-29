@@ -43,26 +43,6 @@ interface nsIDroppedLinkHandler : nsISupports
   boolean canDropLink(in DragEvent aEvent, in boolean aAllowSameDocument);
 
   /**
-   * Given a drop event aEvent, determines the link being dragged and returns
-   * it. If a uri is returned the caller can, for instance, load it. If null
-   * is returned, there is no valid link to be dropped.
-   *
-   * A NS_ERROR_DOM_SECURITY_ERR error will be thrown and the event cancelled if
-   * the receiving target should not load the uri for security reasons. This
-   * will occur if any of the following conditions are true:
-   *  - the source of the drag initiated a link for dragging that
-   *    it itself cannot access. This prevents a source document from tricking
-   *    the user into a dragging a chrome url, for example.
-   *  - aDisallowInherit is true, and the URI being dropped would inherit the
-   *    current document's security context (URI_INHERITS_SECURITY_CONTEXT).
-   *
-   * aName is filled in with the link title if it exists, or an empty string
-   * otherwise.
-   */
-  AString dropLink(in DragEvent aEvent, out AString aName,
-                   [optional] in boolean aDisallowInherit);
-
-  /**
    * Given a drop event aEvent, determines links being dragged and returns
    * them. If links are returned the caller can, for instance, load them. If
    * the returned array is empty, there is no valid link to be dropped.
