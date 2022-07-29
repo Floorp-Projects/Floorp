@@ -41,7 +41,6 @@ var DevelopmentHelpers = {
 
     let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("id", "menu_FileRestartItem");
-    menuitem.setAttribute("key", "key_quickRestart");
     menuitem.setAttribute("label", "Restart (Developer)");
     menuitem.addEventListener("command", this.quickRestart, true);
     document.getElementById("menu_FilePopup").appendChild(menuitem);
