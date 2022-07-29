@@ -945,6 +945,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   mIsRTL = aInitData->mRTL;
+  mForMenupopupFrame = aInitData->mForMenupopupFrame;
   mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
   mResizable = aInitData->mResizable;
@@ -991,7 +992,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  const wchar_t* className = GetWindowClass();
+  const wchar_t* className = ChooseWindowClass(mWindowType, mForMenupopupFrame);
+
   if (aInitData->mWindowType == eWindowType_toplevel && !aParent &&
       !sFirstTopLevelWindowCreated) {
     sFirstTopLevelWindowCreated = true;
@@ -1251,9 +1253,9 @@ void nsWindow::Destroy() {
  *
  **************************************************************/
 
+/* static */
 const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
-                                             UINT aExtraStyle,
-                                             LPWSTR aIconID) const {
+                                             UINT aExtraStyle, LPWSTR aIconID) {
   WNDCLASSW wc;
   if (::GetClassInfoW(nsToolkit::mDllInstance, aClassName, &wc)) {
     // already registered
@@ -1268,7 +1270,7 @@ const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
   wc.hIcon =
       aIconID ? ::LoadIconW(::GetModuleHandleW(nullptr), aIconID) : nullptr;
   wc.hCursor = nullptr;
-  wc.hbrBackground = mBrush;
+  wc.hbrBackground = nullptr;
   wc.lpszMenuName = nullptr;
   wc.lpszClassName = aClassName;
 
@@ -1283,16 +1285,21 @@ const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
 
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 
-// Return the proper window class for everything except popups.
-const wchar_t* nsWindow::GetWindowClass() const {
-  switch (mWindowType) {
+/* static */
+const wchar_t* nsWindow::ChooseWindowClass(nsWindowType aWindowType,
+                                           bool aForMenupopupFrame) {
+  MOZ_ASSERT_IF(aForMenupopupFrame, aWindowType == eWindowType_popup);
+  switch (aWindowType) {
     case eWindowType_invisible:
       return RegisterWindowClass(kClassNameHidden, 0, gStockApplicationIcon);
     case eWindowType_dialog:
       return RegisterWindowClass(kClassNameDialog, 0, 0);
     case eWindowType_popup:
-      return RegisterWindowClass(kClassNameDropShadow, CS_DROPSHADOW,
-                                 gStockApplicationIcon);
+      if (aForMenupopupFrame) {
+        return RegisterWindowClass(kClassNameDropShadow, CS_DROPSHADOW,
+                                   gStockApplicationIcon);
+      }
+      [[fallthrough]];
     default:
       return RegisterWindowClass(GetMainWindowClass(), 0,
                                  gStockApplicationIcon);
@@ -1636,7 +1643,9 @@ void nsWindow::Show(bool bState) {
 #endif  // defined(ACCESSIBILITY)
   }
 
-  if (mWindowType == eWindowType_popup) {
+  if (mForMenupopupFrame) {
+    MOZ_ASSERT(ChooseWindowClass(mWindowType, mForMenupopupFrame) ==
+               kClassNameDropShadow);
     const bool shouldUseDropShadow = [&] {
       if (mTransparencyMode == eTransparencyTransparent) {
         return false;
@@ -3715,9 +3724,10 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   switch (aDataType) {
     case NS_NATIVE_TMP_WINDOW:
       return (void*)::CreateWindowExW(
-          mIsRTL ? WS_EX_LAYOUTRTL : 0, GetWindowClass(), L"", WS_CHILD,
-          CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, mWnd,
-          nullptr, nsToolkit::mDllInstance, nullptr);
+          mIsRTL ? WS_EX_LAYOUTRTL : 0,
+          ChooseWindowClass(mWindowType, /* aForMenupopupFrame = */ false), L"",
+          WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+          mWnd, nullptr, nsToolkit::mDllInstance, nullptr);
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID:
