@@ -558,6 +558,28 @@ function isSelectedFrameSelected(dbg, state) {
 }
 
 /**
+ * Checks to see if the frame is selected and the title is correct.
+ *
+ * @param {Object} dbg
+ * @param {Integer} index
+ * @param {String} title
+ */
+function isFrameSelected(dbg, index, title) {
+  const $frame = findElement(dbg, "frame", index);
+
+  const {
+    selectors: { getSelectedFrame, getCurrentThread },
+  } = dbg;
+
+  const frame = getSelectedFrame(getCurrentThread());
+
+  const elSelected = $frame.classList.contains("selected");
+  const titleSelected = frame.displayName == title;
+
+  return elSelected && titleSelected;
+}
+
+/**
  * Clear all the debugger related preferences.
  */
 async function clearDebuggerPreferences(prefs = []) {

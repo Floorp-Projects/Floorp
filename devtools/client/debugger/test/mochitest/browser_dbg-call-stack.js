@@ -71,22 +71,6 @@ add_task(async function() {
   );
 });
 
-// checks to see if the frame is selected and the title is correct
-function isFrameSelected(dbg, index, title) {
-  const $frame = findElement(dbg, "frame", index);
-
-  const {
-    selectors: { getSelectedFrame, getCurrentThread },
-  } = dbg;
-
-  const frame = getSelectedFrame(getCurrentThread());
-
-  const elSelected = $frame.classList.contains("selected");
-  const titleSelected = frame.displayName == title;
-
-  return elSelected && titleSelected;
-}
-
 function toggleButton(dbg) {
   const callStackBody = findElement(dbg, "callStackBody");
   return callStackBody.querySelector(".show-more");

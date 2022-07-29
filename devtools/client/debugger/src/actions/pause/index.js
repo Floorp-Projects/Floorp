@@ -21,6 +21,7 @@ export { paused } from "./paused";
 export { resumed } from "./resumed";
 export { continueToHere } from "./continueToHere";
 export { breakOnNext } from "./breakOnNext";
+export { resetBreakpointsPaneState } from "./resetBreakpointsPaneState";
 export { mapFrames } from "./mapFrames";
 export { mapDisplayNames } from "./mapDisplayNames";
 export { pauseOnExceptions } from "./pauseOnExceptions";

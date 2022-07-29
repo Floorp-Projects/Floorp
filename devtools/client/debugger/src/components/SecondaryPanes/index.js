@@ -23,6 +23,7 @@ import {
   getCurrentThread,
   getThreadContext,
   getPauseReason,
+  getShouldBreakpointsPaneOpenOnPause,
   getLocationSource,
   getSkipPausing,
   shouldLogEventBreakpoints,
@@ -83,6 +84,8 @@ class SecondaryPanes extends Component {
       mapScopesEnabled: PropTypes.bool.isRequired,
       pauseOnExceptions: PropTypes.func.isRequired,
       pauseReason: PropTypes.string.isRequired,
+      shouldBreakpointsPaneOpenOnPause: PropTypes.bool.isRequired,
+      thread: PropTypes.string.isRequired,
       renderWhyPauseDelay: PropTypes.number.isRequired,
       selectedFrame: PropTypes.object,
       shouldPauseOnCaughtExceptions: PropTypes.bool.isRequired,
@@ -90,6 +93,7 @@ class SecondaryPanes extends Component {
       skipPausing: PropTypes.bool.isRequired,
       source: PropTypes.object,
       toggleEventLogging: PropTypes.func.isRequired,
+      resetBreakpointsPaneState: PropTypes.func.isRequired,
       toggleMapScopes: PropTypes.func.isRequired,
       workers: PropTypes.array.isRequired,
       removeAllBreakpoints: PropTypes.func.isRequired,
@@ -318,6 +322,8 @@ class SecondaryPanes extends Component {
       shouldPauseOnCaughtExceptions,
       pauseOnExceptions,
       pauseReason,
+      shouldBreakpointsPaneOpenOnPause,
+      thread,
     } = this.props;
 
     return {
@@ -333,10 +339,14 @@ class SecondaryPanes extends Component {
       ),
       opened:
         prefs.breakpointsVisible ||
-        pauseReason === "breakpoint" ||
-        pauseReason === "resumeLimit",
+        (pauseReason === "breakpoint" && shouldBreakpointsPaneOpenOnPause),
       onToggle: opened => {
         prefs.breakpointsVisible = opened;
+        //  one-shot flag used to force open the Breakpoints Pane only
+        //  when hitting a breakpoint, but not when selecting frames etc...
+        if (shouldBreakpointsPaneOpenOnPause) {
+          this.props.resetBreakpointsPaneState(thread);
+        }
       },
     };
   }
@@ -497,6 +507,10 @@ const mapStateToProps = state => {
   const thread = getCurrentThread(state);
   const selectedFrame = getSelectedFrame(state, thread);
   const pauseReason = getPauseReason(state, thread);
+  const shouldBreakpointsPaneOpenOnPause = getShouldBreakpointsPaneOpenOnPause(
+    state,
+    thread
+  );
 
   return {
     cx: getThreadContext(state),
@@ -512,6 +526,8 @@ const mapStateToProps = state => {
     logEventBreakpoints: shouldLogEventBreakpoints(state),
     source: selectedFrame && getLocationSource(state, selectedFrame.location),
     pauseReason: pauseReason?.type ?? "",
+    shouldBreakpointsPaneOpenOnPause,
+    thread,
   };
 };
 
@@ -523,4 +539,5 @@ export default connect(mapStateToProps, {
   toggleEventLogging: actions.toggleEventLogging,
   removeAllBreakpoints: actions.removeAllBreakpoints,
   removeAllXHRBreakpoints: actions.removeAllXHRBreakpoints,
+  resetBreakpointsPaneState: actions.resetBreakpointsPaneState,
 })(SecondaryPanes);

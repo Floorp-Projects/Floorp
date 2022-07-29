@@ -142,6 +142,7 @@ function update(state = initialPauseState(), action) {
           thread,
         },
       };
+
       return updateThreadState({
         isWaitingOnBreak: false,
         selectedFrameId: frame ? frame.id : undefined,
@@ -150,6 +151,7 @@ function update(state = initialPauseState(), action) {
         framesLoading: true,
         frameScopes: { ...resumedPauseState.frameScopes },
         why,
+        shouldBreakpointsPaneOpenOnPause: why.type === "breakpoint",
       });
     }
 
@@ -275,10 +277,12 @@ function update(state = initialPauseState(), action) {
           },
         };
       }
+
       return updateThreadState({
         ...resumedPauseState,
         expandedScopes: new Set(),
         lastExpandedScopes: [...threadState().expandedScopes],
+        shouldBreakpointsPaneOpenOnPause: false,
       });
     }
 
@@ -353,6 +357,13 @@ function update(state = initialPauseState(), action) {
       return updateThreadState({
         ...threadState(),
         highlightedCalls: null,
+      });
+    }
+
+    case "RESET_BREAKPOINTS_PANE_STATE": {
+      return updateThreadState({
+        ...threadState(),
+        shouldBreakpointsPaneOpenOnPause: false,
       });
     }
   }
