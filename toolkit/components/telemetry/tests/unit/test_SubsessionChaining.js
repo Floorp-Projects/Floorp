@@ -25,10 +25,6 @@ const REASON_DAILY = "daily";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
 const REASON_SHUTDOWN = "shutdown";
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
-});
-
 var promiseValidateArchivedPings = async function(aExpectedReasons) {
   // The list of ping reasons which mark the session end (and must reset the subsession
   // count).

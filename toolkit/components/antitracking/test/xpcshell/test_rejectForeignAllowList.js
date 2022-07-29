@@ -1,9 +1,5 @@
 "use strict";
 
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
-);
-
 do_get_profile();
 
 // Let's use XPCShellContentUtils to open/close tabs.

@@ -8,9 +8,6 @@ const { TelemetryController } = ChromeUtils.import(
 const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
 );
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );

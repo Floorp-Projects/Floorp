@@ -36,7 +36,6 @@ const principalPrivilegedMozilla = ssm.createContentPrincipal(
 );
 
 const {
-  DEFAULT_REMOTE_TYPE,
   EXTENSION_REMOTE_TYPE,
   FILE_REMOTE_TYPE,
   FISSION_WEB_REMOTE_TYPE,

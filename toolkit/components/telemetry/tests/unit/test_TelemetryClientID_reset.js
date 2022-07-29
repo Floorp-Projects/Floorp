@@ -9,9 +9,6 @@ const { TelemetryController } = ChromeUtils.import(
 const { TelemetryStorage } = ChromeUtils.import(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
-const { TelemetrySend } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySend.jsm"
-);
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
 );
@@ -19,7 +16,6 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const PING_FORMAT_VERSION = 4;
 const DELETION_REQUEST_PING_TYPE = "deletion-request";
 const TEST_PING_TYPE = "test-ping-type";
 
