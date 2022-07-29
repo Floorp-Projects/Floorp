@@ -196,9 +196,8 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvStartIceChecks(
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvSendPacket(
-    const string& transportId, const MediaPacket& packet) {
-  MediaPacket copy(packet);  // Laaaaaaame.
-  mImpl->mHandler->SendPacket(transportId, std::move(copy));
+    const string& transportId, MediaPacket&& packet) {
+  mImpl->mHandler->SendPacket(transportId, std::move(packet));
   return ipc::IPCResult::Ok();
 }
 
