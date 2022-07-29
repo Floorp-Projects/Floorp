@@ -8,6 +8,12 @@
 	 -moz-box-ordinal-group: 3;
 	}
 
+	#titlebar:-moz-lwtheme {
+        background-image: var(--lwt-additional-images) !important;
+        background-repeat: var(--lwt-background-tiling) !important;
+        background-position: var(--lwt-background-alignment) !important;
+    }
+
 	/* 仮の Window コンテナーの位置移動*/
 
 	:root:is([tabsintitlebar], [sizemode="fullscreen"]) {
