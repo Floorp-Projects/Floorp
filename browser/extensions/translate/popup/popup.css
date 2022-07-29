@@ -49,6 +49,12 @@ body {
     cursor: pointer;
 }
 
+#btnSwitchInterfaces {
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+}
+
 .menuDot {
     width: 14px;
     height: 14px;

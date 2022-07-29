@@ -28,6 +28,13 @@ button {
     margin-left: 5px;
 }
 
+#btnSwitchInterfaces {
+    margin: 10px;
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+}
+
 #divOptionsList {
     position: static;
 }

@@ -9,43 +9,189 @@ DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 
 
 FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"] += [
+    "chrome_manifest.json",
     "crowdin.yml",
+    "LICENSE",
     "manifest.json",
+    "PRIVACY",
+    "readme.md",
+]
 
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["options"] += [
+    "options/options.css",
+    "options/options.html",
+    "options/options.js",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["nl"] += [
+    "_locales/nl/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["sv"] += [
+    "_locales/sv/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["th"] += [
+    "_locales/th/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["cs"] += [
+    "_locales/cs/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ar"] += [
+    "_locales/ar/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ru"] += [
+    "_locales/ru/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["fi"] += [
+    "_locales/fi/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["el"] += [
+    "_locales/el/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["it"] += [
+    "_locales/it/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["pt_BR"] += [
+    "_locales/pt_BR/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["pt_PT"] += [
+    "_locales/pt_PT/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["zh_TW"] += [
+    "_locales/zh_TW/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["no"] += [
+    "_locales/no/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["da"] += [
+    "_locales/da/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["pl"] += [
+    "_locales/pl/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["fa"] += [
+    "_locales/fa/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["es"] += [
+    "_locales/es/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["tr"] += [
+    "_locales/tr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["zh_CN"] += [
+    "_locales/zh_CN/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ro"] += [
+    "_locales/ro/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["af"] += [
+    "_locales/af/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["fr"] += [
+    "_locales/fr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["vi"] += [
+    "_locales/vi/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["hu"] += [
+    "_locales/hu/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["hr"] += [
+    "_locales/hr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["sl"] += [
+    "_locales/sl/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ug"] += [
+    "_locales/ug/messages.json",
 ]
 
 FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ja"] += [
     "_locales/ja/messages.json",
-]  
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["de"] += [
+    "_locales/de/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["hi"] += [
+    "_locales/hi/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ca"] += [
+    "_locales/ca/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["ko"] += [
+    "_locales/ko/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["sr"] += [
+    "_locales/sr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["uk"] += [
+    "_locales/uk/messages.json",
+]
 
 FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["en"] += [
     "_locales/en/messages.json",
-]  
+]
 
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["_locales"]["he"] += [
+    "_locales/he/messages.json",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["w3css"]["4"] += [
+    "w3css/4/w3.css",
+]
+
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["extra"] += [
+    "extra/bing.json",
+    "extra/getLanguagesNames.js",
+    "extra/out.json",
+    "extra/package.json",
+    "extra/yandex.json",
+]
 
 FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["background"] += [
     "background/background.js",
     "background/textToSpeech.js",
     "background/translationCache.js",
     "background/translationService.js",
-]    
+]
 
-FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"] += [
-    "contentScript/checkScriptIsInjected.js",
-    "contentScript/deepl.js",
-    "contentScript/pageTranslator.js",
-    "contentScript/popupMobile.js",
-    "contentScript/showOriginal.js",
-    "contentScript/showTranslated.js",
-    "contentScript/translateSelected.js",
-]    
-
-FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"]["css"] += [
-    "contentScript/css/popupMobile.css",
-    "contentScript/css/showOriginal.css",
-    "contentScript/css/showTranslated.css",
-    "contentScript/css/translateSelected.css",
-]  
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["lib"] += [
+    "lib/config.js",
+    "lib/i18n.js",
+    "lib/languages.js",
+    "lib/platformInfo.js",
+]
 
 FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["icons"] += [
     "icons/btn_donate_LG.webp",
@@ -61,19 +207,6 @@ FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["icons"] +
     "icons/yandex-translate-32.png",
 ]
 
-FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["lib"] += [
-    "lib/config.js",
-    "lib/i18n.js",
-    "lib/languages.js",
-    "lib/platformInfo.js",
-]
-
-FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["options"] += [
-    "options/options.css",
-    "options/options.html",
-    "options/options.js",
-]
-
 FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["popup"] += [
     "popup/detect-pdf.js",
     "popup/old-popup.css",
@@ -82,23 +215,30 @@ FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["popup"] +
     "popup/popup-change-language.html",
     "popup/popup-change-language.js",
     "popup/popup-translate-document.html",
-    "popup/popup-translate-document.js",     
+    "popup/popup-translate-document.js",
     "popup/popup-translate-text.html",
-    "popup/popup-translate-text.js",   
+    "popup/popup-translate-text.js",
     "popup/popup.css",
     "popup/popup.html",
-    "popup/popup.js", 
-
+    "popup/popup.js",
 ]
 
-FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["w3css"]["4"] += [
-    "w3css/4/w3.css",
-]  
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"] += [
+    "contentScript/checkScriptIsInjected.js",
+    "contentScript/deepl.js",
+    "contentScript/pageTranslator.js",
+    "contentScript/popupMobile.js",
+    "contentScript/showOriginal.js",
+    "contentScript/showTranslated.js",
+    "contentScript/translateSelected.js",
+]
 
-
-
-
-
+FINAL_TARGET_FILES.features["{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"]["contentScript"]["css"] += [
+    "contentScript/css/popupMobile.css",
+    "contentScript/css/showOriginal.css",
+    "contentScript/css/showTranslated.css",
+    "contentScript/css/translateSelected.css",
+]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "translate")

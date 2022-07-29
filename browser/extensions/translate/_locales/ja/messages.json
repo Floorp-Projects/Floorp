@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "サイトを翻訳"
+    "message": "ウェブページを翻訳"
   },
   "extensionDescription": {
     "message": "GoogleやYandexを使ってリアルタイムでページを翻訳します。"
@@ -51,13 +51,13 @@
     "message": "原文を表示"
   },
   "btnTryAgain": {
-    "message": "再試行"
+    "message": "再試行する"
   },
   "btnOpenOnGoogleTranslate": {
     "message": "Google翻訳で開く"
   },
   "btnDonate": {
-    "message": "寄付"
+    "message": "寄付する"
   },
   "btnNeverTranslate": {
     "message": "このサイトを翻訳しない"
@@ -66,7 +66,7 @@
     "message": "言語を変更"
   },
   "btnMobileOriginal": {
-    "message": "原文"
+    "message": "原文を表示"
   },
   "btnMobileTranslated": {
     "message": "翻訳済み"
@@ -75,7 +75,7 @@
     "message": "このサイトを翻訳しない"
   },
   "btnMobileDonate": {
-    "message": "寄付"
+    "message": "寄付する"
   },
   "optionsNeverTranslate": {
     "message": "翻訳しないサイト"
@@ -102,7 +102,7 @@
     "message": "拡張機能の設定"
   },
   "lblPlsDonate": {
-    "message": "開発者に寄付する"
+    "message": "寄付をして開発者を支援する"
   },
   "msgTranslateFor": {
     "message": "$LANGUAGE_NAME$に翻訳",
@@ -123,7 +123,7 @@
     "message": "無効"
   },
   "lblUseNewAlgorithm": {
-    "message": "新しい翻訳アルゴリズムを使用"
+    "message": "新しい翻訳アルゴリズムを使用しますか？"
   },
   "msgYesRecommended": {
     "message": "はい（推奨）"
@@ -138,7 +138,7 @@
     "message": "「このサイトを翻訳」をクリックした時のみ"
   },
   "msgEmptyListNeverTranslateSites": {
-    "message": "まだサイトが追加されていません"
+    "message": "まだサイトが1つも追加されていません"
   },
   "msgEmptyListAlwaysTranslateLanguages": {
     "message": "まだ言語が追加されていません"
@@ -398,7 +398,7 @@
     "message": "特別なキーボードショートカット"
   },
   "lblTranslateSelectedWhenPressTwice": {
-    "message": "Translate selected text when pressing $SHORTCUT_KEY$ twice",
+    "message": "$SHORTCUT_KEY$を2回押して選択したテキストを翻訳",
     "placeholders": {
       "SHORTCUT_KEY": {
         "content": "[Ctrl]"
@@ -406,7 +406,7 @@
     }
   },
   "lblTranslateTextOverMouseWhenPressTwice": {
-    "message": "Translate the text over the mouse cursor when pressing $SHORTCUT_KEY$ twice",
+    "message": "$SHORTCUT_KEY$を2回押してマウスオーバーしているテキストを翻訳",
     "placeholders": {
       "SHORTCUT_KEY": {
         "content": "[Ctrl]"
@@ -420,7 +420,7 @@
     "message": "ポップアップを表示"
   },
   "msgToTranslateThisDocument": {
-    "message": "To translate this document $DOC_TYPE$ it is necessary to convert it to HTML",
+    "message": "このドキュメント $DOC_TYPE$ を翻訳するには、まずHTMLに変換する必要があります。",
     "placeholders": {
       "DOC_TYPE": {
         "content": "$1",
@@ -429,19 +429,19 @@
     }
   },
   "msgSelectServiceConversion": {
-    "message": "Select a service to do this conversion"
+    "message": "変換に使用するサービスを選択"
   },
   "msgDownloadingDocument": {
-    "message": "Downloading the document..."
+    "message": "ドキュメントのダウンロード中…"
   },
   "msgSendDocument": {
-    "message": "Send document"
+    "message": "ドキュメントを送信"
   },
   "msgErrorDownloadingDocument": {
-    "message": "Error downloading document"
+    "message": "ドキュメントのダウンロードに失敗"
   },
   "msgFileLargerThan": {
-    "message": "This service does not support files larger than $FILE_SIZE$",
+    "message": "このサービスは$FILE_SIZE$より大きいファイルに対応していません。",
     "placeholders": {
       "FILE_SIZE": {
         "content": "$1",
@@ -450,6 +450,18 @@
     }
   },
   "msgPDFtoHTML": {
-    "message": "PDF to HTML"
+    "message": "PDFをHTMLに変換"
+  },
+  "btncopy": {
+    "message": "コピー"
+  },
+  "msgRecents": {
+    "message": "最近"
+  },
+  "msgAll": {
+    "message": "すべて"
+  },
+  "msgPleaseWait": {
+    "message": "処理中…"
   }
 }

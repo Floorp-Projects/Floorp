@@ -120,6 +120,7 @@ function updateContextMenu(pageLanguageState = "original") {
         }
     }
 }
+
 function resetPageAction(tabId, forceShow = false) {
     if (twpConfig.get("translateClickingOnce") === "yes" && !forceShow) {
         chrome.pageAction.setPopup({
@@ -669,7 +670,7 @@ twpConfig.onReady(async () => {
             chrome.webNavigation.onCommitted.removeListener(webNavigationOnCommitted)
             chrome.webNavigation.onDOMContentLoaded.removeListener(webNavigationOnDOMContentLoaded)
         } else {
-            console.warn("No webNavigation permission")
+            console.info("No webNavigation permission")
         }
     }
 

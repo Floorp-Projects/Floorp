@@ -27,6 +27,7 @@
     max-height: 260px;
     overflow: auto;
     white-space: pre-wrap;
+    user-select: text;
 }
 
 ul {

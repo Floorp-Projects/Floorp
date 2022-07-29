@@ -353,6 +353,10 @@ twpConfig.onReady(function () {
         updateInterface()
     }
 
+    $("#btnSwitchInterfaces").addEventListener("click", () => {
+        twpConfig.set("useOldPopup", "no")
+        window.location = "popup.html"
+    })
 
     $("#divIconTranslate").addEventListener("click", () => {
         chrome.tabs.query({
@@ -468,13 +472,13 @@ twpConfig.onReady(function () {
                     }, tabs => {
                         if (currentPageTranslatorService === "yandex") {
                             chrome.tabs.create({
-                                url: "https://translate.yandex.com/translate?url=" + encodeURIComponent(tabs[0].url)
+                                url: `https://translate.yandex.com/translate?view=compact&url=${encodeURIComponent(tabs[0].url)}&lang=${twpConfig.get("targetLanguage").split("-")[0]}`
                             })
                         } else { // google
                             chrome.tabs.create({
                                 url: `https://translate.google.${
                                 "zh-cn" == navigator.language.toLowerCase() ? "cn" : "com"
-                            }/translate?u=` + encodeURIComponent(tabs[0].url)
+                            }/translate?tl=${twpConfig.get("targetLanguage")}&u=${encodeURIComponent(tabs[0].url)}`
                             })
                         }
                     })

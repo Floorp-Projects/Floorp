@@ -23,4 +23,5 @@
     display: block;
     opacity: 1;
     white-space: pre-wrap;
+    user-select: text;
 }

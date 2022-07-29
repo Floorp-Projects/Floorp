@@ -159,7 +159,8 @@ const translationService = {};
     }
 
     let lastBingRequestSIDTime = null
-    let bingTranslateSID = null;
+    let bingTranslateSID = null
+    let bingTranslate_IID_IG = null
     let bingSIDNotFound = false
     let bingGetSidPromise = null
     async function getBingSID() {
@@ -193,10 +194,17 @@ const translationService = {};
                 http.send()
                 http.onload = e => {
                     const result = http.responseText.match(/params_RichTranslateHelper\s=\s\[[^\]]+/)
-                    if (result && result[0] && result[0].length > 50) {
+                    const data_iid_r = http.responseText.match(/data-iid\=\"[a-zA-Z0-9\.]+/)
+                    const IG_r = http.responseText.match(/IG\:\"[a-zA-Z0-9\.]+/)
+                    if (result && result[0] && result[0].length > 50 && data_iid_r && data_iid_r[0] && IG_r && IG_r[0]) {
                         const params_RichTranslateHelper = result[0].substring("params_RichTranslateHelper = [".length).split(",")
-                        if (params_RichTranslateHelper && params_RichTranslateHelper[0] && params_RichTranslateHelper[1] && parseInt(params_RichTranslateHelper[0])) {
+                        const data_iid = data_iid_r[0].substring('data-iid="'.length)
+                        const IG = IG_r[0].substring('IG:"'.length)
+                        if (params_RichTranslateHelper && params_RichTranslateHelper[0] && params_RichTranslateHelper[1] && parseInt(params_RichTranslateHelper[0])
+                        && data_iid && IG
+                        ) {
                             bingTranslateSID = `&token=${params_RichTranslateHelper[1].substring(1, params_RichTranslateHelper[1].length-1)}&key=${parseInt(params_RichTranslateHelper[0])}`
+                            bingTranslate_IID_IG = `IG=${IG}&IID=${data_iid}`
                             bingSIDNotFound = false
                         } else {
                             bingSIDNotFound = true
@@ -314,7 +322,7 @@ const translationService = {};
                     http.responseType = "json"
                     http.send(request.requestBody)
                 } else if (translationService === "bing") {
-                    http.open("POST", "https://www.bing.com/ttranslatev3?isVertical=1")
+                    http.open("POST", "https://www.bing.com/ttranslatev3?isVertical=1&" + bingTranslate_IID_IG)
                     http.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
                     http.responseType = "json"
                     http.send(`&fromLang=auto-detect${request.requestBody}&to=${targetLanguage}${bingTranslateSID}`)
@@ -643,15 +651,45 @@ const translationService = {};
     translationService.yandex.translateSingleText = (source, targetLanguage, dontSaveInCache = false) => translationService.yandex.translateText([ source ], targetLanguage, dontSaveInCache).then(results => results[0])
     
     translationService.bing.translateSingleText = async (source, targetLanguage, dontSaveInCache = false) => {
-        if (targetLanguage == "zh-CN") {
-            targetLanguage = "zh-Hans"
-        } else if (targetLanguage == "zh-TW") {
-            targetLanguage = "zh-Hant"
-        } else if (targetLanguage == "tl") {
-            targetLanguage = "fil"
-        } else if (targetLanguage.indexOf("zh-") !== -1) {
-            targetLanguage = "zh-Hans"
-        }
+        const replacements = [
+            {
+                search: "zh-CN",
+                replace: "zh-Hans"
+            },
+            {
+                search: "zh-TW",
+                replace: "zh-Hant"
+            },
+            {
+                search: "tl",
+                replace: "fil"
+            },
+            {
+                search: "hmn",
+                replace: "mww"
+            },
+            {
+                search: "ckb",
+                replace: "kmr"
+            },
+            {
+                search: "mn",
+                replace: "mn-Cyrl"
+            },
+            {
+                search: "no",
+                replace: "nb"
+            },
+            {
+                search: "sr",
+                replace: "sr-Cyrl"
+            },
+        ];
+        replacements.forEach(r => {
+            if (targetLanguage === r.search) {
+                targetLanguage = r.replace
+            }
+        })
         await getBingSID()
 
         return await translateHTML(

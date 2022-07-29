@@ -1,15 +1,18 @@
 {
     "manifest_version": 2,
     "default_locale": "en",
-    "browser_style":true,
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1",
-    "applications": {
+    "version": "9.5.1",
+    "homepage_url": "https://github.com/FilipePS/Traduzir-paginas-web",
+
+    "browser_specific_settings": {
         "gecko": {
-          "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"
+            "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}",
+            "strict_min_version": "63.0"
         }
     },
+
     "commands": {
         "hotkey-toggle-translation": {
             "suggested_key": {
@@ -55,15 +58,18 @@
         }
     },
 
+    "icons": {
+        "32": "/icons/icon-32.png",
+        "64": "/icons/icon-64.png",
+        "128": "/icons/icon-128.png"
+    },
+
     "permissions": [
         "<all_urls>",
         "storage",
         "activeTab",
         "contextMenus",
-        "webRequest",
-        "mozillaAddons",
-        "about:*",
-        "about:reader*"
+        "webRequest"
     ],
 
     "optional_permissions": [
@@ -78,8 +84,13 @@
         "/contentScript/css/*"
     ],
 
+    "options_ui": {
+        "page": "/options/options.html",
+        "open_in_tab": false,
+        "browser_style": false
+    },
+
     "browser_action": {
-        "default_area" : "menupanel",
         "browser_style": false,
         "default_icon": "/icons/icon-32.png",
         "default_title": "__MSG_pageActionTitle__"
@@ -101,12 +112,14 @@
             "matches": ["<all_urls>"],
             "run_at": "document_start",
             "all_frames": true,
+            "match_about_blank": true,
             "js": ["/lib/languages.js", "/lib/config.js", "/lib/platformInfo.js"]
         },
         {
             "matches": ["<all_urls>"],
             "run_at": "document_end",
             "all_frames": true,
+            "match_about_blank": true,
             "js": ["/lib/i18n.js", "/contentScript/showOriginal.js", "/contentScript/pageTranslator.js", "/contentScript/translateSelected.js", "/contentScript/showTranslated.js"]
         },
         {
