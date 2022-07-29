@@ -3,10 +3,6 @@
 
 const INT_MAX = 0x7fffffff;
 
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
-
 // Return an array of numbers from lower up to, excluding, upper
 function numberRange(lower, upper) {
   let a = [];
@@ -14,28 +10,6 @@ function numberRange(lower, upper) {
     a.push(i);
   }
   return a;
-}
-
-function expect_fail(f) {
-  let failed = false;
-  try {
-    f();
-    failed = false;
-  } catch (e) {
-    failed = true;
-  }
-  Assert.ok(failed);
-}
-
-function expect_success(f) {
-  let succeeded = false;
-  try {
-    f();
-    succeeded = true;
-  } catch (e) {
-    succeeded = false;
-  }
-  Assert.ok(succeeded);
 }
 
 function check_histogram(histogram_type, name, min, max, bucket_count) {

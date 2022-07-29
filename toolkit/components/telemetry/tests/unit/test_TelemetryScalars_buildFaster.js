@@ -2,11 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-const UINT_SCALAR = "telemetry.test.unsigned_int_kind";
-const STRING_SCALAR = "telemetry.test.string_kind";
-const BOOLEAN_SCALAR = "telemetry.test.boolean_kind";
-const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
-
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );

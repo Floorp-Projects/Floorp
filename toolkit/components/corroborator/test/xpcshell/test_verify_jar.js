@@ -5,9 +5,6 @@
 const { Corroborate } = ChromeUtils.import(
   "resource://gre/modules/Corroborate.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
-);
 
 add_task(async function test_various_jars() {
   let result = await Corroborate.verifyJar(do_get_file("data/unsigned.xpi"));

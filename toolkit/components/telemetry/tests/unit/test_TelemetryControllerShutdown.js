@@ -15,7 +15,6 @@ const { TelemetrySend } = ChromeUtils.import(
 const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-const { httpd } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 function contentHandler(metadata, response) {
   dump("contentHandler called for path: " + metadata._path + "\n");

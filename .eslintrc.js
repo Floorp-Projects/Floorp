@@ -226,8 +226,6 @@ module.exports = {
         "dom/**",
         "netwerk/**",
         "security/manager/ssl/tests/unit/**",
-        "toolkit/components/**",
-        "toolkit/modules/**",
       ],
       rules: {
         // No declaring variables that are never used

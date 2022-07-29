@@ -36,7 +36,6 @@ const REASON_TEST_PING = "test-ping";
 const REASON_DAILY = "daily";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
 
-const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
 const IGNORE_CLONED_HISTOGRAM = "test::ignore_me_also";
 // Add some unicode characters here to ensure that sending them works correctly.
 const SHUTDOWN_TIME = 10000;
@@ -93,21 +92,6 @@ function setupTestData() {
   k1.add("a");
   k1.add("a");
   k1.add("b");
-}
-
-function getSavedPingFile(basename) {
-  let tmpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  let pingFile = tmpDir.clone();
-  pingFile.append(basename);
-  if (pingFile.exists()) {
-    pingFile.remove(true);
-  }
-  registerCleanupFunction(function() {
-    try {
-      pingFile.remove(true);
-    } catch (e) {}
-  });
-  return pingFile;
 }
 
 function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
