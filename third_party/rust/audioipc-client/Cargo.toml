@@ -19,3 +19,5 @@ tokio = { version="0.1", default-features=false, features = ["rt-full"] }
 
 [dependencies.audio_thread_priority]
 version = "0.26.1"
+default-features = false
+features = ["winapi"]
