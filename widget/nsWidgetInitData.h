@@ -96,6 +96,7 @@ struct nsWidgetInitData {
         mScreenId(0),
         clipChildren(false),
         clipSiblings(false),
+        mForMenupopupFrame(false),
         mRTL(false),
         mNoAutoHide(false),
         mIsDragPopup(false),
@@ -119,6 +120,7 @@ struct nsWidgetInitData {
   uint32_t mScreenId;
   // when painting exclude area occupied by child windows and sibling windows
   bool clipChildren, clipSiblings;
+  bool mForMenupopupFrame;
   bool mRTL;
   bool mNoAutoHide;   // true for noautohide panels
   bool mIsDragPopup;  // true for drag feedback panels
