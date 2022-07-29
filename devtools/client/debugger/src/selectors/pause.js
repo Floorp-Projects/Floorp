@@ -53,6 +53,11 @@ export function getPauseReason(state, thread) {
   return getThreadPauseState(state.pause, thread).why;
 }
 
+export function getShouldBreakpointsPaneOpenOnPause(state, thread) {
+  return getThreadPauseState(state.pause, thread)
+    .shouldBreakpointsPaneOpenOnPause;
+}
+
 export function getPauseCommand(state, thread) {
   return getThreadPauseState(state.pause, thread).command;
 }

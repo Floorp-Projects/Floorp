@@ -12,6 +12,7 @@ CompiledModules(
     "expandScopes.js",
     "fetchFrames.js",
     "fetchScopes.js",
+    "highlightCalls.js",
     "index.js",
     "inlinePreview.js",
     "mapDisplayNames.js",
@@ -19,8 +20,8 @@ CompiledModules(
     "mapScopes.js",
     "paused.js",
     "pauseOnExceptions.js",
+    "resetBreakpointsPaneState.js",
     "resumed.js",
     "selectFrame.js",
-    "highlightCalls.js",
     "skipPausing.js",
 )
