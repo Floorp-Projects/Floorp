@@ -794,6 +794,11 @@ impl InstructionWriter {
         self.write_u16(argc);
     }
 
+    pub fn call_content(&mut self, argc: u16) {
+        self.emit_argc_op(Opcode::CallContent, argc);
+        self.write_u16(argc);
+    }
+
     pub fn call_iter(&mut self, argc: u16) {
         self.emit_argc_op(Opcode::CallIter, argc);
         self.write_u16(argc);
@@ -846,6 +851,11 @@ impl InstructionWriter {
 
     pub fn new_(&mut self, argc: u16) {
         self.emit_argc_op(Opcode::New, argc);
+        self.write_u16(argc);
+    }
+
+    pub fn new_content(&mut self, argc: u16) {
+        self.emit_argc_op(Opcode::NewContent, argc);
         self.write_u16(argc);
     }
 
