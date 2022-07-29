@@ -17,4 +17,9 @@ interface nsIBrowserWindowTracker : nsISupports
    * Return array of browser tabs that are currently visible.
    */
   Array<nsIVisibleTab> getAllVisibleTabs();
+
+  /**
+   * Return browser having given browser id.
+   */
+  nsISupports getBrowserById(in uint64_t aBrowserId);
 };
