@@ -70,13 +70,18 @@ class SessionStorage(
             return true
         }
 
-        val stateToPersist = if (state.selectedTabId != null && state.selectedTab == null) {
+        // "about:crashparent" is meant for testing purposes only.  If saved/restored then it will
+        // continue to crash the app until data is cleared.  Therefore, we are filtering it out.
+        val updatedTabList = state.tabs.filterNot { it.content.url == "about:crashparent" }
+        val updatedState = state.copy(tabs = updatedTabList)
+
+        val stateToPersist = if (updatedState.selectedTabId != null && updatedState.selectedTab == null) {
             // Needs investigation to figure out and prevent cause:
             // https://github.com/mozilla-mobile/android-components/issues/8417
             logger.error("Selected tab ID set, but tab with matching ID not found. Clearing selection.")
-            state.copy(selectedTabId = null)
+            updatedState.copy(selectedTabId = null)
         } else {
-            state
+            updatedState
         }
 
         return synchronized(sessionFileLock) {

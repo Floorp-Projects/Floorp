@@ -357,6 +357,34 @@ class SessionStorageTest {
         // the first one if all tabs have the same last access value.
         assertEquals("mozilla", browsingSession.selectedTabId)
     }
+
+    @Test
+    fun `WHEN saving state with crash parent tab THEN don't save tab`() {
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(url = "about:crashparent", id = "crash"),
+                createTab(url = "https://getpocket.com", id = "pocket")
+            ),
+            selectedTabId = "crash"
+        )
+
+        val engine = FakeEngine()
+
+        val storage = SessionStorage(testContext, engine)
+        val persisted = storage.save(state)
+        assertTrue(persisted)
+
+        // Read it back
+        val browsingSession = storage.restore()
+        assertNotNull(browsingSession!!)
+
+        assertEquals(1, browsingSession.tabs.size)
+        assertEquals("https://getpocket.com", browsingSession.tabs[0].state.url)
+
+        // Selected tab doesn't exist so we take to most recently accessed one, or
+        // the first one if all tabs have the same last access value.
+        assertEquals("pocket", browsingSession.selectedTabId)
+    }
 }
 
 internal fun TabSessionState.assertSameAs(tab: RecoverableTab) {
