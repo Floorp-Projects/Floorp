@@ -35,7 +35,7 @@ describe("Discovery Stream <DSPrivacyModal>", () => {
     assert.calledOnce(dispatch);
     assert.calledWith(
       dispatch,
-      ac.UserEvent({
+      ac.DiscoveryStreamUserEvent({
         event: "CLICK_PRIVACY_INFO",
         source: "DS_PRIVACY_MODAL",
       })

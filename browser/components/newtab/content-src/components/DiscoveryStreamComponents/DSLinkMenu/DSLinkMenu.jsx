@@ -4,6 +4,7 @@
 
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
+import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
 
 export class DSLinkMenu extends React.PureComponent {
@@ -49,6 +50,7 @@ export class DSLinkMenu extends React.PureComponent {
             onShow={this.props.onMenuShow}
             options={TOP_STORIES_CONTEXT_MENU_OPTIONS}
             shouldSendImpressionStats={true}
+            userEvent={ac.DiscoveryStreamUserEvent}
             site={{
               referrer: "https://getpocket.com/recommendations",
               title: this.props.title,

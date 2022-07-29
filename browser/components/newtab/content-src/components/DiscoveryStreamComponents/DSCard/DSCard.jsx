@@ -176,7 +176,7 @@ export class _DSCard extends React.PureComponent {
   onLinkClick(event) {
     if (this.props.dispatch) {
       this.props.dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: this.props.type.toUpperCase(),
           action_position: this.props.pos,
@@ -214,7 +214,7 @@ export class _DSCard extends React.PureComponent {
       );
 
       this.props.dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "SAVE_TO_POCKET",
           source: "CARDGRID_HOVER",
           action_position: this.props.pos,
