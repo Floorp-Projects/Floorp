@@ -4426,9 +4426,11 @@ mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
     nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
     const bool& aShouldCloseWindow) {
   BrowsingContext* context = aContext.IsDiscarded() ? nullptr : aContext.get();
-  static_cast<ExternalHelperAppParent*>(actor)->Init(
-      loadInfoArgs, aMimeContentType, aForceSave, aReferrer, context,
-      aShouldCloseWindow);
+  if (!static_cast<ExternalHelperAppParent*>(actor)->Init(
+          loadInfoArgs, aMimeContentType, aForceSave, aReferrer, context,
+          aShouldCloseWindow)) {
+    return IPC_FAIL(this, "Init failed.");
+  }
   return IPC_OK();
 }
 
