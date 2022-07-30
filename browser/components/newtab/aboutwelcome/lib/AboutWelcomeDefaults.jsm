@@ -292,6 +292,18 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             navigate: true,
           },
         },
+        secondary_button_top: {
+          label: {
+            string_id: "mr1-onboarding-sign-in-button-label",
+          },
+          action: {
+            data: {
+              entrypoint: "activity-stream-firstrun",
+            },
+            type: "SHOW_FIREFOX_ACCOUNTS",
+            addFlowParams: true,
+          },
+        },
       },
     },
     {

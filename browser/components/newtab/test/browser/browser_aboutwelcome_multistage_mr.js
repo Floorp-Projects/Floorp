@@ -60,8 +60,12 @@ add_task(async function test_aboutwelcome_mr_template_content() {
 
   await test_screen_content(
     browser,
-    "MR template includes screens with split position",
+    "MR template includes screens with split position and a sign in link on the first screen",
     // Expected selectors:
-    [`main.screen[pos="split"]`]
+    [
+      `main.screen[pos="split"]`,
+      "div.secondary-cta.top",
+      "button[value='secondary_button_top']",
+    ]
   );
 });
