@@ -314,6 +314,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
                   CompilationState& compilationState, EmitterMode emitterMode);
 
+  BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
+                  SharedContext* sc, CompilationState& compilationState,
+                  EmitterMode emitterMode);
+
   void initFromBodyPosition(TokenPos bodyPosition);
 
   /*
@@ -325,20 +329,15 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   void reportNeedMoreArgsError(CallNode* callNode, uint32_t requiredArgs);
 
  public:
-  BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
-                  SharedContext* sc, CompilationState& compilationState,
-                  EmitterMode emitterMode = Normal);
-
-  BytecodeEmitter(BytecodeEmitter* parent, const EitherParser& parser,
-                  SharedContext* sc, CompilationState& compilationState,
+  BytecodeEmitter(const EitherParser& parser, SharedContext* sc,
+                  CompilationState& compilationState,
                   EmitterMode emitterMode = Normal);
 
   template <typename Unit>
-  BytecodeEmitter(BytecodeEmitter* parent,
-                  Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
+  BytecodeEmitter(Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
                   CompilationState& compilationState,
                   EmitterMode emitterMode = Normal)
-      : BytecodeEmitter(parent, EitherParser(parser), sc, compilationState,
+      : BytecodeEmitter(EitherParser(parser), sc, compilationState,
                         emitterMode) {}
 
   [[nodiscard]] bool init();

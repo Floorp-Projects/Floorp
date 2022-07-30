@@ -153,11 +153,10 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
   parser = handle;
 }
 
-BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
-                                 const EitherParser& parser, SharedContext* sc,
+BytecodeEmitter::BytecodeEmitter(const EitherParser& parser, SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationState, emitterMode) {
+    : BytecodeEmitter(nullptr, sc, compilationState, emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
 }
