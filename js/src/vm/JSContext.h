@@ -278,6 +278,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
   JS::GCContext* gcContext() { return runtime_->gcContext(); }
+  JS::StackKind stackKindForCurrentPrincipal();
+  uintptr_t stackLimitForCurrentPrincipal();
   uintptr_t stackLimit(JS::StackKind kind) { return nativeStackLimit[kind]; }
   uintptr_t stackLimitForJitCode(JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }
