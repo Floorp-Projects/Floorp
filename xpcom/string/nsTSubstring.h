@@ -674,11 +674,10 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    *  You can control whether whitespace is yanked from start and end of
    *  string as well.
    *
-   *  @param   aEliminateLeading controls stripping of leading ws
-   *  @param   aEliminateTrailing controls stripping of trailing ws
+   *  @param   aTrimLeading controls stripping of leading ws
+   *  @param   aTrimTrailing controls stripping of trailing ws
    */
-  void CompressWhitespace(bool aEliminateLeading = true,
-                          bool aEliminateTrailing = true);
+  void CompressWhitespace(bool aTrimLeading = true, bool aTrimTrailing = true);
 
   void Append(char_type aChar);
 
