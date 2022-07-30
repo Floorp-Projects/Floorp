@@ -34,6 +34,7 @@
 // memory checking. (Limited to avoid quadratic behavior.)
 const size_t kNsStringBufferMaxPoison = 16;
 
+class nsStringBuffer;
 template <typename T>
 class nsTSubstringSplitter;
 template <typename T>
@@ -285,6 +286,7 @@ class BulkWriteHandle final {
 template <typename T>
 class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   friend class mozilla::BulkWriteHandle<T>;
+  friend class nsStringBuffer;
 
  public:
   typedef nsTSubstring<T> self_type;

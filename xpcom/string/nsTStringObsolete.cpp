@@ -172,8 +172,6 @@ void nsTSubstring<T>::ReplaceChar(const char_type* aSet, char_type aNewChar) {
 
 template void nsTSubstring<char16_t>::ReplaceChar(const char*, char16_t);
 
-void ReleaseData(void* aData, nsAString::DataFlags aFlags);
-
 template <typename T>
 void nsTSubstring<T>::ReplaceSubstring(const char_type* aTarget,
                                        const char_type* aNewValue) {
