@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsTPromiseFlatString.h"
+
 template <typename T>
 void nsTPromiseFlatString<T>::Init(const substring_type& str) {
   if (str.IsTerminated()) {
@@ -19,3 +21,6 @@ void nsTPromiseFlatString<T>::Init(const substring_type& str) {
     this->Assign(str);
   }
 }
+
+template class nsTPromiseFlatString<char>;
+template class nsTPromiseFlatString<char16_t>;

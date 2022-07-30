@@ -584,7 +584,9 @@ nsresult ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
     size_t matchIdx;
     if (BinarySearchIf(
             sStaticFileExtensions, 0, ArrayLength(sStaticFileExtensions),
-            [&ext](const char* aOther) { return ext.Compare(aOther); },
+            [&ext](const char* aOther) {
+              return Compare(ext, nsDependentCString(aOther));
+            },
             &matchIdx)) {
       // This is a static resource that shouldn't depend on the extension being
       // ready. Don't bother waiting for it.

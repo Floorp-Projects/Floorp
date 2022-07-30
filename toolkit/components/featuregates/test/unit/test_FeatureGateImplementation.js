@@ -3,13 +3,9 @@
 
 "use strict";
 
-const { FeatureGate } = ChromeUtils.import(
-  "resource://featuregates/FeatureGate.jsm"
-);
 const { FeatureGateImplementation } = ChromeUtils.import(
   "resource://featuregates/FeatureGateImplementation.jsm"
 );
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const kDefinitionDefaults = {
   id: "test-feature",
@@ -24,43 +20,6 @@ const kDefinitionDefaults = {
 
 function definitionFactory(override = {}) {
   return Object.assign({}, kDefinitionDefaults, override);
-}
-
-class DefinitionServer {
-  constructor(definitionOverrides = []) {
-    this.server = new HttpServer();
-    this.server.registerPathHandler("/definitions.json", this);
-    this.definitions = {};
-
-    for (const override of definitionOverrides) {
-      this.addDefinition(override);
-    }
-
-    this.server.start();
-    registerCleanupFunction(
-      () => new Promise(resolve => this.server.stop(resolve))
-    );
-  }
-
-  // for nsIHttpRequestHandler
-  handle(request, response) {
-    // response.setHeader("Content-Type", "application/json");
-    response.write(JSON.stringify(this.definitions));
-  }
-
-  get definitionsUrl() {
-    const { primaryScheme, primaryHost, primaryPort } = this.server.identity;
-    return `${primaryScheme}://${primaryHost}:${primaryPort}/definitions.json`;
-  }
-
-  addDefinition(overrides = {}) {
-    const definition = definitionFactory(overrides);
-    // convert targeted values, used by fromId
-    definition.isPublic = { default: definition.isPublic };
-    definition.defaultValue = { default: definition.defaultValue };
-    this.definitions[definition.id] = definition;
-    return definition;
-  }
 }
 
 // getValue should work

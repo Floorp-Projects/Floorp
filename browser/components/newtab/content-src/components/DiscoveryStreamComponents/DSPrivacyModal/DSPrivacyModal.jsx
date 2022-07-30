@@ -16,7 +16,7 @@ export class DSPrivacyModal extends React.PureComponent {
 
   onLearnLinkClick(event) {
     this.props.dispatch(
-      ac.UserEvent({
+      ac.DiscoveryStreamUserEvent({
         event: "CLICK_PRIVACY_INFO",
         source: "DS_PRIVACY_MODAL",
       })

@@ -4,7 +4,7 @@
 
 <html:template id="unified-extensions-template">
   <menupopup id="unified-extensions-context-menu"
-             onpopupshowing="gUnifiedExtensions.updateContextMenu(this)">
+             onpopupshowing="gUnifiedExtensions.updateContextMenu(this, event)">
     <menuitem data-l10n-id="unified-extensions-context-menu-manage-extension"
               class="unified-extensions-context-menu-manage-extension"
               oncommand="gUnifiedExtensions.manageExtension(this.parentElement)" />

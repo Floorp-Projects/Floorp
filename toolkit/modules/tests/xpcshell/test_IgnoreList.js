@@ -3,11 +3,6 @@
 
 "use strict";
 
-const kSearchEngineID1 = "ignorelist_test_engine1";
-const kSearchEngineURL1 =
-  "http://example.com/?search={searchTerms}&ignore=true";
-const kExtensionID = "searchignore@mozilla.com";
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",

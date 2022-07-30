@@ -128,7 +128,7 @@ describe("<CollectionCardGrid>", () => {
       { url: "789", pocket_id: undefined, isSponsoredTopSite: undefined },
     ]);
 
-    assert.equal(secondCall.args[0].type, "TELEMETRY_USER_EVENT");
+    assert.equal(secondCall.args[0].type, "DISCOVERY_STREAM_USER_EVENT");
     assert.deepEqual(secondCall.args[0].data, {
       event: "BLOCK",
       source: "COLLECTIONCARDGRID",

@@ -139,12 +139,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        "*.html",
-        "*.xhtml",
-        "*.xml",
-        "js/src/builtin/**/*.js",
-      ],
+      files: ["*.html", "*.xhtml", "*.xml", "js/src/builtin/**/*.js"],
       rules: {
         // Curly brackets are required for all the tree via recommended.js,
         // however these files aren't auto-fixable at the moment.
@@ -226,8 +221,6 @@ module.exports = {
         "dom/**",
         "netwerk/**",
         "security/manager/ssl/tests/unit/**",
-        "toolkit/components/**",
-        "toolkit/modules/**",
       ],
       rules: {
         // No declaring variables that are never used

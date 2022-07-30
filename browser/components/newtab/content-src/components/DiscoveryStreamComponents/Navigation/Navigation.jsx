@@ -17,7 +17,7 @@ export class Topic extends React.PureComponent {
   onLinkClick(event) {
     if (this.props.dispatch) {
       this.props.dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source: "POPULAR_TOPICS",
           action_position: 0,

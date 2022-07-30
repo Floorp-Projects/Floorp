@@ -37,7 +37,7 @@ export function _TopicsWidget(props) {
   function onLinkClick(topic, positionInCard) {
     if (dispatch) {
       dispatch(
-        ac.UserEvent({
+        ac.DiscoveryStreamUserEvent({
           event: "CLICK",
           source,
           action_position: position,

@@ -77,7 +77,7 @@ describe("<DSTextPromo>", () => {
       },
     ]);
 
-    assert.equal(secondCall.args[0].type, "TELEMETRY_USER_EVENT");
+    assert.equal(secondCall.args[0].type, "DISCOVERY_STREAM_USER_EVENT");
     assert.deepEqual(secondCall.args[0].data, {
       event: "BLOCK",
       source: "TEXTPROMO",

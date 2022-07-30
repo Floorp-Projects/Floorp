@@ -7,7 +7,6 @@
 const kInterfaceName = "wifi";
 const kOtherInterfaceName = "ril";
 
-var server;
 var step = 0;
 var loginFinished = false;
 

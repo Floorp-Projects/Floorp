@@ -6,6 +6,10 @@
 
 const EXPORTED_SYMBOLS = ["_applyColorwayConfig", "BuiltInThemeConfig"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 /**
  * A Map of themes built in to the browser, alongwith a Map of collections those themes belong to. Params for the objects contained
  * within the map:
@@ -489,10 +493,6 @@ const BuiltInThemeConfig = new Map([
   ],
 ]);
 
-const colorwayClosetEnabled = Services.prefs.getBoolPref(
-  "browser.theme.colorway-closet"
-);
-
 const ColorwayCollections = [
   {
     id: "life-in-color",
@@ -504,7 +504,7 @@ const ColorwayCollections = [
   },
   {
     id: "independent-voices",
-    expiry: colorwayClosetEnabled ? "2023-01-24" : "1970-01-01",
+    expiry: AppConstants.NIGHTLY_BUILD ? "2023-01-24" : "1970-01-01",
     l10nId: {
       title: "colorway-collection-independent-voices",
       description: "colorway-collection-independent-voices-description",
@@ -536,7 +536,7 @@ function _applyColorwayConfig(collections) {
       });
     }
   }
-  BuiltInThemeConfig.findActiveColorwayCollection = now => {
+  BuiltInThemeConfig.findActiveColorwayCollection = (now = new Date()) => {
     let collection = null;
     let start = 0;
     let end = collectionsSorted.length - 1;

@@ -217,7 +217,7 @@ class _BuiltInThemes {
    *   Colorway Collection
    */
   findActiveColorwayCollection() {
-    return this.builtInThemeMap.findActiveColorwayCollection(new Date());
+    return this.builtInThemeMap.findActiveColorwayCollection();
   }
 
   /**

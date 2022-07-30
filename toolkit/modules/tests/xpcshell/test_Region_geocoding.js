@@ -46,17 +46,24 @@ const LOCATIONS = [
   { lat: 45.6523148, lng: 13.7486427, expectedRegion: "IT" },
   // In Bosnia and Herzegovina but within a lot of borders.
   { lat: 42.557079, lng: 18.4370373, expectedRegion: "HR" },
-  // In the sea bordering Italy and a few other regions.
-  { lat: 45.608696, lng: 13.4667903, expectedRegion: "IT" },
+  // In the sea bordering Croatia and a few other regions.
+  { lat: 45.608696, lng: 13.4667903, expectedRegion: "HR" },
   // In the middle of the Atlantic.
   { lat: 35.4411368, lng: -41.5372973, expectedRegion: null },
+  // Tanzania.
+  { lat: -5.066019, lng: 39.1026251, expectedRegion: "TZ" },
 ];
 
 add_task(async function test_local_basic() {
-  setLocation({ lat: -5.066019, lng: 39.1026251 });
-  let expectedRegion = "TZ";
-  let region = await Region._getRegionLocally();
-  Assert.equal(region, expectedRegion);
+  for (const { lat, lng, expectedRegion } of LOCATIONS) {
+    setLocation({ lat, lng });
+    let region = await Region._getRegionLocally();
+    Assert.equal(
+      region,
+      expectedRegion,
+      `Got the expected region at ${lat},${lng}`
+    );
+  }
 });
 
 add_task(async function test_mls_results() {

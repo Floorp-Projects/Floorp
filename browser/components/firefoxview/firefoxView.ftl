@@ -14,6 +14,10 @@ menu-tools-firefox-view =
 
 firefoxview-page-title = { -firefoxview-brand-name }
 
+firefoxview-close-button =
+  .title = Close
+  .aria-label = Close
+
 # Used instead of the localized relative time when a timestamp is within a minute or so of now
 firefoxview-just-now-timestamp = Just now
 
@@ -42,6 +46,13 @@ firefoxview-tabpickup-synctabs-learn-how = Learn how
 firefoxview-tabpickup-synctabs-primarybutton = Sync open tabs
 
 firefoxview-tabpickup-syncing = Sit tight while your tabs sync. It’ll be just a moment.
+
+firefoxview-mobile-promo-header = Grab tabs from your phone or tablet
+firefoxview-mobile-promo-description = To view your latest mobile tabs, sign in to { -brand-product-name } on iOS or Android.
+firefoxview-mobile-promo-primarybutton = Get { -brand-product-name } for mobile
+
+firefoxview-mobile-confirmation-header = 🎉 Good to go!
+firefoxview-mobile-confirmation-description = Now you can grab your { -brand-product-name } tabs from your tablet or phone.
 
 firefoxview-closed-tabs-title = Recently closed
 firefoxview-closed-tabs-collapse-button =

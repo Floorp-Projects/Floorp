@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-07-08T13:24:54.472587'
+updated_at: '2022-07-29T14:34:09.303444'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -27,7 +27,7 @@ people:
     nick: agashlin
   - &agi
     bmo_id: 421286
-    name: Agi Sferro
+    name: ''
     nick: agi
   - &ahal
     bmo_id: 382067
@@ -165,10 +165,10 @@ people:
     bmo_id: 644229
     name: Caroline Cullen
     nick: caroline
-  - &chutten
+  - &chuttenPTO
     bmo_id: 553004
     name: Chris H-C
-    nick: chutten
+    nick: chutten|PTO
   - &ckerschbaumer
     bmo_id: 521513
     name: ''
@@ -225,13 +225,17 @@ people:
     bmo_id: 436087
     name: Kannan Vijayan
     nick: djvj
+  - &dlrobertson
+    bmo_id: 705145
+    name: Dan Robertson
+    nick: dlrobertson
   - &dminor
     bmo_id: 466787
     name: Dan Minor
     nick: dminor
   - &dmosedale
     bmo_id: 1537
-    name: Dan Mosedale
+    name: Dan Mosedale - Away From Bugmail Until Aug 9th
     nick: dmosedale
   - &dragana
     bmo_id: 508195
@@ -977,6 +981,8 @@ modules:
     meta:
       owners_emeritus:
         - Kartikaya Gupta
+      peers_emeritus:
+        - Ryan Hunt
       group: dev-platform
       url: https://wiki.mozilla.org/Platform/GFX/APZ
       components:
@@ -985,7 +991,8 @@ modules:
       - *botond
     peers:
       - *tnikkel
-      - *rhunt
+      - *dlrobertson
+      - *hiro
       - *mstange
     machine_name: core_apz_graphics_submodule
 
@@ -3563,7 +3570,7 @@ modules:
           group: fx-data-dev
           url: https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html
         owners:
-          - *chutten
+          - *chuttenPTO
         peers:
           - *aplacitelli
           - *janerik
@@ -3600,5 +3607,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 6c931f02fdd0d60b6a71e6c9852d4768c079ae4f
-  export: 46336ebc3fe281f466467b7464dcd0781d20656b
+  config: be08cfdb5c6a98a46a1218b5dcd638e779910d5b
+  export: 8fdf75bd25328e606621d418e75482497dbf8d6f
