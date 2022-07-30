@@ -34,6 +34,8 @@ void MainThreadErrorContext::onAllocationOverflow() {
   return cx_->reportAllocationOverflow();
 }
 
+void MainThreadErrorContext::onOverRecursed() { cx_->onOverRecursed(); }
+
 const JSErrorFormatString* MainThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
   gc::AutoSuppressGC suppressGC(cx_);
@@ -80,6 +82,8 @@ void OffThreadErrorContext::onAllocationOverflow() {
   // helper threads; see js::reportAllocationOverflow()
 }
 
+void OffThreadErrorContext::onOverRecursed() { errors_.overRecursed = true; }
+
 const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
   return callback(userRef, errorNumber);
@@ -124,3 +128,42 @@ void OffThreadErrorContext::linkWithJSContext(JSContext* cx) {
     cx->setOffThreadFrontendErrors(&errors_);
   }
 }
+
+#ifdef __wasi__
+void MainThreadErrorContext::incWasiRecursionDepth() {
+  IncWasiRecursionDepth(cx_);
+}
+
+void MainThreadErrorContext::decWasiRecursionDepth() {
+  DecWasiRecursionDepth(cx_);
+}
+
+bool MainThreadErrorContext::checkWasiRecursionLimit() {
+  return CheckWasiRecursionLimit(cx_);
+}
+
+void OffThreadErrorContext::incWasiRecursionDepth() {
+  // WASI doesn't support thread.
+}
+
+void OffThreadErrorContext::decWasiRecursionDepth() {
+  // WASI doesn't support thread.
+}
+
+bool OffThreadErrorContext::checkWasiRecursionLimit() {
+  // WASI doesn't support thread.
+  return true;
+}
+
+JS_PUBLIC_API void js::IncWasiRecursionDepth(ErrorContext* ec) {
+  ec->incWasiRecursionDepth();
+}
+
+JS_PUBLIC_API void js::DecWasiRecursionDepth(ErrorContext* ec) {
+  ec->decWasiRecursionDepth();
+}
+
+JS_PUBLIC_API bool js::CheckWasiRecursionLimit(ErrorContext* ec) {
+  return ec->checkWasiRecursionLimit();
+}
+#endif  // __wasi__

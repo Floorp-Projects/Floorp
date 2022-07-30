@@ -231,11 +231,9 @@ impl ClipTree {
     /// nodes in the tree where possible
     pub fn add(
         &mut self,
-        root: Option<ClipNodeId>,
+        root: ClipNodeId,
         clips: &[ClipDataHandle],
     ) -> ClipNodeId {
-        let root = root.unwrap_or(ClipNodeId(0));
-
         ClipTree::add_impl(
             root,
             clips,
@@ -378,13 +376,17 @@ pub struct ClipChain {
     clips: Vec<ClipDataHandle>,
 }
 
-/// Types of clips that can be pushed on to the clip-stack to add clips from
-/// grouping items to the clip-set for a given leaf.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum ClipStackEntry {
-    ClipChain(Option<ClipChainId>, bool),
-    Clip(ClipId),
+pub struct ClipStackEntry {
+    /// Cache the previous clip-chain build, since this is a common case
+    last_clip_chain_cache: Option<(ClipChainId, ClipNodeId)>,
+
+    /// Set of clips that were already seen and included in clip_node_id
+    seen_clips: FastHashSet<ClipDataHandle>,
+
+    /// The build clip_node_id for this level of the stack
+    clip_node_id: ClipNodeId,
 }
 
 /// Used by the scene builder to build the clip-tree that is part of the built scene.
@@ -406,9 +408,6 @@ pub struct ClipTreeBuilder {
 
     /// A temporary buffer stored here to avoid constant heap allocs/frees
     clip_handles_buffer: Vec<ClipDataHandle>,
-
-    /// Cache the previous clip-chain build, since this is a common case
-    last_clip_chain_cache: Option<(ClipChainId, ClipNodeId)>,
 }
 
 impl ClipTreeBuilder {
@@ -417,10 +416,15 @@ impl ClipTreeBuilder {
             clip_map: FastHashMap::default(),
             clip_chain_map: FastHashMap::default(),
             clip_chains: Vec::new(),
-            clip_stack: Vec::new(),
+            clip_stack: vec![
+                ClipStackEntry {
+                    clip_node_id: ClipNodeId::NONE,
+                    last_clip_chain_cache: None,
+                    seen_clips: FastHashSet::default(),
+                },
+            ],
             tree: ClipTree::new(),
             clip_handles_buffer: Vec::new(),
-            last_clip_chain_cache: None,
         }
     }
 
@@ -473,34 +477,84 @@ impl ClipTreeBuilder {
     /// Push a clip-chain that will be applied to any prims built prior to next pop
     pub fn push_clip_chain(
         &mut self,
-        id: Option<ClipChainId>,
+        clip_chain_id: Option<ClipChainId>,
         reset_seen: bool,
     ) {
-        self.last_clip_chain_cache = None;
-        self.clip_stack.push(ClipStackEntry::ClipChain(id, reset_seen));
+        let (mut clip_node_id, mut seen_clips) = {
+            let prev = self.clip_stack.last().unwrap();
+            (prev.clip_node_id, prev.seen_clips.clone())
+        };
+
+        if let Some(clip_chain_id) = clip_chain_id {
+            if clip_chain_id != ClipChainId::INVALID {
+                self.clip_handles_buffer.clear();
+
+                let clip_chain_index = self.clip_chain_map[&clip_chain_id];
+                ClipTreeBuilder::add_clips(
+                    clip_chain_index,
+                    &mut seen_clips,
+                    &mut self.clip_handles_buffer,
+                    &self.clip_chains,
+                );
+
+                clip_node_id = self.tree.add(
+                    clip_node_id,
+                    &self.clip_handles_buffer,
+                );
+            }
+        }
+
+        if reset_seen {
+            seen_clips.clear();
+        }
+
+        self.clip_stack.push(ClipStackEntry {
+            last_clip_chain_cache: None,
+            clip_node_id,
+            seen_clips,
+        });
     }
 
     /// Push a clip-id that will be applied to any prims built prior to next pop
     pub fn push_clip_id(
         &mut self,
-        id: ClipId,
+        clip_id: ClipId,
     ) {
-        self.last_clip_chain_cache = None;
-        self.clip_stack.push(ClipStackEntry::Clip(id));
+        let (clip_node_id, mut seen_clips) = {
+            let prev = self.clip_stack.last().unwrap();
+            (prev.clip_node_id, prev.seen_clips.clone())
+        };
+
+        self.clip_handles_buffer.clear();
+        let clip_index = self.clip_map[&clip_id];
+
+        if seen_clips.insert(clip_index) {
+            self.clip_handles_buffer.push(clip_index);
+        }
+
+        let clip_node_id = self.tree.add(
+            clip_node_id,
+            &self.clip_handles_buffer,
+        );
+
+        self.clip_stack.push(ClipStackEntry {
+            last_clip_chain_cache: None,
+            seen_clips,
+            clip_node_id,
+        });
     }
 
     /// Pop a clip off the clip_stack, when exiting a grouping item
     pub fn pop_clip(&mut self) {
-        self.last_clip_chain_cache = None;
         self.clip_stack.pop().unwrap();
     }
 
     /// Add clips from a given clip-chain to the set of clips for a primitive during clip-set building
     fn add_clips(
-        &self,
         clip_chain_index: usize,
         seen_clips: &mut FastHashSet<ClipDataHandle>,
         output: &mut Vec<ClipDataHandle>,
+        clip_chains: &[ClipChain],
     ) {
         // TODO(gw): It's possible that we may see clip outputs that include identical clips
         //           (e.g. if there is a clip positioned by two spatial nodes, where one spatial
@@ -509,13 +563,14 @@ impl ClipTreeBuilder {
         //           excluding them, to ensure the shape of the tree matches what we need for
         //           finding shared_clips for tile caches etc.
 
-        let clip_chain = &self.clip_chains[clip_chain_index];
+        let clip_chain = &clip_chains[clip_chain_index];
 
         if let Some(parent) = clip_chain.parent {
-            self.add_clips(
+            ClipTreeBuilder::add_clips(
                 parent,
                 seen_clips,
                 output,
+                clip_chains,
             );
         }
 
@@ -531,58 +586,46 @@ impl ClipTreeBuilder {
         &mut self,
         clip_chain_id: ClipChainId,
     ) -> ClipNodeId {
-        if let Some((cached_clip_chain, cached_clip_node)) = self.last_clip_chain_cache {
-            if cached_clip_chain == clip_chain_id {
-                return cached_clip_node;
-            }
-        }
+        let clip_stack = self.clip_stack.last_mut().unwrap();
 
-        let mut seen_clips = FastHashSet::default();
-        let mut output = mem::replace(&mut self.clip_handles_buffer, Vec::new());
-        output.clear();
-
-        for entry in &self.clip_stack {
-            match entry {
-                ClipStackEntry::ClipChain(clip_chain_id, reset_seen) => {
-                    if let Some(clip_chain_id) = clip_chain_id {
-                        if *clip_chain_id != ClipChainId::INVALID {
-                            let clip_chain_index = self.clip_chain_map[clip_chain_id];
-                            self.add_clips(
-                                clip_chain_index,
-                                &mut seen_clips,
-                                &mut output,
-                            );
-
-                            if *reset_seen {
-                                seen_clips.clear();
-                            }
-                        }
-                    }
-                }
-                ClipStackEntry::Clip(clip_id) => {
-                    let clip_index = self.clip_map[clip_id];
-                    if seen_clips.insert(clip_index) {
-                        output.push(clip_index);
-                    }
+        if clip_chain_id == ClipChainId::INVALID {
+            clip_stack.clip_node_id
+        } else {
+            if let Some((cached_clip_chain, cached_clip_node)) = clip_stack.last_clip_chain_cache {
+                if cached_clip_chain == clip_chain_id {
+                    return cached_clip_node;
                 }
             }
-        }
 
-        if clip_chain_id != ClipChainId::INVALID {
             let clip_chain_index = self.clip_chain_map[&clip_chain_id];
-            self.add_clips(
+
+            self.clip_handles_buffer.clear();
+
+            ClipTreeBuilder::add_clips(
                 clip_chain_index,
-                &mut seen_clips,
-                &mut output,
+                &mut clip_stack.seen_clips,
+                &mut self.clip_handles_buffer,
+                &self.clip_chains,
             );
+
+            // We mutated the `clip_stack.seen_clips` in order to remove duplicate clips from
+            // the supplied `clip_chain_id`. Now step through and remove any clips we added
+            // to the set, so we don't get incorrect results next time `build_clip_set` is
+            // called for a different clip-chain. Doing it this way rather than cloning means
+            // we avoid heap allocations for each `build_clip_set` call.
+            for handle in &self.clip_handles_buffer {
+                clip_stack.seen_clips.remove(handle);
+            }
+
+            let clip_node_id = self.tree.add(
+                clip_stack.clip_node_id,
+                &self.clip_handles_buffer,
+            );
+
+            clip_stack.last_clip_chain_cache = Some((clip_chain_id, clip_node_id));
+
+            clip_node_id
         }
-
-        let node_id = self.tree.add(None, &output);
-
-        self.clip_handles_buffer = output;
-        self.last_clip_chain_cache = Some((clip_chain_id, node_id));
-
-        node_id
     }
 
     /// Recursive impl to check if a clip-chain has complex (non-rectangular) clips
@@ -670,7 +713,7 @@ impl ClipTreeBuilder {
         }
 
         let node_id = self.tree.add(
-            Some(clip_node_id),
+            clip_node_id,
             &self.clip_handles_buffer,
         );
 
@@ -690,7 +733,7 @@ impl ClipTreeBuilder {
         clip_node_id: ClipNodeId,
     ) -> ClipLeafId {
         let node_id = self.tree.add(
-            Some(clip_node_id),
+            clip_node_id,
             &[],
         );
 
@@ -712,11 +755,14 @@ impl ClipTreeBuilder {
         extra_clips: &[ClipItemKey],
         interners: &mut Interners,
     ) -> ClipLeafId {
-        // TODO(gw): Cache the previous build of clip-node / clip-leaf to handle cases where we get a
-        //           lot of primitives referencing the same clip set (e.g. dl_mutate and similar tests)
-        self.clip_handles_buffer.clear();
 
-        if !extra_clips.is_empty() {
+        let node_id = if extra_clips.is_empty() {
+            clip_node_id
+        } else {
+            // TODO(gw): Cache the previous build of clip-node / clip-leaf to handle cases where we get a
+            //           lot of primitives referencing the same clip set (e.g. dl_mutate and similar tests)
+            self.clip_handles_buffer.clear();
+
             for item in extra_clips {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
@@ -728,12 +774,12 @@ impl ClipTreeBuilder {
 
                 self.clip_handles_buffer.push(handle);
             }
-        }
 
-        let node_id = self.tree.add(
-            Some(clip_node_id),
-            &self.clip_handles_buffer,
-        );
+            self.tree.add(
+                clip_node_id,
+                &self.clip_handles_buffer,
+            )
+        };
 
         let clip_leaf_id = ClipLeafId(self.tree.leaves.len() as u32);
 

@@ -52,6 +52,7 @@ class ErrorContext {
   virtual void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                               size_t nbytes, void* reallocPtr = nullptr) = 0;
   virtual void onAllocationOverflow() = 0;
+  virtual void onOverRecursed() = 0;
 
   virtual const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef, const unsigned errorNumber) = 0;
@@ -60,6 +61,12 @@ class ErrorContext {
   virtual bool hadOutOfMemory() const = 0;
   virtual bool hadOverRecursed() const = 0;
   virtual bool hadErrors() const = 0;
+
+#ifdef __wasi__
+  virtual void incWasiRecursionDepth() = 0;
+  virtual void decWasiRecursionDepth() = 0;
+  virtual bool checkWasiRecursionLimit() = 0;
+#endif  // __wasi__
 };
 
 class MainThreadErrorContext : public ErrorContext {
@@ -77,6 +84,7 @@ class MainThreadErrorContext : public ErrorContext {
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
   void onAllocationOverflow() override;
+  void onOverRecursed() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
@@ -86,6 +94,12 @@ class MainThreadErrorContext : public ErrorContext {
   bool hadOutOfMemory() const override;
   bool hadOverRecursed() const override;
   bool hadErrors() const override;
+
+#ifdef __wasi__
+  void incWasiRecursionDepth() override;
+  void decWasiRecursionDepth() override;
+  bool checkWasiRecursionLimit() override;
+#endif  // __wasi__
 };
 
 class OffThreadErrorContext : public ErrorContext {
@@ -108,6 +122,7 @@ class OffThreadErrorContext : public ErrorContext {
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) override;
   void onAllocationOverflow() override;
+  void onOverRecursed() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
@@ -119,6 +134,12 @@ class OffThreadErrorContext : public ErrorContext {
   bool hadErrors() const override {
     return hadOutOfMemory() || hadOverRecursed() || !errors_.errors.empty();
   }
+
+#ifdef __wasi__
+  void incWasiRecursionDepth() override;
+  void decWasiRecursionDepth() override;
+  bool checkWasiRecursionLimit() override;
+#endif  // __wasi__
 
  private:
   void ReportOutOfMemory();
