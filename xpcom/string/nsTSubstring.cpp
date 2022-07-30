@@ -987,103 +987,6 @@ namespace mozilla {
 namespace detail {
 
 template <typename T>
-typename nsTStringRepr<T>::char_type nsTStringRepr<T>::First() const {
-  MOZ_RELEASE_ASSERT(this->mLength > 0, "|First()| called on an empty string");
-  return this->mData[0];
-}
-
-template <typename T>
-typename nsTStringRepr<T>::char_type nsTStringRepr<T>::Last() const {
-  MOZ_RELEASE_ASSERT(this->mLength > 0, "|Last()| called on an empty string");
-  return this->mData[this->mLength - 1];
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Equals(const self_type& aStr) const {
-  return this->mLength == aStr.mLength &&
-         char_traits::compare(this->mData, aStr.mData, this->mLength) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Equals(const self_type& aStr,
-                              comparator_type aComp) const {
-  return this->mLength == aStr.mLength &&
-         aComp(this->mData, aStr.mData, this->mLength, aStr.mLength) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Equals(const substring_tuple_type& aTuple) const {
-  return Equals(substring_type(aTuple));
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Equals(const substring_tuple_type& aTuple,
-                              comparator_type aComp) const {
-  return Equals(substring_type(aTuple), aComp);
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Equals(const char_type* aData) const {
-  // unfortunately, some callers pass null :-(
-  if (!aData) {
-    MOZ_ASSERT_UNREACHABLE("null data pointer");
-    return this->mLength == 0;
-  }
-
-  // XXX avoid length calculation?
-  size_type length = char_traits::length(aData);
-  return this->mLength == length &&
-         char_traits::compare(this->mData, aData, this->mLength) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::Equals(const char_type* aData,
-                              comparator_type aComp) const {
-  // unfortunately, some callers pass null :-(
-  if (!aData) {
-    MOZ_ASSERT_UNREACHABLE("null data pointer");
-    return this->mLength == 0;
-  }
-
-  // XXX avoid length calculation?
-  size_type length = char_traits::length(aData);
-  return this->mLength == length &&
-         aComp(this->mData, aData, this->mLength, length) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::EqualsASCII(const char* aData, size_type aLen) const {
-  return this->mLength == aLen &&
-         char_traits::compareASCII(this->mData, aData, aLen) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::EqualsASCII(const char* aData) const {
-  return char_traits::compareASCIINullTerminated(this->mData, this->mLength,
-                                                 aData) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::EqualsLatin1(const char* aData,
-                                    const size_type aLength) const {
-  return (this->mLength == aLength) &&
-         char_traits::equalsLatin1(this->mData, aData, aLength);
-}
-
-template <typename T>
-bool nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData,
-                                            size_type aLen) const {
-  return this->mLength == aLen &&
-         char_traits::compareLowerCaseToASCII(this->mData, aData, aLen) == 0;
-}
-
-template <typename T>
-bool nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData) const {
-  return char_traits::compareLowerCaseToASCIINullTerminated(
-             this->mData, this->mLength, aData) == 0;
-}
-
-template <typename T>
 typename nsTStringRepr<T>::size_type nsTStringRepr<T>::CountChar(
     char_type aChar) const {
   const char_type* start = this->mData;
@@ -1512,4 +1415,88 @@ template <typename T>
 int64_t nsTSubstring<T>::ToInteger64(nsresult* aErrorCode,
                                      uint32_t aRadix) const {
   return ToIntegerCommon<T, int64_t>(*this, aErrorCode, aRadix);
+}
+
+/**
+ * nsTSubstring::Mid
+ */
+template <typename T>
+typename nsTSubstring<T>::size_type nsTSubstring<T>::Mid(
+    self_type& aResult, index_type aStartPos, size_type aLengthToCopy) const {
+  if (aStartPos == 0 && aLengthToCopy >= this->mLength) {
+    aResult = *this;
+  } else {
+    aResult = Substring(*this, aStartPos, aLengthToCopy);
+  }
+
+  return aResult.mLength;
+}
+
+/**
+ * nsTSubstring::StripWhitespace
+ */
+
+template <typename T>
+void nsTSubstring<T>::StripWhitespace() {
+  if (!StripWhitespace(mozilla::fallible)) {
+    this->AllocFailed(this->mLength);
+  }
+}
+
+template <typename T>
+bool nsTSubstring<T>::StripWhitespace(const fallible_t&) {
+  if (!this->EnsureMutable()) {
+    return false;
+  }
+
+  this->StripTaggedASCII(mozilla::ASCIIMask::MaskWhitespace());
+  return true;
+}
+
+/**
+ * nsTSubstring::CompressWhitespace.
+ */
+
+template <typename T>
+void nsTSubstring<T>::CompressWhitespace(bool aTrimLeading,
+                                         bool aTrimTrailing) {
+  // Quick exit
+  if (this->mLength == 0) {
+    return;
+  }
+
+  if (!this->EnsureMutable()) {
+    this->AllocFailed(this->mLength);
+  }
+
+  const ASCIIMaskArray& mask = mozilla::ASCIIMask::MaskWhitespace();
+
+  char_type* to = this->mData;
+  char_type* from = this->mData;
+  char_type* end = this->mData + this->mLength;
+
+  // Compresses runs of whitespace down to a normal space ' ' and convert
+  // any whitespace to a normal space.  This assumes that whitespace is
+  // all standard 7-bit ASCII.
+  bool skipWS = aTrimLeading;
+  while (from < end) {
+    uint32_t theChar = *from++;
+    if (mozilla::ASCIIMask::IsMasked(mask, theChar)) {
+      if (!skipWS) {
+        *to++ = ' ';
+        skipWS = true;
+      }
+    } else {
+      *to++ = theChar;
+      skipWS = false;
+    }
+  }
+
+  // If we need to trim the trailing whitespace, back up one character.
+  if (aTrimTrailing && skipWS && to > this->mData) {
+    to--;
+  }
+
+  *to = char_type(0);  // add the null
+  this->mLength = to - this->mData;
 }

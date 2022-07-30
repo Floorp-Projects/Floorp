@@ -90,55 +90,6 @@ int32_t nsTStringRepr<T>::RFindCharInSet(const char_type* aSet,
 }  // namespace mozilla::detail
 
 /**
- * nsTString::Mid
- */
-template <typename T>
-typename nsTSubstring<T>::size_type nsTSubstring<T>::Mid(
-    self_type& aResult, index_type aStartPos, size_type aLengthToCopy) const {
-  if (aStartPos == 0 && aLengthToCopy >= this->mLength)
-    aResult = *this;
-  else
-    aResult = Substring(*this, aStartPos, aLengthToCopy);
-
-  return aResult.mLength;
-}
-
-/**
- * nsTString::SetCharAt
- */
-
-template <typename T>
-bool nsTString<T>::SetCharAt(char16_t aChar, index_type aIndex) {
-  if (aIndex >= this->mLength) return false;
-
-  if (!this->EnsureMutable()) this->AllocFailed(this->mLength);
-
-  this->mData[aIndex] = char_type(aChar);
-  return true;
-}
-
-/**
- * nsTSubstring::StripWhitespace
- */
-
-template <typename T>
-void nsTSubstring<T>::StripWhitespace() {
-  if (!StripWhitespace(mozilla::fallible)) {
-    this->AllocFailed(this->mLength);
-  }
-}
-
-template <typename T>
-bool nsTSubstring<T>::StripWhitespace(const fallible_t&) {
-  if (!this->EnsureMutable()) {
-    return false;
-  }
-
-  this->StripTaggedASCII(mozilla::ASCIIMask::MaskWhitespace());
-  return true;
-}
-
-/**
  * nsTSubstring::ReplaceChar,ReplaceSubstring
  */
 
@@ -355,50 +306,4 @@ void nsTSubstring<T>::Trim(const char* aSet, bool aTrimLeading,
 
     if (cutLength) this->Cut(cutEnd - cutLength, cutLength);
   }
-}
-
-/**
- * nsTSubstring::CompressWhitespace.
- */
-
-template <typename T>
-void nsTSubstring<T>::CompressWhitespace(bool aTrimLeading,
-                                         bool aTrimTrailing) {
-  // Quick exit
-  if (this->mLength == 0) {
-    return;
-  }
-
-  if (!this->EnsureMutable()) this->AllocFailed(this->mLength);
-
-  const ASCIIMaskArray& mask = mozilla::ASCIIMask::MaskWhitespace();
-
-  char_type* to = this->mData;
-  char_type* from = this->mData;
-  char_type* end = this->mData + this->mLength;
-
-  // Compresses runs of whitespace down to a normal space ' ' and convert
-  // any whitespace to a normal space.  This assumes that whitespace is
-  // all standard 7-bit ASCII.
-  bool skipWS = aTrimLeading;
-  while (from < end) {
-    uint32_t theChar = *from++;
-    if (mozilla::ASCIIMask::IsMasked(mask, theChar)) {
-      if (!skipWS) {
-        *to++ = ' ';
-        skipWS = true;
-      }
-    } else {
-      *to++ = theChar;
-      skipWS = false;
-    }
-  }
-
-  // If we need to trim the trailing whitespace, back up one character.
-  if (aTrimTrailing && skipWS && to > this->mData) {
-    to--;
-  }
-
-  *to = char_type(0);  // add the null
-  this->mLength = to - this->mData;
 }
