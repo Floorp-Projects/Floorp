@@ -22,6 +22,8 @@ body {
   // sass-lint:disable no-color-literals
   --grey-subtitle-1: #696977;
   --newtab-button-secondary-color: #0060DF;
+  --mr-welcome-background-color: #F8F6F4;
+  --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.2) 0%, rgba(2, 144, 238, 0.2) 100%);
 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
   'Helvetica Neue', sans-serif;
@@ -31,6 +33,8 @@ body {
   &[lwt-newtab-brighttext] {
     --grey-subtitle-1: #FFF;
     --newtab-button-secondary-color: #FFF;
+    --mr-welcome-background-color: #333336;
+    --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.3) 0%, rgba(2, 144, 238, 0.3) 100%);
   }
 }
 
@@ -236,11 +240,25 @@ body {
 
     &[pos='split'] {
       margin: auto;
+      background-color: var(--mr-welcome-background-color);
+      background-image: var(--mr-welcome-background-gradient);
 
       .section-secondary,
       .section-main {
         width: 400px;
         height: 550px;
+      }
+
+      .secondary-cta.top {
+        padding-inline-end: 0;
+
+        @media (max-height: 650px) and (max-width: 990px) {
+          display: none;
+        }
+
+        button {
+          color: var(--in-content-page-color);
+        }
       }
 
       .section-main {
