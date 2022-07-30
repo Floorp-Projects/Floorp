@@ -261,6 +261,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return runtime_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr, this);
   }
 
+  void onOverRecursed();
+
   /* Clear the pending exception (if any) due to OOM. */
   void recoverFromOutOfMemory();
 

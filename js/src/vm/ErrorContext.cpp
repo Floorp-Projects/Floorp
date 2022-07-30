@@ -34,6 +34,8 @@ void MainThreadErrorContext::onAllocationOverflow() {
   return cx_->reportAllocationOverflow();
 }
 
+void MainThreadErrorContext::onOverRecursed() { cx_->onOverRecursed(); }
+
 const JSErrorFormatString* MainThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
   gc::AutoSuppressGC suppressGC(cx_);
@@ -79,6 +81,8 @@ void OffThreadErrorContext::onAllocationOverflow() {
   // TODO Bug 1780599 - Currently allocation overflows are not reported for
   // helper threads; see js::reportAllocationOverflow()
 }
+
+void OffThreadErrorContext::onOverRecursed() { errors_.overRecursed = true; }
 
 const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
