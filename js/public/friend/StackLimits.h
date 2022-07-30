@@ -86,11 +86,16 @@ class MOZ_RAII AutoCheckRecursionLimit {
   void operator=(const AutoCheckRecursionLimit&) = delete;
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool check(JSContext* cx) const;
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool check(JSContext* cx,
+                                             uintptr_t limit) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkDontReport(JSContext* cx) const;
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool checkDontReport(uintptr_t limit) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkWithExtra(JSContext* cx,
                                                       size_t extra) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkWithStackPointerDontReport(
       JSContext* cx, void* sp) const;
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool checkWithStackPointerDontReport(
+      uintptr_t limit, void* sp) const;
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkConservative(JSContext* cx) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkConservativeDontReport(
@@ -152,10 +157,25 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx) const {
   return true;
 }
 
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx,
+                                                      uintptr_t limit) const {
+  if (MOZ_UNLIKELY(!checkDontReport(limit))) {
+    ReportOverRecursed(cx);
+    return false;
+  }
+  return true;
+}
+
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkDontReport(
     JSContext* cx) const {
   int stackDummy;
   return checkWithStackPointerDontReport(cx, &stackDummy);
+}
+
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkDontReport(
+    uintptr_t limit) const {
+  int stackDummy;
+  return checkWithStackPointerDontReport(limit, &stackDummy);
 }
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithStackPointerDontReport(
@@ -170,6 +190,11 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithStackPointerDontReport(
     return true;
   }
   return checkLimitImpl(getStackLimitSlow(cx), sp);
+}
+
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithStackPointerDontReport(
+    uintptr_t limit, void* sp) const {
+  return checkLimitImpl(limit, sp);
 }
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithExtra(
