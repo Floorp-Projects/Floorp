@@ -627,8 +627,7 @@ static bool EmplaceEmitter(CompilationState& compilationState,
                            const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(/* parent = */ nullptr, parser, sc, compilationState,
-                  emitterMode);
+  emitter.emplace(parser, sc, compilationState, emitterMode);
   return emitter->init();
 }
 
@@ -1132,8 +1131,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(),
-                      compilationState, BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(&parser, pn->funbox(), compilationState,
+                      BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }
