@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE, MOZ_COLD
 #include "mozilla/Likely.h"      // MOZ_LIKELY
+#include "mozilla/Variant.h"     // mozilla::Variant, mozilla::AsVariant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uintptr_t
@@ -32,6 +33,16 @@ struct JS_PUBLIC_API JSContext;
 namespace js {
 
 class ErrorContext;
+
+#ifdef __wasi__
+extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(JSContext* ec);
+extern MOZ_COLD JS_PUBLIC_API void DecWasiRecursionDepth(JSContext* ec);
+extern MOZ_COLD JS_PUBLIC_API bool CheckWasiRecursionLimit(JSContext* ec);
+
+extern MOZ_COLD JS_PUBLIC_API void IncWasiRecursionDepth(ErrorContext* ec);
+extern MOZ_COLD JS_PUBLIC_API void DecWasiRecursionDepth(ErrorContext* ec);
+extern MOZ_COLD JS_PUBLIC_API bool CheckWasiRecursionLimit(ErrorContext* ec);
+#endif  // __wasi__
 
 // AutoCheckRecursionLimit can be used to check whether we're close to using up
 // the C++ stack.
@@ -66,23 +77,78 @@ class MOZ_RAII AutoCheckRecursionLimit {
 #ifdef __wasi__
   // The JSContext outlives AutoCheckRecursionLimit so it is safe to use raw
   // pointer here.
-  JSContext* cx_;
+  mozilla::Variant<JSContext*, ErrorContext*> context_;
 #endif  // __wasi__
 
  public:
-  explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(JSContext* cx) {
+  explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(JSContext* cx)
 #ifdef __wasi__
-    cx_ = cx;
-    ++JS::RootingContext::get(cx_)->wasiRecursionDepth;
+      : context_(mozilla::AsVariant(cx))
+#endif  // __wasi__
+  {
+#ifdef __wasi__
+    incWasiRecursionDepth();
+#endif  // __wasi__
+  }
+
+  explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(ErrorContext* ec)
+#ifdef __wasi__
+      : context_(mozilla::AsVariant(ec))
+#endif  // __wasi__
+  {
+#ifdef __wasi__
+    incWasiRecursionDepth();
 #endif  // __wasi__
   }
 
   MOZ_ALWAYS_INLINE ~AutoCheckRecursionLimit() {
 #ifdef __wasi__
-    MOZ_ASSERT(JS::RootingContext::get(cx_)->wasiRecursionDepth > 0);
-    --JS::RootingContext::get(cx_)->wasiRecursionDepth;
+    decWasiRecursionDepth();
 #endif  // __wasi__
   }
+
+#ifdef __wasi__
+  MOZ_ALWAYS_INLINE void incWasiRecursionDepth() {
+    if (context_.is<JSContext*>()) {
+      JSContext* cx = context_.as<JSContext*>();
+      IncWasiRecursionDepth(cx);
+    } else {
+      ErrorContext* ec = context_.as<ErrorContext*>();
+      IncWasiRecursionDepth(ec);
+    }
+  }
+
+  MOZ_ALWAYS_INLINE void decWasiRecursionDepth() {
+    if (context_.is<JSContext*>()) {
+      JSContext* cx = context_.as<JSContext*>();
+      DecWasiRecursionDepth(cx);
+    } else {
+      ErrorContext* ec = context_.as<ErrorContext*>();
+      DecWasiRecursionDepth(ec);
+    }
+  }
+
+  MOZ_ALWAYS_INLINE bool checkWasiRecursionLimit() const {
+    // WASI has two limits:
+    // 1) The stack pointer in linear memory that grows to zero. See
+    //    --stack-first in js/src/shell/moz.build.
+    // 2) The JSContext::wasiRecursionDepth that counts recursion depth.
+    //    Here we should check both.
+    if (context_.is<JSContext*>()) {
+      JSContext* cx = context_.as<JSContext*>();
+      if (!CheckWasiRecursionLimit(cx)) {
+        return false;
+      }
+    } else {
+      ErrorContext* ec = context_.as<ErrorContext*>();
+      if (!CheckWasiRecursionLimit(ec)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+#endif  // __wasi__
 
   AutoCheckRecursionLimit(const AutoCheckRecursionLimit&) = delete;
   void operator=(const AutoCheckRecursionLimit&) = delete;
@@ -116,12 +182,7 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitImpl(uintptr_t limit,
   JS_STACK_OOM_POSSIBLY_FAIL();
 
 #ifdef __wasi__
-  // WASI has two limits:
-  // 1) The stack pointer in linear memory that grows to zero. See --stack-first
-  // in js/src/shell/moz.build. 2) The wasiRecursionDepth_ that counts recursion
-  // depth. Here we should check both.
-  if (JS::RootingContext::get(cx_)->wasiRecursionDepth >=
-      JS::RootingContext::wasiRecursionDepthLimit) {
+  if (!checkWasiRecursionLimit()) {
     return false;
   }
 #endif  // __wasi__

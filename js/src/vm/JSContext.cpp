@@ -1341,3 +1341,22 @@ AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI() {
   MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
 }
 #endif
+
+#ifdef __wasi__
+JS_PUBLIC_API void js::IncWasiRecursionDepth(JSContext* cx) {
+  ++JS::RootingContext::get(cx)->wasiRecursionDepth;
+}
+
+JS_PUBLIC_API void js::DecWasiRecursionDepth(JSContext* cx) {
+  MOZ_ASSERT(JS::RootingContext::get(cx)->wasiRecursionDepth > 0);
+  --JS::RootingContext::get(cx)->wasiRecursionDepth;
+}
+
+JS_PUBLIC_API bool js::CheckWasiRecursionLimit(JSContext* cx) {
+  if (JS::RootingContext::get(cx)->wasiRecursionDepth >=
+      JS::RootingContext::wasiRecursionDepthLimit) {
+    return false;
+  }
+  return true;
+}
+#endif  // __wasi__
