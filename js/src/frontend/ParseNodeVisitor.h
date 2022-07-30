@@ -13,6 +13,9 @@
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 
 namespace js {
+
+class ErrorContext;
+
 namespace frontend {
 
 /**
@@ -51,14 +54,15 @@ template <typename Derived>
 class ParseNodeVisitor {
  public:
   JSContext* cx_;
+  ErrorContext* ec_;
   uintptr_t stackLimit_;
 
-  ParseNodeVisitor(JSContext* cx, uintptr_t stackLimit)
-      : cx_(cx), stackLimit_(stackLimit) {}
+  ParseNodeVisitor(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit)
+      : cx_(cx), ec_(ec), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.check(cx_, stackLimit_)) {
+    if (!recursion.check(ec_, stackLimit_)) {
       return false;
     }
 
@@ -98,14 +102,16 @@ template <typename Derived>
 class RewritingParseNodeVisitor {
  public:
   JSContext* cx_;
+  ErrorContext* ec_;
   uintptr_t stackLimit_;
 
-  RewritingParseNodeVisitor(JSContext* cx, uintptr_t stackLimit)
-      : cx_(cx), stackLimit_(stackLimit) {}
+  RewritingParseNodeVisitor(JSContext* cx, ErrorContext* ec,
+                            uintptr_t stackLimit)
+      : cx_(cx), ec_(ec), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode*& pn) {
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.check(cx_, stackLimit_)) {
+    if (!recursion.check(ec_, stackLimit_)) {
       return false;
     }
 

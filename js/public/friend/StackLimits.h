@@ -88,7 +88,7 @@ class MOZ_RAII AutoCheckRecursionLimit {
   void operator=(const AutoCheckRecursionLimit&) = delete;
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool check(JSContext* cx) const;
-  [[nodiscard]] MOZ_ALWAYS_INLINE bool check(JSContext* cx,
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool check(ErrorContext* ec,
                                              uintptr_t limit) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkDontReport(JSContext* cx) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkDontReport(uintptr_t limit) const;
@@ -158,10 +158,10 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx) const {
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx,
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(ErrorContext* ec,
                                                       uintptr_t limit) const {
   if (MOZ_UNLIKELY(!checkDontReport(limit))) {
-    ReportOverRecursed(cx);
+    ReportOverRecursed(ec);
     return false;
   }
   return true;

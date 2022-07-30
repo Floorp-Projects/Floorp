@@ -11,6 +11,7 @@
 
 namespace js {
 
+class ErrorContext;
 class LifoAlloc;
 
 namespace frontend {
@@ -25,17 +26,20 @@ class ParseNode;
 // If the ParseNode is actually bad, we crash.
 
 #ifdef DEBUG
-[[nodiscard]] extern bool CheckParseTree(JSContext* cx, uintptr_t stackLimit,
+[[nodiscard]] extern bool CheckParseTree(JSContext* cx, ErrorContext* ec,
+                                         uintptr_t stackLimit,
                                          const LifoAlloc& alloc, ParseNode* pn);
 #else
-[[nodiscard]] inline bool CheckParseTree(JSContext* cx, uintptr_t stackLimit,
+[[nodiscard]] inline bool CheckParseTree(JSContext* cx, ErrorContext* ec,
+                                         uintptr_t stackLimit,
                                          const LifoAlloc& alloc,
                                          ParseNode* pn) {
   return true;
 }
 #endif
 
-[[nodiscard]] inline bool CheckParseTree(JSContext* cx, uintptr_t stackLimit,
+[[nodiscard]] inline bool CheckParseTree(JSContext* cx, ErrorContext* ec,
+                                         uintptr_t stackLimit,
                                          const LifoAlloc& alloc,
                                          SyntaxParseHandler::Node pn) {
   return true;
