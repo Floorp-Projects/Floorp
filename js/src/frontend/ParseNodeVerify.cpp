@@ -7,6 +7,7 @@
 #include "frontend/ParseNodeVerify.h"
 
 #include "frontend/ParseNodeVisitor.h"
+#include "js/Stack.h"  // JS::NativeStackLimit
 
 using namespace js;
 
@@ -21,7 +22,7 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
   const LifoAlloc& alloc_;
 
  public:
-  ParseNodeVerifier(ErrorContext* ec, uintptr_t stackLimit,
+  ParseNodeVerifier(ErrorContext* ec, JS::NativeStackLimit stackLimit,
                     const LifoAlloc& alloc)
       : Base(ec, stackLimit), alloc_(alloc) {}
 
@@ -42,7 +43,7 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
 }  // namespace frontend
 }  // namespace js
 
-bool frontend::CheckParseTree(ErrorContext* ec, uintptr_t stackLimit,
+bool frontend::CheckParseTree(ErrorContext* ec, JS::NativeStackLimit stackLimit,
                               const LifoAlloc& alloc, ParseNode* pn) {
   ParseNodeVerifier verifier(ec, stackLimit, alloc);
   return verifier.visit(pn);

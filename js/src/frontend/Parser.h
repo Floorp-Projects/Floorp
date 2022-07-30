@@ -184,6 +184,7 @@
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
 #include "js/friend/ErrorMessages.h"  // JSErrNum, JSMSG_*
+#include "js/Stack.h"                 // JS::NativeStackLimit
 #include "vm/ErrorReporting.h"
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 
@@ -288,7 +289,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
  protected:
   ErrorContext* ec_;
-  uintptr_t stackLimit_;
+  JS::NativeStackLimit stackLimit_;
 
 #if DEBUG
   /* Our fallible 'checkOptions' member function has been called. */
@@ -322,7 +323,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+  ParserBase(JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
              const JS::ReadOnlyCompileOptions& options, bool foldConstants,
              CompilationState& compilationState);
   ~ParserBase();
@@ -471,14 +472,16 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+                   JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+                   JS::NativeStackLimit stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
@@ -924,7 +927,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+  GeneralParser(JSContext* cx, ErrorContext* ec,
+                JS::NativeStackLimit stackLimit,
                 const JS::ReadOnlyCompileOptions& options, const Unit* units,
                 size_t length, bool foldConstants,
                 CompilationState& compilationState, SyntaxParser* syntaxParser);

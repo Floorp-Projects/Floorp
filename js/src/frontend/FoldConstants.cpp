@@ -18,6 +18,7 @@
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Conversions.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
+#include "js/Stack.h"               // JS::NativeStackLimit
 #include "util/StringBuffer.h"      // StringBuffer
 #include "vm/StringType.h"
 
@@ -35,7 +36,7 @@ using mozilla::PositiveInfinity;
 struct FoldInfo {
   JSContext* cx;
   ErrorContext* ec;
-  uintptr_t stackLimit;
+  JS::NativeStackLimit stackLimit;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
 };
@@ -1322,7 +1323,7 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 
  public:
-  FoldVisitor(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+  FoldVisitor(JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
               ParserAtomsTable& parserAtoms, FullParseHandler* handler)
       : RewritingParseNodeVisitor(ec, stackLimit),
         cx(cx),
@@ -1572,9 +1573,9 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 };
 
-static bool Fold(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
-                 ParserAtomsTable& parserAtoms, FullParseHandler* handler,
-                 ParseNode** pnp) {
+static bool Fold(JSContext* cx, ErrorContext* ec,
+                 JS::NativeStackLimit stackLimit, ParserAtomsTable& parserAtoms,
+                 FullParseHandler* handler, ParseNode** pnp) {
   FoldVisitor visitor(cx, ec, stackLimit, parserAtoms, handler);
   return visitor.visit(*pnp);
 }
@@ -1584,7 +1585,7 @@ static bool Fold(FoldInfo info, ParseNode** pnp) {
 }
 
 bool frontend::FoldConstants(JSContext* cx, ErrorContext* ec,
-                             uintptr_t stackLimit,
+                             JS::NativeStackLimit stackLimit,
                              ParserAtomsTable& parserAtoms, ParseNode** pnp,
                              FullParseHandler* handler) {
   return Fold(cx, ec, stackLimit, parserAtoms, handler, pnp);

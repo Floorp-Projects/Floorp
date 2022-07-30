@@ -26,6 +26,7 @@
 #include "js/Object.h"                // JS::GetClass
 #include "js/PropertyAndElement.h"    // JS_DefineProperty
 #include "js/Proxy.h"
+#include "js/Stack.h"   // JS::NativeStackLimitMax
 #include "js/String.h"  // JS::detail::StringToLinearStringSlow
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
@@ -63,11 +64,13 @@ JS::RootingContext::RootingContext() : realm_(nullptr), zone_(nullptr) {
     listHead = nullptr;
   }
 
-  PodArrayZero(nativeStackLimit);
 #if JS_STACK_GROWTH_DIRECTION > 0
   for (int i = 0; i < StackKindCount; i++) {
-    nativeStackLimit[i] = UINTPTR_MAX;
+    nativeStackLimit[i] = JS::NativeStackLimitMax;
   }
+#else
+  static_assert(JS::NativeStackLimitMax == 0);
+  PodArrayZero(nativeStackLimit);
 #endif
 }
 

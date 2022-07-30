@@ -24,6 +24,7 @@
 #endif
 #include "frontend/ModuleSharedContext.h"
 #include "js/SourceText.h"
+#include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/UniquePtr.h"
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
@@ -83,8 +84,8 @@ class MOZ_RAII AutoAssertReportedException {
 
 static bool EmplaceEmitter(CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
-                           uintptr_t stackLimit, const EitherParser& parser,
-                           SharedContext* sc);
+                           JS::NativeStackLimit stackLimit,
+                           const EitherParser& parser, SharedContext* sc);
 
 template <typename Unit>
 class MOZ_STACK_CLASS SourceAwareCompiler {
@@ -96,7 +97,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
   Maybe<Parser<FullParseHandler, Unit>> parser;
   ErrorContext* errorContext;
-  uintptr_t stackLimit;
+  JS::NativeStackLimit stackLimit;
 
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
@@ -625,8 +626,8 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 
 static bool EmplaceEmitter(CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
-                           uintptr_t stackLimit, const EitherParser& parser,
-                           SharedContext* sc) {
+                           JS::NativeStackLimit stackLimit,
+                           const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
   emitter.emplace(ec, stackLimit, parser, sc, compilationState, emitterMode);
@@ -1118,7 +1119,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  uintptr_t stackLimit = cx->stackLimitForCurrentPrincipal();
+  JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
 
   Parser<FullParseHandler, Unit> parser(
       cx, ec, stackLimit, input.options, units, length,

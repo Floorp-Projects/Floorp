@@ -7,18 +7,36 @@
 #ifndef js_Stack_h
 #define js_Stack_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Variant.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Variant.h"     // mozilla::Variant
 
-#include <stddef.h>
-#include <stdint.h>
-#include <utility>
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint32_t, uintptr_t, UINTPTR_MAX
+#include <utility>   // std::move
 
-#include "jstypes.h"
+#include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/Principals.h"
-#include "js/TypeDecls.h"
+#include "js/Principals.h"  // JSPrincipals, JS_HoldPrincipals, JS_DropPrincipals
+#include "js/TypeDecls.h"   // JSContext, Handle*, MutableHandle*
+
+namespace JS {
+
+using NativeStackSize = size_t;
+
+using NativeStackBase = uintptr_t;
+
+using NativeStackLimit = uintptr_t;
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+constexpr NativeStackLimit NativeStackLimitMin = 0;
+constexpr NativeStackLimit NativeStackLimitMax = UINTPTR_MAX;
+#else
+constexpr NativeStackLimit NativeStackLimitMin = UINTPTR_MAX;
+constexpr NativeStackLimit NativeStackLimitMax = 0;
+#endif
+
+}  // namespace JS
 
 /**
  * Set the size of the native stack that should not be exceed. To disable
@@ -39,8 +57,9 @@
  * and before any code is executed and/or interrupts requested.
  */
 extern JS_PUBLIC_API void JS_SetNativeStackQuota(
-    JSContext* cx, size_t systemCodeStackSize,
-    size_t trustedScriptStackSize = 0, size_t untrustedScriptStackSize = 0);
+    JSContext* cx, JS::NativeStackSize systemCodeStackSize,
+    JS::NativeStackSize trustedScriptStackSize = 0,
+    JS::NativeStackSize untrustedScriptStackSize = 0);
 
 namespace js {
 
