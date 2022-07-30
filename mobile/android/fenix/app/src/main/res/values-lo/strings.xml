@@ -40,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">ບຸກມາກຫລ້າສຸດ</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">ສະແດງທັງໝົດ</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ສະແດງບຸກມາກທີ່ບັນທຶກໄວ້ທັງໝົດ</string>
@@ -245,6 +243,9 @@
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">ທ່ານສາມາດກັບໄປເບິງຫນ້າເວັບທີ່ທ່ານເບິງຄ້າງໄວ້ໄດ້ງ່າຍຂື້ນແລ້ວ.</string>
 
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">ຂ້າມໄປຫາແທັບທີ່ເປີດຢູ່, ບຸກມມາກ ແລະ ປະຫວັດການທ່ອງເວັບຂອງທ່ານ.</string>
+
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ຄົ້ນຫາ</string>
     <!-- Text preview for larger sized widgets -->
@@ -308,7 +309,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ການປັບແຕ່ງ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sync ບຸກມາກ, ປະຫວັດ, ແລະ ອື່ນໆດ້ວຍບັນຊີ Firefox ຂອງທ່ານ</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sync ບຸກມາກ, ປະຫວັດ, ແລະ ອື່ນໆດ້ວຍບັນຊີ Firefox ຂອງທ່ານ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">ບັນຊີ Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -461,7 +462,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ເປີດ Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ເປີດ Sync</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ເຂົ້າສູ່ລະບົບເພື່ອເຊື່ອມຕໍ່ຄືນໃຫມ່</string>
     <!-- Preference for removing FxA account -->
@@ -944,8 +945,6 @@
     <string name="snackbar_tabs_closed">ປິດແທັບແລ້ວ</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">ບັນທຶກບຸກມາກແລ້ວ!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">ເພີ່ມເຂົ້າໄປໃນເວັບຍອດນິຍົມແລ້ວ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ປິດແທັບສ່ວນໂຕແລ້ວ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1020,7 +1019,8 @@
     <string name="delete_browsing_data_on_quit_action">ອອກ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">ສິ່ງນີ້ຈະລຶບຂໍ້ມູນການທ່ອງເວັບທັງໝົດຂອງທ່ານ.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ສິ່ງນີ້ຈະລຶບຂໍ້ມູນການທ່ອງເວັບທັງໝົດຂອງທ່ານ.</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s ຈະລຶບຂໍ້ມູນການທ່ອງເວັບທີ່ທ່ານເລືອກ.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1398,8 +1398,6 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. ສະລັບ <b>%1$s</b> ເປັນເປີດ]]></string>
 
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">ເພີ່ມເຂົ້າໄປໃນເວັບຍອດນິຍົມແລ້ວ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ໄດ້ຮັບການຢັ້ງຢືນໂດຍ: %1$s</string>
@@ -1452,13 +1450,8 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">ບໍ່ມີແທັບທີ່ເປີດຢູ່</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ຮອດຂີດຈຳກັດເວັບໄຊທຍອດນິຍົມແລ້ວ</string>
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ຊື່</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ຊື່ເວັບໄຊທຍອດນິຍົມ</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ໂອເຄ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->

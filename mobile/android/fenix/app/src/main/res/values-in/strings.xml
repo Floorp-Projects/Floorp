@@ -1170,7 +1170,18 @@
     <string name="delete_browsing_data_on_quit_action">Keluar</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Ini akan menghapus semua data penjelajahan Anda.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Ini akan menghapus semua data penjelajahan Anda.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Rentang waktu untuk menghapus</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Menghapus riwayat (termasuk riwayat yang disinkronkan dari perangkat lain), kuki, dan data penjelajahan lainnya.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Jam terakhir</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Hari ini dan kemarin</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Semuanya</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s akan menghapus data penjelajahan yang dipilih.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1183,8 +1194,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Menghapus data penjelajahan…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Ini akan menghapus semua item.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Hapus semua situs di “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Batal</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1595,8 +1606,6 @@
     <string name="addresses_edit_address">Edit alamat</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Kelola alamat</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Nama Lengkap</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Nama Depan</string>
     <!-- The header for the middle name of an address -->

@@ -787,8 +787,13 @@
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Diğer cihazlardan</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Diğer cihazlarınızdan eşitlenen geçmişi görmek için giriş yapın.</string>
     <!-- The synced history sign in dialog button text -->
     <string name="history_sign_in_button">Giriş yap</string>
+
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Veya eşitlemeye başlamak için Firefox hesabı açın</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1156,7 +1161,18 @@
     <string name="delete_browsing_data_on_quit_action">Çık</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Bu işlem tüm gezinti verilerinizi silecektir.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Bu işlem tüm gezinti verilerinizi silecektir.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Silinecek zaman aralığı</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Geçmişi (diğer cihazlarla eşitlenen geçmiş dahil), çerezleri ve diğer gezinti verilerini kaldırır.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Son saat</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Bugün ve dün</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Her şey</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s seçili gezinti verilerini silecek.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1169,8 +1185,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Göz atma verileri siliniyor…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Bu işlem tüm öğeleri silecektir.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">“%s” grubundaki tüm siteleri sil</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Vazgeç</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1585,8 +1601,6 @@
     <string name="addresses_edit_address">Adresi düzenle</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Adresleri yönet</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Ad ve soyadı</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Ad</string>
     <!-- The header for the middle name of an address -->
