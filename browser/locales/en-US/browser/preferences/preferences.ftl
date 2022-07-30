@@ -1558,5 +1558,7 @@ always-notify =
 do-not-notify =
  .label = Do not Enable Notifications
 
-floorp-translater = Built-in Translation Function Settings
-click-to-option = Open the Settings Site
+floorp-translater = Translation Function Settings
+click-to-option =
+    .label = Open Settings...
+    .accesskey = O

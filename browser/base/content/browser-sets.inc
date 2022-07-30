@@ -114,8 +114,7 @@
 
   <keyset id="mainKeyset">
     <key 
-        keycode="VK_ESCAPE"
-        key="O"
+        keycode="VK_F9"
         oncommand="gBrowser.selectedTab.toggleMuteAudio();
         reloadAllOtherTabs();
         bosshascomming();"/>  
