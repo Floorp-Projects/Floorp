@@ -236,7 +236,8 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   MainThreadErrorContext ec(cx);
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(
-      cx, &ec, options, chars.get(), length,
+      cx, &ec, cx->stackLimitForCurrentPrincipal(), options, chars.get(),
+      length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {

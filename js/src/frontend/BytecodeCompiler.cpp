@@ -95,6 +95,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
   Maybe<Parser<FullParseHandler, Unit>> parser;
   ErrorContext* errorContext;
+  uintptr_t stackLimit;
 
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
@@ -103,7 +104,8 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
                                CompilationInput& input,
                                SourceText<Unit>& sourceBuffer)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, parserAllocScope, input) {
+        compilationState_(cx, parserAllocScope, input),
+        stackLimit(cx->stackLimitForCurrentPrincipal()) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
@@ -603,8 +605,8 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
   MOZ_ASSERT(compilationState_.canLazilyParse ==
              CanLazilyParse(compilationState_.input.options));
   if (compilationState_.canLazilyParse) {
-    syntaxParser.emplace(cx, errorContext, options, sourceBuffer_.units(),
-                         sourceBuffer_.length(),
+    syntaxParser.emplace(cx, errorContext, stackLimit, options,
+                         sourceBuffer_.units(), sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationState_,
                          /* syntaxParser = */ nullptr);
     if (!syntaxParser->checkOptions()) {
@@ -612,7 +614,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
     }
   }
 
-  parser.emplace(cx, errorContext, options, sourceBuffer_.units(),
+  parser.emplace(cx, errorContext, stackLimit, options, sourceBuffer_.units(),
                  sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationState_,
                  syntaxParser.ptrOr(nullptr));
@@ -1115,10 +1117,10 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  Parser<FullParseHandler, Unit> parser(cx, ec, input.options, units, length,
-                                        /* foldConstants = */ true,
-                                        compilationState,
-                                        /* syntaxParser = */ nullptr);
+  Parser<FullParseHandler, Unit> parser(
+      cx, ec, cx->stackLimitForCurrentPrincipal(), input.options, units, length,
+      /* foldConstants = */ true, compilationState,
+      /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }

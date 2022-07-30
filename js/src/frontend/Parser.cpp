@@ -158,7 +158,7 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 }
 #endif
 
-ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
+ParserBase::ParserBase(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
     : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
@@ -166,6 +166,7 @@ ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
       ss(nullptr),
       foldConstants_(foldConstants),
       ec_(ec),
+      stackLimit_(stackLimit),
 #ifdef DEBUG
       checkOptionsCalled_(false),
 #endif
@@ -186,10 +187,10 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, ErrorContext* ec, const ReadOnlyCompileOptions& options,
-    bool foldConstants, CompilationState& compilationState,
-    void* internalSyntaxParser)
-    : ParserBase(cx, ec, options, foldConstants, compilationState),
+    JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+    const ReadOnlyCompileOptions& options, bool foldConstants,
+    CompilationState& compilationState, void* internalSyntaxParser)
+    : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
       handler_(cx, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
@@ -198,10 +199,12 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, ErrorContext* ec, const ReadOnlyCompileOptions& options,
-    const Unit* units, size_t length, bool foldConstants,
-    CompilationState& compilationState, SyntaxParser* syntaxParser)
-    : Base(cx, ec, options, foldConstants, compilationState, syntaxParser),
+    JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+    const ReadOnlyCompileOptions& options, const Unit* units, size_t length,
+    bool foldConstants, CompilationState& compilationState,
+    SyntaxParser* syntaxParser)
+    : Base(cx, ec, stackLimit, options, foldConstants, compilationState,
+           syntaxParser),
       tokenStream(cx, &compilationState.parserAtoms, options, units, length) {}
 
 template <typename Unit>
