@@ -13,7 +13,7 @@
  */
 
 const { extend } = require("devtools/shared/extend");
-const { Ci, Cu, Cc } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const Services = require("Services");
 
 const {
@@ -114,7 +114,8 @@ webExtensionTargetPrototype.initialize = function(
 ) {
   this.addonId = addonId;
   this.addonBrowsingContextGroupId = addonBrowsingContextGroupId;
-  this.chromeGlobal = chromeGlobal;
+  this._chromeGlobal = chromeGlobal;
+  this._prefix = prefix;
 
   // Expose the BrowsingContext of the fallback document,
   // which is the one this target actor will always refer to via its form()
@@ -132,8 +133,6 @@ webExtensionTargetPrototype.initialize = function(
     window: extensionWindow,
     sessionContext,
   });
-  this._chromeGlobal = chromeGlobal;
-  this._prefix = prefix;
 
   // Redefine the messageManager getter to return the chromeGlobal
   // as the messageManager for this actor (which is the browser XUL
@@ -159,10 +158,6 @@ webExtensionTargetPrototype.initialize = function(
   this.consoleAPIListenerOptions = {
     addonId: this.addonId,
   };
-
-  this.aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
-    Ci.nsIAddonPolicyService
-  );
 
   // This creates a Debugger instance for debugging all the add-on globals.
   this.makeDebugger = makeDebugger.bind(null, {
@@ -234,7 +229,7 @@ webExtensionTargetPrototype._searchFallbackWindow = function() {
   // about:blank browser), this window is related to a XUL browser element
   // specifically created for the devtools server and it is never used
   // or navigated anywhere else.
-  this.fallbackWindow = this.chromeGlobal.content;
+  this.fallbackWindow = this._chromeGlobal.content;
 
   // Add the addonId in the URL to retrieve this information in other devtools
   // helpers. The addonId is usually populated in the principal, but this will
@@ -298,6 +293,9 @@ webExtensionTargetPrototype._onDocShellDestroy = function(docShell) {
 webExtensionTargetPrototype._onNewExtensionWindow = function(window) {
   if (!this.window || this.window === this.fallbackWindow) {
     this._changeTopLevelDocument(window);
+    // For new extension windows, the BrowsingContext group id might have
+    // changed, for instance when reloading the addon.
+    this.addonBrowsingContextGroupId = window.docShell.browsingContext.group.id;
   }
 };
 

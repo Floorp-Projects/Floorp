@@ -147,51 +147,47 @@ class GradientCache final
     lockedInstance->NotifyHandlerEndLocked(lockedInstance);
   }
 
-  static GradientCacheData* Lookup(const nsTArray<GradientStop>& aStops,
-                                   ExtendMode aExtend,
-                                   BackendType aBackendType) {
-    LockedInstance lockedInstance(sInstanceMutex);
-    if (!EnsureInstanceLocked(lockedInstance)) {
-      return nullptr;
-    }
-
-    GradientCacheData* gradientData = lockedInstance->mHashEntries.Get(
-        GradientCacheKey(aStops, aExtend, aBackendType));
-    if (!gradientData) {
-      return nullptr;
-    }
-
-    if (!gradientData->mStops || !gradientData->mStops->IsValid()) {
-      lockedInstance->NotifyExpiredLocked(gradientData, lockedInstance);
-      return nullptr;
-    }
-
-    lockedInstance->MarkUsedLocked(gradientData, lockedInstance);
-    return gradientData;
-  }
-
-  static void RegisterEntry(UniquePtr<GradientCacheData> aValue) {
+  template <typename CreateFunc>
+  static already_AddRefed<GradientStops> LookupOrInsert(
+      const GradientCacheKey& aKey, CreateFunc aCreateFunc) {
     uint32_t numberOfEntries;
+    RefPtr<GradientStops> stops;
     {
       LockedInstance lockedInstance(sInstanceMutex);
       if (!EnsureInstanceLocked(lockedInstance)) {
-        return;
+        return aCreateFunc();
       }
 
-      nsresult rv =
-          lockedInstance->AddObjectLocked(aValue.get(), lockedInstance);
+      GradientCacheData* gradientData = lockedInstance->mHashEntries.Get(aKey);
+      if (gradientData) {
+        if (gradientData->mStops && gradientData->mStops->IsValid()) {
+          lockedInstance->MarkUsedLocked(gradientData, lockedInstance);
+          return do_AddRef(gradientData->mStops);
+        }
+
+        lockedInstance->NotifyExpiredLocked(gradientData, lockedInstance);
+        lockedInstance->NotifyHandlerEndLocked(lockedInstance);
+      }
+
+      stops = aCreateFunc();
+      if (!stops) {
+        return nullptr;
+      }
+
+      auto data = MakeUnique<GradientCacheData>(stops, GradientCacheKey(&aKey));
+      nsresult rv = lockedInstance->AddObjectLocked(data.get(), lockedInstance);
       if (NS_FAILED(rv)) {
         // We are OOM, and we cannot track this object. We don't want to store
         // entries in the hash table (since the expiration tracker is
         // responsible for removing the cache entries), so we avoid putting that
         // entry in the table, which is a good thing considering we are short on
         // memory anyway, we probably don't want to retain things.
-        return;
+        return stops.forget();
       }
-      lockedInstance->mHashEntries.InsertOrUpdate(aValue->mKey,
-                                                  std::move(aValue));
+      lockedInstance->mHashEntries.InsertOrUpdate(aKey, std::move(data));
       numberOfEntries = lockedInstance->mHashEntries.Count();
     }
+
     if (numberOfEntries > MAX_ENTRIES) {
       // We have too many entries force the cache to age a generation.
       NS_DispatchToMainThread(
@@ -204,6 +200,8 @@ class GradientCache final
             lockedInstance->NotifyHandlerEndLocked(lockedInstance);
           }));
     }
+
+    return stops.forget();
   }
 
   GradientCacheMutex& GetMutex() final { return sInstanceMutex; }
@@ -271,20 +269,12 @@ already_AddRefed<GradientStops> gfxGradientCache::GetOrCreateGradientStops(
                                     aExtend);
   }
 
-  GradientCacheData* cached =
-      GradientCache::Lookup(aStops, aExtend, aDT->GetBackendType());
-  if (cached) {
-    return do_AddRef(cached->mStops);
-  }
-
-  RefPtr<GradientStops> gs =
-      aDT->CreateGradientStops(aStops.Elements(), aStops.Length(), aExtend);
-  if (!gs) {
-    return nullptr;
-  }
-  GradientCache::RegisterEntry(MakeUnique<GradientCacheData>(
-      gs, GradientCacheKey(aStops, aExtend, aDT->GetBackendType())));
-  return gs.forget();
+  return GradientCache::LookupOrInsert(
+      GradientCacheKey(aStops, aExtend, aDT->GetBackendType()),
+      [&]() -> already_AddRefed<GradientStops> {
+        return aDT->CreateGradientStops(aStops.Elements(), aStops.Length(),
+                                        aExtend);
+      });
 }
 
 void gfxGradientCache::PurgeAllCaches() { GradientCache::AgeAllGenerations(); }
