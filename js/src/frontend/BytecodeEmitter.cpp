@@ -60,6 +60,7 @@
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
 #include "js/friend/ErrorMessages.h"               // JSMSG_*
 #include "js/friend/StackLimits.h"                 // AutoCheckRecursionLimit
+#include "js/Stack.h"                              // JS::NativeStackLimit
 #include "util/StringBuffer.h"                     // StringBuffer
 #include "vm/AsyncFunctionResolveKind.h"           // AsyncFunctionResolveKind
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
@@ -132,32 +133,42 @@ static bool ShouldSuppressBreakpointsAndSourceNotes(
   return false;
 }
 
-BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
+                                 JS::NativeStackLimit stackLimit,
+                                 SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
       cx(sc->cx_),
+      ec(ec),
+      stackLimit(stackLimit),
       parent(parent),
       bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
       perScriptData_(cx, compilationState),
       compilationState(compilationState),
       suppressBreakpointsAndSourceNotes(
           ShouldSuppressBreakpointsAndSourceNotes(sc, emitterMode)),
-      emitterMode(emitterMode) {}
+      emitterMode(emitterMode) {
+  MOZ_ASSERT_IF(parent, stackLimit == parent->stackLimit);
+  MOZ_ASSERT_IF(parent, ec == parent->ec);
+}
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationState, emitterMode) {
+    : BytecodeEmitter(parent, parent->ec, parent->stackLimit, sc,
+                      compilationState, emitterMode) {
   parser = handle;
 }
 
-BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
+BytecodeEmitter::BytecodeEmitter(ErrorContext* ec,
+                                 JS::NativeStackLimit stackLimit,
                                  const EitherParser& parser, SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, compilationState, emitterMode) {
+    : BytecodeEmitter(nullptr, ec, stackLimit, sc, compilationState,
+                      emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
 }
@@ -819,8 +830,8 @@ JSOp BytecodeEmitter::strictifySetNameOp(JSOp op) {
 }
 
 bool BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
+  AutoCheckRecursionLimit recursion(ec);
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
 
@@ -2481,7 +2492,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(cx, parserAtoms(), body)) {
+  if (!NameFunctions(cx, ec, stackLimit, parserAtoms(), body)) {
     return false;
   }
 
@@ -2557,7 +2568,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   }
 
   if (funbox->index() == CompilationStencil::TopLevelIndex) {
-    if (!NameFunctions(cx, parserAtoms(), funNode)) {
+    if (!NameFunctions(cx, ec, stackLimit, parserAtoms(), funNode)) {
       return false;
     }
   }
@@ -7538,8 +7549,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
                                                 CallNode* call,
                                                 CallOrNewEmitter& cone,
                                                 OptionalEmitter& oe) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
+  AutoCheckRecursionLimit recursion(ec);
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
 
@@ -8198,8 +8209,8 @@ bool BytecodeEmitter::emitPrivateInExpr(ListNode* node) {
 bool BytecodeEmitter::emitOptionalTree(
     ParseNode* pn, OptionalEmitter& oe,
     ValueUsage valueUsage /* = ValueUsage::WantValue */) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
+  AutoCheckRecursionLimit recursion(ec);
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
   ParseNodeKind kind = pn->getKind();
@@ -10943,8 +10954,8 @@ bool BytecodeEmitter::emitExportDefault(BinaryNode* exportNode) {
 bool BytecodeEmitter::emitTree(
     ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */,
     EmitLineNumberNote emitLineNote /* = EMIT_LINENOTE */) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
+  AutoCheckRecursionLimit recursion(ec);
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
 

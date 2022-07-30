@@ -558,8 +558,9 @@ bool InvokeFromInterpreterStub(JSContext* cx,
 static bool CheckOverRecursedImpl(JSContext* cx, size_t extra) {
   // We just failed the jitStackLimit check. There are two possible reasons:
   //  1) jitStackLimit was the real stack limit and we're over-recursed
-  //  2) jitStackLimit was set to UINTPTR_MAX by JSContext::requestInterrupt
-  //     and we need to call JSContext::handleInterrupt.
+  //  2) jitStackLimit was set to JS::NativeStackLimitMin by
+  //     JSContext::requestInterrupt and we need to call
+  //     JSContext::handleInterrupt.
 
   // This handles 1).
 #ifdef JS_SIMULATOR

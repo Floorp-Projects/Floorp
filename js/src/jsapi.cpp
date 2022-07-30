@@ -57,7 +57,7 @@
 #include "js/Proxy.h"
 #include "js/ScriptPrivate.h"
 #include "js/StableStringChars.h"
-#include "js/Stack.h"
+#include "js/Stack.h"  // JS::NativeStackSize, JS::NativeStackLimitMax
 #include "js/StreamConsumer.h"
 #include "js/String.h"  // JS::MaxStringLength
 #include "js/Symbol.h"
@@ -1459,8 +1459,8 @@ JS_GetExternalStringCallbacks(JSString* str) {
   return str->asExternal().callbacks();
 }
 
-static void SetNativeStackLimit(JSContext* cx, JS::StackKind kind,
-                                size_t stackSize) {
+static void SetNativeStackSize(JSContext* cx, JS::StackKind kind,
+                               JS::NativeStackSize stackSize) {
 #ifdef __wasi__
   // WASI makes this easy: we build with the "stack-first" wasm-ld option, so
   // the stack grows downward toward zero. Let's set a limit just a bit above
@@ -1469,14 +1469,14 @@ static void SetNativeStackLimit(JSContext* cx, JS::StackKind kind,
 #else  // __wasi__
 #  if JS_STACK_GROWTH_DIRECTION > 0
   if (stackSize == 0) {
-    cx->nativeStackLimit[kind] = UINTPTR_MAX;
+    cx->nativeStackLimit[kind] = JS::NativeStackLimitMax;
   } else {
     MOZ_ASSERT(cx->nativeStackBase() <= size_t(-1) - stackSize);
     cx->nativeStackLimit[kind] = cx->nativeStackBase() + stackSize - 1;
   }
 #  else   // stack grows up
   if (stackSize == 0) {
-    cx->nativeStackLimit[kind] = 0;
+    cx->nativeStackLimit[kind] = JS::NativeStackLimitMax;
   } else {
     MOZ_ASSERT(cx->nativeStackBase() >= stackSize);
     cx->nativeStackLimit[kind] = cx->nativeStackBase() - (stackSize - 1);
@@ -1485,10 +1485,10 @@ static void SetNativeStackLimit(JSContext* cx, JS::StackKind kind,
 #endif    // !__wasi__
 }
 
-JS_PUBLIC_API void JS_SetNativeStackQuota(JSContext* cx,
-                                          size_t systemCodeStackSize,
-                                          size_t trustedScriptStackSize,
-                                          size_t untrustedScriptStackSize) {
+JS_PUBLIC_API void JS_SetNativeStackQuota(
+    JSContext* cx, JS::NativeStackSize systemCodeStackSize,
+    JS::NativeStackSize trustedScriptStackSize,
+    JS::NativeStackSize untrustedScriptStackSize) {
   MOZ_ASSERT(!cx->activation());
 
   if (!trustedScriptStackSize) {
@@ -1503,10 +1503,9 @@ JS_PUBLIC_API void JS_SetNativeStackQuota(JSContext* cx,
     MOZ_ASSERT(untrustedScriptStackSize < trustedScriptStackSize);
   }
 
-  SetNativeStackLimit(cx, JS::StackForSystemCode, systemCodeStackSize);
-  SetNativeStackLimit(cx, JS::StackForTrustedScript, trustedScriptStackSize);
-  SetNativeStackLimit(cx, JS::StackForUntrustedScript,
-                      untrustedScriptStackSize);
+  SetNativeStackSize(cx, JS::StackForSystemCode, systemCodeStackSize);
+  SetNativeStackSize(cx, JS::StackForTrustedScript, trustedScriptStackSize);
+  SetNativeStackSize(cx, JS::StackForUntrustedScript, untrustedScriptStackSize);
 
   if (cx->isMainThreadContext()) {
     cx->initJitStackLimit();

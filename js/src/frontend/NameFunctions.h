@@ -7,16 +7,21 @@
 #ifndef frontend_NameFunctions_h
 #define frontend_NameFunctions_h
 
+#include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/TypeDecls.h"
 
 namespace js {
+
+class ErrorContext;
+
 namespace frontend {
 
 class ParseNode;
 class ParserAtomsTable;
 
-[[nodiscard]] bool NameFunctions(JSContext* cx, ParserAtomsTable& parserAtoms,
-                                 ParseNode* pn);
+[[nodiscard]] bool NameFunctions(JSContext* cx, ErrorContext* ec,
+                                 JS::NativeStackLimit stackLimit,
+                                 ParserAtomsTable& parserAtoms, ParseNode* pn);
 
 } /* namespace frontend */
 } /* namespace js */

@@ -33,6 +33,7 @@
 #include "jit/Registers.h"
 #include "js/ForOfIterator.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/Stack.h"                 // JS::NativeStackLimitMin
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
@@ -1610,11 +1611,11 @@ Instance::~Instance() {
 
 void Instance::setInterrupt() {
   interrupt_ = true;
-  stackLimit_ = UINTPTR_MAX;
+  stackLimit_ = JS::NativeStackLimitMin;
 }
 
 bool Instance::isInterrupted() const {
-  return interrupt_ || stackLimit_ == UINTPTR_MAX;
+  return interrupt_ || stackLimit_ == JS::NativeStackLimitMin;
 }
 
 void Instance::resetInterrupt(JSContext* cx) {

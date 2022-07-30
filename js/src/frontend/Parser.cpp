@@ -46,6 +46,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
 #include "js/RegExpFlags.h"     // JS::RegExpFlags
+#include "js/Stack.h"           // JS::NativeStackLimit
 #include "util/StringBuffer.h"  // StringBuffer
 #include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
@@ -159,6 +160,7 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 #endif
 
 ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
+                       JS::NativeStackLimit stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
     : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
@@ -166,6 +168,7 @@ ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
       ss(nullptr),
       foldConstants_(foldConstants),
       ec_(ec),
+      stackLimit_(stackLimit),
 #ifdef DEBUG
       checkOptionsCalled_(false),
 #endif
@@ -186,10 +189,10 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, ErrorContext* ec, const ReadOnlyCompileOptions& options,
-    bool foldConstants, CompilationState& compilationState,
-    void* internalSyntaxParser)
-    : ParserBase(cx, ec, options, foldConstants, compilationState),
+    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    const ReadOnlyCompileOptions& options, bool foldConstants,
+    CompilationState& compilationState, void* internalSyntaxParser)
+    : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
       handler_(cx, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
@@ -198,10 +201,12 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, ErrorContext* ec, const ReadOnlyCompileOptions& options,
-    const Unit* units, size_t length, bool foldConstants,
-    CompilationState& compilationState, SyntaxParser* syntaxParser)
-    : Base(cx, ec, options, foldConstants, compilationState, syntaxParser),
+    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    const ReadOnlyCompileOptions& options, const Unit* units, size_t length,
+    bool foldConstants, CompilationState& compilationState,
+    SyntaxParser* syntaxParser)
+    : Base(cx, ec, stackLimit, options, foldConstants, compilationState,
+           syntaxParser),
       tokenStream(cx, &compilationState.parserAtoms, options, units, length) {}
 
 template <typename Unit>
@@ -409,7 +414,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     return null();
   }
 
-  if (!CheckParseTree(cx_, alloc_, stmtList)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, stmtList)) {
     return null();
   }
 
@@ -418,7 +423,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.
     if (!pc_->useAsmOrInsideUseAsm()) {
-      if (!FoldConstants(cx_, this->parserAtoms(), &node, &handler_)) {
+      if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+                         &node, &handler_)) {
         return null();
       }
     }
@@ -1762,7 +1768,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   }
 #endif
 
-  if (!CheckParseTree(cx_, alloc_, body)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, body)) {
     return null();
   }
 
@@ -1770,7 +1776,8 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->parserAtoms(), &node, &handler_)) {
+    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+                       &node, &handler_)) {
       return null();
     }
   }
@@ -1825,7 +1832,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
     return nullptr;
   }
 
-  if (!CheckParseTree(cx_, alloc_, body)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, body)) {
     return null();
   }
 
@@ -1837,7 +1844,8 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->parserAtoms(), &node, &handler_)) {
+    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+                       &node, &handler_)) {
       return null();
     }
   }
@@ -1966,7 +1974,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     }
   }
 
-  if (!CheckParseTree(cx_, alloc_, stmtList)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, stmtList)) {
     return null();
   }
 
@@ -1974,7 +1982,8 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->parserAtoms(), &node, &handler_)) {
+    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+                       &node, &handler_)) {
       return null();
     }
   }
@@ -2364,7 +2373,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     return null();
   }
 
-  if (!CheckParseTree(cx_, alloc_, funNode)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, funNode)) {
     return null();
   }
 
@@ -2372,7 +2381,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->parserAtoms(), &node, &handler_)) {
+    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+                       &node, &handler_)) {
       return null();
     }
   }
@@ -3451,7 +3461,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     }
   }
 
-  if (!CheckParseTree(cx_, alloc_, funNode)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, funNode)) {
     return null();
   }
 
@@ -3459,7 +3469,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // Don't constant-fold inside "use asm" code, as this could create a parse
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
-    if (!FoldConstants(cx_, this->parserAtoms(), &node, &handler_)) {
+    if (!FoldConstants(cx_, this->ec_, this->stackLimit_, this->parserAtoms(),
+                       &node, &handler_)) {
       return null();
     }
   }
@@ -4029,8 +4040,8 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -4348,8 +4359,8 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
     DeclarationKind kind, YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -4503,8 +4514,8 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     DeclarationKind kind, YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -8899,8 +8910,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -9146,8 +9157,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     YieldHandling yieldHandling, bool canHaveDirectives /* = false */) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -9703,8 +9714,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -10081,8 +10092,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -10193,8 +10204,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */,
     PrivateNameHandling privateNameHandling /* = PrivateNameProhibited */) {
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -10468,8 +10479,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
 
   Node lhs;
 
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 
@@ -12376,8 +12387,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError, InvokedPrediction invoked) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
-  AutoCheckRecursionLimit recursion(cx_);
-  if (!recursion.check(cx_)) {
+  AutoCheckRecursionLimit recursion(this->ec_);
+  if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
 

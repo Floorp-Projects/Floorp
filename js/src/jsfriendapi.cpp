@@ -26,6 +26,7 @@
 #include "js/Object.h"                // JS::GetClass
 #include "js/PropertyAndElement.h"    // JS_DefineProperty
 #include "js/Proxy.h"
+#include "js/Stack.h"   // JS::NativeStackLimitMax
 #include "js/String.h"  // JS::detail::StringToLinearStringSlow
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
@@ -63,11 +64,13 @@ JS::RootingContext::RootingContext() : realm_(nullptr), zone_(nullptr) {
     listHead = nullptr;
   }
 
-  PodArrayZero(nativeStackLimit);
 #if JS_STACK_GROWTH_DIRECTION > 0
   for (int i = 0; i < StackKindCount; i++) {
-    nativeStackLimit[i] = UINTPTR_MAX;
+    nativeStackLimit[i] = JS::NativeStackLimitMax;
   }
+#else
+  static_assert(JS::NativeStackLimitMax == 0);
+  PodArrayZero(nativeStackLimit);
 #endif
 }
 
@@ -344,9 +347,9 @@ JS_PUBLIC_API bool js::IsObjectInContextCompartment(JSObject* obj,
   return obj->compartment() == cx->compartment();
 }
 
-JS_PUBLIC_API bool js::AutoCheckRecursionLimit::runningWithTrustedPrincipals(
-    JSContext* cx) const {
-  return cx->runningWithTrustedPrincipals();
+JS_PUBLIC_API JS::StackKind
+js::AutoCheckRecursionLimit::stackKindForCurrentPrincipal(JSContext* cx) const {
+  return cx->stackKindForCurrentPrincipal();
 }
 
 JS_PUBLIC_API JSFunction* js::DefineFunctionWithReserved(

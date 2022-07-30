@@ -25,6 +25,7 @@
 #include "js/Interrupt.h"
 #include "js/Promise.h"
 #include "js/Result.h"
+#include "js/Stack.h"  // JS::NativeStackBase, JS::NativeStackLimit
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/ProtectedData.h"
@@ -261,6 +262,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return runtime_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr, this);
   }
 
+  void onOverRecursed();
+
   /* Clear the pending exception (if any) due to OOM. */
   void recoverFromOutOfMemory();
 
@@ -278,8 +281,12 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
   JS::GCContext* gcContext() { return runtime_->gcContext(); }
-  uintptr_t stackLimit(JS::StackKind kind) { return nativeStackLimit[kind]; }
-  uintptr_t stackLimitForJitCode(JS::StackKind kind);
+  JS::StackKind stackKindForCurrentPrincipal();
+  JS::NativeStackLimit stackLimitForCurrentPrincipal();
+  JS::NativeStackLimit stackLimit(JS::StackKind kind) {
+    return nativeStackLimit[kind];
+  }
+  JS::NativeStackLimit stackLimitForJitCode(JS::StackKind kind);
   size_t gcSystemPageSize() { return js::gc::SystemPageSize(); }
 
   /*
@@ -467,10 +474,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
  private:
   // Base address of the native stack for the current thread.
-  mozilla::Maybe<uintptr_t> nativeStackBase_;
+  mozilla::Maybe<JS::NativeStackBase> nativeStackBase_;
 
  public:
-  uintptr_t nativeStackBase() const { return *nativeStackBase_; }
+  JS::NativeStackBase nativeStackBase() const { return *nativeStackBase_; }
 
  public:
   /* If non-null, report JavaScript entry points to this monitor. */
@@ -496,7 +503,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
  public:
   js::jit::Simulator* simulator() const;
-  uintptr_t* addressOfSimulatorStackLimit();
+  JS::NativeStackLimit* addressOfSimulatorStackLimit();
 #endif
 
  public:
@@ -819,16 +826,16 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   // Any thread can call requestInterrupt() to request that this thread
   // stop running. To stop this thread, requestInterrupt sets two fields:
-  // interruptBits_ (a bitset of InterruptReasons) and jitStackLimit_ (set to
-  // UINTPTR_MAX). The JS engine must continually poll one of these fields
-  // and call handleInterrupt if either field has the interrupt value.
+  // interruptBits_ (a bitset of InterruptReasons) and jitStackLimit (set to
+  // JS::NativeStackLimitMin). The JS engine must continually poll one of these
+  // fields and call handleInterrupt if either field has the interrupt value.
   //
-  // The point of setting jitStackLimit_ to UINTPTR_MAX is that JIT code
-  // already needs to guard on jitStackLimit_ in every function prologue to
+  // The point of setting jitStackLimit to JS::NativeStackLimitMin is that JIT
+  // code already needs to guard on jitStackLimit in every function prologue to
   // avoid stack overflow, so we avoid a second branch on interruptBits_ by
-  // setting jitStackLimit_ to a value that is guaranteed to fail the guard.)
+  // setting jitStackLimit to a value that is guaranteed to fail the guard.)
   //
-  // Note that the writes to interruptBits_ and jitStackLimit_ use a Relaxed
+  // Note that the writes to interruptBits_ and jitStackLimit use a Relaxed
   // Atomic so, while the writes are guaranteed to eventually be visible to
   // this thread, it can happen in any order. handleInterrupt calls the
   // interrupt callback if either is set, so it really doesn't matter as long
@@ -870,10 +877,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // object.
   js::FutexThread fx;
 
-  mozilla::Atomic<uintptr_t, mozilla::Relaxed> jitStackLimit;
+  mozilla::Atomic<JS::NativeStackLimit, mozilla::Relaxed> jitStackLimit;
 
   // Like jitStackLimit, but not reset to trigger interrupts.
-  js::ContextData<uintptr_t> jitStackLimitNoInterrupt;
+  js::ContextData<JS::NativeStackLimit> jitStackLimitNoInterrupt;
 
   // Queue of pending jobs as described in ES2016 section 8.4.
   //

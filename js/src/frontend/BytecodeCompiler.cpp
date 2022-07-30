@@ -24,6 +24,7 @@
 #endif
 #include "frontend/ModuleSharedContext.h"
 #include "js/SourceText.h"
+#include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/UniquePtr.h"
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
@@ -82,7 +83,8 @@ class MOZ_RAII AutoAssertReportedException {
 };
 
 static bool EmplaceEmitter(CompilationState& compilationState,
-                           Maybe<BytecodeEmitter>& emitter,
+                           Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
+                           JS::NativeStackLimit stackLimit,
                            const EitherParser& parser, SharedContext* sc);
 
 template <typename Unit>
@@ -95,6 +97,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
   Maybe<Parser<FullParseHandler, Unit>> parser;
   ErrorContext* errorContext;
+  JS::NativeStackLimit stackLimit;
 
   using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
@@ -103,7 +106,8 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
                                CompilationInput& input,
                                SourceText<Unit>& sourceBuffer)
       : sourceBuffer_(sourceBuffer),
-        compilationState_(cx, parserAllocScope, input) {
+        compilationState_(cx, parserAllocScope, input),
+        stackLimit(cx->stackLimitForCurrentPrincipal()) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
@@ -129,7 +133,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
 
   [[nodiscard]] bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                     SharedContext* sharedContext) {
-    return EmplaceEmitter(compilationState_, emitter,
+    return EmplaceEmitter(compilationState_, emitter, errorContext, stackLimit,
                           EitherParser(parser.ptr()), sharedContext);
   }
 
@@ -603,8 +607,8 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
   MOZ_ASSERT(compilationState_.canLazilyParse ==
              CanLazilyParse(compilationState_.input.options));
   if (compilationState_.canLazilyParse) {
-    syntaxParser.emplace(cx, errorContext, options, sourceBuffer_.units(),
-                         sourceBuffer_.length(),
+    syntaxParser.emplace(cx, errorContext, stackLimit, options,
+                         sourceBuffer_.units(), sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationState_,
                          /* syntaxParser = */ nullptr);
     if (!syntaxParser->checkOptions()) {
@@ -612,7 +616,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
     }
   }
 
-  parser.emplace(cx, errorContext, options, sourceBuffer_.units(),
+  parser.emplace(cx, errorContext, stackLimit, options, sourceBuffer_.units(),
                  sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationState_,
                  syntaxParser.ptrOr(nullptr));
@@ -621,12 +625,12 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 }
 
 static bool EmplaceEmitter(CompilationState& compilationState,
-                           Maybe<BytecodeEmitter>& emitter,
+                           Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
+                           JS::NativeStackLimit stackLimit,
                            const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(/* parent = */ nullptr, parser, sc, compilationState,
-                  emitterMode);
+  emitter.emplace(ec, stackLimit, parser, sc, compilationState, emitterMode);
   return emitter->init();
 }
 
@@ -1115,10 +1119,12 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  Parser<FullParseHandler, Unit> parser(cx, ec, input.options, units, length,
-                                        /* foldConstants = */ true,
-                                        compilationState,
-                                        /* syntaxParser = */ nullptr);
+  JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
+
+  Parser<FullParseHandler, Unit> parser(
+      cx, ec, stackLimit, input.options, units, length,
+      /* foldConstants = */ true, compilationState,
+      /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -1130,8 +1136,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(),
-                      compilationState, BytecodeEmitter::LazyFunction);
+  BytecodeEmitter bce(ec, stackLimit, &parser, pn->funbox(), compilationState,
+                      BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
   }
