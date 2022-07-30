@@ -1311,17 +1311,15 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   using Base = RewritingParseNodeVisitor;
 
-  JSContext* cx;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
 
-  FoldInfo info() const { return FoldInfo{cx, parserAtoms, handler}; }
+  FoldInfo info() const { return FoldInfo{cx_, parserAtoms, handler}; }
 
  public:
   explicit FoldVisitor(JSContext* cx, ParserAtomsTable& parserAtoms,
                        FullParseHandler* handler)
       : RewritingParseNodeVisitor(cx),
-        cx(cx),
         parserAtoms(parserAtoms),
         handler(handler) {}
 
