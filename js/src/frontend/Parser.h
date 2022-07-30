@@ -288,6 +288,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
  protected:
   ErrorContext* ec_;
+  uintptr_t stackLimit_;
 
 #if DEBUG
   /* Our fallible 'checkOptions' member function has been called. */
@@ -321,7 +322,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   template <class, typename>
   friend class AutoInParametersOfAsyncFunction;
 
-  ParserBase(JSContext* cx, ErrorContext* ec,
+  ParserBase(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
              const JS::ReadOnlyCompileOptions& options, bool foldConstants,
              CompilationState& compilationState);
   ~ParserBase();
@@ -470,19 +471,19 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   // NOTE: The argument ordering here is deliberately different from the
   //       public constructor so that typos calling the public constructor
   //       are less likely to select this overload.
-  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+  PerHandlerParser(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
-  PerHandlerParser(JSContext* cx, ErrorContext* ec,
+  PerHandlerParser(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
                    const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationState& compilationState,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser)
-      : PerHandlerParser(cx, ec, options, foldConstants, compilationState,
-                         static_cast<void*>(syntaxParser)) {}
+      : PerHandlerParser(cx, ec, stackLimit, options, foldConstants,
+                         compilationState, static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
 
@@ -923,7 +924,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TokenStream tokenStream;
 
  public:
-  GeneralParser(JSContext* cx, ErrorContext* ec,
+  GeneralParser(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
                 const JS::ReadOnlyCompileOptions& options, const Unit* units,
                 size_t length, bool foldConstants,
                 CompilationState& compilationState, SyntaxParser* syntaxParser);
