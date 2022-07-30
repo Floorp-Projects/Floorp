@@ -83,7 +83,7 @@ static bool ListContainsHoistedDeclaration(FoldInfo& info, ListNode* list,
 // |node| being completely eliminated as dead.
 static bool ContainsHoistedDeclaration(FoldInfo& info, ParseNode* node,
                                        bool* result) {
-  AutoCheckRecursionLimit recursion(info.cx);
+  AutoCheckRecursionLimit recursion(info.ec);
   if (!recursion.check(info.ec, info.stackLimit)) {
     return false;
   }
@@ -1313,17 +1313,19 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   using Base = RewritingParseNodeVisitor;
 
+  JSContext* cx;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
 
   FoldInfo info() const {
-    return FoldInfo{cx_, ec_, stackLimit_, parserAtoms, handler};
+    return FoldInfo{cx, ec_, stackLimit_, parserAtoms, handler};
   }
 
  public:
   FoldVisitor(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
               ParserAtomsTable& parserAtoms, FullParseHandler* handler)
-      : RewritingParseNodeVisitor(cx, ec, stackLimit),
+      : RewritingParseNodeVisitor(ec, stackLimit),
+        cx(cx),
         parserAtoms(parserAtoms),
         handler(handler) {}
 

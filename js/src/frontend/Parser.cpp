@@ -412,7 +412,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     return null();
   }
 
-  if (!CheckParseTree(cx_, this->ec_, this->stackLimit_, alloc_, stmtList)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, stmtList)) {
     return null();
   }
 
@@ -1766,7 +1766,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   }
 #endif
 
-  if (!CheckParseTree(cx_, this->ec_, this->stackLimit_, alloc_, body)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, body)) {
     return null();
   }
 
@@ -1830,7 +1830,7 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
     return nullptr;
   }
 
-  if (!CheckParseTree(cx_, this->ec_, this->stackLimit_, alloc_, body)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, body)) {
     return null();
   }
 
@@ -1972,7 +1972,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     }
   }
 
-  if (!CheckParseTree(cx_, this->ec_, this->stackLimit_, alloc_, stmtList)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, stmtList)) {
     return null();
   }
 
@@ -2371,7 +2371,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     return null();
   }
 
-  if (!CheckParseTree(cx_, this->ec_, this->stackLimit_, alloc_, funNode)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, funNode)) {
     return null();
   }
 
@@ -3459,7 +3459,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     }
   }
 
-  if (!CheckParseTree(cx_, this->ec_, this->stackLimit_, alloc_, funNode)) {
+  if (!CheckParseTree(this->ec_, this->stackLimit_, alloc_, funNode)) {
     return null();
   }
 
@@ -4038,7 +4038,7 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -4357,7 +4357,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
     DeclarationKind kind, YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -4512,7 +4512,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     DeclarationKind kind, YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -8908,7 +8908,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -9155,7 +9155,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     YieldHandling yieldHandling, bool canHaveDirectives /* = false */) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -9712,7 +9712,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -10090,7 +10090,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -10202,7 +10202,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */,
     PrivateNameHandling privateNameHandling /* = PrivateNameProhibited */) {
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -10477,7 +10477,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
 
   Node lhs;
 
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }
@@ -12385,7 +12385,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError, InvokedPrediction invoked) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
-  AutoCheckRecursionLimit recursion(cx_);
+  AutoCheckRecursionLimit recursion(this->ec_);
   if (!recursion.check(this->ec_, this->stackLimit_)) {
     return null();
   }

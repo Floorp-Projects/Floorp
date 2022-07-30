@@ -827,7 +827,7 @@ JSOp BytecodeEmitter::strictifySetNameOp(JSOp op) {
 }
 
 bool BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer) {
-  AutoCheckRecursionLimit recursion(cx);
+  AutoCheckRecursionLimit recursion(ec);
   if (!recursion.check(ec, stackLimit)) {
     return false;
   }
@@ -7546,7 +7546,7 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
                                                 CallNode* call,
                                                 CallOrNewEmitter& cone,
                                                 OptionalEmitter& oe) {
-  AutoCheckRecursionLimit recursion(cx);
+  AutoCheckRecursionLimit recursion(ec);
   if (!recursion.check(ec, stackLimit)) {
     return false;
   }
@@ -8206,7 +8206,7 @@ bool BytecodeEmitter::emitPrivateInExpr(ListNode* node) {
 bool BytecodeEmitter::emitOptionalTree(
     ParseNode* pn, OptionalEmitter& oe,
     ValueUsage valueUsage /* = ValueUsage::WantValue */) {
-  AutoCheckRecursionLimit recursion(cx);
+  AutoCheckRecursionLimit recursion(ec);
   if (!recursion.check(ec, stackLimit)) {
     return false;
   }
@@ -10951,7 +10951,7 @@ bool BytecodeEmitter::emitExportDefault(BinaryNode* exportNode) {
 bool BytecodeEmitter::emitTree(
     ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */,
     EmitLineNumberNote emitLineNote /* = EMIT_LINENOTE */) {
-  AutoCheckRecursionLimit recursion(cx);
+  AutoCheckRecursionLimit recursion(ec);
   if (!recursion.check(ec, stackLimit)) {
     return false;
   }
