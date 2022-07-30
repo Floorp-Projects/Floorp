@@ -205,6 +205,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   JSContext* const cx = nullptr;
 
+  uintptr_t stackLimit;
+
   // Enclosing function or global context.
   BytecodeEmitter* const parent = nullptr;
 
@@ -311,8 +313,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
    */
  private:
   // Internal constructor, for delegation use only.
-  BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
-                  CompilationState& compilationState, EmitterMode emitterMode);
+  BytecodeEmitter(BytecodeEmitter* parent, uintptr_t stackLimit,
+                  SharedContext* sc, CompilationState& compilationState,
+                  EmitterMode emitterMode);
 
   BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
                   SharedContext* sc, CompilationState& compilationState,
@@ -329,15 +332,15 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   void reportNeedMoreArgsError(CallNode* callNode, uint32_t requiredArgs);
 
  public:
-  BytecodeEmitter(const EitherParser& parser, SharedContext* sc,
-                  CompilationState& compilationState,
+  BytecodeEmitter(uintptr_t stackLimit, const EitherParser& parser,
+                  SharedContext* sc, CompilationState& compilationState,
                   EmitterMode emitterMode = Normal);
 
   template <typename Unit>
-  BytecodeEmitter(Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
-                  CompilationState& compilationState,
+  BytecodeEmitter(uintptr_t stackLimit, Parser<FullParseHandler, Unit>* parser,
+                  SharedContext* sc, CompilationState& compilationState,
                   EmitterMode emitterMode = Normal)
-      : BytecodeEmitter(EitherParser(parser), sc, compilationState,
+      : BytecodeEmitter(stackLimit, EitherParser(parser), sc, compilationState,
                         emitterMode) {}
 
   [[nodiscard]] bool init();

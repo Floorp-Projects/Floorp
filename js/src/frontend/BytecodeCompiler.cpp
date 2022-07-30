@@ -83,7 +83,8 @@ class MOZ_RAII AutoAssertReportedException {
 
 static bool EmplaceEmitter(CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter,
-                           const EitherParser& parser, SharedContext* sc);
+                           uintptr_t stackLimit, const EitherParser& parser,
+                           SharedContext* sc);
 
 template <typename Unit>
 class MOZ_STACK_CLASS SourceAwareCompiler {
@@ -131,7 +132,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
 
   [[nodiscard]] bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                     SharedContext* sharedContext) {
-    return EmplaceEmitter(compilationState_, emitter,
+    return EmplaceEmitter(compilationState_, emitter, stackLimit,
                           EitherParser(parser.ptr()), sharedContext);
   }
 
@@ -624,10 +625,11 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 
 static bool EmplaceEmitter(CompilationState& compilationState,
                            Maybe<BytecodeEmitter>& emitter,
-                           const EitherParser& parser, SharedContext* sc) {
+                           uintptr_t stackLimit, const EitherParser& parser,
+                           SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(parser, sc, compilationState, emitterMode);
+  emitter.emplace(stackLimit, parser, sc, compilationState, emitterMode);
   return emitter->init();
 }
 
@@ -1116,8 +1118,10 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
+  uintptr_t stackLimit = cx->stackLimitForCurrentPrincipal();
+
   Parser<FullParseHandler, Unit> parser(
-      cx, ec, cx->stackLimitForCurrentPrincipal(), input.options, units, length,
+      cx, ec, stackLimit, input.options, units, length,
       /* foldConstants = */ true, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
@@ -1131,7 +1135,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  BytecodeEmitter bce(&parser, pn->funbox(), compilationState,
+  BytecodeEmitter bce(stackLimit, &parser, pn->funbox(), compilationState,
                       BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
