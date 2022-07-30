@@ -344,9 +344,9 @@ JS_PUBLIC_API bool js::IsObjectInContextCompartment(JSObject* obj,
   return obj->compartment() == cx->compartment();
 }
 
-JS_PUBLIC_API bool js::AutoCheckRecursionLimit::runningWithTrustedPrincipals(
-    JSContext* cx) const {
-  return cx->runningWithTrustedPrincipals();
+JS_PUBLIC_API JS::StackKind
+js::AutoCheckRecursionLimit::stackKindForCurrentPrincipal(JSContext* cx) const {
+  return cx->stackKindForCurrentPrincipal();
 }
 
 JS_PUBLIC_API JSFunction* js::DefineFunctionWithReserved(

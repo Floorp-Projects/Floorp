@@ -59,7 +59,7 @@ class MOZ_RAII AutoCheckRecursionLimit {
                                                   JS::StackKind kind,
                                                   int extraAllowance) const;
 
-  JS_PUBLIC_API bool runningWithTrustedPrincipals(JSContext* cx) const;
+  JS_PUBLIC_API JS::StackKind stackKindForCurrentPrincipal(JSContext* cx) const;
 
 #ifdef __wasi__
   // The JSContext outlives AutoCheckRecursionLimit so it is safe to use raw
@@ -132,9 +132,7 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitImpl(uintptr_t limit,
 
 MOZ_ALWAYS_INLINE uintptr_t
 AutoCheckRecursionLimit::getStackLimitSlow(JSContext* cx) const {
-  JS::StackKind kind = runningWithTrustedPrincipals(cx)
-                           ? JS::StackForTrustedScript
-                           : JS::StackForUntrustedScript;
+  JS::StackKind kind = stackKindForCurrentPrincipal(cx);
   return getStackLimitHelper(cx, kind, 0);
 }
 
@@ -181,7 +179,7 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkDontReport(
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithStackPointerDontReport(
     JSContext* cx, void* sp) const {
   // getStackLimitSlow(cx) is pretty slow because it has to do an uninlined
-  // call to runningWithTrustedPrincipals to determine which stack limit to
+  // call to stackKindForCurrentPrincipal to determine which stack limit to
   // use. To work around this, check the untrusted limit first to avoid the
   // overhead in most cases.
   uintptr_t untrustedLimit =

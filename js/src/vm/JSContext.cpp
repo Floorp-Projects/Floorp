@@ -724,6 +724,15 @@ void JSContext::recoverFromOutOfMemory() {
   }
 }
 
+JS::StackKind JSContext::stackKindForCurrentPrincipal() {
+  return runningWithTrustedPrincipals() ? JS::StackForTrustedScript
+                                        : JS::StackForUntrustedScript;
+}
+
+uintptr_t JSContext::stackLimitForCurrentPrincipal() {
+  return stackLimit(stackKindForCurrentPrincipal());
+}
+
 JS_PUBLIC_API bool js::UseInternalJobQueues(JSContext* cx) {
   // Internal job queue handling must be set up very early. Self-hosting
   // initialization is as good a marker for that as any.
