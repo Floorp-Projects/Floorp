@@ -26,6 +26,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
   static const size_t MaxParents = 100;
 
+  JSContext* cx_;
   ParserAtomsTable& parserAtoms_;
   TaggedParserAtomIndex prefix_;
 
@@ -451,7 +452,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
   NameResolver(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
                ParserAtomsTable& parserAtoms)
-      : ParseNodeVisitor(cx, ec, stackLimit),
+      : ParseNodeVisitor(ec, stackLimit),
+        cx_(cx),
         parserAtoms_(parserAtoms),
         nparents_(0),
         buf_(cx) {}

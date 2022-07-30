@@ -53,15 +53,14 @@ namespace frontend {
 template <typename Derived>
 class ParseNodeVisitor {
  public:
-  JSContext* cx_;
   ErrorContext* ec_;
   uintptr_t stackLimit_;
 
-  ParseNodeVisitor(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit)
-      : cx_(cx), ec_(ec), stackLimit_(stackLimit) {}
+  ParseNodeVisitor(ErrorContext* ec, uintptr_t stackLimit)
+      : ec_(ec), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
-    AutoCheckRecursionLimit recursion(cx_);
+    AutoCheckRecursionLimit recursion(ec_);
     if (!recursion.check(ec_, stackLimit_)) {
       return false;
     }
@@ -101,16 +100,14 @@ class ParseNodeVisitor {
 template <typename Derived>
 class RewritingParseNodeVisitor {
  public:
-  JSContext* cx_;
   ErrorContext* ec_;
   uintptr_t stackLimit_;
 
-  RewritingParseNodeVisitor(JSContext* cx, ErrorContext* ec,
-                            uintptr_t stackLimit)
-      : cx_(cx), ec_(ec), stackLimit_(stackLimit) {}
+  RewritingParseNodeVisitor(ErrorContext* ec, uintptr_t stackLimit)
+      : ec_(ec), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode*& pn) {
-    AutoCheckRecursionLimit recursion(cx_);
+    AutoCheckRecursionLimit recursion(ec_);
     if (!recursion.check(ec_, stackLimit_)) {
       return false;
     }
