@@ -8,6 +8,11 @@
   --sidebar-width: 200px;
   --header-spacing: 40px;
   --footer-spacing: 80px;
+  --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
+
+  --success-background-color: #87FFD1;
+  --success-border-color: #2AC3A2;
+  --success-color: #15141A;
 
   --colorways-figure-size: 225px;
   --colorways-grid-template-areas:
@@ -254,6 +259,17 @@ body > main > aside {
   display: none !important;
 }
 
+button.primary {
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+button.close {
+  background-image: url(chrome://global/skin/icons/close.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 .card,
 .synced-tab-li,
 .synced-tab-li-placeholder,
@@ -306,12 +322,12 @@ body > main > aside {
 }
 
 /* Bug 1770534 - Only use the zap-gradient for built-in, color-neutral themes */
-.setup-step {
+.zap-card {
   border: none;
   position: relative;
   z-index: 0;
 }
-.setup-step::before {
+.zap-card::before {
   content: "";
   position: absolute;
   z-index: -1;
@@ -339,11 +355,6 @@ body > main > aside {
   flex: 1 1 auto;
 }
 
-.setup-step > .step-body > button.primary {
-  white-space: nowrap;
-  min-width: fit-content;
-}
-
 .setup-step > footer {
   display: flex;
   flex-direction: column;
@@ -352,6 +363,44 @@ body > main > aside {
 
 .setup-step > footer > progress {
   margin-block: 0 8px;
+}
+
+.message-box {
+  display: flex;
+  align-content: space-between;
+  align-items: center;
+  margin-block: 8px;
+  gap: 8px;
+}
+
+.message-content {
+  flex: 1 1 auto;
+}
+
+.message-content > .message-header {
+  font-size: 1.12em;
+  margin-block: 0 0.33em;
+}
+
+.message-content > .message-description {
+  margin-block: 0 0.33em;
+}
+
+.confirmation-message-box {
+  background-color: var(--success-background-color);
+  color: var(--success-color);
+  border-color: var(--success-border-color);
+}
+.confirmation-message-box > .message-content {
+  text-align: center;
+}
+.confirmation-message-box > .message-content > .message-header {
+  font-size: inherit;
+  display: inline;
+}
+.confirmation-message-box > .icon-button {
+  /* ensure we get the local color value as container doesnt change color with theme */
+  color: inherit;
 }
 
 /* 117px is the total height of the collapsible-tabs-container; setting that size
