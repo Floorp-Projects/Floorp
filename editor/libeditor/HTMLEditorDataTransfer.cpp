@@ -1449,14 +1449,14 @@ void RemoveFragComments(nsCString& aStr) {
   // remove the StartFragment/EndFragment comments from the str, if present
   int32_t startCommentIndx = aStr.Find("<!--StartFragment");
   if (startCommentIndx >= 0) {
-    int32_t startCommentEnd = aStr.Find("-->", false, startCommentIndx);
+    int32_t startCommentEnd = aStr.Find("-->", startCommentIndx);
     if (startCommentEnd > startCommentIndx) {
       aStr.Cut(startCommentIndx, (startCommentEnd + 3) - startCommentIndx);
     }
   }
   int32_t endCommentIndx = aStr.Find("<!--EndFragment");
   if (endCommentIndx >= 0) {
-    int32_t endCommentEnd = aStr.Find("-->", false, endCommentIndx);
+    int32_t endCommentEnd = aStr.Find("-->", endCommentIndx);
     if (endCommentEnd > endCommentIndx) {
       aStr.Cut(endCommentIndx, (endCommentEnd + 3) - endCommentIndx);
     }
