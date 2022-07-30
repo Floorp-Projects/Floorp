@@ -221,7 +221,7 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       if (BinarySearchIf(
               kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
               [script](const auto& entry) -> int {
-                return script.Compare(entry.mTag);
+                return Compare(script, nsDependentCString(entry.mTag));
               },
               &foundIndex)) {
         return kScriptLangGroup[foundIndex].mAtom;

@@ -76,7 +76,7 @@ GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction() {
   if (BinarySearchIf(
           localesFallbacks, 0, ArrayLength(localesFallbacks),
           [&locale](const EncodingProp& aProperty) {
-            return locale.Compare(aProperty.mKey);
+            return Compare(locale, nsDependentCString(aProperty.mKey));
           },
           &index)) {
     return localesFallbacks[index].mValue;

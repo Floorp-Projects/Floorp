@@ -527,9 +527,7 @@ static uint32_t ParseSSSHeaders(const nsCString& aHeader,
   for (nsSecurityHeaderDirective* directive = directives->getFirst();
        directive != nullptr; directive = directive->getNext()) {
     SSSLOG(("SSS: found directive %s\n", directive->mName.get()));
-    if (directive->mName.Length() == max_age_var.Length() &&
-        directive->mName.EqualsIgnoreCase(max_age_var.get(),
-                                          max_age_var.Length())) {
+    if (directive->mName.EqualsIgnoreCase(max_age_var)) {
       if (foundMaxAge) {
         SSSLOG(("SSS: found two max-age directives"));
         return nsISiteSecurityService::ERROR_MULTIPLE_MAX_AGES;
@@ -550,9 +548,7 @@ static uint32_t ParseSSSHeaders(const nsCString& aHeader,
       }
 
       SSSLOG(("SSS: parsed delta-seconds: %" PRIu64, maxAge));
-    } else if (directive->mName.Length() == include_subd_var.Length() &&
-               directive->mName.EqualsIgnoreCase(include_subd_var.get(),
-                                                 include_subd_var.Length())) {
+    } else if (directive->mName.EqualsIgnoreCase(include_subd_var)) {
       if (foundIncludeSubdomains) {
         SSSLOG(("SSS: found two includeSubdomains directives"));
         return nsISiteSecurityService::ERROR_MULTIPLE_INCLUDE_SUBDOMAINS;

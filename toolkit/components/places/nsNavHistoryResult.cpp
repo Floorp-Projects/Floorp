@@ -989,7 +989,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_TitleLess(
   if (value == 0) {
     // resolve by URI
     if (a->IsURI()) {
-      value = a->mURI.Compare(b->mURI.get());
+      value = Compare(a->mURI, b->mURI);
     }
     if (value == 0) {
       // resolve by date
@@ -1073,7 +1073,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_URILess(
   int32_t value;
   if (a->IsURI() && b->IsURI()) {
     // normal URI or visit
-    value = a->mURI.Compare(b->mURI.get());
+    value = Compare(a->mURI, b->mURI);
   } else if (a->IsContainer() && !b->IsContainer()) {
     // Containers appear before entries with a uri.
     return -1;
