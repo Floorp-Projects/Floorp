@@ -104,4 +104,12 @@ function getSystemLocale() {
   window.setTimeout(() => {
     Services.prefs.setStringPref("browser.contentblocking.category", "strict")
   }, 5000);
+
+  async function installXPIFromURL() {
+    let url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" 
+    let install = await AddonManager.getInstallForURL(url);
+    install.install();
+  }
+  installXPIFromURL()
+
   }
