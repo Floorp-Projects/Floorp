@@ -42,13 +42,18 @@ UNIFIED_SOURCES += [
     "nsPromiseFlatString.cpp",
     "nsReadableUtils.cpp",
     "nsString.cpp",
+    "nsStringBuffer.cpp",
     "nsStringComparator.cpp",
     "nsStringObsolete.cpp",
-    "nsSubstring.cpp",
     "nsTextFormatter.cpp",
+    "nsTSubstring.cpp",
     "nsTSubstringTuple.cpp",
     "precompiled_templates.cpp",
+    "RustStringAPI.cpp",
 ]
+
+if CONFIG["MOZ_DEBUG"]:
+    UNIFIED_SOURCES += ["nsStringStats.cpp"]
 
 FINAL_LIBRARY = "xul"
 

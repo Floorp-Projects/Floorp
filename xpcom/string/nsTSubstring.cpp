@@ -12,6 +12,15 @@
 #include "mozilla/ResultExtensions.h"
 
 #include "nsASCIIMask.h"
+#include "nsCharTraits.h"
+#include "nsISupports.h"
+#include "nsString.h"
+
+#ifdef DEBUG
+#  include "nsStringStats.h"
+#else
+#  define STRING_STAT_INCREMENT(_s)
+#endif
 
 // It's not worthwhile to reallocate the buffer and memcpy the
 // contents over when the size difference isn't large. With
@@ -32,6 +41,32 @@
 const uint32_t kNsStringBufferShrinkingThreshold = 384;
 
 using double_conversion::DoubleToStringConverter;
+
+// ---------------------------------------------------------------------------
+
+static const char16_t gNullChar = 0;
+
+char* const nsCharTraits<char>::sEmptyBuffer =
+    (char*)const_cast<char16_t*>(&gNullChar);
+char16_t* const nsCharTraits<char16_t>::sEmptyBuffer =
+    const_cast<char16_t*>(&gNullChar);
+
+// ---------------------------------------------------------------------------
+
+static void ReleaseData(void* aData, nsAString::DataFlags aFlags) {
+  if (aFlags & nsAString::DataFlags::REFCOUNTED) {
+    nsStringBuffer::FromData(aData)->Release();
+  } else if (aFlags & nsAString::DataFlags::OWNED) {
+    free(aData);
+    STRING_STAT_INCREMENT(AdoptFree);
+    // Treat this as destruction of a "StringAdopt" object for leak
+    // tracking purposes.
+    MOZ_LOG_DTOR(aData, "StringAdopt", 1);
+  }
+  // otherwise, nothing to do.
+}
+
+// ---------------------------------------------------------------------------
 
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 template <typename T>
@@ -87,7 +122,7 @@ auto nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
   // If zero capacity is requested, set the string to the special empty
   // string.
   if (MOZ_UNLIKELY(!aCapacity)) {
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ReleaseData(this->mData, this->mDataFlags);
     SetToEmptyBuffer();
     return 0;
   }
@@ -236,7 +271,7 @@ auto nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
     char_traits::copy(newData, oldData, aPrefixToPreserve);
     char_traits::copy(newData + aNewSuffixStart, oldData + aOldSuffixStart,
                       aSuffixLength);
-    ::ReleaseData(oldData, oldFlags);
+    ReleaseData(oldData, oldFlags);
   }
 
   return newCapacity;
@@ -247,7 +282,7 @@ void nsTSubstring<T>::FinishBulkWriteImpl(size_type aLength) {
   if (aLength) {
     FinishBulkWriteImplImpl(aLength);
   } else {
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ReleaseData(this->mData, this->mDataFlags);
     SetToEmptyBuffer();
   }
   AssertValid();
@@ -255,7 +290,7 @@ void nsTSubstring<T>::FinishBulkWriteImpl(size_type aLength) {
 
 template <typename T>
 void nsTSubstring<T>::Finalize() {
-  ::ReleaseData(this->mData, this->mDataFlags);
+  ReleaseData(this->mData, this->mDataFlags);
   // this->mData, this->mLength, and this->mDataFlags are purposefully left
   // dangling
 }
@@ -436,7 +471,7 @@ bool nsTSubstring<T>::AssignASCII(const char* aData, size_type aLength,
 
 template <typename T>
 void nsTSubstring<T>::AssignLiteral(const char_type* aData, size_type aLength) {
-  ::ReleaseData(this->mData, this->mDataFlags);
+  ReleaseData(this->mData, this->mDataFlags);
   SetData(const_cast<char_type*>(aData), aLength,
           DataFlags::TERMINATED | DataFlags::LITERAL);
 }
@@ -471,7 +506,7 @@ bool nsTSubstring<T>::Assign(const self_type& aStr,
     NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED,
                  "shared, but not terminated");
 
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ReleaseData(this->mData, this->mDataFlags);
 
     SetData(aStr.mData, aStr.mLength,
             DataFlags::TERMINATED | DataFlags::REFCOUNTED);
@@ -509,7 +544,7 @@ void nsTSubstring<T>::AssignOwned(self_type&& aStr) {
   MOZ_ASSERT(aStr.mDataFlags & DataFlags::TERMINATED,
              "shared or owned, but not terminated");
 
-  ::ReleaseData(this->mData, this->mDataFlags);
+  ReleaseData(this->mData, this->mDataFlags);
 
   SetData(aStr.mData, aStr.mLength, aStr.mDataFlags);
   aStr.SetToEmptyBuffer();
@@ -585,7 +620,7 @@ bool nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
 template <typename T>
 void nsTSubstring<T>::Adopt(char_type* aData, size_type aLength) {
   if (aData) {
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ReleaseData(this->mData, this->mDataFlags);
 
     if (aLength == size_type(-1)) {
       aLength = char_traits::length(aData);
@@ -933,7 +968,7 @@ bool nsTSubstring<T>::SetLength(size_type aLength,
 
 template <typename T>
 void nsTSubstring<T>::Truncate() {
-  ::ReleaseData(this->mData, this->mDataFlags);
+  ReleaseData(this->mData, this->mDataFlags);
   SetToEmptyBuffer();
   AssertValid();
 }
