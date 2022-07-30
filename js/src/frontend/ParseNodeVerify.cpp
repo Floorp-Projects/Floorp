@@ -21,8 +21,8 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
   const LifoAlloc& alloc_;
 
  public:
-  ParseNodeVerifier(JSContext* cx, const LifoAlloc& alloc)
-      : Base(cx), alloc_(alloc) {}
+  ParseNodeVerifier(JSContext* cx, uintptr_t stackLimit, const LifoAlloc& alloc)
+      : Base(cx, stackLimit), alloc_(alloc) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
     // pn->size() asserts that pn->pn_kind is valid, so we don't redundantly
@@ -41,9 +41,9 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
 }  // namespace frontend
 }  // namespace js
 
-bool frontend::CheckParseTree(JSContext* cx, const LifoAlloc& alloc,
-                              ParseNode* pn) {
-  ParseNodeVerifier verifier(cx, alloc);
+bool frontend::CheckParseTree(JSContext* cx, uintptr_t stackLimit,
+                              const LifoAlloc& alloc, ParseNode* pn) {
+  ParseNodeVerifier verifier(cx, stackLimit, alloc);
   return verifier.visit(pn);
 }
 

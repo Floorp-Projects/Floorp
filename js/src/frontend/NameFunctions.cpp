@@ -449,8 +449,9 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     return internalVisitSpecList(pn);
   }
 
-  explicit NameResolver(JSContext* cx, ParserAtomsTable& parserAtoms)
-      : ParseNodeVisitor(cx),
+  NameResolver(JSContext* cx, uintptr_t stackLimit,
+               ParserAtomsTable& parserAtoms)
+      : ParseNodeVisitor(cx, stackLimit),
         parserAtoms_(parserAtoms),
         nparents_(0),
         buf_(cx) {}
@@ -484,8 +485,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
 } /* anonymous namespace */
 
-bool frontend::NameFunctions(JSContext* cx, ParserAtomsTable& parserAtoms,
-                             ParseNode* pn) {
-  NameResolver nr(cx, parserAtoms);
+bool frontend::NameFunctions(JSContext* cx, uintptr_t stackLimit,
+                             ParserAtomsTable& parserAtoms, ParseNode* pn) {
+  NameResolver nr(cx, stackLimit, parserAtoms);
   return nr.visit(pn);
 }

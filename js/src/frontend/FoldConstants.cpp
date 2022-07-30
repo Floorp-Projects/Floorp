@@ -34,6 +34,7 @@ using mozilla::PositiveInfinity;
 
 struct FoldInfo {
   JSContext* cx;
+  uintptr_t stackLimit;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
 };
@@ -53,13 +54,13 @@ struct FoldInfo {
   return true;
 }
 
-static bool ContainsHoistedDeclaration(JSContext* cx, ParseNode* node,
+static bool ContainsHoistedDeclaration(FoldInfo& info, ParseNode* node,
                                        bool* result);
 
-static bool ListContainsHoistedDeclaration(JSContext* cx, ListNode* list,
+static bool ListContainsHoistedDeclaration(FoldInfo& info, ListNode* list,
                                            bool* result) {
   for (ParseNode* node : list->contents()) {
-    if (!ContainsHoistedDeclaration(cx, node, result)) {
+    if (!ContainsHoistedDeclaration(info, node, result)) {
       return false;
     }
     if (*result) {
@@ -79,10 +80,10 @@ static bool ListContainsHoistedDeclaration(JSContext* cx, ListNode* list,
 // specific context of deciding that |node|, as one arm of a ParseNodeKind::If
 // controlled by a constant condition, contains a declaration that forbids
 // |node| being completely eliminated as dead.
-static bool ContainsHoistedDeclaration(JSContext* cx, ParseNode* node,
+static bool ContainsHoistedDeclaration(FoldInfo& info, ParseNode* node,
                                        bool* result) {
-  AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx)) {
+  AutoCheckRecursionLimit recursion(info.cx);
+  if (!recursion.check(info.cx, info.stackLimit)) {
     return false;
   }
 
@@ -180,7 +181,7 @@ restart:
     // Statements possibly containing hoistable declarations only in the left
     // half, in ParseNode terms -- the loop body in AST terms.
     case ParseNodeKind::DoWhileStmt:
-      return ContainsHoistedDeclaration(cx, node->as<BinaryNode>().left(),
+      return ContainsHoistedDeclaration(info, node->as<BinaryNode>().left(),
                                         result);
 
     // Statements possibly containing hoistable declarations only in the
@@ -188,12 +189,12 @@ restart:
     // (usually a block statement), in AST terms.
     case ParseNodeKind::WhileStmt:
     case ParseNodeKind::WithStmt:
-      return ContainsHoistedDeclaration(cx, node->as<BinaryNode>().right(),
+      return ContainsHoistedDeclaration(info, node->as<BinaryNode>().right(),
                                         result);
 
     case ParseNodeKind::LabelStmt:
       return ContainsHoistedDeclaration(
-          cx, node->as<LabeledStatement>().statement(), result);
+          info, node->as<LabeledStatement>().statement(), result);
 
     // Statements with more complicated structures.
 
@@ -202,7 +203,7 @@ restart:
     case ParseNodeKind::IfStmt: {
       TernaryNode* ifNode = &node->as<TernaryNode>();
       ParseNode* consequent = ifNode->kid2();
-      if (!ContainsHoistedDeclaration(cx, consequent, result)) {
+      if (!ContainsHoistedDeclaration(info, consequent, result)) {
         return false;
       }
       if (*result) {
@@ -226,7 +227,7 @@ restart:
                  "must have either catch or finally");
 
       ParseNode* tryBlock = tryNode->kid1();
-      if (!ContainsHoistedDeclaration(cx, tryBlock, result)) {
+      if (!ContainsHoistedDeclaration(info, tryBlock, result)) {
         return false;
       }
       if (*result) {
@@ -239,7 +240,7 @@ restart:
         MOZ_ASSERT(catchNode->isKind(ParseNodeKind::Catch));
 
         ParseNode* catchStatements = catchNode->right();
-        if (!ContainsHoistedDeclaration(cx, catchStatements, result)) {
+        if (!ContainsHoistedDeclaration(info, catchStatements, result)) {
           return false;
         }
         if (*result) {
@@ -248,7 +249,7 @@ restart:
       }
 
       if (ParseNode* finallyBlock = tryNode->kid3()) {
-        return ContainsHoistedDeclaration(cx, finallyBlock, result);
+        return ContainsHoistedDeclaration(info, finallyBlock, result);
       }
 
       *result = false;
@@ -260,13 +261,13 @@ restart:
     // declarations.
     case ParseNodeKind::SwitchStmt: {
       SwitchStatement* switchNode = &node->as<SwitchStatement>();
-      return ContainsHoistedDeclaration(cx, &switchNode->lexicalForCaseList(),
+      return ContainsHoistedDeclaration(info, &switchNode->lexicalForCaseList(),
                                         result);
     }
 
     case ParseNodeKind::Case: {
       CaseClause* caseClause = &node->as<CaseClause>();
-      return ContainsHoistedDeclaration(cx, caseClause->statementList(),
+      return ContainsHoistedDeclaration(info, caseClause->statementList(),
                                         result);
     }
 
@@ -310,7 +311,7 @@ restart:
       }
 
       ParseNode* loopBody = forNode->body();
-      return ContainsHoistedDeclaration(cx, loopBody, result);
+      return ContainsHoistedDeclaration(info, loopBody, result);
     }
 
     case ParseNodeKind::LexicalScope: {
@@ -318,17 +319,18 @@ restart:
       ParseNode* expr = scope->scopeBody();
 
       if (expr->isKind(ParseNodeKind::ForStmt) || expr->is<FunctionNode>()) {
-        return ContainsHoistedDeclaration(cx, expr, result);
+        return ContainsHoistedDeclaration(info, expr, result);
       }
 
       MOZ_ASSERT(expr->isKind(ParseNodeKind::StatementList));
       return ListContainsHoistedDeclaration(
-          cx, &scope->scopeBody()->as<ListNode>(), result);
+          info, &scope->scopeBody()->as<ListNode>(), result);
     }
 
     // List nodes with all non-null children.
     case ParseNodeKind::StatementList:
-      return ListContainsHoistedDeclaration(cx, &node->as<ListNode>(), result);
+      return ListContainsHoistedDeclaration(info, &node->as<ListNode>(),
+                                            result);
 
     // Grammar sub-components that should never be reached directly by this
     // method, because some parent component should have asserted itself.
@@ -930,8 +932,7 @@ static bool FoldIf(FoldInfo info, ParseNode** nodePtr) {
       // A declaration that hoists outside the discarded arm prevents the
       // |if| from being folded away.
       bool containsHoistedDecls;
-      if (!ContainsHoistedDeclaration(info.cx, discarded,
-                                      &containsHoistedDecls)) {
+      if (!ContainsHoistedDeclaration(info, discarded, &containsHoistedDecls)) {
         return false;
       }
 
@@ -1314,12 +1315,14 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
 
-  FoldInfo info() const { return FoldInfo{cx_, parserAtoms, handler}; }
+  FoldInfo info() const {
+    return FoldInfo{cx_, stackLimit_, parserAtoms, handler};
+  }
 
  public:
-  explicit FoldVisitor(JSContext* cx, ParserAtomsTable& parserAtoms,
-                       FullParseHandler* handler)
-      : RewritingParseNodeVisitor(cx),
+  FoldVisitor(JSContext* cx, uintptr_t stackLimit,
+              ParserAtomsTable& parserAtoms, FullParseHandler* handler)
+      : RewritingParseNodeVisitor(cx, stackLimit),
         parserAtoms(parserAtoms),
         handler(handler) {}
 
@@ -1566,16 +1569,18 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 };
 
-static bool Fold(JSContext* cx, ParserAtomsTable& parserAtoms,
-                 FullParseHandler* handler, ParseNode** pnp) {
-  FoldVisitor visitor(cx, parserAtoms, handler);
+static bool Fold(JSContext* cx, uintptr_t stackLimit,
+                 ParserAtomsTable& parserAtoms, FullParseHandler* handler,
+                 ParseNode** pnp) {
+  FoldVisitor visitor(cx, stackLimit, parserAtoms, handler);
   return visitor.visit(*pnp);
 }
 static bool Fold(FoldInfo info, ParseNode** pnp) {
-  return Fold(info.cx, info.parserAtoms, info.handler, pnp);
+  return Fold(info.cx, info.stackLimit, info.parserAtoms, info.handler, pnp);
 }
 
-bool frontend::FoldConstants(JSContext* cx, ParserAtomsTable& parserAtoms,
-                             ParseNode** pnp, FullParseHandler* handler) {
-  return Fold(cx, parserAtoms, handler, pnp);
+bool frontend::FoldConstants(JSContext* cx, uintptr_t stackLimit,
+                             ParserAtomsTable& parserAtoms, ParseNode** pnp,
+                             FullParseHandler* handler) {
+  return Fold(cx, stackLimit, parserAtoms, handler, pnp);
 }

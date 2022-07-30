@@ -15,8 +15,8 @@ namespace frontend {
 class ParseNode;
 class ParserAtomsTable;
 
-[[nodiscard]] bool NameFunctions(JSContext* cx, ParserAtomsTable& parserAtoms,
-                                 ParseNode* pn);
+[[nodiscard]] bool NameFunctions(JSContext* cx, uintptr_t stackLimit,
+                                 ParserAtomsTable& parserAtoms, ParseNode* pn);
 
 } /* namespace frontend */
 } /* namespace js */

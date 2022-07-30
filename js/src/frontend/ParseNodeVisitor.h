@@ -51,12 +51,14 @@ template <typename Derived>
 class ParseNodeVisitor {
  public:
   JSContext* cx_;
+  uintptr_t stackLimit_;
 
-  explicit ParseNodeVisitor(JSContext* cx) : cx_(cx) {}
+  ParseNodeVisitor(JSContext* cx, uintptr_t stackLimit)
+      : cx_(cx), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode* pn) {
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.check(cx_)) {
+    if (!recursion.check(cx_, stackLimit_)) {
       return false;
     }
 
@@ -96,12 +98,14 @@ template <typename Derived>
 class RewritingParseNodeVisitor {
  public:
   JSContext* cx_;
+  uintptr_t stackLimit_;
 
-  explicit RewritingParseNodeVisitor(JSContext* cx) : cx_(cx) {}
+  RewritingParseNodeVisitor(JSContext* cx, uintptr_t stackLimit)
+      : cx_(cx), stackLimit_(stackLimit) {}
 
   [[nodiscard]] bool visit(ParseNode*& pn) {
     AutoCheckRecursionLimit recursion(cx_);
-    if (!recursion.check(cx_)) {
+    if (!recursion.check(cx_, stackLimit_)) {
       return false;
     }
 
