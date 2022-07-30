@@ -400,7 +400,7 @@ nsDependentCSubstring IMContextWrapper::GetIMName() const {
     return im;
   }
 
-  int32_t atIMValueEnd = xmodifiers.Find("@", false, atIMValueStart);
+  int32_t atIMValueEnd = xmodifiers.Find("@", atIMValueStart);
   if (atIMValueEnd > atIMValueStart) {
     return nsDependentCSubstring(xmodifiersChar + atIMValueStart,
                                  atIMValueEnd - atIMValueStart);
@@ -3039,10 +3039,11 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   }
 
   // Get only the focused paragraph, by looking for newlines
-  int32_t parStart =
-      (selOffset == 0) ? 0
-                       : textContent.RFind("\n", false, selOffset - 1, -1) + 1;
-  int32_t parEnd = textContent.Find("\n", false, selOffset + selLength, -1);
+  int32_t parStart = 0;
+  if (selOffset > 0) {
+    parStart = Substring(textContent, 0, selOffset - 1).RFind(u"\n") + 1;
+  }
+  int32_t parEnd = textContent.Find(u"\n", selOffset + selLength);
   if (parEnd < 0) {
     parEnd = textContent.Length();
   }

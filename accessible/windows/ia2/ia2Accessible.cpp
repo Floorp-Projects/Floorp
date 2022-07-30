@@ -29,9 +29,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-template <typename String>
-static void EscapeAttributeChars(String& aStr);
-
 ////////////////////////////////////////////////////////////////////////////////
 // ia2Accessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,10 +586,9 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges, long* aNRanges) {
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers
 
-template <typename String>
-static inline void EscapeAttributeChars(String& aStr) {
+static inline void EscapeAttributeChars(nsString& aStr) {
   int32_t offset = 0;
-  static const char kCharsToEscape[] = ":;=,\\";
+  static const char16_t kCharsToEscape[] = u":;=,\\";
   while ((offset = aStr.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
     aStr.Insert('\\', offset);
     offset += 2;

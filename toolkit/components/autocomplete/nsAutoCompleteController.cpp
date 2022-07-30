@@ -597,7 +597,7 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool* _retval) {
         input->GetTextValue(inputValue);
         if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, value))) {
           nsAutoString suggestedValue;
-          int32_t pos = inputValue.Find(" >> ");
+          int32_t pos = inputValue.Find(u" >> ");
           if (pos > 0) {
             inputValue.Right(suggestedValue, inputValue.Length() - pos - 4);
           } else {
@@ -1231,7 +1231,7 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
       nsAutoString inputValue;
       input->GetTextValue(inputValue);
       nsAutoString suggestedValue;
-      int32_t pos = inputValue.Find(" >> ");
+      int32_t pos = inputValue.Find(u" >> ");
       if (pos > 0) {
         inputValue.Right(suggestedValue, inputValue.Length() - pos - 4);
       } else {
