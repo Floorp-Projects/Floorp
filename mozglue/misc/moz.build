@@ -17,9 +17,7 @@ EXPORTS.mozilla += [
     "PlatformMutex.h",
     "PlatformRWLock.h",
     "Printf.h",
-    "SIMD.h",
     "Sprintf.h",
-    "SSE.h",
     "StackWalk.h",
     "TimeStamp.h",
     "Uptime.h",
@@ -45,18 +43,10 @@ SOURCES += [
     "AwakeTimeStamp.cpp",
     "MmapFaultHandler.cpp",
     "Printf.cpp",
-    "SIMD.cpp",
     "StackWalk.cpp",
     "TimeStamp.cpp",
     "Uptime.cpp",
 ]
-
-if CONFIG["CPU_ARCH"].startswith("x86"):
-    SOURCES += [
-        "SIMD_avx2.cpp",
-        "SSE.cpp",
-    ]
-    SOURCES["SIMD_avx2.cpp"].flags += ["-mavx2"]
 
 OS_LIBS += CONFIG["REALTIME_LIBS"]
 
