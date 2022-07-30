@@ -45,3 +45,6 @@ void nsTDependentString<T>::Rebind(const char_type* aStart,
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
   this->Rebind(aStart, aEnd - aStart);
 }
+
+template class nsTDependentString<char>;
+template class nsTDependentString<char16_t>;

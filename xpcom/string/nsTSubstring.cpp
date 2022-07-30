@@ -15,6 +15,7 @@
 #include "nsCharTraits.h"
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 #ifdef DEBUG
 #  include "nsStringStats.h"
@@ -1688,3 +1689,6 @@ void nsTSubstring<T>::CompressWhitespace(bool aTrimLeading,
   *to = char_type(0);  // add the null
   this->mLength = to - this->mData;
 }
+
+template class nsTSubstring<char>;
+template class nsTSubstring<char16_t>;
