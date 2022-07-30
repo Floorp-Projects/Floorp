@@ -274,7 +274,7 @@ describe("<RecentSavesContainer>", () => {
       .simulate("click");
     assert.calledWith(
       dispatch,
-      ac.UserEvent({
+      ac.DiscoveryStreamUserEvent({
         event: "CLICK",
         source: `CARDGRID_RECENT_SAVES_VIEW_LIST`,
       })

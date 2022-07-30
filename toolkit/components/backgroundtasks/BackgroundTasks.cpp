@@ -370,7 +370,7 @@ nsresult BackgroundTasks::RemoveStaleEphemeralProfileDirectories(
     }
 
     // Find profile folders matching our prefix.
-    if (aPrefix.Compare(entryName.get(), false, aPrefix.Length()) != 0) {
+    if (!StringBeginsWith(entryName, aPrefix)) {
       continue;
     }
 

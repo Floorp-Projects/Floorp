@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { TelemetryArchiveTesting } = ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "TelemetryEventPing",

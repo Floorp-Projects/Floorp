@@ -79,6 +79,9 @@ describe("TelemetryFeed", () => {
       newTabURLOverridden: false,
       newTabURL: "",
     });
+    globals.set("pktApi", {
+      isUserLoggedIn: () => true,
+    });
     globals.set("HomePage", fakeHomePage);
     globals.set("ExtensionSettingsStore", fakeExtensionSettingsStore);
     globals.set("PingCentre", PingCentre);
@@ -1458,6 +1461,29 @@ describe("TelemetryFeed", () => {
       instance.onAction(action);
 
       assert.calledWith(eventCreator, action);
+      assert.calledWith(sendEvent, eventCreator.returnValue);
+      assert.calledWith(utSendUserEvent, eventCreator.returnValue);
+    });
+    it("should send an event on a DISCOVERY_STREAM_USER_EVENT action", () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      instance = new TelemetryFeed();
+
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+      const utSendUserEvent = sandbox.stub(instance.utEvents, "sendUserEvent");
+      const eventCreator = sandbox.stub(instance, "createUserEvent");
+      const action = { type: at.DISCOVERY_STREAM_USER_EVENT };
+
+      instance.onAction(action);
+
+      assert.calledWith(eventCreator, {
+        ...action,
+        data: {
+          value: {
+            pocket_logged_in_status: true,
+          },
+        },
+      });
       assert.calledWith(sendEvent, eventCreator.returnValue);
       assert.calledWith(utSendUserEvent, eventCreator.returnValue);
     });

@@ -28,6 +28,7 @@ export class _LinkMenu extends React.PureComponent {
       isPrivateBrowsingEnabled,
       siteInfo,
       platform,
+      userEvent = ac.UserEvent,
     } = props;
 
     // Handle special case of default site
@@ -48,7 +49,7 @@ export class _LinkMenu extends React.PureComponent {
         )
       )
       .map(option => {
-        const { action, impression, id, type, userEvent } = option;
+        const { action, impression, id, type, userEvent: eventName } = option;
         if (!type && id) {
           option.onClick = (event = {}) => {
             const { ctrlKey, metaKey, shiftKey, button } = event;
@@ -62,16 +63,16 @@ export class _LinkMenu extends React.PureComponent {
               );
             }
             props.dispatch(action);
-            if (userEvent) {
+            if (eventName) {
               const userEventData = Object.assign(
                 {
-                  event: userEvent,
+                  event: eventName,
                   source,
                   action_position: index,
                 },
                 siteInfo
               );
-              props.dispatch(ac.UserEvent(userEventData));
+              props.dispatch(userEvent(userEventData));
             }
             if (impression && props.shouldSendImpressionStats) {
               props.dispatch(impression);

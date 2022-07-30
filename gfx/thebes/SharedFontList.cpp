@@ -1071,7 +1071,8 @@ Family* FontList::FindFamily(const nsCString& aName, bool aPrimaryNameOnly) {
         : mList(aList), mTarget(aTarget) {}
 
     int operator()(const Family& aVal) const {
-      return mTarget.Compare(aVal.Key().BeginReading(mList));
+      return Compare(mTarget,
+                     nsDependentCString(aVal.Key().BeginReading(mList)));
     }
 
    private:
@@ -1181,7 +1182,8 @@ LocalFaceRec* FontList::FindLocalFace(const nsCString& aName) {
         : mList(aList), mTarget(aTarget) {}
 
     int operator()(const LocalFaceRec& aVal) const {
-      return mTarget.Compare(aVal.mKey.BeginReading(mList));
+      return Compare(mTarget,
+                     nsDependentCString(aVal.mKey.BeginReading(mList)));
     }
 
    private:

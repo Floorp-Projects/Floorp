@@ -72,9 +72,7 @@ bool SharedStringMap::Find(const nsCString& aKey, size_t* aIndex) {
 
   return BinarySearchIf(
       Entries(), 0, EntryCount(),
-      [&](const Entry& aEntry) {
-        return aKey.Compare(keys.GetBare(aEntry.mKey));
-      },
+      [&](const Entry& aEntry) { return Compare(aKey, keys.Get(aEntry.mKey)); },
       aIndex);
 }
 

@@ -747,8 +747,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     ScopedGfxFeatureReporter reporter("IpcWebGL");
 
     auto* const cm = gfx::CanvasManagerChild::Get();
-    MOZ_ASSERT(cm);
-    if (!cm) {
+    if (NS_WARN_IF(!cm)) {
       return Err("!CanvasManagerChild::Get()");
     }
 

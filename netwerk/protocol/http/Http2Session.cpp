@@ -2558,9 +2558,11 @@ nsresult Http2Session::RecvAltSvc(Http2Session* self) {
     // a little off main thread origin parser. This is a non critical function
     // because any alternate route created has to be verified anyhow
     nsAutoCString specifiedOriginHost;
-    if (origin.EqualsIgnoreCase("https://", 8)) {
+    if (StringBeginsWith(origin, "https://"_ns,
+                         nsCaseInsensitiveCStringComparator)) {
       specifiedOriginHost.Assign(origin.get() + 8, origin.Length() - 8);
-    } else if (origin.EqualsIgnoreCase("http://", 7)) {
+    } else if (StringBeginsWith(origin, "http://"_ns,
+                                nsCaseInsensitiveCStringComparator)) {
       specifiedOriginHost.Assign(origin.get() + 7, origin.Length() - 7);
     }
 

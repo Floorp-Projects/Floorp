@@ -315,27 +315,28 @@ function run_test() {
 // If only I could have Promises to test this :)
 // There is only so much we can do at this stage,
 // if we want to avoid tests overlapping.
-function test_cycles(size, tc) {
-  // Now, restart this with unreferenced cycles
-  for (let i = 0; i < size / 2; ++i) {
-    let a = {
-      a: ctypes.CDataFinalizer(tc.acquire(i * 2), tc.release),
-      b: {
-        b: ctypes.CDataFinalizer(tc.acquire(i * 2 + 1), tc.release),
-      },
-    };
-    a.b.a = a;
-  }
-  do_test_pending();
+// Deactivated - see comment above.
+// function test_cycles(size, tc) {
+//   // Now, restart this with unreferenced cycles
+//   for (let i = 0; i < size / 2; ++i) {
+//     let a = {
+//       a: ctypes.CDataFinalizer(tc.acquire(i * 2), tc.release),
+//       b: {
+//         b: ctypes.CDataFinalizer(tc.acquire(i * 2 + 1), tc.release),
+//       },
+//     };
+//     a.b.a = a;
+//   }
+//   do_test_pending();
 
-  Cu.schedulePreciseGC(function after_gc() {
-    // Check that _something_ has been finalized
-    Assert.ok(count_finalized(size, tc) > 0);
-    do_test_finished();
-  });
+//   Cu.schedulePreciseGC(function after_gc() {
+//     // Check that _something_ has been finalized
+//     Assert.ok(count_finalized(size, tc) > 0);
+//     do_test_finished();
+//   });
 
-  do_timeout(10000, do_throw);
-}
+//   do_timeout(10000, do_throw);
+// }
 
 function count_finalized(size, tc) {
   let finalizedItems = 0;

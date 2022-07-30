@@ -17,6 +17,8 @@ ChromeUtils.defineModuleGetter(
 
 // Execution of common tests
 
+// This is used in common_test_Download.js
+// eslint-disable-next-line no-unused-vars
 var gUseLegacySaver = false;
 
 var scriptFile = do_get_file("common_test_Download.js");

@@ -621,7 +621,7 @@ nsresult DNSPacket::DecodeInternal(
     bool responseMatchesQuestion =
         (qname.Length() == aHost.Length() ||
          (aHost.Length() == qname.Length() + 1 && aHost.Last() == '.')) &&
-        qname.Compare(aHost.BeginReading(), true, qname.Length()) == 0;
+        StringBeginsWith(aHost, qname, nsCaseInsensitiveCStringComparator);
 
     if (responseMatchesQuestion) {
       // RDATA

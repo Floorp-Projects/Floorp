@@ -8,6 +8,7 @@
 #include "DocAccessibleWrap.h"
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
@@ -293,7 +294,7 @@ bool AccessibleWrap::ApplyPostFilter(const EWhichPostFilter& aSearchKey,
              "Only search text supported");
   nsAutoString name;
   Name(name);
-  return name.Find(aSearchText, true) != kNotFound;
+  return CaseInsensitiveFindInReadable(aSearchText, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

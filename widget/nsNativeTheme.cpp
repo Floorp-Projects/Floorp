@@ -356,7 +356,7 @@ bool nsNativeTheme::IsBottomTab(nsIFrame* aFrame) {
                                                nsGkAtoms::_class, classStr);
   }
   // FIXME: This looks bogus, shouldn't this be looking at GetClasses()?
-  return !classStr.IsEmpty() && classStr.Find("tab-bottom") != kNotFound;
+  return !classStr.IsEmpty() && classStr.Find(u"tab-bottom") != kNotFound;
 }
 
 bool nsNativeTheme::IsFirstTab(nsIFrame* aFrame) {

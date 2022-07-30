@@ -54,6 +54,8 @@ class nsTString : public nsTSubstring<T> {
 
   typedef typename substring_type::const_char_iterator const_char_iterator;
 
+  typedef typename substring_type::string_view string_view;
+
   typedef typename substring_type::index_type index_type;
   typedef typename substring_type::size_type size_type;
 
@@ -177,15 +179,6 @@ class nsTString : public nsTSubstring<T> {
   }
 
   char_type operator[](index_type aIndex) const { return CharAt(aIndex); }
-
-  int32_t RFindCharInSet(const self_type& aString, int32_t aOffset = -1) const {
-    return repr_type::RFindCharInSet(aString.get(), aOffset);
-  }
-  using repr_type::RFindCharInSet;
-  int32_t FindCharInSet(const self_type& aString, int32_t aOffset = 0) const {
-    return repr_type::FindCharInSet(aString.get(), aOffset);
-  }
-  using repr_type::FindCharInSet;
 
   /**
    * Perform string to double-precision float conversion.

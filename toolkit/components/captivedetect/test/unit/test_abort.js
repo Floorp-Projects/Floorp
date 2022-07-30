@@ -6,7 +6,6 @@
 
 const kInterfaceName = "wifi";
 
-var server;
 var step = 0;
 var loginFinished = false;
 
