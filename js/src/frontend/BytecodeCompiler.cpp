@@ -82,7 +82,7 @@ class MOZ_RAII AutoAssertReportedException {
 };
 
 static bool EmplaceEmitter(CompilationState& compilationState,
-                           Maybe<BytecodeEmitter>& emitter,
+                           Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
                            uintptr_t stackLimit, const EitherParser& parser,
                            SharedContext* sc);
 
@@ -132,7 +132,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
 
   [[nodiscard]] bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                     SharedContext* sharedContext) {
-    return EmplaceEmitter(compilationState_, emitter, stackLimit,
+    return EmplaceEmitter(compilationState_, emitter, errorContext, stackLimit,
                           EitherParser(parser.ptr()), sharedContext);
   }
 
@@ -624,12 +624,12 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 }
 
 static bool EmplaceEmitter(CompilationState& compilationState,
-                           Maybe<BytecodeEmitter>& emitter,
+                           Maybe<BytecodeEmitter>& emitter, ErrorContext* ec,
                            uintptr_t stackLimit, const EitherParser& parser,
                            SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
       sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
-  emitter.emplace(stackLimit, parser, sc, compilationState, emitterMode);
+  emitter.emplace(ec, stackLimit, parser, sc, compilationState, emitterMode);
   return emitter->init();
 }
 
@@ -1135,7 +1135,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  BytecodeEmitter bce(stackLimit, &parser, pn->funbox(), compilationState,
+  BytecodeEmitter bce(ec, stackLimit, &parser, pn->funbox(), compilationState,
                       BytecodeEmitter::LazyFunction);
   if (!bce.init(pn->pn_pos)) {
     return false;
