@@ -13,11 +13,15 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   lazy,
+  "Utils",
+  "resource://services-settings/Utils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
-
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
@@ -60,7 +64,7 @@ class PersonalityProvider {
     if (this._baseAttachmentsURL) {
       return this._baseAttachmentsURL;
     }
-    const server = Services.prefs.getCharPref("services.settings.server");
+    const server = lazy.Utils.SERVER_URL;
     const serverInfo = await (
       await fetch(`${server}/`, {
         credentials: "omit",
