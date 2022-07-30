@@ -195,9 +195,8 @@ void nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
       nsAutoString styleType;
       doc->GetHeaderData(nsGkAtoms::headerContentStyleType, styleType);
       if (!styleType.IsEmpty()) {
-        static const char textCssStr[] = "text/css";
-        isCSS =
-            (styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr) - 1));
+        isCSS = StringBeginsWith(styleType, u"text/css"_ns,
+                                 nsASCIICaseInsensitiveStringComparator);
       }
     }
 

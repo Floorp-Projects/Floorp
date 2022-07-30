@@ -234,37 +234,15 @@ class nsTStringRepr {
   bool NS_FASTCALL Equals(const char_type* aData, comparator_type) const;
 
   /**
-   * Compares a given string to this string.
+   * Compare this string and another ASCII-case-insensitively.
    *
-   * @param   aString is the string to be compared
-   * @param   aIgnoreCase tells us how to treat case
-   * @param   aCount tells us how many chars to compare
-   * @return  -1,0,1
-   */
-  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
-  int32_t Compare(
-      const char_type* aString, bool aIgnoreCase = false,
-      size_type aCount = std::numeric_limits<size_type>::max()) const;
-
-  /**
-   * Equality check between given string and this string.
+   * This method is similar to `LowerCaseEqualsASCII` however both strings are
+   * lowercased, meaning that `aString` need not be all lowercase.
    *
    * @param   aString is the string to check
-   * @param   aIgnoreCase tells us how to treat case
-   * @param   aCount tells us how many chars to compare
    * @return  boolean
    */
-  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
-  bool EqualsIgnoreCase(
-      const char_type* aString,
-      size_type aCount = std::numeric_limits<size_type>::max()) const {
-    return Compare(aString, true, aCount) == 0;
-  }
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  bool EqualsIgnoreCase(
-      const incompatible_char_type* aString,
-      size_type aCount = std::numeric_limits<size_type>::max()) const;
+  bool EqualsIgnoreCase(const std::string_view& aString) const;
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = Char16OnlyT<Q>>

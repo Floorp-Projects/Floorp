@@ -13,7 +13,7 @@ struct PropertyComparator {
   const nsCString& mKey;
   explicit PropertyComparator(const nsCString& aKey) : mKey(aKey) {}
   int operator()(const nsUConvProp& aProperty) const {
-    return mKey.Compare(aProperty.mKey);
+    return Compare(mKey, nsDependentCString(aProperty.mKey));
   }
 };
 

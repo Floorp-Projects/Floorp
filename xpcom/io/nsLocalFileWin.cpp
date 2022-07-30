@@ -193,18 +193,18 @@ nsresult nsLocalFile::RevealFile(const nsString& aResolvedPath) {
 
 // static
 void nsLocalFile::CheckForReservedFileName(nsString& aFileName) {
-  static const char* forbiddenNames[] = {
-      "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",  "COM8",
-      "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",  "LPT7",
-      "LPT8", "LPT9", "CON",  "PRN",  "AUX",  "NUL",  "CLOCK$"};
+  static const nsLiteralString forbiddenNames[] = {
+      u"COM1"_ns, u"COM2"_ns, u"COM3"_ns, u"COM4"_ns, u"COM5"_ns,  u"COM6"_ns,
+      u"COM7"_ns, u"COM8"_ns, u"COM9"_ns, u"LPT1"_ns, u"LPT2"_ns,  u"LPT3"_ns,
+      u"LPT4"_ns, u"LPT5"_ns, u"LPT6"_ns, u"LPT7"_ns, u"LPT8"_ns,  u"LPT9"_ns,
+      u"CON"_ns,  u"PRN"_ns,  u"AUX"_ns,  u"NUL"_ns,  u"CLOCK$"_ns};
 
-  uint32_t nameLen;
-  for (size_t n = 0; n < ArrayLength(forbiddenNames); ++n) {
-    nameLen = (uint32_t)strlen(forbiddenNames[n]);
-    if (aFileName.EqualsIgnoreCase(forbiddenNames[n], nameLen)) {
+  for (const nsLiteralString& forbiddenName : forbiddenNames) {
+    if (StringBeginsWith(aFileName, forbiddenName,
+                         nsASCIICaseInsensitiveStringComparator)) {
       // invalid name is either the entire string, or a prefix with a period
-      if (aFileName.Length() == nameLen ||
-          aFileName.CharAt(nameLen) == char16_t('.')) {
+      if (aFileName.Length() == forbiddenName.Length() ||
+          aFileName.CharAt(forbiddenName.Length()) == char16_t('.')) {
         aFileName.Truncate();
       }
     }

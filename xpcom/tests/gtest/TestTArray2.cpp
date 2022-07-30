@@ -238,7 +238,7 @@ class Object {
 
   bool operator<(const Object& other) const {
     // sort based on mStr only
-    return mStr.Compare(other.mStr.get()) < 0;
+    return Compare(mStr, other.mStr) < 0;
   }
 
   const char* Str() const { return mStr.get(); }

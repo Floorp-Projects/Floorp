@@ -1670,8 +1670,11 @@ nsresult nsPlainTextSerializer::GetAttributeValue(const nsAtom* aName,
 bool nsPlainTextSerializer::IsCurrentNodeConverted() const {
   nsAutoString value;
   nsresult rv = GetAttributeValue(nsGkAtoms::_class, value);
-  return (NS_SUCCEEDED(rv) && (value.EqualsIgnoreCase("moz-txt", 7) ||
-                               value.EqualsIgnoreCase("\"moz-txt", 8)));
+  return (NS_SUCCEEDED(rv) &&
+          (StringBeginsWith(value, u"moz-txt"_ns,
+                            nsASCIICaseInsensitiveStringComparator) ||
+           StringBeginsWith(value, u"\"moz-txt"_ns,
+                            nsASCIICaseInsensitiveStringComparator)));
 }
 
 // static
