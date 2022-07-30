@@ -18,6 +18,7 @@ const {
   ERRNO_UNKNOWN_DEVICE,
   ON_DEVICE_CONNECTED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
+  ON_DEVICELIST_UPDATED,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 var { AccountState } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
@@ -789,6 +790,14 @@ add_task(async function test_refreshDeviceList() {
   let spy = {
     getDeviceList: { count: 0 },
   };
+  const deviceListUpdateObserver = {
+    count: 0,
+    observe(subject, topic, data) {
+      this.count++;
+    },
+  };
+  Services.obs.addObserver(deviceListUpdateObserver, ON_DEVICELIST_UPDATED);
+
   fxAccountsClient.getDeviceList = (function(old) {
     return function getDeviceList() {
       spy.getDeviceList.count += 1;
@@ -826,6 +835,11 @@ add_task(async function test_refreshDeviceList() {
     "Should not have device list initially"
   );
   Assert.ok(await device.refreshDeviceList(), "Should refresh list");
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    1,
+    `${ON_DEVICELIST_UPDATED} was notified`
+  );
   Assert.deepEqual(
     device.recentDeviceList,
     [
@@ -847,6 +861,11 @@ add_task(async function test_refreshDeviceList() {
     !(await device.refreshDeviceList()),
     "Should not refresh device list if fresh"
   );
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    1,
+    `${ON_DEVICELIST_UPDATED} was not notified`
+  );
 
   fxai._now += device.TIME_BETWEEN_FXA_DEVICES_FETCH_MS;
 
@@ -861,6 +880,11 @@ add_task(async function test_refreshDeviceList() {
     2,
     "Should only make one request if called with pending request"
   );
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    2,
+    `${ON_DEVICELIST_UPDATED} only notified once`
+  );
 
   device.observe(null, ON_DEVICE_CONNECTED_NOTIFICATION);
   await device.refreshDeviceList();
@@ -868,6 +892,11 @@ add_task(async function test_refreshDeviceList() {
     spy.getDeviceList.count,
     3,
     "Should refresh device list after connecting new device"
+  );
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    3,
+    `${ON_DEVICELIST_UPDATED} notified when new device connects`
   );
   device.observe(
     null,
@@ -880,6 +909,11 @@ add_task(async function test_refreshDeviceList() {
     4,
     "Should refresh device list after disconnecting device"
   );
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    4,
+    `${ON_DEVICELIST_UPDATED} notified when device disconnects`
+  );
   device.observe(
     null,
     ON_DEVICE_DISCONNECTED_NOTIFICATION,
@@ -891,11 +925,21 @@ add_task(async function test_refreshDeviceList() {
     4,
     "Should not refresh device list after disconnecting this device"
   );
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    4,
+    `${ON_DEVICELIST_UPDATED} not notified again`
+  );
 
   let refreshBeforeResetPromise = device.refreshDeviceList({
     ignoreCached: true,
   });
   fxai._generation++;
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    4,
+    `${ON_DEVICELIST_UPDATED} not notified`
+  );
   await Assert.rejects(refreshBeforeResetPromise, /Another user has signed in/);
 
   device.reset();
@@ -908,6 +952,12 @@ add_task(async function test_refreshDeviceList() {
     await device.refreshDeviceList(),
     "Should fetch new list after resetting"
   );
+  Assert.equal(
+    deviceListUpdateObserver.count,
+    5,
+    `${ON_DEVICELIST_UPDATED} notified after reset`
+  );
+  Services.obs.removeObserver(deviceListUpdateObserver, ON_DEVICELIST_UPDATED);
 });
 
 add_task(async function test_checking_remote_availableCommands_mismatch() {

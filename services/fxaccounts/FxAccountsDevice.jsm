@@ -12,6 +12,7 @@ const {
   ERRNO_DEVICE_SESSION_CONFLICT,
   ERRNO_UNKNOWN_DEVICE,
   ON_NEW_DEVICE_ID,
+  ON_DEVICELIST_UPDATED,
   ON_DEVICE_CONNECTED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
@@ -255,6 +256,7 @@ class FxAccountsDevice {
           lastFetch: this._fxai.now(),
           devices,
         };
+        Services.obs.notifyObservers(null, ON_DEVICELIST_UPDATED);
         return true;
       } finally {
         this._fetchAndCacheDeviceListPromise = null;

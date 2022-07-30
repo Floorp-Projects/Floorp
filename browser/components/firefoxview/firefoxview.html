@@ -33,7 +33,7 @@
     <main>
       <template id="sync-setup-template">
         <named-deck class="sync-setup-container" data-prefix="id:">
-          <div name="sync-setup-view0" data-prefix="id:-view0" class="card setup-step" data-prefix="aria-labelledby:-view0-header">
+          <div name="sync-setup-view0" data-prefix="id:-view0" class="card zap-card setup-step" data-prefix="aria-labelledby:-view0-header">
             <h2 data-prefix="id:-view0-header" data-l10n-id="firefoxview-tabpickup-step-signin-header" class="card-header"></h2>
             <section class="step-body">
               <p class="step-content" data-l10n-id="firefoxview-tabpickup-step-signin-description"></p>
@@ -47,7 +47,7 @@
                 data-l10n-args='{"percentValue":"11"}'></label>
             </footer>
           </div>
-          <div name="sync-setup-view1" data-prefix="id:-view1" class="card setup-step" data-prefix="aria-labelledby:-view1-header">
+          <div name="sync-setup-view1" data-prefix="id:-view1" class="card zap-card setup-step" data-prefix="aria-labelledby:-view1-header">
             <h2 data-prefix="id:-view1-header" data-l10n-id="firefoxview-tabpickup-adddevice-header" class="card-header"></h2>
             <section class="step-body">
               <p class="step-content">
@@ -65,7 +65,7 @@
                 data-l10n-args='{"percentValue":"33"}'></label>
             </footer>
           </div>
-          <div name="sync-setup-view2" data-prefix="id:-view2" class="card setup-step" data-prefix="aria-labelledby:-view2-header">
+          <div name="sync-setup-view2" data-prefix="id:-view2" class="card zap-card setup-step" data-prefix="aria-labelledby:-view2-header">
             <h2 data-prefix="id:-view2-header" data-l10n-id="firefoxview-tabpickup-synctabs-header" class="card-header"></h2>
             <section class="step-body">
               <p class="step-content">
@@ -104,6 +104,25 @@
           <button id="collapsible-synced-tabs-button" class="ghost-button twisty icon arrow-up" hidden></button>
           <p class="section-description" data-l10n-id="firefoxview-tabpickup-description"></p>
         </header>
+
+        <div class="confirmation-message-box message-box card card-no-hover" hidden>
+          <div class="message-content">
+            <h2 data-l10n-id="firefoxview-mobile-confirmation-header" class="message-header"></h2>
+            <span class="message-description" data-l10n-id="firefoxview-mobile-confirmation-description"></span>
+          </div>
+          <button data-action="mobile-confirmation-dismiss" class="close icon-button ghost-button" data-l10n-id="firefoxview-close-button"></button>
+        </div>
+        <div id="sync-setup-placeholder" hidden></div>
+        <div id="synced-tabs-placeholder" hidden></div>
+        <div class="promo-box message-box zap-card card-no-hover card" hidden>
+          <div class="message-content">
+            <h2 data-l10n-id="firefoxview-mobile-promo-header" class="message-header"></h2>
+            <p class="message-description" data-l10n-id="firefoxview-mobile-promo-description"></p>
+          </div>
+          <button class="primary" data-action="mobile-promo-primary-action" data-l10n-id="firefoxview-mobile-promo-primarybutton"></button>
+          <button data-action="mobile-promo-dismiss" class="close icon-button ghost-button" data-l10n-id="firefoxview-close-button"></button>
+        </div>
+
       </section>
 
       <aside class="content-container" is="colorways-card">

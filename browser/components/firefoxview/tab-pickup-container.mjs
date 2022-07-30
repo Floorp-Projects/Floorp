@@ -31,8 +31,9 @@ class TabPickupContainer extends HTMLElement {
 
   connectedCallback() {
     this.addEventListener("click", this);
+    this.addEventListener("visibilitychange", this);
     Services.obs.addObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
-    this.updateSetupState(TabsSetupFlowManager.uiStateIndex);
+    this.update();
   }
 
   cleanup() {
@@ -62,17 +63,43 @@ class TabPickupContainer extends HTMLElement {
           TabsSetupFlowManager.syncOpenTabs(event.target);
           break;
         }
+        case "mobile-promo-dismiss": {
+          TabsSetupFlowManager.dismissMobilePromo(event.target);
+          break;
+        }
+        case "mobile-promo-primary-action": {
+          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+          break;
+        }
+        case "mobile-confirmation-dismiss": {
+          TabsSetupFlowManager.dismissMobileConfirmation(event.target);
+          break;
+        }
       }
     }
-  }
-
-  async observe(subject, topic, stateIndex) {
-    if (topic == TOPIC_SETUPSTATE_CHANGED) {
-      this.updateSetupState(TabsSetupFlowManager.uiStateIndex);
+    // Returning to fxview seems like a likely time for a device check
+    if (
+      event.type == "visibilitychange" &&
+      document.visibilityState === "visible"
+    ) {
+      this.update();
     }
   }
 
-  appendTemplatedElement(templateId, elementId) {
+  async observe(subject, topic, data) {
+    if (topic == TOPIC_SETUPSTATE_CHANGED) {
+      this.update();
+    }
+  }
+
+  get mobilePromoElem() {
+    return this.querySelector(".promo-box");
+  }
+  get mobileSuccessElem() {
+    return this.querySelector(".confirmation-message-box");
+  }
+
+  insertTemplatedElement(templateId, elementId, replaceNode) {
     const template = document.getElementById(templateId);
     const templateContent = template.content;
     const cloned = templateContent.cloneNode(true);
@@ -91,32 +118,57 @@ class TabPickupContainer extends HTMLElement {
           elem.dataset.supportUrl;
       }
     }
-    this.appendChild(cloned);
+    if (replaceNode) {
+      if (typeof replaceNode == "string") {
+        replaceNode = document.getElementById(replaceNode);
+      }
+      this.replaceChild(cloned, replaceNode);
+    } else {
+      this.appendChild(cloned);
+    }
   }
-  updateSetupState(stateIndex) {
-    const currStateIndex = this._currentSetupStateIndex;
-    if (stateIndex === undefined) {
-      stateIndex = currStateIndex;
+
+  update({
+    stateIndex = TabsSetupFlowManager.uiStateIndex,
+    showMobilePromo = TabsSetupFlowManager.shouldShowMobilePromo,
+    showMobilePairSuccess = TabsSetupFlowManager.shouldShowMobileConnectedSuccess,
+  } = {}) {
+    let needsRender = false;
+    if (showMobilePromo !== this._showMobilePromo) {
+      this._showMobilePromo = showMobilePromo;
+      needsRender = true;
     }
-    if (stateIndex === this._currentSetupStateIndex) {
-      return;
+    if (showMobilePairSuccess !== this._showMobilePairSuccess) {
+      this._showMobilePairSuccess = showMobilePairSuccess;
+      needsRender = true;
     }
-    this._currentSetupStateIndex = stateIndex;
-    this.render();
+    if (stateIndex !== this._currentSetupStateIndex) {
+      this._currentSetupStateIndex = stateIndex;
+      needsRender = true;
+    }
+    needsRender && this.render();
   }
   render() {
     if (!this.isConnected) {
       return;
     }
+
     let setupElem = this.setupContainerElem;
     let tabsElem = this.tabsContainerElem;
+    let mobilePromoElem = this.mobilePromoElem;
+    let mobileSuccessElem = this.mobileSuccessElem;
+
     const stateIndex = this._currentSetupStateIndex;
     const isLoading = stateIndex == 3;
 
     // show/hide either the setup or tab list containers, creating each as necessary
     if (stateIndex < 3) {
       if (!setupElem) {
-        this.appendTemplatedElement("sync-setup-template", "tabpickup-steps");
+        this.insertTemplatedElement(
+          "sync-setup-template",
+          "tabpickup-steps",
+          "sync-setup-placeholder"
+        );
         setupElem = this.setupContainerElem;
       }
       if (tabsElem) {
@@ -128,9 +180,10 @@ class TabPickupContainer extends HTMLElement {
     }
 
     if (!tabsElem) {
-      this.appendTemplatedElement(
+      this.insertTemplatedElement(
         "synced-tabs-template",
-        "tabpickup-tabs-container"
+        "tabpickup-tabs-container",
+        "synced-tabs-placeholder"
       );
       tabsElem = this.tabsContainerElem;
     }
@@ -143,6 +196,8 @@ class TabPickupContainer extends HTMLElement {
     if (stateIndex == 4) {
       this.collapsibleButton.hidden = false;
     }
+    mobilePromoElem.hidden = !this._showMobilePromo;
+    mobileSuccessElem.hidden = !this._showMobilePairSuccess;
   }
 }
 customElements.define("tab-pickup-container", TabPickupContainer);
