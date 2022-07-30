@@ -48,7 +48,7 @@
 #include "js/MemoryCallbacks.h"
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty
-#include "js/Stack.h"
+#include "js/Stack.h"  // JS::NativeStackSize, JS::NativeStackLimit, JS::NativeStackLimitMin
 #include "util/DiagnosticAssertions.h"
 #include "util/DifferentialTesting.h"
 #include "util/DoubleToString.h"
@@ -162,9 +162,11 @@ static void InitDefaultStackQuota(JSContext* cx) {
   // XPCJSContext::Initialize.
 
 #if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
-  static constexpr size_t MaxStackSize = 2 * 128 * sizeof(size_t) * 1024;
+  static constexpr JS::NativeStackSize MaxStackSize =
+      2 * 128 * sizeof(size_t) * 1024;
 #else
-  static constexpr size_t MaxStackSize = 128 * sizeof(size_t) * 1024;
+  static constexpr JS::NativeStackSize MaxStackSize =
+      128 * sizeof(size_t) * 1024;
 #endif
   JS_SetNativeStackQuota(cx, MaxStackSize);
 }
@@ -746,7 +748,7 @@ JS::StackKind JSContext::stackKindForCurrentPrincipal() {
                                         : JS::StackForUntrustedScript;
 }
 
-uintptr_t JSContext::stackLimitForCurrentPrincipal() {
+JS::NativeStackLimit JSContext::stackLimitForCurrentPrincipal() {
   return stackLimit(stackKindForCurrentPrincipal());
 }
 
@@ -1032,8 +1034,8 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       interruptCallbackDisabled(this, false),
       interruptBits_(0),
       inlinedICScript_(this, nullptr),
-      jitStackLimit(UINTPTR_MAX),
-      jitStackLimitNoInterrupt(this, UINTPTR_MAX),
+      jitStackLimit(JS::NativeStackLimitMin),
+      jitStackLimitNoInterrupt(this, JS::NativeStackLimitMin),
       jobQueue(this, nullptr),
       internalJobQueue(this),
       canSkipEnqueuingJobs(this, false),
@@ -1241,7 +1243,7 @@ void JSContext::trace(JSTracer* trc) {
   geckoProfiler().trace(trc);
 }
 
-uintptr_t JSContext::stackLimitForJitCode(JS::StackKind kind) {
+JS::NativeStackLimit JSContext::stackLimitForJitCode(JS::StackKind kind) {
 #ifdef JS_SIMULATOR
   return simulator()->stackLimit();
 #else

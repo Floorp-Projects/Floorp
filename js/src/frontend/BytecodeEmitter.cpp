@@ -60,6 +60,7 @@
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
 #include "js/friend/ErrorMessages.h"               // JSMSG_*
 #include "js/friend/StackLimits.h"                 // AutoCheckRecursionLimit
+#include "js/Stack.h"                              // JS::NativeStackLimit
 #include "util/StringBuffer.h"                     // StringBuffer
 #include "vm/AsyncFunctionResolveKind.h"           // AsyncFunctionResolveKind
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
@@ -133,7 +134,8 @@ static bool ShouldSuppressBreakpointsAndSourceNotes(
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
-                                 uintptr_t stackLimit, SharedContext* sc,
+                                 JS::NativeStackLimit stackLimit,
+                                 SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
@@ -160,7 +162,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
   parser = handle;
 }
 
-BytecodeEmitter::BytecodeEmitter(ErrorContext* ec, uintptr_t stackLimit,
+BytecodeEmitter::BytecodeEmitter(ErrorContext* ec,
+                                 JS::NativeStackLimit stackLimit,
                                  const EitherParser& parser, SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)

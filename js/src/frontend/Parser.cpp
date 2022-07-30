@@ -46,6 +46,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
 #include "js/RegExpFlags.h"     // JS::RegExpFlags
+#include "js/Stack.h"           // JS::NativeStackLimit
 #include "util/StringBuffer.h"  // StringBuffer
 #include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
@@ -158,7 +159,8 @@ void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
 }
 #endif
 
-ParserBase::ParserBase(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+ParserBase::ParserBase(JSContext* cx, ErrorContext* ec,
+                       JS::NativeStackLimit stackLimit,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationState& compilationState)
     : ParserSharedBase(cx, compilationState, ParserSharedBase::Kind::Parser),
@@ -187,7 +189,7 @@ ParserBase::~ParserBase() { MOZ_ASSERT(checkOptionsCalled_); }
 
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
-    JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
@@ -199,7 +201,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
 
 template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
-    JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
+    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length,
     bool foldConstants, CompilationState& compilationState,
     SyntaxParser* syntaxParser)
