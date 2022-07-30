@@ -187,10 +187,10 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
   // set |mChildLaunchArch| to x64 and allow the library to be used as long
   // as this process is a universal binary.
   if (!(pluginArch & arm64) && (pluginArch & x86)) {
-    bool isWidevine = parentLeafName.Find("widevine") != kNotFound;
+    bool isWidevine = parentLeafName.Find(u"widevine") != kNotFound;
     bool isWidevineAllowed =
         StaticPrefs::media_gmp_widevinecdm_allow_x64_plugin_on_arm64();
-    bool isH264 = parentLeafName.Find("openh264") != kNotFound;
+    bool isH264 = parentLeafName.Find(u"openh264") != kNotFound;
     bool isH264Allowed =
         StaticPrefs::media_gmp_gmpopenh264_allow_x64_plugin_on_arm64();
 
