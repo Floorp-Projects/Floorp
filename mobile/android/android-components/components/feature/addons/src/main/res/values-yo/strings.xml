@@ -24,6 +24,8 @@
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Ní àǹfàní sí data rẹ ní títàn %1$d agbègbè mìíràn</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Ní àǹfàní sí àwọn abala bíráwúsà</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Tọ́ju iye àìlópin dátà ti apá kan àwọn alábárà</string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">Ní àǹfàní sí iṣẹ́ tó ń lọ lóri bíráwúsà lákòókò ìwákiri</string>
     <!-- Description for bookmarks permission. -->
@@ -44,16 +46,26 @@
     <string name="mozac_feature_addons_permissions_find_description">Ka àwọn ọ̀rọ̀ gbogbo táàbù tó wà ní ṣíṣí</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">Ní àǹfàní sí ibùdó ti o wà</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Ní àǹfàní sí ìtàn bíráwúsìnìn</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Ṣàmójútó àwọn ìlò àfikún ki o sì ṣàkóso àwọn àkórí</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Ṣe pàṣípàrọ̀ àwọn ọ̀rọ̀ ìfiránṣẹ́ pẹ̀lú àwọn áàpù mìíràn ju èyí lọ </string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Ṣe àfihàn àwọn ìwífúnni sí ọ</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Pèsè ìjẹ́risí àwọn iṣẹ́ kiripitógíráfì</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Ṣàkóso asojú àwọn ètò bíráwúsà</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">Ní àǹfàní sí táàbù tó ṣẹ̀ṣẹ̀ padé</string>
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Tọ́jú ko sì sàfihàn àwọn táàbù bíráwúsà</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Ní àǹfàní sí ìtàn bíráwúsìnìn</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Fa irinṣẹ́ àwọn ìdàgbàsókè gùn láti ní àǹfàní sí dátà rẹ nínú àwọn táàbù tó wà ní ṣíṣí</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Ẹ̀dà</string>
     <!-- The authors of an add-on. -->
@@ -124,6 +136,8 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">A nílò ìgbàláyè tuntun</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Ṣàfikún ìsọdọ̀tun</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Olùyẹwò àwọn àfikún tí ó ṣe àtìlẹ́yìn</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">Àfikún tuntun ti wà</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
@@ -136,4 +150,36 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Ṣàfikún wọn sí %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Ọ̀làjú ti ń dé bá àfikún ìmọ̀-ẹ̀rọ Firefox. Àwọn àfikún yìí ń lo àwọn ìlànà tí kò bá Firefox mu 75 &amp; jú bẹ̀ẹ́ lọ.</string>
-    </resources>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Lọ́wọ́lọ́wọ́ yìí à ń ṣe àtìlẹ́yìn fún irúfẹ́ àwọn àfikún tí a kọ́kọ́ yàn tí wọ́n sì ti sọ̀rọ̀ rẹ̀ ní dáada. </string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">Ṣíṣàgbàálẹ̀ àti  ìjẹ́rìísí àfikún…</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">Ó ní àṣèyọrí ìfi sórí ẹ̀rọ %1$s</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">Ó kùnà ìfi sórí ẹ̀rọ %1$s</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">Ó ní àṣeyọrí ṣíṣiṣẹ́ %1$s</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">Kùnà láti ṣiṣẹ́ %1$s%1$s</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">Ní àṣeyọrí ìyọkúrò %1$s</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">Kùnà láti yọkúrò %1$s</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">Ní àṣeyọrí yíyọkúrò %1$s</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">Ó kùnà láti yọ kúrò %1$s</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">A yọ́ kúrò ní ìrọwọ́rọsẹ̀ %1$s</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Kùnà láti yọ kúrò %1$s</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">Kò sí ìròyìn ọ̀tun nílẹ̀</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">Àṣìṣe                </string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">Ìròyin Alásọdọ̀tun</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Bẹ́ẹ̀ni, Mo ri</string>
+</resources>
