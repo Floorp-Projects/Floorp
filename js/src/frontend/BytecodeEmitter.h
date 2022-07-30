@@ -44,6 +44,9 @@
 #include "vm/ThrowMsgKind.h"               // ThrowMsgKind, ThrowCondition
 
 namespace js {
+
+class ErrorContext;
+
 namespace frontend {
 
 class BytecodeOffset;
@@ -204,6 +207,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   SharedContext* const sc = nullptr;
 
   JSContext* const cx = nullptr;
+  ErrorContext* const ec = nullptr;
 
   uintptr_t stackLimit;
 
@@ -313,9 +317,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
    */
  private:
   // Internal constructor, for delegation use only.
-  BytecodeEmitter(BytecodeEmitter* parent, uintptr_t stackLimit,
-                  SharedContext* sc, CompilationState& compilationState,
-                  EmitterMode emitterMode);
+  BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
+                  uintptr_t stackLimit, SharedContext* sc,
+                  CompilationState& compilationState, EmitterMode emitterMode);
 
   BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
                   SharedContext* sc, CompilationState& compilationState,
@@ -332,16 +336,18 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   void reportNeedMoreArgsError(CallNode* callNode, uint32_t requiredArgs);
 
  public:
-  BytecodeEmitter(uintptr_t stackLimit, const EitherParser& parser,
-                  SharedContext* sc, CompilationState& compilationState,
+  BytecodeEmitter(ErrorContext* ec, uintptr_t stackLimit,
+                  const EitherParser& parser, SharedContext* sc,
+                  CompilationState& compilationState,
                   EmitterMode emitterMode = Normal);
 
   template <typename Unit>
-  BytecodeEmitter(uintptr_t stackLimit, Parser<FullParseHandler, Unit>* parser,
-                  SharedContext* sc, CompilationState& compilationState,
+  BytecodeEmitter(ErrorContext* ec, uintptr_t stackLimit,
+                  Parser<FullParseHandler, Unit>* parser, SharedContext* sc,
+                  CompilationState& compilationState,
                   EmitterMode emitterMode = Normal)
-      : BytecodeEmitter(stackLimit, EitherParser(parser), sc, compilationState,
-                        emitterMode) {}
+      : BytecodeEmitter(ec, stackLimit, EitherParser(parser), sc,
+                        compilationState, emitterMode) {}
 
   [[nodiscard]] bool init();
   [[nodiscard]] bool init(TokenPos bodyPosition);
