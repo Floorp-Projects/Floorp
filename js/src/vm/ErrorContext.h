@@ -61,6 +61,12 @@ class ErrorContext {
   virtual bool hadOutOfMemory() const = 0;
   virtual bool hadOverRecursed() const = 0;
   virtual bool hadErrors() const = 0;
+
+#ifdef __wasi__
+  virtual void incWasiRecursionDepth() = 0;
+  virtual void decWasiRecursionDepth() = 0;
+  virtual bool checkWasiRecursionLimit() = 0;
+#endif  // __wasi__
 };
 
 class MainThreadErrorContext : public ErrorContext {
@@ -88,6 +94,12 @@ class MainThreadErrorContext : public ErrorContext {
   bool hadOutOfMemory() const override;
   bool hadOverRecursed() const override;
   bool hadErrors() const override;
+
+#ifdef __wasi__
+  void incWasiRecursionDepth() override;
+  void decWasiRecursionDepth() override;
+  bool checkWasiRecursionLimit() override;
+#endif  // __wasi__
 };
 
 class OffThreadErrorContext : public ErrorContext {
@@ -122,6 +134,12 @@ class OffThreadErrorContext : public ErrorContext {
   bool hadErrors() const override {
     return hadOutOfMemory() || hadOverRecursed() || !errors_.errors.empty();
   }
+
+#ifdef __wasi__
+  void incWasiRecursionDepth() override;
+  void decWasiRecursionDepth() override;
+  bool checkWasiRecursionLimit() override;
+#endif  // __wasi__
 
  private:
   void ReportOutOfMemory();
