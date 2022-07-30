@@ -84,7 +84,7 @@ Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
 })
 
 
-if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", true)) {
+if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
   window.setTimeout(function(){document.body.appendChild(document.getElementById('PersonalToolbar'));}, 250);
   }
 
