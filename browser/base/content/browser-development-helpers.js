@@ -31,17 +31,9 @@ var DevelopmentHelpers = {
     command.setAttribute("id", "cmd_quickRestart");
     command.addEventListener("command", this.quickRestart, true);
     document.getElementById("mainCommandSet").prepend(command);
-
-    let key = document.createXULElement("key");
-    key.setAttribute("id", "key_quickRestart");
-    key.setAttribute("key", "r");
-    key.setAttribute("modifiers", "accel,alt");
-    key.setAttribute("command", "cmd_quickRestart");
-    document.getElementById("mainKeyset").prepend(key);
-
+    
     let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("id", "menu_FileRestartItem");
-    menuitem.setAttribute("key", "key_quickRestart");
     menuitem.setAttribute("label", "Restart (Developer)");
     menuitem.addEventListener("command", this.quickRestart, true);
     document.getElementById("menu_FilePopup").appendChild(menuitem);
