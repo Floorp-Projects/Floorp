@@ -3253,6 +3253,10 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
   list-style-image: url(chrome://browser/skin/profile.svg) !important;
 }
 
+#fxa-avatar-image{
+  border-radius: 99px !important;
+}
+
 :root[privatebrowsingmode] #fxa-avatar-image {
   list-style-image: url(chrome://browser/skin/incognito.svg) !important;
 }
