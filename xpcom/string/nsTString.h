@@ -54,6 +54,8 @@ class nsTString : public nsTSubstring<T> {
 
   typedef typename substring_type::const_char_iterator const_char_iterator;
 
+  typedef typename substring_type::string_view string_view;
+
   typedef typename substring_type::index_type index_type;
   typedef typename substring_type::size_type size_type;
 
