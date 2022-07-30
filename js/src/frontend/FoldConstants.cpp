@@ -34,6 +34,7 @@ using mozilla::PositiveInfinity;
 
 struct FoldInfo {
   JSContext* cx;
+  ErrorContext* ec;
   uintptr_t stackLimit;
   ParserAtomsTable& parserAtoms;
   FullParseHandler* handler;
@@ -83,7 +84,7 @@ static bool ListContainsHoistedDeclaration(FoldInfo& info, ListNode* list,
 static bool ContainsHoistedDeclaration(FoldInfo& info, ParseNode* node,
                                        bool* result) {
   AutoCheckRecursionLimit recursion(info.cx);
-  if (!recursion.check(info.cx, info.stackLimit)) {
+  if (!recursion.check(info.ec, info.stackLimit)) {
     return false;
   }
 
@@ -1316,13 +1317,13 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   FullParseHandler* handler;
 
   FoldInfo info() const {
-    return FoldInfo{cx_, stackLimit_, parserAtoms, handler};
+    return FoldInfo{cx_, ec_, stackLimit_, parserAtoms, handler};
   }
 
  public:
-  FoldVisitor(JSContext* cx, uintptr_t stackLimit,
+  FoldVisitor(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
               ParserAtomsTable& parserAtoms, FullParseHandler* handler)
-      : RewritingParseNodeVisitor(cx, stackLimit),
+      : RewritingParseNodeVisitor(cx, ec, stackLimit),
         parserAtoms(parserAtoms),
         handler(handler) {}
 
@@ -1569,18 +1570,20 @@ class FoldVisitor : public RewritingParseNodeVisitor<FoldVisitor> {
   }
 };
 
-static bool Fold(JSContext* cx, uintptr_t stackLimit,
+static bool Fold(JSContext* cx, ErrorContext* ec, uintptr_t stackLimit,
                  ParserAtomsTable& parserAtoms, FullParseHandler* handler,
                  ParseNode** pnp) {
-  FoldVisitor visitor(cx, stackLimit, parserAtoms, handler);
+  FoldVisitor visitor(cx, ec, stackLimit, parserAtoms, handler);
   return visitor.visit(*pnp);
 }
 static bool Fold(FoldInfo info, ParseNode** pnp) {
-  return Fold(info.cx, info.stackLimit, info.parserAtoms, info.handler, pnp);
+  return Fold(info.cx, info.ec, info.stackLimit, info.parserAtoms, info.handler,
+              pnp);
 }
 
-bool frontend::FoldConstants(JSContext* cx, uintptr_t stackLimit,
+bool frontend::FoldConstants(JSContext* cx, ErrorContext* ec,
+                             uintptr_t stackLimit,
                              ParserAtomsTable& parserAtoms, ParseNode** pnp,
                              FullParseHandler* handler) {
-  return Fold(cx, stackLimit, parserAtoms, handler, pnp);
+  return Fold(cx, ec, stackLimit, parserAtoms, handler, pnp);
 }

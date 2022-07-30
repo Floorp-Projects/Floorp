@@ -10,12 +10,16 @@
 #include "js/TypeDecls.h"
 
 namespace js {
+
+class ErrorContext;
+
 namespace frontend {
 
 class ParseNode;
 class ParserAtomsTable;
 
-[[nodiscard]] bool NameFunctions(JSContext* cx, uintptr_t stackLimit,
+[[nodiscard]] bool NameFunctions(JSContext* cx, ErrorContext* ec,
+                                 uintptr_t stackLimit,
                                  ParserAtomsTable& parserAtoms, ParseNode* pn);
 
 } /* namespace frontend */

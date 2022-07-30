@@ -828,7 +828,7 @@ JSOp BytecodeEmitter::strictifySetNameOp(JSOp op) {
 
 bool BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer) {
   AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx, stackLimit)) {
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
 
@@ -2489,7 +2489,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(cx, stackLimit, parserAtoms(), body)) {
+  if (!NameFunctions(cx, ec, stackLimit, parserAtoms(), body)) {
     return false;
   }
 
@@ -2565,7 +2565,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   }
 
   if (funbox->index() == CompilationStencil::TopLevelIndex) {
-    if (!NameFunctions(cx, stackLimit, parserAtoms(), funNode)) {
+    if (!NameFunctions(cx, ec, stackLimit, parserAtoms(), funNode)) {
       return false;
     }
   }
@@ -7547,7 +7547,7 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
                                                 CallOrNewEmitter& cone,
                                                 OptionalEmitter& oe) {
   AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx, stackLimit)) {
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
 
@@ -8207,7 +8207,7 @@ bool BytecodeEmitter::emitOptionalTree(
     ParseNode* pn, OptionalEmitter& oe,
     ValueUsage valueUsage /* = ValueUsage::WantValue */) {
   AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx, stackLimit)) {
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
   ParseNodeKind kind = pn->getKind();
@@ -10952,7 +10952,7 @@ bool BytecodeEmitter::emitTree(
     ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */,
     EmitLineNumberNote emitLineNote /* = EMIT_LINENOTE */) {
   AutoCheckRecursionLimit recursion(cx);
-  if (!recursion.check(cx, stackLimit)) {
+  if (!recursion.check(ec, stackLimit)) {
     return false;
   }
 
