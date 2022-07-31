@@ -6,7 +6,6 @@
 #ifndef ToastNotification_h__
 #define ToastNotification_h__
 
-#include "mozilla/Maybe.h"
 #include "nsIAlertsService.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"
@@ -41,16 +40,8 @@ class ToastNotification final : public nsIWindowsAlertsService,
 
  protected:
   virtual ~ToastNotification();
-  bool EnsureAumidRegistered();
-
-  static bool AssignIfMsixAumid(Maybe<nsAutoString>& aAumid);
-  static bool AssignIfNsisAumid(nsAutoString& aInstallHash,
-                                Maybe<nsAutoString>& aAumid);
-  static bool RegisterRuntimeAumid(nsAutoString& aInstallHash,
-                                   Maybe<nsAutoString>& aAumid);
 
   nsRefPtrHashtable<nsStringHashKey, ToastNotificationHandler> mActiveHandlers;
-  Maybe<nsAutoString> mAumid;
   bool mSuppressForScreenSharing = false;
 };
 
