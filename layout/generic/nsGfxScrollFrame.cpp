@@ -6228,6 +6228,13 @@ bool ScrollFrameHelper::NeedsScrollSnap() const {
          StyleScrollSnapStrictness::None;
 }
 
+nsSize ScrollFrameHelper::GetSnapportSize() const {
+  nsRect snapport = GetScrollPortRect();
+  nsMargin scrollPadding = GetScrollPadding();
+  snapport.Deflate(scrollPadding);
+  return snapport.Size();
+}
+
 bool ScrollFrameHelper::IsScrollbarOnRight() const {
   nsPresContext* presContext = mOuter->PresContext();
 
@@ -7685,17 +7692,6 @@ ScrollFrameHelper::GetAvailableScrollingDirectionsForUserInputEvents() const {
   return directions;
 }
 
-static nsRect InflateByScrollMargin(const nsRect& aTargetRect,
-                                    const nsMargin& aScrollMargin,
-                                    const nsRect& aScrolledRect) {
-  // Inflate the rect by scroll-margin.
-  nsRect result = aTargetRect;
-  result.Inflate(aScrollMargin);
-
-  // But don't be beyond the limit boundary.
-  return result.Intersect(aScrolledRect);
-}
-
 /**
  * Append scroll positions for valid snap positions into |aSnapInfo| if
  * applicable.
@@ -7705,32 +7701,17 @@ static void AppendScrollPositionsForSnap(
     const nsRect& aScrolledRect, const nsMargin& aScrollPadding,
     WritingMode aWritingModeOnScroller, ScrollSnapInfo& aSnapInfo,
     ScrollFrameHelper::SnapTargetSet* aSnapTargets) {
-  nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
-      aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
-
-  // The snap area contains scroll-margin values.
-  // https://drafts.csswg.org/css-scroll-snap-1/#scroll-snap-area
-  nsMargin scrollMargin = aFrame->StyleMargin()->GetScrollMargin();
-  nsRect snapArea =
-      InflateByScrollMargin(targetRect, scrollMargin, aScrolledRect);
-
   ScrollSnapTargetId targetId = ScrollSnapUtils::GetTargetIdFor(aFrame);
 
+  nsRect snapArea =
+      ScrollSnapUtils::GetSnapAreaFor(aFrame, aScrolledFrame, aScrolledRect);
   // Use the writing-mode on the target element if the snap area is larger than
   // the snapport.
   // https://drafts.csswg.org/css-scroll-snap/#snap-scope
-  //
-  // It's unclear `larger` means that the size is larger than only on the target
-  // axis. If it doesn't, it will pick the same axis in the case where only one
-  // axis is larger. For example, if an element size is (200 x 10) and the
-  // snapport size is (100 x 100) and if the element's writing mode is different
-  // from the scroller's writing mode, then `scroll-snap-align: start start`
-  // will be conflict.
-  WritingMode writingMode =
-      snapArea.width > aSnapInfo.mSnapportSize.width ||
-              snapArea.height > aSnapInfo.mSnapportSize.height
-          ? aFrame->GetWritingMode()
-          : aWritingModeOnScroller;
+  WritingMode writingMode = ScrollSnapUtils::NeedsToRespectTargetWritingMode(
+                                snapArea.Size(), aSnapInfo.mSnapportSize)
+                                ? aFrame->GetWritingMode()
+                                : aWritingModeOnScroller;
 
   // These snap range shouldn't be involved with scroll-margin since we just
   // need the visible range of the target element.
@@ -7952,14 +7933,10 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() {
   WritingMode writingMode = mOuter->GetWritingMode();
   result.InitializeScrollSnapStrictness(writingMode, disp);
 
-  nsRect snapport = GetScrollPortRect();
-  nsMargin scrollPadding = GetScrollPadding();
-  snapport.Deflate(scrollPadding);
-
-  result.mSnapportSize = snapport.Size();
+  result.mSnapportSize = GetSnapportSize();
   CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
-                                GetScrolledRect(), scrollPadding, writingMode,
-                                result, &mSnapTargets);
+                                GetScrolledRect(), GetScrollPadding(),
+                                writingMode, result, &mSnapTargets);
   return result;
 }
 
