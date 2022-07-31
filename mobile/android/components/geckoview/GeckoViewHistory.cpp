@@ -235,8 +235,7 @@ NS_IMPL_ISUPPORTS(OnVisitedCallback, nsIAndroidEventCallback)
 
 NS_IMETHODIMP
 GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
-                           nsIURI* aLastVisitedURI, uint32_t aFlags,
-                           uint64_t aBrowserId) {
+                           nsIURI* aLastVisitedURI, uint32_t aFlags) {
   if (!aURI) {
     return NS_OK;
   }
@@ -253,7 +252,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
       return NS_OK;
     }
     Unused << NS_WARN_IF(
-        !browserChild->SendVisitURI(aURI, aLastVisitedURI, aFlags, aBrowserId));
+        !browserChild->SendVisitURI(aURI, aLastVisitedURI, aFlags));
     return NS_OK;
   }
 

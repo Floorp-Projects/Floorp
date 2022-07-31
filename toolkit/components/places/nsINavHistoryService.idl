@@ -1023,16 +1023,6 @@ interface nsINavHistoryService : nsISupports
   const unsigned short DATABASE_STATUS_LOCKED = 4;
 
   /**
-   * Insert this value into moz_historyvisits if the visit source is organic.
-   */
-  const unsigned short VISIT_SOURCE_ORGANIC = 0;
-
-  /**
-   * Insert this value into moz_historyvisits if the visit source is sponsored.
-   */
-  const unsigned short VISIT_SOURCE_SPONSORED = 1;
-
-  /**
    * Returns the current database status
    */
   readonly attribute unsigned short databaseStatus;
