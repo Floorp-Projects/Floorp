@@ -361,7 +361,7 @@ export class UrlbarController {
       case KeyEvent.DOM_VK_UP:
       case KeyEvent.DOM_VK_PAGE_DOWN:
       case KeyEvent.DOM_VK_PAGE_UP:
-        if (event.ctrlKey || event.altKey) {
+        if (event.altKey) {
           break;
         }
         if (this.view.isOpen) {
