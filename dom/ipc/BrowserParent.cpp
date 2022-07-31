@@ -3894,9 +3894,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvShowCanvasPermissionPrompt(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(nsIURI* aURI,
-                                                    nsIURI* aLastVisitedURI,
-                                                    const uint32_t& aFlags) {
+mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(
+    nsIURI* aURI, nsIURI* aLastVisitedURI, const uint32_t& aFlags,
+    const uint64_t& aBrowserId) {
   if (!aURI) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -3906,7 +3906,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(nsIURI* aURI,
   }
   nsCOMPtr<IHistory> history = components::History::Service();
   if (history) {
-    Unused << history->VisitURI(widget, aURI, aLastVisitedURI, aFlags);
+    Unused << history->VisitURI(widget, aURI, aLastVisitedURI, aFlags,
+                                aBrowserId);
   }
   return IPC_OK();
 }
