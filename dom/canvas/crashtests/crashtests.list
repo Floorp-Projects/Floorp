@@ -63,3 +63,4 @@ pref(webgl.enable-privileged-extensions,true) load 1744172.html
 load 1757925-1.html
 load 1757755.html
 pref(gfx.offscreencanvas.enabled,true) load 1769878.html
+pref(gfx.offscreencanvas.enabled,true) load 1771007-1.html

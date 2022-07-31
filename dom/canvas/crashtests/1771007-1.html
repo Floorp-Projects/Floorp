@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script id="worker1" type="javascript/worker">
+      self.onmessage = async function (e) {
+        const canvas = new OffscreenCanvas(82, 127)
+        canvas.getContext('2d', {})
+        canvas.width = 134
+        await canvas.convertToBlob({})
+        canvas.transferToImageBitmap()
+      }
+    </script>
+    <script>
+      window.addEventListener('load', () => {
+        const blob = new Blob([document.querySelector('#worker1').textContent], { type: 'text/javascript' })
+        const worker = new Worker(window.URL.createObjectURL(blob))
+        worker.postMessage([], [])
+        setTimeout('self.close()', 500)
+      })
+    </script>
+</head>
+</html>
