@@ -1660,6 +1660,7 @@
       var aName;
       var aCsp;
       var aSkipLoad;
+      var aGlobalHistoryOptions;
       if (
         arguments.length == 2 &&
         typeof arguments[1] == "object" &&
@@ -1689,6 +1690,7 @@
         aName = params.name;
         aCsp = params.csp;
         aSkipLoad = params.skipLoad;
+        aGlobalHistoryOptions = params.globalHistoryOptions;
       }
 
       // all callers of loadOneTab need to pass a valid triggeringPrincipal.
@@ -1728,6 +1730,7 @@
         name: aName,
         csp: aCsp,
         skipLoad: aSkipLoad,
+        globalHistoryOptions: aGlobalHistoryOptions,
       });
       if (!bgLoad) {
         this.selectedTab = tab;
@@ -2585,6 +2588,7 @@
         csp,
         skipLoad,
         batchInsertingTabs,
+        globalHistoryOptions,
       } = {}
     ) {
       // all callers of addTab that pass a params object need to pass
@@ -2916,6 +2920,7 @@
               charset,
               postData,
               csp,
+              globalHistoryOptions,
             });
           } catch (ex) {
             Cu.reportError(ex);

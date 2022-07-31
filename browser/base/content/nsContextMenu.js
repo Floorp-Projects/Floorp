@@ -1405,6 +1405,14 @@ class nsContextMenu {
   openLinkInTab(event) {
     let params = {
       userContextId: parseInt(event.target.getAttribute("data-usercontextid")),
+      globalHistoryOptions: {
+        triggeringSponsoredURL: this.browser.getAttribute(
+          "triggeringSponsoredURL"
+        ),
+        triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
+          "triggeringSponsoredURLVisitTimeMS"
+        ),
+      },
     };
 
     openLinkIn(this.linkURL, "tab", this._openLinkInParameters(params));

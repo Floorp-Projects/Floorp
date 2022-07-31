@@ -1010,8 +1010,7 @@ parent:
     async IsWindowSupportingWebVR(uint64_t aOuterWindowID) returns(bool isSupported);
 
     /** Records a history visit. */
-    async VisitURI(nsIURI aURI, nsIURI aLastVisitedURI,
-                   uint32_t aFlags);
+    async VisitURI(nsIURI aURI, nsIURI aLastVisitedURI, uint32_t aFlags, uint64_t aBrowserId);
 
     /** Fetches the visited status for an array of URIs (Android-only). */
     async QueryVisitedState(nsIURI[] aURIs);

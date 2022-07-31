@@ -143,9 +143,11 @@ class IHistory : public nsISupports {
    *        The URI of the last visit in the chain.
    * @param aFlags
    *        The VisitFlags describing this visit.
+   * @param aBrowserId
+   *        The id of browser used for this visit.
    */
   NS_IMETHOD VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
-                      uint32_t aFlags) = 0;
+                      uint32_t aFlags, uint64_t aBrowserId) = 0;
 
   /**
    * Set the title of the URI.
