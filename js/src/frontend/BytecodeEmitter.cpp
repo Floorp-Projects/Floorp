@@ -1448,15 +1448,6 @@ bool BytecodeEmitter::emitSuperBase() {
   return emit1(JSOp::SuperBase);
 }
 
-bool BytecodeEmitter::ensureAtLeastArgs(CallNode* callNode,
-                                        uint32_t requiredArgs) {
-  ListNode* argsList = &callNode->right()->as<ListNode>();
-  if (argsList->count() < requiredArgs) {
-    reportNeedMoreArgsError(callNode, requiredArgs);
-    return false;
-  }
-  return true;
-}
 
 bool BytecodeEmitter::ensureArgs(CallNode* callNode, uint32_t requiredArgs) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
@@ -7106,9 +7097,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
   NameNode* calleeNode = &callNode->left()->as<NameNode>();
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureAtLeastArgs(callNode, 2)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() >= 2);
 
   MOZ_ASSERT(callNode->callOp() == JSOp::Call);
 
@@ -7169,9 +7158,7 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   // Syntax: resumeGenerator(gen, value, 'next'|'throw'|'return')
-  if (!ensureArgs(callNode, 3)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 3);
 
   ParseNode* genNode = argsList->head();
   if (!emitTree(genNode)) {
@@ -7222,9 +7209,7 @@ bool BytecodeEmitter::emitSelfHostedForceInterpreter() {
 bool BytecodeEmitter::emitSelfHostedAllowContentIter(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 1)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 1);
 
   // We're just here as a sentinel. Pass the value through directly.
   return emitTree(argsList->head());
@@ -7260,9 +7245,7 @@ bool BytecodeEmitter::emitSelfHostedDefineDataProperty(CallNode* callNode) {
 bool BytecodeEmitter::emitSelfHostedHasOwn(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 2)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 2);
 
   ParseNode* idNode = argsList->head();
   if (!emitTree(idNode)) {
@@ -7280,9 +7263,7 @@ bool BytecodeEmitter::emitSelfHostedHasOwn(CallNode* callNode) {
 bool BytecodeEmitter::emitSelfHostedGetPropertySuper(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 3)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 3);
 
   ParseNode* objNode = argsList->head();
   ParseNode* idNode = objNode->pn_next;
@@ -7306,9 +7287,7 @@ bool BytecodeEmitter::emitSelfHostedGetPropertySuper(CallNode* callNode) {
 bool BytecodeEmitter::emitSelfHostedToNumeric(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 1)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 1);
 
   ParseNode* argNode = argsList->head();
 
@@ -7322,9 +7301,7 @@ bool BytecodeEmitter::emitSelfHostedToNumeric(CallNode* callNode) {
 bool BytecodeEmitter::emitSelfHostedToString(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 1)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 1);
 
   ParseNode* argNode = argsList->head();
 
@@ -7339,9 +7316,7 @@ bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
     CallNode* callNode, bool isConstructor) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 1)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 1);
 
   ParseNode* argNode = argsList->head();
 
@@ -7395,9 +7370,7 @@ JS::SymbolCode ParserAtomToSymbolCode(TaggedParserAtomIndex atom) {
 bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 1)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 1);
 
   ParseNode* argNode = argsList->head();
 
@@ -7449,12 +7422,9 @@ bool BytecodeEmitter::checkSelfHostedExpectedTopLevel(CallNode* callNode,
 
 bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
     CallNode* callNode) {
-  if (!ensureArgs(callNode, 1)) {
-    return false;
-  }
-
 #ifdef DEBUG
   ListNode* argsList = &callNode->right()->as<ListNode>();
+  MOZ_ASSERT(argsList->count() == 1);
   if (!checkSelfHostedExpectedTopLevel(callNode, argsList->head())) {
     return false;
   }
@@ -7470,9 +7440,7 @@ bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
 bool BytecodeEmitter::emitSelfHostedSetCanonicalName(CallNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
-  if (!ensureArgs(callNode, 2)) {
-    return false;
-  }
+  MOZ_ASSERT(argsList->count() == 2);
 
 #ifdef DEBUG
   if (!checkSelfHostedExpectedTopLevel(callNode, argsList->head())) {

@@ -331,8 +331,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   /*
    * Helpers for reporting when we have insufficient args.
    */
-  [[nodiscard]] bool ensureAtLeastArgs(CallNode* callNode,
-                                       uint32_t requiredArgs);
   [[nodiscard]] bool ensureArgs(CallNode* callNode, uint32_t requiredArgs);
   void reportNeedMoreArgsError(CallNode* callNode, uint32_t requiredArgs);
 
