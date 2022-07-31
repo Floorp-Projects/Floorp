@@ -36,6 +36,7 @@ class nsIContent;
 namespace mozilla {
 class DisplayItemClip;
 class nsDisplayListBuilder;
+enum class StyleScrollSnapAlignKeyword : uint8_t;
 
 namespace layers {
 struct ScrollMetadata;
@@ -54,11 +55,14 @@ class ScrollAnchorContainer;
  */
 class nsIScrollableFrame : public nsIScrollbarMediator {
  public:
-  typedef mozilla::CSSIntPoint CSSIntPoint;
-  typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
-  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
-  typedef mozilla::ScrollMode ScrollMode;
-  typedef mozilla::ScrollOrigin ScrollOrigin;
+  using CSSIntPoint = mozilla::CSSIntPoint;
+  using ScrollSnapInfo = mozilla::layers::ScrollSnapInfo;
+  using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
+  using ScrollMode = mozilla::ScrollMode;
+  using ScrollOrigin = mozilla::ScrollOrigin;
+  using PhysicalScrollSnapAlign =
+      std::pair<mozilla::StyleScrollSnapAlignKeyword,
+                mozilla::StyleScrollSnapAlignKeyword>;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
@@ -585,6 +589,15 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void PostPendingResnapIfNeeded(const nsIFrame* aFrame) = 0;
   virtual void PostPendingResnap() = 0;
+
+  /**
+   * Returns a pair of the scroll-snap-align property value both on X and Y axes
+   * for the given |aFrame| considering the scroll-snap-type of this scroll
+   * container. For example, if the scroll-snap-type is `none`, the pair of
+   * scroll-snap-align is also `none none`.
+   */
+  virtual PhysicalScrollSnapAlign GetScrollSnapAlignFor(
+      const nsIFrame* aFrame) const = 0;
 
   /**
    * Given the drag event aEvent, determine whether the mouse is near the edge

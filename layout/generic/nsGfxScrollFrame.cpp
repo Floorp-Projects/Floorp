@@ -8054,6 +8054,77 @@ void ScrollFrameHelper::PostPendingResnap() {
   mOuter->PresShell()->PostPendingScrollResnap(sf);
 }
 
+nsIScrollableFrame::PhysicalScrollSnapAlign
+ScrollFrameHelper::GetScrollSnapAlignFor(const nsIFrame* aFrame) const {
+  StyleScrollSnapAlignKeyword alignForY = StyleScrollSnapAlignKeyword::None;
+  StyleScrollSnapAlignKeyword alignForX = StyleScrollSnapAlignKeyword::None;
+
+  nsIFrame* styleFrame = GetFrameForStyle();
+  if (!styleFrame) {
+    return {alignForX, alignForY};
+  }
+
+  if (styleFrame->StyleDisplay()->mScrollSnapType.strictness ==
+      StyleScrollSnapStrictness::None) {
+    return {alignForX, alignForY};
+  }
+
+  const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
+  if (styleDisplay->mScrollSnapAlign.inline_ ==
+          StyleScrollSnapAlignKeyword::None &&
+      styleDisplay->mScrollSnapAlign.block ==
+          StyleScrollSnapAlignKeyword::None) {
+    return {alignForX, alignForY};
+  }
+
+  nsSize snapAreaSize =
+      ScrollSnapUtils::GetSnapAreaFor(aFrame, mScrolledFrame, GetScrolledRect())
+          .Size();
+  const WritingMode writingMode =
+      ScrollSnapUtils::NeedsToRespectTargetWritingMode(snapAreaSize,
+                                                       GetSnapportSize())
+          ? aFrame->GetWritingMode()
+          : styleFrame->GetWritingMode();
+
+  switch (styleFrame->StyleDisplay()->mScrollSnapType.axis) {
+    case StyleScrollSnapAxis::X:
+      alignForX = writingMode.IsVertical()
+                      ? styleDisplay->mScrollSnapAlign.block
+                      : styleDisplay->mScrollSnapAlign.inline_;
+      break;
+    case StyleScrollSnapAxis::Y:
+      alignForY = writingMode.IsVertical()
+                      ? styleDisplay->mScrollSnapAlign.inline_
+                      : styleDisplay->mScrollSnapAlign.block;
+      break;
+    case StyleScrollSnapAxis::Block:
+      if (writingMode.IsVertical()) {
+        alignForX = styleDisplay->mScrollSnapAlign.block;
+      } else {
+        alignForY = styleDisplay->mScrollSnapAlign.block;
+      }
+      break;
+    case StyleScrollSnapAxis::Inline:
+      if (writingMode.IsVertical()) {
+        alignForY = styleDisplay->mScrollSnapAlign.inline_;
+      } else {
+        alignForX = styleDisplay->mScrollSnapAlign.inline_;
+      }
+      break;
+    case StyleScrollSnapAxis::Both:
+      if (writingMode.IsVertical()) {
+        alignForX = styleDisplay->mScrollSnapAlign.block;
+        alignForY = styleDisplay->mScrollSnapAlign.inline_;
+      } else {
+        alignForX = styleDisplay->mScrollSnapAlign.inline_;
+        alignForY = styleDisplay->mScrollSnapAlign.block;
+      }
+      break;
+  }
+
+  return {alignForX, alignForY};
+}
+
 bool ScrollFrameHelper::UsesOverlayScrollbars() const {
   return mOuter->PresContext()->UseOverlayScrollbars();
 }
