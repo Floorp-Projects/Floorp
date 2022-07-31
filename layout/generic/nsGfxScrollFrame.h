@@ -37,6 +37,7 @@ class AutoContainsBlendModeCapturer;
 namespace mozilla {
 class PresShell;
 struct ScrollReflowInput;
+struct StyleScrollSnapAlign;
 namespace layers {
 class Layer;
 class WebRenderLayerManager;
@@ -493,6 +494,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void TryResnap();
   void PostPendingResnapIfNeeded(const nsIFrame* aFrame);
   void PostPendingResnap();
+
+  using PhysicalScrollSnapAlign = nsIScrollableFrame::PhysicalScrollSnapAlign;
+  PhysicalScrollSnapAlign GetScrollSnapAlignFor(const nsIFrame* aFrame) const;
 
   static bool ShouldActivateAllScrollFrames();
   nsRect RestrictToRootDisplayPort(const nsRect& aDisplayportBase);
@@ -1319,6 +1323,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     mHelper.PostPendingResnapIfNeeded(aFrame);
   }
   void PostPendingResnap() final { mHelper.PostPendingResnap(); }
+  using PhysicalScrollSnapAlign = nsIScrollableFrame::PhysicalScrollSnapAlign;
+  PhysicalScrollSnapAlign GetScrollSnapAlignFor(
+      const nsIFrame* aFrame) const final {
+    return mHelper.GetScrollSnapAlignFor(aFrame);
+  }
 
   bool DragScroll(mozilla::WidgetEvent* aEvent) final {
     return mHelper.DragScroll(aEvent);
@@ -1806,6 +1815,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
     mHelper.PostPendingResnapIfNeeded(aFrame);
   }
   void PostPendingResnap() final { mHelper.PostPendingResnap(); }
+  using PhysicalScrollSnapAlign = nsIScrollableFrame::PhysicalScrollSnapAlign;
+  PhysicalScrollSnapAlign GetScrollSnapAlignFor(
+      const nsIFrame* aFrame) const final {
+    return mHelper.GetScrollSnapAlignFor(aFrame);
+  }
 
   bool DragScroll(mozilla::WidgetEvent* aEvent) final {
     return mHelper.DragScroll(aEvent);
