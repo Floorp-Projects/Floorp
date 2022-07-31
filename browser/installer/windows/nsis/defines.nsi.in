@@ -31,6 +31,7 @@
 !define DialogWindowClass     "MozillaDialogClass"
 !define DDEApplication        "Firefox"
 !define AppRegName            "Firefox"
+!define ToastAumidPrefix      "@MOZ_TOAST_APP_NAME@Toast-"
 
 !define BrandProductName      "Firefox"
 !ifndef DEV_EDITION

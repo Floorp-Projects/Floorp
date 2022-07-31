@@ -607,6 +607,42 @@ Section "Uninstall"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry"
 !endif
 
+  ; Remove Toast Notification registration.
+  ${If} ${AtLeastWin10}
+    ; Find any GUID used for this installation.
+    ClearErrors
+    ReadRegStr $0 HKLM "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "CustomActivator"
+
+    DeleteRegValue HKLM "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "CustomActivator"
+    DeleteRegValue HKLM "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "DisplayName"
+    DeleteRegValue HKLM "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "IconUri"
+    DeleteRegKey HKLM "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID"
+    ${If} "$0" != ""
+      DeleteRegValue HKLM "Software\Classes\AppID\$0" "DllSurrogate"
+      DeleteRegKey HKLM "Software\Classes\AppID\$0"
+      DeleteRegValue HKLM "Software\Classes\CLSID\$0" "AppID"
+      DeleteRegValue HKLM "Software\Classes\CLSID\$0\InProcServer32" ""
+      DeleteRegKey HKLM "Software\Classes\CLSID\$0\InProcServer32"
+      DeleteRegKey HKLM "Software\Classes\CLSID\$0"
+    ${EndIf}
+
+    ClearErrors
+    ReadRegStr $0 HKCU "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "CustomActivator"
+
+    DeleteRegValue HKCU "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "CustomActivator"
+    DeleteRegValue HKCU "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "DisplayName"
+    DeleteRegValue HKCU "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID" "IconUri"
+    DeleteRegKey HKCU "Software\Classes\AppUserModelId\${ToastAumidPrefix}$AppUserModelID"
+    ${If} "$0" != ""
+      DeleteRegValue HKCU "Software\Classes\AppID\$0" "DllSurrogate"
+      DeleteRegKey HKCU "Software\Classes\AppID\$0"
+      DeleteRegValue HKCU "Software\Classes\CLSID\$0" "AppID"
+      DeleteRegValue HKCU "Software\Classes\CLSID\$0\InProcServer32" ""
+      DeleteRegKey HKCU "Software\Classes\CLSID\$0\InProcServer32"
+      DeleteRegKey HKCU "Software\Classes\CLSID\$0"
+    ${EndIf}
+  ${EndIf}
+
   ; Uninstall the default browser agent scheduled task and all other scheduled
   ; tasks registered by Firefox.
   ; This also removes the registry entries that the WDBA creates.
