@@ -59,6 +59,9 @@
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[<label> <b>%1$s</b> gẹ́gẹ́ bíi ètò ààbò tí a pè ní HTTP Strict Transport Security (HSTS), tó túmọ̀ si ́pé <b>%2$s</b> ó lè ṣiṣẹ́ nínu pẹ̀lú. O kò lè ṣe àfikún ohun ọ̀tọ̀ mí ì lórí ìkànnì yìí.
 ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label> <b>%1$s</b> gẹ́gẹ́ bíi ètò ààbò tí a pè ní HTTP ààbò ìlọmabọ̀ tó le (HSTS), tó túmọ̀ sí pé <b>%2$s</b> ó lè ní ìbátan pẹ̀lú rẹ̀ nígbà tí ààbò bá wà. O kò lè fi ìyàsọ́tọ̀ kún-un láti ṣàbẹ̀wò sí sáìtì yìí. </label>
+]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Padà Sẹ́yìn</string>
 
