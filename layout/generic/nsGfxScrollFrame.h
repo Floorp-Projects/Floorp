@@ -417,6 +417,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   bool NeedsScrollSnap() const;
 
+  // Returns the snapport size of this scroll container.
+  // https://drafts.csswg.org/css-scroll-snap/#scroll-snapport
+  nsSize GetSnapportSize() const;
+
   // Schedule the scroll-linked animations.
   void ScheduleScrollAnimations();
   void TryScheduleScrollAnimations() {

@@ -16,6 +16,7 @@ class nsIContent;
 class nsIFrame;
 struct nsPoint;
 struct nsRect;
+struct nsSize;
 
 namespace mozilla {
 
@@ -71,6 +72,21 @@ struct ScrollSnapUtils {
   // scroll operation but the given |aFrame| might be a valid snap point now,
   // e.g changing the scroll-snap-align property from `none` to something.
   static void PostPendingResnapFor(nsIFrame* aFrame);
+
+  // Returns true if the writing-mode of the snap target element needs to be
+  // respected to resolve scroll-snap-align property.
+  // Note that usually the scroll container's writing-mode is used for resolving
+  // the property but there's a special case defined in the CSS scroll snap
+  // spec.
+  static bool NeedsToRespectTargetWritingMode(const nsSize& aSnapAreaSize,
+                                              const nsSize& aSnapportSize);
+
+  // Returns the scroll snap area for the snap target frame |aFrame| inside the
+  // nearest scroll container |aScrolledFrame| and its scrolled rect
+  // |aScrolledRect|.
+  static nsRect GetSnapAreaFor(const nsIFrame* aFrame,
+                               const nsIFrame* aScrolledFrame,
+                               const nsRect& aScrolledRect);
 };
 
 }  // namespace mozilla

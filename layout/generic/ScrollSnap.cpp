@@ -583,4 +583,43 @@ void ScrollSnapUtils::PostPendingResnapFor(nsIFrame* aFrame) {
   }
 }
 
+bool ScrollSnapUtils::NeedsToRespectTargetWritingMode(
+    const nsSize& aSnapAreaSize, const nsSize& aSnapportSize) {
+  // Use the writing-mode on the target element if the snap area is larger than
+  // the snapport.
+  // https://drafts.csswg.org/css-scroll-snap/#snap-scope
+  //
+  // It's unclear `larger` means that the size is larger than only on the target
+  // axis. If it doesn't, it will pick the same axis in the case where only one
+  // axis is larger. For example, if an element size is (200 x 10) and the
+  // snapport size is (100 x 100) and if the element's writing mode is different
+  // from the scroller's writing mode, then `scroll-snap-align: start start`
+  // will be conflict.
+  return aSnapAreaSize.width > aSnapportSize.width ||
+         aSnapAreaSize.height > aSnapportSize.height;
+}
+
+static nsRect InflateByScrollMargin(const nsRect& aTargetRect,
+                                    const nsMargin& aScrollMargin,
+                                    const nsRect& aScrolledRect) {
+  // Inflate the rect by scroll-margin.
+  nsRect result = aTargetRect;
+  result.Inflate(aScrollMargin);
+
+  // But don't be beyond the limit boundary.
+  return result.Intersect(aScrolledRect);
+}
+
+nsRect ScrollSnapUtils::GetSnapAreaFor(const nsIFrame* aFrame,
+                                       const nsIFrame* aScrolledFrame,
+                                       const nsRect& aScrolledRect) {
+  nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
+      aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
+
+  // The snap area contains scroll-margin values.
+  // https://drafts.csswg.org/css-scroll-snap-1/#scroll-snap-area
+  nsMargin scrollMargin = aFrame->StyleMargin()->GetScrollMargin();
+  return InflateByScrollMargin(targetRect, scrollMargin, aScrolledRect);
+}
+
 }  // namespace mozilla
