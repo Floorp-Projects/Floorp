@@ -22,7 +22,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   RenderDXGITextureHost(WindowsHandle aHandle,
                         Maybe<uint64_t>& aGpuProcessTextureId,
                         uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
-                        gfx::YUVColorSpace aYUVColorSpace,
+                        gfx::ColorSpace2,
                         gfx::ColorRange aColorRange, gfx::IntSize aSize);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
@@ -58,7 +58,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
                 PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
   gfx::YUVRangedColorSpace GetYUVColorSpace() const override {
-    return ToYUVRangedColorSpace(mYUVColorSpace, GetColorRange());
+    return ToYUVRangedColorSpace(ToYUVColorSpace(mColorSpace), mColorRange);
   }
 
   bool EnsureD3D11Texture2D(ID3D11Device* aDevice);
@@ -108,11 +108,13 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   // handles for Y and CbCr data.
   GLuint mTextureHandle[2];
 
+ public:
   const gfx::SurfaceFormat mFormat;
-  const gfx::YUVColorSpace mYUVColorSpace;
+  const gfx::ColorSpace2 mColorSpace;
   const gfx::ColorRange mColorRange;
   const gfx::IntSize mSize;
 
+ private:
   bool mLocked;
 };
 

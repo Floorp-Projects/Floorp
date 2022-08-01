@@ -84,7 +84,16 @@ class BindAnglePlanes final {
                   const EGLAttrib* const* postAttribsList = nullptr)
       : mParent(*parent),
         mNumPlanes(numPlanes),
-        mMultiTex(mParent.mGL, mNumPlanes, LOCAL_GL_TEXTURE_EXTERNAL),
+        mMultiTex(
+            mParent.mGL,
+            [&]() {
+              std::vector<uint8_t> ret;
+              for (int i = 0; i < numPlanes; i++) {
+                ret.push_back(i);
+              }
+              return ret;
+            }(),
+            LOCAL_GL_TEXTURE_EXTERNAL),
         mTempTexs{0},
         mStreams{0},
         mSuccess(true) {
@@ -230,7 +239,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
   const auto srcOrigin = OriginPos::BottomLeft;
   const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
-  const auto colorSpace = desc.yUVColorSpace();
+  const auto colorSpace = desc.colorSpace();
 
   if (format != gfx::SurfaceFormat::NV12 &&
       format != gfx::SurfaceFormat::P010 &&
@@ -286,13 +295,29 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
   const gfx::IntSize uvSize(ySize.width / divisors.width,
                             ySize.height / divisors.height);
 
+  const auto yuvColorSpace = [&]() {
+    switch (colorSpace) {
+      case gfx::ColorSpace2::UNKNOWN:
+      case gfx::ColorSpace2::SRGB:
+      case gfx::ColorSpace2::DISPLAY_P3:
+        MOZ_CRASH("Expected BT* colorspace");
+      case gfx::ColorSpace2::BT601_525:
+        return gfx::YUVColorSpace::BT601;
+      case gfx::ColorSpace2::BT709:
+        return gfx::YUVColorSpace::BT709;
+      case gfx::ColorSpace2::BT2020:
+        return gfx::YUVColorSpace::BT2020;
+    }
+    MOZ_ASSERT_UNREACHABLE();
+  }();
+
   const bool yFlip = destOrigin != srcOrigin;
   const DrawBlitProg::BaseArgs baseArgs = {SubRectMat3(clipRect, ySize), yFlip,
                                            destSize, Nothing()};
   const DrawBlitProg::YUVArgs yuvArgs = {
-      SubRectMat3(clipRect, uvSize, divisors), colorSpace};
+      SubRectMat3(clipRect, uvSize, divisors), Some(yuvColorSpace)};
 
-  const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_NV12});
+  const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, {kFragSample_TwoPlane, kFragConvert_ColorMatrix}});
   prog->Draw(baseArgs, &yuvArgs);
   return true;
 }
@@ -340,9 +365,10 @@ bool GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
   const DrawBlitProg::BaseArgs baseArgs = {SubRectMat3(clipRect, ySize), yFlip,
                                            destSize, Nothing()};
   const DrawBlitProg::YUVArgs yuvArgs = {
-      SubRectMat3(clipRect, uvSize, divisors), colorSpace};
+      SubRectMat3(clipRect, uvSize, divisors), Some(colorSpace)};
 
-  const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_PlanarYUV});
+  const auto& prog =
+      GetDrawBlitProg({kFragHeader_TexExt, {kFragSample_ThreePlane, kFragConvert_ColorMatrix}});
   prog->Draw(baseArgs, &yuvArgs);
   return true;
 }

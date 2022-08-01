@@ -7,11 +7,14 @@
 #ifndef MOZILLA_GFX_DCLAYER_TREE_H
 #define MOZILLA_GFX_DCLAYER_TREE_H
 
+#include "WinUtils.h"
+#include <DXGIType.h>
 #include <dxgiformat.h>
 #include <unordered_map>
 #include <vector>
 #include <windows.h>
 
+#include "Colorspaces.h"
 #include "GLTypes.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/layers/OverlayInfo.h"
@@ -34,12 +37,14 @@ struct IDCompositionVisual2;
 struct IDXGIDecodeSwapChain;
 struct IDXGIResource;
 struct IDXGISwapChain1;
+struct IDXGISwapChain3;
 struct IDCompositionVirtualSurface;
 
 namespace mozilla {
 
 namespace gl {
 class GLContext;
+class Texture;
 }
 
 namespace wr {
@@ -50,8 +55,9 @@ namespace wr {
 
 class DCTile;
 class DCSurface;
-class DCSurfaceVideo;
+class DCSurfaceSwapChain;
 class RenderTextureHost;
+class RenderDXGITextureHost;
 
 struct GpuOverlayInfo {
   bool mSupportsOverlays = false;
@@ -119,8 +125,8 @@ class DCLayerTree {
   ID3D11VideoProcessorEnumerator* GetVideoProcessorEnumerator() const {
     return mVideoProcessorEnumerator;
   }
-  bool EnsureVideoProcessor(const gfx::IntSize& aInputSize,
-                            const gfx::IntSize& aOutputSize);
+  bool EnsureVideoProcessorAtLeast(const gfx::IntSize& aInputSize,
+                                   const gfx::IntSize& aOutputSize);
 
   DCSurface* GetSurface(wr::NativeSurfaceId aId) const;
 
@@ -247,7 +253,7 @@ class DCSurface {
   void UpdateAllocatedRect();
   void DirtyAllocatedRect();
 
-  virtual DCSurfaceVideo* AsDCSurfaceVideo() { return nullptr; }
+  virtual DCSurfaceSwapChain* AsDCSurfaceSwapChain() { return nullptr; }
 
  protected:
   DCLayerTree* mDCLayerTree;
@@ -272,33 +278,87 @@ class DCSurface {
   RefPtr<IDCompositionVirtualSurface> mVirtualSurface;
 };
 
-class DCSurfaceVideo : public DCSurface {
+struct RaiiHANDLE final {
+  const HANDLE val;
+
+  explicit RaiiHANDLE(HANDLE val) : val(val) {}
+
+  operator HANDLE() const { return val; }
+
+  ~RaiiHANDLE() {
+    if (val) {
+      ::CloseHandle(val);
+    }
+  }
+};
+
+struct CspaceAndRange final {
+  gfx::ColorSpace2 space;
+  Maybe<gfx::ColorRange> yuvRange;
+
+  auto Members() const { return std::tie(space, yuvRange); }
+  INLINE_DERIVE_MEMBERS_EQ(CspaceAndRange);
+};
+
+struct CspaceTransformPlan final {
+  struct WithVideoProcessor final {
+    DXGI_COLOR_SPACE_TYPE srcSpace;
+    Maybe<DXGI_COLOR_SPACE_TYPE> dstYuvSpace;
+    DXGI_COLOR_SPACE_TYPE dstRgbSpace;
+  };
+  struct WithGLBlitHelper final {
+    color::ColorspaceDesc srcSpace;
+    color::ColorspaceDesc dstSpace;
+    DXGI_COLOR_SPACE_TYPE dstDxgiSpace;
+    DXGI_FORMAT dstDxgiFormat;
+  };
+  Maybe<WithVideoProcessor> videoProcessor;
+  Maybe<WithGLBlitHelper> blitHelper;
+};
+
+class DCSurfaceSwapChain : public DCSurface {
  public:
-  DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree);
+  DCSurfaceSwapChain(bool aIsOpaque, DCLayerTree* aDCLayerTree);
 
   void AttachExternalImage(wr::ExternalImageId aExternalImage);
-  bool CalculateSwapChainSize(gfx::Matrix& aTransform);
-  void PresentVideo();
+  Maybe<gfx::Matrix> EnsurePresented(const gfx::Matrix&);
 
-  DCSurfaceVideo* AsDCSurfaceVideo() override { return this; }
+  DCSurfaceSwapChain* AsDCSurfaceSwapChain() override { return this; }
+
+  struct Src final {
+    RefPtr<RenderDXGITextureHost> texture;
+    gfx::IntSize size;
+    gfx::SurfaceFormat format;
+    CspaceAndRange space;
+
+    // When RenderTextureHost, swapChainSize or VideoSwapChain are updated,
+    // then DCSurfaceSwapChain::Present() needs to be called.
+    bool needsPresent = true;
+  };
+  struct Dest final {
+    RefPtr<IDXGISwapChain3> swapChain;  // Destination
+    UniquePtr<RaiiHANDLE> swapChainSurfaceHandle;
+    gfx::IntSize size;
+    DXGI_FORMAT format;
+    DXGI_COLOR_SPACE_TYPE space;
+  };
+  struct PlanAndDest final {
+    CspaceAndRange srcSpace;
+    CspaceTransformPlan plan;
+    Maybe<Dest> dest;
+    mutable std::shared_ptr<gl::Texture> lut;
+    bool needsPresent = true;
+  };
 
  protected:
-  DXGI_FORMAT GetSwapChainFormat();
-  bool CreateVideoSwapChain();
-  bool CallVideoProcessorBlt();
-  void ReleaseDecodeSwapChainResources();
+  bool CallVideoProcessorBlt() const;
+  bool CallBlitHelper() const;
 
-  RefPtr<ID3D11VideoProcessorOutputView> mOutputView;
-  RefPtr<IDXGIResource> mDecodeResource;
-  RefPtr<IDXGISwapChain1> mVideoSwapChain;
-  RefPtr<IDXGIDecodeSwapChain> mDecodeSwapChain;
-  HANDLE mSwapChainSurfaceHandle = 0;
-  gfx::IntSize mVideoSize;
-  gfx::IntSize mSwapChainSize;
-  DXGI_FORMAT mSwapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-  bool mFailedYuvSwapChain = false;
-  RefPtr<RenderTextureHost> mRenderTextureHost;
-  RefPtr<RenderTextureHost> mPrevTexture;
+  // -
+
+  Maybe<DXGI_FORMAT> mOverlayFormat;
+  Maybe<Src> mSrc;
+  Maybe<PlanAndDest> mDest;
 };
 
 class DCTile {
