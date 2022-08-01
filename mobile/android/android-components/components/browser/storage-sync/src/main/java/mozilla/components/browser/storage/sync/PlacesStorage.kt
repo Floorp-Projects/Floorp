@@ -44,7 +44,6 @@ abstract class PlacesStorage(
 
     abstract val logger: Logger
 
-    @VisibleForTesting
     internal open val places: Connection by lazy {
         RustPlacesConnection.init(storageDir)
         RustPlacesConnection

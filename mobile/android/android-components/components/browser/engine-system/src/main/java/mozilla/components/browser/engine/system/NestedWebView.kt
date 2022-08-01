@@ -52,7 +52,6 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
      *
      * @see InputResultDetail
      */
-    @VisibleForTesting
     internal var inputResultDetail = InputResultDetail.newInstance()
 
     init {

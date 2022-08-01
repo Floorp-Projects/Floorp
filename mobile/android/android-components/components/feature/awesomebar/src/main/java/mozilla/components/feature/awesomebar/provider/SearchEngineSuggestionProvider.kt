@@ -7,7 +7,6 @@ package mozilla.components.feature.awesomebar.provider
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.StringRes
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import java.lang.Integer.MAX_VALUE
@@ -34,9 +33,7 @@ class SearchEngineSuggestionProvider(
     private val title: Int,
     private val description: String?,
     private val searchIcon: Bitmap?,
-    @VisibleForTesting
     internal val maxSuggestions: Int = DEFAULT_MAX_SUGGESTIONS,
-    @VisibleForTesting
     internal val charactersThreshold: Int = DEFAULT_CHARACTERS_THRESHOLD
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()

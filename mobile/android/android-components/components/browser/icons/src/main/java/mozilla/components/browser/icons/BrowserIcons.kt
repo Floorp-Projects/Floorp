@@ -88,7 +88,6 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
         MemoryIconPreparer(sharedMemoryCache),
         DiskIconPreparer(sharedDiskCache)
     ),
-    @VisibleForTesting
     internal var loaders: List<IconLoader> = listOf(
         MemoryIconLoader(sharedMemoryCache),
         DiskIconLoader(sharedDiskCache),

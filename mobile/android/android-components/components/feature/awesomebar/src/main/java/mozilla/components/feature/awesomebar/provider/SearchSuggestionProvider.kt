@@ -6,7 +6,6 @@ package mozilla.components.feature.awesomebar.provider
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -30,11 +29,11 @@ import java.util.concurrent.TimeUnit
  */
 @Suppress("LongParameterList")
 class SearchSuggestionProvider private constructor(
-    @VisibleForTesting internal val client: SearchSuggestionClient,
+    internal val client: SearchSuggestionClient,
     private val searchUseCase: SearchUseCases.SearchUseCase,
     private val limit: Int = 15,
     private val mode: Mode = Mode.SINGLE_SUGGESTION,
-    @VisibleForTesting internal val engine: Engine? = null,
+    internal val engine: Engine? = null,
     private val icon: Bitmap? = null,
     private val showDescription: Boolean = true,
     private val filterExactMatch: Boolean = false

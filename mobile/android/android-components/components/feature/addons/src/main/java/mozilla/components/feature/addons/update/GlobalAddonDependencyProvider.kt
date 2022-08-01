@@ -18,7 +18,6 @@ object GlobalAddonDependencyProvider {
     @VisibleForTesting
     internal var updater: AddonUpdater? = null
 
-    @VisibleForTesting
     internal var onCrash: ((Throwable) -> Unit)? = null
 
     /**

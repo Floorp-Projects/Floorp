@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.gecko.serviceworker
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.Settings
@@ -21,9 +20,9 @@ import org.mozilla.geckoview.GeckoSession
  * @param engineSettings [Settings] default settings used when new [EngineSession]s are to be created.
  */
 class GeckoServiceWorkerDelegate(
-    @VisibleForTesting internal val delegate: ServiceWorkerDelegate,
-    @VisibleForTesting internal val runtime: GeckoRuntime,
-    @VisibleForTesting internal val engineSettings: Settings?,
+    internal val delegate: ServiceWorkerDelegate,
+    internal val runtime: GeckoRuntime,
+    internal val engineSettings: Settings?,
 ) : GeckoRuntime.ServiceWorkerDelegate {
     override fun onOpenWindow(url: String): GeckoResult<GeckoSession> {
         val newEngineSession = GeckoEngineSession(runtime, false, engineSettings, openGeckoSession = false)

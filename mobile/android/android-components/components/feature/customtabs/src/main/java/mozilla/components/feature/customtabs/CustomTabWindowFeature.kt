@@ -34,7 +34,7 @@ class CustomTabWindowFeature(
     private val activity: Activity,
     private val store: BrowserStore,
     private val sessionId: String,
-    @VisibleForTesting internal val onLaunchUrlFallback: (Uri) -> Unit
+    internal val onLaunchUrlFallback: (Uri) -> Unit
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null

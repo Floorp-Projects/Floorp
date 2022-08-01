@@ -281,7 +281,6 @@ class AppLinksUseCases(
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         internal var redirectCache: AppLinkRedirectCache? = null
 
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
         internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf(
             "about", "data", "file", "ftp", "http",

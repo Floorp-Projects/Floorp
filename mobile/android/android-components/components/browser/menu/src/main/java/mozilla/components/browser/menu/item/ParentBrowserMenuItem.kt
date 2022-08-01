@@ -9,7 +9,6 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
@@ -37,7 +36,6 @@ import mozilla.components.concept.menu.candidate.TextStyle
  */
 @Suppress("LongParameterList")
 class ParentBrowserMenuItem(
-    @VisibleForTesting
     internal val label: String,
     @DrawableRes
     private val imageResource: Int,

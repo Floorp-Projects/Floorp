@@ -28,7 +28,6 @@ private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"
  */
 internal class ChoiceDialogFragment : PromptDialogFragment() {
 
-    @VisibleForTesting
     internal val choices: Array<Choice> by lazy {
         safeArguments.getParcelableArray(KEY_CHOICES)!!.toArrayOfChoices()
     }

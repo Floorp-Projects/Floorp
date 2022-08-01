@@ -15,7 +15,6 @@ import android.view.accessibility.AccessibilityEvent
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.annotation.ColorInt
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -142,7 +141,6 @@ class DisplayToolbar internal constructor(
         BOTTOM
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val views = DisplayToolbarViews(
         browserActions = rootView.findViewById(R.id.mozac_browser_toolbar_browser_actions),
         pageActions = rootView.findViewById(R.id.mozac_browser_toolbar_page_actions),

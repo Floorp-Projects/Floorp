@@ -8,12 +8,10 @@ import android.content.Context
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.CompoundButton
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
 import mozilla.components.concept.menu.candidate.ContainerStyle
-import java.lang.reflect.Modifier.PRIVATE
 
 /**
  * A browser menu compound button. A basic sub-class would only have to provide a layout resource to
@@ -27,8 +25,7 @@ import java.lang.reflect.Modifier.PRIVATE
  * @param listener Callback to be invoked when this menu item is checked.
  */
 abstract class BrowserMenuCompoundButton(
-    @VisibleForTesting(otherwise = PRIVATE)
-    val label: String,
+    internal val label: String,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     private val initialState: () -> Boolean = { false },

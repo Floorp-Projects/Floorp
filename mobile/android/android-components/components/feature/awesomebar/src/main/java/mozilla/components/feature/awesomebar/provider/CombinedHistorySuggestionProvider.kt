@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mozilla.components.browser.icons.BrowserIcons
@@ -50,7 +49,7 @@ class CombinedHistorySuggestionProvider(
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal var maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT,
+    internal var maxNumberOfSuggestions: Int = DEFAULT_COMBINED_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
 ) : AwesomeBar.SuggestionProvider {

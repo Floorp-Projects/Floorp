@@ -6,7 +6,6 @@ package mozilla.components.support.base.ids
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.VisibleForTesting
 
 private const val KEY_NEXT_ID = "nextId"
 private const val KEY_LAST_USED_PREFIX = "lastUsed."
@@ -109,6 +108,5 @@ internal class SharedIds(
 
     fun clear(context: Context) { preferences(context).edit().clear().apply() }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var now: () -> Long = { System.currentTimeMillis() }
 }

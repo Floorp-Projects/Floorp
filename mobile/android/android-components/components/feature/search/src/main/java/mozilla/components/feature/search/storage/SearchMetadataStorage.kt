@@ -6,7 +6,6 @@ package mozilla.components.feature.search.storage
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.search.middleware.SearchMiddleware
 
 private const val PREFERENCE_FILE = "mozac_feature_search_metadata"
