@@ -26,9 +26,9 @@ def is_release_promotion_available(parameters):
 
 @register_callback_action(
     name='release-promotion',
-    title='Ship Focus/Klar',
+    title='Release Promotion',
     symbol='${input.release_promotion_flavor}',
-    description="Ship Focus/Klar",
+    description="Release Promotion",
     generic=False,
     order=500,
     context=[],
@@ -143,7 +143,7 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     version_string = input.get('version', None)
 
     # shipit uses the version in version.txt to determine next version number; check that its passed in
-    # in the payload     
+    # in the payload
     if not version_string:
         version_string = version_in_file
     elif version_string != version_in_file:
