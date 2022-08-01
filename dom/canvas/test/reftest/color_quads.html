@@ -21,7 +21,10 @@
   </head>
   <body>
     <div id="e_settings">
-      Canvas Width: <input id="e_width" type="text" value="400">
+      Image override: <input id="e_img" type="text">
+
+      <br>
+      <br>Canvas Width: <input id="e_width" type="text" value="400">
       <br>Canvas Height: <input id="e_height" type="text" value="400">
       <br>Canvas Colorspace: <input id="e_cspace" type="text">
       <br>Canvas Context Type: <select id="e_context">
@@ -43,7 +46,9 @@
       <br><input id="e_publish" type="button" value="Publish">
       <hr>
     </div>
-    <div id="e_canvas_holder"><canvas></canvas></div>
+      <div id="e_canvas_holder">
+        <canvas></canvas>
+      </div>
     <script>
 "use strict";
 
@@ -58,6 +63,67 @@ e_canvas_holder.addEventListener("click", () => {
 // Hide settings initially if there's a query string in the url.
 if (window.location.search.startsWith("?")) {
   e_settings.style.display = "none";
+}
+
+// -
+
+function map(obj, fn) {
+  fn = fn || (x => x);
+  const ret = {};
+  for (const [k,v] of Object.entries(obj)) {
+    ret[k] = fn(v, k);
+  }
+  return ret;
+}
+
+function map_keys_required(obj, keys, fn) {
+  fn = fn || (x => x);
+
+  const ret = {};
+  for (const k of keys) {
+    const v = obj[k];
+    if (v === undefined) throw {k, obj};
+    ret[k] = fn(v, k);
+  }
+  return ret;
+}
+
+function set_device_pixel_size(e, device_size) {
+  const DPR = window.devicePixelRatio;
+  map_keys_required(device_size, ['width', 'height'], (device, k) => {
+    const css = device / DPR;
+    e.style[k] = css + 'px';
+  });
+}
+
+function pad_top_left_to_device_pixels(e) {
+  const DPR = window.devicePixelRatio;
+
+  e.style.padding = '';
+  let css_rect = e.getBoundingClientRect();
+  css_rect = map_keys_required(css_rect, ['left', 'top']);
+
+  const orig_device_rect = {};
+  const snapped_padding = map(css_rect, (css, k) => {
+    const device = orig_device_rect[k] = css * DPR;
+    const device_snapped = Math.round(device);
+    let device_padding = device_snapped - device;
+    // Negative padding is treated as 0.
+    // We want to pad:
+    // * 3.9 -> 4.0
+    // * 3.1 -> 4.0
+    // * 3.00000001 -> 3.0
+    if (device_padding < 0.01) {
+      device_padding += 1;
+    }
+    const css_padding = device_padding / DPR;
+    // console.log({css, k, device, device_snapped, device_padding, css_padding});
+    return css_padding;
+  });
+
+  e.style.paddingLeft = snapped_padding.left + 'px';
+  e.style.paddingTop = snapped_padding.top + 'px';
+  console.log(`[info] At dpr=${DPR}, padding`, css_rect, '(', orig_device_rect, 'device) by', snapped_padding);
 }
 
 // -
@@ -135,11 +201,23 @@ UNITTEST_STR_EQ(`parse_css_color_npa('rgb(20,40,60,0)');`, '[20/255, 40/255, 60/
 
 let e_canvas;
 
-function draw() {
+async function draw() {
   while (e_canvas_holder.firstChild) {
     e_canvas_holder.removeChild(e_canvas_holder.firstChild);
   }
-  e_canvas = e_canvas_holder.appendChild(document.createElement("canvas"));
+
+  if (e_img.value) {
+    const img = document.createElement("img");
+    img.src = e_img.value;
+    console.log('img.src =', img.src);
+    await img.decode();
+    e_canvas_holder.appendChild(img);
+    set_device_pixel_size(img, {width: img.naturalWidth, height: img.naturalHeight});
+    pad_top_left_to_device_pixels(img);
+    return;
+  }
+
+  e_canvas = document.createElement("canvas");
 
   let options = eval(`Object.assign(${e_options.value})`);
   options.colorSpace = e_cspace.value || undefined;
@@ -159,6 +237,12 @@ function draw() {
   const H = parseInt(e_height.value);
   context.canvas.width = W;
   context.canvas.height = H;
+  e_canvas_holder.appendChild(e_canvas);
+
+  // If we don't snap to the device pixel grid, borders between color blocks
+  // will be filtered, and this causes a lot of fuzzy() annotations.
+  set_device_pixel_size(e_canvas, e_canvas);
+  pad_top_left_to_device_pixels(e_canvas);
 
   // -
 
