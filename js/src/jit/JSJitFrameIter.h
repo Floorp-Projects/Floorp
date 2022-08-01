@@ -272,6 +272,8 @@ class JitcodeGlobalTable;
 
 class JSJitProfilingFrameIterator {
   uint8_t* fp_;
+  // See JS::ProfilingFrameIterator::endStackAddress_ comment.
+  void* endStackAddress_ = nullptr;
   FrameType type_;
   void* resumePCinCurrentFrame_;
 
@@ -283,7 +285,7 @@ class JSJitProfilingFrameIterator {
   void moveToNextFrame(CommonFrameLayout* frame);
 
  public:
-  JSJitProfilingFrameIterator(JSContext* cx, void* pc);
+  JSJitProfilingFrameIterator(JSContext* cx, void* pc, void* sp);
   explicit JSJitProfilingFrameIterator(CommonFrameLayout* exitFP);
 
   void operator++();
@@ -307,6 +309,8 @@ class JSJitProfilingFrameIterator {
     MOZ_ASSERT(!done());
     return resumePCinCurrentFrame_;
   }
+
+  void* endStackAddress() const { return endStackAddress_; }
 };
 
 class RInstructionResults {
