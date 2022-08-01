@@ -15,8 +15,6 @@ def get_defaults(repo_root):
         "pull_request_number": None,
         "release_type": "",
         "shipping_phase": None,
-        "next_version": "",
-        "version": "",
     }
 
 
@@ -24,16 +22,11 @@ extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
     Required("release_type"): str,
     Optional("shipping_phase"): Any('build', 'promote', 'ship', None),
-    Required("version"): str,
-    Required("next_version"): Any(None, str),
 }, defaults_fn=get_defaults)
 
 
 def get_decision_parameters(graph_config, parameters):
     parameters.setdefault("release_type", "")
-    head_tag = parameters["head_tag"]
-    parameters["version"] = head_tag[1:] if head_tag else ""
 
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
-    parameters.setdefault("next_version", None)
