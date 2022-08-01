@@ -55,14 +55,28 @@ class NodePicker extends EventEmitter {
    * to workaround the fact that some navigations will not create/destroy any
    * target (eg when jumping from a background document to a popup document).
    **/
-  #onDocumentEventResourceAvailable = async resources => {
+  #onWebExtensionDocumentEventAvailable = async resources => {
     const { DOCUMENT_EVENT } = this.commands.resourceCommand.TYPES;
 
     for (const resource of resources) {
       if (
         resource.resourceType == DOCUMENT_EVENT &&
         resource.name === "dom-complete" &&
-        resource.targetFront.isTopLevel
+        resource.targetFront.isTopLevel &&
+        // When switching frames for a webextension target, a first dom-complete
+        // resource is emitted when we start watching the new docshell, in the
+        // WindowGlobalTargetActor progress listener.
+        //
+        // However here, we are expecting the "fake" dom-complete resource
+        // emitted specifically from the webextension target actor, when the
+        // new docshell is finally recognized to be linked to the target's
+        // webextension. This resource is emitted from `_changeTopLevelDocument`
+        // and is the only one which will have `isFrameSwitching` set to true.
+        //
+        // It also emitted after the one for the new docshell, so to avoid
+        // stopping and starting the node-picker twice, we filter out the first
+        // resource, which does not have `isFrameSwitching` set.
+        resource.isFrameSwitching
       ) {
         const inspectorFront = await resource.targetFront.getFront("inspector");
         // When a webextension target navigates, it will typically be between
@@ -71,6 +85,7 @@ class NodePicker extends EventEmitter {
         // need to restart the node picker.
         await inspectorFront.walker.cancelPick();
         await inspectorFront.walker.pick(this.doFocus);
+        this.emitForTests("node-picker-webextension-target-restarted");
       }
     }
   };
@@ -175,7 +190,7 @@ class NodePicker extends EventEmitter {
       await this.commands.resourceCommand.watchResources(
         [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
-          onAvailable: this.#onDocumentEventResourceAvailable,
+          onAvailable: this.#onWebExtensionDocumentEventAvailable,
         }
       );
     }
@@ -210,7 +225,7 @@ class NodePicker extends EventEmitter {
       this.commands.resourceCommand.unwatchResources(
         [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
-          onAvailable: this.#onDocumentEventResourceAvailable,
+          onAvailable: this.#onWebExtensionDocumentEventAvailable,
         }
       );
     }
