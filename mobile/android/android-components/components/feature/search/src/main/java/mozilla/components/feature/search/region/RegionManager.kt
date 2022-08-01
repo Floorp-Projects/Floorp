@@ -6,7 +6,6 @@ package mozilla.components.feature.search.region
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -40,8 +39,8 @@ private const val PREFERENCE_KEY_REGION_FIRST_SEEN = "region.first_seen"
 internal class RegionManager(
     context: Context,
     private val locationService: LocationService,
-    @VisibleForTesting private val currentTime: () -> Long = { System.currentTimeMillis() },
-    @VisibleForTesting private val preferences: Lazy<SharedPreferences> = lazy {
+    private val currentTime: () -> Long = { System.currentTimeMillis() },
+    private val preferences: Lazy<SharedPreferences> = lazy {
         context.getSharedPreferences(
             PREFERENCE_FILE,
             Context.MODE_PRIVATE
