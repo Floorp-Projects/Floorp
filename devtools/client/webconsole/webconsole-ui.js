@@ -144,9 +144,11 @@ class WebConsoleUI {
   }
 
   destroy() {
-    if (!this.hud) {
+    if (this._destroyed) {
       return;
     }
+
+    this._destroyed = true;
 
     this.React = this.ReactDOM = this.FrameView = null;
 
@@ -232,7 +234,7 @@ class WebConsoleUI {
   }
 
   async clearMessagesCache() {
-    if (!this.hud) {
+    if (this._destroyed) {
       return;
     }
 
@@ -268,10 +270,12 @@ class WebConsoleUI {
    * This method emits the "private-messages-cleared" notification.
    */
   clearPrivateMessages() {
-    if (this.wrapper) {
-      this.wrapper.dispatchPrivateMessagesClear();
-      this.emitForTests("private-messages-cleared");
+    if (this._destroyed) {
+      return;
     }
+
+    this.wrapper.dispatchPrivateMessagesClear();
+    this.emitForTests("private-messages-cleared");
   }
 
   inspectObjectActor(objectActor) {
@@ -292,9 +296,10 @@ class WebConsoleUI {
   }
 
   disableAllNetworkMessages() {
-    if (this.wrapper) {
-      this.wrapper.dispatchNetworkMessagesDisable();
+    if (this._destroyed) {
+      return;
     }
+    this.wrapper.dispatchNetworkMessagesDisable();
   }
 
   getPanelWindow() {
@@ -398,7 +403,7 @@ class WebConsoleUI {
   }
 
   async stopWatchingNetworkResources() {
-    if (!this.hud) {
+    if (this._destroyed) {
       return;
     }
 
@@ -467,9 +472,10 @@ class WebConsoleUI {
   }
 
   _onResourceAvailable(resources) {
-    if (!this.hud) {
+    if (this._destroyed) {
       return;
     }
+
     const messages = [];
     for (const resource of resources) {
       const { TYPES } = this.hud.resourceCommand;
@@ -514,6 +520,10 @@ class WebConsoleUI {
   }
 
   _onNetworkResourceUpdated(updates) {
+    if (this._destroyed) {
+      return;
+    }
+
     const messageUpdates = [];
     for (const { resource } of updates) {
       if (
@@ -537,6 +547,10 @@ class WebConsoleUI {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront }) {
+    if (this._destroyed) {
+      return;
+    }
+
     // Once we support only server watcher for NETWORK_EVENT, we will be able to drop this.
     // We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
     const { targetCommand, resourceCommand } = this.hud.commands;
@@ -574,7 +588,7 @@ class WebConsoleUI {
 
   _onTargetDestroyed({ targetFront, isModeSwitching }) {
     // Don't try to do anything if the WebConsole is being destroyed
-    if (!this.wrapper) {
+    if (this._destroyed) {
       return;
     }
 
