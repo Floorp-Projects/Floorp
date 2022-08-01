@@ -76,5 +76,11 @@ add_task(async function test_in_process_tab() {
     }
   );
 
+  // Wait for the end of the CSS transition happening on the navigation
+  // toolbar background-color before closing the window, or compositing
+  // never stops on Mac. See bug 1781524.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 100));
+
   await BrowserTestUtils.closeWindow(win);
 });
