@@ -69,10 +69,15 @@ add_task(async function testNodePickerInExtensionPopup() {
   info("Open the webextension popup");
   // Clicking on the addon popup will trigger a navigation between the DevTools
   // fallback document and the popup document.
-  // Wait until the inspector was fully reloaded.
+  // Wait until the inspector was fully reloaded and for the node-picker to be
+  // restarted.
+  const nodePickerRestarted = toolbox.nodePicker.once(
+    "node-picker-webextension-target-restarted"
+  );
   const reloaded = inspector.once("reloaded");
   clickOnAddonWidget(ADDON_ID);
   await reloaded;
+  await nodePickerRestarted;
 
   const popup = await waitFor(() =>
     gBrowser.ownerDocument.querySelector(".webextension-popup-browser")
