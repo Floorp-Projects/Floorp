@@ -400,7 +400,6 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
 
 template <class Derived>
 Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
-  MOZ_ASSERT(mCachedFields);
   if (!mCachedFields) {
     return Nothing();
   }
