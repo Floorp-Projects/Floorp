@@ -40,8 +40,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Жуырдағы бетбелгілер</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Барлығын көрсету</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Барлық сақталған бетбелгілерді көрсету</string>
 
@@ -353,7 +351,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Баптау</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Firefox тіркелгісімен бетбелгілер, шолу тарихы және т.б. синхрондау</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Firefox тіркелгісімен бетбелгілер, шолу тарихы және т.б. синхрондау</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Беттер, бетбелгілер, парольдерді синхрондау және т.б. үшін кіріңіз.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox тіркелгісі</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -522,7 +522,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Синхрондауды іске қосу</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Синхрондауды іске қосу</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Деректерді синхрондау және сақтау</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Қайта байланысу үшін кіру</string>
     <!-- Preference for removing FxA account -->
@@ -739,7 +741,7 @@
     <string name="pwa_site_controls_title_private">%1$s (жекелік режимі)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Басқа беттер</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Басқа беттер</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -772,6 +774,13 @@
     <string name="history_synced_from_other_devices">Басқа құрылғыдан синхрондалған</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Басқа құрылғылардан</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Басқа құрылғыларыңыздан синхрондалған тарихты көру үшін жүйеге кіріңіз.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Кіру</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Немесе синхрондауды бастау үшін Firefox тіркелгісін жасаңыз</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1059,8 +1068,6 @@
     <string name="snackbar_tabs_closed">Беттер жабылды</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Бетбелгілер сақталды!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Үздік сайттарға қосылды!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Жарлықтарға қосылды!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1141,7 +1148,18 @@
     <string name="delete_browsing_data_on_quit_action">Шығу</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Бұл сіздің барлық шолу деректеріңізді өшіреді.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Бұл сіздің барлық шолу деректеріңізді өшіреді.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Жойылатын деректер мерзімі</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Тарихты (басқа құрылғылардан синхрондалған тарихты қоса), cookie файлдарын және басқа шолу деректерін өшіреді.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Соңғы сағат</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Бүгін және кеше</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Барлығы</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s таңдалған шолу деректерін өшіреді.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1153,8 +1171,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Шолу деректерін өшіру…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Бұл барлық элементтерді өшіреді.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">&quot;%s&quot; ішіндегі барлық сайттарды өшіру</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Бас тарту</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1573,8 +1591,6 @@
     <string name="addresses_edit_address">Адресті түзету</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Адрестерді басқару</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Толық аты</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Аты</string>
     <!-- The header for the middle name of an address -->
@@ -1682,10 +1698,6 @@
     <string name="no_site_exceptions">Сайт үшін ережеден тыс жағдайлар жоқ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Бұл бетбелгіні өшіруді шынымен қалайсыз ба?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Үздік сайттарға қосу</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Үздік сайттардан өшіру</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Жарлықтарға қосу</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1762,12 +1774,8 @@
     <string name="synced_tabs_collapse_group">Синхрондалған беттер тобын бүктеу</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Үздік сайттар саны шегіне жетті</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Жарлықтар саны шегіне жетті</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Жаңа үздік сайтын қосу үшін, біреуін өшіріңіз. Сайтқа басып, басулы ұстаңыз және өшіру таңдаңыз.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Жаңа жарлықты қосу үшін, біреуін өшіріңіз. Сайтқа басып, басулы ұстаңыз және өшіру таңдаңыз.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1777,8 +1785,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Жарлықтар</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Аты</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Үздік сайт атауы</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Жарлық атауы</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
@@ -1851,4 +1857,5 @@
     <string name="experiments_snackbar">Деректерді жіберу үшін телеметрияны іске қосу.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Баптауларға өту</string>
+    <string name="firefox_suggest_header">Firefox ұсынысы</string>
 </resources>
