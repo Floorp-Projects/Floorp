@@ -163,7 +163,8 @@ void InitDCStorage(size_t num_blocks, ImageF* dc_values) {
   }
 }
 
-void ComputeDC(const ImageF& dc_values, bool fast, int* dc_x, int* dc_b) {
+void ComputeDC(const ImageF& dc_values, bool fast, int32_t* dc_x,
+               int32_t* dc_b) {
   constexpr float kDistanceMultiplierDC = 1e-5f;
   const float* JXL_RESTRICT dc_values_yx = dc_values.Row(0);
   const float* JXL_RESTRICT dc_values_x = dc_values.Row(1);

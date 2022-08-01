@@ -194,20 +194,6 @@ Status ReadSizeHeader(BitReader* JXL_RESTRICT reader,
 
 Status WriteSizeHeader(const SizeHeader& size, BitWriter* JXL_RESTRICT writer,
                        size_t layer, AuxOut* aux_out) {
-  const size_t max_bits = Bundle::MaxBits(size);
-  if (max_bits != SizeHeader::kMaxBits) {
-    JXL_ABORT("Please update SizeHeader::kMaxBits from %" PRIuS " to %" PRIuS
-              "\n",
-              SizeHeader::kMaxBits, max_bits);
-  }
-
-  // Only check the number of non-extension bits (extensions are unbounded).
-  // (Bundle::Write will call CanEncode again, but it is fast because SizeHeader
-  // is tiny.)
-  size_t extension_bits, total_bits;
-  JXL_RETURN_IF_ERROR(Bundle::CanEncode(size, &extension_bits, &total_bits));
-  JXL_ASSERT(total_bits - extension_bits < SizeHeader::kMaxBits);
-
   return Bundle::Write(size, writer, layer, aux_out);
 }
 

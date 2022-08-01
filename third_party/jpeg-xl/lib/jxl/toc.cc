@@ -20,10 +20,9 @@ size_t MaxBits(const size_t num_sizes) {
   return 1 + kBitsPerByte + entry_bits + kBitsPerByte;
 }
 
-Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
-                        std::vector<uint64_t>* JXL_RESTRICT offsets,
-                        std::vector<uint32_t>* JXL_RESTRICT sizes,
-                        uint64_t* total_size) {
+Status ReadToc(size_t toc_entries, BitReader* JXL_RESTRICT reader,
+               std::vector<uint32_t>* JXL_RESTRICT sizes,
+               std::vector<coeff_order_t>* JXL_RESTRICT permutation) {
   if (toc_entries > 65536) {
     // Prevent out of memory if invalid JXL codestream causes a bogus amount
     // of toc_entries such as 2720436919446 to be computed.
@@ -33,8 +32,6 @@ Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
 
   sizes->clear();
   sizes->resize(toc_entries);
-  offsets->clear();
-  offsets->resize(toc_entries);
   if (reader->TotalBitsConsumed() >= reader->TotalBytes() * kBitsPerByte) {
     return JXL_STATUS(StatusCode::kNotEnoughBytes, "Not enough bytes for TOC");
   }
@@ -51,16 +48,13 @@ Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
     return JXL_STATUS(StatusCode::kNotEnoughBytes, "Not enough bytes for TOC");
   };
 
-  JXL_DASSERT(offsets != nullptr && sizes != nullptr);
-  std::vector<coeff_order_t> permutation;
-  if (reader->ReadFixedBits<1>() == 1 && toc_entries > 0) {
-    // Skip permutation description if the toc_entries is 0.
+  JXL_DASSERT(toc_entries > 0);
+  if (reader->ReadFixedBits<1>() == 1) {
     JXL_RETURN_IF_ERROR(check_bit_budget(toc_entries));
-    permutation.resize(toc_entries);
-    JXL_RETURN_IF_ERROR(
-        DecodePermutation(/*skip=*/0, toc_entries, permutation.data(), reader));
+    permutation->resize(toc_entries);
+    JXL_RETURN_IF_ERROR(DecodePermutation(/*skip=*/0, toc_entries,
+                                          permutation->data(), reader));
   }
-
   JXL_RETURN_IF_ERROR(reader->JumpToByteBoundary());
   JXL_RETURN_IF_ERROR(check_bit_budget(toc_entries));
   for (size_t i = 0; i < toc_entries; ++i) {
@@ -68,6 +62,18 @@ Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
   }
   JXL_RETURN_IF_ERROR(reader->JumpToByteBoundary());
   JXL_RETURN_IF_ERROR(check_bit_budget(0));
+  return true;
+}
+
+Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
+                        std::vector<uint64_t>* JXL_RESTRICT offsets,
+                        std::vector<uint32_t>* JXL_RESTRICT sizes,
+                        uint64_t* total_size) {
+  std::vector<coeff_order_t> permutation;
+  JXL_RETURN_IF_ERROR(ReadToc(toc_entries, reader, sizes, &permutation));
+
+  offsets->clear();
+  offsets->resize(toc_entries);
 
   // Prefix sum starting with 0 and ending with the offset of the last group
   uint64_t offset = 0;

@@ -148,9 +148,9 @@ void TestConvolve() {
                   ThreadPoolInternal pool3(3);
                   for (size_t ysize = kConvolveMaxRadius; ysize < 16; ++ysize) {
                     JXL_DEBUG(JXL_DEBUG_CONVOLVE,
-                              "%" PRIuS " x %" PRIuS
-                              " (target %d)===============================",
-                              xsize, ysize, HWY_TARGET);
+                              "%" PRIuS " x %" PRIuS " (target %" PRIx64
+                              ")===============================",
+                              xsize, ysize, static_cast<int64_t>(HWY_TARGET));
 
                     JXL_DEBUG(JXL_DEBUG_CONVOLVE, "Sym3------------------");
                     VerifySymmetric3(xsize, ysize, null_pool, &rng);

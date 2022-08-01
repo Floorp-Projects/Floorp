@@ -153,6 +153,46 @@ inline float FastErff(float f) {
   return GetLane(FastErff(D, Set(D, f)));
 }
 
+// Returns cbrt(x) + add with 6 ulp max error.
+// Modified from vectormath_exp.h, Apache 2 license.
+// https://www.agner.org/optimize/vectorclass.zip
+template <class V>
+V CubeRootAndAdd(const V x, const V add) {
+  const HWY_FULL(float) df;
+  const HWY_FULL(int32_t) di;
+
+  const auto kExpBias = Set(di, 0x54800000);  // cast(1.) + cast(1.) / 3
+  const auto kExpMul = Set(di, 0x002AAAAA);   // shifted 1/3
+  const auto k1_3 = Set(df, 1.0f / 3);
+  const auto k4_3 = Set(df, 4.0f / 3);
+
+  const auto xa = x;  // assume inputs never negative
+  const auto xa_3 = k1_3 * xa;
+
+  // Multiply exponent by -1/3
+  const auto m1 = BitCast(di, xa);
+  // Special case for 0. 0 is represented with an exponent of 0, so the
+  // "kExpBias - 1/3 * exp" below gives the wrong result. The IfThenZeroElse()
+  // sets those values as 0, which prevents having NaNs in the computations
+  // below.
+  const auto m2 =
+      IfThenZeroElse(m1 == Zero(di), kExpBias - (ShiftRight<23>(m1)) * kExpMul);
+  auto r = BitCast(df, m2);
+
+  // Newton-Raphson iterations
+  for (int i = 0; i < 3; i++) {
+    const auto r2 = r * r;
+    r = NegMulAdd(xa_3, r2 * r2, k4_3 * r);
+  }
+  // Final iteration
+  auto r2 = r * r;
+  r = MulAdd(k1_3, NegMulAdd(xa, r2 * r2, r), r);
+  r2 = r * r;
+  r = MulAdd(r2, x, add);
+
+  return r;
+}
+
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace jxl
@@ -161,6 +201,8 @@ HWY_AFTER_NAMESPACE();
 #endif  // LIB_JXL_FAST_MATH_INL_H_
 
 #if HWY_ONCE
+#ifndef FAST_MATH_ONCE
+#define FAST_MATH_ONCE
 
 namespace jxl {
 inline float FastLog2f(float f) { return HWY_STATIC_DISPATCH(FastLog2f)(f); }
@@ -172,4 +214,5 @@ inline float FastCosf(float f) { return HWY_STATIC_DISPATCH(FastCosf)(f); }
 inline float FastErff(float f) { return HWY_STATIC_DISPATCH(FastErff)(f); }
 }  // namespace jxl
 
+#endif  // FAST_MATH_ONCE
 #endif  // HWY_ONCE

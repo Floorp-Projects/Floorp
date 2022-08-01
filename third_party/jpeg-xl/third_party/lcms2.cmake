@@ -44,7 +44,7 @@ add_library(lcms2 STATIC EXCLUDE_FROM_ALL
 target_include_directories(lcms2
     PUBLIC "${CMAKE_CURRENT_LIST_DIR}/lcms/include")
 # This warning triggers with gcc-8.
-if (${CMAKE_C_COMPILER_ID} MATCHES "GNU")
+if (CMAKE_C_COMPILER_ID MATCHES "GNU")
 target_compile_options(lcms2
   PRIVATE
     # gcc-only flags.

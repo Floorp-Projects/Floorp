@@ -114,15 +114,15 @@ Status InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
     const pixel_type *JXL_RESTRICT p_avg = chin.Row(y);
     pixel_type *JXL_RESTRICT p_out = chout.Row(y);
     for (size_t x = x0; x < chin_residual.w; x++) {
-      pixel_type diff_minus_tendency = p_residual[x];
-      pixel_type avg = p_avg[x];
-      pixel_type next_avg = (x + 1 < chin.w ? p_avg[x + 1] : avg);
-      pixel_type left = (x ? p_out[(x << 1) - 1] : avg);
-      pixel_type tendency = SmoothTendency(left, avg, next_avg);
-      pixel_type diff = diff_minus_tendency + tendency;
-      pixel_type A = avg + (diff / 2);
+      pixel_type_w diff_minus_tendency = p_residual[x];
+      pixel_type_w avg = p_avg[x];
+      pixel_type_w next_avg = (x + 1 < chin.w ? p_avg[x + 1] : avg);
+      pixel_type_w left = (x ? p_out[(x << 1) - 1] : avg);
+      pixel_type_w tendency = SmoothTendency(left, avg, next_avg);
+      pixel_type_w diff = diff_minus_tendency + tendency;
+      pixel_type_w A = avg + (diff / 2);
       p_out[(x << 1)] = A;
-      pixel_type B = A - diff;
+      pixel_type_w B = A - diff;
       p_out[(x << 1) + 1] = B;
     }
     if (chout.w & 1) p_out[chout.w - 1] = p_avg[chin.w - 1];
@@ -243,13 +243,13 @@ Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
       }
 #endif
       for (; x < w; x++) {
-        pixel_type avg = p_avg[x];
-        pixel_type next_avg = p_navg[x];
-        pixel_type top = p_pout[x];
-        pixel_type tendency = SmoothTendency(top, avg, next_avg);
-        pixel_type diff_minus_tendency = p_residual[x];
-        pixel_type diff = diff_minus_tendency + tendency;
-        pixel_type out = avg + (diff / 2);
+        pixel_type_w avg = p_avg[x];
+        pixel_type_w next_avg = p_navg[x];
+        pixel_type_w top = p_pout[x];
+        pixel_type_w tendency = SmoothTendency(top, avg, next_avg);
+        pixel_type_w diff_minus_tendency = p_residual[x];
+        pixel_type_w diff = diff_minus_tendency + tendency;
+        pixel_type_w out = avg + (diff / 2);
         p_out[x] = out;
         // If the chin_residual.h == chin.h, the output has an even number
         // of rows so the next line is fine. Otherwise, this loop won't
@@ -450,6 +450,8 @@ Status MetaSqueeze(Image &image, std::vector<SqueezeParams> *parameters) {
 
       image.channel.insert(image.channel.begin() + offset + (c - beginc),
                            std::move(dummy));
+      JXL_DEBUG_V(8, "MetaSqueeze applied, current image: %s",
+                  image.DebugString().c_str());
     }
   }
   return true;

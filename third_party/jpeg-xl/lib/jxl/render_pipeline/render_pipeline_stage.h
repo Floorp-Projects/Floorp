@@ -31,7 +31,10 @@ enum class RenderPipelineChannelMode {
   kInPlace = 1,
   // This channel is modified and written to a new buffer.
   kInOut = 2,
-  // This channel is only read.
+  // This channel is only read. These are the only stages that are assumed to
+  // have observable effects, i.e. calls to ProcessRow for other stages may be
+  // omitted if it can be shown they can't affect any kInput stage ProcessRow
+  // call that happens inside image boundaries.
   kInput = 3,
 };
 
@@ -100,6 +103,10 @@ class RenderPipelineStage {
                           size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                           size_t thread_id) const = 0;
 
+  // How each channel will be processed. Channels are numbered starting from
+  // color channels (always 3) and followed by all other channels.
+  virtual RenderPipelineChannelMode GetChannelMode(size_t c) const = 0;
+
  protected:
   explicit RenderPipelineStage(Settings settings) : settings_(settings) {}
 
@@ -111,10 +118,6 @@ class RenderPipelineStage {
       const std::vector<std::pair<size_t, size_t>>& input_sizes) {}
 
   virtual Status PrepareForThreads(size_t num_threads) { return true; }
-
-  // How each channel will be processed. Channels are numbered starting from
-  // color channels (always 3) and followed by all other channels.
-  virtual RenderPipelineChannelMode GetChannelMode(size_t c) const = 0;
 
   // Returns a pointer to the input row of channel `c` with offset `y`.
   // `y` must be in [-settings_.border_y, settings_.border_y]. `c` must be such
@@ -140,6 +143,8 @@ class RenderPipelineStage {
   // Indicates whether, from this stage on, the pipeline will operate on an
   // image- rather than frame-sized buffer. Only one stage in the pipeline
   // should return true, and it should implement ProcessPaddingRow below too.
+  // It is assumed that, if there is a SwitchToImageDimensions() == true stage,
+  // all kInput stages appear after it.
   virtual bool SwitchToImageDimensions() const { return false; }
 
   // If SwitchToImageDimensions returns true, then this should set xsize and

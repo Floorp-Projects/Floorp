@@ -87,7 +87,8 @@ void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
   }
   uint64_t threshold =
       (std::numeric_limits<uint64_t>::max() >> 32) * pixel_fraction;
-  uint64_t s[2] = {0x94D049BB133111EBull, 0xBF58476D1CE4E5B9ull};
+  uint64_t s[2] = {static_cast<uint64_t>(0x94D049BB133111EBull),
+                   static_cast<uint64_t>(0xBF58476D1CE4E5B9ull)};
   // Xorshift128+ adapted from xorshift128+-inl.h
   auto use_sample = [&]() {
     auto s1 = s[0];

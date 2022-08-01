@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+#include <atomic>
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 
 #include "jxl/decode.h"
@@ -89,6 +90,9 @@ struct PassesDecoderState {
   // If true, rgb_output or callback output is RGBA using 4 instead of 3 bytes
   // per pixel.
   bool rgb_output_is_rgba;
+  // If true, the RGBA output will be unpremultiplied before writing to the
+  // output callback (the output buffer case is handled in ConvertToExternal).
+  bool unpremul_alpha;
 
   // Callback for line-by-line output.
   PixelCallback pixel_callback;
@@ -134,7 +138,9 @@ struct PassesDecoderState {
 
     rgb_output = nullptr;
     rgb_output_is_rgba = false;
+    unpremul_alpha = false;
     fast_xyb_srgb8_conversion = false;
+    pixel_callback = PixelCallback();
     used_acs = 0;
 
     upsampler8x = GetUpsamplingStage(shared->metadata->transform_data, 0, 3);

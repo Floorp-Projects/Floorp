@@ -20,7 +20,8 @@
 namespace jxl {
 struct Rng {
   explicit Rng(size_t seed)
-      : s{0x94D049BB133111EBull, 0xBF58476D1CE4E5B9ull + seed} {}
+      : s{static_cast<uint64_t>(0x94D049BB133111EBull),
+          static_cast<uint64_t>(0xBF58476D1CE4E5B9ull) + seed} {}
 
   // Xorshift128+ adapted from xorshift128+-inl.h
   uint64_t operator()() {

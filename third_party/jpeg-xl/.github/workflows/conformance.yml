@@ -14,13 +14,33 @@ on:
   pull_request:
     types: [opened, reopened, labeled, synchronize]
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
+    name: Conformance Build ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: AVX3
+            cflags: -DHWY_DISABLED_TARGETS=HWY_AVX3-1
+          - name: AVX2
+            cflags: -DHWY_DISABLED_TARGETS=HWY_AVX2-1
+          - name: SSE4
+            cflags: -DHWY_DISABLED_TARGETS=HWY_SSE4-1
+          - name: SSSE3
+            cflags: -DHWY_DISABLED_TARGETS=HWY_SSSE3-1
+          - name: EMU128
+            cflags: -DHWY_COMPILE_ONLY_EMU128=1
+          - name: SCALAR
+            cflags: -DHWY_COMPILE_ONLY_SCALAR=1
+          - name: SCALAR_ASAN
+            cflags: -DHWY_COMPILE_ONLY_SCALAR=1
+            build_type: asan
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
     steps:
@@ -36,7 +56,6 @@ jobs:
           libbenchmark-tools \
           libbrotli-dev \
           libgdk-pixbuf2.0-dev \
-          libgflags-dev \
           libgif-dev \
           libgtest-dev \
           libgtk2.0-dev  \
@@ -76,29 +95,40 @@ jobs:
       run: |
         mkdir -p ${CCACHE_DIR}
         echo "max_size = 200M" > ${CCACHE_DIR}/ccache.conf
-        ./ci.sh release -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
+        CMAKE_FLAGS="${{ matrix.cflags }}" \
+        ./ci.sh ${{ matrix.build_type || 'release' }} -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache \
           -DBUILD_TESTING=OFF
-        # Copy library to flatten the artifacts directory structure
+        # Flatten the artifacts directory structure
+        cp tools/conformance/conformance.py build/tools/conformance
+        cp tools/conformance/lcms2.py build/tools/conformance
+        cp build/tools/djxl build/tools/conformance
         cp build/libjxl_dec.so.0.7.0 build/tools/conformance
+        cp build/libjxl_threads.so.0.7.0 build/tools/conformance
       env:
         SKIP_TEST: 1
     - uses: actions/upload-artifact@v2
       with:
-        name: conformance_binary
+        name: conformance_binary-${{ matrix.name }}
         path: |
-          build/tools/conformance/djxl_conformance
+          build/tools/conformance/conformance.py
+          build/tools/conformance/lcms2.py
+          build/tools/conformance/djxl
           build/tools/conformance/libjxl_dec.so.0.7.0
+          build/tools/conformance/libjxl_threads.so.0.7.0
     - name: ccache stats
       run: ccache --show-stats
 
   run:
+    name: Conformance Test ${{ matrix.name }} on ${{ matrix.target}}
     needs: build
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         name: [main_level5, main_level10]
+        target: [AVX3, AVX2, SSE4, SSSE3, EMU128, SCALAR, SCALAR_ASAN]
     steps:
     - name: Install deps
       run: |
@@ -107,19 +137,20 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: libjxl/conformance
-        ref: ce5a804a3ff834097b93c39d2f93e5445f6bf340
+        ref: a6a44bbbd69830e1dc862174599ce5738a0a414f
         path: conformance
     - name: Download and link conformance files
       run: |
         ${{ github.workspace }}/conformance/scripts/download_and_symlink.sh
     - uses: actions/download-artifact@v2
       with:
-        name: conformance_binary
+        name: conformance_binary-${{ matrix.target }}
     - name: Run conformance tests
       run: |
-        chmod +x djxl_conformance
+        chmod +x djxl
         ln -s libjxl_dec.so.0.7.0 libjxl_dec.so.0.7
+        ln -s libjxl_threads.so.0.7.0 libjxl_threads.so.0.7
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
-        python conformance/scripts/conformance.py \
-          --decoder=`pwd`/djxl_conformance \
+        python conformance.py \
+          --decoder=`pwd`/djxl \
           --corpus=`pwd`/conformance/testcases/${{ matrix.name }}.txt

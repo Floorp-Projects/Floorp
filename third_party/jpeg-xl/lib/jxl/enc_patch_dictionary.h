@@ -81,13 +81,12 @@ class PatchDictionaryEncoder {
                      size_t layer, AuxOut* aux_out);
 
   static void SetPositions(PatchDictionary* pdic,
-                           std::vector<PatchPosition> positions) {
-    if (pdic->positions_.empty()) {
-      pdic->positions_ = std::move(positions);
-    } else {
-      pdic->positions_.insert(pdic->positions_.end(), positions.begin(),
-                              positions.end());
-    }
+                           std::vector<PatchPosition> positions,
+                           std::vector<PatchReferencePosition> ref_positions,
+                           std::vector<PatchBlending> blendings) {
+    pdic->positions_ = std::move(positions);
+    pdic->ref_positions_ = std::move(ref_positions);
+    pdic->blendings_ = std::move(blendings);
     pdic->ComputePatchCache();
   }
 
@@ -102,7 +101,7 @@ void FindBestPatchDictionary(const Image3F& opsin,
 void RoundtripPatchFrame(Image3F* reference_frame,
                          PassesEncoderState* JXL_RESTRICT state, int idx,
                          CompressParams& cparams, const JxlCmsInterface& cms,
-                         ThreadPool* pool, bool subtract);
+                         ThreadPool* pool, AuxOut* aux_out, bool subtract);
 
 }  // namespace jxl
 

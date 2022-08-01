@@ -25,6 +25,12 @@ void AuxOut::Print(size_t num_inputs) const {
 
   printf("Average butteraugli iters: %10.2f\n",
          num_butteraugli_iters * 1.0 / num_inputs);
+  if (min_quant_rescale != 1.0 || max_quant_rescale != 1.0) {
+    printf("quant rescale range: %f .. %f\n", min_quant_rescale,
+           max_quant_rescale);
+    printf("bitrate error range: %.3f%% .. %.3f%%\n",
+           100.0f * min_bitrate_error, 100.0f * max_bitrate_error);
+  }
 
   for (size_t i = 0; i < layers.size(); ++i) {
     if (layers[i].total_bits != 0) {

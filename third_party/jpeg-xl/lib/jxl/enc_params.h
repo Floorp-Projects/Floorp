@@ -202,6 +202,7 @@ struct CompressParams {
 
   // Prints extra information during/after encoding.
   bool verbose = false;
+  bool log_search_state = false;
 
   ButteraugliParams ba_params;
 
@@ -242,8 +243,6 @@ struct CompressParams {
     color_transform = jxl::ColorTransform::kNone;
   }
 
-  bool use_new_heuristics = false;
-
   // Down/upsample the image before encoding / after decoding by this factor.
   // The resampling value can also be set to <= 0 to automatically choose based
   // on distance, however EncodeFrame doesn't support this, so it is
@@ -253,6 +252,11 @@ struct CompressParams {
   int ec_resampling = -1;
   // Skip the downsampling before encoding if this is true.
   bool already_downsampled = false;
+  // Butteraugli target distance on the original full size image, this can be
+  // different from butteraugli_distance if resampling was used.
+  float original_butteraugli_distance = -1.0f;
+
+  float quant_ac_rescale = 1.0;
 
   // Codestream level to conform to.
   // -1: don't care

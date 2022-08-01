@@ -31,6 +31,25 @@ constexpr size_t kMinBytes = 9;
 
 }  // namespace
 
+std::vector<Codec> AvailableCodecs() {
+  std::vector<Codec> out;
+#if JPEGXL_ENABLE_APNG
+  out.push_back(Codec::kPNG);
+#endif
+#if JPEGXL_ENABLE_EXR
+  out.push_back(Codec::kEXR);
+#endif
+#if JPEGXL_ENABLE_GIF
+  out.push_back(Codec::kGIF);
+#endif
+#if JPEGXL_ENABLE_JPEG
+  out.push_back(Codec::kJPG);
+#endif
+  out.push_back(Codec::kPGX);
+  out.push_back(Codec::kPNM);
+  return out;
+}
+
 Codec CodecFromExtension(std::string extension,
                          size_t* JXL_RESTRICT bits_per_sample) {
   std::transform(

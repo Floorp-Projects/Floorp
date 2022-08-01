@@ -115,7 +115,10 @@ class ProgressiveSplitter {
           min_downsampling_factor != kNoDownsamplingFactor) {
         passes->downsample[passes->num_downsample] = min_downsampling_factor;
         passes->last_pass[passes->num_downsample] = i;
-        passes->num_downsample += 1;
+        if (mode_.passes[i + 1].suitable_for_downsampling_of_at_least <
+            min_downsampling_factor) {
+          passes->num_downsample += 1;
+        }
       }
     }
   }

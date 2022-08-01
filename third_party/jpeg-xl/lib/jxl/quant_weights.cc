@@ -450,9 +450,9 @@ Status Decode(BitReader* br, QuantEncoding* encoding, size_t required_size_x,
         for (size_t i = 0; i < 6; i++) {
           encoding->afv_weights[c][i] *= 64;
         }
-        JXL_RETURN_IF_ERROR(DecodeDctParams(br, &encoding->dct_params));
-        JXL_RETURN_IF_ERROR(DecodeDctParams(br, &encoding->dct_params_afv_4x4));
       }
+      JXL_RETURN_IF_ERROR(DecodeDctParams(br, &encoding->dct_params));
+      JXL_RETURN_IF_ERROR(DecodeDctParams(br, &encoding->dct_params_afv_4x4));
       break;
     }
     case QuantEncoding::kQuantModeDCT: {

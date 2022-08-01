@@ -19,9 +19,9 @@
 
 namespace jxl {
 
-static const int kDefaultQuant = 64;
+static const int32_t kDefaultQuant = 64;
 
-constexpr int Quantizer::kQuantMax;
+constexpr int32_t Quantizer::kQuantMax;
 
 Quantizer::Quantizer(const DequantMatrices* dequant)
     : Quantizer(dequant, kDefaultQuant, kGlobalScaleDenom / kDefaultQuant) {}
@@ -39,7 +39,7 @@ Quantizer::Quantizer(const DequantMatrices* dequant, int quant_dc,
 void Quantizer::ComputeGlobalScaleAndQuant(float quant_dc, float quant_median,
                                            float quant_median_absd) {
   // Target value for the median value in the quant field.
-  const float kQuantFieldTarget = 3.80987740592518214386f;
+  const float kQuantFieldTarget = 5;
   // We reduce the median of the quant field by the median absolute deviation:
   // higher resolution on highly varying quant fields.
   float scale = kGlobalScaleDenom * (quant_median - quant_median_absd) /
@@ -49,9 +49,9 @@ void Quantizer::ComputeGlobalScaleAndQuant(float quant_dc, float quant_median,
   if (scale > (1 << 15)) scale = 1 << 15;
   int new_global_scale = static_cast<int>(scale);
   // Ensure that quant_dc_ will always be at least
-  // kGlobalScaleDenom/kGlobalScaleNumerator.
+  // 0.625 * kGlobalScaleDenom/kGlobalScaleNumerator = 10.
   const int scaled_quant_dc =
-      static_cast<int>(quant_dc * kGlobalScaleNumerator);
+      static_cast<int>(quant_dc * kGlobalScaleNumerator * 1.6);
   if (new_global_scale > scaled_quant_dc) {
     new_global_scale = scaled_quant_dc;
     if (new_global_scale <= 0) new_global_scale = 1;
@@ -70,7 +70,7 @@ void Quantizer::ComputeGlobalScaleAndQuant(float quant_dc, float quant_median,
 }
 
 void Quantizer::SetQuantFieldRect(const ImageF& qf, const Rect& rect,
-                                  ImageI* JXL_RESTRICT raw_quant_field) {
+                                  ImageI* JXL_RESTRICT raw_quant_field) const {
   for (size_t y = 0; y < rect.ysize(); ++y) {
     const float* JXL_RESTRICT row_qf = rect.ConstRow(qf, y);
     int32_t* JXL_RESTRICT row_qi = rect.Row(raw_quant_field, y);
@@ -83,7 +83,6 @@ void Quantizer::SetQuantFieldRect(const ImageF& qf, const Rect& rect,
 
 void Quantizer::SetQuantField(const float quant_dc, const ImageF& qf,
                               ImageI* JXL_RESTRICT raw_quant_field) {
-  JXL_CHECK(SameSize(*raw_quant_field, qf));
   std::vector<float> data(qf.xsize() * qf.ysize());
   for (size_t y = 0; y < qf.ysize(); ++y) {
     const float* JXL_RESTRICT row_qf = qf.Row(y);
@@ -103,13 +102,16 @@ void Quantizer::SetQuantField(const float quant_dc, const ImageF& qf,
                    deviations.end());
   const float quant_median_absd = deviations[deviations.size() / 2];
   ComputeGlobalScaleAndQuant(quant_dc, quant_median, quant_median_absd);
-  SetQuantFieldRect(qf, Rect(qf), raw_quant_field);
+  if (raw_quant_field) {
+    JXL_CHECK(SameSize(*raw_quant_field, qf));
+    SetQuantFieldRect(qf, Rect(qf), raw_quant_field);
+  }
 }
 
 void Quantizer::SetQuant(float quant_dc, float quant_ac,
                          ImageI* JXL_RESTRICT raw_quant_field) {
   ComputeGlobalScaleAndQuant(quant_dc, quant_ac, 0);
-  int val = ClampVal(quant_ac * inv_global_scale_ + 0.5f);
+  int32_t val = ClampVal(quant_ac * inv_global_scale_ + 0.5f);
   FillImage(val, raw_quant_field);
 }
 

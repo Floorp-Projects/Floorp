@@ -5,6 +5,7 @@
 
 #include "lib/jxl/enc_image_bundle.h"
 
+#include <atomic>
 #include <limits>
 #include <utility>
 

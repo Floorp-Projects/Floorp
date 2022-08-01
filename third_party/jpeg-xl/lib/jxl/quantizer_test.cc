@@ -42,7 +42,7 @@ TEST(QuantizerTest, BitStreamRoundtripSameQuant) {
   EXPECT_TRUE(quantizer1.Encode(&writer, 0, nullptr));
   writer.ZeroPadToByte();
   const size_t bits_written = writer.BitsWritten();
-  Quantizer quantizer2(&dequant, qxsize, qysize);
+  Quantizer quantizer2(&dequant);
   BitReader reader(writer.GetSpan());
   EXPECT_TRUE(quantizer2.Decode(&reader));
   EXPECT_TRUE(reader.JumpToByteBoundary());
@@ -66,7 +66,7 @@ TEST(QuantizerTest, BitStreamRoundtripRandomQuant) {
   EXPECT_TRUE(quantizer1.Encode(&writer, 0, nullptr));
   writer.ZeroPadToByte();
   const size_t bits_written = writer.BitsWritten();
-  Quantizer quantizer2(&dequant, qxsize, qysize);
+  Quantizer quantizer2(&dequant);
   BitReader reader(writer.GetSpan());
   EXPECT_TRUE(quantizer2.Decode(&reader));
   EXPECT_TRUE(reader.JumpToByteBoundary());

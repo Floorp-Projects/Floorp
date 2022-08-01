@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <sstream>
 #include <utility>  // std::move
 
 #include "lib/jxl/base/cache_aligned.h"
@@ -242,8 +243,8 @@ class RectT {
 
   JXL_MUST_USE_RESULT RectT Intersection(const RectT& other) const {
     return RectT(std::max(x0_, other.x0_), std::max(y0_, other.y0_), xsize_,
-                 ysize_, std::min(x0_ + xsize_, other.x0_ + other.xsize_),
-                 std::min(y0_ + ysize_, other.y0_ + other.ysize_));
+                 ysize_, std::min(x1(), other.x1()),
+                 std::min(y1(), other.y1()));
   }
 
   JXL_MUST_USE_RESULT RectT Translate(int64_t x_offset,
@@ -282,8 +283,8 @@ class RectT {
   }
 
   bool IsInside(const RectT& other) const {
-    return x0_ >= other.x0() && x0_ + xsize_ <= other.x0() + other.xsize_ &&
-           y0_ >= other.y0() && y0_ + ysize_ <= other.y0() + other.ysize();
+    return x0_ >= other.x0() && x1() <= other.x1() && y0_ >= other.y0() &&
+           y1() <= other.y1();
   }
 
   // Returns true if this Rect fully resides in the given image. ImageT could be
@@ -300,6 +301,32 @@ class RectT {
   T x1() const { return x0_ + xsize_; }
   T y1() const { return y0_ + ysize_; }
 
+  RectT<T> ShiftLeft(size_t shiftx, size_t shifty) const {
+    return RectT<T>(x0_ * (1 << shiftx), y0_ * (1 << shifty), xsize_ << shiftx,
+                    ysize_ << shifty);
+  }
+  RectT<T> ShiftLeft(size_t shift) const { return ShiftLeft(shift, shift); }
+
+  // Requires x0(), y0() to be multiples of 1<<shiftx, 1<<shifty.
+  RectT<T> CeilShiftRight(size_t shiftx, size_t shifty) const {
+    JXL_ASSERT(x0_ % (1 << shiftx) == 0);
+    JXL_ASSERT(y0_ % (1 << shifty) == 0);
+    return RectT<T>(x0_ / (1 << shiftx), y0_ / (1 << shifty),
+                    DivCeil(xsize_, T{1} << shiftx),
+                    DivCeil(ysize_, T{1} << shifty));
+  }
+  RectT<T> CeilShiftRight(std::pair<size_t, size_t> shift) const {
+    return CeilShiftRight(shift.first, shift.second);
+  }
+  RectT<T> CeilShiftRight(size_t shift) const {
+    return CeilShiftRight(shift, shift);
+  }
+
+  template <typename U>
+  RectT<U> As() const {
+    return RectT<U>(U(x0_), U(y0_), U(xsize_), U(ysize_));
+  }
+
  private:
   // Returns size_max, or whatever is left in [begin, end).
   static constexpr size_t ClampedSize(T begin, size_t size_max, T end) {
@@ -314,6 +341,14 @@ class RectT {
   size_t xsize_;
   size_t ysize_;
 };
+
+template <typename T>
+std::string Description(RectT<T> r) {
+  std::ostringstream os;
+  os << "[" << r.x0() << ".." << r.x1() << ")x"
+     << "[" << r.y0() << ".." << r.y1() << ")";
+  return os.str();
+}
 
 using Rect = RectT<size_t>;
 

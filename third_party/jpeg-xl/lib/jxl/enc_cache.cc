@@ -25,6 +25,7 @@
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_group.h"
 #include "lib/jxl/enc_modular.h"
+#include "lib/jxl/enc_quant_weights.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -62,6 +63,11 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
     enc_state->coeffs.pop_back();
   }
 
+  float scale =
+      shared.quantizer.ScaleGlobalScale(enc_state->cparams.quant_ac_rescale);
+  DequantMatricesScaleDC(&shared.matrices, scale);
+  shared.quantizer.RecomputeFromGlobalScale();
+
   Image3F dc(shared.frame_dim.xsize_blocks, shared.frame_dim.ysize_blocks);
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, shared.frame_dim.num_groups, ThreadPool::NoInit,
@@ -72,28 +78,17 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
 
   if (shared.frame_header.flags & FrameHeader::kUseDcFrame) {
     CompressParams cparams = enc_state->cparams;
-    // Guess a distance that produces good initial results.
-    cparams.butteraugli_distance =
-        std::max(kMinButteraugliDistance,
-                 enc_state->cparams.butteraugli_distance * 0.1f);
     cparams.dots = Override::kOff;
     cparams.noise = Override::kOff;
     cparams.patches = Override::kOff;
     cparams.gaborish = Override::kOff;
     cparams.epf = 0;
-    cparams.max_error_mode = true;
     cparams.resampling = 1;
     cparams.ec_resampling = 1;
-    for (size_t c = 0; c < 3; c++) {
-      cparams.max_error[c] = shared.quantizer.MulDC()[c];
-    }
-    JXL_ASSERT(cparams.progressive_dc > 0);
-    cparams.progressive_dc--;
     // The DC frame will have alpha=0. Don't erase its contents.
     cparams.keep_invisible = Override::kOn;
-    // No EPF or Gaborish in DC frames.
-    cparams.epf = 0;
-    cparams.gaborish = Override::kOff;
+    JXL_ASSERT(cparams.progressive_dc > 0);
+    cparams.progressive_dc--;
     // Use kVarDCT in max_error_mode for intermediate progressive DC,
     // and kModular for the smallest DC (first in the bitstream)
     if (cparams.progressive_dc == 0) {
@@ -102,6 +97,15 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
       cparams.butteraugli_distance =
           std::max(kMinButteraugliDistance,
                    enc_state->cparams.butteraugli_distance * 0.03f);
+    } else {
+      cparams.max_error_mode = true;
+      for (size_t c = 0; c < 3; c++) {
+        cparams.max_error[c] = shared.quantizer.MulDC()[c];
+      }
+      // Guess a distance that produces good initial results.
+      cparams.butteraugli_distance =
+          std::max(kMinButteraugliDistance,
+                   enc_state->cparams.butteraugli_distance * 0.1f);
     }
     ImageBundle ib(&shared.metadata->m);
     // This is a lie - dc is in XYB
@@ -134,24 +138,31 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
     dc_frame_info.dc_level = shared.frame_header.dc_level + 1;
     dc_frame_info.ib_needs_color_transform = false;
     dc_frame_info.save_before_color_transform = true;  // Implicitly true
-    // TODO(lode): the EncodeFrame / DecodeFrame pair here is likely broken in
-    // case of dc_level >= 3, since EncodeFrame may output multiple frames
-    // to the bitwriter, while DecodeFrame reads only one.
+    AuxOut dc_aux_out;
     JXL_CHECK(EncodeFrame(cparams, dc_frame_info, shared.metadata, ib,
                           state.get(), cms, pool, special_frame.get(),
-                          nullptr));
+                          aux_out ? &dc_aux_out : nullptr));
+    if (aux_out) {
+      for (const auto& l : dc_aux_out.layers) {
+        aux_out->layers[kLayerDC].Assimilate(l);
+      }
+    }
     const Span<const uint8_t> encoded = special_frame->GetSpan();
     enc_state->special_frames.emplace_back(std::move(special_frame));
 
-    BitReader br(encoded);
     ImageBundle decoded(&shared.metadata->m);
     std::unique_ptr<PassesDecoderState> dec_state =
         jxl::make_unique<PassesDecoderState>();
-    JXL_CHECK(dec_state->output_encoding_info.Set(
-        *shared.metadata,
-        ColorEncoding::LinearSRGB(shared.metadata->m.color_encoding.IsGray())));
-    JXL_CHECK(DecodeFrame({}, dec_state.get(), pool, &br, &decoded,
-                          *shared.metadata, /*constraints=*/nullptr));
+    JXL_CHECK(
+        dec_state->output_encoding_info.SetFromMetadata(*shared.metadata));
+    const uint8_t* frame_start = encoded.data();
+    size_t encoded_size = encoded.size();
+    for (int i = 0; i <= cparams.progressive_dc; ++i) {
+      JXL_CHECK(DecodeFrame(dec_state.get(), pool, frame_start, encoded_size,
+                            &decoded, *shared.metadata));
+      frame_start += decoded.decoded_bytes();
+      encoded_size -= decoded.decoded_bytes();
+    }
     // TODO(lode): shared.frame_header.dc_level should be equal to
     // dec_state.shared->frame_header.dc_level - 1 here, since above we set
     // dc_frame_info.dc_level = shared.frame_header.dc_level + 1, and
@@ -161,7 +172,7 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
         CopyImage(dec_state->shared->dc_frames[shared.frame_header.dc_level]);
     ZeroFillImage(&shared.quant_dc);
     shared.dc = &shared.dc_storage;
-    JXL_CHECK(br.Close());
+    JXL_CHECK(encoded_size == 0);
   } else {
     auto compute_dc_coeffs = [&](int group_index, int /* thread */) {
       modular_frame_encoder->AddVarDCTDC(

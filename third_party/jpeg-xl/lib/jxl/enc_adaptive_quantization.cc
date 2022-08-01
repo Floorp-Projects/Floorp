@@ -625,7 +625,6 @@ namespace jxl {
 HWY_EXPORT(AdaptiveQuantizationMap);
 
 namespace {
-bool FLAGS_log_search_state = false;
 // If true, prints the quantization maps at each iteration.
 bool FLAGS_dump_quant_state = false;
 
@@ -735,6 +734,13 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
                           const JxlCmsInterface& cms, ThreadPool* pool,
                           AuxOut* aux_out) {
   const CompressParams& cparams = enc_state->cparams;
+  if (cparams.resampling > 1 &&
+      cparams.original_butteraugli_distance <= 4.0 * cparams.resampling) {
+    // For downsampled opsin image, the butteraugli based adaptive quantization
+    // loop would only make the size bigger without improving the distance much,
+    // so in this case we enable it only for very high butteraugli targets.
+    return;
+  }
   Quantizer& quantizer = enc_state->shared.quantizer;
   ImageI& raw_quant_field = enc_state->shared.raw_quant_field;
   ImageF& quant_field = enc_state->initial_quant_field;
@@ -761,6 +767,7 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
       enc_state->shared.frame_header.nonserialized_metadata->ysize());
 
   const float butteraugli_target = cparams.butteraugli_distance;
+  const float original_butteraugli = cparams.original_butteraugli_distance;
   ButteraugliParams params = cparams.ba_params;
   params.intensity_target = linear.metadata()->IntensityTarget();
   // Hack the default intensity target value to be 80.0, the intensity
@@ -818,18 +825,20 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
       score = -score;
       diffmap = ScaleImage(-1.0f, diffmap);
     }
-    tile_distmap = TileDistMap(diffmap, 8, 0, enc_state->shared.ac_strategy);
+    tile_distmap = TileDistMap(diffmap, 8 * cparams.resampling, 0,
+                               enc_state->shared.ac_strategy);
     if (WantDebugOutput(aux_out)) {
       aux_out->DumpImage(("dec" + ToString(i)).c_str(), *dec_linear.color());
       DumpHeatmaps(aux_out, butteraugli_target, quant_field, tile_distmap,
                    diffmap);
     }
     if (aux_out != nullptr) ++aux_out->num_butteraugli_iters;
-    if (FLAGS_log_search_state) {
+    if (cparams.log_search_state) {
       float minval, maxval;
       ImageMinMax(quant_field, &minval, &maxval);
       printf("\nButteraugli iter: %d/%d\n", i, cparams.max_butteraugli_iters);
-      printf("Butteraugli distance: %f\n", score);
+      printf("Butteraugli distance: %f  (target = %f)\n", score,
+             original_butteraugli);
       printf("quant range: %f ... %f  DC quant: %f\n", minval, maxval,
              initial_quant_dc);
       if (FLAGS_dump_quant_state) {
@@ -867,7 +876,7 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
 
     double cur_pow = 0.0;
     if (i < 7) {
-      cur_pow = kPow[i] + (butteraugli_target - 1.0) * kPowMod[i];
+      cur_pow = kPow[i] + (original_butteraugli - 1.0) * kPowMod[i];
       if (cur_pow < 0) {
         cur_pow = 0;
       }
@@ -877,7 +886,7 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
         const float* const JXL_RESTRICT row_dist = tile_distmap.Row(y);
         float* const JXL_RESTRICT row_q = quant_field.Row(y);
         for (size_t x = 0; x < quant_field.xsize(); ++x) {
-          const float diff = row_dist[x] / butteraugli_target;
+          const float diff = row_dist[x] / original_butteraugli;
           if (diff > 1.0f) {
             float old = row_q[x];
             row_q[x] *= diff;
@@ -896,7 +905,7 @@ void FindBestQuantization(const ImageBundle& linear, const Image3F& opsin,
         const float* const JXL_RESTRICT row_dist = tile_distmap.Row(y);
         float* const JXL_RESTRICT row_q = quant_field.Row(y);
         for (size_t x = 0; x < quant_field.xsize(); ++x) {
-          const float diff = row_dist[x] / butteraugli_target;
+          const float diff = row_dist[x] / original_butteraugli;
           if (diff <= 1.0f) {
             row_q[x] *= std::pow(diff, cur_pow);
           } else {
@@ -921,10 +930,7 @@ void FindBestQuantizationMaxError(const Image3F& opsin,
                                   PassesEncoderState* enc_state,
                                   const JxlCmsInterface& cms, ThreadPool* pool,
                                   AuxOut* aux_out) {
-  // TODO(veluca): this only works if opsin is in XYB. The current encoder does
-  // not have code paths that produce non-XYB opsin here.
-  JXL_CHECK(enc_state->shared.frame_header.color_transform ==
-            ColorTransform::kXYB);
+  // TODO(szabadka): Make this work for non-opsin color spaces.
   const CompressParams& cparams = enc_state->cparams;
   Quantizer& quantizer = enc_state->shared.quantizer;
   ImageI& raw_quant_field = enc_state->shared.raw_quant_field;
@@ -1065,10 +1071,8 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
   PROFILER_ZONE("enc roundtrip");
   std::unique_ptr<PassesDecoderState> dec_state =
       jxl::make_unique<PassesDecoderState>();
-  JXL_CHECK(dec_state->output_encoding_info.Set(
-      *enc_state->shared.metadata,
-      ColorEncoding::LinearSRGB(
-          enc_state->shared.metadata->m.color_encoding.IsGray())));
+  JXL_CHECK(dec_state->output_encoding_info.SetFromMetadata(
+      *enc_state->shared.metadata));
   dec_state->shared = &enc_state->shared;
   JXL_ASSERT(opsin.ysize() % kBlockDim == 0);
 

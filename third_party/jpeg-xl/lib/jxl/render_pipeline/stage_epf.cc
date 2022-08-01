@@ -93,7 +93,7 @@ class EPF0Stage : public RenderPipelineStage {
       if (row_sigma[bx] < kMinSigma) {
         for (size_t c = 0; c < 3; c++) {
           auto px = Load(df, rows[c][3 + 0] + x);
-          Store(px, df, GetOutputRow(output_rows, c, 0) + x);
+          StoreU(px, df, GetOutputRow(output_rows, c, 0) + x);
         }
         continue;
       }
@@ -146,9 +146,9 @@ class EPF0Stage : public RenderPipelineStage {
 #else
       auto inv_w = ApproximateReciprocal(w);
 #endif
-      Store(X * inv_w, df, GetOutputRow(output_rows, 0, 0) + x);
-      Store(Y * inv_w, df, GetOutputRow(output_rows, 1, 0) + x);
-      Store(B * inv_w, df, GetOutputRow(output_rows, 2, 0) + x);
+      StoreU(X * inv_w, df, GetOutputRow(output_rows, 0, 0) + x);
+      StoreU(Y * inv_w, df, GetOutputRow(output_rows, 1, 0) + x);
+      StoreU(B * inv_w, df, GetOutputRow(output_rows, 2, 0) + x);
     }
   }
 
@@ -507,7 +507,6 @@ std::unique_ptr<RenderPipelineStage> GetEPFStage(const LoopFilter& lf,
     default:
       JXL_ABORT("Invalid EPF stage");
   }
-  return nullptr;
 }
 
 }  // namespace jxl

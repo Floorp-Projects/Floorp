@@ -12,10 +12,16 @@ set(JPEGXL_EXTRAS_SOURCES
   extras/dec/color_hints.h
   extras/dec/decode.cc
   extras/dec/decode.h
+  extras/dec/jxl.cc
+  extras/dec/jxl.h
   extras/dec/pgx.cc
   extras/dec/pgx.h
   extras/dec/pnm.cc
   extras/dec/pnm.h
+  extras/enc/encode.cc
+  extras/enc/encode.h
+  extras/enc/npy.cc
+  extras/enc/npy.h
   extras/enc/pgx.cc
   extras/enc/pgx.h
   extras/enc/pnm.cc
@@ -25,6 +31,8 @@ set(JPEGXL_EXTRAS_SOURCES
   extras/packed_image.h
   extras/packed_image_convert.cc
   extras/packed_image_convert.h
+  extras/render_hdr.cc
+  extras/render_hdr.h
   extras/time.cc
   extras/time.h
   extras/tone_mapping.cc
@@ -69,6 +77,7 @@ target_include_directories(jxl_extras-static PUBLIC "${PROJECT_SOURCE_DIR}")
 target_link_libraries(jxl_extras-static PUBLIC
   jxl-static
   jxl_extras_dec-static
+  jxl_threads-static
 )
 
 find_package(GIF 5.1)
@@ -159,7 +168,7 @@ if (OpenEXR_FOUND)
   # Actually those flags counteract the ones set in JPEGXL_INTERNAL_FLAGS.
   if (NOT WIN32)
     set_source_files_properties(extras/dec/exr.cc extras/enc/exr.cc PROPERTIES COMPILE_FLAGS -fexceptions)
-    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       set_source_files_properties(extras/dec/exr.cc extras/enc/exr.cc PROPERTIES COMPILE_FLAGS -fcxx-exceptions)
     endif()
   endif()
@@ -174,12 +183,10 @@ target_compile_definitions(jxl_extras_dec-static PUBLIC ${JXL_EXTRAS_DEC_PUBLIC_
 target_link_libraries(jxl_extras_dec-static PRIVATE ${JXL_EXTRAS_DEC_INTERNAL_LIBRARIES})
 
 ### Shared library.
-if (((NOT DEFINED "${TARGET_SUPPORTS_SHARED_LIBS}") OR
-     TARGET_SUPPORTS_SHARED_LIBS) AND NOT JPEGXL_STATIC AND BUILD_SHARED_LIBS)
+if (BUILD_SHARED_LIBS)
 add_library(jxl_extras_dec SHARED $<TARGET_OBJECTS:jxl_extras_dec-obj>)
 target_compile_definitions(jxl_extras_dec PUBLIC ${JXL_EXTRAS_DEC_PUBLIC_DEFINITIONS})
 target_link_libraries(jxl_extras_dec PRIVATE ${JXL_EXTRAS_DEC_INTERNAL_LIBRARIES} jxl)
 else()
 add_library(jxl_extras_dec ALIAS jxl_extras_dec-static)
-endif()  # TARGET_SUPPORTS_SHARED_LIBS AND NOT JPEGXL_STATIC AND
-         # BUILD_SHARED_LIBS
+endif()  # BUILD_SHARED_LIBS

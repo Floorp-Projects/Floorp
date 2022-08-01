@@ -29,23 +29,39 @@ struct OpsinParams {
 };
 
 struct OutputEncodingInfo {
+  //
+  // Fields depending only on image metadata
+  //
+  ColorEncoding orig_color_encoding;
+  // Used for the HLG OOTF and PQ tone mapping.
+  float orig_intensity_target;
+  // Opsin inverse matrix taken from the metadata.
+  float orig_inverse_matrix[9];
+  bool default_transform;
+  bool xyb_encoded;
+  //
+  // Fields depending on output color encoding
+  //
   ColorEncoding color_encoding;
-  // Used for Gamma and DCI transfer functions.
-  float inverse_gamma;
+  bool color_encoding_is_original;
   // Contains an opsin matrix that converts to the primaries of the output
   // encoding.
   OpsinParams opsin_params;
-  // default_enc is used for xyb encoded image with ICC profile, in other
-  // cases it has no effect. Use linear sRGB or grayscale if ICC profile is
-  // not matched (not parsed or no matching ColorEncoding exists)
-  Status Set(const CodecMetadata& metadata, const ColorEncoding& default_enc);
-  bool all_default_opsin = true;
-  bool color_encoding_is_original = false;
-  // Luminances of color_encoding's primaries, used for the HLG inverse OOTF.
+  bool all_default_opsin;
+  // Used for Gamma and DCI transfer functions.
+  float inverse_gamma;
+  // Luminances of color_encoding's primaries, used for the HLG inverse OOTF and
+  // for PQ tone mapping.
   // Default to sRGB's.
-  float luminances[3] = {0.2126, 0.7152, 0.0722};
-  // Also used for the HLG inverse OOTF.
-  float intensity_target;
+  float luminances[3];
+  // Used for the HLG inverse OOTF and PQ tone mapping.
+  float desired_intensity_target;
+
+  Status SetFromMetadata(const CodecMetadata& metadata);
+  Status MaybeSetColorEncoding(const ColorEncoding& c_desired);
+
+ private:
+  Status SetColorEncoding(const ColorEncoding& c_desired);
 };
 
 // Converts `inout` (not padded) from opsin to linear sRGB in-place. Called from

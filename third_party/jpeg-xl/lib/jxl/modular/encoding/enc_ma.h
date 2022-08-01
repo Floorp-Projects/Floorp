@@ -114,13 +114,13 @@ struct TreeSamples {
   // Property values, quantized to at most 256 distinct values.
   std::vector<std::vector<uint8_t>> props;
   // Decompactification info for `props`.
-  std::vector<std::vector<int>> compact_properties;
+  std::vector<std::vector<int32_t>> compact_properties;
   // List of properties to use.
   std::vector<uint32_t> props_to_use;
   // List of predictors to use.
   std::vector<Predictor> predictors;
   // Mapping property value -> quantized property value.
-  static constexpr int kPropertyRange = 511;
+  static constexpr int32_t kPropertyRange = 511;
   std::vector<std::vector<uint8_t>> property_mapping;
   // Number of samples seen.
   size_t num_samples = 0;

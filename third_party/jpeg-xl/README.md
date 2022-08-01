@@ -1,7 +1,13 @@
 # JPEG XL reference implementation
 
-[![Build&Test](https://github.com/libjxl/libjxl/actions/workflows/build_test.yml/badge.svg)](
+[![Build/Test](https://github.com/libjxl/libjxl/actions/workflows/build_test.yml/badge.svg)](
 https://github.com/libjxl/libjxl/actions/workflows/build_test.yml)
+[![Build/Test Cross](https://github.com/libjxl/libjxl/actions/workflows/build_test_cross.yml/badge.svg)](
+https://github.com/libjxl/libjxl/actions/workflows/build_test_cross.yml)
+[![Conformance](https://github.com/libjxl/libjxl/actions/workflows/conformance.yml/badge.svg)](
+https://github.com/libjxl/libjxl/actions/workflows/conformance.yml)
+[![CIFuzz](https://github.com/libjxl/libjxl/actions/workflows/fuzz.yml/badge.svg)](
+https://github.com/libjxl/libjxl/actions/workflows/fuzz.yml)
 [![Releases](https://github.com/libjxl/libjxl/actions/workflows/release.yaml/badge.svg)](
 https://github.com/libjxl/libjxl/actions/workflows/release.yaml)
 [![Doc](https://readthedocs.org/projects/libjxl/badge/?version=latest)](
@@ -63,7 +69,7 @@ Required dependencies for compiling the code, in a Debian/Ubuntu based
 distribution run:
 
 ```bash
-sudo apt install cmake pkg-config libbrotli-dev libgflags-dev
+sudo apt install cmake pkg-config libbrotli-dev
 ```
 
 Optional dependencies for supporting other formats in the `cjxl`/`djxl` tools,
@@ -168,7 +174,7 @@ format: Cloudinary and Google.
 *   [JPEG XL Format Overview](doc/format_overview.md)
 *   [Introductory paper](https://www.spiedigitallibrary.org/proceedings/Download?fullDOI=10.1117%2F12.2529237) (open-access)
 *   [XL Overview](doc/xl_overview.md) - a brief introduction to the source code modules
-*   [JPEG XL white paper](http://ds.jpeg.org/whitepapers/jpeg-xl-whitepaper.pdf)
+*   [JPEG XL white paper](https://ds.jpeg.org/whitepapers/jpeg-xl-whitepaper.pdf)
 *   [JPEG XL official website](https://jpeg.org/jpegxl)
 *   [JPEG XL community website](https://jpegxl.info)
 

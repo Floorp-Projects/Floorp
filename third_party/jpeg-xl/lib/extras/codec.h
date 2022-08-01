@@ -49,7 +49,7 @@ Status SetFromFile(const std::string& pathname,
 // color space to c_desired.
 Status Encode(const CodecInOut& io, extras::Codec codec,
               const ColorEncoding& c_desired, size_t bits_per_sample,
-              PaddedBytes* bytes, ThreadPool* pool = nullptr);
+              std::vector<uint8_t>* bytes, ThreadPool* pool = nullptr);
 
 // Deduces codec, calls Encode and writes to file.
 Status EncodeToFile(const CodecInOut& io, const ColorEncoding& c_desired,

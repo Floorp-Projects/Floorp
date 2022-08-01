@@ -37,72 +37,54 @@ namespace jxl {
 enum {
   kLayerHeader = 0,
   kLayerTOC,
+  kLayerDictionary,
+  kLayerSplines,
   kLayerNoise,
   kLayerQuant,
-  kLayerDequantTables,
-  kLayerOrder,
+  kLayerModularTree,
+  kLayerModularGlobal,
   kLayerDC,
+  kLayerModularDcGroup,
   kLayerControlFields,
+  kLayerOrder,
   kLayerAC,
   kLayerACTokens,
-  kLayerDictionary,
-  kLayerDots,
-  kLayerSplines,
-  kLayerLossless,
-  kLayerModularGlobal,
-  kLayerModularDcGroup,
   kLayerModularAcGroup,
-  kLayerModularTree,
-  kLayerAlpha,
-  kLayerDepth,
-  kLayerExtraChannels,
   kNumImageLayers
 };
 
 static inline const char* LayerName(size_t layer) {
   switch (layer) {
     case kLayerHeader:
-      return "headers";
+      return "Headers";
     case kLayerTOC:
       return "TOC";
+    case kLayerDictionary:
+      return "Patches";
+    case kLayerSplines:
+      return "Splines";
     case kLayerNoise:
-      return "noise";
+      return "Noise";
     case kLayerQuant:
-      return "quantizer";
-    case kLayerDequantTables:
-      return "quant tables";
-    case kLayerOrder:
-      return "order";
+      return "Quantizer";
+    case kLayerModularTree:
+      return "ModularTree";
+    case kLayerModularGlobal:
+      return "ModularGlobal";
     case kLayerDC:
       return "DC";
+    case kLayerModularDcGroup:
+      return "ModularDcGroup";
     case kLayerControlFields:
       return "ControlFields";
+    case kLayerOrder:
+      return "CoeffOrder";
     case kLayerAC:
-      return "AC";
+      return "ACHistograms";
     case kLayerACTokens:
       return "ACTokens";
-    case kLayerDictionary:
-      return "dictionary";
-    case kLayerDots:
-      return "dots";
-    case kLayerSplines:
-      return "splines";
-    case kLayerLossless:
-      return "lossless";
-    case kLayerModularGlobal:
-      return "modularGlobal";
-    case kLayerModularDcGroup:
-      return "modularDcGroup";
     case kLayerModularAcGroup:
-      return "modularAcGroup";
-    case kLayerModularTree:
-      return "modularTree";
-    case kLayerAlpha:
-      return "alpha";
-    case kLayerDepth:
-      return "depth";
-    case kLayerExtraChannels:
-      return "extra channels";
+      return "ModularAcGroup";
     default:
       JXL_ABORT("Invalid layer %d\n", static_cast<int>(layer));
   }
@@ -167,9 +149,21 @@ struct AuxOut {
       dc_pred_usage[i] += victim.dc_pred_usage[i];
       dc_pred_usage_xb[i] += victim.dc_pred_usage_xb[i];
     }
+    max_quant_rescale = std::max(max_quant_rescale, victim.max_quant_rescale);
+    min_quant_rescale = std::min(min_quant_rescale, victim.min_quant_rescale);
+    max_bitrate_error = std::max(max_bitrate_error, victim.max_bitrate_error);
+    min_bitrate_error = std::min(min_bitrate_error, victim.min_bitrate_error);
   }
 
   void Print(size_t num_inputs) const;
+
+  size_t TotalBits() const {
+    size_t total = 0;
+    for (const auto& layer : layers) {
+      total += layer.total_bits;
+    }
+    return total;
+  }
 
   template <typename T>
   void DumpImage(const char* label, const Image3<T>& image) const {
@@ -284,6 +278,11 @@ struct AuxOut {
   std::array<uint32_t, 8> dc_pred_usage_xb = {{0}};
 
   int num_butteraugli_iters = 0;
+
+  float max_quant_rescale = 1.0f;
+  float min_quant_rescale = 1.0f;
+  float min_bitrate_error = 0.0f;
+  float max_bitrate_error = 0.0f;
 
   // If not empty, additional debugging information (e.g. debug images) is
   // saved in files with this prefix.

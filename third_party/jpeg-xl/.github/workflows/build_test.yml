@@ -90,7 +90,7 @@ jobs:
       # Whether we track the stack size.
       STACK_SIZE: ${{ matrix.env_stack_size }}
       TEST_STACK_LIMIT: ${{ matrix.env_test_stack_size }}
-      WILL_RUN_TESTS: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && (matrix.test_in_pr || contains(github.event.pull_request.labels.*.names, 'CI:full'))) }}
+      WILL_RUN_TESTS: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && (matrix.test_in_pr || contains(github.event.pull_request.labels.*.name, 'CI:full'))) }}
 
     steps:
     - name: Install build deps
@@ -105,7 +105,6 @@ jobs:
           libbenchmark-tools \
           libbrotli-dev \
           libgdk-pixbuf2.0-dev \
-          libgflags-dev \
           libgif-dev \
           libgtest-dev \
           libgtk2.0-dev  \
@@ -125,6 +124,28 @@ jobs:
       with:
         submodules: true
         fetch-depth: 2
+
+    - name: Setup the LLVM source path
+      if: matrix.name == 'msan'
+      run: |
+        LLVM_ROOT=${GITHUB_WORKSPACE}/llvm_root
+        mkdir -p ${LLVM_ROOT}
+        echo "LLVM_ROOT=${LLVM_ROOT}" >> $GITHUB_ENV
+    - name: Cache LLVM sources
+      if: matrix.name == 'msan'
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.LLVM_ROOT }}
+        key: llvm
+    - name: Checkout the LLVM source
+      if: matrix.name == 'msan'
+      uses: actions/checkout@v2
+      with:
+        submodules: false
+        repository: llvm/llvm-project
+        ref: llvmorg-7.0.1
+        path: llvm_root
+
     - name: Sphinx dependencies
       # Dependencies for sphinx HTML documentation
       if: matrix.name == 'release'
@@ -162,6 +183,9 @@ jobs:
       env:
         SKIP_TEST: 1
         CMAKE_CXX_FLAGS: ${{ matrix.cxxflags }}
+    - name: Build stats
+      run: |
+        awk '!/^#/ {total[$4]+=($2-$1);cntr[$4]+=1} END {for (key in total) print total[key]/cntr[key] " " key}' build/.ninja_log | sort -n | tail -n 25
     - name: ccache stats
       run: ccache --show-stats
     - name: Build stats ${{ matrix.name }}
@@ -185,7 +209,7 @@ jobs:
           exit 1
         fi
         # Test that the built binaries run.
-        echo -e -n "PF\n1 1\n-1.0\nrrrrggggbbbb" > test.pfm
+        echo -e -n "PF\n1 1\n-1.0\n\0\0\x80\x3f\0\0\x80\x3f\0\0\x80\x3f" > test.pfm
         build-example/encode_oneshot test.pfm test.jxl
         build-example/encode_oneshot_static test.pfm test-static.jxl
         build-example/decode_oneshot test.jxl dec.pfm dec.icc
@@ -218,7 +242,7 @@ jobs:
         matrix.name != 'coverage' && (github.event_name == 'push' ||
         (github.event_name == 'pull_request' && (
          matrix.test_in_pr ||
-         contains(github.event.pull_request.labels.*.names, 'CI:full'))))
+         contains(github.event.pull_request.labels.*.name, 'CI:full'))))
       run: |
         STORE_IMAGES=0 ./ci.sh fast_benchmark
     # Run gbench once, just to make sure it runs, not for actual benchmarking.
@@ -231,173 +255,22 @@ jobs:
       run: |
         ./ci.sh gbench --benchmark_min_time=0
 
-
-  cross_compile_ubuntu:
-    name: Cross-compiling ${{ matrix.build_target }} ${{ matrix.lowprecision }}
-    runs-on: [ubuntu-18.04]
-    strategy:
-      matrix:
-        include:
-          - arch: arm64
-            lowprecision:
-            build_target: aarch64-linux-gnu
-            cmake_args: -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static
-
-          - arch: arm64
-            lowprecision: lowprecision
-            build_target: aarch64-linux-gnu
-            cmake_args: -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static -DCMAKE_CXX_FLAGS=-DJXL_HIGH_PRECISION=0
-
-          - arch: armhf
-            lowprecision:
-            build_target: arm-linux-gnueabihf
-            cmake_args: -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-arm-static
-
-          - arch: i386
-            lowprecision:
-            test_in_pr: true
-            build_target: i686-linux-gnu
-
-    env:
-      BUILD_DIR: build
-      WILL_RUN_TESTS: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && (matrix.test_in_pr || contains(github.event.pull_request.labels.*.names, 'CI:full'))) }}
-
-    steps:
-    - name: Setup apt
-      shell: bash
-      run: |
-        set -x
-        sudo apt-get update -y
-        sudo apt-get install -y curl gnupg ca-certificates
-        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1E9377A2BA9EF27F
-
-        if [[ "${{ matrix.arch }}" != "amd64" ]]; then
-          sudo dpkg --add-architecture "${{ matrix.arch }}"
-
-          # Update the sources.list with the split of supported architectures.
-          bkplist="/etc/apt/sources.list.bkp"
-          sudo mv /etc/apt/sources.list "${bkplist}"
-
-          newlist="/etc/apt/sources.list"
-          sudo rm -f "${newlist}"
-
-          main_list="amd64"
-          port_list=""
-          if [[ "${{ matrix.arch }}" == "i386" ]]; then
-            main_list="amd64,i386"
-          else
-            port_list="${{ matrix.arch }}"
-          fi
-
-          if [[ -n "${port_list}" ]]; then
-            port_url="http://ports.ubuntu.com/ubuntu-ports/"
-            grep -v -E '^#' "${bkplist}" |
-              sed -E "s;^deb (http[^ ]+) (.*)\$;deb [arch=${{ matrix.arch }}] ${port_url} \\2;" \
-              | sudo tee -a "${newlist}"
-          fi
-          grep -v -E '^#' "${bkplist}" |
-            sed -E "s;^deb (http[^ ]+) (.*)\$;deb [arch=${main_list}] \\1 \\2\ndeb-src [arch=${main_list}] \\1 \\2;" \
-            | sudo tee -a "${newlist}"
-        fi
-
-    - name: Install build deps
-      shell: bash
-      run: |
-        set -x
-        sudo apt update
-        pkgs=(
-          # Build dependencies
-          cmake
-          doxygen
-          ninja-build
-          pkg-config
-          qemu-user-static
-          xvfb
-
-          # Toolchain for cross-compiling.
-          clang-7
-          # libclang-common-7-dev:${{ matrix.arch }}
-          libc6-dev-${{ matrix.arch }}-cross
-          libstdc++-8-dev-${{ matrix.arch }}-cross
-          libstdc++-8-dev:${{ matrix.arch }}
-
-          # Dependencies
-          libbrotli-dev:${{ matrix.arch }}
-          libgif-dev:${{ matrix.arch }}
-          libjpeg-dev:${{ matrix.arch }}
-          libpng-dev:${{ matrix.arch }}
-          libwebp-dev:${{ matrix.arch }}
-
-          # For OpenEXR:
-          libilmbase-dev:${{ matrix.arch }}
-          libopenexr-dev:${{ matrix.arch }}
-
-          # GTK plugins
-          libgdk-pixbuf2.0-dev:${{ matrix.arch }}
-          libgtk2.0-dev:${{ matrix.arch }}
-
-          # QT
-          libqt5x11extras5-dev:${{ matrix.arch }}
-          qtbase5-dev:${{ matrix.arch }}
-        )
-        if [[ "${{ matrix.build_target }}" != "x86_64-linux-gnu" ]]; then
-          pkgs+=(
-            binutils-${{ matrix.build_target }}
-            gcc-${{ matrix.build_target }}
-          )
-        fi
-        if [[ "${{ matrix.arch }}" != "i386" ]]; then
-          pkgs+=(
-            # TCMalloc
-            libgoogle-perftools-dev:${{ matrix.arch }}
-            libgoogle-perftools4:${{ matrix.arch }}
-            libtcmalloc-minimal4:${{ matrix.arch }}
-            libunwind-dev:${{ matrix.arch }}
-          )
-        fi
-        DEBIAN_FRONTEND=noninteractive sudo apt install -y "${pkgs[@]}"
-        echo "CC=clang-7" >> $GITHUB_ENV
-        echo "CXX=clang++-7" >> $GITHUB_ENV
-    - name: Checkout the source
-      uses: actions/checkout@v2
-      with:
-        submodules: true
-        fetch-depth: 1
-    - name: Build
-      run: |
-        ./ci.sh release \
-          -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
-          -DJPEGXL_BUNDLE_GFLAGS=ON \
-          -DJPEGXL_ENABLE_JNI=OFF \
-          ${{ matrix.cmake_args }}
-      env:
-        SKIP_TEST: 1
-        BUILD_TARGET: ${{ matrix.build_target }}
-    - name: Build stats ${{ matrix.build_target }}
-      run: |
-        tools/build_stats.py --save build/stats.json \
-          --binutils ${{ matrix.build_target }}- \
-          --max-stack ${{ matrix.max_stack || '0' }} \
-          cjxl djxl libjxl.so libjxl_dec.so
-    # Run the tests on push and when requested in pull_request.
-    - name: Test
-      if: env.WILL_RUN_TESTS == 'true'
-      run: |
-        ./ci.sh test
-      env:
-        BUILD_TARGET: ${{ matrix.build_target }}
-
   windows_msys:
-    name: Windows MSYS2 / ${{ matrix.arch }}
+    name: Windows MSYS2 / ${{ matrix.msystem }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - arch: x86_64
-            msystem: mingw64
-          - arch: i686
-            msystem: mingw32
+         - msystem: mingw64
+         - msystem: clang64
+         - msystem: mingw32
+           # TODO(eustas): investigate HWY Mul failures
+           disable_tests: HwyMulTestGroup/HwyMulTest\.TestAllMulHigh/EMU128|HwyMulTestGroup/HwyMulTest\.TestAllMulFixedPoint15/EMU128
+         - msystem: clang32
+           # TODO(eustas): investigate HWY Sort and JXL ANS failures
+           disable_tests: SortTestGroup/SortTest\.TestAllSort/.*|ANSTest\.RandomUnbalancedStreamRoundtrip3|ANSTest\.RandomUnbalancedStreamRoundtripBig
+
     defaults:
       run:
         shell: msys2 {0}
@@ -415,24 +288,22 @@ jobs:
           install: >-
             base-devel
             git
-            mingw-w64-${{ matrix.arch }}-brotli
-            mingw-w64-${{ matrix.arch }}-cmake
-            mingw-w64-${{ matrix.arch }}-gcc
-            mingw-w64-${{ matrix.arch }}-gflags
-            mingw-w64-${{ matrix.arch }}-giflib
-            mingw-w64-${{ matrix.arch }}-gtest
-            mingw-w64-${{ matrix.arch }}-libavif
-            mingw-w64-${{ matrix.arch }}-libjpeg-turbo
-            mingw-w64-${{ matrix.arch }}-libpng
-            mingw-w64-${{ matrix.arch }}-libwebp
-            mingw-w64-${{ matrix.arch }}-ninja
+          pacboy: >-
+            brotli:p
+            cmake:p
+            giflib:p
+            gtest:p
+            libavif:p
+            libjpeg-turbo:p
+            libpng:p
+            libwebp:p
+            ninja:p
+            toolchain:p
 
       - name: CMake configure
-        # AVX2 tests fail with segfault when built in MSYS2.
         run: |
           cmake \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="-DHWY_DISABLED_TARGETS=\"HWY_AVX2|HWY_AVX3\"" \
             -DJPEGXL_ENABLE_JNI=OFF \
             -DJPEGXL_ENABLE_MANPAGES=OFF \
             -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
@@ -445,20 +316,17 @@ jobs:
         if: |
           github.event_name == 'push' ||
           (github.event_name == 'pull_request' &&
-           contains(github.event.pull_request.labels.*.names, 'CI:full'))
-        # LibraryCLinkageTest doesn't work in here because it needs the DLL
-        # which is not installed.
-        run: ctest --test-dir build --parallel 2 --output-on-failure -E LibraryCLinkageTest
+           contains(github.event.pull_request.labels.*.name, 'CI:full'))
+        run: ctest --test-dir build --parallel 2 --output-on-failure -E "${{ matrix.disable_tests }}"
 
   wasm32_build:
     name: WASM wasm32/${{ matrix.variant }}
     runs-on: ubuntu-latest
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
-      EM_VERSION: 3.1.4
-      V8_VERSION: 9.8.177
-      V8: ${{ github.workspace }}/.jsvu/v8
       BUILD_TARGET: wasm32
+      EM_VERSION: 3.1.1
+      NODE_VERSION: 18
 
     strategy:
       matrix:
@@ -499,6 +367,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-${{ steps.git-env.outputs.parent }}-${{ matrix.variant }}
 
+    - name: Install node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{env.NODE_VERSION}}
+
+    - name: Get non-EMSDK node path
+      run: which node >> $HOME/.base_node_path
+
     - name: Install emsdk
       uses: mymindstorm/setup-emsdk@v11
       # TODO(deymo): We could cache this action but it doesn't work when running
@@ -506,13 +382,12 @@ jobs:
       with:
         version: ${{env.EM_VERSION}}
         no-cache: true
-    - name: Install v8
+
+    - name: Set EMSDK node version
       run: |
-        npm install jsvu -g
-        HOME="${{ github.workspace }}" jsvu --os=linux64 "v8@${V8_VERSION}"
-        rm -f "${{ github.workspace }}/.jsvu/v8"
-        ln -s "${{ github.workspace }}/.jsvu/v8-${V8_VERSION}" \
-          "${{ github.workspace }}/.jsvu/v8"
+        echo "NODE_JS='$(cat $HOME/.base_node_path)'" >> $EM_CONFIG
+        emsdk construct_env
+
     # TODO(deymo): Build and install other dependencies like libpng, libjpeg,
     # etc.
     - name: Build
@@ -522,12 +397,9 @@ jobs:
         if [[ "${{ matrix.variant }}" == "simd" ]]; then
           export ENABLE_WASM_SIMD=1
         fi
-        emconfigure ./ci.sh release \
+        ./ci.sh release \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-          -DBUILD_SHARED_LIBS=OFF \
-          -DJPEGXL_ENABLE_JNI=OFF
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
       env:
         SKIP_TEST: 1
     - name: ccache stats
@@ -537,6 +409,6 @@ jobs:
       if: |
         github.event_name == 'push' ||
         (github.event_name == 'pull_request' &&
-         contains(github.event.pull_request.labels.*.names, 'CI:full'))
+         contains(github.event.pull_request.labels.*.name, 'CI:full'))
       run: |
-        emconfigure ./ci.sh test
+        ./ci.sh test

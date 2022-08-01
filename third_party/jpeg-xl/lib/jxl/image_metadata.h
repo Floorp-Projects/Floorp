@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <string>
 #include <vector>
 
 #include "jxl/codestream_header.h"
@@ -79,6 +80,8 @@ struct BitDepth : public Fields {
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
+  std::string DebugString() const;
+
   // Whether the original (uncompressed) samples are floating point or
   // unsigned integer.
   bool floating_point_sample;
@@ -106,6 +109,8 @@ struct ExtraChannelInfo : public Fields {
   JXL_FIELDS_NAME(ExtraChannelInfo)
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
+
+  std::string DebugString() const;
 
   mutable bool all_default;
 
@@ -276,6 +281,8 @@ struct ImageMetadata : public Fields {
 
   bool ExtraFieldsDefault() const;
 
+  std::string DebugString() const;
+
   mutable bool all_default;
 
   BitDepth bit_depth;
@@ -407,6 +414,8 @@ struct CodecMetadata {
       return m.preview_size.ysize();
     }
   }
+
+  std::string DebugString() const;
 };
 
 }  // namespace jxl

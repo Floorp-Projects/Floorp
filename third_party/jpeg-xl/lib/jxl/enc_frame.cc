@@ -497,7 +497,6 @@ class LossyFrameEncoder {
                              Image3F* JXL_RESTRICT opsin,
                              const JxlCmsInterface& cms, ThreadPool* pool,
                              ModularFrameEncoder* modular_frame_encoder,
-                             BitWriter* JXL_RESTRICT writer,
                              FrameHeader* frame_header) {
     PROFILER_ZONE("ComputeEncodingData uninstrumented");
     JXL_ASSERT((opsin->xsize() % kBlockDim) == 0 &&
@@ -605,7 +604,7 @@ class LossyFrameEncoder {
     std::vector<int> qt(192);
     for (size_t c = 0; c < 3; c++) {
       size_t jpeg_c = jpeg_c_map[c];
-      const int* quant =
+      const int32_t* quant =
           jpeg_data.quant[jpeg_data.components[jpeg_c].quant_idx].values.data();
 
       dcquantization[c] = 255 * 8.0f / quant[0];
@@ -630,7 +629,7 @@ class LossyFrameEncoder {
     shared.quantizer.RecomputeFromGlobalScale();
 
     // Per-block dequant scaling should be 1.
-    FillImage(static_cast<int>(shared.quantizer.InvGlobalScale()),
+    FillImage(static_cast<int32_t>(shared.quantizer.InvGlobalScale()),
               &shared.raw_quant_field);
 
     std::vector<int32_t> scaled_qtable(192);
@@ -936,8 +935,8 @@ class LossyFrameEncoder {
   Status EncodeGlobalACInfo(BitWriter* writer,
                             ModularFrameEncoder* modular_frame_encoder) {
     JXL_RETURN_IF_ERROR(DequantMatricesEncode(&enc_state_->shared.matrices,
-                                              writer, kLayerDequantTables,
-                                              aux_out_, modular_frame_encoder));
+                                              writer, kLayerQuant, aux_out_,
+                                              modular_frame_encoder));
     if (enc_state_->cparams.speed_tier <= SpeedTier::kTortoise) {
       if (!doing_jpeg_recompression) ClusterGroups(enc_state_);
     }
@@ -1050,6 +1049,12 @@ Status ParamsPostInit(CompressParams* p) {
   if (!p->manual_xyb_factors.empty() && p->manual_xyb_factors.size() != 3) {
     return JXL_FAILURE("Invalid number of XYB quantization factors");
   }
+  if (!p->modular_mode && p->butteraugli_distance == 0.0) {
+    p->butteraugli_distance = kMinButteraugliDistance;
+  }
+  if (p->original_butteraugli_distance == -1.0) {
+    p->original_butteraugli_distance = p->butteraugli_distance;
+  }
   if (p->resampling <= 0) {
     p->resampling = 1;
     // For very low bit rates, using 2x2 resampling gives better results on
@@ -1071,11 +1076,57 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                    const ImageBundle& ib, PassesEncoderState* passes_enc_state,
                    const JxlCmsInterface& cms, ThreadPool* pool,
                    BitWriter* writer, AuxOut* aux_out) {
+  CompressParams cparams = cparams_orig;
+  if (cparams_orig.target_bitrate > 0.0f &&
+      frame_info.frame_type == FrameType::kRegularFrame) {
+    cparams.target_bitrate = 0.0f;
+    const float target_bitrate = cparams_orig.target_bitrate;
+    float bitrate = 0.0f;
+    float prev_bitrate = 0.0f;
+    float rescale = 1.0f;
+    size_t prev_bits = 0;
+    float error = 0.0f;
+    float best_error = 100.0f;
+    float best_rescale = 1.0f;
+    for (size_t i = 0; i < 10; ++i) {
+      std::unique_ptr<PassesEncoderState> state =
+          jxl::make_unique<PassesEncoderState>();
+      BitWriter bw;
+      JXL_CHECK(EncodeFrame(cparams, frame_info, metadata, ib, state.get(), cms,
+                            pool, &bw, nullptr));
+      bitrate = bw.BitsWritten() * 1.0 / (ib.xsize() * ib.ysize());
+      error = target_bitrate / bitrate - 1.0f;
+      if (std::abs(error) < std::abs(best_error)) {
+        best_error = error;
+        best_rescale = cparams.quant_ac_rescale;
+      }
+      if (bw.BitsWritten() == prev_bits || std::abs(error) < 0.0005f) {
+        break;
+      }
+      float lambda = 1.0f;
+      if (i > 0) {
+        lambda = (((bitrate / prev_bitrate) - 1.0f) / (rescale - 1.0f));
+      }
+      rescale = (1.0f + ((target_bitrate / bitrate) - 1.0f) / lambda);
+      if (rescale < 0.0f) {
+        break;
+      }
+      cparams.quant_ac_rescale *= rescale;
+      prev_bitrate = bitrate;
+      prev_bits = bw.BitsWritten();
+    }
+    if (aux_out) {
+      aux_out->max_quant_rescale = best_rescale;
+      aux_out->min_quant_rescale = best_rescale;
+      aux_out->min_bitrate_error = best_error;
+      aux_out->max_bitrate_error = best_error;
+    }
+    cparams.quant_ac_rescale = best_rescale;
+  }
   ib.VerifyMetadata();
 
   passes_enc_state->special_frames.clear();
 
-  CompressParams cparams = cparams_orig;
   JXL_RETURN_IF_ERROR(ParamsPostInit(&cparams));
 
   if (cparams.progressive_dc < 0) {
@@ -1084,16 +1135,20 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                          cparams.progressive_dc);
     }
     cparams.progressive_dc = 0;
-    // Enable progressive_dc for lower qualities.
-    if (cparams.butteraugli_distance >=
-        kMinButteraugliDistanceForProgressiveDc) {
+    // Enable progressive_dc for lower qualities, except for fast speeds where
+    // the modular encoder uses fixed tree.
+    if (cparams.speed_tier <= SpeedTier::kCheetah &&
+        cparams.butteraugli_distance >=
+            kMinButteraugliDistanceForProgressiveDc) {
       cparams.progressive_dc = 1;
     }
   }
   if (cparams.ec_resampling < cparams.resampling) {
     cparams.ec_resampling = cparams.resampling;
   }
-  if (cparams.resampling > 1) cparams.progressive_dc = 0;
+  if (cparams.resampling > 1 || frame_info.is_preview) {
+    cparams.progressive_dc = 0;
+  }
 
   if (frame_info.dc_level + cparams.progressive_dc > 4) {
     return JXL_FAILURE("Too many levels of progressive DC");
@@ -1240,7 +1295,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     if (frame_header->encoding == FrameEncoding::kVarDCT) {
       PadImageToBlockMultipleInPlace(&opsin);
       JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
-          ib_or_linear, &opsin, cms, pool, modular_frame_encoder.get(), writer,
+          ib_or_linear, &opsin, cms, pool, modular_frame_encoder.get(),
           frame_header.get()));
     } else if (frame_header->upsampling != 1 && !cparams.already_downsampled) {
       // In VarDCT mode, LossyFrameHeuristics takes care of running downsampling
@@ -1249,7 +1304,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     }
   } else {
     JXL_RETURN_IF_ERROR(lossy_frame_encoder.ComputeEncodingData(
-        &ib, &opsin, cms, pool, modular_frame_encoder.get(), writer,
+        &ib, &opsin, cms, pool, modular_frame_encoder.get(),
         frame_header.get()));
   }
   if (cparams.ec_resampling != 1 && !cparams.already_downsampled) {
@@ -1321,7 +1376,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
 
   JXL_RETURN_IF_ERROR(
       DequantMatricesEncodeDC(&lossy_frame_encoder.State()->shared.matrices,
-                              get_output(0), kLayerDequantTables, aux_out));
+                              get_output(0), kLayerQuant, aux_out));
   if (frame_header->encoding == FrameEncoding::kVarDCT) {
     JXL_RETURN_IF_ERROR(
         lossy_frame_encoder.EncodeGlobalDCInfo(*frame_header, get_output(0)));
@@ -1401,7 +1456,9 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   JXL_RETURN_IF_ERROR(num_errors.load(std::memory_order_relaxed) == 0);
 
   for (BitWriter& bw : group_codes) {
+    BitWriter::Allotment allotment(&bw, 8);
     bw.ZeroPadToByte();  // end of group.
+    ReclaimAndCharge(&bw, &allotment, kLayerAC, aux_out);
   }
 
   std::vector<coeff_order_t>* permutation_ptr = nullptr;
@@ -1483,7 +1540,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   JXL_RETURN_IF_ERROR(
       WriteGroupOffsets(group_codes, permutation_ptr, writer, aux_out));
   writer->AppendByteAligned(group_codes);
-  writer->ZeroPadToByte();  // end of frame.
 
   return true;
 }

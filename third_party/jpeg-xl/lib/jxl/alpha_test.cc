@@ -5,8 +5,7 @@
 
 #include "lib/jxl/alpha.h"
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "lib/jxl/test_utils.h"
 
 namespace jxl {
 namespace {

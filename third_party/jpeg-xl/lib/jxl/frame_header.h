@@ -262,10 +262,10 @@ struct Passes : public Fields {
 
   void GetDownsamplingBracket(size_t pass, int& minShift, int& maxShift) const {
     maxShift = 2;
-    minShift = 0;
+    minShift = 3;
     for (size_t i = 0;; i++) {
       for (uint32_t j = 0; j < num_downsample; ++j) {
-        if (i <= last_pass[j]) {
+        if (i == last_pass[j]) {
           if (downsample[j] == 8) minShift = 3;
           if (downsample[j] == 4) minShift = 2;
           if (downsample[j] == 2) minShift = 1;
@@ -275,9 +275,21 @@ struct Passes : public Fields {
       if (i == num_passes - 1) minShift = 0;
       if (i == pass) return;
       maxShift = minShift - 1;
-      minShift = 0;
     }
   }
+
+  uint32_t GetDownsamplingTargetForCompletedPasses(uint32_t num_p) const {
+    if (num_p >= num_passes) return 1;
+    uint32_t retval = 8;
+    for (uint32_t i = 0; i < num_downsample; ++i) {
+      if (num_p > last_pass[i]) {
+        retval = std::min(retval, downsample[i]);
+      }
+    }
+    return retval;
+  }
+
+  std::string DebugString() const;
 
   uint32_t num_passes;      // <= kMaxNumPasses
   uint32_t num_downsample;  // <= num_passes
@@ -472,6 +484,8 @@ struct FrameHeader : public Fields {
            frame_type == FrameType::kRegularFrame ||
            frame_type == FrameType::kSkipProgressive;
   }
+
+  std::string DebugString() const;
 
   uint64_t extensions;
 };

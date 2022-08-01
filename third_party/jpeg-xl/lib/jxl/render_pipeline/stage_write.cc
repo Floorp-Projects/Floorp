@@ -5,6 +5,7 @@
 
 #include "lib/jxl/render_pipeline/stage_write.h"
 
+#include "lib/jxl/alpha.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/image_bundle.h"
@@ -53,20 +54,20 @@ void StoreRGBA(D d, V r, V g, V b, V a, bool alpha, size_t n, size_t extra,
   // TODO(veluca): implement this for x86.
   size_t mul = alpha ? 4 : 3;
   HWY_ALIGN uint8_t bytes[16];
-  Store(r, d, bytes);
+  StoreU(r, d, bytes);
   for (size_t i = 0; i < n; i++) {
     buf[mul * i] = bytes[i];
   }
-  Store(g, d, bytes);
+  StoreU(g, d, bytes);
   for (size_t i = 0; i < n; i++) {
     buf[mul * i + 1] = bytes[i];
   }
-  Store(b, d, bytes);
+  StoreU(b, d, bytes);
   for (size_t i = 0; i < n; i++) {
     buf[mul * i + 2] = bytes[i];
   }
   if (alpha) {
-    Store(a, d, bytes);
+    StoreU(a, d, bytes);
     for (size_t i = 0; i < n; i++) {
       buf[4 * i + 3] = bytes[i];
     }
@@ -115,10 +116,10 @@ class WriteToU8Stage : public RenderPipelineStage {
     }
 
     for (ssize_t x = 0; x < x1; x += Lanes(d)) {
-      auto rf = Clamp(zero, Load(d, row_in_r + x), one) * mul;
-      auto gf = Clamp(zero, Load(d, row_in_g + x), one) * mul;
-      auto bf = Clamp(zero, Load(d, row_in_b + x), one) * mul;
-      auto af = row_in_a ? Clamp(zero, Load(d, row_in_a + x), one) * mul
+      auto rf = Clamp(zero, LoadU(d, row_in_r + x), one) * mul;
+      auto gf = Clamp(zero, LoadU(d, row_in_g + x), one) * mul;
+      auto bf = Clamp(zero, LoadU(d, row_in_b + x), one) * mul;
+      auto af = row_in_a ? Clamp(zero, LoadU(d, row_in_a + x), one) * mul
                          : Set(d, 255.0f);
       auto r8 = U8FromU32(BitCast(du, NearestInt(rf)));
       auto g8 = U8FromU32(BitCast(du, NearestInt(gf)));
@@ -272,13 +273,14 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
  public:
   WriteToPixelCallbackStage(const PixelCallback& pixel_callback, size_t width,
                             size_t height, bool rgba, bool has_alpha,
-                            size_t alpha_c)
+                            bool unpremul_alpha, size_t alpha_c)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
         pixel_callback_(pixel_callback),
         width_(width),
         height_(height),
         rgba_(rgba),
         has_alpha_(has_alpha),
+        unpremul_alpha_(unpremul_alpha),
         alpha_c_(alpha_c),
         opaque_alpha_(kMaxPixelsPerCall, 1.0f) {}
 
@@ -309,6 +311,7 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
       // No xextra offset; opaque_alpha_ is a way to set all values to 1.0f.
       line_buffers[3] = opaque_alpha_.data();
     }
+
     // TODO(veluca): SIMD.
     ssize_t limit = std::min(xextra + xsize, width_ - xpos);
     for (ssize_t x0 = -xextra; x0 < limit; x0 += kMaxPixelsPerCall) {
@@ -323,6 +326,10 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
         if (rgba_) {
           temp[j++] = line_buffers[3][ix];
         }
+      }
+      if (has_alpha_ && rgba_ && unpremul_alpha_) {
+        // TODO(szabadka) SIMDify (possibly in a separate pipeline stage).
+        UnpremultiplyAlpha(temp, ix);
       }
       pixel_callback_.run(run_opaque_, thread_id, xpos + x0, ypos, ix, temp);
       for (size_t c = 0; c < 3; c++) line_buffers[c] += kMaxPixelsPerCall;
@@ -357,6 +364,7 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
   size_t height_;
   bool rgba_;
   bool has_alpha_;
+  bool unpremul_alpha_;
   size_t alpha_c_;
   std::vector<float> opaque_alpha_;
   std::vector<CacheAlignedUniquePtr> temp_;
@@ -385,9 +393,9 @@ std::unique_ptr<RenderPipelineStage> GetWriteToU8Stage(uint8_t* rgb,
 
 std::unique_ptr<RenderPipelineStage> GetWriteToPixelCallbackStage(
     const PixelCallback& pixel_callback, size_t width, size_t height, bool rgba,
-    bool has_alpha, size_t alpha_c) {
+    bool has_alpha, bool unpremul_alpha, size_t alpha_c) {
   return jxl::make_unique<WriteToPixelCallbackStage>(
-      pixel_callback, width, height, rgba, has_alpha, alpha_c);
+      pixel_callback, width, height, rgba, has_alpha, unpremul_alpha, alpha_c);
 }
 
 }  // namespace jxl

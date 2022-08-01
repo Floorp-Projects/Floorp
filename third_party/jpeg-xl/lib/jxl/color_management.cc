@@ -468,7 +468,8 @@ Status MaybeCreateProfile(const ColorEncoding& c,
             CreateICCCurvParaTag({2.6, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
         break;
       default:
-        JXL_ABORT("Unknown TF %d", c.tf.GetTransferFunction());
+        JXL_ABORT("Unknown TF %u",
+                  static_cast<unsigned int>(c.tf.GetTransferFunction()));
     }
   }
   FinalizeICCTag(&tags, &tag_offset, &tag_size);

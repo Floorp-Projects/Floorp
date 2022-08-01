@@ -62,7 +62,7 @@ struct State {
   pixel_type_w pred = 0;  // *before* removing the added bits.
   std::vector<uint32_t> pred_errors[kNumPredictors];
   std::vector<int32_t> error;
-  Header header;
+  const Header header;
 
   // Allows to approximate division by a number from 1 to 64.
   uint32_t divlookup[64];

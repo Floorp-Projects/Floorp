@@ -15,13 +15,14 @@ OS=`uname -s`
 MYDIR=$(dirname $(realpath "$0"))
 
 ### Environment parameters:
-TEST_STACK_LIMIT="${TEST_STACK_LIMIT:-128}"
+TEST_STACK_LIMIT="${TEST_STACK_LIMIT:-256}"
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-RelWithDebInfo}
 CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-}
 CMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER:-}
 CMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER:-}
 CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM:-}
 SKIP_TEST="${SKIP_TEST:-0}"
+TEST_SELECTOR="${TEST_SELECTOR:-}"
 BUILD_TARGET="${BUILD_TARGET:-}"
 ENABLE_WASM_SIMD="${ENABLE_WASM_SIMD:-0}"
 if [[ -n "${BUILD_TARGET}" ]]; then
@@ -41,27 +42,11 @@ FUZZER_MAX_TIME="${FUZZER_MAX_TIME:-0}"
 
 SANITIZER="none"
 
-if [[ "${BUILD_TARGET}" == wasm* ]]; then
-  # Check that environment is setup for the WASM build target.
-  if [[ -z "${EMSCRIPTEN}" ]]; then
-    echo "'EMSCRIPTEN' is not defined. Use 'emconfigure' wrapper to setup WASM build environment" >&2
-    return 1
-  fi
-  # Remove the side-effect of "emconfigure" wrapper - it considers NodeJS environment.
-  unset EMMAKEN_JUST_CONFIGURE
-  EMS_TOOLCHAIN_FILE="${EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake"
-  if [[ -f "${EMS_TOOLCHAIN_FILE}" ]]; then
-    CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE:-${EMS_TOOLCHAIN_FILE}}
-  else
-    echo "Warning: EMSCRIPTEN CMake module not found" >&2
-  fi
-  CMAKE_CROSSCOMPILING_EMULATOR="${MYDIR}/js-wasm-wrapper.sh"
-fi
 
 if [[ "${BUILD_TARGET%%-*}" == "x86_64" ||
     "${BUILD_TARGET%%-*}" == "i686" ]]; then
   # Default to building all targets, even if compiler baseline is SSE4
-  HWY_BASELINE_TARGETS=${HWY_BASELINE_TARGETS:-HWY_SCALAR}
+  HWY_BASELINE_TARGETS=${HWY_BASELINE_TARGETS:-HWY_EMU128}
 else
   HWY_BASELINE_TARGETS=${HWY_BASELINE_TARGETS:-}
 fi
@@ -350,7 +335,6 @@ cmake_configure() {
     -G Ninja
     -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}"
     -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS}"
-    -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}"
     -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}"
     -DCMAKE_MODULE_LINKER_FLAGS="${CMAKE_MODULE_LINKER_FLAGS}"
     -DCMAKE_SHARED_LINKER_FLAGS="${CMAKE_SHARED_LINKER_FLAGS}"
@@ -392,11 +376,14 @@ cmake_configure() {
         # Only the first element of the target triplet.
         -DCMAKE_SYSTEM_PROCESSOR="${BUILD_TARGET%%-*}"
         -DCMAKE_SYSTEM_NAME="${system_name}"
+        -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}"
       )
     else
-      # sjpeg confuses WASM SIMD with SSE.
       args+=(
+        # sjpeg confuses WASM SIMD with SSE.
         -DSJPEG_ENABLE_SIMD=OFF
+        # Building shared libs is not very useful for WASM.
+        -DBUILD_SHARED_LIBS=OFF
       )
     fi
     args+=(
@@ -457,7 +444,11 @@ cmake_configure() {
       -DCMAKE_MAKE_PROGRAM="${CMAKE_MAKE_PROGRAM}"
     )
   fi
-  cmake "${args[@]}" "$@"
+  if [[ "${BUILD_TARGET}" == wasm* ]]; then
+    emcmake cmake "${args[@]}" "$@"
+  else
+    cmake "${args[@]}" "$@"
+  fi
 }
 
 cmake_build_and_test() {
@@ -485,7 +476,7 @@ cmake_build_and_test() {
     (cd "${BUILD_DIR}"
      export UBSAN_OPTIONS=print_stacktrace=1
      [[ "${TEST_STACK_LIMIT}" == "none" ]] || ulimit -s "${TEST_STACK_LIMIT}"
-     ctest -j $(nproc --all || echo 1) --output-on-failure)
+     ctest -j $(nproc --all || echo 1) ${TEST_SELECTOR} --output-on-failure)
   fi
 }
 
@@ -494,7 +485,7 @@ cmake_build_and_test() {
 # library.
 strip_dead_code() {
   # Emscripten does tree shaking without any extra flags.
-  if [[ "${CMAKE_TOOLCHAIN_FILE##*/}" == "Emscripten.cmake" ]]; then
+  if [[ "${BUILD_TARGET}" == wasm* ]]; then
     return 0
   fi
   # -ffunction-sections, -fdata-sections and -Wl,--gc-sections effectively
@@ -711,20 +702,24 @@ cmd_msan_install() {
   export CC="${CC:-clang}"
   export CXX="${CXX:-clang++}"
   detect_clang_version
-  local llvm_tag="llvmorg-${CLANG_VERSION}.0.0"
-  case "${CLANG_VERSION}" in
-    "6.0")
-      llvm_tag="llvmorg-6.0.1"
-      ;;
-    "7")
-      llvm_tag="llvmorg-7.0.1"
-      ;;
-  esac
-  local llvm_targz="${tmpdir}/${llvm_tag}.tar.gz"
-  curl -L --show-error -o "${llvm_targz}" \
-    "https://github.com/llvm/llvm-project/archive/${llvm_tag}.tar.gz"
-  tar -C "${tmpdir}" -zxf "${llvm_targz}"
-  local llvm_root="${tmpdir}/llvm-project-${llvm_tag}"
+  # Allow overriding the LLVM checkout.
+  local llvm_root="${LLVM_ROOT}"
+  if [ -z "${llvm_root}" ]; then
+    local llvm_tag="llvmorg-${CLANG_VERSION}.0.0"
+    case "${CLANG_VERSION}" in
+      "6.0")
+        llvm_tag="llvmorg-6.0.1"
+        ;;
+      "7")
+        llvm_tag="llvmorg-7.0.1"
+        ;;
+    esac
+    local llvm_targz="${tmpdir}/${llvm_tag}.tar.gz"
+    curl -L --show-error -o "${llvm_targz}" \
+      "https://github.com/llvm/llvm-project/archive/${llvm_tag}.tar.gz"
+    tar -C "${tmpdir}" -zxf "${llvm_targz}"
+    llvm_root="${tmpdir}/llvm-project-${llvm_tag}"
+  fi
 
   local msan_prefix="${HOME}/.msan/${CLANG_VERSION}"
   rm -rf "${msan_prefix}"
@@ -1020,11 +1015,11 @@ cmd_arm_benchmark() {
   )
 
   local images=(
-    "third_party/testdata/third_party/imagecompression.info/flower_foveon.png"
+    "testdata/jxl/flower/flower.png"
   )
 
   local jpg_images=(
-    "third_party/testdata/third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg"
+    "testdata/jxl/flower/flower.png.im_q85_420.jpg"
   )
 
   if [[ "${SKIP_CPUSET:-}" == "1" ]]; then
@@ -1219,10 +1214,10 @@ cmd_lint() {
     # We include in this linter all the changes including the uncommitted changes
     # to avoid printing changes already applied.
     set -x
+    # Ignoring the error that git-clang-format outputs.
     git -C "${MYDIR}" "${clang_format}" --binary "${clang_format}" \
-      --style=file --diff "${MR_ANCESTOR_SHA}" -- >"${tmppatch}"
+      --style=file --diff "${MR_ANCESTOR_SHA}" -- >"${tmppatch}" || true
     { set +x; } 2>/dev/null
-
     if grep -E '^--- ' "${tmppatch}">/dev/null; then
       if [[ -n "${LINT_OUTPUT:-}" ]]; then
         cp "${tmppatch}" "${LINT_OUTPUT}"
@@ -1423,11 +1418,14 @@ cmd_bump_version() {
 # Check that the AUTHORS file contains the email of the committer.
 cmd_authors() {
   merge_request_commits
-  # TODO(deymo): Handle multiple commits and check that they are all the same
-  # author.
-  local email=$(git log --format='%ae' "${MR_HEAD_SHA}^!")
-  local name=$(git log --format='%an' "${MR_HEAD_SHA}^!")
-  "${MYDIR}"/tools/check_author.py "${email}" "${name}"
+  local emails
+  local names
+  readarray -t emails < <(git log --format='%ae' "${MR_HEAD_SHA}...${MR_ANCESTOR_SHA}")
+  readarray -t names < <(git log --format='%an' "${MR_HEAD_SHA}...${MR_ANCESTOR_SHA}")
+  for i in "${!names[@]}"; do
+    echo "Checking name '${names[$i]}' with email '${emails[$i]}' ..."
+    "${MYDIR}"/tools/check_author.py "${emails[$i]}" "${names[$i]}"
+  done
 }
 
 main() {
@@ -1490,6 +1488,7 @@ You can pass some optional environment variables as well:
  - SKIP_TEST=1: Skip the test stage.
  - STORE_IMAGES=0: Makes the benchmark discard the computed images.
  - TEST_STACK_LIMIT: Stack size limit (ulimit -s) during tests, in KiB.
+ - TEST_SELECTOR: pass additional arguments to ctest, e.g. "-R .Resample.".
  - STACK_SIZE=1: Generate binaries with the .stack_sizes sections.
 
 These optional environment variables are forwarded to the cmake call as

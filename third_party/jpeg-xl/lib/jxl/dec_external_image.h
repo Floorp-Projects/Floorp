@@ -38,7 +38,8 @@ Status ConvertToExternal(const jxl::ImageBundle& ib, size_t bits_per_sample,
                          JxlEndianness endianness, size_t stride_out,
                          jxl::ThreadPool* thread_pool, void* out_image,
                          size_t out_size, const PixelCallback& out_callback,
-                         jxl::Orientation undo_orientation);
+                         jxl::Orientation undo_orientation,
+                         bool unpremul_alpha = false);
 
 // Converts single-channel image to interleaved void* pixel buffer with the
 // given format, with a single channel.

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -101,6 +102,8 @@ class Image {
 
   void undo_transforms(const weighted::Header& wp_header,
                        jxl::ThreadPool* pool = nullptr);
+
+  std::string DebugString() const;
 };
 
 }  // namespace jxl

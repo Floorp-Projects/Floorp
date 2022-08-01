@@ -62,7 +62,7 @@ void ComputeSigma(const Rect& block_rect, PassesDecoderState* state) {
     const uint8_t* JXL_RESTRICT sharpness_row =
         block_rect.ConstRow(state->shared->epf_sharpness, by);
     AcStrategyRow acs_row = ac_strategy.ConstRow(block_rect, by);
-    const int* const JXL_RESTRICT row_quant =
+    const int32_t* const JXL_RESTRICT row_quant =
         block_rect.ConstRow(state->shared->raw_quant_field, by);
 
     for (size_t bx = 0; bx < block_rect.xsize(); bx++) {

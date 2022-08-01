@@ -35,7 +35,6 @@ jobs:
           doxygen \
           libbrotli-dev \
           libgdk-pixbuf2.0-dev \
-          libgflags-dev \
           libgif-dev \
           libgtest-dev \
           libgtk2.0-dev  \
@@ -146,6 +145,20 @@ jobs:
         cd "git-${git_version}"
         make prefix=/usr -j4 install
 
+    - name: Install gcc-8 (only 18.04)
+      if: matrix.os == 'ubuntu:18.04'
+        # Compiler bug workaround: install and use gcc-8
+      shell: 'bash'
+      run: |
+        apt install -y \
+          gcc-8 \
+          g++-8 \
+        #
+        update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 100
+        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100
+        update-alternatives --set g++ /usr/bin/g++-8
+        update-alternatives --set gcc /usr/bin/gcc-8
+
     - name: Set git safe dir
       run: |
         export GIT_CEILING_DIRECTORIES=/__w # only work before git v2.35.2
@@ -251,7 +264,7 @@ jobs:
 
   windows_build:
     name: Windows Build (vcpkg / ${{ matrix.triplet }})
-    runs-on: [windows-latest]
+    runs-on: [windows-2019]
     strategy:
       fail-fast: false
       matrix:
@@ -262,7 +275,7 @@ jobs:
             arch: '-A x64'
 
     env:
-      VCPKG_VERSION: '2021.05.12'
+      VCPKG_VERSION: '2022.06.16.1'
       VCPKG_ROOT: vcpkg
       VCPKG_DISABLE_METRICS: 1
 
@@ -302,7 +315,6 @@ jobs:
       run: |
         set -x
         ${VCPKG_ROOT}/vcpkg --triplet ${{ matrix.triplet }} install \
-          gflags \
           giflib \
           libjpeg-turbo \
           libpng \
@@ -324,7 +336,6 @@ jobs:
           -DJPEGXL_ENABLE_TCMALLOC=OFF \
           -DJPEGXL_ENABLE_VIEWERS=OFF \
           -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
-          -DJPEGXL_BUNDLE_GFLAGS=ON \
         #
     - name: Build
       shell: 'bash'

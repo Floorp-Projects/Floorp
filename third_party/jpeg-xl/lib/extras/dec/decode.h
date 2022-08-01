@@ -12,15 +12,12 @@
 #include <stdint.h>
 
 #include <string>
+#include <vector>
 
 #include "lib/extras/dec/color_hints.h"
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/codec_in_out.h"
-#include "lib/jxl/field_encodings.h"  // MakeBit
 
 namespace jxl {
 namespace extras {
@@ -36,27 +33,14 @@ enum class Codec : uint32_t {
   kEXR
 };
 
-static inline constexpr uint64_t EnumBits(Codec /*unused*/) {
-  // Return only fully-supported codecs (kGIF is decode-only).
-  return MakeBit(Codec::kPNM)
-#if JPEGXL_ENABLE_APNG
-         | MakeBit(Codec::kPNG)
-#endif
-#if JPEGXL_ENABLE_JPEG
-         | MakeBit(Codec::kJPG)
-#endif
-#if JPEGXL_ENABLE_EXR
-         | MakeBit(Codec::kEXR)
-#endif
-      ;
-}
+std::vector<Codec> AvailableCodecs();
 
 // If and only if extension is ".pfm", *bits_per_sample is updated to 32 so
 // that Encode() would encode to PFM instead of PPM.
 Codec CodecFromExtension(std::string extension,
                          size_t* JXL_RESTRICT bits_per_sample = nullptr);
 
-// Decodes "bytes" and sets io->metadata.m.
+// Decodes "bytes" info *ppf.
 // color_space_hint may specify the color space, otherwise, defaults to sRGB.
 Status DecodeBytes(Span<const uint8_t> bytes, const ColorHints& color_hints,
                    const SizeConstraints& constraints,

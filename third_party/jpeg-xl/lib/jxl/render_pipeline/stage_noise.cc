@@ -10,7 +10,6 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/fast_math-inl.h"
 #include "lib/jxl/sanitizers.h"
 #include "lib/jxl/transfer_functions-inl.h"
 
@@ -23,7 +22,7 @@ using hwy::HWY_NAMESPACE::ShiftRight;
 using hwy::HWY_NAMESPACE::Vec;
 
 using D = HWY_CAPPED(float, kBlockDim);
-using DI = hwy::HWY_NAMESPACE::Rebind<int, D>;
+using DI = hwy::HWY_NAMESPACE::Rebind<int32_t, D>;
 using DI8 = hwy::HWY_NAMESPACE::Repartition<uint8_t, D>;
 
 // [0, max_value]
@@ -124,17 +123,17 @@ void AddNoiseToRGB(const D d, const Vec<D> rnd_noise_r,
   const auto green_noise = kRGNCorr * rnd_noise_g * noise_strength_g +
                            kRGCorr * rnd_noise_cor * noise_strength_g;
 
-  auto vx = Load(d, out_x);
-  auto vy = Load(d, out_y);
-  auto vb = Load(d, out_b);
+  auto vx = LoadU(d, out_x);
+  auto vy = LoadU(d, out_y);
+  auto vb = LoadU(d, out_b);
 
   vx += red_noise - green_noise + Set(d, ytox) * (red_noise + green_noise);
   vy += red_noise + green_noise;
   vb += Set(d, ytob) * (red_noise + green_noise);
 
-  Store(vx, d, out_x);
-  Store(vy, d, out_y);
-  Store(vb, d, out_b);
+  StoreU(vx, d, out_x);
+  StoreU(vy, d, out_y);
+  StoreU(vb, d, out_b);
 }
 
 class AddNoiseStage : public RenderPipelineStage {
@@ -181,16 +180,16 @@ class AddNoiseStage : public RenderPipelineStage {
     msan::UnpoisonMemory(row_x + xsize, (xsize_v - xsize) * sizeof(float));
     msan::UnpoisonMemory(row_y + xsize, (xsize_v - xsize) * sizeof(float));
     for (size_t x = 0; x < xsize_v; x += Lanes(d)) {
-      const auto vx = Load(d, row_x + x);
-      const auto vy = Load(d, row_y + x);
+      const auto vx = LoadU(d, row_x + x);
+      const auto vy = LoadU(d, row_y + x);
       const auto in_g = vy - vx;
       const auto in_r = vy + vx;
       const auto noise_strength_g = NoiseStrength(noise_model, in_g * half);
       const auto noise_strength_r = NoiseStrength(noise_model, in_r * half);
-      const auto addit_rnd_noise_red = Load(d, row_rnd_r + x) * norm_const;
-      const auto addit_rnd_noise_green = Load(d, row_rnd_g + x) * norm_const;
+      const auto addit_rnd_noise_red = LoadU(d, row_rnd_r + x) * norm_const;
+      const auto addit_rnd_noise_green = LoadU(d, row_rnd_g + x) * norm_const;
       const auto addit_rnd_noise_correlated =
-          Load(d, row_rnd_c + x) * norm_const;
+          LoadU(d, row_rnd_c + x) * norm_const;
       AddNoiseToRGB(D(), addit_rnd_noise_red, addit_rnd_noise_green,
                     addit_rnd_noise_correlated, noise_strength_g,
                     noise_strength_r, ytox, ytob, row_x + x, row_y + x,
@@ -242,7 +241,7 @@ class ConvolveNoiseStage : public RenderPipelineStage {
       float* JXL_RESTRICT row_out = GetOutputRow(output_rows, c, 0);
       for (ssize_t x = -RoundUpTo(xextra, Lanes(d));
            x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
-        const auto p00 = Load(d, rows[2] + x);
+        const auto p00 = LoadU(d, rows[2] + x);
         auto others = Zero(d);
         for (ssize_t i = -2; i <= 2; i++) {
           others += LoadU(d, rows[0] + x + i);
@@ -256,7 +255,7 @@ class ConvolveNoiseStage : public RenderPipelineStage {
         others += LoadU(d, rows[2] + x + 2);
         // 4 * (1 - box kernel)
         auto pixels = MulAdd(others, Set(d, 0.16), p00 * Set(d, -3.84));
-        Store(pixels, d, row_out + x);
+        StoreU(pixels, d, row_out + x);
       }
     }
   }

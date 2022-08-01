@@ -13,7 +13,8 @@
 namespace jxl {
 namespace {
 
-ImageF Convolve(const ImageF& in, const std::vector<float>& kernel) {
+JXL_MAYBE_UNUSED ImageF Convolve(const ImageF& in,
+                                 const std::vector<float>& kernel) {
   return ConvolveAndSample(in, kernel, 1);
 }
 
@@ -35,9 +36,8 @@ void BM_GaussBlur1d(benchmark::State& state) {
   for (auto _ : state) {
     FastGaussian1D(rg, in.Row(0), length, out.Row(0));
     // Prevent optimizing out
-    const float actual = out.ConstRow(0)[length / 2];
-    const float rel_err = std::abs(actual - expected) / expected;
-    JXL_ASSERT(rel_err < 9E-5);
+    JXL_ASSERT(std::abs(out.ConstRow(0)[length / 2] - expected) / expected <
+               9E-5);
   }
   state.SetItemsProcessed(length * state.iterations());
 }
@@ -59,9 +59,9 @@ void BM_GaussBlur2d(benchmark::State& state) {
   for (auto _ : state) {
     FastGaussian(rg, in, null_pool, &temp, &out);
     // Prevent optimizing out
-    const float actual = out.ConstRow(ysize / 2)[xsize / 2];
-    const float rel_err = std::abs(actual - expected) / expected;
-    JXL_ASSERT(rel_err < 9E-5);
+    JXL_ASSERT(std::abs(out.ConstRow(ysize / 2)[xsize / 2] - expected) /
+                   expected <
+               9E-5);
   }
   state.SetItemsProcessed(xsize * ysize * state.iterations());
 }
@@ -81,11 +81,11 @@ void BM_GaussBlurFir(benchmark::State& state) {
   const std::vector<float> kernel =
       GaussianKernel(static_cast<int>(4 * sigma), static_cast<float>(sigma));
   for (auto _ : state) {
-    const ImageF out = Convolve(in, kernel);
     // Prevent optimizing out
-    const float actual = out.ConstRow(ysize / 2)[xsize / 2];
-    const float rel_err = std::abs(actual - expected) / expected;
-    JXL_ASSERT(rel_err < 9E-5);
+    JXL_ASSERT(std::abs(Convolve(in, kernel).ConstRow(ysize / 2)[xsize / 2] -
+                        expected) /
+                   expected <
+               9E-5);
   }
   state.SetItemsProcessed(xsize * ysize * state.iterations());
 }
@@ -110,9 +110,9 @@ void BM_GaussBlurSep7(benchmark::State& state) {
   for (auto _ : state) {
     Separable7(in, Rect(in), weights, null_pool, &out);
     // Prevent optimizing out
-    const float actual = out.ConstRow(ysize / 2)[xsize / 2];
-    const float rel_err = std::abs(actual - expected) / expected;
-    JXL_ASSERT(rel_err < 9E-5);
+    JXL_ASSERT(std::abs(out.ConstRow(ysize / 2)[xsize / 2] - expected) /
+                   expected <
+               9E-5);
   }
   state.SetItemsProcessed(xsize * ysize * state.iterations());
 }

@@ -12,11 +12,11 @@
 
 namespace jxl {
 
-std::vector<int> CreateFlatHistogram(int length, int total_count) {
+std::vector<int32_t> CreateFlatHistogram(int length, int total_count) {
   JXL_ASSERT(length > 0);
   JXL_ASSERT(length <= total_count);
   const int count = total_count / length;
-  std::vector<int> result(length, count);
+  std::vector<int32_t> result(length, count);
   const int rem_counts = total_count % length;
   for (int i = 0; i < rem_counts; ++i) {
     ++result[i];
@@ -48,7 +48,7 @@ std::vector<int> CreateFlatHistogram(int length, int total_count) {
 // underfull nor overfull, and represents exactly two symbols. The overfull
 // entry might be either overfull or underfull, and is pushed into the
 // corresponding stack.
-void InitAliasTable(std::vector<int> distribution, uint32_t range,
+void InitAliasTable(std::vector<int32_t> distribution, uint32_t range,
                     size_t log_alpha_size, AliasTable::Entry* JXL_RESTRICT a) {
   while (!distribution.empty() && distribution.back() == 0) {
     distribution.pop_back();

@@ -26,7 +26,7 @@ foreach(brlib IN ITEMS ${brlibs})
   )
 
   if (${BRPREFIX}_LIBRARY AND NOT TARGET ${brlib})
-    if(${CMAKE_VERSION} VERSION_LESS "3.13.5")
+    if(CMAKE_VERSION VERSION_LESS "3.13.5")
     add_library(${brlib} INTERFACE IMPORTED GLOBAL)
       set_property(TARGET ${brlib} PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BROTLI_INCLUDE_DIR})
       target_link_libraries(${brlib} INTERFACE ${${BRPREFIX}_LIBRARY})

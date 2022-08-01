@@ -38,27 +38,7 @@ License: BSD-3-clause
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Files: third_party/testdata/third_party/imagecompression.info/*
-Copyright: their respective owners.
-License: License without any prohibitive copyright restrictions.
- See https://imagecompression.info/test_images/ for details.
- .
- These Images are available without any prohibitive copyright restrictions.
- .
- These images are (c) there respective owners. You are granted full
- redistribution and publication rights on these images provided:
- .
- 1. The origin of the pictures must not be misrepresented; you must not claim
- that you took the original pictures. If you use, publish or redistribute them,
- an acknowledgment would be appreciated but is not required.
- 2. Altered versions must be plainly marked as such, and must not be
- misinterpreted as being the originals.
- 3. No payment is required for distribution of this material, it must be
- available freely under the conditions stated here. That is, it is prohibited to
- sell the material.
- 4. This notice may not be removed or altered from any distribution.
-
-Files: third_party/testdata/third_party/pngsuite/*
+Files: testdata/external/pngsuite/*
 Copyright: Willem van Schaik, 1996, 2011
 License: PngSuite License
  See http://www.schaik.com/pngsuite/ for details.
@@ -66,15 +46,15 @@ License: PngSuite License
  Permission to use, copy, modify and distribute these images for any
  purpose and without fee is hereby granted.
 
-Files: third_party/testdata/raw.pixls/*
+Files: testdata/external/raw.pixls/*
 Copyright: their respective owners listed in https://raw.pixls.us/
 License: CC0-1.0
 
-Files: third_party/testdata/raw.pixls/*
+Files: testdata/external/wesaturate/*
 Copyright: their respective owners listed in https://www.wesaturate.com/
 License: CC0-1.0
 
-Files: third_party/testdata/third_party/wide-gamut-tests/
+Files: testdata/external/wide-gamut-tests/
 Copyright: github.com/codelogic/wide-gamut-tests authors.
 License: Apache-2.0
 

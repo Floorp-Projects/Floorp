@@ -173,14 +173,8 @@ void ThreadParallelRunner::ThreadFunc(ThreadParallelRunner* self,
 }
 
 ThreadParallelRunner::ThreadParallelRunner(const int num_worker_threads)
-#if defined(__EMSCRIPTEN__)
-    : num_worker_threads_(0), num_threads_(1) {
-  // TODO(eustas): find out if pthreads would work for us.
-  (void)num_worker_threads;
-#else
     : num_worker_threads_(num_worker_threads),
       num_threads_(std::max(num_worker_threads, 1)) {
-#endif
   PROFILER_ZONE("ThreadParallelRunner ctor");
 
   threads_.reserve(num_worker_threads_);

@@ -164,19 +164,6 @@ void FindBestBlockEntropyModel(PassesEncoderState& enc_state) {
       *std::max_element(ctx_map.begin(), ctx_map.end()) + 1;
 }
 
-// Returns the target size based on whether bitrate or direct targetsize is
-// given.
-size_t TargetSize(const CompressParams& cparams,
-                  const FrameDimensions& frame_dim) {
-  if (cparams.target_size > 0) {
-    return cparams.target_size;
-  }
-  if (cparams.target_bitrate > 0.0) {
-    return 0.5 + cparams.target_bitrate * frame_dim.xsize * frame_dim.ysize /
-                     kBitsPerByte;
-  }
-  return 0;
-}
 }  // namespace
 
 void FindBestDequantMatrices(const CompressParams& cparams,
@@ -772,12 +759,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     PadImageToBlockMultipleInPlace(opsin);
   }
 
-  const FrameDimensions& frame_dim = enc_state->shared.frame_dim;
-  size_t target_size = TargetSize(cparams, frame_dim);
-  size_t opsin_target_size = target_size;
-  if (cparams.target_size > 0 || cparams.target_bitrate > 0.0) {
-    cparams.target_size = opsin_target_size;
-  } else if (cparams.butteraugli_distance < 0) {
+  if (cparams.butteraugli_distance < 0) {
     return JXL_FAILURE("Expected non-negative distance");
   }
 
@@ -859,6 +841,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     enc_state->initial_quant_field = InitialQuantField(
         butteraugli_distance_for_iqf, *opsin, shared.frame_dim, pool, 1.0f,
         &enc_state->initial_quant_masking);
+    quantizer.SetQuantField(quant_dc, enc_state->initial_quant_field, nullptr);
   }
 
   // TODO(veluca): do something about animations.

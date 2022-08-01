@@ -33,7 +33,7 @@ install(TARGETS pixbufloader-jxl LIBRARY DESTINATION "${GDK_PIXBUF_MODULEDIR}")
 # /usr/share/thumbnailers/gdk-pixbuf-thumbnailer.thumbnailer
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/jxl.thumbnailer DESTINATION share/thumbnailers/)
 
-if(BUILD_TESTING AND NOT MINGW)
+if(BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
   pkg_check_modules(Gdk IMPORTED_TARGET gdk-2.0)
   if (Gdk_FOUND)
     # Test for loading a .jxl file using the pixbufloader library via GDK. This
@@ -71,7 +71,7 @@ if(BUILD_TESTING AND NOT MINGW)
         COMMAND
           ${XVFB_PROGRAM_PREFIX} $<TARGET_FILE:pixbufloader_test>
           "${CMAKE_CURRENT_SOURCE_DIR}/loaders_test.cache"
-          "${CMAKE_SOURCE_DIR}/third_party/testdata/jxl/blending/cropped_traffic_light.jxl"
+          "${CMAKE_SOURCE_DIR}/testdata/jxl/blending/cropped_traffic_light.jxl"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       )
       set_tests_properties(pixbufloader_test_jxl PROPERTIES SKIP_RETURN_CODE 254)

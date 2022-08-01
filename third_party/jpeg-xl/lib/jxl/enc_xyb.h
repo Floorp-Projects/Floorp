@@ -37,9 +37,6 @@ Status RgbToYcbcr(const ImageF& r_plane, const ImageF& g_plane,
 // DEPRECATED, used by opsin_image_wrapper.
 Image3F OpsinDynamicsImage(const Image3B& srgb8, const JxlCmsInterface& cms);
 
-// For opsin_image_test.
-void TestCubeRoot();
-
 }  // namespace jxl
 
 #endif  // LIB_JXL_ENC_XYB_H_

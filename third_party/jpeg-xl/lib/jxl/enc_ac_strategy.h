@@ -56,10 +56,6 @@ struct ACSConfig {
     JXL_DASSERT(quant_field_row[by * quant_field_stride + bx] > 0);
     return quant_field_row[by * quant_field_stride + bx];
   }
-  void SetQuant(size_t bx, size_t by, float value) const {
-    JXL_DASSERT(value > 0);
-    quant_field_row[by * quant_field_stride + bx] = value;
-  }
 };
 
 struct AcStrategyHeuristics {
