@@ -22,8 +22,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
         android:usesCleartextTraffic="true"
-        tools:ignore="UnusedAttribute"
-        android:name=".GleanApplication">
+        tools:ignore="DataExtractionRules,UnusedAttribute"
+        android:name=".GleanApplication"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity android:name="org.mozilla.samples.glean.MainActivity"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTask"

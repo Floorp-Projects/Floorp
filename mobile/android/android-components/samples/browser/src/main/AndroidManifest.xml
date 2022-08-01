@@ -28,7 +28,8 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:name=".SampleApplication"
         android:usesCleartextTraffic="true"
-        tools:ignore="UnusedAttribute">
+        tools:ignore="DataExtractionRules,UnusedAttribute"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity android:name=".BrowserActivity"
             android:launchMode="singleTask"
             android:exported="true"
