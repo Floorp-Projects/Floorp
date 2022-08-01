@@ -121,8 +121,8 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
 nscoord nsHTMLButtonControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
-  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
-    result = 0;
+  if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
+    result = *containISize;
   } else {
     nsIFrame* kid = mFrames.FirstChild();
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
@@ -134,8 +134,8 @@ nscoord nsHTMLButtonControlFrame::GetMinISize(gfxContext* aRenderingContext) {
 nscoord nsHTMLButtonControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
-  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
-    result = 0;
+  if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
+    result = *containISize;
   } else {
     nsIFrame* kid = mFrames.FirstChild();
     result = nsLayoutUtils::IntrinsicForContainer(
@@ -235,36 +235,30 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
   if (aButtonReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
     // Button has a fixed block-size -- that's its content-box bSize.
     buttonContentBox.BSize(wm) = aButtonReflowInput.ComputedBSize();
-  } else if (aButtonReflowInput.mStyleDisplay->GetContainSizeAxes()
-                 .mBContained) {
-    // Button is intrinsically sized and has size containment in block axis.
-    // It should have a BSize that is either zero or the minimum
-    // specified BSize.
-    buttonContentBox.BSize(wm) = aButtonReflowInput.ComputedMinBSize();
   } else {
     // Button is intrinsically sized -- it should shrinkwrap the
-    // button-contents' bSize:
-    buttonContentBox.BSize(wm) = contentsDesiredSize.BSize(wm);
+    // button-contents' bSize. But if it has size containment in block axis,
+    // ignore the contents and use contain-intrinsic-block-size.
+    nscoord bSize = aButtonReflowInput.mFrame->ContainIntrinsicBSize().valueOr(
+        contentsDesiredSize.BSize(wm));
 
     // Make sure we obey min/max-bSize in the case when we're doing intrinsic
     // sizing (we get it for free when we have a non-intrinsic
     // aButtonReflowInput.ComputedBSize()).  Note that we do this before
     // adjusting for borderpadding, since mComputedMaxBSize and
     // mComputedMinBSize are content bSizes.
-    buttonContentBox.BSize(wm) = NS_CSS_MINMAX(
-        buttonContentBox.BSize(wm), aButtonReflowInput.ComputedMinBSize(),
-        aButtonReflowInput.ComputedMaxBSize());
+    buttonContentBox.BSize(wm) =
+        NS_CSS_MINMAX(bSize, aButtonReflowInput.ComputedMinBSize(),
+                      aButtonReflowInput.ComputedMaxBSize());
   }
   if (aButtonReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE) {
     buttonContentBox.ISize(wm) = aButtonReflowInput.ComputedISize();
-  } else if (aButtonReflowInput.mStyleDisplay->GetContainSizeAxes()
-                 .mIContained) {
-    buttonContentBox.ISize(wm) = aButtonReflowInput.ComputedMinISize();
   } else {
-    buttonContentBox.ISize(wm) = contentsDesiredSize.ISize(wm);
-    buttonContentBox.ISize(wm) = NS_CSS_MINMAX(
-        buttonContentBox.ISize(wm), aButtonReflowInput.ComputedMinISize(),
-        aButtonReflowInput.ComputedMaxISize());
+    nscoord iSize = aButtonReflowInput.mFrame->ContainIntrinsicISize().valueOr(
+        contentsDesiredSize.ISize(wm));
+    buttonContentBox.ISize(wm) =
+        NS_CSS_MINMAX(iSize, aButtonReflowInput.ComputedMinISize(),
+                      aButtonReflowInput.ComputedMaxISize());
   }
 
   // Center child in the block-direction in the button
