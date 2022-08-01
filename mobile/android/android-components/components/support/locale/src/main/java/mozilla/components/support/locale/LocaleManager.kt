@@ -4,6 +4,7 @@
 
 package mozilla.components.support.locale
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
@@ -92,6 +93,7 @@ object LocaleManager {
         }
     }
 
+    @SuppressLint("AppBundleLocaleChanges")
     private fun updateConfiguration(context: Context, locale: Locale): Context {
         val configuration = Configuration(context.resources.configuration)
         configuration.setLocale(locale)
