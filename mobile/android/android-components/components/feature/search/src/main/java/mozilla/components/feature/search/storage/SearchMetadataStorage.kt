@@ -20,7 +20,7 @@ private const val PREFERENCE_KEY_ADDITIONAL_SEARCH_ENGINES = "additional_search_
  */
 internal class SearchMetadataStorage(
     context: Context,
-    @VisibleForTesting private val preferences: Lazy<SharedPreferences> = lazy {
+    private val preferences: Lazy<SharedPreferences> = lazy {
         context.getSharedPreferences(
             PREFERENCE_FILE,
             Context.MODE_PRIVATE
