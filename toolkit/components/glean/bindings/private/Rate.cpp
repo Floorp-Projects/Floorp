@@ -38,7 +38,7 @@ void RateMetric::AddToDenominator(int32_t aAmount) const {
 Result<Maybe<std::pair<int32_t, int32_t>>, nsCString> RateMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_rate_test_get_error(mId, &aPingName, &err)) {
+  if (fog_rate_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_rate_test_has_value(mId, &aPingName)) {

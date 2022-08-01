@@ -136,13 +136,7 @@ fn the_accumulate_samples_api_correctly_stores_memory_values() {
     assert_eq!(1, snapshot.values[&3024]);
 
     // No errors should be reported.
-    assert!(test_get_num_recorded_errors(
-        &glean,
-        metric.meta(),
-        ErrorType::InvalidValue,
-        Some("store1")
-    )
-    .is_err());
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err());
 }
 
 #[test]
@@ -183,11 +177,6 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
     // 1 error should be reported.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidValue,
-            Some("store1")
-        )
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 }

@@ -22,16 +22,7 @@ pub unsafe extern "C" fn fog_denominator_test_get_value(id: u32, ping_name: &nsA
 }
 
 #[no_mangle]
-pub extern "C" fn fog_denominator_test_get_error(
-    id: u32,
-    ping_name: &nsACString,
-    error_str: &mut nsACString,
-) -> bool {
-    let err = with_metric!(
-        DENOMINATOR_MAP,
-        id,
-        metric,
-        test_get_errors!(metric, ping_name)
-    );
+pub extern "C" fn fog_denominator_test_get_error(id: u32, error_str: &mut nsACString) -> bool {
+    let err = with_metric!(DENOMINATOR_MAP, id, metric, test_get_errors!(metric));
     err.map(|err_str| error_str.assign(&err_str)).is_some()
 }

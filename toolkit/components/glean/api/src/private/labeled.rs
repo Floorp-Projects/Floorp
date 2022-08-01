@@ -175,16 +175,11 @@ where
     /// # Returns
     ///
     /// The number of errors reported.
-    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: ErrorType,
-        ping_name: S,
-    ) -> i32 {
+    pub fn test_get_num_recorded_errors(&self, error: ErrorType) -> i32 {
         if need_ipc() {
             panic!("Use of labeled metrics in IPC land not yet implemented!");
         } else {
-            let ping_name = ping_name.into().map(|s| s.to_string());
-            self.core.test_get_num_recorded_errors(error, ping_name)
+            self.core.test_get_num_recorded_errors(error)
         }
     }
 }
@@ -317,7 +312,7 @@ mod test {
 
         assert_eq!(
             1,
-            metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
+            metric.test_get_num_recorded_errors(ErrorType::InvalidLabel)
         );
     }
 
@@ -355,7 +350,7 @@ mod test {
 
         assert_eq!(
             0,
-            metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None)
+            metric.test_get_num_recorded_errors(ErrorType::InvalidLabel)
         );
     }
 }

@@ -10,6 +10,7 @@ use std::path::Path;
 use std::str;
 use std::sync::RwLock;
 
+use rkv::migrator::Migrator;
 use rkv::StoreOptions;
 
 /// Unwrap a `Result`s `Ok` value or do the specified action.
@@ -27,148 +28,119 @@ macro_rules! unwrap_or {
     };
 }
 
-// Select the LMDB-powered storage backend when the feature is not activated.
-#[cfg(not(feature = "rkv-safe-mode"))]
-mod backend {
-    use std::path::Path;
+/// cbindgen:ignore
+pub type Rkv = rkv::Rkv<rkv::backend::SafeModeEnvironment>;
+/// cbindgen:ignore
+pub type SingleStore = rkv::SingleStore<rkv::backend::SafeModeDatabase>;
+/// cbindgen:ignore
+pub type Writer<'t> = rkv::Writer<rkv::backend::SafeModeRwTransaction<'t>>;
 
-    /// cbindgen:ignore
-    pub type Rkv = rkv::Rkv<rkv::backend::LmdbEnvironment>;
-    /// cbindgen:ignore
-    pub type SingleStore = rkv::SingleStore<rkv::backend::LmdbDatabase>;
-    /// cbindgen:ignore
-    pub type Writer<'t> = rkv::Writer<rkv::backend::LmdbRwTransaction<'t>>;
-
-    pub fn rkv_new(path: &Path) -> Result<Rkv, rkv::StoreError> {
-        Rkv::new::<rkv::backend::Lmdb>(path)
-    }
-
-    /// No migration necessary when staying with LMDB.
-    pub fn migrate(_path: &Path, _dst_env: &Rkv) {
-        // Intentionally left empty.
+pub fn rkv_new(path: &Path) -> std::result::Result<Rkv, rkv::StoreError> {
+    match Rkv::new::<rkv::backend::SafeMode>(path) {
+        // An invalid file can mean:
+        // 1. An empty file.
+        // 2. A corrupted file.
+        //
+        // In both instances there's not much we can do.
+        // Drop the data by removing the file, and start over.
+        Err(rkv::StoreError::FileInvalid) => {
+            let safebin = path.join("data.safe.bin");
+            fs::remove_file(safebin).map_err(|_| rkv::StoreError::FileInvalid)?;
+            // Now try again, we only handle that error once.
+            Rkv::new::<rkv::backend::SafeMode>(path)
+        }
+        other => other,
     }
 }
 
-// Select the "safe mode" storage backend when the feature is activated.
-#[cfg(feature = "rkv-safe-mode")]
-mod backend {
-    use rkv::migrator::Migrator;
-    use std::{fs, path::Path};
-
-    /// cbindgen:ignore
-    pub type Rkv = rkv::Rkv<rkv::backend::SafeModeEnvironment>;
-    /// cbindgen:ignore
-    pub type SingleStore = rkv::SingleStore<rkv::backend::SafeModeDatabase>;
-    /// cbindgen:ignore
-    pub type Writer<'t> = rkv::Writer<rkv::backend::SafeModeRwTransaction<'t>>;
-
-    pub fn rkv_new(path: &Path) -> Result<Rkv, rkv::StoreError> {
-        match Rkv::new::<rkv::backend::SafeMode>(path) {
-            // An invalid file can mean:
-            // 1. An empty file.
-            // 2. A corrupted file.
-            //
-            // In both instances there's not much we can do.
-            // Drop the data by removing the file, and start over.
-            Err(rkv::StoreError::FileInvalid) => {
-                let safebin = path.join("data.safe.bin");
-                fs::remove_file(safebin).map_err(|_| rkv::StoreError::FileInvalid)?;
-                // Now try again, we only handle that error once.
-                Rkv::new::<rkv::backend::SafeMode>(path)
+fn delete_and_log(path: &Path, msg: &str) {
+    if let Err(err) = fs::remove_file(path) {
+        match err.kind() {
+            std::io::ErrorKind::NotFound => {
+                // Silently drop this error, the file was already non-existing.
             }
-            other => other,
+            _ => log::warn!("{}", msg),
         }
     }
+}
 
-    fn delete_and_log(path: &Path, msg: &str) {
-        if let Err(err) = fs::remove_file(path) {
-            match err.kind() {
-                std::io::ErrorKind::NotFound => {
-                    // Silently drop this error, the file was already non-existing.
-                }
-                _ => log::warn!("{}", msg),
+fn delete_lmdb_database(path: &Path) {
+    let datamdb = path.join("data.mdb");
+    delete_and_log(&datamdb, "Failed to delete old data.");
+
+    let lockmdb = path.join("lock.mdb");
+    delete_and_log(&lockmdb, "Failed to delete old lock.");
+}
+
+/// Migrate from LMDB storage to safe-mode storage.
+///
+/// This migrates the data once, then deletes the LMDB storage.
+/// The safe-mode storage must be empty for it to work.
+/// Existing data will not be overwritten.
+/// If the destination database is not empty the LMDB database is deleted
+/// without migrating data.
+/// This is a no-op if no LMDB database file exists.
+pub fn migrate(path: &Path, dst_env: &Rkv) {
+    use rkv::{MigrateError, StoreError};
+
+    log::debug!("Migrating files in {}", path.display());
+
+    // Shortcut if no data to migrate is around.
+    let datamdb = path.join("data.mdb");
+    if !datamdb.exists() {
+        log::debug!("No data to migrate.");
+        return;
+    }
+
+    // We're handling the same error cases as `easy_migrate_lmdb_to_safe_mode`,
+    // but annotate each why they don't cause problems for Glean.
+    // Additionally for known cases we delete the LMDB database regardless.
+    let should_delete =
+        match Migrator::open_and_migrate_lmdb_to_safe_mode(path, |builder| builder, dst_env) {
+            // Source environment is corrupted.
+            // We start fresh with the new database.
+            Err(MigrateError::StoreError(StoreError::FileInvalid)) => true,
+            Err(MigrateError::StoreError(StoreError::DatabaseCorrupted)) => true,
+            // Path not accessible.
+            // Somehow our directory vanished between us creating it and reading from it.
+            // Nothing we can do really.
+            Err(MigrateError::StoreError(StoreError::IoError(_))) => true,
+            // Path accessible but incompatible for configuration.
+            // This should not happen, we never used storages that safe-mode doesn't understand.
+            // If it does happen, let's start fresh and use the safe-mode from now on.
+            Err(MigrateError::StoreError(StoreError::UnsuitableEnvironmentPath(_))) => true,
+            // Nothing to migrate.
+            // Source database was empty. We just start fresh anyway.
+            Err(MigrateError::SourceEmpty) => true,
+            // Migrating would overwrite.
+            // Either a previous migration failed and we still started writing data,
+            // or someone placed back an old data file.
+            // In any case we better stay on the new data and delete the old one.
+            Err(MigrateError::DestinationNotEmpty) => {
+                log::warn!("Failed to migrate old data. Destination was not empty");
+                true
             }
-        }
+            // An internal lock was poisoned.
+            // This would only happen if multiple things run concurrently and one crashes.
+            Err(MigrateError::ManagerPoisonError) => false,
+            // Couldn't close source environment and delete files on disk (e.g. other stores still open).
+            // This could only happen if multiple instances are running,
+            // we leave files in place.
+            Err(MigrateError::CloseError(_)) => false,
+            // Other store errors are never returned from the migrator.
+            // We need to handle them to please rustc.
+            Err(MigrateError::StoreError(_)) => false,
+            // Other errors can't happen, so this leaves us with the Ok case.
+            // This already deleted the LMDB files.
+            Ok(()) => false,
+        };
+
+    if should_delete {
+        log::debug!("Need to delete remaining LMDB files.");
+        delete_lmdb_database(path);
     }
 
-    fn delete_lmdb_database(path: &Path) {
-        let datamdb = path.join("data.mdb");
-        delete_and_log(&datamdb, "Failed to delete old data.");
-
-        let lockmdb = path.join("lock.mdb");
-        delete_and_log(&lockmdb, "Failed to delete old lock.");
-    }
-
-    /// Migrate from LMDB storage to safe-mode storage.
-    ///
-    /// This migrates the data once, then deletes the LMDB storage.
-    /// The safe-mode storage must be empty for it to work.
-    /// Existing data will not be overwritten.
-    /// If the destination database is not empty the LMDB database is deleted
-    /// without migrating data.
-    /// This is a no-op if no LMDB database file exists.
-    pub fn migrate(path: &Path, dst_env: &Rkv) {
-        use rkv::{MigrateError, StoreError};
-
-        log::debug!("Migrating files in {}", path.display());
-
-        // Shortcut if no data to migrate is around.
-        let datamdb = path.join("data.mdb");
-        if !datamdb.exists() {
-            log::debug!("No data to migrate.");
-            return;
-        }
-
-        // We're handling the same error cases as `easy_migrate_lmdb_to_safe_mode`,
-        // but annotate each why they don't cause problems for Glean.
-        // Additionally for known cases we delete the LMDB database regardless.
-        let should_delete =
-            match Migrator::open_and_migrate_lmdb_to_safe_mode(path, |builder| builder, dst_env) {
-                // Source environment is corrupted.
-                // We start fresh with the new database.
-                Err(MigrateError::StoreError(StoreError::FileInvalid)) => true,
-                Err(MigrateError::StoreError(StoreError::DatabaseCorrupted)) => true,
-                // Path not accessible.
-                // Somehow our directory vanished between us creating it and reading from it.
-                // Nothing we can do really.
-                Err(MigrateError::StoreError(StoreError::IoError(_))) => true,
-                // Path accessible but incompatible for configuration.
-                // This should not happen, we never used storages that safe-mode doesn't understand.
-                // If it does happen, let's start fresh and use the safe-mode from now on.
-                Err(MigrateError::StoreError(StoreError::UnsuitableEnvironmentPath(_))) => true,
-                // Nothing to migrate.
-                // Source database was empty. We just start fresh anyway.
-                Err(MigrateError::SourceEmpty) => true,
-                // Migrating would overwrite.
-                // Either a previous migration failed and we still started writing data,
-                // or someone placed back an old data file.
-                // In any case we better stay on the new data and delete the old one.
-                Err(MigrateError::DestinationNotEmpty) => {
-                    log::warn!("Failed to migrate old data. Destination was not empty");
-                    true
-                }
-                // An internal lock was poisoned.
-                // This would only happen if multiple things run concurrently and one crashes.
-                Err(MigrateError::ManagerPoisonError) => false,
-                // Couldn't close source environment and delete files on disk (e.g. other stores still open).
-                // This could only happen if multiple instances are running,
-                // we leave files in place.
-                Err(MigrateError::CloseError(_)) => false,
-                // Other store errors are never returned from the migrator.
-                // We need to handle them to please rustc.
-                Err(MigrateError::StoreError(_)) => false,
-                // Other errors can't happen, so this leaves us with the Ok case.
-                // This already deleted the LMDB files.
-                Ok(()) => false,
-            };
-
-        if should_delete {
-            log::debug!("Need to delete remaining LMDB files.");
-            delete_lmdb_database(path);
-        }
-
-        log::debug!("Migration ended. Safe-mode database in {}", path.display());
-    }
+    log::debug!("Migration ended. Safe-mode database in {}", path.display());
 }
 
 use crate::metrics::Metric;
@@ -176,7 +148,6 @@ use crate::CommonMetricData;
 use crate::Glean;
 use crate::Lifetime;
 use crate::Result;
-use backend::*;
 
 pub struct Database {
     /// Handle to the database environment.
@@ -250,21 +221,6 @@ impl Database {
     /// It also loads any Lifetime::Ping data that might be
     /// persisted, in case `delay_ping_lifetime_io` is set.
     pub fn new(data_path: &Path, delay_ping_lifetime_io: bool) -> Result<Self> {
-        #[cfg(all(windows, not(feature = "rkv-safe-mode")))]
-        {
-            // The underlying lmdb wrapper implementation
-            // cannot actually handle non-UTF8 paths on Windows.
-            // It will unconditionally panic if passed one.
-            // See
-            // https://github.com/mozilla/lmdb-rs/blob/df1c2f56e3088f097c719c57b9925ab51e26f3f4/src/environment.rs#L43-L53
-            //
-            // To avoid this, in case we're using LMDB on Windows (that's just testing now though),
-            // we simply error out earlier.
-            if data_path.to_str().is_none() {
-                return Err(crate::Error::utf8_error());
-            }
-        }
-
         let path = data_path.join("db");
         log::debug!("Database path: {:?}", path.display());
         let file_size = database_size(&path);
@@ -839,25 +795,12 @@ mod test {
 
         let res = Database::new(&path, false);
 
-        #[cfg(feature = "rkv-safe-mode")]
-        {
-            assert!(
-                res.is_ok(),
-                "Database should succeed at {}: {:?}",
-                path.display(),
-                res
-            );
-        }
-
-        #[cfg(not(feature = "rkv-safe-mode"))]
-        {
-            assert!(
-                res.is_err(),
-                "Database should fail at {}: {:?}",
-                path.display(),
-                res
-            );
-        }
+        assert!(
+            res.is_ok(),
+            "Database should succeed at {}: {:?}",
+            path.display(),
+            res
+        );
     }
 
     #[test]
@@ -1491,27 +1434,6 @@ mod test {
         );
     }
 
-    /// LDMB ignores an empty database file just fine.
-    #[cfg(not(feature = "rkv-safe-mode"))]
-    #[test]
-    fn empty_data_file() {
-        let dir = tempdir().unwrap();
-
-        // Create database directory structure.
-        let database_dir = dir.path().join("db");
-        fs::create_dir_all(&database_dir).expect("create database dir");
-
-        // Create empty database file.
-        let datamdb = database_dir.join("data.mdb");
-        let f = fs::File::create(datamdb).expect("create database file");
-        drop(f);
-
-        Database::new(dir.path(), false).unwrap();
-
-        assert!(dir.path().exists());
-    }
-
-    #[cfg(feature = "rkv-safe-mode")]
     mod safe_mode {
         use std::fs::File;
 

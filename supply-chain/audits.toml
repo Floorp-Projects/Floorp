@@ -7,6 +7,12 @@ criteria = "safe-to-deploy"
 version = "0.11.0"
 notes = "Small crate, wrapping Android log functionality, reviewed by janerik"
 
+[[audits.android_logger]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.0 -> 0.11.1"
+notes = "Small crate, wrapping Android log functionality, now switched to properly using MaybeUninit"
+
 [[audits.android_system_properties]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -122,6 +128,12 @@ criteria = "safe-to-deploy"
 delta = "50.1.2 -> 50.1.3"
 notes = "Unchanged from last version"
 
+[[audits.glean]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "50.1.3 -> 51.0.1"
+notes = "Maintained by the Glean team at Mozilla"
+
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -139,6 +151,12 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "50.1.2 -> 50.1.3"
 notes = "Bug fix release with minimal changes, changes done by myself"
+
+[[audits.glean-core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "50.1.3 -> 51.0.1"
+notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.linked-hash-map]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"

@@ -7,8 +7,6 @@ use std::fmt::{self, Display};
 use std::io;
 use std::result;
 
-use ffi_support::{handle_map::HandleError, ExternError};
-
 use rkv::StoreError;
 
 /// A specialized [`Result`] type for this crate's operations.
@@ -31,9 +29,6 @@ pub type Result<T> = result::Result<T, Error>;
 pub enum ErrorKind {
     /// Lifetime conversion failed
     Lifetime(i32),
-
-    /// FFI-Support error
-    Handle(HandleError),
 
     /// IO error
     IoError(io::Error),
@@ -107,7 +102,6 @@ impl Display for Error {
         use ErrorKind::*;
         match self.kind() {
             Lifetime(l) => write!(f, "Lifetime conversion from {} failed", l),
-            Handle(e) => write!(f, "Invalid handle: {}", e),
             IoError(e) => write!(f, "An I/O error occurred: {}", e),
             Rkv(e) => write!(f, "An Rkv error occurred: {}", e),
             Json(e) => write!(f, "A JSON error occurred: {}", e),
@@ -133,14 +127,6 @@ impl From<ErrorKind> for Error {
     }
 }
 
-impl From<HandleError> for Error {
-    fn from(error: HandleError) -> Error {
-        Error {
-            kind: ErrorKind::Handle(error),
-        }
-    }
-}
-
 impl From<io::Error> for Error {
     fn from(error: io::Error) -> Error {
         Error {
@@ -154,12 +140,6 @@ impl From<StoreError> for Error {
         Error {
             kind: ErrorKind::Rkv(error),
         }
-    }
-}
-
-impl From<Error> for ExternError {
-    fn from(error: Error) -> ExternError {
-        ffi_support::ExternError::new_error(ffi_support::ErrorCode::new(42), format!("{}", error))
     }
 }
 

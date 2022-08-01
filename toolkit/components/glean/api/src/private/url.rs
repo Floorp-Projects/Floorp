@@ -65,14 +65,9 @@ impl glean::traits::Url for UrlMetric {
         }
     }
 
-    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: glean::ErrorType,
-        ping_name: S,
-    ) -> i32 {
-        let ping_name = ping_name.into().map(|s| s.to_string());
+    pub fn test_get_num_recorded_errors(&self, error: glean::ErrorType) -> i32 {
         match self {
-            UrlMetric::Parent(p) => p.test_get_num_recorded_errors(error, ping_name),
+            UrlMetric::Parent(p) => p.test_get_num_recorded_errors(error),
             UrlMetric::Child(_) => panic!(
                 "Cannot get the number of recorded errors for Url metric in non-parent process!"
             ),

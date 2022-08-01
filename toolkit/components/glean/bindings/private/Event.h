@@ -98,7 +98,7 @@ class EventMetric {
   Result<Maybe<nsTArray<RecordedEvent>>, nsCString> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
     nsCString err;
-    if (fog_event_test_get_error(mId, &aPingName, &err)) {
+    if (fog_event_test_get_error(mId, &err)) {
       return Err(err);
     }
 

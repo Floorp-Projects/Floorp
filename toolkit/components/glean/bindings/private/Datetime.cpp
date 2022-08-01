@@ -60,7 +60,7 @@ void DatetimeMetric::Set(const PRExplodedTime* aValue) const {
 Result<Maybe<PRExplodedTime>, nsCString> DatetimeMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_datetime_test_get_error(mId, &aPingName, &err)) {
+  if (fog_datetime_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_datetime_test_has_value(mId, &aPingName)) {

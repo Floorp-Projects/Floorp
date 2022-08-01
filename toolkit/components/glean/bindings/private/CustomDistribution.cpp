@@ -52,7 +52,7 @@ void CustomDistributionMetric::AccumulateSamplesSigned(
 Result<Maybe<DistributionData>, nsCString>
 CustomDistributionMetric::TestGetValue(const nsACString& aPingName) const {
   nsCString err;
-  if (fog_custom_distribution_test_get_error(mId, &aPingName, &err)) {
+  if (fog_custom_distribution_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_custom_distribution_test_has_value(mId, &aPingName)) {

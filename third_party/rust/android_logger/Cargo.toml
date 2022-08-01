@@ -11,7 +11,7 @@
 
 [package]
 name = "android_logger"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["The android_logger Developers"]
 description = """
 A logging implementation for `log` which hooks to android log output.

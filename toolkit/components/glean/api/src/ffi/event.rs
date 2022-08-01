@@ -60,17 +60,8 @@ pub unsafe extern "C" fn fog_event_test_has_value(id: u32, ping_name: &nsACStrin
 }
 
 #[no_mangle]
-pub extern "C" fn fog_event_test_get_error(
-    id: u32,
-    ping_name: &nsACString,
-    error_str: &mut nsACString,
-) -> bool {
-    let storage = if ping_name.is_empty() {
-        None
-    } else {
-        Some(ping_name.to_utf8().into_owned())
-    };
-    let err = metric_maps::event_test_get_error(id, storage);
+pub extern "C" fn fog_event_test_get_error(id: u32, error_str: &mut nsACString) -> bool {
+    let err = metric_maps::event_test_get_error(id);
     err.map(|err_str| error_str.assign(&err_str)).is_some()
 }
 

@@ -31,7 +31,7 @@ void UrlMetric::Set(const nsACString& aValue) const {
 Result<Maybe<nsCString>, nsCString> UrlMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_url_test_get_error(mId, &aPingName, &err)) {
+  if (fog_url_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_url_test_has_value(mId, &aPingName)) {

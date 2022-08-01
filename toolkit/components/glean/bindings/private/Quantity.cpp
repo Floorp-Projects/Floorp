@@ -32,7 +32,7 @@ void QuantityMetric::Set(int64_t aValue) const {
 Result<Maybe<int64_t>, nsCString> QuantityMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_quantity_test_get_error(mId, &aPingName, &err)) {
+  if (fog_quantity_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_quantity_test_has_value(mId, &aPingName)) {

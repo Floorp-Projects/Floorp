@@ -1127,7 +1127,7 @@ fn test_boolean_get_num_errors() {
     });
 
     // Check specifically for an invalid label
-    let result = metric.test_get_num_recorded_errors(ErrorType::InvalidLabel, None);
+    let result = metric.test_get_num_recorded_errors(ErrorType::InvalidLabel);
 
     assert_eq!(result, 0);
 }

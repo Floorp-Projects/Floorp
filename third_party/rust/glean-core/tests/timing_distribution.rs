@@ -134,12 +134,7 @@ fn timing_distributions_must_not_accumulate_negative_values() {
     // Make sure that the errors have been recorded
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidValue,
-            Some("store1")
-        )
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 }
 
@@ -180,13 +175,7 @@ fn the_accumulate_samples_api_correctly_stores_timing_values() {
     assert_eq!(1, snapshot.values[&2784941737]);
 
     // No errors should be reported.
-    assert!(test_get_num_recorded_errors(
-        &glean,
-        metric.meta(),
-        ErrorType::InvalidValue,
-        Some("store1")
-    )
-    .is_err());
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err());
 }
 
 #[test]
@@ -223,12 +212,7 @@ fn the_accumulate_samples_api_correctly_handles_negative_values() {
     // 1 error should be reported.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidValue,
-            Some("store1")
-        )
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 }
 
@@ -269,12 +253,7 @@ fn the_accumulate_samples_api_correctly_handles_overflowing_values() {
     // 1 error should be reported.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidOverflow,
-            Some("store1")
-        )
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)
     );
 }
 
@@ -331,12 +310,7 @@ fn stopping_non_existing_id_records_an_error() {
     // 1 error should be reported.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidState,
-            Some("store1")
-        )
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidState)
     );
 }
 
@@ -377,13 +351,7 @@ fn the_accumulate_raw_samples_api_correctly_stores_timing_values() {
     assert_eq!(1, snapshot.values[&2784941737]);
 
     // No errors should be reported.
-    assert!(test_get_num_recorded_errors(
-        &glean,
-        metric.meta(),
-        ErrorType::InvalidState,
-        Some("store1")
-    )
-    .is_err());
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidState).is_err());
 }
 
 #[test]
@@ -430,11 +398,6 @@ fn raw_samples_api_error_cases() {
     // No errors should be reported.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidOverflow,
-            Some("store1")
-        )
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)
     );
 }

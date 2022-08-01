@@ -40,7 +40,7 @@ void StringListMetric::Set(const nsTArray<nsCString>& aValue) const {
 Result<Maybe<nsTArray<nsCString>>, nsCString> StringListMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_string_list_test_get_error(mId, &aPingName, &err)) {
+  if (fog_string_list_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_string_list_test_has_value(mId, &aPingName)) {

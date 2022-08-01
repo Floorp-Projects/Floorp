@@ -308,24 +308,6 @@ impl EventDatabase {
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Returns whether there are any events currently stored for the given even
-    /// metric.
-    ///
-    /// This doesn't clear the stored value.
-    pub fn test_has_value<'a>(&'a self, meta: &'a CommonMetricData, store_name: &str) -> bool {
-        record_coverage(&meta.base_identifier());
-
-        self.event_stores
-            .read()
-            .unwrap() // safe unwrap, only error case is poisoning
-            .get(&store_name.to_string())
-            .into_iter()
-            .flatten()
-            .any(|event| event.name == meta.name && event.category == meta.category)
-    }
-
-    /// **Test-only API (exported for FFI purposes).**
-    ///
     /// Gets the vector of currently stored events for the given event metric in
     /// the given store.
     ///

@@ -158,14 +158,9 @@ impl Datetime for DatetimeMetric {
     /// # Returns
     ///
     /// The number of errors reported.
-    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: glean::ErrorType,
-        ping_name: S,
-    ) -> i32 {
-        let ping_name = ping_name.into().map(|s| s.to_string());
+    pub fn test_get_num_recorded_errors(&self, error: glean::ErrorType) -> i32 {
         match self {
-            DatetimeMetric::Parent(p) => p.test_get_num_recorded_errors(error, ping_name),
+            DatetimeMetric::Parent(p) => p.test_get_num_recorded_errors(error),
             DatetimeMetric::Child(_) => panic!("Cannot get the number of recorded errors for DatetimeMetric in non-parent process!"),
         }
     }

@@ -129,12 +129,11 @@ impl StringMetric {
     /// # Returns
     ///
     /// The number of errors reported.
-    pub fn test_get_num_recorded_errors(&self, error: ErrorType, ping_name: Option<String>) -> i32 {
+    pub fn test_get_num_recorded_errors(&self, error: ErrorType) -> i32 {
         crate::block_on_dispatcher();
 
         crate::core::with_glean(|glean| {
-            test_get_num_recorded_errors(glean, self.meta(), error, ping_name.as_deref())
-                .unwrap_or(0)
+            test_get_num_recorded_errors(glean, self.meta(), error).unwrap_or(0)
         })
     }
 }
@@ -169,7 +168,7 @@ mod test {
 
         assert_eq!(
             1,
-            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
+            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)
                 .unwrap()
         );
     }
