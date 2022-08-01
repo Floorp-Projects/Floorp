@@ -24,7 +24,11 @@ const OPEN_TYPE = {
   NEWTAB_BY_CONTEXTMENU: 2,
 };
 
-const { VISIT_SOURCE_ORGANIC, VISIT_SOURCE_SPONSORED } = PlacesUtils.history;
+const {
+  VISIT_SOURCE_ORGANIC,
+  VISIT_SOURCE_SPONSORED,
+  VISIT_SOURCE_BOOKMARKED,
+} = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
   const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
@@ -176,6 +180,44 @@ add_task(async function basic() {
       },
     },
     {
+      description: "Bookmarked result",
+      link: {
+        label: "test_label",
+        url: "http://example.com/",
+      },
+      bookmarks: [
+        {
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          url: Services.io.newURI("http://example.com/"),
+          title: "test bookmark",
+        },
+      ],
+      expected: {
+        source: VISIT_SOURCE_BOOKMARKED,
+      },
+    },
+    {
+      description: "Sponsored and bookmarked result",
+      link: {
+        label: "test_label",
+        url: "http://example.com/",
+        sponsored_position: 1,
+        sponsored_tile_id: 12345,
+        sponsored_impression_url: "http://impression.example.com/",
+        sponsored_click_url: "http://click.example.com/",
+      },
+      bookmarks: [
+        {
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          url: Services.io.newURI("http://example.com/"),
+          title: "test bookmark",
+        },
+      ],
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+      },
+    },
+    {
       description: "Organic tile",
       link: {
         label: "test_label",
@@ -187,7 +229,7 @@ add_task(async function basic() {
     },
   ];
 
-  for (const { description, link, expected } of testData) {
+  for (const { description, link, bookmarks, expected } of testData) {
     info(description);
 
     await BrowserTestUtils.withNewTab("about:home", async () => {
@@ -195,6 +237,9 @@ add_task(async function basic() {
       await pin(link);
 
       // Test with new tab.
+      for (const bookmark of bookmarks || []) {
+        await PlacesUtils.bookmarks.insert(bookmark);
+      }
       await openAndTest({
         linkSelector: ".top-site-button",
         linkURL: link.url,
@@ -205,6 +250,9 @@ add_task(async function basic() {
       await clearHistoryAndBookmarks();
 
       // Test with same tab.
+      for (const bookmark of bookmarks || []) {
+        await PlacesUtils.bookmarks.insert(bookmark);
+      }
       await openAndTest({
         linkSelector: ".top-site-button",
         linkURL: link.url,

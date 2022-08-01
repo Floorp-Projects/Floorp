@@ -89,7 +89,8 @@ struct VisitData {
         useFrecencyRedirectBonus(false),
         source(nsINavHistoryService::VISIT_SOURCE_ORGANIC),
         triggeringPlaceId(0),
-        triggeringSponsoredURLVisitTimeMS(0) {
+        triggeringSponsoredURLVisitTimeMS(0),
+        bookmarked(false) {
     guid.SetIsVoid(true);
     title.SetIsVoid(true);
     baseDomain.SetIsVoid(true);
@@ -115,7 +116,8 @@ struct VisitData {
         useFrecencyRedirectBonus(false),
         source(nsINavHistoryService::VISIT_SOURCE_ORGANIC),
         triggeringPlaceId(0),
-        triggeringSponsoredURLVisitTimeMS(0) {
+        triggeringSponsoredURLVisitTimeMS(0),
+        bookmarked(false) {
     MOZ_ASSERT(aURI);
     if (aURI) {
       (void)aURI->GetSpec(spec);
@@ -185,6 +187,7 @@ struct VisitData {
   nsCString triggeringSponsoredURL;
   nsCString triggeringSponsoredURLBaseDomain;
   int64_t triggeringSponsoredURLVisitTimeMS;
+  bool bookmarked;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1210,7 +1213,9 @@ class InsertVisitedURIs final : public Runnable {
   }
 
   nsresult UpdateVisitSource(VisitData& aPlace, History* aHistory) {
-    aPlace.source = nsINavHistoryService::VISIT_SOURCE_ORGANIC;
+    aPlace.source = aPlace.bookmarked
+                        ? nsINavHistoryService::VISIT_SOURCE_BOOKMARKED
+                        : nsINavHistoryService::VISIT_SOURCE_ORGANIC;
 
     if (aPlace.triggeringSponsoredURL.IsEmpty()) {
       // No triggeringSponsoredURL.
@@ -1668,7 +1673,8 @@ nsresult History::FetchPageInfo(VisitData& _place, bool* _exists) {
         "last_visit_date, "
         "(SELECT id FROM moz_historyvisits "
         "WHERE place_id = h.id AND visit_date = h.last_visit_date) AS "
-        "last_visit_id "
+        "last_visit_id, "
+        "EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk = h.id) AS bookmarked "
         "FROM moz_places h "
         "WHERE url_hash = hash(:page_url) AND url = :page_url ");
     NS_ENSURE_STATE(stmt);
@@ -1681,7 +1687,8 @@ nsresult History::FetchPageInfo(VisitData& _place, bool* _exists) {
         "last_visit_date, "
         "(SELECT id FROM moz_historyvisits "
         "WHERE place_id = h.id AND visit_date = h.last_visit_date) AS "
-        "last_visit_id "
+        "last_visit_id, "
+        "EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk = h.id) AS bookmarked "
         "FROM moz_places h "
         "WHERE guid = :guid ");
     NS_ENSURE_STATE(stmt);
@@ -1751,6 +1758,10 @@ nsresult History::FetchPageInfo(VisitData& _place, bool* _exists) {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->GetInt64(8, &_place.lastVisitId);
   NS_ENSURE_SUCCESS(rv, rv);
+  int32_t bookmarked;
+  rv = stmt->GetInt32(9, &bookmarked);
+  NS_ENSURE_SUCCESS(rv, rv);
+  _place.bookmarked = bookmarked == 1;
 
   return NS_OK;
 }
