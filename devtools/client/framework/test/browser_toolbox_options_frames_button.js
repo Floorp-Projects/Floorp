@@ -37,8 +37,10 @@ add_task(async function() {
   );
   framesButtonCheckbox.click();
 
-  framesButton = doc.getElementById("command-button-frames");
-  ok(framesButton, "Frames button is rendered.");
+  info("Wait for the frame button to be rendered");
+  framesButton = await waitFor(() =>
+    doc.getElementById("command-button-frames")
+  );
   ok(framesButton.disabled, "Frames button is disabled.");
 
   info("Leave the options panel, the frames button should not be rendered.");
