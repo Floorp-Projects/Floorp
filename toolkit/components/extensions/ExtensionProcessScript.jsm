@@ -426,6 +426,8 @@ var ExtensionAPIRequestHandler = {
   },
 
   handleAPIRequest(policy, request) {
+    let context;
+
     try {
       let extension = extensions.get(policy);
 
@@ -433,7 +435,7 @@ var ExtensionAPIRequestHandler = {
         throw new Error(`Extension instance not found for addon ${policy.id}`);
       }
 
-      let context = this.getExtensionContextForAPIRequest({
+      context = this.getExtensionContextForAPIRequest({
         extension,
         request,
       });
@@ -452,6 +454,14 @@ var ExtensionAPIRequestHandler = {
 
       return context.childManager.handleWebIDLAPIRequest(request);
     } catch (error) {
+      // Propagate errors related to parameter validation when the error object
+      // belongs to the extension context that initiated the call.
+      if (context?.Error && error instanceof context.Error) {
+        return {
+          type: Ci.mozIExtensionAPIRequestResult.EXTENSION_ERROR,
+          value: error,
+        };
+      }
       // Do not propagate errors that are not meant to be accessible to the
       // extension, report it to the console and just throw the generic
       // "An unexpected error occurred".
