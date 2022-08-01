@@ -118,6 +118,10 @@ void DirectoryLockImpl::NotifyOpenListener() {
   if (mInvalidated) {
     (*mOpenListener)->DirectoryLockFailed();
   } else {
+#ifdef DEBUG
+    mAcquired.Flip();
+#endif
+
     (*mOpenListener)
         ->DirectoryLockAcquired(static_cast<UniversalDirectoryLock*>(this));
   }
@@ -200,6 +204,32 @@ void DirectoryLockImpl::AcquireImmediately() {
 
   mQuotaManager->RegisterDirectoryLock(*this);
 }
+
+#ifdef DEBUG
+void DirectoryLockImpl::AssertIsAcquiredExclusively() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mBlockedOn.IsEmpty());
+  MOZ_ASSERT(mExclusive);
+  MOZ_ASSERT(mInternal);
+  MOZ_ASSERT(mRegistered);
+  MOZ_ASSERT(!mInvalidated);
+  MOZ_ASSERT(mAcquired);
+
+  bool found = false;
+
+  for (const DirectoryLockImpl* const existingLock :
+       mQuotaManager->mDirectoryLocks) {
+    if (existingLock == this) {
+      MOZ_ASSERT(!found);
+      found = true;
+    } else if (existingLock->mAcquired) {
+      MOZ_ASSERT(false);
+    }
+  }
+
+  MOZ_ASSERT(found);
+}
+#endif
 
 RefPtr<ClientDirectoryLock> DirectoryLockImpl::SpecializeForClient(
     PersistenceType aPersistenceType,

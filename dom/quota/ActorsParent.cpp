@@ -1094,7 +1094,11 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
 
   virtual void Open() = 0;
 
+#ifdef DEBUG
+  virtual nsresult DirectoryOpen();
+#else
   nsresult DirectoryOpen();
+#endif
 
   virtual nsresult DoDirectoryWork(QuotaManager& aQuotaManager) = 0;
 
@@ -1140,11 +1144,10 @@ class NormalOriginOperationBase
     : public OriginOperationBase,
       public OpenDirectoryListener,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
-  RefPtr<DirectoryLock> mDirectoryLock;
-
  protected:
-  Nullable<PersistenceType> mPersistenceType;
   OriginScope mOriginScope;
+  RefPtr<DirectoryLock> mDirectoryLock;
+  Nullable<PersistenceType> mPersistenceType;
   Nullable<Client::Type> mClientType;
   mozilla::Atomic<bool> mCanceled;
   const bool mExclusive;
@@ -1161,8 +1164,8 @@ class NormalOriginOperationBase
                             const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope, bool aExclusive)
       : OriginOperationBase(GetCurrentEventTarget(), aRunnableName),
-        mPersistenceType(aPersistenceType),
         mOriginScope(aOriginScope),
+        mPersistenceType(aPersistenceType),
         mExclusive(aExclusive) {
     AssertIsOnOwningThread();
   }
@@ -1231,6 +1234,10 @@ class ShutdownStorageOp : public NormalOriginOperationBase {
 
  private:
   ~ShutdownStorageOp() = default;
+
+#ifdef DEBUG
+  nsresult DirectoryOpen() override;
+#endif
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -7999,6 +8006,16 @@ void SaveOriginAccessTimeOp::SendResults() {
   NoteActorDestroyed();
 #endif
 }
+
+#ifdef DEBUG
+nsresult ShutdownStorageOp::DirectoryOpen() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mDirectoryLock);
+  mDirectoryLock->AssertIsAcquiredExclusively();
+
+  return NormalOriginOperationBase::DirectoryOpen();
+}
+#endif
 
 nsresult ShutdownStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
