@@ -45,7 +45,7 @@
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Lleer el testu de toles llingüetes abiertes</string>
     <!-- Description for geolocation permission. -->
-    <string name="mozac_feature_addons_permissions_geolocation_description">Acceder al to allugamientu</string>
+    <string name="mozac_feature_addons_permissions_geolocation_description">Acceder a la llocalización</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Acceder al historial de restolar</string>
     <!-- Description for management permission. -->
@@ -85,9 +85,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Desactivóse</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permitir nel restolar en privao</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permitir nel mou de restolar en privao</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">Executar nel restolar en privao</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Executar nel mou de restolar en privao</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Activóse</string>
     <!-- Indicates the add-on is disabled. -->
@@ -155,7 +155,7 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">La teunoloxía de complementos pa Firefox ta modernizándose. Estos complementos usen frameworks que nun son compatibles a partir de Firefox 75.</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption2">Anguaño tamos trabayando pa ufrir una esbilla inicial d\'estensiones aconseyaes.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Tamos trabayando pa ufrir una seleición inicial d\'estensiones aconseyaes.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Baxando y verificando\'l complementu…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -179,7 +179,7 @@
     <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_uninstall">Hebo un fallu al desinstalar «%1$s»</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">«%1$s» quitóse correutamante</string>
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">«%1$s» quitóse correutamente</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Hebo un fallu al quitar «%1$s»</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
@@ -207,5 +207,5 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">Ábrilu nel menú</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">Entiéndolo</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Entendílo</string>
 </resources>
