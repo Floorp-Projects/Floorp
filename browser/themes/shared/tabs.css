@@ -15,7 +15,6 @@
   /* --tabpanel-background-color matches $in-content-page-background in newtab
      (browser/components/newtab/content-src/styles/_variables.scss) */
   --tabpanel-background-color: #F9F9FB;
-  --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(42,195,162));
 }
 
 #tabbrowser-tabpanels browser {
@@ -624,14 +623,17 @@
 
 /* Pinned tabs */
 
-toolbar[brighttext] {
-  --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(84,255,189));
+#TabsToolbar {
+  --attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(42,195,162));
+}
+
+#TabsToolbar[brighttext] {
+  --attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(84,255,189));
 }
 
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]),
-#firefox-view-button[attention="true"] {
-  background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
+.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
+  background-image: radial-gradient(circle, var(--attention-icon-color), var(--attention-icon-color) 2px, transparent 2px);
   background-position: center bottom calc(6.5px + var(--tabs-navbar-shadow-size));
   background-size: 4px 4px;
   background-repeat: no-repeat;
@@ -689,23 +691,6 @@ toolbar[brighttext] {
 
 :root[privatebrowsingmode=temporary] :is(#firefox-view-button, #menu_openFirefoxView) {
   display: none;
-}
-
-toolbar:not(#TabsToolbar) #firefox-view-button {
-  background-position: top 25% right 25%;
-}
-
-:is(#widget-overflow-mainView, #widget-overflow-fixed-list) #firefox-view-button {
-  background-position: top 25% left 22px;
-}
-
-/* RTL notification dot */
-toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
-  background-position-x: left 25%;
-}
-
-:is(#widget-overflow-mainView, #widget-overflow-fixed-list) #firefox-view-button:-moz-locale-dir(rtl) {
-  background-position-x: right 22px;
 }
 
 /* Tab bar scroll arrows */

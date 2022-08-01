@@ -3,6 +3,7 @@
 
 "use strict";
 
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { BuiltInThemes } = ChromeUtils.import(
   "resource:///modules/BuiltInThemes.jsm"
 );
