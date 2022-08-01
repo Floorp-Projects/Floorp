@@ -2887,6 +2887,12 @@
   #appMenu-print-button2 {
     list-style-image: url("chrome://global/skin/icons/print.svg");
   }
+  #openprofiledir{
+    list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
+  }
+  #rebootappmenu{
+    list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
+   }
 
   @supports -moz-bool-pref("userChrome.icon.panel_full") {
     #appMenu-save-file-button2 {

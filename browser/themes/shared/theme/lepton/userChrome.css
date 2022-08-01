@@ -4164,6 +4164,9 @@ tab[visuallyselected] > stack::after {
 #openprofiledir{
   list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
 }
+#rebootappmenu{
+  list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
+ }
 #appMenu-new-private-window-button2 {
   list-style-image: url("chrome://browser/skin/privateBrowsing.svg");
 }
