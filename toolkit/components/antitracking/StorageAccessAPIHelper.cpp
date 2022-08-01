@@ -70,7 +70,7 @@ bool GetTopLevelWindowId(BrowsingContext* aParentContext, uint32_t aBehavior,
 StorageAccessAPIHelper::AllowAccessFor(
     nsIPrincipal* aPrincipal, dom::BrowsingContext* aParentContext,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
-    const StorageAccessAPIHelper::PerformPermissionGrant& aPerformFinalChecks) {
+    const StorageAccessAPIHelper::PerformFinalChecks& aPerformFinalChecks) {
   MOZ_ASSERT(aParentContext);
 
   switch (aReason) {
@@ -289,7 +289,7 @@ StorageAccessAPIHelper::AllowAccessFor(
   }
 
   MOZ_ASSERT(XRE_IsContentProcess());
-  // Only support PerformPermissionGrant when we run ::CompleteAllowAccessFor in
+  // Only support PerformFinalChecks when we run ::CompleteAllowAccessFor in
   // the same process. This callback is only used by eStorageAccessAPI,
   // which is always runned in the same process.
   MOZ_ASSERT(!aPerformFinalChecks);
@@ -361,7 +361,7 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
     nsIPrincipal* aTrackingPrincipal, const nsACString& aTrackingOrigin,
     uint32_t aCookieBehavior,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
-    const PerformPermissionGrant& aPerformFinalChecks) {
+    const PerformFinalChecks& aPerformFinalChecks) {
   MOZ_ASSERT(aParentContext);
   MOZ_ASSERT_IF(XRE_IsContentProcess(), aParentContext->IsInProcess());
 
@@ -960,34 +960,6 @@ StorageAccessAPIHelper::CheckExistingPermissionDecidesStorageAccessAPI(
     return Some(true);
   }
   return Nothing();
-}
-
-// static
-RefPtr<StorageAccessAPIHelper::StorageAccessPermissionGrantPromise>
-StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
-    dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
-    dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-    bool aHasUserInteraction,
-    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
-    bool aRequireGrant) {
-  MOZ_ASSERT(aDocument);
-
-  if (!aRequireGrant) {
-    // Try to allow access for the given principal.
-    return StorageAccessAPIHelper::AllowAccessFor(aPrincipal, aBrowsingContext,
-                                                  aNotifier);
-  }
-
-  RefPtr<nsIPrincipal> principal(aPrincipal);
-
-  // This is a lambda function that has some variables bound to it. It will be
-  // called later in CompleteAllowAccessFor inside of AllowAccessFor.
-  auto performPermissionGrant = aDocument->CreatePermissionGrantPromise(
-      aInnerWindow, principal, aHasUserInteraction, Nothing());
-
-  // Try to allow access for the given principal.
-  return StorageAccessAPIHelper::AllowAccessFor(
-      principal, aBrowsingContext, aNotifier, performPermissionGrant);
 }
 
 // There are two methods to handle permission update:

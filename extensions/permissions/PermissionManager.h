@@ -216,10 +216,8 @@ class PermissionManager final : public nsIPermissionManager,
    * @param aKey  A string which will be filled with the permission
    * key.
    */
-  static nsresult GetKeyForPrincipal(nsIPrincipal* aPrincipal,
-                                     bool aForceStripOA,
-                                     bool aSiteScopePermissions,
-                                     nsACString& aKey);
+  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal, bool aForceStripOA,
+                                 bool aSiteScopePermissions, nsACString& aKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -242,8 +240,8 @@ class PermissionManager final : public nsIPermissionManager,
    * @param aKey  A string which will be filled with the permission
    * key.
    */
-  static nsresult GetKeyForOrigin(const nsACString& aOrigin, bool aForceStripOA,
-                                  bool aSiteScopePermissions, nsACString& aKey);
+  static void GetKeyForOrigin(const nsACString& aOrigin, bool aForceStripOA,
+                              bool aSiteScopePermissions, nsACString& aKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -263,9 +261,8 @@ class PermissionManager final : public nsIPermissionManager,
    * @param aPermissionKey  A string which will be filled with the permission
    * key.
    */
-  static nsresult GetKeyForPermission(nsIPrincipal* aPrincipal,
-                                      const nsACString& aType,
-                                      nsACString& aKey);
+  static void GetKeyForPermission(nsIPrincipal* aPrincipal,
+                                  const nsACString& aType, nsACString& aKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
