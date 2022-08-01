@@ -26,13 +26,14 @@ class ToastNotificationHandler final
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
 
-  ToastNotificationHandler(ToastNotification* backend,
+  ToastNotificationHandler(ToastNotification* backend, const nsAString& aumid,
                            nsIObserver* aAlertListener, const nsAString& aName,
                            const nsAString& aCookie, const nsAString& aTitle,
                            const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable, bool aRequireInteraction,
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions)
       : mBackend(backend),
+        mAumid(aumid),
         mHasImage(false),
         mAlertListener(aAlertListener),
         mName(aName),
@@ -70,6 +71,8 @@ class ToastNotificationHandler final
   Microsoft::WRL::ComPtr<IToastNotifier> mNotifier;
 
   RefPtr<ToastNotification> mBackend;
+
+  nsString mAumid;
 
   nsCOMPtr<nsICancelable> mImageRequest;
   nsCOMPtr<nsIFile> mImageFile;
