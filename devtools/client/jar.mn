@@ -342,6 +342,7 @@ devtools.jar:
     content/framework/browser-toolbox/window.css (framework/browser-toolbox/window.css)
     content/framework/browser-toolbox/window.js (framework/browser-toolbox/window.js)
     content/framework/components/DebugTargetErrorPage.css (framework/components/DebugTargetErrorPage.css)
+    content/framework/components/ChromeDebugToolbar.css (framework/components/ChromeDebugToolbar.css)
 
     # DOM
     content/dom/index.html (dom/index.html)
