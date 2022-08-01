@@ -12,6 +12,7 @@ import androidx.test.runner.permission.PermissionRequester
 import androidx.test.uiautomator.UiDevice
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -82,6 +83,7 @@ class DownloadTest {
         }
     }
 
+    @Ignore("Failing with frequent ANR: https://github.com/mozilla-mobile/fenix/issues/25926")
     @Test
     fun testDownloadPrompt() {
         downloadFile = "web_icon.png"
