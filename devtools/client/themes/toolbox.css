@@ -141,15 +141,6 @@
   min-height: 29px;
 }
 
-/* Iframe dropdown form displaying the browser toolbox scopes */
-#toolbox-frame-menu form {
-  text-align: end;
-  margin: 5px 10px;
-}
-#toolbox-frame-menu form label {
-  margin-inline-start: 5px;
-}
-
 .dragging #toolbox-panel-iframe-webconsole {
   pointer-events: none;
 }

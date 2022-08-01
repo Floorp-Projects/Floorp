@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.chrome-debug-toolbar {
+  display: flex;
+  padding: 0.5em 1em;
+  font-size: 12px;
+  line-height: 1.5;
+  background-color: var(--theme-body-alternate-emphasized-background);
+  font-family: system-ui, -apple-system, sans-serif;
+  border-block-end: 1px solid var(--theme-toolbar-separator);
+}
+
+.chrome-debug-toolbar section > h3 {
+  margin: 0;
+  font-weight: normal;
+}
+
+.chrome-debug-toolbar__modes {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em 1em;
+  flex-wrap: wrap;
+}
+
+.chrome-debug-toolbar__modes label {
+  border: 1px solid var(--theme-toolbar-separator);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.chrome-debug-toolbar__modes label.selected {
+  border-color: var(--theme-toolbar-selected-color);
+}
+
+.chrome-debug-toolbar__modes label:where(:hover, :focus-within) {
+  background-color: var(--blue-50-a30);
+}
+
+.chrome-debug-toolbar__modes label input {
+  margin: 0;
+  margin-inline-end: 4px;
+}
+
+.mode__sublabel {
+  color: var(--theme-comment);
+  margin-inline-start: 4px;
+}
