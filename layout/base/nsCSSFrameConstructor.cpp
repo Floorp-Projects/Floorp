@@ -1440,25 +1440,22 @@ static void EnsureAutoPageName(nsFrameConstructorState& aState,
 }
 
 nsCSSFrameConstructor::AutoFrameConstructionPageName::
-    AutoFrameConstructionPageName(nsCSSFrameConstructor& aFCtor,
-                                  nsFrameConstructorState& aState,
-                                  FrameConstructionItemList& aItems,
+    AutoFrameConstructionPageName(nsFrameConstructorState& aState,
                                   nsIFrame* const aFrame)
-    : mFCtor(aFCtor),
-      mState(aState),
-      mItems(aItems),
-      mFrame(aFrame),
-      mNameToRestore(nullptr) {
-  if (!(aState.mPresContext->IsPaginated() &&
-        StaticPrefs::layout_css_named_pages_enabled())) {
+    : mState(aState), mNameToRestore(nullptr) {
+  if (!aState.mPresContext->IsPaginated() ||
+      !StaticPrefs::layout_css_named_pages_enabled()) {
+    MOZ_ASSERT(!aState.mAutoPageNameValue,
+               "Page name should not have been set");
     return;
   }
+
   EnsureAutoPageName(aState, aFrame->GetParent());
   mNameToRestore = aState.mAutoPageNameValue;
 
   MOZ_ASSERT(mNameToRestore,
              "Page name should have been found by EnsureAutoPageName");
-  MaybeApplyPageName(mState, aFrame->StylePage()->mPage);
+  MaybeApplyPageName(aState, aFrame->StylePage()->mPage);
   // Ensure that the PageValuesProperty field has been created.
   // Before layout.css.named_pages.enabled is prefed on by default, we should
   // investigate making this property optional, and have a missing property
@@ -1477,26 +1474,10 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
 
 nsCSSFrameConstructor::AutoFrameConstructionPageName::
     ~AutoFrameConstructionPageName() {
-  if (!(mState.mPresContext->IsPaginated() &&
-        StaticPrefs::layout_css_named_pages_enabled())) {
-    return;
-  }
-  nsIFrame::PageValues* const pageValues =
-      mFrame->GetProperty(nsIFrame::PageValuesProperty());
-  MOZ_ASSERT(!!pageValues->mStartPageValue == !!pageValues->mEndPageValue,
-             "Both or neither of the child page names should have been set.");
-  if (!pageValues->mStartPageValue && !mItems.IsEmpty()) {
-    pageValues->mStartPageValue = mState.mAutoPageNameValue;
-    pageValues->mEndPageValue = mState.mAutoPageNameValue;
-  }
-  if (const nsIFrame* const prevSibling = mFrame->GetPrevSibling()) {
-    if (const nsIFrame::PageValues* const prevPageValues =
-            prevSibling->GetProperty(nsIFrame::PageValuesProperty())) {
-      if (prevPageValues->mEndPageValue != pageValues->mStartPageValue) {
-        mFCtor.PrependPageBreakItem(mFrame->GetContent(), mItems);
-      }
-    }
-  }
+  // This isn't actually useful when not in paginated layout or when
+  // layout.css.named-pages.enabled is false, but it's very likely cheaper to
+  // unconditionally write this pointer than to test for paginated layout and
+  // the value of the pref and then branch on the result.
   mState.mAutoPageNameValue = mNameToRestore;
 }
 
@@ -2875,9 +2856,9 @@ void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
   }
 
   AutoFrameConstructionItemList itemsToConstruct(this);
+  AutoFrameConstructionPageName pageNameTracker(aState, aFrame);
   AddFCItemsForAnonymousContent(aState, aFrame, anonymousItems,
-                                itemsToConstruct);
-
+                                itemsToConstruct, pageNameTracker);
   ConstructFramesFromItemList(aState, itemsToConstruct, aFrame,
                               /* aParentIsWrapperAnonBox = */ false,
                               aFrameList);
@@ -3061,8 +3042,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
 
     // The other piece of NAC can take the normal path.
     AutoFrameConstructionItemList fcItems(this);
+    AutoFrameConstructionPageName pageNameTracker(aState, comboboxFrame);
     AddFCItemsForAnonymousContent(aState, comboboxFrame, newAnonymousItems,
-                                  fcItems);
+                                  fcItems, pageNameTracker);
     ConstructFramesFromItemList(aState, fcItems, comboboxFrame,
                                 /* aParentIsWrapperAnonBox = */ false,
                                 childList);
@@ -3880,8 +3862,6 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
       aState.MaybePushFloatContainingBlock(newFrameAsContainer, floatSaveState);
 
       if (bits & FCDATA_USE_CHILD_ITEMS) {
-        AutoFrameConstructionPageName pageName(*this, aState, aItem.mChildItems,
-                                               newFrame);
         ConstructFramesFromItemList(
             aState, aItem.mChildItems, newFrameAsContainer,
             bits & FCDATA_IS_WRAPPER_ANON_BOX, childList);
@@ -4288,7 +4268,9 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     aState.MaybePushFloatContainingBlock(gfxScrollFrame, floatSaveState);
 
     AutoFrameConstructionItemList items(this);
-    AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items);
+    AutoFrameConstructionPageName pageNameTracker(aState, gfxScrollFrame);
+    AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items,
+                                  pageNameTracker);
     ConstructFramesFromItemList(aState, items, gfxScrollFrame,
                                 /* aParentIsWrapperAnonBox = */ false,
                                 anonymousList);
@@ -5506,8 +5488,12 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     return;
   }
 
+  bool pageNameBreak = false;
+  // TODO: We should document why the TextIsOnlyWhitespace() check is needed.
+  // This will be documented as part of fixing Bug 1782324
   if (aState.mPresContext->IsPaginated() &&
-      StaticPrefs::layout_css_named_pages_enabled()) {
+      StaticPrefs::layout_css_named_pages_enabled() &&
+      !aContent->TextIsOnlyWhitespace()) {
     // TODO: This is slightly incorrect! See Bug 1764437
     // We should be waiting all of our descendent frames to be constructed.
     //
@@ -5515,30 +5501,53 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     // constructing this frame's first child, inspecting the parent frames and
     // rewriting their first child page-name.
     const StylePageName& pageName = aComputedStyle->StylePage()->mPage;
-    const nsAtom* pageNameAtom;
-    if (pageName.IsPageName()) {
-      pageNameAtom = pageName.AsPageName().AsAtom();
-    } else {
-      // Resolve auto against the parent frame's used page name.
-      MOZ_ASSERT(pageName.IsAuto(), "Impossible page name");
-      pageNameAtom = aState.mAutoPageNameValue;
-    }
+
+    // Resolve auto against the parent frame's used page name, which has been
+    // determined and set on aState.mAutoPageNameValue. If this item is not
+    // block-level then we use the value that auto resolves to.
+    //
+    // This is to achieve the propagation behavior described in the spec:
+    //
+    // "A start page value and end page value is determined for each box as
+    //  the value (if any) propagated from its first or last child box
+    //  (respectively), else the used value on the box itself."
+    //
+    // "A child propagates its own start or end page value if and only if the
+    //  page property applies to it."
+    //
+    // The page property only applies to "boxes that create class A break
+    // points". When taken together, means that non block-level children do
+    // not propagate start/end page values, and instead we use "the used
+    // value on the box itself", the "box itself" being aParentFrame. This
+    // value has been determined and saved as aState.mAutoPageNameValue
+    //
+    // https://www.w3.org/TR/css-page-3/#using-named-pages
+    // https://www.w3.org/TR/css-break-3/#btw-blocks
+    const nsAtom* const pageNameAtom =
+        (pageName.IsPageName() &&
+         aComputedStyle->StyleDisplay()->IsBlockOutsideStyle())
+            ? pageName.AsPageName().AsAtom()
+            : aState.mAutoPageNameValue;
 
     // Check if we are the first child of our parent. If so, propagate this
     // child's page name up the frame tree for every frame while our ancestor
     // is the first child of its parent.
-    //
-    // TODO: Bug 1766685
-    // We should consider if this frame can create a class A page break or not,
-    // and only propagate the page property if it can. Otherwise, the page
-    // property should be ignored in our computed style.
     nsIFrame::PageValues* const framePageValues =
         aParentFrame->GetProperty(nsIFrame::PageValuesProperty());
+    // TODO alaskanemily: This assert should be removed when we move to lazily
+    // setting the PageValuesProperty
     MOZ_ASSERT(framePageValues,
                "child box page names should have been created by "
                "AutoFrameConstructionPageName");
     if (!framePageValues->mStartPageValue) {
       framePageValues->mStartPageValue = pageNameAtom;
+      if (nsIFrame* const prevFrame = aParentFrame->GetPrevSibling()) {
+        const nsIFrame::PageValues* const prevPageValues =
+            prevFrame->GetProperty(nsIFrame::PageValuesProperty());
+        if (prevPageValues && prevPageValues->mEndPageValue != pageNameAtom) {
+          pageNameBreak = true;
+        }
+      }
       // Propagate the start page value back up the frame tree.
       // If the frame already has mStartPageValue set, then we are not a
       // descendant of the frame's first child.
@@ -5561,8 +5570,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       !display.IsAbsolutelyPositionedStyle() &&
       !(aParentFrame && aParentFrame->IsGridContainerFrame()) &&
       !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
-
-  if (canHavePageBreak && display.BreakBefore()) {
+  if (canHavePageBreak && (pageNameBreak || display.BreakBefore())) {
     AppendPageBreakItem(aContent, aItems);
   }
 
@@ -9641,9 +9649,8 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
 void nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     nsFrameConstructorState& aState, nsContainerFrame* aFrame,
     const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
-    FrameConstructionItemList& aItemsToConstruct) {
-  AutoFrameConstructionPageName pageName(*this, aState, aItemsToConstruct,
-                                         aFrame);
+    FrameConstructionItemList& aItemsToConstruct,
+    const AutoFrameConstructionPageName&) {
   for (const auto& info : aAnonymousItems) {
     nsIContent* content = info.mContent;
     // Gecko-styled nodes should have no pending restyle flags.
@@ -9702,8 +9709,7 @@ void nsCSSFrameConstructor::ProcessChildren(
   }
 
   AutoFrameConstructionItemList itemsToConstruct(this);
-  AutoFrameConstructionPageName pageName(*this, aState, itemsToConstruct,
-                                         aFrame);
+  AutoFrameConstructionPageName pageNameTracker(aState, aFrame);
 
   // If we have first-letter or first-line style then frames can get
   // moved around so don't set these flags.
@@ -9724,7 +9730,7 @@ void nsCSSFrameConstructor::ProcessChildren(
   }
 #endif
   AddFCItemsForAnonymousContent(aState, aFrame, anonymousItems,
-                                itemsToConstruct);
+                                itemsToConstruct, pageNameTracker);
 
   nsBlockFrame* listItem = nullptr;
   bool isOutsideMarker = false;
