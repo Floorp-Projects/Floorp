@@ -120,12 +120,13 @@ LoginManagerAuthPromptFactory.prototype = {
   // Promise used to defer prompts if the password manager isn't ready when
   // they're called.
   _uiBusyPromise: null,
+  _uiBusyResolve: null,
 
   observe(subject, topic, data) {
     this.log(`Observed topic: ${topic}.`);
     if (topic == "passwordmgr-crypto-login") {
       // Show the deferred prompters.
-      this._uiBusyPromise?.resolve();
+      this._uiBusyResolve?.();
     }
   },
 
@@ -208,7 +209,9 @@ LoginManagerAuthPromptFactory.prototype = {
 
     this.log("Waiting for primary password UI.");
 
-    this._uiBusyPromise = new Promise();
+    this._uiBusyPromise = new Promise(resolve => {
+      this._uiBusyResolve = resolve;
+    });
     await this._uiBusyPromise;
   },
 
