@@ -27,6 +27,7 @@ let openUrl = url => {
     inBackground: false,
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
+  return { focusContent: true };
 };
 
 // There are various actions that will either fail or do not
@@ -120,11 +121,10 @@ const DEFAULT_ACTIONS = {
     label: "quickactions-screenshot2",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
-      Services.obs.notifyObservers(
-        null,
-        "menuitem-screenshot-extension",
-        "contextMenu"
-      );
+      lazy.BrowserWindowTracker.getTopWindow()
+        .document.getElementById("Browser:Screenshot")
+        .doCommand();
+      return { focusContent: true };
     },
   },
   settings: {
