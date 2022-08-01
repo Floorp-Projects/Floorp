@@ -30,6 +30,8 @@ class NS_NO_VTABLE DirectoryLock {
 
   virtual void AcquireImmediately() = 0;
 
+  virtual void AssertIsAcquiredExclusively() = 0;
+
   virtual void Log() const = 0;
 };
 

@@ -40,9 +40,6 @@ function cleanup() {
   Services.prefs.clearUserPref(ROLLOUT_PREF_PHASE1_PREFERENCES);
   Services.prefs.clearUserPref(CB_CATEGORY_PREF);
 
-  // Reset the rollout scalar back to 2 = unset. We have to simulate this on
-  // test cleanup, because BrowserGlue only sets this once initially.
-  Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 2);
   // Same for the tcpByDefault feature probe.
   Services.telemetry.scalarSet(
     "privacy.dfpi_rollout_tcpByDefault_feature",
@@ -71,12 +68,6 @@ function testTelemetryState(
   expectedValueTCPByDefault,
   message = "Scalars should have correct value"
 ) {
-  TelemetryTestUtils.assertScalar(
-    TelemetryTestUtils.getProcessScalars("parent"),
-    "privacy.dfpi_rollout_enabledByDefault",
-    expectedValueOptIn,
-    message
-  );
   TelemetryTestUtils.assertScalar(
     TelemetryTestUtils.getProcessScalars("parent"),
     "privacy.dfpi_rollout_tcpByDefault_feature",

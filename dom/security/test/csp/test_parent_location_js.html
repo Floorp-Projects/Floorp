@@ -22,7 +22,7 @@ SimpleTest.waitForExplicitFinish();
 function receiveMessage(event) {
   window.removeEventListener("message", receiveMessage);
   is(event.data.blockedURI, "inline", "blockedURI");
-  is(event.data.violatedDirective, "script-src", "violatedDirective")
+  is(event.data.violatedDirective, "script-src-elem", "violatedDirective")
   is(event.data.originalPolicy, "script-src 'nonce-bug1550414'", "originalPolicy");
   SimpleTest.finish();
 }

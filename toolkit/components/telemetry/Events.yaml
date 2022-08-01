@@ -3299,11 +3299,11 @@ privacy_segmentation:
     methods: ["enable", "disable"]
     release_channel_collection: opt-out
     record_in_processes: ["main"]
-    bug_numbers: [1748877]
+    bug_numbers: [1748877, 1781975]
     notification_emails:
       - pbz@mozilla.com
       - rtestard@mozilla.com
-    expiry_version: "106"
+    expiry_version: "109"
     products: ["firefox"]
 
 synced_tabs:

@@ -87,7 +87,7 @@ add_task(async function test_replaceTopLevelOnNavigation() {
 
   listener.startListening();
 
-  await loadURL(tab.linkedBrowser, "about:robots");
+  await loadURL(tab.linkedBrowser, "about:mozilla");
 
   const discardEvent = await discarded;
   const attachEvent = await attached;

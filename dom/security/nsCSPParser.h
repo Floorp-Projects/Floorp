@@ -182,8 +182,9 @@ class nsCSPParser {
 
   // helpers to allow invalidation of srcs within script-src and style-src
   // if either 'strict-dynamic' or at least a hash or nonce is present.
-  bool mHasHashOrNonce;  // false, if no hash or nonce is defined
-  bool mStrictDynamic;   // false, if 'strict-dynamic' is not defined
+  bool mHasHashOrNonce;    // false, if no hash or nonce is defined
+  bool mHasAnyUnsafeEval;  // false, if no (wasm-)unsafe-eval keyword is used.
+  bool mStrictDynamic;     // false, if 'strict-dynamic' is not defined
   nsCSPKeywordSrc* mUnsafeInlineKeywordSrc;  // null, otherwise invlidate()
 
   // cache variables for child-src, frame-src and worker-src handling;
@@ -197,6 +198,7 @@ class nsCSPParser {
   nsCSPDirective* mFrameSrc;
   nsCSPDirective* mWorkerSrc;
   nsCSPScriptSrcDirective* mScriptSrc;
+  nsCSPStyleSrcDirective* mStyleSrc;
 
   // cache variable to let nsCSPHostSrc know that it's within
   // the frame-ancestors directive.

@@ -1125,9 +1125,9 @@ bool EventStateManager::CheckIfEventMatchesAccessKey(
     WidgetKeyboardEvent* aEvent, nsPresContext* aPresContext) {
   AutoTArray<uint32_t, 10> accessCharCodes;
   aEvent->GetAccessKeyCandidates(accessCharCodes);
-  return WalkESMTreeToHandleAccessKey(const_cast<WidgetKeyboardEvent*>(aEvent),
-                                      aPresContext, accessCharCodes, nullptr,
-                                      eAccessKeyProcessingNormal, false);
+  return WalkESMTreeToHandleAccessKey(aEvent, aPresContext, accessCharCodes,
+                                      nullptr, eAccessKeyProcessingNormal,
+                                      false);
 }
 
 bool EventStateManager::LookForAccessKeyAndExecute(
@@ -1155,22 +1155,32 @@ bool EventStateManager::LookForAccessKeyAndExecute(
         if (!aExecute) {
           return true;
         }
-        bool shouldActivate =
-            StaticPrefs::accessibility_accesskeycausesactivation();
-
-        if (aIsRepeat && nsContentUtils::IsChromeDoc(element->OwnerDoc())) {
-          shouldActivate = false;
-        }
-
-        // XXXedgar, Bug 1700646, maybe we could use other data structure to
-        // make searching target with same accesskey easier, and current setup
-        // could not ensure we cycle the target with tree order.
-        int32_t j = 0;
-        while (shouldActivate && ++j < length) {
-          Element* el = mAccessKeys[(start + count + j) % length];
-          if (IsAccessKeyTarget(el, accessKey)) {
-            shouldActivate = false;
+        Document* doc = element->OwnerDoc();
+        const bool shouldActivate = [&] {
+          if (!StaticPrefs::accessibility_accesskeycausesactivation()) {
+            return false;
           }
+          if (aIsRepeat && nsContentUtils::IsChromeDoc(doc)) {
+            return false;
+          }
+
+          // XXXedgar, Bug 1700646, maybe we could use other data structure to
+          // make searching target with same accesskey easier, and current setup
+          // could not ensure we cycle the target with tree order.
+          int32_t j = 0;
+          while (++j < length) {
+            Element* el = mAccessKeys[(start + count + j) % length];
+            if (IsAccessKeyTarget(el, accessKey)) {
+              return false;
+            }
+          }
+          return true;
+        }();
+
+        // TODO(bug 1641171): This shouldn't be needed if we considered the
+        // accesskey combination properly.
+        if (aIsTrustedEvent) {
+          doc->NotifyUserGestureActivation();
         }
 
         auto result =

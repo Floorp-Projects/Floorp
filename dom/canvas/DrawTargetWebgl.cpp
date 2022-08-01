@@ -795,6 +795,7 @@ bool DrawTargetWebgl::LockBits(uint8_t** aData, IntSize* aSize,
                                IntPoint* aOrigin) {
   // Can only access pixels if there is valid, flattened Skia data.
   if (mSkiaValid && !mSkiaLayer) {
+    MarkSkiaChanged();
     return mSkia->LockBits(aData, aSize, aStride, aFormat, aOrigin);
   }
   return false;

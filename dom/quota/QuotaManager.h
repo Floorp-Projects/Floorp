@@ -14,6 +14,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/InitializedOnce.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
@@ -300,7 +301,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
-  void ShutdownStorage();
+  RefPtr<BoolPromise> ShutdownStorage();
+
+  void ShutdownStorageInternal();
 
   // Returns a bool indicating whether the directory was newly created.
   Result<bool, nsresult> EnsureOriginDirectory(nsIFile& aDirectory);
@@ -651,11 +654,14 @@ class QuotaManager final : public BackgroundThreadObject {
   LazyInitializedOnce<const nsString> mTemporaryStoragePath;
   LazyInitializedOnce<const nsString> mDefaultStoragePath;
 
+  MozPromiseHolder<BoolPromise> mShutdownStoragePromiseHolder;
+
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
   int64_t mNextDirectoryLockId;
   bool mTemporaryStorageInitialized;
   bool mCacheUsable;
+  bool mShuttingDownStorage;
 };
 
 }  // namespace mozilla::dom::quota

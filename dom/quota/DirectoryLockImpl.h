@@ -47,6 +47,10 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   FlippedOnce<true> mPending;
   FlippedOnce<false> mInvalidated;
 
+#ifdef DEBUG
+  FlippedOnce<false> mAcquired;
+#endif
+
  public:
   DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                     const Nullable<PersistenceType>& aPersistenceType,
@@ -172,6 +176,14 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   void Acquire(RefPtr<OpenDirectoryListener> aOpenListener) override;
 
   void AcquireImmediately() override;
+
+  void AssertIsAcquiredExclusively() override
+#ifdef DEBUG
+      ;
+#else
+  {
+  }
+#endif
 
   void Log() const override;
 
