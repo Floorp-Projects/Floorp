@@ -1305,39 +1305,42 @@ js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
 }
 
 void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
-  // Suppress the sampling profiler to prevent it observing moved functions.
-  AutoSuppressProfilerSampling suppressProfiler(
-      runtime()->mainContextFromOwnThread());
+  {
+    // Suppress the sampling profiler to prevent it observing moved functions.
+    AutoSuppressProfilerSampling suppressProfiler(
+        runtime()->mainContextFromOwnThread());
 
-  // Trace the store buffer. This must happen first.
-  StoreBuffer& sb = gc->storeBuffer();
+    // Trace the store buffer. This must happen first.
+    StoreBuffer& sb = gc->storeBuffer();
 
-  // Strings in the whole cell buffer must be traced first, in order to mark
-  // tenured dependent strings' bases as non-deduplicatable. The rest of
-  // nursery collection (whole non-string cells, edges, etc.) can happen later.
-  startProfile(ProfileKey::TraceWholeCells);
-  sb.traceWholeCells(mover);
-  endProfile(ProfileKey::TraceWholeCells);
+    // Strings in the whole cell buffer must be traced first, in order to mark
+    // tenured dependent strings' bases as non-deduplicatable. The rest of
+    // nursery collection (whole non-string cells, edges, etc.) can happen
+    // later.
+    startProfile(ProfileKey::TraceWholeCells);
+    sb.traceWholeCells(mover);
+    endProfile(ProfileKey::TraceWholeCells);
 
-  startProfile(ProfileKey::TraceValues);
-  sb.traceValues(mover);
-  endProfile(ProfileKey::TraceValues);
+    startProfile(ProfileKey::TraceValues);
+    sb.traceValues(mover);
+    endProfile(ProfileKey::TraceValues);
 
-  startProfile(ProfileKey::TraceCells);
-  sb.traceCells(mover);
-  endProfile(ProfileKey::TraceCells);
+    startProfile(ProfileKey::TraceCells);
+    sb.traceCells(mover);
+    endProfile(ProfileKey::TraceCells);
 
-  startProfile(ProfileKey::TraceSlots);
-  sb.traceSlots(mover);
-  endProfile(ProfileKey::TraceSlots);
+    startProfile(ProfileKey::TraceSlots);
+    sb.traceSlots(mover);
+    endProfile(ProfileKey::TraceSlots);
 
-  startProfile(ProfileKey::TraceGenericEntries);
-  sb.traceGenericEntries(&mover);
-  endProfile(ProfileKey::TraceGenericEntries);
+    startProfile(ProfileKey::TraceGenericEntries);
+    sb.traceGenericEntries(&mover);
+    endProfile(ProfileKey::TraceGenericEntries);
 
-  startProfile(ProfileKey::MarkRuntime);
-  gc->traceRuntimeForMinorGC(&mover, session);
-  endProfile(ProfileKey::MarkRuntime);
+    startProfile(ProfileKey::MarkRuntime);
+    gc->traceRuntimeForMinorGC(&mover, session);
+    endProfile(ProfileKey::MarkRuntime);
+  }
 
   startProfile(ProfileKey::MarkDebugger);
   {
