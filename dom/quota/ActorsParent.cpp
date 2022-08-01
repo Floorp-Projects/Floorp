@@ -3935,8 +3935,8 @@ void QuotaManager::Shutdown() {
     // QuotaManager on the IO thread. This should probably use
     // NewNonOwningRunnableMethod ...
     RefPtr<Runnable> runnable =
-        NewRunnableMethod("dom::quota::QuotaManager::ShutdownStorage", this,
-                          &QuotaManager::ShutdownStorage);
+        NewRunnableMethod("dom::quota::QuotaManager::ShutdownStorageInternal",
+                          this, &QuotaManager::ShutdownStorageInternal);
     MOZ_ASSERT(runnable);
 
     // Give clients a chance to cleanup IO thread only objects.
@@ -6466,7 +6466,7 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
       "dom::quota::FirstInitializationAttempt::TemporaryStorage"_ns, innerFunc);
 }
 
-void QuotaManager::ShutdownStorage() {
+void QuotaManager::ShutdownStorageInternal() {
   AssertIsOnIOThread();
 
   if (mStorageConnection) {
@@ -9292,7 +9292,7 @@ nsresult ResetOrClearOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     aQuotaManager.RemoveQuota();
   }
 
-  aQuotaManager.ShutdownStorage();
+  aQuotaManager.ShutdownStorageInternal();
 
   if (mClear) {
     DeleteStorageFile(aQuotaManager);
