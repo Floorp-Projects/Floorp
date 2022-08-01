@@ -172,7 +172,9 @@ def write_with_overwrite_confirm(
             )
             data = ""
             while data not in ["Y", "N", "D"]:
-                data = input("\nOverwrite %s? (Yes/No/Diff)\n" % relpath)
+                data = input(
+                    "\nOverwrite %s? (Y = Yes / N = No / D = Diff)\n" % relpath
+                ).upper()
                 if data == "N":
                     print(
                         "Aborted saving updated content to file %s" % relpath,
