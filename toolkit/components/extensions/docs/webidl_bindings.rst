@@ -69,8 +69,8 @@ Once the WebIDL definition for an WebExtensions API namespace has been
 implemented and wired up, the following testing strategies are available to
 cover them as part of the WebExtensions testing suites:
 
-``toolkit/components/extensions/tests/xpcshell/webidl-api``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``toolkit/components/extensions/test/xpcshell/webidl-api``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The xpcshell tests added to this group of xpcshell tests are meant to provide testing coverage
 related to lower level components and behaviors (e.g. when making changes to the shared C++
@@ -90,8 +90,8 @@ are being disabled at build time (e.g. beta and release builds, where otherwise
 the test would permafail while riding the train once got on those builds).
 
 
-``toolkit/components/extensions/tests/xpcshell/xpcshell-serviceworker.ini``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``toolkit/components/extensions/test/xpcshell/xpcshell-serviceworker.ini``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When a new or existing xpcshell tests added to this xpcshell-test manifest, all test extensions
 will be generated with a background service worker instead of a background page.
@@ -144,8 +144,8 @@ workers mode" specify the ``sw-webextensions`` tag:
 
    mach xpcshell-test --tag sw-webextensions path/to/test/file.js
 
-``toolkit/components/extensions/tests/mochitest/mochitest-serviceworker.ini``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``toolkit/components/extensions/test/mochitest/mochitest-serviceworker.ini``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Same as the xpcshell-serviceworker.ini manifest but for the mochitest-plain tests.
 
