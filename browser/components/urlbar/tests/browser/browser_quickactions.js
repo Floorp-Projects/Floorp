@@ -12,6 +12,9 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
+const DUMMY_PAGE =
+  "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
+
 let testActionCalled = 0;
 
 add_setup(async function setup() {
@@ -19,6 +22,8 @@ add_setup(async function setup() {
     set: [
       ["browser.urlbar.quickactions.enabled", true],
       ["browser.urlbar.shortcuts.quickactions", true],
+      ["screenshots.browser.component.enabled", true],
+      ["extensions.screenshots.disabled", false],
     ],
   });
 
@@ -190,4 +195,55 @@ add_task(async function match_in_phrase() {
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
   UrlbarProviderQuickActions.removeAction("newtestaction");
+});
+
+async function isScreenshotInitialized() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    let screenshotsChild = content.windowGlobalChild.getActor(
+      "ScreenshotsComponent"
+    );
+    return screenshotsChild?._overlay?._initialized;
+  });
+}
+
+add_task(async function test_screenshot() {
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, DUMMY_PAGE);
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    DUMMY_PAGE
+  );
+
+  info("The action is matched when at end of input");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "screenshot",
+  });
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "We matched the action"
+  );
+  let { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.DYNAMIC);
+  Assert.equal(result.providerName, "quickactions");
+
+  info("Trigger the screenshot mode");
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+  EventUtils.synthesizeKey("KEY_Enter", {}, window);
+  await TestUtils.waitForCondition(
+    isScreenshotInitialized,
+    "Screenshot component is active"
+  );
+
+  info("Press Escape to exit screenshot mode");
+  EventUtils.synthesizeKey("KEY_Escape", {}, window);
+  await TestUtils.waitForCondition(
+    async () => !(await isScreenshotInitialized()),
+    "Screenshot component has been dismissed"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
 });

@@ -188,7 +188,10 @@ class ProviderQuickActions extends UrlbarProvider {
   }
 
   pickResult(result, itemPicked) {
-    this.#actions.get(itemPicked.dataset.key).onPick();
+    let options = this.#actions.get(itemPicked.dataset.key).onPick() ?? {};
+    if (options.focusContent) {
+      itemPicked.ownerGlobal.gBrowser.selectedBrowser.focus();
+    }
   }
 
   /**
