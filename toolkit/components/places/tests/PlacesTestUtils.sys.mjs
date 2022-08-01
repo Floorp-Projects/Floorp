@@ -527,6 +527,18 @@ export var PlacesTestUtils = Object.freeze({
   },
 
   /**
+   * Clear moz_historyvisits table.
+   */
+  async clearHistoryVisits() {
+    await lazy.PlacesUtils.withConnectionWrapper(
+      "test:clearHistoryVisits",
+      db => {
+        return db.executeCached("DELETE FROM moz_historyvisits");
+      }
+    );
+  },
+
+  /**
    * Compares 2 place: URLs ignoring the order of their params.
    * @param url1 First URL to compare
    * @param url2 Second URL to compare
