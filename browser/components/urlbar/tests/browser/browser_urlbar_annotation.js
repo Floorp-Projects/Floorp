@@ -5,7 +5,11 @@
 
 // Test whether a visit information is annotated correctly when picking a result.
 
-const { VISIT_SOURCE_ORGANIC, VISIT_SOURCE_SPONSORED } = PlacesUtils.history;
+const {
+  VISIT_SOURCE_ORGANIC,
+  VISIT_SOURCE_SPONSORED,
+  VISIT_SOURCE_BOOKMARKED,
+} = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
   const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
@@ -90,6 +94,41 @@ add_task(async function basic() {
       },
     },
     {
+      description: "Bookmarked result",
+      input: "exa",
+      payload: {
+        url: "http://example.com/",
+      },
+      bookmarks: [
+        {
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          url: Services.io.newURI("http://example.com/"),
+          title: "test bookmark",
+        },
+      ],
+      expected: {
+        source: VISIT_SOURCE_BOOKMARKED,
+      },
+    },
+    {
+      description: "Sponsored and bookmarked result",
+      input: "exa",
+      payload: {
+        url: "http://example.com/",
+        isSponsored: true,
+      },
+      bookmarks: [
+        {
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          url: Services.io.newURI("http://example.com/"),
+          title: "test bookmark",
+        },
+      ],
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+      },
+    },
+    {
       description: "Organic result",
       input: "exa",
       payload: {
@@ -101,9 +140,13 @@ add_task(async function basic() {
     },
   ];
 
-  for (const { description, input, payload, expected } of testData) {
+  for (const { description, input, payload, bookmarks, expected } of testData) {
     info(description);
     const provider = registerProvider(payload);
+
+    for (const bookmark of bookmarks || []) {
+      await PlacesUtils.bookmarks.insert(bookmark);
+    }
 
     await BrowserTestUtils.withNewTab("about:blank", async () => {
       info("Pick result");

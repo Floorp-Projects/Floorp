@@ -1033,6 +1033,11 @@ interface nsINavHistoryService : nsISupports
   const unsigned short VISIT_SOURCE_SPONSORED = 1;
 
   /**
+   * Insert this value into moz_historyvisits if the visit source is bookmarked.
+   */
+  const unsigned short VISIT_SOURCE_BOOKMARKED = 2;
+
+  /**
    * Returns the current database status
    */
   readonly attribute unsigned short databaseStatus;
