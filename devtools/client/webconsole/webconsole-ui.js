@@ -75,6 +75,7 @@ class WebConsoleUI {
       this
     );
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
+    this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._onNetworkResourceUpdated = this._onNetworkResourceUpdated.bind(this);
     this.clearPrivateMessages = this.clearPrivateMessages.bind(this);
@@ -177,6 +178,7 @@ class WebConsoleUI {
     this.hud.commands.targetCommand.unwatchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroyed,
     });
 
     const resourceCommand = this.hud.resourceCommand;
@@ -333,6 +335,7 @@ class WebConsoleUI {
     await commands.targetCommand.watchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroyed,
     });
 
     await resourceCommand.watchResources(
@@ -566,6 +569,21 @@ class WebConsoleUI {
           this.clearPrivateMessages
         );
       }
+    }
+  }
+
+  _onTargetDestroyed({ targetFront, isModeSwitching }) {
+    // Don't try to do anything if the WebConsole is being destroyed
+    if (!this.wrapper) {
+      return;
+    }
+
+    // We only want to remove messages from a target destroyed when we're switching mode
+    // in the Browser Console/Browser Toolbox Console.
+    // For regular cases, we want to keep the message history (the output will still be
+    // cleared when the top level target navigates, if "Persist Logs" isn't true, via handleWillNavigate)
+    if (isModeSwitching) {
+      this.wrapper.dispatchTargetMessagesRemove(targetFront);
     }
   }
 
