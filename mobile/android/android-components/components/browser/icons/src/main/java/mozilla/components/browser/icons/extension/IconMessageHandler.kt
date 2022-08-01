@@ -28,7 +28,7 @@ internal class IconMessageHandler(
 ) : MessageHandler {
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE) // This only exists so that we can wait in tests.
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) // This only exists so that we can wait in tests.
     internal var lastJob: Job? = null
 
     override fun onMessage(message: Any, source: EngineSession?): Any {
