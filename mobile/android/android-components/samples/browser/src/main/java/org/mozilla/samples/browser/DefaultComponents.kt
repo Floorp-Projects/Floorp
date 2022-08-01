@@ -4,6 +4,7 @@
 
 package org.mozilla.samples.browser
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -89,6 +90,7 @@ import java.util.concurrent.TimeUnit
 
 private const val DAY_IN_MINUTES = 24 * 60L
 
+@SuppressLint("NewApi")
 @Suppress("LargeClass")
 open class DefaultComponents(private val applicationContext: Context) {
     companion object {
