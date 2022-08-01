@@ -472,6 +472,31 @@ function messages(
       );
     }
 
+    case constants.TARGET_MESSAGES_REMOVE: {
+      const removedIds = [];
+      for (const [id, message] of mutableMessagesById) {
+        // Remove message from the target but not evaluations and their results, so
+        // 1. we're consistent with the filtering behavior, i.e. we never hide those
+        // 2. when switching mode from multiprocess to parent process and back to multi,
+        //    if we'd clear evaluations we wouldn't have a way to get them back, unlike
+        //    log messages and errors, which are still available in the server caches).
+        if (
+          message.targetFront == action.targetFront &&
+          message.type !== MESSAGE_TYPE.COMMAND &&
+          message.type !== MESSAGE_TYPE.RESULT
+        ) {
+          removedIds.push(id);
+        }
+      }
+
+      return removeMessagesFromState(
+        {
+          ...state,
+        },
+        removedIds
+      );
+    }
+
     case constants.MESSAGES_DISABLE:
       return {
         ...state,
