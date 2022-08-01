@@ -19,18 +19,15 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(StorageAccessPermissionRequest,
 
 StorageAccessPermissionRequest::StorageAccessPermissionRequest(
     nsPIDOMWindowInner* aWindow, nsIPrincipal* aNodePrincipal,
-    const Maybe<nsCString>& aTopLevelBaseDomain, AllowCallback&& aAllowCallback,
-    CancelCallback&& aCancelCallback)
+    AllowCallback&& aAllowCallback, CancelCallback&& aCancelCallback)
     : ContentPermissionRequestBase(aNodePrincipal, aWindow,
                                    "dom.storage_access"_ns,
                                    "storage-access"_ns),
       mAllowCallback(std::move(aAllowCallback)),
       mCancelCallback(std::move(aCancelCallback)),
       mCallbackCalled(false) {
-  if (aTopLevelBaseDomain.isSome()) {
-    mOptions.AppendElement(NS_ConvertUTF8toUTF16(aTopLevelBaseDomain.value()));
-  }
-  mPermissionRequests.AppendElement(PermissionRequest(mType, mOptions));
+  mPermissionRequests.AppendElement(
+      PermissionRequest(mType, nsTArray<nsString>()));
 }
 
 NS_IMETHODIMP
@@ -60,12 +57,6 @@ StorageAccessPermissionRequest::Allow(JS::Handle<JS::Value> aChoices) {
     }
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-StorageAccessPermissionRequest::GetTypes(nsIArray** aTypes) {
-  return nsContentPermissionUtils::CreatePermissionArray(mType, mOptions,
-                                                         aTypes);
 }
 
 RefPtr<StorageAccessPermissionRequest::AutoGrantDelayPromise>
@@ -119,15 +110,6 @@ StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
                                        nsIPrincipal* aPrincipal,
                                        AllowCallback&& aAllowCallback,
                                        CancelCallback&& aCancelCallback) {
-  return Create(aWindow, aPrincipal, Nothing(), std::move(aAllowCallback),
-                std::move(aCancelCallback));
-}
-
-already_AddRefed<StorageAccessPermissionRequest>
-StorageAccessPermissionRequest::Create(
-    nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-    const Maybe<nsCString>& aTopLevelBaseDomain, AllowCallback&& aAllowCallback,
-    CancelCallback&& aCancelCallback) {
   if (!aWindow) {
     return nullptr;
   }
@@ -137,9 +119,9 @@ StorageAccessPermissionRequest::Create(
   }
 
   RefPtr<StorageAccessPermissionRequest> request =
-      new StorageAccessPermissionRequest(
-          aWindow, aPrincipal, aTopLevelBaseDomain, std::move(aAllowCallback),
-          std::move(aCancelCallback));
+      new StorageAccessPermissionRequest(aWindow, aPrincipal,
+                                         std::move(aAllowCallback),
+                                         std::move(aCancelCallback));
   return request.forget();
 }
 
