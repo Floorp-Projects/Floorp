@@ -28,7 +28,7 @@ import java.lang.reflect.Modifier
  */
 @Suppress("LongParameterList")
 class BrowserMenuImageSwitch(
-    @VisibleForTesting(otherwise = Modifier.PRIVATE)
+    @get:VisibleForTesting(otherwise = Modifier.PRIVATE)
     @DrawableRes
     val imageResource: Int,
     label: String,

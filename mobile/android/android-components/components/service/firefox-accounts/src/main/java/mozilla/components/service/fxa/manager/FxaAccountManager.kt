@@ -122,7 +122,7 @@ enum class MigrationResult {
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 open class FxaAccountManager(
     private val context: Context,
-    @VisibleForTesting val serverConfig: ServerConfig,
+    @get:VisibleForTesting val serverConfig: ServerConfig,
     private val deviceConfig: DeviceConfig,
     private val syncConfig: SyncConfig?,
     private val applicationScopes: Set<String> = emptySet(),

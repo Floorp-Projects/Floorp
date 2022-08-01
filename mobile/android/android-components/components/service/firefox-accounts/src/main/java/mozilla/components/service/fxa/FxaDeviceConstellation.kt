@@ -42,7 +42,7 @@ internal sealed class FxaDeviceConstellationException : Exception() {
 class FxaDeviceConstellation(
     private val account: FirefoxAccount,
     private val scope: CoroutineScope,
-    @VisibleForTesting
+    @get:VisibleForTesting
     internal val crashReporter: CrashReporting? = null
 ) : DeviceConstellation, Observable<AccountEventsObserver> by ObserverRegistry() {
     private val logger = Logger("FxaDeviceConstellation")

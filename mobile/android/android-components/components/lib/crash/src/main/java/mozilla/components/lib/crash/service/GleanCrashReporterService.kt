@@ -21,7 +21,7 @@ import java.io.IOException
  */
 class GleanCrashReporterService(
     val context: Context,
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val file: File = File(context.applicationInfo.dataDir, CRASH_FILE_NAME)
 ) : CrashTelemetryService {
     companion object {

@@ -85,7 +85,7 @@ class MozillaSocorroService(
     private val version: String = DEFAULT_VERSION,
     private val buildId: String = DEFAULT_BUILD_ID,
     private val vendor: String = DEFAULT_VENDOR,
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var serverUrl: String? = null,
     private var versionName: String = DEFAULT_VERSION_NAME,
     private var versionCode: String = DEFAULT_VERSION_CODE,

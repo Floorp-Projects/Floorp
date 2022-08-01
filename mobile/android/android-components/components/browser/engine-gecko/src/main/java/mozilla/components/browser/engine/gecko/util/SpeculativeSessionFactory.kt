@@ -88,8 +88,8 @@ internal class SpeculativeSessionFactory {
  * observer for handling content process crashes/kills.
  */
 internal class SpeculativeEngineSession constructor(
-    @VisibleForTesting internal val engineSession: GeckoEngineSession,
-    @VisibleForTesting internal val observer: SpeculativeSessionObserver
+    @get:VisibleForTesting internal val engineSession: GeckoEngineSession,
+    @get:VisibleForTesting internal val observer: SpeculativeSessionObserver
 ) {
     /**
      * Checks whether the [SpeculativeEngineSession] matches the given configuration.

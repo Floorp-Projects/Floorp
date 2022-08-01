@@ -66,7 +66,7 @@ import mozilla.components.support.utils.Browsers
 class DownloadsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,
-    @VisibleForTesting(otherwise = PRIVATE)
+    @get:VisibleForTesting(otherwise = PRIVATE)
     internal val useCases: DownloadsUseCases,
     override var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     onDownloadStopped: onDownloadStopped = noop,

@@ -39,7 +39,7 @@ class BrowserMenuImageTextCheckboxButton(
     private val label: String,
     @ColorRes iconTintColorResource: Int = NO_ID,
     @ColorRes internal val textColorResource: Int = NO_ID,
-    @VisibleForTesting internal val labelListener: () -> Unit,
+    @get:VisibleForTesting internal val labelListener: () -> Unit,
     @DrawableRes val primaryStateIconResource: Int,
     @DrawableRes val secondaryStateIconResource: Int,
     @ColorRes internal val tintColorResource: Int = NO_ID,

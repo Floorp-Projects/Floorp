@@ -15,7 +15,7 @@ import mozilla.components.service.pocket.stories.api.PocketEndpoint.Companion.ne
  * @see [newInstance] to retrieve an instance.
  */
 internal class PocketEndpoint internal constructor(
-    @VisibleForTesting internal val rawEndpoint: PocketEndpointRaw,
+    @get:VisibleForTesting internal val rawEndpoint: PocketEndpointRaw,
     private val jsonParser: PocketJSONParser
 ) {
 

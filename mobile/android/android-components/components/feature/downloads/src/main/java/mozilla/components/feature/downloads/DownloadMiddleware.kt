@@ -40,7 +40,7 @@ class DownloadMiddleware(
     private val applicationContext: Context,
     private val downloadServiceClass: Class<*>,
     coroutineContext: CoroutineContext = Dispatchers.IO,
-    @VisibleForTesting
+    @get:VisibleForTesting
     internal val downloadStorage: DownloadStorage = DownloadStorage(applicationContext)
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("DownloadMiddleware")

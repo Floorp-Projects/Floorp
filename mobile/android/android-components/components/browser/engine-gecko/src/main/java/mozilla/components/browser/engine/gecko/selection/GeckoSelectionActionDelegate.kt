@@ -18,7 +18,7 @@ import org.mozilla.geckoview.BasicSelectionActionDelegate
  */
 open class GeckoSelectionActionDelegate(
     activity: Activity,
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val customDelegate: SelectionActionDelegate
 ) : BasicSelectionActionDelegate(activity) {
 

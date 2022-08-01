@@ -14,7 +14,7 @@ import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.concept.menu.MenuController
 
 internal class MenuButton(
-    @VisibleForTesting internal val impl: mozilla.components.browser.menu.view.MenuButton
+    @get:VisibleForTesting internal val impl: mozilla.components.browser.menu.view.MenuButton
 ) {
 
     init {
