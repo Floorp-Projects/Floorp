@@ -12,7 +12,7 @@ transforms:
 kind-dependencies:
     - toolchain
 
-job-defaults:
+task-defaults:
     apk-artifact-template:
         type: file
         name: 'public/build/{gradle_build}/{abi}/target.apk'
@@ -38,7 +38,7 @@ job-defaults:
         max-run-time: 7200
         chain-of-trust: true
 
-jobs:
+tasks:
     focus-debug:
         description: 'Focus debug build from source code'
         run-on-tasks-for: [github-pull-request, github-push]

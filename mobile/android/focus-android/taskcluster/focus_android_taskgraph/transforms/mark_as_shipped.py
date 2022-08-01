@@ -30,14 +30,14 @@ def resolve_keys(config, tasks):
 
 
 @transforms.add
-def make_task_description(config, jobs):
-    for job in jobs:
+def make_task_description(config, tasks):
+    for task in tasks:
         # used to query shipit so the case needs to match
         product = "Focus-android"
         version = config.params['version'] or "{ver}"
-        job['worker']['release-name'] = '{product}-{version}-build{build_number}'.format(
+        task['worker']['release-name'] = '{product}-{version}-build{build_number}'.format(
             product=product,
             version=version,
             build_number=config.params.get('build_number', 1)
         )
-        yield job
+        yield task

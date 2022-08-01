@@ -11,10 +11,10 @@ transforms:
 kind-dependencies:
     - toolchain
 
-job-defaults:
+task-defaults:
     attributes:
         retrigger: true
-    description: Unit tests 
+    description: Unit tests
     fetches:
         toolchain:
             - android-sdk-linux
@@ -30,7 +30,7 @@ job-defaults:
         docker-image: {in-tree: base}
         max-run-time: 7200
 
-jobs:
+tasks:
     debug:
         attributes:
             code-review: true

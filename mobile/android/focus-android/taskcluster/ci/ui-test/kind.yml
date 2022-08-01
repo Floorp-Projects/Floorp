@@ -12,13 +12,13 @@ kind-dependencies:
     - toolchain
     - build
 
-job-defaults:
+task-defaults:
     attributes:
         build-type: debug
         code-review: true
         retrigger: true
     dependencies:
-        # key is arbitrary, the value corresponds to <kind name>-<build-name> 
+        # key is arbitrary, the value corresponds to <kind name>-<build-name>
         signed-debug-apk: signing-focus-debug
         signed-android-test: signing-android-test-debug
     worker-type: b-android
@@ -52,7 +52,7 @@ job-defaults:
             - [wget, {artifact-reference: '<signed-debug-apk/public/build/focus/x86/target.apk>'}, '-O', app.apk]
             - [wget, {artifact-reference: '<signed-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
 
-jobs:
+tasks:
     x86-debug:
         description: 'UI tests with firebase'
         run:
