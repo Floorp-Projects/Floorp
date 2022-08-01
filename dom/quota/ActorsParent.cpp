@@ -1211,6 +1211,32 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   virtual void SendResults() override;
 };
 
+class ShutdownStorageOp : public NormalOriginOperationBase {
+  MozPromiseHolder<BoolPromise> mPromiseHolder;
+
+ public:
+  ShutdownStorageOp()
+      : NormalOriginOperationBase("dom::quota::ShutdownStorageOp",
+                                  Nullable<PersistenceType>(),
+                                  OriginScope::FromNull(),
+                                  /* aExclusive */ true) {
+    AssertIsOnOwningThread();
+  }
+
+  RefPtr<BoolPromise> OnResults() {
+    AssertIsOnOwningThread();
+
+    return mPromiseHolder.Ensure(__func__);
+  }
+
+ private:
+  ~ShutdownStorageOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
+
+  void SendResults() override;
+};
+
 /*******************************************************************************
  * Actor class declarations
  ******************************************************************************/
@@ -3281,7 +3307,8 @@ QuotaManager::QuotaManager(const nsAString& aBasePath,
       mTemporaryStorageUsage(0),
       mNextDirectoryLockId(0),
       mTemporaryStorageInitialized(false),
-      mCacheUsable(false) {
+      mCacheUsable(false),
+      mShuttingDownStorage(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!gInstance);
 }
@@ -3930,18 +3957,6 @@ void QuotaManager::Shutdown() {
 
   auto shutdownAndJoinIOThread = [this]() {
     RecordQuotaManagerShutdownStep("shutdownAndJoinIOThread"_ns);
-    // NB: It's very important that runnable is destroyed on this thread
-    // (i.e. after we join the IO thread) because we can't release the
-    // QuotaManager on the IO thread. This should probably use
-    // NewNonOwningRunnableMethod ...
-    RefPtr<Runnable> runnable =
-        NewRunnableMethod("dom::quota::QuotaManager::ShutdownStorageInternal",
-                          this, &QuotaManager::ShutdownStorageInternal);
-    MOZ_ASSERT(runnable);
-
-    // Give clients a chance to cleanup IO thread only objects.
-    QM_WARNONLY_TRY(
-        QM_TO_RESULT((*mIOThread)->Dispatch(runnable, NS_DISPATCH_NORMAL)));
 
     // Make sure to join with our IO thread.
     QM_WARNONLY_TRY(QM_TO_RESULT((*mIOThread)->Shutdown()));
@@ -3958,6 +3973,15 @@ void QuotaManager::Shutdown() {
   ScopedLogExtraInfo scope{ScopedLogExtraInfo::kTagContext,
                            "dom::quota::QuotaManager::Shutdown"_ns};
 
+  // This must be called before `flagShutdownStarted`, it would fail otherwise.
+  // `ShutdownStorageOp` needs to acquire an exclusive directory lock over
+  // entire <profile>/storage which will abort any existing operations and wait
+  // for all existing directory locks to be released. So the shutdown operation
+  // will effectively run after all existing operations.
+  // We don't need to use the returned promise here because `ShutdownStorage`
+  // registers `ShudownStorageOp` in `gNormalOriginOps`.
+  ShutdownStorage();
+
   flagShutdownStarted();
 
   startCrashBrowserTimer();
@@ -3966,6 +3990,12 @@ void QuotaManager::Shutdown() {
   // maintenance work.
   // This could be done as part of QuotaClient::AbortAllOperations.
   StopIdleMaintenance();
+
+  // XXX In theory, we could simplify the code below (and also the `Client`
+  // interface) by removing the `initiateShutdownWorkThreads` and
+  // `isAllClientsShutdownComplete` calls because it should be sufficient
+  // to rely on `ShutdownStorage` to abort all existing operations and to
+  // wait for all existing directory locks to be released as well.
 
   const bool needsToWait =
       initiateShutdownWorkThreads() || static_cast<bool>(gNormalOriginOps);
@@ -6466,6 +6496,35 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
       "dom::quota::FirstInitializationAttempt::TemporaryStorage"_ns, innerFunc);
 }
 
+RefPtr<BoolPromise> QuotaManager::ShutdownStorage() {
+  if (!mShuttingDownStorage) {
+    mShuttingDownStorage = true;
+
+    auto shutdownStorageOp = MakeRefPtr<ShutdownStorageOp>();
+
+    RegisterNormalOriginOp(*shutdownStorageOp);
+
+    shutdownStorageOp->RunImmediately();
+
+    shutdownStorageOp->OnResults()->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [self = RefPtr<QuotaManager>(this)](bool aResolveValue) {
+          self->mShuttingDownStorage = false;
+
+          self->mShutdownStoragePromiseHolder.ResolveIfExists(aResolveValue,
+                                                              __func__);
+        },
+        [self = RefPtr<QuotaManager>(this)](nsresult aRejectValue) {
+          self->mShuttingDownStorage = false;
+
+          self->mShutdownStoragePromiseHolder.RejectIfExists(aRejectValue,
+                                                             __func__);
+        });
+  }
+
+  return mShutdownStoragePromiseHolder.Ensure(__func__);
+}
+
 void QuotaManager::ShutdownStorageInternal() {
   AssertIsOnIOThread();
 
@@ -7939,6 +7998,28 @@ void SaveOriginAccessTimeOp::SendResults() {
 #ifdef DEBUG
   NoteActorDestroyed();
 #endif
+}
+
+nsresult ShutdownStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("ShutdownStorageOp::DoDirectoryWork", OTHER);
+
+  aQuotaManager.ShutdownStorageInternal();
+
+  return NS_OK;
+}
+
+void ShutdownStorageOp::SendResults() {
+#ifdef DEBUG
+  NoteActorDestroyed();
+#endif
+
+  if (NS_SUCCEEDED(mResultCode)) {
+    mPromiseHolder.ResolveIfExists(true, __func__);
+  } else {
+    mPromiseHolder.RejectIfExists(mResultCode, __func__);
+  }
 }
 
 NS_IMETHODIMP
