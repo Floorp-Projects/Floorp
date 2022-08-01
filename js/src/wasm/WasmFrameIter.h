@@ -170,6 +170,8 @@ class ProfilingFrameIterator {
   uint8_t* callerFP_;
   void* callerPC_;
   void* stackAddress_;
+  // See JS::ProfilingFrameIterator::endStackAddress_ comment.
+  void* endStackAddress_ = nullptr;
   uint8_t* unwoundJitCallerFP_;
   ExitReason exitReason_;
 
@@ -207,6 +209,8 @@ class ProfilingFrameIterator {
     return unwoundJitCallerFP_;
   }
   const char* label() const;
+
+  void* endStackAddress() const { return endStackAddress_; }
 };
 
 // Prologue/epilogue code generation

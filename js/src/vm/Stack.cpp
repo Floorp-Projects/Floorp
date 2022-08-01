@@ -509,6 +509,7 @@ void JS::ProfilingFrameIterator::settleFrames() {
     new (storage()) wasm::ProfilingFrameIterator(fp);
     kind_ = Kind::Wasm;
     MOZ_ASSERT(!wasmIter().done());
+    maybeSetEndStackAddress(wasmIter().endStackAddress());
     return;
   }
 
@@ -522,6 +523,7 @@ void JS::ProfilingFrameIterator::settleFrames() {
         jit::JSJitProfilingFrameIterator((jit::CommonFrameLayout*)fp);
     kind_ = Kind::JSJit;
     MOZ_ASSERT(!jsJitIter().done());
+    maybeSetEndStackAddress(jsJitIter().endStackAddress());
     return;
   }
 }
@@ -531,6 +533,7 @@ void JS::ProfilingFrameIterator::settle() {
   while (iteratorDone()) {
     iteratorDestroy();
     activation_ = activation_->prevProfiling();
+    endStackAddress_ = nullptr;
     if (!activation_) {
       return;
     }
@@ -555,11 +558,13 @@ void JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state) {
   if (activation->hasWasmExitFP() || wasm::InCompiledCode(state.pc)) {
     new (storage()) wasm::ProfilingFrameIterator(*activation, state);
     kind_ = Kind::Wasm;
+    maybeSetEndStackAddress(wasmIter().endStackAddress());
     return;
   }
 
-  new (storage()) jit::JSJitProfilingFrameIterator(cx_, state.pc);
+  new (storage()) jit::JSJitProfilingFrameIterator(cx_, state.pc, state.sp);
   kind_ = Kind::JSJit;
+  maybeSetEndStackAddress(jsJitIter().endStackAddress());
 }
 
 void JS::ProfilingFrameIterator::iteratorConstruct() {
@@ -574,12 +579,14 @@ void JS::ProfilingFrameIterator::iteratorConstruct() {
   if (activation->hasWasmExitFP()) {
     new (storage()) wasm::ProfilingFrameIterator(*activation);
     kind_ = Kind::Wasm;
+    maybeSetEndStackAddress(wasmIter().endStackAddress());
     return;
   }
 
   auto* fp = (jit::ExitFrameLayout*)activation->jsExitFP();
   new (storage()) jit::JSJitProfilingFrameIterator(fp);
   kind_ = Kind::JSJit;
+  maybeSetEndStackAddress(jsJitIter().endStackAddress());
 }
 
 void JS::ProfilingFrameIterator::iteratorDestroy() {
@@ -621,6 +628,9 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     jit::JitcodeGlobalEntry* entry) const {
   void* stackAddr = stackAddress();
 
+  MOZ_DIAGNOSTIC_ASSERT(endStackAddress_);
+  MOZ_DIAGNOSTIC_ASSERT(stackAddr >= endStackAddress_);
+
   if (isWasm()) {
     Frame frame;
     frame.kind = Frame_Wasm;
@@ -628,7 +638,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     frame.returnAddress_ = nullptr;
     frame.activation = activation_;
     frame.label = nullptr;
-    frame.endStackAddress = activation_->asJit()->jsOrWasmExitFP();
+    frame.endStackAddress = endStackAddress_;
     frame.interpreterScript = nullptr;
     // TODO: get the realm ID of wasm frames. Bug 1596235.
     frame.realmID = 0;
@@ -694,7 +704,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
     frame.realmID = 0;
   }
   frame.activation = activation_;
-  frame.endStackAddress = activation_->asJit()->jsOrWasmExitFP();
+  frame.endStackAddress = endStackAddress_;
   return mozilla::Some(frame);
 }
 
