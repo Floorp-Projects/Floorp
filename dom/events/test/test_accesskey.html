@@ -36,6 +36,8 @@
 <button id="button5" style="display:none" accesskey="1">Button 5</button>
 <button id="button6" style="display:none" accesskey="2">Button 6</button>
 <textarea id="textarea1" accesskey="2"></textarea>
+<!-- Test for file input -->
+<input type=file id="file" accesskey="f">
 <script>
 
 function performAccessKey(aKey) {
@@ -136,6 +138,21 @@ add_task(async function modifyAccessKey() {
 
   performAccessKey("1");
   await promise;
+});
+
+add_task(async function file_picker() {
+  const file = document.getElementById("file");
+  const MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+  MockFilePicker.returnValue = MockFilePicker.returnCancel;
+
+  let clicked = false;
+  file.addEventListener("click", function(e) { clicked = true; });
+
+  performAccessKey("f");
+  ok(clicked, "Should've activated the picker");
+
+  MockFilePicker.reset();
 });
 
 </script>
