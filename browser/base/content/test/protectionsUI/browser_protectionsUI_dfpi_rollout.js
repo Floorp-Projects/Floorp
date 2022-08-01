@@ -25,26 +25,6 @@ function cleanup() {
 
   BrowserGlue._defaultCookieBehaviorAtStartup = previousDefaultCB;
   defaultPrefs.setIntPref(COOKIE_BEHAVIOR_PREF, previousDefaultCB);
-
-  // Reset the rollout scalar back to 2 = unset. We have to simulate this on
-  // test cleanup, because BrowserGlue only sets this once initially.
-  Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 2);
-}
-
-function testTelemetryState(optIn) {
-  let expectedValue;
-  if (optIn == null) {
-    expectedValue = 2;
-  } else {
-    expectedValue = optIn ? 1 : 0;
-  }
-
-  TelemetryTestUtils.assertScalar(
-    TelemetryTestUtils.getProcessScalars("parent"),
-    "privacy.dfpi_rollout_enabledByDefault",
-    expectedValue,
-    "Scalar should have correct value"
-  );
 }
 
 // Tests that the dFPI rollout pref updates the default cookieBehavior to 5,
@@ -60,36 +40,29 @@ add_task(async function testdFPIRolloutPref() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
 
-  // Test the unset state of the pref.
-  testTelemetryState(null);
-
   Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, false);
   is(
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  testTelemetryState(false);
 
   Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, true);
   is(
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
   );
-  testTelemetryState(true);
 
   Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, false);
   is(
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  testTelemetryState(false);
 
   Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, true);
   is(
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
   );
-  testTelemetryState(true);
 
   cleanup();
 });
