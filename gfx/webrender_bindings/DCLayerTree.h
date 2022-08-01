@@ -320,7 +320,7 @@ class DCSurfaceSwapChain : public DCSurface {
   DCSurfaceSwapChain(bool aIsOpaque, DCLayerTree* aDCLayerTree);
 
   void AttachExternalImage(wr::ExternalImageId aExternalImage);
-  Maybe<gfx::Matrix> EnsurePresented(const gfx::Matrix&);
+  Maybe<gfx::Matrix> EnsurePresented(const gfx::Matrix&, wr::ImageRendering);
 
   DCSurfaceSwapChain* AsDCSurfaceSwapChain() override { return this; }
 
@@ -343,6 +343,7 @@ class DCSurfaceSwapChain : public DCSurface {
     DXGI_COLOR_SPACE_TYPE space;
   };
   struct PlanAndDest final {
+    Maybe<wr::ImageRendering> rendering;
     CspaceAndRange srcSpace;
     CspaceTransformPlan plan;
     Maybe<Dest> dest;

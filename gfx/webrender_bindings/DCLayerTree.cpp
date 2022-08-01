@@ -566,7 +566,7 @@ void DCLayerTree::AddSurface(wr::NativeSurfaceId aId,
 
   auto* surfaceSc = surface->AsDCSurfaceSwapChain();
   if (surfaceSc) {
-    const auto presentationTransform = surfaceSc->EnsurePresented(transform);
+    const auto presentationTransform = surfaceSc->EnsurePresented(transform, aImageRendering);
     if (presentationTransform) {
       transform = *presentationTransform;
     }  // else EnsurePresented failed, just limp along?
@@ -1118,7 +1118,8 @@ static CspaceTransformPlan ChooseCspaceTransformPlan(
 // -
 
 Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
-    const gfx::Matrix& aTransform) {
+    const gfx::Matrix& aTransform,
+    const wr::ImageRendering aRendering) {
   MOZ_RELEASE_ASSERT(mSrc);
   const auto& srcSize = mSrc->size;
 
@@ -1158,6 +1159,10 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
   }
   if (mDest && mDest->srcSpace != mSrc->space) {
     mDest = Nothing();
+  }
+
+  if (mDest && mDest->rendering.value() != aRendering) {
+    mDest->needsPresent = true;
   }
 
   // -
@@ -1241,6 +1246,7 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
       MOZ_ASSERT(mDest->dest);
       mVisual->SetContent(mDest->dest->swapChain);
     }
+    mDest->rendering = Some(aRendering);
 
     if (!CallBlit()) {
       RenderThread::Get()->NotifyWebRenderError(
@@ -1518,6 +1524,12 @@ bool DCSurfaceSwapChain::CallBlitHelper() const {
     return ret;
   };
 
+  const auto filter = ToGlTexFilter(mDest->rendering.value());
+  const auto SetRenderingTexFilter = [&](const GLenum texTarget) {
+    gl->fTexParameteri(texTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
+    gl->fTexParameteri(texTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
+  };
+
   // -
   // Bind LUT
 
@@ -1546,6 +1558,7 @@ bool DCSurfaceSwapChain::CallBlitHelper() const {
 
   gl->fActiveTexture(LOCAL_GL_TEXTURE0 + 0);
   gl->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, image0.handle);
+  SetRenderingTexFilter(LOCAL_GL_TEXTURE_EXTERNAL);
 
   // -
   // Bind swapchain RT
@@ -1608,6 +1621,7 @@ bool DCSurfaceSwapChain::CallBlitHelper() const {
 
     gl->fActiveTexture(LOCAL_GL_TEXTURE0 + 1);
     gl->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL, image1.handle);
+    SetRenderingTexFilter(LOCAL_GL_TEXTURE_EXTERNAL);
 
     yuvArgs = Some(gl::DrawBlitProg::YUVArgs{texCoordMat1, {}});
     fragSample = gl::kFragSample_TwoPlane;
