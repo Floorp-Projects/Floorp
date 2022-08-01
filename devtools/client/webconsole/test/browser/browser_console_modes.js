@@ -41,6 +41,7 @@ add_task(async function() {
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
+  await pushPref("devtools.webconsole.input.context", true);
 
   info("Run once with Fission enabled");
   await checkMessages(true);
@@ -104,12 +105,48 @@ async function checkMessages(isFissionSupported) {
     );
   }
 
+  let evaluationContextSelectorButton;
+  if (isFissionSupported) {
+    evaluationContextSelectorButton = await waitFor(() =>
+      hud.ui.outputNode.querySelector(".webconsole-evaluation-selector-button")
+    );
+
+    info("Select the content process target");
+    const pid =
+      gBrowser.selectedTab.linkedBrowser.browsingContext.currentWindowGlobal
+        .osPid;
+    getContextSelectorItems(hud)
+      .find(item =>
+        item.querySelector(".label")?.innerText?.startsWith(`(pid ${pid})`)
+      )
+      .click();
+
+    await waitFor(() =>
+      evaluationContextSelectorButton.classList.contains("checked")
+    );
+
+    await executeAndWaitForResultMessage(
+      hud,
+      `Cu.reportError("${FILTER_PREFIX}Content Cu.reportError");21+21`,
+      42
+    );
+  } else {
+    await SpecialPowers.spawn(
+      gBrowser.selectedTab.linkedBrowser,
+      [FILTER_PREFIX],
+      prefix => Cu.reportError(prefix + "Content Cu.reportError")
+    );
+  }
+
   // Since we run the non-fission test in second, and given we don't retrieve cached messages
   // in such case, it's okay to just cause the message to appear in this function.
-  Cu.reportError(FILTER_PREFIX + "Cu.reportError");
+  Cu.reportError(FILTER_PREFIX + "Parent Cu.reportError");
 
-  await waitFor(() => findErrorMessage(hud, "Cu.reportError"));
+  await waitFor(() => findErrorMessage(hud, "Parent Cu.reportError"));
   ok(true, "Parent process message is displayed");
+
+  await waitFor(() => findErrorMessage(hud, "Content Cu.reportError"));
+  ok(true, "reportError message from content process is displayed");
 
   const suffix = isFissionSupported ? ` Object { hello: "world" }` : "";
   const expectedMessages = [
@@ -134,8 +171,13 @@ async function checkMessages(isFissionSupported) {
   info("wait for all the messages to be displayed");
   await waitFor(
     () =>
-      expectedMessages.every(expectedMessage =>
-        findConsoleAPIMessage(hud, expectedMessage)
+      expectedMessages.every(
+        expectedMessage =>
+          findMessagePartsByType(hud, {
+            text: expectedMessage,
+            typeSelector: ".console-api",
+            partSelector: ".message-body",
+          }).length == 1
       ),
     "wait for all the messages to be displayed",
     100
@@ -197,13 +239,26 @@ async function checkMessages(isFissionSupported) {
       hud.iframeWindow.document.hasFocus(),
       "Browser Console is still focused"
     );
+
+    await waitFor(
+      () => !evaluationContextSelectorButton.classList.contains("checked")
+    );
+    ok(true, "Changing mode did reset the context selector");
+    ok(
+      findMessageByType(hud, "21+21", ".command"),
+      "The evaluation message is still displayed"
+    );
+    ok(
+      findEvaluationResultMessage(hud, `42`),
+      "The evaluation result is still displayed"
+    );
   }
 
   info(
     "Check that message from parent process is still visible in the Browser Console"
   );
   ok(
-    !!findErrorMessage(hud, "Cu.reportError"),
+    !!findErrorMessage(hud, "Parent Cu.reportError"),
     "Parent process message is still displayed"
   );
 
@@ -229,11 +284,24 @@ async function checkMessages(isFissionSupported) {
   );
 
   for (const expectedMessage of expectedMessages) {
-    ok(
-      findConsoleAPIMessage(hud, expectedMessage),
+    // Search into the message body as the message location could have some of the
+    // searched text.
+    is(
+      findMessagePartsByType(hud, {
+        text: expectedMessage,
+        typeSelector: ".console-api",
+        partSelector: ".message-body",
+      }).length,
+      1,
       `"${expectedMessage}" is visible`
     );
   }
+
+  is(
+    findErrorMessages(hud, "Content Cu.reportError").length,
+    1,
+    "reportError message from content process is only displayed once"
+  );
 
   if (isFissionSupported) {
     is(

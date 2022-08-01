@@ -248,6 +248,39 @@ class WebConsoleWrapper {
     store.dispatch(actions.privateMessagesClear());
   }
 
+  dispatchTargetMessagesRemove(targetFront) {
+    // We might still have pending packets in the queues from the target that we need to remove
+    // to prevent messages appearing in the output.
+
+    for (let i = this.queuedMessageUpdates.length - 1; i >= 0; i--) {
+      const packet = this.queuedMessageUpdates[i];
+      if (packet.targetFront == targetFront) {
+        this.queuedMessageUpdates.splice(i, 1);
+      }
+    }
+
+    for (let i = this.queuedRequestUpdates.length - 1; i >= 0; i--) {
+      const packet = this.queuedRequestUpdates[i];
+      if (packet.data.targetFront == targetFront) {
+        this.queuedRequestUpdates.splice(i, 1);
+      }
+    }
+
+    for (let i = this.queuedMessageAdds.length - 1; i >= 0; i--) {
+      const packet = this.queuedMessageAdds[i];
+      // Keep in sync with the check done in the reducer for the TARGET_MESSAGES_REMOVE action.
+      if (
+        packet.targetFront == targetFront &&
+        packet.type !== Constants.MESSAGE_TYPE.COMMAND &&
+        packet.type !== Constants.MESSAGE_TYPE.RESULT
+      ) {
+        this.queuedMessageAdds.splice(i, 1);
+      }
+    }
+
+    store.dispatch(actions.targetMessagesRemove(targetFront));
+  }
+
   dispatchMessagesUpdate(messages) {
     this.batchedMessagesUpdates(messages);
   }
