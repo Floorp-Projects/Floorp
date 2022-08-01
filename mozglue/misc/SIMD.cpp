@@ -318,41 +318,33 @@ const TValue* FindInBuffer(const TValue* ptr, TValue value, size_t length) {
 }
 
 template <typename TValue>
-const TValue* TwoByteLoop(uintptr_t start, uintptr_t end, TValue v1, TValue v2);
+const TValue* TwoElementLoop(uintptr_t start, uintptr_t end, TValue v1,
+                             TValue v2) {
+  static_assert(sizeof(TValue) == 1 || sizeof(TValue) == 2);
 
-template <>
-const unsigned char* TwoByteLoop<unsigned char>(uintptr_t start, uintptr_t end,
-                                                unsigned char v1,
-                                                unsigned char v2) {
-  uintptr_t cur = start;
-  uintptr_t preEnd = end - sizeof(unsigned char);
+  const TValue* cur = reinterpret_cast<const TValue*>(start);
+  const TValue* preEnd = reinterpret_cast<const TValue*>(end - sizeof(TValue));
+
+  uint32_t expected = static_cast<uint32_t>(v1) |
+                      (static_cast<uint32_t>(v2) << (sizeof(TValue) * 8));
   while (cur < preEnd) {
     // NOTE: this should only ever be called on little endian architectures.
     static_assert(MOZ_LITTLE_ENDIAN());
-    uint16_t pattern =
-        static_cast<uint16_t>(v1) | (static_cast<uint16_t>(v2) << 8);
-    if (GetAs<uint16_t>(cur) == pattern) {
-      return reinterpret_cast<const unsigned char*>(cur);
+    // We or cur[0] and cur[1] together explicitly and compare to expected,
+    // in order to avoid UB from just loading them as a uint16_t/uint32_t.
+    // However, it will compile down the same code after optimizations on
+    // little endian systems which support unaligned loads. Comparing them
+    // value-by-value, however, will not, and seems to perform worse in local
+    // microbenchmarking. Even after bitwise or'ing the comparison values
+    // together to avoid the short circuit, the compiler doesn't seem to get
+    // the hint and creates two branches, the first of which might be
+    // frequently mispredicted.
+    uint32_t actual = static_cast<uint32_t>(cur[0]) |
+                      (static_cast<uint32_t>(cur[1]) << (sizeof(TValue) * 8));
+    if (actual == expected) {
+      return cur;
     }
-    cur += sizeof(unsigned char);
-  }
-  return nullptr;
-}
-
-template <>
-const char16_t* TwoByteLoop<char16_t>(uintptr_t start, uintptr_t end,
-                                      char16_t v1, char16_t v2) {
-  uintptr_t cur = start;
-  uintptr_t preEnd = end - sizeof(char16_t);
-  while (cur < preEnd) {
-    // NOTE: this should only ever be called on little endian architectures
-    static_assert(MOZ_LITTLE_ENDIAN());
-    uint32_t pattern =
-        static_cast<uint32_t>(v1) | (static_cast<uint32_t>(v2) << 16);
-    if (GetAs<uint32_t>(cur) == pattern) {
-      return reinterpret_cast<const char16_t*>(cur);
-    }
-    cur += sizeof(char16_t);
+    cur++;
   }
   return nullptr;
 }
@@ -382,7 +374,7 @@ const TValue* FindTwoInBuffer(const TValue* ptr, TValue v1, TValue v2,
   uintptr_t end = cur + numBytes;
 
   if (numBytes < 16) {
-    return TwoByteLoop<TValue>(cur, end, v1, v2);
+    return TwoElementLoop<TValue>(cur, end, v1, v2);
   }
 
   if (numBytes < 32) {
