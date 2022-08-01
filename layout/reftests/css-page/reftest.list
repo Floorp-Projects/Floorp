@@ -1,11 +1,11 @@
 defaults pref(layout.css.named-pages.enabled,true)
 
 # https://bugzilla.mozilla.org/1764437
-fails == page-name-display-none-child.html page-name-display-none-child-ref.html
-== page-name-canvas-001.html page-name-canvas-001-ref.html
-== page-name-canvas-002.html page-name-canvas-002-ref.html
+== page-name-display-none-child.html page-name-display-none-child-ref.html
+fails == page-name-canvas-001.html page-name-canvas-001-ref.html
+fails == page-name-canvas-002.html page-name-canvas-002-ref.html
 == page-name-img-001.html page-name-img-001-ref.html
-== page-name-img-002.html page-name-img-002-ref.html
+fails == page-name-img-002.html page-name-img-002-ref.html
 == page-name-siblings-001.html page-name-siblings-ref.html
 == page-name-siblings-002.html page-name-siblings-ref.html
 == page-name-siblings-003.html page-name-siblings-ref.html

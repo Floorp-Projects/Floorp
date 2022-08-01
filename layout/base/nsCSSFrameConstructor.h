@@ -1247,29 +1247,25 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   };
 
   /**
-   * Updates the nsFrameConstructorState auto page-name value, adding page
-   * breaks between frames when the end page value of the previous frame is
-   * different from the start page value of the next frame.
+   * Updates the nsFrameConstructorState auto page-name value, and restores the
+   * previous value on destruction.
    * See https://drafts.csswg.org/css-page-3/#using-named-pages
    *
    * To track this, this will automatically add PageValuesProperty to
    * the frame.
    *
-   * Note that this does not add any page breaks or PageValuesProperty
-   * to the frame when not in a paginated context, or if
-   * layout.css.named_pages.enabled is set to false.
+   * Note that this does not add PageValuesProperty to the frame when not in a
+   * paginated context, or if layout.css.named_pages.enabled is set to false.
    */
   class MOZ_RAII AutoFrameConstructionPageName final {
-    nsCSSFrameConstructor& mFCtor;
     nsFrameConstructorState& mState;
-    FrameConstructionItemList& mItems;
-    const nsIFrame* const mFrame;
     const nsAtom* mNameToRestore;
 
    public:
-    AutoFrameConstructionPageName(nsCSSFrameConstructor& aFCtor,
-                                  nsFrameConstructorState& aState,
-                                  FrameConstructionItemList& aItems,
+    AutoFrameConstructionPageName(const AutoFrameConstructionPageName&) =
+        delete;
+    AutoFrameConstructionPageName(AutoFrameConstructionPageName&&) = delete;
+    AutoFrameConstructionPageName(nsFrameConstructorState& aState,
                                   nsIFrame* const aFrame);
     ~AutoFrameConstructionPageName();
   };
@@ -1617,11 +1613,15 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * This adds FrameConstructionItem objects to aItemsToConstruct for the
    * anonymous content returned by an nsIAnonymousContentCreator::
    * CreateAnonymousContent implementation.
+   * This includes an AutoFrameConstructionPageName argument as it is always
+   * the caller's responsibility to handle page-name tracking before calling
+   * this function.
    */
   void AddFCItemsForAnonymousContent(
       nsFrameConstructorState& aState, nsContainerFrame* aFrame,
       const nsTArray<nsIAnonymousContentCreator::ContentInfo>& aAnonymousItems,
-      FrameConstructionItemList& aItemsToConstruct);
+      FrameConstructionItemList& aItemsToConstruct,
+      const AutoFrameConstructionPageName& aUnusedPageNameTracker);
 
   /**
    * Construct the frames for the children of aContent.  "children" is defined
