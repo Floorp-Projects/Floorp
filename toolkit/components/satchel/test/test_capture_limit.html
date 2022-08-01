@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Form History capture no more than 100 changes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form id="form1">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+add_task(async function setup() {
+  const count = await countEntries(null, null);
+  ok(!count, "initial storage is empty");
+});
+
+add_task(async function captureLimit() {
+  // Capture no more than 100 fields per submit. See FormHistoryChild.jsm.
+  const inputsCount = 100 + 2;
+  const form = document.getElementById("form1");
+  for (let i = 1; i <= inputsCount; i++) {
+    const newField = document.createElement("input");
+    newField.setAttribute("type", "text");
+    newField.setAttribute("name", "test" + i);
+    form.appendChild(newField);
+    if( i != 50) {
+      SpecialPowers.wrap(newField).setUserInput(i);
+    }
+  }
+
+  form.addEventListener("submit", e => e.preventDefault(), { once: true });
+  const storageUpdated = promiseNextStorageEvent();
+  getFormSubmitButton(1).click();
+  await storageUpdated;
+
+  for (let i = 1; i <= inputsCount; i++) { // check all but last
+    const historyEntries = await countEntries("test" + i, i);
+
+    switch(i) {
+      case 50:
+        is(historyEntries, 0, `no history saved for input ${i} because user didn't modify it`);
+        break;
+      case 102:
+        is(historyEntries, 0, `no history saved for input ${i} because form already captured 100 fields`);
+        break;
+      default:
+        is(historyEntries, 1, `history saved for input ${i}`);
+        break;
+    }
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>
