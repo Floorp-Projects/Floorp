@@ -289,7 +289,7 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
     case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-      return nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE;
+      return nsIContentSecurityPolicy::STYLE_SRC_ELEM_DIRECTIVE;
 
     case nsIContentPolicy::TYPE_FONT:
     case nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD:
@@ -1293,10 +1293,7 @@ bool nsCSPChildSrcDirective::equals(CSPDirective aDirective) const {
 /* =============== nsCSPScriptSrcDirective ============= */
 
 nsCSPScriptSrcDirective::nsCSPScriptSrcDirective(CSPDirective aDirective)
-    : nsCSPDirective(aDirective),
-      mRestrictWorkers(false),
-      mRestrictScriptElem(false),
-      mRestrictScriptAttr(false) {}
+    : nsCSPDirective(aDirective) {}
 
 nsCSPScriptSrcDirective::~nsCSPScriptSrcDirective() = default;
 
@@ -1310,7 +1307,24 @@ bool nsCSPScriptSrcDirective::equals(CSPDirective aDirective) const {
   if (aDirective == nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE) {
     return mRestrictScriptAttr;
   }
-  return (mDirective == aDirective);
+  return mDirective == aDirective;
+}
+
+/* =============== nsCSPStyleSrcDirective ============= */
+
+nsCSPStyleSrcDirective::nsCSPStyleSrcDirective(CSPDirective aDirective)
+    : nsCSPDirective(aDirective) {}
+
+nsCSPStyleSrcDirective::~nsCSPStyleSrcDirective() = default;
+
+bool nsCSPStyleSrcDirective::equals(CSPDirective aDirective) const {
+  if (aDirective == nsIContentSecurityPolicy::STYLE_SRC_ELEM_DIRECTIVE) {
+    return mRestrictStyleElem;
+  }
+  if (aDirective == nsIContentSecurityPolicy::STYLE_SRC_ATTR_DIRECTIVE) {
+    return mRestrictStyleAttr;
+  }
+  return mDirective == aDirective;
 }
 
 /* =============== nsBlockAllMixedContentDirective ============= */

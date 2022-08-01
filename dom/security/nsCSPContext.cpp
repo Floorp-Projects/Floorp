@@ -201,11 +201,17 @@ bool nsCSPContext::permitsInternal(
         permits = false;
       }
 
-      // See the comment in nsCSPContext::GetAllowsInline.
+      // In CSP 3.0 the effective directive doesn't become the actually used
+      // directive in case of a fallback from e.g. script-src-elem to
+      // script-src or default-src.
+      // TODO(bug 1779369): Fix this for all directive types.
       nsAutoString effectiveDirective(violatedDirective);
       if ((StaticPrefs::security_csp_script_src_attr_elem_enabled() &&
-          (aDir == SCRIPT_SRC_ELEM_DIRECTIVE ||
-          aDir == SCRIPT_SRC_ATTR_DIRECTIVE))) {
+           (aDir == SCRIPT_SRC_ELEM_DIRECTIVE ||
+            aDir == SCRIPT_SRC_ATTR_DIRECTIVE)) ||
+          (StaticPrefs::security_csp_style_src_attr_elem_enabled() &&
+           (aDir == STYLE_SRC_ELEM_DIRECTIVE ||
+            aDir == STYLE_SRC_ATTR_DIRECTIVE))) {
         effectiveDirective.AssignASCII(CSP_CSPDirectiveToString(aDir));
       }
 
@@ -584,9 +590,10 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
 
   if (aDirective != SCRIPT_SRC_ELEM_DIRECTIVE &&
       aDirective != SCRIPT_SRC_ATTR_DIRECTIVE &&
-      aDirective != STYLE_SRC_DIRECTIVE) {
+      aDirective != STYLE_SRC_ELEM_DIRECTIVE &&
+      aDirective != STYLE_SRC_ATTR_DIRECTIVE) {
     MOZ_ASSERT(false,
-               "can only allow inline for script-src-(attr/elem) or style");
+               "can only allow inline for (script/style)-src-(attr/elem)");
     return NS_OK;
   }
 
@@ -634,6 +641,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
       bool reportSample = false;
       mPolicies[i]->getDirectiveStringAndReportSampleForContentType(
           aDirective, violatedDirective, &reportSample);
+
       // In CSP 3.0 the effective directive doesn't become the actually used
       // directive in case of a fallback from e.g. script-src-elem to
       // script-src or default-src.
@@ -641,7 +649,10 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
       nsAutoString effectiveDirective(violatedDirective);
       if ((StaticPrefs::security_csp_script_src_attr_elem_enabled() &&
            (aDirective == SCRIPT_SRC_ELEM_DIRECTIVE ||
-            aDirective == SCRIPT_SRC_ATTR_DIRECTIVE))) {
+            aDirective == SCRIPT_SRC_ATTR_DIRECTIVE)) ||
+          (StaticPrefs::security_csp_style_src_attr_elem_enabled() &&
+           (aDirective == STYLE_SRC_ELEM_DIRECTIVE ||
+            aDirective == STYLE_SRC_ATTR_DIRECTIVE))) {
         effectiveDirective.AssignASCII(CSP_CSPDirectiveToString(aDirective));
       }
 
@@ -651,6 +662,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, const nsAString& aNonce,
                             aLineNumber, aColumnNumber);
     }
   }
+
   return NS_OK;
 }
 
@@ -1519,8 +1531,8 @@ class CSPReportSenderRunnable final : public Runnable {
     }
 
     // 4) fire violation event
-    // A frame-ancestors violation has occurred, but we should not dispatch the
-    // violation event to a potentially cross-origin ancestor.
+    // A frame-ancestors violation has occurred, but we should not dispatch
+    // the violation event to a potentially cross-origin ancestor.
     if (!mViolatedDirective.EqualsLiteral("frame-ancestors")) {
       mCSPContext->FireViolationEvent(mTriggeringElement, mCSPEventListener,
                                       init);
@@ -1869,9 +1881,9 @@ CSPReportRedirectSink::AsyncOnChannelRedirect(
   nsresult rv = aOldChannel->Cancel(NS_ERROR_ABORT);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // notify an observer that we have blocked the report POST due to a redirect,
-  // used in testing, do this async since we're in an async call now to begin
-  // with
+  // notify an observer that we have blocked the report POST due to a
+  // redirect, used in testing, do this async since we're in an async call now
+  // to begin with
   nsCOMPtr<nsIURI> uri;
   rv = aOldChannel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
