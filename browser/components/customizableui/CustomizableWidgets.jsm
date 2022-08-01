@@ -472,11 +472,6 @@ const CustomizableWidgets = [
       return Services.prefs.getBoolPref("browser.tabs.firefox-view");
     },
     onCommand(e) {
-      Services.obs.notifyObservers(
-        null,
-        "firefoxview-notification-dot-update",
-        "false"
-      );
       e.view.FirefoxViewHandler.openTab();
     },
   },
