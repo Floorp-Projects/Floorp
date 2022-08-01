@@ -92,8 +92,7 @@ class ShareDownloadFeature(
     private val httpClient: Client,
     private val store: BrowserStore,
     private val tabId: String?,
-    @VisibleForTesting
-    internal var cleanupCacheCoroutineDispatcher: CoroutineDispatcher = IO
+    cleanupCacheCoroutineDispatcher: CoroutineDispatcher = IO
 ) : LifecycleAwareFeature {
     private val logger = Logger("ShareDownloadMiddleware")
 
