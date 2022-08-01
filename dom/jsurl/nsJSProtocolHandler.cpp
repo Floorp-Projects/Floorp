@@ -137,9 +137,11 @@ static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP,
     return true;
   }
 
+  // javascript: is a "navigation" type, so script-src-elem applies.
+  // https://w3c.github.io/webappsec-csp/#effective-directive-for-inline-check
   bool allowsInlineScript = true;
   nsresult rv =
-      aCSP->GetAllowsInline(nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE,
+      aCSP->GetAllowsInline(nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE,
                             u""_ns,                  // aNonce
                             true,                    // aParserCreated
                             nullptr,                 // aElement,

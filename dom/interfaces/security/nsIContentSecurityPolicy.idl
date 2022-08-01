@@ -62,6 +62,8 @@ interface nsIContentSecurityPolicy : nsISerializable
     SANDBOX_DIRECTIVE              = 19,
     WORKER_SRC_DIRECTIVE           = 20,
     NAVIGATE_TO_DIRECTIVE          = 21,
+    SCRIPT_SRC_ELEM_DIRECTIVE      = 22,
+    SCRIPT_SRC_ATTR_DIRECTIVE      = 23,
   };
 
   /**
