@@ -53,6 +53,9 @@ pub fn setup_glean(glean: Glean) -> Result<()> {
     Ok(())
 }
 
+/// Execute `f` passing the global Glean object.
+///
+/// Panics if the global Glean object has not been set.
 pub fn with_glean<F, R>(f: F) -> R
 where
     F: FnOnce(&Glean) -> R,
@@ -62,6 +65,9 @@ where
     f(&lock)
 }
 
+/// Execute `f` passing the global Glean object mutable.
+///
+/// Panics if the global Glean object has not been set.
 pub fn with_glean_mut<F, R>(f: F) -> R
 where
     F: FnOnce(&mut Glean) -> R,
@@ -69,6 +75,19 @@ where
     let glean = global_glean().expect("Global Glean object not initialized");
     let mut lock = glean.lock().unwrap();
     f(&mut lock)
+}
+
+/// Execute `f` passing the global Glean object if it has been set.
+///
+/// Returns `None` if the global Glean object has not been set.
+/// Returns `Some(T)` otherwise.
+pub fn with_opt_glean<F, R>(f: F) -> Option<R>
+where
+    F: FnOnce(&Glean) -> R,
+{
+    let glean = global_glean()?;
+    let lock = glean.lock().unwrap();
+    Some(f(&lock))
 }
 
 /// The object holding meta information about a Glean instance.
