@@ -8598,10 +8598,14 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     }
     gridReflowInput.CalculateTrackSizes(grid, computedSize,
                                         SizingConstraint::NoConstraint);
-    // XXX Technically incorrect: We're ignoring our row sizes, when really
-    // we should use them but *they* should be computed as if we had no
-    // children. To be fixed in bug 1488878.
-    if (!aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
+    // XXX Technically incorrect: 'contain-intrinsic-block-size: none' is
+    // treated as 0, ignoring our row sizes, when really we should use them but
+    // *they* should be computed as if we had no children. To be fixed in bug
+    // 1488878.
+    if (Maybe<nscoord> containBSize =
+            aReflowInput.mFrame->ContainIntrinsicBSize()) {
+      bSize = *containBSize;
+    } else {
       if (IsMasonry(eLogicalAxisBlock)) {
         bSize = computedBSize;
       } else {
@@ -8622,10 +8626,14 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
   } else {
     consumedBSize = CalcAndCacheConsumedBSize();
     gridReflowInput.InitializeForContinuation(this, consumedBSize);
-    // XXX Technically incorrect: We're ignoring our row sizes, when really
-    // we should use them but *they* should be computed as if we had no
-    // children. To be fixed in bug 1488878.
-    if (!aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
+    // XXX Technically incorrect: 'contain-intrinsic-block-size: none' is
+    // treated as 0, ignoring our row sizes, when really we should use them but
+    // *they* should be computed as if we had no children. To be fixed in bug
+    // 1488878.
+    if (Maybe<nscoord> containBSize =
+            aReflowInput.mFrame->ContainIntrinsicBSize()) {
+      bSize = *containBSize;
+    } else {
       const uint32_t numRows = gridReflowInput.mRows.mSizes.Length();
       bSize = gridReflowInput.mRows.GridLineEdge(numRows,
                                                  GridLineSide::AfterGridGap);
@@ -9355,8 +9363,9 @@ nscoord nsGridContainerFrame::GetMinISize(gfxContext* aRC) {
 
   DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
-    mCachedMinISize = StyleDisplay()->GetContainSizeAxes().mIContained
-                          ? 0
+    Maybe<nscoord> containISize = ContainIntrinsicISize();
+    mCachedMinISize = containISize
+                          ? *containISize
                           : IntrinsicISize(aRC, IntrinsicISizeType::MinISize);
   }
   return mCachedMinISize;
@@ -9370,8 +9379,9 @@ nscoord nsGridContainerFrame::GetPrefISize(gfxContext* aRC) {
 
   DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
-    mCachedPrefISize = StyleDisplay()->GetContainSizeAxes().mIContained
-                           ? 0
+    Maybe<nscoord> containISize = ContainIntrinsicISize();
+    mCachedPrefISize = containISize
+                           ? *containISize
                            : IntrinsicISize(aRC, IntrinsicISizeType::PrefISize);
   }
   return mCachedPrefISize;
