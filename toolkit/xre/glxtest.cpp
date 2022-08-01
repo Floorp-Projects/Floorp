@@ -262,6 +262,12 @@ static void close_logging() {
 #define PCI_BASE_CLASS_DISPLAY 0x03
 
 static int get_pci_status() {
+  if (access("/sys/bus/pci/", F_OK) != 0 &&
+      access("/sys/bus/pci_express/", F_OK) != 0) {
+    record_warning("cannot access /sys/bus/pci");
+    return 0;
+  }
+
   void* libpci = dlopen("libpci.so.3", RTLD_LAZY);
   if (!libpci) {
     libpci = dlopen("libpci.so", RTLD_LAZY);
