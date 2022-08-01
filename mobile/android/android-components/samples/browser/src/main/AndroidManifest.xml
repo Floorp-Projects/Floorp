@@ -47,8 +47,7 @@
             android:exported="false"
             android:taskAffinity=""
             android:persistableMode="persistNever"
-            android:autoRemoveFromRecents="false"
-            android:label="@string/app_name" />
+            android:autoRemoveFromRecents="false" />
 
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
