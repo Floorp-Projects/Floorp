@@ -986,8 +986,8 @@ StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
       aInnerWindow, principal, aHasUserInteraction, Nothing());
 
   // Try to allow access for the given principal.
-  return StorageAccessAPIHelper::AllowAccessFor(principal, aBrowsingContext,
-                                                aNotifier, performPermissionGrant);
+  return StorageAccessAPIHelper::AllowAccessFor(
+      principal, aBrowsingContext, aNotifier, performPermissionGrant);
 }
 
 // There are two methods to handle permission update:
