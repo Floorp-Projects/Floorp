@@ -80,7 +80,7 @@ add_task(async function() {
         `Test tab is visible in the execution context (${labelTexts})`
       );
 
-      // Also assert the behavior of the iframe dropdown and the mode selector
+      // Also assert the behavior of the iframe dropdown
       info("Check the iframe dropdown, start by opening it");
       const btn = gToolbox.doc.getElementById("command-button-frames");
       btn.click();
@@ -102,50 +102,28 @@ add_task(async function() {
         "The iframe dropdown lists the tab document, running in the content process"
       );
 
-      // Click on top frame to hide the iframe picker, so clicks on other elements can be registered.
-      gToolbox.doc.querySelector("#toolbox-frame-menu .command").click();
-
-      await waitUntil(
-        () => !panel.classList.contains("tooltip-visible"),
-        "Wait for the menu to be hidden"
+      const everythingScope = gToolbox.doc.querySelector(
+        'input[name="scope"][value="everything"]'
       );
-
-      info("Check that the ChromeDebugToolbar is displayed");
-      const chromeDebugToolbar = gToolbox.doc.querySelector(
-        ".chrome-debug-toolbar"
-      );
-      ok(!!chromeDebugToolbar, "ChromeDebugToolbar is displayed");
-      const chromeDebugToolbarScopeInputs = Array.from(
-        chromeDebugToolbar.querySelectorAll(`[name="chrome-debug-mode"]`)
-      );
-      is(
-        chromeDebugToolbarScopeInputs.length,
-        2,
-        "There are 2 mode inputs in the chromeDebugToolbar"
-      );
-      const [
-        chromeDebugToolbarParentProcessModeInput,
-        chromeDebugToolbarMultiprocessModeInput,
-      ] = chromeDebugToolbarScopeInputs;
-      is(
-        chromeDebugToolbarParentProcessModeInput.value,
-        "parent-process",
-        "Got expected value for the first input"
-      );
-      is(
-        chromeDebugToolbarMultiprocessModeInput.value,
-        "everything",
-        "Got expected value for the second input"
+      const parentProcessScope = gToolbox.doc.querySelector(
+        'input[name="scope"][value="parent-process"]'
       );
       ok(
-        chromeDebugToolbarMultiprocessModeInput.checked,
-        "The multiprocess mode is selected"
+        everythingScope.checked,
+        "By default, we are in the multiprocess scope"
+      );
+      ok(
+        !parentProcessScope.checked,
+        "By default, the parent process scope is disabled"
       );
 
-      info(
-        "Click on the parent-process input and check that it restricts the targets"
+      info("Switch to parent process only scope");
+      parentProcessScope.click();
+      ok(
+        panel.classList.contains("tooltip-visible"),
+        "The menu stays visible when selecting another scope"
       );
-      chromeDebugToolbarParentProcessModeInput.click();
+
       info("Wait for the iframe dropdown to hide the tab target");
       await waitUntil(() => {
         return !getFramesLabels(gToolbox).includes(tabURI);
@@ -156,17 +134,18 @@ add_task(async function() {
         return !getContextLabels(gToolbox).includes(`Test tab`);
       });
 
+      ok(!everythingScope.checked, "Now, the multiprocess mode is disabled...");
       ok(
-        !chromeDebugToolbarMultiprocessModeInput.checked,
-        "Now, the multiprocess mode is disabled…"
-      );
-      ok(
-        chromeDebugToolbarParentProcessModeInput.checked,
-        "…and the parent process mode is enabled"
+        parentProcessScope.checked,
+        "... and the parent process scope is enabled"
       );
 
-      info("Switch back to multiprocess mode");
-      chromeDebugToolbarMultiprocessModeInput.click();
+      info("Switch back to multiprocess scope");
+      everythingScope.click();
+      ok(
+        panel.classList.contains("tooltip-visible"),
+        "The menu stays visible when selecting another scope"
+      );
 
       info("Wait for the iframe dropdown to show again the tab target");
       await waitUntil(() => {

@@ -6,7 +6,6 @@
 
 
 DevToolsModules(
-    "ChromeDebugToolbar.js",
     "DebugTargetErrorPage.js",
     "DebugTargetInfo.js",
     "MeatballMenu.js",
