@@ -1151,17 +1151,6 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
     }
   }
 
-  // 4:2:2 subsampled formats like YUY2 must have an even width, and 4:2:0
-  // subsampled formats like NV12 must have an even width and height.
-  // And we should be able to pad width and height because we clip the Visual to
-  // the unpadded rect. Just do this unconditionally.
-  if (dstSize.width % 2 == 1) {
-    dstSize.width += 1;
-  }
-  if (dstSize.height % 2 == 1) {
-    dstSize.height += 1;
-  }
-
   // -
 
   if (mDest && mDest->dest->size != dstSize) {
@@ -1318,10 +1307,24 @@ static Maybe<DCSurfaceSwapChain::Dest> CreateSwapChain(
     desc.Scaling = DXGI_SCALING_STRETCH;
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
     desc.Flags = DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;
+    desc.AlphaMode = aAlphaMode;  // DXGI_ALPHA_MODE_IGNORE;
+
     if (IsYuv(desc.Format)) {
       desc.Flags |= DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO;
     }
-    desc.AlphaMode = aAlphaMode;  // DXGI_ALPHA_MODE_IGNORE;
+
+    // 4:2:2 subsampled formats like YUY2 must have an even width, and 4:2:0
+    // subsampled formats like NV12 must have an even width and height.
+    // And we should be able to pad width and height because we clip the Visual to
+    // the unpadded rect.
+    // Do this unconditionally so that we don't need laser-guided testing for
+    // this case.
+    if (desc.Width % 2 == 1) {
+      desc.Width += 1;
+    }
+    if (desc.Height % 2 == 1) {
+      desc.Height += 1;
+    }
 
     RefPtr<IDXGISwapChain1> swapChain1;
     HRESULT hr;
@@ -1585,15 +1588,15 @@ bool DCSurfaceSwapChain::CallBlitHelper() const {
   // -
   // Draw
 
-  auto lutUintIfNeeded = Some(LUT_TEX_UNIT);
+  auto lutUnitIfNeeded = Some(LUT_TEX_UNIT);
   auto fragConvert = gl::kFragConvert_ColorLut;
   if (!mDest->lut) {
-    lutUintIfNeeded = Nothing();
+    lutUnitIfNeeded = Nothing();
     fragConvert = gl::kFragConvert_None;
   }
 
   const auto baseArgs = gl::DrawBlitProg::BaseArgs{
-      texCoordMat0, false, mDest->dest->size, {}, lutUintIfNeeded,
+      texCoordMat0, false, mDest->dest->size, {}, lutUnitIfNeeded,
   };
   Maybe<gl::DrawBlitProg::YUVArgs> yuvArgs;
   auto fragSample = gl::kFragSample_OnePlane;
