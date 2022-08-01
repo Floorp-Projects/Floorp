@@ -72,6 +72,12 @@ loader.lazyGetter(this, "GridElementWidthResizer", () =>
   )
 );
 
+loader.lazyGetter(this, "ChromeDebugToolbar", () =>
+  createFactory(
+    require("devtools/client/framework/components/ChromeDebugToolbar")
+  )
+);
+
 const l10n = require("devtools/client/webconsole/utils/l10n");
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 
@@ -265,6 +271,17 @@ class App extends Component {
     input.addEventListener("keyup", pasteKeyUpHandler);
   }
 
+  renderChromeDebugToolbar() {
+    const { webConsoleUI } = this.props;
+    if (!webConsoleUI.isBrowserConsole || !webConsoleUI.fissionSupport) {
+      return null;
+    }
+    return ChromeDebugToolbar({
+      // This should always be true at this point
+      isBrowserConsole: webConsoleUI.isBrowserConsole,
+    });
+  }
+
   renderFilterBar() {
     const {
       closeSplitConsole,
@@ -438,6 +455,7 @@ class App extends Component {
   render() {
     const { webConsoleUI, editorMode, dispatch, inputEnabled } = this.props;
 
+    const chromeDebugToolbar = this.renderChromeDebugToolbar();
     const filterBar = this.renderFilterBar();
     const editorToolbar = this.renderEditorToolbar();
     const consoleOutput = this.renderConsoleOutput();
@@ -449,6 +467,7 @@ class App extends Component {
     const confirmDialog = this.renderConfirmDialog();
 
     return this.renderRootElement([
+      chromeDebugToolbar,
       filterBar,
       editorToolbar,
       dom.div(
