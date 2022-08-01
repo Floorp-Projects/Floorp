@@ -277,19 +277,24 @@ async function draw() {
 
   // -
 
-  fillFromElem(e_color_o1, 0  , 0  , W/2, H/2);
-  fillFromElem(e_color_o2, W/2, 0  , W/2, H/2);
-  fillFromElem(e_color_o3, 0  , H/2, W/2, H/2);
-  fillFromElem(e_color_o4, W/2, H/2, W/2, H/2);
+  const LEFT_HALF = W/2 | 0; // Round
+  const TOP_HALF = H/2 | 0;
+
+  fillFromElem(e_color_o1, 0        , 0       ,   LEFT_HALF,   TOP_HALF);
+  fillFromElem(e_color_o2, LEFT_HALF, 0       , W-LEFT_HALF,   TOP_HALF);
+  fillFromElem(e_color_o3, 0        , TOP_HALF,   LEFT_HALF, H-TOP_HALF);
+  fillFromElem(e_color_o4, LEFT_HALF, TOP_HALF, W-LEFT_HALF, H-TOP_HALF);
 
   // -
 
   const INNER_SCALE = 1/4;
+  const W_INNER = W*INNER_SCALE | 0;
+  const H_INNER = H*INNER_SCALE | 0;
 
-  fillFromElem(e_color_i1, W/2-W*INNER_SCALE, H/2-H*INNER_SCALE, W*INNER_SCALE, H*INNER_SCALE);
-  fillFromElem(e_color_i2, W/2              , H/2-H*INNER_SCALE, W*INNER_SCALE, H*INNER_SCALE);
-  fillFromElem(e_color_i3, W/2-W*INNER_SCALE, H/2              , W*INNER_SCALE, H*INNER_SCALE);
-  fillFromElem(e_color_i4, W/2              , H/2              , W*INNER_SCALE, H*INNER_SCALE);
+  fillFromElem(e_color_i1, LEFT_HALF-W_INNER, TOP_HALF-H_INNER, W_INNER, H_INNER);
+  fillFromElem(e_color_i2, LEFT_HALF        , TOP_HALF-H_INNER, W_INNER, H_INNER);
+  fillFromElem(e_color_i3, LEFT_HALF-W_INNER, TOP_HALF        , W_INNER, H_INNER);
+  fillFromElem(e_color_i4, LEFT_HALF        , TOP_HALF        , W_INNER, H_INNER);
 }
 
 draw();
