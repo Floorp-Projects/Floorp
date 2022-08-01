@@ -13,8 +13,8 @@
 #ifndef JXL_ENCODE_H_
 #define JXL_ENCODE_H_
 
+#include "jxl/cms_interface.h"
 #include "jxl/codestream_header.h"
-#include "jxl/decode.h"
 #include "jxl/jxl_export.h"
 #include "jxl/memory_manager.h"
 #include "jxl/parallel_runner.h"
@@ -73,15 +73,60 @@ typedef enum {
 
   /** DEPRECATED: the encoder does not return this status and there is no need
    * to handle or expect it.
+   * Instead, JXL_ENC_ERROR is returned with error condition
+   * JXL_ENC_ERR_NOT_SUPPORTED.
    */
   JXL_ENC_NOT_SUPPORTED = 3,
 
 } JxlEncoderStatus;
 
 /**
- * Id of encoder options for a frame. This includes options such as the
- * image quality and compression speed for this frame. This does not include
- * non-frame related encoder options such as for boxes.
+ * Error conditions:
+ * API usage errors have the 0x80 bit set to 1
+ * Other errors have the 0x80 bit set to 0
+ */
+typedef enum {
+  /** No error
+   */
+  JXL_ENC_ERR_OK = 0,
+
+  /** Generic encoder error due to unspecified cause
+   */
+  JXL_ENC_ERR_GENERIC = 1,
+
+  /** Out of memory
+   *  TODO(jon): actually catch this and return this error
+   */
+  JXL_ENC_ERR_OOM = 2,
+
+  /** JPEG bitstream reconstruction data could not be
+   *  represented (e.g. too much tail data)
+   */
+  JXL_ENC_ERR_JBRD = 3,
+
+  /** Input is invalid (e.g. corrupt JPEG file or ICC profile)
+   */
+  JXL_ENC_ERR_BAD_INPUT = 4,
+
+  /** The encoder doesn't (yet) support this. Either no version of libjxl
+   * supports this, and the API is used incorrectly, or the libjxl version
+   * should have been checked before trying to do this.
+   */
+  JXL_ENC_ERR_NOT_SUPPORTED = 0x80,
+
+  /** The encoder API is used in an incorrect way.
+   *  In this case, a debug build of libjxl should output a specific error
+   * message. (if not, please open an issue about it)
+   */
+  JXL_ENC_ERR_API_USAGE = 0x81,
+
+} JxlEncoderError;
+
+/**
+ * Id of encoder options for a frame. This includes options such as setting
+ * encoding effort/speed or overriding the use of certain coding tools, for this
+ * frame. This does not include non-frame related encoder options such as for
+ * boxes.
  */
 typedef enum {
   /** Sets encoder effort/speed level without affecting decoding speed. Valid
@@ -236,9 +281,12 @@ typedef enum {
    */
   JXL_ENC_FRAME_SETTING_COLOR_TRANSFORM = 24,
 
-  /** Color space for modular encoding: -1=default, 0-35=reverse color transform
+  /** Reversible color transform for modular encoding: -1=default, 0-41=RCT
    * index, e.g. index 0 = none, index 6 = YCoCg.
-   * The default behavior is to try several, depending on the speed setting.
+   * If this option is set to a non-default value, the RCT will be globally
+   * applied to the whole frame.
+   * The default behavior is to try several RCTs locally per modular group,
+   * depending on the speed and distance setting.
    */
   JXL_ENC_FRAME_SETTING_MODULAR_COLOR_SPACE = 25,
 
@@ -353,6 +401,15 @@ JXL_EXPORT void JxlEncoderSetCms(JxlEncoder* enc, JxlCmsInterface cms);
 JXL_EXPORT JxlEncoderStatus
 JxlEncoderSetParallelRunner(JxlEncoder* enc, JxlParallelRunner parallel_runner,
                             void* parallel_runner_opaque);
+
+/**
+ * Get the (last) error code in case JXL_ENC_ERROR was returned.
+ *
+ * @param enc encoder object.
+ * @return the JxlEncoderError that caused the (last) JXL_ENC_ERROR to be
+ * returned.
+ */
+JXL_EXPORT JxlEncoderError JxlEncoderGetError(JxlEncoder* enc);
 
 /**
  * Encodes JPEG XL file using the available bytes. @p *avail_out indicates how
@@ -519,12 +576,12 @@ JxlEncoderAddJPEGFrame(const JxlEncoderFrameSettings* frame_settings,
  * If the image has alpha, and alpha is not passed here, it will implicitly be
  * set to all-opaque (an alpha value of 1.0 everywhere).
  *
- * The color profile of the pixels depends on the value of uses_original_profile
- * in the JxlBasicInfo. If true, the pixels are assumed to be encoded in the
- * original profile that is set with JxlEncoderSetColorEncoding or
- * JxlEncoderSetICCProfile. If false, the pixels are assumed to be nonlinear
- * sRGB for integer data types (JXL_TYPE_UINT8, JXL_TYPE_UINT16), and linear
- * sRGB for floating point data types (JXL_TYPE_FLOAT16, JXL_TYPE_FLOAT).
+ * The pixels are assumed to be encoded in the original profile that is set with
+ * JxlEncoderSetColorEncoding or JxlEncoderSetICCProfile. If none of these
+ * functions were used, the pixels are assumed to be nonlinear sRGB for integer
+ * data types (JXL_TYPE_UINT8, JXL_TYPE_UINT16), and linear sRGB for floating
+ * point data types (JXL_TYPE_FLOAT16, JXL_TYPE_FLOAT).
+ *
  * Sample values in floating-point pixel formats are allowed to be outside the
  * nominal range, e.g. to represent out-of-sRGB-gamut colors in the
  * uses_original_profile=false case. They are however not allowed to be NaN or
@@ -715,6 +772,7 @@ JXL_EXPORT void JxlEncoderCloseInput(JxlEncoder* enc);
  * is an alternative to JxlEncoderSetICCProfile and only one of these two must
  * be used. This one sets the color encoding as a @ref JxlColorEncoding, while
  * the other sets it as ICC binary data.
+ * Must be called after JxlEncoderSetBasicInfo.
  *
  * @param enc encoder object.
  * @param color color encoding. Object owned by the caller and its contents are
@@ -730,6 +788,7 @@ JxlEncoderSetColorEncoding(JxlEncoder* enc, const JxlColorEncoding* color);
  * ICC color profile. This is an alternative to JxlEncoderSetColorEncoding and
  * only one of these two must be used. This one sets the color encoding as ICC
  * binary data, while the other defines it as a @ref JxlColorEncoding.
+ * Must be called after JxlEncoderSetBasicInfo.
  *
  * @param enc encoder object.
  * @param icc_profile bytes of the original ICC profile
@@ -852,7 +911,25 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelName(JxlEncoder* enc,
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
     JxlEncoderFrameSettings* frame_settings, JxlEncoderFrameSettingId option,
-    int32_t value);
+    int64_t value);
+
+/**
+ * Sets a frame-specific option of float type to the encoder options.
+ * The JxlEncoderFrameSettingId argument determines which option is set.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param option ID of the option to set.
+ * @param value Float value to set for this option.
+ * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR in
+ * case of an error, such as invalid or unknown option id, or invalid integer
+ * value for the given option. If an error is returned, the state of the
+ * JxlEncoderFrameSettings object is still valid and is the same as before this
+ * function was called.
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
+    JxlEncoderFrameSettings* frame_settings, JxlEncoderFrameSettingId option,
+    float value);
 
 /** Forces the encoder to use the box-based container format (BMFF) even
  * when not necessary.
@@ -893,8 +970,8 @@ JXL_EXPORT JxlEncoderStatus
 JxlEncoderStoreJPEGMetadata(JxlEncoder* enc, JXL_BOOL store_jpeg_metadata);
 
 /** Sets the feature level of the JPEG XL codestream. Valid values are 5 and
- * 10. Keeping the default value of 5 is recommended for compatibility with all
- * decoders.
+ * 10, or -1 (to choose automatically). Using the minimum required level, or
+ * level 5 in most cases, is recommended for compatibility with all decoders.
  *
  * Level 5: for end-user image delivery, this level is the most widely
  * supported level by image decoders and the recommended level to use unless a
@@ -910,16 +987,19 @@ JxlEncoderStoreJPEGMetadata(JxlEncoder* enc, JXL_BOOL store_jpeg_metadata);
  * 5 limitations, allows CMYK color and up to 32 bits per color channel, but
  * may be less widely supported.
  *
- * The default value is 5. To use level 10 features, the setting must be
- * explicitly set to 10, the encoder will not automatically enable it. If
- * incompatible parameters such as too high image resolution for the current
- * level are set, the encoder will return an error. For internal coding tools,
- * the encoder will only use those compatible with the level setting.
+ * The default value is -1. This means the encoder will automatically choose
+ * between level 5 and level 10 based on what information is inside the @ref
+ * JxlBasicInfo structure. Do note that some level 10 features, particularly
+ * those used by animated JPEG XL codestreams, might require level 10, even
+ * though the @ref JxlBasicInfo only suggests level 5. In this case, the level
+ * must be explicitly set to 10, otherwise the encoder will return an error.
+ * The encoder will restrict internal encoding choices to those compatible with
+ * the level setting.
  *
  * This setting can only be set at the beginning, before encoding starts.
  *
  * @param enc encoder object.
- * @param level the level value to set, must be 5 or 10.
+ * @param level the level value to set, must be -1, 5, or 10.
  * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
  * otherwise.
  */

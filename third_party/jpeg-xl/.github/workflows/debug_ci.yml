@@ -27,7 +27,6 @@ jobs:
           doxygen \
           libbrotli-dev \
           libgdk-pixbuf2.0-dev \
-          libgflags-dev \
           libgif-dev \
           libgtest-dev \
           libgtk2.0-dev  \

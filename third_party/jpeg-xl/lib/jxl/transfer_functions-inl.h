@@ -18,6 +18,7 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/fast_math-inl.h"
 #include "lib/jxl/rational_polynomial-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -129,12 +130,26 @@ class TF_709 {
     return IfThenElse(x <= Set(d, kThresh), low, hi);
   }
 
+  template <class D, class V>
+  JXL_INLINE V DisplayFromEncoded(D d, V x) const {
+    auto low = Set(d, kInvMulLow) * x;
+    auto hi = FastPowf(d, MulAdd(x, Set(d, kInvMulHi), Set(d, kInvAdd)),
+                       Set(d, kInvPowHi));
+    return IfThenElse(x < Set(d, kInvThresh), low, hi);
+  }
+
  private:
   static constexpr double kThresh = 0.018;
   static constexpr double kMulLow = 4.5;
   static constexpr double kMulHi = 1.099;
   static constexpr double kPowHi = 0.45;
   static constexpr double kSub = -0.099;
+
+  static constexpr double kInvThresh = 0.081;
+  static constexpr double kInvMulLow = 1 / 4.5;
+  static constexpr double kInvMulHi = 1 / 1.099;
+  static constexpr double kInvPowHi = 1 / 0.45;
+  static constexpr double kInvAdd = 0.099 * kInvMulHi;
 };
 
 // Perceptual Quantization

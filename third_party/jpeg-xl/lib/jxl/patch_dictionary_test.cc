@@ -5,7 +5,6 @@
 
 #include "gtest/gtest.h"
 #include "lib/extras/codec.h"
-#include "lib/jxl/dec_params.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image_test_utils.h"
@@ -26,11 +25,10 @@ TEST(PatchDictionaryTest, GrayscaleModular) {
   CompressParams cparams;
   cparams.SetLossless();
   cparams.patches = jxl::Override::kOn;
-  DecompressParams dparams;
 
   CodecInOut io2;
   // Without patches: ~25k
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 8000u);
+  EXPECT_LE(Roundtrip(&io, cparams, {}, pool, &io2), 8000u);
   VerifyRelativeError(*io.Main().color(), *io2.Main().color(), 1e-7f, 0);
 }
 
@@ -42,11 +40,10 @@ TEST(PatchDictionaryTest, GrayscaleVarDCT) {
 
   CompressParams cparams;
   cparams.patches = jxl::Override::kOn;
-  DecompressParams dparams;
 
   CodecInOut io2;
   // Without patches: ~47k
-  EXPECT_LE(Roundtrip(&io, cparams, dparams, pool, &io2), 14000u);
+  EXPECT_LE(Roundtrip(&io, cparams, {}, pool, &io2), 14000u);
   // Without patches: ~1.2
   EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
                                 /*distmap=*/nullptr, pool),

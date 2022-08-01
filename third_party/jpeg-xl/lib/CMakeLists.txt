@@ -52,7 +52,7 @@ set(JPEGXL_INTERNAL_FLAGS
 )
 
 # Warning flags supported by clang.
-if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   list(APPEND JPEGXL_INTERNAL_FLAGS
     -Wdeprecated-increment-bool
     # TODO(deymo): Add -Wextra-semi once we update third_party/highway.
@@ -90,7 +90,7 @@ if (WIN32)
     -Wno-zero-as-null-pointer-constant
   )
 
-  if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     list(APPEND JPEGXL_INTERNAL_FLAGS
       -Wno-used-but-marked-unused
       -Wno-unused-template
@@ -110,7 +110,7 @@ else()  # WIN32
     -fmath-errno
   )
 
-  if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     list(APPEND JPEGXL_INTERNAL_FLAGS
       -fnew-alignment=8
       -fno-cxx-exceptions
@@ -136,7 +136,9 @@ endif()  #!MSVC
 include(jxl.cmake)
 
 # Other libraries outside the core jxl library.
-include(jxl_extras.cmake)
+if(JPEGXL_ENABLE_TOOLS)
+  include(jxl_extras.cmake)
+endif()
 include(jxl_threads.cmake)
 
 # Install all the library headers from the source and the generated ones. There

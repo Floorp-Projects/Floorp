@@ -18,7 +18,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "jxl/color_encoding.h"
 #include "jxl/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -175,10 +174,14 @@ typedef struct {
    * (linear if outputting to floating point, nonlinear with standard sRGB
    * transfer function if outputting to unsigned integers) but will not convert
    * it to to the original color profile. The decoder also does not convert to
-   * the target display color profile, but instead will always indicate which
-   * color profile the returned pixel data is encoded in when using @see
-   * JXL_COLOR_PROFILE_TARGET_DATA so that a CMS can be used to convert the
-   * data.
+   * the target display color profile. To convert the pixel data produced by
+   * the decoder to the original color profile, one of the JxlDecoderGetColor*
+   * functions needs to be called with @ref JXL_COLOR_PROFILE_TARGET_DATA to get
+   * the color profile of the decoder output, and then an external CMS can be
+   * used for conversion.
+   * Note that for lossy compression, this should be set to false for most use
+   * cases, and if needed, the image should be converted to the original color
+   * profile after decoding, as described above.
    */
   JXL_BOOL uses_original_profile;
 

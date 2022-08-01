@@ -5,7 +5,7 @@
 
 #include "lib/jxl/enc_photon_noise.h"
 
-#include "gmock/gmock.h"
+#include "lib/jxl/test_utils.h"
 
 namespace jxl {
 namespace {

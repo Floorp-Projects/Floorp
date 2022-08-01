@@ -51,7 +51,7 @@ int TestInit(void* jpegxl_opaque, size_t num_threads) { return 0; }
 
 }  // namespace
 
-TEST_F(DataParallelTest, RunnerCalledParamenters) {
+TEST_F(DataParallelTest, RunnerCalledParameters) {
   EXPECT_TRUE(pool_.Run(
       1234, 5678, [](size_t /* num_threads */) { return true; },
       [](uint32_t /* task */, size_t /* thread */) { return; }));

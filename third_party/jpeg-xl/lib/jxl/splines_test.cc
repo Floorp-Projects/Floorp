@@ -5,15 +5,13 @@
 
 #include "lib/jxl/splines.h"
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "lib/extras/codec.h"
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/dec_file.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_splines.h"
 #include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/test_utils.h"
 #include "lib/jxl/testdata.h"
 
 namespace jxl {
@@ -328,8 +326,8 @@ TEST(SplinesTest, ClearedEveryFrame) {
   CodecInOut io_actual;
   const PaddedBytes bytes_actual =
       ReadTestData("jxl/spline_on_first_frame.jxl");
-  ASSERT_TRUE(DecodeFile(DecompressParams(), bytes_actual, &io_actual,
-                         /*pool=*/nullptr));
+  ASSERT_TRUE(test::DecodeFile({}, bytes_actual, &io_actual,
+                               /*pool=*/nullptr));
 
   ASSERT_TRUE(io_actual.TransformTo(ColorEncoding::SRGB(), GetJxlCms()));
   for (size_t c = 0; c < 3; ++c) {

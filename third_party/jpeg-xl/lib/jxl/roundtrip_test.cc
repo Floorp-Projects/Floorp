@@ -729,7 +729,7 @@ TEST(RoundtripTest, TestICCProfile) {
   jxl::test::JxlBasicInfoSetFromPixelFormat(&basic_info, &format);
   basic_info.xsize = xsize;
   basic_info.ysize = ysize;
-  basic_info.uses_original_profile = JXL_FALSE;
+  basic_info.uses_original_profile = JXL_TRUE;
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc, &basic_info));
 
   EXPECT_EQ(JXL_ENC_SUCCESS,
@@ -800,8 +800,7 @@ TEST(RoundtripTest, TestICCProfile) {
 
 #if JPEGXL_ENABLE_JPEG  // Loading .jpg files requires libjpeg support.
 TEST(RoundtripTest, JXL_TRANSCODE_JPEG_TEST(TestJPEGReconstruction)) {
-  const std::string jpeg_path =
-      "third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg";
+  const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
   ASSERT_TRUE(

@@ -5,22 +5,16 @@
 
 #ifndef LIB_JXL_RENDER_PIPELINE_STAGE_XYB_H_
 #define LIB_JXL_RENDER_PIPELINE_STAGE_XYB_H_
-#include <math.h>
 #include <stdint.h>
-#include <stdio.h>
-
-#include <algorithm>
-#include <utility>
-#include <vector>
 
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 
 namespace jxl {
 
-// Converts the color channels from XYB to the specified output encoding.
+// Converts the color channels from XYB to linear with appropriate primaries.
 std::unique_ptr<RenderPipelineStage> GetXYBStage(
-    const OutputEncodingInfo& output_encoding_info);
+    const OpsinParams& output_encoding_info);
 
 // Gets a stage to convert with fixed point arithmetic from XYB to sRGB8 and
 // write to a uint8 buffer.

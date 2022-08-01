@@ -22,8 +22,6 @@
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/common.h"
-#include "lib/jxl/dec_file.h"
-#include "lib/jxl/dec_params.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_file.h"
@@ -31,6 +29,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
+#include "lib/jxl/test_utils.h"
 
 namespace jxl {
 namespace {
@@ -151,8 +150,6 @@ void TestGradient(ThreadPool* pool, uint32_t color0, uint32_t color1,
   if (fast_mode) {
     cparams.speed_tier = SpeedTier::kSquirrel;
   }
-  DecompressParams dparams;
-
   Image3F gradient = GenerateTestGradient(color0, color1, angle, xsize, ysize);
 
   CodecInOut io;
@@ -167,7 +164,7 @@ void TestGradient(ThreadPool* pool, uint32_t color0, uint32_t color1,
   PassesEncoderState enc_state;
   EXPECT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
                          aux_out, pool));
-  EXPECT_TRUE(DecodeFile(dparams, compressed, &io2, pool));
+  EXPECT_TRUE(test::DecodeFile({}, compressed, &io2, pool));
   EXPECT_TRUE(
       io2.Main().TransformTo(io2.metadata.m.color_encoding, GetJxlCms(), pool));
 

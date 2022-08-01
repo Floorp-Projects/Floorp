@@ -8,15 +8,15 @@
 
 #include <stddef.h>
 
+#include <string>
+
 #include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_cache.h"
-#include "lib/jxl/dec_params.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_bundle.h"
 #include "lib/jxl/modular/encoding/encoding.h"
 #include "lib/jxl/modular/modular_image.h"
 
@@ -82,6 +82,7 @@ struct ModularStreamId {
   static size_t Num(const FrameDimensions& frame_dim, size_t passes) {
     return ModularAC(0, passes).ID(frame_dim);
   }
+  std::string DebugString() const;
 };
 
 class ModularFrameDecoder {
@@ -93,7 +94,7 @@ class ModularFrameDecoder {
                      int maxShift, const ModularStreamId& stream, bool zerofill,
                      PassesDecoderState* dec_state,
                      RenderPipelineInput* render_pipeline_input,
-                     ImageBundle* output, bool allow_truncated);
+                     bool allow_truncated, bool* should_run_pipeline = nullptr);
   // Decodes a VarDCT DC group (`group_id`) from the given `reader`.
   Status DecodeVarDCTDC(size_t group_id, BitReader* reader,
                         PassesDecoderState* dec_state);
@@ -111,7 +112,7 @@ class ModularFrameDecoder {
   // if it is false, it can be called multiple times (e.g. for progressive
   // steps)
   Status FinalizeDecoding(PassesDecoderState* dec_state, jxl::ThreadPool* pool,
-                          ImageBundle* output, bool inplace);
+                          bool inplace);
   bool have_dc() const { return have_something; }
   void MaybeDropFullImage();
   bool UsesFullImage() const { return use_full_image; }

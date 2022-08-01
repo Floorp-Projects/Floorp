@@ -88,7 +88,7 @@ static inline constexpr uint64_t EnumBits(Primaries /*unused*/) {
 }
 
 // Values from CICP TransferCharacteristics
-enum TransferFunction : uint32_t {
+enum class TransferFunction : uint32_t {
   k709 = 1,
   kUnknown = 2,
   kLinear = 8,

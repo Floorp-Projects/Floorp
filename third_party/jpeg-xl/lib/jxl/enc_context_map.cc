@@ -56,7 +56,8 @@ std::vector<uint8_t> MoveToFrontTransform(const std::vector<uint8_t>& v) {
 }  // namespace
 
 void EncodeContextMap(const std::vector<uint8_t>& context_map,
-                      size_t num_histograms, BitWriter* writer) {
+                      size_t num_histograms, BitWriter* writer, size_t layer,
+                      AuxOut* aux_out) {
   if (num_histograms == 1) {
     // Simple code
     writer->Write(1, 1);
@@ -100,7 +101,7 @@ void EncodeContextMap(const std::vector<uint8_t>& context_map,
     writer->Write(1, 0);
     writer->Write(1, use_mtf);  // Use/don't use MTF.
     BuildAndEncodeHistograms(params, 1, tokens, &codes, &dummy_context_map,
-                             writer, 0, nullptr);
+                             writer, layer, aux_out);
     WriteTokens(tokens[0], codes, dummy_context_map, writer);
   }
 }
@@ -132,7 +133,7 @@ void EncodeBlockCtxMap(const BlockCtxMap& block_ctx_map, BitWriter* writer,
   for (uint32_t i : qft) {
     JXL_CHECK(U32Coder::Write(kQFThresholdDist, i - 1, writer));
   }
-  EncodeContextMap(ctx_map, block_ctx_map.num_ctxs, writer);
+  EncodeContextMap(ctx_map, block_ctx_map.num_ctxs, writer, kLayerAC, aux_out);
   ReclaimAndCharge(writer, &allotment, kLayerAC, aux_out);
 }
 

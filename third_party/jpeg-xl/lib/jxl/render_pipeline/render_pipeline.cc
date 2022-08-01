@@ -108,9 +108,9 @@ void RenderPipeline::InputReady(
     const std::vector<std::pair<ImageF*, Rect>>& buffers) {
   JXL_DASSERT(group_id < group_completed_passes_.size());
   group_completed_passes_[group_id]++;
-  for (const auto& buf : buffers) {
-    (void)buf;
-    JXL_CHECK_IMAGE_INITIALIZED(*buf.first, buf.second);
+  for (size_t i = 0; i < buffers.size(); ++i) {
+    (void)i;
+    JXL_CHECK_PLANE_INITIALIZED(*buffers[i].first, buffers[i].second, i);
   }
 
   ProcessBuffers(group_id, thread_id);

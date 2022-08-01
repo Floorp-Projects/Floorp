@@ -9,7 +9,6 @@ Build-Depends:
  debhelper (>= 9),
  libbrotli-dev,
  libgdk-pixbuf-2.0-dev | libgdk-pixbuf2.0-dev,
- libgflags-dev | libgflag-dev,
  libgif-dev,
  libgimp2.0-dev,
  libgmock-dev,

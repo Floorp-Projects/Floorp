@@ -6,6 +6,8 @@
 #ifndef LIB_JXL_MODULAR_TRANSFORM_PALETTE_H_
 #define LIB_JXL_MODULAR_TRANSFORM_PALETTE_H_
 
+#include <atomic>
+
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
@@ -139,7 +141,7 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
   const pixel_type *JXL_RESTRICT p_palette = input.channel[0].Row(0);
   intptr_t onerow = input.channel[0].plane.PixelsPerRow();
   intptr_t onerow_image = input.channel[c0].plane.PixelsPerRow();
-  const int bit_depth = input.bitdepth;
+  const int bit_depth = std::min(input.bitdepth, 24);
 
   if (w == 0) {
     // Nothing to do.
@@ -152,7 +154,7 @@ static Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
             const size_t y = task;
             pixel_type *p = input.channel[c0].Row(y);
             for (size_t x = 0; x < w; x++) {
-              const int index = Clamp1(p[x], 0, (pixel_type)palette.w - 1);
+              const int index = Clamp1<int>(p[x], 0, (pixel_type)palette.w - 1);
               p[x] = palette_internal::GetPaletteValue(
                   p_palette, index, /*c=*/0,
                   /*palette_size=*/palette.w,

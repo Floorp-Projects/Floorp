@@ -20,6 +20,8 @@ Status DequantMatricesEncodeDC(const DequantMatrices* matrices,
 // precision.
 void DequantMatricesSetCustomDC(DequantMatrices* matrices, const float* dc);
 
+void DequantMatricesScaleDC(DequantMatrices* matrices, const float scale);
+
 void DequantMatricesSetCustom(DequantMatrices* matrices,
                               const std::vector<QuantEncoding>& encodings,
                               ModularFrameEncoder* encoder);

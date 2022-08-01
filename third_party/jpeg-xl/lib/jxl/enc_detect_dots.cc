@@ -151,16 +151,18 @@ ImageF ComputeEnergyImage(const Image3F& orig, Image3F* smooth,
 
   // Prepare guidance images for dot selection.
   Image3F forig(orig.xsize(), orig.ysize());
-  Image3F tmp(orig.xsize(), orig.ysize());
   *smooth = Image3F(orig.xsize(), orig.ysize());
+  Rect rect(orig);
 
   const auto& weights1 = WeightsSeparable5Gaussian0_65();
   const auto& weights3 = WeightsSeparable5Gaussian3();
 
-  Separable5_3(orig, Rect(orig), weights1, pool, &forig);
-
-  Separable5_3(orig, Rect(orig), weights3, pool, &tmp);
-  Separable5_3(tmp, Rect(tmp), weights3, pool, smooth);
+  for (size_t c = 0; c < 3; ++c) {
+    // Use forig as temporary storage to reduce memory and keep it warmer.
+    Separable5(orig.Plane(c), rect, weights3, pool, &forig.Plane(c));
+    Separable5(forig.Plane(c), rect, weights3, pool, &smooth->Plane(c));
+    Separable5(orig.Plane(c), rect, weights1, pool, &forig.Plane(c));
+  }
 
 #if JXL_DEBUG_DOT_DETECT
   AuxOut aux;

@@ -81,7 +81,7 @@ void Roundtrip(size_t num_entries, bool permute, Rng* rng) {
 
 TEST(TocTest, Test) {
   Rng rng(0);
-  for (size_t num_entries = 0; num_entries < 10; ++num_entries) {
+  for (size_t num_entries = 1; num_entries < 10; ++num_entries) {
     for (bool permute : std::vector<bool>{false, true}) {
       Roundtrip(num_entries, permute, &rng);
     }

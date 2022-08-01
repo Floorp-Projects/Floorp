@@ -39,8 +39,7 @@ Status Transform::Inverse(Image &input, const weighted::Header &wp_header,
 }
 
 Status Transform::MetaApply(Image &input) {
-  JXL_DEBUG_V(6, "Input channels (%" PRIuS ", %" PRIuS " meta): ",
-              input.channel.size(), input.nb_meta_channels);
+  JXL_DEBUG_V(6, "MetaApply input: %s", input.DebugString().c_str());
   switch (id) {
     case TransformId::kRCT:
       JXL_DEBUG_V(2, "Transform: kRCT, rct_type=%" PRIu32, rct_type);
@@ -68,9 +67,6 @@ Status Transform::MetaApply(Image &input) {
                   "Transform: kPalette, begin_c=%" PRIu32 ", num_c=%" PRIu32
                   ", nb_colors=%" PRIu32 ", nb_deltas=%" PRIu32,
                   begin_c, num_c, nb_colors, nb_deltas);
-      if (input.bitdepth > 24) {
-        return JXL_FAILURE("Palette is not allowed for bitdepth > 24");
-      }
       return MetaPalette(input, begin_c, begin_c + num_c - 1, nb_colors,
                          nb_deltas, lossy_palette);
     default:

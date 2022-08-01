@@ -71,8 +71,9 @@ void* CacheAligned::Allocate(const size_t payload_size, size_t offset) {
   // To avoid wasting space, the header resides at the end of `unused`,
   // which therefore cannot be empty (offset == 0).
   if (offset == 0) {
-    offset = kAlignment;  // = round_up(sizeof(AllocationHeader), kAlignment)
-    static_assert(sizeof(AllocationHeader) <= kAlignment, "Else: round up");
+    // SVE/RVV vectors can be large, so we cannot rely on them (including the
+    // padding at the end of AllocationHeader) to fit in kAlignment.
+    offset = hwy::RoundUpTo(sizeof(AllocationHeader), kAlignment);
   }
 
 #if JXL_USE_MMAP

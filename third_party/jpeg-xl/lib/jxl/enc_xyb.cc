@@ -22,79 +22,16 @@
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_image_bundle.h"
+#include "lib/jxl/fast_math-inl.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/transfer_functions-inl.h"
+
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
-
-// These templates are not found via ADL.
-using hwy::HWY_NAMESPACE::ShiftRight;
-
-// Returns cbrt(x) + add with 6 ulp max error.
-// Modified from vectormath_exp.h, Apache 2 license.
-// https://www.agner.org/optimize/vectorclass.zip
-template <class V>
-V CubeRootAndAdd(const V x, const V add) {
-  const HWY_FULL(float) df;
-  const HWY_FULL(int32_t) di;
-
-  const auto kExpBias = Set(di, 0x54800000);  // cast(1.) + cast(1.) / 3
-  const auto kExpMul = Set(di, 0x002AAAAA);   // shifted 1/3
-  const auto k1_3 = Set(df, 1.0f / 3);
-  const auto k4_3 = Set(df, 4.0f / 3);
-
-  const auto xa = x;  // assume inputs never negative
-  const auto xa_3 = k1_3 * xa;
-
-  // Multiply exponent by -1/3
-  const auto m1 = BitCast(di, xa);
-  // Special case for 0. 0 is represented with an exponent of 0, so the
-  // "kExpBias - 1/3 * exp" below gives the wrong result. The IfThenZeroElse()
-  // sets those values as 0, which prevents having NaNs in the computations
-  // below.
-  const auto m2 =
-      IfThenZeroElse(m1 == Zero(di), kExpBias - (ShiftRight<23>(m1)) * kExpMul);
-  auto r = BitCast(df, m2);
-
-  // Newton-Raphson iterations
-  for (int i = 0; i < 3; i++) {
-    const auto r2 = r * r;
-    r = NegMulAdd(xa_3, r2 * r2, k4_3 * r);
-  }
-  // Final iteration
-  auto r2 = r * r;
-  r = MulAdd(k1_3, NegMulAdd(xa, r2 * r2, r), r);
-  r2 = r * r;
-  r = MulAdd(r2, x, add);
-
-  return r;
-}
-
-// Ensures infinity norm is bounded.
-void TestCubeRoot() {
-  const HWY_FULL(float) d;
-  float max_err = 0.0f;
-  for (uint64_t x5 = 0; x5 < 2000000; x5++) {
-    const float x = x5 * 1E-5f;
-    const float expected = cbrtf(x);
-    HWY_ALIGN float approx[MaxLanes(d)];
-    Store(CubeRootAndAdd(Set(d, x), Zero(d)), d, approx);
-
-    // All lanes are same
-    for (size_t i = 1; i < Lanes(d); ++i) {
-      JXL_ASSERT(std::abs(approx[0] - approx[i]) <= 1.2E-7f);
-    }
-
-    const float err = std::abs(approx[0] - expected);
-    max_err = std::max(max_err, err);
-  }
-  // printf("max err %e\n", max_err);
-  JXL_ASSERT(max_err < 8E-7f);
-}
 
 // 4x3 matrix * 3x1 SIMD vectors
 template <class V>
@@ -416,9 +353,6 @@ Status RgbToYcbcr(const ImageF& r_plane, const ImageF& g_plane,
   return HWY_DYNAMIC_DISPATCH(RgbToYcbcr)(r_plane, g_plane, b_plane, y_plane,
                                           cb_plane, cr_plane, pool);
 }
-
-HWY_EXPORT(TestCubeRoot);
-void TestCubeRoot() { return HWY_DYNAMIC_DISPATCH(TestCubeRoot)(); }
 
 // DEPRECATED
 Image3F OpsinDynamicsImage(const Image3B& srgb8, const JxlCmsInterface& cms) {

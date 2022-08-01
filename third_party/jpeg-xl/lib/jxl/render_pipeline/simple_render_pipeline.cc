@@ -63,7 +63,7 @@ void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
   for (size_t c = 0; c < channel_data_.size(); c++) {
     Rect r = MakeChannelRect(group_id, c);
     (void)r;
-    JXL_CHECK_IMAGE_INITIALIZED(channel_data_[c], r);
+    JXL_CHECK_PLANE_INITIALIZED(channel_data_[c], r, c);
   }
 
   if (PassesWithAllInput() <= processed_passes_) return;
@@ -202,9 +202,10 @@ void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
                              1 << channel_shifts_[next_stage][c].second);
       channel_data_[c].ShrinkTo(xsize + 2 * kRenderPipelineXOffset,
                                 ysize + 2 * kRenderPipelineXOffset);
-      JXL_CHECK_IMAGE_INITIALIZED(
+      JXL_CHECK_PLANE_INITIALIZED(
           channel_data_[c],
-          Rect(kRenderPipelineXOffset, kRenderPipelineXOffset, xsize, ysize));
+          Rect(kRenderPipelineXOffset, kRenderPipelineXOffset, xsize, ysize),
+          c);
     }
 
     if (stage->SwitchToImageDimensions()) {

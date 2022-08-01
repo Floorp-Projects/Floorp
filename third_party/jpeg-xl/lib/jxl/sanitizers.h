@@ -169,7 +169,7 @@ static JXL_INLINE JXL_MAYBE_UNUSED void PrintImageUninitialized(
 // (not poisoned). If any of the values is poisoned it will abort.
 template <typename T>
 static JXL_INLINE JXL_MAYBE_UNUSED void CheckImageInitialized(
-    const Plane<T>& im, const Rect& r, const char* message) {
+    const Plane<T>& im, const Rect& r, size_t c, const char* message) {
   JXL_ASSERT(r.x0() <= im.xsize());
   JXL_ASSERT(r.x0() + r.xsize() <= im.xsize());
   JXL_ASSERT(r.y0() <= im.ysize());
@@ -188,10 +188,11 @@ static JXL_INLINE JXL_MAYBE_UNUSED void CheckImageInitialized(
           static_cast<uint64_t>(r.x0()), static_cast<uint64_t>(r.y0()),
           static_cast<uint64_t>(r.xsize()), static_cast<uint64_t>(r.ysize()));
       size_t x = ret / sizeof(*row);
-      JXL_DEBUG(
-          1, "CheckImageInitialized failed at x=%" PRIu64 ", y=%" PRIu64 ": %s",
-          static_cast<uint64_t>(r.x0() + x), static_cast<uint64_t>(y),
-          message ? message : "");
+      JXL_DEBUG(1,
+                "CheckImageInitialized failed at x=%" PRIu64 ", y=%" PRIu64
+                ", c=%" PRIu64 ": %s",
+                static_cast<uint64_t>(r.x0() + x), static_cast<uint64_t>(y),
+                static_cast<uint64_t>(c), message ? message : "");
       PrintImageUninitialized(im);
     }
     // This will report an error if memory is not initialized.
@@ -205,12 +206,15 @@ static JXL_INLINE JXL_MAYBE_UNUSED void CheckImageInitialized(
   for (size_t c = 0; c < 3; c++) {
     std::string str_message(message);
     str_message += " c=" + std::to_string(c);
-    CheckImageInitialized(im.Plane(c), r, str_message.c_str());
+    CheckImageInitialized(im.Plane(c), r, c, str_message.c_str());
   }
 }
 
 #define JXL_CHECK_IMAGE_INITIALIZED(im, r) \
   ::jxl::msan::CheckImageInitialized(im, r, "im=" #im ", r=" #r);
+
+#define JXL_CHECK_PLANE_INITIALIZED(im, r, c) \
+  ::jxl::msan::CheckImageInitialized(im, r, c, "im=" #im ", r=" #r ", c=" #c);
 
 #else  // JXL_MEMORY_SANITIZER
 
@@ -228,6 +232,7 @@ template <typename T>
 static JXL_INLINE JXL_MAYBE_UNUSED void PoisonImage(const Plane<T>& im) {}
 
 #define JXL_CHECK_IMAGE_INITIALIZED(im, r)
+#define JXL_CHECK_PLANE_INITIALIZED(im, r, c)
 
 #endif
 

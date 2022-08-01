@@ -12,7 +12,10 @@
 
 #include <hwy/highway.h>
 
+#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/image_ops.h"
+
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
@@ -107,6 +110,180 @@ class Neighbors {
     return TableLookupLanes(c, indices);
 #endif
 #endif
+  }
+};
+
+#if HWY_TARGET != HWY_SCALAR
+
+// Returns indices for SetTableIndices such that TableLookupLanes on the
+// rightmost unaligned vector (rightmost sample in its most-significant lane)
+// returns the mirrored values, with the mirror outside the last valid sample.
+static inline const int32_t* MirrorLanes(const size_t mod) {
+  const HWY_CAPPED(float, 16) d;
+  constexpr size_t kN = MaxLanes(d);
+
+  // For mod = `image width mod 16` 0..15:
+  // last full vec     mirrored (mem order)  loadedVec  mirrorVec  idxVec
+  // 0123456789abcdef| fedcba9876543210      fed..210   012..def   012..def
+  // 0123456789abcdef|0 0fedcba98765432      0fe..321   234..f00   123..eff
+  // 0123456789abcdef|01 10fedcba987654      10f..432   456..110   234..ffe
+  // 0123456789abcdef|012 210fedcba9876      210..543   67..2210   34..ffed
+  // 0123456789abcdef|0123 3210fedcba98      321..654   8..33210   4..ffedc
+  // 0123456789abcdef|01234 43210fedcba
+  // 0123456789abcdef|012345 543210fedc
+  // 0123456789abcdef|0123456 6543210fe
+  // 0123456789abcdef|01234567 76543210
+  // 0123456789abcdef|012345678 8765432
+  // 0123456789abcdef|0123456789 987654
+  // 0123456789abcdef|0123456789A A9876
+  // 0123456789abcdef|0123456789AB BA98
+  // 0123456789abcdef|0123456789ABC CBA
+  // 0123456789abcdef|0123456789ABCD DC
+  // 0123456789abcdef|0123456789ABCDE E      EDC..10f   EED..210   ffe..321
+#if HWY_CAP_GE512
+  HWY_ALIGN static constexpr int32_t idx_lanes[2 * kN - 1] = {
+      1,  2,  3,  4,  5,  6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15,  //
+      14, 13, 12, 11, 10, 9, 8, 7, 6, 5,  4,  3,  2,  1,  0};
+#elif HWY_CAP_GE256
+  HWY_ALIGN static constexpr int32_t idx_lanes[2 * kN - 1] = {
+      1, 2, 3, 4, 5, 6, 7, 7,  //
+      6, 5, 4, 3, 2, 1, 0};
+#else  // 128-bit
+  HWY_ALIGN static constexpr int32_t idx_lanes[2 * kN - 1] = {1, 2, 3, 3,  //
+                                                              2, 1, 0};
+#endif
+  return idx_lanes + kN - 1 - mod;
+}
+
+#endif  // HWY_TARGET != HWY_SCALAR
+
+// Single entry point for convolution.
+// "Strategy" (Direct*/Separable*) decides kernel size and how to evaluate it.
+template <class Strategy>
+class ConvolveT {
+  static constexpr int64_t kRadius = Strategy::kRadius;
+  using Simd = HWY_CAPPED(float, 16);
+
+ public:
+  static size_t MinWidth() {
+#if HWY_TARGET == HWY_SCALAR
+    // First/Last use mirrored loads of up to +/- kRadius.
+    return 2 * kRadius;
+#else
+    return Lanes(Simd()) + kRadius;
+#endif
+  }
+
+  // "Image" is ImageF or Image3F.
+  template <class Image, class Weights>
+  static void Run(const Image& in, const Rect& rect, const Weights& weights,
+                  ThreadPool* pool, Image* out) {
+    PROFILER_ZONE("ConvolveT::Run");
+    JXL_CHECK(SameSize(rect, *out));
+    JXL_CHECK(rect.xsize() >= MinWidth());
+
+    static_assert(int64_t(kRadius) <= 3,
+                  "Must handle [0, kRadius) and >= kRadius");
+    switch (rect.xsize() % Lanes(Simd())) {
+      case 0:
+        return RunRows<0>(in, rect, weights, pool, out);
+      case 1:
+        return RunRows<1>(in, rect, weights, pool, out);
+      case 2:
+        return RunRows<2>(in, rect, weights, pool, out);
+      default:
+        return RunRows<3>(in, rect, weights, pool, out);
+    }
+  }
+
+ private:
+  template <size_t kSizeModN, class WrapRow, class Weights>
+  static JXL_INLINE void RunRow(const float* JXL_RESTRICT in,
+                                const size_t xsize, const int64_t stride,
+                                const WrapRow& wrap_row, const Weights& weights,
+                                float* JXL_RESTRICT out) {
+    Strategy::template ConvolveRow<kSizeModN>(in, xsize, stride, wrap_row,
+                                              weights, out);
+  }
+
+  template <size_t kSizeModN, class Weights>
+  static JXL_INLINE void RunBorderRows(const ImageF& in, const Rect& rect,
+                                       const int64_t ybegin, const int64_t yend,
+                                       const Weights& weights, ImageF* out) {
+    const int64_t stride = in.PixelsPerRow();
+    const WrapRowMirror wrap_row(in, rect.ysize());
+    for (int64_t y = ybegin; y < yend; ++y) {
+      RunRow<kSizeModN>(rect.ConstRow(in, y), rect.xsize(), stride, wrap_row,
+                        weights, out->Row(y));
+    }
+  }
+
+  // Image3F.
+  template <size_t kSizeModN, class Weights>
+  static JXL_INLINE void RunBorderRows(const Image3F& in, const Rect& rect,
+                                       const int64_t ybegin, const int64_t yend,
+                                       const Weights& weights, Image3F* out) {
+    const int64_t stride = in.PixelsPerRow();
+    for (int64_t y = ybegin; y < yend; ++y) {
+      for (size_t c = 0; c < 3; ++c) {
+        const WrapRowMirror wrap_row(in.Plane(c), rect.ysize());
+        RunRow<kSizeModN>(rect.ConstPlaneRow(in, c, y), rect.xsize(), stride,
+                          wrap_row, weights, out->PlaneRow(c, y));
+      }
+    }
+  }
+
+  template <size_t kSizeModN, class Weights>
+  static JXL_INLINE void RunInteriorRows(const ImageF& in, const Rect& rect,
+                                         const int64_t ybegin,
+                                         const int64_t yend,
+                                         const Weights& weights,
+                                         ThreadPool* pool, ImageF* out) {
+    const int64_t stride = in.PixelsPerRow();
+    JXL_CHECK(RunOnPool(
+        pool, ybegin, yend, ThreadPool::NoInit,
+        [&](const uint32_t y, size_t /*thread*/) HWY_ATTR {
+          RunRow<kSizeModN>(rect.ConstRow(in, y), rect.xsize(), stride,
+                            WrapRowUnchanged(), weights, out->Row(y));
+        },
+        "Convolve"));
+  }
+
+  // Image3F.
+  template <size_t kSizeModN, class Weights>
+  static JXL_INLINE void RunInteriorRows(const Image3F& in, const Rect& rect,
+                                         const int64_t ybegin,
+                                         const int64_t yend,
+                                         const Weights& weights,
+                                         ThreadPool* pool, Image3F* out) {
+    const int64_t stride = in.PixelsPerRow();
+    JXL_CHECK(RunOnPool(
+        pool, ybegin, yend, ThreadPool::NoInit,
+        [&](const uint32_t y, size_t /*thread*/) HWY_ATTR {
+          for (size_t c = 0; c < 3; ++c) {
+            RunRow<kSizeModN>(rect.ConstPlaneRow(in, c, y), rect.xsize(),
+                              stride, WrapRowUnchanged(), weights,
+                              out->PlaneRow(c, y));
+          }
+        },
+        "Convolve3"));
+  }
+
+  template <size_t kSizeModN, class Image, class Weights>
+  static JXL_INLINE void RunRows(const Image& in, const Rect& rect,
+                                 const Weights& weights, ThreadPool* pool,
+                                 Image* out) {
+    const int64_t ysize = rect.ysize();
+    RunBorderRows<kSizeModN>(in, rect, 0, std::min(int64_t(kRadius), ysize),
+                             weights, out);
+    if (ysize > 2 * int64_t(kRadius)) {
+      RunInteriorRows<kSizeModN>(in, rect, int64_t(kRadius),
+                                 ysize - int64_t(kRadius), weights, pool, out);
+    }
+    if (ysize > int64_t(kRadius)) {
+      RunBorderRows<kSizeModN>(in, rect, ysize - int64_t(kRadius), ysize,
+                               weights, out);
+    }
   }
 };
 

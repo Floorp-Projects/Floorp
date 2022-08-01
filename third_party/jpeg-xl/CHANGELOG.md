@@ -6,18 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.7] - 2022-07-21
+
 ### Added
  - decoder API: Ability to decode the content of metadata boxes:
-   `JXL_DEC_BOX`, `JXL_DEC_BOX_NEED_MORE_OUTPUT`,  `JxlDecoderSetBoxBuffer`,
+   `JXL_DEC_BOX`, `JXL_DEC_BOX_NEED_MORE_OUTPUT`, `JxlDecoderSetBoxBuffer`,
    `JxlDecoderGetBoxType`, `JxlDecoderGetBoxSizeRaw` and
-   `JxlDecoderSetDecompressBoxes`
- - decoder API: ability to mark the input is finished: `JxlDecoderCloseInput`
- - encoder API: ability to add metadata boxes, added new functions
-   `JxlEncoderAddBox`, `JxlEncoderUseBoxes`, `JxlEncoderCloseBoxes` and
-   `JxlEncoderCloseFrames`.
+   `JxlDecoderSetDecompressBoxes`.
+ - decoder API: ability to mark the input is finished: `JxlDecoderCloseInput`.
+ - decoder API: ability to request updates on different progressive events using
+   `JxlDecoderSetProgressiveDetail`; currently supported events are
+   `kDC`, `kLastPasses` and `kPasses`.
+ - decoder API: ability to specify desired intensity target using
+   `JxlDecoderSetDesiredIntensityTarget`
  - decoder API: new function `JxlDecoderSetCoalesced` to allow decoding
    non-coalesced (unblended) frames, e.g. layers of a composite still image
    or the cropped frames of a recompressed GIF/APNG.
+ - decoder API: new function `JxlDecoderSetUnpremultiplyAlpha` to set
+   preference for getting an associated alpha channel with premultiplied or
+   unpremultiplied colors.
  - decoder API: field added to `JxlFrameHeader`: a `JxlLayerInfo` struct
    that contains crop dimensions and offsets and blending information for
    the non-coalesced case.
@@ -26,37 +34,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - decoder API: new function `JxlDecoderSetMultithreadedImageOutCallback`,
    allowing output callbacks to receive more information about the number of
    threads on which they are running.
- - encoder API: added ability to set several encoder options to frames using
-   `JxlEncoderFrameSettingsSetOption`
+ - decoder API: new function `JxlDecoderSkipCurrentFrame` to skip processing
+   the current frame after a progressive detail is reached.
+ - decoder API: new function `JxlDecoderGetIntendedDownsamplingRatio` to get
+   the intended downsampling ratio of progressive steps, based on the
+   information in the frame header.
+ - decoder API: new function `JxlDecoderSetRenderSpotcolors` to allow disabling
+   rendering of spot colors.
+ - decoder/encoder API: add two fields to `JXLBasicInfo`: `intrinsic_xsize`
+   and `intrinsic_ysize` to signal the intrinsic size.
+ - encoder API: ability to add metadata boxes, added new functions
+   `JxlEncoderAddBox`, `JxlEncoderUseBoxes`, `JxlEncoderCloseBoxes` and
+   `JxlEncoderCloseFrames`.
+ - encoder API: added ability to set several encoder options / extra fields to
+   frames using `JxlEncoderSetFrameName`, `JxlEncoderFrameSettingsSetOption`,
+   `JxlEncoderFrameSettingsSetFloatOption`.
+ - encoder API: added ability to check required codestream compatibility level
+   and force specified using `JxlEncoderGetRequiredCodestreamLevel` and
+   `JxlEncoderSetCodestreamLevel`.
+ - encoder API: added ability to force emitting box-based container format
+   using `JxlEncoderUseContainer`.
+ - encoder API: added ability to store JPEG metadata for lossless reconstruction
+   using `JxlEncoderStoreJPEGMetadata`
  - encoder API: new functions `JxlEncoderSetFrameHeader` and
    `JxlEncoderSetExtraChannelBlendInfo` to set animation
    and blending parameters of the frame, and `JxlEncoderInitFrameHeader` and
    `JxlEncoderInitBlendInfo` to initialize the structs to set.
- - decoder/encoder API: add two fields to `JXLBasicInfo`: `intrinsic_xsize`
-   and `intrinsic_ysize` to signal the intrinsic size.
  - encoder API: ability to encode arbitrary extra channels:
   `JxlEncoderInitExtraChannelInfo`, `JxlEncoderSetExtraChannelInfo`,
   `JxlEncoderSetExtraChannelName` and `JxlEncoderSetExtraChannelBuffer`.
+ - encoder API: ability to plug custom CMS implementation using
+   `JxlEncoderSetCms(JxlEncoder* enc, JxlCmsInterface cms)`
+ - encoder API: added `JxlEncoderGetError` to retrieve last encoder error.
 
 ### Changed
 - decoder API: using `JxlDecoderCloseInput` at the end of all input is required
   when using JXL_DEC_BOX, and is now also encouraged in other cases, but not
-  required in those other cases for backwards compatiblity.
+  required in those other cases for backwards compatibility.
 - encoder API: `JxlEncoderCloseInput` now closes both frames and boxes input.
+- CLI: `cjxl` and `djxl` have been reimplemented on the base of public decoder
+  and encoder API; dropped dependency on `gflags` for argument parsing.
 
 ### Deprecated
-- encoder API: `JxlEncoderOptions`: use `JxlEncoderFrameSettings` instead
+- decoder API: `JXL_DEC_EXTENSIONS` event: use `JXL_DEC_BASIC_INFO`
+- decoder / encoder API: pixel types `JXL_TYPE_BOOLEAN` and `JXL_TYPE_UINT32`:
+  consider using `JXL_TYPE_UINT8` and `JXL_TYPE_FLOAT` correspondingly.
+- decoder API: pixel format parameter for `JxlDecoderGetColorAsEncodedProfile`
+  and `JxlDecoderGetICCProfileSize`: pass `NULL`.
+- decoder API: `JxlDecoderDefaultPixelFormat`
+- encoder API: `JxlEncoderOptions`: use `JxlEncoderFrameSettings` instead.
 - encoder API: `JxlEncoderOptionsCreate`: use `JxlEncoderFrameSettingsCreate`
-  instead
+  instead.
 - encoder API: `JxlEncoderOptionsSetDistance`: use `JxlEncoderSetFrameDistance`
-  instead
+  instead.
 - encoder API: `JxlEncoderOptionsSetLossless`: use `JxlEncoderSetFrameLossless`
-  instead
-- encoder API: `JxlEncoderOptionsSetEffort`: use `JxlEncoderFrameSettingsSetOption(
-  frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, effort)` instead.
+  instead.
+- encoder API: `JxlEncoderOptionsSetEffort`: use
+  `JxlEncoderFrameSettingsSetOption(frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, effort)`
+  instead.
 - encoder API: `JxlEncoderOptionsSetDecodingSpeed`: use
-  `JxlEncoderFrameSettingsSetOption(frame_settings,
-  JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier)` instead.
+  `JxlEncoderFrameSettingsSetOption(frame_settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier)`
+  instead.
 - encoder API: deprecated `JXL_ENC_NOT_SUPPORTED`, the encoder returns
   `JXL_ENC_ERROR` instead and there is no need to handle
   `JXL_ENC_NOT_SUPPORTED`.

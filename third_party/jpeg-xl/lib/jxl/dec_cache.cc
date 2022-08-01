@@ -9,11 +9,14 @@
 #include "lib/jxl/render_pipeline/stage_blending.h"
 #include "lib/jxl/render_pipeline/stage_chroma_upsampling.h"
 #include "lib/jxl/render_pipeline/stage_epf.h"
+#include "lib/jxl/render_pipeline/stage_from_linear.h"
 #include "lib/jxl/render_pipeline/stage_gaborish.h"
 #include "lib/jxl/render_pipeline/stage_noise.h"
 #include "lib/jxl/render_pipeline/stage_patches.h"
 #include "lib/jxl/render_pipeline/stage_splines.h"
 #include "lib/jxl/render_pipeline/stage_spot.h"
+#include "lib/jxl/render_pipeline/stage_to_linear.h"
+#include "lib/jxl/render_pipeline/stage_tone_mapping.h"
 #include "lib/jxl/render_pipeline/stage_upsampling.h"
 #include "lib/jxl/render_pipeline/stage_write.h"
 #include "lib/jxl/render_pipeline/stage_xyb.h"
@@ -89,7 +92,9 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
   }
 
   if ((frame_header.flags & FrameHeader::kPatches) != 0) {
-    builder.AddStage(GetPatchesStage(&shared->image_features.patches));
+    builder.AddStage(
+        GetPatchesStage(&shared->image_features.patches,
+                        3 + shared->metadata->m.num_extra_channels));
   }
   if ((frame_header.flags & FrameHeader::kSplines) != 0) {
     builder.AddStage(GetSplineStage(&shared->image_features.splines));
@@ -150,19 +155,29 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
                                             height, rgb_output_is_rgba,
                                             has_alpha, alpha_c));
   } else {
+    bool linear = false;
     if (frame_header.color_transform == ColorTransform::kYCbCr) {
       builder.AddStage(GetYCbCrStage());
     } else if (frame_header.color_transform == ColorTransform::kXYB) {
-      builder.AddStage(GetXYBStage(output_encoding_info));
+      builder.AddStage(GetXYBStage(output_encoding_info.opsin_params));
+      linear = true;
     }  // Nothing to do for kNone.
 
     if (options.coalescing && NeedsBlending(this)) {
+      if (linear) {
+        builder.AddStage(GetFromLinearStage(output_encoding_info));
+        linear = false;
+      }
       builder.AddStage(
           GetBlendingStage(this, output_encoding_info.color_encoding));
     }
 
     if (options.coalescing && frame_header.CanBeReferenced() &&
         !frame_header.save_before_color_transform) {
+      if (linear) {
+        builder.AddStage(GetFromLinearStage(output_encoding_info));
+        linear = false;
+      }
       builder.AddStage(GetWriteToImageBundleStage(
           &frame_storage_for_referencing, output_encoding_info.color_encoding));
     }
@@ -180,10 +195,30 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
       }
     }
 
+    auto tone_mapping_stage = GetToneMappingStage(output_encoding_info);
+    if (tone_mapping_stage) {
+      if (!linear) {
+        auto to_linear_stage = GetToLinearStage(output_encoding_info);
+        if (!to_linear_stage) {
+          return JXL_FAILURE(
+              "attempting to perform tone mapping on colorspace not "
+              "convertible to linear");
+        }
+        builder.AddStage(std::move(to_linear_stage));
+        linear = true;
+      }
+      builder.AddStage(std::move(tone_mapping_stage));
+    }
+
+    if (linear) {
+      builder.AddStage(GetFromLinearStage(output_encoding_info));
+      linear = false;
+    }
+
     if (pixel_callback.IsPresent()) {
-      builder.AddStage(GetWriteToPixelCallbackStage(pixel_callback, width,
-                                                    height, rgb_output_is_rgba,
-                                                    has_alpha, alpha_c));
+      builder.AddStage(GetWriteToPixelCallbackStage(
+          pixel_callback, width, height, rgb_output_is_rgba, has_alpha,
+          unpremul_alpha, alpha_c));
     } else if (rgb_output) {
       builder.AddStage(GetWriteToU8Stage(rgb_output, rgb_stride, height,
                                          rgb_output_is_rgba, has_alpha,

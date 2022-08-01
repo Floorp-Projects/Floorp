@@ -12,9 +12,11 @@
 #include <algorithm>
 #include <iterator>
 #include <numeric>
+#include <sstream>
 #include <utility>
 #include <vector>
 
+#include "lib/extras/packed_image_convert.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
@@ -93,12 +95,10 @@ Status SetChromaSubsampling(const YCbCrChromaSubsampling& chroma_subsampling,
   return true;
 }
 
-}  // namespace
-
-Status EncodeWithLibJpeg(const ImageBundle* ib, const CodecInOut* io,
+Status EncodeWithLibJpeg(const ImageBundle& ib, std::vector<uint8_t> exif,
                          size_t quality,
                          const YCbCrChromaSubsampling& chroma_subsampling,
-                         PaddedBytes* bytes) {
+                         std::vector<uint8_t>* bytes) {
   jpeg_compress_struct cinfo;
   // cinfo is initialized by libjpeg, which we are not instrumenting with
   // msan.
@@ -109,9 +109,9 @@ Status EncodeWithLibJpeg(const ImageBundle* ib, const CodecInOut* io,
   unsigned char* buffer = nullptr;
   unsigned long size = 0;
   jpeg_mem_dest(&cinfo, &buffer, &size);
-  cinfo.image_width = ib->oriented_xsize();
-  cinfo.image_height = ib->oriented_ysize();
-  if (ib->IsGray()) {
+  cinfo.image_width = ib.oriented_xsize();
+  cinfo.image_height = ib.oriented_ysize();
+  if (ib.IsGray()) {
     cinfo.input_components = 1;
     cinfo.in_color_space = JCS_GRAYSCALE;
   } else {
@@ -125,11 +125,10 @@ Status EncodeWithLibJpeg(const ImageBundle* ib, const CodecInOut* io,
   }
   jpeg_set_quality(&cinfo, quality, TRUE);
   jpeg_start_compress(&cinfo, TRUE);
-  if (!ib->IsSRGB()) {
-    WriteICCProfile(&cinfo, ib->c_current().ICC());
+  if (!ib.IsSRGB()) {
+    WriteICCProfile(&cinfo, ib.c_current().ICC());
   }
-  if (!io->blobs.exif.empty()) {
-    std::vector<uint8_t> exif = io->blobs.exif;
+  if (!exif.empty()) {
     ResetExifOrientation(exif);
     WriteExif(&cinfo, exif);
   }
@@ -137,14 +136,14 @@ Status EncodeWithLibJpeg(const ImageBundle* ib, const CodecInOut* io,
     return JXL_FAILURE("invalid numbers of components");
 
   size_t stride =
-      ib->oriented_xsize() * cinfo.input_components * sizeof(JSAMPLE);
-  PaddedBytes raw_bytes(stride * ib->oriented_ysize());
+      ib.oriented_xsize() * cinfo.input_components * sizeof(JSAMPLE);
+  std::vector<uint8_t> raw_bytes(stride * ib.oriented_ysize());
   JXL_RETURN_IF_ERROR(ConvertToExternal(
-      *ib, BITS_IN_JSAMPLE, /*float_out=*/false, cinfo.input_components,
+      ib, BITS_IN_JSAMPLE, /*float_out=*/false, cinfo.input_components,
       JXL_BIG_ENDIAN, stride, nullptr, raw_bytes.data(), raw_bytes.size(),
-      /*out_callback=*/{}, ib->metadata()->GetOrientation()));
+      /*out_callback=*/{}, ib.metadata()->GetOrientation()));
 
-  for (size_t y = 0; y < ib->oriented_ysize(); ++y) {
+  for (size_t y = 0; y < ib.oriented_ysize(); ++y) {
     JSAMPROW row[] = {raw_bytes.data() + y * stride};
 
     jpeg_write_scanlines(&cinfo, row, 1);
@@ -160,19 +159,18 @@ Status EncodeWithLibJpeg(const ImageBundle* ib, const CodecInOut* io,
   return true;
 }
 
-Status EncodeWithSJpeg(const ImageBundle* ib, const CodecInOut* io,
+Status EncodeWithSJpeg(const ImageBundle& ib, std::vector<uint8_t> exif,
                        size_t quality,
                        const YCbCrChromaSubsampling& chroma_subsampling,
-                       PaddedBytes* bytes) {
+                       std::vector<uint8_t>* bytes) {
 #if !JPEGXL_ENABLE_SJPEG
   return JXL_FAILURE("JPEG XL was built without sjpeg support");
 #else
   sjpeg::EncoderParam param(quality);
-  if (!ib->IsSRGB()) {
-    param.iccp.assign(ib->metadata()->color_encoding.ICC().begin(),
-                      ib->metadata()->color_encoding.ICC().end());
+  if (!ib.IsSRGB()) {
+    param.iccp.assign(ib.metadata()->color_encoding.ICC().begin(),
+                      ib.metadata()->color_encoding.ICC().end());
   }
-  std::vector<uint8_t> exif = io->blobs.exif;
   if (!exif.empty()) {
     ResetExifOrientation(exif);
     param.exif.assign(exif.begin(), exif.end());
@@ -184,16 +182,16 @@ Status EncodeWithSJpeg(const ImageBundle* ib, const CodecInOut* io,
   } else {
     return JXL_FAILURE("sjpeg does not support this chroma subsampling mode");
   }
-  size_t stride = ib->oriented_xsize() * 3;
-  PaddedBytes rgb(ib->xsize() * ib->ysize() * 3);
+  size_t stride = ib.oriented_xsize() * 3;
+  std::vector<uint8_t> rgb(ib.xsize() * ib.ysize() * 3);
   JXL_RETURN_IF_ERROR(
-      ConvertToExternal(*ib, 8, /*float_out=*/false, 3, JXL_BIG_ENDIAN, stride,
+      ConvertToExternal(ib, 8, /*float_out=*/false, 3, JXL_BIG_ENDIAN, stride,
                         nullptr, rgb.data(), rgb.size(),
-                        /*out_callback=*/{}, ib->metadata()->GetOrientation()));
+                        /*out_callback=*/{}, ib.metadata()->GetOrientation()));
 
   std::string output;
-  JXL_RETURN_IF_ERROR(sjpeg::Encode(rgb.data(), ib->oriented_xsize(),
-                                    ib->oriented_ysize(), stride, param,
+  JXL_RETURN_IF_ERROR(sjpeg::Encode(rgb.data(), ib.oriented_xsize(),
+                                    ib.oriented_ysize(), stride, param,
                                     &output));
   bytes->assign(
       reinterpret_cast<const uint8_t*>(output.data()),
@@ -202,37 +200,122 @@ Status EncodeWithSJpeg(const ImageBundle* ib, const CodecInOut* io,
 #endif
 }
 
-Status EncodeImageJPG(const CodecInOut* io, JpegEncoder encoder, size_t quality,
+Status EncodeImageJPG(const ImageBundle& ib, std::vector<uint8_t> exif,
+                      JpegEncoder encoder, size_t quality,
                       YCbCrChromaSubsampling chroma_subsampling,
-                      ThreadPool* pool, PaddedBytes* bytes) {
-  if (io->Main().HasAlpha()) {
+                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
+  if (ib.HasAlpha()) {
     return JXL_FAILURE("alpha is not supported");
   }
   if (quality > 100) {
     return JXL_FAILURE("please specify a 0-100 JPEG quality");
   }
 
-  const ImageBundle* ib;
-  ImageMetadata metadata = io->metadata.m;
+  const ImageBundle* transformed;
+  ImageMetadata metadata = *ib.metadata();
   ImageBundle ib_store(&metadata);
-  JXL_RETURN_IF_ERROR(TransformIfNeeded(io->Main(),
-                                        io->metadata.m.color_encoding,
-                                        GetJxlCms(), pool, &ib_store, &ib));
+  JXL_RETURN_IF_ERROR(TransformIfNeeded(
+      ib, metadata.color_encoding, GetJxlCms(), pool, &ib_store, &transformed));
 
   switch (encoder) {
     case JpegEncoder::kLibJpeg:
-      JXL_RETURN_IF_ERROR(
-          EncodeWithLibJpeg(ib, io, quality, chroma_subsampling, bytes));
+      JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(ib, std::move(exif), quality,
+                                            chroma_subsampling, bytes));
       break;
     case JpegEncoder::kSJpeg:
-      JXL_RETURN_IF_ERROR(
-          EncodeWithSJpeg(ib, io, quality, chroma_subsampling, bytes));
+      JXL_RETURN_IF_ERROR(EncodeWithSJpeg(ib, std::move(exif), quality,
+                                          chroma_subsampling, bytes));
       break;
     default:
       return JXL_FAILURE("tried to use an unknown JPEG encoder");
   }
 
   return true;
+}
+
+Status ParseChromaSubsampling(const std::string& param,
+                              YCbCrChromaSubsampling* subsampling) {
+  const std::pair<const char*,
+                  std::pair<std::array<uint8_t, 3>, std::array<uint8_t, 3>>>
+      options[] = {{"444", {{{1, 1, 1}}, {{1, 1, 1}}}},
+                   {"420", {{{2, 1, 1}}, {{2, 1, 1}}}},
+                   {"422", {{{2, 1, 1}}, {{1, 1, 1}}}},
+                   {"440", {{{1, 1, 1}}, {{2, 1, 1}}}}};
+  for (const auto& option : options) {
+    if (param == option.first) {
+      return subsampling->Set(option.second.first.data(),
+                              option.second.second.data());
+    }
+  }
+  return false;
+}
+
+class JPEGEncoder : public Encoder {
+  std::vector<JxlPixelFormat> AcceptedFormats() const override {
+    std::vector<JxlPixelFormat> formats;
+    for (const uint32_t num_channels : {1, 3}) {
+      for (JxlEndianness endianness : {JXL_BIG_ENDIAN, JXL_LITTLE_ENDIAN}) {
+        formats.push_back(JxlPixelFormat{/*num_channels=*/num_channels,
+                                         /*data_type=*/JXL_TYPE_UINT8,
+                                         /*endianness=*/endianness,
+                                         /*align=*/0});
+      }
+    }
+    return formats;
+  }
+  Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
+                ThreadPool* pool = nullptr) const override {
+    const auto& options = this->options();
+    int quality = 100;
+    auto it_quality = options.find("q");
+    if (it_quality != options.end()) {
+      std::istringstream is(it_quality->second);
+      JXL_RETURN_IF_ERROR(static_cast<bool>(is >> quality));
+    }
+    YCbCrChromaSubsampling chroma_subsampling;
+    auto it_chroma_subsampling = options.find("chroma_subsampling");
+    if (it_chroma_subsampling != options.end()) {
+      JXL_RETURN_IF_ERROR(ParseChromaSubsampling(it_chroma_subsampling->second,
+                                                 &chroma_subsampling));
+    }
+    JpegEncoder jpeg_encoder = JpegEncoder::kLibJpeg;
+    auto it_encoder = options.find("jpeg_encoder");
+    if (it_encoder != options.end()) {
+      if (it_encoder->second == "libjpeg") {
+        jpeg_encoder = JpegEncoder::kLibJpeg;
+      } else if (it_encoder->second == "sjpeg") {
+        jpeg_encoder = JpegEncoder::kSJpeg;
+      } else {
+        return JXL_FAILURE("unknown jpeg encoder \"%s\"",
+                           it_encoder->second.c_str());
+      }
+    }
+    CodecInOut io;
+    JXL_RETURN_IF_ERROR(ConvertPackedPixelFileToCodecInOut(ppf, pool, &io));
+    encoded_image->icc = ppf.icc;
+    encoded_image->bitstreams.clear();
+    encoded_image->bitstreams.reserve(io.frames.size());
+    for (const ImageBundle& ib : io.frames) {
+      encoded_image->bitstreams.emplace_back();
+      JXL_RETURN_IF_ERROR(EncodeImageJPG(ib, ppf.metadata.exif, jpeg_encoder,
+                                         quality, chroma_subsampling, pool,
+                                         &encoded_image->bitstreams.back()));
+    }
+    return true;
+  }
+};
+
+}  // namespace
+
+std::unique_ptr<Encoder> GetJPEGEncoder() {
+  return jxl::make_unique<JPEGEncoder>();
+}
+
+Status EncodeImageJPG(const CodecInOut* io, JpegEncoder encoder, size_t quality,
+                      YCbCrChromaSubsampling chroma_subsampling,
+                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
+  return EncodeImageJPG(io->Main(), io->blobs.exif, encoder, quality,
+                        chroma_subsampling, pool, bytes);
 }
 
 }  // namespace extras

@@ -37,8 +37,8 @@ void InverseMoveToFrontTransform(uint8_t* v, int v_len) {
   }
 }
 
-bool VerifyContextMap(const std::vector<uint8_t>& context_map,
-                      const size_t num_htrees) {
+Status VerifyContextMap(const std::vector<uint8_t>& context_map,
+                        const size_t num_htrees) {
   std::vector<bool> have_htree(num_htrees);
   size_t num_found = 0;
   for (const uint8_t htree : context_map) {
@@ -58,8 +58,8 @@ bool VerifyContextMap(const std::vector<uint8_t>& context_map,
 
 }  // namespace
 
-bool DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
-                      BitReader* input) {
+Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
+                        BitReader* input) {
   bool is_simple = input->ReadFixedBits<1>();
   if (is_simple) {
     int bits_per_entry = input->ReadFixedBits<2>();

@@ -504,7 +504,7 @@ void ComputeBestTree(TreeSamples &tree_samples, float threshold,
    tree);
 }
 
-constexpr int TreeSamples::kPropertyRange;
+constexpr int32_t TreeSamples::kPropertyRange;
 constexpr uint32_t TreeSamples::kDedupEntryUnused;
 
 Status TreeSamples::SetPredictor(Predictor predictor,
@@ -722,12 +722,12 @@ void TreeSamples::ThreeShuffle(size_t a, size_t b, size_t c) {
 }
 
 namespace {
-std::vector<int> QuantizeHistogram(const std::vector<uint32_t> &histogram,
-                                   size_t num_chunks) {
+std::vector<int32_t> QuantizeHistogram(const std::vector<uint32_t> &histogram,
+                                       size_t num_chunks) {
   if (histogram.empty()) return {};
   // TODO(veluca): selecting distinct quantiles is likely not the best
   // way to go about this.
-  std::vector<int> thresholds;
+  std::vector<int32_t> thresholds;
   size_t sum = std::accumulate(histogram.begin(), histogram.end(), 0LU);
   size_t cumsum = 0;
   size_t threshold = 0;
@@ -741,8 +741,8 @@ std::vector<int> QuantizeHistogram(const std::vector<uint32_t> &histogram,
   return thresholds;
 }
 
-std::vector<int> QuantizeSamples(const std::vector<int32_t> &samples,
-                                 size_t num_chunks) {
+std::vector<int32_t> QuantizeSamples(const std::vector<int32_t> &samples,
+                                     size_t num_chunks) {
   if (samples.empty()) return {};
   int min = *std::min_element(samples.begin(), samples.end());
   constexpr int kRange = 512;
@@ -752,7 +752,7 @@ std::vector<int> QuantizeSamples(const std::vector<int32_t> &samples,
     uint32_t sample_offset = std::min(std::max(s, -kRange), kRange) - min;
     counts[sample_offset]++;
   }
-  std::vector<int> thresholds = QuantizeHistogram(counts, num_chunks);
+  std::vector<int32_t> thresholds = QuantizeHistogram(counts, num_chunks);
   for (auto &v : thresholds) v += min;
   return thresholds;
 }
@@ -810,15 +810,15 @@ void TreeSamples::PreQuantizeProperties(
     return QuantizeHistogram(group_pixel_count, max_property_values);
   };
   auto quantize_coordinate = [&]() {
-    std::vector<int> quantized;
+    std::vector<int32_t> quantized;
     quantized.reserve(max_property_values - 1);
     for (size_t i = 0; i + 1 < max_property_values; i++) {
       quantized.push_back((i + 1) * 256 / max_property_values - 1);
     }
     return quantized;
   };
-  std::vector<int> abs_pixel_thr;
-  std::vector<int> pixel_thr;
+  std::vector<int32_t> abs_pixel_thr;
+  std::vector<int32_t> pixel_thr;
   auto quantize_pixel_property = [&]() {
     if (pixel_thr.empty()) {
       pixel_thr = QuantizeSamples(pixel_samples, max_property_values);
@@ -833,8 +833,8 @@ void TreeSamples::PreQuantizeProperties(
     }
     return abs_pixel_thr;
   };
-  std::vector<int> abs_diff_thr;
-  std::vector<int> diff_thr;
+  std::vector<int32_t> abs_diff_thr;
+  std::vector<int32_t> diff_thr;
   auto quantize_diff_property = [&]() {
     if (diff_thr.empty()) {
       diff_thr = QuantizeSamples(diff_samples, max_property_values);
@@ -851,16 +851,16 @@ void TreeSamples::PreQuantizeProperties(
   };
   auto quantize_wp = [&]() {
     if (max_property_values < 32) {
-      return std::vector<int>{-127, -63, -31, -15, -7, -3, -1, 0,
-                              1,    3,   7,   15,  31, 63, 127};
+      return std::vector<int32_t>{-127, -63, -31, -15, -7, -3, -1, 0,
+                                  1,    3,   7,   15,  31, 63, 127};
     }
     if (max_property_values < 64) {
-      return std::vector<int>{-255, -191, -127, -95, -63, -47, -31, -23,
-                              -15,  -11,  -7,   -5,  -3,  -1,  0,   1,
-                              3,    5,    7,    11,  15,  23,  31,  47,
-                              63,   95,   127,  191, 255};
+      return std::vector<int32_t>{-255, -191, -127, -95, -63, -47, -31, -23,
+                                  -15,  -11,  -7,   -5,  -3,  -1,  0,   1,
+                                  3,    5,    7,    11,  15,  23,  31,  47,
+                                  63,   95,   127,  191, 255};
     }
-    return std::vector<int>{
+    return std::vector<int32_t>{
         -255, -223, -191, -159, -127, -111, -95, -79, -63, -55, -47,
         -39,  -31,  -27,  -23,  -19,  -15,  -13, -11, -9,  -7,  -6,
         -5,   -4,   -3,   -2,   -1,   0,    1,   2,   3,   4,   5,

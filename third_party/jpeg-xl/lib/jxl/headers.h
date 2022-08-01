@@ -29,10 +29,6 @@ static constexpr uint8_t kCodestreamMarker = 0x0A;
 // can preallocate early.
 class SizeHeader : public Fields {
  public:
-  // All fields are valid after reading at most this many bits. WriteSizeHeader
-  // verifies this matches Bundle::MaxBits(SizeHeader).
-  static constexpr size_t kMaxBits = 78;
-
   SizeHeader();
   JXL_FIELDS_NAME(SizeHeader)
 
