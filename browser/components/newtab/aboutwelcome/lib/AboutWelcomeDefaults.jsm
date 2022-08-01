@@ -260,34 +260,25 @@ const MR_ABOUT_WELCOME_DEFAULT = {
   backdrop: "#438ab6",
   screens: [
     {
-      id: "AW_SET_DEFAULT",
+      id: "AW_PIN_FIREFOX",
       content: {
         position: "split",
-        background: "#3191f8",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
         progress_bar: true,
         logo: {},
-        hero_text: {
-          string_id: "mr1-welcome-screen-hero-text",
-        },
-        title: {
-          string_id: "mr1-onboarding-default-header",
-        },
-        subtitle: {
-          string_id: "mr1-onboarding-default-subtitle",
-        },
+        title: "Open up an amazing internet",
+        subtitle:
+          "Launch Firefox from anywhere with a single click. Every time you do, you’re choosing a more open and independent web.",
         primary_button: {
-          label: {
-            string_id: "mr1-onboarding-default-primary-button-label",
-          },
+          label: "Pin Firefox to taskbar",
           action: {
             navigate: true,
-            type: "SET_DEFAULT_BROWSER",
+            type: "PIN_FIREFOX_TO_TASKBAR",
           },
         },
         secondary_button: {
-          label: {
-            string_id: "mr1-onboarding-set-default-secondary-button-label",
-          },
+          label: "Skip this step",
           action: {
             navigate: true,
           },
@@ -310,10 +301,12 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_LANGUAGE_MISMATCH",
       content: {
         position: "split",
-        background: "#3191f8",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
         progress_bar: true,
         logo: {},
         title: { string_id: "onboarding-live-language-header" },
+        subtitle: "Firefox speaks your language",
         languageSwitcher: {
           downloading: {
             string_id: "onboarding-live-language-button-label-downloading",
@@ -330,18 +323,42 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       },
     },
     {
+      id: "AW_SET_DEFAULT",
+      content: {
+        position: "split",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+        progress_bar: true,
+        logo: {},
+        title: "Make Firefox your go-to browser",
+        subtitle:
+          "Use a browser backed by a non-profit. We defend your privacy while you zip around the web.",
+        primary_button: {
+          label: "Set as default browser",
+          action: {
+            navigate: true,
+            type: "SET_DEFAULT_BROWSER",
+          },
+        },
+        secondary_button: {
+          label: "Skip this step",
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
       id: "AW_IMPORT_SETTINGS",
       content: {
         position: "split",
-        background: "#3191f8",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
         progress_bar: true,
         logo: {},
-        title: {
-          string_id: "mr1-onboarding-import-header",
-        },
-        subtitle: {
-          string_id: "mr1-onboarding-import-subtitle",
-        },
+        title: "Lightning fast setup",
+        subtitle:
+          "Set up Firefox how you like it. Add your bookmarks, passwords and more from your old browser.",
         primary_button: {
           label: {
             string_id:
@@ -354,9 +371,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           },
         },
         secondary_button: {
-          label: {
-            string_id: "mr1-onboarding-import-secondary-button-label",
-          },
+          label: "Skip this step",
           action: {
             navigate: true,
           },
@@ -367,15 +382,11 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_CHOOSE_THEME",
       content: {
         position: "split",
-        background: "#3191f8",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
         progress_bar: true,
         logo: {},
-        title: {
-          string_id: "mr1-onboarding-theme-header",
-        },
-        subtitle: {
-          string_id: "mr1-onboarding-theme-subtitle",
-        },
+        title: "Independent voices can change culture",
         tiles: {
           type: "theme",
           action: {
@@ -432,20 +443,45 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             },
           ],
         },
+        subtitle:
+          "You are an Expressionist. You see the world differently and your creations stir the emotions of others.",
         primary_button: {
-          label: {
-            string_id: "onboarding-theme-primary-button-label",
-          },
+          label: "Set colorway",
           action: {
             navigate: true,
           },
         },
         secondary_button: {
-          label: {
-            string_id: "mr1-onboarding-theme-secondary-button-label",
-          },
+          label: "Skip this step",
           action: {
             theme: "automatic",
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_GRATITUDE",
+      content: {
+        position: "split",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+        progress_bar: true,
+        logo: {},
+        title: "You’re helping us build a better web.",
+        subtitle:
+          "Thank you for using Firefox, backed by the Mozilla Foundation. With your support, we’re working to make the internet more open, accessible, and better for everyone.",
+        primary_button: {
+          label: "See what’s new",
+          action: {
+            type: "OPEN_ABOUT_PAGE",
+            data: { args: "firefoxview", where: "current" },
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: "Start browsing",
+          action: {
             navigate: true,
           },
         },
@@ -543,33 +579,44 @@ function getLocalizedUA(ua) {
   return null;
 }
 
+// Helper to find screens and remove them where applicable.
+function removeScreens(check, screens) {
+  for (let i = 0; i < screens?.length; i++) {
+    if (check(screens[i])) {
+      screens.splice(i--, 1);
+    }
+  }
+}
+
 function prepareMRContent(content) {
   // Expand with logic for finalized MR designs
+  const { screens } = content;
+
+  //If Fx is set as default, skip Import settings screen and show colorways
+  let removeDefault = !content.needDefault;
+  if (removeDefault) {
+    removeScreens(
+      screen => screen.id?.startsWith("AW_IMPORT_SETTINGS"),
+      screens
+    );
+  }
+
   return content;
 }
 
 async function prepareContentForReact(content) {
+  const { screens } = content;
+
   if (content?.template === "return_to_amo") {
     return content;
   }
 
-  if (content.templateMR) {
-    return prepareMRContent(content);
-  }
-
-  // Helper to find screens and remove them where applicable.
-  function removeScreens(check) {
-    const { screens } = content;
-    for (let i = 0; i < screens?.length; i++) {
-      if (check(screens[i])) {
-        screens.splice(i--, 1);
-      }
-    }
-  }
-
   // Change content for Windows 7 because non-light themes aren't quite right.
   if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-    removeScreens(screen => ["theme"].includes(screen.content?.tiles?.type));
+    removeScreens(
+      screen => ["theme"].includes(screen.content?.tiles?.type),
+      screens
+    );
   }
 
   // Set the primary import button source based on attribution.
@@ -631,7 +678,7 @@ async function prepareContentForReact(content) {
     }
   }
   if (removeDefault) {
-    removeScreens(screen => screen.id?.startsWith("AW_SET_DEFAULT"));
+    removeScreens(screen => screen.id?.startsWith("AW_SET_DEFAULT"), screens);
   }
 
   // Remove Firefox Accounts related UI and prevent related metrics.
@@ -671,7 +718,11 @@ async function prepareContentForReact(content) {
   }
 
   if (shouldRemoveLanguageMismatchScreen) {
-    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH");
+    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH", screens);
+  }
+
+  if (content.templateMR) {
+    return prepareMRContent(content);
   }
 
   return content;
