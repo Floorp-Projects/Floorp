@@ -31,7 +31,8 @@
 
 /* Inspector badge */
 .inspector-badge,
-.editor.text .whitespace::before {
+.editor.text .whitespace::before,
+.unavailable-children::before {
   display: inline-block;
   /* 9px text is too blurry on low-resolution screens */
   font-size: 10px;
@@ -53,6 +54,11 @@
 .editor.text .whitespace::before {
   content: attr(data-label);
   margin-inline-start: 0;
+}
+
+.unavailable-children::before {
+  content: attr(data-label);
+  height: auto;
 }
 
 @media (min-resolution: 1.1dppx) {
