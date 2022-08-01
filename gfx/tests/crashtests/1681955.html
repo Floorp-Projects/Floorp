@@ -1,0 +1,17 @@
+<html style="overflow-inline: scroll;">
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        const link = document.createElement('link')
+        const slot = document.createElement('slot')
+        document.documentElement.appendChild(link)
+        const blob = new Blob()
+        const range = new Range()
+        await blob.arrayBuffer()
+        range.selectNode(document.documentElement)
+        range.surroundContents(slot)
+        setTimeout('location.reload()', 200)
+      })
+    </script>
+</head>
+</html>
