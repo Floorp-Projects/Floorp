@@ -50,6 +50,20 @@ loader.lazyGetter(this, "L10N", function() {
   return new LocalizationHelper("devtools/client/locales/startup.properties");
 });
 
+// Only Browser Console needs Fluent bundles at the moment
+loader.lazyRequireGetter(
+  this,
+  "FluentL10n",
+  "devtools/client/shared/fluent-l10n/fluent-l10n",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "LocalizationProvider",
+  "devtools/client/shared/vendor/fluent-react",
+  true
+);
+
 let store = null;
 
 class WebConsoleWrapper {
@@ -84,6 +98,13 @@ class WebConsoleWrapper {
   async init() {
     const { webConsoleUI } = this;
 
+    let fluentBundles;
+    if (webConsoleUI.isBrowserConsole) {
+      const fluentL10n = new FluentL10n();
+      await fluentL10n.init(["devtools/client/toolbox.ftl"]);
+      fluentBundles = fluentL10n.getBundles();
+    }
+
     return new Promise(resolve => {
       store = configureStore(this.webConsoleUI, {
         // We may not have access to the toolbox (e.g. in the browser console).
@@ -114,6 +135,10 @@ class WebConsoleWrapper {
 
       // Render the root Application component.
       if (this.parentNode) {
+        const maybeLocalizedElement = fluentBundles
+          ? createElement(LocalizationProvider, { bundles: fluentBundles }, app)
+          : app;
+
         this.body = ReactDOM.render(
           createElement(
             Provider,
@@ -121,7 +146,7 @@ class WebConsoleWrapper {
             createElement(
               createProvider(this.hud.commands.targetCommand.storeId),
               { store: this.hud.commands.targetCommand.store },
-              app
+              maybeLocalizedElement
             )
           ),
           this.parentNode
