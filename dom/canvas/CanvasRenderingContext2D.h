@@ -18,6 +18,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
 #include "FilterDescription.h"
 #include "gfx2DGlue.h"
@@ -551,9 +552,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * The number of living nsCanvasRenderingContexts.  When this goes down to
    * 0, we free the premultiply and unpremultiply tables, if they exist.
    */
-  static mozilla::Atomic<uintptr_t> sNumLivingContexts;
+  static MOZ_THREAD_LOCAL(uintptr_t) sNumLivingContexts;
 
-  static mozilla::gfx::DrawTarget* sErrorTarget;
+  static MOZ_THREAD_LOCAL(mozilla::gfx::DrawTarget*) sErrorTarget;
 
   void SetTransformInternal(const mozilla::gfx::Matrix& aTransform);
 
@@ -679,7 +680,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   /**
    * Check if the target is valid after calling EnsureTarget.
    */
-  bool IsTargetValid() const { return !!mTarget && mTarget != sErrorTarget; }
+  bool IsTargetValid() const {
+    return !!mTarget && mTarget != sErrorTarget.get();
+  }
 
   /**
    * Returns the surface format this canvas should be allocated using. Takes

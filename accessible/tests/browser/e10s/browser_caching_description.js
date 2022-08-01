@@ -61,12 +61,20 @@ const tests = [
   },
   {
     desc:
-      "Description from @aria-describedby attribute when @title (used for " +
-      "name) and @aria-describedby are not the same",
+      "No description change when @alt is dropped but @aria-describedby remains",
     attrs: [
       {
         attr: "alt",
       },
+    ],
+    waitFor: [[EVENT_NAME_CHANGE, "image"]],
+    expected: "another description",
+  },
+  {
+    desc:
+      "Description from @aria-describedby attribute when @title (used for " +
+      "name) and @aria-describedby are not the same",
+    attrs: [
       {
         attr: "title",
         value: "title",

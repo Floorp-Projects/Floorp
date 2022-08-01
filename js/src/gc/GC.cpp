@@ -4669,19 +4669,10 @@ T* js::gc::ClearEdgesTracer::onEdge(T* thing) {
 }
 
 void GCRuntime::setPerformanceHint(PerformanceHint hint) {
-  bool wasInPageLoad = inPageLoadCount != 0;
-
   if (hint == PerformanceHint::InPageLoad) {
     inPageLoadCount++;
   } else {
     MOZ_ASSERT(inPageLoadCount);
     inPageLoadCount--;
   }
-
-  bool inPageLoad = inPageLoadCount != 0;
-  if (inPageLoad == wasInPageLoad) {
-    return;
-  }
-
-  atomsZone->updateGCStartThresholds(*this);
 }

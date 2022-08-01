@@ -9,7 +9,8 @@
 </head>
 <body>
 <p id="display"></p>
-<!-- Tests for lable -->
+<button id="activation" accesskey="e">Should be activated</button>
+<!-- Tests for label -->
 <label id="label1" accesskey="a">Label 1</label><br>
 <label id="label2" accesskey="a" for="checkbox2">Label 2</label><input type="checkbox" id="checkbox2" disabled>Checkbox 2</input><br>
 <label id="label3" accesskey="a" for="checkbox3">Label 3</label><input type="checkbox" id="checkbox3">Checkbox 3</input><br>
@@ -35,6 +36,8 @@
 <button id="button5" style="display:none" accesskey="1">Button 5</button>
 <button id="button6" style="display:none" accesskey="2">Button 6</button>
 <textarea id="textarea1" accesskey="2"></textarea>
+<!-- Test for file input -->
+<input type=file id="file" accesskey="f">
 <script>
 
 function performAccessKey(aKey) {
@@ -46,6 +49,13 @@ function performAccessKey(aKey) {
 add_task(async function init() {
   // A workaround for bug 1726811.
   await SpecialPowers.pushPrefEnv({ set: [[ "accessibility.tabfocus", 7 ]] });
+});
+
+add_task(function activation() {
+  ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation, "Shouldn't be activated yet");
+  performAccessKey("e");
+  is(document.activeElement, document.getElementById("activation"), "Focus moved");
+  ok(SpecialPowers.wrap(document).hasValidTransientUserGestureActivation, "Accesskey triggers activation");
 });
 
 add_task(function label() {
@@ -128,6 +138,21 @@ add_task(async function modifyAccessKey() {
 
   performAccessKey("1");
   await promise;
+});
+
+add_task(async function file_picker() {
+  const file = document.getElementById("file");
+  const MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window);
+  MockFilePicker.returnValue = MockFilePicker.returnCancel;
+
+  let clicked = false;
+  file.addEventListener("click", function(e) { clicked = true; });
+
+  performAccessKey("f");
+  ok(clicked, "Should've activated the picker");
+
+  MockFilePicker.reset();
 });
 
 </script>
