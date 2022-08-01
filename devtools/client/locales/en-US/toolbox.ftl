@@ -29,4 +29,17 @@ toolbox-meatball-menu-noautohide-label = Disable Popup Auto-Hide
 toolbox-meatball-menu-pseudo-locale-accented = Enable “accented” locale
 toolbox-meatball-menu-pseudo-locale-bidi = Enable “bidi” locale
 
-##
+## These labels are shown in the top-toolbar in the Browser Toolbox and Browser Console
+
+toolbox-mode-browser-toolbox-label = Browser Toolbox Mode
+toolbox-mode-browser-console-label = Browser Console Mode
+
+toolbox-mode-everything-label = Multiprocess
+toolbox-mode-everything-sub-label = (Slower)
+toolbox-mode-everything-container =
+  .title = Debug everything in all processes
+
+toolbox-mode-parent-process-label = Parent process only
+toolbox-mode-parent-process-sub-label = (Fast)
+toolbox-mode-parent-process-container =
+  .title = Only focus on resources from the parent process.
