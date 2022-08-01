@@ -599,13 +599,6 @@ Toolbox.prototype = {
     return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
   },
 
-  get isMultiProcessBrowserToolbox() {
-    return (
-      this.isBrowserToolbox &&
-      Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false)
-    );
-  },
-
   /**
    * Set a given target as selected (which may impact the console evaluation context selector).
    *
@@ -3211,11 +3204,15 @@ Toolbox.prototype = {
   _refreshHostTitle: function() {
     let title;
 
+    const isMultiProcessBrowserToolbox =
+      this.isBrowserToolbox &&
+      Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
+
     if (this.target.isXpcShellTarget) {
       // This will only be displayed for local development and can remain
       // hardcoded in english.
       title = "XPCShell Toolbox";
-    } else if (this.isMultiProcessBrowserToolbox) {
+    } else if (isMultiProcessBrowserToolbox) {
       const scope = Services.prefs.getCharPref(BROWSERTOOLBOX_SCOPE_PREF);
       if (scope == BROWSERTOOLBOX_SCOPE_EVERYTHING) {
         title = L10N.getStr("toolbox.multiProcessBrowserToolboxTitle");

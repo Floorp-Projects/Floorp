@@ -446,13 +446,10 @@ class ResourceCommand {
   /**
    * Method called by the TargetCommand for each already existing or target which has just been created.
    *
-   * @param {Object} arg
-   * @param {Front} arg.targetFront
+   * @param {Front} targetFront
    *        The Front of the target that is available.
    *        This Front inherits from TargetMixin and is typically
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
-   * @param {Boolean} arg.isTargetSwitching
-   *         true when the new target was created because of a target switching.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
     const resources = [];
@@ -582,13 +579,9 @@ class ResourceCommand {
 
   /**
    * Method called by the TargetCommand when a target has just been destroyed
-   * @param {Object} arg
-   * @param {Front} arg.targetFront
-   *        The Front of the target that was destroyed
-   * @param {Boolean} arg.isModeSwitching
-   *         true when this is called as the result of a change to the devtools.browsertoolbox.scope pref.
+   * See _onTargetAvailable for arguments, they are the same.
    */
-  _onTargetDestroyed({ targetFront, isModeSwitching }) {
+  _onTargetDestroyed({ targetFront }) {
     // Clear the map of legacy listeners for this target.
     this._existingLegacyListeners.set(targetFront, []);
     this._offTargetFrontListeners.delete(targetFront);
@@ -597,8 +590,6 @@ class ResourceCommand {
     // Top level BrowsingContext target will be purge via DOCUMENT_EVENT will-navigate events.
     // If we were to clean resources from target-destroyed, we will clear resources
     // happening between will-navigate and target-destroyed. Typically the navigation request
-    // At the moment, isModeSwitching can only be true when targetFront.isTopLevel isn't true,
-    // so we don't need to add a specific check for isModeSwitching.
     if (!targetFront.isTopLevel || !targetFront.isBrowsingContext) {
       for (const [key, resource] of this._cache) {
         if (resource.targetFront === targetFront) {
@@ -608,19 +599,10 @@ class ResourceCommand {
       }
     }
 
-    // Purge "available" pendingEvents for resources from the destroyed target when switching
-    // mode as we want to ignore those.
-    if (isModeSwitching) {
-      for (const watcherEntry of this._watchers) {
-        for (const pendingEvent of watcherEntry.pendingEvents) {
-          if (pendingEvent.callbackType == "available") {
-            pendingEvent.updates = pendingEvent.updates.filter(
-              update => update.targetFront !== targetFront
-            );
-          }
-        }
-      }
-    }
+    //TODO: Is there a point in doing anything else?
+    //
+    // We could remove the available/destroyed event, but as the target is destroyed
+    // its listeners will be destroyed anyway.
   }
 
   /**

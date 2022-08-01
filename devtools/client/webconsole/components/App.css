@@ -31,8 +31,6 @@ body {
   /*
     * Here's the design we want in in-line mode
     * +----------------------------------------------+
-    * |            [ChromeDebugToolbar]              |
-    * +----------------------------------------------+
     * |    Filter bar primary      ↔                 |
     * +----------------------------↔                 |
     * |   [Filter bar secondary]   ↔                 |
@@ -61,12 +59,11 @@ body {
      *   rows/columns to "auto" to make them collapse when the element
      *   they contain is hidden.
     */
-  grid-template-areas: "chrome-debug-toolbar     chrome-debug-toolbar"
-                       "filter-toolbar           sidebar"
+  grid-template-areas: "filter-toolbar           sidebar"
                        "filter-toolbar-secondary sidebar"
                        "output-input             sidebar"
                        "reverse-search           sidebar";
-  grid-template-rows: auto var(--primary-toolbar-height) auto 1fr auto;
+  grid-template-rows: var(--primary-toolbar-height) auto 1fr auto;
   grid-template-columns: minmax(200px, 1fr) minmax(0, auto);
   max-height: 100vh !important;
   height: 100vh !important;
@@ -74,11 +71,6 @@ body {
   overflow: hidden;
   color: var(--console-output-color);
   -moz-user-focus: normal;
-}
-
-.chrome-debug-toolbar {
-  grid-column: chrome-debug-toolbar;
-  grid-row: chrome-debug-toolbar;
 }
 
 .webconsole-filteringbar-wrapper {
@@ -256,8 +248,6 @@ body {
   /*
      * Here's the design we want in editor mode
      * +-----------------------------------------------------------------------+
-     * |                 [ChromeDebugToolbar]                 |
-     * +-----------------------------------------------------------------------+
      * |                 [Notification Box (self XSS warning)]                 |
      * +--------------------------+--------------------------+-----------------+
      * |    Editor Toolbar        ↔    Filter bar primary    ↔                 |
@@ -281,15 +271,13 @@ body {
      *   rows/columns to "auto" to make them collapse when the element
      *   they contain is hidden.
      */
-  grid-template-areas: "chrome-debug-toolbar  chrome-debug-toolbar      chrome-debug-toolbar"
-                       "notification          notification              notification"
-                       "editor-toolbar        filter-toolbar            sidebar"
-                       "editor                filter-toolbar-secondary  sidebar"
-                       "editor                output                    sidebar"
-                       "eager-evaluation      output                    sidebar"
-                       "reverse-search        output                    sidebar";
+  grid-template-areas: "notification      notification               notification"
+                       "editor-toolbar    filter-toolbar             sidebar"
+                       "editor            filter-toolbar-secondary   sidebar"
+                       "editor            output                     sidebar"
+                       "eager-evaluation  output                     sidebar"
+                       "reverse-search    output                     sidebar";
   grid-template-rows:
-    auto
     auto
     var(--primary-toolbar-height)
     auto

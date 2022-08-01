@@ -135,8 +135,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       resources: supportedResources,
       // @backward-compat { version 103 } Clear resources not supported by old servers
       supportsClearResources: true,
-      // @backward-compat { version 105 } isSwitchingMode not supported by old servers
-      supportsSwitchingMode: true,
       // @backward-compat { version 84 } Expose the pref value to the client.
       // Services.prefs is undefined in xpcshell tests.
       workerConsoleApiMessagesDispatchedToMainThread: Services.prefs

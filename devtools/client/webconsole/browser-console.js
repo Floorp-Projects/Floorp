@@ -100,10 +100,6 @@ class BrowserConsole extends WebConsole {
 
     return this.#bcDestroyer;
   }
-
-  updateWindowTitle() {
-    BrowserConsoleManager.updateWindowTitle(this.chromeWindow);
-  }
 }
 
 /**
