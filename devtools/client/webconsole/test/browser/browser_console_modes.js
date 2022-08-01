@@ -52,8 +52,8 @@ add_task(async function() {
 async function checkMessages(isFissionSupported) {
   await pushPref("devtools.browsertoolbox.fission", isFissionSupported);
 
-  // Add the tab first so it creates the ContentProcess
-  await addTab(TEST_URI);
+  // Open the WebConsole on the tab to check changing mode won't focus the tab
+  await openNewTabAndConsole(TEST_URI);
 
   // Open the Browser Console
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
@@ -191,6 +191,11 @@ async function checkMessages(isFissionSupported) {
       hud.chromeWindow.document.title,
       "Parent process Browser Console",
       "Browser Console window title was updated"
+    );
+
+    ok(
+      hud.iframeWindow.document.hasFocus(),
+      "Browser Console is still focused"
     );
   }
 

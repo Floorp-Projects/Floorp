@@ -686,10 +686,10 @@ const windowGlobalTargetPrototype = {
     if (this.docShell) {
       this._unwatchDocShell(this.docShell);
 
-      // If this target is being destroyed as part of a target switch, we don't need to
-      // restore the configuration (this might cause the content page to be focused again
-      // and cause issues in tets).
-      if (!isTargetSwitching) {
+      // If this target is being destroyed as part of a target switch or a mode switch,
+      // we don't need to restore the configuration (this might cause the content page to
+      // be focused again, causing issues in tests and disturbing the user when switching modes).
+      if (!isTargetSwitching && !isModeSwitching) {
         this._restoreTargetConfiguration();
       }
     }
