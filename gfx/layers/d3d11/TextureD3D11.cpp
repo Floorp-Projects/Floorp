@@ -402,7 +402,7 @@ bool D3D11TextureData::SerializeSpecific(
   }
   *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle,
                                      mGpuProcessTextureId, mArrayIndex, mFormat,
-                                     mSize, mYUVColorSpace, mColorRange);
+                                     mSize, mColorSpace, mColorRange);
   return true;
 }
 
@@ -425,13 +425,13 @@ void D3D11TextureData::GetSubDescriptor(
 /* static */
 already_AddRefed<TextureClient> D3D11TextureData::CreateTextureClient(
     ID3D11Texture2D* aTexture, uint32_t aIndex, gfx::IntSize aSize,
-    gfx::SurfaceFormat aFormat, gfx::YUVColorSpace aColorSpace,
+    gfx::SurfaceFormat aFormat, gfx::ColorSpace2 aColorSpace,
     gfx::ColorRange aColorRange, KnowsCompositor* aKnowsCompositor,
     RefPtr<IMFSampleUsageInfo> aUsageInfo) {
   D3D11TextureData* data = new D3D11TextureData(
       aTexture, aIndex, aSize, aFormat,
       TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION);
-  data->SetYUVColorSpace(aColorSpace);
+  data->mColorSpace = aColorSpace;
   data->SetColorRange(aColorRange);
 
   RefPtr<TextureClient> textureClient = MakeAndAddRef<TextureClient>(
@@ -812,7 +812,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mSize(aDescriptor.size()),
       mHandle(aDescriptor.handle()),
       mFormat(aDescriptor.format()),
-      mYUVColorSpace(aDescriptor.yUVColorSpace()),
+      mColorSpace(aDescriptor.colorSpace()),
       mColorRange(aDescriptor.colorRange()),
       mIsLocked(false) {}
 
@@ -964,7 +964,7 @@ void DXGITextureHostD3D11::UnlockInternal() {
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHost(
-      mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mYUVColorSpace,
+      mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mColorSpace,
       mColorRange, mSize);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
@@ -1092,7 +1092,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
           GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
                                                   : wr::ColorDepth::Color16,
-          wr::ToWrYuvColorSpace(mYUVColorSpace),
+          wr::ToWrYuvColorSpace(ToYUVColorSpace(mColorSpace)),
           wr::ToWrColorRange(mColorRange), aFilter, preferCompositorSurface,
           SupportsExternalCompositing(aBuilder.GetBackendType()));
       break;
@@ -1109,8 +1109,7 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
     return true;
   }
   // XXX Add P010 and P016 support.
-  if (GetFormat() == gfx::SurfaceFormat::NV12 &&
-      gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
+  if (gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
     return true;
   }
   return false;
