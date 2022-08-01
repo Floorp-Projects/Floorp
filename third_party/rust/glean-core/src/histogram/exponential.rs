@@ -56,7 +56,7 @@ fn exponential_range(min: u64, max: u64, bucket_count: usize) -> Vec<u64> {
 ///
 /// Buckets are pre-computed at instantiation with an exponential distribution from `min` to `max`
 /// and `bucket_count` buckets.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PrecomputedExponential {
     // Don't serialize the (potentially large) array of ranges, instead compute them on first
     // access.

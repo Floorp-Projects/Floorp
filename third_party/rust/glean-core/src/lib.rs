@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#![allow(clippy::significant_drop_in_scrutinee)]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(missing_docs)]
 
@@ -497,6 +498,19 @@ fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfoMetrics) {
     }
     core_metrics::internal_metrics::os_version.set_sync(glean, system::get_os_version());
     core_metrics::internal_metrics::architecture.set_sync(glean, system::ARCH.to_string());
+
+    if let Some(android_sdk_version) = client_info.android_sdk_version.as_ref() {
+        core_metrics::internal_metrics::android_sdk_version.set_sync(glean, android_sdk_version);
+    }
+    if let Some(device_manufacturer) = client_info.device_manufacturer.as_ref() {
+        core_metrics::internal_metrics::device_manufacturer.set_sync(glean, device_manufacturer);
+    }
+    if let Some(device_model) = client_info.device_model.as_ref() {
+        core_metrics::internal_metrics::device_model.set_sync(glean, device_model);
+    }
+    if let Some(locale) = client_info.locale.as_ref() {
+        core_metrics::internal_metrics::locale.set_sync(glean, locale);
+    }
 }
 
 /// Checks if [`initialize`] was ever called.
@@ -833,7 +847,7 @@ pub fn glean_test_destroy_glean(clear_stores: bool) {
 
 /// Get the next upload task
 pub fn glean_get_upload_task() -> PingUploadTask {
-    core::with_glean(|glean| glean.get_upload_task())
+    core::with_opt_glean(|glean| glean.get_upload_task()).unwrap_or_else(PingUploadTask::done)
 }
 
 /// Processes the response from an attempt to upload a ping.

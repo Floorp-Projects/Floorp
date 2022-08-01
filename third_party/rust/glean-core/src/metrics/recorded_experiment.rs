@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map as JsonMap, Value as JsonValue};
 
 /// Deserialized experiment data.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct RecordedExperiment {
     /// The experiment's branch as set through [`set_experiment_active`](crate::glean_set_experiment_active).
     pub branch: String,

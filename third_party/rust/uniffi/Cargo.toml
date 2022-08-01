@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "uniffi"
-version = "0.18.0"
+version = "0.19.3"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (runtime support code)"
 homepage = "https://mozilla.github.io/uniffi-rs"
@@ -23,6 +23,7 @@ keywords = [
 ]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/uniffi-rs"
+resolver = "2"
 
 [dependencies.anyhow]
 version = "1"
@@ -30,8 +31,11 @@ version = "1"
 [dependencies.bytes]
 version = "1.0"
 
+[dependencies.camino]
+version = "1.0.8"
+
 [dependencies.cargo_metadata]
-version = "0.13"
+version = "0.14"
 
 [dependencies.lazy_static]
 version = "1.4"
@@ -46,7 +50,7 @@ version = "1.0"
 version = "1.1.0"
 
 [dependencies.uniffi_bindgen]
-version = "=0.18.0"
+version = "=0.19.3"
 optional = true
 
 [dev-dependencies.trybuild]

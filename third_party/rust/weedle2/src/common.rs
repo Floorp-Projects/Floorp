@@ -60,14 +60,14 @@ ast_types! {
 
     /// Parses `(item1, item2, item3,...)?`
     struct Punctuated<T, S> where [T: Parse<'a>, S: Parse<'a> + ::std::default::Default] {
-        list: Vec<T> = separated_list!(weedle!(S), weedle!(T)),
+        list: Vec<T> = separated_list0!(weedle!(S), weedle!(T)),
         separator: S = marker,
     }
 
     /// Parses `item1, item2, item3, ...`
     struct PunctuatedNonEmpty<T, S> where [T: Parse<'a>, S: Parse<'a> + ::std::default::Default] {
         list: Vec<T> = terminated!(
-            separated_nonempty_list!(weedle!(S), weedle!(T)),
+            separated_list1!(weedle!(S), weedle!(T)),
             opt!(weedle!(S))
         ),
         separator: S = marker,

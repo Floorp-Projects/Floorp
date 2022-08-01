@@ -1,18 +1,16 @@
-
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-{% import "macros.swift" as swift %}
-{%- let e = self.inner() %}
-public enum {{ e|type_name }} {
+{%- let e = ci.get_enum_definition(name).unwrap() %}
+public enum {{ type_name }} {
     {% for variant in e.variants() %}
     case {{ variant.name()|enum_variant_swift }}{% if variant.fields().len() > 0 %}({% call swift::field_list_decl(variant) %}){% endif -%}
     {% endfor %}
 }
 
-fileprivate struct {{ e|ffi_converter_name }}: FfiConverterRustBuffer {
-    typealias SwiftType = {{ e|type_name }}
+fileprivate struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
+    typealias SwiftType = {{ type_name }}
 
-    static func read(from buf: Reader) throws -> {{ e|type_name }} {
+    static func read(from buf: Reader) throws -> {{ type_name }} {
         let variant: Int32 = try buf.readInt()
         switch variant {
         {% for variant in e.variants() %}
@@ -27,7 +25,7 @@ fileprivate struct {{ e|ffi_converter_name }}: FfiConverterRustBuffer {
         }
     }
 
-    static func write(_ value: {{ e|type_name }}, into buf: Writer) {
+    static func write(_ value: {{ type_name }}, into buf: Writer) {
         switch value {
         {% for variant in e.variants() %}
         {% if variant.has_fields() %}
@@ -45,6 +43,6 @@ fileprivate struct {{ e|ffi_converter_name }}: FfiConverterRustBuffer {
     }
 }
 
-{% if ! self.contains_object_references() %}
-extension {{ e|type_name }}: Equatable, Hashable {}
+{% if !contains_object_references %}
+extension {{ type_name }}: Equatable, Hashable {}
 {% endif %}

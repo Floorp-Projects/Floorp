@@ -1,4 +1,5 @@
-{%- match config %}
+{%- let ffi_type_name=builtin.ffi_type().borrow()|ffi_type_name %}
+{%- match config.custom_types.get(name.as_str())  %}
 {%- when None %}
 {#- No config, just forward all methods to our builtin type #}
 /**
@@ -21,6 +22,14 @@ public typealias {{ name }} = {{ concrete_type_name }}
 {%- else %}
 {%- endmatch %}
 
+{%- match config.imports %}
+{%- when Some(imports) %}
+{%- for import_name in imports %}
+{{ self.add_import(import_name) }}
+{%- endfor %}
+{%- else %}
+{%- endmatch %}
+
 fileprivate struct FfiConverterType{{ name }} {
     {#- Custom type config supplied, use it to convert the builtin type #}
 
@@ -34,12 +43,12 @@ fileprivate struct FfiConverterType{{ name }} {
         return {{ builtin|write_fn }}(builtinValue, into: buf)
     }
 
-    static func lift(_ value: {{ self.builtin_ffi_type().borrow()|type_ffi_lowered }}) throws -> {{ name }} {
+    static func lift(_ value: {{ ffi_type_name }}) throws -> {{ name }} {
         let builtinValue = try {{ builtin|lift_fn }}(value)
         return {{ config.into_custom.render("builtinValue") }}
     }
 
-    static func lower(_ value: {{ name }}) -> {{ self.builtin_ffi_type().borrow()|type_ffi_lowered }} {
+    static func lower(_ value: {{ name }}) -> {{ ffi_type_name }} {
         let builtinValue = {{ config.from_custom.render("value") }}
         return {{ builtin|lower_fn }}(builtinValue)
     }

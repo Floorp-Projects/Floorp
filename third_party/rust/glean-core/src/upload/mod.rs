@@ -127,7 +127,7 @@ impl RateLimiter {
 /// the requester may receive one out of three possible tasks.
 ///
 /// If new variants are added, this should be reflected in `glean-core/ffi/src/upload.rs` as well.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum PingUploadTask {
     /// An upload task
     Upload {
@@ -174,7 +174,7 @@ impl PingUploadTask {
         matches!(self, PingUploadTask::Wait { .. })
     }
 
-    fn done() -> Self {
+    pub(crate) fn done() -> Self {
         PingUploadTask::Done { unused: 0 }
     }
 }

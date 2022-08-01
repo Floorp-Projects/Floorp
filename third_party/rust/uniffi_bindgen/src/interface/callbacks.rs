@@ -39,7 +39,7 @@ use anyhow::{bail, Result};
 
 use super::ffi::{FFIArgument, FFIFunction, FFIType};
 use super::object::Method;
-use super::types::{IterTypes, Type, TypeIterator};
+use super::types::{Type, TypeIterator};
 use super::{APIConverter, ComponentInterface};
 
 #[derive(Debug, Clone)]
@@ -74,10 +74,6 @@ impl CallbackInterface {
         &self.ffi_init_callback
     }
 
-    pub fn iter_ffi_function_definitions(&self) -> Vec<FFIFunction> {
-        vec![self.ffi_init_callback.clone()]
-    }
-
     pub(super) fn derive_ffi_funcs(&mut self, ci_prefix: &str) {
         self.ffi_init_callback.name = format!("ffi_{}_{}_init_callback", ci_prefix, self.name);
         self.ffi_init_callback.arguments = vec![FFIArgument {
@@ -86,11 +82,9 @@ impl CallbackInterface {
         }];
         self.ffi_init_callback.return_type = None;
     }
-}
 
-impl IterTypes for CallbackInterface {
-    fn iter_types(&self) -> TypeIterator<'_> {
-        Box::new(self.methods.iter().flat_map(IterTypes::iter_types))
+    pub fn iter_types(&self) -> TypeIterator<'_> {
+        Box::new(self.methods.iter().flat_map(Method::iter_types))
     }
 }
 
@@ -120,7 +114,7 @@ impl APIConverter<CallbackInterface> for weedle::CallbackInterfaceDefinition<'_>
             match member {
                 weedle::interface::InterfaceMember::Operation(t) => {
                     let mut method: Method = t.convert(ci)?;
-                    method.object_name.push_str(object.name.as_str());
+                    method.object_name = object.name.clone();
                     object.methods.push(method);
                 }
                 _ => bail!(
@@ -145,7 +139,7 @@ mod test {
             callback interface Testing {};
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.iter_callback_interface_definitions().len(), 1);
+        assert_eq!(ci.callback_interface_definitions().len(), 1);
         assert_eq!(
             ci.get_callback_interface_definition("Testing")
                 .unwrap()
@@ -168,7 +162,7 @@ mod test {
             };
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
-        assert_eq!(ci.iter_callback_interface_definitions().len(), 2);
+        assert_eq!(ci.callback_interface_definitions().len(), 2);
 
         let callbacks_one = ci.get_callback_interface_definition("One").unwrap();
         assert_eq!(callbacks_one.methods().len(), 1);

@@ -1,5 +1,4 @@
-{%- import "macros.kt" as kt %}
-
+{%- import "macros.swift" as swift %}
 {%- for type_ in ci.iter_types() %}
 {%- let type_name = type_|type_name %}
 {%- let ffi_converter_name = type_|ffi_converter_name %}
@@ -18,76 +17,74 @@
 {%- match type_ %}
 
 {%- when Type::Boolean %}
-{%- include "BooleanHelper.kt" %}
-
-{%- when Type::Int8 %}
-{%- include "Int8Helper.kt" %}
-
-{%- when Type::Int16 %}
-{%- include "Int16Helper.kt" %}
-
-{%- when Type::Int32 %}
-{%- include "Int32Helper.kt" %}
-
-{%- when Type::Int64 %}
-{%- include "Int64Helper.kt" %}
-
-{%- when Type::UInt8 %}
-{%- include "UInt8Helper.kt" %}
-
-{%- when Type::UInt16 %}
-{%- include "UInt16Helper.kt" %}
-
-{%- when Type::UInt32 %}
-{%- include "UInt32Helper.kt" %}
-
-{%- when Type::UInt64 %}
-{%- include "UInt64Helper.kt" %}
-
-{%- when Type::Float32 %}
-{%- include "Float32Helper.kt" %}
-
-{%- when Type::Float64 %}
-{%- include "Float64Helper.kt" %}
+{%- include "BooleanHelper.swift" %}
 
 {%- when Type::String %}
-{%- include "StringHelper.kt" %}
+{%- include "StringHelper.swift" %}
 
-{%- when Type::Enum(name) %}
-{% include "EnumTemplate.kt" %}
+{%- when Type::Int8 %}
+{%- include "Int8Helper.swift" %}
 
-{%- when Type::Error(name) %}
-{% include "ErrorTemplate.kt" %}
+{%- when Type::Int16 %}
+{%- include "Int16Helper.swift" %}
 
-{%- when Type::Object(name) %}
-{% include "ObjectTemplate.kt" %}
+{%- when Type::Int32 %}
+{%- include "Int32Helper.swift" %}
 
-{%- when Type::Record(name) %}
-{% include "RecordTemplate.kt" %}
+{%- when Type::Int64 %}
+{%- include "Int64Helper.swift" %}
 
-{%- when Type::Optional(inner_type) %}
-{% include "OptionalTemplate.kt" %}
+{%- when Type::UInt8 %}
+{%- include "UInt8Helper.swift" %}
 
-{%- when Type::Sequence(inner_type) %}
-{% include "SequenceTemplate.kt" %}
+{%- when Type::UInt16 %}
+{%- include "UInt16Helper.swift" %}
 
-{%- when Type::Map(key_type, value_type) %}
-{% include "MapTemplate.kt" %}
+{%- when Type::UInt32 %}
+{%- include "UInt32Helper.swift" %}
 
-{%- when Type::CallbackInterface(name) %}
-{% include "CallbackInterfaceTemplate.kt" %}
+{%- when Type::UInt64 %}
+{%- include "UInt64Helper.swift" %}
+
+{%- when Type::Float32 %}
+{%- include "Float32Helper.swift" %}
+
+{%- when Type::Float64 %}
+{%- include "Float64Helper.swift" %}
 
 {%- when Type::Timestamp %}
-{% include "TimestampHelper.kt" %}
+{%- include "TimestampHelper.swift" %}
 
 {%- when Type::Duration %}
-{% include "DurationHelper.kt" %}
+{%- include "DurationHelper.swift" %}
+
+{%- when Type::CallbackInterface(name) %}
+{%- include "CallbackInterfaceTemplate.swift" %}
 
 {%- when Type::Custom { name, builtin } %}
-{% include "CustomTypeTemplate.kt" %}
+{%- include "CustomType.swift" %}
 
-{%- when Type::External { crate_name, name } %}
-{% include "ExternalTypeTemplate.kt" %}
+{%- when Type::Enum(name) %}
+{%- include "EnumTemplate.swift" %}
+
+{%- when Type::Error(name) %}
+{%- include "ErrorTemplate.swift" %}
+
+{%- when Type::Object(name) %}
+{%- include "ObjectTemplate.swift" %}
+
+{%- when Type::Record(name) %}
+{%- include "RecordTemplate.swift" %}
+
+{%- when Type::Optional(inner_type) %}
+{%- include "OptionalTemplate.swift" %}
+
+{%- when Type::Sequence(inner_type) %}
+{%- include "SequenceTemplate.swift" %}
+
+{%- when Type::Map(key_type, value_type) %}
+{%- include "MapTemplate.swift" %}
+
 
 {%- else %}
 {%- endmatch %}

@@ -10,7 +10,7 @@ fun {{ func.name()|fn_name }}({%- call kt::arg_list_decl(func) -%}): {{ return_t
     return {{ return_type|lift_fn }}({% call kt::to_ffi_call(func) %})
 }
 
-{% when None -%}
+{% when None %}
 
 fun {{ func.name()|fn_name }}({% call kt::arg_list_decl(func) %}) =
     {% call kt::to_ffi_call(func) %}

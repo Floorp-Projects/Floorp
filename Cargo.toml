@@ -115,13 +115,6 @@ env_logger = { path = "build/rust/env_logger" }
 # Patch toml 0.4 to 0.5
 toml = { path = "build/rust/toml" }
 
-# Patch cargo_metadata 0.13 to 0.14.2
-# FIXME(bug 1772132): To be removed with the next Glean update
-cargo_metadata = { path = "build/rust/cargo_metadata" }
-
-# Patch nom 5 to nom 6
-nom = { path = "build/rust/nom" }
-
 # Patch parking_lot 0.12 down to 0.11, which is compatible for most crates that use it, to avoid
 # dependencies on windows-sys.
 parking_lot = { path = "build/rust/parking_lot" }

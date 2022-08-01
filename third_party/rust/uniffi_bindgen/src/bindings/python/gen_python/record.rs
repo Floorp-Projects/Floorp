@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeDeclaration, CodeOracle, CodeType, Literal};
-use crate::interface::{ComponentInterface, Record};
-use askama::Template;
-
-use super::filters;
+use crate::backend::{CodeOracle, CodeType, Literal};
 
 pub struct RecordCodeType {
     id: String,
@@ -31,36 +27,7 @@ impl CodeType for RecordCodeType {
         unreachable!();
     }
 
-    fn helper_code(&self, oracle: &dyn CodeOracle) -> Option<String> {
-        Some(format!(
-            "# Helper code for {} record is found in RecordTemplate.py",
-            self.type_label(oracle)
-        ))
-    }
-
     fn coerce(&self, _oracle: &dyn CodeOracle, nm: &str) -> String {
         nm.to_string()
-    }
-}
-
-#[derive(Template)]
-#[template(syntax = "py", escape = "none", path = "RecordTemplate.py")]
-pub struct PythonRecord {
-    inner: Record,
-}
-
-impl PythonRecord {
-    pub fn new(inner: Record, _ci: &ComponentInterface) -> Self {
-        Self { inner }
-    }
-
-    pub fn inner(&self) -> &Record {
-        &self.inner
-    }
-}
-
-impl CodeDeclaration for PythonRecord {
-    fn definition_code(&self, _oracle: &dyn CodeOracle) -> Option<String> {
-        Some(self.render().unwrap())
     }
 }

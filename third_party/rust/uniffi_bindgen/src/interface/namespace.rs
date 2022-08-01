@@ -54,7 +54,7 @@
 //! # namespace example {};
 //! # "##)?;
 //! assert_eq!(ci.namespace(), "example");
-//! assert_eq!(ci.iter_function_definitions().len(), 0);
+//! assert_eq!(ci.function_definitions().len(), 0);
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
@@ -111,7 +111,7 @@ mod test {
         "#;
         let ci = ComponentInterface::from_webidl(UDL).unwrap();
         assert_eq!(ci.namespace(), "foobar");
-        assert_eq!(ci.iter_function_definitions().len(), 2);
+        assert_eq!(ci.function_definitions().len(), 2);
         assert!(ci.get_function_definition("hello").is_some());
         assert!(ci.get_function_definition("world").is_some());
         assert!(ci.get_function_definition("potato").is_none());

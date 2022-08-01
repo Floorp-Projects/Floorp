@@ -29,14 +29,11 @@
 //!  * How to read from and write into a byte buffer.
 //!
 
+use std::{ffi::OsString, io::Write, process::Command};
+
 use anyhow::{bail, Context, Result};
-use std::{
-    ffi::OsString,
-    fs::File,
-    io::Write,
-    path::{Path, PathBuf},
-    process::Command,
-};
+use camino::Utf8Path;
+use fs_err::File;
 
 pub mod gen_swift;
 pub use gen_swift::{generate_bindings, Config};
@@ -62,43 +59,35 @@ pub struct Bindings {
 pub fn write_bindings(
     config: &Config,
     ci: &ComponentInterface,
-    out_dir: &Path,
+    out_dir: &Utf8Path,
     try_format_code: bool,
 ) -> Result<()> {
-    let out_path = PathBuf::from(out_dir);
-
     let Bindings {
         header,
         library,
         modulemap,
     } = generate_bindings(config, ci)?;
 
-    let mut source_file = out_path.clone();
-    source_file.push(format!("{}.swift", config.module_name()));
-    let mut l = File::create(&source_file).context("Failed to create .swift file for bindings")?;
+    let source_file = out_dir.join(format!("{}.swift", config.module_name()));
+    let mut l = File::create(&source_file)?;
     write!(l, "{}", library)?;
 
-    let mut header_file = out_path.clone();
-    header_file.push(config.header_filename());
-    let mut h = File::create(&header_file).context("Failed to create .h file for bindings")?;
+    let mut h = File::create(out_dir.join(config.header_filename()))?;
     write!(h, "{}", header)?;
 
     if let Some(modulemap) = modulemap {
-        let mut modulemap_file = out_path;
-        modulemap_file.push(config.modulemap_filename());
-        let mut m = File::create(&modulemap_file)
-            .context("Failed to create .modulemap file for bindings")?;
+        let mut m = File::create(out_dir.join(config.modulemap_filename()))?;
         write!(m, "{}", modulemap)?;
     }
 
     if try_format_code {
         if let Err(e) = Command::new("swiftformat")
-            .arg(source_file.to_str().unwrap())
+            .arg(source_file.as_str())
             .output()
         {
             println!(
                 "Warning: Unable to auto-format {} using swiftformat: {:?}",
-                source_file.file_name().unwrap().to_str().unwrap(),
+                source_file.file_name().unwrap(),
                 e
             )
         }
@@ -115,23 +104,21 @@ pub fn write_bindings(
 /// test scripts need to be able to import the generated bindings, we have to compile them
 /// ahead of time before running the tests.
 ///
-pub fn compile_bindings(config: &Config, ci: &ComponentInterface, out_dir: &Path) -> Result<()> {
-    let out_path = PathBuf::from(out_dir);
-
+pub fn compile_bindings(
+    config: &Config,
+    ci: &ComponentInterface,
+    out_dir: &Utf8Path,
+) -> Result<()> {
     if !config.generate_module_map() {
         bail!("Cannot compile Swift bindings when `generate_module_map` is `false`")
     }
-    let mut module_map_file = out_path.clone();
-    module_map_file.push(config.modulemap_filename());
 
+    let module_map_file = out_dir.join(config.modulemap_filename());
     let mut module_map_file_option = OsString::from("-fmodule-map-file=");
     module_map_file_option.push(module_map_file.as_os_str());
 
-    let mut source_file = out_path.clone();
-    source_file.push(format!("{}.swift", config.module_name()));
-
-    let mut dylib_file = out_path.clone();
-    dylib_file.push(format!("lib{}.dylib", config.module_name()));
+    let source_file = out_dir.join(format!("{}.swift", config.module_name()));
+    let dylib_file = out_dir.join(format!("lib{}.dylib", config.module_name()));
 
     // `-emit-library -o <path>` generates a `.dylib`, so that we can use the
     // Swift module from the REPL. Otherwise, we'll get "Couldn't lookup
@@ -143,13 +130,13 @@ pub fn compile_bindings(config: &Config, ci: &ComponentInterface, out_dir: &Path
         .arg(ci.namespace())
         .arg("-emit-library")
         .arg("-o")
-        .arg(&dylib_file)
+        .arg(dylib_file)
         .arg("-emit-module")
         .arg("-emit-module-path")
-        .arg(&out_path)
+        .arg(out_dir)
         .arg("-parse-as-library")
         .arg("-L")
-        .arg(&out_path)
+        .arg(out_dir)
         .arg(format!("-l{}", config.cdylib_name()))
         .arg("-Xcc")
         .arg(module_map_file_option)
@@ -170,7 +157,7 @@ pub fn compile_bindings(config: &Config, ci: &ComponentInterface, out_dir: &Path
 /// Swift modules in the given output directory. The modules must have been pre-compiled
 /// using the [`compile_bindings`] function.
 ///
-pub fn run_script(out_dir: &Path, script_file: &Path) -> Result<()> {
+pub fn run_script(out_dir: &Utf8Path, script_file: &Utf8Path) -> Result<()> {
     let mut cmd = Command::new("swift");
 
     // Find any module maps and/or dylibs in the target directory, and tell swift to use them.
@@ -179,7 +166,7 @@ pub fn run_script(out_dir: &Path, script_file: &Path) -> Result<()> {
     // this test function doesn't allow us to pass that name in to the call.
 
     cmd.arg("-I").arg(out_dir);
-    for entry in PathBuf::from(out_dir)
+    for entry in out_dir
         .read_dir()
         .context("Failed to list target directory when running script")?
     {

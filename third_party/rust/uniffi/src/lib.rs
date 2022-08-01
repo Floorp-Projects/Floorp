@@ -514,7 +514,7 @@ impl<T: FfiConverter> RustBufferFfiConverter for Vec<T> {
         // TODO: would be nice not to panic here :-/
         let len = i32::try_from(obj.len()).unwrap();
         buf.put_i32(len); // We limit arrays to i32::MAX items
-        for item in obj.into_iter() {
+        for item in obj {
             <T as FfiConverter>::write(item, buf);
         }
     }
@@ -548,7 +548,7 @@ where
         // TODO: would be nice not to panic here :-/
         let len = i32::try_from(obj.len()).unwrap();
         buf.put_i32(len); // We limit HashMaps to i32::MAX entries
-        for (key, value) in obj.into_iter() {
+        for (key, value) in obj {
             <K as FfiConverter>::write(key, buf);
             <V as FfiConverter>::write(value, buf);
         }

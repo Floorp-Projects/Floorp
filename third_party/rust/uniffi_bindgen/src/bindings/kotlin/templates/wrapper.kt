@@ -40,7 +40,7 @@ import {{ imported_class }}
 // Public interface members begin here.
 {{ type_helper_code }}
 
-{%- for func in ci.iter_function_definitions() %}
+{%- for func in ci.function_definitions() %}
 {%- include "TopLevelFunctionTemplate.kt" %}
 {%- endfor %}
 

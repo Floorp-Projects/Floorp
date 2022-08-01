@@ -7,9 +7,9 @@
 //! Currently this is just for easily generating integration tests, but maybe
 //! we'll put some other code-annotation helper macros in here at some point.
 
+use camino::{Utf8Path, Utf8PathBuf};
 use quote::{format_ident, quote};
 use std::env;
-use std::path::{Path, PathBuf};
 use syn::{bracketed, punctuated::Punctuated, LitStr, Token};
 
 /// A macro to build testcases for a component's generated bindings.
@@ -38,8 +38,8 @@ pub fn build_foreign_language_testcases(paths: proc_macro::TokenStream) -> proc_
         .udl_files
         .iter()
         .map(|file_path| {
-            let pathbuf: PathBuf = [&pkg_dir, file_path].iter().collect();
-            let path = pathbuf.to_string_lossy();
+            let pathbuf: Utf8PathBuf = [&pkg_dir, file_path].iter().collect();
+            let path = pathbuf.to_string();
             quote! { #path }
         })
         .collect::<Vec<proc_macro2::TokenStream>>();
@@ -48,12 +48,11 @@ pub fn build_foreign_language_testcases(paths: proc_macro::TokenStream) -> proc_
     let test_functions = paths.test_scripts
         .iter()
         .map(|file_path| {
-            let test_file_pathbuf: PathBuf = [&pkg_dir, file_path].iter().collect();
-            let test_file_path = test_file_pathbuf.to_string_lossy();
+            let test_file_pathbuf: Utf8PathBuf = [&pkg_dir, file_path].iter().collect();
+            let test_file_path = test_file_pathbuf.to_string();
             let test_file_name = test_file_pathbuf
                 .file_name()
-                .expect("Test file has no name, cannot build tests for generated bindings")
-                .to_string_lossy();
+                .expect("Test file has no name, cannot build tests for generated bindings");
             let test_name = format_ident!(
                 "uniffi_foreign_language_testcase_{}",
                 test_file_name.replace(|c: char| !c.is_alphanumeric(), "_")
@@ -79,7 +78,7 @@ pub fn build_foreign_language_testcases(paths: proc_macro::TokenStream) -> proc_
 }
 
 // UNIFFI_TESTS_DISABLE_EXTENSIONS contains a comma-sep'd list of extensions (without leading `.`)
-fn should_skip_path(path: &Path) -> bool {
+fn should_skip_path(path: &Utf8Path) -> bool {
     let ext = path.extension().expect("File has no extension!");
     env::var("UNIFFI_TESTS_DISABLE_EXTENSIONS")
         .map(|v| v.split(',').any(|look| look == ext))
@@ -163,20 +162,19 @@ pub fn generate_and_include_scaffolding(
 ) -> proc_macro::TokenStream {
     let udl_file = syn::parse_macro_input!(udl_file as syn::LitStr);
     let udl_file_string = udl_file.value();
-    let udl_file_path = Path::new(udl_file_string.as_str());
+    let udl_file_path = Utf8Path::new(&udl_file_string);
     if std::env::var("OUT_DIR").is_err() {
         quote! {
             compile_error!("This macro assumes the crate has a build.rs script, but $OUT_DIR is not present");
         }
-    } else if uniffi_build::generate_scaffolding(&udl_file_path.to_string_lossy()).is_err() {
+    } else if uniffi_build::generate_scaffolding(udl_file_path).is_err() {
         quote! {
             compile_error!(concat!("Failed to generate scaffolding from UDL file at ", #udl_file));
         }
     } else {
         // We know the filename is good because `generate_scaffolding` succeeded,
         // so this `unwrap` will never fail.
-        let name = udl_file_path.file_stem().unwrap().to_os_string();
-        let name = LitStr::new(&name.to_string_lossy(), udl_file.span());
+        let name = LitStr::new(udl_file_path.file_stem().unwrap(), udl_file.span());
         quote! {
             uniffi_macros::include_scaffolding!(#name);
         }

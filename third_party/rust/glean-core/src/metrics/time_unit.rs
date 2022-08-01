@@ -11,7 +11,7 @@ use crate::error::{Error, ErrorKind};
 
 /// Different resolutions supported by the time related
 /// metric types (e.g. DatetimeMetric).
-#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 #[repr(i32)] // use i32 to be compatible with our JNA definition
 pub enum TimeUnit {

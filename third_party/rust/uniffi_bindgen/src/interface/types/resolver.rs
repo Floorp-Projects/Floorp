@@ -333,12 +333,12 @@ mod test {
         types.add_type_definition("TestBoolean", Type::Boolean)?;
         assert_eq!(types.iter_known_types().count(), 6);
         let mut iter = types.iter_known_types();
-        assert_eq!(Some(Type::UInt8), iter.next());
-        assert_eq!(Some(Type::Int8), iter.next());
-        assert_eq!(Some(Type::Int64), iter.next());
-        assert_eq!(Some(Type::Boolean), iter.next());
-        assert_eq!(Some(Type::Record("TestRecord".into())), iter.next());
-        assert_eq!(Some(Type::Record("TestRecord2".into())), iter.next());
+        assert_eq!(Some(&Type::UInt8), iter.next());
+        assert_eq!(Some(&Type::Int8), iter.next());
+        assert_eq!(Some(&Type::Int64), iter.next());
+        assert_eq!(Some(&Type::Boolean), iter.next());
+        assert_eq!(Some(&Type::Record("TestRecord".into())), iter.next());
+        assert_eq!(Some(&Type::Record("TestRecord2".into())), iter.next());
         Ok(())
     }
 }

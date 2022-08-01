@@ -20,32 +20,32 @@ uniffi::deps::static_assertions::assert_impl_all!({{ k|type_rs }}: ::std::cmp::E
 {% include "RustBuffer.rs" %}
 
 // Error definitions, corresponding to `error` in the UDL.
-{% for e in ci.iter_error_definitions() %}
+{% for e in ci.error_definitions() %}
 {% include "ErrorTemplate.rs" %}
 {% endfor %}
 
 // Enum defitions, corresponding to `enum` in UDL.
-{% for e in ci.iter_enum_definitions() %}
+{% for e in ci.enum_definitions() %}
 {% include "EnumTemplate.rs" %}
 {% endfor %}
 
 // Record definitions, implemented as method-less structs, corresponding to `dictionary` objects.
-{% for rec in ci.iter_record_definitions() %}
+{% for rec in ci.record_definitions() %}
 {% include "RecordTemplate.rs" %}
 {% endfor %}
 
 // Top level functions, corresponding to UDL `namespace` functions.
-{%- for func in ci.iter_function_definitions() %}
+{%- for func in ci.function_definitions() %}
 {% include "TopLevelFunctionTemplate.rs" %}
 {% endfor -%}
 
 // Object definitions, corresponding to UDL `interface` definitions.
-{% for obj in ci.iter_object_definitions() %}
+{% for obj in ci.object_definitions() %}
 {% include "ObjectTemplate.rs" %}
 {% endfor %}
 
 // Callback Interface definitions, corresponding to UDL `callback interface` definitions.
-{% for cbi in ci.iter_callback_interface_definitions() %}
+{% for cbi in ci.callback_interface_definitions() %}
 {% include "CallbackInterfaceTemplate.rs" %}
 {% endfor %}
 
