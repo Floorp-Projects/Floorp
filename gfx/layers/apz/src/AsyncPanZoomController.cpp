@@ -5159,7 +5159,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   bool viewportSizeUpdated = false;
   bool needToReclampScroll = false;
 
-  if ((aIsFirstPaint && aThisLayerTreeUpdated) || isDefault) {
+  if ((aIsFirstPaint && aThisLayerTreeUpdated) || isDefault ||
+      Metrics().IsRootContent() != aLayerMetrics.IsRootContent()) {
+    if (Metrics().IsRootContent() && !aLayerMetrics.IsRootContent()) {
+      // We only support zooming on root content APZCs
+      SetZoomAnimationId(Nothing());
+    }
+
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
     CancelAnimation();
