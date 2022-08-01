@@ -7,11 +7,10 @@
 #ifndef DOM_QUOTA_FORWARD_DECLS_H_
 #define DOM_QUOTA_FORWARD_DECLS_H_
 
+#include <cstdint>
 #include "mozilla/dom/quota/Config.h"
 
-#ifndef QM_ERROR_STACKS_ENABLED
 enum class nsresult : uint32_t;
-#endif
 
 namespace mozilla {
 
@@ -26,6 +25,11 @@ template <typename V, typename E>
 class Result;
 
 using OkOrErr = Result<Ok, QMResult>;
+
+template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
+class MozPromise;
+
+using BoolPromise = MozPromise<bool, nsresult, false>;
 
 }  // namespace mozilla
 
