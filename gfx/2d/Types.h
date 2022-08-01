@@ -16,6 +16,7 @@
 #include <iosfwd>  // for ostream
 #include <stddef.h>
 #include <stdint.h>
+#include <optional>
 
 namespace mozilla {
 namespace gfx {
@@ -86,7 +87,7 @@ enum class SurfaceFormat : int8_t {
   Depth,
 
   // This represents the unknown format.
-  UNKNOWN,
+  UNKNOWN,  // TODO: Replace uses with Maybe<SurfaceFormat>.
 
 // The following values are endian-independent synonyms. The _UINT32 suffix
 // indicates that the name reflects the layout when viewed as a uint32_t
@@ -108,6 +109,115 @@ enum class SurfaceFormat : int8_t {
   OS_RGBA = A8R8G8B8_UINT32,
   OS_RGBX = X8R8G8B8_UINT32
 };
+
+struct SurfaceFormatInfo {
+  bool hasColor;
+  bool hasAlpha;
+  bool isYuv;
+  std::optional<uint8_t> bytesPerPixel;
+};
+inline std::optional<SurfaceFormatInfo> Info(const SurfaceFormat aFormat) {
+  auto info = SurfaceFormatInfo{};
+
+  switch (aFormat) {
+    case SurfaceFormat::B8G8R8A8:
+    case SurfaceFormat::R8G8B8A8:
+    case SurfaceFormat::A8R8G8B8:
+      info.hasColor = true;
+      info.hasAlpha = true;
+      break;
+
+    case SurfaceFormat::B8G8R8X8:
+    case SurfaceFormat::R8G8B8X8:
+    case SurfaceFormat::X8R8G8B8:
+    case SurfaceFormat::R8G8B8:
+    case SurfaceFormat::B8G8R8:
+    case SurfaceFormat::R5G6B5_UINT16:
+    case SurfaceFormat::R8G8:
+    case SurfaceFormat::R16G16:
+    case SurfaceFormat::HSV:
+    case SurfaceFormat::Lab:
+      info.hasColor = true;
+      info.hasAlpha = false;
+      break;
+
+    case SurfaceFormat::A8:
+    case SurfaceFormat::A16:
+      info.hasColor = false;
+      info.hasAlpha = true;
+      break;
+
+    case SurfaceFormat::YUV:
+    case SurfaceFormat::NV12:
+    case SurfaceFormat::P016:
+    case SurfaceFormat::P010:
+    case SurfaceFormat::YUV422:
+      info.hasColor = true;
+      info.hasAlpha = false;
+      info.isYuv = true;
+      break;
+
+    case SurfaceFormat::Depth:
+      info.hasColor = false;
+      info.hasAlpha = false;
+      info.isYuv = false;
+      break;
+
+    case SurfaceFormat::UNKNOWN:
+      break;
+  }
+
+  // -
+  // bytesPerPixel
+
+  switch (aFormat) {
+    case SurfaceFormat::B8G8R8A8:
+    case SurfaceFormat::R8G8B8A8:
+    case SurfaceFormat::A8R8G8B8:
+    case SurfaceFormat::B8G8R8X8:
+    case SurfaceFormat::R8G8B8X8:
+    case SurfaceFormat::X8R8G8B8:
+    case SurfaceFormat::R16G16:
+      info.bytesPerPixel = 4;
+      break;
+
+    case SurfaceFormat::R8G8B8:
+    case SurfaceFormat::B8G8R8:
+      info.bytesPerPixel = 3;
+      break;
+
+    case SurfaceFormat::R5G6B5_UINT16:
+    case SurfaceFormat::R8G8:
+    case SurfaceFormat::A16:
+    case SurfaceFormat::Depth:  // uint16_t
+      info.bytesPerPixel = 2;
+      break;
+
+    case SurfaceFormat::A8:
+      info.bytesPerPixel = 1;
+      break;
+
+    case SurfaceFormat::HSV:
+    case SurfaceFormat::Lab:
+      info.bytesPerPixel = 3 * sizeof(float);
+      break;
+
+    case SurfaceFormat::YUV:
+    case SurfaceFormat::NV12:
+    case SurfaceFormat::P016:
+    case SurfaceFormat::P010:
+    case SurfaceFormat::YUV422:
+    case SurfaceFormat::UNKNOWN:
+      break;  // No bytesPerPixel per se.
+  }
+
+  // -
+
+  if (aFormat == SurfaceFormat::UNKNOWN) {
+    return {};
+  }
+  return info;
+}
 
 std::ostream& operator<<(std::ostream& aOut, const SurfaceFormat& aFormat);
 
@@ -153,6 +263,7 @@ inline uint32_t operator>>(uint32_t a, SurfaceFormatBit b) {
 }
 
 static inline int BytesPerPixel(SurfaceFormat aFormat) {
+  // TODO: return Info(aFormat).value().bytesPerPixel.value();
   switch (aFormat) {
     case SurfaceFormat::A8:
       return 1;
@@ -173,6 +284,7 @@ static inline int BytesPerPixel(SurfaceFormat aFormat) {
 }
 
 inline bool IsOpaque(SurfaceFormat aFormat) {
+  // TODO: return Info(aFormat).value().hasAlpha;
   switch (aFormat) {
     case SurfaceFormat::B8G8R8X8:
     case SurfaceFormat::R8G8B8X8:

@@ -8,8 +8,7 @@
 #define MOZILLA_GFX_DCLAYER_TREE_H
 
 #include "WinUtils.h"
-#include <DXGIType.h>
-#include <dxgiformat.h>
+#include <dxgi1_2.h>
 #include <unordered_map>
 #include <vector>
 #include <windows.h>
@@ -329,6 +328,7 @@ class DCSurfaceSwapChain : public DCSurface {
     RefPtr<RenderDXGITextureHost> texture;
     gfx::IntSize size;
     gfx::SurfaceFormat format;
+    DXGI_ALPHA_MODE alphaMode;
     CspaceAndRange space;
 
     // When RenderTextureHost, swapChainSize or VideoSwapChain are updated,
