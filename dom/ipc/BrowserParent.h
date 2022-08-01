@@ -747,7 +747,8 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);
 
   mozilla::ipc::IPCResult RecvVisitURI(nsIURI* aURI, nsIURI* aLastVisitedURI,
-                                       const uint32_t& aFlags);
+                                       const uint32_t& aFlags,
+                                       const uint64_t& aBrowserId);
 
   mozilla::ipc::IPCResult RecvQueryVisitedState(
       nsTArray<RefPtr<nsIURI>>&& aURIs);

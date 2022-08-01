@@ -12374,7 +12374,8 @@ void nsDocShell::SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
     }
 
     mozilla::Unused << history->VisitURI(aWidget, aURI, aPreviousURI,
-                                         visitURIFlags);
+                                         visitURIFlags,
+                                         aBrowsingContext->BrowserId());
   }
 }
 

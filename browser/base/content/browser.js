@@ -1470,6 +1470,7 @@ function _loadURI(browser, uri, params = {}) {
     csp,
     remoteTypeOverride,
     hasValidUserGestureActivation,
+    globalHistoryOptions,
   } = params || {};
   let loadFlags =
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -1509,6 +1510,17 @@ function _loadURI(browser, uri, params = {}) {
 
   // XXX(nika): Is `browser.isNavigating` necessary anymore?
   browser.isNavigating = true;
+
+  if (globalHistoryOptions?.triggeringSponsoredURL) {
+    browser.setAttribute(
+      "triggeringSponsoredURL",
+      globalHistoryOptions.triggeringSponsoredURL
+    );
+    const time =
+      globalHistoryOptions.triggeringSponsoredURLVisitTimeMS || Date.now();
+    browser.setAttribute("triggeringSponsoredURLVisitTimeMS", time);
+  }
+
   let loadURIOptions = {
     triggeringPrincipal,
     csp,
