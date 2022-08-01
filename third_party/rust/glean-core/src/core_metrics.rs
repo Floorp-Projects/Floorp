@@ -130,6 +130,50 @@ pub mod internal_metrics {
         })
     });
 
+    pub static android_sdk_version: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "android_sdk_version".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    pub static device_manufacturer: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "device_manufacturer".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    pub static device_model: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "device_model".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
+    pub static locale: Lazy<StringMetric> = Lazy::new(|| {
+        StringMetric::new(CommonMetricData {
+            name: "locale".into(),
+            category: "".into(),
+            send_in_pings: vec!["glean_client_info".into()],
+            lifetime: Lifetime::Application,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
     pub static baseline_duration: Lazy<TimespanMetric> = Lazy::new(|| {
         TimespanMetric::new(
             CommonMetricData {

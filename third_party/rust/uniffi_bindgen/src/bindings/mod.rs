@@ -8,9 +8,8 @@
 //! along with some helpers for executing foreign language scripts or tests.
 
 use anyhow::{bail, Result};
+use camino::Utf8Path;
 use serde::{Deserialize, Serialize};
-use std::convert::{TryFrom, TryInto};
-use std::path::Path;
 
 use crate::interface::ComponentInterface;
 use crate::MergeWith;
@@ -99,17 +98,13 @@ impl MergeWith for Config {
 }
 
 /// Generate foreign language bindings from a compiled `uniffi` library.
-pub fn write_bindings<P>(
+pub fn write_bindings(
     config: &Config,
     ci: &ComponentInterface,
-    out_dir: P,
+    out_dir: &Utf8Path,
     language: TargetLanguage,
     try_format_code: bool,
-) -> Result<()>
-where
-    P: AsRef<Path>,
-{
-    let out_dir = out_dir.as_ref();
+) -> Result<()> {
     match language {
         TargetLanguage::Kotlin => {
             kotlin::write_bindings(&config.kotlin, ci, out_dir, try_format_code)?
@@ -129,16 +124,12 @@ where
 ///
 /// Note: This function is only used for compiling the unit tests. See #1169 for plans to refactor
 /// it.
-pub fn compile_bindings<P>(
+pub fn compile_bindings(
     config: &Config,
     ci: &ComponentInterface,
-    out_dir: P,
+    out_dir: &Utf8Path,
     language: TargetLanguage,
-) -> Result<()>
-where
-    P: AsRef<Path>,
-{
-    let out_dir = out_dir.as_ref();
+) -> Result<()> {
     match language {
         TargetLanguage::Kotlin => kotlin::compile_bindings(&config.kotlin, ci, out_dir)?,
         TargetLanguage::Swift => swift::compile_bindings(&config.swift, ci, out_dir)?,
@@ -152,13 +143,11 @@ where
 ///
 /// Note: This function is only used for compiling the unit tests. See #1169 for plans to refactor
 /// it.
-pub fn run_script<P1, P2>(out_dir: P1, script_file: P2, language: TargetLanguage) -> Result<()>
-where
-    P1: AsRef<Path>,
-    P2: AsRef<Path>,
-{
-    let out_dir = out_dir.as_ref();
-    let script_file = script_file.as_ref();
+pub fn run_script(
+    out_dir: &Utf8Path,
+    script_file: &Utf8Path,
+    language: TargetLanguage,
+) -> Result<()> {
     match language {
         TargetLanguage::Kotlin => kotlin::run_script(out_dir, script_file)?,
         TargetLanguage::Swift => swift::run_script(out_dir, script_file)?,

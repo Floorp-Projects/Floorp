@@ -1,6 +1,12 @@
 
 # cargo-vet audits file
 
+[[audits.android_logger]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.1 -> 0.11.0"
+notes = "Small crate, wrapping Android log functionality, reviewed by janerik"
+
 [[audits.arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
@@ -51,10 +57,22 @@ criteria = "safe-to-deploy"
 version = "50.1.0"
 notes = "Maintained by the Glean team at Mozilla"
 
+[[audits.glean]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "50.1.0 -> 50.1.4"
+notes = "Maintained by the Glean team at Mozilla"
+
 [[audits.glean-core]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "50.1.0"
+notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.glean-core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "50.1.0 -> 50.1.4"
 notes = "Maintained by the Glean team at Mozilla"
 
 [[audits.linked-hash-map]]
@@ -94,4 +112,34 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.19 -> 0.1.20"
 notes = "I am the author of most of these changes upstream, and prepared the release myself, at which point I looked at the other changes since 0.1.19."
+
+[[audits.uniffi]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0 -> 0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.uniffi_bindgen]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0 -> 0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.uniffi_build]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0 -> 0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.uniffi_macros]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0 -> 0.19.3"
+notes = "Maintained by the Glean and Application Services teams."
+
+[[audits.weedle2]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "2.0.1 -> 3.0.0"
+notes = "Maintained by the Glean and Application Services teams."
 
