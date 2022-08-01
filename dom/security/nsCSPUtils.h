@@ -91,6 +91,8 @@ static const char* CSPStrDirectives[] = {
     "navigate-to",                // NAVIGATE_TO_DIRECTIVE
     "script-src-elem",            // SCRIPT_SRC_ELEM_DIRECTIVE
     "script-src-attr",            // SCRIPT_SRC_ATTR_DIRECTIVE
+    "style-src-elem",             // STYLE_SRC_ELEM_DIRECTIVE
+    "style-src-attr",             // STYLE_SRC_ATTR_DIRECTIVE
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir) {
@@ -515,12 +517,33 @@ class nsCSPScriptSrcDirective : public nsCSPDirective {
   void setRestrictScriptElem() { mRestrictScriptElem = true; }
   void setRestrictScriptAttr() { mRestrictScriptAttr = true; }
 
-  virtual bool equals(CSPDirective aDirective) const override;
+  bool equals(CSPDirective aDirective) const override;
 
  private:
-  bool mRestrictWorkers;
-  bool mRestrictScriptElem;
-  bool mRestrictScriptAttr;
+  bool mRestrictWorkers = false;
+  bool mRestrictScriptElem = false;
+  bool mRestrictScriptAttr = false;
+};
+
+/* =============== nsCSPStyleSrcDirective ============= */
+
+/*
+ * In CSP 3 style-src is use as a fallback for style-src-elem and
+ * style-src-attr.
+ */
+class nsCSPStyleSrcDirective : public nsCSPDirective {
+ public:
+  explicit nsCSPStyleSrcDirective(CSPDirective aDirective);
+  virtual ~nsCSPStyleSrcDirective();
+
+  void setRestrictStyleElem() { mRestrictStyleElem = true; }
+  void setRestrictStyleAttr() { mRestrictStyleAttr = true; }
+
+  bool equals(CSPDirective aDirective) const override;
+
+ private:
+  bool mRestrictStyleElem = false;
+  bool mRestrictStyleAttr = false;
 };
 
 /* =============== nsBlockAllMixedContentDirective === */

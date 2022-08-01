@@ -64,6 +64,8 @@ interface nsIContentSecurityPolicy : nsISerializable
     NAVIGATE_TO_DIRECTIVE          = 21,
     SCRIPT_SRC_ELEM_DIRECTIVE      = 22,
     SCRIPT_SRC_ATTR_DIRECTIVE      = 23,
+    STYLE_SRC_ELEM_DIRECTIVE       = 24,
+    STYLE_SRC_ATTR_DIRECTIVE       = 25,
   };
 
   /**
