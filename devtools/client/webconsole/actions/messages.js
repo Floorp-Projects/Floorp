@@ -16,17 +16,18 @@ const {
 } = require("devtools/client/shared/redux/middleware/debounce");
 
 const {
+  CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+  MESSAGE_CLOSE,
+  MESSAGE_OPEN,
+  MESSAGE_REMOVE,
+  MESSAGE_TYPE,
   MESSAGES_ADD,
-  NETWORK_MESSAGES_UPDATE,
-  NETWORK_UPDATES_REQUEST,
   MESSAGES_CLEAR,
   MESSAGES_DISABLE,
-  MESSAGE_OPEN,
-  MESSAGE_CLOSE,
-  MESSAGE_TYPE,
-  MESSAGE_REMOVE,
-  CSS_MESSAGE_ADD_MATCHING_ELEMENTS,
+  NETWORK_MESSAGES_UPDATE,
+  NETWORK_UPDATES_REQUEST,
   PRIVATE_MESSAGES_CLEAR,
+  TARGET_MESSAGES_REMOVE,
 } = require("devtools/client/webconsole/constants");
 
 const defaultIdGenerator = new IdGenerator();
@@ -74,6 +75,13 @@ function messagesDisable(ids) {
 function privateMessagesClear() {
   return {
     type: PRIVATE_MESSAGES_CLEAR,
+  };
+}
+
+function targetMessagesRemove(targetFront) {
+  return {
+    type: TARGET_MESSAGES_REMOVE,
+    targetFront,
   };
 }
 
@@ -161,4 +169,5 @@ module.exports = {
   networkMessageUpdates,
   networkUpdateRequests,
   privateMessagesClear,
+  targetMessagesRemove,
 };
