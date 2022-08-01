@@ -42,6 +42,7 @@ loader.lazyRequireGetter(
 const ZoomKeys = require("devtools/client/shared/zoom-keys");
 
 const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
+const PREF_BROWSERTOOLBOX_SCOPE = "devtools.browsertoolbox.scope";
 
 /**
  * A WebConsoleUI instance is an interactive console initialized *per target*
@@ -74,10 +75,17 @@ class WebConsoleUI {
       this
     );
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
-    this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._onNetworkResourceUpdated = this._onNetworkResourceUpdated.bind(this);
     this.clearPrivateMessages = this.clearPrivateMessages.bind(this);
+    this._onScopePrefChanged = this._onScopePrefChanged.bind(this);
+
+    if (this.isBrowserConsole) {
+      Services.prefs.addObserver(
+        PREF_BROWSERTOOLBOX_SCOPE,
+        this._onScopePrefChanged
+      );
+    }
 
     EventEmitter.decorate(this);
   }
@@ -158,11 +166,17 @@ class WebConsoleUI {
       toolbox.off("select", this._onChangeSplitConsoleState);
     }
 
+    if (this.isBrowserConsole) {
+      Services.prefs.removeObserver(
+        PREF_BROWSERTOOLBOX_SCOPE,
+        this._onScopePrefChanged
+      );
+    }
+
     // Stop listening for targets
     this.hud.commands.targetCommand.unwatchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
-      onDestroyed: this._onTargetDestroyed,
     });
 
     const resourceCommand = this.hud.resourceCommand;
@@ -319,7 +333,6 @@ class WebConsoleUI {
     await commands.targetCommand.watchTargets({
       types: this.hud.commands.targetCommand.ALL_TYPES,
       onAvailable: this._onTargetAvailable,
-      onDestroyed: this._onTargetDestroyed,
     });
 
     await resourceCommand.watchResources(
@@ -556,16 +569,6 @@ class WebConsoleUI {
     }
   }
 
-  /**
-   * Called any time a target has been destroyed.
-   *
-   * @private
-   * See _onTargetAvailable for param's description.
-   */
-  _onTargetDestroyed({ targetFront }) {
-    // XXX keeping this as it's going to be used again in a patch in this queue
-  }
-
   _initUI() {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
@@ -696,6 +699,12 @@ class WebConsoleUI {
 
   _onChangeSplitConsoleState() {
     this.wrapper.dispatchSplitConsoleCloseButtonToggle();
+  }
+
+  _onScopePrefChanged() {
+    if (this.isBrowserConsole) {
+      this.hud.updateWindowTitle();
+    }
   }
 
   getInputCursor() {

@@ -117,13 +117,7 @@ class BrowserConsoleManager {
       once: true,
     });
 
-    const fissionSupport = Services.prefs.getBoolPref(
-      PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
-    );
-    const title = fissionSupport
-      ? l10n.getStr("multiProcessBrowserConsole.title")
-      : l10n.getStr("browserConsole.title");
-    win.document.title = title;
+    this.updateWindowTitle(win);
     return win;
   }
 
@@ -149,6 +143,36 @@ class BrowserConsoleManager {
    */
   getBrowserConsole() {
     return this._browserConsole;
+  }
+
+  /**
+   * Set the title of the Browser Console window.
+   *
+   * @param {Window} win: The BrowserConsole window
+   */
+  updateWindowTitle(win) {
+    const fissionSupport = Services.prefs.getBoolPref(
+      PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
+    );
+
+    let title;
+    if (!fissionSupport) {
+      title = l10n.getStr("browserConsole.title");
+    } else {
+      const mode = Services.prefs.getCharPref(
+        "devtools.browsertoolbox.scope",
+        null
+      );
+      if (mode == "everything") {
+        title = l10n.getStr("multiProcessBrowserConsole.title");
+      } else if (mode == "parent-process") {
+        title = l10n.getStr("parentProcessBrowserConsole.title");
+      } else {
+        throw new Error("Unsupported mode: " + mode);
+      }
+    }
+
+    win.document.title = title;
   }
 }
 
