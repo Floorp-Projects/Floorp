@@ -749,13 +749,6 @@ class PlanarYCbCrImage : public Image {
   }
 
   /**
-   * Ask this Image to not convert YUV to RGB during SetData, and make
-   * the original data available through GetData. This is optional,
-   * and not all PlanarYCbCrImages will support it.
-   */
-  virtual void SetDelayedConversion(bool aDelayed) {}
-
-  /**
    * Grab the original YUV data. This is optional.
    */
   virtual const Data* GetData() const { return &mData; }
