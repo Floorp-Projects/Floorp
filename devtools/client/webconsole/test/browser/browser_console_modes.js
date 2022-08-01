@@ -81,6 +81,11 @@ async function checkMessages(isFissionSupported) {
       ),
       "Show content messages menu item isn't displayed when Browser Console has Fission support"
     );
+    is(
+      hud.chromeWindow.document.title,
+      "Multiprocess Browser Console",
+      "Browser Console window has expected title"
+    );
   } else {
     ok(
       !chromeDebugToolbar,
@@ -91,6 +96,11 @@ async function checkMessages(isFissionSupported) {
         ".webconsole-console-settings-menu-item-contentMessages"
       ),
       "Show content messages menu item is displayed when Browser Console does not have Fission support"
+    );
+    is(
+      hud.chromeWindow.document.title,
+      "Browser Console",
+      "Browser Console window has expected title"
     );
   }
 
@@ -176,6 +186,14 @@ async function checkMessages(isFissionSupported) {
     );
   }
 
+  if (isFissionSupported) {
+    is(
+      hud.chromeWindow.document.title,
+      "Parent process Browser Console",
+      "Browser Console window title was updated"
+    );
+  }
+
   info(
     "Check that message from parent process is still visible in the Browser Console"
   );
@@ -209,6 +227,14 @@ async function checkMessages(isFissionSupported) {
     ok(
       findConsoleAPIMessage(hud, expectedMessage),
       `"${expectedMessage}" is visible`
+    );
+  }
+
+  if (isFissionSupported) {
+    is(
+      hud.chromeWindow.document.title,
+      "Multiprocess Browser Console",
+      "Browser Console window title was updated again"
     );
   }
 
