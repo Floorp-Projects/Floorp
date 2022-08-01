@@ -174,7 +174,7 @@ impl PingUploadTask {
         matches!(self, PingUploadTask::Wait { .. })
     }
 
-    fn done() -> Self {
+    pub(crate) fn done() -> Self {
         PingUploadTask::Done { unused: 0 }
     }
 }
