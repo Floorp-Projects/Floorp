@@ -470,12 +470,28 @@ class HTTP2ProxyCode {
           stream.close();
         }
       });
+      const http2 = require("http2");
       socket.on("error", error => {
-        // On windows platform, the sockeet is closed with ECONNRESET in the end.
-        if (error.errno == "ECONNRESET") {
-          return;
+        const status = error.errno == "ENOTFOUND" ? 404 : 502;
+        console.log(`responsing with http_code='${status}'`);
+        try {
+          stream.respond({ ":status": status });
+          stream.end();
+        } catch (exception) {
+          stream.close(http2.constants.NGHTTP2_CONNECT_ERROR);
         }
-        throw `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`;
+      });
+      socket.on("close", () => {
+        stream.close();
+      });
+      stream.on("close", () => {
+        socket.end();
+      });
+      stream.on("aborted", () => {
+        socket.end();
+      });
+      stream.on("error", error => {
+        console.log("RESPONSE STREAM ERROR", error);
       });
     });
   }
