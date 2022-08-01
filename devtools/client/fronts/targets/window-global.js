@@ -27,6 +27,10 @@ class WindowGlobalTargetFront extends TargetMixin(
     // used anywhere else.
     this._javascriptEnabled = null;
 
+    // If this target was retrieved via NodeFront connectToFrame, keep a
+    // reference to the parent NodeFront.
+    this._parentNodeFront = null;
+
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onFrameUpdate = this._onFrameUpdate.bind(this);
 
@@ -92,6 +96,14 @@ class WindowGlobalTargetFront extends TargetMixin(
     }
   }
 
+  getParentNodeFront() {
+    return this._parentNodeFront;
+  }
+
+  setParentNodeFront(nodeFront) {
+    this._parentNodeFront = nodeFront;
+  }
+
   /**
    * Set the targetFront url.
    *
@@ -143,6 +155,7 @@ class WindowGlobalTargetFront extends TargetMixin(
 
   destroy() {
     const promise = super.destroy();
+    this._parentNodeFront = null;
 
     // As detach isn't necessarily called on target's destroy
     // (it isn't for local tabs), ensure removing listeners set in constructor.
