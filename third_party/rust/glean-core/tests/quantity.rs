@@ -113,6 +113,6 @@ fn quantities_must_not_set_when_passed_negative() {
     // Make sure that the errors have been recorded
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 }

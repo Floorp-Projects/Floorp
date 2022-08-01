@@ -128,7 +128,7 @@ fn long_string_values_are_truncated() {
     // Ensure the error has been recorded.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)
     );
 
     metric.set_sync(&glean, vec![test_string.clone()]);
@@ -142,7 +142,7 @@ fn long_string_values_are_truncated() {
     // Ensure the error has been recorded.
     assert_eq!(
         Ok(2),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)
     );
 }
 
@@ -170,9 +170,7 @@ fn disabled_string_lists_dont_record() {
     assert_eq!(None, metric.get_value(&glean, "store1"));
 
     // Ensure no error was recorded.
-    assert!(
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None).is_err()
-    );
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err());
 }
 
 #[test]
@@ -206,7 +204,7 @@ fn string_lists_dont_exceed_max_items() {
     // Ensure we recorded the error.
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 
     // Try to set it to a list that's too long. Ensure it cuts off at 20 elements.
@@ -220,7 +218,7 @@ fn string_lists_dont_exceed_max_items() {
 
     assert_eq!(
         Ok(2),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 }
 
@@ -243,7 +241,5 @@ fn set_does_not_record_error_when_receiving_empty_list() {
     assert_eq!(Some(vec![]), metric.get_value(&glean, "store1"));
 
     // Ensure we didn't record an error.
-    assert!(
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None).is_err()
-    );
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err());
 }

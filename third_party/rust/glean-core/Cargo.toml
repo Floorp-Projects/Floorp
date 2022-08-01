@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "50.1.3"
+version = "51.0.1"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -45,9 +45,6 @@ features = ["serde"]
 
 [dependencies.crossbeam-channel]
 version = "0.5"
-
-[dependencies.ffi-support]
-version = "0.4.0"
 
 [dependencies.flate2]
 version = "1.0.19"
@@ -112,9 +109,6 @@ version = "3.1.0"
 [build-dependencies.uniffi_build]
 version = "0.19.3"
 features = ["builtin-bindgen"]
-
-[features]
-rkv-safe-mode = []
 
 [target."cfg(not(target_os = \"android\"))".dependencies.env_logger]
 version = "0.9.0"

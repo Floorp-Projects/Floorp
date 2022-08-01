@@ -136,30 +136,8 @@ macro_rules! test_get {
 /// # Arguments
 ///
 /// * `$metric`  - The metric to test.
-/// * `$storage` - the storage name to look into, an nsACString.
 macro_rules! test_get_errors {
-    ($metric:path, $storage:ident) => {{
-        let storage = if $storage.is_empty() {
-            None
-        } else {
-            Some($storage.to_utf8())
-        };
-        // Note: I'd really appreciate a trick that'd get the compiler to
-        // double-check I haven't missed any error types here.
-
-        test_get_errors_string!($metric, storage)
-    }};
-}
-
-/// Check the provided metric in the provided storage for errors.
-/// On finding one, return an error string.
-///
-/// # Arguments
-///
-/// * `$metric`  - The metric to test.
-/// * `$storage` - the storage name to look into, an Option<String>
-macro_rules! test_get_errors_string {
-    ($metric:path, $storage:ident) => {{
+    ($metric:path) => {{
         let error_types = [
             glean::ErrorType::InvalidValue,
             glean::ErrorType::InvalidLabel,
@@ -168,7 +146,7 @@ macro_rules! test_get_errors_string {
         ];
         let mut error_str = None;
         for &error_type in error_types.iter() {
-            let num_errors = $metric.test_get_num_recorded_errors(error_type, $storage.as_deref());
+            let num_errors = $metric.test_get_num_recorded_errors(error_type);
             if num_errors > 0 {
                 error_str = Some(format!(
                     "Metric had {} error(s) of type {}!",

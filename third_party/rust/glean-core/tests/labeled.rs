@@ -167,7 +167,7 @@ fn can_record_error_for_submetric() {
     // Make sure that the errors have been recorded
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow, None)
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidOverflow)
     );
 }
 

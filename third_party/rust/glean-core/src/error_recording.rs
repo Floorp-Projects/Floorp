@@ -157,16 +157,13 @@ pub fn test_get_num_recorded_errors(
     glean: &Glean,
     meta: &CommonMetricData,
     error: ErrorType,
-    ping_name: Option<&str>,
 ) -> Result<i32, String> {
-    let use_ping_name = ping_name.unwrap_or(&meta.send_in_pings[0]);
     let metric = get_error_metric_for_metric(meta, error);
 
-    metric.get_value(glean, Some(use_ping_name)).ok_or_else(|| {
+    metric.get_value(glean, Some("metrics")).ok_or_else(|| {
         format!(
-            "No error recorded for {} in '{}' store",
+            "No error recorded for {} in 'metrics' store",
             meta.base_identifier(),
-            use_ping_name
         )
     })
 }
@@ -221,24 +218,19 @@ mod test {
             expected_invalid_labels_errors,
         );
 
-        for store in &["store1", "store2", "metrics"] {
+        let invalid_val =
+            get_error_metric_for_metric(string_metric.meta(), ErrorType::InvalidValue);
+        let invalid_label =
+            get_error_metric_for_metric(string_metric.meta(), ErrorType::InvalidLabel);
+        for &store in &["store1", "store2", "metrics"] {
             assert_eq!(
-                Ok(expected_invalid_values_errors),
-                test_get_num_recorded_errors(
-                    &glean,
-                    string_metric.meta(),
-                    ErrorType::InvalidValue,
-                    Some(store)
-                )
+                Some(expected_invalid_values_errors),
+                invalid_val.get_value(&glean, Some(store))
             );
+
             assert_eq!(
-                Ok(expected_invalid_labels_errors),
-                test_get_num_recorded_errors(
-                    &glean,
-                    string_metric.meta(),
-                    ErrorType::InvalidLabel,
-                    Some(store)
-                )
+                Some(expected_invalid_labels_errors),
+                invalid_label.get_value(&glean, Some(store))
             );
         }
     }

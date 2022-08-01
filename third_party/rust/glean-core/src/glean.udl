@@ -242,7 +242,7 @@ interface CounterMetric {
 
     i32? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 // Different resolutions supported by the time related metric types
@@ -277,7 +277,7 @@ interface TimespanMetric {
 
     i64? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface BooleanMetric {
@@ -287,7 +287,7 @@ interface BooleanMetric {
 
     boolean? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface StringMetric {
@@ -297,7 +297,7 @@ interface StringMetric {
 
     string? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface LabeledCounter {
@@ -305,7 +305,7 @@ interface LabeledCounter {
 
     CounterMetric get(string label);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface LabeledBoolean {
@@ -313,7 +313,7 @@ interface LabeledBoolean {
 
     BooleanMetric get(string label);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface LabeledString {
@@ -321,7 +321,7 @@ interface LabeledString {
 
     StringMetric get(string label);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface StringListMetric {
@@ -333,7 +333,7 @@ interface StringListMetric {
 
     sequence<string>? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface UrlMetric {
@@ -343,7 +343,7 @@ interface UrlMetric {
 
     string? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface UuidMetric {
@@ -355,7 +355,7 @@ interface UuidMetric {
 
     string? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface QuantityMetric {
@@ -365,7 +365,7 @@ interface QuantityMetric {
 
     i64? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 // A snapshot of all buckets and the accumulated sum of a distribution.
@@ -398,7 +398,7 @@ interface TimingDistributionMetric {
 
     DistributionData? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 // Different resolutions supported by the memory related metric types
@@ -423,7 +423,7 @@ interface MemoryDistributionMetric {
 
     DistributionData? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 // Different kinds of histograms.
@@ -441,7 +441,7 @@ interface CustomDistributionMetric {
 
     DistributionData? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 // Representation of a date, time and timezone.
@@ -465,7 +465,7 @@ interface DatetimeMetric {
 
     string? test_get_value_as_string(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 // Represents the recorded data for a single event.
@@ -498,7 +498,7 @@ interface EventMetric {
 
     sequence<RecordedEvent>? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 dictionary Rate {
@@ -515,7 +515,7 @@ interface RateMetric {
 
     Rate? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface DenominatorMetric {
@@ -525,7 +525,7 @@ interface DenominatorMetric {
 
     i32? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface NumeratorMetric {
@@ -535,7 +535,7 @@ interface NumeratorMetric {
 
     Rate? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };
 
 interface TextMetric {
@@ -545,5 +545,5 @@ interface TextMetric {
 
     string? test_get_value(optional string? ping_name = null);
 
-    i32 test_get_num_recorded_errors(ErrorType error, optional string? ping_name = null);
+    i32 test_get_num_recorded_errors(ErrorType error);
 };

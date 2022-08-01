@@ -24,9 +24,7 @@ fn rate_smoke() {
     metric.add_to_numerator_sync(&glean, 0);
     metric.add_to_denominator_sync(&glean, 0);
 
-    assert!(
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None).is_err(),
-    );
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err());
 
     // Adding a negative value errors.
     metric.add_to_numerator_sync(&glean, -1);
@@ -34,7 +32,7 @@ fn rate_smoke() {
 
     assert_eq!(
         Ok(2),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None),
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue),
     );
 
     // Getting the value returns 0s if that's all we have.
@@ -61,16 +59,14 @@ fn numerator_smoke() {
     // Adding 0 doesn't error.
     metric.add_to_numerator_sync(&glean, 0);
 
-    assert!(
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None).is_err()
-    );
+    assert!(test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err());
 
     // Adding a negative value errors.
     metric.add_to_numerator_sync(&glean, -1);
 
     assert_eq!(
         Ok(1),
-        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue, None),
+        test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue),
     );
 
     // Getting the value returns 0s if that's all we have.
@@ -124,12 +120,8 @@ fn denominator_smoke() {
     denom.add_sync(&glean, 7);
 
     // no errors.
-    assert!(
-        test_get_num_recorded_errors(&glean, num1.meta(), ErrorType::InvalidValue, None).is_err()
-    );
-    assert!(
-        test_get_num_recorded_errors(&glean, num2.meta(), ErrorType::InvalidValue, None).is_err()
-    );
+    assert!(test_get_num_recorded_errors(&glean, num1.meta(), ErrorType::InvalidValue).is_err());
+    assert!(test_get_num_recorded_errors(&glean, num2.meta(), ErrorType::InvalidValue).is_err());
 
     // Getting the value returns 0s if that's all we have.
     let data = num1.get_value(&glean, None).unwrap();

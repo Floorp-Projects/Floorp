@@ -112,15 +112,9 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
         }
     }
 
-    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: glean::ErrorType,
-        ping_name: S,
-    ) -> i32 {
+    pub fn test_get_num_recorded_errors(&self, error: glean::ErrorType) -> i32 {
         match self {
-            EventMetric::Parent { inner, .. } => {
-                inner.test_get_num_recorded_errors(error, ping_name)
-            }
+            EventMetric::Parent { inner, .. } => inner.test_get_num_recorded_errors(error),
             EventMetric::Child(c) => panic!(
                 "Cannot get the number of recorded errors for {:?} in non-parent process!",
                 c.0

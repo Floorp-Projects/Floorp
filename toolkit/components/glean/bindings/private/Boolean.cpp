@@ -36,7 +36,7 @@ void BooleanMetric::Set(bool aValue) const {
 Result<Maybe<bool>, nsCString> BooleanMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_boolean_test_get_error(mId, &aPingName, &err)) {
+  if (fog_boolean_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_boolean_test_has_value(mId, &aPingName)) {

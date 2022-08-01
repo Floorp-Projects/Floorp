@@ -28,7 +28,7 @@ void DenominatorMetric::Add(int32_t aAmount) const {
 Result<Maybe<int32_t>, nsCString> DenominatorMetric::TestGetValue(
     const nsACString& aPingName) const {
   nsCString err;
-  if (fog_denominator_test_get_error(mId, &aPingName, &err)) {
+  if (fog_denominator_test_get_error(mId, &err)) {
     return Err(err);
   }
   if (!fog_denominator_test_has_value(mId, &aPingName)) {

@@ -231,11 +231,11 @@ pub(crate) mod __glean_metric_maps {
     ///
     /// Panics if no event by the given metric ID could be found.
     #[allow(unused_variables)]
-    pub(crate) fn event_test_get_error(metric_id: u32, ping_name: Option<String>) -> Option<String> {
+    pub(crate) fn event_test_get_error(metric_id: u32) -> Option<String> {
         #[cfg(feature = "with_gecko")]
         match metric_id {
 {% for metric_id, event in events_by_id.items() %}
-           {{metric_id}} => test_get_errors_string!(super::{{event}}, ping_name),
+           {{metric_id}} => test_get_errors!(super::{{event}}),
 {% endfor %}
            _ => panic!("No event for metric id {}", metric_id),
         }

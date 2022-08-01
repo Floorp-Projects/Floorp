@@ -143,13 +143,9 @@ mod linear {
         assert_eq!(1, snapshot.values[&3]);
 
         // No errors should be reported.
-        assert!(test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidValue,
-            Some("store1")
-        )
-        .is_err());
+        assert!(
+            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err()
+        );
     }
 
     #[test]
@@ -191,12 +187,7 @@ mod linear {
         // 1 error should be reported.
         assert_eq!(
             Ok(1),
-            test_get_num_recorded_errors(
-                &glean,
-                metric.meta(),
-                ErrorType::InvalidValue,
-                Some("store1")
-            )
+            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
         );
     }
 
@@ -354,13 +345,9 @@ mod exponential {
         assert_eq!(1, snapshot.values[&3]);
 
         // No errors should be reported.
-        assert!(test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidValue,
-            Some("store1")
-        )
-        .is_err());
+        assert!(
+            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue).is_err()
+        );
     }
 
     #[test]
@@ -402,12 +389,7 @@ mod exponential {
         // 1 error should be reported.
         assert_eq!(
             Ok(1),
-            test_get_num_recorded_errors(
-                &glean,
-                metric.meta(),
-                ErrorType::InvalidValue,
-                Some("store1")
-            )
+            test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
         );
     }
 

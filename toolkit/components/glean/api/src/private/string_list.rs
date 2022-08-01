@@ -143,16 +143,9 @@ impl StringList for StringListMetric {
     /// # Returns
     ///
     /// The number of errors recorded.
-    pub fn test_get_num_recorded_errors<'a, S: Into<Option<&'a str>>>(
-        &self,
-        error: glean::ErrorType,
-        ping_name: S,
-    ) -> i32 {
-        let ping_name = ping_name.into().map(|s| s.to_string());
+    pub fn test_get_num_recorded_errors(&self, error: glean::ErrorType) -> i32 {
         match self {
-            StringListMetric::Parent { inner, .. } => {
-                inner.test_get_num_recorded_errors(error, ping_name)
-            }
+            StringListMetric::Parent { inner, .. } => inner.test_get_num_recorded_errors(error),
             StringListMetric::Child(c) => panic!(
                 "Cannot get the number of recorded errors for {:?} in non-parent process!",
                 c.0
