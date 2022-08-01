@@ -918,6 +918,10 @@ void DCSurfaceSwapChain::AttachExternalImage(
       src.texture->mColorSpace,
       IsYuv(src.format) ? Some(src.texture->mColorRange) : Nothing(),
   };
+  src.alphaMode = DXGI_ALPHA_MODE_IGNORE;
+  if (gfx::Info(src.format).value().hasAlpha) {
+    src.alphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+  }
 
   mSrc = Some(src);
 }
@@ -925,7 +929,7 @@ void DCSurfaceSwapChain::AttachExternalImage(
 // -
 
 Maybe<DCSurfaceSwapChain::Dest> CreateSwapChain(ID3D11Device&, gfx::IntSize,
-                                                DXGI_FORMAT,
+                                                DXGI_FORMAT, DXGI_ALPHA_MODE,
                                                 DXGI_COLOR_SPACE_TYPE);
 
 // -
@@ -1228,7 +1232,7 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
         const auto& plan = *mDest->plan.videoProcessor;
         if (mOverlayFormat && plan.dstYuvSpace) {
           mDest->dest = CreateSwapChain(*device, dstSize, *mOverlayFormat,
-                                        *plan.dstYuvSpace);
+                                        mSrc->alphaMode, *plan.dstYuvSpace);
           // We need to check if this works. If it does, we're going to
           // immediately redundently call this again below, but that's ok.
           if (!CallVideoProcessorBlt()) {
@@ -1236,13 +1240,14 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
           }
         }
         if (!mDest->dest) {
-          mDest->dest = CreateSwapChain(
-              *device, dstSize, DXGI_FORMAT_B8G8R8A8_UNORM, plan.dstRgbSpace);
+          mDest->dest =
+              CreateSwapChain(*device, dstSize, DXGI_FORMAT_B8G8R8A8_UNORM,
+                              mSrc->alphaMode, plan.dstRgbSpace);
         }
       } else if (mDest->plan.blitHelper) {
         const auto& plan = *mDest->plan.blitHelper;
         mDest->dest = CreateSwapChain(*device, dstSize, plan.dstDxgiFormat,
-                                      plan.dstDxgiSpace);
+                                      mSrc->alphaMode, plan.dstDxgiSpace);
       }
       MOZ_ASSERT(mDest->dest);
       mVisual->SetContent(mDest->dest->swapChain);
@@ -1270,7 +1275,7 @@ Maybe<gfx::Matrix> DCSurfaceSwapChain::EnsurePresented(
 
 static Maybe<DCSurfaceSwapChain::Dest> CreateSwapChain(
     ID3D11Device& device, const gfx::IntSize aSize, const DXGI_FORMAT aFormat,
-    const DXGI_COLOR_SPACE_TYPE aColorSpace) {
+    const DXGI_ALPHA_MODE aAlphaMode, const DXGI_COLOR_SPACE_TYPE aColorSpace) {
   auto swapChain = DCSurfaceSwapChain::Dest();
   swapChain.size = aSize;
   swapChain.format = aFormat;
@@ -1316,7 +1321,7 @@ static Maybe<DCSurfaceSwapChain::Dest> CreateSwapChain(
     if (IsYuv(desc.Format)) {
       desc.Flags |= DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO;
     }
-    desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+    desc.AlphaMode = aAlphaMode;  // DXGI_ALPHA_MODE_IGNORE;
 
     RefPtr<IDXGISwapChain1> swapChain1;
     HRESULT hr;

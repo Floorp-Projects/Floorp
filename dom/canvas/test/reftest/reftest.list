@@ -1,5 +1,6 @@
 # Canvas Filter Reftests
 include filters/reftest.list
+include color_quads.list
 
 # WebGL Reftests!
 defaults pref(webgl.force-enabled,true) skip-if(Android)
@@ -216,7 +217,10 @@ fuzzy(0-9,0-40000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-re
 # Force native GL (Windows):
 skip pref(webgl.disable-angle,true) == webgl-color-test.html?native-gl wrapper.html?colors-no-alpha.png
 
+
+# ----------------------------------------------------------------------
 # Non-WebGL Reftests!
+
 
 # Do we correctly handle multiple clip paths?
 != clip-multiple-paths.html clip-multiple-paths-badref.html

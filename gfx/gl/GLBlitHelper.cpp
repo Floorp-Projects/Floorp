@@ -212,9 +212,14 @@ const char* const kFragConvert_ColorLut = R"(
 // -
 
 static const char kFragBody[] = R"(
+  uniform bool uAlphaMultiply; // Default: false
   void main(void) {
     vec4 src = metaSample();
     vec3 dst = metaConvert(src.rgb);
+    if (uAlphaMultiply) {
+      dst *= src.a;
+    }
+    dst = min(dst, vec3(src.a)); // Ensure valid premult-alpha colors.
     FRAG_COLOR = vec4(dst, src.a);
   }
 )";
@@ -424,6 +429,8 @@ class ScopedDrawBlitState final {
 DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
     : mParent(*parent),
       mProg(prog),
+      mLoc_uAlphaMultiply(
+          mParent.mGL->fGetUniformLocation(mProg, "uAlphaMultiply")),
       mLoc_uDestMatrix(mParent.mGL->fGetUniformLocation(mProg, "uDestMatrix")),
       mLoc_uTexMatrix0(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix0")),
       mLoc_uTexMatrix1(mParent.mGL->fGetUniformLocation(mProg, "uTexMatrix1")),
@@ -431,8 +438,9 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
       mLoc_uColorMatrix(
           mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix")) {
   const auto& gl = mParent.mGL;
-  MOZ_GL_ASSERT(gl, mLoc_uDestMatrix != -1);
-  MOZ_GL_ASSERT(gl, mLoc_uTexMatrix0 != -1);
+  MOZ_GL_ASSERT(gl, mLoc_uAlphaMultiply >= -1);  // Optional
+  MOZ_GL_ASSERT(gl, mLoc_uDestMatrix != -1);     // Required
+  MOZ_GL_ASSERT(gl, mLoc_uTexMatrix0 != -1);     // Required
   if (mLoc_uColorMatrix != -1) {
     MOZ_GL_ASSERT(gl, mLoc_uTexMatrix1 != -1);
 
@@ -470,6 +478,14 @@ void DrawBlitProg::Draw(const BaseArgs& args,
   gl->fUseProgram(mProg);
 
   // --
+
+  const bool supportsAlphaMultiply = (mLoc_uAlphaMultiply != -1);
+  if (args.alphaMultiply) {
+    MOZ_ASSERT(supportsAlphaMultiply);
+  }
+  if (supportsAlphaMultiply) {
+    gl->fUniform1i(mLoc_uAlphaMultiply, int(args.alphaMultiply));
+  }
 
   Mat3 destMatrix;
   if (args.destRect) {

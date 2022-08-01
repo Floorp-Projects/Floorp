@@ -127,6 +127,7 @@ Mat3 SubRectMat3(const gfx::IntRect& bigSubrect, const gfx::IntSize& smallSize,
 class DrawBlitProg final {
   const GLBlitHelper& mParent;
   const GLuint mProg;
+  const GLint mLoc_uAlphaMultiply;
   const GLint mLoc_uDestMatrix;
   const GLint mLoc_uTexMatrix0;
   const GLint mLoc_uTexMatrix1;
@@ -155,6 +156,7 @@ class DrawBlitProg final {
         destSize;  // Always needed for (at least) setting the viewport.
     Maybe<gfx::IntRect> destRect;
     Maybe<uint32_t> texUnitForColorLut;
+    bool alphaMultiply = false;
   };
   struct YUVArgs final {
     Mat3 texMatrix1;
