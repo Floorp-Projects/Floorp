@@ -945,7 +945,7 @@ struct BaseCompiler final {
                     CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
   CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call);
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  void callRef(const Stk& calleeRef, const FunctionCall& call,
+  void callRef(const Stk& calleeRef, const FunctionCall& call, bool checkNull,
                CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
 #endif
   CodeOffset builtinCall(SymbolicAddress builtin, const FunctionCall& call);

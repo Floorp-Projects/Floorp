@@ -229,8 +229,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           return iter.unrecognizedOpcode(&op);
         }
         const FuncType* unusedType;
+        bool unused;
         NothingVector unusedArgs{};
-        CHECK(iter.readCallRef(&unusedType, &nothing, &unusedArgs));
+        CHECK(iter.readCallRef(&unusedType, &unused, &nothing, &unusedArgs));
       }
 #endif
       case uint16_t(Op::I32Const): {

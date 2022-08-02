@@ -1604,12 +1604,15 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 void BaseCompiler::callRef(const Stk& calleeRef, const FunctionCall& call,
-                           CodeOffset* fastCallOffset,
+                           bool checkNull, CodeOffset* fastCallOffset,
                            CodeOffset* slowCallOffset) {
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::FuncRef);
   CalleeDesc callee = CalleeDesc::wasmFuncRef();
 
   loadRef(calleeRef, RegRef(WasmCallRefReg));
+  if (checkNull) {
+    emitGcNullCheck(RegRef(WasmCallRefReg));
+  }
   masm.wasmCallRef(desc, callee, fastCallOffset, slowCallOffset);
 }
 #endif
@@ -4750,9 +4753,10 @@ bool BaseCompiler::emitCallRef() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   const FuncType* funcType;
+  bool maybeNull;
   Nothing unused_callee;
   BaseNothingVector unused_args{};
-  if (!iter_.readCallRef(&funcType, &unused_callee, &unused_args)) {
+  if (!iter_.readCallRef(&funcType, &maybeNull, &unused_callee, &unused_args)) {
     return false;
   }
 
@@ -4786,7 +4790,7 @@ bool BaseCompiler::emitCallRef() {
   const Stk& callee = peek(results.count());
   CodeOffset fastCallOffset;
   CodeOffset slowCallOffset;
-  callRef(callee, baselineCall, &fastCallOffset, &slowCallOffset);
+  callRef(callee, baselineCall, maybeNull, &fastCallOffset, &slowCallOffset);
   if (!createStackMap("emitCallRef", fastCallOffset)) {
     return false;
   }
