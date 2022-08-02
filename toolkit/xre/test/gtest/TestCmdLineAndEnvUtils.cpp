@@ -252,8 +252,8 @@ bool TestCommandLineImpl(CommandLine const& cl) {
   // EnsureCommandlineSafe's signature isn't const-correct here for annoying
   // reasons, but it is indeed non-mutating.
   CharT** argv = const_cast<CharT**>(cl.argv<CharT>());
-  return mozilla::internal::EnsureCommandlineSafeImpl(argc, argv,
-                                                      kRequiredArgs);
+  return mozilla::internal::EnsureCommandlineSafeImpl<CharT>(argc, argv,
+                                                             kRequiredArgs);
 }
 
 // Test that `args` produces `expectation`. On Windows, test against both

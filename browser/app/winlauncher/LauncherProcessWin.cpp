@@ -30,6 +30,7 @@
 #include "ErrorHandler.h"
 #include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
+#include "../BrowserDefines.h"
 
 #if defined(MOZ_LAUNCHER_PROCESS)
 #  include "mozilla/LauncherRegistryInfo.h"
@@ -241,9 +242,7 @@ namespace mozilla {
 
 Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
                         const StaticXREAppData& aAppData) {
-  // Note: keep in sync with nsBrowserApp.
-  const char* acceptableParams[] = {"url", "private-window"};
-  EnsureCommandlineSafe(argc, argv, acceptableParams);
+  EnsureBrowserCommandlineSafe(argc, argv);
 
   SetLauncherErrorAppData(aAppData);
 

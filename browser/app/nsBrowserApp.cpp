@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsXULAppAPI.h"
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/XREAppData.h"
 #include "XREShellData.h"
 #include "application.ini.h"
 #include "mozilla/Bootstrap.h"
 #include "mozilla/ProcessType.h"
 #include "mozilla/RuntimeExceptionModule.h"
+#include "BrowserDefines.h"
 #if defined(XP_WIN)
 #  include <windows.h>
 #  include <stdlib.h>
@@ -223,9 +223,7 @@ static int do_main(int argc, char* argv[], char* envp[]) {
     gBootstrap->XRE_LibFuzzerSetDriver(fuzzer::FuzzerDriver);
 #endif
 
-  // Note: keep in sync with LauncherProcessWin.
-  const char* acceptableParams[] = {"url", "private-window"};
-  EnsureCommandlineSafe(argc, argv, acceptableParams);
+  EnsureBrowserCommandlineSafe(argc, argv);
 
   return gBootstrap->XRE_main(argc, argv, config);
 }
