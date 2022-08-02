@@ -8,11 +8,12 @@ These are instructions for preparing a release branch for Android Components and
 
 ## [Release Management] Creating a new Beta release branch
 
-**This part is 100% covered by the Release Management team. Please do not handle it anymore.**
+**This part is 100% covered by the Release Management team. The dev team should not perform these steps.**
 
 1. Create a branch name with the format `releases/[beta_version].0` off of the `main` branch (for example, `releases/98.0`) through the GitHub UI.
 `[beta_version]` should follow the Firefox Beta release number. See [Firefox Release Calendar](https://wiki.mozilla.org/Release_Management/Calendar).
-2. In [Gecko.kt](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt):
+2. Notify the dev team that they can start the new Nightly development cycle per the steps given in the next section ⬇️
+3. In [Gecko.kt](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt):
    - Set the `channel` to `val channel = GeckoChannel.BETA`.
 
     ```diff
@@ -30,11 +31,15 @@ These are instructions for preparing a release branch for Android Components and
 
     /**
     ```
-3. Create a commit and pull request named `Switch to GeckoView Beta` for this change. The pull request should be committed into the `releases/[beta_version].0` branch. Land the pull request. This will create busted builds which are expected. The next step should green it up.
-4. Let the Github Action bump the geckoview version like in [#12485](https://github.com/mozilla-mobile/android-components/pull/12485).
-5. Once both pull requests are landed, go to [Shipit](https://shipit.mozilla-releng.net/) and kick off a new release.
-6. After 30-60 minutes, follow up to see if a `[beta_version].0.0` build is available in one of the AC components on [maven/components](https://maven.mozilla.org/?prefix=maven2/org/mozilla/components/).
-7. Tell the dev team they can handle the changes down below ⬇️
+4. Create a commit named `Switch to GeckoView Beta` for this change. This change can either be directly committed to the newly-created `releases/[beta_version].0` branch or a pull request can be created against it and then merged. Once landed, it is expected that this will create busted builds. The next step should green it up.
+5. The Github Action will automatically bump the GeckoView version once the new Beta build is created and uploaded to Maven, as shown in [#12547](https://github.com/mozilla-mobile/android-components/pull/12547) for example.
+6. Once both of the above commits have landed, create a new AC release in [Ship-It](https://shipit.mozilla-releng.net/) per normal practice.
+7. When the release automation completes, a new `v[beta_version].0.0` release tag will be created in Github. Following the template below, update the description with the release notes URL, commit range, and milestone like shown in [v104.0.0](https://github.com/mozilla-mobile/android-components/releases/tag/v104.0.0) and click `Update release` when ready.
+    ```
+    * [Release notes](https://mozac.org/changelog/#9800)
+    * [Commits](https://github.com/mozilla-mobile/android-components/compare/v97.0.0...v98.0.0)
+    * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/145?closed=1)
+    ```
 
 ## [Dev team] Starting the next Nightly development cycle
 
@@ -90,7 +95,7 @@ These are instructions for preparing a release branch for Android Components and
 5. Create a pull request with these 2 commits and land.
   - If this is landed after the scheduled [cron task](https://github.com/mozilla-mobile/android-components/blob/main/.cron.yml#L13) that will build and bump AC automatically, trigger a manual AC build through the [hook](https://firefox-ci-tc.services.mozilla.com/hooks/project-releng/cron-task-mozilla-mobile-android-components%2Fnightly). At time of writing, the morning cron task is schedule to run at 14:30 UTC (9:30AM EST).
   - When the manual AC build is complete, trigger the [hook](https://firefox-ci-tc.services.mozilla.com/hooks/project-releng/cron-task-mozilla-mobile-fenix%2Fbump-android-components) to bump AC in Fenix.
-6. After an hour, follow up by checking if a new `[nightly_version]` AC build is available in [nightly.maven/components](https://nightly.maven.mozilla.org/?prefix=maven2/org/mozilla/components/). Fenix will automatically receive the Nightly AC bump.
+6. After an hour, follow up by checking if a new `[nightly_version]` AC build is available in [nightly.maven/components](https://nightly.maven.mozilla.org/?prefix=maven2/org/mozilla/components/). Fenix and Focus will automatically receive the Nightly AC bump.
 
 See [https://github.com/mozilla-mobile/android-components/pull/11519](https://github.com/mozilla-mobile/android-components/pull/11519) for an example.
 
