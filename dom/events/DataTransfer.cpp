@@ -1501,7 +1501,10 @@ void DataTransfer::IPCDataTransferTextItemsToDataTransfer(
 
   uint32_t i = 0;
   for (const IPCDataTransferItem& item : aIpcDataTransfer.items()) {
-    MOZ_ASSERT(item.data().type() == IPCDataTransferData::TnsString);
+    if (item.data().type() != IPCDataTransferData::TIPCDataTransferString) {
+      MOZ_ASSERT_UNREACHABLE("Expected transferable item to be a string");
+      continue;
+    }
     RefPtr<nsVariantCC> variant = new nsVariantCC();
     nsresult rv = nsContentUtils::IPCTransferableItemToVariant(
         item, variant, ContentChild::GetSingleton());
