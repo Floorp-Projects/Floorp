@@ -453,17 +453,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin-bottom: var(--tabs-navbar-shadow-size);
 }
 
-:root:not([privatebrowsingmode=temporary]) .accessibility-indicator,
 .private-browsing-indicator {
-  margin-inline-end: 12px;
+  margin-inline: 12px;
 }
-
-:root:not([accessibilitymode]) .private-browsing-indicator,
-.accessibility-indicator {
-  margin-inline-start: 12px;
-}
-
-/* End private browsing and accessibility indicators */
 
 #UITourTooltipButtons {
   /**

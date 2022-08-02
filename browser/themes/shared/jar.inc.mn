@@ -180,7 +180,6 @@
 #ifndef MOZ_WIDGET_GTK
   skin/classic/browser/import-export.svg              (../shared/icons/import-export.svg)
 #endif
-  skin/classic/browser/indicator-accessibility.svg    (../shared/icons/indicator-accessibility.svg)
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
   skin/classic/browser/login.svg                      (../shared/icons/login.svg)
   skin/classic/browser/logo-android.svg               (../shared/icons/logo-android.svg)
