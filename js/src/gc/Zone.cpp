@@ -54,10 +54,11 @@ void ZoneAllocator::fixupAfterMovingGC() {
 #endif
 }
 
-void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
+void js::ZoneAllocator::updateSchedulingStateOnGCStart() {
   gcHeapSize.updateOnGCStart();
   mallocHeapSize.updateOnGCStart();
   jitHeapSize.updateOnGCStart();
+  perZoneGCTime = mozilla::TimeDuration();
 }
 
 void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc) {

@@ -18,6 +18,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TimeStamp.h"
 
 #include "builtin/FinalizationRegistryObject.h"
 #include "builtin/WeakRefObject.h"
@@ -49,6 +50,8 @@
 
 using namespace js;
 using namespace js::gc;
+
+using mozilla::TimeStamp;
 
 struct js::gc::FinalizePhase {
   gcstats::PhaseKind statsPhase;
@@ -328,6 +331,8 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
     Zone* zone = zones.removeFront();
     MOZ_ASSERT(zone->isGCFinished());
 
+    TimeStamp startTime = ReallyNow();
+
     Arena* emptyArenas = zone->arenas.takeSweptEmptyArenas();
 
     // We must finalize thing kinds in the order specified by
@@ -358,6 +363,10 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
         releaseArena(arena, lock);
       }
     }
+
+    // Record time spent sweeping this zone.
+    TimeStamp endTime = ReallyNow();
+    zone->perZoneGCTime += endTime - startTime;
   }
 }
 

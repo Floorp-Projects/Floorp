@@ -991,6 +991,8 @@ void Statistics::beginGC(JS::GCOptions options, const TimeStamp& currentTime) {
   if (gc->lastGCEndTime()) {
     timeSinceLastGC = currentTime - gc->lastGCEndTime();
   }
+
+  totalGCTime_ = TimeDuration();
 }
 
 void Statistics::measureInitialHeapSize() {
@@ -1185,6 +1187,8 @@ void Statistics::endSlice() {
     sendSliceTelemetry(slice);
 
     sliceCount_++;
+
+    totalGCTime_ += slice.end - slice.start;
   }
 
   bool last = !gc->isIncrementalGCInProgress();
