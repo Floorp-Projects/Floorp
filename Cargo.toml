@@ -165,3 +165,16 @@ path = "third_party/rust/mio-0.6.23"
 # https://github.com/mozilla/neqo/pull/1350
 [patch."https://github.com/mozilla/neqo"]
 neqo-common = { path = "third_party/rust/neqo-common" }
+
+# These are used to test UniFFI functionality.  We haven't figured out how we
+# want to publish these yet, so they are only accessible via git.  This works
+# okay, but it means that their dependencies on UniFFI crates will normally
+# also be the git versions.  Patch them to use the published versions to avoid
+# duplicate crates.
+
+[patch."https://github.com/mozilla/uniffi-rs.git"]
+uniffi = "0.19"
+uniffi_bindgen = "0.19"
+uniffi_build = "0.19"
+uniffi_macros = "0.19"
+weedle2 = "3.0.0"
