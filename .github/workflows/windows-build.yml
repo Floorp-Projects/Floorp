@@ -1,4 +1,4 @@
-name: Linux x64 Build
+name: Windows x64 Build
 
 on: workflow_dispatch
 
@@ -11,7 +11,7 @@ jobs:
 
     - name: Create environment
       run: |
-        wget https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe
+        bitsadmin /transfer download https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe %CD%\MozillaBuildSetup-4.0.1.exe
         .\MozillaBuildSetup-4.0.1.exe
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
@@ -29,4 +29,4 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: floorp-linux-x64
-        path: obj-x86_64-pc-linux-gnu/dist/floorp
+        path: obj-x86_64-pc-mingw32/dist/floorp
