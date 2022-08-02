@@ -240,6 +240,10 @@ typedef enum JSGCParamKey {
    * This parameter trades off GC time for memory usage. Smaller values result
    * in lower memory use and larger values result in less time spent collecting.
    *
+   * Heap limits are set to the heap's retained size plus some extra space. The
+   * extra space is calculated based on several factors but is scaled
+   * proportionally to this parameter.
+   *
    * Pref: javascript.options.mem.gc_heap_growth_factor
    * Default: HeapGrowthFactor
    */
