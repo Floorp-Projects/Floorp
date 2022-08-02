@@ -481,7 +481,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       freeTask(this),
       decommitTask(this),
       nursery_(this),
-      storeBuffer_(rt, nursery()) {
+      storeBuffer_(rt, nursery()),
+      lastAllocRateUpdateTime(ReallyNow()) {
   marker.setIncrementalGCEnabled(incrementalGCEnabled);
 }
 
@@ -2827,7 +2828,9 @@ void GCRuntime::finishCollection() {
 
   maybeStopPretenuring();
 
-  updateSchedulingStateAfterCollection();
+  TimeStamp currentTime = ReallyNow();
+
+  updateSchedulingStateAfterCollection(currentTime);
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->changeGCState(Zone::Finished, Zone::NoGC);
@@ -2838,7 +2841,6 @@ void GCRuntime::finishCollection() {
   clearSelectedForMarking();
 #endif
 
-  auto currentTime = ReallyNow();
   schedulingState.updateHighFrequencyMode(lastGCEndTime_, currentTime,
                                           tunables);
   lastGCEndTime_ = currentTime;
@@ -2904,7 +2906,7 @@ void GCRuntime::maybeStopPretenuring() {
   }
 }
 
-void GCRuntime::updateSchedulingStateAfterCollection() {
+void GCRuntime::updateSchedulingStateAfterCollection(TimeStamp currentTime) {
   TimeDuration totalGCTime = stats().totalGCTime();
   size_t totalInitialBytes = stats().initialCollectedBytes();
 
@@ -2921,6 +2923,32 @@ void GCRuntime::updateAllGCStartThresholds() {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     zone->updateGCStartThresholds(*this);
   }
+}
+
+void GCRuntime::updateAllocationRates() {
+  TimeStamp currentTime = ReallyNow();
+  MOZ_ASSERT(currentTime - lastAllocRateUpdateTime >=
+             collectorTimeSinceAllocRateUpdate.ref());
+
+  // Calculate mutator time since the last update. This ignores the fact that
+  // the zone could have been created since the last update.
+
+  TimeDuration totalTime = currentTime - lastAllocRateUpdateTime;
+  if (collectorTimeSinceAllocRateUpdate >= totalTime) {
+    // It shouldn't happen but occasionally we see collector time being larger
+    // than total time. Skip the update in that case.
+    return;
+  }
+
+  TimeDuration mutatorTime = totalTime - collectorTimeSinceAllocRateUpdate;
+
+  for (AllZonesIter zone(this); !zone.done(); zone.next()) {
+    zone->updateAllocationRate(mutatorTime);
+    zone->updateGCStartThresholds(*this);
+  }
+
+  lastAllocRateUpdateTime = currentTime;
+  collectorTimeSinceAllocRateUpdate = TimeDuration();
 }
 
 static const char* GCHeapStateToLabel(JS::HeapState heapState) {
@@ -3749,6 +3777,13 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   bool budgetWasIncreased = maybeIncreaseSliceBudget(budget);
 
   ScheduleZones(this);
+
+  auto updateCollectorTime = MakeScopeExit([&] {
+    if (const gcstats::Statistics::SliceData* slice = stats().lastSlice()) {
+      collectorTimeSinceAllocRateUpdate += slice->duration();
+    }
+  });
+
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(), gcOptions(), budget,
                            reason, budgetWasIncreased);
 
@@ -3951,6 +3986,10 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
   AutoSetZoneSliceThresholds sliceThresholds(this);
 
   schedulingState.updateHighFrequencyModeForReason(reason);
+
+  if (!isIncrementalGCInProgress() && tunables.balancedHeapLimitsEnabled()) {
+    updateAllocationRates();
+  }
 
   bool repeat;
   do {

@@ -755,6 +755,7 @@ class HeapSize {
   void removeGCArena() {
     MOZ_ASSERT(retainedBytes_ >= ArenaSize);
     removeBytes(ArenaSize, true /* only sweeping removes arenas */);
+    MOZ_ASSERT(retainedBytes_ <= bytes_);
   }
 
   void addBytes(size_t nbytes) {
@@ -797,6 +798,25 @@ class HeapSizeChild : public HeapSize {
     HeapSize::removeBytes(nbytes, updateRetainedSize);
     parent.removeBytes(nbytes, updateRetainedSize);
   }
+};
+
+class PerZoneGCHeapSize : public HeapSizeChild {
+ public:
+  size_t freedBytes() const { return freedBytes_; }
+  void clearFreedBytes() { freedBytes_ = 0; }
+
+  void removeGCArena(HeapSize& parent) {
+    HeapSizeChild::removeGCArena(parent);
+    freedBytes_ += ArenaSize;
+  }
+
+  void removeBytes(size_t nbytes, bool updateRetainedSize, HeapSize& parent) {
+    HeapSizeChild::removeBytes(nbytes, updateRetainedSize, parent);
+    freedBytes_ += nbytes;
+  }
+
+ private:
+  AtomicByteCount freedBytes_;
 };
 
 // Heap size thresholds used to trigger GC. This is an abstract base class for

@@ -169,9 +169,11 @@ class ZoneAllocator : public JS::shadow::Zone,
   void updateCollectionRate(mozilla::TimeDuration mainThreadGCTime,
                             size_t initialBytesForAllZones);
 
+  void updateAllocationRate(mozilla::TimeDuration mutatorTime);
+
  public:
   // The size of allocated GC arenas in this zone.
-  gc::HeapSizeChild gcHeapSize;
+  gc::PerZoneGCHeapSize gcHeapSize;
 
   // Threshold used to trigger GC based on GC heap size.
   gc::GCHeapThreshold gcHeapThreshold;
@@ -198,6 +200,11 @@ class ZoneAllocator : public JS::shadow::Zone,
   // it. Updated every time this zone is collected.
   MainThreadData<mozilla::Maybe<double>> smoothedCollectionRate;
   MainThreadOrGCTaskData<mozilla::TimeDuration> perZoneGCTime;
+
+  // Allocation rate estimate in MB/s of mutator time, and state used to
+  // calculate it.
+  MainThreadData<mozilla::Maybe<double>> smoothedAllocationRate;
+  MainThreadData<size_t> prevGCHeapSize;
 
  private:
 #ifdef DEBUG

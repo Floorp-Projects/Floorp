@@ -22,6 +22,7 @@ using namespace js::gc;
 using mozilla::CheckedInt;
 using mozilla::Some;
 using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 
 /*
  * We may start to collect a zone before its trigger threshold is reached if
@@ -430,6 +431,7 @@ void GCSchedulingState::updateHighFrequencyModeForReason(JS::GCReason reason) {
 
 static constexpr size_t BytesPerMB = 1024 * 1024;
 static constexpr double CollectionRateSmoothingFactor = 0.5;
+static constexpr double AllocationRateSmoothingFactor = 0.5;
 
 static double ExponentialMovingAverage(double prevAverage, double newData,
                                        double smoothingFactor) {
@@ -456,6 +458,31 @@ void js::ZoneAllocator::updateCollectionRate(
     smoothedCollectionRate = Some(ExponentialMovingAverage(
         prevRate, collectionRate, CollectionRateSmoothingFactor));
   }
+}
+
+void js::ZoneAllocator::updateAllocationRate(TimeDuration mutatorTime) {
+  // To get the total size allocated since the last collection we have to
+  // take account of how much memory got freed in the meantime.
+  size_t freedBytes = gcHeapSize.freedBytes();
+
+  size_t sizeIncludingFreedBytes = gcHeapSize.bytes() + freedBytes;
+
+  MOZ_ASSERT(prevGCHeapSize <= sizeIncludingFreedBytes);
+  size_t allocatedBytes = sizeIncludingFreedBytes - prevGCHeapSize;
+
+  double allocationRate =
+      double(allocatedBytes) / (mutatorTime.ToSeconds() * BytesPerMB);
+
+  if (!smoothedAllocationRate.ref()) {
+    smoothedAllocationRate = Some(allocationRate);
+  } else {
+    double prevRate = smoothedAllocationRate.ref().value();
+    smoothedAllocationRate = Some(ExponentialMovingAverage(
+        prevRate, allocationRate, AllocationRateSmoothingFactor));
+  }
+
+  gcHeapSize.clearFreedBytes();
+  prevGCHeapSize = gcHeapSize.bytes();
 }
 
 // GC thresholds may exceed the range of size_t on 32-bit platforms, so these
