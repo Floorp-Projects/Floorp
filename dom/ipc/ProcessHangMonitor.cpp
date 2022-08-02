@@ -154,22 +154,21 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   bool mSentReport;
 
   // These fields must be accessed with mMonitor held.
-  bool mTerminateScript MOZ_GUARDED_BY(mMonitor);
-  bool mStartDebugger MOZ_GUARDED_BY(mMonitor);
-  bool mFinishedStartingDebugger MOZ_GUARDED_BY(mMonitor);
-  bool mPaintWhileInterruptingJS MOZ_GUARDED_BY(mMonitor);
-  TabId mPaintWhileInterruptingJSTab MOZ_GUARDED_BY(mMonitor);
+  bool mTerminateScript GUARDED_BY(mMonitor);
+  bool mStartDebugger GUARDED_BY(mMonitor);
+  bool mFinishedStartingDebugger GUARDED_BY(mMonitor);
+  bool mPaintWhileInterruptingJS GUARDED_BY(mMonitor);
+  TabId mPaintWhileInterruptingJSTab GUARDED_BY(mMonitor);
   MOZ_INIT_OUTSIDE_CTOR LayersObserverEpoch mPaintWhileInterruptingJSEpoch
-      MOZ_GUARDED_BY(mMonitor);
-  bool mCancelContentJS MOZ_GUARDED_BY(mMonitor);
-  TabId mCancelContentJSTab MOZ_GUARDED_BY(mMonitor);
+      GUARDED_BY(mMonitor);
+  bool mCancelContentJS GUARDED_BY(mMonitor);
+  TabId mCancelContentJSTab GUARDED_BY(mMonitor);
   nsIRemoteTab::NavigationType mCancelContentJSNavigationType
-      MOZ_GUARDED_BY(mMonitor);
-  int32_t mCancelContentJSNavigationIndex MOZ_GUARDED_BY(mMonitor);
-  mozilla::Maybe<nsCString> mCancelContentJSNavigationURI
-      MOZ_GUARDED_BY(mMonitor);
-  int32_t mCancelContentJSEpoch MOZ_GUARDED_BY(mMonitor);
-  bool mShutdownDone MOZ_GUARDED_BY(mMonitor);
+      GUARDED_BY(mMonitor);
+  int32_t mCancelContentJSNavigationIndex GUARDED_BY(mMonitor);
+  mozilla::Maybe<nsCString> mCancelContentJSNavigationURI GUARDED_BY(mMonitor);
+  int32_t mCancelContentJSEpoch GUARDED_BY(mMonitor);
+  bool mShutdownDone GUARDED_BY(mMonitor);
 
   JSContext* mContext;  // const after constructor
 
@@ -292,14 +291,14 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   RefPtr<HangMonitoredProcess> mProcess;
 
   // Must be accessed with mMonitor held.
-  bool mShutdownDone MOZ_GUARDED_BY(mMonitor);
+  bool mShutdownDone GUARDED_BY(mMonitor);
   // Map from plugin ID to crash dump ID. Protected by
   // mBrowserCrashDumpHashLock.
   nsTHashMap<nsUint32HashKey, nsString> mBrowserCrashDumpIds
-      MOZ_GUARDED_BY(mMonitor);
-  Mutex mBrowserCrashDumpHashLock MOZ_GUARDED_BY(mMonitor);
+      GUARDED_BY(mMonitor);
+  Mutex mBrowserCrashDumpHashLock GUARDED_BY(mMonitor);
   mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory
-      MOZ_GUARDED_BY(mMonitor);
+      GUARDED_BY(mMonitor);
 };
 
 }  // namespace

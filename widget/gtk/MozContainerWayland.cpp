@@ -628,7 +628,7 @@ static bool moz_container_wayland_surface_create_locked(
 }
 
 struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   // LOGWAYLAND("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
   //           (void*)container, (void*)container->wl_container.surface,
   //           container->wl_container.ready_to_draw);
@@ -642,7 +642,7 @@ struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container)
 
 void moz_container_wayland_surface_unlock(MozContainer* container,
                                           struct wl_surface** surface)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   // Temporarily disabled to avoid log noise
   // LOGWAYLAND("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
   //            (void*)container->wl_container.surface);
@@ -667,12 +667,12 @@ struct wl_surface* moz_container_wayland_get_surface_locked(
 }
 
 void moz_container_wayland_lock(MozContainer* container)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   container->wl_container.container_lock->Lock();
 }
 
 void moz_container_wayland_unlock(MozContainer* container)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   container->wl_container.container_lock->Unlock();
 }
 

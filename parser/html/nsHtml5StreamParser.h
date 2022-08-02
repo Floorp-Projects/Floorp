@@ -312,7 +312,7 @@ class nsHtml5StreamParser final : public nsISupports {
     mInterrupted = true;
   }
 
-  void Uninterrupt() MOZ_NO_THREAD_SAFETY_ANALYSIS {
+  void Uninterrupt() NO_THREAD_SAFETY_ANALYSIS {
     MOZ_ASSERT(IsParserThread(), "Wrong thread!");
     mTokenizerMutex.AssertCurrentThreadOwns();
     mInterrupted = false;
@@ -325,30 +325,30 @@ class nsHtml5StreamParser final : public nsISupports {
   void FlushTreeOpsAndDisarmTimer();
 
   void SwitchDecoderIfAsciiSoFar(NotNull<const Encoding*> aEncoding)
-      MOZ_REQUIRES(mTokenizerMutex);
+      REQUIRES(mTokenizerMutex);
   ;
 
   size_t CountGts();
 
   void DiscardMetaSpeculation();
 
-  bool ProcessLookingForMetaCharset(bool aEof) MOZ_REQUIRES(mTokenizerMutex);
+  bool ProcessLookingForMetaCharset(bool aEof) REQUIRES(mTokenizerMutex);
 
   void ParseAvailableData();
 
   void DoStopRequest();
 
   void DoDataAvailableBuffer(mozilla::Buffer<uint8_t>&& aBuffer)
-      MOZ_REQUIRES(mTokenizerMutex);
+      REQUIRES(mTokenizerMutex);
 
   void DoDataAvailable(mozilla::Span<const uint8_t> aBuffer)
-      MOZ_REQUIRES(mTokenizerMutex);
+      REQUIRES(mTokenizerMutex);
 
   static nsresult CopySegmentsToParser(nsIInputStream* aInStream,
                                        void* aClosure, const char* aFromSegment,
                                        uint32_t aToOffset, uint32_t aCount,
                                        uint32_t* aWriteCount)
-      MOZ_REQUIRES(mTokenizerMutex);
+      REQUIRES(mTokenizerMutex);
 
   bool IsTerminatedOrInterrupted() { return mTerminated || mInterrupted; }
 
@@ -372,13 +372,13 @@ class nsHtml5StreamParser final : public nsISupports {
    * Push bytes from network when there is no Unicode decoder yet
    */
   nsresult SniffStreamBytes(mozilla::Span<const uint8_t> aFromSegment,
-                            bool aEof) MOZ_REQUIRES(mTokenizerMutex);
+                            bool aEof) REQUIRES(mTokenizerMutex);
 
   /**
    * Push bytes from network when there is a Unicode decoder already
    */
   nsresult WriteStreamBytes(mozilla::Span<const uint8_t> aFromSegment)
-      MOZ_REQUIRES(mTokenizerMutex);
+      REQUIRES(mTokenizerMutex);
 
   /**
    * Set up the Unicode decoder and write the sniffing buffer into it
@@ -393,7 +393,7 @@ class nsHtml5StreamParser final : public nsISupports {
    */
   nsresult SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
       mozilla::Span<const uint8_t> aPrefix,
-      mozilla::Span<const uint8_t> aFromSegment) MOZ_REQUIRES(mTokenizerMutex);
+      mozilla::Span<const uint8_t> aFromSegment) REQUIRES(mTokenizerMutex);
 
   /**
    * Initialize the Unicode decoder, mark the BOM as the source and
@@ -418,7 +418,7 @@ class nsHtml5StreamParser final : public nsISupports {
    * When speculatively decoding from file: URL as UTF-8, redecode
    * using fallback and then continue normally with the fallback.
    */
-  [[nodiscard]] nsresult ReDecodeLocalFile() MOZ_REQUIRES(mTokenizerMutex);
+  [[nodiscard]] nsresult ReDecodeLocalFile() REQUIRES(mTokenizerMutex);
 
   /**
    * Potentially guess the encoding using mozilla::EncodingDetector.

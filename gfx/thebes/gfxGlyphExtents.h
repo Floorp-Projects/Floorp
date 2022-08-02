@@ -149,8 +149,8 @@ class gfxGlyphExtents {
     nsTArray<uintptr_t> mBlocks;
   };
 
-  GlyphWidths mContainedGlyphWidths MOZ_GUARDED_BY(mLock);
-  nsTHashtable<HashEntry> mTightGlyphExtents MOZ_GUARDED_BY(mLock);
+  GlyphWidths mContainedGlyphWidths GUARDED_BY(mLock);
+  nsTHashtable<HashEntry> mTightGlyphExtents GUARDED_BY(mLock);
   const int32_t mAppUnitsPerDevUnit;
   mutable mozilla::RWLock mLock;
 
