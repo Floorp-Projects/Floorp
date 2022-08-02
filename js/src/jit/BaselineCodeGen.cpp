@@ -6386,7 +6386,7 @@ MethodStatus BaselineCompiler::emitBody() {
 #endif
   }
 
-  MOZ_ASSERT(JSOp(*prevpc) == JSOp::RetRval);
+  MOZ_ASSERT(JSOp(*prevpc) == JSOp::RetRval || JSOp(*prevpc) == JSOp::Return);
   return Method_Compiled;
 }
 
