@@ -146,21 +146,16 @@ static void SetMitigationPolicies(mozilla::ProcThreadAttributes& aAttrs,
 static mozilla::LauncherFlags ProcessCmdLine(int& aArgc, wchar_t* aArgv[]) {
   mozilla::LauncherFlags result = mozilla::LauncherFlags::eNone;
 
-  if (mozilla::CheckArg(aArgc, aArgv, "wait-for-browser",
-                        static_cast<const wchar_t**>(nullptr),
+  if (mozilla::CheckArg(aArgc, aArgv, "wait-for-browser", nullptr,
                         mozilla::CheckArgFlag::RemoveArg) ==
           mozilla::ARG_FOUND ||
-      mozilla::CheckArg(aArgc, aArgv, "marionette",
-                        static_cast<const wchar_t**>(nullptr),
+      mozilla::CheckArg(aArgc, aArgv, "marionette", nullptr,
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
-      mozilla::CheckArg(aArgc, aArgv, "backgroundtask",
-                        static_cast<const wchar_t**>(nullptr),
+      mozilla::CheckArg(aArgc, aArgv, "backgroundtask", nullptr,
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
-      mozilla::CheckArg(aArgc, aArgv, "headless",
-                        static_cast<const wchar_t**>(nullptr),
+      mozilla::CheckArg(aArgc, aArgv, "headless", nullptr,
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
-      mozilla::CheckArg(aArgc, aArgv, "remote-debugging-port",
-                        static_cast<const wchar_t**>(nullptr),
+      mozilla::CheckArg(aArgc, aArgv, "remote-debugging-port", nullptr,
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
       mozilla::EnvHasValue("MOZ_AUTOMATION") ||
       mozilla::EnvHasValue("MOZ_HEADLESS")) {
@@ -220,9 +215,9 @@ static bool DoLauncherProcessChecks(int& argc, wchar_t** argv) {
     result = true;
   }
 
-  result |= mozilla::CheckArg(
-                argc, argv, "launcher", static_cast<const wchar_t**>(nullptr),
-                mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND;
+  result |=
+      mozilla::CheckArg(argc, argv, "launcher", nullptr,
+                        mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND;
 
   return result;
 }
@@ -238,8 +233,7 @@ static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
 #if defined(MOZ_LAUNCHER_PROCESS)
   bool forceLauncher =
       runAsLauncher &&
-      mozilla::CheckArg(argc, argv, "force-launcher",
-                        static_cast<const wchar_t**>(nullptr),
+      mozilla::CheckArg(argc, argv, "force-launcher", nullptr,
                         mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND;
 
   mozilla::LauncherRegistryInfo::ProcessType desiredType =
@@ -279,8 +273,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 
   SetLauncherErrorAppData(aAppData);
 
-  if (CheckArg(argc, argv, "log-launcher-error",
-               static_cast<const wchar_t**>(nullptr),
+  if (CheckArg(argc, argv, "log-launcher-error", nullptr,
                mozilla::CheckArgFlag::RemoveArg) == ARG_FOUND) {
     SetLauncherErrorForceEventLog();
   }
@@ -288,8 +281,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   // return fast when we're a child process.
   // (The remainder of this function has some side effects that are
   // undesirable for content processes)
-  if (mozilla::CheckArg(argc, argv, "contentproc",
-                        static_cast<const wchar_t**>(nullptr),
+  if (mozilla::CheckArg(argc, argv, "contentproc", nullptr,
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
     // A child process should not instantiate LauncherRegistryInfo.
     return Nothing();

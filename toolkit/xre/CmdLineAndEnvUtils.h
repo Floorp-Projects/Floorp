@@ -212,6 +212,14 @@ inline ArgResult CheckArg(int& aArgc, CharT** aArgv, const char* aArg,
   return ar;
 }
 
+template <typename CharT>
+inline ArgResult CheckArg(int& aArgc, CharT** aArgv, const char* aArg,
+                          std::nullptr_t,
+                          CheckArgFlag aFlags = CheckArgFlag::RemoveArg) {
+  return CheckArg<CharT>(aArgc, aArgv, aArg,
+                         static_cast<const CharT**>(nullptr), aFlags);
+}
+
 namespace internal {
 // template <typename T>
 // constexpr bool IsStringRange =
@@ -248,8 +256,8 @@ inline bool EnsureCommandlineSafeImpl(int aArgc, CharT** aArgv,
 
   // If "-osint" (or the equivalent) is not present, then this is trivially
   // satisfied.
-  if (CheckArg(aArgc, aArgv, osintLit, static_cast<const CharT**>(nullptr),
-               CheckArgFlag::None) != ARG_FOUND) {
+  if (CheckArg(aArgc, aArgv, osintLit, nullptr, CheckArgFlag::None) !=
+      ARG_FOUND) {
     return true;
   }
 
