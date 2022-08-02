@@ -72,12 +72,7 @@ impl MemoryDistribution for MemoryDistributionMetric {
                 // If the value doesn't fit into `i64` it's definitely to large
                 // and cause an error.
                 // glean-core handles that.
-                let sample = sample.try_into().unwrap_or_else(|_| {
-                    log::warn!(
-                        "Memory size too large to fit into into 64-bytes. Saturating at i64::MAX."
-                    );
-                    i64::MAX
-                });
+                let sample = sample.try_into().unwrap_or(i64::MAX);
                 inner.accumulate(sample);
             }
             MemoryDistributionMetric::Child(c) => {
