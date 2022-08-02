@@ -1,0 +1,23 @@
+name: Linux x64 Build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build
+      run: |        
+        ./mach bootstrap
+        echo -e "ac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --disable-bootstrap\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=" >> mozconfig
+        ./mach configure
+        ./mach build
+        ./mach package
+    - name: Publish
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-linux-x64
+        path: obj-x86_64-pc-linux-gnu/dist/floorp
