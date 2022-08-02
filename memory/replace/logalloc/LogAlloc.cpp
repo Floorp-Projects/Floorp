@@ -27,8 +27,8 @@ static bool sStdoutOrStderr = false;
 static Mutex sMutex MOZ_UNANNOTATED;
 
 #ifndef _WIN32
-static void prefork() NO_THREAD_SAFETY_ANALYSIS { sMutex.Lock(); }
-static void postfork_parent() NO_THREAD_SAFETY_ANALYSIS { sMutex.Unlock(); }
+static void prefork() MOZ_NO_THREAD_SAFETY_ANALYSIS { sMutex.Lock(); }
+static void postfork_parent() MOZ_NO_THREAD_SAFETY_ANALYSIS { sMutex.Unlock(); }
 static void postfork_child() { sMutex.Init(); }
 #endif
 

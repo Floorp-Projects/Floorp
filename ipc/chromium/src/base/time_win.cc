@@ -246,11 +246,11 @@ class NowSingleton {
       : rollover_(TimeDelta::FromMilliseconds(0)), last_seen_(0) {}
   ~NowSingleton() = default;
 
-  TimeDelta rollover_ GUARDED_BY(
+  TimeDelta rollover_ MOZ_GUARDED_BY(
       sNowSingletonLock);  // Accumulation of time lost due to rollover.
   DWORD last_seen_
-      GUARDED_BY(sNowSingletonLock);  // The last timeGetTime value we saw, to
-                                      // detect rollover.
+      MOZ_GUARDED_BY(sNowSingletonLock);  // The last timeGetTime value we saw,
+                                          // to detect rollover.
 
   DISALLOW_COPY_AND_ASSIGN(NowSingleton);
 };

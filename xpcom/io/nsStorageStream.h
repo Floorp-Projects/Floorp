@@ -46,31 +46,31 @@ class nsStorageStream final : public nsIStorageStream, public nsIOutputStream {
   ~nsStorageStream();
 
   mozilla::Mutex mMutex{"nsStorageStream"};
-  nsSegmentedBuffer* mSegmentedBuffer GUARDED_BY(mMutex) = nullptr;
+  nsSegmentedBuffer* mSegmentedBuffer MOZ_GUARDED_BY(mMutex) = nullptr;
   // All segments, except possibly the last, are of this size.  Must be
   // power-of-2
-  uint32_t mSegmentSize GUARDED_BY(mMutex) = 0;
+  uint32_t mSegmentSize MOZ_GUARDED_BY(mMutex) = 0;
   // log2(mSegmentSize)
-  uint32_t mSegmentSizeLog2 GUARDED_BY(mMutex) = 0;
+  uint32_t mSegmentSizeLog2 MOZ_GUARDED_BY(mMutex) = 0;
   // true, if an un-Close'ed output stream exists
-  bool mWriteInProgress GUARDED_BY(mMutex) = false;
+  bool mWriteInProgress MOZ_GUARDED_BY(mMutex) = false;
   // Last segment # in use, -1 initially
-  int32_t mLastSegmentNum GUARDED_BY(mMutex) = -1;
+  int32_t mLastSegmentNum MOZ_GUARDED_BY(mMutex) = -1;
   // Pointer to next byte to be written
-  char* mWriteCursor GUARDED_BY(mMutex) = nullptr;
+  char* mWriteCursor MOZ_GUARDED_BY(mMutex) = nullptr;
   // Pointer to one byte after end of segment containing the write cursor
-  char* mSegmentEnd GUARDED_BY(mMutex) = nullptr;
+  char* mSegmentEnd MOZ_GUARDED_BY(mMutex) = nullptr;
   // Number of bytes written to stream
-  uint32_t mLogicalLength GUARDED_BY(mMutex) = 0;
+  uint32_t mLogicalLength MOZ_GUARDED_BY(mMutex) = 0;
   // number of input streams actively reading a segment.
-  uint32_t mActiveSegmentBorrows GUARDED_BY(mMutex) = 0;
+  uint32_t mActiveSegmentBorrows MOZ_GUARDED_BY(mMutex) = 0;
 
-  nsresult SetLengthLocked(uint32_t aLength) REQUIRES(mMutex);
-  nsresult Seek(int32_t aPosition) REQUIRES(mMutex);
-  uint32_t SegNum(uint32_t aPosition) REQUIRES(mMutex) {
+  nsresult SetLengthLocked(uint32_t aLength) MOZ_REQUIRES(mMutex);
+  nsresult Seek(int32_t aPosition) MOZ_REQUIRES(mMutex);
+  uint32_t SegNum(uint32_t aPosition) MOZ_REQUIRES(mMutex) {
     return aPosition >> mSegmentSizeLog2;
   }
-  uint32_t SegOffset(uint32_t aPosition) REQUIRES(mMutex) {
+  uint32_t SegOffset(uint32_t aPosition) MOZ_REQUIRES(mMutex) {
     return aPosition & (mSegmentSize - 1);
   }
 };

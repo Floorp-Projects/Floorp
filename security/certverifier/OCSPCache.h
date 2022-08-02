@@ -127,7 +127,7 @@ class OCSPCache {
   // implementation will give us. 1024 bytes is the maximum it allows,
   // which results in 256 Entry pointers or 128 Entry pointers, depending
   // on the size of a pointer.
-  Vector<Entry*, 256> mEntries GUARDED_BY(mMutex);
+  Vector<Entry*, 256> mEntries MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace psm

@@ -137,9 +137,10 @@ class MessageLoop::EventTarget : public nsISerialEventTarget,
   }
 
   mozilla::Mutex mMutex;
-  bool mShutdownTasksRun GUARDED_BY(mMutex) = false;
-  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks GUARDED_BY(mMutex);
-  MessageLoop* mLoop GUARDED_BY(mMutex);
+  bool mShutdownTasksRun MOZ_GUARDED_BY(mMutex) = false;
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
+      MOZ_GUARDED_BY(mMutex);
+  MessageLoop* mLoop MOZ_GUARDED_BY(mMutex);
 };
 
 NS_IMPL_ISUPPORTS(MessageLoop::EventTarget, nsIEventTarget,

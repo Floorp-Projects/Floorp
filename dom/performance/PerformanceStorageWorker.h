@@ -40,7 +40,7 @@ class PerformanceStorageWorker final : public PerformanceStorage {
 
   // Protected by mutex.
   // Created and released on worker-thread. Used also on main-thread.
-  RefPtr<WeakWorkerRef> mWorkerRef GUARDED_BY(mMutex);
+  RefPtr<WeakWorkerRef> mWorkerRef MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla::dom

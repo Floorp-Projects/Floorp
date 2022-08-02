@@ -76,7 +76,7 @@ class InputStreamLengthWrapper final : public nsIAsyncInputStream,
   mozilla::Mutex mMutex;
 
   // This is used for AsyncWait and it's protected by mutex.
-  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback GUARDED_BY(mMutex);
+  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla

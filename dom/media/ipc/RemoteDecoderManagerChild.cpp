@@ -36,11 +36,11 @@ using namespace gfx;
 // launched serially. Protects sLaunchPromise
 StaticMutex sLaunchRDDMutex;
 static StaticRefPtr<GenericNonExclusivePromise> sLaunchRDDPromise
-    GUARDED_BY(sLaunchRDDMutex);
+    MOZ_GUARDED_BY(sLaunchRDDMutex);
 
 StaticMutex sLaunchUtilityMutex;
 static StaticRefPtr<GenericNonExclusivePromise> sLaunchUtilityPromise
-    GUARDED_BY(sLaunchUtilityMutex);
+    MOZ_GUARDED_BY(sLaunchUtilityMutex);
 
 // Only modified on the main-thread, read on any thread. While it could be read
 // on the main thread directly, for clarity we force access via the DataMutex

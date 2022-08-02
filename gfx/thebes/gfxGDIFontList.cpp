@@ -400,7 +400,7 @@ static bool ShouldIgnoreItalicStyle(const nsACString& aName) {
 
 int CALLBACK GDIFontFamily::FamilyAddStylesProc(
     const ENUMLOGFONTEXW* lpelfe, const NEWTEXTMETRICEXW* nmetrics,
-    DWORD fontType, LPARAM data) NO_THREAD_SAFETY_ANALYSIS {
+    DWORD fontType, LPARAM data) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   const NEWTEXTMETRICW& metrics = nmetrics->ntmTm;
   LOGFONTW logFont = lpelfe->elfLogFont;
   GDIFontFamily* ff = reinterpret_cast<GDIFontFamily*>(data);

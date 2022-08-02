@@ -76,15 +76,16 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
                     ThreadEventTarget* aEventTarget);
   };
 
-  nsTArray<NestedQueueItem> mNestedQueues GUARDED_BY(mLock);
+  nsTArray<NestedQueueItem> mNestedQueues MOZ_GUARDED_BY(mLock);
 
   Mutex mLock;
-  CondVar mEventsAvailable GUARDED_BY(mLock);
+  CondVar mEventsAvailable MOZ_GUARDED_BY(mLock);
 
-  bool mEventsAreDoomed GUARDED_BY(mLock) = false;
-  nsCOMPtr<nsIThreadObserver> mObserver GUARDED_BY(mLock);
-  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks GUARDED_BY(mLock);
-  bool mShutdownTasksRun GUARDED_BY(mLock) = false;
+  bool mEventsAreDoomed MOZ_GUARDED_BY(mLock) = false;
+  nsCOMPtr<nsIThreadObserver> mObserver MOZ_GUARDED_BY(mLock);
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
+      MOZ_GUARDED_BY(mLock);
+  bool mShutdownTasksRun MOZ_GUARDED_BY(mLock) = false;
 
   const bool mIsMainThread;
 };

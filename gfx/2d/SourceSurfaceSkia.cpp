@@ -159,7 +159,7 @@ uint8_t* SourceSurfaceSkia::GetData() {
 }
 
 bool SourceSurfaceSkia::Map(MapType, MappedSurface* aMappedSurface)
-    NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   mChangeMutex.Lock();
   aMappedSurface->mData = GetData();
   aMappedSurface->mStride = Stride();
@@ -169,12 +169,12 @@ bool SourceSurfaceSkia::Map(MapType, MappedSurface* aMappedSurface)
     mChangeMutex.Unlock();
   }
   // Static analysis will warn due to a conditional Unlock
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   return isMapped;
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 }
 
-void SourceSurfaceSkia::Unmap() NO_THREAD_SAFETY_ANALYSIS {
+void SourceSurfaceSkia::Unmap() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   mChangeMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsMapped);
   mIsMapped = false;

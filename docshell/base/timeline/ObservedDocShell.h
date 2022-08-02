@@ -37,7 +37,7 @@ class ObservedDocShell : public MarkersStorage {
   // Off the main thread only.
   Mutex mLock;
   nsTArray<UniquePtr<AbstractTimelineMarker>> mOffTheMainThreadTimelineMarkers
-      GUARDED_BY(mLock);
+      MOZ_GUARDED_BY(mLock);
 
  public:
   explicit ObservedDocShell(nsIDocShell* aDocShell);

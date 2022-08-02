@@ -686,10 +686,10 @@
  * MOZ_UNANNOTATED/MOZ_ANNOTATED: Applies to Mutexes/Monitors and variations on
  *   them. MOZ_UNANNOTATED indicates that the Mutex/Monitor/etc hasn't been
  *   examined and annotated using macros from mfbt/ThreadSafety --
- *   GUARDED_BY()/REQUIRES()/etc. MOZ_ANNOTATED is used in rare cases to
+ *   MOZ_GUARDED_BY()/REQUIRES()/etc. MOZ_ANNOTATED is used in rare cases to
  *   indicate that is has been looked at, but it did not need any
- *   GUARDED_BY()/REQUIRES()/etc (and thus static analysis knows it can ignore
- *   this Mutex/Monitor/etc)
+ *   MOZ_GUARDED_BY()/REQUIRES()/etc (and thus static analysis knows it can
+ * ignore this Mutex/Monitor/etc)
  */
 
 // gcc emits a nuisance warning -Wignored-attributes because attributes do not

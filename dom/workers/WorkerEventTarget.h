@@ -28,8 +28,8 @@ class WorkerEventTarget final : public nsISerialEventTarget {
 
  private:
   mozilla::Mutex mMutex;
-  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate GUARDED_BY(mMutex);
-  const Behavior mBehavior GUARDED_BY(mMutex);
+  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate MOZ_GUARDED_BY(mMutex);
+  const Behavior mBehavior MOZ_GUARDED_BY(mMutex);
 
   ~WorkerEventTarget() = default;
 

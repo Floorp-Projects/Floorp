@@ -66,12 +66,12 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
 
   ~RemoteLazyInputStream();
 
-  void StreamNeeded() REQUIRES(mMutex);
+  void StreamNeeded() MOZ_REQUIRES(mMutex);
 
   // Upon receiving the stream from our actor, we will not wrap it into an async
   // stream until needed. This allows callers to get access to the underlying
   // potentially-sync stream using `TakeInternalStream` before reading.
-  nsresult EnsureAsyncRemoteStream() REQUIRES(mMutex);
+  nsresult EnsureAsyncRemoteStream() MOZ_REQUIRES(mMutex);
 
   // Note that data has been read from our input stream, and disconnect from our
   // remote actor.
@@ -82,7 +82,7 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
       IPC::MessageReader* aReader);
 
   // Helper method to generate a description of a stream for use in loggging.
-  nsCString Describe() REQUIRES(mMutex);
+  nsCString Describe() MOZ_REQUIRES(mMutex);
 
   // Start and length of the slice to apply on this RemoteLazyInputStream when
   // fetching the underlying stream with `SendStreamNeeded`.
@@ -112,7 +112,7 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
     // mInnerStream is released and any method will return
     // NS_BASE_STREAM_CLOSED.
     eClosed,
-  } mState GUARDED_BY(mMutex) = eClosed;
+  } mState MOZ_GUARDED_BY(mMutex) = eClosed;
 
   // The actor which will be used to provide the underlying stream or length
   // information when needed, as well as to efficiently allow transferring the
@@ -121,22 +121,25 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
   // The connection to our actor will be cleared once the stream has been closed
   // or has started reading, at which point this stream will be serialized and
   // cloned as-if it was the underlying stream.
-  RefPtr<RemoteLazyInputStreamChild> mActor GUARDED_BY(mMutex);
+  RefPtr<RemoteLazyInputStreamChild> mActor MOZ_GUARDED_BY(mMutex);
 
-  nsCOMPtr<nsIInputStream> mInnerStream GUARDED_BY(mMutex);
-  nsCOMPtr<nsIAsyncInputStream> mAsyncInnerStream GUARDED_BY(mMutex);
+  nsCOMPtr<nsIInputStream> mInnerStream MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIAsyncInputStream> mAsyncInnerStream MOZ_GUARDED_BY(mMutex);
 
   // These 2 values are set only if mState is ePending or eRunning.
   // RefPtr is used instead of nsCOMPtr to avoid invoking QueryInterface when
   // assigning in debug builds, as `mInputStreamCallback` may not be threadsafe.
-  RefPtr<nsIInputStreamCallback> mInputStreamCallback GUARDED_BY(mMutex);
-  nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget GUARDED_BY(mMutex);
-  uint32_t mInputStreamCallbackFlags GUARDED_BY(mMutex) = 0;
-  uint32_t mInputStreamCallbackRequestedCount GUARDED_BY(mMutex) = 0;
+  RefPtr<nsIInputStreamCallback> mInputStreamCallback MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget
+      MOZ_GUARDED_BY(mMutex);
+  uint32_t mInputStreamCallbackFlags MOZ_GUARDED_BY(mMutex) = 0;
+  uint32_t mInputStreamCallbackRequestedCount MOZ_GUARDED_BY(mMutex) = 0;
 
   // These 2 values are set only if mState is ePending.
-  nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback GUARDED_BY(mMutex);
-  nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget GUARDED_BY(mMutex);
+  nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback
+      MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget
+      MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla

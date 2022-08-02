@@ -101,11 +101,11 @@ class TimelineConsumers {
  private:
   static StaticMutex sMutex;
 
-  static LinkedList<MarkersStorage>& MarkersStores() REQUIRES(sMutex);
+  static LinkedList<MarkersStorage>& MarkersStores() MOZ_REQUIRES(sMutex);
 
-  static uint32_t sActiveConsumers GUARDED_BY(sMutex);
+  static uint32_t sActiveConsumers MOZ_GUARDED_BY(sMutex);
   static StaticAutoPtr<LinkedList<MarkersStorage>> sMarkersStores
-      GUARDED_BY(sMutex);
+      MOZ_GUARDED_BY(sMutex);
 };
 
 }  // namespace mozilla

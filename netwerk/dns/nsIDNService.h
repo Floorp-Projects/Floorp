@@ -176,7 +176,7 @@ class nsIDNService final : public nsIIDNService,
   mozilla::MutexSingleWriter mLock;
 
   // guarded by mLock
-  nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist GUARDED_BY(mLock);
+  nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist MOZ_GUARDED_BY(mLock);
 
   /**
    * Flag set by the pref network.IDN_show_punycode. When it is true,
@@ -185,7 +185,7 @@ class nsIDNService final : public nsIIDNService,
    *
    * guarded by mLock
    */
-  bool mShowPunycode GUARDED_BY(mLock) = false;
+  bool mShowPunycode MOZ_GUARDED_BY(mLock) = false;
 
   /**
    * Restriction-level Detection profiles defined in UTR 39
@@ -198,11 +198,12 @@ class nsIDNService final : public nsIIDNService,
     eModeratelyRestrictiveProfile
   };
   // guarded by mLock;
-  restrictionProfile mRestrictionProfile GUARDED_BY(mLock){eASCIIOnlyProfile};
+  restrictionProfile mRestrictionProfile MOZ_GUARDED_BY(mLock){
+      eASCIIOnlyProfile};
   // guarded by mLock;
-  nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch GUARDED_BY(mLock);
+  nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch MOZ_GUARDED_BY(mLock);
   // guarded by mLock
-  bool mIDNUseWhitelist GUARDED_BY(mLock) = false;
+  bool mIDNUseWhitelist MOZ_GUARDED_BY(mLock) = false;
 };
 
 #endif  // nsIDNService_h__
