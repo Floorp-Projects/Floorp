@@ -308,7 +308,12 @@
                       "optional": true,
                       "type": "array",
                       "minItems": 1,
-                      "items": { "$ref": "ExtensionID" }
+                      "items": {
+                        "choices": [
+                          {"$ref": "ExtensionID" },
+                          { "type": "string", "enum": ["*"] }
+                        ]
+                      }
                     }
                   }
                 }
