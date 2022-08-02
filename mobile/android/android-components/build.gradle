@@ -76,6 +76,22 @@ subprojects {
     }
 
     project.configurations.all {
+        // Dependencies can't depend on a different major version of Glean than A-C itself.
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.mozilla.telemetry'
+                    && details.requested.name.contains('glean') ) {
+                def requested = details.requested.version.tokenize(".")
+                def defined = Versions.mozilla_glean.tokenize(".")
+                // Check the major version
+                if (requested[0] != defined[0]) {
+                    throw new AssertionError("Cannot resolve to a single Glean version. Requested: ${details.requested.version}, A-C uses: ${Versions.mozilla_glean}")
+                } else {
+                    // Enforce that all (transitive) dependencies are using the defined Glean version
+                    details.useVersion Versions.mozilla_glean
+                }
+            }
+        }
+
         // Enforce that all (transitive) dependencies are using the same support library version as we do.
         resolutionStrategy.eachDependency { details ->
             if (details.requested.group == 'com.android.support'
