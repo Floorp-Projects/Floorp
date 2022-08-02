@@ -2317,13 +2317,6 @@ void LocalAccessible::Shutdown() {
   // parent
   mStateFlags |= eIsDefunct;
 
-  // Usually, when a subtree is removed, we do this in
-  // DocAccessible::UncacheChildrenInSubtree. However, that won't get called
-  // when the document is shut down, so we handle that here.
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() && IsTable()) {
-    CachedTableAccessible::Invalidate(this);
-  }
-
   int32_t childCount = mChildren.Length();
   for (int32_t childIdx = 0; childIdx < childCount; childIdx++) {
     mChildren.ElementAt(childIdx)->UnbindFromParent();
@@ -2507,6 +2500,13 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
 
 // LocalAccessible protected
 void LocalAccessible::UnbindFromParent() {
+  // We do this here to handle document shutdown and an Accessible being moved.
+  // We do this for subtree removal in DocAccessible::UncacheChildrenInSubtree.
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+      (IsTable() || IsTableCell())) {
+    CachedTableAccessible::Invalidate(this);
+  }
+
   mParent = nullptr;
   mIndexInParent = -1;
   mIndexOfEmbeddedChild = -1;

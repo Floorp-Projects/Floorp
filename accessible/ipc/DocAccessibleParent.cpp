@@ -233,13 +233,15 @@ void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
   }
   // This is a move. Moves are sent as a hide and then a show, but for a move,
   // we want to keep the Accessible alive for reuse later.
-  aAcc->SetParent(nullptr);
   if (aAcc->IsTable() || aAcc->IsTableCell()) {
+    // For table cells, it's important that we do this before the parent is
+    // cleared because CachedTableAccessible::Invalidate needs the ancestry.
     CachedTableAccessible::Invalidate(aAcc);
   }
   if (aAcc->IsHyperText()) {
     aAcc->InvalidateCachedHyperTextOffsets();
   }
+  aAcc->SetParent(nullptr);
   mMovingIDs.EnsureRemoved(id);
   if (aAcc->IsOuterDoc()) {
     // Leave child documents alone. They are added and removed differently to
