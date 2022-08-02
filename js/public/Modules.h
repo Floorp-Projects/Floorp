@@ -108,12 +108,6 @@ extern JS_PUBLIC_API void SetModuleDynamicImportHook(
     JSRuntime* rt, ModuleDynamicImportHook func);
 
 /**
- * Passed to FinishDynamicModuleImport to indicate the result of the dynamic
- * import operation.
- */
-enum class DynamicImportStatus { Failed = 0, Ok };
-
-/**
  * This must be called after a dynamic import operation is complete.
  *
  * If |evaluationPromise| is rejected, the rejection reason will be used to
@@ -123,19 +117,6 @@ extern JS_PUBLIC_API bool FinishDynamicModuleImport(
     JSContext* cx, Handle<JSObject*> evaluationPromise,
     Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
     Handle<JSObject*> promise);
-
-/**
- * This must be called after a dynamic import operation is complete.
- *
- * This is used so that Top Level Await functionality can be turned off
- * entirely. It will be removed in bug#1676612.
- *
- * If |status| is Failed, any pending exception on the context will be used to
- * complete the user's promise.
- */
-extern JS_PUBLIC_API bool FinishDynamicModuleImport_NoTLA(
-    JSContext* cx, DynamicImportStatus status, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global
