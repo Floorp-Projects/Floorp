@@ -311,7 +311,7 @@ class LiveRange : public TempObject {
   void setBundle(LiveBundle* bundle) { bundle_ = bundle; }
 
   void addUse(UsePosition* use);
-  void distributeUses(LiveRange* other);
+  void tryToMoveDefAndUsesInto(LiveRange* other);
 
   void setHasDefinition() {
     MOZ_ASSERT(!hasDefinition_);
@@ -707,8 +707,8 @@ class BacktrackingAllocator : protected RegisterAllocator {
 
   // Implementation of splitting decisions, but not the making of those
   // decisions
-  [[nodiscard]] bool splitAndRequeueBundles(LiveBundle* bundle,
-                                            const LiveBundleVector& newBundles);
+  [[nodiscard]] bool updateVirtualRegisterListsThenRequeueBundles(
+      LiveBundle* bundle, const LiveBundleVector& newBundles);
 
   // Implementation of splitting decisions, but not the making of those
   // decisions
@@ -763,10 +763,11 @@ class BacktrackingAllocator : protected RegisterAllocator {
                                 LiveRange* from, LiveRange* to,
                                 LDefinition::Type type);
   [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool deadRange(LiveRange* range);
-  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool resolveControlFlow();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool
+  createMoveGroupsFromLiveRangeTransitions();
   size_t findFirstNonCallSafepoint(CodePosition from);
   void addLiveRegistersForRange(VirtualRegister& reg, LiveRange* range);
-  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool reifyAllocations();
+  [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool installAllocationsInLIR();
   size_t findFirstSafepoint(CodePosition pos, size_t startFrom);
   [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool populateSafepoints();
   [[nodiscard]] AVOID_INLINE_FOR_DEBUGGING bool annotateMoveGroups();
