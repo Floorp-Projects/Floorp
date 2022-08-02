@@ -9926,6 +9926,9 @@ var ConfirmationHint = {
 
 var FirefoxViewHandler = {
   tab: null,
+  get button() {
+    return document.getElementById("firefox-view-button");
+  },
   init() {
     const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-notification-manager.sys.mjs"
@@ -9960,9 +9963,7 @@ var FirefoxViewHandler = {
   handleEvent(e) {
     switch (e.type) {
       case "TabSelect":
-        document
-          .getElementById("firefox-view-button")
-          ?.toggleAttribute("open", e.target == this.tab);
+        this.button?.toggleAttribute("open", e.target == this.tab);
         this._removeNotificationDotIfTabSelected();
         break;
       case "TabClose":
@@ -9990,7 +9991,6 @@ var FirefoxViewHandler = {
     }
   },
   _toggleNotificationDot(shouldShow) {
-    let fxViewButton = document.getElementById("firefox-view-button");
-    fxViewButton?.setAttribute("attention", shouldShow);
+    this.button?.toggleAttribute("attention", shouldShow);
   },
 };
