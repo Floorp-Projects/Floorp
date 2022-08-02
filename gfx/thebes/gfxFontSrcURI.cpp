@@ -18,11 +18,8 @@ static bool HasFlag(nsIURI* aURI, uint32_t aFlag) {
   return NS_SUCCEEDED(rv) && value;
 }
 
-gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI) {
-  MOZ_ASSERT(NS_IsMainThread());
+gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI) : mURI(aURI) {
   MOZ_ASSERT(aURI);
-
-  mURI = aURI;
 
   // If we have a data: URI, we know that it is backed by an nsSimpleURI,
   // and that we don't need to serialize it ahead of time.
@@ -49,14 +46,21 @@ gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI) {
   }
 
   mHash = nsURIHashKey::HashKey(mURI);
-
-  mInheritsSecurityContext =
-      HasFlag(aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT);
-  mSyncLoadIsOK = HasFlag(aURI, nsIProtocolHandler::URI_SYNC_LOAD_IS_OK);
 }
 
-gfxFontSrcURI::~gfxFontSrcURI() {
-  NS_ReleaseOnMainThread("gfxFontSrcURI::mURI", mURI.forget());
+gfxFontSrcURI::~gfxFontSrcURI() = default;
+
+void gfxFontSrcURI::EnsureInitialized() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mInitialized) {
+    return;
+  }
+
+  mInheritsSecurityContext =
+      HasFlag(mURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT);
+  mSyncLoadIsOK = HasFlag(mURI, nsIProtocolHandler::URI_SYNC_LOAD_IS_OK);
+  mInitialized = true;
 }
 
 bool gfxFontSrcURI::Equals(gfxFontSrcURI* aOther) {

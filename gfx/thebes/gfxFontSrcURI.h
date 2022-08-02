@@ -22,7 +22,7 @@ class nsSimpleURI;
  * A wrapper for an nsIURI that can be used OMT, which has cached information
  * useful for the gfxUserFontSet.
  */
-class gfxFontSrcURI {
+class gfxFontSrcURI final {
  public:
   explicit gfxFontSrcURI(nsIURI* aURI);
 
@@ -35,11 +35,21 @@ class gfxFontSrcURI {
   nsCString GetSpecOrDefault();
 
   PLDHashNumber Hash() const { return mHash; }
-  bool InheritsSecurityContext() const { return mInheritsSecurityContext; }
-  bool SyncLoadIsOK() const { return mSyncLoadIsOK; }
+
+  bool InheritsSecurityContext() {
+    EnsureInitialized();
+    return mInheritsSecurityContext;
+  }
+
+  bool SyncLoadIsOK() {
+    EnsureInitialized();
+    return mSyncLoadIsOK;
+  }
 
  private:
   ~gfxFontSrcURI();
+
+  void EnsureInitialized();
 
   // The URI.
   nsCOMPtr<nsIURI> mURI;
@@ -57,12 +67,15 @@ class gfxFontSrcURI {
   // Precomputed hash for mURI.
   PLDHashNumber mHash;
 
+  // Whether the font has been initialized on the main thread.
+  bool mInitialized = false;
+
   // Whether the nsIURI's protocol handler has the URI_INHERITS_SECURITY_CONTEXT
   // flag.
-  bool mInheritsSecurityContext;
+  bool mInheritsSecurityContext = false;
 
   // Whether the nsIURI's protocol handler has teh URI_SYNC_LOAD_IS_OK flag.
-  bool mSyncLoadIsOK;
+  bool mSyncLoadIsOK = false;
 };
 
 #endif  // MOZILLA_GFX_FONTSRCURI_H
