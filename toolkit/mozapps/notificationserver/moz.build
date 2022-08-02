@@ -17,6 +17,8 @@ UNIFIED_SOURCES = [
 
 DEFFILE = "notificationserver.def"
 
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+
 OS_LIBS += [
     "advapi32",
 ]
