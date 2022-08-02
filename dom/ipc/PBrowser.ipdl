@@ -106,7 +106,6 @@ using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h
 using mozilla::IntrinsicSize from "nsIFrame.h";
 using mozilla::AspectRatio from "mozilla/AspectRatio.h";
 using mozilla::NativeKeyBindingsType from "mozilla/NativeKeyBindingsType.h";
-[MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
 
 namespace mozilla {
 namespace dom {
@@ -415,7 +414,7 @@ parent:
      */
     async SetCursor(nsCursor value,
                     bool hasCustomCursor,
-                    BigBuffer? customCursorData,
+                    nsCString customCursorData,
                     uint32_t width, uint32_t height,
                     float resolutionX, float resolutionY,
                     uint32_t stride, SurfaceFormat format,
@@ -633,7 +632,7 @@ parent:
     [Nested=inside_sync] sync DispatchTouchEvent(WidgetTouchEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
-                            BigBuffer? visualData,
+                            Shmem? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
                             nsIPrincipal principal, nsIContentSecurityPolicy csp,
