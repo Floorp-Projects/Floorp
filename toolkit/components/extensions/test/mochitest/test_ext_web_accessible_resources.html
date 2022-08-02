@@ -25,6 +25,8 @@ let image = atob(
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0))
   .buffer;
 
+const ANDROID = navigator.userAgent.includes("Android");
+
 async function testImageLoading(src, expectedAction) {
   let imageLoadingPromise = new Promise((resolve, reject) => {
     let cleanupListeners;
@@ -244,22 +246,22 @@ add_task(async function test_web_accessible_resources() {
     files: {
       "content_script.js": contentScript,
 
-      "accessible.html": `<html><head>
+      "accessible.html": `<!DOCTYPE html><html><head>
         <meta charset="utf-8">
         <script src="pagescript.js"><\/script>
       </head></html>`,
 
-      "inaccessible.html": `<html><head>
+      "inaccessible.html": `<!DOCTYPE html><html><head>
         <meta charset="utf-8">
         <script src="pagescript.js"><\/script>
       </head></html>`,
 
-      "wild1.html": `<html><head>
+      "wild1.html": `<!DOCTYPE html><html><head>
         <meta charset="utf-8">
         <script src="pagescript.js"><\/script>
       </head></html>`,
 
-      "wild2.htm": `<html><head>
+      "wild2.htm": `<!DOCTYPE html><html><head>
         <meta charset="utf-8">
         <script src="pagescript.js"><\/script>
       </head></html>`,
@@ -373,6 +375,103 @@ add_task(async function test_web_accessible_resources_mixed_content() {
 
   await extension.unload();
 });
+
+// test that MV2 extensions continue to open other MV2 extension pages
+// when they are not listed in web_accessible_resources.  This test also
+// covers mobile/android tab creation.
+add_task(async function test_web_accessible_resources_extensions_MV2() {
+  function background() {
+    let newtab;
+    let win;
+    let expectUrl;
+    browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+      if (!expectUrl || tab.url != expectUrl || changeInfo.status !== "complete") {
+        return;
+      }
+      expectUrl = undefined;
+      browser.test.log(`onUpdated ${JSON.stringify(changeInfo)} ${tab.url}`);
+      browser.test.sendMessage("onUpdated", tab.url);
+    });
+    browser.test.onMessage.addListener(async (msg, url) => {
+      browser.test.log(`onMessage ${msg} ${url}`);
+      expectUrl = url;
+      if (msg == "create") {
+        newtab = await browser.tabs.create({ url });
+        browser.test.assertTrue(
+          newtab.id !== browser.tabs.TAB_ID_NONE,
+          "New tab was created."
+        );
+      } else if (msg == "update") {
+        await browser.tabs.update(newtab.id, { url });
+      } else if (msg == "remove") {
+        await browser.tabs.remove(newtab.id);
+        newtab = null;
+        browser.test.sendMessage("completed");
+      } else if (msg == "open-window") {
+        win = await browser.windows.create({ url });
+      } else if (msg == "close-window") {
+        await browser.windows.remove(win.id);
+        browser.test.sendMessage("completed");
+        win = null;
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: "this-mv2@mochitest" } },
+    },
+    background,
+    files: {
+      "page.html": `<!DOCTYPE html><html><head>
+          <meta charset="utf-8">
+        </head></html>`,
+    },
+  });
+
+  async function testTabsAction(ext, action, url) {
+    ext.sendMessage(action, url);
+    is(await ext.awaitMessage("onUpdated"), url, "extension url was loaded");
+  }
+
+  await extension.startup();
+  let extensionUrl = `moz-extension://${extension.uuid}/page.html`;
+
+  // Test opening its own pages
+  await testTabsAction(extension, "create", `${extensionUrl}?q=1`);
+  await testTabsAction(extension, "update", `${extensionUrl}?q=2`);
+  extension.sendMessage("remove");
+  await extension.awaitMessage("completed");
+  if (!ANDROID) {
+    await testTabsAction(extension, "open-window", `${extensionUrl}?q=3`);
+    extension.sendMessage("close-window");
+    await extension.awaitMessage("completed");
+  }
+
+  // Extension used to open the homepage in a new window.
+  let other = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs", "<all_urls>"],
+    },
+    background,
+  });
+  await other.startup();
+
+  // Test opening another extensions pages
+  await testTabsAction(other, "create", `${extensionUrl}?q=4`);
+  await testTabsAction(other, "update", `${extensionUrl}?q=5`);
+  other.sendMessage("remove");
+  await other.awaitMessage("completed");
+  if (!ANDROID) {
+    await testTabsAction(other, "open-window", `${extensionUrl}?q=6`);
+    other.sendMessage("close-window");
+    await other.awaitMessage("completed");
+  }
+
+  await extension.unload();
+  await other.unload();
+});
+
 </script>
 
 </body>

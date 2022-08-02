@@ -117,6 +117,35 @@ this.tabs = class extends ExtensionAPI {
       return tab;
     }
 
+    function loadURIInTab(nativeTab, url) {
+      const { browser } = nativeTab;
+
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+      let { principal } = context;
+      const isAboutUrl = url.startsWith("about:");
+      if (
+        isAboutUrl ||
+        (url.startsWith("moz-extension://") &&
+          !context.checkLoadURL(url, { dontReportErrors: true }))
+      ) {
+        // Falling back to content here as about: requires it, however is safe.
+        principal = Services.scriptSecurityManager.getLoadContextContentPrincipal(
+          Services.io.newURI(url),
+          browser.loadContext
+        );
+      }
+      if (isAboutUrl) {
+        // Make sure things like about:blank and other about: URIs never
+        // inherit, and instead always get a NullPrincipal.
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+      }
+
+      browser.loadURI(url, {
+        flags,
+        triggeringPrincipal: principal,
+      });
+    }
+
     const self = {
       tabs: {
         onActivated: new EventManager({
@@ -326,7 +355,10 @@ this.tabs = class extends ExtensionAPI {
           if (url !== null) {
             url = context.uri.resolve(url);
 
-            if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+            if (
+              !url.startsWith("moz-extension://") &&
+              !context.checkLoadURL(url, { dontReportErrors: true })
+            ) {
               return Promise.reject({ message: `Illegal URL: ${url}` });
             }
           }
@@ -353,10 +385,6 @@ this.tabs = class extends ExtensionAPI {
             },
           });
 
-          const { browser } = nativeTab;
-
-          let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-
           // Make sure things like about:blank URIs never inherit,
           // and instead always get a NullPrincipal.
           if (url !== null) {
@@ -365,25 +393,10 @@ this.tabs = class extends ExtensionAPI {
             url = "about:blank";
           }
 
-          let { principal } = context;
-          if (url.startsWith("about:")) {
-            // Make sure things like about:blank and other about: URIs never
-            // inherit, and instead always get a NullPrincipal.
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
-            // Falling back to content here as about: requires it, however is safe.
-            principal = Services.scriptSecurityManager.getLoadContextContentPrincipal(
-              Services.io.newURI(url),
-              browser.loadContext
-            );
-          }
-
-          browser.loadURI(url, {
-            flags,
-            triggeringPrincipal: principal,
-          });
+          loadURIInTab(nativeTab, url);
 
           if (active) {
-            const newWindow = browser.ownerGlobal;
+            const newWindow = nativeTab.browser.ownerGlobal;
             mobileWindowTracker.setTabActive(newWindow, true);
           }
 
@@ -420,7 +433,10 @@ this.tabs = class extends ExtensionAPI {
           if (url !== null) {
             url = context.uri.resolve(url);
 
-            if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+            if (
+              !url.startsWith("moz-extension://") &&
+              !context.checkLoadURL(url, { dontReportErrors: true })
+            ) {
               return Promise.reject({ message: `Illegal URL: ${url}` });
             }
           }
@@ -439,9 +455,7 @@ this.tabs = class extends ExtensionAPI {
           });
 
           if (url !== null) {
-            nativeTab.browser.loadURI(url, {
-              triggeringPrincipal: context.principal,
-            });
+            loadURIInTab(nativeTab, url);
           }
 
           // FIXME: openerTabId, successorTabId
