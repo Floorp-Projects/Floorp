@@ -49,6 +49,7 @@
 #  include "updaterfileutils_osx.h"
 #endif  // XP_MACOSX
 
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/UniquePtr.h"
 #ifdef XP_WIN
 #  include "mozilla/Maybe.h"
@@ -2822,20 +2823,8 @@ bool ShouldRunSilently(int argc, NS_tchar** argv) {
   // task. The CheckArg semantics aren't reproduced in full here,
   // there's e.g. no check for a parameter and no case-insensitive comparison.
   for (int i = 1; i < argc; ++i) {
-    NS_tchar* arg = argv[i];
-
-    // As in CheckArgs, accept -, --, or / (also incidentally /-)
-    if (*arg == '-'
-#  if defined(XP_WIN)
-        || *arg == '/'
-#  endif
-    ) {
-      ++arg;
-
-      if (*arg == '-') {
-        ++arg;
-      }
-
+    if (const auto option = mozilla::internal::ReadAsOption(argv[i])) {
+      const NS_tchar* arg = option.value();
       if (NS_tstrcmp(arg, NS_T("backgroundtask")) == 0) {
         return true;
       }
