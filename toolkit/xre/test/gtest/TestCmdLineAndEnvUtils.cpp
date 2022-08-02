@@ -1,0 +1,220 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include <memory>
+#include <ostream>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+#include "gtest/gtest.h"
+
+#include "mozilla/CmdLineAndEnvUtils.h"
+
+// Insulate these test-classes from the outside world.
+//
+// (In particular, distinguish this `CommandLine` from the one in ipc/chromium.
+// The compiler has no issues here, but the MSVC debugger gets somewhat
+// confused.)
+namespace testzilla {
+
+template <typename CharT>
+struct AcceptableArgs;
+
+template <>
+struct AcceptableArgs<char> {
+  constexpr static const char* value[] = {"aleph", "beth", nullptr};
+};
+template <>
+struct AcceptableArgs<wchar_t> {
+  constexpr static const wchar_t* value[] = {L"aleph", L"beth", nullptr};
+};
+
+// Auxiliary class to simplify the declaration of test-cases for
+// EnsureCommandlineSafe.
+class CommandLine {
+  const size_t size;
+  std::vector<std::string> _data_8;
+  std::vector<std::wstring> _data_16;
+  // _should_ be const all the way through, but...
+  char const** argv_8;
+  wchar_t const** argv_16;
+
+ public:
+  inline int argc() const { return (int)(unsigned int)(size); }
+
+  template <typename CharT>
+  CharT const** argv() const;
+
+  CommandLine(CommandLine const&) = delete;
+  CommandLine(CommandLine&& that) = delete;
+
+  template <typename Container>
+  explicit CommandLine(Container const& container)
+      : size{std::size(container) + 1},     // plus one for argv[0]
+        argv_8(new const char*[size + 1]),  // plus one again for argv[argc]
+        argv_16(new const wchar_t*[size + 1]) {
+    _data_8.reserve(size + 1);
+    _data_16.reserve(size + 1);
+    size_t pos = 0;
+
+    const auto append = [&](const char* val) {
+      size_t const len = ::strlen(val);
+      _data_8.emplace_back(val, val + len);
+      _data_16.emplace_back(val, val + len);
+      argv_8[pos] = _data_8.back().data();
+      argv_16[pos] = _data_16.back().data();
+      ++pos;
+    };
+
+    append("GECKOAPP.COM");  // argv[0] may be anything
+    for (const char* item : container) {
+      append(item);
+    }
+    assert(pos == size);
+
+    // C99 §5.1.2.2.1 states "argv[argc] shall be a null pointer", and
+    // `CheckArg` implicitly relies on this.
+    argv_8[pos] = nullptr;
+    argv_16[pos] = nullptr;
+  }
+
+  // debug output
+  friend std::ostream& operator<<(std::ostream& o, CommandLine const& cl) {
+    for (const auto& item : cl._data_8) {
+      o << '"';
+      for (const char c : item) {
+        if (c == '"') {
+          o << "\\\"";
+        } else {
+          o << c;
+        }
+      }
+      o << "\", ";
+    }
+    return o;
+  }
+};
+
+template <>
+char const** CommandLine::argv<char>() const {
+  return argv_8;
+}
+template <>
+wchar_t const** CommandLine::argv<wchar_t>() const {
+  return argv_16;
+}
+
+enum TestCaseState : bool {
+  FAIL = false,
+  PASS = true,
+};
+constexpr TestCaseState operator!(TestCaseState s) {
+  return TestCaseState(!bool(s));
+}
+
+#ifdef XP_WIN
+constexpr static const TestCaseState WIN_ONLY = PASS;
+#else
+constexpr static const TestCaseState WIN_ONLY = FAIL;
+#endif
+
+std::pair<TestCaseState, std::vector<const char*>> const kCommandLines[] = {
+    // the basic admissible forms
+    {PASS, {"-osint", "-aleph", "http://www.example.com/"}},
+    {PASS, {"-osint", "-beth", "http://www.example.com/"}},
+
+    // GNU-style double-dashes are also allowed
+    {PASS, {"--osint", "-aleph", "http://www.example.com/"}},
+    {PASS, {"--osint", "-beth", "http://www.example.com/"}},
+    {PASS, {"--osint", "--aleph", "http://www.example.com/"}},
+    {PASS, {"--osint", "--beth", "http://www.example.com/"}},
+
+    // on Windows, slashes are also permitted
+    {WIN_ONLY, {"-osint", "/aleph", "http://www.example.com/"}},
+    {WIN_ONLY, {"--osint", "/aleph", "http://www.example.com/"}},
+    // - These should pass on Windows because they're well-formed.
+    // - These should pass elsewhere because the first parameter is
+    //     just a local filesystem path, not an option.
+    {PASS, {"/osint", "/aleph", "http://www.example.com/"}},
+    {PASS, {"/osint", "-aleph", "http://www.example.com/"}},
+    {PASS, {"/osint", "--aleph", "http://www.example.com/"}},
+
+    // the required argument's argument may not itself be a flag
+    {FAIL, {"-osint", "-aleph", "-anything"}},
+    {FAIL, {"-osint", "-aleph", "--anything"}},
+    // - On Windows systems this is a switch and should be rejected.
+    // - On non-Windows systems this is potentially a valid local path.
+    {!WIN_ONLY, {"-osint", "-aleph", "/anything"}},
+
+    // wrong order
+    {FAIL, {"-osint", "http://www.example.com/", "-aleph"}},
+    {FAIL, {"-aleph", "-osint", "http://www.example.com/"}},
+    {FAIL, {"-aleph", "http://www.example.com/", "-osint"}},
+    {FAIL, {"http://www.example.com/", "-osint", "-aleph"}},
+    {FAIL, {"http://www.example.com/", "-aleph", "-osint"}},
+
+    // missing arguments
+    {FAIL, {"-osint", "http://www.example.com/"}},
+    {FAIL, {"-osint", "-aleph"}},
+    {FAIL, {"-osint"}},
+
+    // improper arguments
+    {FAIL, {"-osint", "-other-argument", "http://www.example.com/"}},
+    {FAIL, {"-osint", "", "http://www.example.com/"}},
+
+    // additional arguments
+    {FAIL, {"-osint", "-aleph", "http://www.example.com/", "-other-argument"}},
+    {FAIL, {"-osint", "-other-argument", "-aleph", "http://www.example.com/"}},
+    {FAIL, {"-osint", "-aleph", "-other-argument", "http://www.example.com/"}},
+    {FAIL, {"-osint", "-aleph", "http://www.example.com/", "-a", "-b"}},
+    {FAIL, {"-osint", "-aleph", "-a", "http://www.example.com/", "-b"}},
+    {FAIL, {"-osint", "-a", "-aleph", "http://www.example.com/", "-b"}},
+
+    // multiply-occurring otherwise-licit arguments
+    {FAIL, {"-osint", "-aleph", "-beth", "http://www.example.com/"}},
+    {FAIL, {"-osint", "-aleph", "-aleph", "http://www.example.com/"}},
+
+    // if -osint is not supplied, anything goes
+    {PASS, {}},
+    {PASS, {"http://www.example.com"}},
+    {PASS, {"-aleph", "http://www.example.com/"}},
+    {PASS, {"-beth", "http://www.example.com/"}},
+    {PASS, {"-aleph", "http://www.example.com/", "-other-argument"}},
+    {PASS, {"-aleph", "-aleph", "http://www.example.com/"}},
+};
+
+template <typename CharT>
+bool TestCommandLineImpl(CommandLine const& cl) {
+  int argc = cl.argc();
+  // EnsureCommandlineSafe's signature isn't const-correct here for annoying
+  // reasons, but it is indeed non-mutating.
+  CharT** argv = const_cast<CharT**>(cl.argv<CharT>());
+  return mozilla::EnsureCommandlineSafeImpl<CharT>(
+      argc, argv, AcceptableArgs<CharT>::value);
+}
+
+// Test that `args` produces `expectation`. On Windows, test against both
+// wide-character and narrow-character implementations.
+void TestCommandLine(TestCaseState expectation, CommandLine const& cl) {
+  EXPECT_EQ(TestCommandLineImpl<char>(cl), expectation) << "cl is: " << cl;
+#ifdef XP_WIN
+  EXPECT_EQ(TestCommandLineImpl<wchar_t>(cl), expectation) << "cl is: " << cl;
+#endif
+}
+}  // namespace testzilla
+
+/***********************
+ * Test cases
+ */
+
+TEST(CmdLineAndEnvUtils, ensureSafe)
+{
+  using namespace testzilla;
+  for (auto const& [result, data] : kCommandLines) {
+    CommandLine const cl(data);
+    TestCommandLine(result, cl);
+  }
+}
