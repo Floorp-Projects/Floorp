@@ -24,5 +24,5 @@ browser.jar:
   skin/classic/browser/window-controls/maximize.svg   (../windows/window-controls/maximize.svg)
   skin/classic/browser/window-controls/minimize.svg   (../windows/window-controls/minimize.svg)
   skin/classic/browser/window-controls/restore.svg    (../windows/window-controls/restore.svg)
-
-  skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
+  skin/classic/browser/e10s-64@2x.png                 (../shared/e10s-64@2x.png)
+  skin/classic/browser/history-swipe-arrow.svg        (../shared/swipe-gesture-icons/history-swipe-arrow.svg)

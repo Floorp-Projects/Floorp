@@ -10,6 +10,7 @@
 #include "mozilla/FlushType.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
@@ -140,8 +141,12 @@ nsEventStatus SwipeTracker::ProcessEvent(
   // success here and the user does not lift their fingers and then decreases
   // the total swipe so that we go below the success threshold the opacity would
   // also decrease in that case but that seems okay.
+  // We don't want above tweak if we move the UI along with the opacity change
+  // since it forces the UI element jump to the last position and jump back to
+  // the original position if the navigation didn't happen.
   double eventAmount = mGestureAmount;
-  if (computedSwipeSuccess) {
+  if (computedSwipeSuccess &&
+      StaticPrefs::browser_swipe_navigation_icon_move_distance() == 0) {
     eventAmount = kSwipeSuccessThreshold;
     if (mGestureAmount < 0.f) {
       eventAmount = -eventAmount;
