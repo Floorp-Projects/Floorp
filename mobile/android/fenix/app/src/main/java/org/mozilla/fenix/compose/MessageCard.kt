@@ -124,11 +124,12 @@ fun MessageCard(
                 }
             }
 
-            if (!message.data.buttonLabel.isNullOrBlank()) {
+            val buttonLabel = message.data.buttonLabel
+            if (!buttonLabel.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 PrimaryButton(
-                    text = stringResource(R.string.preferences_set_as_default_browser),
+                    text = buttonLabel,
                     onClick = onClick
                 )
             }
