@@ -535,6 +535,10 @@ Section "-Application" APP_IDX
   WriteRegDWORD HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry" 1
 !endif
 
+  ${If} ${AtLeastWin10}
+    ${WriteToastNotificationRegistration} $TmpVal
+  ${EndIf}
+
   ; Create shortcuts
   ${LogHeader} "Adding Shortcuts"
 
