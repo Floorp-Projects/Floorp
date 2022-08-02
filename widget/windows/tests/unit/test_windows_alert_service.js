@@ -5,6 +5,27 @@
  * Test that Windows alert notifications generate expected XML.
  */
 
+let gProfD = do_get_profile();
+
+// Setup that allows to use the profile service in xpcshell tests,
+// lifted from `toolkit/profile/xpcshell/head.js`.
+function setupProfileService() {
+  let gDataHome = gProfD.clone();
+  gDataHome.append("data");
+  gDataHome.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  let gDataHomeLocal = gProfD.clone();
+  gDataHomeLocal.append("local");
+  gDataHomeLocal.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+
+  let xreDirProvider = Cc["@mozilla.org/xre/directory-provider;1"].getService(
+    Ci.nsIXREDirProvider
+  );
+  xreDirProvider.setUserDataDirectory(gDataHome, false);
+  xreDirProvider.setUserDataDirectory(gDataHomeLocal, true);
+}
+
+add_setup(setupProfileService);
+
 function makeAlert(options) {
   var alert = Cc["@mozilla.org/alert-notification;1"].createInstance(
     Ci.nsIAlertNotification
@@ -29,7 +50,21 @@ function makeAlert(options) {
   return alert;
 }
 
-add_task(async () => {
+function testAlert(serverEnabled) {
+  let argumentString = argument => {
+    // &#xA; is "\n".
+    let s = ``;
+    if (serverEnabled) {
+      s += `program&#xA;firefox&#xA;profile&#xA;${gProfD.path}`;
+    } else {
+      s += `invalid key&#xA;invalid value`;
+    }
+    if (argument) {
+      s += `&#xA;action&#xA;${argument}`;
+    }
+    return s;
+  };
+
   let alertsService = Cc["@mozilla.org/system-alerts-service;1"]
     .getService(Ci.nsIAlertsService)
     .QueryInterface(Ci.nsIWindowsAlertsService);
@@ -44,22 +79,49 @@ add_task(async () => {
   ];
 
   let alert = makeAlert({ name, title, text });
-  let expected =
-    '<toast><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/></actions></toast>';
+  let expected = `<toast launch="${argumentString()}"><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="${argumentString(
+    "settings"
+  )}" placement="contextmenu"/></actions></toast>`;
   Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
 
   alert = makeAlert({ name, title, text, imageURL });
-  expected =
-    '<toast><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/></actions></toast>';
+  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="${argumentString(
+    "settings"
+  )}" placement="contextmenu"/></actions></toast>`;
   Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
 
   alert = makeAlert({ name, title, text, imageURL, requireInteraction: true });
-  expected =
-    '<toast scenario="reminder"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/></actions></toast>';
+  expected = `<toast scenario="reminder" launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="${argumentString(
+    "settings"
+  )}" placement="contextmenu"/></actions></toast>`;
   Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
 
   alert = makeAlert({ name, title, text, imageURL, actions });
-  expected =
-    '<toast><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="settings" placement="contextmenu"/><action content="title1" arguments="action1"/><action content="title2" arguments="action2"/></actions></toast>';
+  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="${argumentString(
+    "settings"
+  )}" placement="contextmenu"/><action content="title1" arguments="${argumentString(
+    "action1"
+  )}"/><action content="title2" arguments="${argumentString(
+    "action2"
+  )}"/></actions></toast>`;
   Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
+}
+
+add_task(async () => {
+  Services.prefs.clearUserPref(
+    "alerts.useSystemBackend.windows.notificationserver.enabled"
+  );
+  testAlert(false);
+
+  Services.prefs.setBoolPref(
+    "alerts.useSystemBackend.windows.notificationserver.enabled",
+    false
+  );
+  testAlert(false);
+
+  Services.prefs.setBoolPref(
+    "alerts.useSystemBackend.windows.notificationserver.enabled",
+    true
+  );
+  testAlert(true);
 });
