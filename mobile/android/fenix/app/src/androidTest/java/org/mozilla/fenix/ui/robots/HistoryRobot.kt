@@ -82,6 +82,12 @@ class HistoryRobot {
 
     fun verifyDeleteSnackbarText(text: String) = assertSnackBarText(text)
 
+    fun verifyUndoDeleteSnackBarButton() = assertUndoDeleteSnackBarButton()
+
+    fun clickUndoDeleteButton() {
+        snackBarUndoButton().click()
+    }
+
     class Transition {
         fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.pressBack()
@@ -155,3 +161,8 @@ private fun assertCopySnackBarText() = snackBarText().check(matches(withText("UR
 
 private fun assertSnackBarText(text: String) =
     snackBarText().check(matches(withText(Matchers.containsString(text))))
+
+private fun snackBarUndoButton() = onView(withId(R.id.snackbar_btn))
+
+private fun assertUndoDeleteSnackBarButton() =
+    snackBarUndoButton().check(matches(withText("UNDO")))

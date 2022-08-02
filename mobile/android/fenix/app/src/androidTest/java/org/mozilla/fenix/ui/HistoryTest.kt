@@ -129,6 +129,27 @@ class HistoryTest {
         }
     }
 
+    @Test
+    fun undoDeleteHistoryItemTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyHistoryListExists()
+            historyListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.history_list), 1)
+            IdlingRegistry.getInstance().register(historyListIdlingResource!!)
+            clickDeleteHistoryButton(firstWebPage.url.toString())
+            IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
+            verifyUndoDeleteSnackBarButton()
+            clickUndoDeleteButton()
+            verifyHistoryItemExists(true, firstWebPage.url.toString())
+        }
+    }
+
     @SmokeTest
     @Test
     fun deleteAllHistoryTest() {
