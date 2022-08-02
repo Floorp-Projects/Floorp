@@ -13,11 +13,19 @@
 namespace mozilla {
 namespace browser {
 constexpr static const char* kRequiredArguments[] = {"url", "private-window"};
+#ifdef XP_WIN
+#  define ATTEMPTING_DEELEVATION_FLAG "attempting-deelevation"
+constexpr static const char* kOptionalArguments[] = {
+    ATTEMPTING_DEELEVATION_FLAG};
+#else
+constexpr static auto kOptionalArguments = nullptr;
+#endif
 }  // namespace browser
 
 template <typename CharT>
 inline void EnsureBrowserCommandlineSafe(int aArgc, CharT** aArgv) {
-  mozilla::EnsureCommandlineSafe(aArgc, aArgv, browser::kRequiredArguments);
+  mozilla::EnsureCommandlineSafe(aArgc, aArgv, browser::kRequiredArguments,
+                                 browser::kOptionalArguments);
 }
 }  // namespace mozilla
 

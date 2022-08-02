@@ -135,8 +135,39 @@ LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
     return LAUNCHER_ERROR_FROM_HRESULT(mscom.GetHResult());
   }
 
-  // Omit argv[0] because ShellExecute doesn't need it in params
-  UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(aArgc - 1, aArgv + 1));
+  // Omit the original argv[0] because ShellExecute doesn't need it. Insert
+  // ATTEMPTING_DEELEVATION_FLAG so that we know not to attempt to restart
+  // ourselves if deelevation fails.
+  UniquePtr<wchar_t[]> cmdLine = [&]() {
+    constexpr wchar_t const* kTagArg = L"--" ATTEMPTING_DEELEVATION_FLAG;
+
+    // This should have already been checked, but just in case...
+    EnsureBrowserCommandlineSafe(aArgc, aArgv);
+
+    if (mozilla::CheckArg(aArgc, aArgv, "osint",
+                          static_cast<const wchar_t**>(nullptr),
+                          CheckArgFlag::None)) {
+      // If the command line contains -osint, we have to arrange things in a
+      // particular order.
+      //
+      // (We can't just replace -osint with kTagArg, unfortunately: there is
+      // code in the browser which behaves differently in the presence of an
+      // `-osint` tag, but which will not have had a chance to react to this.
+      // See, _e.g._, bug 1243603.)
+      auto const aArgvCopy = MakeUnique<wchar_t const*[]>(aArgc + 1);
+      aArgvCopy[0] = aArgv[1];
+      aArgvCopy[1] = kTagArg;
+      for (int i = 2; i < aArgc; ++i) {
+        aArgvCopy[i] = aArgv[i];
+      }
+      aArgvCopy[aArgc] = nullptr;  // because argv[argc] is NULL
+      return MakeCommandLine(aArgc, aArgvCopy.get(), 0, nullptr);
+    } else {
+      // Otherwise, just tack it on at the end.
+      constexpr wchar_t const* const kTagArgArray[] = {kTagArg};
+      return MakeCommandLine(aArgc - 1, aArgv + 1, 1, kTagArgArray);
+    }
+  }();
   if (!cmdLine) {
     return LAUNCHER_ERROR_GENERIC();
   }
