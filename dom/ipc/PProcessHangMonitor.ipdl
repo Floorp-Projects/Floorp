@@ -32,6 +32,7 @@ parent:
 
 child:
   async TerminateScript();
+  async RequestContentJSInterrupt();
 
   async BeginStartingDebugger();
   async EndStartingDebugger();

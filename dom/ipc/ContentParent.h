@@ -818,6 +818,13 @@ class ContentParent final : public PContentParent,
   void MarkAsDead();
 
   /**
+   * Let the process know we are about to send a shutdown through a
+   * non-mainthread side channel in order to bypass mainthread congestion.
+   * This potentially cancels mainthread content JS execution.
+   */
+  void SignalImpendingShutdownToContentJS();
+
+  /**
    * Check if this process is ready to be shut down, and if it is, begin the
    * shutdown process. Should be called whenever a change occurs which could
    * cause the decisions made by `ShouldKeepProcessAlive` to change.
