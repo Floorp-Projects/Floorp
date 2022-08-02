@@ -257,11 +257,11 @@ GMPMutexImpl::~GMPMutexImpl() { MOZ_COUNT_DTOR(GMPMutexImpl); }
 
 void GMPMutexImpl::Destroy() { delete this; }
 
-MOZ_PUSH_IGNORE_THREAD_SAFETY
+PUSH_IGNORE_THREAD_SAFETY
 void GMPMutexImpl::Acquire() { mMonitor.Enter(); }
 
 void GMPMutexImpl::Release() { mMonitor.Exit(); }
-MOZ_POP_THREAD_SAFETY
+POP_THREAD_SAFETY
 
 GMPTask* NewGMPTask(std::function<void()>&& aFunction) {
   class Task : public GMPTask {

@@ -140,7 +140,7 @@ class GLLibraryEGL final {
   ~GLLibraryEGL() = default;
 
   static StaticMutex sMutex;
-  static StaticRefPtr<GLLibraryEGL> sInstance MOZ_GUARDED_BY(sMutex);
+  static StaticRefPtr<GLLibraryEGL> sInstance GUARDED_BY(sMutex);
 
   bool Init(nsACString* const out_failureId);
   void InitLibExtensions();

@@ -272,7 +272,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
     ~LruPosition() { Reset(); }
   };
 
-  mutable LruPosition mLruPosition MOZ_GUARDED_BY(sLruMutex);
+  mutable LruPosition mLruPosition GUARDED_BY(sLruMutex);
 
   void BumpLruLocked(const StaticMutexAutoLock& aProofOfLock);
 
@@ -740,7 +740,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
  private:
   static StaticMutex sLruMutex;
-  static std::list<WebGLContext*> sLru MOZ_GUARDED_BY(sLruMutex);
+  static std::list<WebGLContext*> sLru GUARDED_BY(sLruMutex);
 
   // State tracking slots
   bool mDitherEnabled = true;

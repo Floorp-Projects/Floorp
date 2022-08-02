@@ -140,7 +140,7 @@ class CacheFile final : public CacheFileChunkListener,
 
   virtual ~CacheFile();
 
-  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  PUSH_IGNORE_THREAD_SAFETY
   void Lock() { mLock->Lock().Lock(); }
   void Unlock() {
     // move the elements out of mObjsToRelease
@@ -149,7 +149,7 @@ class CacheFile final : public CacheFileChunkListener,
 
     mLock->Lock().Unlock();
   }
-  MOZ_POP_THREAD_SAFETY
+  POP_THREAD_SAFETY
   void AssertOwnsLock() const { mLock->Lock().AssertCurrentThreadOwns(); }
   void ReleaseOutsideLock(RefPtr<nsISupports> aObject);
 

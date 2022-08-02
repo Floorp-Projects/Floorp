@@ -426,7 +426,7 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
 // thread-safety doesn't handle emplace well
 NS_IMETHODIMP
 BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
