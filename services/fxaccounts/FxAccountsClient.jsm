@@ -33,8 +33,6 @@ const HOST_PREF = "identity.fxaccounts.auth.uri";
 
 const SIGNIN = "/account/login";
 const SIGNUP = "/account/create";
-// Devices older than this many days will not appear in the devices list
-const DEVICES_FILTER_DAYS = 21;
 
 var FxAccountsClient = function(host = Services.prefs.getCharPref(HOST_PREF)) {
   this.host = host;
@@ -707,8 +705,7 @@ FxAccountsClient.prototype = {
   },
 
   /**
-   * Get a list of currently registered devices that have been accessed
-   * in the last `DEVICES_FILTER_DAYS` days
+   * Get a list of currently registered devices
    *
    * @method getDeviceList
    * @param  sessionTokenHex
@@ -727,9 +724,9 @@ FxAccountsClient.prototype = {
    *         ]
    */
   async getDeviceList(sessionTokenHex) {
-    let timestamp = Date.now() - 1000 * 60 * 60 * 24 * DEVICES_FILTER_DAYS;
-    let path = `/account/devices?filterIdleDevicesTimestamp=${timestamp}`;
+    let path = "/account/devices";
     let creds = await deriveHawkCredentials(sessionTokenHex, "sessionToken");
+
     return this._request(path, "GET", creds, {});
   },
 
