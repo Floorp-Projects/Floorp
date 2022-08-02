@@ -76,14 +76,16 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
     MOZ_ASSERT(workerPrivate);
 
-    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-        workerPrivate, "FetchStreamReader", [streamReader]() {
+    RefPtr<WeakWorkerRef> workerRef =
+        WeakWorkerRef::Create(workerPrivate, [streamReader]() {
           MOZ_ASSERT(streamReader);
           MOZ_ASSERT(streamReader->mWorkerRef);
 
-          streamReader->CloseAndRelease(
-              streamReader->mWorkerRef->Private()->GetJSContext(),
-              NS_ERROR_DOM_INVALID_STATE_ERR);
+          WorkerPrivate* workerPrivate = streamReader->mWorkerRef->GetPrivate();
+          MOZ_ASSERT(workerPrivate);
+
+          streamReader->CloseAndRelease(workerPrivate->GetJSContext(),
+                                        NS_ERROR_DOM_INVALID_STATE_ERR);
         });
 
     if (NS_WARN_IF(!workerRef)) {
@@ -192,7 +194,6 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-  mAsyncWaitWorkerRef = mWorkerRef;
 }
 
 struct FetchReadRequest : public ReadRequest {
@@ -235,7 +236,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   NS_ASSERT_OWNINGTHREAD(FetchStreamReader);
-  mAsyncWaitWorkerRef = nullptr;
   if (mStreamClosed) {
     return NS_OK;
   }

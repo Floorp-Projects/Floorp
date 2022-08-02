@@ -295,13 +295,14 @@ class WorkerStreamOwner final {
     RefPtr<WorkerStreamOwner> self =
         new WorkerStreamOwner(aStream, std::move(target));
 
-    self->mWorkerRef = StrongWorkerRef::Create(aWorker, "JSStreamConsumer", [self]() {
+    self->mWorkerRef = WeakWorkerRef::Create(aWorker, [self]() {
       if (self->mStream) {
         // If this Close() calls JSStreamConsumer::OnInputStreamReady and drops
         // the last reference to the JSStreamConsumer, 'this' will not be
         // destroyed since ~JSStreamConsumer() only enqueues a release proxy.
         self->mStream->Close();
         self->mStream = nullptr;
+        self->mWorkerRef = nullptr;
       }
     });
 
@@ -325,7 +326,7 @@ class WorkerStreamOwner final {
   // Read from any thread but only set/cleared on the worker thread. The
   // lifecycle of WorkerStreamOwner prevents concurrent read/clear.
   nsCOMPtr<nsIAsyncInputStream> mStream;
-  RefPtr<StrongWorkerRef> mWorkerRef;
+  RefPtr<WeakWorkerRef> mWorkerRef;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 };
 
