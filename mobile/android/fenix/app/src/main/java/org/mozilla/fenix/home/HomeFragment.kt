@@ -94,6 +94,7 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.DefaultMessageController
 import org.mozilla.fenix.gleanplumb.MessagingFeature
@@ -968,11 +969,11 @@ class HomeFragment : Fragment() {
                             binding.wallpaperImageView.visibility = View.GONE
                         }
                         else -> {
-                            with(requireComponents.wallpaperManager) {
-                                val bitmap = currentWallpaper.load(requireContext()) ?: return@onEach
-                                bitmap.scaleBitmapToBottomOfView(binding.wallpaperImageView)
+                            val bitmap = requireComponents.useCases.wallpaperUseCases.loadBitmap(currentWallpaper)
+                            bitmap?.let {
+                                it.scaleToBottomOfView(binding.wallpaperImageView)
+                                binding.wallpaperImageView.visibility = View.VISIBLE
                             }
-                            binding.wallpaperImageView.visibility = View.VISIBLE
                         }
                     }
                 }

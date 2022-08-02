@@ -5,6 +5,7 @@
 package org.mozilla.fenix.wallpapers
 
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,21 +40,25 @@ class WallpaperFileManagerTest {
     }
 
     @Test
-    fun `GIVEN files exist in all directories WHEN expired wallpaper looked up THEN expired wallpaper returned`() {
+    fun `GIVEN files exist in all directories WHEN expired wallpaper looked up THEN expired wallpaper returned`() = runTest {
         val wallpaperName = "name"
         createAllFiles(wallpaperName)
 
+        val result = fileManager.lookupExpiredWallpaper(wallpaperName)
+
         val expected = Wallpaper.Expired(name = wallpaperName)
-        assertEquals(expected, fileManager.lookupExpiredWallpaper(wallpaperName))
+        assertEquals(expected, result)
     }
 
     @Test
-    fun `GIVEN any missing file in directories WHEN expired wallpaper looked up THEN null returned`() {
+    fun `GIVEN any missing file in directories WHEN expired wallpaper looked up THEN null returned`() = runTest {
         val wallpaperName = "name"
         File(landscapeLightFolder, "$wallpaperName.png").createNewFile()
         File(landscapeDarkFolder, "$wallpaperName.png").createNewFile()
 
-        assertEquals(null, fileManager.lookupExpiredWallpaper(wallpaperName))
+        val result = fileManager.lookupExpiredWallpaper(wallpaperName)
+
+        assertEquals(null, result)
     }
 
     @Test

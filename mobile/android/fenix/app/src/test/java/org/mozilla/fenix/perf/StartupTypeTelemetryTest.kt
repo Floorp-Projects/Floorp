@@ -5,6 +5,7 @@
 package org.mozilla.fenix.perf
 
 import androidx.lifecycle.Lifecycle
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -22,7 +23,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.perf.StartupPathProvider.StartupPath
 import org.mozilla.fenix.perf.StartupStateProvider.StartupState
 
@@ -35,7 +35,7 @@ private val validTelemetryLabels = run {
 
 private val activityClass = HomeActivity::class.java
 
-@RunWith(FenixRobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class StartupTypeTelemetryTest {
 
     @get:Rule

@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.R
@@ -23,11 +24,14 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
-import org.mozilla.fenix.wallpapers.WallpaperManager
 
 class WallpaperSettingsFragment : Fragment() {
-    private val wallpaperManager by lazy {
-        requireComponents.wallpaperManager
+    private val appStore by lazy {
+        requireComponents.appStore
+    }
+
+    private val wallpaperUseCases by lazy {
+        requireComponents.useCases.wallpaperUseCases
     }
 
     private val settings by lazy {
@@ -44,25 +48,20 @@ class WallpaperSettingsFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 FirefoxTheme {
-                    var currentWallpaper by remember { mutableStateOf(wallpaperManager.currentWallpaper) }
+                    val wallpapers = appStore.observeAsComposableState { state ->
+                        state.wallpaperState.availableWallpapers
+                    }.value ?: listOf()
+                    val currentWallpaper = appStore.observeAsComposableState { state ->
+                        state.wallpaperState.currentWallpaper
+                    }.value ?: Wallpaper.Default
                     var wallpapersSwitchedByLogo by remember { mutableStateOf(settings.wallpapersSwitchedByLogoTap) }
+
                     WallpaperSettings(
-                        wallpapers = wallpaperManager.wallpapers,
-                        defaultWallpaper = WallpaperManager.defaultWallpaper,
-                        loadWallpaperResource = { wallpaper ->
-                            with(wallpaperManager) { wallpaper.load(context) }
-                        },
+                        wallpapers = wallpapers,
+                        defaultWallpaper = Wallpaper.Default,
+                        loadWallpaperResource = { wallpaperUseCases.loadBitmap(it) },
                         selectedWallpaper = currentWallpaper,
-                        onSelectWallpaper = { selectedWallpaper: Wallpaper ->
-                            currentWallpaper = selectedWallpaper
-                            wallpaperManager.currentWallpaper = selectedWallpaper
-                            Wallpapers.wallpaperSelected.record(
-                                Wallpapers.WallpaperSelectedExtra(
-                                    name = selectedWallpaper.name,
-                                    themeCollection = selectedWallpaper::class.simpleName
-                                )
-                            )
-                        },
+                        onSelectWallpaper = { wallpaperUseCases.selectWallpaper(it) },
                         onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
                         tapLogoSwitchChecked = wallpapersSwitchedByLogo,
                         onTapLogoSwitchCheckedChange = {

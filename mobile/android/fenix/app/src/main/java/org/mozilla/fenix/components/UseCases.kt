@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -24,7 +25,9 @@ import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
+import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
+import org.mozilla.fenix.wallpapers.WallpapersUseCases
 
 /**
  * Component group for all use cases. Use cases are provided by feature
@@ -38,7 +41,10 @@ class UseCases(
     private val shortcutManager: WebAppShortcutManager,
     private val topSitesStorage: TopSitesStorage,
     private val bookmarksStorage: BookmarksStorage,
-    private val historyStorage: HistoryStorage
+    private val historyStorage: HistoryStorage,
+    appStore: AppStore,
+    client: Client,
+    strictMode: StrictModeManager,
 ) {
     /**
      * Use cases that provide engine interactions for a given browser session.
@@ -99,4 +105,8 @@ class UseCases(
      * Use cases that provide bookmark management.
      */
     val bookmarksUseCases by lazyMonitored { BookmarksUseCase(bookmarksStorage, historyStorage) }
+
+    val wallpaperUseCases by lazyMonitored {
+        WallpapersUseCases(context, appStore, client, strictMode)
+    }
 }

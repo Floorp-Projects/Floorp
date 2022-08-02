@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class WallpaperFileManager(
@@ -23,8 +24,8 @@ class WallpaperFileManager(
      * files for each of the following orientation and theme combinations:
      * light/portrait - light/landscape - dark/portrait - dark/landscape
      */
-    fun lookupExpiredWallpaper(name: String): Wallpaper.Expired? {
-        return if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
+    suspend fun lookupExpiredWallpaper(name: String): Wallpaper.Expired? = withContext(Dispatchers.IO) {
+        if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
             Wallpaper.Expired(name)
         } else null
     }

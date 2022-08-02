@@ -19,7 +19,6 @@ import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.worker.Frequency
-import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -45,8 +44,6 @@ import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.wallpapers.WallpaperDownloader
-import org.mozilla.fenix.wallpapers.WallpaperFileManager
 import org.mozilla.fenix.wallpapers.WallpaperManager
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit
@@ -85,7 +82,10 @@ class Components(private val context: Context) {
             core.webAppShortcutManager,
             core.topSitesStorage,
             core.bookmarksStorage,
-            core.historyStorage
+            core.historyStorage,
+            appStore,
+            core.client,
+            strictMode,
         )
     }
 
@@ -161,17 +161,11 @@ class Components(private val context: Context) {
     val strictMode by lazyMonitored { StrictModeManager(Config, this) }
 
     val wallpaperManager by lazyMonitored {
-        val currentLocale = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            LocaleManager.getCurrentLocale(context)?.toLanguageTag()
-                ?: LocaleManager.getSystemDefault().toLanguageTag()
-        }
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             WallpaperManager(
                 settings,
                 appStore,
-                WallpaperDownloader(context, core.client),
-                WallpaperFileManager(context.filesDir),
-                currentLocale
+                useCases.wallpaperUseCases.selectWallpaper,
             )
         }
     }
