@@ -24,6 +24,7 @@
 #  include <windows.h>
 #endif  // defined(XP_WIN)
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/TypedEnumBits.h"
 
@@ -114,6 +115,28 @@ static inline bool strimatch(const char* lowerstr, const CharT* mixedstr) {
   return true;
 }
 
+// Given a command-line argument, return Nothing if it isn't structurally a
+// command-line option, and Some(<the option text>) if it is.
+template <typename CharT>
+mozilla::Maybe<const CharT*> ReadAsOption(const CharT* str) {
+  if (!str) {
+    return Nothing();
+  }
+  if (*str == '-') {
+    str++;
+    if (*str == '-') {
+      str++;
+    }
+    return Some(str);
+  }
+#ifdef XP_WIN
+  if (*str == '/') {
+    return Some(str + 1);
+  }
+#endif
+  return Nothing();
+}
+
 }  // namespace internal
 
 using internal::strimatch;
@@ -144,26 +167,15 @@ template <typename CharT>
 inline ArgResult CheckArg(int& aArgc, CharT** aArgv, const char* aArg,
                           const CharT** aParam = nullptr,
                           CheckArgFlag aFlags = CheckArgFlag::RemoveArg) {
+  using internal::ReadAsOption;
   MOZ_ASSERT(aArgv && aArg);
 
   CharT** curarg = aArgv + 1;  // skip argv[0]
   ArgResult ar = ARG_NONE;
 
   while (*curarg) {
-    CharT* arg = curarg[0];
-
-    if (arg[0] == '-'
-#if defined(XP_WIN)
-        || *arg == '/'
-#endif
-    ) {
-      ++arg;
-
-      if (*arg == '-') {
-        ++arg;
-      }
-
-      if (strimatch(aArg, arg)) {
+    if (const auto arg = ReadAsOption(*curarg)) {
+      if (strimatch(aArg, arg.value())) {
         if (aFlags & CheckArgFlag::RemoveArg) {
           RemoveArg(aArgc, curarg);
         } else {
@@ -176,11 +188,7 @@ inline ArgResult CheckArg(int& aArgc, CharT** aArgv, const char* aArg,
         }
 
         if (*curarg) {
-          if (**curarg == '-'
-#if defined(XP_WIN)
-              || **curarg == '/'
-#endif
-          ) {
+          if (ReadAsOption(*curarg)) {
             return ARG_BAD;
           }
 
@@ -231,38 +239,19 @@ inline bool EnsureCommandlineSafeImpl(int aArgc, CharT** aArgv,
     }
 
     // The first should be osint.
-    CharT* arg = aArgv[1];
-    if (*arg != '-'
-#ifdef XP_WIN
-        && *arg != '/'
-#endif
-    ) {
-      return false;
-    }
-    ++arg;
-    if (*arg == '-') {
-      ++arg;
-    }
-    if (!strimatch(osintLit, arg)) {
+    const auto arg1 = ReadAsOption(aArgv[1]);
+    if (!arg1) return false;
+    if (!strimatch(osintLit, arg1.value())) {
       return false;
     }
 
-    // Now only a required argument and a parameter for it should be left:
-    arg = aArgv[2];
-    if (*arg != '-'
-#ifdef XP_WIN
-        && *arg != '/'
-#endif
-    ) {
-      return false;
-    }
-    ++arg;
-    if (*arg == '-') {
-      ++arg;
-    }
+    // Now only an acceptable argument and a parameter for it should be left:
+    const auto arg2 = ReadAsOption(aArgv[2]);
+    if (!arg2) return false;
+
     const bool haveRequiredArg = [&] {
       for (const char* a : requiredParams) {
-        if (strimatch(a, arg)) {
+        if (strimatch(a, arg2.value())) {
           return true;
         }
       }
@@ -271,13 +260,9 @@ inline bool EnsureCommandlineSafeImpl(int aArgc, CharT** aArgv,
     if (!haveRequiredArg) {
       return false;
     }
+
     // The param that is passed afterwards shouldn't be another switch:
-    arg = aArgv[3];
-    if (*arg == '-'
-#ifdef XP_WIN
-        || *arg == '/'
-#endif
-    ) {
+    if (ReadAsOption(aArgv[3])) {
       return false;
     }
   }
@@ -297,9 +282,7 @@ inline void EnsureCommandlineSafe(int aArgc, CharT** aArgv,
 }
 
 #if defined(XP_WIN)
-
 namespace internal {
-
 /**
  * Get the length that the string will take and takes into account the
  * additional length if the string needs to be quoted and if characters need to
