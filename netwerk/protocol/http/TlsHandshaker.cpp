@@ -138,29 +138,22 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
 nsresult TlsHandshaker::SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps) {
   nsTArray<nsCString> protocolArray;
 
-  nsCString npnToken = mConnInfo->GetNPNToken();
-  if (npnToken.IsEmpty()) {
-    // The first protocol is used as the fallback if none of the
-    // protocols supported overlap with the server's list.
-    // When using ALPN the advertised preferences are protocolArray indicies
-    // {1, .., N, 0} in decreasing order.
-    // For NPN, In the case of overlap, matching priority is driven by
-    // the order of the server's advertisement - with index 0 used when
-    // there is no match.
-    protocolArray.AppendElement("http/1.1"_ns);
+  // The first protocol is used as the fallback if none of the
+  // protocols supported overlap with the server's list.
+  // When using ALPN the advertised preferences are protocolArray indicies
+  // {1, .., N, 0} in decreasing order.
+  // For NPN, In the case of overlap, matching priority is driven by
+  // the order of the server's advertisement - with index 0 used when
+  // there is no match.
+  protocolArray.AppendElement("http/1.1"_ns);
 
-    if (StaticPrefs::network_http_http2_enabled() &&
-        !(caps & NS_HTTP_DISALLOW_SPDY)) {
-      LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
-      const SpdyInformation* info = gHttpHandler->SpdyInfo();
-      if (info->ALPNCallbacks(ssl)) {
-        protocolArray.AppendElement(info->VersionString);
-      }
+  if (StaticPrefs::network_http_http2_enabled() &&
+      !(caps & NS_HTTP_DISALLOW_SPDY)) {
+    LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
+    const SpdyInformation* info = gHttpHandler->SpdyInfo();
+    if (info->ALPNCallbacks(ssl)) {
+      protocolArray.AppendElement(info->VersionString);
     }
-  } else {
-    LOG(("nsHttpConnection::SetupSSL limiting NPN selection to %s",
-         npnToken.get()));
-    protocolArray.AppendElement(npnToken);
   }
 
   nsresult rv = ssl->SetNPNList(protocolArray);
