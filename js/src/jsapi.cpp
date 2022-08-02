@@ -4225,6 +4225,25 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
   return true;
 }
 
+JS_PUBLIC_API void JS::DisableSpectreMitigationsAfterInit() {
+  // This is used to turn off Spectre mitigations in pre-allocated child
+  // processes used for isolated web content. Assert there's a single runtime
+  // and cancel off-thread compilations, to ensure we're not racing with any
+  // compilations.
+  JSContext* cx = TlsContext.get();
+  MOZ_RELEASE_ASSERT(cx);
+  MOZ_RELEASE_ASSERT(JSRuntime::hasSingleLiveRuntime());
+  MOZ_RELEASE_ASSERT(cx->runtime()->wasmInstances.lock()->empty());
+
+  CancelOffThreadIonCompile(cx->runtime());
+
+  jit::JitOptions.spectreIndexMasking = false;
+  jit::JitOptions.spectreObjectMitigations = false;
+  jit::JitOptions.spectreStringMitigations = false;
+  jit::JitOptions.spectreValueMasking = false;
+  jit::JitOptions.spectreJitToCxxCalls = false;
+}
+
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && \
