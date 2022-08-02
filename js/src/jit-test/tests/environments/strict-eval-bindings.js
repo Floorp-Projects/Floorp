@@ -16,11 +16,11 @@ function assertBytecode(actual, expected, message) {
   // intentionally includes the expression stack, as that is what makes the
   // `GetLocal .* y$` trick work. The disassemble() output is like this:
   //
-  //     00016:  GetLocal 0                      # x y
+  //     00016:  10 GetLocal 0                      # x y
   //
   let actualOps =
       actual.split('\n')
-      .map(s => /^\d{5}:  (.*)$/.exec(s)?.[1])
+      .map(s => /^\d{5}: +\d+ +(.*)$/.exec(s)?.[1])
       .filter(x => x !== undefined);
 
   // Turn the expectations into regular expressions.

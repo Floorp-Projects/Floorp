@@ -3160,72 +3160,6 @@ static bool PCToLine(JSContext* cx, unsigned argc, Value* vp) {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
-[[nodiscard]] static bool SrcNotes(JSContext* cx, HandleScript script,
-                                   Sprinter* sp) {
-  if (!sp->put("\nSource notes:\n") ||
-      !sp->jsprintf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column",
-                    "pc", "delta", "desc", "args") ||
-      !sp->put("---- ---- ------ ----- ------ ---------- ------\n")) {
-    return false;
-  }
-
-  unsigned offset = 0;
-  unsigned lineno = script->lineno();
-  unsigned column = script->column();
-  SrcNote* notes = script->notes();
-  for (SrcNoteIterator iter(notes); !iter.atEnd(); ++iter) {
-    auto sn = *iter;
-
-    unsigned delta = sn->delta();
-    offset += delta;
-    SrcNoteType type = sn->type();
-    const char* name = sn->name();
-    if (!sp->jsprintf("%3u: %4u %6u %5u [%4u] %-10s", unsigned(sn - notes),
-                      lineno, column, offset, delta, name)) {
-      return false;
-    }
-
-    switch (type) {
-      case SrcNoteType::Null:
-      case SrcNoteType::AssignOp:
-      case SrcNoteType::Breakpoint:
-      case SrcNoteType::StepSep:
-      case SrcNoteType::XDelta:
-        break;
-
-      case SrcNoteType::ColSpan: {
-        uint32_t colspan = SrcNote::ColSpan::getSpan(sn);
-        if (!sp->jsprintf(" colspan %u", colspan)) {
-          return false;
-        }
-        column += colspan;
-        break;
-      }
-
-      case SrcNoteType::SetLine:
-        lineno = SrcNote::SetLine::getLine(sn, script->lineno());
-        if (!sp->jsprintf(" lineno %u", lineno)) {
-          return false;
-        }
-        column = 0;
-        break;
-
-      case SrcNoteType::NewLine:
-        ++lineno;
-        column = 0;
-        break;
-
-      default:
-        MOZ_ASSERT_UNREACHABLE("unrecognized srcnote");
-    }
-    if (!sp->put("\n")) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   Sprinter sprinter(cx);
@@ -3239,7 +3173,7 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (!SrcNotes(cx, script, &sprinter)) {
+    if (!JSScript::dumpSrcNotes(cx, script, &sprinter)) {
       return false;
     }
   }
@@ -3252,316 +3186,19 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static const char* TryNoteName(TryNoteKind kind) {
-  switch (kind) {
-    case TryNoteKind::Catch:
-      return "catch";
-    case TryNoteKind::Finally:
-      return "finally";
-    case TryNoteKind::ForIn:
-      return "for-in";
-    case TryNoteKind::ForOf:
-      return "for-of";
-    case TryNoteKind::Loop:
-      return "loop";
-    case TryNoteKind::ForOfIterClose:
-      return "for-of-iterclose";
-    case TryNoteKind::Destructuring:
-      return "destructuring";
-  }
-
-  MOZ_CRASH("Bad TryNoteKind");
-}
-
-[[nodiscard]] static bool TryNotes(JSContext* cx, HandleScript script,
-                                   Sprinter* sp) {
-  if (!sp->put(
-          "\nException table:\nkind               stack    start      end\n")) {
-    return false;
-  }
-
-  for (const js::TryNote& tn : script->trynotes()) {
-    if (!sp->jsprintf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()),
-                      tn.stackDepth, tn.start, tn.start + tn.length)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-[[nodiscard]] static bool ScopeNotes(JSContext* cx, HandleScript script,
-                                     Sprinter* sp) {
-  if (!sp->put("\nScope notes:\n   index   parent    start      end\n")) {
-    return false;
-  }
-
-  for (const ScopeNote& note : script->scopeNotes()) {
-    if (note.index == ScopeNote::NoScopeIndex) {
-      if (!sp->jsprintf("%8s ", "(none)")) {
-        return false;
-      }
-    } else {
-      if (!sp->jsprintf("%8u ", note.index.index)) {
-        return false;
-      }
-    }
-    if (note.parent == ScopeNote::NoScopeIndex) {
-      if (!sp->jsprintf("%8s ", "(none)")) {
-        return false;
-      }
-    } else {
-      if (!sp->jsprintf("%8u ", note.parent)) {
-        return false;
-      }
-    }
-    if (!sp->jsprintf("%8u %8u\n", note.start, note.start + note.length)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-[[nodiscard]] static bool GCThings(JSContext* cx, HandleScript script,
-                                   Sprinter* sp) {
-  if (!sp->put("\nGC things:\n   index   type       value\n")) {
-    return false;
-  }
-
-  size_t i = 0;
-  for (JS::GCCellPtr gcThing : script->gcthings()) {
-    if (!sp->jsprintf("%8zu   ", i)) {
-      return false;
-    }
-    if (gcThing.is<BigInt>()) {
-      if (!sp->put("BigInt     ")) {
-        return false;
-      }
-      gcThing.as<BigInt>().dump(*sp);
-      if (!sp->put("\n")) {
-        return false;
-      }
-    } else if (gcThing.is<Scope>()) {
-      if (!sp->put("Scope      ")) {
-        return false;
-      }
-      Rooted<Scope*> scope(cx, &gcThing.as<Scope>());
-      if (!Scope::dumpForDisassemble(cx, scope, *sp,
-                                     "                      ")) {
-        return false;
-      }
-      if (!sp->put("\n")) {
-        return false;
-      }
-    } else if (gcThing.is<JSObject>()) {
-      JSObject* obj = &gcThing.as<JSObject>();
-      if (obj->is<JSFunction>()) {
-        if (!sp->put("Function   ")) {
-          return false;
-        }
-        RootedFunction fun(cx, &obj->as<JSFunction>());
-        if (fun->displayAtom()) {
-          Rooted<JSAtom*> name(cx, fun->displayAtom());
-          UniqueChars utf8chars = JS_EncodeStringToUTF8(cx, name);
-          if (!utf8chars) {
-            return false;
-          }
-          if (!sp->put(utf8chars.get())) {
-            return false;
-          }
-        } else {
-          if (!sp->put("(anonymous)")) {
-            return false;
-          }
-        }
-
-        if (fun->hasBaseScript()) {
-          BaseScript* script = fun->baseScript();
-          if (!sp->jsprintf(" @ %u:%u\n", script->lineno(), script->column())) {
-            return false;
-          }
-        } else {
-          if (!sp->put(" (no script)\n")) {
-            return false;
-          }
-        }
-      } else {
-        if (obj->is<RegExpObject>()) {
-          if (!sp->put("RegExp     ")) {
-            return false;
-          }
-        } else {
-          if (!sp->put("Object     ")) {
-            return false;
-          }
-        }
-
-        RootedValue objValue(cx, ObjectValue(*obj));
-        RootedString str(cx, ValueToSource(cx, objValue));
-        if (!str) {
-          return false;
-        }
-        UniqueChars utf8chars = JS_EncodeStringToUTF8(cx, str);
-        if (!utf8chars) {
-          return false;
-        }
-        if (!sp->put(utf8chars.get())) {
-          return false;
-        }
-
-        if (!sp->put("\n")) {
-          return false;
-        }
-      }
-    } else if (gcThing.is<JSString>()) {
-      RootedString str(cx, &gcThing.as<JSString>());
-      if (str->isAtom()) {
-        if (!sp->put("Atom       ")) {
-          return false;
-        }
-      } else {
-        if (!sp->put("String     ")) {
-          return false;
-        }
-      }
-      UniqueChars chars = QuoteString(cx, str, '"');
-      if (!chars) {
-        return false;
-      }
-      if (!sp->put(chars.get())) {
-        return false;
-      }
-      if (!sp->put("\n")) {
-        return false;
-      }
-    } else {
-      if (!sp->put("Unknown\n")) {
-        return false;
-      }
-    }
-    i++;
-  }
-
-  return true;
-}
-
-[[nodiscard]] static bool DisassembleScript(JSContext* cx, HandleScript script,
-                                            HandleFunction fun, bool lines,
-                                            bool recursive, bool sourceNotes,
-                                            bool gcThings, Sprinter* sp) {
-  if (fun) {
-    if (!sp->put("flags:")) {
-      return false;
-    }
-    if (fun->isLambda()) {
-      if (!sp->put(" LAMBDA")) {
-        return false;
-      }
-    }
-    if (fun->needsCallObject()) {
-      if (!sp->put(" NEEDS_CALLOBJECT")) {
-        return false;
-      }
-    }
-    if (fun->needsExtraBodyVarEnvironment()) {
-      if (!sp->put(" NEEDS_EXTRABODYVARENV")) {
-        return false;
-      }
-    }
-    if (fun->needsNamedLambdaEnvironment()) {
-      if (!sp->put(" NEEDS_NAMEDLAMBDAENV")) {
-        return false;
-      }
-    }
-    if (fun->isConstructor()) {
-      if (!sp->put(" CONSTRUCTOR")) {
-        return false;
-      }
-    }
-    if (fun->isSelfHostedBuiltin()) {
-      if (!sp->put(" SELF_HOSTED")) {
-        return false;
-      }
-    }
-    if (fun->isArrow()) {
-      if (!sp->put(" ARROW")) {
-        return false;
-      }
-    }
-    if (!sp->put("\n")) {
-      return false;
-    }
-  }
-
-  if (!Disassemble(cx, script, lines, sp)) {
-    return false;
-  }
-  if (sourceNotes) {
-    if (!SrcNotes(cx, script, sp)) {
-      return false;
-    }
-  }
-  if (!TryNotes(cx, script, sp)) {
-    return false;
-  }
-  if (!ScopeNotes(cx, script, sp)) {
-    return false;
-  }
-  if (gcThings) {
-    if (!GCThings(cx, script, sp)) {
-      return false;
-    }
-  }
-
-  if (recursive) {
-    for (JS::GCCellPtr gcThing : script->gcthings()) {
-      if (!gcThing.is<JSObject>()) {
-        continue;
-      }
-
-      JSObject* obj = &gcThing.as<JSObject>();
-      if (obj->is<JSFunction>()) {
-        if (!sp->put("\n")) {
-          return false;
-        }
-
-        RootedFunction fun(cx, &obj->as<JSFunction>());
-        if (fun->isInterpreted()) {
-          RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-          if (!script || !DisassembleScript(cx, script, fun, lines, recursive,
-                                            sourceNotes, gcThings, sp)) {
-            return false;
-          }
-        } else {
-          if (!sp->put("[native code]\n")) {
-            return false;
-          }
-        }
-      }
-    }
-  }
-
-  return true;
-}
-
 namespace {
 
 struct DisassembleOptionParser {
   unsigned argc;
   Value* argv;
-  bool lines;
-  bool recursive;
-  bool sourceNotes;
-  bool gcThings;
+  JSScript::DumpOptions options;
 
   DisassembleOptionParser(unsigned argc, Value* argv)
-      : argc(argc),
-        argv(argv),
-        lines(false),
-        recursive(false),
-        sourceNotes(true),
-        gcThings(false) {}
+      : argc(argc), argv(argv) {}
 
   bool parse(JSContext* cx) {
+    options.recursive = false;
+
     /* Read options off early arguments */
     while (argc > 0 && argv[0].isString()) {
       JSString* str = argv[0].toString();
@@ -3569,14 +3206,8 @@ struct DisassembleOptionParser {
       if (!linearStr) {
         return false;
       }
-      if (JS_LinearStringEqualsLiteral(linearStr, "-l")) {
-        lines = true;
-      } else if (JS_LinearStringEqualsLiteral(linearStr, "-r")) {
-        recursive = true;
-      } else if (JS_LinearStringEqualsLiteral(linearStr, "-S")) {
-        sourceNotes = false;
-      } else if (JS_LinearStringEqualsLiteral(linearStr, "-g")) {
-        gcThings = true;
+      if (JS_LinearStringEqualsLiteral(linearStr, "-r")) {
+        options.recursive = true;
       } else {
         break;
       }
@@ -3602,22 +3233,8 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
     RootedScript script(cx, GetTopScript(cx));
     if (script) {
       JSAutoRealm ar(cx, script);
-      if (!Disassemble(cx, script, p.lines, sprinter)) {
+      if (!JSScript::dump(cx, script, p.options, sprinter)) {
         return false;
-      }
-      if (!SrcNotes(cx, script, sprinter)) {
-        return false;
-      }
-      if (!TryNotes(cx, script, sprinter)) {
-        return false;
-      }
-      if (!ScopeNotes(cx, script, sprinter)) {
-        return false;
-      }
-      if (p.gcThings) {
-        if (!GCThings(cx, script, sprinter)) {
-          return false;
-        }
       }
     }
   } else {
@@ -3636,8 +3253,8 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
       if (!script) {
         return false;
       }
-      if (!DisassembleScript(cx, script, fun, p.lines, p.recursive,
-                             p.sourceNotes, p.gcThings, sprinter)) {
+
+      if (!JSScript::dump(cx, script, p.options, sprinter)) {
         return false;
       }
     }
@@ -3734,8 +3351,7 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
   if (!sprinter.init()) {
     return false;
   }
-  if (!DisassembleScript(cx, script, nullptr, p.lines, p.recursive,
-                         p.sourceNotes, p.gcThings, &sprinter)) {
+  if (JSScript::dump(cx, script, p.options, &sprinter)) {
     return false;
   }
 

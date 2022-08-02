@@ -60,6 +60,9 @@ class ScriptSource;
 class VarScope;
 class LexicalScope;
 
+class GenericPrinter;
+class Sprinter;
+
 namespace coverage {
 class LCovSource;
 }  // namespace coverage
@@ -2114,6 +2117,27 @@ class JSScript : public js::BaseScript {
     void holdScript(JS::HandleFunction fun);
     void dropScript();
   };
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+ public:
+  struct DumpOptions {
+    bool recursive = false;
+  };
+
+  void dump(JSContext* cx);
+  void dumpRecursive(JSContext* cx);
+
+  static bool dump(JSContext* cx, JS::Handle<JSScript*> script,
+                   DumpOptions& options, js::Sprinter* sp);
+  static bool dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
+                           js::Sprinter* sp);
+  static bool dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
+                           js::Sprinter* sp);
+  static bool dumpScopeNotes(JSContext* cx, JS::Handle<JSScript*> script,
+                             js::Sprinter* sp);
+  static bool dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
+                           js::Sprinter* sp);
+#endif
 };
 
 namespace js {
