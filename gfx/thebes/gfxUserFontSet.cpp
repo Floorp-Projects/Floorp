@@ -257,8 +257,7 @@ gfxUserFontFamily::~gfxUserFontFamily() {
 already_AddRefed<gfxFontSrcPrincipal> gfxFontFaceSrc::LoadPrincipal(
     const gfxUserFontSet& aFontSet) const {
   MOZ_ASSERT(mSourceType == eSourceType_URL);
-  if (mUseOriginPrincipal) {
-    MOZ_ASSERT(mOriginPrincipal);
+  if (mUseOriginPrincipal && mOriginPrincipal) {
     return RefPtr{mOriginPrincipal}.forget();
   }
   return aFontSet.GetStandardFontLoadPrincipal();
