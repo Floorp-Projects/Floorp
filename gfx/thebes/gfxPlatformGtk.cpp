@@ -102,7 +102,6 @@ gfxPlatformGtk::gfxPlatformGtk() {
     gtk_init(nullptr, nullptr);
   }
 
-  mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
   mIsX11Display = gfxPlatform::IsHeadless() ? false : GdkIsX11Display();
   if (XRE_IsParentProcess()) {
     InitX11EGLConfig();
@@ -474,22 +473,9 @@ void gfxPlatformGtk::FontsPrefsChanged(const char* aPref) {
     return;
   }
 
-  mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
   gfxFcPlatformFontList* pfl = gfxFcPlatformFontList::PlatformFontList();
   pfl->ClearGenericMappings();
   FlushFontAndWordCaches();
-}
-
-uint32_t gfxPlatformGtk::MaxGenericSubstitions() {
-  if (mMaxGenericSubstitutions == UNINITIALIZED_VALUE) {
-    mMaxGenericSubstitutions =
-        Preferences::GetInt(GFX_PREF_MAX_GENERIC_SUBSTITUTIONS, 3);
-    if (mMaxGenericSubstitutions < 0) {
-      mMaxGenericSubstitutions = 3;
-    }
-  }
-
-  return uint32_t(mMaxGenericSubstitutions);
 }
 
 bool gfxPlatformGtk::AccelerateLayersByDefault() { return true; }

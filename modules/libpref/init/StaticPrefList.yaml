@@ -5687,6 +5687,13 @@
   value: false
   mirror: always
 
+#ifdef MOZ_WIDGET_GTK
+-   name: gfx.font_rendering.fontconfig.max_generic_substitutions
+    type: RelaxedAtomicUint32
+    value: 3
+    mirror: always
+#endif
+
 #if defined(XP_WIN)
 # Whether the DirectWrite bold simulation should be used when a bold font-weight
 # is requested but no bold face available in the family. This renders poorly with
