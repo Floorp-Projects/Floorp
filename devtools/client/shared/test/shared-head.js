@@ -788,16 +788,10 @@ function _watchForPanelReload(toolbox, toolId) {
       info("Waiting for inspector updates after page reload");
       await onReloaded;
     };
-  } else if (toolId == "netmonitor") {
+  } else if (["netmonitor", "accessibility", "webconsole"].includes(toolId)) {
     const onReloaded = panel.once("reloaded");
     return async function() {
-      info("Waiting for netmonitor updates after page reload");
-      await onReloaded;
-    };
-  } else if (toolId == "accessibility") {
-    const onReloaded = panel.once("reloaded");
-    return async function() {
-      info("Waiting for accessibility updates after page reload");
+      info(`Waiting for ${toolId} updates after page reload`);
       await onReloaded;
     };
   }
