@@ -471,13 +471,23 @@ const CustomizableWidgets = [
     onBeforeCreated() {
       return Services.prefs.getBoolPref("browser.tabs.firefox-view");
     },
-    onCommand(e) {
-      Services.obs.notifyObservers(
-        null,
-        "firefoxview-notification-dot-update",
-        "false"
+    onCreated(aNode) {
+      aNode.addEventListener("mousedown", this);
+      aNode.ownerGlobal.addEventListener(
+        "unload",
+        () => {
+          aNode.removeEventListener("mousedown", this);
+        },
+        { once: true }
       );
+    },
+    onCommand(e) {
       e.view.FirefoxViewHandler.openTab();
+    },
+    handleEvent(e) {
+      if (e.type == "mousedown" && e.button == 0) {
+        e.view.FirefoxViewHandler.openTab();
+      }
     },
   },
 ];

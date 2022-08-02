@@ -9937,7 +9937,7 @@ var FirefoxViewHandler = {
       document.getElementById("menu_openFirefoxView").hidden = true;
     } else {
       let shouldShow = FirefoxViewNotificationManager.shouldNotificationDotBeShowing();
-      this.toggleNotificationDot(shouldShow);
+      this._toggleNotificationDot(shouldShow);
     }
     Services.obs.addObserver(this, "firefoxview-notification-dot-update");
     this.observerAdded = true;
@@ -9963,29 +9963,33 @@ var FirefoxViewHandler = {
         document
           .getElementById("firefox-view-button")
           ?.toggleAttribute("open", e.target == this.tab);
+        this._removeNotificationDotIfTabSelected();
         break;
       case "TabClose":
         this.tab = null;
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
         break;
       case "activate":
-        if (this.tab?.selected) {
-          Services.obs.notifyObservers(
-            null,
-            "firefoxview-notification-dot-update",
-            "false"
-          );
-        }
+        this._removeNotificationDotIfTabSelected();
         break;
     }
   },
   observe(sub, topic, data) {
     if (topic === "firefoxview-notification-dot-update") {
       let shouldShow = data === "true";
-      this.toggleNotificationDot(shouldShow);
+      this._toggleNotificationDot(shouldShow);
     }
   },
-  toggleNotificationDot(shouldShow) {
+  _removeNotificationDotIfTabSelected() {
+    if (this.tab?.selected) {
+      Services.obs.notifyObservers(
+        null,
+        "firefoxview-notification-dot-update",
+        "false"
+      );
+    }
+  },
+  _toggleNotificationDot(shouldShow) {
     let fxViewButton = document.getElementById("firefox-view-button");
     fxViewButton?.setAttribute("attention", shouldShow);
   },

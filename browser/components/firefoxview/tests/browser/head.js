@@ -116,7 +116,7 @@ async function openFirefoxViewTab(w = window) {
   info("Clicking the Firefox View button");
   await EventUtils.synthesizeMouseAtCenter(
     w.document.getElementById("firefox-view-button"),
-    {},
+    { type: "mousedown" },
     w
   );
   assertFirefoxViewTab(w);
