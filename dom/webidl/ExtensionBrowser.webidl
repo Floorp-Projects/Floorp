@@ -40,6 +40,11 @@ interface ExtensionBrowser {
    Func="mozilla::extensions::ExtensionRuntime::IsAllowed"]
   readonly attribute ExtensionRuntime runtime;
 
+  // `browser.scripting` API namespace
+  [Replaceable, SameObject, BinaryName="GetExtensionScripting",
+    Func="mozilla::extensions::ExtensionScripting::IsAllowed"]
+  readonly attribute ExtensionScripting scripting;
+
   // `browser.test` API namespace, available in tests.
   [Replaceable, SameObject, BinaryName="GetExtensionTest",
    Func="mozilla::extensions::ExtensionTest::IsAllowed"]

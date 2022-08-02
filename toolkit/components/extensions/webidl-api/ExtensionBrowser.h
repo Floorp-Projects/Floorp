@@ -24,6 +24,7 @@ class ExtensionAlarms;
 class ExtensionMockAPI;
 class ExtensionPort;
 class ExtensionRuntime;
+class ExtensionScripting;
 class ExtensionTest;
 
 bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
@@ -62,6 +63,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   RefPtr<ExtensionAlarms> mExtensionAlarms;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionRuntime> mExtensionRuntime;
+  RefPtr<ExtensionScripting> mExtensionScripting;
   RefPtr<ExtensionTest> mExtensionTest;
   nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
 
@@ -118,6 +120,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   ExtensionAlarms* GetExtensionAlarms();
   ExtensionMockAPI* GetExtensionMockAPI();
   ExtensionRuntime* GetExtensionRuntime();
+  ExtensionScripting* GetExtensionScripting();
   ExtensionTest* GetExtensionTest();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
