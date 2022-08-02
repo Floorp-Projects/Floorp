@@ -121,6 +121,57 @@ constexpr static const TestCaseState WIN_ONLY = PASS;
 constexpr static const TestCaseState WIN_ONLY = FAIL;
 #endif
 
+using NarrowTestCase = std::pair<const char*, const char*>;
+constexpr std::pair<TestCaseState, NarrowTestCase> kStrMatches8[] = {
+    {PASS, {"", ""}},
+
+    {PASS, {"i", "i"}},
+    {PASS, {"i", "I"}},
+
+    {FAIL, {"", "i"}},
+    {FAIL, {"i", ""}},
+    {FAIL, {"i", "j"}},
+
+    {PASS, {"mozilla", "mozilla"}},
+    {PASS, {"mozilla", "Mozilla"}},
+    {PASS, {"mozilla", "MOZILLA"}},
+    {PASS, {"mozilla", "mOZILLA"}},
+    {PASS, {"mozilla", "mOZIlLa"}},
+    {PASS, {"mozilla", "MoZiLlA"}},
+
+    {FAIL, {"mozilla", ""}},
+    {FAIL, {"mozilla", "mozill"}},
+    {FAIL, {"mozilla", "mozillo"}},
+    {FAIL, {"mozilla", "mozillam"}},
+    {FAIL, {"mozilla", "mozilla-"}},
+    {FAIL, {"mozilla", "-mozilla"}},
+    {FAIL, {"-mozilla", "mozilla"}},
+
+    // numbers are permissible
+    {PASS, {"m0zi11a", "m0zi11a"}},
+    {PASS, {"m0zi11a", "M0ZI11A"}},
+    {PASS, {"m0zi11a", "m0Zi11A"}},
+
+    {FAIL, {"mozilla", "m0zi11a"}},
+    {FAIL, {"m0zi11a", "mozilla"}},
+
+    // capital letters are not accepted in the left comparand
+    {FAIL, {"I", "i"}},
+    {FAIL, {"I", "i"}},
+    {FAIL, {"Mozilla", "mozilla"}},
+    {FAIL, {"Mozilla", "Mozilla"}},
+};
+
+#ifdef XP_WIN
+using WideTestCase = std::pair<const wchar_t*, const wchar_t*>;
+constexpr std::pair<TestCaseState, WideTestCase> kStrMatches16[] = {
+    // (implementation- and locale-dependent behavior:
+    // `wtolower` may or may not transform Turkish 'İ' to 'i')
+    {FAIL, {L"i", L"İ"}},
+    {FAIL, {L"mozilla", L"ṁozilla"}},
+};
+#endif
+
 std::pair<TestCaseState, std::vector<const char*>> const kCommandLines[] = {
     // the basic admissible forms
     {PASS, {"-osint", "-aleph", "http://www.example.com/"}},
@@ -209,6 +260,34 @@ void TestCommandLine(TestCaseState expectation, CommandLine const& cl) {
 /***********************
  * Test cases
  */
+
+TEST(CmdLineAndEnvUtils, strimatch)
+{
+  using namespace testzilla;
+  using mozilla::strimatch;
+  for (auto const& [result, data] : kStrMatches8) {
+    auto const& [left, right] = data;
+    EXPECT_EQ(strimatch(left, right), result)
+        << '<' << left << "> !~ <" << right << '>';
+
+#ifdef XP_WIN
+    wchar_t left_wide[200];
+    wchar_t right_wide[200];
+    ::mbstowcs(left_wide, left, 200);
+    ::mbstowcs(right_wide, right, 200);
+    EXPECT_EQ(strimatch(left_wide, right_wide), result)
+        << '<' << left_wide << "> !~ L<" << right << '>';
+#endif
+  }
+
+#ifdef XP_WIN
+  for (auto const& [result, data] : kStrMatches16) {
+    auto const& [left, right] = data;
+    EXPECT_EQ(strimatch(left, right), result)
+        << '<' << left << "> !~ L<" << right << '>';
+  }
+#endif
+}
 
 TEST(CmdLineAndEnvUtils, ensureSafe)
 {
