@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+</head>
+<body>
+<pre id=e_out></pre>
+<script>
+
+ok = window.ok || function(e, s) {
+  e_out.textContent += `\n${!e ? 'FAIL' : 'pass'}: ${s}`;
+};
+
+const canvas = document.createElement('canvas');
+const gl = canvas.getContext('webgl');
+const program = gl.createProgram();
+const vertex = gl.createShader(gl.VERTEX_SHADER);
+
+gl.shaderSource(vertex, `\
+  precision highp float;
+  varying vec2 v_vec2;
+  varying vec3 v_vec3;
+  void main() { }
+`);
+gl.compileShader(vertex);
+gl.attachShader(program, vertex);
+
+const fragment = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(fragment, `\
+  precision highp float;
+  varying vec2 v_vec2;
+  varying vec3 v_vec3;
+  uniform sampler2D u_sampler2d;
+  uniform samplerCube u_samplercube;
+  void main() {
+    gl_FragColor = texture2D(u_sampler2d, v_vec2);
+    gl_FragColor += textureCube(u_samplercube, normalize(v_vec3));
+  }
+`);
+gl.compileShader(fragment);
+gl.attachShader(program, fragment);
+
+gl.linkProgram(program);
+gl.useProgram(program);
+gl.drawArrays(gl.TRIANGLE_STRIP, 29, 32);
+let err = gl.getError();
+ok(err == gl.INVALID_OPERATION, `err: ${err}`);
+
+ok(true, `Done.`);
+
+</script>
+</body>
+</html>
