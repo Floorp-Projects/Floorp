@@ -20,9 +20,9 @@
 #include "js/GCVector.h"                 // GCVector
 #include "js/Id.h"                       // jsid
 #include "js/Modules.h"
-#include "js/PropertyDescriptor.h"       // PropertyDescriptor
-#include "js/Proxy.h"                    // BaseProxyHandler
-#include "js/RootingAPI.h"               // Rooted, Handle, MutableHandle
+#include "js/PropertyDescriptor.h"  // PropertyDescriptor
+#include "js/Proxy.h"               // BaseProxyHandler
+#include "js/RootingAPI.h"          // Rooted, Handle, MutableHandle
 #include "js/TypeDecls.h"  // HandleValue, HandleId, HandleObject, HandleScript, MutableHandleValue, MutableHandleIdVector, MutableHandleObject
 #include "js/UniquePtr.h"  // UniquePtr
 #include "js/Value.h"      // JS::Value
