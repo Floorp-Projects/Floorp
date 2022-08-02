@@ -3656,8 +3656,18 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
   return false;
 }
 
-static void ScheduleZones(GCRuntime* gc) {
+static void ScheduleZones(GCRuntime* gc, JS::GCReason reason) {
   for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
+    // Re-check heap threshold for alloc-triggered zones that were not
+    // previously collected. Now we have allocation rate data, the heap limit
+    // may have been increased beyond the current size.
+    if (gc->tunables.balancedHeapLimitsEnabled() && zone->isGCScheduled() &&
+        zone->smoothedCollectionRate.ref().isNothing() &&
+        reason == JS::GCReason::ALLOC_TRIGGER &&
+        zone->gcHeapSize.bytes() < zone->gcHeapThreshold.startBytes()) {
+      zone->unscheduleGC();  // May still be re-scheduled below.
+    }
+
     if (!gc->isPerZoneGCEnabled()) {
       zone->scheduleGC();
     }
@@ -3776,7 +3786,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   SliceBudget budget(budgetArg);
   bool budgetWasIncreased = maybeIncreaseSliceBudget(budget);
 
-  ScheduleZones(this);
+  ScheduleZones(this, reason);
 
   auto updateCollectorTime = MakeScopeExit([&] {
     if (const gcstats::Statistics::SliceData* slice = stats().lastSlice()) {

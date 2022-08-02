@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "gc/Nursery.h"
 #include "gc/RelocationOverlay.h"
@@ -618,14 +619,65 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
   return ToClampedSize(std::min(triggerMax, trigger));
 }
 
-void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
-                                           const GCSchedulingTunables& tunables,
-                                           const GCSchedulingState& state,
-                                           bool isAtomsZone) {
-  double growthFactor =
-      computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
+// Parameters for balanced heap limits computation.
 
-  startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, tunables);
+// The W0 parameter. How much memory can be traversed in a chosen minimum
+// collection time.
+static constexpr double BalancedHeapBaseMB = 5.0;
+
+// The minimum heap limit. Do not constrain the heap to any less than this size.
+static constexpr double MinBalancedHeapLimitMB = 10.0;
+
+// The minimum amount of additional space to allow beyond the retained size.
+static constexpr double MinBalancedHeadroomMB = 3.0;
+
+// The default allocation rate in MB/s allocated by the mutator to use before we
+// have an estimate. Used to set the heap limit for zones that have not yet been
+// collected.
+static constexpr double DefaultAllocationRate = 0.0;
+
+// The s0 parameter. The default collection rate in MB/s to use before we have
+// an estimate. Used to set the heap limit for zones that have not yet been
+// collected.
+static constexpr double DefaultCollectionRate = 200.0;
+
+double GCHeapThreshold::computeBalancedHeapLimit(
+    size_t lastBytes, double allocationRate, double collectionRate,
+    const GCSchedulingTunables& tunables) {
+  MOZ_ASSERT(tunables.balancedHeapLimitsEnabled());
+
+  // Optimal heap limits as described in https://arxiv.org/abs/2204.10455
+
+  double W = double(lastBytes) / BytesPerMB;  // Retained size / MB.
+  double W0 = BalancedHeapBaseMB;
+  double d = tunables.heapGrowthFactor();  // Rearranged constant 'c'.
+  double g = allocationRate;
+  double s = collectionRate;
+  double M = W + d * sqrt((W + W0) * (g / s));
+  M = std::max({MinBalancedHeapLimitMB, W + MinBalancedHeadroomMB, M});
+
+  return M * double(BytesPerMB);
+}
+
+void GCHeapThreshold::updateStartThreshold(
+    size_t lastBytes, mozilla::Maybe<double> allocationRate,
+    mozilla::Maybe<double> collectionRate, const GCSchedulingTunables& tunables,
+    const GCSchedulingState& state, bool isAtomsZone) {
+  if (!tunables.balancedHeapLimitsEnabled()) {
+    double growthFactor =
+        computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
+
+    startBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, tunables);
+  } else {
+    double threshold = computeBalancedHeapLimit(
+        lastBytes, allocationRate.valueOr(DefaultAllocationRate),
+        collectionRate.valueOr(DefaultCollectionRate), tunables);
+
+    double triggerMax =
+        double(tunables.gcMaxBytes()) / tunables.largeHeapIncrementalLimit();
+
+    startBytes_ = ToClampedSize(uint64_t(std::min(triggerMax, threshold)));
+  }
 
   setIncrementalLimitFromStartBytes(lastBytes, tunables);
 }

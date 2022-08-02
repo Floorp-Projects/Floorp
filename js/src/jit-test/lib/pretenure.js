@@ -31,6 +31,9 @@ function setupPretenureTest() {
   // Disable incremental GC so there's at most one minor GC per major GC.
   gcparam("incrementalGCEnabled", false);
 
+  // Disable balanced heap limits to make the number of GCs predictable.
+  gcparam("balancedHeapLimitsEnabled", false);
+
   // Force a nursery collection to apply size parameters.
   let o = {};
 
