@@ -1550,6 +1550,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "extend"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c5216e387a76eebaaf11f6d871ec8a4aae0b25f05456ee21f228e024b1b3610"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2164,6 +2176,11 @@ dependencies = [
  "tokio-threadpool",
  "unic-langid",
  "unic-langid-ffi",
+ "uniffi-example-arithmetic",
+ "uniffi-example-geometry",
+ "uniffi-example-rondpoint",
+ "uniffi-example-sprites",
+ "uniffi-example-todolist",
  "url",
  "viaduct",
  "webext_storage_bridge",
@@ -5602,6 +5619,75 @@ dependencies = [
  "log",
  "paste",
  "static_assertions",
+ "uniffi_bindgen",
+]
+
+[[package]]
+name = "uniffi-bindgen-gecko-js"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "askama",
+ "camino",
+ "clap",
+ "extend",
+ "heck",
+ "serde",
+ "toml 0.5.9",
+ "uniffi_bindgen",
+]
+
+[[package]]
+name = "uniffi-example-arithmetic"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
+dependencies = [
+ "thiserror",
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
+]
+
+[[package]]
+name = "uniffi-example-geometry"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
+dependencies = [
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
+]
+
+[[package]]
+name = "uniffi-example-rondpoint"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
+dependencies = [
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
+]
+
+[[package]]
+name = "uniffi-example-sprites"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
+dependencies = [
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
+]
+
+[[package]]
+name = "uniffi-example-todolist"
+version = "0.18.0"
+source = "git+https://github.com/mozilla/uniffi-rs.git?rev=bb2039f077a29dba0879372a67e764e6ace8e33f#bb2039f077a29dba0879372a67e764e6ace8e33f"
+dependencies = [
+ "lazy_static",
+ "thiserror",
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
 ]
 
 [[package]]

@@ -1,0 +1,15 @@
+
+namespace geometry {
+  double gradient(Line ln);
+  Point? intersection(Line ln1, Line ln2);
+};
+
+dictionary Point {
+  double coord_x;
+  double coord_y;
+};
+
+dictionary Line {
+  Point start;
+  Point end;
+};
