@@ -6,46 +6,6 @@ from .. import any_stack_trace
 
 
 @pytest.mark.asyncio
-async def test_exception(bidi_session, top_context):
-    with pytest.raises(ScriptEvaluateResultException) as exception:
-        await bidi_session.script.call_function(
-            function_declaration='()=>{throw 1}',
-            await_promise=False,
-            target=ContextTarget(top_context["context"]))
-
-    recursive_compare({
-        'realm': any_string,
-        'exceptionDetails': {
-            'columnNumber': any_int,
-            'exception': {
-                'value': 1,
-                'type': 'number'},
-            'lineNumber': any_int,
-            'stackTrace': any_stack_trace,
-            'text': any_string}},
-        exception.value.result)
-
-
-@pytest.mark.asyncio
-async def test_invalid_function(bidi_session, top_context):
-    with pytest.raises(ScriptEvaluateResultException) as exception:
-        await bidi_session.script.call_function(
-            function_declaration='))) !!@@## some invalid JS script (((',
-            await_promise=False,
-            target=ContextTarget(top_context["context"]))
-    recursive_compare({
-        'realm': any_string,
-        'exceptionDetails': {
-            'columnNumber': any_int,
-            'exception': {
-                'type': 'error'},
-            'lineNumber': any_int,
-            'stackTrace': any_stack_trace,
-            'text': any_string}},
-        exception.value.result)
-
-
-@pytest.mark.asyncio
 async def test_arrow_function(bidi_session, top_context):
     result = await bidi_session.script.call_function(
         function_declaration="()=>{return 1+2;}",

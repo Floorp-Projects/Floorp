@@ -7,12 +7,12 @@ from .. import any_stack_trace
 
 
 @pytest.mark.asyncio
-async def test_invalid_script(bidi_session, top_context):
+async def test_invalid_function(bidi_session, top_context):
     with pytest.raises(ScriptEvaluateResultException) as exception:
-        await bidi_session.script.evaluate(
-            expression="))) !!@@## some invalid JS script (((",
+        await bidi_session.script.call_function(
+            function_declaration="))) !!@@## some invalid JS script (((",
+            await_promise=False,
             target=ContextTarget(top_context["context"]),
-            await_promise=True,
         )
     recursive_compare(
         {
@@ -159,16 +159,15 @@ async def test_invalid_script(bidi_session, top_context):
 )
 @pytest.mark.asyncio
 async def test_exception_details(bidi_session, top_context, await_promise, expression, expected):
+    function_declaration = f"()=>{{ throw {expression} }}"
     if await_promise:
-        expression = f"Promise.reject({expression})"
-    else:
-        expression = f"throw {expression}"
+        function_declaration = "async" + function_declaration
 
     with pytest.raises(ScriptEvaluateResultException) as exception:
-        await bidi_session.script.evaluate(
-            expression=expression,
-            target=ContextTarget(top_context["context"]),
+        await bidi_session.script.call_function(
+            function_declaration=function_declaration,
             await_promise=await_promise,
+            target=ContextTarget(top_context["context"]),
         )
 
     recursive_compare(
