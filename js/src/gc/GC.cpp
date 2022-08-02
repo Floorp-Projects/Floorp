@@ -1166,6 +1166,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.lowFrequencyHeapGrowth() * 100);
     case JSGC_BALANCED_HEAP_LIMITS_ENABLED:
       return uint32_t(tunables.balancedHeapLimitsEnabled());
+    case JSGC_HEAP_GROWTH_FACTOR:
+      return uint32_t(tunables.heapGrowthFactor());
     case JSGC_ALLOCATION_THRESHOLD:
       return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
     case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT:

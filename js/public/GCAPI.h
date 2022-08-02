@@ -234,6 +234,16 @@ typedef enum JSGCParamKey {
   JSGC_BALANCED_HEAP_LIMITS_ENABLED = 17,
 
   /**
+   * Heap growth parameter for balanced heap limit calculation.
+   *
+   * This parameter trades off GC time for memory usage. Smaller values result
+   * in lower memory use and larger values result in less time spent collecting.
+   *
+   * Default: HeapGrowthFactor
+   */
+  JSGC_HEAP_GROWTH_FACTOR = 18,
+
+  /**
    * Lower limit for collecting a zone (MB).
    *
    * Zones smaller than this size will not normally be collected.

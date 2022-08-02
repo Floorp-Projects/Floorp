@@ -387,6 +387,9 @@ static const double HighFrequencyLargeHeapGrowth = 1.5;
 /* JSGC_LOW_FREQUENCY_HEAP_GROWTH */
 static const double LowFrequencyHeapGrowth = 1.5;
 
+/* JSGC_HEAP_GROWTH_FACTOR */
+static const double HeapGrowthFactor = 40.0;
+
 /* JSGC_MIN_EMPTY_CHUNK_COUNT */
 static const uint32_t MinEmptyChunkCount = 1;
 
@@ -537,6 +540,11 @@ class GCSchedulingTunables {
   MainThreadOrGCTaskData<bool> balancedHeapLimitsEnabled_;
 
   /*
+   * JSGC_HEAP_GROWTH_FACTOR
+   */
+  MainThreadOrGCTaskData<double> heapGrowthFactor_;
+
+  /*
    * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION
    * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_FRACTION
    *
@@ -634,6 +642,7 @@ class GCSchedulingTunables {
   }
   double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
   bool balancedHeapLimitsEnabled() const { return balancedHeapLimitsEnabled_; }
+  double heapGrowthFactor() const { return heapGrowthFactor_; }
   uint32_t nurseryFreeThresholdForIdleCollection() const {
     return nurseryFreeThresholdForIdleCollection_;
   }
@@ -669,6 +678,9 @@ class GCSchedulingTunables {
   void setHighFrequencySmallHeapGrowth(double value);
   void setHighFrequencyLargeHeapGrowth(double value);
   void setLowFrequencyHeapGrowth(double value);
+  void setHeapGrowthFactor(double value);
+  void setMinEmptyChunkCount(uint32_t value);
+  void setMaxEmptyChunkCount(uint32_t value);
 
   static bool megabytesToBytes(uint32_t value, size_t* bytesOut);
   static bool kilobytesToBytes(uint32_t value, size_t* bytesOut);
