@@ -403,6 +403,20 @@ class InactivePropertyHelper {
         fixId: "inactive-css-border-image-fix",
         msgId: "inactive-css-border-image",
       },
+      // width & height properties used on ruby elements.
+      {
+        invalidProperties: [
+          "height",
+          "min-height",
+          "max-height",
+          "width",
+          "min-width",
+          "max-width",
+        ],
+        when: () => this.checkComputedStyle("display", ["ruby", "ruby-text"]),
+        fixId: "inactive-css-ruby-element-fix",
+        msgId: "inactive-css-ruby-element",
+      },
     ];
   }
 
