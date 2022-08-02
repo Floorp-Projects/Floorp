@@ -2,6 +2,8 @@ function bytecode(f) {
     if (typeof disassemble !== "function")
         return "unavailable";
     var d = disassemble(f);
+    // Remove line numbers.
+    d = d.replace(/(\n\d{5}:).*\d+/g, "$1");
     return d.slice(d.indexOf("main:"), d.indexOf("\n\n"));
 }
 assertEq(bytecode(() => "hello" + "world"),
