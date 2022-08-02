@@ -227,8 +227,8 @@ static const JSClassOps classOps = {
 const JSClass WrappedFunctionObject::class_ = {
     "WrappedFunctionObject",
     JSCLASS_HAS_CACHED_PROTO(
-        JSProto_Function) |  // MG:XXX: Is this going to correctly set the
-                             // prototype for me?
+        JSProto_Function) |  // This sets the prototype to Function.prototype,
+                             // Step 3 of WrappedFunctionCreate
         JSCLASS_HAS_RESERVED_SLOTS(WrappedFunctionObject::SlotCount),
     &classOps};
 
