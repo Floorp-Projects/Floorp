@@ -18,10 +18,10 @@ class nsProtectedAuthThread : public nsIProtectedAuthThread {
  private:
   mozilla::Mutex mMutex;
 
-  nsCOMPtr<nsIRunnable> mNotifyObserver GUARDED_BY(mMutex);
+  nsCOMPtr<nsIRunnable> mNotifyObserver MOZ_GUARDED_BY(mMutex);
 
-  bool mIAmRunning GUARDED_BY(mMutex);
-  bool mLoginReady GUARDED_BY(mMutex);
+  bool mIAmRunning MOZ_GUARDED_BY(mMutex);
+  bool mLoginReady MOZ_GUARDED_BY(mMutex);
 
   PRThread* mThreadHandle;  // MainThread only
 

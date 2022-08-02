@@ -151,8 +151,8 @@ class ZipArchiveLogger {
 
  private:
   static StaticMutex sLock;
-  int mRefCnt GUARDED_BY(sLock);
-  PRFileDesc* mFd GUARDED_BY(sLock);
+  int mRefCnt MOZ_GUARDED_BY(sLock);
+  PRFileDesc* mFd MOZ_GUARDED_BY(sLock);
 };
 
 StaticMutex ZipArchiveLogger::sLock;
@@ -601,7 +601,7 @@ nsZipItem* nsZipArchive::CreateZipItem() {
 //  nsZipArchive::BuildFileList
 //---------------------------------------------
 nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd)
-    NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // We're only called from the constructor, but need to call
   // CreateZipItem(), which touches locked data, and modify mFiles.  Turn
   // off thread-safety, which normally doesn't apply for constructors

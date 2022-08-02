@@ -26,10 +26,10 @@ static StaticMutex sMutex;
 static bool sBlockUNCPaths = false;
 typedef nsTArray<nsString> WinPaths;
 
-static WinPaths& PathAllowlist() REQUIRES(sMutex) {
+static WinPaths& PathAllowlist() MOZ_REQUIRES(sMutex) {
   sMutex.AssertCurrentThreadOwns();
 
-  static WinPaths sPaths GUARDED_BY(sMutex);
+  static WinPaths sPaths MOZ_GUARDED_BY(sMutex);
   return sPaths;
 }
 

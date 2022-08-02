@@ -15,11 +15,11 @@ they will be errors on checkin.
 This analysis depends on thread-safety attributions in the source. These
 have been added to Mozilla’s Mutex and Monitor classes and subclasses,
 but in practice the analysis is largely dependent on additions to the
-code being checked, in particular adding GUARDED_BY(mutex) attributions
+code being checked, in particular adding MOZ_GUARDED_BY(mutex) attributions
 on the definitions of member variables. Like this: ::
 
   mozilla::Mutex mLock;
-  bool mShutdown GUARDED_BY(mLock);
+  bool mShutdown MOZ_GUARDED_BY(mLock);
 
 For background on Clang’s thread-safety support, see `their
 documentation <https://clang.llvm.org/docs/ThreadSafetyAnalysis.html>`__.
@@ -29,7 +29,7 @@ and we are enabling static checks to verify this. Legacy uses of Mutexes
 and Monitors are marked with MOZ_UNANNOTATED.
 
 If you’re modifying code that has been annotated with
-GUARDED_BY()/REQUIRES()/etc, you should **make sure that the annotations
+MOZ_GUARDED_BY()/MOZ_REQUIRES()/etc, you should **make sure that the annotations
 are updated properly**; e.g. if you change the thread-usage of a member
 variable or method you should mark it accordingly, comment, and resolve
 any warnings. Since the warnings will be errors in autoland/m-c, you
@@ -46,16 +46,16 @@ about the locking requirements and/or what threads it’s touched from: ::
   // thread. Protected by mMutex.
 
   nsTArray<std::pair<ImageContainer::FrameID, VideoChunk>> mFrames
-  GUARDED_BY(mMutex);
+  MOZ_GUARDED_BY(mMutex);
 
   // Set on MainThread, deleted on either MainThread mainthread, used on
   // MainThread or IO Thread in DoStopSession
-  nsCOMPtr<nsITimer> mReconnectDelayTimer GUARDED_BY(mMutex);
+  nsCOMPtr<nsITimer> mReconnectDelayTimer MOZ_GUARDED_BY(mMutex);
 
 It’s strongly recommended to group values by access pattern, but it’s
 **critical** to make it clear what the requirements to access a value
 are. With values protected by Mutexes and Monitors, adding a
-GUARDED_BY(mutex/monitor) should be sufficient, though you may want to
+MOZ_GUARDED_BY(mutex/monitor) should be sufficient, though you may want to
 also document what threads access it, and if they read or write to it.
 
 Values which have more complex access requirements (see single-writer
@@ -67,11 +67,11 @@ defined: ::
   // mResource should only be modified on the main thread with the lock.
   // So it can be read without lock on the main thread or on other threads
   // with the lock.
-  RefPtr<ChannelMediaResource> mResource GUARDED_BY(mMutex);
+  RefPtr<ChannelMediaResource> mResource MOZ_GUARDED_BY(mMutex);
 
 **WARNING:** thread-safety analysis is not magic; it depends on you telling
 it the requirements around access. If you don’t mark something as
-GUARDED_BY() it won’t figure it out for you, and you can end up with a data
+MOZ_GUARDED_BY() it won’t figure it out for you, and you can end up with a data
 race. When writing multithreaded code, you should always be thinking about
 which threads can access what and when, and document this.
 
@@ -96,19 +96,19 @@ Gecko uses a number of different locking patterns. They include:
 
 The simplest and easiest to check with static analysis is **Always
 Lock**, and generally you should prefer this pattern. This is very
-simple; you add GUARDED_BY(mutex/monitor), and must own the lock to
+simple; you add MOZ_GUARDED_BY(mutex/monitor), and must own the lock to
 access the value. This can be implemented by some combination of direct
 Lock/AutoLock calls in the method; an assertion that the lock is already
 held by the current thread, or annotating the method as requiring the
-lock (REQUIRES(mutex)) in the method definition: ::
+lock (MOZ_REQUIRES(mutex)) in the method definition: ::
 
   // Ensures mSize is initialized, if it can be.
   // mLock must be held when this is called, and mInput must be non-null.
-  void EnsureSizeInitialized() REQUIRES(mLock);
+  void EnsureSizeInitialized() MOZ_REQUIRES(mLock);
   ...
   // This lock protects mSeekable, mInput, mSize, and mSizeInitialized.
   Mutex mLock;
-  int64_t mSize GUARDED_BY(mLock);
+  int64_t mSize MOZ_GUARDED_BY(mLock);
 
 **Single Writer** is tricky for static analysis normally, since it
 doesn’t know what thread an access will occur on. In general, you should
@@ -130,9 +130,9 @@ There is one case this causes problems with: when a method needs to
 access the value (without the lock), and then decides to write to the
 value from the same method, taking the lock. To the static analyzer,
 this looks like a double-lock. Either you will need to add
-NO_THREAD_SAFETY_ANALYSIS to the method, move the write into another
+MOZ_NO_THREAD_SAFETY_ANALYSIS to the method, move the write into another
 method you call, or locally disable the warning with
-PUSH_IGNORE_THREAD_SAFETY and POP_THREAD_SAFETY. We’re discussing with
+MOZ_PUSH_IGNORE_THREAD_SAFETY and MOZ_POP_THREAD_SAFETY. We’re discussing with
 the clang static analysis developers how to better handle this.
 
 Note also that this provides no checking that the lock is taken to write
@@ -142,7 +142,7 @@ to the value: ::
   // mResource should only be modified on the main thread with the lock.
   // So it can be read without lock on the main thread or on other threads
   // with the lock.
-  RefPtr<ChannelMediaResource> mResource GUARDED_BY(mMutex);
+  RefPtr<ChannelMediaResource> mResource MOZ_GUARDED_BY(mMutex);
   ...
   nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest *aRequest) {
     mMutex.AssertOnWritingThread();
@@ -162,9 +162,9 @@ thread-safety analysis for the lock: ::
   mMutex.AssertOnWritingThread();
   ...
   {
-    PUSH_IGNORE_THREAD_SAFETY
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
     MutexSingleWriterAutoLock lock(mMutex);
-    POP_THREAD_SAFETY
+    MOZ_POP_THREAD_SAFETY
 
 **Out-of-band Invariants** is used in a number of places (and may be
 combined with either of the above patterns). It's using other knowledge
@@ -194,8 +194,8 @@ might be called from elsewhere: ::
     }
     ...
     mMutex mMutex;
-    uint32_t mBar GUARDED_BY(mMutex);
-    uint32_t mQuerty GUARDED_BY(mMutex);
+    uint32_t mBar MOZ_GUARDED_BY(mMutex);
+    uint32_t mQuerty MOZ_GUARDED_BY(mMutex);
   }
 
 Another example might be a value that’s used from other threads, but only
@@ -220,8 +220,8 @@ threads accessing the value. In all but a few cases where code is on a very
 lock is cheap.
 
 To quiet warnings where these patterns are in use, you'll need to either
-add locks (preferred), or suppress the warnings with NO_THREAD_SAFETY_ANALYSIS or
-PUSH_IGNORE_THREAD_SAFETY/POP_THREAD_SAFETY.
+add locks (preferred), or suppress the warnings with MOZ_NO_THREAD_SAFETY_ANALYSIS or
+MOZ_PUSH_IGNORE_THREAD_SAFETY/MOZ_POP_THREAD_SAFETY.
 
 **This pattern especially needs good documentation in the code as to what
 threads will access what members under what conditions!**::
@@ -233,15 +233,15 @@ threads will access what members under what conditions!**::
 					     uint32_t chunkSize,
 					     bool closeSource,
 					     bool closeSink)
-	NO_THREAD_SAFETY_ANALYSIS {
+	MOZ_NO_THREAD_SAFETY_ANALYSIS {
 
 and::
 
   // We can't be accessed by another thread because this hasn't been
   // added to the public list yet
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   mRestrictedPortList.AppendElement(gBadPortList[i]);
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 
 and::
 
@@ -259,8 +259,8 @@ per their documentation, it can’t handle conditional locks, like: ::
     mMutex.Lock();
   }
 
-You should resolve this either via NO_THREAD_SAFETY_ANALYSIS on the
-method, or PUSH_IGNORE_THREAD_SAFETY/POP_THREAD_SAFETY.
+You should resolve this either via MOZ_NO_THREAD_SAFETY_ANALYSIS on the
+method, or MOZ_PUSH_IGNORE_THREAD_SAFETY/MOZ_POP_THREAD_SAFETY.
 
 **Sometimes the analyzer can’t figure out that two objects are both the
 same Mutex**, and it will warn you. You may be able to resolve this by
@@ -282,14 +282,14 @@ is owned or freed; follow locking via the MayBe<> by
   mMonitor->AssertCurrentThreadOwns(); // for threadsafety analysis
 
 If you reset() the Maybe<>, you may need to surround it with
-PUSH_IGNORE_THREAD_SAFETY and POP_THREAD_SAFETY macros: ::
+MOZ_PUSH_IGNORE_THREAD_SAFETY and MOZ_POP_THREAD_SAFETY macros: ::
 
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   aLock.reset();
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 
 **Passing a protected value by-reference** sometimes will confuse the
-analyzer. Use PUSH_IGNORE_THREAD_SAFETY and POP_THREAD_SAFETY macros to
+analyzer. Use MOZ_PUSH_IGNORE_THREAD_SAFETY and MOZ_POP_THREAD_SAFETY macros to
 resolve this.
 
 **Classes which need thread-safety annotations**
@@ -321,19 +321,19 @@ Some code passes **Proof-of-Lock** AutoLock parameters, as a poor form of
 static analysis. While it’s hard to make mistakes if you pass an AutoLock
 reference, it is possible to pass a lock to the wrong Mutex/Monitor.
 
-Proof-of-lock is basically redundant to REQUIRES() and obsolete, and
+Proof-of-lock is basically redundant to MOZ_REQUIRES() and obsolete, and
 depends on the optimizer to remove it, and per above it can be misused,
-with effort.  With REQUIRES(), any proof-of-lock parameters can be removed,
+with effort.  With MOZ_REQUIRES(), any proof-of-lock parameters can be removed,
 though you don't have to do so immediately.
 
-In any method taking an aProofOfLock parameter, add a REQUIRES(mutex) to
+In any method taking an aProofOfLock parameter, add a MOZ_REQUIRES(mutex) to
 the definition (and optionally remove the proof-of-lock), or add a
 mMutex.AssertCurrentThreadOwns() to the method: ::
 
     nsresult DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunnable,
  -                            nsIEventTarget* aSyncLoopTarget,
  -                            const MutexAutoLock& aProofOfLock);
- +                            nsIEventTarget* aSyncLoopTarget) REQUIRES(mMutex);
+ +                            nsIEventTarget* aSyncLoopTarget) MOZ_REQUIRES(mMutex);
 
 or (if for some reason it's hard to specify the mutex in the header)::
 
@@ -343,12 +343,12 @@ or (if for some reason it's hard to specify the mutex in the header)::
  +                            nsIEventTarget* aSyncLoopTarget) {
  +  mMutex.AssertCurrentThreadOwns();
 
-In addition to GUARDED_BY() there’s also PT_GUARDED_BY(), which says
+In addition to MOZ_GUARDED_BY() there’s also MOZ_PT_GUARDED_BY(), which says
 that the pointer isn’t guarded, but the data pointed to by the pointer
 is.
 
 Classes that expose a Mutex-like interface can be annotated like Mutex;
-see some of the examples in the tree that use CAPABILITY and
-ACQUIRE()/RELEASE().
+see some of the examples in the tree that use MOZ_CAPABILITY and
+MOZ_ACQUIRE()/MOZ_RELEASE().
 
 Shared locks are supported, though we don’t use them much. See RWLock.

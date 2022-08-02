@@ -76,7 +76,7 @@ class ServiceWorkerRegistrar : public nsIObserver,
   void DeleteData();
 
   void RegisterServiceWorkerInternal(const ServiceWorkerRegistrationData& aData)
-      REQUIRES(mMonitor);
+      MOZ_REQUIRES(mMonitor);
 
   ServiceWorkerRegistrar();
   virtual ~ServiceWorkerRegistrar();
@@ -100,11 +100,11 @@ class ServiceWorkerRegistrar : public nsIObserver,
   mozilla::Monitor mMonitor;
 
   // protected by mMonitor.
-  nsCOMPtr<nsIFile> mProfileDir GUARDED_BY(mMonitor);
+  nsCOMPtr<nsIFile> mProfileDir MOZ_GUARDED_BY(mMonitor);
   // Read on mainthread, modified on background thread EXCEPT for
   // ReloadDataForTest() AND for gtest, which modifies this on MainThread.
-  nsTArray<ServiceWorkerRegistrationData> mData GUARDED_BY(mMonitor);
-  bool mDataLoaded GUARDED_BY(mMonitor);
+  nsTArray<ServiceWorkerRegistrationData> mData MOZ_GUARDED_BY(mMonitor);
+  bool mDataLoaded MOZ_GUARDED_BY(mMonitor);
 
   // PBackground thread only
   uint32_t mDataGeneration;

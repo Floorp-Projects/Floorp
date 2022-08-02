@@ -51,7 +51,8 @@ class BrowserProcessSubThread : public base::Thread {
   // The threads are not owned by this array.  Typically, the threads are owned
   // on the UI thread by the g_browser_process object.  ChromeThreads remove
   // themselves from this array upon destruction.
-  static BrowserProcessSubThread* sBrowserThreads[ID_COUNT] GUARDED_BY(sLock);
+  static BrowserProcessSubThread* sBrowserThreads[ID_COUNT] MOZ_GUARDED_BY(
+      sLock);
 };
 
 inline void AssertIOThread() {

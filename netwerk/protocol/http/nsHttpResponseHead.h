@@ -43,10 +43,10 @@ class nsHttpResponseHead {
   nsHttpResponseHead(const nsHttpResponseHead& aOther);
   nsHttpResponseHead& operator=(const nsHttpResponseHead& aOther);
 
-  void Enter() const CAPABILITY_ACQUIRE(mRecursiveMutex) {
+  void Enter() const MOZ_CAPABILITY_ACQUIRE(mRecursiveMutex) {
     mRecursiveMutex.Lock();
   }
-  void Exit() const CAPABILITY_RELEASE(mRecursiveMutex) {
+  void Exit() const MOZ_CAPABILITY_RELEASE(mRecursiveMutex) {
     mRecursiveMutex.Unlock();
   }
   void AssertMutexOwned() const { mRecursiveMutex.AssertCurrentThreadIn(); }
@@ -150,48 +150,49 @@ class nsHttpResponseHead {
   [[nodiscard]] nsresult SetHeader_locked(const nsHttpAtom& atom,
                                           const nsACString& h,
                                           const nsACString& v, bool m = false)
-      REQUIRES(mRecursiveMutex);
-  void AssignDefaultStatusText() REQUIRES(mRecursiveMutex);
-  void ParseVersion(const char*) REQUIRES(mRecursiveMutex);
-  void ParseCacheControl(const char*) REQUIRES(mRecursiveMutex);
-  void ParsePragma(const char*) REQUIRES(mRecursiveMutex);
+      MOZ_REQUIRES(mRecursiveMutex);
+  void AssignDefaultStatusText() MOZ_REQUIRES(mRecursiveMutex);
+  void ParseVersion(const char*) MOZ_REQUIRES(mRecursiveMutex);
+  void ParseCacheControl(const char*) MOZ_REQUIRES(mRecursiveMutex);
+  void ParsePragma(const char*) MOZ_REQUIRES(mRecursiveMutex);
 
-  void ParseStatusLine_locked(const nsACString& line) REQUIRES(mRecursiveMutex);
+  void ParseStatusLine_locked(const nsACString& line)
+      MOZ_REQUIRES(mRecursiveMutex);
   [[nodiscard]] nsresult ParseHeaderLine_locked(const nsACString& line,
                                                 bool originalFromNetHeaders)
-      REQUIRES(mRecursiveMutex);
+      MOZ_REQUIRES(mRecursiveMutex);
 
   // these return failure if the header does not exist.
   [[nodiscard]] nsresult ParseDateHeader(const nsHttpAtom& header,
                                          uint32_t* result) const
-      REQUIRES(mRecursiveMutex);
+      MOZ_REQUIRES(mRecursiveMutex);
   [[nodiscard]] nsresult GetAgeValue(uint32_t* result);
   [[nodiscard]] nsresult GetMaxAgeValue(uint32_t* result);
   [[nodiscard]] nsresult GetStaleWhileRevalidateValue(uint32_t* result);
   [[nodiscard]] nsresult GetDateValue(uint32_t* result);
   [[nodiscard]] nsresult GetExpiresValue(uint32_t* result);
 
-  bool ExpiresInPast_locked() const REQUIRES(mRecursiveMutex);
+  bool ExpiresInPast_locked() const MOZ_REQUIRES(mRecursiveMutex);
   [[nodiscard]] nsresult GetAgeValue_locked(uint32_t* result) const
-      REQUIRES(mRecursiveMutex);
+      MOZ_REQUIRES(mRecursiveMutex);
   [[nodiscard]] nsresult GetExpiresValue_locked(uint32_t* result) const
-      REQUIRES(mRecursiveMutex);
+      MOZ_REQUIRES(mRecursiveMutex);
   [[nodiscard]] nsresult GetMaxAgeValue_locked(uint32_t* result) const
-      REQUIRES(mRecursiveMutex);
+      MOZ_REQUIRES(mRecursiveMutex);
   [[nodiscard]] nsresult GetStaleWhileRevalidateValue_locked(
-      uint32_t* result) const REQUIRES(mRecursiveMutex);
+      uint32_t* result) const MOZ_REQUIRES(mRecursiveMutex);
 
   [[nodiscard]] nsresult GetDateValue_locked(uint32_t* result) const
-      REQUIRES(mRecursiveMutex) {
+      MOZ_REQUIRES(mRecursiveMutex) {
     return ParseDateHeader(nsHttp::Date, result);
   }
 
   [[nodiscard]] nsresult GetLastModifiedValue_locked(uint32_t* result) const
-      REQUIRES(mRecursiveMutex) {
+      MOZ_REQUIRES(mRecursiveMutex) {
     return ParseDateHeader(nsHttp::Last_Modified, result);
   }
 
-  bool NoCache_locked() const REQUIRES(mRecursiveMutex) {
+  bool NoCache_locked() const MOZ_REQUIRES(mRecursiveMutex) {
     // We ignore Pragma: no-cache if Cache-Control is set.
     MOZ_ASSERT_IF(mCacheControlNoCache, mHasCacheControl);
     return mHasCacheControl ? mCacheControlNoCache : mPragmaNoCache;
@@ -199,30 +200,31 @@ class nsHttpResponseHead {
 
  private:
   // All members must be copy-constructable and assignable
-  nsHttpHeaderArray mHeaders GUARDED_BY(mRecursiveMutex);
-  HttpVersion mVersion GUARDED_BY(mRecursiveMutex){HttpVersion::v1_1};
-  uint16_t mStatus GUARDED_BY(mRecursiveMutex){200};
-  nsCString mStatusText GUARDED_BY(mRecursiveMutex);
-  int64_t mContentLength GUARDED_BY(mRecursiveMutex){-1};
-  nsCString mContentType GUARDED_BY(mRecursiveMutex);
-  nsCString mContentCharset GUARDED_BY(mRecursiveMutex);
-  bool mHasCacheControl GUARDED_BY(mRecursiveMutex){false};
-  bool mCacheControlPublic GUARDED_BY(mRecursiveMutex){false};
-  bool mCacheControlPrivate GUARDED_BY(mRecursiveMutex){false};
-  bool mCacheControlNoStore GUARDED_BY(mRecursiveMutex){false};
-  bool mCacheControlNoCache GUARDED_BY(mRecursiveMutex){false};
-  bool mCacheControlImmutable GUARDED_BY(mRecursiveMutex){false};
-  bool mCacheControlStaleWhileRevalidateSet GUARDED_BY(mRecursiveMutex){false};
-  uint32_t mCacheControlStaleWhileRevalidate GUARDED_BY(mRecursiveMutex){0};
-  bool mCacheControlMaxAgeSet GUARDED_BY(mRecursiveMutex){false};
-  uint32_t mCacheControlMaxAge GUARDED_BY(mRecursiveMutex){0};
-  bool mPragmaNoCache GUARDED_BY(mRecursiveMutex){false};
+  nsHttpHeaderArray mHeaders MOZ_GUARDED_BY(mRecursiveMutex);
+  HttpVersion mVersion MOZ_GUARDED_BY(mRecursiveMutex){HttpVersion::v1_1};
+  uint16_t mStatus MOZ_GUARDED_BY(mRecursiveMutex){200};
+  nsCString mStatusText MOZ_GUARDED_BY(mRecursiveMutex);
+  int64_t mContentLength MOZ_GUARDED_BY(mRecursiveMutex){-1};
+  nsCString mContentType MOZ_GUARDED_BY(mRecursiveMutex);
+  nsCString mContentCharset MOZ_GUARDED_BY(mRecursiveMutex);
+  bool mHasCacheControl MOZ_GUARDED_BY(mRecursiveMutex){false};
+  bool mCacheControlPublic MOZ_GUARDED_BY(mRecursiveMutex){false};
+  bool mCacheControlPrivate MOZ_GUARDED_BY(mRecursiveMutex){false};
+  bool mCacheControlNoStore MOZ_GUARDED_BY(mRecursiveMutex){false};
+  bool mCacheControlNoCache MOZ_GUARDED_BY(mRecursiveMutex){false};
+  bool mCacheControlImmutable MOZ_GUARDED_BY(mRecursiveMutex){false};
+  bool mCacheControlStaleWhileRevalidateSet MOZ_GUARDED_BY(mRecursiveMutex){
+      false};
+  uint32_t mCacheControlStaleWhileRevalidate MOZ_GUARDED_BY(mRecursiveMutex){0};
+  bool mCacheControlMaxAgeSet MOZ_GUARDED_BY(mRecursiveMutex){false};
+  uint32_t mCacheControlMaxAge MOZ_GUARDED_BY(mRecursiveMutex){0};
+  bool mPragmaNoCache MOZ_GUARDED_BY(mRecursiveMutex){false};
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
   mutable RecursiveMutex mRecursiveMutex{"nsHttpResponseHead.mRecursiveMutex"};
   // During VisitHeader we sould not allow call to SetHeader.
-  bool mInVisitHeaders GUARDED_BY(mRecursiveMutex){false};
+  bool mInVisitHeaders MOZ_GUARDED_BY(mRecursiveMutex){false};
 
   friend struct IPC::ParamTraits<nsHttpResponseHead>;
 };

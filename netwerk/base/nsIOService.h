@@ -234,7 +234,7 @@ class nsIOService final : public nsIIOService,
       NS_CHANNEL_EVENT_SINK_CATEGORY};
 
   Mutex mMutex{"nsIOService::mMutex"};
-  nsTArray<int32_t> mRestrictedPortList GUARDED_BY(mMutex);
+  nsTArray<int32_t> mRestrictedPortList MOZ_GUARDED_BY(mMutex);
 
   uint32_t mTotalRequests{0};
   uint32_t mCacheWon{0};

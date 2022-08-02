@@ -671,9 +671,9 @@ class SourceMediaTrack : public MediaTrack {
   // The value set here is applied in MoveToSegment so we can avoid the
   // buffering delay in applying the change. See Bug 1443511.
   void SetVolume(float aVolume);
-  float GetVolumeLocked() REQUIRES(mMutex);
+  float GetVolumeLocked() MOZ_REQUIRES(mMutex);
 
-  Mutex& GetMutex() RETURN_CAPABILITY(mMutex) { return mMutex; }
+  Mutex& GetMutex() MOZ_RETURN_CAPABILITY(mMutex) { return mMutex; }
 
   friend class MediaTrackGraphImpl;
 
@@ -706,7 +706,8 @@ class SourceMediaTrack : public MediaTrack {
 
   bool NeedsMixing();
 
-  void ResampleAudioToGraphSampleRate(MediaSegment* aSegment) REQUIRES(mMutex);
+  void ResampleAudioToGraphSampleRate(MediaSegment* aSegment)
+      MOZ_REQUIRES(mMutex);
 
   void AddDirectListenerImpl(
       already_AddRefed<DirectMediaTrackListener> aListener) override;
@@ -718,7 +719,7 @@ class SourceMediaTrack : public MediaTrack {
    * from AppendData on the thread providing the data, and will call
    * the Listeners on this thread.
    */
-  void NotifyDirectConsumers(MediaSegment* aSegment) REQUIRES(mMutex);
+  void NotifyDirectConsumers(MediaSegment* aSegment) MOZ_REQUIRES(mMutex);
 
   void OnGraphThreadDone() override {
     MutexAutoLock lock(mMutex);
@@ -739,10 +740,10 @@ class SourceMediaTrack : public MediaTrack {
   // held together.
   Mutex mMutex;
   // protected by mMutex
-  float mVolume GUARDED_BY(mMutex) = 1.0;
-  UniquePtr<TrackData> mUpdateTrack GUARDED_BY(mMutex);
+  float mVolume MOZ_GUARDED_BY(mMutex) = 1.0;
+  UniquePtr<TrackData> mUpdateTrack MOZ_GUARDED_BY(mMutex);
   nsTArray<RefPtr<DirectMediaTrackListener>> mDirectTrackListeners
-      GUARDED_BY(mMutex);
+      MOZ_GUARDED_BY(mMutex);
 };
 
 /**

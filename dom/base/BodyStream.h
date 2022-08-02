@@ -141,17 +141,18 @@ class BodyStream final : public nsIInputStreamCallback,
 
   void ErrorPropagation(JSContext* aCx,
                         const MutexSingleWriterAutoLock& aProofOfLock,
-                        ReadableStream* aStream, nsresult aRv) REQUIRES(mMutex);
+                        ReadableStream* aStream, nsresult aRv)
+      MOZ_REQUIRES(mMutex);
 
   // TODO: convert this to MOZ_CAN_RUN_SCRIPT (bug 1750605)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void CloseAndReleaseObjects(
       JSContext* aCx, const MutexSingleWriterAutoLock& aProofOfLock,
-      ReadableStream* aStream) REQUIRES(mMutex);
+      ReadableStream* aStream) MOZ_REQUIRES(mMutex);
 
   class WorkerShutdown;
 
   void ReleaseObjects(const MutexSingleWriterAutoLock& aProofOfLock)
-      REQUIRES(mMutex);
+      MOZ_REQUIRES(mMutex);
 
   void ReleaseObjects();
 
@@ -186,12 +187,12 @@ class BodyStream final : public nsIInputStreamCallback,
   MutexSingleWriter mMutex;
 
   // Protected by mutex.
-  State mState GUARDED_BY(mMutex);  // all writes are from the owning thread
+  State mState MOZ_GUARDED_BY(mMutex);  // all writes are from the owning thread
 
   // mGlobal is set on creation, and isn't modified off the owning thread.
   // It isn't set to nullptr until ReleaseObjects() runs.
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<BodyStreamHolder> mStreamHolder GUARDED_BY(mMutex);
+  RefPtr<BodyStreamHolder> mStreamHolder MOZ_GUARDED_BY(mMutex);
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
   // This is the original inputStream received during the CTOR. It will be
