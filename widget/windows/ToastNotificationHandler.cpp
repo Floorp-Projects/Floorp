@@ -34,24 +34,23 @@
 namespace mozilla {
 namespace widget {
 
-typedef ABI::Windows::Foundation::ITypedEventHandler<
-    ABI::Windows::UI::Notifications::ToastNotification*, IInspectable*>
-    ToastActivationHandler;
-typedef ABI::Windows::Foundation::ITypedEventHandler<
-    ABI::Windows::UI::Notifications::ToastNotification*,
-    ABI::Windows::UI::Notifications::ToastDismissedEventArgs*>
-    ToastDismissedHandler;
-typedef ABI::Windows::Foundation::ITypedEventHandler<
-    ABI::Windows::UI::Notifications::ToastNotification*,
-    ABI::Windows::UI::Notifications::ToastFailedEventArgs*>
-    ToastFailedHandler;
-
 using namespace ABI::Windows::Data::Xml::Dom;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::UI::Notifications;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace mozilla;
+
+// Needed to disambiguate internal and Windows `ToastNotification` classes.
+typedef ABI::Windows::UI::Notifications::ToastNotification WinToastNotification;
+typedef ITypedEventHandler<WinToastNotification*, IInspectable*>
+    ToastActivationHandler;
+typedef ITypedEventHandler<WinToastNotification*, ToastDismissedEventArgs*>
+    ToastDismissedHandler;
+typedef ITypedEventHandler<WinToastNotification*, ToastFailedEventArgs*>
+    ToastFailedHandler;
+typedef Collections::IVectorView<WinToastNotification*>
+    IVectorView_ToastNotification;
 
 NS_IMPL_ISUPPORTS(ToastNotificationHandler, nsIAlertNotificationImageListener)
 
@@ -192,7 +191,6 @@ void ToastNotificationHandler::UnregisterHandler() {
     mNotification->remove_Dismissed(mDismissedToken);
     mNotification->remove_Activated(mActivatedToken);
     mNotification->remove_Failed(mFailedToken);
-    mNotifier->Hide(mNotification.Get());
   }
 
   mNotification = nullptr;
@@ -464,6 +462,25 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       &mFailedToken);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
+  ComPtr<IToastNotification2> notification2;
+  hr = mNotification.As(&notification2);
+
+  // Add tag, needed to check if toast is still present in the action center
+  // when we receive a dismiss timeout.
+  //
+  // Note that the Web Notifications API also exposes a "tag" element which can
+  // be used to override a current notification. This should be emulated at the
+  // DOM level as allowing webpages to overwrite Windows tags directly allows
+  // pages to override each other's notifications.
+  nsIDToCString uuidString(nsID::GenerateUUID());
+  size_t len = strlen(uuidString.get());
+  MOZ_ASSERT(len == NSID_LENGTH - 1);
+  nsAutoString tag;
+  CopyASCIItoUTF16(nsDependentCSubstring(uuidString.get(), len), tag);
+  HString hTag;
+  hTag.Set(tag.get());
+  notification2->put_Tag(hTag.Get());
+
   ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics =
       GetToastNotificationManagerStatics();
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
@@ -544,9 +561,89 @@ ToastNotificationHandler::OnActivate(IToastNotification* notification,
   return S_OK;
 }
 
+// A single toast message can receive multiple dismiss events, at most one for
+// the popup and at most one for the action center. We can't simply count
+// dismiss events as the user may have disabled either popups or action center
+// notifications, therefore we have to check if the toast remains in the history
+// (action center) to determine if the toast is fully dismissed.
+static bool NotificationStillPresent(
+    ComPtr<IToastNotification>& current_notification, nsString& nsAumid) {
+  HRESULT hr = S_OK;
+
+  ComPtr<IToastNotification2> current_notification2;
+  hr = current_notification.As(&current_notification2);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  HString current_id;
+  hr = current_notification2->get_Tag(current_id.GetAddressOf());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  ComPtr<IToastNotificationManagerStatics> manager =
+      GetToastNotificationManagerStatics();
+  if (!manager) {
+    return false;
+  }
+
+  ComPtr<IToastNotificationManagerStatics2> manager2;
+  hr = manager.As(&manager2);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  ComPtr<IToastNotificationHistory> history;
+  hr = manager2->get_History(&history);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  ComPtr<IToastNotificationHistory2> history2;
+  hr = history.As(&history2);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  HString aumid;
+  hr = aumid.Set(nsAumid.get());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  ComPtr<IVectorView_ToastNotification> toasts;
+  hr = history2->GetHistoryWithId(aumid.Get(), &toasts);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+  unsigned int hist_size;
+  hr = toasts->get_Size(&hist_size);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  for (unsigned int i = 0; i < hist_size; i++) {
+    ComPtr<IToastNotification> hist_toast;
+    hr = toasts->GetAt(i, &hist_toast);
+    if (NS_WARN_IF(FAILED(hr))) {
+      continue;
+    }
+
+    ComPtr<IToastNotification2> hist_toast2;
+    hr = hist_toast.As(&hist_toast2);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+    HString history_id;
+    hr = hist_toast2->get_Tag(history_id.GetAddressOf());
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+
+    // We can not directly compare IToastNotification objects; their IUnknown
+    // pointers should be equivalent but under inspection were not. Therefore we
+    // use the notification's tag instead.
+    if (current_id == history_id) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 HRESULT
 ToastNotificationHandler::OnDismiss(IToastNotification* notification,
                                     IToastDismissedEventArgs* aArgs) {
+  // AddRef as ComPtr doesn't own the object and shouldn't release.
+  notification->AddRef();
+  ComPtr<IToastNotification> comptrNotification(notification);
+  // Don't dismiss notifications when they are still in the action center. We
+  // can receive multiple dismiss events.
+  if (NotificationStillPresent(comptrNotification, mAumid)) {
+    return S_OK;
+  }
+
   SendFinished();
   mBackend->RemoveHandler(mName, this);
   return S_OK;
