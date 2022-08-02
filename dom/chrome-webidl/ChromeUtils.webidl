@@ -632,6 +632,11 @@ partial namespace ChromeUtils {
 
   [Throws]
   sequence<FormAutofillConfidences> getFormAutofillConfidences(sequence<Element> elements);
+
+  /**
+   * Returns whether the background of the element is dark.
+   */
+  boolean isDarkBackground(Element element);
 };
 
 /*
