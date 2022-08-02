@@ -132,6 +132,39 @@ void IPCFuzzController::OnActorConnected(IProtocol* protocol) {
   }
 }
 
+void IPCFuzzController::OnActorDestroyed(IProtocol* protocol) {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  MOZ_FUZZING_NYX_PRINTF("INFO: [OnActorDestroyed] ActorID %d Protocol: %s\n",
+                         protocol->Id(), protocol->GetProtocolName());
+
+  MessageChannel* channel = protocol->ToplevelProtocol()->GetIPCChannel();
+
+  Maybe<PortName> portName = channel->GetPortName();
+  if (portName) {
+    MOZ_FUZZING_NYX_DEBUG(
+        "DEBUG: IPCFuzzController::OnActorDestroyed() Mutex try\n");
+    // Called on background threads and modifies `actorIds`.
+    MutexAutoLock lock(mMutex);
+    MOZ_FUZZING_NYX_DEBUG(
+        "DEBUG: IPCFuzzController::OnActorDestroyed() Mutex locked\n");
+
+    for (auto iter = actorIds[*portName].begin();
+         iter != actorIds[*portName].end();) {
+      if (iter->first == protocol->Id() &&
+          iter->second == protocol->GetProtocolId()) {
+        iter = actorIds[*portName].erase(iter);
+      } else {
+        ++iter;
+      }
+    }
+  } else {
+    MOZ_FUZZING_NYX_PRINT("WARNING: No port name on destroyed actor?!\n");
+  }
+}
+
 void IPCFuzzController::AddToplevelActor(PortName name, ProtocolId protocolId) {
   const char* protocolName = ProtocolIdToName(protocolId);
   auto result = portNameToIndex.find(protocolName);

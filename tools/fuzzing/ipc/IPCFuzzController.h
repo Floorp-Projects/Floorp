@@ -89,6 +89,7 @@ class IPCFuzzController {
                           bool* is_cons, bool update = true);
 
   void OnActorConnected(mozilla::ipc::IProtocol* protocol);
+  void OnActorDestroyed(mozilla::ipc::IProtocol* protocol);
   void OnDropPeer(const char* reason, const char* file, int line);
   void OnMessageTaskStart();
   void OnMessageTaskStop();

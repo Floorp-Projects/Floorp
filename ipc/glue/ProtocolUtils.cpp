@@ -546,6 +546,10 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
   MOZ_ASSERT(CanRecv(), "destroying non-connected actor");
   MOZ_ASSERT(mLifecycleProxy, "destroying zombie actor");
 
+#ifdef FUZZING_SNAPSHOT
+  fuzzing::IPCFuzzController::instance().OnActorDestroyed(this);
+#endif
+
   // If we're a managed actor, unregister from our manager
   if (Manager()) {
     Unregister(Id());
