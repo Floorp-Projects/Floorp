@@ -28,9 +28,6 @@ class ScrollbarDrawingWin : public ScrollbarDrawing {
   Maybe<nsITheme::Transparency> GetScrollbarPartTransparency(
       nsIFrame* aFrame, StyleAppearance aAppearance) override;
 
-  static ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame,
-                                                bool* aDarkScrollbar = nullptr);
-
   template <typename PaintBackendData>
   bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
                              ScrollbarKind, nsIFrame*, const ComputedStyle&,

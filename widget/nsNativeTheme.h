@@ -155,6 +155,7 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
 
   bool IsRangeHorizontal(nsIFrame* aFrame);
 
+  static bool IsDarkBackgroundForScrollbar(nsIFrame*);
   static bool IsDarkBackground(nsIFrame*);
 
   static bool IsWidgetScrollbarPart(mozilla::StyleAppearance);

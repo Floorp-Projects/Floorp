@@ -180,7 +180,8 @@ ColorScheme ThemeColors::ColorSchemeForWidget(const nsIFrame* aFrame,
   if (StaticPrefs::widget_disable_dark_scrollbar()) {
     return ColorScheme::Light;
   }
-  return nsNativeTheme::IsDarkBackground(const_cast<nsIFrame*>(aFrame))
+  return nsNativeTheme::IsDarkBackgroundForScrollbar(
+             const_cast<nsIFrame*>(aFrame))
              ? ColorScheme::Dark
              : ColorScheme::Light;
 }

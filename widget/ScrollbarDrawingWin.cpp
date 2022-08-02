@@ -54,10 +54,26 @@ LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
   }
 }
 
+// Returns the style for custom scrollbar if the scrollbar part frame should
+// use the custom drawing path, nullptr otherwise.
+const ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame) {
+  const ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+  if (style->StyleUI()->HasCustomScrollbars() ||
+      ScrollbarDrawing::IsScrollbarWidthThin(*style)) {
+    return style;
+  }
+  bool useDarkScrollbar = !StaticPrefs::widget_disable_dark_scrollbar() &&
+                          nsNativeTheme::IsDarkBackgroundForScrollbar(aFrame);
+  if (useDarkScrollbar) {
+    return style;
+  }
+  return nullptr;
+}
+
 Maybe<nsITheme::Transparency> ScrollbarDrawingWin::GetScrollbarPartTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (nsNativeTheme::IsWidgetScrollbarPart(aAppearance)) {
-    if (ComputedStyle* style = GetCustomScrollbarStyle(aFrame)) {
+    if (const ComputedStyle* style = GetCustomScrollbarStyle(aFrame)) {
       auto* ui = style->StyleUI();
       if (ui->mScrollbarColor.IsAuto() ||
           ui->mScrollbarColor.AsColors().track.MaybeTransparent()) {
@@ -99,29 +115,6 @@ Maybe<nsITheme::Transparency> ScrollbarDrawingWin::GetScrollbarPartTransparency(
   }
 
   return Nothing();
-}
-
-// Returns the style for custom scrollbar if the scrollbar part frame should
-// use the custom drawing path, nullptr otherwise.
-//
-// Optionally the caller can pass a pointer to aDarkScrollbar for whether
-// custom scrollbar may be drawn due to dark background.
-/*static*/
-ComputedStyle* ScrollbarDrawingWin::GetCustomScrollbarStyle(
-    nsIFrame* aFrame, bool* aDarkScrollbar) {
-  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  if (style->StyleUI()->HasCustomScrollbars()) {
-    return style;
-  }
-  bool useDarkScrollbar = !StaticPrefs::widget_disable_dark_scrollbar() &&
-                          nsNativeTheme::IsDarkBackground(aFrame);
-  if (useDarkScrollbar || IsScrollbarWidthThin(*style)) {
-    if (aDarkScrollbar) {
-      *aDarkScrollbar = useDarkScrollbar;
-    }
-    return style;
-  }
-  return nullptr;
 }
 
 template <typename PaintBackendData>
