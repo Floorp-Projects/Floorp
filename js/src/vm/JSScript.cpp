@@ -35,8 +35,9 @@
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "frontend/ParseContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
-#include "frontend/StencilXdr.h"   // XDRStencilEncoder
-#include "gc/AllocKind.h"          // gc::InitialHeap
+#include "frontend/Stencil.h"  // DumpFunctionFlagsItems, DumpImmutableScriptFlags
+#include "frontend/StencilXdr.h"  // XDRStencilEncoder
+#include "gc/AllocKind.h"         // gc::InitialHeap
 #include "gc/GCContext.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRHealth.h"
@@ -74,6 +75,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSONPrinter.h"  // JSONPrinter
 #include "vm/Opcodes.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"  // js::GenericPrinter, js::Fprinter, js::Sprinter, js::QuoteString
@@ -3247,6 +3249,7 @@ void JSScript::dump(JSContext* cx) {
   }
 
   DumpOptions options;
+  options.runtimeData = true;
   if (!dump(cx, script, options, &sp)) {
     return;
   }
@@ -3263,6 +3266,7 @@ void JSScript::dumpRecursive(JSContext* cx) {
   }
 
   DumpOptions options;
+  options.runtimeData = true;
   options.recursive = true;
   if (!dump(cx, script, options, &sp)) {
     return;
@@ -3271,53 +3275,124 @@ void JSScript::dumpRecursive(JSContext* cx) {
   fprintf(stderr, "%s\n", sp.string());
 }
 
+static void DumpMutableScriptFlags(js::JSONPrinter& json,
+                                   MutableScriptFlags mutableFlags) {
+  // Skip warmup data.
+  static_assert(int(MutableScriptFlagsEnum::WarmupResets_MASK) == 0xff);
+
+  for (uint32_t i = 0x100; i; i = i << 1) {
+    if (uint32_t(mutableFlags) & i) {
+      switch (MutableScriptFlagsEnum(i)) {
+        case MutableScriptFlagsEnum::HasRunOnce:
+          json.value("HasRunOnce");
+          break;
+        case MutableScriptFlagsEnum::HasBeenCloned:
+          json.value("HasBeenCloned");
+          break;
+        case MutableScriptFlagsEnum::HasScriptCounts:
+          json.value("HasScriptCounts");
+          break;
+        case MutableScriptFlagsEnum::HasDebugScript:
+          json.value("HasDebugScript");
+          break;
+        case MutableScriptFlagsEnum::AllowRelazify:
+          json.value("AllowRelazify");
+          break;
+        case MutableScriptFlagsEnum::SpewEnabled:
+          json.value("SpewEnabled");
+          break;
+        case MutableScriptFlagsEnum::NeedsFinalWarmUpCount:
+          json.value("NeedsFinalWarmUpCount");
+          break;
+        case MutableScriptFlagsEnum::BaselineDisabled:
+          json.value("BaselineDisabled");
+          break;
+        case MutableScriptFlagsEnum::IonDisabled:
+          json.value("IonDisabled");
+          break;
+        case MutableScriptFlagsEnum::Uninlineable:
+          json.value("Uninlineable");
+          break;
+        case MutableScriptFlagsEnum::FailedBoundsCheck:
+          json.value("FailedBoundsCheck");
+          break;
+        case MutableScriptFlagsEnum::HadLICMInvalidation:
+          json.value("HadLICMInvalidation");
+          break;
+        case MutableScriptFlagsEnum::HadReorderingBailout:
+          json.value("HadReorderingBailout");
+          break;
+        case MutableScriptFlagsEnum::HadEagerTruncationBailout:
+          json.value("HadEagerTruncationBailout");
+          break;
+        case MutableScriptFlagsEnum::FailedLexicalCheck:
+          json.value("FailedLexicalCheck");
+          break;
+        case MutableScriptFlagsEnum::HadSpeculativePhiBailout:
+          json.value("HadSpeculativePhiBailout");
+          break;
+        case MutableScriptFlagsEnum::HadUnboxFoldingBailout:
+          json.value("HadUnboxFoldingBailout");
+          break;
+        default:
+          json.value("Unknown(%x)", i);
+          break;
+      }
+    }
+  }
+}
+
 /* static */
 bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
                     DumpOptions& options, js::Sprinter* sp) {
-  if (script->isFunction()) {
-    JS::Rooted<JSFunction*> fun(cx, script->function());
+  {
+    JSONPrinter json(*sp);
 
-    if (!sp->put("flags:")) {
-      return false;
+    json.beginObject();
+
+    if (const char* filename = script->filename()) {
+      json.property("file", filename);
+    } else {
+      json.nullProperty("file");
     }
-    if (fun->isLambda()) {
-      if (!sp->put(" LAMBDA")) {
-        return false;
+
+    json.property("lineno", script->lineno());
+    json.property("column", script->column());
+
+    json.beginListProperty("immutableFlags");
+    DumpImmutableScriptFlags(json, script->immutableFlags());
+    json.endList();
+
+    if (options.runtimeData) {
+      json.beginListProperty("mutableFlags");
+      DumpMutableScriptFlags(json, script->mutableFlags_);
+      json.endList();
+    }
+
+    if (script->isFunction()) {
+      JS::Rooted<JSFunction*> fun(cx, script->function());
+
+      JS::Rooted<JSAtom*> name(cx, fun->displayAtom());
+      if (name) {
+        UniqueChars bytes = JS_EncodeStringToUTF8(cx, name);
+        if (!bytes) {
+          return false;
+        }
+        json.property("functionName", bytes.get());
+      } else {
+        json.nullProperty("functionName");
       }
+
+      json.beginListProperty("functionFlags");
+      DumpFunctionFlagsItems(json, fun->flags());
+      json.endList();
     }
-    if (fun->needsCallObject()) {
-      if (!sp->put(" NEEDS_CALLOBJECT")) {
-        return false;
-      }
-    }
-    if (fun->needsExtraBodyVarEnvironment()) {
-      if (!sp->put(" NEEDS_EXTRABODYVARENV")) {
-        return false;
-      }
-    }
-    if (fun->needsNamedLambdaEnvironment()) {
-      if (!sp->put(" NEEDS_NAMEDLAMBDAENV")) {
-        return false;
-      }
-    }
-    if (fun->isConstructor()) {
-      if (!sp->put(" CONSTRUCTOR")) {
-        return false;
-      }
-    }
-    if (fun->isSelfHostedBuiltin()) {
-      if (!sp->put(" SELF_HOSTED")) {
-        return false;
-      }
-    }
-    if (fun->isArrow()) {
-      if (!sp->put(" ARROW")) {
-        return false;
-      }
-    }
-    if (!sp->put("\n")) {
-      return false;
-    }
+
+    json.endObject();
+  }
+
+  if (!sp->put("\n")) {
+    return false;
   }
 
   if (!Disassemble(cx, script, /* lines = */ true, sp)) {
