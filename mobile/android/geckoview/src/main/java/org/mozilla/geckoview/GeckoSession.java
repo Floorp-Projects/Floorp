@@ -311,6 +311,12 @@ public class GeckoSession {
         int x, int y, int width, int height, Object surface, Object surfaceControl);
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
+    public native void blockSurfaceControl();
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
+    public native void allowSurfaceControl();
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
     public native void setMaxToolbarHeight(int height);
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
@@ -904,6 +910,10 @@ public class GeckoSession {
 
             delegate.onShowActionRequest(GeckoSession.this, selection);
 
+            // We have a selection, meaning we may need to show the magnifier soon. The magnifier
+            // does not work when using the SurfaceControl rendering path, so temporarily block it.
+            mCompositor.blockSurfaceControl();
+
           } else if ("GeckoView:HideSelectionAction".equals(event)) {
             final String reasonString = message.getString("reason");
             final int reason;
@@ -915,6 +925,8 @@ public class GeckoSession {
               reason = SelectionActionDelegate.HIDE_REASON_ACTIVE_SCROLL;
             } else if ("visibilitychange".equals(reasonString)) {
               reason = SelectionActionDelegate.HIDE_REASON_NO_SELECTION;
+              // The selection has been dismissed, meaning we can allow SurfaceControl again.
+              mCompositor.allowSurfaceControl();
             } else {
               throw new IllegalArgumentException();
             }
