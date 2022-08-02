@@ -353,6 +353,9 @@ for (const form of document.forms) {
 }
 
 add_task(async function checkInitialState() {
+  await updateFormHistory([
+    { op: "remove" },
+  ]);
   const historyEntriesCount = await countEntries(null, null);
   ok(!historyEntriesCount, "checking for initially empty storage");
 });

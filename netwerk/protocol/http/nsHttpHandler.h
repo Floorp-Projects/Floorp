@@ -27,6 +27,7 @@
 #include "nsISpeculativeConnect.h"
 #include "nsTHashMap.h"
 #include "nsTHashSet.h"
+
 #ifdef DEBUG
 #  include "nsIOService.h"
 #endif
@@ -35,6 +36,7 @@
 // method implementations to the cpp file
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsSocketTransportService2.h"
 
 class nsIHttpActivityDistributor;
 class nsIHttpUpgradeListener;
@@ -47,8 +49,6 @@ class nsISiteSecurityService;
 class nsIStreamConverterService;
 
 namespace mozilla::net {
-
-bool OnSocketThread();
 
 class ATokenBucketEvent;
 class EventTokenBucket;
