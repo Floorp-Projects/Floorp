@@ -1333,7 +1333,7 @@ async function withOnlineExperiment(callback) {
   let {
     enrollmentPromise,
     doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
+  } = await ExperimentFakes.enrollmentHelper(
     ExperimentFakes.recipe("firefox-suggest-offline-vs-online", {
       active: true,
       branches: [

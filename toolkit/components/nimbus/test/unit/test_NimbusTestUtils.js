@@ -32,14 +32,11 @@ add_task(async function test_enrollmentHelper() {
 
   await manager.onStartup();
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(recipe, { manager });
+  let { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(recipe, {
+    manager,
+  });
 
-  await enrollmentPromise;
-
-  Assert.ok(manager.store.getAllActive().length === 1, "Enrolled");
+  Assert.equal(manager.store.getAllActive().length, 1, "Enrolled");
   Assert.equal(
     manager.store.getAllActive()[0].slug,
     recipe.slug,
