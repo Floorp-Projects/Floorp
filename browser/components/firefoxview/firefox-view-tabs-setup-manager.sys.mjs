@@ -19,19 +19,11 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   UIState: "resource://services-sync/UIState.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
-
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.import(
     "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gNetworkLinkService",
-  "@mozilla.org/network/network-link-service;1",
-  "nsINetworkLinkService"
-);
 
 const SYNC_TABS_PREF = "services.sync.engine.tabs";
 const RECENT_TABS_SYNC = "services.sync.lastTabFetch";
@@ -40,10 +32,6 @@ const MOBILE_PROMO_DISMISSED_PREF =
 const LOGGING_PREF = "browser.tabs.firefox-view.logLevel";
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
 const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
-const NETWORK_STATUS_CHANGED = "network:offline-status-changed";
-const SYNC_SERVICE_ERROR = "weave:service:sync:error";
-const FXA_ENABLED = "identity.fxaccounts.enabled";
-const SYNC_SERVICE_FINISHED = "weave:service:sync:finished";
 
 function openTabInWindow(window, url) {
   const {
@@ -58,46 +46,31 @@ export const TabsSetupFlowManager = new (class {
 
     this.setupState = new Map();
     this.resetInternalState();
-    this._currentSetupStateName = "";
-    this.networkIsOnline =
-      lazy.gNetworkLinkService.linkStatusKnown &&
-      lazy.gNetworkLinkService.isLinkUp;
-    this.syncIsWorking = true;
 
     this.registerSetupState({
       uiStateIndex: 0,
-      name: "error-state",
-      exitConditions: () => {
-        return (
-          this.networkIsOnline &&
-          this.syncIsWorking &&
-          !Services.prefs.prefIsLocked(FXA_ENABLED)
-        );
-      },
-    });
-    this.registerSetupState({
-      uiStateIndex: 1,
       name: "not-signed-in",
       exitConditions: () => {
         return this.fxaSignedIn;
       },
     });
+    // TODO: handle offline, sync service not ready or available
     this.registerSetupState({
-      uiStateIndex: 2,
+      uiStateIndex: 1,
       name: "connect-secondary-device",
       exitConditions: () => {
         return this.secondaryDeviceConnected;
       },
     });
     this.registerSetupState({
-      uiStateIndex: 3,
+      uiStateIndex: 2,
       name: "disabled-tab-sync",
       exitConditions: () => {
         return this.syncTabsPrefEnabled;
       },
     });
     this.registerSetupState({
-      uiStateIndex: 4,
+      uiStateIndex: 3,
       name: "synced-tabs-not-ready",
       enter: () => {
         if (!this.didRecentTabSync) {
@@ -109,7 +82,7 @@ export const TabsSetupFlowManager = new (class {
       },
     });
     this.registerSetupState({
-      uiStateIndex: 5,
+      uiStateIndex: 4,
       name: "synced-tabs-loaded",
       exitConditions: () => {
         // This is the end state
@@ -119,9 +92,6 @@ export const TabsSetupFlowManager = new (class {
 
     Services.obs.addObserver(this, lazy.UIState.ON_UPDATE);
     Services.obs.addObserver(this, TOPIC_DEVICELIST_UPDATED);
-    Services.obs.addObserver(this, NETWORK_STATUS_CHANGED);
-    Services.obs.addObserver(this, SYNC_SERVICE_ERROR);
-    Services.obs.addObserver(this, SYNC_SERVICE_FINISHED);
 
     // this.syncTabsPrefEnabled will track the value of the tabs pref
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -175,29 +145,9 @@ export const TabsSetupFlowManager = new (class {
       secondaryDeviceConnected: this.secondaryDeviceConnected,
     };
   }
-
-  getErrorType() {
-    // this ordering is important for dealing with multiple errors at once
-    const errorStates = {
-      "network-offline": !this.networkIsOnline,
-      "sync-error": !this.syncIsWorking,
-      "fxa-admin-disabled": Services.prefs.prefIsLocked(FXA_ENABLED),
-    };
-
-    for (let [type, value] of Object.entries(errorStates)) {
-      if (value) {
-        return type;
-      }
-    }
-    return null;
-  }
-
   uninit() {
     Services.obs.removeObserver(this, lazy.UIState.ON_UPDATE);
     Services.obs.removeObserver(this, TOPIC_DEVICELIST_UPDATED);
-    Services.obs.removeObserver(this, NETWORK_STATUS_CHANGED);
-    Services.obs.removeObserver(this, SYNC_SERVICE_ERROR);
-    Services.obs.removeObserver(this, SYNC_SERVICE_FINISHED);
   }
   get currentSetupState() {
     return this.setupState.get(this._currentSetupStateName);
@@ -275,24 +225,6 @@ export const TabsSetupFlowManager = new (class {
         this.refreshDevices();
         this.maybeUpdateUI();
         break;
-      case "fxaccounts:device_connected":
-      case "fxaccounts:device_disconnected":
-        await lazy.fxAccounts.device.refreshDeviceList();
-        this.maybeUpdateUI();
-        break;
-      case SYNC_SERVICE_ERROR:
-        this.syncIsWorking = false;
-        this.maybeUpdateUI();
-        break;
-      case NETWORK_STATUS_CHANGED:
-        this.networkIsOnline = data == "online";
-        this.maybeUpdateUI();
-        break;
-      case SYNC_SERVICE_FINISHED:
-        if (!this.syncIsWorking) {
-          this.syncIsWorking = true;
-          this.maybeUpdateUI();
-        }
     }
   }
 
@@ -341,7 +273,6 @@ export const TabsSetupFlowManager = new (class {
 
   maybeUpdateUI() {
     let nextSetupStateName = this._currentSetupStateName;
-    let errorState = null;
 
     // state transition conditions
     for (let state of this.setupState.values()) {
@@ -352,14 +283,8 @@ export const TabsSetupFlowManager = new (class {
     }
 
     let setupState = this.currentSetupState;
-    const state = this.setupState.get(nextSetupStateName);
-    const uiStateIndex = state.uiStateIndex;
-
-    if (
-      uiStateIndex == 0 ||
-      nextSetupStateName != this._currentSetupStateName
-    ) {
-      setupState = state;
+    if (nextSetupStateName != this._currentSetupStateName) {
+      setupState = this.setupState.get(nextSetupStateName);
       this._currentSetupStateName = nextSetupStateName;
       this._uiUpdateNeeded = true;
     }
@@ -369,10 +294,7 @@ export const TabsSetupFlowManager = new (class {
       if (this.shouldShowMobilePromo) {
         this._didShowMobilePromo = true;
       }
-      if (uiStateIndex == 0) {
-        errorState = this.getErrorType();
-      }
-      Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED, errorState);
+      Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED);
     }
     if ("function" == typeof setupState.enter) {
       setupState.enter();
