@@ -37,6 +37,8 @@ class ScreenshotGrabberImpl final {
   void GrabScreenshot(Window& aWindow, const IntSize& aWindowSize);
   void ProcessQueue();
 
+  bool HaveScreenshotsToFlush();
+
  private:
   struct QueueItem final {
     mozilla::TimeStamp mTimeStamp;
@@ -89,6 +91,10 @@ void ScreenshotGrabber::MaybeProcessQueue() {
   } else if (mImpl) {
     Destroy();
   }
+}
+
+bool ScreenshotGrabber::HaveScreenshotsToFlush() {
+  return mImpl && mImpl->HaveScreenshotsToFlush();
 }
 
 void ScreenshotGrabber::NotifyEmptyFrame() {
@@ -222,6 +228,10 @@ void ScreenshotGrabberImpl::ProcessQueue() {
     mQueue.AppendElement(std::move(*mCurrentFrameQueueItem));
     mCurrentFrameQueueItem = Nothing();
   }
+}
+
+bool ScreenshotGrabberImpl::HaveScreenshotsToFlush() {
+  return mCurrentFrameQueueItem.isSome() || !mQueue.IsEmpty();
 }
 
 }  // namespace profiler_screenshots
