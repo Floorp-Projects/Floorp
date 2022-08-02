@@ -20,18 +20,6 @@
 // confused.)
 namespace testzilla {
 
-template <typename CharT>
-struct AcceptableArgs;
-
-template <>
-struct AcceptableArgs<char> {
-  constexpr static const char* value[] = {"aleph", "beth", nullptr};
-};
-template <>
-struct AcceptableArgs<wchar_t> {
-  constexpr static const wchar_t* value[] = {L"aleph", L"beth", nullptr};
-};
-
 // Auxiliary class to simplify the declaration of test-cases for
 // EnsureCommandlineSafe.
 class CommandLine {
@@ -160,17 +148,38 @@ constexpr std::pair<TestCaseState, NarrowTestCase> kStrMatches8[] = {
     {FAIL, {"I", "i"}},
     {FAIL, {"Mozilla", "mozilla"}},
     {FAIL, {"Mozilla", "Mozilla"}},
+
+    // punctuation other than `-` is rejected
+    {FAIL, {"*", "*"}},
+    {FAIL, {"*", "word"}},
+    {FAIL, {".", "."}},
+    {FAIL, {".", "a"}},
+    {FAIL, {"_", "_"}},
+
+    // spaces are rejected
+    {FAIL, {" ", " "}},
+    {FAIL, {"two words", "two words"}},
+
+    // non-ASCII characters are rejected
+    //
+    // (the contents of this test case may differ depending on the source and
+    // execution character sets, but the result should always be failure)
+    {FAIL, {"à", "a"}},
+    {FAIL, {"a", "à"}},
+    {FAIL, {"à", "à"}},
 };
 
 #ifdef XP_WIN
-using WideTestCase = std::pair<const wchar_t*, const wchar_t*>;
-constexpr std::pair<TestCaseState, WideTestCase> kStrMatches16[] = {
-    // (implementation- and locale-dependent behavior:
-    // `wtolower` may or may not transform Turkish 'İ' to 'i')
-    {FAIL, {L"i", L"İ"}},
-    {FAIL, {L"mozilla", L"ṁozilla"}},
+using WideTestCase = std::pair<const char*, const wchar_t*>;
+std::pair<TestCaseState, WideTestCase> kStrMatches16[] = {
+    // (Turkish 'İ' may lowercase to 'i' in some locales, but
+    // we explicitly prevent that from being relevant)
+    {FAIL, {"i", L"İ"}},
+    {FAIL, {"mozilla", L"ṁozilla"}},
 };
 #endif
+
+constexpr const char* kRequiredArgs[] = {"aleph", "beth"};
 
 std::pair<TestCaseState, std::vector<const char*>> const kCommandLines[] = {
     // the basic admissible forms
@@ -243,8 +252,8 @@ bool TestCommandLineImpl(CommandLine const& cl) {
   // EnsureCommandlineSafe's signature isn't const-correct here for annoying
   // reasons, but it is indeed non-mutating.
   CharT** argv = const_cast<CharT**>(cl.argv<CharT>());
-  return mozilla::EnsureCommandlineSafeImpl<CharT>(
-      argc, argv, AcceptableArgs<CharT>::value);
+  return mozilla::internal::EnsureCommandlineSafeImpl(argc, argv,
+                                                      kRequiredArgs);
 }
 
 // Test that `args` produces `expectation`. On Windows, test against both
@@ -271,12 +280,10 @@ TEST(CmdLineAndEnvUtils, strimatch)
         << '<' << left << "> !~ <" << right << '>';
 
 #ifdef XP_WIN
-    wchar_t left_wide[200];
     wchar_t right_wide[200];
-    ::mbstowcs(left_wide, left, 200);
     ::mbstowcs(right_wide, right, 200);
-    EXPECT_EQ(strimatch(left_wide, right_wide), result)
-        << '<' << left_wide << "> !~ L<" << right << '>';
+    EXPECT_EQ(strimatch(left, right_wide), result)
+        << '<' << left << "> !~ L<" << right << '>';
 #endif
   }
 
