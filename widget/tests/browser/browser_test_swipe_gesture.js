@@ -302,20 +302,6 @@ add_task(async () => {
   let opacity = gHistorySwipeAnimation._prevBox.style.opacity;
   ok(0.98 < opacity && opacity < 0.99, "opacity of prevbox is not quite 1");
 
-  const translateDistance = Services.prefs.getIntPref(
-    "browser.swipe.navigation-icon-move-distance",
-    0
-  );
-  if (translateDistance != 0) {
-    isnot(
-      window
-        .getComputedStyle(gHistorySwipeAnimation._prevBox)
-        .getPropertyValue("translate"),
-      "none",
-      "translate of prevbox is not `none` during gestures"
-    );
-  }
-
   await panLeftToRightEnd(tab.linkedBrowser, 100, 100, 0.9);
 
   // NOTE: We only get a wheel event for the beginPhase, rest of events have
@@ -349,18 +335,6 @@ add_task(async () => {
   ok(computedOpacity == 1, "computed opacity of prevbox is 1");
   opacity = gHistorySwipeAnimation._prevBox.style.opacity;
   ok(opacity == 0, "element.style opacity of prevbox 0");
-
-  if (translateDistance != 0) {
-    // We don't have a transition for translate property so that we still have
-    // some amount of translate.
-    isnot(
-      window
-        .getComputedStyle(gHistorySwipeAnimation._prevBox)
-        .getPropertyValue("translate"),
-      "none",
-      "translate of prevbox is not `none` during the opacity transition"
-    );
-  }
 
   // Make sure the gesture triggered going back to the previous page.
   await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
