@@ -76,6 +76,26 @@ public class SurfaceControlManager {
     return new Surface(child);
   }
 
+  // Ensures the managed child Surface of the parent SurfaceControl is hidden.
+  @RequiresApi(api = Build.VERSION_CODES.Q)
+  @WrapForJNI(exceptionMode = "abort")
+  public synchronized void hideChildSurface(final SurfaceControl parent) {
+    final SurfaceControl child = mChildSurfaceControls.get(parent);
+    if (child != null) {
+      new SurfaceControl.Transaction().setVisibility(child, false).apply();
+    }
+  }
+
+  // Ensures the managed child Surface of the parent SurfaceControl is visible.
+  @RequiresApi(api = Build.VERSION_CODES.Q)
+  @WrapForJNI(exceptionMode = "abort")
+  public synchronized void showChildSurface(final SurfaceControl parent) {
+    final SurfaceControl child = mChildSurfaceControls.get(parent);
+    if (child != null) {
+      new SurfaceControl.Transaction().setVisibility(child, true).apply();
+    }
+  }
+
   // Must be called whenever the GPU process has died. This destroys all the child SurfaceControls
   // that have been created, meaning subsequent calls to getChildSurface() will create new ones.
   @RequiresApi(api = Build.VERSION_CODES.Q)
