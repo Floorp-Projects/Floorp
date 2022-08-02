@@ -34,7 +34,8 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
   void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,
                              ScrollbarKind, nsIFrame* aFrame,
                              const ComputedStyle& aStyle, const ElementState&,
-                             const DocumentState&, const DPIRatio&);
+                             const DocumentState&, const Colors&,
+                             const DPIRatio&);
   bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
                            nsIFrame*, const ComputedStyle&, const ElementState&,
                            const DocumentState&, const Colors&,
@@ -47,7 +48,8 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
   template <typename PaintBackendData>
   void DoPaintScrollbarTrack(PaintBackendData&, const LayoutDeviceRect&,
                              ScrollbarKind, nsIFrame*, const ComputedStyle&,
-                             const DocumentState&, const DPIRatio&);
+                             const DocumentState&, const Colors&,
+                             const DPIRatio&);
   bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect& aRect,
                            ScrollbarKind, nsIFrame* aFrame,
                            const ComputedStyle& aStyle, const DocumentState&,
@@ -60,7 +62,8 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
   template <typename PaintBackendData>
   void DoPaintScrollCorner(PaintBackendData&, const LayoutDeviceRect&,
                            ScrollbarKind, nsIFrame*, const ComputedStyle&,
-                           const DocumentState&, const DPIRatio&);
+                           const DocumentState&, const Colors&,
+                           const DPIRatio&);
   bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
                          nsIFrame*, const ComputedStyle&, const DocumentState&,
                          const Colors&, const DPIRatio&) override;
