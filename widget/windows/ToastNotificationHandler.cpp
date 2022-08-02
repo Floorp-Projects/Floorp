@@ -6,14 +6,16 @@
 
 #include "ToastNotificationHandler.h"
 
-#include "WidgetUtils.h"
-#include "WinTaskbar.h"
-#include "WinUtils.h"
+#include <windows.foundation.h>
+
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/WindowsVersion.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsAppRunner.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIDUtils.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
@@ -22,6 +24,9 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
+#include "nsXREDirProvider.h"
+#include "WidgetUtils.h"
+#include "WinUtils.h"
 
 #include "ToastNotification.h"
 
@@ -118,13 +123,12 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
 static ComPtr<IToastNotificationManagerStatics>
 GetToastNotificationManagerStatics() {
   ComPtr<IToastNotificationManagerStatics> toastNotificationManagerStatics;
-  if (NS_WARN_IF(FAILED(GetActivationFactory(
-          HStringReference(
-              RuntimeClass_Windows_UI_Notifications_ToastNotificationManager)
-              .Get(),
-          &toastNotificationManagerStatics)))) {
-    return nullptr;
-  }
+  HRESULT hr = GetActivationFactory(
+      HStringReference(
+          RuntimeClass_Windows_UI_Notifications_ToastNotificationManager)
+          .Get(),
+      &toastNotificationManagerStatics);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return toastNotificationManagerStatics;
 }
@@ -413,14 +417,10 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       GetToastNotificationManagerStatics();
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  nsAutoString uid;
-  if (NS_WARN_IF(!WinTaskbar::GetAppUserModelID(uid))) {
-    return false;
-  }
-
-  HSTRING uidStr =
-      HStringReference(static_cast<const wchar_t*>(uid.get())).Get();
-  hr = toastNotificationManagerStatics->CreateToastNotifierWithId(uidStr,
+  HString aumid;
+  hr = aumid.Set(mAumid.get());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  hr = toastNotificationManagerStatics->CreateToastNotifierWithId(aumid.Get(),
                                                                   &mNotifier);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
