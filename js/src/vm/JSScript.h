@@ -2122,6 +2122,7 @@ class JSScript : public js::BaseScript {
  public:
   struct DumpOptions {
     bool recursive = false;
+    bool runtimeData = false;
   };
 
   void dump(JSContext* cx);
