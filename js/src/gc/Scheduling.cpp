@@ -20,6 +20,7 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::CheckedInt;
+using mozilla::Some;
 using mozilla::TimeDuration;
 
 /*
@@ -424,6 +425,36 @@ void GCSchedulingState::updateHighFrequencyModeForReason(JS::GCReason reason) {
   if (reason == JS::GCReason::ALLOC_TRIGGER ||
       reason == JS::GCReason::TOO_MUCH_MALLOC) {
     inHighFrequencyGCMode_ = true;
+  }
+}
+
+static constexpr size_t BytesPerMB = 1024 * 1024;
+static constexpr double CollectionRateSmoothingFactor = 0.5;
+
+static double ExponentialMovingAverage(double prevAverage, double newData,
+                                       double smoothingFactor) {
+  MOZ_ASSERT(smoothingFactor > 0.0 && smoothingFactor <= 1.0);
+  return smoothingFactor * newData + (1.0 - smoothingFactor) * prevAverage;
+}
+
+void js::ZoneAllocator::updateCollectionRate(
+    mozilla::TimeDuration mainThreadGCTime, size_t initialBytesForAllZones) {
+  MOZ_ASSERT(initialBytesForAllZones != 0);
+  MOZ_ASSERT(gcHeapSize.initialBytes() <= initialBytesForAllZones);
+
+  double zoneFraction =
+      double(gcHeapSize.initialBytes()) / double(initialBytesForAllZones);
+  double zoneDuration = mainThreadGCTime.ToSeconds() * zoneFraction +
+                        perZoneGCTime.ref().ToSeconds();
+  double collectionRate =
+      double(gcHeapSize.initialBytes()) / (zoneDuration * BytesPerMB);
+
+  if (!smoothedCollectionRate.ref()) {
+    smoothedCollectionRate = Some(collectionRate);
+  } else {
+    double prevRate = smoothedCollectionRate.ref().value();
+    smoothedCollectionRate = Some(ExponentialMovingAverage(
+        prevRate, collectionRate, CollectionRateSmoothingFactor));
   }
 }
 

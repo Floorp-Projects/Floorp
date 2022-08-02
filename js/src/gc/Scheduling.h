@@ -728,6 +728,11 @@ class HeapSize {
   AtomicByteCount bytes_;
 
   /*
+   * The number of bytes in use at the start of the last collection.
+   */
+  MainThreadData<size_t> initialBytes_;
+
+  /*
    * The number of bytes retained after the last collection. This is updated
    * dynamically during incremental GC. It does not include allocations that
    * happen during a GC.
@@ -741,9 +746,10 @@ class HeapSize {
   }
 
   size_t bytes() const { return bytes_; }
+  size_t initialBytes() const { return initialBytes_; }
   size_t retainedBytes() const { return retainedBytes_; }
 
-  void updateOnGCStart() { retainedBytes_ = size_t(bytes_); }
+  void updateOnGCStart() { retainedBytes_ = initialBytes_ = bytes(); }
 
   void addGCArena() { addBytes(ArenaSize); }
   void removeGCArena() {

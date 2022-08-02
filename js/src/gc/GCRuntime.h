@@ -480,7 +480,7 @@ class GCRuntime {
   void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
   void clearBlackAndGrayRootTracers();
 
-  void updateMemoryCountersOnGCStart();
+  void updateSchedulingStateOnGCStart();
 
   void setGCCallback(JSGCCallback callback, void* data);
   void callGCCallback(JSGCStatus status, JS::GCReason reason) const;
@@ -662,7 +662,7 @@ class GCRuntime {
   TriggerResult checkHeapThreshold(Zone* zone, const HeapSize& heapSize,
                                    const HeapThreshold& heapThreshold);
 
-  void updateGCThresholdsAfterCollection();
+  void updateSchedulingStateAfterCollection();
   void updateAllGCStartThresholds();
 
   // For ArenaLists::allocateFromArena()

@@ -289,6 +289,9 @@ struct Statistics {
 
   TimeStamp creationTime() const { return creationTime_; }
 
+  TimeDuration totalGCTime() const { return totalGCTime_; }
+  size_t initialCollectedBytes() const { return preCollectedHeapBytes; }
+
   // File to write profiling information to, either stderr or file specified
   // with JS_GC_PROFILE_FILE.
   FILE* profileFile() const { return gcProfileFile; }
@@ -355,11 +358,11 @@ struct Statistics {
   TimeStamp timedGCStart;
   TimeDuration timedGCTime;
 
-  /* Total time in a given phase for this GC. */
+  /* Total main thread time in a given phase for this GC. */
   PhaseTimes phaseTimes;
 
-  /* Total parallel time for a given phase kind for this GC. */
-  PhaseKindTimes parallelTimes;
+  /* Total main thread time for this GC. */
+  TimeDuration totalGCTime_;
 
   /* Number of events of this type for this GC. */
   EnumeratedArray<Count, COUNT_LIMIT,

@@ -2713,7 +2713,7 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
     traceRuntimeForMajorGC(&marker, session);
   }
 
-  updateMemoryCountersOnGCStart();
+  updateSchedulingStateOnGCStart();
   stats().measureInitialHeapSize();
 }
 
@@ -2787,12 +2787,12 @@ void GCRuntime::findDeadCompartments() {
   }
 }
 
-void GCRuntime::updateMemoryCountersOnGCStart() {
+void GCRuntime::updateSchedulingStateOnGCStart() {
   heapSize.updateOnGCStart();
 
   // Update memory counters for the zones we are collecting.
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    zone->updateMemoryCountersOnGCStart();
+    zone->updateSchedulingStateOnGCStart();
   }
 }
 
@@ -2827,7 +2827,7 @@ void GCRuntime::finishCollection() {
 
   maybeStopPretenuring();
 
-  updateGCThresholdsAfterCollection();
+  updateSchedulingStateAfterCollection();
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->changeGCState(Zone::Finished, Zone::NoGC);
@@ -2904,8 +2904,14 @@ void GCRuntime::maybeStopPretenuring() {
   }
 }
 
-void GCRuntime::updateGCThresholdsAfterCollection() {
+void GCRuntime::updateSchedulingStateAfterCollection() {
+  TimeDuration totalGCTime = stats().totalGCTime();
+  size_t totalInitialBytes = stats().initialCollectedBytes();
+
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+    if (tunables.balancedHeapLimitsEnabled() && totalInitialBytes != 0) {
+      zone->updateCollectionRate(totalGCTime, totalInitialBytes);
+    }
     zone->clearGCSliceThresholds();
     zone->updateGCStartThresholds(*this);
   }
