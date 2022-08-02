@@ -405,6 +405,9 @@ static const bool PerZoneGCEnabled = false;
 /* JSGC_COMPACTING_ENABLED */
 static const bool CompactingEnabled = true;
 
+/* JSGC_BALANCED_HEAP_LIMITS_ENABLED */
+static const bool BalancedHeapLimitsEnabled = false;
+
 /* JSGC_INCREMENTAL_WEAKMAP_ENABLED */
 static const bool IncrementalWeakMapMarkingEnabled = true;
 
@@ -529,6 +532,11 @@ class GCSchedulingTunables {
   MainThreadData<double> lowFrequencyHeapGrowth_;
 
   /*
+   * JSGC_BALANCED_HEAP_LIMITS_ENABLED
+   */
+  MainThreadOrGCTaskData<bool> balancedHeapLimitsEnabled_;
+
+  /*
    * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION
    * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_FRACTION
    *
@@ -625,6 +633,7 @@ class GCSchedulingTunables {
     return highFrequencyLargeHeapGrowth_;
   }
   double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
+  bool balancedHeapLimitsEnabled() const { return balancedHeapLimitsEnabled_; }
   uint32_t nurseryFreeThresholdForIdleCollection() const {
     return nurseryFreeThresholdForIdleCollection_;
   }
