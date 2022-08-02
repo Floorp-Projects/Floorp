@@ -2737,6 +2737,10 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
     return compareType() == ins->toCompare()->compareType() &&
            jsop() == ins->toCompare()->jsop();
   }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
 };
 
 // Takes a typed value and returns an untyped value.

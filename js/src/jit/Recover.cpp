@@ -19,6 +19,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/VMFunctions.h"
 #include "vm/BigIntType.h"
+#include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
@@ -811,6 +812,73 @@ bool RBigIntBitNot::recover(JSContext* cx, SnapshotIterator& iter) const {
   }
 
   iter.storeInstructionResult(result);
+  return true;
+}
+
+bool MCompare::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_Compare));
+
+  static_assert(sizeof(JSOp) == sizeof(uint8_t));
+  writer.writeByte(uint8_t(jsop_));
+  return true;
+}
+
+RCompare::RCompare(CompactBufferReader& reader) {
+  jsop_ = JSOp(reader.readByte());
+
+  MOZ_ASSERT(IsEqualityOp(jsop_) || IsRelationalOp(jsop_));
+}
+
+bool RCompare::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedValue lhs(cx, iter.read());
+  RootedValue rhs(cx, iter.read());
+
+  bool result;
+  switch (jsop_) {
+    case JSOp::Eq:
+    case JSOp::Ne:
+      if (!js::LooselyEqual(cx, lhs, rhs, &result)) {
+        return false;
+      }
+      if (jsop_ == JSOp::Ne) {
+        result = !result;
+      }
+      break;
+    case JSOp::StrictEq:
+    case JSOp::StrictNe:
+      if (!StrictlyEqual(cx, lhs, rhs, &result)) {
+        return false;
+      }
+      if (jsop_ == JSOp::StrictNe) {
+        result = !result;
+      }
+      break;
+    case JSOp::Lt:
+      if (!js::LessThan(cx, &lhs, &rhs, &result)) {
+        return false;
+      }
+      break;
+    case JSOp::Le:
+      if (!js::LessThanOrEqual(cx, &lhs, &rhs, &result)) {
+        return false;
+      }
+      break;
+    case JSOp::Gt:
+      if (!js::GreaterThan(cx, &lhs, &rhs, &result)) {
+        return false;
+      }
+      break;
+    case JSOp::Ge:
+      if (!js::GreaterThanOrEqual(cx, &lhs, &rhs, &result)) {
+        return false;
+      }
+      break;
+    default:
+      MOZ_CRASH("Unexpected op.");
+  }
+
+  iter.storeInstructionResult(BooleanValue(result));
   return true;
 }
 
