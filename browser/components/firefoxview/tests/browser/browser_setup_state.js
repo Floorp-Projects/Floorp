@@ -62,7 +62,7 @@ async function setupWithDesktopDevices() {
       },
     ],
   });
-
+  // ensure tab sync is false so we don't skip onto next step
   await SpecialPowers.pushPrefEnv({
     set: [["services.sync.engine.tabs", true]],
   });
@@ -139,9 +139,6 @@ async function tearDown(sandbox) {
 }
 
 add_setup(async function() {
-  // we only use this for the first test, then we reset it
-  Services.prefs.lockPref("identity.fxaccounts.enabled");
-
   if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
     info(
       "firefox-view pref was off, toggling it on and adding the tabstrip widget"
@@ -173,55 +170,12 @@ add_setup(async function() {
   });
 });
 
-add_task(async function test_sync_admin_disabled() {
-  const sandbox = setupMocks({ state: UIState.STATUS_NOT_CONFIGURED });
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    is(
-      Services.prefs.getBoolPref("identity.fxaccounts.enabled"),
-      true,
-      "Expected identity.fxaccounts.enabled pref to be false"
-    );
-
-    is(
-      Services.prefs.prefIsLocked("identity.fxaccounts.enabled"),
-      true,
-      "Expected identity.fxaccounts.enabled pref to be locked"
-    );
-
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("disabled")
-    );
-
-    ok(
-      errorStateHeader
-        .getAttribute("data-l10n-id")
-        .includes("fxa-admin-disabled"),
-      "Correct message should show when fxa is disabled by an admin"
-    );
-  });
-  Services.prefs.unlockPref("identity.fxaccounts.enabled");
-  await tearDown(sandbox);
-});
-
 add_task(async function test_unconfigured_initial_state() {
   const sandbox = setupMocks({ state: UIState.STATUS_NOT_CONFIGURED });
   await withFirefoxView({}, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view1",
+      expectedVisible: "#tabpickup-steps-view0",
     });
     checkMobilePromo(browser, {
       mobilePromo: false,
@@ -243,11 +197,10 @@ add_task(async function test_signed_in() {
       },
     ],
   });
-
   await withFirefoxView({}, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view2",
+      expectedVisible: "#tabpickup-steps-view1",
     });
 
     is(
@@ -289,7 +242,7 @@ add_task(async function test_2nd_desktop_connected() {
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view3",
+      expectedVisible: "#tabpickup-steps-view2",
     });
 
     is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
@@ -333,7 +286,7 @@ add_task(async function test_mobile_connected() {
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view3",
+      expectedVisible: "#tabpickup-steps-view2",
     });
 
     is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
@@ -373,7 +326,7 @@ add_task(async function test_tab_sync_enabled() {
 
     // test initial state, with the pref not enabled
     await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view3",
+      expectedVisible: "#tabpickup-steps-view2",
     });
     checkMobilePromo(browser, {
       mobilePromo: false,
@@ -393,7 +346,7 @@ add_task(async function test_tab_sync_enabled() {
     // reset and test clicking the action button
     await SpecialPowers.popPrefEnv();
     await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view3",
+      expectedVisible: "#tabpickup-steps-view2",
     });
     checkMobilePromo(browser, {
       mobilePromo: false,
@@ -401,7 +354,7 @@ add_task(async function test_tab_sync_enabled() {
     });
 
     const actionButton = browser.contentWindow.document.querySelector(
-      "#tabpickup-steps-view3 button.primary"
+      "#tabpickup-steps-view2 button.primary"
     );
     actionButton.click();
 
@@ -717,79 +670,6 @@ add_task(async function test_mobile_promo_windows() {
       }
     );
     await BrowserTestUtils.closeWindow(win2);
-  });
-  await tearDown(sandbox);
-});
-
-add_task(async function test_network_offline() {
-  const sandbox = await setupWithDesktopDevices();
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    Services.obs.notifyObservers(
-      null,
-      "network:offline-status-changed",
-      "offline"
-    );
-    await waitForElementVisible(browser, "#tabpickup-steps", true);
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("connection")
-    );
-
-    ok(
-      errorStateHeader.getAttribute("data-l10n-id").includes("network-offline"),
-      "Correct message should show when network connection is lost"
-    );
-
-    Services.obs.notifyObservers(
-      null,
-      "network:offline-status-changed",
-      "online"
-    );
-
-    await waitForElementVisible(browser, "#tabpickup-tabs-container", true);
-  });
-  await tearDown(sandbox);
-});
-
-add_task(async function test_sync_error() {
-  const sandbox = await setupWithDesktopDevices();
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    Services.obs.notifyObservers(null, "weave:service:sync:error");
-
-    await waitForElementVisible(browser, "#tabpickup-steps", true);
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("trouble syncing")
-    );
-
-    ok(
-      errorStateHeader.getAttribute("data-l10n-id").includes("sync-error"),
-      "Correct message should show when there's a sync service error"
-    );
-
-    Services.obs.notifyObservers(null, "weave:service:sync:finished");
   });
   await tearDown(sandbox);
 });

@@ -24,7 +24,7 @@
   --colorways-grid-template-rows: auto auto auto;
   --colorways-figure-display: flex;
   --colorways-header-flex-direction: column;
-  --info-icon-background-color: #0090ED;
+
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 }
 
@@ -282,19 +282,6 @@ button.close {
   border-radius: 4px;
 }
 
-.error-state {
-  text-align: center;
-  padding: 0 0 20px;
-  border: 1px solid var(--fxview-contrast-border);
-  border-radius: 4px;
-}
-
-.error-state > h3 {
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 0;
-}
-
 .placeholder-content {
   text-align: center;
   padding: 24px 16px;
@@ -436,9 +423,12 @@ button.close {
 
 .synced-tabs-container > .loading-content {
   text-align: center;
-  color: var(--fxview-text-secondary-color);
-  margin-top: 40px;
-  padding: 20px 16px 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background: url(chrome://global/skin/icons/loading-dial.svg) no-repeat center top;
+  background-size: 32px;
+  margin-top: 32px;
+  padding: 48px 16px 16px;
 }
 
 .closed-tabs-list {
@@ -704,17 +694,6 @@ button.close {
   background-image: url('chrome://browser/skin/synced-tabs.svg');
 }
 
-.info {
-  background-image: url('chrome://global/skin/icons/info-filled.svg');
-}
-
-.error-state > .info {
-  vertical-align: text-top;
-  margin-inline-end: 7px;
-  margin-top: 1px;
-  color: var(--info-icon-background-color);
-}
-
 .favicon {
   background-size: cover;
   -moz-context-properties: fill;
@@ -724,25 +703,6 @@ button.close {
 .favicon, .icon, .synced-tab-li-favicon {
   width: 16px;
   height: 16px;
-}
-
-.sync {
-  background-image: url(chrome://browser/skin/sync.svg);
-  background-size: cover;
-  height: 19px;
-  width: 19px;
-  color: var(--fxview-text-secondary-color);
-}
-
-@keyframes syncRotate {
-  from { transform: rotate(0); }
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .sync {
-    animation: syncRotate 0.8s linear infinite;
-  }
 }
 
 .last-active-badge {
