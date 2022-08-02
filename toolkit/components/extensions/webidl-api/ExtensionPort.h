@@ -31,33 +31,6 @@ class ExtensionPort final : public nsISupports,
                             public nsWrapperCache,
                             public SupportsWeakPtr,
                             public ExtensionAPIBase {
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ExtensionBrowser> mExtensionBrowser;
-  RefPtr<ExtensionEventManager> mOnDisconnectEventMgr;
-  RefPtr<ExtensionEventManager> mOnMessageEventMgr;
-  UniquePtr<dom::ExtensionPortDescriptor> mPortDescriptor;
-  RefPtr<dom::Function> mCallback;
-
-  ~ExtensionPort() = default;
-  ExtensionPort(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
-                UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor);
-
-  void ForgetReleasedPort();
-
- protected:
-  // ExtensionAPIBase methods
-  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
-
-  ExtensionBrowser* GetExtensionBrowser() const override {
-    return mExtensionBrowser;
-  }
-
-  nsString GetAPINamespace() const override { return u"runtime"_ns; }
-
-  nsString GetAPIObjectType() const override { return u"Port"_ns; }
-
-  nsString GetAPIObjectId() const override;
-
  public:
   static already_AddRefed<ExtensionPort> Create(
       nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
@@ -85,6 +58,35 @@ class ExtensionPort final : public nsISupports,
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionPort)
+
+ protected:
+  // ExtensionAPIBase methods
+  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+
+  ExtensionBrowser* GetExtensionBrowser() const override {
+    return mExtensionBrowser;
+  }
+
+  nsString GetAPINamespace() const override { return u"runtime"_ns; }
+
+  nsString GetAPIObjectType() const override { return u"Port"_ns; }
+
+  nsString GetAPIObjectId() const override;
+
+ private:
+  ExtensionPort(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
+                UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor);
+
+  ~ExtensionPort() = default;
+
+  void ForgetReleasedPort();
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
+  RefPtr<ExtensionEventManager> mOnDisconnectEventMgr;
+  RefPtr<ExtensionEventManager> mOnMessageEventMgr;
+  UniquePtr<dom::ExtensionPortDescriptor> mPortDescriptor;
+  RefPtr<dom::Function> mCallback;
 };
 
 }  // namespace extensions

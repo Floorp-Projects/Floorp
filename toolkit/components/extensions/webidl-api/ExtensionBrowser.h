@@ -57,21 +57,6 @@ class ExtensionEventWakeupMap final
 };
 
 class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  JS::Heap<JS::Value> mLastError;
-  bool mCheckedLastError;
-  RefPtr<ExtensionAlarms> mExtensionAlarms;
-  RefPtr<ExtensionMockAPI> mExtensionMockAPI;
-  RefPtr<ExtensionRuntime> mExtensionRuntime;
-  RefPtr<ExtensionScripting> mExtensionScripting;
-  RefPtr<ExtensionTest> mExtensionTest;
-  nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
-
-  // `[APINamespace].[APIName]` => int64 (listeners count)
-  ExtensionEventWakeupMap mExpectedEventWakeupMap;
-
-  ~ExtensionBrowser() = default;
-
  public:
   explicit ExtensionBrowser(nsIGlobalObject* aGlobal);
 
@@ -125,6 +110,21 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionBrowser)
+
+ private:
+  ~ExtensionBrowser() = default;
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  JS::Heap<JS::Value> mLastError;
+  bool mCheckedLastError;
+  RefPtr<ExtensionAlarms> mExtensionAlarms;
+  RefPtr<ExtensionMockAPI> mExtensionMockAPI;
+  RefPtr<ExtensionRuntime> mExtensionRuntime;
+  RefPtr<ExtensionScripting> mExtensionScripting;
+  RefPtr<ExtensionTest> mExtensionTest;
+  nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
+  // `[APINamespace].[APIName]` => int64 (listeners count)
+  ExtensionEventWakeupMap mExpectedEventWakeupMap;
 };
 
 }  // namespace extensions

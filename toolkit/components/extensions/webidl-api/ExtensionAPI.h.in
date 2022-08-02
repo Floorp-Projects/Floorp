@@ -29,13 +29,6 @@ class ExtensionEventManager;
 class {{ webidl_name }} final : public nsISupports,
                                 public nsWrapperCache,
                                 public ExtensionAPINamespace {
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ExtensionBrowser> mExtensionBrowser;
-  // TODO: add RefPtr for the ExtensionEventManager instances if any.
-  // RefPtr<ExtensionEventManager> mOnEVENTNAMEEventMgr;
-
-  ~{{ webidl_name }}() = default;
-
  public:
   {{ webidl_name }}(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser);
 
@@ -65,6 +58,14 @@ class {{ webidl_name }} final : public nsISupports,
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS({{ webidl_name }})
+
+ private:
+  ~{{ webidl_name }}() = default;
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
+  // TODO: add RefPtr for the ExtensionEventManager instances if any.
+  // RefPtr<ExtensionEventManager> mOnEVENTNAMEEventMgr;
 };
 
 }  // namespace extensions
