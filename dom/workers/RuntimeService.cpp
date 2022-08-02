@@ -350,6 +350,8 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
            JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH),
       PREF("gc_small_heap_size_max_mb", JSGC_SMALL_HEAP_SIZE_MAX),
       PREF("gc_large_heap_size_min_mb", JSGC_LARGE_HEAP_SIZE_MIN),
+      PREF("gc_balanced_heap_limits", JSGC_BALANCED_HEAP_LIMITS_ENABLED),
+      PREF("gc_heap_growth_factor", JSGC_HEAP_GROWTH_FACTOR),
       PREF("gc_allocation_threshold_mb", JSGC_ALLOCATION_THRESHOLD),
       PREF("gc_malloc_threshold_base_mb", JSGC_MALLOC_THRESHOLD_BASE),
       PREF("gc_small_heap_incremental_limit",
@@ -408,7 +410,8 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
         UpdateOtherJSGCMemoryOption(rts, pref->key, value);
         break;
       }
-      case JSGC_COMPACTING_ENABLED: {
+      case JSGC_COMPACTING_ENABLED:
+      case JSGC_BALANCED_HEAP_LIMITS_ENABLED: {
         bool present;
         bool prefValue = GetPref(pref->fullName, false, &present);
         Maybe<uint32_t> value = present ? Some(prefValue ? 1 : 0) : Nothing();
@@ -428,6 +431,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       case JSGC_URGENT_THRESHOLD_MB:
       case JSGC_MIN_EMPTY_CHUNK_COUNT:
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
+      case JSGC_HEAP_GROWTH_FACTOR:
         UpdateCommonJSGCMemoryOption(rts, pref->fullName, pref->key);
         break;
       default:

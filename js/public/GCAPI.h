@@ -229,6 +229,7 @@ typedef enum JSGCParamKey {
    * Otherwise, heap limits are set based on a linear multiple of the retained
    * size after the last collection.
    *
+   * Pref: javascript.options.mem.gc_balanced_heap_limits
    * Default: BalancedHeapLimitsEnabled
    */
   JSGC_BALANCED_HEAP_LIMITS_ENABLED = 17,
@@ -239,6 +240,7 @@ typedef enum JSGCParamKey {
    * This parameter trades off GC time for memory usage. Smaller values result
    * in lower memory use and larger values result in less time spent collecting.
    *
+   * Pref: javascript.options.mem.gc_heap_growth_factor
    * Default: HeapGrowthFactor
    */
   JSGC_HEAP_GROWTH_FACTOR = 18,
