@@ -21,6 +21,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "nsISocketTransportService.h"
 #include "nsICancelable.h"
+#include "nsSocketTransportService2.h"
 
 #include "WebrtcTCPSocketCallback.h"
 #include "WebrtcTCPSocketLog.h"
