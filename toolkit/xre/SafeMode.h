@@ -39,9 +39,8 @@ inline Maybe<bool> IsSafeModeRequested(
     checkArgFlags |= CheckArgFlag::RemoveArg;
   }
 
-  ArgResult ar =
-      CheckArg(aArgc, aArgv, GetLiteral<CharT, FlagLiteral::safemode>(),
-               static_cast<const CharT**>(nullptr), checkArgFlags);
+  ArgResult ar = CheckArg(aArgc, aArgv, "safe-mode",
+                          static_cast<const CharT**>(nullptr), checkArgFlags);
   if (ar == ARG_BAD) {
     return Nothing();
   }

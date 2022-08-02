@@ -21,6 +21,9 @@ bool CheckArgv(char** aArgv, const char* const (&aExpected)[N]) {
     if (aArgv[i] == nullptr && aExpected[i] == nullptr) {
       return true;
     }
+    if (aArgv[i] == nullptr || aExpected[i] == nullptr) {
+      return false;
+    }
     if (strcmp(aArgv[i], aExpected[i]) != 0) {
       return false;
     }
