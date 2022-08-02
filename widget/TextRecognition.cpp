@@ -34,34 +34,35 @@ auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface)
     -> RefPtr<NativePromise> {
   if (XRE_IsContentProcess()) {
     auto* contentChild = ContentChild::GetSingleton();
-    auto image = nsContentUtils::SurfaceToIPCImage(aSurface, contentChild);
+    auto image = nsContentUtils::SurfaceToIPCImage(aSurface);
     if (!image) {
       return NativePromise::CreateAndReject("Failed to share data surface"_ns,
                                             __func__);
     }
     auto promise = MakeRefPtr<NativePromise::Private>(__func__);
-    contentChild->SendFindImageText(*image)->Then(
-        GetCurrentSerialEventTarget(), __func__,
-        [promise](TextRecognitionResultOrError&& aResultOrError) {
-          switch (aResultOrError.type()) {
-            case TextRecognitionResultOrError::Type::TTextRecognitionResult:
-              promise->Resolve(
-                  std::move(aResultOrError.get_TextRecognitionResult()),
-                  __func__);
-              break;
-            case TextRecognitionResultOrError::Type::TnsCString:
-              promise->Reject(std::move(aResultOrError.get_nsCString()),
-                              __func__);
-              break;
-            default:
-              MOZ_ASSERT_UNREACHABLE("Unknown result?");
-              promise->Reject("Unknown error"_ns, __func__);
-              break;
-          }
-        },
-        [promise](mozilla::ipc::ResponseRejectReason) {
-          promise->Reject("IPC rejection"_ns, __func__);
-        });
+    contentChild->SendFindImageText(std::move(*image))
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [promise](TextRecognitionResultOrError&& aResultOrError) {
+              switch (aResultOrError.type()) {
+                case TextRecognitionResultOrError::Type::TTextRecognitionResult:
+                  promise->Resolve(
+                      std::move(aResultOrError.get_TextRecognitionResult()),
+                      __func__);
+                  break;
+                case TextRecognitionResultOrError::Type::TnsCString:
+                  promise->Reject(std::move(aResultOrError.get_nsCString()),
+                                  __func__);
+                  break;
+                default:
+                  MOZ_ASSERT_UNREACHABLE("Unknown result?");
+                  promise->Reject("Unknown error"_ns, __func__);
+                  break;
+              }
+            },
+            [promise](mozilla::ipc::ResponseRejectReason) {
+              promise->Reject("IPC rejection"_ns, __func__);
+            });
     return promise;
   }
   return DoFindText(aSurface);

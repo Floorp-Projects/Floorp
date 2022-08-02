@@ -444,8 +444,8 @@ union TextRecognitionResultOrError {
     nsCString;
 };
 
-struct ShmemImage {
-    Shmem data;
+struct IPCImage {
+    BigBuffer data;
     uint32_t stride;
     SurfaceFormat format;
     ImageIntSize size;
@@ -1238,7 +1238,7 @@ parent:
 
     async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
 
-    async FindImageText(ShmemImage image) returns (TextRecognitionResultOrError result);
+    async FindImageText(IPCImage image) returns (TextRecognitionResultOrError result);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.
