@@ -40,3 +40,4 @@ browser.jar:
   skin/classic/browser/window-controls/restore-highcontrast.svg  (window-controls/restore-highcontrast.svg)
   skin/classic/browser/window-controls/restore-themes.svg        (window-controls/restore-themes.svg)
   skin/classic/browser/e10s-64@2x.png                            (../shared/e10s-64@2x.png)
+  skin/classic/browser/history-swipe-arrow.svg                   (swipe-gesture-icons/history-swipe-arrow.svg)
