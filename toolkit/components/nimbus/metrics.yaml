@@ -33,14 +33,19 @@ nimbus_events:
         description: Indicates whether this is an experiemnt or rollout
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_sensitivity:
       - technical
     notification_emails:
       - tlong@mozilla.com
       - nimbus-team@mozilla.com
     expires: never
+    send_in_pings:
+      - background-update
+      - events
   enroll_failed:
     type: event
     description: >
@@ -57,14 +62,19 @@ nimbus_events:
         description: If reason == "invalid-branch", this is the invalid branch.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_sensitivity:
       - technical
     notification_emails:
       - tlong@mozilla.com
       - nimbus-team@mozilla.com
     expires: never
+    send_in_pings:
+      - background-update
+      - events
   unenrollment:
     type: event
     description: >
@@ -86,14 +96,19 @@ nimbus_events:
         description: The reason for the unenrollment
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_sensitivity:
       - technical
     notification_emails:
       - tlong@mozilla.com
       - nimbus-team@mozilla.com
     expires: never
+    send_in_pings:
+      - background-update
+      - events
   unenroll_failed:
     type: event
     description: >
@@ -107,14 +122,19 @@ nimbus_events:
         description: The reason for the unenrollment failure
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_sensitivity:
       - technical
     notification_emails:
       - tlong@mozilla.com
       - nimbus-team@mozilla.com
     expires: never
+    send_in_pings:
+      - background-update
+      - events
   exposure:
     type: event
     description: >
@@ -133,14 +153,19 @@ nimbus_events:
         description: A unique identifier for the feature that was exposed
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_sensitivity:
       - technical
     notification_emails:
       - tlong@mozilla.com
       - nimbus-team@mozilla.com
     expires: never
+    send_in_pings:
+      - background-update
+      - events
   validation_failed:
     type: event
     description: >
@@ -163,10 +188,15 @@ nimbus_events:
         description: If reason == invalid-feature, the invalid feature ID.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1762652
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1762652
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
     data_sensitivity:
       - technical
     notification_emails:
       - barret@mozilla.com
     expires: never
+    send_in_pings:
+      - background-update
+      - events
