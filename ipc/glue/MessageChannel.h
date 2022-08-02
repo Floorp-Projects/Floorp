@@ -316,7 +316,7 @@ class MessageChannel : HasResultCodes {
 #ifdef FUZZING_SNAPSHOT
   Maybe<mojo::core::ports::PortName> GetPortName() {
     MonitorAutoLock lock(*mMonitor);
-    return mLink->GetPortName();
+    return mLink ? mLink->GetPortName() : Nothing();
   }
 #endif
 
