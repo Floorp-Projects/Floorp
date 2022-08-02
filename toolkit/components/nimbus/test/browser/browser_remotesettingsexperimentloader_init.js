@@ -32,7 +32,7 @@ function getRecipe(slug) {
 
 add_task(async function test_double_feature_enrollment() {
   let sandbox = sinon.createSandbox();
-  let { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper();
+  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
   let sendFailureTelemetryStub = sandbox.stub(
     ExperimentManager,
     "sendFailureTelemetry"
