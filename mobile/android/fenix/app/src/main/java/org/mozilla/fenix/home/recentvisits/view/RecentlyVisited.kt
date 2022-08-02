@@ -5,10 +5,8 @@
 package org.mozilla.fenix.home.recentvisits.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
@@ -40,17 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
-import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -103,87 +96,11 @@ fun RecentlyVisited(
                                     onRecentVisitClick(it, pageIndex + 1)
                                 }
                             )
-                            is RecentHistoryGroup -> RecentlyVisitedHistoryGroup(
-                                recentVisit = recentVisit,
-                                menuItems = menuItems,
-                                clickableEnabled = listState.atLeastHalfVisibleItems.contains(pageIndex),
-                                showDividerLine = index < items.size - 1,
-                                onRecentVisitClick = {
-                                    onRecentVisitClick(it, pageIndex + 1)
-                                }
-                            )
                         }
                     }
                 }
             }
         }
-    }
-}
-
-/**
- * A recently visited history group.
- *
- * @param recentVisit The [RecentHistoryGroup] to display.
- * @param menuItems List of [RecentVisitMenuItem] to display in a recent visit dropdown menu.
- * @param clickableEnabled Whether click actions should be invoked or not.
- * @param showDividerLine Whether to show a divider line at the bottom.
- * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun RecentlyVisitedHistoryGroup(
-    recentVisit: RecentHistoryGroup,
-    menuItems: List<RecentVisitMenuItem>,
-    clickableEnabled: Boolean,
-    showDividerLine: Boolean,
-    onRecentVisitClick: (RecentHistoryGroup) -> Unit = { _ -> },
-) {
-    var isMenuExpanded by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .combinedClickable(
-                enabled = clickableEnabled,
-                onClick = { onRecentVisitClick(recentVisit) },
-                onLongClick = { isMenuExpanded = true }
-            )
-            .size(268.dp, 56.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_multiple_tabs),
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            RecentlyVisitedTitle(
-                text = recentVisit.title,
-                modifier = Modifier
-                    .padding(top = 7.dp, bottom = 2.dp)
-                    .weight(1f)
-            )
-
-            RecentlyVisitedCaption(
-                count = recentVisit.historyMetadata.size,
-                modifier = Modifier.weight(1f)
-            )
-
-            if (showDividerLine) {
-                RecentlyVisitedDivider()
-            }
-        }
-
-        RecentlyVisitedMenu(
-            showMenu = isMenuExpanded,
-            menuItems = menuItems,
-            recentVisit = recentVisit,
-            onDismissRequest = { isMenuExpanded = false }
-        )
     }
 }
 
@@ -259,36 +176,6 @@ private fun RecentlyVisitedTitle(
         fontSize = 16.sp,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
-    )
-}
-
-/**
- * The caption text for a recent visit.
- *
- * @param count Number of recently visited items to display in the caption.
- * @param modifier [Modifier] allowing to perfectly place this.
- */
-@Composable
-private fun RecentlyVisitedCaption(
-    count: Int,
-    modifier: Modifier
-) {
-    val stringId = if (count == 1) {
-        R.string.history_search_group_site
-    } else {
-        R.string.history_search_group_sites
-    }
-
-    Text(
-        text = String.format(LocalContext.current.getString(stringId), count),
-        modifier = modifier,
-        color = when (isSystemInDarkTheme()) {
-            true -> FirefoxTheme.colors.textPrimary
-            false -> FirefoxTheme.colors.textSecondary
-        },
-        fontSize = 12.sp,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = 1
     )
 }
 
@@ -373,10 +260,14 @@ private fun RecentlyVisitedPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         RecentlyVisited(
             recentVisits = listOf(
-                RecentHistoryGroup(title = "running shoes"),
-                RecentHistoryGroup(title = "mozilla"),
-                RecentHistoryGroup(title = "firefox"),
-                RecentHistoryGroup(title = "pocket")
+                RecentHistoryHighlight(
+                    title = "Google",
+                    url = "www.google.com",
+                ),
+                RecentHistoryHighlight(
+                    title = "Firefox",
+                    url = "www.firefox.com",
+                ),
             ),
             menuItems = emptyList()
         )

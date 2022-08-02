@@ -16,7 +16,6 @@ import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStory
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
-import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -161,13 +160,6 @@ internal fun getFilteredSponsoredStories(
         .take(limit)
         .toList()
 }
-
-/**
- * Get the [SearchGroup] shown in the "Jump back in" section.
- * May be null if no search group is shown.
- */
-internal val AppState.recentSearchGroup: SearchGroup?
-    get() = recentTabs.find { it is SearchGroup } as SearchGroup?
 
 /**
  * Filter a [AppState] by the blocklist.

@@ -23,7 +23,6 @@ import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInterac
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
-import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
@@ -402,16 +401,6 @@ class SessionControlInteractor(
 
     override fun onHistoryShowAllClicked() {
         recentVisitsController.handleHistoryShowAllClicked()
-    }
-
-    override fun onRecentHistoryGroupClicked(recentHistoryGroup: RecentHistoryGroup) {
-        recentVisitsController.handleRecentHistoryGroupClicked(
-            recentHistoryGroup
-        )
-    }
-
-    override fun onRemoveRecentHistoryGroup(groupTitle: String) {
-        recentVisitsController.handleRemoveRecentHistoryGroup(groupTitle)
     }
 
     override fun onRecentHistoryHighlightClicked(recentHistoryHighlight: RecentHistoryHighlight) {

@@ -60,7 +60,6 @@ sealed class AppAction : Action {
     data class RemoveRecentBookmark(val recentBookmark: RecentBookmark) : AppAction()
     data class RecentHistoryChange(val recentHistory: List<RecentlyVisitedItem>) : AppAction()
     data class RemoveRecentHistoryHighlight(val highlightUrl: String) : AppAction()
-    data class DisbandSearchGroupAction(val searchTerm: String) : AppAction()
     /**
      * Indicates the given [categoryName] was selected by the user.
      */

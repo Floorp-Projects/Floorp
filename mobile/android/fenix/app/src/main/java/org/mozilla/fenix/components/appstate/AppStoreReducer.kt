@@ -4,18 +4,15 @@
 
 package org.mozilla.fenix.components.appstate
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.ext.recordNewImpression
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
-import org.mozilla.fenix.ext.recentSearchGroup
 import org.mozilla.fenix.gleanplumb.state.MessagingReducer
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
-import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 
 /**
  * Reducer for [AppStore].
@@ -88,14 +85,6 @@ internal object AppStoreReducer {
         is AppAction.RemoveRecentHistoryHighlight -> state.copy(
             recentHistory = state.recentHistory.filterNot {
                 it is RecentlyVisitedItem.RecentHistoryHighlight && it.url == action.highlightUrl
-            }
-        )
-        is AppAction.DisbandSearchGroupAction -> state.copy(
-            recentHistory = state.recentHistory.filterNot {
-                it is RecentHistoryGroup && (
-                    it.title.equals(action.searchTerm, true) ||
-                        it.title.equals(state.recentSearchGroup?.searchTerm, true)
-                    )
             }
         )
         is AppAction.SelectPocketStoriesCategory -> {
@@ -203,18 +192,5 @@ internal object AppStoreReducer {
             state.copy(
                 wallpaperState = state.wallpaperState.copy(availableWallpapers = action.wallpapers)
             )
-    }
-}
-
-/**
- * Removes a [RecentHistoryGroup] identified by [groupTitle] if it exists in the current list.
- *
- * @param groupTitle [RecentHistoryGroup.title] of the item that should be removed.
- */
-@VisibleForTesting
-internal fun List<RecentlyVisitedItem>.filterOut(groupTitle: String?): List<RecentlyVisitedItem> {
-    return when (groupTitle != null) {
-        true -> filterNot { it is RecentHistoryGroup && it.title.equals(groupTitle, true) }
-        false -> this
     }
 }
