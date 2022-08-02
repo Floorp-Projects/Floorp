@@ -949,8 +949,15 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
           ((aDecodedFrame->Height() + 1) / 2);
   int32_t size = length.value();
   MOZ_RELEASE_ASSERT(length.isValid() && size > 0);
-  auto buffer = MakeUniqueFallible<uint8_t[]>(size);
-  if (buffer) {
+
+  // Don't use MakeUniqueFallible here, because UniquePtr isn't copyable, and
+  // the closure below in WrapI420Buffer uses std::function which _is_ copyable.
+  // We'll alloc the buffer here, so we preserve the "fallible" nature, and
+  // then hand a shared_ptr, which is copyable, to WrapI420Buffer.
+  auto falliblebuffer = new (std::nothrow) uint8_t[size];
+  if (falliblebuffer) {
+    auto buffer = std::shared_ptr<uint8_t>(falliblebuffer);
+
     // This is 3 separate buffers currently anyways, no use in trying to
     // see if we can use a single memcpy.
     uint8_t* buffer_y = buffer.get();
@@ -971,13 +978,16 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
     MutexAutoLock lock(mCallbackMutex);
     if (mCallback) {
+      // Note: the last parameter to WrapI420Buffer is named no_longer_used,
+      // but is currently called in the destructor of WrappedYuvBuffer when
+      // the buffer is "no_longer_used".
       rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =
           webrtc::WrapI420Buffer(aDecodedFrame->Width(),
                                  aDecodedFrame->Height(), buffer_y,
                                  aDecodedFrame->Stride(kGMPYPlane), buffer_u,
                                  aDecodedFrame->Stride(kGMPUPlane), buffer_v,
                                  aDecodedFrame->Stride(kGMPVPlane),
-                                 [buf = buffer.release()] {});
+                                 [buffer] {});
 
       GMP_LOG_DEBUG("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp());
       auto videoFrame =
