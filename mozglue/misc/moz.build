@@ -61,10 +61,12 @@ if CONFIG["CPU_ARCH"].startswith("x86"):
 if not CONFIG["JS_STANDALONE"]:
     EXPORTS.mozilla += [
         "ProcessType.h",
+        "RuntimeExceptionModule.h",
     ]
 
     SOURCES += [
         "ProcessType.cpp",
+        "RuntimeExceptionModule.cpp",
     ]
 
 OS_LIBS += CONFIG["REALTIME_LIBS"]
