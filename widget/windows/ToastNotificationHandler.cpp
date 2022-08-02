@@ -12,6 +12,7 @@
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Result.h"
+#include "mozilla/Tokenizer.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
@@ -85,6 +86,7 @@ static bool SetAttribute(IXmlElement* element, const HStringReference& name,
 
 static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
                           const nsAString& actionTitle,
+                          const nsAString& launchArg,
                           const nsAString& actionArgs,
                           const nsAString& actionPlacement = u""_ns) {
   ComPtr<IXmlElement> action;
@@ -96,8 +98,15 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
       SetAttribute(action.Get(), HStringReference(L"content"), actionTitle);
   NS_ENSURE_TRUE(success, false);
 
-  success =
-      SetAttribute(action.Get(), HStringReference(L"arguments"), actionArgs);
+  // Action arguments overwrite the toast's launch arguments, so we need to
+  // prepend the launch arguments necessary for the Notification Server to
+  // reconstruct the toast's origin.
+  //
+  // Web Notification actions are arbitrary strings; to prevent breaking launch
+  // argument parsing the action argument must be last. All delimiters after
+  // `action` are part of the action arugment.
+  nsAutoString args = launchArg + u"\naction\n"_ns + actionArgs;
+  success = SetAttribute(action.Get(), HStringReference(L"arguments"), args);
   NS_ENSURE_TRUE(success, false);
 
   if (!actionPlacement.IsEmpty()) {
@@ -345,14 +354,14 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     NS_ENSURE_SUCCESS(ns, nullptr);
 
     AddActionNode(toastXml.Get(), actionsNode.Get(), disableButtonTitle,
-                  u"snooze"_ns, u"contextmenu"_ns);
+                  launchArg, u"snooze"_ns, u"contextmenu"_ns);
   }
 
   nsAutoString settingsButtonTitle;
   bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
   success =
       AddActionNode(toastXml.Get(), actionsNode.Get(), settingsButtonTitle,
-                    u"settings"_ns, u"contextmenu"_ns);
+                    launchArg, u"settings"_ns, u"contextmenu"_ns);
   NS_ENSURE_TRUE(success, nullptr);
 
   for (const auto& action : mActions) {
@@ -365,8 +374,8 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     ns = action->GetAction(actionString);
     NS_ENSURE_SUCCESS(ns, nullptr);
 
-    success =
-        AddActionNode(toastXml.Get(), actionsNode.Get(), title, actionString);
+    success = AddActionNode(toastXml.Get(), actionsNode.Get(), title, launchArg,
+                            actionString);
     NS_ENSURE_TRUE(success, nullptr);
   }
 
@@ -514,7 +523,8 @@ HRESULT
 ToastNotificationHandler::OnActivate(IToastNotification* notification,
                                      IInspectable* inspectable) {
   if (mAlertListener) {
-    nsAutoString argString;
+    // Extract the `action` value from the argument string.
+    nsAutoString actionString;
     if (inspectable) {
       ComPtr<IToastActivatedEventArgs> eventArgs;
       HRESULT hr = inspectable->QueryInterface(
@@ -524,17 +534,36 @@ ToastNotificationHandler::OnActivate(IToastNotification* notification,
         hr = eventArgs->get_Arguments(arguments.GetAddressOf());
         if (SUCCEEDED(hr)) {
           uint32_t len = 0;
-          const wchar_t* buffer = arguments.GetRawBuffer(&len);
+          const char16_t* buffer = (char16_t*)arguments.GetRawBuffer(&len);
           if (buffer) {
-            argString.Assign(buffer, len);
+            // Toast arguments are a newline separated key/value combination of
+            // launch arguments and an optional action argument provided as an
+            // argument to the toast's constructor. After the `action` key is
+            // found, the remainder of toast argument (including newlines) is
+            // the `action` value.
+            Tokenizer16 parse(buffer);
+            nsDependentSubstring token;
+
+            while (parse.ReadUntil(Tokenizer16::Token::NewLine(), token)) {
+              if (token == u"action"_ns) {
+                Unused << parse.ReadUntil(Tokenizer16::Token::EndOfFile(),
+                                          actionString);
+              } else {
+                // Next line is a value in a key/value pair, skip.
+                parse.SkipUntil(Tokenizer16::Token::NewLine());
+              }
+              // Skip newline.
+              Tokenizer16::Token unused;
+              Unused << parse.Next(unused);
+            }
           }
         }
       }
     }
 
-    if (argString.EqualsLiteral("settings")) {
+    if (actionString.EqualsLiteral("settings")) {
       mAlertListener->Observe(nullptr, "alertsettingscallback", mCookie.get());
-    } else if (argString.EqualsLiteral("snooze")) {
+    } else if (actionString.EqualsLiteral("snooze")) {
       mAlertListener->Observe(nullptr, "alertdisablecallback", mCookie.get());
     } else if (mClickable) {
       // When clicking toast, focus moves to another process, but we want to set

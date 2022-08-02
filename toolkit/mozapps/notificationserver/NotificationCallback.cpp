@@ -44,6 +44,10 @@ HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
       }
     } else if (key == L"profile") {
       profile = value;
+    } else if (key == L"action") {
+      // Remainder of args are from the Web Notification action, don't parse.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1781929.
+      break;
     }
   }
 
