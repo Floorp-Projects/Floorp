@@ -5,7 +5,7 @@
 use api::{ColorF, DebugFlags, FontRenderMode, PremultipliedColorF};
 use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer, CommandBufferList};
-use crate::clip::ClipStore;
+use crate::clip::{ClipStore, ClipTree};
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
@@ -164,6 +164,7 @@ pub struct FrameBuildingState<'a> {
     pub plane_splitters: &'a mut [PlaneSplitter],
     pub surface_builder: SurfaceBuilder,
     pub cmd_buffers: &'a mut CommandBufferList,
+    pub clip_tree: &'a ClipTree,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -378,6 +379,7 @@ impl FrameBuilder {
             plane_splitters: &mut scene.plane_splitters,
             surface_builder: SurfaceBuilder::new(),
             cmd_buffers,
+            clip_tree: &mut scene.clip_tree,
         };
 
         // Push a default dirty region which culls primitives
