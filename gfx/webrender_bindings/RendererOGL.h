@@ -135,6 +135,8 @@ class RendererOGL {
 
   bool EnsureAsyncScreenshot();
 
+  void FlushScreenshotsQueue();
+
  protected:
   /**
    * Determine if any content pipelines updated, and update
@@ -149,7 +151,7 @@ class RendererOGL {
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
-
+  TimeStamp mLastUpdateAndRenderEndTime;
   bool mDisableNativeCompositor;
 
   RendererScreenshotGrabber mScreenshotGrabber;
@@ -166,6 +168,9 @@ class RendererOGL {
   std::unordered_map<uint64_t, wr::Epoch> mContentPipelineEpochs;
 
   RefPtr<WebRenderPipelineInfo> mLastPipelineInfo;
+
+  RefPtr<nsITimer> mProcessScreenshotQueueTimer;
+  bool mProcessScreenshotQueueTimerRunning = false;
 };
 
 }  // namespace wr

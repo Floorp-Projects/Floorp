@@ -45,6 +45,8 @@ class RendererScreenshotGrabber final {
    */
   void MaybeProcessQueue(RendererOGL* aRenderer);
 
+  bool HaveScreenshotsToFlush();
+
  private:
   /**
    * Drop all our allocated memory when we are no longer profiling.

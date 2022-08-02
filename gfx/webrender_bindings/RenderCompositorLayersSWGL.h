@@ -88,6 +88,8 @@ class RenderCompositorLayersSWGL : public RenderCompositor {
   bool MaybeGrabScreenshot(const gfx::IntSize& aWindowSize) override;
   bool MaybeProcessScreenshotQueue() override;
 
+  bool HaveScreenshotsToFlush() override;
+
   // TODO: Screenshots etc
 
   struct TileKey {

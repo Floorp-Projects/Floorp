@@ -228,6 +228,14 @@ bool RenderCompositorNative::MaybeProcessScreenshotQueue() {
   return true;
 }
 
+bool RenderCompositorNative::HaveScreenshotsToFlush() {
+  if (!ShouldUseNativeCompositor()) {
+    return false;
+  }
+
+  return mProfilerScreenshotGrabber.HaveScreenshotsToFlush();
+}
+
 void RenderCompositorNative::CompositorBeginFrame() {
   mAddedLayers.Clear();
   mAddedTilePixelCount = 0;
