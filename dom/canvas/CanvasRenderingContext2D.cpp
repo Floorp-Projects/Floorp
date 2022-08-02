@@ -2327,9 +2327,9 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
         return nullptr;
       }
 
-      RefPtr<CanvasPattern> pat =
-          new CanvasPattern(this, srcSurf, repeatMode, nullptr,
-                            offscreenCanvas->IsWriteOnly(), false);
+      RefPtr<CanvasPattern> pat = new CanvasPattern(
+          this, srcSurf, repeatMode, srcCanvas->PrincipalOrNull(),
+          offscreenCanvas->IsWriteOnly(), false);
 
       return pat.forget();
     }
