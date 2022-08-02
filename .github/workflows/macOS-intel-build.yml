@@ -15,9 +15,11 @@ jobs:
         ./mach bootstrap
          echo -e "ac_add_options --disable-updater\\nac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=/Users/runner/work/Floorp/Floorp/l10n-central/l10n-central" >> mozconfig
         ./mach configure
-    - name: Build & Package
+    - name: 🔨Build
       run: |        
         ./mach build
+      name: Package
+      run: |       
         MOZ_CHROME_MULTILOCALE=("ar" "cs" "da" "de" "el" "en-GB" "en-US" "es-ES" "es-MX" "fr" "hu" "id" "it" "ja" "ja-KA" "ko" "lt" "nl" "nn-NO" "pl" "pt-BR" "pt-PT" "ru" "sv-SE" "th" "vi" "zh-CN" "zh-TW") 
         for i in ${MOZ_CHROME_MULTILOCALE[@]}; do 
         ./mach build chrome-$i; done
