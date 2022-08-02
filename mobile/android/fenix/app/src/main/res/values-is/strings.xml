@@ -747,7 +747,7 @@
     <string name="pwa_site_controls_title_private">%1$s (huliðshamur)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Aðrir flipar</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Aðrir flipar</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1153,7 +1153,18 @@
     <string name="delete_browsing_data_on_quit_action">Hætta</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Þetta mun eyða öllum vafragögnum þínum.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Þetta mun eyða öllum vafragögnum þínum.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Tímabil sem á að hreinsa</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Fjarlægir feril (þar á meðal feril samstilltan úr öðrum tækjum), vefkökur og önnur vafragögn.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Síðustu klukkustund</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Í dag og í gær</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Allt</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s mun eyða völdum vafragögnum.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1165,8 +1176,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Eyði vafragögnum…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Þetta mun eyða öllum atriðum.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Eyða öllum vefsvæðum í “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Hætta við</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1580,8 +1591,6 @@
     <string name="addresses_edit_address">Breyt tölvupóstfangi</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Sýsla með tölvupóstföng</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Fullt nafn</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Skírnarnafn</string>
     <!-- The header for the middle name of an address -->
