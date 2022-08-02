@@ -302,6 +302,7 @@ addAccessibleTask(
   <tr id="r1"><td>a</td><td id="b">b</td></tr>
   <tr id="r2" hidden><td>c</td><td>d</td></tr>
 </table>
+<div id="owner"></div>
   `,
   async function(browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
@@ -312,7 +313,7 @@ addAccessibleTask(
     testTableIndexes(table, [[0, 1]]);
     info("Showing r2");
     let reordered = waitForEvent(EVENT_REORDER, table);
-    setNodeHidden(browser, "r2", false);
+    await setNodeHidden(browser, "r2", false);
     await reordered;
     is(table.rowCount, 2, "table rowCount correct");
     testTableIndexes(table, [
@@ -321,21 +322,35 @@ addAccessibleTask(
     ]);
     info("Hiding r2");
     reordered = waitForEvent(EVENT_REORDER, table);
-    setNodeHidden(browser, "r2", true);
+    await setNodeHidden(browser, "r2", true);
     await reordered;
     is(table.rowCount, 1, "table rowCount correct");
     testTableIndexes(table, [[0, 1]]);
     info("Hiding b");
     reordered = waitForEvent(EVENT_REORDER, "r1");
-    setNodeHidden(browser, "b", true);
+    await setNodeHidden(browser, "b", true);
     await reordered;
     is(table.columnCount, 1, "table columnCount correct");
     testTableIndexes(table, [[0]]);
     info("Showing b");
     reordered = waitForEvent(EVENT_REORDER, "r1");
-    setNodeHidden(browser, "b", false);
+    await setNodeHidden(browser, "b", false);
     await reordered;
     is(table.columnCount, 2, "table columnCount correct");
+    if (isCacheEnabled) {
+      info("Moving b out of table using aria-owns");
+      reordered = waitForEvent(EVENT_REORDER, "r1");
+      await invokeContentTask(browser, [], () => {
+        content.document.getElementById("owner").setAttribute("aria-owns", "b");
+      });
+      await reordered;
+      is(table.columnCount, 1, "table columnCount correct");
+    } else {
+      todo(
+        false,
+        "CachedTableAccessible disabled, so counts broken when cell moved with aria-owns"
+      );
+    }
   },
   {
     chrome: true,
