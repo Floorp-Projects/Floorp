@@ -45,6 +45,7 @@ testChangeParam("largeHeapSizeMin");
 testChangeParam("highFrequencySmallHeapGrowth");
 testChangeParam("highFrequencyLargeHeapGrowth");
 testChangeParam("lowFrequencyHeapGrowth");
+testChangeParam("balancedHeapLimitsEnabled");
 testChangeParam("allocationThreshold");
 testChangeParam("smallHeapIncrementalLimit");
 testChangeParam("largeHeapIncrementalLimit");

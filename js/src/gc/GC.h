@@ -60,6 +60,7 @@ struct Cell;
   _("highFrequencyLargeHeapGrowth", JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH, \
     true)                                                                  \
   _("lowFrequencyHeapGrowth", JSGC_LOW_FREQUENCY_HEAP_GROWTH, true)        \
+  _("balancedHeapLimitsEnabled", JSGC_BALANCED_HEAP_LIMITS_ENABLED, true)  \
   _("allocationThreshold", JSGC_ALLOCATION_THRESHOLD, true)                \
   _("smallHeapIncrementalLimit", JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, true)  \
   _("largeHeapIncrementalLimit", JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, true)  \
