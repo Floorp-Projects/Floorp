@@ -63,6 +63,12 @@ widget/gtk/MPRISInterfaceDescription.h
 xpcom/reflect/xptcall/md/win32/.*
 xpcom/reflect/xptcall/md/unix/.*
 
+# Askama template code, which isn't valid C++ in its original form
+toolkit/components/uniffi-bindgen-gecko-js/src/templates/.*
+# Generated from that template code
+toolkit/components/uniffi-js/UniFFIGeneratedScaffolding.cpp
+toolkit/components/uniffi-js/UniFFIFixtureScaffolding.cpp
+
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print ""$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
 browser/components/translation/cld2/.*
