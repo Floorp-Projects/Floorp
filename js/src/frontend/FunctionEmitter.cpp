@@ -631,12 +631,15 @@ bool FunctionScriptEmitter::emitEndBody() {
     }
   }
 
-  // Always end the script with a JSOp::RetRval. Some other parts of the
-  // codebase depend on this opcode,
-  // e.g. InterpreterRegs::setToEndOfScript.
-  if (!bce_->emitReturnRval()) {
-    //              [stack]
-    return false;
+  // Emit JSOp::RetRval except for sync arrow function with expression body
+  // which always ends with JSOp::Return. Other parts of the codebase depend
+  // on these opcodes being the last opcode.
+  // See JSScript::lastPC and BaselineCompiler::emitBody.
+  if (!funbox_->hasExprBody() || funbox_->isAsync()) {
+    if (!bce_->emitReturnRval()) {
+      //            [stack]
+      return false;
+    }
   }
 
   if (namedLambdaEmitterScope_) {

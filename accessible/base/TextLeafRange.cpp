@@ -391,12 +391,7 @@ class BlockRule : public PivotRule {
  public:
   virtual uint16_t Match(Accessible* aAcc) override {
     if (RefPtr<nsAtom>(aAcc->DisplayStyle()) == nsGkAtoms::block ||
-        aAcc->IsHTMLListItem() ||
-        // XXX Bullets are inline-block, but the old local implementation treats
-        // them as block because IsBlockFrame() returns true. Semantically,
-        // they shouldn't be treated as blocks, so this should be removed once
-        // we only have a single implementation to deal with.
-        (aAcc->IsText() && aAcc->Role() == roles::LISTITEM_MARKER)) {
+        aAcc->IsHTMLListItem()) {
       return nsIAccessibleTraversalRule::FILTER_MATCH;
     }
     return nsIAccessibleTraversalRule::FILTER_IGNORE;
@@ -444,14 +439,24 @@ TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
   if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && aAcc->HasChildren()) {
     // Find a leaf. This might not necessarily be a TextLeafAccessible; it
     // could be an empty container.
-    for (Accessible* acc = aAcc->FirstChild(); acc; acc = acc->FirstChild()) {
+    auto GetChild = [&aOffset](Accessible* acc) -> Accessible* {
+      return aOffset != nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT
+                 ? acc->FirstChild()
+                 : acc->LastChild();
+    };
+
+    for (Accessible* acc = GetChild(aAcc); acc; acc = GetChild(acc)) {
       mAcc = acc;
     }
-    mOffset = 0;
+    mOffset = aOffset != nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT
+                  ? 0
+                  : nsAccUtils::TextLength(mAcc);
     return;
   }
   mAcc = aAcc;
-  mOffset = aOffset;
+  mOffset = aOffset != nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT
+                ? aOffset
+                : nsAccUtils::TextLength(mAcc);
 }
 
 bool TextLeafPoint::operator<(const TextLeafPoint& aPoint) const {

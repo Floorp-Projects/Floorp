@@ -107,7 +107,7 @@ const gSelects = {
     "  option { color: white; }" +
     "</style></head>" +
     "<body><select id='one'>" +
-    '  <option>{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 0)"}</option>' +
+    '  <option>{"colorScheme": "dark", "color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 0)"}</option>' +
     '  <option selected="true">{"end": "true"}</option>' +
     "</select></body></html>",
 
@@ -231,8 +231,8 @@ const gSelects = {
      select { background-color: #fff; }
      option { color: #2b2b2b; background-color: #fff; }
    </style></head><body><select id='one'>
-     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
-     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
+     <option>{"colorScheme": "light", "color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
+     <option>{"colorScheme": "light", "color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
      <option selected="true">{"end": "true"}</option>
    </select></body></html>
 `,
@@ -298,6 +298,7 @@ function computeLabels(tab) {
       let any = false;
       for (let color of Object.keys(expected)) {
         if (
+          color != "colorScheme" &&
           color.toLowerCase().includes("color") &&
           !expected[color].startsWith("rgb")
         ) {
@@ -719,7 +720,6 @@ add_task(
       '#ContentSelectDropdown .ContentSelectDropdown-item-1:not([_moz-menuactive="true"])',
       "#ContentSelectDropdown .ContentSelectDropdown-item-2",
       '#ContentSelectDropdown .ContentSelectDropdown-item-2:not([_moz-menuactive="true"])',
-      "#ContentSelectDropdown > menupopup",
       '#ContentSelectDropdown > menupopup > :is(menuitem, menucaption):not([_moz-menuactive="true"])',
       '#ContentSelectDropdown > menupopup > :is(menuitem, menucaption)[_moz-menuactive="true"]',
     ].sort();

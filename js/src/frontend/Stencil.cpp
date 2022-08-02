@@ -3396,8 +3396,8 @@ void StencilModuleMetadata::dumpFields(
   json.boolProperty("isAsync", isAsync);
 }
 
-static void DumpImmutableScriptFlags(js::JSONPrinter& json,
-                                     ImmutableScriptFlags immutableFlags) {
+void js::DumpImmutableScriptFlags(js::JSONPrinter& json,
+                                  ImmutableScriptFlags immutableFlags) {
   for (uint32_t i = 1; i; i = i << 1) {
     if (uint32_t(immutableFlags) & i) {
       switch (ImmutableScriptFlagsEnum(i)) {
@@ -3496,8 +3496,8 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
   }
 }
 
-static void DumpFunctionFlagsItems(js::JSONPrinter& json,
-                                   FunctionFlags functionFlags) {
+void js::DumpFunctionFlagsItems(js::JSONPrinter& json,
+                                FunctionFlags functionFlags) {
   switch (functionFlags.kind()) {
     case FunctionFlags::FunctionKind::NormalFunction:
       json.value("NORMAL_KIND");

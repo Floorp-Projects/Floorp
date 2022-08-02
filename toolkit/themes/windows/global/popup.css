@@ -23,9 +23,6 @@ menupopup {
   appearance: auto;
   -moz-default-appearance: menupopup;
 
-  /* Native menus are always light */
-  color-scheme: light;
-
   /* We set the background-color / border here so that it doesn't interfere with native styling. */
   background-color: Menu;
   border: 1px solid ThreeDShadow;
@@ -38,7 +35,6 @@ menupopup {
   menupopup {
     /* Disable the default appearance so we can override the native styling. */
     appearance: none;
-    color-scheme: unset;
 
     /* Prevent any background or border around the outside of the shadow. */
     background-color: transparent;
@@ -124,6 +120,11 @@ menulist > menupopup {
 }
 
 @media not (-moz-windows-non-native-menus) {
+  menupopup {
+    /* Native menus are always light */
+    color-scheme: light !important;
+  }
+
   /* For Win10, the popup itself needs to have a transparent background because
      otherwise the background color would appear behind the drop shadow. */
   menulist > menupopup {

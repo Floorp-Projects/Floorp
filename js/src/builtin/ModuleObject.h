@@ -19,10 +19,10 @@
 #include "js/Class.h"                    // JSClass, ObjectOpResult
 #include "js/GCVector.h"                 // GCVector
 #include "js/Id.h"                       // jsid
-#include "js/Modules.h"                  // JS::DynamicImportStatus
-#include "js/PropertyDescriptor.h"       // PropertyDescriptor
-#include "js/Proxy.h"                    // BaseProxyHandler
-#include "js/RootingAPI.h"               // Rooted, Handle, MutableHandle
+#include "js/Modules.h"
+#include "js/PropertyDescriptor.h"  // PropertyDescriptor
+#include "js/Proxy.h"               // BaseProxyHandler
+#include "js/RootingAPI.h"          // Rooted, Handle, MutableHandle
 #include "js/TypeDecls.h"  // HandleValue, HandleId, HandleObject, HandleScript, MutableHandleValue, MutableHandleIdVector, MutableHandleObject
 #include "js/UniquePtr.h"  // UniquePtr
 #include "js/Value.h"      // JS::Value
@@ -445,14 +445,6 @@ bool FinishDynamicModuleImport(JSContext* cx, HandleObject evaluationPromise,
                                HandleValue referencingPrivate,
                                HandleObject moduleRequest,
                                HandleObject promise);
-
-// This is used so that Top Level Await functionality can be turned off
-// entirely. It will be removed in bug#1676612.
-bool FinishDynamicModuleImport_NoTLA(JSContext* cx,
-                                     JS::DynamicImportStatus status,
-                                     HandleValue referencingPrivate,
-                                     HandleObject moduleRequest,
-                                     HandleObject promise);
 
 }  // namespace js
 

@@ -33,10 +33,10 @@ class WrappedFunctionObject : public NativeObject {
 };
 
 bool WrappedFunctionCreate(JSContext* cx, Realm* callerRealm,
-                           HandleObject target, MutableHandleValue res);
+                           Handle<JSObject*> target, MutableHandle<Value> res);
 
-bool GetWrappedValue(JSContext* cx, Realm* callerRealm, HandleValue value,
-                     MutableHandleValue res);
+bool GetWrappedValue(JSContext* cx, Realm* callerRealm, Handle<Value> value,
+                     MutableHandle<Value> res);
 
 }  // namespace js
 

@@ -142,6 +142,7 @@ const TEST_GLOBAL = {
   BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {
     defineModuleGetter: updateGlobalOrObject,
+    defineESModuleGetters: updateGlobalOrObject,
     generateQI() {
       return {};
     },

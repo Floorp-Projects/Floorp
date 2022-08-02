@@ -93,7 +93,7 @@ class GeckoProfile(object):
             with gzip.open(profile_path, "r") as profile_file:
                 profile = json.load(profile_file)
         else:
-            with open(profile_path, "r") as profile_file:
+            with open(profile_path, "r", encoding="utf-8") as profile_file:
                 profile = json.load(profile_file)
         return profile
 

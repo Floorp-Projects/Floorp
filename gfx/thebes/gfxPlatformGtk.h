@@ -50,9 +50,6 @@ class gfxPlatformGtk final : public gfxPlatform {
 
   void FontsPrefsChanged(const char* aPref) override;
 
-  // maximum number of fonts to substitute for a generic
-  uint32_t MaxGenericSubstitions();
-
   bool SupportsPluginDirectBitmapDrawing() override { return true; }
 
   bool AccelerateLayersByDefault() override;
@@ -73,8 +70,6 @@ class gfxPlatformGtk final : public gfxPlatform {
   void InitWebRenderConfig() override;
   bool CheckVariationFontSupport() override;
   void BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut) override;
-
-  int8_t mMaxGenericSubstitutions;
 
  private:
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;

@@ -1690,17 +1690,7 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
     return false;
   }
 
-  if (script->isGenerator() && !JitOptions.warpGenerator) {
-    *reason = "generator script";
-    return false;
-  }
-
   if (script->isAsync()) {
-    if (!JitOptions.warpAsync) {
-      *reason = "async script";
-      return false;
-    }
-
     if (script->isModule()) {
       *reason = "async module";
       return false;

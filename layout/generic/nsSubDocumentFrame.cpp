@@ -617,8 +617,9 @@ nscoord nsSubDocumentFrame::GetPrefISize(gfxContext* aRenderingContext) {
 IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
   const auto containAxes = StyleDisplay()->GetContainSizeAxes();
   if (containAxes.IsBoth()) {
-    // Intrinsic size of 'contain:size' replaced elements is 0,0.
-    return IntrinsicSize(0, 0);
+    // Intrinsic size of 'contain:size' replaced elements is determined by
+    // contain-intrinsic-size.
+    return containAxes.ContainIntrinsicSize(IntrinsicSize(0, 0), *this);
   }
 
   if (nsCOMPtr<nsIObjectLoadingContent> iolc = do_QueryInterface(mContent)) {

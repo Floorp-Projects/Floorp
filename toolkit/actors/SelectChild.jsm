@@ -130,6 +130,7 @@ SelectContentHelper.prototype = {
       options,
       rect,
       selectedIndex: this.element.selectedIndex,
+      isDarkBackground: ChromeUtils.isDarkBackground(this.element),
       style: supportedStyles(computedStyles, SUPPORTED_SELECT_PROPERTIES),
       defaultStyle: supportedStyles(defaultStyles, SUPPORTED_SELECT_PROPERTIES),
     });

@@ -307,10 +307,10 @@ menupopup::part(drop-indicator) {
   background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
 
-/* Private browsing and accessibility indicators */
+/* Private browsing indicator */
 
-.accessibility-indicator,
 .private-browsing-indicator {
+  background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
   background-repeat: no-repeat;
   background-size: 100% auto;
   background-position: center;
@@ -321,28 +321,6 @@ menupopup::part(drop-indicator) {
   /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
    * in case the dark/light themes give that item a background. */
   z-index: 1;
-}
-
-.accessibility-indicator {
-  -moz-context-properties: fill;
-  fill: #00C8D7;
-  background-image: url("chrome://browser/skin/indicator-accessibility.svg");
-  -moz-user-focus: normal;
-  /* Clear default button styling */
-  appearance: none;
-  margin-block: unset;
-  min-width: unset;
-  color: unset;
-  text-shadow: unset;
-}
-
-.accessibility-indicator:is(:hover, :active, :focus, :-moz-focusring) {
-  fill: #008ea4;
-  outline: 0;
-}
-
-.private-browsing-indicator {
-  background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
 }
 
 /* New Private Browsing Indicator */
@@ -358,7 +336,6 @@ menupopup::part(drop-indicator) {
   height: 16px;
 }
 
-:root:not([accessibilitymode]) .accessibility-indicator,
 :root:not([privatebrowsingmode=temporary]) .private-browsing-indicator,
 :root[privatebrowsingnewindicator] .private-browsing-indicator,
 :root:not([privatebrowsingnewindicator]) #private-browsing-indicator-with-label,
@@ -366,7 +343,7 @@ menupopup::part(drop-indicator) {
   display: none;
 }
 
-/* End private browsing and accessibility indicators */
+/* End private browsing indicator */
 
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */

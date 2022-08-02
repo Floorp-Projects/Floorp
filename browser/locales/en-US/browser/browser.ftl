@@ -885,9 +885,6 @@ navbar-library =
 navbar-search =
     .title = Search
 
-navbar-accessibility-indicator =
-    .tooltiptext = Accessibility Features Enabled
-
 # Name for the tabs toolbar as spoken by screen readers. The word
 # "toolbar" is appended automatically and should not be included in
 # in the string

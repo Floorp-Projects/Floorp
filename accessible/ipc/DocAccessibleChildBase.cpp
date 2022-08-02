@@ -86,7 +86,8 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
   FlattenTree(aChild, shownTree);
   ShowEventData data(parentID, aIdxInParent,
                      nsTArray<AccessibleData>(shownTree.Length()),
-                     aSuppressShowEvent);
+                     aSuppressShowEvent ||
+                         StaticPrefs::accessibility_cache_enabled_AtStartup());
   SerializeTree(shownTree, data.NewTree());
   MaybeSendShowEvent(data, false);
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {

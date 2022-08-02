@@ -632,4 +632,17 @@
       </hbox>
     </panel>
   </html:template>
+
+  <menupopup id="unified-extensions-context-menu"
+             onpopupshowing="gUnifiedExtensions.updateContextMenu(this, event)">
+    <menuitem data-lazy-l10n-id="unified-extensions-context-menu-manage-extension"
+              class="unified-extensions-context-menu-manage-extension"
+              oncommand="gUnifiedExtensions.manageExtension(this.parentElement)" />
+    <menuitem data-lazy-l10n-id="unified-extensions-context-menu-remove-extension"
+              class="unified-extensions-context-menu-remove-extension"
+              oncommand="gUnifiedExtensions.removeExtension(this.parentElement)" />
+    <menuitem data-lazy-l10n-id="unified-extensions-context-menu-report-extension"
+              class="unified-extensions-context-menu-report-extension"
+              oncommand="gUnifiedExtensions.reportExtension(this.parentElement)" />
+  </menupopup>
 </popupset>

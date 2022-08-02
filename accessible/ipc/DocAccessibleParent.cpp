@@ -611,6 +611,20 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     remote->ApplyCache(aUpdateType, entry.Fields());
   }
 
+  if (aUpdateType == CacheUpdateType::Initial && !aData.IsEmpty()) {
+    RemoteAccessible* target = GetAccessible(aData.ElementAt(0).ID());
+    ProxyShowHideEvent(target, target->RemoteParent(), true, false);
+
+    if (nsCoreUtils::AccEventObserversExist()) {
+      xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+      xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+      nsINode* node = nullptr;
+      RefPtr<xpcAccEvent> event = new xpcAccEvent(
+          nsIAccessibleEvent::EVENT_SHOW, xpcAcc, doc, node, false);
+      nsCoreUtils::DispatchAccEvent(std::move(event));
+    }
+  }
+
   if (nsCOMPtr<nsIObserverService> obsService =
           services::GetObserverService()) {
     obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);

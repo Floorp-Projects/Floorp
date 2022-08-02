@@ -51,6 +51,7 @@
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "IOActivityMonitor.h"
+#include "nsNativeTheme.h"
 #include "nsThreadUtils.h"
 #include "mozJSModuleLoader.h"
 #include "mozilla/ProfilerLabels.h"
@@ -1707,4 +1708,13 @@ void ChromeUtils::GetFormAutofillConfidences(
   FormAutofillNative::GetFormAutofillConfidences(aGlobal, aElements, aResults,
                                                  aRv);
 }
+
+bool ChromeUtils::IsDarkBackground(GlobalObject&, Element& aElement) {
+  nsIFrame* f = aElement.GetPrimaryFrame(FlushType::Frames);
+  if (!f) {
+    return false;
+  }
+  return nsNativeTheme::IsDarkBackground(f);
+}
+
 }  // namespace mozilla::dom
