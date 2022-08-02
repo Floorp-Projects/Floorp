@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(4);
+
 ChromeUtils.defineModuleGetter(
   this,
   "ExtensionSettingsStore",
@@ -712,4 +714,73 @@ add_task(async function testNewTabPrefsReset() {
     isUndefinedPref("browser.newtab.privateAllowed"),
     "privateAllowed pref is not set"
   );
+});
+
+// This test ensures that an extension provided newtab
+// can be opened by another extension (e.g. tab manager)
+// regardless of whether the newtab url is made available
+// in web_accessible_resources.
+add_task(async function test_newtab_from_extension() {
+  let panel = getNewTabDoorhanger().closest("panel");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "newtaburl@mochi.test",
+        },
+      },
+      chrome_url_overrides: {
+        newtab: "newtab.html",
+      },
+    },
+    files: {
+      "newtab.html": `<h1>New tab!</h1><script src="newtab.js"></script>`,
+      "newtab.js": () => {
+        browser.test.sendMessage("newtab-loaded");
+      },
+    },
+    useAddonManager: "temporary",
+  });
+
+  await extension.startup();
+  let extensionNewTabUrl = `moz-extension://${extension.uuid}/newtab.html`;
+
+  let popupShown = promisePopupShown(panel);
+  let tab = await promiseNewTab(extensionNewTabUrl);
+  await popupShown;
+
+  // This will show a confirmation doorhanger, make sure we don't leave it open.
+  let popupHidden = promisePopupHidden(panel);
+  panel.hidePopup();
+  await popupHidden;
+
+  BrowserTestUtils.removeTab(tab);
+
+  // extension to open the newtab
+  let opener = ExtensionTestUtils.loadExtension({
+    async background() {
+      let newtab = await browser.tabs.create({});
+      browser.test.assertTrue(
+        newtab.id !== browser.tabs.TAB_ID_NONE,
+        "New tab was created."
+      );
+      await browser.tabs.remove(newtab.id);
+      browser.test.sendMessage("complete");
+    },
+  });
+
+  function listener(msg) {
+    Assert.ok(!/may not load or link to moz-extension/.test(msg.message));
+  }
+  Services.console.registerListener(listener);
+  registerCleanupFunction(() => {
+    Services.console.unregisterListener(listener);
+  });
+
+  await opener.startup();
+  await opener.awaitMessage("complete");
+  await extension.awaitMessage("newtab-loaded");
+  await opener.unload();
+  await extension.unload();
 });
