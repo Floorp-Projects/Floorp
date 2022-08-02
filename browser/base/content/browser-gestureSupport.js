@@ -733,23 +733,51 @@ var gHistorySwipeAnimation = {
       return;
     }
 
-    // We use the following value to set the opacity of the swipe arrows. It was
-    // determined experimentally that absolute values of 0.25 (or greater)
-    // trigger history navigation, hence the multiplier 4 to set the arrows to
-    // full opacity at 0.25 or greater.
+    const translateDistance = Services.prefs.getIntPref(
+      "browser.swipe.navigation-icon-move-distance",
+      0
+    );
+    // We use the following value to set the opacity (and translate on Windows)
+    // of the swipe arrows. Absolute values of 0.25 (or greater) trigger
+    // history navigation, hence the multiplier 4 to set the arrows to full
+    // opacity at 0.25 or greater.
     let opacity = Math.abs(aVal) * 4;
+
+    // If we move the icon along with the opacity change, we make the opacity
+    // change 2x faster so that it will avoid appearing the icon suddenly away
+    // from the browser edge.
+    if (translateDistance > 0) {
+      opacity *= 2;
+    }
+
+    // The icon moves from -20% of |translateDistance| so that it will be
+    // partially out of the viewport.
+    let translate =
+      Math.abs(aVal) * 4 * translateDistance - 0.2 * translateDistance;
+    if (!this.isLTR) {
+      translate = -translate;
+    }
+
+    // Clamp inside [-20% of translateDistance, 80% of translateDistance].
+    translate = Math.min(
+      Math.max(-translateDistance * 0.2, translate),
+      translateDistance * 0.8
+    );
+
     if ((aVal >= 0 && this.isLTR) || (aVal <= 0 && !this.isLTR)) {
       // The intention is to go back.
       if (this._canGoBack) {
         this._prevBox.collapsed = false;
         this._nextBox.collapsed = true;
         this._prevBox.style.opacity = opacity > 1 ? 1 : opacity;
+        this._prevBox.style.translate = `${translate}px 0px`;
       }
     } else if (this._canGoForward) {
       // The intention is to go forward.
       this._nextBox.collapsed = false;
       this._prevBox.collapsed = true;
       this._nextBox.style.opacity = opacity > 1 ? 1 : opacity;
+      this._nextBox.style.translate = `${-translate}px 0px`;
     }
   },
 

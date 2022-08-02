@@ -864,21 +864,6 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   pointer-events: none;
 }
 
-#historySwipeAnimationPreviousArrow {
-  background: url("chrome://browser/content/history-swipe-arrow.svg")
-              center left / 64px 128px no-repeat transparent;
-}
-#historySwipeAnimationPreviousArrow:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-#historySwipeAnimationNextArrow {
-  background: url("chrome://browser/content/history-swipe-arrow.svg")
-              center left / 64px 128px no-repeat transparent;
-}
-#historySwipeAnimationNextArrow:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
-}
-
 /*  Full Screen UI */
 
 #fullscr-toggler {

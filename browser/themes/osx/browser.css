@@ -480,3 +480,20 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 .webextension-popup-stack {
   border-radius: inherit;
 }
+
+#historySwipeAnimationPreviousArrow {
+  background: url("chrome://browser/skin/history-swipe-arrow.svg")
+              center left / 64px 128px no-repeat transparent;
+  will-change: transform;
+}
+#historySwipeAnimationPreviousArrow:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+#historySwipeAnimationNextArrow {
+  background: url("chrome://browser/skin/history-swipe-arrow.svg")
+              center left / 64px 128px no-repeat transparent;
+  will-change: transform;
+}
+#historySwipeAnimationNextArrow:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
