@@ -34,7 +34,6 @@ nsIGlobalObject* nsICanvasRenderingContextInternal::GetParentObject() const {
 }
 
 nsIPrincipal* nsICanvasRenderingContextInternal::PrincipalOrNull() const {
-  MOZ_ASSERT(NS_IsMainThread());
   if (mCanvasElement) {
     return mCanvasElement->NodePrincipal();
   }
