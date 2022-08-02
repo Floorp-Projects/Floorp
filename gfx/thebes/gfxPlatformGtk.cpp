@@ -72,6 +72,9 @@
 
 #define GDK_PIXMAP_SIZE_MAX 32767
 
+#define GFX_PREF_MAX_GENERIC_SUBSTITUTIONS \
+  "gfx.font_rendering.fontconfig.max_generic_substitutions"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
@@ -99,6 +102,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
     gtk_init(nullptr, nullptr);
   }
 
+  mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
   mIsX11Display = gfxPlatform::IsHeadless() ? false : GdkIsX11Display();
   if (XRE_IsParentProcess()) {
     InitX11EGLConfig();
@@ -464,9 +468,28 @@ gfxImageFormat gfxPlatformGtk::GetOffscreenFormat() {
 }
 
 void gfxPlatformGtk::FontsPrefsChanged(const char* aPref) {
+  // only checking for generic substitions, pass other changes up
+  if (strcmp(GFX_PREF_MAX_GENERIC_SUBSTITUTIONS, aPref) != 0) {
+    gfxPlatform::FontsPrefsChanged(aPref);
+    return;
+  }
+
+  mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
   gfxFcPlatformFontList* pfl = gfxFcPlatformFontList::PlatformFontList();
   pfl->ClearGenericMappings();
   FlushFontAndWordCaches();
+}
+
+uint32_t gfxPlatformGtk::MaxGenericSubstitions() {
+  if (mMaxGenericSubstitutions == UNINITIALIZED_VALUE) {
+    mMaxGenericSubstitutions =
+        Preferences::GetInt(GFX_PREF_MAX_GENERIC_SUBSTITUTIONS, 3);
+    if (mMaxGenericSubstitutions < 0) {
+      mMaxGenericSubstitutions = 3;
+    }
+  }
+
+  return uint32_t(mMaxGenericSubstitutions);
 }
 
 bool gfxPlatformGtk::AccelerateLayersByDefault() { return true; }
