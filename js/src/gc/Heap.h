@@ -203,7 +203,7 @@ class alignas(ArenaSize) Arena {
   /*
    * True until the arena is swept for the first time.
    */
-  size_t isNewlyCreated : 1;
+  size_t isNewlyCreated_ : 1;
 
   /*
    * When recursive marking uses too much stack we delay marking of arenas and
@@ -365,6 +365,8 @@ class alignas(ArenaSize) Arena {
     uintptr_t tailOffset = ArenaSize - (thing & ArenaMask);
     return tailOffset % thingSize == 0;
   }
+
+  bool isNewlyCreated() const { return isNewlyCreated_; }
 
   bool onDelayedMarkingList() const { return onDelayedMarkingList_; }
 

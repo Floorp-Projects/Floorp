@@ -283,6 +283,14 @@ struct Statistics {
 
   const SliceDataVector& slices() const { return slices_; }
 
+  const SliceData* lastSlice() const {
+    if (slices_.length() == 0) {
+      return nullptr;
+    }
+
+    return &slices_.back();
+  }
+
   TimeStamp start() const { return slices_[0].start; }
 
   TimeStamp end() const { return slices_.back().end; }
