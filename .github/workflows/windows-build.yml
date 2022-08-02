@@ -11,7 +11,7 @@ jobs:
 
     - name: Create environment
       run: |
-        bitsadmin /transfer download https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe %CD%\MozillaBuildSetup-4.0.1.exe
+        bitsadmin /transfer https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe %CD%\MozillaBuildSetup-4.0.1.exe
         .\MozillaBuildSetup-4.0.1.exe
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
