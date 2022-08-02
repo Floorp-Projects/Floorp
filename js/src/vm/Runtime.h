@@ -924,6 +924,7 @@ struct JSRuntime {
 
  public:
   static bool hasLiveRuntimes() { return liveRuntimesCount > 0; }
+  static bool hasSingleLiveRuntime() { return liveRuntimesCount == 1; }
 
   explicit JSRuntime(JSRuntime* parentRuntime);
   ~JSRuntime();

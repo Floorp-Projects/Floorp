@@ -47,6 +47,7 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StorageAccessAPIHelper.h"
 #include "mozilla/TelemetryIPC.h"
@@ -2669,6 +2670,14 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     SetProcessName("Isolated Service Worker"_ns, &etld);
   }
   // else "prealloc" or "web" type -> "Web Content" already set
+
+  // Turn off Spectre mitigations in isolated web content processes.
+  if (StaticPrefs::javascript_options_spectre_disable_for_isolated_content() &&
+      (remoteTypePrefix == FISSION_WEB_REMOTE_TYPE ||
+       remoteTypePrefix == SERVICEWORKER_REMOTE_TYPE ||
+       remoteTypePrefix == WITH_COOP_COEP_REMOTE_TYPE)) {
+    JS::DisableSpectreMitigationsAfterInit();
+  }
 
   // Use the prefix to avoid URIs from Fission isolated processes.
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
