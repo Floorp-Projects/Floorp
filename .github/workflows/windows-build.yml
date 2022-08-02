@@ -11,8 +11,8 @@ jobs:
 
     - name: Create environment
       run: |
-        curl -L https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe  --output "D:\a\Floorp\Floorp"
-        cd D:\a\Floorp\Floorp
+        curl -L https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe  --output "D:\a\Floorp"
+        cd D:\a\Floorp
         start [MozillaBuildSetup-4.0.1.exe]
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
