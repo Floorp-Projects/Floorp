@@ -319,6 +319,12 @@ class DocAccessibleParent : public RemoteAccessible,
 
   void URL(nsAString& aURL) const;
 
+  // Tracks cached reverse relations (ie. those not set explicitly by an
+  // attribute like aria-labelledby) for accessibles in this doc. This map is of
+  // the form: {accID, {relationType, [targetAccID, targetAccID, ...]}}
+  nsTHashMap<uint64_t, nsTHashMap<uint64_t, nsTArray<uint64_t>>>
+      mReverseRelations;
+
  private:
   ~DocAccessibleParent();
 
