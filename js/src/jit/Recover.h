@@ -85,6 +85,7 @@ namespace jit {
   _(BigIntDecrement)              \
   _(BigIntNegate)                 \
   _(BigIntBitNot)                 \
+  _(Compare)                      \
   _(Concat)                       \
   _(StringLength)                 \
   _(ArgumentsLength)              \
@@ -470,6 +471,16 @@ class RBigIntNegate final : public RInstruction {
 class RBigIntBitNot final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntBitNot, 1)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RCompare final : public RInstruction {
+  JSOp jsop_;
+
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(Compare, 2)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
