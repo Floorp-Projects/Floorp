@@ -70,6 +70,8 @@ add_task(async () => {
     return;
   }
 
+  await pushPref("dom.abort_script_on_child_shutdown", true);
+
   // Ensure the process cache cannot interfere.
   pushPref("dom.ipc.processPreload.enabled", false);
   // Ensure we have no cached processes from previous tests.
