@@ -32,12 +32,15 @@ describe("Personality Provider", () => {
     global.fetch = async server => ({
       ok: true,
       json: async () => {
-        if (server === "bogus://foo/") {
+        if (server === "services.settings.server/") {
           return { capabilities: { attachments: { base_url: baseURLStub } } };
         }
         return {};
       },
     });
+    globals.sandbox
+      .stub(global.Services.prefs, "getCharPref")
+      .callsFake(pref => pref);
     globals.set("RemoteSettings", RemoteSettingsStub);
 
     instance = new PersonalityProvider();
