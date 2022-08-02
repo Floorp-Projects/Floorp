@@ -20,11 +20,9 @@ jobs:
         ./mach build
     - name: Package
       run: |       
-        MOZ_CHROME_MULTILOCALE=("ar" "cs" "da" "de" "el" "en-GB" "en-US" "es-ES" "es-MX" "fr" "hu" "id" "it" "ja" "ja-KA" "ko" "lt" "nl" "nn-NO" "pl" "pt-BR" "pt-PT" "ru" "sv-SE" "th" "vi" "zh-CN" "zh-TW") 
-        for i in ${MOZ_CHROME_MULTILOCALE[@]}; do 
-        ./mach build chrome-$i; done
-        AB_CD=multi 
-        ./mach package
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
 
     - name: Publish
       uses: actions/upload-artifact@master
