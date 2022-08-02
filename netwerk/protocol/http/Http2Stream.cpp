@@ -17,6 +17,7 @@
 #include "PSpdyPush.h"
 #include "nsIRequestContext.h"
 #include "nsHttpTransaction.h"
+#include "nsSocketTransportService2.h"
 
 namespace mozilla::net {
 
