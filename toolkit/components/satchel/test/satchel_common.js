@@ -68,69 +68,6 @@ function getMenuEntries() {
   return results;
 }
 
-function checkArrayValues(actualValues, expectedValues, msg) {
-  is(
-    actualValues.length,
-    expectedValues.length,
-    "Checking array values: " + msg
-  );
-  for (let i = 0; i < expectedValues.length; i++) {
-    is(actualValues[i], expectedValues[i], msg + " Checking array entry #" + i);
-  }
-}
-
-var gCheckObserver = {
-  verifyStack: [],
-  callback: null,
-
-  init() {
-    gChromeScript.sendAsyncMessage("addObserver");
-    gChromeScript.addMessageListener(
-      "satchel-storage-changed",
-      this.observe.bind(this)
-    );
-  },
-
-  uninit() {
-    gChromeScript.sendAsyncMessage("removeObserver");
-  },
-
-  waitForChecks(callback) {
-    if (!this.verifyStack.length) {
-      callback();
-    } else {
-      this.callback = callback;
-    }
-  },
-
-  observe({ subject, topic, data }) {
-    if (data != "formhistory-add" && data != "formhistory-update") {
-      return;
-    }
-    ok(!!this.verifyStack.length, "checking if saved form data was expected");
-
-    // Make sure that every piece of data we expect to be saved is saved, and no
-    // more. Here it is assumed that for every entry satchel saves or modifies, a
-    // message is sent.
-    //
-    // We don't actually check the content of the message, but just that the right
-    // quantity of messages is received.
-    // - if there are too few messages, test will time out
-    // - if there are too many messages, test will error out here
-    //
-    let expected = this.verifyStack.shift();
-
-    countEntries(expected.name, expected.value, function(num) {
-      ok(num > 0, expected.message);
-      if (!gCheckObserver.verifyStack.length) {
-        let callback = gCheckObserver.callback;
-        gCheckObserver.callback = null;
-        callback();
-      }
-    });
-  },
-};
-
 class StorageEventsObserver {
   promisesToResolve = [];
 
@@ -153,10 +90,6 @@ class StorageEventsObserver {
   promiseNextStorageEvent() {
     return new Promise(resolve => this.promisesToResolve.push(resolve));
   }
-}
-
-function checkForSave(name, value, message) {
-  gCheckObserver.verifyStack.push({ name, value, message });
 }
 
 function getFormSubmitButton(formNum) {

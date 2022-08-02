@@ -284,7 +284,7 @@ async function safeCloseBrowserConsole({ clearOutput = false } = {}) {
     if (ui.outputNode.querySelector(".object-inspector")) {
       promises.push(ui.once("fronts-released"));
     }
-    ui.clearOutput(true);
+    await ui.clearOutput(true);
     await Promise.all(promises);
     info("Browser console cleared");
   }

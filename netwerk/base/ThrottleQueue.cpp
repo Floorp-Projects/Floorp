@@ -9,6 +9,7 @@
 #include "nsISeekableStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIOService.h"
+#include "nsSocketTransportService2.h"
 #include "nsStreamUtils.h"
 #include "nsNetUtil.h"
 

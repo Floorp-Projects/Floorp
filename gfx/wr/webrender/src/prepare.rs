@@ -1219,6 +1219,7 @@ pub fn update_brush_segment_clip_task(
 
 fn write_brush_segment_description(
     prim_local_rect: LayoutRect,
+    prim_local_clip_rect: LayoutRect,
     clip_chain: &ClipChainInstance,
     segment_builder: &mut SegmentBuilder,
     clip_store: &ClipStore,
@@ -1230,10 +1231,17 @@ fn write_brush_segment_description(
         return false;
     }
 
+    // NOTE: The local clip rect passed to the segment builder must be the unmodified
+    //       local clip rect from the clip leaf, not the local_clip_rect from the
+    //       clip-chain instance. The clip-chain instance may have been reduced by
+    //       clips that are in the same coordinate system, but not the same spatial
+    //       node as the primitive. This can result in the clip for the segment building
+    //       being affected by scrolling clips, which we can't handle (since the segments
+    //       are not invalidated during frame building after being built).
     segment_builder.initialize(
         prim_local_rect,
         None,
-        clip_chain.local_clip_rect
+        prim_local_clip_rect,
     );
 
     // Segment the primitive on all the local-space clip sources that we can.
@@ -1375,9 +1383,11 @@ fn build_segments_if_needed(
 
     if *segment_instance_index == SegmentInstanceIndex::INVALID {
         let mut segments: SmallVec<[BrushSegment; 8]> = SmallVec::new();
+        let clip_leaf = frame_state.clip_tree.get_leaf(instance.clip_leaf_id);
 
         if write_brush_segment_description(
             prim_local_rect,
+            clip_leaf.local_clip_rect,
             prim_clip_chain,
             &mut frame_state.segment_builder,
             frame_state.clip_store,
