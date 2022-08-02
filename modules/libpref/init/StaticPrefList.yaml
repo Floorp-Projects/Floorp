@@ -12785,7 +12785,7 @@
 # reacts to the embedder `color-scheme` in content.
 - name: svg.embedder-prefers-color-scheme.content.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Enables the 'context-fill' and 'context-stroke' keywords for particular
