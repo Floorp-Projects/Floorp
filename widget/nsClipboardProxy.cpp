@@ -33,7 +33,7 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       aTransferable->GetRequestingPrincipal();
   nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
-  child->SendSetClipboard(std::move(ipcDataTransfer), isPrivateData,
+  child->SendSetClipboard(ipcDataTransfer, isPrivateData,
                           IPC::Principal(requestingPrincipal),
                           contentPolicyType, aWhichClipboard);
 
@@ -50,7 +50,8 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard,
                                                  &dataTransfer);
   return nsContentUtils::IPCTransferableToTransferable(
-      dataTransfer, false /* aAddDataFlavor */, aTransferable);
+      dataTransfer, false /* aAddDataFlavor */, aTransferable,
+      ContentChild::GetSingleton());
 }
 
 NS_IMETHODIMP

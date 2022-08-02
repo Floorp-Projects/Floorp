@@ -897,7 +897,7 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
   }
 
   bool hasCustomCursor = false;
-  Maybe<mozilla::ipc::BigBuffer> customCursorData;
+  UniquePtr<char[]> customCursorData;
   size_t length = 0;
   IntSize customCursorSize;
   int32_t stride = 0;
@@ -935,8 +935,10 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
     }
   }
 
+  nsDependentCString cursorData(customCursorData ? customCursorData.get() : "",
+                                length);
   if (!mBrowserChild->SendSetCursor(
-          aCursor.mDefaultCursor, hasCustomCursor, std::move(customCursorData),
+          aCursor.mDefaultCursor, hasCustomCursor, cursorData,
           customCursorSize.width, customCursorSize.height, resolution.mX,
           resolution.mY, stride, format, aCursor.mHotspotX, aCursor.mHotspotY,
           force)) {
