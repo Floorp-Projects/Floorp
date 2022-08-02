@@ -28,4 +28,4 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: floorp-linux-x64
-        path: obj-x86_64-pc-linux-gnu/dist/floorp
+        path: obj-x86_64-apple-darwin20.6.0/dist/floorp
