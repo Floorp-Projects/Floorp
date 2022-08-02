@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(4);
+
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -716,4 +718,134 @@ add_task(async function test_overriding_home_page_incognito_external() {
   });
 
   await extension.unload();
+});
+
+// This tests that the homepage provided by an extension can be opened by any extension
+// and does not require web_accessible_resource entries.
+async function _test_overriding_home_page_open(manifest_version) {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version,
+      chrome_settings_overrides: { homepage: "home.html" },
+      name: "homepage provider",
+      applications: {
+        gecko: { id: "homepage@mochitest" },
+      },
+    },
+    files: {
+      "home.html": `<h1>Home Page!</h1><pre id="result"></pre><script src="home.js"></script>`,
+      "home.js": () => {
+        document.querySelector("#result").textContent = "homepage loaded";
+      },
+    },
+    useAddonManager: "permanent",
+  });
+
+  await extension.startup();
+
+  // ensure it works and deal with initial panel prompt.
+  await testHomePageWindow({
+    expectPanel: true,
+    async test(win) {
+      Assert.equal(
+        HomePage.get(win),
+        `moz-extension://${extension.uuid}/home.html`,
+        "The homepage is set"
+      );
+      Assert.equal(
+        win.gURLBar.value,
+        `moz-extension://${extension.uuid}/home.html`,
+        "extension is control in window"
+      );
+      const { selectedBrowser } = win.gBrowser;
+      const result = await SpecialPowers.spawn(
+        selectedBrowser,
+        [],
+        async () => {
+          const { document } = this.content;
+          if (document.readyState !== "complete") {
+            await new Promise(resolve => (document.onload = resolve));
+          }
+          return document.querySelector("#result").textContent;
+        }
+      );
+      Assert.equal(
+        result,
+        "homepage loaded",
+        "Overridden homepage loaded successfully"
+      );
+    },
+  });
+
+  // Extension used to open the homepage in a new window.
+  let opener = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+    async background() {
+      let win;
+      browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+        if (tab.windowId !== win.id || tab.status !== "complete") {
+          return;
+        }
+        browser.test.sendMessage("created", tab.url);
+      });
+      browser.test.onMessage.addListener(async msg => {
+        if (msg == "create") {
+          win = await browser.windows.create({});
+          browser.test.assertTrue(
+            win.id !== browser.windows.WINDOW_ID_NONE,
+            "New window was created."
+          );
+        }
+      });
+    },
+  });
+
+  function listener(msg) {
+    Assert.ok(!/may not load or link to moz-extension/.test(msg.message));
+  }
+  Services.console.registerListener(listener);
+  registerCleanupFunction(() => {
+    Services.console.unregisterListener(listener);
+  });
+
+  await opener.startup();
+  const promiseNewWindow = BrowserTestUtils.waitForNewWindow();
+  await opener.sendMessage("create");
+  let homepageUrl = await opener.awaitMessage("created");
+
+  Assert.equal(
+    homepageUrl,
+    `moz-extension://${extension.uuid}/home.html`,
+    "The homepage is set"
+  );
+
+  const newWin = await promiseNewWindow;
+  Assert.equal(
+    await SpecialPowers.spawn(newWin.gBrowser.selectedBrowser, [], async () => {
+      const { document } = this.content;
+      if (document.readyState !== "complete") {
+        await new Promise(resolve => (document.onload = resolve));
+      }
+      return document.querySelector("#result").textContent;
+    }),
+    "homepage loaded",
+    "Overridden homepage loaded as expected"
+  );
+
+  await BrowserTestUtils.closeWindow(newWin);
+  await opener.unload();
+  await extension.unload();
+}
+
+add_task(async function test_overriding_home_page_open_mv2() {
+  await _test_overriding_home_page_open(2);
+});
+
+add_task(async function test_overriding_home_page_open_mv3() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+  await _test_overriding_home_page_open(3);
 });

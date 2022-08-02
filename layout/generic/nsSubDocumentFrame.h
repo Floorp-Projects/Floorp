@@ -163,8 +163,8 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   }
 
   nscoord GetIntrinsicISize() {
-    if (StyleDisplay()->GetContainSizeAxes().mIContained) {
-      return 0;
+    if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
+      return *containISize;
     }
     auto size = GetIntrinsicSize();
     Maybe<nscoord> iSize =

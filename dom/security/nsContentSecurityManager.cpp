@@ -1248,7 +1248,7 @@ nsresult nsContentSecurityManager::CheckAllowLoadInPrivilegedAboutContext(
 }
 
 /*
- * Every protocol handler must set one of the five security flags
+ * Every protocol handler must set one of the six security flags
  * defined in nsIProtocolHandler - if not - deny the load.
  */
 nsresult nsContentSecurityManager::CheckChannelHasProtocolSecurityFlag(
@@ -1273,6 +1273,9 @@ nsresult nsContentSecurityManager::CheckChannelHasProtocolSecurityFlag(
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t securityFlagsSet = 0;
+  if (flags & nsIProtocolHandler::WEBEXT_URI_WEB_ACCESSIBLE) {
+    securityFlagsSet += 1;
+  }
   if (flags & nsIProtocolHandler::URI_LOADABLE_BY_ANYONE) {
     securityFlagsSet += 1;
   }

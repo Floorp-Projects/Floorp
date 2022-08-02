@@ -265,15 +265,13 @@ add_task(async function test_validate_registerContentScripts_persistAcrossSessio
       ];
 
       for (const { title, params, expectedError } of TEST_CASES) {
-        try {
-          await browser.scripting.registerContentScripts(params);
-          browser.test.fail("registration should not be allowed");
-        } catch (err) {
-          browser.test.assertTrue(
-            expectedError.test(err.message),
-            `${title} - got expected error`
-          );
-        }
+        browser.test.assertThrows(
+          () => {
+            browser.scripting.registerContentScripts(params);
+          },
+          expectedError,
+          `${title} - got expected error`
+        );
       }
 
       let scripts = await browser.scripting.getRegisteredContentScripts();
@@ -335,6 +333,18 @@ add_task(async function test_validate_getRegisteredContentScripts_params() {
 
       scripts = await browser.scripting.getRegisteredContentScripts({
         ids: ["non-existent-id"]
+      });
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      browser.test.log("test call with undefined filter and a chrome-compatible callback");
+      scripts = await new Promise(resolve => {
+        browser.scripting.getRegisteredContentScripts(undefined, resolve);
+      });
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      browser.test.log("test call with only the chrome-compatible callback");
+      scripts = await new Promise(resolve => {
+        browser.scripting.getRegisteredContentScripts(resolve);
       });
       browser.test.assertEq(0, scripts.length, "expected no registered scripts");
 
@@ -953,6 +963,62 @@ add_task(async function test_validate_unregisterContentScripts_params() {
   await extension.unload();
 });
 
+add_task(async function test_unregisterContentScripts_with_chrome_compatible_callback() {
+  let extension = makeExtension({
+    async background() {
+      let scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no script");
+
+      // Register a script that we can unregister after.
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script-1",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
+        },
+      ]);
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(1, scripts.length, "expected 1 registered script");
+
+      browser.test.log("test call with undefined filter and a chrome-compatible callback");
+      await new Promise(resolve => {
+        browser.scripting.unregisterContentScripts(undefined, resolve);
+      });
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      // Re-register a script that we can unregister after.
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script-1",
+          js: ["script.js"],
+          matches: ["*://test1.example.com/*"],
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      browser.test.log("test call with only the chrome-compatible callback");
+      await new Promise(resolve => {
+        browser.scripting.unregisterContentScripts(resolve);
+      });
+
+      scripts = await browser.scripting.getRegisteredContentScripts();
+      browser.test.assertEq(0, scripts.length, "expected no registered scripts");
+
+      browser.test.sendMessage("background-done");
+    },
+    files: {
+      "script.js": "",
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-done");
+  await extension.unload();
+});
+
 add_task(async function test_unregisterContentScripts() {
   let extension = makeExtension({
     async background() {
@@ -1526,20 +1592,18 @@ add_task(async function test_validate_updateContentScripts_persistAcrossSessions
 
       await browser.scripting.registerContentScripts([script]);
 
-      try {
-        await browser.scripting.updateContentScripts([
-          {
-            id: script.id,
-            persistAcrossSessions: true,
-          },
-        ]);
-        browser.test.fail("registration should not be allowed");
-      } catch (err) {
-        browser.test.assertTrue(
-          /persistAcrossSessions: Invalid value true/.test(err.message),
-          "got expected error"
-        );
-      }
+      browser.test.assertThrows(
+        () => {
+          browser.scripting.updateContentScripts([
+            {
+              id: script.id,
+              persistAcrossSessions: true,
+            },
+          ]);
+        },
+        /persistAcrossSessions: Invalid value true/,
+        "got expected error"
+      );
 
       browser.test.notifyPass("test-finished");
     },

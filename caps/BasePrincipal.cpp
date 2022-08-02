@@ -18,6 +18,7 @@
 #include "nsAboutProtocolUtils.h"
 #include "ThirdPartyUtil.h"
 #include "mozilla/ContentPrincipal.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
@@ -596,6 +597,8 @@ nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
     }
   }
 
+  // Web Accessible Resources in MV2 Extensions are marked with
+  // URI_FETCHABLE_BY_ANYONE
   bool fetchableByAnyone;
   rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_FETCHABLE_BY_ANYONE,
                            &fetchableByAnyone);
@@ -603,14 +606,32 @@ nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
     return NS_OK;
   }
 
-  if (aReport) {
-    nsCOMPtr<nsIURI> prinURI;
-    rv = GetURI(getter_AddRefs(prinURI));
-    if (NS_SUCCEEDED(rv) && prinURI) {
-      nsScriptSecurityManager::ReportError(
-          "CheckSameOriginError", prinURI, aURI,
-          mOriginAttributes.mPrivateBrowsingId > 0, aInnerWindowID);
+  // Get the principal uri for the last flag check or error.
+  nsCOMPtr<nsIURI> prinURI;
+  rv = GetURI(getter_AddRefs(prinURI));
+  if (!(NS_SUCCEEDED(rv) && prinURI)) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  // If MV3 Extension uris are web accessible by this principal it is allowed to
+  // load.
+  bool maybeWebAccessible = false;
+  NS_URIChainHasFlags(aURI, nsIProtocolHandler::WEBEXT_URI_WEB_ACCESSIBLE,
+                      &maybeWebAccessible);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (maybeWebAccessible) {
+    bool isWebAccessible = false;
+    rv = ExtensionPolicyService::GetSingleton().SourceMayLoadExtensionURI(
+        prinURI, aURI, &isWebAccessible);
+    if (NS_SUCCEEDED(rv) && isWebAccessible) {
+      return NS_OK;
     }
+  }
+
+  if (aReport) {
+    nsScriptSecurityManager::ReportError(
+        "CheckSameOriginError", prinURI, aURI,
+        mOriginAttributes.mPrivateBrowsingId > 0, aInnerWindowID);
   }
 
   return NS_ERROR_DOM_BAD_URI;

@@ -840,6 +840,14 @@ extern JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
                                                         JSJitCompilerOption opt,
                                                         uint32_t* valueOut);
 
+namespace JS {
+
+// Disable all Spectre mitigations for this process after creating the initial
+// JSContext. Must be called on this context's thread.
+extern JS_PUBLIC_API void DisableSpectreMitigationsAfterInit();
+
+};
+
 /**
  * Convert a uint32_t index into a jsid.
  */

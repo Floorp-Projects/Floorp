@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Spectre mitigations</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+add_task(async function() {
+  const { Cu } = SpecialPowers;
+  const options = Cu.getJSTestingFunctions().getJitCompilerOptions();
+
+  const testMitigation = function(name) {
+    let val = options[name];
+    ok(val === 0 || val === 1, "must be valid JitOption");
+    is(Boolean(val), !SpecialPowers.useRemoteSubframes, "must be enabled if Fission is disabled");
+  };
+
+  testMitigation("spectre.index-masking");
+  testMitigation("spectre.object-mitigations");
+  testMitigation("spectre.string-mitigations");
+  testMitigation("spectre.value-masking");
+  testMitigation("spectre.jit-to-cxx-calls");
+});
+</script>
+</body>
+</html>

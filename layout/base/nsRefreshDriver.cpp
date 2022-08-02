@@ -1991,6 +1991,8 @@ bool nsRefreshDriver::ShouldKeepTimerRunningAfterPageLoad() {
       !StaticPrefs::layout_keep_ticking_after_load_ms() || mThrottled ||
       mTestControllingRefreshes || !XRE_IsContentProcess() ||
       !mPresContext->Document()->IsTopLevelContentDocument() ||
+      TaskController::Get()->PendingMainthreadTaskCountIncludingSuspended() ==
+          0 ||
       gfxPlatform::IsInLayoutAsapMode()) {
     // Make the next check faster.
     mHasExceededAfterLoadTickPeriod = true;

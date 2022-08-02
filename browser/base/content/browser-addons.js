@@ -1350,11 +1350,17 @@ var gUnifiedExtensions = {
         this._listView.addEventListener("ViewShowing", this);
         this._listView.addEventListener("ViewHiding", this);
 
-        // Load context menu popup.
-        const template = document.getElementById("unified-extensions-template");
-        if (template) {
-          template.replaceWith(template.content);
-        }
+        // Lazy-load the l10n strings.
+        document
+          .getElementById("unified-extensions-context-menu")
+          .querySelectorAll("[data-lazy-l10n-id]")
+          .forEach(el => {
+            el.setAttribute(
+              "data-l10n-id",
+              el.getAttribute("data-lazy-l10n-id")
+            );
+            el.removeAttribute("data-lazy-l10n-id");
+          });
       }
 
       if (this._button.open) {

@@ -4199,6 +4199,21 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
       *valueOut = rt->canUseOffthreadIonCompilation();
       break;
+    case JSJITCOMPILER_SPECTRE_INDEX_MASKING:
+      *valueOut = jit::JitOptions.spectreIndexMasking ? 1 : 0;
+      break;
+    case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS:
+      *valueOut = jit::JitOptions.spectreObjectMitigations ? 1 : 0;
+      break;
+    case JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS:
+      *valueOut = jit::JitOptions.spectreStringMitigations ? 1 : 0;
+      break;
+    case JSJITCOMPILER_SPECTRE_VALUE_MASKING:
+      *valueOut = jit::JitOptions.spectreValueMasking ? 1 : 0;
+      break;
+    case JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS:
+      *valueOut = jit::JitOptions.spectreJitToCxxCalls ? 1 : 0;
+      break;
     case JSJITCOMPILER_WATCHTOWER_MEGAMORPHIC:
       *valueOut = jit::JitOptions.enableWatchtowerMegamorphic ? 1 : 0;
       break;
@@ -4223,6 +4238,25 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
   *valueOut = 0;
 #endif
   return true;
+}
+
+JS_PUBLIC_API void JS::DisableSpectreMitigationsAfterInit() {
+  // This is used to turn off Spectre mitigations in pre-allocated child
+  // processes used for isolated web content. Assert there's a single runtime
+  // and cancel off-thread compilations, to ensure we're not racing with any
+  // compilations.
+  JSContext* cx = TlsContext.get();
+  MOZ_RELEASE_ASSERT(cx);
+  MOZ_RELEASE_ASSERT(JSRuntime::hasSingleLiveRuntime());
+  MOZ_RELEASE_ASSERT(cx->runtime()->wasmInstances.lock()->empty());
+
+  CancelOffThreadIonCompile(cx->runtime());
+
+  jit::JitOptions.spectreIndexMasking = false;
+  jit::JitOptions.spectreObjectMitigations = false;
+  jit::JitOptions.spectreStringMitigations = false;
+  jit::JitOptions.spectreValueMasking = false;
+  jit::JitOptions.spectreJitToCxxCalls = false;
 }
 
 /************************************************************************/

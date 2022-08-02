@@ -55,6 +55,7 @@ add_task(async function test_context_menu() {
   // Open the extension panel, then open the context menu for the extension.
   await openExtensionsPanel(win);
   const contextMenu = await openUnifiedExtensionsContextMenu(win, extension.id);
+  const doc = contextMenu.ownerDocument;
 
   const manageButton = contextMenu.querySelector(
     ".unified-extensions-context-menu-manage-extension"
@@ -62,6 +63,11 @@ add_task(async function test_context_menu() {
   ok(manageButton, "expected manage button");
   is(manageButton.hidden, false, "expected manage button to be visible");
   is(manageButton.disabled, false, "expected manage button to be enabled");
+  Assert.deepEqual(
+    doc.l10n.getAttributes(manageButton),
+    { id: "unified-extensions-context-menu-manage-extension", args: null },
+    "expected correct l10n attributes for manage button"
+  );
 
   const removeButton = contextMenu.querySelector(
     ".unified-extensions-context-menu-remove-extension"
@@ -69,6 +75,11 @@ add_task(async function test_context_menu() {
   ok(removeButton, "expected remove button");
   is(removeButton.hidden, false, "expected remove button to be visible");
   is(removeButton.disabled, false, "expected remove button to be enabled");
+  Assert.deepEqual(
+    doc.l10n.getAttributes(removeButton),
+    { id: "unified-extensions-context-menu-remove-extension", args: null },
+    "expected correct l10n attributes for remove button"
+  );
 
   const reportButton = contextMenu.querySelector(
     ".unified-extensions-context-menu-report-extension"
@@ -76,6 +87,11 @@ add_task(async function test_context_menu() {
   ok(reportButton, "expected report button");
   is(reportButton.hidden, false, "expected report button to be visible");
   is(reportButton.disabled, false, "expected report button to be enabled");
+  Assert.deepEqual(
+    doc.l10n.getAttributes(reportButton),
+    { id: "unified-extensions-context-menu-report-extension", args: null },
+    "expected correct l10n attributes for report button"
+  );
 
   await closeChromeContextMenu(contextMenu.id, null, win);
   await closeExtensionsPanel(win);

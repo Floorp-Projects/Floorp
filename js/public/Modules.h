@@ -40,7 +40,15 @@ enum class ImportAssertion { Type };
 using ImportAssertionVector =
     js::Vector<ImportAssertion, 1, js::SystemAllocPolicy>;
 
-using SupportedAssertionsHook = bool (*)(JSContext*,
+/**
+ * The HostGetSupportedImportAssertions hook.
+ *
+ * See:
+ * https://tc39.es/proposal-import-assertions/#sec-hostgetsupportedimportassertions
+ *
+ * Get the list of supported import assertions.
+ */
+using SupportedAssertionsHook = bool (*)(JSContext* cx,
                                          ImportAssertionVector& values);
 
 /**
@@ -52,13 +60,38 @@ GetSupportedAssertionsHook(JSRuntime* rt);
 /**
  * Set the HostGetSupportedImportAssertions hook for the runtime to the given
  * function.
- * https://tc39.es/proposal-import-assertions/#sec-hostgetsupportedimportassertions
  */
 extern JS_PUBLIC_API void SetSupportedAssertionsHook(
     JSRuntime* rt, SupportedAssertionsHook func);
 
-using ModuleResolveHook = JSObject* (*)(JSContext*, Handle<Value>,
-                                        Handle<JSObject*>);
+/**
+ * The HostResolveImportedModule hook.
+ *
+ * See: https://tc39.es/ecma262/#sec-hostresolveimportedmodule
+ *
+ * This embedding-defined hook is used to implement module loading. It is called
+ * to get or create a module object corresponding to |moduleRequest| occurring
+ * in the context of the script or module with private value
+ * |referencingPrivate|.
+ *
+ * The module specifier string for the request can be obtained by calling
+ * JS::GetModuleRequestSpecifier.
+ *
+ * The private value for a script or module is set with JS::SetScriptPrivate or
+ * JS::SetModulePrivate. It's assumed that the embedding can handle receiving
+ * either here.
+ *
+ * This hook must obey the restrictions defined in the spec:
+ *  - Each time the hook is called with the same arguemnts, the same module must
+ *    be returned.
+ *  - If a module cannot be created for the given arguments, an exception must
+ *    be thrown.
+ *
+ * This is a synchronous operation.
+ */
+using ModuleResolveHook = JSObject* (*)(JSContext* cx,
+                                        Handle<Value> referencingPrivate,
+                                        Handle<JSObject*> moduleRequest);
 
 /**
  * Get the HostResolveImportedModule hook for the runtime.
@@ -71,8 +104,19 @@ extern JS_PUBLIC_API ModuleResolveHook GetModuleResolveHook(JSRuntime* rt);
 extern JS_PUBLIC_API void SetModuleResolveHook(JSRuntime* rt,
                                                ModuleResolveHook func);
 
-using ModuleMetadataHook = bool (*)(JSContext*, Handle<Value>,
-                                    Handle<JSObject*>);
+/**
+ * The module metadata hook.
+ *
+ * See: https://tc39.es/ecma262/#sec-hostgetimportmetaproperties
+ *
+ * Populate the |metaObject| object returned when import.meta is evaluated in
+ * the context of the script or module with private value |privateValue|.
+ *
+ * This is based on the spec's HostGetImportMetaProperties hook but defines
+ * properties on the meta object directly rather than returning a list.
+ */
+using ModuleMetadataHook = bool (*)(JSContext* cx, Handle<Value> privateValue,
+                                    Handle<JSObject*> metaObject);
 
 /**
  * Get the hook for populating the import.meta metadata object.
@@ -86,6 +130,24 @@ extern JS_PUBLIC_API ModuleMetadataHook GetModuleMetadataHook(JSRuntime* rt);
 extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
                                                 ModuleMetadataHook func);
 
+/**
+ * The HostImportModuleDynamically hook.
+ *
+ * See https://tc39.es/ecma262/#sec-hostimportmoduledynamically
+ *
+ * Used to implement dynamic module import. Called when evaluating import()
+ * expressions.
+ *
+ * This starts an asynchronous operation. Some time after this hook is called
+ * the embedding must call JS::FinishDynamicModuleImport() passing the
+ * |referencingPrivate|, |moduleRequest| and |promise| arguments from the
+ * call. This must happen for both success and failure cases.
+ *
+ * In the meantime the embedding can take whatever steps it needs to make the
+ * module available. If successful, after calling FinishDynamicModuleImport()
+ * the module should be returned by the resolve hook when passed
+ * |referencingPrivate| and |moduleRequest|.
+ */
 using ModuleDynamicImportHook = bool (*)(JSContext* cx,
                                          Handle<Value> referencingPrivate,
                                          Handle<JSObject*> moduleRequest,
@@ -108,12 +170,6 @@ extern JS_PUBLIC_API void SetModuleDynamicImportHook(
     JSRuntime* rt, ModuleDynamicImportHook func);
 
 /**
- * Passed to FinishDynamicModuleImport to indicate the result of the dynamic
- * import operation.
- */
-enum class DynamicImportStatus { Failed = 0, Ok };
-
-/**
  * This must be called after a dynamic import operation is complete.
  *
  * If |evaluationPromise| is rejected, the rejection reason will be used to
@@ -123,19 +179,6 @@ extern JS_PUBLIC_API bool FinishDynamicModuleImport(
     JSContext* cx, Handle<JSObject*> evaluationPromise,
     Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
     Handle<JSObject*> promise);
-
-/**
- * This must be called after a dynamic import operation is complete.
- *
- * This is used so that Top Level Await functionality can be turned off
- * entirely. It will be removed in bug#1676612.
- *
- * If |status| is Failed, any pending exception on the context will be used to
- * complete the user's promise.
- */
-extern JS_PUBLIC_API bool FinishDynamicModuleImport_NoTLA(
-    JSContext* cx, DynamicImportStatus status, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global

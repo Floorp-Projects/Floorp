@@ -1,4 +1,4 @@
-// |jit-test| --ion-offthread-compile=off; --ion-full-warmup-threshold=0; --ion-gvn=off; --warp-async; --baseline-eager
+// |jit-test| --ion-offthread-compile=off; --ion-full-warmup-threshold=0; --ion-gvn=off; --baseline-eager
 //
 // Bug 1683306 - Assertion failure: !genObj->hasStackStorage() || genObj->isStackStorageEmpty(), at vm/GeneratorObject.cpp:144
 

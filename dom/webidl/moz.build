@@ -1098,6 +1098,7 @@ WEBIDL_FILES += [
     "ExtensionMockAPI.webidl",
     "ExtensionPort.webidl",
     "ExtensionRuntime.webidl",
+    "ExtensionScripting.webidl",
     "ExtensionTest.webidl",
 ]
 

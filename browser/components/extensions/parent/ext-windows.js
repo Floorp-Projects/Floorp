@@ -87,6 +87,26 @@ this.windows = class extends ExtensionAPIPersistent {
 
     const { windowManager } = extension;
 
+    function getTriggeringPrincipalForUrl(url) {
+      if (context.checkLoadURL(url, { dontReportErrors: true })) {
+        return context.principal;
+      }
+      let window = context.currentWindow || windowTracker.topWindow;
+      // The extension principal cannot directly load about:-URLs except for about:blank, and
+      // possibly some other loads such as moz-extension.  Ensure any page set as a home page
+      // will load by using a content principal.
+      return Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(url),
+        {
+          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(
+            window.gBrowser
+          )
+            ? 1
+            : 0,
+        }
+      );
+    }
+
     return {
       windows: {
         onCreated: new EventManager({
@@ -182,7 +202,12 @@ this.windows = class extends ExtensionAPIPersistent {
             Ci.nsIMutableArray
           );
 
-          let principal = context.principal;
+          // Creating a new window allows one single triggering principal for all tabs that
+          // are created in the window.  Due to that, if we need a browser principal to load
+          // some urls, we fallback to using a content principal like we do in the tabs api.
+          // Throws if url is an array and any url can't be loaded by the extension principal.
+          let { allowScriptsToClose, principal } = createData;
+
           if (createData.tabId !== null) {
             if (createData.url !== null) {
               throw new ExtensionError(
@@ -231,12 +256,24 @@ this.windows = class extends ExtensionAPIPersistent {
               let array = Cc["@mozilla.org/array;1"].createInstance(
                 Ci.nsIMutableArray
               );
-              for (let url of createData.url) {
+              for (let url of createData.url.map(u => context.uri.resolve(u))) {
+                // We can only provide a single triggering principal when
+                // opening a window, so if the extension cannot normally
+                // access a url, we fail.  This includes about and moz-ext
+                // urls.
+                if (!context.checkLoadURL(url, { dontReportErrors: true })) {
+                  return Promise.reject({ message: `Illegal URL: ${url}` });
+                }
                 array.appendElement(mkstr(url));
               }
               args.appendElement(array);
             } else {
-              args.appendElement(mkstr(createData.url));
+              let url = context.uri.resolve(createData.url);
+              args.appendElement(mkstr(url));
+              principal = getTriggeringPrincipalForUrl(url);
+              if (allowScriptsToClose === null) {
+                allowScriptsToClose = url.startsWith("moz-extension://");
+              }
             }
           } else {
             let url =
@@ -245,15 +282,7 @@ this.windows = class extends ExtensionAPIPersistent {
                 ? "about:privatebrowsing"
                 : HomePage.get().split("|", 1)[0];
             args.appendElement(mkstr(url));
-
-            if (
-              url.startsWith("about:") &&
-              !context.checkLoadURL(url, { dontReportErrors: true })
-            ) {
-              // The extension principal cannot directly load about:-URLs,
-              // except for about:blank. So use the system principal instead.
-              principal = Services.scriptSecurityManager.getSystemPrincipal();
-            }
+            principal = getTriggeringPrincipalForUrl(url);
           }
 
           args.appendElement(null); // extraOptions
@@ -271,6 +300,7 @@ this.windows = class extends ExtensionAPIPersistent {
               createData.cookieStoreId,
               createData.incognito
             );
+
             args.appendElement(userContextIdSupports); // userContextId
           } else {
             args.appendElement(null);
@@ -314,12 +344,6 @@ this.windows = class extends ExtensionAPIPersistent {
             } else {
               features.push("non-private");
             }
-          }
-
-          let { allowScriptsToClose, url } = createData;
-          if (allowScriptsToClose === null) {
-            allowScriptsToClose =
-              typeof url === "string" && url.startsWith("moz-extension://");
           }
 
           let window = Services.ww.openWindow(

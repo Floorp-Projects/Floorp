@@ -56,12 +56,12 @@
       [[0, 0, kEmbedChar, 0, 1],
       [1, 2, kEmbedChar, 1, 2]]);
       testTextAtOffset("li1", BOUNDARY_PARAGRAPH,
-      [[0, 0, "• ", 0, 2], [2, 3, "a", 2, 3]]);
+      [[0, 3, "• a", 0, 3]]);
       testTextAtOffset("li2", BOUNDARY_PARAGRAPH,
-      [[0, 0, "• ", 0, 2], [2, 3, "a", 2, 3]]);
+      [[0, 3, "• a", 0, 3]]);
       // Test a list item containing multiple text leaf nodes.
       testTextAtOffset("liMultiLeaf", BOUNDARY_PARAGRAPH,
-      [[0, 0, "• ", 0, 2], [2, 4, "ab", 2, 4]]);
+      [[0, 4, "• ab", 0, 4]]);
 
       // Test line breaks in a textarea.
       testTextAtOffset("textarea", BOUNDARY_PARAGRAPH,

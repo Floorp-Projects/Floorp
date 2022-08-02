@@ -44,23 +44,18 @@ async function waitForNotificationBadgeToBeShowing(fxViewButton) {
   await BrowserTestUtils.waitForMutationCondition(
     fxViewButton,
     { attributes: true },
-    () => fxViewButton.getAttribute("attention") === "true"
+    () => fxViewButton.hasAttribute("attention")
   );
-  return fxViewButton.getAttribute("attention") === "true";
+  return fxViewButton.hasAttribute("attention");
 }
 
 async function waitForNotificationBadgeToBeHidden(fxViewButton) {
   await BrowserTestUtils.waitForMutationCondition(
     fxViewButton,
     { attributes: true },
-    () =>
-      !fxViewButton.getAttribute("attention") ||
-      fxViewButton.getAttribute("attention") === "false"
+    () => !fxViewButton.hasAttribute("attention")
   );
-  return (
-    !fxViewButton.getAttribute("attention") ||
-    fxViewButton.getAttribute("attention") === "false"
-  );
+  return !fxViewButton.hasAttribute("attention");
 }
 
 function getBackgroundPositionForElement(ele) {

@@ -111,7 +111,7 @@ class GeckoProfile(object):
         self, cycle, symbolicator, missing_symbols_zip, profile_path
     ):
         try:
-            with open(profile_path, "r") as profile_file:
+            with open(profile_path, "r", encoding="utf-8") as profile_file:
                 profile = json.load(profile_file)
             symbolicator.dump_and_integrate_missing_symbols(
                 profile, missing_symbols_zip

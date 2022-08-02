@@ -1652,6 +1652,7 @@ const nsACString& ContentParent::GetRemoteType() const { return mRemoteType; }
 
 static StaticRefPtr<nsIAsyncShutdownClient> sXPCOMShutdownClient;
 static StaticRefPtr<nsIAsyncShutdownClient> sProfileBeforeChangeClient;
+static StaticRefPtr<nsIAsyncShutdownClient> sQuitApplicationGrantedClient;
 
 void ContentParent::Init() {
   MOZ_ASSERT(sXPCOMShutdownClient);
@@ -1722,6 +1723,7 @@ void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
 
   // We're dying now, prevent anything from re-using this process.
   MarkAsDead();
+  SignalImpendingShutdownToContentJS();
   StartForceKillTimer();
 
   if (aSendShutDown) {
@@ -1799,7 +1801,12 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
               __LINE__);
           mShutdownPending = true;
           // Start the force-kill timer if we haven't already.
-          StartForceKillTimer();
+          // This can happen if we shutdown a process while launching or
+          // because it is removed from the cached processes pool.
+          if (!mForceKillTimer) {
+            SignalImpendingShutdownToContentJS();
+            StartForceKillTimer();
+          }
         } else {
           MaybeLogBlockShutdownDiagnostics(
               this, "ShutDownProcess: !!! Send shutdown message failed! !!!",
@@ -2366,8 +2373,6 @@ void ContentParent::StartForceKillTimer() {
   if (mForceKillTimer || !CanSend()) {
     return;
   }
-
-  NotifyImpendingShutdown();
 
   int32_t timeoutSecs = StaticPrefs::dom_ipc_tabs_shutdownTimeoutSecs();
   if (timeoutSecs > 0) {
@@ -3578,14 +3583,71 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentParent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProcessParent)
 NS_INTERFACE_MAP_END
 
+class RequestContentJSInterruptRunnable final : public Runnable {
+ public:
+  explicit RequestContentJSInterruptRunnable(PProcessHangMonitorParent* aActor)
+      : Runnable("dom::RequestContentJSInterruptRunnable"),
+        mHangMonitorActor(aActor) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(mHangMonitorActor);
+    Unused << mHangMonitorActor->SendRequestContentJSInterrupt();
+
+    return NS_OK;
+  }
+
+ private:
+  // The end-of-life of ContentParent::mHangMonitorActor is bound to
+  // ContentParent::ActorDestroy and then HangMonitorParent::Shutdown
+  // dispatches a shutdown runnable to this queue and waits for it to be
+  // executed. So the runnable needs not to care about keeping it alive,
+  // as it is surely dispatched earlier than the
+  // HangMonitorParent::ShutdownOnThread.
+  PProcessHangMonitorParent* mHangMonitorActor;
+};
+
+void ContentParent::SignalImpendingShutdownToContentJS() {
+  if (!AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+    MaybeLogBlockShutdownDiagnostics(
+        this, "BlockShutdown: NotifyImpendingShutdown.", __FILE__, __LINE__);
+    NotifyImpendingShutdown();
+    if (mHangMonitorActor &&
+        StaticPrefs::dom_abort_script_on_child_shutdown()) {
+      MaybeLogBlockShutdownDiagnostics(
+          this, "BlockShutdown: RequestContentJSInterrupt.", __FILE__,
+          __LINE__);
+      RefPtr<RequestContentJSInterruptRunnable> r =
+          new RequestContentJSInterruptRunnable(mHangMonitorActor);
+      ProcessHangMonitor::Get()->Dispatch(r.forget());
+    }
+  }
+}
+
 // Async shutdown blocker
 NS_IMETHODIMP
 ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
+  if (!AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  // We register two shutdown blockers and both would call us, but
-  // if things go well we will unregister both as (delayed) reaction
-  // to the first call we get and thus never receive a second call.
-  // Thus we believe that we will get called only once.
+    mBlockShutdownCalled = true;
+#endif
+    // Our real shutdown has not yet started. Just notify the
+    // impending shutdown and eventually cancel content JS.
+    SignalImpendingShutdownToContentJS();
+    if (sQuitApplicationGrantedClient) {
+      Unused << sQuitApplicationGrantedClient->RemoveBlocker(this);
+    }
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mBlockShutdownCalled = false;
+#endif
+    return NS_OK;
+  }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // We register two final shutdown blockers and both would call us, but if
+  // things go well we will unregister both as (delayed) reaction to the first
+  // call we get and thus never receive a second call. Thus we believe that we
+  // will get called only once except for quit-application-granted, which is
+  // handled above.
   MOZ_ASSERT(!mBlockShutdownCalled);
   mBlockShutdownCalled = true;
 #endif
@@ -3671,6 +3733,15 @@ static void InitShutdownClients() {
         ClearOnShutdown(&sProfileBeforeChangeClient);
       }
     }
+    // TODO: ShutdownPhase::AppShutdownConfirmed is not mapping to
+    // QuitApplicationGranted, see bug 1762840 comment 4.
+    if (!AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+      rv = svc->GetQuitApplicationGranted(getter_AddRefs(client));
+      if (NS_SUCCEEDED(rv)) {
+        sQuitApplicationGrantedClient = client.forget();
+        ClearOnShutdown(&sQuitApplicationGrantedClient);
+      }
+    }
   }
 }
 
@@ -3685,6 +3756,10 @@ void ContentParent::AddShutdownBlockers() {
   }
   if (sProfileBeforeChangeClient) {
     sProfileBeforeChangeClient->AddBlocker(
+        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
+  }
+  if (sQuitApplicationGrantedClient) {
+    sQuitApplicationGrantedClient->AddBlocker(
         this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
   }
 }
@@ -3704,6 +3779,9 @@ void ContentParent::RemoveShutdownBlockers() {
   }
   if (sProfileBeforeChangeClient) {
     Unused << sProfileBeforeChangeClient->RemoveBlocker(this);
+  }
+  if (sQuitApplicationGrantedClient) {
+    Unused << sQuitApplicationGrantedClient->RemoveBlocker(this);
   }
 }
 

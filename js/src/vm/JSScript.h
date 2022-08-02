@@ -60,6 +60,9 @@ class ScriptSource;
 class VarScope;
 class LexicalScope;
 
+class GenericPrinter;
+class Sprinter;
+
 namespace coverage {
 class LCovSource;
 }  // namespace coverage
@@ -1706,7 +1709,7 @@ class JSScript : public js::BaseScript {
 
   jsbytecode* lastPC() const {
     jsbytecode* pc = codeEnd() - js::JSOpLength_RetRval;
-    MOZ_ASSERT(JSOp(*pc) == JSOp::RetRval);
+    MOZ_ASSERT(JSOp(*pc) == JSOp::RetRval || JSOp(*pc) == JSOp::Return);
     return pc;
   }
 
@@ -2114,6 +2117,28 @@ class JSScript : public js::BaseScript {
     void holdScript(JS::HandleFunction fun);
     void dropScript();
   };
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+ public:
+  struct DumpOptions {
+    bool recursive = false;
+    bool runtimeData = false;
+  };
+
+  void dump(JSContext* cx);
+  void dumpRecursive(JSContext* cx);
+
+  static bool dump(JSContext* cx, JS::Handle<JSScript*> script,
+                   DumpOptions& options, js::Sprinter* sp);
+  static bool dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
+                           js::Sprinter* sp);
+  static bool dumpTryNotes(JSContext* cx, JS::Handle<JSScript*> script,
+                           js::Sprinter* sp);
+  static bool dumpScopeNotes(JSContext* cx, JS::Handle<JSScript*> script,
+                             js::Sprinter* sp);
+  static bool dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
+                           js::Sprinter* sp);
+#endif
 };
 
 namespace js {

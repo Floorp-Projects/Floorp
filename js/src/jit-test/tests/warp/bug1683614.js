@@ -1,6 +1,5 @@
-// |jit-test| --ion-offthread-compile=off; --ion-full-warmup-threshold=0; --warp-async; --baseline-eager; skip-if: !this.hasOwnProperty("ReadableStream")
-//
-// The following testcase crashes on mozilla-central revision 20201219-3262affdccf6 (debug build, run with --fuzzing-safe --ion-offthread-compile=off --ion-full-warmup-threshold=0 --warp-async --baseline-eager):
+// |jit-test| --ion-offthread-compile=off; --ion-full-warmup-threshold=0; --baseline-eager; skip-if: !this.hasOwnProperty("ReadableStream")
+
 gczeal(9, 8);
 function s() { }
 new ReadableStream({
