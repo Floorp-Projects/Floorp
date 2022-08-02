@@ -266,11 +266,12 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
         mCachedFields = new AccAttributes();
       }
       mCachedFields->Update(aFields);
-      if (IsTextLeaf()) {
-        Derived* parent = RemoteParent();
-        if (parent && parent->IsHyperText()) {
-          parent->InvalidateCachedHyperTextOffsets();
-        }
+    }
+
+    if (IsTextLeaf()) {
+      Derived* parent = RemoteParent();
+      if (parent && parent->IsHyperText()) {
+        parent->InvalidateCachedHyperTextOffsets();
       }
     }
   }

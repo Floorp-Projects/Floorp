@@ -237,6 +237,9 @@ void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
   if (aAcc->IsTable() || aAcc->IsTableCell()) {
     CachedTableAccessible::Invalidate(aAcc);
   }
+  if (aAcc->IsHyperText()) {
+    aAcc->InvalidateCachedHyperTextOffsets();
+  }
   mMovingIDs.EnsureRemoved(id);
   if (aAcc->IsOuterDoc()) {
     // Leave child documents alone. They are added and removed differently to
