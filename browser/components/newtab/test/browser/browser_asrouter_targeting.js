@@ -27,11 +27,9 @@ ChromeUtils.defineModuleGetter(
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "TelemetryEnvironment",
