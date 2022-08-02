@@ -56,6 +56,7 @@ GCSchedulingTunables::GCSchedulingTunables()
           TuningDefaults::HighFrequencyLargeHeapGrowth),
       lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
       balancedHeapLimitsEnabled_(TuningDefaults::BalancedHeapLimitsEnabled),
+      heapGrowthFactor_(TuningDefaults::HeapGrowthFactor),
       nurseryFreeThresholdForIdleCollection_(
           TuningDefaults::NurseryFreeThresholdForIdleCollection),
       nurseryFreeThresholdForIdleCollectionFraction_(
@@ -146,6 +147,10 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
         return false;
       }
       setLowFrequencyHeapGrowth(newGrowth);
+      break;
+    }
+    case JSGC_HEAP_GROWTH_FACTOR: {
+      setHeapGrowthFactor(double(value));
       break;
     }
     case JSGC_ALLOCATION_THRESHOLD: {
@@ -314,6 +319,10 @@ void GCSchedulingTunables::setLowFrequencyHeapGrowth(double value) {
   MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinHeapGrowthFactor);
 }
 
+void GCSchedulingTunables::setHeapGrowthFactor(double value) {
+  heapGrowthFactor_ = value;
+}
+
 void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
   switch (key) {
     case JSGC_MAX_BYTES:
@@ -348,6 +357,9 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
       break;
     case JSGC_BALANCED_HEAP_LIMITS_ENABLED:
       balancedHeapLimitsEnabled_ = TuningDefaults::BalancedHeapLimitsEnabled;
+      break;
+    case JSGC_HEAP_GROWTH_FACTOR:
+      setHeapGrowthFactor(TuningDefaults::HeapGrowthFactor);
       break;
     case JSGC_ALLOCATION_THRESHOLD:
       gcZoneAllocThresholdBase_ = TuningDefaults::GCZoneAllocThresholdBase;
