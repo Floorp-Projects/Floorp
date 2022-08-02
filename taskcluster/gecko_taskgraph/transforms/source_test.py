@@ -263,3 +263,13 @@ def set_base_revision_in_tgdiff(config, jobs):
             "base_rev": data["changesets"][0]["parents"][0]
         }
         yield job
+
+
+@transforms.add
+def set_worker_exit_code(config, jobs):
+    for job in jobs:
+        worker = job["worker"]
+        worker.setdefault("retry-exit-status", [])
+        if 137 not in worker["retry-exit-status"]:
+            worker["retry-exit-status"].append(137)
+        yield job
