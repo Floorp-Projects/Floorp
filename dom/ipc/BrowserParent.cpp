@@ -3791,7 +3791,7 @@ nsresult BrowserParent::HandleEvent(Event* aEvent) {
 
 mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
-    Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
+    Maybe<BigBuffer>&& aVisualDnDData, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
     const CookieJarSettingsArgs& aCookieJarSettingsArgs,
@@ -3814,11 +3814,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
       this, std::move(aTransfers), aDragRect, aPrincipal, aCsp,
       cookieJarSettings, aSourceWindowContext.GetMaybeDiscarded());
 
-  if (!aVisualDnDData.isNothing() && aVisualDnDData.ref().IsReadable() &&
-      aVisualDnDData.ref().Size<char>() >= aDragRect.height * aStride) {
+  if (aVisualDnDData && aVisualDnDData->Size() >= aDragRect.height * aStride) {
     dragStartData->SetVisualization(gfx::CreateDataSourceSurfaceFromData(
         gfx::IntSize(aDragRect.width, aDragRect.height), aFormat,
-        aVisualDnDData.ref().get<uint8_t>(), aStride));
+        aVisualDnDData->Data(), aStride));
   }
 
   nsCOMPtr<nsIDragService> dragService =
@@ -3830,10 +3829,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
   presShell->GetPresContext()
       ->EventStateManager()
       ->BeginTrackingRemoteDragGesture(mFrameElement, dragStartData);
-
-  if (aVisualDnDData.isSome()) {
-    Unused << DeallocShmem(aVisualDnDData.ref());
-  }
 
   return IPC_OK();
 }
