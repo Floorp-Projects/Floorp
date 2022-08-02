@@ -450,7 +450,7 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   }
 
   // Pass on the path of the shortcut used to launch this process, if any.
-  STARTUPINFOW currentStartupInfo;
+  STARTUPINFOW currentStartupInfo = {.cb = sizeof(STARTUPINFOW)};
   GetStartupInfoW(&currentStartupInfo);
   if ((currentStartupInfo.dwFlags & STARTF_TITLEISLINKNAME) &&
       currentStartupInfo.lpTitle) {
