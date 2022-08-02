@@ -83,56 +83,6 @@ static void DisableFontActivation() {
   }
 }
 
-// Helpers for gfxPlatformMac::RegisterSupplementalFonts below.
-static void ActivateFontsFromDir(const nsACString& aDir) {
-  AutoCFRelease<CFURLRef> directory = CFURLCreateFromFileSystemRepresentation(
-      kCFAllocatorDefault, (const UInt8*)nsPromiseFlatCString(aDir).get(),
-      aDir.Length(), true);
-  if (!directory) {
-    return;
-  }
-  AutoCFRelease<CFURLEnumeratorRef> enumerator =
-      CFURLEnumeratorCreateForDirectoryURL(kCFAllocatorDefault, directory,
-                                           kCFURLEnumeratorDefaultBehavior,
-                                           nullptr);
-  if (!enumerator) {
-    return;
-  }
-  AutoCFRelease<CFMutableArrayRef> urls =
-      ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-  if (!urls) {
-    return;
-  }
-
-  CFURLRef url;
-  CFURLEnumeratorResult result;
-  do {
-    result = CFURLEnumeratorGetNextURL(enumerator, &url, nullptr);
-    if (result == kCFURLEnumeratorSuccess) {
-      CFArrayAppendValue(urls, url);
-    }
-  } while (result != kCFURLEnumeratorEnd);
-
-  CTFontManagerRegisterFontsForURLs(urls, kCTFontManagerScopeProcess, nullptr);
-}
-
-#ifdef MOZ_BUNDLED_FONTS
-static void ActivateBundledFonts() {
-  nsCOMPtr<nsIFile> localDir;
-  if (NS_FAILED(NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(localDir)))) {
-    return;
-  }
-  if (NS_FAILED(localDir->Append(u"fonts"_ns))) {
-    return;
-  }
-  nsAutoCString path;
-  if (NS_FAILED(localDir->GetNativePath(path))) {
-    return;
-  }
-  ActivateFontsFromDir(path);
-}
-#endif
-
 // A bunch of fonts for "additional language support" are shipped in a
 // "Language Support" directory, and don't show up in the standard font
 // list returned by CTFontManagerCopyAvailableFontFamilyNames unless
@@ -141,12 +91,13 @@ static const nsLiteralCString kLangFontsDirs[] = {
     "/Library/Application Support/Apple/Fonts/Language Support"_ns,
     "/System/Library/Fonts/Supplemental"_ns};
 
-static void FontRegistrationCallback(void* aUnused) {
+/* static */
+void gfxPlatformMac::FontRegistrationCallback(void* aUnused) {
   AUTO_PROFILER_REGISTER_THREAD("RegisterFonts");
   PR_SetCurrentThreadName("RegisterFonts");
 
   for (const auto& dir : kLangFontsDirs) {
-    ActivateFontsFromDir(dir);
+    gfxMacPlatformFontList::ActivateFontsFromDir(dir);
   }
 }
 
@@ -173,7 +124,7 @@ void gfxPlatformMac::RegisterSupplementalFonts() {
     // CTFontManager.h header claiming that it's thread-safe. So we just do it
     // immediately on the main thread, and accept the startup-time hit (sigh).
     for (const auto& dir : kLangFontsDirs) {
-      ActivateFontsFromDir(dir);
+      gfxMacPlatformFontList::ActivateFontsFromDir(dir);
     }
   }
 }
@@ -183,22 +134,6 @@ void gfxPlatformMac::WaitForFontRegistration() {
   if (sFontRegistrationThread) {
     PR_JoinThread(sFontRegistrationThread);
     sFontRegistrationThread = nullptr;
-
-#ifdef MOZ_BUNDLED_FONTS
-    // This is not done by the font registration thread because it uses the
-    // XPCOM directory service, which is not yet available at the time we start
-    // the registration thread.
-    //
-    // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
-    // explicit value of 0 (off) will disable them.
-    if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
-      TimeStamp start = TimeStamp::Now();
-      ActivateBundledFonts();
-      TimeStamp end = TimeStamp::Now();
-      Telemetry::Accumulate(Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
-                            (end - start).ToMilliseconds());
-    }
-#endif
   }
 }
 
