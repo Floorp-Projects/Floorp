@@ -102,6 +102,9 @@ inline auto AutoAssertCast(const From val) {
   return detail::AutoAssertCastT<From>(val);
 }
 
+const char* GetEnumName(GLenum val, const char* defaultRet = "<unknown>");
+std::string EnumString(GLenum val);
+
 namespace webgl {
 template <typename T>
 struct QueueParamTraits;

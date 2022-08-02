@@ -85,6 +85,16 @@ struct LocationInfo final {
   const ActiveUniformValidationInfo info;
   const uint32_t indexIntoUniform;
   SamplerUniformInfo* const samplerInfo;
+
+  auto PrettyName() const {
+    auto ret = info.info.name;
+    if (info.isArray) {
+      ret += "[";
+      ret += std::to_string(indexIntoUniform);
+      ret += "]";
+    }
+    return ret;
+  }
 };
 
 // -

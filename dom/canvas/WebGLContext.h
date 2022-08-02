@@ -1301,9 +1301,6 @@ V RoundUpToMultipleOf(const V& value, const M& multiple) {
   return ((value + multiple - 1) / multiple) * multiple;
 }
 
-const char* GetEnumName(GLenum val, const char* defaultRet = "<unknown>");
-std::string EnumString(GLenum val);
-
 class ScopedFBRebinder final {
  private:
   const WebGLContext* const mWebGL;
