@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // If you ever need to force a toolchain rebuild (taskcluster) then edit the following comment.
-// FORCE REBUILD 2022-08-18
+// FORCE REBUILD 2022-09-16
 
 object Versions {
     const val kotlin = "1.6.10"
@@ -11,8 +11,8 @@ object Versions {
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3
-    const val android_gradle_plugin = "7.0.0"
-    const val android_lint_api = "30.0.0"
+    const val android_gradle_plugin = "7.3.0"
+    const val android_lint_api = "30.2.2"
 
     const val sentry = "5.7.3"
     const val leakcanary = "2.8.1"
