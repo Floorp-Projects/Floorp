@@ -246,22 +246,57 @@ std::pair<TestCaseState, std::vector<const char*>> const kCommandLines[] = {
     {PASS, {"-aleph", "-aleph", "http://www.example.com/"}},
 };
 
+constexpr static char const* const kOptionalArgs[] = {"mozilla", "allizom"};
+
+// Additional test cases for optional parameters.
+//
+// Test cases marked PASS should pass iff the above optional parameters are
+// permitted. (Test cases marked FAIL should fail regardless, and are only
+// grouped here for convenience and semantic coherence.)
+std::pair<TestCaseState, std::vector<const char*>> kCommandLinesOpt[] = {
+    {PASS, {"-osint", "-mozilla", "-aleph", "http://www.example.com/"}},
+    {PASS, {"-osint", "-allizom", "-aleph", "http://www.example.com/"}},
+    {PASS,
+     {"-osint", "-mozilla", "-allizom", "-aleph", "http://www.example.com/"}},
+    {PASS,
+     {"-osint", "-allizom", "-mozilla", "-aleph", "http://www.example.com/"}},
+
+    {FAIL, {"-mozilla", "-osint", "-aleph", "http://www.example.com/"}},
+    {FAIL, {"-osint", "-aleph", "-mozilla", "http://www.example.com/"}},
+    {FAIL, {"-osint", "-aleph", "http://www.example.com/", "-mozilla"}},
+};
+
+enum WithOptionalState : bool {
+  NoOptionalArgs = false,
+  WithOptionalArgs = true,
+};
+
 template <typename CharT>
-bool TestCommandLineImpl(CommandLine const& cl) {
+bool TestCommandLineImpl(CommandLine const& cl,
+                         WithOptionalState withOptional) {
   int argc = cl.argc();
   // EnsureCommandlineSafe's signature isn't const-correct here for annoying
   // reasons, but it is indeed non-mutating.
   CharT** argv = const_cast<CharT**>(cl.argv<CharT>());
-  return mozilla::internal::EnsureCommandlineSafeImpl<CharT>(argc, argv,
-                                                             kRequiredArgs);
+  if (withOptional) {
+    return mozilla::internal::EnsureCommandlineSafeImpl(
+        argc, argv, kRequiredArgs, kOptionalArgs);
+  }
+  return mozilla::internal::EnsureCommandlineSafeImpl(argc, argv,
+                                                      kRequiredArgs);
 }
 
 // Test that `args` produces `expectation`. On Windows, test against both
 // wide-character and narrow-character implementations.
-void TestCommandLine(TestCaseState expectation, CommandLine const& cl) {
-  EXPECT_EQ(TestCommandLineImpl<char>(cl), expectation) << "cl is: " << cl;
+void TestCommandLine(TestCaseState expectation, CommandLine const& cl,
+                     WithOptionalState withOptional) {
+  EXPECT_EQ(TestCommandLineImpl<char>(cl, withOptional), expectation)
+      << "cl is: " << cl << std::endl
+      << "withOptional is: " << bool(withOptional);
 #ifdef XP_WIN
-  EXPECT_EQ(TestCommandLineImpl<wchar_t>(cl), expectation) << "cl is: " << cl;
+  EXPECT_EQ(TestCommandLineImpl<wchar_t>(cl, withOptional), expectation)
+      << "cl is: " << cl << std::endl
+      << "withOptional is: " << bool(withOptional);
 #endif
 }
 }  // namespace testzilla
@@ -301,6 +336,24 @@ TEST(CmdLineAndEnvUtils, ensureSafe)
   using namespace testzilla;
   for (auto const& [result, data] : kCommandLines) {
     CommandLine const cl(data);
-    TestCommandLine(result, cl);
+    TestCommandLine(result, cl, NoOptionalArgs);
+  }
+  for (auto const& [_unused, data] : kCommandLinesOpt) {
+    MOZ_UNUSED(_unused);  // silence gcc
+    CommandLine const cl(data);
+    TestCommandLine(FAIL, cl, NoOptionalArgs);
+  }
+}
+
+TEST(CmdLineAndEnvUtils, ensureSafeWithOptional)
+{
+  using namespace testzilla;
+  for (auto const& [result, data] : kCommandLines) {
+    CommandLine const cl(data);
+    TestCommandLine(result, cl, WithOptionalArgs);
+  }
+  for (auto const& [result, data] : kCommandLinesOpt) {
+    CommandLine const cl(data);
+    TestCommandLine(result, cl, WithOptionalArgs);
   }
 }

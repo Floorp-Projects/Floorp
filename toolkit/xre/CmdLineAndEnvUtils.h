@@ -217,66 +217,113 @@ namespace internal {
 // constexpr bool IsStringRange =
 //     std::convertible_to<std::ranges::range_value_t<T>, const char *>;
 
-template <typename CharT, typename ReqContainerT>
-// requires IsStringRange<ReqContainerT>
+template <typename CharT, typename ListT>
+// requires IsStringRange<ListT>
+static bool MatchesAnyOf(CharT const* unknown, ListT const& known) {
+  for (const char* k : known) {
+    if (strimatch(k, unknown)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template <typename CharT, typename ReqContainerT, typename OptContainerT>
+// requires IsStringRange<ReqContainerT> && IsStringRange<OptContainerT>
 inline bool EnsureCommandlineSafeImpl(int aArgc, CharT** aArgv,
-                                      ReqContainerT const& requiredParams) {
+                                      ReqContainerT const& requiredParams,
+                                      OptContainerT const& optionalParams) {
   // We expect either no -osint, or the full commandline to be:
-  // app -osint
-  // followed by one of the arguments listed in requiredParams,
-  // followed by one parameter for that arg.
-  // If this varies, we abort to avoid abuse of other commandline handlers
-  // from apps that do a poor job escaping links they give to the OS.
+  //
+  //   app -osint [<optional-param>...] <required-param> <required-argument>
+  //
+  // Otherwise, we abort to avoid abuse of other command-line handlers from apps
+  // that do a poor job escaping links they give to the OS.
+  //
+  // Note that the above implies that optional parameters do not themselves take
+  // arguments. This is a security feature, to prevent the possible injection of
+  // additional parameters via such arguments. (See, e.g., bug 384384.)
 
   static constexpr const char* osintLit = "osint";
 
+  // If "-osint" (or the equivalent) is not present, then this is trivially
+  // satisfied.
   if (CheckArg(aArgc, aArgv, osintLit, static_cast<const CharT**>(nullptr),
-               CheckArgFlag::None) == ARG_FOUND) {
-    // There should be 4 items left (app name + -osint + (acceptable arg) +
-    // param)
-    if (aArgc != 4) {
-      return false;
-    }
-
-    // The first should be osint.
-    const auto arg1 = ReadAsOption(aArgv[1]);
-    if (!arg1) return false;
-    if (!strimatch(osintLit, arg1.value())) {
-      return false;
-    }
-
-    // Now only an acceptable argument and a parameter for it should be left:
-    const auto arg2 = ReadAsOption(aArgv[2]);
-    if (!arg2) return false;
-
-    const bool haveRequiredArg = [&] {
-      for (const char* a : requiredParams) {
-        if (strimatch(a, arg2.value())) {
-          return true;
-        }
-      }
-      return false;
-    }();
-    if (!haveRequiredArg) {
-      return false;
-    }
-
-    // The param that is passed afterwards shouldn't be another switch:
-    if (ReadAsOption(aArgv[3])) {
-      return false;
-    }
+               CheckArgFlag::None) != ARG_FOUND) {
+    return true;
   }
 
-  // Either no osint, so nothing to do, or we ensured nothing nefarious was
-  // passed.
+  // There should be at least 4 items present:
+  //    <app name> -osint <required param> <arg>.
+  if (aArgc < 4) {
+    return false;
+  }
+
+  // The first parameter must be osint.
+  const auto arg1 = ReadAsOption(aArgv[1]);
+  if (!arg1) return false;
+  if (!strimatch(osintLit, arg1.value())) {
+    return false;
+  }
+  // Following this is any number of optional parameters, terminated by a
+  // required parameter.
+  int pos = 2;
+  while (true) {
+    if (pos >= aArgc) return false;
+
+    auto const arg = ReadAsOption(aArgv[pos]);
+    if (!arg) return false;
+
+    if (MatchesAnyOf(arg.value(), optionalParams)) {
+      ++pos;
+      continue;
+    }
+
+    if (MatchesAnyOf(arg.value(), requiredParams)) {
+      ++pos;
+      break;
+    }
+
+    return false;
+  }
+
+  // There must be one argument remaining...
+  if (pos + 1 != aArgc) return false;
+  // ... which must not be another option.
+  if (ReadAsOption(aArgv[pos])) {
+    return false;
+  }
+
+  // Nothing ill-formed was passed.
   return true;
+}
+
+// C (and so C++) disallows empty arrays. Rather than require callers to jump
+// through hoops to specify an empty optional-argument list, allow either its
+// omission or its specification as `nullptr`, and do the hoop-jumping here.
+//
+// No such facility is provided for requiredParams, which must have at least one
+// entry.
+template <typename CharT, typename ReqContainerT>
+inline bool EnsureCommandlineSafeImpl(int aArgc, CharT** aArgv,
+                                      ReqContainerT const& requiredParams,
+                                      std::nullptr_t _ = nullptr) {
+  struct {
+    inline const char** begin() const { return nullptr; }
+    inline const char** end() const { return nullptr; }
+  } emptyContainer;
+  return EnsureCommandlineSafeImpl(aArgc, aArgv, requiredParams,
+                                   emptyContainer);
 }
 }  // namespace internal
 
-template <typename CharT, typename ReqContainerT>
-inline void EnsureCommandlineSafe(int aArgc, CharT** aArgv,
-                                  ReqContainerT const& requiredParams) {
-  if (!internal::EnsureCommandlineSafeImpl(aArgc, aArgv, requiredParams)) {
+template <typename CharT, typename ReqContainerT,
+          typename OptContainerT = std::nullptr_t>
+inline void EnsureCommandlineSafe(
+    int aArgc, CharT** aArgv, ReqContainerT const& requiredParams,
+    OptContainerT const& optionalParams = nullptr) {
+  if (!internal::EnsureCommandlineSafeImpl(aArgc, aArgv, requiredParams,
+                                           optionalParams)) {
     exit(127);
   }
 }
