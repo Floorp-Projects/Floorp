@@ -859,6 +859,12 @@ inline bool Decoder::validateTypeIndex(const TypeContext& types,
                       types[type.typeIndex()].isArrayType())) {
     return true;
   }
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  if (features.functionReferences && types[type.typeIndex()].isFuncType()) {
+    return true;
+  }
+#endif
+
   return fail("type index references an invalid type");
 }
 

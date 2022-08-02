@@ -87,3 +87,16 @@ let { callLoadInt } = wasmEvalText(`(module
 
 assertEq(loadInt(), 4);
 assertEq(callLoadInt(), 4);
+
+// Null call.
+assertErrorMessage(function() {
+  let { nullCall } = wasmEvalText(`(module
+    (type $t (func (param i32) (result i32)))
+    (func (export "nullCall") (param i32) (result i32)
+      local.get 0
+      ref.null $t
+      call_ref
+    )
+  )`).exports;
+  nullCall(3);
+}, WebAssembly.RuntimeError, /dereferencing null pointer/);

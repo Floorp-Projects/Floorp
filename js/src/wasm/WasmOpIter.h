@@ -365,7 +365,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   template <typename ValTypeSpanT>
   [[nodiscard]] bool popWithTypes(ValTypeSpanT expected, ValueVector* values);
   [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
-  [[nodiscard]] bool popWithFuncType(Value* value, FuncType** funcType);
+  [[nodiscard]] bool popWithFuncType(Value* value, FuncType** funcType,
+                                     bool* maybeNull);
   [[nodiscard]] bool popThenPushType(ResultType expected, ValueVector* values);
   [[nodiscard]] bool topWithTypeAndPush(ResultType expected,
                                         ValueVector* values);
@@ -561,8 +562,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                       uint32_t* tableIndex, Value* callee,
                                       ValueVector* argValues);
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
-                                 ValueVector* argValues);
+  [[nodiscard]] bool readCallRef(const FuncType** funcType, bool* maybeNull,
+                                 Value* callee, ValueVector* argValues);
 #endif
   [[nodiscard]] bool readOldCallDirect(uint32_t numFuncImports,
                                        uint32_t* funcTypeIndex,
@@ -902,7 +903,8 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
 // This function pops exactly one value from the stack, checking that it is a
 // subtype of the function type.
 template <typename Policy>
-inline bool OpIter<Policy>::popWithFuncType(Value* value, FuncType** funcType) {
+inline bool OpIter<Policy>::popWithFuncType(Value* value, FuncType** funcType,
+                                            bool* maybeNull) {
   StackType ty;
   if (!popWithRefType(value, &ty)) {
     return false;
@@ -918,6 +920,7 @@ inline bool OpIter<Policy>::popWithFuncType(Value* value, FuncType** funcType) {
   }
 
   *funcType = &env_.types->funcType(ty.valType().typeIndex());
+  *maybeNull = ty.valType().isNullable();
 
 #ifdef WASM_PRIVATE_REFTYPES
   if ((*funcType)->exposesTypeIndex()) {
@@ -2374,11 +2377,12 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 template <typename Policy>
 inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
-                                        Value* callee, ValueVector* argValues) {
+                                        bool* maybeNull, Value* callee,
+                                        ValueVector* argValues) {
   MOZ_ASSERT(Classify(op_) == OpKind::CallRef);
 
   FuncType* funcType_;
-  if (!popWithFuncType(callee, &funcType_)) {
+  if (!popWithFuncType(callee, &funcType_, maybeNull)) {
     return false;
   }
 
