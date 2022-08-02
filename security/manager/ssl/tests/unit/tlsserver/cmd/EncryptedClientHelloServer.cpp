@@ -73,7 +73,38 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
   return 0;
 }
 
+int32_t SetAlpnOptions(PRFileDesc* aFd, uint8_t flags) {
+  const std::vector<uint8_t> http1 = {0x08, 0x68, 0x74, 0x74, 0x70,
+                                      0x2f, 0x31, 0x2e, 0x31};
+  const std::vector<uint8_t> http2 = {0x02, 0x68, 0x32};
+  const std::vector<uint8_t> http3 = {0x02, 0x68, 0x33};
+  std::vector<uint8_t> alpnVec = {};
+  if (flags & 0b001) {
+    alpnVec.insert(alpnVec.end(), http1.begin(), http1.end());
+  }
+  if (flags & 0b010) {
+    alpnVec.insert(alpnVec.end(), http2.begin(), http2.end());
+  }
+  if (flags & 0b100) {
+    alpnVec.insert(alpnVec.end(), http3.begin(), http3.end());
+  }
+  fprintf(stderr, "ALPN Flags: %u\n", flags);
+  fprintf(stderr, "ALPN length: %zu\n", alpnVec.size());
+  if (SSL_SetNextProtoNego(aFd, alpnVec.data(), alpnVec.size()) != SECSuccess) {
+    fprintf(stderr, "Setting ALPN failed!\n");
+    return 1;
+  }
+
+  return 0;
+}
+
 SECStatus ConfigureServer(PRFileDesc* aFd) {
+  const char* alpnFlag = PR_GetEnv("MOZ_TLS_ECH_ALPN_FLAG");
+  if (alpnFlag) {
+    uint8_t flag = atoi(alpnFlag);
+    SetAlpnOptions(aFd, flag);
+  }
+
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     PrintPRError("PK11_GetInternalKeySlot failed");
