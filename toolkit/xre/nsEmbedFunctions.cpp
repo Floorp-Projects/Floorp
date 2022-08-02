@@ -67,6 +67,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/FilePreferences.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/ProcessType.h"
 #include "mozilla/RDDProcessImpl.h"
 #include "mozilla/ipc/UtilityProcessImpl.h"
 #include "mozilla/UniquePtr.h"
@@ -253,10 +254,6 @@ const char* XRE_ChildProcessTypeToAnnotation(GeckoProcessType aProcessType) {
   }
 }
 
-namespace mozilla::startup {
-GeckoProcessType sChildProcessType = GeckoProcessType_Default;
-}  // namespace mozilla::startup
-
 #if defined(MOZ_WIDGET_ANDROID)
 void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
   mozilla::jni::SetGeckoThreadEnv(env);
@@ -269,21 +266,7 @@ void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 void XRE_SetProcessType(const char* aProcessTypeString) {
-  static bool called = false;
-  if (called && sChildProcessType != GeckoProcessType_ForkServer) {
-    MOZ_CRASH();
-  }
-  called = true;
-
-  sChildProcessType = [&] {
-    for (GeckoProcessType t :
-         MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
-      if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
-        return t;
-      }
-    }
-    return GeckoProcessType_Invalid;
-  }();
+  SetGeckoProcessType(aProcessTypeString);
 
 #ifdef MOZ_MEMORY
   // For the parent process, we're probably willing to accept an apparent
