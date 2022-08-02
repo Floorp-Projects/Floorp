@@ -120,6 +120,9 @@ check_and_add_warning("-Wduplicated-cond")
 # catches unintentional switch case fallthroughs
 check_and_add_warning("-Wimplicit-fallthrough", cxx_compiler)
 
+# Warn about suspicious uses of logical operators in expressions.
+check_and_add_warning("-Wlogical-op")
+
 # Enable some ObjC diagnostics that are only relevant when targeting macOS:
 with only_when(depends(target)(lambda t: t.kernel == "Darwin")):
     # catch redeclaration of ObjC method parameter name
