@@ -45,6 +45,17 @@ firefoxview-tabpickup-synctabs-description = Allow { -brand-short-name } to shar
 firefoxview-tabpickup-synctabs-learn-how = Learn how
 firefoxview-tabpickup-synctabs-primarybutton = Sync open tabs
 
+firefoxview-tabpickup-fxa-admin-disabled-header = Your organization has disabled sync
+firefoxview-tabpickup-fxa-admin-disabled-description = { -brand-short-name } is not able to sync tabs between devices because your administrator has disabled syncing.
+
+firefoxview-tabpickup-network-offline-header = Check your internet connection
+firefoxview-tabpickup-network-offline-description = If you’re using a firewall or proxy, check that { -brand-short-name } has permission to access the web.
+firefoxview-tabpickup-network-offline-primarybutton = Try again
+
+firefoxview-tabpickup-sync-error-header = We’re having trouble syncing
+firefoxview-tabpickup-sync-error-description = { -brand-short-name } can’t reach the service right now. Try again in a few moments.
+firefoxview-tabpickup-sync-error-primarybutton = Try again
+
 firefoxview-tabpickup-syncing = Sit tight while your tabs sync. It’ll be just a moment.
 
 firefoxview-mobile-promo-header = Grab tabs from your phone or tablet
