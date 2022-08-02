@@ -29,11 +29,6 @@ class ExtensionEventManager;
 class ExtensionScripting final : public nsISupports,
                                  public nsWrapperCache,
                                  public ExtensionAPINamespace {
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ExtensionBrowser> mExtensionBrowser;
-
-  ~ExtensionScripting() = default;
-
  public:
   ExtensionScripting(nsIGlobalObject* aGlobal,
                      ExtensionBrowser* aExtensionBrowser);
@@ -58,6 +53,12 @@ class ExtensionScripting final : public nsISupports,
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionScripting)
+
+ private:
+  ~ExtensionScripting() = default;
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
 };
 
 }  // namespace extensions

@@ -31,21 +31,6 @@ class ExtensionEventManager;
 class ExtensionPort;
 
 class ExtensionAPIBase {
- protected:
-  virtual nsIGlobalObject* GetGlobalObject() const = 0;
-  virtual ExtensionBrowser* GetExtensionBrowser() const = 0;
-  virtual nsString GetAPINamespace() const = 0;
-  virtual nsString GetAPIObjectType() const = 0;
-  virtual nsString GetAPIObjectId() const = 0;
-
- private:
-  void CallWebExtMethodAsyncInternal(JSContext* aCx,
-                                     const nsAString& aApiMethod,
-                                     const dom::Sequence<JS::Value>& aArgs,
-                                     const RefPtr<dom::Function>& aCallback,
-                                     JS::MutableHandle<JS::Value> aRetval,
-                                     ErrorResult& aRv);
-
  public:
   // WebExtensionStub methods shared between multiple API namespaces.
 
@@ -122,6 +107,21 @@ class ExtensionAPIBase {
       const nsAString& aEventName);
 
   static void ThrowUnexpectedError(JSContext* aCx, ErrorResult& aRv);
+
+ protected:
+  virtual nsIGlobalObject* GetGlobalObject() const = 0;
+  virtual ExtensionBrowser* GetExtensionBrowser() const = 0;
+  virtual nsString GetAPINamespace() const = 0;
+  virtual nsString GetAPIObjectType() const = 0;
+  virtual nsString GetAPIObjectId() const = 0;
+
+ private:
+  void CallWebExtMethodAsyncInternal(JSContext* aCx,
+                                     const nsAString& aApiMethod,
+                                     const dom::Sequence<JS::Value>& aArgs,
+                                     const RefPtr<dom::Function>& aCallback,
+                                     JS::MutableHandle<JS::Value> aRetval,
+                                     ErrorResult& aRv);
 };
 
 class ExtensionAPINamespace : public ExtensionAPIBase {
