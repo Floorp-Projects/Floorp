@@ -183,8 +183,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsRect BoundsInAppUnits() const override;
 
-  virtual nsTArray<RemoteAccessible*> RelationByType(RelationType aType) const;
-
   virtual uint64_t State() override;
 
   virtual already_AddRefed<AccAttributes> Attributes() override;
@@ -257,7 +255,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   DocAccessibleParent* AsDoc() const { return IsDoc() ? mDoc : nullptr; }
 
   void ApplyCache(CacheUpdateType aUpdateType, AccAttributes* aFields) {
-    const nsTArray<bool> relUpdatesNeeded = PreProcessRelations(aFields);
     if (aUpdateType == CacheUpdateType::Initial) {
       mCachedFields = aFields;
     } else {
@@ -276,8 +273,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
         }
       }
     }
-
-    PostProcessRelations(relUpdatesNeeded);
   }
 
   void UpdateStateCache(uint64_t aState, bool aEnabled) {
@@ -307,26 +302,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                             uint32_t aLength = UINT32_MAX) override;
 
   virtual bool TableIsProbablyForLayout();
-
-  /**
-   * Iterates through each atom in kRelationTypeAtoms, checking to see
-   * if it is present in aFields. If it is present (or if aFields contains
-   * a DeleteEntry() for this atom) and mCachedFields is initialized,
-   * fetches the old rel targets and removes their existing reverse relations
-   * stored in mReverseRelations.
-   * Returns an array of bools where the ith array entry corresponds
-   * to whether or not the rel at the ith entry of kRelationTypeAtoms
-   * requires a post-processing update.
-   */
-  nsTArray<bool> PreProcessRelations(AccAttributes* aFields);
-
-  /**
-   * Takes in the array returned from PreProcessRelations.
-   * For each entry requiring an update, fetches the new relation
-   * targets stored in mCachedFields and appropriately
-   * updates their reverse relations in mReverseRelations.
-   */
-  void PostProcessRelations(const nsTArray<bool>& aToUpdate);
 
   uint32_t GetCachedTextLength();
   Maybe<const nsTArray<int32_t>&> GetCachedTextLines();

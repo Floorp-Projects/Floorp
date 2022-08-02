@@ -51,8 +51,13 @@ virtual already_AddRefed<AccAttributes> Attributes() override;
 /**
  * Return set of targets of given relation type.
  */
-virtual nsTArray<RemoteAccessible*> RelationByType(
-    RelationType aType) const override;
+nsTArray<RemoteAccessible*> RelationByType(RelationType aType) const;
+
+/**
+ * Get all relations for this accessible.
+ */
+void Relations(nsTArray<RelationType>* aTypes,
+               nsTArray<nsTArray<RemoteAccessible*>>* aTargetSets) const;
 
 bool IsSearchbox() const;
 
