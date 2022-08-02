@@ -238,8 +238,6 @@ body:not(.neterror) #advancedButton {
 .title-text {
   font-weight: 300;
   line-height: 1.2;
-  margin-bottom: 0;
-  padding-bottom: 0;
 }
 
 #errorShortDescText {
