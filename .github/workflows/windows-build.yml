@@ -12,7 +12,7 @@ jobs:
     - name: Create environment
       run: |
         cd D:\a\Floorp\Floorp
-        Invoke-WebRequest -Uri https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe -OutFile D:/a/Floorp/Floorp/MozillaBuildSetup-4.0.1.exe
+        curl https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe -o D:\a\Floorp\Floorp\MozillaBuildSetup-4.0.1.exe
         .\MozillaBuildSetup-4.0.1.exe
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
