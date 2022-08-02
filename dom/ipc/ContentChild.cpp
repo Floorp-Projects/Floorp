@@ -3156,7 +3156,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
       for (uint32_t i = 0; i < aTransfers.Length() && !hasFiles; ++i) {
         auto& items = aTransfers[i].items();
         for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
-          if (items[j].data().type() == IPCDataTransferData::TIPCDataTransferBlob) {
+          if (items[j].data().type() == IPCDataTransferData::TIPCBlob) {
             hasFiles = true;
           }
         }
@@ -3179,7 +3179,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
           // We should hide this data from content if we have a file, and we
           // aren't a file.
           bool hidden =
-              hasFiles && item.data().type() != IPCDataTransferData::TIPCDataTransferBlob;
+              hasFiles && item.data().type() != IPCDataTransferData::TIPCBlob;
           dataTransfer->SetDataWithPrincipalFromOtherProcess(
               NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
               nsContentUtils::GetSystemPrincipal(), hidden);
