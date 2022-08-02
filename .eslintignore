@@ -228,3 +228,6 @@ toolkit/components/backgroundtasks/defaults
 
 # Ignore pre-generated webpack and typescript transpiled files for translations
 browser/extensions/translations/extension/
+
+# "scaffolding" used by uniffi which isn't valid JS in its original form.
+toolkit/components/uniffi-bindgen-gecko-js/src/templates/js/
