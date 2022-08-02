@@ -913,6 +913,8 @@
     "browser/components/newtab/lib/TelemetryFeed.jsm",
   "resource://activity-stream/lib/TippyTopProvider.jsm":
     "browser/components/newtab/lib/TippyTopProvider.jsm",
+  "resource://activity-stream/lib/ToastNotification.jsm":
+    "browser/components/newtab/lib/ToastNotification.jsm",
   "resource://activity-stream/lib/ToolbarBadgeHub.jsm":
     "browser/components/newtab/lib/ToolbarBadgeHub.jsm",
   "resource://activity-stream/lib/ToolbarPanelHub.jsm":
