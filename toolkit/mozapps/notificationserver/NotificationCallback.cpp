@@ -31,5 +31,40 @@ NotificationCallback::QueryInterface(REFIID riid, void** ppvObject) {
 HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
     LPCWSTR appUserModelId, LPCWSTR invokedArgs,
     const NOTIFICATION_USER_INPUT_DATA* data, ULONG dataCount) {
+  std::wstring program;
+  std::wstring profile;
+
+  std::wistringstream args(invokedArgs);
+  for (std::wstring key, value;
+       std::getline(args, key) && std::getline(args, value);) {
+    if (key == L"program") {
+      // Check executable name to prevent running arbitrary executables.
+      if (value == L"" MOZ_APP_NAME) {
+        program = value;
+      }
+    } else if (key == L"profile") {
+      profile = value;
+    }
+  }
+
+  if (!program.empty()) {
+    path programPath = installDir / program;
+    programPath += L".exe";
+
+    std::wostringstream runArgs;
+    if (!profile.empty()) {
+      runArgs << L" --profile \"" << profile << L"\"";
+    }
+
+    STARTUPINFOW si = {0};
+    si.cb = sizeof(STARTUPINFOW);
+    PROCESS_INFORMATION pi = {0};
+
+    // Runs `{program path} [--profile {profile path}]`.
+    CreateProcessW(programPath.c_str(), runArgs.str().data(), nullptr, nullptr,
+                   false, DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr,
+                   nullptr, &si, &pi);
+  }
+
   return S_OK;
 }
