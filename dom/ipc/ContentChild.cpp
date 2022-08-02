@@ -2675,7 +2675,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
   if (StaticPrefs::javascript_options_spectre_disable_for_isolated_content() &&
       (remoteTypePrefix == FISSION_WEB_REMOTE_TYPE ||
        remoteTypePrefix == SERVICEWORKER_REMOTE_TYPE ||
-       remoteTypePrefix == WITH_COOP_COEP_REMOTE_TYPE)) {
+       remoteTypePrefix == WITH_COOP_COEP_REMOTE_TYPE ||
+       aRemoteType == PRIVILEGEDABOUT_REMOTE_TYPE)) {
     JS::DisableSpectreMitigationsAfterInit();
   }
 
