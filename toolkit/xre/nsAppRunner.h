@@ -139,8 +139,6 @@ namespace mozilla {
 namespace startup {
 Result<nsCOMPtr<nsIFile>, nsresult> GetIncompleteStartupFile(nsIFile* aProfLD);
 
-extern GeckoProcessType sChildProcessType;
-
 void IncreaseDescriptorLimits();
 }  // namespace startup
 

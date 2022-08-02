@@ -9,6 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ProcessType.h"
 #include "mozilla/TimeStamp.h"
 #include "nscore.h"
 
@@ -338,18 +339,6 @@ void XRE_TermEmbedding();
  * @param aAppData The nsXREAppData structure to fill.
  */
 nsresult XRE_ParseAppData(nsIFile* aINIFile, mozilla::XREAppData& aAppData);
-
-// This enum is not dense.  See GeckoProcessTypes.h for details.
-enum GeckoProcessType {
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
-                           process_bin_type, procinfo_typename,               \
-                           webidl_typename, allcaps_name)                     \
-  GeckoProcessType_##enum_name = enum_value,
-#include "mozilla/GeckoProcessTypes.h"
-#undef GECKO_PROCESS_TYPE
-  GeckoProcessType_End,
-  GeckoProcessType_Invalid = GeckoProcessType_End
-};
 
 const char* XRE_GeckoProcessTypeToString(GeckoProcessType aProcessType);
 const char* XRE_ChildProcessTypeToAnnotation(GeckoProcessType aProcessType);
