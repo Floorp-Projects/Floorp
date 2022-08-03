@@ -2964,6 +2964,54 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
   return true;
 }
 
+static constexpr JSClass ObjectWithManyReservedSlotsClass = {
+    "ObjectWithManyReservedSlots", JSCLASS_HAS_RESERVED_SLOTS(40)};
+
+static bool NewObjectWithManyReservedSlots(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  static constexpr size_t NumReservedSlots =
+      JSCLASS_RESERVED_SLOTS(&ObjectWithManyReservedSlotsClass);
+  static_assert(NumReservedSlots > NativeObject::MAX_FIXED_SLOTS);
+
+  RootedObject obj(cx, JS_NewObject(cx, &ObjectWithManyReservedSlotsClass));
+  if (!obj) {
+    return false;
+  }
+
+  for (size_t i = 0; i < NumReservedSlots; i++) {
+    JS_SetReservedSlot(obj, i, Int32Value(i));
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+static bool CheckObjectWithManyReservedSlots(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isObject() ||
+      args[0].toObject().getClass() != &ObjectWithManyReservedSlotsClass) {
+    JS_ReportErrorASCII(cx,
+                        "Expected object from newObjectWithManyReservedSlots");
+    return false;
+  }
+
+  JSObject* obj = &args[0].toObject();
+
+  static constexpr size_t NumReservedSlots =
+      JSCLASS_RESERVED_SLOTS(&ObjectWithManyReservedSlotsClass);
+
+  for (size_t i = 0; i < NumReservedSlots; i++) {
+    MOZ_RELEASE_ASSERT(JS::GetReservedSlot(obj, i).toInt32() == int32_t(i));
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool SetWatchtowerCallback(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -8027,6 +8075,17 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Returns a new object with an addProperty JSClass hook. This hook\n"
 "  increments the value of the _propertiesAdded data property on the object\n"
 "  when a new property is added."),
+
+    JS_FN_HELP("newObjectWithManyReservedSlots", NewObjectWithManyReservedSlots, 0, 0,
+"newObjectWithManyReservedSlots()",
+"  Returns a new object with many reserved slots. The slots are initialized to int32\n"
+"  values. checkObjectWithManyReservedSlots can be used to check the slots still\n"
+"  hold these values."),
+
+    JS_FN_HELP("checkObjectWithManyReservedSlots", CheckObjectWithManyReservedSlots, 1, 0,
+"checkObjectWithManyReservedSlots(obj)",
+"  Checks the reserved slots set by newObjectWithManyReservedSlots still hold the expected\n"
+"  values."),
 
     JS_FN_HELP("setWatchtowerCallback", SetWatchtowerCallback, 1, 0,
 "setWatchtowerCallback(function)",
