@@ -242,3 +242,25 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of relations with respect to output objects and their "for" attr.
+ */
+addAccessibleTask(
+  `
+  <form oninput="host.value=parseInt(dependant1.value)+parseInt(dependant2.value)">
+    <input type="number" id="dependant1" value="50"> +
+    <input type="number" id="dependant2" value="25"> =
+    <output name="host" id="host"></output>
+  </form>`,
+  async function(browser, accDoc) {
+    await testRelated(
+      browser,
+      accDoc,
+      "for",
+      RELATION_CONTROLLED_BY,
+      RELATION_CONTROLLER_FOR
+    );
+  },
+  { iframe: true, remoteIframe: true }
+);

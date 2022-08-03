@@ -84,6 +84,11 @@ class HTMLOutputAccessible : public HyperTextAccessibleWrap {
   // LocalAccessible
   virtual Relation RelationByType(RelationType aType) const override;
 
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
+
  protected:
   virtual ~HTMLOutputAccessible() {}
 };
