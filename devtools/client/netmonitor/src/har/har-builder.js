@@ -584,7 +584,7 @@ function dateToJSON(date) {
     if (!c) {
       c = 2;
     }
-    let s = new String(n);
+    let s = String(n);
     while (s.length < c) {
       s = "0" + s;
     }

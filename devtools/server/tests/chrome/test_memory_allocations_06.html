@@ -24,7 +24,7 @@ window.onload = function() {
 
     const allocs = [];
     function allocator() {
-      allocs.push(new Object());
+      allocs.push({});
     }
 
     await memory.startRecordingAllocations({

@@ -57,7 +57,7 @@ add_task(async function() {
  * promise.
  *
  * @param {Node} target
- *        Node to observe
+ *         Node to observe
  * @return {Promise} promise that will resolve upon receiving a mutation for the class
  *         attribute on the target.
  */

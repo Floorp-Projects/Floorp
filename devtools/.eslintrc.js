@@ -241,8 +241,6 @@ module.exports = {
     "no-multi-str": "error",
     // Disallow usage of __proto__ property.
     "no-proto": "error",
-    // Disallow multiple spaces in a regular expression literal.
-    "no-regex-spaces": "off",
     // Prevent using some properties
     "no-restricted-properties": [
       "error",
@@ -281,17 +279,8 @@ module.exports = {
 
     // disallow overwriting functions written as function declarations
     "no-func-assign": "off",
-    // disallow irregular whitespace outside of strings and comments
-    "no-irregular-whitespace": "off",
     // disallow unnecessary nested blocks
     "no-lone-blocks": "off",
-    // disallow use of the Object constructor
-    "no-new-object": "off",
-    // disallows creating new instances of String,Number, and Boolean
-    "no-new-wrappers": "off",
-    // disallow the use of object properties of the global object (Math and
-    // JSON) as functions
-    "no-obj-calls": "off",
     // disallow unnecessary concatenation of literals or template literals
     "no-useless-concat": "off",
     // This rule will match any function starting with `use` which aren't
