@@ -662,7 +662,7 @@ const MESSAGES = () => [
     frequency: { lifetime: 3 },
   },
   {
-    id: "PB_PIN_PROMO",
+    id: "PB_NEWTAB_PIN_PROMO",
     template: "pb_newtab",
     groups: ["pbNewtab"],
     content: {
@@ -704,7 +704,7 @@ const MESSAGES = () => [
               {
                 type: "BLOCK_MESSAGE",
                 data: {
-                  id: "PB_PIN_PROMO",
+                  id: "PB_NEWTAB_PIN_PROMO",
                 },
               },
               {
