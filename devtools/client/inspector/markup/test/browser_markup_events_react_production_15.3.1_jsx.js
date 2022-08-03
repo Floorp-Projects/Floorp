@@ -29,7 +29,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_LIB_BABEL + ":10:41",
+        filename: TEST_LIB_BABEL + ":11:41",
         attributes: ["React", "Bubbling"],
         handler: `
           function() {
@@ -78,7 +78,7 @@ const TEST_DATA = [
       },
       {
         type: "onMouseUp",
-        filename: TEST_LIB_BABEL + ":10:41",
+        filename: TEST_LIB_BABEL + ":11:41",
         attributes: ["React", "Bubbling"],
         handler: `
           function() {

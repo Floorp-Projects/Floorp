@@ -83,7 +83,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":75:35",
+        filename: TEST_URL + ":76:35",
         attributes: ["Bubbling"],
         handler:
           "function noeventsClickHandler(event) {\n" +
@@ -119,7 +119,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":70:29",
+        filename: TEST_URL + ":71:29",
         attributes: ["Bubbling"],
         handler: "function(blah) {\n" + '  alert("handleEvent");\n' + "}",
       },

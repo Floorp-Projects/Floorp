@@ -71,6 +71,7 @@
       }
 
       HandleEventClick.prototype = {
+        // eslint-disable-next-line object-shorthand
         anonObjectMethod: function() {
           alert("obj.anonObjectMethod");
         },
@@ -85,7 +86,7 @@
       }
 
       BoundHandleEventClick.prototype = {
-        handleEvent: function() {
+        handleEvent() {
           alert("boundHandleEvent");
         }
       };
