@@ -978,21 +978,6 @@ class JSRegExp : public HeapObject {
   // Maximum number of captures allowed.
   static constexpr int kMaxCaptures = (1 << 15) - 1;
 
-  // **************************************************
-  // JSRegExp::Flags
-  // **************************************************
-
-  enum Flag : uint8_t {
-    kNone = JS::RegExpFlag::NoFlags,
-    kGlobal = JS::RegExpFlag::Global,
-    kIgnoreCase = JS::RegExpFlag::IgnoreCase,
-    kMultiline = JS::RegExpFlag::Multiline,
-    kSticky = JS::RegExpFlag::Sticky,
-    kUnicode = JS::RegExpFlag::Unicode,
-    kDotAll = JS::RegExpFlag::DotAll,
-  };
-  using Flags = JS::RegExpFlags;
-
   static constexpr int kNoBacktrackLimit = 0;
 
  private:
@@ -1000,6 +985,15 @@ class JSRegExp : public HeapObject {
     return value().toGCThing()->as<js::RegExpShared>();
   }
 };
+
+using RegExpFlags = JS::RegExpFlags;
+
+inline bool IsUnicode(RegExpFlags flags) { return flags.unicode(); }
+inline bool IsGlobal(RegExpFlags flags) { return flags.global(); }
+inline bool IsIgnoreCase(RegExpFlags flags) { return flags.ignoreCase(); }
+inline bool IsMultiline(RegExpFlags flags) { return flags.multiline(); }
+inline bool IsDotAll(RegExpFlags flags) { return flags.dotAll(); }
+inline bool IsSticky(RegExpFlags flags) { return flags.sticky(); }
 
 class Histogram {
  public:
