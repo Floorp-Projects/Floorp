@@ -214,7 +214,7 @@ ${RemoveDefaultBrowserAgentShortcut}
 
 !macro AddPrivateBrowsingShortcut
   ${IfNot} ${FileExists} "$SMPROGRAMS\$(PRIVATE_BROWSING_SHORTCUT_TITLE).lnk"
-    CreateShortcut "$SMPROGRAMS\$(PRIVATE_BROWSING_SHORTCUT_TITLE).lnk" "$INSTDIR\${FileMainEXE}" "-private-window" "$INSTDIR\${FileMainEXE}" ${IDI_PBICON_ZERO_BASED}
+    CreateShortcut "$SMPROGRAMS\$(PRIVATE_BROWSING_SHORTCUT_TITLE).lnk" "$INSTDIR\${PrivateBrowsingEXE}" "" "$INSTDIR\${PrivateBrowsingEXE}" ${IDI_PBICON_PB_EXE_ZERO_BASED}
     ShellLink::SetShortcutWorkingDirectory "$SMPROGRAMS\$(PRIVATE_BROWSING_SHORTCUT_TITLE).lnk" "$INSTDIR"
     ShellLink::SetShortcutDescription "$SMPROGRAMS\$(PRIVATE_BROWSING_SHORTCUT_TITLE).lnk" "$(PRIVATE_BROWSING_SHORTCUT_TITLE)"
     ApplicationID::Set "$SMPROGRAMS\$(PRIVATE_BROWSING_SHORTCUT_TITLE).lnk" "$AppUserModelID;PrivateBrowsingAUMID" "true"
