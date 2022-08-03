@@ -163,7 +163,8 @@ class MozSiteMetadata:
             and self.site_name == other.site_name
             and self.mach_site_packages_source == other.mach_site_packages_source
             # On Windows, execution environment can lead to different cases.  Normalize.
-            and Path(self.original_python.python_path) == Path(other.original_python.python_path)
+            and Path(self.original_python.python_path)
+            == Path(other.original_python.python_path)
         )
 
     @classmethod
