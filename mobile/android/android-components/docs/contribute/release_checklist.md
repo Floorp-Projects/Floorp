@@ -34,7 +34,9 @@ These are instructions for preparing a release branch for Android Components and
 4. Create a commit named `Switch to GeckoView Beta` for this change. This change can either be directly committed to the newly-created `releases/[beta_version].0` branch or a pull request can be created against it and then merged. Once landed, it is expected that this will create busted builds. The next step should green it up.
 5. The Github Action will automatically bump the GeckoView version once the new Beta build is created and uploaded to Maven, as shown in [#12547](https://github.com/mozilla-mobile/android-components/pull/12547) for example.
 6. Once both of the above commits have landed, create a new AC release in [Ship-It](https://shipit.mozilla-releng.net/) per normal practice.
-7. When the release automation completes, a new `v[beta_version].0.0` release tag will be created in Github. Following the template below, update the description with the release notes URL, commit range, and milestone like shown in [v104.0.0](https://github.com/mozilla-mobile/android-components/releases/tag/v104.0.0) and click `Update release` when ready.
+7. When the release automation completes, a new `v[beta_version].0.0` release tag will be created in Github.
+   - Following the template below, update the description with the release notes URL, commit range, and milestone like shown in [v104.0.0](https://github.com/mozilla-mobile/android-components/releases/tag/v104.0.0) and click `Update release` when ready.
+
     ```
     * [Release notes](https://mozac.org/changelog/#9800)
     * [Commits](https://github.com/mozilla-mobile/android-components/compare/v97.0.0...v98.0.0)
