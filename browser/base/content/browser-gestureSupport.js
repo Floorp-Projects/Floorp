@@ -771,6 +771,18 @@ var gHistorySwipeAnimation = {
         this._nextBox.collapsed = true;
         this._prevBox.style.opacity = opacity > 1 ? 1 : opacity;
         this._prevBox.style.translate = `${translate}px 0px`;
+
+        if (translateDistance > 0) {
+          if (Math.abs(aVal) >= 0.25) {
+            // Add a glow the same color as the circle surrounding the arrow.
+            // If the page background is too close to this color it won't be
+            // distinguishable, but hopefully that's not too common.
+            this._prevBox.style.fill = "rgb(56, 56, 61)";
+          } else {
+            // Hide the glow.
+            this._prevBox.style.fill = "rgba(0,0,0,0)";
+          }
+        }
       }
     } else if (this._canGoForward) {
       // The intention is to go forward.
@@ -778,6 +790,18 @@ var gHistorySwipeAnimation = {
       this._prevBox.collapsed = true;
       this._nextBox.style.opacity = opacity > 1 ? 1 : opacity;
       this._nextBox.style.translate = `${-translate}px 0px`;
+
+      if (translateDistance > 0) {
+        if (Math.abs(aVal) >= 0.25) {
+          // Add a glow the same color as the circle surrounding the arrow.
+          // If the page background is too close to this color it won't be
+          // distinguishable, but hopefully that's not too common.
+          this._nextBox.style.fill = "rgb(56, 56, 61)";
+        } else {
+          // Hide the glow.
+          this._nextBox.style.fill = "rgba(0,0,0,0)";
+        }
+      }
     }
   },
 
