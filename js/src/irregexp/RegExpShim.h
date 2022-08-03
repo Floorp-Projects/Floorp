@@ -79,15 +79,6 @@ class RegExpStack;
 #define CHECK_GE(lhs, rhs) MOZ_RELEASE_ASSERT((lhs) >= (rhs))
 #define CONSTEXPR_DCHECK MOZ_ASSERT
 
-template <class T>
-static constexpr inline T Min(T t1, T t2) {
-  return t1 < t2 ? t1 : t2;
-}
-
-template <class T>
-static constexpr inline T Max(T t1, T t2) {
-  return t1 > t2 ? t1 : t2;
-}
 #define MemCopy memcpy
 
 // Origin:
@@ -957,9 +948,6 @@ class JSRegExp : public HeapObject {
   // ******************************************************
   void TierUpTick() { inner()->tierUpTick(); }
 
-  Object Code(bool is_latin1) const {
-    return Object(JS::PrivateGCThingValue(inner()->getJitCode(is_latin1)));
-  }
   Object bytecode(bool is_latin1) const {
     return Object(JS::PrivateValue(inner()->getByteCode(is_latin1)));
   }
@@ -988,7 +976,6 @@ class JSRegExp : public HeapObject {
   // Static constants
   // ******************************
 
-  // Maximum number of captures allowed.
   static constexpr int kMaxCaptures = (1 << 15) - 1;
 
   static constexpr int kNoBacktrackLimit = 0;
@@ -1020,10 +1007,6 @@ class Counters {
  private:
   Histogram regexp_backtracks_;
 };
-
-#define PROFILE(isolate, call) \
-  do {                         \
-  } while (false);
 
 enum class AllocationType : uint8_t {
   kYoung,  // Allocate in the nursery
@@ -1197,18 +1180,6 @@ class Code : public HeapObject {
   }
   js::jit::JitCode* inner() {
     return value().toGCThing()->as<js::jit::JitCode>();
-  }
-};
-
-enum class MessageTemplate { kStackOverflow };
-
-class MessageFormatter {
- public:
-  static const char* TemplateString(MessageTemplate index) {
-    switch (index) {
-      case MessageTemplate::kStackOverflow:
-        return "too much recursion";
-    }
   }
 };
 
