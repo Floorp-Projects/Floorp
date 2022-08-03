@@ -1,0 +1,38 @@
+namespace todolist {
+    TodoList? get_default_list();
+    undefined set_default_list(TodoList list);
+
+    [Throws=TodoError]
+    TodoEntry create_entry_with(string todo);
+};
+
+dictionary TodoEntry {
+    string text;
+};
+
+[Error]
+enum TodoError {
+    "TodoDoesNotExist", "EmptyTodoList", "DuplicateTodo", "EmptyString", "DeligatedError"
+};
+
+interface TodoList {
+    constructor();
+    [Throws=TodoError]
+    void add_item(string todo);
+    [Throws=TodoError]
+    void add_entry(TodoEntry entry);
+    sequence<TodoEntry> get_entries();
+    sequence<string> get_items();
+    void add_entries(sequence<TodoEntry> entries);
+    void add_items(sequence<string> items);
+    [Throws=TodoError]
+    TodoEntry get_last_entry();
+    [Throws=TodoError]
+    string get_last();
+    [Throws=TodoError]
+    string get_first();
+    [Throws=TodoError]
+    void clear_item(string todo);
+    [Self=ByArc]
+    undefined make_default();
+};
