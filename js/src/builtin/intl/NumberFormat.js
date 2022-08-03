@@ -88,8 +88,9 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     internalProps.roundingIncrement = lazyNumberFormatData.roundingIncrement;
 
     // Intl.NumberFormat Unified API Proposal
-    if (notation === "compact")
+    if (notation === "compact") {
         internalProps.compactDisplay = lazyNumberFormatData.compactDisplay;
+    }
 
     // Step 24.
     internalProps.useGrouping = lazyNumberFormatData.useGrouping;
@@ -121,8 +122,9 @@ function getNumberFormatInternals(obj) {
 
     // If internal properties have already been computed, use them.
     var internalProps = maybeInternalProperties(internals);
-    if (internalProps)
+    if (internalProps) {
         return internalProps;
+    }
 
     // Otherwise it's time to fully create them.
     internalProps = resolveNumberFormatInternals(internals.lazyData);
@@ -310,13 +312,15 @@ function IsWellFormedUnitIdentifier(unitIdentifier) {
     assert(typeof unitIdentifier === "string", "unitIdentifier is a string value");
 
     // Step 1.
-    if (IsSanctionedSimpleUnitIdentifier(unitIdentifier))
+    if (IsSanctionedSimpleUnitIdentifier(unitIdentifier)) {
         return true;
+    }
 
     // Step 2.
     var pos = callFunction(std_String_indexOf, unitIdentifier, "-per-");
-    if (pos < 0)
+    if (pos < 0) {
         return false;
+    }
 
     var next = pos + "-per-".length;
 
@@ -349,8 +353,9 @@ function IsSanctionedSimpleUnitIdentifier(unitIdentifier) {
 
 #if DEBUG || MOZ_SYSTEM_ICU
     if (isSanctioned) {
-        if (availableMeasurementUnits.value === null)
+        if (availableMeasurementUnits.value === null) {
             availableMeasurementUnits.value = intl_availableMeasurementUnits();
+        }
 
         var isSupported = hasOwn(unitIdentifier, availableMeasurementUnits.value);
 
@@ -459,10 +464,11 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // If we ever need more speed here at startup, we should try to detect the
     // case where |options === undefined| and then directly use the default
     // value for each option.  For now, just keep it simple.
-    if (options === undefined)
+    if (options === undefined) {
         options = std_Object_create(null);
-    else
+    } else {
         options = ToObject(options);
+    }
 
     // Compute options that impact interpretation of locale.
     // Step 4.
@@ -497,13 +503,15 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // we normally validate all options when present, even the ones which are
     // unused.
     // TODO: File issue at <https://github.com/tc39/proposal-unified-intl-numberformat>.
-    if (currency !== undefined && !IsWellFormedCurrencyCode(currency))
+    if (currency !== undefined && !IsWellFormedCurrencyCode(currency)) {
         ThrowRangeError(JSMSG_INVALID_CURRENCY_CODE, currency);
+    }
 
     var cDigits;
     if (style === "currency") {
-        if (currency === undefined)
+        if (currency === undefined) {
             ThrowTypeError(JSMSG_UNDEFINED_CURRENCY);
+        }
 
         // Steps 19.a-c.
         currency = toASCIIUpperCase(currency);
@@ -514,28 +522,32 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // Step 18.
     var currencyDisplay = GetOption(options, "currencyDisplay", "string",
                                     ["code", "symbol", "narrowSymbol", "name"], "symbol");
-    if (style === "currency")
+    if (style === "currency") {
         lazyNumberFormatData.currencyDisplay = currencyDisplay;
+    }
 
     // Intl.NumberFormat Unified API Proposal
     var currencySign = GetOption(options, "currencySign", "string", ["standard", "accounting"],
                                  "standard");
-    if (style === "currency")
+    if (style === "currency") {
         lazyNumberFormatData.currencySign = currencySign;
+    }
 
     // Intl.NumberFormat Unified API Proposal
     var unit = GetOption(options, "unit", "string", undefined, undefined);
 
     // Aligned with |currency| check from above, see note about spec issue there.
-    if (unit !== undefined && !IsWellFormedUnitIdentifier(unit))
+    if (unit !== undefined && !IsWellFormedUnitIdentifier(unit)) {
         ThrowRangeError(JSMSG_INVALID_UNIT_IDENTIFIER, unit);
+    }
 
     var unitDisplay = GetOption(options, "unitDisplay", "string",
                                 ["short", "narrow", "long"], "short");
 
     if (style === "unit") {
-        if (unit === undefined)
+        if (unit === undefined) {
             ThrowTypeError(JSMSG_UNDEFINED_UNIT);
+        }
 
         lazyNumberFormatData.unit = unit;
         lazyNumberFormatData.unitDisplay = unitDisplay;
@@ -614,8 +626,9 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // Intl.NumberFormat Unified API Proposal
     var compactDisplay = GetOption(options, "compactDisplay", "string",
                                    ["short", "long"], "short");
-    if (notation === "compact")
+    if (notation === "compact") {
         lazyNumberFormatData.compactDisplay = compactDisplay;
+    }
 
     // Steps 23.
 #ifdef NIGHTLY_BUILD
@@ -679,8 +692,9 @@ function CurrencyDigits(currency) {
     assert(IsWellFormedCurrencyCode(currency), "currency is well-formed");
     assert(currency == toASCIIUpperCase(currency), "currency is all upper-case");
 
-    if (hasOwn(currency, currencyDigits))
+    if (hasOwn(currency, currencyDigits)) {
         return currencyDigits[currency];
+    }
     return 2;
 }
 
@@ -936,8 +950,9 @@ function Intl_NumberFormat_resolvedOptions() {
     var notation = internals.notation;
     DefineDataProperty(result, "notation", notation);
 
-    if (notation === "compact")
+    if (notation === "compact") {
         DefineDataProperty(result, "compactDisplay", internals.compactDisplay);
+    }
 
     DefineDataProperty(result, "signDisplay", internals.signDisplay);
 
