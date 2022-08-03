@@ -33,6 +33,7 @@ Ensure you've checked the following items for installation:
 -  In the Workloads tab:
     -  Desktop development with C++.
 -  In the Individual components tab:
+    -  MSVC v143 - VS 2022 C++ x64/x86 build tools.
     -  Windows 10 SDK (at least **10.0.19041.0**).
     -  C++ ATL for v143 build tools (x86 and x64).
 
