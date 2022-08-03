@@ -18,6 +18,7 @@ jobs:
     - name: 🔨Build
       run: |        
         ./mach build
+
     - name: Package
       run: |       
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
@@ -30,4 +31,4 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: floorp-Intel-macOS-x64
-        path: obj-x86_64-apple-darwin20.6.0/dist/
+        path: obj-x86_64-apple-darwin20.6.0/dist/floorp.app

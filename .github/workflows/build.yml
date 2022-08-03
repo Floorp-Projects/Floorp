@@ -22,6 +22,15 @@ jobs:
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
 
+    - name: Zip artifact for deployment
+       run: zip release.zip obj-x86_64-apple-darwin20.6.0/dist/ -r
+       
+    - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+        name: floorp-app
+        path: release.zip
+
     - name: Publish
       uses: actions/upload-artifact@master
       with:
