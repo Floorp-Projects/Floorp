@@ -19,23 +19,17 @@ namespace mozilla::media {
 
 void MCSInfo::AddSupport(const MediaCodecsSupported& aSupport) {
   StaticMutexAutoLock lock(sUpdateMutex);
-  MCSInfo* instance = GetInstance();
-  MOZ_ASSERT(instance);
-  instance->mSupport += aSupport;
+  GetInstance()->mSupport += aSupport;
 }
 
 MediaCodecsSupported MCSInfo::GetSupport() {
   StaticMutexAutoLock lock(sUpdateMutex);
-  MCSInfo* instance = GetInstance();
-  MOZ_ASSERT(instance);
-  return instance->mSupport;
+  return GetInstance()->mSupport;
 }
 
 void MCSInfo::ResetSupport() {
   StaticMutexAutoLock lock(sUpdateMutex);
-  MCSInfo* instance = GetInstance();
-  MOZ_ASSERT(instance);
-  instance->mSupport.clear();
+  GetInstance()->mSupport.clear();
 }
 
 DecodeSupportSet MCSInfo::GetDecodeSupportSet(
@@ -54,7 +48,9 @@ DecodeSupportSet MCSInfo::GetDecodeSupportSet(
 MediaCodecsSupported MCSInfo::GetDecodeMediaCodecsSupported(
     const MediaCodec& aCodec, const DecodeSupportSet& aSupportSet) {
   MediaCodecsSupported support;
+
   const auto supportInfo = GetCodecDefinition(aCodec);
+
   if (aSupportSet.contains(DecodeSupport::SoftwareDecode)) {
     support += supportInfo.swDecodeSupport;
   }
@@ -68,11 +64,8 @@ void MCSInfo::GetMediaCodecsSupportedString(
     nsCString& aSupportString, const MediaCodecsSupported& aSupportedCodecs) {
   CodecDefinition supportInfo;
   aSupportString = "Codec support information:\n"_ns;
-  MCSInfo* instance = GetInstance();
   for (const auto& it : aSupportedCodecs) {
-    MOZ_ASSERT(instance);
-    MOZ_ASSERT(instance->mHashTableMCS);
-    if (!instance->mHashTableMCS->Get(it, &supportInfo)) {
+    if (!GetInstance()->mHashTableMCS->Get(it, &supportInfo)) {
       CODEC_SUPPORT_LOG(
           "Could not find string matching MediaCodecsSupported enum: %d",
           static_cast<int>(it));
@@ -97,12 +90,9 @@ void MCSInfo::GetMediaCodecsSupportedString(
 
 MCSInfo* MCSInfo::GetInstance() {
   StaticMutexAutoLock lock(sInitMutex);
-  CODEC_SUPPORT_LOG("Getting MCSInfo instance.");
   if (!sInstance) {
-    CODEC_SUPPORT_LOG("No MCSInfo instance found - creating new one.");
     sInstance.reset(new MCSInfo());
   }
-  MOZ_ASSERT(sInstance);
   return sInstance.get();
 }
 
@@ -113,21 +103,27 @@ MCSInfo::MCSInfo() {
 
   for (const auto& it : GetAllCodecDefinitions()) {
     // Insert MediaCodecsSupport values as keys
-    MOZ_ASSERT(mHashTableMCS);
     mHashTableMCS->InsertOrUpdate(it.swDecodeSupport, it);
     mHashTableMCS->InsertOrUpdate(it.hwDecodeSupport, it);
     // Insert codec enum values as keys
-    MOZ_ASSERT(mHashTableCodec);
     mHashTableCodec->InsertOrUpdate(it.codec, it);
   }
+
+  GetMainThreadSerialEventTarget()->Dispatch(
+      NS_NewRunnableFunction("MCSInfo::MCSInfo", [&] {
+        // Ensure hash tables freed on shutdown
+        RunOnShutdown(
+            [&] {
+              mHashTableMCS.reset();
+              mHashTableCodec.reset();
+            },
+            ShutdownPhase::XPCOMShutdown);
+      }));
 }
 
 CodecDefinition MCSInfo::GetCodecDefinition(const MediaCodec& aCodec) {
   CodecDefinition info;
-  MCSInfo* instance = GetInstance();
-  MOZ_ASSERT(instance);
-  MOZ_ASSERT(instance->mHashTableCodec);
-  if (instance->mHashTableCodec->Get(aCodec, &info)) {
+  if (!GetInstance()->mHashTableCodec->Get(aCodec, &info)) {
     CODEC_SUPPORT_LOG("Could not find codec definition for codec enum: %d!",
                       static_cast<int>(aCodec));
   }
