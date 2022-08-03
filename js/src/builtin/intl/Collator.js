@@ -41,8 +41,9 @@ function resolveCollatorInternals(lazyCollatorData) {
     var collation = r.co;
 
     // Step 20.
-    if (collation === null)
+    if (collation === null) {
         collation = "default";
+    }
 
     // Step 21.
     internalProps.collation = collation;
@@ -87,8 +88,9 @@ function getCollatorInternals(obj) {
 
     // If internal properties have already been computed, use them.
     var internalProps = maybeInternalProperties(internals);
-    if (internalProps)
+    if (internalProps) {
         return internalProps;
+    }
 
     // Otherwise it's time to fully create them.
     internalProps = resolveCollatorInternals(internals.lazyData);
@@ -141,10 +143,11 @@ function InitializeCollator(collator, locales, options) {
     // If we ever need more speed here at startup, we should try to detect the
     // case where |options === undefined| and then directly use the default
     // value for each option.  For now, just keep it simple.
-    if (options === undefined)
+    if (options === undefined) {
         options = std_Object_create(null);
-    else
+    } else {
         options = ToObject(options);
+    }
 
     // Compute options that impact interpretation of locale.
     // Step 4.
@@ -161,14 +164,16 @@ function InitializeCollator(collator, locales, options) {
 
     // https://github.com/tc39/ecma402/pull/459
     var collation = GetOption(options, "collation", "string", undefined, undefined);
-    if (collation !== undefined)
+    if (collation !== undefined) {
         collation = intl_ValidateAndCanonicalizeUnicodeExtensionType(collation, "collation", "co");
+    }
     opt.co = collation;
 
     // Steps 11-13.
     var numericValue = GetOption(options, "numeric", "boolean", undefined, undefined);
-    if (numericValue !== undefined)
+    if (numericValue !== undefined) {
         numericValue = numericValue ? "true" : "false";
+    }
     opt.kn = numericValue;
 
     // Steps 14-15.
@@ -242,8 +247,9 @@ function collatorActualLocale(locale) {
  */
 function collatorSortCaseFirst(locale) {
     var actualLocale = collatorActualLocale(locale);
-    if (intl_isUpperCaseFirst(actualLocale))
+    if (intl_isUpperCaseFirst(actualLocale)) {
         return ["upper", "false", "lower"];
+    }
 
     // Default caseFirst values for all other languages.
     return ["false", "lower", "upper"];
@@ -254,8 +260,9 @@ function collatorSortCaseFirst(locale) {
  */
 function collatorSortCaseFirstDefault(locale) {
     var actualLocale = collatorActualLocale(locale);
-    if (intl_isUpperCaseFirst(actualLocale))
+    if (intl_isUpperCaseFirst(actualLocale)) {
         return "upper";
+    }
 
     // Default caseFirst value for all other languages.
     return "false";
@@ -351,8 +358,9 @@ function $Intl_Collator_compare_get() {
     var collator = this;
 
     // Steps 2-3.
-    if (!IsObject(collator) || (collator = intl_GuardToCollator(collator)) === null)
+    if (!IsObject(collator) || (collator = intl_GuardToCollator(collator)) === null) {
         return callFunction(intl_CallCollatorMethodIfWrapped, this, "$Intl_Collator_compare_get");
+    }
 
     var internals = getCollatorInternals(collator);
 
@@ -377,8 +385,9 @@ function Intl_Collator_resolvedOptions() {
     var collator = this;
 
     // Steps 2-3.
-    if (!IsObject(collator) || (collator = intl_GuardToCollator(collator)) === null)
+    if (!IsObject(collator) || (collator = intl_GuardToCollator(collator)) === null) {
         return callFunction(intl_CallCollatorMethodIfWrapped, this, "Intl_Collator_resolvedOptions");
+    }
 
     var internals = getCollatorInternals(collator);
 
