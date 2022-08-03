@@ -31,6 +31,9 @@ add_task(async function() {
   await pushPref("devtools.webconsole.input.editor", true);
   await pushPref("devtools.browserconsole.input.editor", true);
 
+  // Enable Multiprocess Browser Console
+  await pushPref("devtools.browsertoolbox.scope", "everything");
+
   // Needed for the execute() function below
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
 

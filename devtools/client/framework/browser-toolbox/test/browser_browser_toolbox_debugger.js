@@ -30,6 +30,8 @@ add_task(async function runTest() {
     ""
   );
 
+  await pushPref("devtools.browsertoolbox.scope", "everything");
+
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,
   });

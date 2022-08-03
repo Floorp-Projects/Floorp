@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsPrintfCString.h"
 #include "WebGLBuffer.h"
@@ -1096,6 +1097,15 @@ bool WebGLContext::DoFakeVertexAttrib0(const uint64_t totalVertCount) {
   }
 
   ////
+
+  const auto maxFakeVerts = StaticPrefs::webgl_fake_verts_max();
+  if (totalVertCount > maxFakeVerts) {
+    ErrorOutOfMemory(
+        "Draw requires faking a vertex attrib 0 array, but required vert count"
+        " (%" PRIu64 ") is more than webgl.fake-verts.max (%u).",
+        totalVertCount, maxFakeVerts);
+    return false;
+  }
 
   const auto bytesPerVert = sizeof(mFakeVertexAttrib0Data);
   const auto checked_dataSize =

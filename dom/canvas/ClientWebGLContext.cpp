@@ -4933,11 +4933,12 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
 
   const auto& shmemBytes = shmem.ByteRange();
 
-  uint8_t bpp;
-  if (!GetBytesPerPixel(desc.pi, &bpp)) {
-    MOZ_ASSERT(false);
+  const auto pii = webgl::PackingInfoInfo::For(desc.pi);
+  if (!pii) {
+    gfxCriticalError() << "ReadPixels: Bad " << desc.pi;
     return false;
   }
+  const auto bpp = pii->BytesPerPixel();
 
   const auto& packing = desc.packState;
   auto packRect = *uvec2::From(subrect.x, subrect.y);

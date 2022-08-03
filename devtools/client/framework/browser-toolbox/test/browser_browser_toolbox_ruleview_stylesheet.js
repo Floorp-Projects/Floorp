@@ -22,6 +22,8 @@ requestLongerTimeout(4);
 add_task(async function() {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
+  // Enable Multiprocess Browser Toolbox
+  await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,

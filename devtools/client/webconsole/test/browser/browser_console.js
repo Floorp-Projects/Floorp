@@ -38,6 +38,7 @@ add_task(async function() {
   info(
     "Check browser console messages with devtools.browsertoolbox.fission set to true"
   );
+  await pushPref("devtools.browsertoolbox.scope", "everything");
   await pushPref("devtools.browsertoolbox.fission", true);
   await testMessages();
 

@@ -13,6 +13,7 @@ add_task(async function() {
   // devtools.browsertoolbox.fission should be true to monitor resources from
   // remote browsers & frames.
   await pushPref("devtools.browsertoolbox.fission", true);
+  await pushPref("devtools.browsertoolbox.scope", "everything");
 
   // Open a test tab
   const tab = await addTab("data:text/html,Root Node tests");

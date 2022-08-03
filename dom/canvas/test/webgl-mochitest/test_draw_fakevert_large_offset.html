@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+</head>
+<body>
+<pre id=e_out></pre>
+<script>
+ok = window.ok || function(e, s) {
+  e_out.textContent += `\n${!e ? 'FAIL' : 'pass'}: ${s}`;
+};
+
+// -
+
+// Bug 1778144
+const canvas = document.createElement("canvas")
+const gl = canvas.getContext("webgl")
+program = gl.createProgram()
+vertex = gl.createShader(gl.VERTEX_SHADER)
+gl.shaderSource(vertex, `\
+  precision highp float;
+  attribute vec4 a_vec4;
+  uniform bool u_bool;
+  uniform bvec2 u_bvec2;
+  uniform bvec3 u_bvec3;
+  uniform bvec4 u_bvec4;
+  varying vec2 v_vec2;
+  void main() {
+    gl_Position.x += float(a_vec4.x);
+    if (u_bool || u_bvec2.x || u_bvec3.x || u_bvec4.x) {
+    }
+  }
+`)
+gl.compileShader(vertex)
+gl.attachShader(program, vertex)
+fragment = gl.createShader(gl.FRAGMENT_SHADER)
+gl.shaderSource(fragment, `\
+  precision highp float;
+  varying vec2 v_vec2;
+  uniform sampler2D u_sampler2d;
+  void main() {
+    gl_FragColor = texture2D(u_sampler2d, v_vec2);
+  }
+`)
+gl.compileShader(fragment)
+gl.attachShader(program, fragment)
+gl.linkProgram(program)
+gl.useProgram(program)
+const begin = performance.now();
+gl.drawArrays(gl.POINTS, 1659036386, 1)
+
+let err = gl.getError();
+ok(err == gl.OUT_OF_MEMORY || !err, `err: ${err}`);
+
+const elapsed_ms = performance.now() - begin;
+ok(elapsed_ms < 1000, `elapsed_ms:${elapsed_ms} < 1000`);
+
+// -
+
+// Let's be kind and kill this now-gpu-memory-heavy context.
+gl.getExtension('WEBGL_lose_context').loseContext();
+err = gl.getError();
+ok(err == gl.CONTEXT_LOST_WEBGL, `err:${err} == gl.CONTEXT_LOST_WEBGL`);
+
+// -
+
+ok(true, 'done');
+</script>
+</body>
+</html>

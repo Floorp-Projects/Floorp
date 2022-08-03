@@ -1367,6 +1367,12 @@
   value: 5000
   mirror: always
 
+# Number of seconds till the sponsored session is timeout.
+- name: browser.places.sponsoredSession.timeoutSecs
+  type: RelaxedAtomicUint32
+  value: 3600
+  mirror: always
+
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool
@@ -5296,8 +5302,8 @@
 
 - name: gfx.canvas.accelerated
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+#if defined(XP_LINUX) && !defined(ANDROID) && defined(NIGHTLY_BUILD)
+  value: true
 #else
   value: false
 #endif
@@ -13484,6 +13490,11 @@
 - name: webgl.enable-webgl2
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+- name: webgl.fake-verts.max
+  type: RelaxedAtomicUint32
+  value: 10*1000*1000  # 10M as vec4 is count*4*4 = 160MB
   mirror: always
 
 - name: webgl.force-enabled
