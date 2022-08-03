@@ -153,14 +153,14 @@ async function testSubmenu(toolbox) {
   menu.append(
     new MenuItem({
       l10nID: "text-action-copy",
-      submenu: submenu,
+      submenu,
     })
   );
   menu.append(
     new MenuItem({
       label: "Submenu parent with attributes",
       id: "submenu-parent-with-attrs",
-      submenu: submenu,
+      submenu,
       accesskey: "A",
       disabled: true,
     })

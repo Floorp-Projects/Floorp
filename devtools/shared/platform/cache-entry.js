@@ -29,7 +29,7 @@ exports.CacheEntry = {
   /**
    * Initializes our cache session / cache storage session.
    */
-  initializeCacheSession: function(request) {
+  initializeCacheSession(request) {
     try {
       const cacheService = Services.cache2;
       if (cacheService) {
@@ -52,7 +52,7 @@ exports.CacheEntry = {
    *
    * @param Object descriptor The descriptor from the backend.
    */
-  parseCacheDescriptor: function(descriptor) {
+  parseCacheDescriptor(descriptor) {
     const descriptorObj = {};
     try {
       if (descriptor.storageDataSize) {
@@ -87,7 +87,7 @@ exports.CacheEntry = {
    * @param Function onCacheDescriptorAvailable
    *        callback function.
    */
-  getCacheEntry: function(request, onCacheDescriptorAvailable) {
+  getCacheEntry(request, onCacheDescriptorAvailable) {
     if (!this.isCacheSessionInitialized) {
       this.initializeCacheSession(request);
     }

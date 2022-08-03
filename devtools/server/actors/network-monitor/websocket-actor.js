@@ -39,7 +39,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     }
   },
 
-  destroy: function() {
+  destroy() {
     this.targetActor.off("window-ready", this.onWindowReady);
 
     this.stopListening();
@@ -48,7 +48,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
 
   // Actor API
 
-  startListening: function() {
+  startListening() {
     this.stopListening();
     this.innerWindowID = this.targetActor.window.windowGlobalChild.innerWindowId;
     webSocketEventService.addListener(this.innerWindowID, this);

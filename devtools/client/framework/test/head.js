@@ -189,7 +189,7 @@ function DevToolPanel(iframeWindow, toolbox) {
 }
 
 DevToolPanel.prototype = {
-  open: function() {
+  open() {
     return new Promise(resolve => {
       executeSoon(() => {
         resolve(this);
@@ -209,7 +209,7 @@ DevToolPanel.prototype = {
     return this._toolbox;
   },
 
-  destroy: function() {
+  destroy() {
     return Promise.resolve(null);
   },
 };

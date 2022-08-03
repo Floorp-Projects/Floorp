@@ -28,9 +28,9 @@ class CodeMirrorTestChild extends JSWindowActorChild {
         customMsg
       ) => {
         this.sendAsyncMessage("setStatus", {
-          statusMsg: statusMsg,
-          type: type,
-          customMsg: customMsg,
+          statusMsg,
+          type,
+          customMsg,
         });
       };
 

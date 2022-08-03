@@ -134,5 +134,5 @@
     };
   }
 
-  return { createTask: createTask };
+  return { createTask };
 });

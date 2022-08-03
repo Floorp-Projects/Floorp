@@ -40,7 +40,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         window.myWebExtensionAddonFunction = function() {
           console.log(
             "Background page function called",
@@ -91,7 +91,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   // Install another addon in order to ensure we don't get its logs
   await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         console.log("Other addon log");
 
         const style = document.createElement("style");
@@ -355,7 +355,7 @@ add_task(async function testWebExtensionTwoReloads() {
 
   await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         console.log("Background page log");
       },
       extraProperties: {

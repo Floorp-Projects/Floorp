@@ -177,8 +177,8 @@ var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
       info("Toolbox and storage already open");
 
       return {
-        toolbox: toolbox,
-        storage: storage,
+        toolbox,
+        storage,
       };
     }
   }
@@ -200,8 +200,8 @@ var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
   await waitForToolboxFrameFocus(toolbox);
 
   return {
-    toolbox: toolbox,
-    storage: storage,
+    toolbox,
+    storage,
   };
 };
 

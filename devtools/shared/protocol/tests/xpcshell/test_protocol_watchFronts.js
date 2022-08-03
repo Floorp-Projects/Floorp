@@ -28,7 +28,7 @@ const ChildActor = protocol.ActorClassWithSpec(childSpec, {
 
   release() {},
 
-  form: function() {
+  form() {
     return {
       actor: this.actorID,
       childID: this.childID,
@@ -51,7 +51,7 @@ const rootSpec = protocol.generateActorSpec({
 const RootActor = protocol.ActorClassWithSpec(rootSpec, {
   typeName: "root",
 
-  initialize: function(conn) {
+  initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.actorID = "root";

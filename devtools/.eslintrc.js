@@ -261,10 +261,6 @@ module.exports = {
     // Disallow global and local variables that aren't used, but allow unused
     // function arguments.
     "no-unused-vars": ["error", { args: "none", vars: "all" }],
-    // Don't require method and property shorthand syntax for object literals.
-    // We use this in the code a lot, but not consistently, and this seems more
-    // like something to check at code review time.
-    "object-shorthand": "off",
     // Enforce using `let` only when variables are reassigned.
     "prefer-const": ["error", { destructuring: "all" }],
     // Require use of the second argument for parseInt().

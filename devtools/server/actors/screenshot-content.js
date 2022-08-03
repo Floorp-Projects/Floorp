@@ -19,7 +19,7 @@ loader.lazyRequireGetter(
 );
 
 exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
-  initialize: function(conn, targetActor) {
+  initialize(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
     this.targetActor = targetActor;
   },

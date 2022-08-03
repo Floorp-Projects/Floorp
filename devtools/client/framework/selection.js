@@ -70,7 +70,7 @@ function Selection() {
 }
 
 Selection.prototype = {
-  _onMutations: function(mutations) {
+  _onMutations(mutations) {
     let attributeChange = false;
     let pseudoChange = false;
     let detached = false;
@@ -105,7 +105,7 @@ Selection.prototype = {
     }
   },
 
-  destroy: function() {
+  destroy() {
     this.setWalker();
     this._nodeFront = null;
   },
@@ -113,7 +113,7 @@ Selection.prototype = {
   /**
    * @param {WalkerFront|null} walker
    */
-  setWalker: function(walker = null) {
+  setWalker(walker = null) {
     if (this._walker) {
       this._removeWalkerFrontEventListeners(this._walker);
     }
@@ -148,7 +148,7 @@ Selection.prototype = {
    * @param {TargetFront} front
    * @emits detached-front
    */
-  onTargetDestroyed: function(targetFront) {
+  onTargetDestroyed(targetFront) {
     // if the current walker belongs to the target that is destroyed, emit a `detached-front`
     // event so consumers can act accordingly (e.g. in the inspector, another node will be
     // selected)
@@ -173,10 +173,7 @@ Selection.prototype = {
    *        - {Boolean} isSlotted: Is the selection representing the slotted version of
    *          the node.
    */
-  setNodeFront: function(
-    nodeFront,
-    { reason = "unknown", isSlotted = false } = {}
-  ) {
+  setNodeFront(nodeFront, { reason = "unknown", isSlotted = false } = {}) {
     this.reason = reason;
 
     // If an inlineTextChild text node is being set, then set it's parent instead.
@@ -210,17 +207,17 @@ Selection.prototype = {
     return this._nodeFront;
   },
 
-  isRoot: function() {
+  isRoot() {
     return (
       this.isNode() && this.isConnected() && this._nodeFront.isDocumentElement
     );
   },
 
-  isNode: function() {
+  isNode() {
     return !!this._nodeFront;
   },
 
-  isConnected: function() {
+  isConnected() {
     let node = this._nodeFront;
     if (!node || node.isDestroyed()) {
       return false;
@@ -235,82 +232,82 @@ Selection.prototype = {
     return false;
   },
 
-  isHTMLNode: function() {
+  isHTMLNode() {
     const xhtmlNs = "http://www.w3.org/1999/xhtml";
     return this.isNode() && this.nodeFront.namespaceURI == xhtmlNs;
   },
 
-  isSVGNode: function() {
+  isSVGNode() {
     const svgNs = "http://www.w3.org/2000/svg";
     return this.isNode() && this.nodeFront.namespaceURI == svgNs;
   },
 
-  isMathMLNode: function() {
+  isMathMLNode() {
     const mathmlNs = "http://www.w3.org/1998/Math/MathML";
     return this.isNode() && this.nodeFront.namespaceURI == mathmlNs;
   },
 
   // Node type
 
-  isElementNode: function() {
+  isElementNode() {
     return (
       this.isNode() && this.nodeFront.nodeType == nodeConstants.ELEMENT_NODE
     );
   },
 
-  isPseudoElementNode: function() {
+  isPseudoElementNode() {
     return this.isNode() && this.nodeFront.isPseudoElement;
   },
 
-  isAnonymousNode: function() {
+  isAnonymousNode() {
     return this.isNode() && this.nodeFront.isAnonymous;
   },
 
-  isAttributeNode: function() {
+  isAttributeNode() {
     return (
       this.isNode() && this.nodeFront.nodeType == nodeConstants.ATTRIBUTE_NODE
     );
   },
 
-  isTextNode: function() {
+  isTextNode() {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.TEXT_NODE;
   },
 
-  isCDATANode: function() {
+  isCDATANode() {
     return (
       this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.CDATA_SECTION_NODE
     );
   },
 
-  isEntityRefNode: function() {
+  isEntityRefNode() {
     return (
       this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.ENTITY_REFERENCE_NODE
     );
   },
 
-  isEntityNode: function() {
+  isEntityNode() {
     return (
       this.isNode() && this.nodeFront.nodeType == nodeConstants.ENTITY_NODE
     );
   },
 
-  isProcessingInstructionNode: function() {
+  isProcessingInstructionNode() {
     return (
       this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE
     );
   },
 
-  isCommentNode: function() {
+  isCommentNode() {
     return (
       this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE
     );
   },
 
-  isDocumentNode: function() {
+  isDocumentNode() {
     return (
       this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_NODE
     );
@@ -319,7 +316,7 @@ Selection.prototype = {
   /**
    * @returns true if the selection is the <body> HTML element.
    */
-  isBodyNode: function() {
+  isBodyNode() {
     return (
       this.isHTMLNode() &&
       this.isConnected() &&
@@ -330,7 +327,7 @@ Selection.prototype = {
   /**
    * @returns true if the selection is the <head> HTML element.
    */
-  isHeadNode: function() {
+  isHeadNode() {
     return (
       this.isHTMLNode() &&
       this.isConnected() &&
@@ -338,31 +335,31 @@ Selection.prototype = {
     );
   },
 
-  isDocumentTypeNode: function() {
+  isDocumentTypeNode() {
     return (
       this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.DOCUMENT_TYPE_NODE
     );
   },
 
-  isDocumentFragmentNode: function() {
+  isDocumentFragmentNode() {
     return (
       this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.DOCUMENT_FRAGMENT_NODE
     );
   },
 
-  isNotationNode: function() {
+  isNotationNode() {
     return (
       this.isNode() && this.nodeFront.nodeType == nodeConstants.NOTATION_NODE
     );
   },
 
-  isSlotted: function() {
+  isSlotted() {
     return this._isSlotted;
   },
 
-  isShadowRootNode: function() {
+  isShadowRootNode() {
     return this.isNode() && this.nodeFront.isShadowRoot;
   },
 };

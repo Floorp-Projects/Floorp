@@ -26,7 +26,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     return this.mql ? this.mql.matches : null;
   },
 
-  initialize: function(mediaRule, parentActor) {
+  initialize(mediaRule, parentActor) {
     protocol.Actor.prototype.initialize.call(this, parentActor.conn);
 
     this.rawRule = mediaRule;
@@ -49,7 +49,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     }
   },
 
-  destroy: function() {
+  destroy() {
     if (this.mql) {
       // The content page may already be destroyed and mql be the dead wrapper.
       if (!Cu.isDeadWrapper(this.mql)) {
@@ -61,7 +61,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  form: function() {
+  form() {
     const form = {
       actor: this.actorID, // actorID is set when this is added to a pool
       mediaText: this.rawRule.media.mediaText,
@@ -75,7 +75,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     return form;
   },
 
-  _matchesChange: function() {
+  _matchesChange() {
     this.emit("matches-change", this.matches);
   },
 });

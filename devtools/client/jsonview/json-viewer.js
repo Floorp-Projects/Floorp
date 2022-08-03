@@ -33,12 +33,12 @@ define(function(require, exports, module) {
    * available for the JSON viewer.
    */
   input.actions = {
-    onCopyJson: function() {
+    onCopyJson() {
       const text = input.prettified ? input.jsonPretty : input.jsonText;
       copyString(text.textContent);
     },
 
-    onSaveJson: function() {
+    onSaveJson() {
       if (input.prettified && !prettyURL) {
         prettyURL = URL.createObjectURL(
           new window.Blob([input.jsonPretty.textContent])
@@ -47,7 +47,7 @@ define(function(require, exports, module) {
       dispatchEvent("save", input.prettified ? prettyURL : null);
     },
 
-    onCopyHeaders: function() {
+    onCopyHeaders() {
       let value = "";
       const isWinNT =
         document.documentElement.getAttribute("platform") === "win";
@@ -70,11 +70,11 @@ define(function(require, exports, module) {
       copyString(value);
     },
 
-    onSearch: function(value) {
+    onSearch(value) {
       theApp.setState({ searchFilter: value });
     },
 
-    onPrettify: function(data) {
+    onPrettify(data) {
       if (input.json instanceof Error) {
         // Cannot prettify invalid JSON
         return;
@@ -91,12 +91,12 @@ define(function(require, exports, module) {
       input.prettified = !input.prettified;
     },
 
-    onCollapse: function(data) {
+    onCollapse(data) {
       input.expandedNodes.clear();
       theApp.forceUpdate();
     },
 
-    onExpand: function(data) {
+    onExpand(data) {
       input.expandedNodes = TreeViewClass.getExpandedNodes(input.json);
       theApp.setState({ expandedNodes: input.expandedNodes });
     },

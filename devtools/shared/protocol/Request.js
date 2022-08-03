@@ -31,7 +31,7 @@ Request.prototype = {
    *    The object making the request.
    * @returns a request packet.
    */
-  write: function(fnArgs, ctx) {
+  write(fnArgs, ctx) {
     const ret = {};
     for (const key in this.template) {
       const value = this.template[key];
@@ -61,7 +61,7 @@ Request.prototype = {
    *    The object making the request.
    * @returns an arguments array
    */
-  read: function(packet, ctx) {
+  read(packet, ctx) {
     const fnArgs = [];
     for (const templateArg of this.args) {
       const arg = templateArg.placeholder;
@@ -105,11 +105,11 @@ var Arg = function(index, type) {
 };
 
 Arg.prototype = {
-  write: function(arg, ctx) {
+  write(arg, ctx) {
     return this.type.write(arg, ctx);
   },
 
-  read: function(v, ctx, outArgs) {
+  read(v, ctx, outArgs) {
     outArgs[this.index] = this.type.read(v, ctx);
   },
 };
@@ -141,7 +141,7 @@ var Option = function(index, type) {
 };
 
 Option.prototype = extend(Arg.prototype, {
-  write: function(arg, ctx, name) {
+  write(arg, ctx, name) {
     // Ignore if arg is undefined or null; allow other falsy values
     if (arg == undefined || arg[name] == undefined) {
       return undefined;
@@ -149,7 +149,7 @@ Option.prototype = extend(Arg.prototype, {
     const v = arg[name];
     return this.type.write(v, ctx);
   },
-  read: function(v, ctx, outArgs, name) {
+  read(v, ctx, outArgs, name) {
     if (outArgs[this.index] === undefined) {
       outArgs[this.index] = {};
     }

@@ -239,7 +239,7 @@ StyleSheetEditor.prototype = {
   /**
    * If this is an original source, get the path of the CSS file it generated.
    */
-  linkCSSFile: function() {
+  linkCSSFile() {
     if (!this.styleSheet.isOriginalSource) {
       return;
     }
@@ -322,7 +322,7 @@ StyleSheetEditor.prototype = {
    *         A promise that'll resolve with the source text once the source
    *         has been loaded or reject on unexpected error.
    */
-  fetchSource: function() {
+  fetchSource() {
     return this._getSourceTextAndPrettify()
       .then(source => {
         this.sourceLoaded = true;
@@ -398,7 +398,7 @@ StyleSheetEditor.prototype = {
    * @param  {string} property
    *         Property that has changed on sheet
    */
-  onPropertyChange: function(property, value) {
+  onPropertyChange(property, value) {
     this.emit("property-change", property, value);
   },
 
@@ -406,7 +406,7 @@ StyleSheetEditor.prototype = {
    * Called when the stylesheet text changes.
    * @param {Object} update: The stylesheet resource update packet.
    */
-  onStyleApplied: function(update) {
+  onStyleApplied(update) {
     const updateIsFromSyleSheetEditor =
       update?.event?.cause === STYLE_SHEET_UPDATE_CAUSED_BY_STYLE_EDITOR;
 
@@ -436,7 +436,7 @@ StyleSheetEditor.prototype = {
    * @param  {array} rules
    *         Array of MediaRuleFronts for new media rules of sheet.
    */
-  onMediaRulesChanged: function(rules) {
+  onMediaRulesChanged(rules) {
     if (!rules.length && !this.mediaRules.length) {
       return;
     }
@@ -448,7 +448,7 @@ StyleSheetEditor.prototype = {
   /**
    * Forward media-rules-changed event from stylesheet.
    */
-  emitMediaRulesChanged: function() {
+  emitMediaRulesChanged() {
     this.emit("media-rules-changed", this.mediaRules);
   },
 
@@ -462,7 +462,7 @@ StyleSheetEditor.prototype = {
    * @return {Promise}
    *         Promise that will resolve when the style editor is loaded.
    */
-  load: async function(inputElement, cssProperties) {
+  async load(inputElement, cssProperties) {
     if (this._isDestroyed) {
       throw new Error(
         "Won't load source editor as the style sheet has " +
@@ -529,7 +529,7 @@ StyleSheetEditor.prototype = {
    * @return {Promise}
    *         Promise that will resolve with the editor.
    */
-  getSourceEditor: function() {
+  getSourceEditor() {
     const self = this;
 
     if (this.sourceEditor) {
@@ -546,7 +546,7 @@ StyleSheetEditor.prototype = {
   /**
    * Focus the Style Editor input.
    */
-  focus: function() {
+  focus() {
     if (this.sourceEditor) {
       this.sourceEditor.focus();
     } else {
@@ -560,7 +560,7 @@ StyleSheetEditor.prototype = {
    * @param {Object} options
    * @param {String} options.reason: Indicates why the editor is shown
    */
-  onShow: function(options = {}) {
+  onShow(options = {}) {
     if (this.sourceEditor) {
       // CodeMirror needs refresh to restore scroll position after hiding and
       // showing the editor.
@@ -585,7 +585,7 @@ StyleSheetEditor.prototype = {
   /**
    * Queue a throttled task to update the live style sheet.
    */
-  updateStyleSheet: function() {
+  updateStyleSheet() {
     if (this._updateTask) {
       // cancel previous queued task not executed within throttle delay
       this._window.clearTimeout(this._updateTask);
@@ -642,7 +642,7 @@ StyleSheetEditor.prototype = {
    * Handle mousemove events, calling _highlightSelectorAt after a delay only
    * and reseting the delay everytime.
    */
-  _onMouseMove: function(e) {
+  _onMouseMove(e) {
     // As we only want to hide an existing highlighter, we can use this.highlighter directly
     // (and not this.getHighlighter).
     if (this.highlighter) {
@@ -748,7 +748,7 @@ StyleSheetEditor.prototype = {
    *        has failed or has been canceled by the user.
    * @see savedFile
    */
-  saveToFile: function(file, callback) {
+  saveToFile(file, callback) {
     const onFile = returnFile => {
       if (!returnFile) {
         if (callback) {
@@ -801,7 +801,7 @@ StyleSheetEditor.prototype = {
   /**
    * Called when this source has been successfully saved to disk.
    */
-  onFileSaved: function(returnFile) {
+  onFileSaved(returnFile) {
     this._friendlyName = null;
     this.savedFile = returnFile;
 
@@ -827,7 +827,7 @@ StyleSheetEditor.prototype = {
    * Check to see if our linked CSS file has changed on disk, and
    * if so, update the live style sheet.
    */
-  checkLinkedFileForChanges: function() {
+  checkLinkedFileForChanges() {
     IOUtils.stat(this.linkedCSSFile).then(info => {
       const lastChange = info.lastModified;
 
@@ -859,7 +859,7 @@ StyleSheetEditor.prototype = {
    * @param string error
    *        The error we got when trying to access the file.
    */
-  markLinkedFileBroken: function(error) {
+  markLinkedFileBroken(error) {
     this.linkedCSSFileError = error || true;
     this.emit("linked-css-file-error");
 
@@ -875,7 +875,7 @@ StyleSheetEditor.prototype = {
    * For original sources (e.g. Sass files). Fetch contents of linked CSS
    * file from disk and live update the stylesheet object with the contents.
    */
-  updateLinkedStyleSheet: function() {
+  updateLinkedStyleSheet() {
     IOUtils.read(this.linkedCSSFile).then(async array => {
       const decoder = new TextDecoder();
       const text = decoder.decode(array);
@@ -899,7 +899,7 @@ StyleSheetEditor.prototype = {
    *
    * @return {array} key binding objects for the source editor
    */
-  _getKeyBindings: function() {
+  _getKeyBindings() {
     const saveStyleSheetKeybind = Editor.accel(
       getString("saveStyleSheet.commandkey")
     );
@@ -930,7 +930,7 @@ StyleSheetEditor.prototype = {
   /**
    * Clean up for this editor.
    */
-  destroy: function() {
+  destroy() {
     if (this._sourceEditor) {
       this._sourceEditor.off("dirty-change", this.onPropertyChange);
       this._sourceEditor.off("saveRequested", this.saveToFile);

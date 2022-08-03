@@ -191,7 +191,7 @@ async function fetchStylesheet(sheet) {
  * A StyleSheetActor represents a stylesheet on the server.
  */
 var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
-  toString: function() {
+  toString() {
     return "[StyleSheetActor " + this.actorID + "]";
   },
 
@@ -264,7 +264,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     return this._styleSheetIndex;
   },
 
-  destroy: function() {
+  destroy() {
     if (this._transitionTimeout && this.window) {
       this.window.clearTimeout(this._transitionTimeout);
       removePseudoClassLock(
@@ -275,7 +275,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  initialize: function(styleSheet, parentActor) {
+  initialize(styleSheet, parentActor) {
     protocol.Actor.prototype.initialize.call(this, parentActor.conn);
 
     this.rawSheet = styleSheet;
@@ -306,7 +306,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Test whether this sheet has been modified by CSSOM.
    * @return {Boolean} true if changed by CSSOM.
    */
-  hasRulesModifiedByCSSOM: function() {
+  hasRulesModifiedByCSSOM() {
     return InspectorUtils.hasRulesModifiedByCSSOM(this.rawSheet);
   },
 
@@ -316,7 +316,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with a CSSRuleList
    */
-  getCSSRules: function() {
+  getCSSRules() {
     let rules;
     try {
       rules = this.rawSheet.cssRules;
@@ -357,7 +357,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         With properties of the underlying stylesheet, plus 'text',
    *        'styleSheetIndex' and 'parentActor' if it's @imported
    */
-  form: function() {
+  form() {
     let docHref;
     if (this.ownerNode) {
       if (this.ownerNode.nodeType == this.ownerNode.DOCUMENT_NODE) {
@@ -406,7 +406,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: function() {
+  toggleDisabled() {
     this.rawSheet.disabled = !this.rawSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
@@ -420,14 +420,14 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param  {string} property
    *         Name of the changed property
    */
-  _notifyPropertyChanged: function(property) {
+  _notifyPropertyChanged(property) {
     this.emit("property-change", property, this.form()[property]);
   },
 
   /**
    * Protocol method to get the text of this stylesheet.
    */
-  getText: function() {
+  getText() {
     return this._getText().then(text => {
       return new LongStringActor(this.conn, text || "");
     });
@@ -440,7 +440,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with a string text of the stylesheet.
    */
-  _getText: function() {
+  _getText() {
     if (typeof this.text === "string") {
       return Promise.resolve(this.text);
     }
@@ -454,7 +454,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Protocol method to get the media rules for the stylesheet.
    */
-  getMediaRules: function() {
+  getMediaRules() {
     return this._getMediaRules();
   },
 
@@ -464,7 +464,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {promise}
    *         A promise that resolves with an array of MediaRuleActors.
    */
-  _getMediaRules: function() {
+  _getMediaRules() {
     return this.getCSSRules().then(rules => {
       const mediaRules = [];
       for (let i = 0; i < rules.length; i++) {
@@ -489,7 +489,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param {string} kind: either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    * @param {string|null} cause: indicates the cause of this update
    */
-  update: function(text, transition, kind = UPDATE_GENERAL, cause) {
+  update(text, transition, kind = UPDATE_GENERAL, cause) {
     InspectorUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
@@ -518,7 +518,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param {string} kind: either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    * @param {string|null} cause: indicates the cause of this update
    */
-  _startTransition: function(kind, cause) {
+  _startTransition(kind, cause) {
     if (!this._transitionSheetLoaded) {
       this._transitionSheetLoaded = true;
       // We don't remove this sheet. It uses an internal selector that
@@ -545,7 +545,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param {string} kind: either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    * @param {string|null} cause: indicates the cause of this update
    */
-  _onTransitionEnd: function(kind, cause) {
+  _onTransitionEnd(kind, cause) {
     this._transitionTimeout = null;
     removePseudoClassLock(
       this.document.documentElement,

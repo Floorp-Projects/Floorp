@@ -197,7 +197,7 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
 
         resolve({
           workerTargetForm: message.workerTargetForm,
-          transport: transport,
+          transport,
         });
       },
     };

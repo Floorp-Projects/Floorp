@@ -596,7 +596,7 @@ function _syncGetRuleViewProperty(view, selectorText, propertyName) {
     const valueSpan = p.querySelector(".ruleview-propertyvalue");
 
     if (nameSpan.textContent === propertyName) {
-      return { nameSpan: nameSpan, valueSpan: valueSpan };
+      return { nameSpan, valueSpan };
     }
   }
   return null;
@@ -767,7 +767,7 @@ function buildContextMenuItems(menu) {
  * @return An array of MenuItems
  */
 function openStyleContextMenuAndGetAllItems(view, target) {
-  const menu = view.contextMenu._openMenu({ target: target });
+  const menu = view.contextMenu._openMenu({ target });
   return buildContextMenuItems(menu);
 }
 

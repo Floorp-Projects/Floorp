@@ -14,14 +14,14 @@ async function runTests(aTab) {
     isToolSupported: () => true,
     url: "about:blank",
     label: "someLabel",
-    build: function(iframeWindow, toolbox) {
+    build(iframeWindow, toolbox) {
       return new Promise(resolve => {
         executeSoon(() => {
           resolve({
             target: toolbox.target,
-            toolbox: toolbox,
+            toolbox,
             isReady: true,
-            destroy: function() {},
+            destroy() {},
           });
         });
       });

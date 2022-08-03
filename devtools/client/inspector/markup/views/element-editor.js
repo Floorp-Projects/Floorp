@@ -127,7 +127,7 @@ function ElementEditor(container, node) {
 }
 
 ElementEditor.prototype = {
-  buildMarkup: function() {
+  buildMarkup() {
     this.elt = this.doc.createElement("span");
     this.elt.classList.add("editor");
 
@@ -152,7 +152,7 @@ ElementEditor.prototype = {
     }
   },
 
-  renderOpenTag: function() {
+  renderOpenTag() {
     const open = this.doc.createElement("span");
     open.classList.add("open");
     open.appendChild(this.doc.createTextNode("<"));
@@ -173,12 +173,12 @@ ElementEditor.prototype = {
     open.appendChild(closingBracket);
   },
 
-  renderAttributes: function(containerEl) {
+  renderAttributes(containerEl) {
     this.attrList = this.doc.createElement("span");
     containerEl.appendChild(this.attrList);
   },
 
-  renderNewAttributeEditor: function(containerEl) {
+  renderNewAttributeEditor(containerEl) {
     this.newAttr = this.doc.createElement("span");
     this.newAttr.classList.add("newattr");
     this.newAttr.setAttribute("tabindex", "-1");
@@ -218,14 +218,14 @@ ElementEditor.prototype = {
     });
   },
 
-  renderEventBadge: function() {
+  renderEventBadge() {
     this.expandBadge = this.doc.createElement("span");
     this.expandBadge.classList.add("markup-expand-badge");
     this.expandBadge.addEventListener("click", this.onExpandBadgeClick);
     this.elt.appendChild(this.expandBadge);
   },
 
-  renderCloseTag: function() {
+  renderCloseTag() {
     const close = this.doc.createElement("span");
     close.classList.add("close");
     close.appendChild(this.doc.createTextNode("</"));
@@ -249,7 +249,7 @@ ElementEditor.prototype = {
     }
   },
 
-  flashAttribute: function(attrName) {
+  flashAttribute(attrName) {
     if (this.animationTimers[attrName]) {
       clearTimeout(this.animationTimers[attrName]);
     }
@@ -273,7 +273,7 @@ ElementEditor.prototype = {
    * @return {Object} An object literal with the following information:
    *         {type: "attribute", name: "rel", value: "index", el: node}
    */
-  getInfoAtNode: function(node) {
+  getInfoAtNode(node) {
     if (!node) {
       return null;
     }
@@ -296,7 +296,7 @@ ElementEditor.prototype = {
   /**
    * Update the state of the editor from the node.
    */
-  update: function() {
+  update() {
     const nodeAttributes = this.node.attributes || [];
 
     // Keep the data model in sync with attributes on the node.
@@ -344,7 +344,7 @@ ElementEditor.prototype = {
     this.updateOverflowHighlight();
   },
 
-  updateEventBadge: function() {
+  updateEventBadge() {
     const showEventBadge = this.node.hasEventListeners;
     if (this._eventBadge && !showEventBadge) {
       this._eventBadge.remove();
@@ -354,7 +354,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _createEventBadge: function() {
+  _createEventBadge() {
     this._eventBadge = this.doc.createElement("div");
     this._eventBadge.className = "inspector-badge interactive";
     this._eventBadge.dataset.event = "true";
@@ -370,7 +370,7 @@ ElementEditor.prototype = {
     this.markup.emit("badge-added-event");
   },
 
-  updateScrollableBadge: function() {
+  updateScrollableBadge() {
     if (this.node.isScrollable && !this._scrollableBadge) {
       this._createScrollableBadge();
     } else if (this._scrollableBadge && !this.node.isScrollable) {
@@ -379,7 +379,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _createScrollableBadge: function() {
+  _createScrollableBadge() {
     const isInteractive =
       this.isOverflowDebuggingEnabled &&
       // Document elements cannot have interative scrollable badges since retrieval of their
@@ -412,7 +412,7 @@ ElementEditor.prototype = {
   /**
    * Update the markup display badge.
    */
-  updateDisplayBadge: function() {
+  updateDisplayBadge() {
     const displayType = this.node.displayType;
     const showDisplayBadge = displayType in DISPLAY_TYPES;
 
@@ -428,7 +428,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _createDisplayBadge: function() {
+  _createDisplayBadge() {
     this._displayBadge = this.doc.createElement("div");
     this._displayBadge.className = "inspector-badge";
     this._displayBadge.addEventListener("click", this.onDisplayBadgeClick);
@@ -436,7 +436,7 @@ ElementEditor.prototype = {
     this.elt.insertBefore(this._displayBadge, this._customBadge);
   },
 
-  _updateDisplayBadgeContent: function() {
+  _updateDisplayBadgeContent() {
     const displayType = this.node.displayType;
     this._displayBadge.textContent = displayType;
     this._displayBadge.dataset.display = displayType;
@@ -455,7 +455,7 @@ ElementEditor.prototype = {
     this._displayBadge.classList.toggle("interactive", isInteractive);
   },
 
-  updateOverflowBadge: function() {
+  updateOverflowBadge() {
     if (!this.isOverflowDebuggingEnabled) {
       return;
     }
@@ -468,7 +468,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _createOverflowBadge: function() {
+  _createOverflowBadge() {
     this._overflowBadge = this.doc.createElement("div");
     this._overflowBadge.className = "inspector-badge overflow-badge";
     this._overflowBadge.textContent = INSPECTOR_L10N.getStr(
@@ -483,7 +483,7 @@ ElementEditor.prototype = {
   /**
    * Update the markup custom element badge.
    */
-  updateCustomBadge: function() {
+  updateCustomBadge() {
     const showCustomBadge = !!this.node.customElementLocation;
     if (this._customBadge && !showCustomBadge) {
       this._customBadge.remove();
@@ -493,7 +493,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _createCustomBadge: function() {
+  _createCustomBadge() {
     this._customBadge = this.doc.createElement("div");
     this._customBadge.className = "inspector-badge interactive";
     this._customBadge.dataset.custom = "true";
@@ -510,7 +510,7 @@ ElementEditor.prototype = {
    * If node causes overflow, toggle its overflow highlight if its scrollable ancestor's
    * scrollable badge is active/inactive.
    */
-  updateOverflowHighlight: async function() {
+  async updateOverflowHighlight() {
     if (!this.isOverflowDebuggingEnabled) {
       return;
     }
@@ -543,7 +543,7 @@ ElementEditor.prototype = {
    *
    * @param {Boolean} showOverflowHighlight
    */
-  setOverflowHighlight: function(showOverflowHighlight) {
+  setOverflowHighlight(showOverflowHighlight) {
     this.container.tagState.classList.toggle(
       "overflow-causing-highlighted",
       showOverflowHighlight
@@ -553,7 +553,7 @@ ElementEditor.prototype = {
   /**
    * Update the inline text editor in case of a single text child node.
    */
-  updateTextEditor: function() {
+  updateTextEditor() {
     const node = this.node.inlineTextChild;
 
     if (this.textEditor && this.textEditor.node != node) {
@@ -587,7 +587,7 @@ ElementEditor.prototype = {
    * be inspected by the current session (eg a parent-process only toolbox
    * inspecting a content browser).
    */
-  updateUnavailableChildren: function() {
+  updateUnavailableChildren() {
     const childrenUnavailable = this.node.childrenUnavailable;
 
     if (this.childrenUnavailableElt) {
@@ -611,7 +611,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _startModifyingAttributes: function() {
+  _startModifyingAttributes() {
     return this.node.startModifyingAttributes();
   },
 
@@ -622,7 +622,7 @@ ElementEditor.prototype = {
    *         The name of the attribute to get the element for
    * @return {DOMNode}
    */
-  getAttributeElement: function(attrName) {
+  getAttributeElement(attrName) {
     return this.attrList.querySelector(
       ".attreditor[data-attr=" + CSS.escape(attrName) + "] .attr-value"
     );
@@ -634,7 +634,7 @@ ElementEditor.prototype = {
    * @param  {String} attrName
    *         The name of the attribute to remove
    */
-  removeAttribute: function(attrName) {
+  removeAttribute(attrName) {
     const attr = this.attrElements.get(attrName);
     if (attr) {
       this.attrElements.delete(attrName);
@@ -661,7 +661,7 @@ ElementEditor.prototype = {
    *     '"'
    *   )
    */
-  _createAttribute: function(attribute, before = null) {
+  _createAttribute(attribute, before = null) {
     const attr = this.doc.createElement("span");
     attr.dataset.attr = attribute.name;
     attr.dataset.value = attribute.value;
@@ -724,7 +724,7 @@ ElementEditor.prototype = {
    * @param  {Element} attrValueEl
    *         The attribute value <span class="attr-value"> element.
    */
-  _setupAttributeEditor: function(
+  _setupAttributeEditor(
     attribute,
     attrEditorEl,
     editableEl,
@@ -756,7 +756,7 @@ ElementEditor.prototype = {
       trigger: "dblclick",
       stopOnReturn: true,
       selectAll: false,
-      initial: initial,
+      initial,
       multiline: true,
       maxWidth: () => getAutocompleteMaxWidth(editableEl, this.container.elt),
       contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
@@ -812,7 +812,7 @@ ElementEditor.prototype = {
    *         The attribute value <span class="attr-value"> element to append
    *         the parsed attribute values to.
    */
-  _appendAttributeValue: function(attribute, attributeValueEl) {
+  _appendAttributeValue(attribute, attributeValueEl) {
     // Parse the attribute value to detect whether there are linkable parts in
     // it (make sure to pass a complete list of existing attributes to the
     // parseAttribute function, by concatenating attribute, because this could
@@ -858,7 +858,7 @@ ElementEditor.prototype = {
    *         Attribute value.
    * @return {String} truncated attribute value.
    */
-  _truncateAttributeValue: function(value) {
+  _truncateAttributeValue(value) {
     if (value && value.match(COLLAPSE_DATA_URL_REGEX)) {
       return truncateString(value, COLLAPSE_DATA_URL_LENGTH);
     }
@@ -879,7 +879,7 @@ ElementEditor.prototype = {
    *         set of attributes, used to place new attributes where the
    *         user put them.
    */
-  _applyAttributes: function(value, attrNode, doMods, undoMods) {
+  _applyAttributes(value, attrNode, doMods, undoMods) {
     const attrs = parseAttributeValues(value, this.doc);
     for (const attr of attrs) {
       // Create an attribute editor next to the current attribute if needed.
@@ -893,7 +893,7 @@ ElementEditor.prototype = {
    * Saves the current state of the given attribute into an attribute
    * modification list.
    */
-  _saveAttribute: function(name, undoMods) {
+  _saveAttribute(name, undoMods) {
     const node = this.node;
     if (node.hasAttribute(name)) {
       const oldValue = node.getAttribute(name);
@@ -908,7 +908,7 @@ ElementEditor.prototype = {
    * try to focus on the attribute after the one that's being edited now.
    * If the attribute order changes, go to the beginning of the attribute list.
    */
-  refocusOnEdit: function(attrName, attrNode, direction) {
+  refocusOnEdit(attrName, attrNode, direction) {
     // Only allow one refocus on attribute change at a time, so when there's
     // more than 1 request in parallel, the last one wins.
     if (this._editedAttributeObserver) {
@@ -1025,7 +1025,7 @@ ElementEditor.prototype = {
    * When a flexbox/grid highlighter is shown or hidden, the corresponding badge will
    * be marked accordingly. See MarkupView.handleHighlighterEvent()
    */
-  onDisplayBadgeClick: async function(event) {
+  async onDisplayBadgeClick(event) {
     event.stopPropagation();
 
     const target = event.target;
@@ -1052,7 +1052,7 @@ ElementEditor.prototype = {
     }
   },
 
-  onCustomBadgeClick: async function() {
+  async onCustomBadgeClick() {
     const { url, line, column } = this.node.customElementLocation;
 
     this.markup.toolbox.viewSourceInDebugger(
@@ -1064,7 +1064,7 @@ ElementEditor.prototype = {
     );
   },
 
-  onExpandBadgeClick: function() {
+  onExpandBadgeClick() {
     this.container.expandContainer();
   },
 
@@ -1072,7 +1072,7 @@ ElementEditor.prototype = {
    * Called when the scrollable badge is clicked. Shows the overflow causing elements and
    * highlights their container if the scroll badge is active.
    */
-  onScrollableBadgeClick: async function() {
+  async onScrollableBadgeClick() {
     this.highlightingOverflowCausingElements = this._scrollableBadge.classList.toggle(
       "active"
     );
@@ -1104,7 +1104,7 @@ ElementEditor.prototype = {
   /**
    * Called when the tag name editor has is done editing.
    */
-  onTagEdit: function(newTagName, isCommit) {
+  onTagEdit(newTagName, isCommit) {
     if (
       !isCommit ||
       newTagName.toLowerCase() === this.node.tagName.toLowerCase() ||
@@ -1122,7 +1122,7 @@ ElementEditor.prototype = {
     });
   },
 
-  destroy: function() {
+  destroy() {
     if (this._displayBadge) {
       this._displayBadge.removeEventListener("click", this.onDisplayBadgeClick);
     }

@@ -33,7 +33,7 @@ WebConsolePanel.prototype = {
    * If the WebConsole is opened, check if the JSTerm's input line has focus.
    * If not, focus it.
    */
-  focusInput: function() {
+  focusInput() {
     this.hud.jsterm.focus();
   },
 
@@ -43,7 +43,7 @@ WebConsolePanel.prototype = {
    * @return object
    *         A promise that is resolved when the Web Console completes opening.
    */
-  open: async function() {
+  async open() {
     try {
       const parentDoc = this._toolbox.doc;
       const iframe = parentDoc.getElementById(
@@ -92,7 +92,7 @@ WebConsolePanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy: function() {
+  destroy() {
     if (!this._toolbox) {
       return;
     }

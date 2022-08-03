@@ -741,7 +741,7 @@ class StorageUI {
     for (const type in added) {
       for (const host in added[type]) {
         const label = this.getReadableLabelFromHostname(host);
-        this.tree.add([type, { id: host, label: label, type: "url" }]);
+        this.tree.add([type, { id: host, label, type: "url" }]);
         for (let name of added[type][host]) {
           try {
             name = JSON.parse(name);
@@ -992,7 +992,7 @@ class StorageUI {
     const populateTreeFromResource = (type, resource) => {
       for (const host in resource.hosts) {
         const label = this.getReadableLabelFromHostname(host);
-        this.tree.add([type, { id: host, label: label, type: "url" }]);
+        this.tree.add([type, { id: host, label, type: "url" }]);
         for (const name of resource.hosts[host]) {
           try {
             const names = JSON.parse(name);

@@ -21,7 +21,7 @@ add_task(
 
         // this test has been disabled for a long time so the functionality doesn't work
         const response = await threadFront.setBreakpoint(
-          { sourceUrl: source.url, line: line },
+          { sourceUrl: source.url, line },
           {}
         );
         // check that the breakpoint has properly skipped forward one line.

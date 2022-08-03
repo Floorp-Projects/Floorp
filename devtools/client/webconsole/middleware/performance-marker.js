@@ -15,7 +15,7 @@ module.exports = function(sessionId) {
     [MESSAGES_ADD]: {
       label: "WebconsoleAddMessages",
       sessionId,
-      getMarkerDescription: function({ action, state }) {
+      getMarkerDescription({ action, state }) {
         const { messages } = action;
         const totalMessageCount = state.messages.mutableMessagesById.size;
         return `${messages.length} messages handled, store now has ${totalMessageCount} messages`;

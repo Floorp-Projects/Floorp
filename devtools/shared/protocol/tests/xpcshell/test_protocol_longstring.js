@@ -56,7 +56,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize: function(conn) {
+  initialize(conn) {
     rootActor = this;
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
@@ -66,15 +66,15 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  shortString: function() {
+  shortString() {
     return new LongStringActor(this.conn, SHORT_STR);
   },
 
-  longString: function() {
+  longString() {
     return new LongStringActor(this.conn, LONG_STR);
   },
 
-  emitShortString: function() {
+  emitShortString() {
     EventEmitter.emit(
       this,
       "string-event",
@@ -82,7 +82,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     );
   },
 
-  emitLongString: function() {
+  emitLongString() {
     EventEmitter.emit(
       this,
       "string-event",

@@ -111,7 +111,7 @@ function getSourceURL(source, targetActor) {
  *        The current thread actor.
  */
 const SourceActor = ActorClassWithSpec(sourceSpec, {
-  initialize: function({ source, thread }) {
+  initialize({ source, thread }) {
     Actor.prototype.initialize.call(this, thread.conn);
 
     this._threadActor = thread;
@@ -181,7 +181,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._source.id;
   },
 
-  form: function() {
+  form() {
     const source = this._source;
 
     let introductionType = source.introductionType;
@@ -210,7 +210,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     };
   },
 
-  destroy: function() {
+  destroy() {
     const parent = this.getParent();
     if (parent && parent.sourceActors) {
       delete parent.sourceActors[this.actorID];
@@ -222,7 +222,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._source.introductionType === "wasm";
   },
 
-  _getSourceText: async function() {
+  async _getSourceText() {
     if (this._isWasm) {
       const wasm = this._source.binary;
       const buffer = wasm.buffer;
@@ -296,7 +296,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return true;
   },
 
-  getBreakableLines: async function() {
+  async getBreakableLines() {
     const positions = await this.getBreakpointPositions();
     const lines = new Set();
     for (const position of positions) {
@@ -541,7 +541,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     }
   },
 
-  getBreakpointPositions: async function(query) {
+  async getBreakpointPositions(query) {
     const scripts = this._findDebuggeeScripts(
       query,
       /* forBreakpointPositions */ true
@@ -593,7 +593,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     }
   },
 
-  getBreakpointPositionsCompressed: async function(query) {
+  async getBreakpointPositionsCompressed(query) {
     const items = await this.getBreakpointPositions(query);
     const compressed = {};
     for (const { line, column } of items) {
@@ -612,7 +612,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *         a field `source`. `source` can either be an ArrayBuffer or
    *         a LongString.
    */
-  source: async function() {
+  async source() {
     try {
       const { content, contentType } = await this._getSourceText();
       if (
@@ -645,7 +645,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   /**
    * Handler for the "blackbox" packet.
    */
-  blackbox: function(range) {
+  blackbox(range) {
     this.sourcesManager.blackBox(this.url, range);
     if (
       this.threadActor.state == "paused" &&
@@ -660,7 +660,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   /**
    * Handler for the "unblackbox" packet.
    */
-  unblackbox: function(range) {
+  unblackbox(range) {
     this.sourcesManager.unblackBox(this.url, range);
   },
 
@@ -676,7 +676,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *          }
    *        }
    */
-  setPausePoints: function(pausePoints) {
+  setPausePoints(pausePoints) {
     const uncompressed = {};
     const points = {
       0: {},
@@ -704,7 +704,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *
    * @returns A Promise that resolves to the given BreakpointActor.
    */
-  applyBreakpoint: async function(actor) {
+  async applyBreakpoint(actor) {
     let { line, column } = actor.location;
 
     // Find all entry points that correspond to the given location.

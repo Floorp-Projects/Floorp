@@ -32,7 +32,7 @@ const TESTS = [
     category: "HTML",
     matchString: "multipart/form-data",
     typeSelector: ".warn",
-    onload: function() {
+    onload() {
       SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
         const form = content.document.querySelector("form");
         form.submit();

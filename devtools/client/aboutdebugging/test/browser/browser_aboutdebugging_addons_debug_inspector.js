@@ -30,7 +30,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         document.body.innerText = "Background Page Body Test Content";
       },
       id: ADDON_ID,

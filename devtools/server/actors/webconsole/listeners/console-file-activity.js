@@ -42,7 +42,7 @@ ConsoleFileActivityListener.prototype = {
    * Initialize the ConsoleFileActivityListener.
    * @private
    */
-  _init: function() {
+  _init() {
     if (this._initialized) {
       return;
     }
@@ -60,18 +60,18 @@ ConsoleFileActivityListener.prototype = {
    * Start a monitor/tracker related to the current nsIWebProgressListener
    * instance.
    */
-  startMonitor: function() {
+  startMonitor() {
     this._init();
   },
 
   /**
    * Stop monitoring.
    */
-  stopMonitor: function() {
+  stopMonitor() {
     this.destroy();
   },
 
-  onStateChange: function(progress, request, state, status) {
+  onStateChange(progress, request, state, status) {
     if (!this.owner) {
       return;
     }
@@ -85,7 +85,7 @@ ConsoleFileActivityListener.prototype = {
    * URI has been loaded, then the remote Web Console instance is notified.
    * @private
    */
-  _checkFileActivity: function(progress, request, state, status) {
+  _checkFileActivity(progress, request, state, status) {
     if (!(state & Ci.nsIWebProgressListener.STATE_START)) {
       return;
     }
@@ -109,7 +109,7 @@ ConsoleFileActivityListener.prototype = {
   /**
    * Destroy the ConsoleFileActivityListener.
    */
-  destroy: function() {
+  destroy() {
     if (!this._initialized) {
       return;
     }

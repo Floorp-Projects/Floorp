@@ -17,12 +17,12 @@ loader.lazyImporter(
  * An actor for a Web Manifest
  */
 const ManifestActor = ActorClassWithSpec(manifestSpec, {
-  initialize: function(conn, targetActor) {
+  initialize(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
     this.targetActor = targetActor;
   },
 
-  fetchCanonicalManifest: async function() {
+  async fetchCanonicalManifest() {
     try {
       const manifest = await ManifestObtainer.contentObtainManifest(
         this.targetActor.window,

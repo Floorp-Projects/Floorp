@@ -14,15 +14,15 @@ function TestStreamListener() {
   this.state = "initial";
 }
 TestStreamListener.prototype = {
-  onStartRequest: function() {
+  onStartRequest() {
     this.setState("start");
   },
 
-  onStopRequest: function() {
+  onStopRequest() {
     this.setState("stop");
   },
 
-  onDataAvailable: function(request, inputStream, offset, count) {
+  onDataAvailable(request, inputStream, offset, count) {
     const sin = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
       nsIScriptableInputStream
     );
@@ -31,7 +31,7 @@ TestStreamListener.prototype = {
     this.setState("data");
   },
 
-  setState: function(state) {
+  setState(state) {
     this.state = state;
     if (this._deferred) {
       this._deferred.resolve(state);
@@ -39,7 +39,7 @@ TestStreamListener.prototype = {
     }
   },
 
-  onStateChanged: function() {
+  onStateChanged() {
     if (!this._deferred) {
       let resolve, reject;
       const promise = new Promise(function(res, rej) {
@@ -58,7 +58,7 @@ function TestChannel() {
   this._throttleQueue = null;
 }
 TestChannel.prototype = {
-  QueryInterface: function() {
+  QueryInterface() {
     return this;
   },
 
@@ -71,7 +71,7 @@ TestChannel.prototype = {
     this.state = "throttled";
   },
 
-  setNewListener: function(listener) {
+  setNewListener(listener) {
     this.listener = listener;
     this.state = "listener";
     return this.testListener;

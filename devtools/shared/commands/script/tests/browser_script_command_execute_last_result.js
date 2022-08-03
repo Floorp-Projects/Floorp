@@ -77,7 +77,7 @@ add_task(async () => {
 
 function basicResultCheck(response, input, output) {
   checkObject(response, {
-    input: input,
+    input,
     result: output,
   });
   ok(!response.exception, "no eval exception");

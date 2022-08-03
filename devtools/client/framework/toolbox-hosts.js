@@ -55,7 +55,7 @@ BottomHost.prototype = {
   /**
    * Create a box at the bottom of the host tab.
    */
-  create: async function() {
+  async create() {
     await gDevToolsBrowser.loadBrowserStyleSheet(this.hostTab.ownerGlobal);
 
     const gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
@@ -88,7 +88,7 @@ BottomHost.prototype = {
   /**
    * Raise the host.
    */
-  raise: function() {
+  raise() {
     focusTab(this.hostTab);
   },
 
@@ -96,12 +96,12 @@ BottomHost.prototype = {
    * Set the toolbox title.
    * Nothing to do for this host type.
    */
-  setTitle: function() {},
+  setTitle() {},
 
   /**
    * Destroy the bottom dock.
    */
-  destroy: function() {
+  destroy() {
     if (!this._destroyed) {
       this._destroyed = true;
 
@@ -234,7 +234,7 @@ WindowHost.prototype = {
   /**
    * Create a new xul window to contain the toolbox.
    */
-  create: function() {
+  create() {
     return new Promise(resolve => {
       let flags = "chrome,centerscreen,resizable,dialog=no";
 
@@ -294,7 +294,7 @@ WindowHost.prototype = {
   /**
    * Catch the user closing the window.
    */
-  _boundUnload: function(event) {
+  _boundUnload(event) {
     if (event.target.location != this.WINDOW_URL) {
       return;
     }
@@ -306,21 +306,21 @@ WindowHost.prototype = {
   /**
    * Raise the host.
    */
-  raise: function() {
+  raise() {
     this._window.focus();
   },
 
   /**
    * Set the toolbox title.
    */
-  setTitle: function(title) {
+  setTitle(title) {
     this._window.document.title = title;
   },
 
   /**
    * Destroy the window.
    */
-  destroy: function() {
+  destroy() {
     if (!this._destroyed) {
       this._destroyed = true;
 
@@ -343,7 +343,7 @@ function BrowserToolboxHost(hostTab, options) {
 BrowserToolboxHost.prototype = {
   type: "browsertoolbox",
 
-  create: async function() {
+  async create() {
     this.frame = createDevToolsFrame(
       this.doc,
       "devtools-toolbox-browsertoolbox-iframe"
@@ -357,19 +357,19 @@ BrowserToolboxHost.prototype = {
   /**
    * Raise the host.
    */
-  raise: function() {
+  raise() {
     this.doc.defaultView.focus();
   },
 
   /**
    * Set the toolbox title.
    */
-  setTitle: function(title) {
+  setTitle(title) {
     this.doc.title = title;
   },
 
   // Do nothing. The BrowserToolbox is destroyed by quitting the application.
-  destroy: function() {
+  destroy() {
     return Promise.resolve(null);
   },
 };
@@ -387,18 +387,18 @@ function PageHost(hostTab, options) {
 PageHost.prototype = {
   type: "page",
 
-  create: function() {
+  create() {
     return Promise.resolve(this.frame);
   },
 
   // Do nothing.
-  raise: function() {},
+  raise() {},
 
   // Do nothing.
-  setTitle: function(title) {},
+  setTitle(title) {},
 
   // Do nothing.
-  destroy: function() {
+  destroy() {
     return Promise.resolve(null);
   },
 };

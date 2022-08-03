@@ -19,7 +19,7 @@ function ProcessActorList() {
 }
 
 ProcessActorList.prototype = {
-  getList: function() {
+  getList() {
     const processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
       const mm = ppmm.getChildAt(i);
@@ -54,7 +54,7 @@ ProcessActorList.prototype = {
     this._checkListening();
   },
 
-  _checkListening: function() {
+  _checkListening() {
     if (this._onListChanged !== null && this._mustNotify) {
       if (!this._hasObserver) {
         Services.obs.addObserver(this, "ipc:content-created");

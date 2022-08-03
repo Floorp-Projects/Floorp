@@ -7,35 +7,35 @@
 function ObjectFront(grip, overrides) {
   return {
     grip,
-    enumEntries: function() {
+    enumEntries() {
       return Promise.resolve(
         this.getIterator({
           ownProperties: {},
         })
       );
     },
-    enumProperties: function(options) {
+    enumProperties(options) {
       return Promise.resolve(
         this.getIterator({
           ownProperties: {},
         })
       );
     },
-    enumSymbols: function() {
+    enumSymbols() {
       return Promise.resolve(
         this.getIterator({
           ownSymbols: [],
         })
       );
     },
-    enumPrivateProperties: function() {
+    enumPrivateProperties() {
       return Promise.resolve(
         this.getIterator({
           privateProperties: [],
         })
       );
     },
-    getPrototype: function() {
+    getPrototype() {
       return Promise.resolve({
         prototype: {},
       });
@@ -43,7 +43,7 @@ function ObjectFront(grip, overrides) {
     // Declared here so we can override it.
     getIterator(res) {
       return {
-        slice: function(start, count) {
+        slice(start, count) {
           return Promise.resolve(res);
         },
       };

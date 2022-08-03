@@ -31,7 +31,7 @@ add_task(async function testWebExtensionToolboxReload() {
 
   await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         console.log("background script executed " + Math.random());
       },
       id: ADDON_ID,

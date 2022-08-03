@@ -330,7 +330,7 @@ BoxModel.prototype = {
 
     const editor = new InplaceEditor(
       {
-        element: element,
+        element,
         initial: initialValue,
         contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
         property: {
@@ -344,7 +344,7 @@ BoxModel.prototype = {
             value += "px";
           }
 
-          const properties = [{ name: property, value: value }];
+          const properties = [{ name: property, value }];
 
           if (property.substring(0, 7) == "border-") {
             const bprop = property.substring(0, property.length - 5) + "style";

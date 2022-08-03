@@ -103,15 +103,15 @@ function createPieTableChart(
 
   const pie = Chart.Pie(document, {
     width: diameter,
-    data: data,
+    data,
   });
 
   const table = Chart.Table(document, {
-    title: title,
-    data: data,
-    strings: strings,
-    totals: totals,
-    header: header,
+    title,
+    data,
+    strings,
+    totals,
+    header,
   });
 
   const container = document.createElement("div");

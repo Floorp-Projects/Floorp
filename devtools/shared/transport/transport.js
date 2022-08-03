@@ -113,7 +113,7 @@ DebuggerTransport.prototype = {
    * transmit the entire packet. Packets are transmitted in the order
    * they are passed to this method.
    */
-  send: function(object) {
+  send(object) {
     const packet = new JSONPacket(this);
     packet.object = object;
     this._outgoing.push(packet);
@@ -161,7 +161,7 @@ DebuggerTransport.prototype = {
    *                     This object also emits "progress" events for each chunk
    *                     that is copied.  See stream-utils.js.
    */
-  startBulkSend: function(header) {
+  startBulkSend(header) {
     const packet = new BulkPacket(this);
     packet.header = header;
     this._outgoing.push(packet);
@@ -175,7 +175,7 @@ DebuggerTransport.prototype = {
    *        The status code or error message that corresponds to the reason for
    *        closing the transport (likely because a stream closed or failed).
    */
-  close: function(reason) {
+  close(reason) {
     this.active = false;
     this._input.close();
     this._scriptableInput.close();
@@ -204,7 +204,7 @@ DebuggerTransport.prototype = {
    * Flush data to the outgoing stream.  Waits until the output stream notifies
    * us that it is ready to be written to (via onOutputStreamReady).
    */
-  _flushOutgoing: function() {
+  _flushOutgoing() {
     if (!this._outgoingEnabled || this._outgoing.length === 0) {
       return;
     }
@@ -225,14 +225,14 @@ DebuggerTransport.prototype = {
    * used when we've temporarily handed off our output stream for writing bulk
    * data.
    */
-  pauseOutgoing: function() {
+  pauseOutgoing() {
     this._outgoingEnabled = false;
   },
 
   /**
    * Resume this transport's attempts to write to the output stream.
    */
-  resumeOutgoing: function() {
+  resumeOutgoing() {
     this._outgoingEnabled = true;
     this._flushOutgoing();
   },
@@ -264,7 +264,7 @@ DebuggerTransport.prototype = {
   /**
    * Remove the current outgoing packet from the queue upon completion.
    */
-  _finishCurrentOutgoing: function() {
+  _finishCurrentOutgoing() {
     if (this._currentOutgoing) {
       this._currentOutgoing.destroy();
       this._outgoing.shift();
@@ -274,7 +274,7 @@ DebuggerTransport.prototype = {
   /**
    * Clear the entire outgoing queue.
    */
-  _destroyAllOutgoing: function() {
+  _destroyAllOutgoing() {
     for (const packet of this._outgoing) {
       packet.destroy();
     }
@@ -286,7 +286,7 @@ DebuggerTransport.prototype = {
    * we watch for packets on the input stream, and pass them to the appropriate
    * handlers via this.hooks.
    */
-  ready: function() {
+  ready() {
     this.active = true;
     this._waitForIncoming();
   },
@@ -295,7 +295,7 @@ DebuggerTransport.prototype = {
    * Asks the input stream to notify us (via onInputStreamReady) when it is
    * ready for reading.
    */
-  _waitForIncoming: function() {
+  _waitForIncoming() {
     if (this._incomingEnabled) {
       const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
       this._input.asyncWait(this, 0, 0, threadManager.currentThread);
@@ -307,14 +307,14 @@ DebuggerTransport.prototype = {
    * used when we've temporarily handed off our input stream for reading bulk
    * data.
    */
-  pauseIncoming: function() {
+  pauseIncoming() {
     this._incomingEnabled = false;
   },
 
   /**
    * Resume this transport's attempts to read from the input stream.
    */
-  resumeIncoming: function() {
+  resumeIncoming() {
     this._incomingEnabled = true;
     this._flushIncoming();
     this._waitForIncoming();
@@ -353,7 +353,7 @@ DebuggerTransport.prototype = {
    *         Whether incoming stream processing should continue for any
    *         remaining data.
    */
-  _processIncoming: function(stream, count) {
+  _processIncoming(stream, count) {
     dumpv("Data available: " + count);
 
     if (!count) {
@@ -413,7 +413,7 @@ DebuggerTransport.prototype = {
    * @return boolean
    *         True if we now have a complete header.
    */
-  _readHeader: function() {
+  _readHeader() {
     const amountToRead = PACKET_HEADER_MAX - this._incomingHeader.length;
     this._incomingHeader += StreamUtils.delimitedRead(
       this._scriptableInput,
@@ -442,7 +442,7 @@ DebuggerTransport.prototype = {
   /**
    * If the incoming packet is done, log it as needed and clear the buffer.
    */
-  _flushIncoming: function() {
+  _flushIncoming() {
     if (!this._incoming.done) {
       return;
     }
@@ -456,7 +456,7 @@ DebuggerTransport.prototype = {
    * Handler triggered by an incoming JSONPacket completing it's |read| method.
    * Delivers the packet to this.hooks.onPacket.
    */
-  _onJSONObjectReady: function(object) {
+  _onJSONObjectReady(object) {
     DevToolsUtils.executeSoon(
       DevToolsUtils.makeInfallible(() => {
         // Ensure the transport is still alive by the time this runs.
@@ -473,7 +473,7 @@ DebuggerTransport.prototype = {
    * streaming data to this.hooks.onBulkPacket.  See the main comment on the
    * transport at the top of this file for more details.
    */
-  _onBulkReadReady: function(...args) {
+  _onBulkReadReady(...args) {
     DevToolsUtils.executeSoon(
       DevToolsUtils.makeInfallible(() => {
         // Ensure the transport is still alive by the time this runs.
@@ -488,7 +488,7 @@ DebuggerTransport.prototype = {
    * Remove all handlers and references related to the current incoming packet,
    * either because it is now complete or because the transport is closing.
    */
-  _destroyIncoming: function() {
+  _destroyIncoming() {
     if (this._incoming) {
       this._incoming.destroy();
     }

@@ -55,7 +55,7 @@ async function test_socket_conn() {
   const onDebuggerConnectionClosed = DevToolsServer.once("connectionchange");
   await new Promise(resolve => {
     transport.hooks = {
-      onPacket: function(packet) {
+      onPacket(packet) {
         this.onPacket = function({ unicode }) {
           Assert.equal(unicode, unicodeString);
           transport.close();
@@ -70,7 +70,7 @@ async function test_socket_conn() {
         });
         Assert.equal(packet.from, "root");
       },
-      onTransportClosed: function(status) {
+      onTransportClosed(status) {
         resolve();
       },
     };
@@ -117,11 +117,11 @@ async function test_socket_shutdown() {
 function test_pipe_conn() {
   const transport = DevToolsServer.connectPipe();
   transport.hooks = {
-    onPacket: function(packet) {
+    onPacket(packet) {
       Assert.equal(packet.from, "root");
       transport.close();
     },
-    onTransportClosed: function(status) {
+    onTransportClosed(status) {
       run_next_test();
     },
   };

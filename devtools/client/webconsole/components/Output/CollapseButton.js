@@ -24,7 +24,7 @@ function CollapseButton(props) {
       // Clearing the text selection to allow the message to collpase.
       e.target.ownerDocument.defaultView.getSelection().removeAllRanges();
     },
-    title: title,
+    title,
   });
 }
 

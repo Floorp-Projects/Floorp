@@ -54,7 +54,7 @@ add_task(async function() {
         start: runPropertyAutocompletionTest,
         contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
         done: resolve,
-        popup: popup,
+        popup,
       },
       doc
     );

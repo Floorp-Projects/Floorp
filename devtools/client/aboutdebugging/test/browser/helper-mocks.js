@@ -152,7 +152,7 @@ class Mocks {
     this._usbRuntimes.push({
       deviceId: runtimeInfo.deviceId || "test device id",
       deviceName: runtimeInfo.deviceName || "test device name",
-      id: id,
+      id,
       isFenix: runtimeInfo.isFenix,
       shortName: runtimeInfo.shortName || "testshort",
       socketPath: runtimeInfo.socketPath || "test/path",

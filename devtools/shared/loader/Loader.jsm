@@ -192,7 +192,7 @@ DevToolsLoader.prototype = {
     return {};
   },
 
-  destroy: function(reason = "shutdown") {
+  destroy(reason = "shutdown") {
     unload(this.loader, reason);
     delete this.loader;
   },
@@ -201,7 +201,7 @@ DevToolsLoader.prototype = {
    * Return true if |id| refers to something requiring help from a
    * loader plugin.
    */
-  isLoaderPluginId: function(id) {
+  isLoaderPluginId(id) {
     return id.startsWith("raw!");
   },
 };

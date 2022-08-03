@@ -18,11 +18,11 @@ const Match = (function() {
   }
 
   Pattern.prototype = {
-    match: function(act) {
+    match(act) {
       return match(act, this.template);
     },
 
-    matches: function(act) {
+    matches(act) {
       try {
         return this.match(act);
       } catch (e) {
@@ -33,7 +33,7 @@ const Match = (function() {
       return false;
     },
 
-    assert: function(act, message) {
+    assert(act, message) {
       try {
         return this.match(act);
       } catch (e) {
@@ -71,7 +71,7 @@ const Match = (function() {
   }
 
   MatchError.prototype = {
-    toString: function() {
+    toString() {
       return "match error: " + this.message;
     },
   };

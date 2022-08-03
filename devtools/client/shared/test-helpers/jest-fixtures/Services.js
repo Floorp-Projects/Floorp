@@ -50,10 +50,10 @@ function PrefBranch(parent, name, fullName) {
 }
 
 PrefBranch.prototype = {
-  PREF_INVALID: PREF_INVALID,
-  PREF_STRING: PREF_STRING,
-  PREF_INT: PREF_INT,
-  PREF_BOOL: PREF_BOOL,
+  PREF_INVALID,
+  PREF_STRING,
+  PREF_INT,
+  PREF_BOOL,
 
   /** @see nsIPrefBranch.root.  */
   get root() {
@@ -61,12 +61,12 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.getPrefType.  */
-  getPrefType: function(prefName) {
+  getPrefType(prefName) {
     return this._findPref(prefName)._type;
   },
 
   /** @see nsIPrefBranch.getBoolPref.  */
-  getBoolPref: function(prefName, defaultValue) {
+  getBoolPref(prefName, defaultValue) {
     try {
       const thePref = this._findPref(prefName);
       if (thePref._type !== PREF_BOOL) {
@@ -82,7 +82,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.setBoolPref.  */
-  setBoolPref: function(prefName, value) {
+  setBoolPref(prefName, value) {
     if (typeof value !== "boolean") {
       throw new Error("non-bool passed to setBoolPref");
     }
@@ -94,7 +94,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.getCharPref.  */
-  getCharPref: function(prefName, defaultValue) {
+  getCharPref(prefName, defaultValue) {
     try {
       const thePref = this._findPref(prefName);
       if (thePref._type !== PREF_STRING) {
@@ -110,12 +110,12 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.getStringPref.  */
-  getStringPref: function() {
+  getStringPref() {
     return this.getCharPref.apply(this, arguments);
   },
 
   /** @see nsIPrefBranch.setCharPref.  */
-  setCharPref: function(prefName, value) {
+  setCharPref(prefName, value) {
     if (typeof value !== "string") {
       throw new Error("non-string passed to setCharPref");
     }
@@ -127,12 +127,12 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.setStringPref.  */
-  setStringPref: function() {
+  setStringPref() {
     return this.setCharPref.apply(this, arguments);
   },
 
   /** @see nsIPrefBranch.getIntPref.  */
-  getIntPref: function(prefName, defaultValue) {
+  getIntPref(prefName, defaultValue) {
     try {
       const thePref = this._findPref(prefName);
       if (thePref._type !== PREF_INT) {
@@ -148,7 +148,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.setIntPref.  */
-  setIntPref: function(prefName, value) {
+  setIntPref(prefName, value) {
     if (typeof value !== "number") {
       throw new Error("non-number passed to setIntPref");
     }
@@ -160,19 +160,19 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.clearUserPref */
-  clearUserPref: function(prefName) {
+  clearUserPref(prefName) {
     const thePref = this._findPref(prefName);
     thePref._clearUserValue();
   },
 
   /** @see nsIPrefBranch.prefHasUserValue */
-  prefHasUserValue: function(prefName) {
+  prefHasUserValue(prefName) {
     const thePref = this._findPref(prefName);
     return thePref._hasUserValue;
   },
 
   /** @see nsIPrefBranch.addObserver */
-  addObserver: function(domain, observer, holdWeak) {
+  addObserver(domain, observer, holdWeak) {
     if (holdWeak) {
       throw new Error("shim prefs only supports strong observers");
     }
@@ -184,7 +184,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.removeObserver */
-  removeObserver: function(domain, observer) {
+  removeObserver(domain, observer) {
     if (!(domain in this._observers)) {
       return;
     }
@@ -195,7 +195,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefService.savePrefFile */
-  savePrefFile: function(file) {
+  savePrefFile(file) {
     if (file) {
       throw new Error("shim prefs only supports null file in savePrefFile");
     }
@@ -203,7 +203,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefService.getBranch */
-  getBranch: function(prefRoot) {
+  getBranch(prefRoot) {
     if (!prefRoot) {
       return this;
     }
@@ -222,7 +222,7 @@ PrefBranch.prototype = {
    *         return a string, a number, or a boolean depending on the
    *         preference's type.
    */
-  _get: function() {
+  _get() {
     if (this._hasUserValue) {
       return this._userValue;
     }
@@ -236,7 +236,7 @@ PrefBranch.prototype = {
    *
    * @param {Any} value the new value
    */
-  _set: function(value) {
+  _set(value) {
     if (!this._hasUserValue || value !== this._userValue) {
       this._userValue = value;
       this._hasUserValue = true;
@@ -250,7 +250,7 @@ PrefBranch.prototype = {
    *
    * @param {Any} value the new default value
    */
-  _setDefault: function(value) {
+  _setDefault(value) {
     if (this._defaultValue !== value) {
       this._defaultValue = value;
       if (!this._hasUserValue) {
@@ -263,7 +263,7 @@ PrefBranch.prototype = {
    * If this preference has a user value, clear it.  If a change was
    * made, emit a change notification.
    */
-  _clearUserValue: function() {
+  _clearUserValue() {
     if (this._hasUserValue) {
       this._userValue = null;
       this._hasUserValue = false;
@@ -275,7 +275,7 @@ PrefBranch.prototype = {
    * Helper function to write the preference's value to local storage
    * and then emit a change notification.
    */
-  _saveAndNotify: function() {
+  _saveAndNotify() {
     const store = {
       type: this._type,
       defaultValue: this._defaultValue,
@@ -305,7 +305,7 @@ PrefBranch.prototype = {
    *        and |hasUserValue| is a boolean indicating whether the user value
    *        is valid
    */
-  _storageUpdated: function(type, userValue, hasUserValue, defaultValue) {
+  _storageUpdated(type, userValue, hasUserValue, defaultValue) {
     this._type = type;
     this._defaultValue = defaultValue;
     this._hasUserValue = hasUserValue;
@@ -322,7 +322,7 @@ PrefBranch.prototype = {
    * @param {String} prefName the fully-qualified preference name
    * @return {Object} Either a Preference or PrefBranch object
    */
-  _findPref: function(prefName) {
+  _findPref(prefName) {
     const branchNames = prefName.split(".");
     let branch = this;
 
@@ -345,7 +345,7 @@ PrefBranch.prototype = {
    * @param {String} relativeName the name of the updated pref,
    *        relative to this branch
    */
-  _notify: function(relativeName) {
+  _notify(relativeName) {
     for (const domain in this._observers) {
       if (
         relativeName === domain ||
@@ -387,7 +387,7 @@ PrefBranch.prototype = {
    *        of the branch to be created
    * @return {PrefBranch} the new branch
    */
-  _createBranch: function(branchList) {
+  _createBranch(branchList) {
     let parent = this;
     for (const branch of branchList) {
       if (!parent._children[branch]) {
@@ -414,7 +414,7 @@ PrefBranch.prototype = {
    * @param {Boolean} init if true, then this call is initialization
    *        from local storage and should override the default prefs
    */
-  _findOrCreatePref: function(
+  _findOrCreatePref(
     keyName,
     userValue,
     hasUserValue,
@@ -451,7 +451,7 @@ PrefBranch.prototype = {
     return branch;
   },
 
-  getKeyName: function(keyName) {
+  getKeyName(keyName) {
     if (keyName.startsWith(PREFIX)) {
       return keyName.slice(PREFIX.length);
     }
@@ -466,7 +466,7 @@ PrefBranch.prototype = {
    * @param {StorageEvent} event the event representing the local
    *        storage change
    */
-  _onStorageChange: function(event) {
+  _onStorageChange(event) {
     if (event.storageArea !== localStorage) {
       return;
     }
@@ -492,7 +492,7 @@ PrefBranch.prototype = {
   /**
    * Helper function to initialize the root PrefBranch.
    */
-  _initializeRoot: function() {
+  _initializeRoot() {
     if (Services._defaultPrefsEnabled) {
       /* eslint-disable no-eval */
       // let devtools = require("raw!prefs!devtools/client/preferences/devtools");
@@ -541,9 +541,9 @@ const Services = {
   appinfo: "",
   obs: { addObserver: () => {} },
   strings: {
-    createBundle: function(bundle) {
+    createBundle(bundle) {
       return {
-        GetStringFromName: function(str) {
+        GetStringFromName(str) {
           return "NodeTest";
         },
       };

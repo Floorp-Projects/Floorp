@@ -373,7 +373,7 @@ InplaceEditor.prototype = {
     return val;
   },
 
-  _createInput: function() {
+  _createInput() {
     this.input = this.doc.createElementNS(
       HTML_NS,
       this.multiline ? "textarea" : "input"
@@ -398,7 +398,7 @@ InplaceEditor.prototype = {
   /**
    * Get rid of the editor.
    */
-  _clear: function() {
+  _clear() {
     if (!this.input) {
       // Already cleared.
       return;
@@ -437,7 +437,7 @@ InplaceEditor.prototype = {
    * Keeps the editor close to the size of its input string.  This is pretty
    * crappy, suggestions for improvement welcome.
    */
-  _autosize: function() {
+  _autosize() {
     // Create a hidden, absolutely-positioned span to measure the text
     // in the input.  Boo.
 
@@ -475,7 +475,7 @@ InplaceEditor.prototype = {
   /**
    * Clean up the mess created by _autosize().
    */
-  _stopAutosize: function() {
+  _stopAutosize() {
     if (!this._measurement) {
       return;
     }
@@ -486,7 +486,7 @@ InplaceEditor.prototype = {
   /**
    * Size the editor to fit its current contents.
    */
-  _updateSize: function() {
+  _updateSize() {
     // Replace spaces with non-breaking spaces.  Otherwise setting
     // the span's textContent will collapse spaces and the measurement
     // will be wrong.
@@ -526,7 +526,7 @@ InplaceEditor.prototype = {
    * Get the width and height of a single character in the input to properly
    * position the autocompletion popup.
    */
-  _getInputCharDimensions: function() {
+  _getInputCharDimensions() {
     // Just make the text content to be 'x' to get the width and height of any
     // character in a monospace font.
     this._measurement.textContent = "x";
@@ -542,7 +542,7 @@ InplaceEditor.prototype = {
    *        The amount to increase/decrease the property value.
    * @return {Boolean} true if value has been incremented.
    */
-  _incrementValue: function(increment) {
+  _incrementValue(increment) {
     const value = this.input.value;
     const selectionStart = this.input.selectionStart;
     const selectionEnd = this.input.selectionEnd;
@@ -583,7 +583,7 @@ InplaceEditor.prototype = {
    *        Ending index of the value.
    * @return {Object} object with properties 'value', 'start', and 'end'.
    */
-  _incrementCSSValue: function(value, increment, selStart, selEnd) {
+  _incrementCSSValue(value, increment, selStart, selEnd) {
     const range = this._parseCSSValue(value, selStart);
     const type = range?.type || "";
     const rawValue = range ? value.substring(range.start, range.end) : "";
@@ -685,7 +685,7 @@ InplaceEditor.prototype = {
    * @return {String} a valid unit that can be used for this number value or
    *         empty string if no match could be found.
    */
-  _findCompatibleUnit: function(beforeValue, afterValue) {
+  _findCompatibleUnit(beforeValue, afterValue) {
     if (!this.property || !this.property.name) {
       return "";
     }
@@ -720,7 +720,7 @@ InplaceEditor.prototype = {
    * @return {Object} object with properties 'value', 'start', 'end', and
    *         'type'.
    */
-  _parseCSSValue: function(value, offset) {
+  _parseCSSValue(value, offset) {
     /* eslint-disable max-len */
     const reSplitCSS = /(?<url>url\("?[^"\)]+"?\)?)|(?<rgb>rgba?\([^)]*\)?)|(?<hsl>hsla?\([^)]*\)?)|(?<hwb>hwb\([^)]*\)?)|(?<hex>#[\dA-Fa-f]+)|(?<number>-?\d*\.?\d+(%|[a-z]{1,4})?)|"([^"]*)"?|'([^']*)'?|([^,\s\/!\(\)]+)|(!(.*)?)/;
     /* eslint-enable */
@@ -757,7 +757,7 @@ InplaceEditor.prototype = {
       value: m[0],
       start: start + m.index,
       end: start + m.index + m[0].length,
-      type: type,
+      type,
     };
   },
 
@@ -777,7 +777,7 @@ InplaceEditor.prototype = {
    *        Object with details about the property value.
    * @return {Object} object with properties 'value', 'start', and 'end'.
    */
-  _incrementGenericValue: function(value, increment, offset, offsetEnd, info) {
+  _incrementGenericValue(value, increment, offset, offsetEnd, info) {
     // Try to find a number around the cursor to increment.
     let start, end;
     // Check if we are incrementing in a non-number context (such as a URL)
@@ -828,7 +828,7 @@ InplaceEditor.prototype = {
       if (mid !== null) {
         return {
           value: first + mid + last,
-          start: start,
+          start,
           end: start + mid.length,
         };
       }
@@ -848,7 +848,7 @@ InplaceEditor.prototype = {
    *        Object with info about the property value.
    * @return {String} the incremented value.
    */
-  _incrementRawValue: function(rawValue, increment, info) {
+  _incrementRawValue(rawValue, increment, info) {
     const num = parseFloat(rawValue);
 
     if (isNaN(num)) {
@@ -890,7 +890,7 @@ InplaceEditor.prototype = {
    *        Ending index of the property value.
    * @return {Object} object with properties 'value' and 'selection'.
    */
-  _incHexColor: function(rawValue, increment, offset, offsetEnd) {
+  _incHexColor(rawValue, increment, offset, offsetEnd) {
     // Return early if no part of the rawValue is selected.
     if (offsetEnd > rawValue.length && offset >= rawValue.length) {
       return null;
@@ -999,7 +999,7 @@ InplaceEditor.prototype = {
    *        true to not select the text after selecting the newly selectedItem
    *        from the popup.
    */
-  _cycleCSSSuggestion: function(reverse, noSelect) {
+  _cycleCSSSuggestion(reverse, noSelect) {
     // selectedItem can be null when nothing is selected in an empty editor.
     const { label, preLabel } = this.popup.selectedItem || {
       label: "",
@@ -1046,7 +1046,7 @@ InplaceEditor.prototype = {
   /**
    * Call the client's done handler and clear out.
    */
-  _apply: function(event, direction) {
+  _apply(event, direction) {
     if (this._applied) {
       return null;
     }
@@ -1064,7 +1064,7 @@ InplaceEditor.prototype = {
   /**
    * Hide the popup and cancel any pending popup opening.
    */
-  _onWindowBlur: function() {
+  _onWindowBlur() {
     if (this.popup && this.popup.isOpen) {
       this.popup.hidePopup();
     }
@@ -1077,7 +1077,7 @@ InplaceEditor.prototype = {
   /**
    * Event handler called when the inplace-editor's input loses focus.
    */
-  _onBlur: function(event) {
+  _onBlur(event) {
     if (
       event &&
       this.popup &&
@@ -1098,7 +1098,7 @@ InplaceEditor.prototype = {
    * @param {Function} getGridLineNames
    *        A function which gets the line names of the current grid.
    */
-  _getGridNamesBeforeCompletion: async function(getGridLineNames) {
+  async _getGridNamesBeforeCompletion(getGridLineNames) {
     if (
       getGridLineNames &&
       this.property &&
@@ -1120,11 +1120,11 @@ InplaceEditor.prototype = {
    * Event handler called by the autocomplete popup when receiving a click
    * event.
    */
-  _onAutocompletePopupClick: function() {
+  _onAutocompletePopupClick() {
     this._acceptPopupSuggestion();
   },
 
-  _acceptPopupSuggestion: function() {
+  _acceptPopupSuggestion() {
     let label, preLabel;
 
     if (this._selectedIndex === undefined) {
@@ -1182,7 +1182,7 @@ InplaceEditor.prototype = {
    * Handle the input field's keypress event.
    */
   // eslint-disable-next-line complexity
-  _onKeyPress: function(event) {
+  _onKeyPress(event) {
     let prevent = false;
 
     const key = event.keyCode;
@@ -1331,7 +1331,7 @@ InplaceEditor.prototype = {
     }
   },
 
-  _onContextMenu: function(event) {
+  _onContextMenu(event) {
     if (this.contextMenu) {
       // Call stopPropagation() and preventDefault() here so that avoid to show default
       // context menu in about:devtools-toolbox. See Bug 1515265.
@@ -1350,7 +1350,7 @@ InplaceEditor.prototype = {
    *        The index of the item that should be selected. Use -1 to have no
    *        item selected.
    */
-  _openAutocompletePopup: function(offset, selectedIndex) {
+  _openAutocompletePopup(offset, selectedIndex) {
     this.popup.on("popup-click", this._onAutocompletePopupClick);
     this.popup.openPopup(this.input, offset, 0, selectedIndex);
   },
@@ -1359,7 +1359,7 @@ InplaceEditor.prototype = {
    * Remove the custom classname and click handler and close the autocomplete
    * popup.
    */
-  _hideAutocompletePopup: function() {
+  _hideAutocompletePopup() {
     this.popup.off("popup-click", this._onAutocompletePopupClick);
     this.popup.hidePopup();
   },
@@ -1367,7 +1367,7 @@ InplaceEditor.prototype = {
   /**
    * Get the increment/decrement step to use for the provided key event.
    */
-  _getIncrement: function(event) {
+  _getIncrement(event) {
     const getSmallIncrementKey = evt => {
       if (AppConstants.platform === "macosx") {
         return evt.altKey;
@@ -1404,14 +1404,14 @@ InplaceEditor.prototype = {
   /**
    * Handle the input field's keyup event.
    */
-  _onKeyup: function() {
+  _onKeyup() {
     this._applied = false;
   },
 
   /**
    * Handle changes to the input text.
    */
-  _onInput: function() {
+  _onInput() {
     // Validate the entered value.
     this._doValidation();
 
@@ -1434,14 +1434,14 @@ InplaceEditor.prototype = {
   /**
    * Stop propagation on the provided event
    */
-  _stopEventPropagation: function(e) {
+  _stopEventPropagation(e) {
     e.stopPropagation();
   },
 
   /**
    * Fire validation callback with current input
    */
-  _doValidation: function() {
+  _doValidation() {
     if (this.validate && this.input) {
       this.validate(this.input.value);
     }
@@ -1453,7 +1453,7 @@ InplaceEditor.prototype = {
    * @param {Boolean} autoInsert
    *        Pass true to automatically insert the most relevant suggestion.
    */
-  _maybeSuggestCompletion: function(autoInsert) {
+  _maybeSuggestCompletion(autoInsert) {
     // Input can be null in cases when you intantaneously switch out of it.
     if (!this.input) {
       return;
@@ -1671,7 +1671,7 @@ InplaceEditor.prototype = {
   /**
    * Automatically add closing parenthesis and skip closing parenthesis when needed.
    */
-  _autocloseParenthesis: function() {
+  _autocloseParenthesis() {
     // Split the current value at the cursor index to rebuild the string.
     const parts = this._splitStringAt(
       this.input.value,
@@ -1699,7 +1699,7 @@ InplaceEditor.prototype = {
   /**
    * Update the current value of the input while preserving the caret position.
    */
-  _updateValue: function(str) {
+  _updateValue(str) {
     const start = this.input.selectionStart;
     this.input.value = str;
     this.input.setSelectionRange(start, start);
@@ -1710,7 +1710,7 @@ InplaceEditor.prototype = {
    * Split the provided string at the provided index. Returns an array of two strings.
    * _splitStringAt("1234567", 3) will return ["123", "4567"]
    */
-  _splitStringAt: function(str, index) {
+  _splitStringAt(str, index) {
     return [str.substring(0, index), str.substring(index, str.length)];
   },
 
@@ -1719,7 +1719,7 @@ InplaceEditor.prototype = {
    *
    * @return {Boolean} true if the input has a single line of text
    */
-  _isSingleLine: function() {
+  _isSingleLine() {
     if (!this.multiline) {
       // Checking the inputCharDimensions.height only makes sense with multiline
       // editors, because the textarea is directly sized using
@@ -1737,7 +1737,7 @@ InplaceEditor.prototype = {
    *
    * @return {Array} array of CSS property names (Strings)
    */
-  _getCSSPropertyList: function() {
+  _getCSSPropertyList() {
     return this.cssProperties.getNames().sort();
   },
 
@@ -1749,7 +1749,7 @@ InplaceEditor.prototype = {
    * @param {String} propertyName
    * @return {Array} array of CSS property values (Strings)
    */
-  _getCSSValuesForPropertyName: function(propertyName) {
+  _getCSSValuesForPropertyName(propertyName) {
     const gridLineList = [];
     if (this.gridLineNames) {
       if (GRID_ROW_PROPERTY_NAMES.includes(this.property.name)) {
@@ -1771,7 +1771,7 @@ InplaceEditor.prototype = {
    *
    * @return {Array} array of CSS variable names (Strings)
    */
-  _getCSSVariableNames: function() {
+  _getCSSVariableNames() {
     return Array.from(this.cssVariables.keys()).sort();
   },
 
@@ -1782,7 +1782,7 @@ InplaceEditor.prototype = {
    *        The variable name to retrieve the value of
    * @return {String} the variable value to the given CSS variable name
    */
-  _getCSSVariableValue: function(varName) {
+  _getCSSVariableValue(varName) {
     return this.cssVariables.get(varName);
   },
 };

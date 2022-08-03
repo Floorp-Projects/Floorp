@@ -42,7 +42,7 @@ SourceLocation.prototype = {
     return this.sourceActor.url;
   },
 
-  equals: function(other) {
+  equals(other) {
     return (
       this.sourceActor.url == other.sourceActor.url &&
       this.line === other.line &&
@@ -52,7 +52,7 @@ SourceLocation.prototype = {
     );
   },
 
-  toJSON: function() {
+  toJSON() {
     return {
       source: this.sourceActor.form(),
       line: this.line,

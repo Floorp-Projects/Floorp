@@ -506,8 +506,8 @@ function getBindingElementAndPseudo(node) {
     pseudo = "::after";
   }
   return {
-    bindingElement: bindingElement,
-    pseudo: pseudo,
+    bindingElement,
+    pseudo,
   };
 }
 exports.getBindingElementAndPseudo = getBindingElementAndPseudo;

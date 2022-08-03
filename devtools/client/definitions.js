@@ -119,11 +119,11 @@ Tools.options = {
   tooltip: l10n("optionsButton.tooltip"),
   inMenu: false,
 
-  isToolSupported: function() {
+  isToolSupported() {
     return true;
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new OptionsPanel(iframeWindow, toolbox, commands);
   },
 };
@@ -153,15 +153,15 @@ Tools.inspector = {
   // preventRaisingOnKey is used to keep the focus on the content window for shortcuts
   // that trigger the element picker.
   preventRaisingOnKey: true,
-  onkey: function(panel, toolbox) {
+  onkey(panel, toolbox) {
     toolbox.nodePicker.togglePicker();
   },
 
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     return toolbox.target.hasActor("inspector");
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new InspectorPanel(iframeWindow, toolbox, commands);
   },
 };
@@ -184,7 +184,7 @@ Tools.webConsole = {
   inMenu: false,
 
   preventClosingOnKey: true,
-  onkey: function(panel, toolbox) {
+  onkey(panel, toolbox) {
     if (toolbox.splitConsole) {
       return toolbox.focusConsoleInput();
     }
@@ -193,10 +193,10 @@ Tools.webConsole = {
     return undefined;
   },
 
-  isToolSupported: function() {
+  isToolSupported() {
     return true;
   },
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new WebConsolePanel(iframeWindow, toolbox, commands);
   },
 };
@@ -217,10 +217,10 @@ Tools.jsdebugger = {
     );
   },
   inMenu: false,
-  isToolSupported: function() {
+  isToolSupported() {
     return true;
   },
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new DebuggerPanel(iframeWindow, toolbox, commands);
   },
 };
@@ -241,11 +241,11 @@ Tools.styleEditor = {
     );
   },
   inMenu: false,
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     return toolbox.target.hasActor("styleSheets");
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new StyleEditorPanel(iframeWindow, toolbox, commands);
   },
 };
@@ -266,7 +266,7 @@ Tools.performance = {
   },
   accesskey: l10n("performance.accesskey"),
   inMenu: false,
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     // Only use the new performance panel on local tab toolboxes, as they are guaranteed
     // to have a performance actor.
     // Remote tab toolboxes (eg about:devtools-toolbox from about:debugging) should not
@@ -275,7 +275,7 @@ Tools.performance = {
     // Also accept the Browser Toolbox, so that we can profile its process via a second browser toolbox.
     return toolbox.target.isLocalTab || toolbox.isBrowserToolbox;
   },
-  build: function(frame, toolbox, commands) {
+  build(frame, toolbox, commands) {
     return new NewPerformancePanel(frame, toolbox, commands);
   },
 };
@@ -290,11 +290,11 @@ Tools.memory = {
   panelLabel: l10n("memory.panelLabel"),
   tooltip: l10n("memory.tooltip"),
 
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     return !toolbox.target.isAddon && !toolbox.target.isWorkerTarget;
   },
 
-  build: function(frame, toolbox, commands) {
+  build(frame, toolbox, commands) {
     return new MemoryPanel(frame, toolbox, commands);
   },
 };
@@ -317,14 +317,14 @@ Tools.netMonitor = {
   },
   inMenu: false,
 
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     return (
       toolbox.target.getTrait("networkMonitor") &&
       !toolbox.target.isWorkerTarget
     );
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new NetMonitorPanel(iframeWindow, toolbox, commands);
   },
 };
@@ -347,11 +347,11 @@ Tools.storage = {
   },
   inMenu: false,
 
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     return toolbox.target.hasActor("storage");
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new StoragePanel(iframeWindow, toolbox, commands);
   },
 };
@@ -374,11 +374,11 @@ Tools.dom = {
   },
   inMenu: false,
 
-  isToolSupported: function() {
+  isToolSupported() {
     return true;
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new DomPanel(iframeWindow, toolbox, commands);
   },
 };
@@ -422,11 +422,11 @@ Tools.application = {
   tooltip: l10n("application.tooltip"),
   inMenu: false,
 
-  isToolSupported: function(toolbox) {
+  isToolSupported(toolbox) {
     return toolbox.target.hasActor("manifest");
   },
 
-  build: function(iframeWindow, toolbox, commands) {
+  build(iframeWindow, toolbox, commands) {
     return new ApplicationPanel(iframeWindow, toolbox, commands);
   },
 };

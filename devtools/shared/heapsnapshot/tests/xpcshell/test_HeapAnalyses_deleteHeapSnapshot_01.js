@@ -28,7 +28,7 @@ add_task(async function() {
   let threw = false;
   try {
     await client.getDominatorTree({
-      dominatorTreeId: dominatorTreeId,
+      dominatorTreeId,
       breakdown,
     });
   } catch (_) {

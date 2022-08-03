@@ -50,7 +50,7 @@ add_task(async function() {
       validateValue: () =>
         getDoc().querySelector(".monitor-panel .split-box .controlled")
           .clientWidth,
-      modifyFrontend: function(value) {
+      modifyFrontend(value) {
         getDoc().querySelector(
           ".monitor-panel .split-box .controlled"
         ).style.width = `${value}px`;
@@ -61,7 +61,7 @@ add_task(async function() {
       validateValue: () =>
         getDoc().querySelector(".monitor-panel .split-box .controlled")
           .clientHeight,
-      modifyFrontend: function(value) {
+      modifyFrontend(value) {
         getDoc().querySelector(
           ".monitor-panel .split-box .controlled"
         ).style.height = `${value}px`;

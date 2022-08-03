@@ -92,7 +92,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize: function(conn) {
+  initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
@@ -101,31 +101,31 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  simpleReturn: function() {
+  simpleReturn() {
     return 1;
   },
 
-  promiseReturn: function() {
+  promiseReturn() {
     return Promise.resolve(1);
   },
 
-  simpleArgs: function(a, b) {
+  simpleArgs(a, b) {
     return { firstResponse: a + 1, secondResponse: b + 1 };
   },
 
-  optionArgs: function(options) {
+  optionArgs(options) {
     return { option1: options.option1, option2: options.option2 };
   },
 
-  optionalArgs: function(a, b = 200) {
+  optionalArgs(a, b = 200) {
     return b;
   },
 
-  arrayArgs: function(a) {
+  arrayArgs(a) {
     return a;
   },
 
-  nestedArrayArgs: function(a) {
+  nestedArrayArgs(a) {
     return a;
   },
 
@@ -133,19 +133,19 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
    * Test that the 'type' part of the request packet works
    * correctly when the type isn't the same as the method name
    */
-  renamedEcho: function(a) {
+  renamedEcho(a) {
     if (this.conn.currentPacket.type != "echo") {
       return "goodbye";
     }
     return a;
   },
 
-  testOneWay: function(a) {
+  testOneWay(a) {
     // Emit to show that we got this message, because there won't be a response.
     EventEmitter.emit(this, "oneway", a);
   },
 
-  emitFalsyOptions: function() {
+  emitFalsyOptions() {
     EventEmitter.emit(this, "falsyOptions", { zero: 0, farce: false });
   },
 });

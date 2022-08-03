@@ -81,7 +81,7 @@ const SUPPORTED_RULE_TYPES = [
  * with a special rule type (100).
  */
 const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
-  initialize: function(pageStyle, item) {
+  initialize(pageStyle, item) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.pageStyle = pageStyle;
     this.rawStyle = item.style;
@@ -116,7 +116,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       this.rawNode = item;
       this.rawRule = {
         style: item.style,
-        toString: function() {
+        toString() {
           return "[element rule " + this.style + "]";
         },
       };
@@ -127,7 +127,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     return this.pageStyle.conn;
   },
 
-  destroy: function() {
+  destroy() {
     if (!this.rawStyle) {
       return;
     }
@@ -287,7 +287,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     return data;
   },
 
-  getDocument: function(sheet) {
+  getDocument(sheet) {
     if (!sheet.associatedDocument) {
       throw new Error(
         "Failed trying to get the document of an invalid stylesheet"
@@ -296,12 +296,12 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     return sheet.associatedDocument;
   },
 
-  toString: function() {
+  toString() {
     return "[StyleRuleActor for " + this.rawRule + "]";
   },
 
   // eslint-disable-next-line complexity
-  form: function() {
+  form() {
     const form = {
       actor: this.actorID,
       type: this.type,
@@ -485,7 +485,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * @param {Number} line the new line number
    * @param {Number} column the new column number
    */
-  _notifyLocationChanged: function(line, column) {
+  _notifyLocationChanged(line, column) {
     this.emit("location-changed", line, column);
   },
 
@@ -495,7 +495,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * a given CSS rule in its parent.  A vector is used to support
    * nested rules.
    */
-  _computeRuleIndex: function() {
+  _computeRuleIndex() {
     let rule = this.rawRule;
     const result = [];
 
@@ -536,7 +536,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * @return {CSSStyleRule} the rule corresponding to
    * |this._ruleIndex|
    */
-  _getRuleFromIndex: function(parentSheet) {
+  _getRuleFromIndex(parentSheet) {
     let currentRule = null;
     for (const i of this._ruleIndex) {
       if (currentRule === null) {
@@ -552,7 +552,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * This is attached to the parent style sheet actor's
    * "style-applied" event.
    */
-  _onStyleApplied: function(kind) {
+  _onStyleApplied(kind) {
     if (kind === UPDATE_GENERAL) {
       // A general change means that the rule actors are invalidated,
       // so stop listening to events now.
@@ -594,7 +594,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        ignore it and parse the stylehseet again. The authoredText
    *        may be outdated if a descendant of this rule has changed.
    */
-  getAuthoredCssText: async function(skipCache = false) {
+  async getAuthoredCssText(skipCache = false) {
     if (!this.canSetRuleText || !SUPPORTED_RULE_TYPES.includes(this.type)) {
       return Promise.resolve("");
     }
@@ -640,7 +640,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *
    * @return {String}
    */
-  getRuleText: async function() {
+  async getRuleText() {
     // Bail out if the rule is not supported or not an element inline style.
     if (![...SUPPORTED_RULE_TYPES, ELEMENT_STYLE].includes(this.type)) {
       return Promise.resolve("");
@@ -787,7 +787,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *
    * @returns the rule with updated properties
    */
-  modifyProperties: function(modifications) {
+  modifyProperties(modifications) {
     // Use a fresh element for each call to this function to prevent side
     // effects that pop up based on property values that were already set on the
     // element.
@@ -1059,7 +1059,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *        new rule and a boolean indicating whether or not the new selector
    *        matches the current selected element
    */
-  modifySelector: function(node, value, editAuthored = false) {
+  modifySelector(node, value, editAuthored = false) {
     if (this.type === ELEMENT_STYLE || this.rawRule.selectorText === value) {
       return { ruleProps: null, isMatching: true };
     }

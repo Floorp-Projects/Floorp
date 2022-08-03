@@ -36,12 +36,7 @@ exports.WorkerTargetActor = TargetActorMixin(
      * @param {Object} sessionContext: The Session Context to help know what is debugged.
      *                                 See devtools/server/actors/watcher/session-context.js
      */
-    initialize: function(
-      connection,
-      workerGlobal,
-      workerDebuggerData,
-      sessionContext
-    ) {
+    initialize(connection, workerGlobal, workerDebuggerData, sessionContext) {
       Actor.prototype.initialize.call(this, connection);
 
       // workerGlobal is needed by the console actor for evaluations.

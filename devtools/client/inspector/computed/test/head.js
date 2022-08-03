@@ -42,7 +42,7 @@ function getComputedViewProperty(view, name) {
     const valueSpan = property.querySelector(".computed-property-value");
 
     if (nameSpan.firstChild.textContent === name) {
-      prop = { nameSpan: nameSpan, valueSpan: valueSpan };
+      prop = { nameSpan, valueSpan };
       break;
     }
   }

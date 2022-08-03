@@ -319,7 +319,7 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
     };
   },
 
-  getPolymorphism: function(id) {
+  getPolymorphism(id) {
     if (id == 0) {
       return new ChildActor(this.conn, id);
     } else if (id == 1) {
@@ -328,7 +328,7 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
     throw new Error("Unexpected id");
   },
 
-  requestPolymorphism: function(id, actor) {
+  requestPolymorphism(id, actor) {
     if (id == 0 && actor instanceof ChildActor) {
       return actor;
     } else if (id == 1 && actor instanceof OtherChildActor) {

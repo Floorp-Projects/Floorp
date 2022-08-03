@@ -46,7 +46,7 @@ define(function(require, exports, module) {
       return div(
         { className: "headersPanelBox tab-panel-inner" },
         HeadersToolbar({ actions: this.props.actions }),
-        div({ className: "panelContent" }, Headers({ data: data }))
+        div({ className: "panelContent" }, Headers({ data }))
       );
     }
   }

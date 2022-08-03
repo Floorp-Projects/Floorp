@@ -26,7 +26,7 @@ function _bridgeEvents(actor, names) {
  * The PerfActor wraps the Gecko Profiler interface
  */
 exports.PerfActor = ActorClassWithSpec(perfSpec, {
-  initialize: function(conn, targetActor) {
+  initialize(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
     // The "bridge" is the actual implementation of the actor. It is separated
     // for historical reasons, and could be merged into this class.
@@ -35,7 +35,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     _bridgeEvents(this, ["profiler-started", "profiler-stopped"]);
   },
 
-  destroy: function(conn) {
+  destroy(conn) {
     Actor.prototype.destroy.call(this, conn);
     this.bridge.destroy();
   },

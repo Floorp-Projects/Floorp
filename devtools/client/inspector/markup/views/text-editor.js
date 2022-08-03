@@ -52,7 +52,7 @@ function TextEditor(container, node, type) {
 }
 
 TextEditor.prototype = {
-  buildMarkup: function(type) {
+  buildMarkup(type) {
     const doc = this.markup.doc;
 
     this.elt = doc.createElement("span");
@@ -88,7 +88,7 @@ TextEditor.prototype = {
     this.update();
   },
 
-  showTextEditor: function(element) {
+  showTextEditor(element) {
     new InplaceEditor({
       cssProperties: this.markup.inspector.cssProperties,
       done: (val, commit) => {
@@ -114,7 +114,7 @@ TextEditor.prototype = {
     });
   },
 
-  update: async function() {
+  async update() {
     try {
       const value = await getLongString(this.node.getNodeValue());
 
@@ -126,14 +126,14 @@ TextEditor.prototype = {
     }
   },
 
-  destroy: function() {
+  destroy() {
     this.ReactDOM.unmountComponentAtNode(this.elt);
   },
 
   /**
    * Stub method for consistency with ElementEditor.
    */
-  getInfoAtNode: function() {
+  getInfoAtNode() {
     return null;
   },
 };

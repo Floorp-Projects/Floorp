@@ -23,14 +23,14 @@ function RootContainer(markupView, node) {
 RootContainer.prototype = {
   hasChildren: true,
   expanded: true,
-  update: function() {},
-  destroy: function() {},
+  update() {},
+  destroy() {},
 
   /**
    * If the node has children, return the list of containers for all these children.
    * @return {Array} An array of child containers or null.
    */
-  getChildContainers: function() {
+  getChildContainers() {
     return [...this.children.children]
       .filter(node => node.container)
       .map(node => node.container);
@@ -40,19 +40,19 @@ RootContainer.prototype = {
    * Set the expanded state of the container node.
    * @param  {Boolean} value
    */
-  setExpanded: function() {},
+  setExpanded() {},
 
   /**
    * Set an appropriate role of the container's children node.
    */
-  setChildrenRole: function() {},
+  setChildrenRole() {},
 
   /**
    * Set an appropriate DOM tree depth level for a node and its subtree.
    */
-  updateLevel: function() {},
+  updateLevel() {},
 
-  isSlotted: function() {
+  isSlotted() {
     return false;
   },
 };

@@ -53,7 +53,7 @@ function messageServiceWorker(win, scope, message) {
         resolve();
       };
       const sw = swr.active || swr.waiting || swr.installing;
-      sw.postMessage({ type: "PING", message: message });
+      sw.postMessage({ type: "PING", message });
     });
   });
 }

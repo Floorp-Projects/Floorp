@@ -151,7 +151,7 @@ class SplitBox extends Component {
     this.splitBox.classList.add("dragging");
 
     this.setState({
-      defaultCursor: defaultCursor,
+      defaultCursor,
     });
   }
 

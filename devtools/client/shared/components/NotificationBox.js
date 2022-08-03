@@ -233,7 +233,7 @@ class NotificationBox extends Component {
         key: props.label,
         className: "notificationButton",
         accesskey: props.accesskey,
-        onClick: onClick,
+        onClick,
       },
       props.label
     );

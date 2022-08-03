@@ -84,7 +84,7 @@ class DevToolsWorkerParent extends JSWindowActorParent {
 
   destroyWorkerTargets({ watcherActorID, sessionContext }) {
     return this.sendAsyncMessage("DevToolsWorkerParent:destroy", {
-      watcherActorID: watcherActorID,
+      watcherActorID,
       sessionContext,
     });
   }

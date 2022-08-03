@@ -34,7 +34,7 @@ const TEST_DATA = [
       textContent: "grid",
       visible: true,
     },
-    changeStyle: async function() {
+    async changeStyle() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node = content.document.getElementById("grid");
         node.style.display = "block";
@@ -50,7 +50,7 @@ const TEST_DATA = [
     before: {
       visible: false,
     },
-    changeStyle: async function() {
+    async changeStyle() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node = content.document.getElementById("grid");
         node.style.display = "grid";
@@ -67,7 +67,7 @@ const TEST_DATA = [
     before: {
       visible: false,
     },
-    changeStyle: async function() {
+    async changeStyle() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node = content.document.getElementById("block");
         node.style.display = "grid";
@@ -84,7 +84,7 @@ const TEST_DATA = [
     before: {
       visible: false,
     },
-    changeStyle: async function() {
+    async changeStyle() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
         content.document.getElementById("flex").removeAttribute("hidden")
       );

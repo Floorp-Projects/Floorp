@@ -170,7 +170,7 @@ NetworkResponseListener.prototype = {
    *        current callback is removed.
    * @return void
    */
-  setAsyncListener: function(stream, listener) {
+  setAsyncListener(stream, listener) {
     // Asynchronously wait for the stream to be readable or closed.
     stream.asyncWait(listener, 0, 0, Services.tm.mainThread);
   },
@@ -189,7 +189,7 @@ NetworkResponseListener.prototype = {
    * @param unsigned long offset
    * @param unsigned long count
    */
-  onDataAvailable: function(request, inputStream, offset, count) {
+  onDataAvailable(request, inputStream, offset, count) {
     this._findOpenResponse();
     const data = NetUtil.readInputStreamToString(inputStream, count);
 
@@ -219,7 +219,7 @@ NetworkResponseListener.prototype = {
    * @param nsIRequest request
    * @param nsISupports context
    */
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     request = request.QueryInterface(Ci.nsIChannel);
     // Converter will call this again, we should just ignore that.
     if (this.request) {
@@ -316,7 +316,7 @@ NetworkResponseListener.prototype = {
   /**
    * Parse security state of this request and report it to the client.
    */
-  _getSecurityInfo: async function() {
+  async _getSecurityInfo() {
     // Many properties of the securityInfo (e.g., the server certificate or HPKP
     // status) are not available in the content process and can't be even touched safely,
     // because their C++ getters trigger assertions. This function is called in content
@@ -357,7 +357,7 @@ NetworkResponseListener.prototype = {
    * Fetches cache information from CacheEntry
    * @private
    */
-  _fetchCacheInformation: function() {
+  _fetchCacheInformation() {
     const httpActivity = this.httpActivity;
     CacheEntry.getCacheEntry(this.request, descriptor => {
       httpActivity.owner.addResponseCache({
@@ -372,7 +372,7 @@ NetworkResponseListener.prototype = {
    * For more documentation about nsIRequestObserver go to:
    * https://developer.mozilla.org/En/NsIRequestObserver
    */
-  onStopRequest: function() {
+  onStopRequest() {
     // Bug 1429365: onStopRequest may be called after onComplete for resources loaded
     // from bytecode cache.
     if (!this.httpActivity) {
@@ -388,14 +388,14 @@ NetworkResponseListener.prototype = {
    * Handle progress event as data is transferred.  This is used to record the
    * size on the wire, which may be compressed / encoded.
    */
-  onProgress: function(request, progress, progressMax) {
+  onProgress(request, progress, progressMax) {
     this.transferredSize = progress;
     // Need to forward as well to keep things like Download Manager's progress
     // bar working properly.
     this._forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
   },
 
-  onStatus: function() {
+  onStatus() {
     this._forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
   },
 
@@ -408,7 +408,7 @@ NetworkResponseListener.prototype = {
    *
    * @private
    */
-  _findOpenResponse: function() {
+  _findOpenResponse() {
     if (!this.owner || this._foundOpenResponse) {
       return;
     }
@@ -435,7 +435,7 @@ NetworkResponseListener.prototype = {
    * stream is closed.
    * @return void
    */
-  onStreamClose: function() {
+  onStreamClose() {
     if (!this.httpActivity) {
       return;
     }
@@ -482,7 +482,7 @@ NetworkResponseListener.prototype = {
    *        Optional, the received data coming from the response listener or
    *        from the cache.
    */
-  _onComplete: function(data) {
+  _onComplete(data) {
     // Make sure all the security and response content info are sent
     this._getResponseContent(data);
     this._onSecurityInfo.then(() => this._destroy());
@@ -491,7 +491,7 @@ NetworkResponseListener.prototype = {
   /**
    * Create the response object and send it to the client.
    */
-  _getResponseContent: function(data) {
+  _getResponseContent(data) {
     const response = {
       mimeType: "",
       text: data || "",
@@ -549,7 +549,7 @@ NetworkResponseListener.prototype = {
     });
   },
 
-  _destroy: function() {
+  _destroy() {
     this._wrappedNotificationCallbacks = null;
     this.httpActivity = null;
     this.sink = null;
@@ -567,7 +567,7 @@ NetworkResponseListener.prototype = {
    *        The sink input stream from which data is coming.
    * @returns void
    */
-  onInputStreamReady: function(stream) {
+  onInputStreamReady(stream) {
     if (!(stream instanceof Ci.nsIAsyncInputStream) || !this.httpActivity) {
       return;
     }

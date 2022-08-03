@@ -83,7 +83,7 @@ class StatusCode extends Component {
     return div(
       {
         className: "requests-list-status-code status-code",
-        onMouseOver: function({ target }) {
+        onMouseOver({ target }) {
           if (status && statusText && !target.title) {
             target.title = getStatusTooltip(item);
           }

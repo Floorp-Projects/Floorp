@@ -188,7 +188,7 @@ TextPropertyEditor.prototype = {
   /**
    * Create the property editor's DOM.
    */
-  _create: function() {
+  _create() {
     this.element = this.doc.createElementNS(HTML_NS, "li");
     this.element.classList.add("ruleview-property");
     this.element.dataset.declarationId = this.prop.id;
@@ -423,7 +423,7 @@ TextPropertyEditor.prototype = {
    * @return {Object} Contains the names of the cols and rows as arrays
    * {cols: [], rows: []}.
    */
-  getGridlineNames: async function() {
+  async getGridlineNames() {
     const gridLineNames = { cols: [], rows: [] };
     const layoutInspector = await this.ruleView.inspector.walker.getLayoutInspector();
     const gridFront = await layoutInspector.getCurrentGrid(
@@ -507,7 +507,7 @@ TextPropertyEditor.prototype = {
    * Populate the span based on changes to the TextProperty.
    */
   // eslint-disable-next-line complexity
-  update: function() {
+  update() {
     if (this.ruleView.isDestroyed) {
       return;
     }
@@ -777,7 +777,7 @@ TextPropertyEditor.prototype = {
     }
   },
 
-  _onStartEditing: function() {
+  _onStartEditing() {
     this.element.classList.remove("ruleview-overridden");
     this.filterProperty.hidden = true;
     this.enable.style.visibility = "hidden";
@@ -801,7 +801,7 @@ TextPropertyEditor.prototype = {
    * Update the visibility of the enable checkbox, the warning indicator, the used
    * indicator and the filter property, as well as the overridden state of the property.
    */
-  updatePropertyState: function() {
+  updatePropertyState() {
     if (this.prop.enabled) {
       this.enable.style.removeProperty("visibility");
     } else {
@@ -845,7 +845,7 @@ TextPropertyEditor.prototype = {
     }
   },
 
-  updatePropertyUsedIndicator: function() {
+  updatePropertyUsedIndicator() {
     const { used } = this.prop.isUsed();
 
     if (this.editing || this.prop.overridden || !this.prop.enabled || used) {
@@ -857,7 +857,7 @@ TextPropertyEditor.prototype = {
     }
   },
 
-  updatePropertyCompatibilityIndicator: async function() {
+  async updatePropertyCompatibilityIndicator() {
     const { isCompatible } = await this.prop.isCompatible();
 
     if (this.editing || isCompatible) {
@@ -871,7 +871,7 @@ TextPropertyEditor.prototype = {
    * Update the indicator for computed styles. The computed styles themselves
    * are populated on demand, when they become visible.
    */
-  _updateComputed: function() {
+  _updateComputed() {
     this.computed.innerHTML = "";
 
     this.expander.style.display =
@@ -888,7 +888,7 @@ TextPropertyEditor.prototype = {
   /**
    * Populate the list of computed styles.
    */
-  _populateComputed: function() {
+  _populateComputed() {
     if (this._populatedComputed) {
       return;
     }
@@ -916,7 +916,7 @@ TextPropertyEditor.prototype = {
    * overridden styles themselves are populated on demand, when they
    * become visible.
    */
-  _updateShorthandOverridden: function() {
+  _updateShorthandOverridden() {
     this.shorthandOverridden.innerHTML = "";
 
     this._populatedShorthandOverridden = false;
@@ -926,7 +926,7 @@ TextPropertyEditor.prototype = {
   /**
    * Populate the list of overridden shorthand styles.
    */
-  _populateShorthandOverridden: function() {
+  _populateShorthandOverridden() {
     if (
       this._populatedShorthandOverridden ||
       this.prop.overridden ||
@@ -954,7 +954,7 @@ TextPropertyEditor.prototype = {
   /**
    * Creates and populates a list item with the computed CSS property.
    */
-  _createComputedListItem: function(parentEl, computed, className) {
+  _createComputedListItem(parentEl, computed, className) {
     const li = createChild(parentEl, "li", {
       class: className,
     });
@@ -1001,7 +1001,7 @@ TextPropertyEditor.prototype = {
    * Handle updates to the preference which disables/enables the feature to
    * edit size properties on drag.
    */
-  _onDraggablePreferenceChanged: function() {
+  _onDraggablePreferenceChanged() {
     if (this._isDraggableProperty(this.prop)) {
       this._addDraggingCapability();
     } else {
@@ -1012,14 +1012,14 @@ TextPropertyEditor.prototype = {
   /**
    * Stop clicks propogating down the tree from the enable / disable checkbox.
    */
-  _onEnableClicked: function(event) {
+  _onEnableClicked(event) {
     event.stopPropagation();
   },
 
   /**
    * Handles clicks on the disabled property.
    */
-  _onEnableChanged: function(event) {
+  _onEnableChanged(event) {
     this.prop.setEnabled(this.enable.checked);
     event.stopPropagation();
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
@@ -1034,7 +1034,7 @@ TextPropertyEditor.prototype = {
    * expand the computed list and tracks whether or not the computed list is
    * expanded by manually by the user.
    */
-  _onExpandClicked: function(event) {
+  _onExpandClicked(event) {
     if (
       this.computed.hasAttribute("filter-open") ||
       this.computed.hasAttribute("user-open")
@@ -1059,7 +1059,7 @@ TextPropertyEditor.prototype = {
    * filtering. The filter-open attribute is used to track whether or not the
    * computed list was toggled opened by the filter.
    */
-  expandForFilter: function() {
+  expandForFilter() {
     if (!this.computed.hasAttribute("user-open")) {
       this.expander.setAttribute("open", "true");
       this.computed.setAttribute("filter-open", "");
@@ -1070,7 +1070,7 @@ TextPropertyEditor.prototype = {
   /**
    * Collapses the computed list that was expanded by style filtering.
    */
-  collapseForFilter: function() {
+  collapseForFilter() {
     this.computed.removeAttribute("filter-open");
 
     if (!this.computed.hasAttribute("user-open")) {
@@ -1090,7 +1090,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _onNameDone: function(value, commit, direction) {
+  _onNameDone(value, commit, direction) {
     const isNameUnchanged =
       (!commit && !this.ruleEditor.isEditing) || this.committed.name === value;
     if (this.prop.value && isNameUnchanged) {
@@ -1141,7 +1141,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  remove: function(direction) {
+  remove(direction) {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
       for (const span of this._colorSwatchSpans) {
         this.ruleView.tooltips.getTooltip("colorPicker").removeSwatch(span);
@@ -1178,7 +1178,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _onValueDone: function(value = "", commit, direction) {
+  _onValueDone(value = "", commit, direction) {
     const parsedProperties = this._getValueAndExtraProperties(value);
     const val = parseSingleValue(
       this.cssProperties.isKnown,
@@ -1243,7 +1243,7 @@ TextPropertyEditor.prototype = {
   /**
    * Called when the swatch editor wants to commit a value change.
    */
-  _onSwatchCommit: function() {
+  _onSwatchCommit() {
     this._onValueDone(this.valueSpan.textContent, true);
     this.update();
   },
@@ -1251,7 +1251,7 @@ TextPropertyEditor.prototype = {
   /**
    * Called when the swatch editor wants to preview a value change.
    */
-  _onSwatchPreview: function() {
+  _onSwatchPreview() {
     this._previewValue(this.valueSpan.textContent);
   },
 
@@ -1259,7 +1259,7 @@ TextPropertyEditor.prototype = {
    * Called when the swatch editor closes from an ESC. Revert to the original
    * value of this property before editing.
    */
-  _onSwatchRevert: function() {
+  _onSwatchRevert() {
     this._previewValue(this.prop.value, true);
     this.update();
   },
@@ -1279,7 +1279,7 @@ TextPropertyEditor.prototype = {
    *        propertiesToAdd: An array with additional properties, following the
    *                         parseDeclarations format of {name,value,priority}
    */
-  _getValueAndExtraProperties: function(value) {
+  _getValueAndExtraProperties(value) {
     // The inplace editor will prevent manual typing of multiple properties,
     // but we need to deal with the case during a paste event.
     // Adding multiple properties inside of value editor sets value with the
@@ -1306,8 +1306,8 @@ TextPropertyEditor.prototype = {
     }
 
     return {
-      propertiesToAdd: propertiesToAdd,
-      firstValue: firstValue,
+      propertiesToAdd,
+      firstValue,
     };
   },
 
@@ -1319,7 +1319,7 @@ TextPropertyEditor.prototype = {
    * @param {Boolean} reverting
    *        True if we're reverting the previously previewed value
    */
-  _previewValue: function(value, reverting = false) {
+  _previewValue(value, reverting = false) {
     // Since function call is debounced, we need to make sure we are still
     // editing, and any selector modifications have been completed
     if (!reverting && (!this.editing || this.ruleEditor.isEditing)) {
@@ -1341,7 +1341,7 @@ TextPropertyEditor.prototype = {
    * @param  {KeyboardEvent} event
    * @returns {Boolean}
    */
-  _hasSmallIncrementModifier: function(event) {
+  _hasSmallIncrementModifier(event) {
     const modifier = AppConstants.platform === "macosx" ? "altKey" : "ctrlKey";
     return event[modifier] === true;
   },
@@ -1354,7 +1354,7 @@ TextPropertyEditor.prototype = {
    * @param  {String} value
    * @returns {Object|null}
    */
-  _parseDimension: function(value) {
+  _parseDimension(value) {
     // The regex handles values like +1, -1, 1e4, .4, 1.3e-4, 1.567
     const cssDimensionRegex = /^(?<value>[+-]?(\d*\.)?\d+(e[+-]?\d+)?)(?<unit>(%|[a-zA-Z]+))$/;
     return value.match(cssDimensionRegex);
@@ -1366,7 +1366,7 @@ TextPropertyEditor.prototype = {
    * @param  {TextProperty} textProperty
    * @returns {Boolean}
    */
-  _isDraggableProperty: function(textProperty) {
+  _isDraggableProperty(textProperty) {
     // Check if the feature is explicitly disabled.
     if (
       !Services.prefs.getBoolPref(
@@ -1394,7 +1394,7 @@ TextPropertyEditor.prototype = {
     return !!dimensionMatchObj;
   },
 
-  _draggingOnMouseDown: function(event) {
+  _draggingOnMouseDown(event) {
     this._isDragging = true;
     this.valueSpan.setPointerCapture(event.pointerId);
     this._draggingController = new AbortController();
@@ -1423,7 +1423,7 @@ TextPropertyEditor.prototype = {
     });
   },
 
-  _draggingOnMouseMove: function(event) {
+  _draggingOnMouseMove(event) {
     if (!this._isDragging) {
       return;
     }
@@ -1470,7 +1470,7 @@ TextPropertyEditor.prototype = {
     this._hasDragged = true;
   },
 
-  _draggingOnMouseUp: function(event) {
+  _draggingOnMouseUp(event) {
     if (!this._isDragging) {
       return;
     }
@@ -1481,7 +1481,7 @@ TextPropertyEditor.prototype = {
     this._onStopDragging(event);
   },
 
-  _draggingOnKeydown: function(event) {
+  _draggingOnKeydown(event) {
     if (event.key == "Escape") {
       this.prop.setValue(this.committed.value, this.committed.priority);
       this._onStopDragging(event);
@@ -1489,7 +1489,7 @@ TextPropertyEditor.prototype = {
     }
   },
 
-  _onStopDragging: function(event) {
+  _onStopDragging(event) {
     // childHasDragged is used to stop the propagation of a click event when we
     // release the mouse in the ruleview.
     // The click event is not emitted when we have a pending click on the text property.
@@ -1508,7 +1508,7 @@ TextPropertyEditor.prototype = {
    * add event listeners to add the ability to modify any size value
    * by dragging the mouse horizontally
    */
-  _addDraggingCapability: function() {
+  _addDraggingCapability() {
     if (this.valueSpan.classList.contains(DRAGGABLE_VALUE_CLASSNAME)) {
       return;
     }
@@ -1516,7 +1516,7 @@ TextPropertyEditor.prototype = {
     this.valueSpan.addEventListener("mousedown", this._draggingOnMouseDown);
   },
 
-  _removeDraggingCapacity: function() {
+  _removeDraggingCapacity() {
     if (!this.valueSpan.classList.contains(DRAGGABLE_VALUE_CLASSNAME)) {
       return;
     }
@@ -1531,7 +1531,7 @@ TextPropertyEditor.prototype = {
    *
    * @return {Boolean} true if the property name + value pair is valid, false otherwise.
    */
-  isValid: function() {
+  isValid() {
     return this.prop.isValid();
   },
 
@@ -1539,7 +1539,7 @@ TextPropertyEditor.prototype = {
    * Validate the name of this property.
    * @return {Boolean} true if the property name is valid, false otherwise.
    */
-  isNameValid: function() {
+  isNameValid() {
     return this.prop.isNameValid();
   },
 };

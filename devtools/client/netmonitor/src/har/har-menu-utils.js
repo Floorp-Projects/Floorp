@@ -83,7 +83,7 @@ var HarMenuUtils = {
 
   getDefaultHarOptions(requests, connector) {
     return {
-      connector: connector,
+      connector,
       items: requests,
     };
   },

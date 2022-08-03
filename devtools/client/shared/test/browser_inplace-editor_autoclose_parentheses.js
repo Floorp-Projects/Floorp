@@ -50,7 +50,7 @@ add_task(async function() {
         },
         cssVariables: new Map(),
         done: resolve,
-        popup: popup,
+        popup,
       },
       doc
     );

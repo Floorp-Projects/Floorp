@@ -90,12 +90,12 @@ add_task(async function() {
     const menuLabel = await getMenuLabel(toolbox);
 
     return {
-      deckHeight: deckHeight,
-      containerHeight: containerHeight,
-      webconsoleHeight: webconsoleHeight,
-      splitterVisibility: splitterVisibility,
-      splitterHeight: splitterHeight,
-      openedConsolePanel: openedConsolePanel,
+      deckHeight,
+      containerHeight,
+      webconsoleHeight,
+      splitterVisibility,
+      splitterHeight,
+      openedConsolePanel,
       menuLabel,
     };
   }

@@ -48,7 +48,7 @@ function doConsoleCalls(aState)
     function inAsmJS2() { foreign.fromAsmJS() }
     function inAsmJS1() { inAsmJS2() }
     return inAsmJS1
-  })(null, { fromAsmJS:fromAsmJS })();
+  })(null, { fromAsmJS })();
 
   expectedConsoleCalls = [
     {

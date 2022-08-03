@@ -26,7 +26,7 @@ ContentObserver.prototype = {
   /**
    * Starts listening for the required observer messages.
    */
-  startListening: function() {
+  startListening() {
     Services.obs.addObserver(
       this._onContentGlobalCreated,
       "content-document-global-created"
@@ -40,7 +40,7 @@ ContentObserver.prototype = {
   /**
    * Stops listening for the required observer messages.
    */
-  stopListening: function() {
+  stopListening() {
     Services.obs.removeObserver(
       this._onContentGlobalCreated,
       "content-document-global-created"
@@ -54,7 +54,7 @@ ContentObserver.prototype = {
   /**
    * Fired immediately after a web content document window has been set up.
    */
-  _onContentGlobalCreated: function(subject, topic, data) {
+  _onContentGlobalCreated(subject, topic, data) {
     if (subject == this._contentWindow) {
       EventEmitter.emit(this, "global-created", subject);
     }
@@ -63,7 +63,7 @@ ContentObserver.prototype = {
   /**
    * Fired when an inner window is removed from the backward/forward cache.
    */
-  _onInnerWindowDestroyed: function(subject, topic, data) {
+  _onInnerWindowDestroyed(subject, topic, data) {
     const id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     EventEmitter.emit(this, "global-destroyed", id);
   },

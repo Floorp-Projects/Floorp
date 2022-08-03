@@ -8,7 +8,7 @@ const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 function promiseAddonEvent(event) {
   return new Promise(resolve => {
     const listener = {
-      [event]: function(...args) {
+      [event](...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
       },

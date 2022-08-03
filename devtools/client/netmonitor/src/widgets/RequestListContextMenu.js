@@ -607,7 +607,7 @@ class RequestListContextMenu {
       referrer,
       referrerPolicy,
       body: requestPostData.postData.text,
-      method: method,
+      method,
       mode: "cors",
     };
 

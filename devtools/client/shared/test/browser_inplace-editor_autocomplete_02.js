@@ -54,7 +54,7 @@ add_task(async function() {
           name: "display",
         },
         done: resolve,
-        popup: popup,
+        popup,
       },
       doc
     );

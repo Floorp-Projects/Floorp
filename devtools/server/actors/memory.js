@@ -27,7 +27,7 @@ loader.lazyRequireGetter(
  * @see devtools/server/performance/memory.js for documentation.
  */
 exports.MemoryActor = protocol.ActorClassWithSpec(memorySpec, {
-  initialize: function(conn, parent, frameCache = new StackFrameCache()) {
+  initialize(conn, parent, frameCache = new StackFrameCache()) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this._onGarbageCollection = this._onGarbageCollection.bind(this);
@@ -37,7 +37,7 @@ exports.MemoryActor = protocol.ActorClassWithSpec(memorySpec, {
     this.bridge.on("allocations", this._onAllocations);
   },
 
-  destroy: function() {
+  destroy() {
     this.bridge.off("garbage-collection", this._onGarbageCollection);
     this.bridge.off("allocations", this._onAllocations);
     this.bridge.destroy();
@@ -50,7 +50,7 @@ exports.MemoryActor = protocol.ActorClassWithSpec(memorySpec, {
 
   getState: actorBridgeWithSpec("getState"),
 
-  saveHeapSnapshot: function(boundaries) {
+  saveHeapSnapshot(boundaries) {
     return this.bridge.saveHeapSnapshot(boundaries);
   },
 
@@ -72,13 +72,13 @@ exports.MemoryActor = protocol.ActorClassWithSpec(memorySpec, {
 
   residentUnique: actorBridgeWithSpec("residentUnique"),
 
-  _onGarbageCollection: function(data) {
+  _onGarbageCollection(data) {
     if (this.conn.transport) {
       this.emit("garbage-collection", data);
     }
   },
 
-  _onAllocations: function(data) {
+  _onAllocations(data) {
     if (this.conn.transport) {
       this.emit("allocations", data);
     }

@@ -116,7 +116,7 @@ define(function(require, exports, module) {
         object: this.props.data,
         mode: MODE.TINY,
         onFilter: this.onFilter,
-        columns: columns,
+        columns,
         renderValue: this.renderValue,
         expandedNodes: this.props.expandedNodes,
       });

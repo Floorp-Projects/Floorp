@@ -166,7 +166,7 @@ function isObject(value) {
  *        Optional, the parent actor.
  */
 const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
-  initialize: function(connection, parentActor) {
+  initialize(connection, parentActor) {
     Actor.prototype.initialize.call(this, connection);
     this.conn = connection;
     this.parentActor = parentActor;
@@ -259,7 +259,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return nsIDOMWindow
    *         The window to use, or null if no window could be found.
    */
-  _getWindowForBrowserConsole: function() {
+  _getWindowForBrowserConsole() {
     // Check if our last used chrome window is still live.
     let window = this._lastChromeWindow && this._lastChromeWindow.get();
     // If not, look for a new one.
@@ -293,7 +293,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param nsIDOMWindow window
    *        The window to store on the actor (can be null).
    */
-  _handleNewWindow: function(window) {
+  _handleNewWindow(window) {
     if (window) {
       if (this._hadChromeWindow) {
         Services.console.logStringMessage("Webconsole context has changed");
@@ -374,7 +374,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   _webConsoleCommandsCache: null,
 
-  grip: function() {
+  grip() {
     return { actor: this.actorID };
   },
 
@@ -419,7 +419,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return The EnvironmentActor for |environment| or |undefined| for host
    *         functions or functions scoped to a non-debuggee global.
    */
-  createEnvironmentActor: function(environment) {
+  createEnvironmentActor(environment) {
     if (!environment) {
       return undefined;
     }
@@ -441,7 +441,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param mixed value
    * @return object
    */
-  createValueGrip: function(value) {
+  createValueGrip(value) {
     return createValueGrip(value, this, this.objectGrip);
   },
 
@@ -456,7 +456,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         Debuggee value for |value|.
    */
-  makeDebuggeeValue: function(value, useObjectGlobal) {
+  makeDebuggeeValue(value, useObjectGlobal) {
     if (useObjectGlobal && isObject(value)) {
       try {
         const global = Cu.getGlobalForObject(value);
@@ -481,7 +481,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param object
    *        The object grip.
    */
-  objectGrip: function(object, pool) {
+  objectGrip(object, pool) {
     const actor = new ObjectActor(
       object,
       {
@@ -508,7 +508,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         A LongStringActor object that wraps the given string.
    */
-  longStringGrip: function(string, pool) {
+  longStringGrip(string, pool) {
     const actor = new LongStringActor(this.conn, string);
     pool.manage(actor);
     return actor.form();
@@ -524,7 +524,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         A string is returned if |string| is not a long string.
    *         A LongStringActor grip is returned if |string| is a long string.
    */
-  _createStringGrip: function(string) {
+  _createStringGrip(string) {
     if (string && stringIsLong(string)) {
       return this.longStringGrip(string, this);
     }
@@ -537,7 +537,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *
    * @return object
    */
-  getLastConsoleInputEvaluation: function() {
+  getLastConsoleInputEvaluation() {
     return this._lastConsoleInputEvaluation;
   },
 
@@ -586,7 +586,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        The response object which holds the startedListeners array.
    */
   // eslint-disable-next-line complexity
-  startListeners: async function(listeners) {
+  async startListeners(listeners) {
     const startedListeners = [];
     const global = !this.parentActor.isRootActor ? this.global : null;
     const isTargetActorContentProcess =
@@ -791,7 +791,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        The response packet to send to the client: holds the
    *        stoppedListeners array.
    */
-  stopListeners: function(listeners) {
+  stopListeners(listeners) {
     const stoppedListeners = [];
 
     // If no specific listeners are requested to be detached, we stop all
@@ -871,7 +871,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     // Update the live list of running listeners
     stoppedListeners.forEach(this._listeners.delete, this._listeners);
 
-    return { stoppedListeners: stoppedListeners };
+    return { stoppedListeners };
   },
 
   /**
@@ -884,7 +884,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         The response packet to send to the client: it holds the cached
    *         messages array.
    */
-  getCachedMessages: function(messageTypes) {
+  getCachedMessages(messageTypes) {
     if (!messageTypes) {
       return {
         error: "missingParameter",
@@ -974,7 +974,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     return {
-      messages: messages,
+      messages,
     };
   },
 
@@ -991,7 +991,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         The response packet to send to with the unique id in the
    *         `resultID` field.
    */
-  evaluateJSAsync: async function(request) {
+  async evaluateJSAsync(request) {
     const startTime = Date.now();
     // Use Date instead of UUID as this code is used by workers, which
     // don't have access to the UUID XPCOM component.
@@ -1046,7 +1046,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The updated response object.
    */
-  _maybeWaitForResponseResult: async function(response) {
+  async _maybeWaitForResponseResult(response) {
     if (!response) {
       return response;
     }
@@ -1095,7 +1095,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The evaluation response packet.
    */
-  evaluateJS: function(request) {
+  evaluateJS(request) {
     const input = request.text;
 
     const evalOptions = {
@@ -1145,7 +1145,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   },
 
   // eslint-disable-next-line complexity
-  prepareEvaluationResult: function(evalInfo, input, eager, mapped) {
+  prepareEvaluationResult(evalInfo, input, eager, mapped) {
     const evalResult = evalInfo.result;
     const helperResult = evalInfo.helperResult;
 
@@ -1315,7 +1315,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     return {
-      input: input,
+      input,
       result: resultGrip,
       awaitResult,
       exception: errorGrip,
@@ -1325,7 +1325,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       hasException: errorGrip !== null,
       errorMessageName,
       frame,
-      helperResult: helperResult,
+      helperResult,
       notes: errorNotes,
     };
   },
@@ -1346,7 +1346,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The response message - matched properties.
    */
-  autocomplete: function(
+  autocomplete(
     text,
     cursor,
     frameActorId,
@@ -1475,7 +1475,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   /**
    * The "clearMessagesCacheAsync" request handler.
    */
-  clearMessagesCacheAsync: function() {
+  clearMessagesCacheAsync() {
     if (isWorker) {
       // Defined on WorkerScope
       clearConsoleEvents();
@@ -1516,7 +1516,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The response message - a { key: value } object map.
    */
-  getPreferences: function(preferences) {
+  getPreferences(preferences) {
     const prefs = Object.create(null);
     for (const key of preferences) {
       prefs[key] = this._prefs[key];
@@ -1530,7 +1530,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param object preferences
    *        The preferences that need to be updated.
    */
-  setPreferences: function(preferences) {
+  setPreferences(preferences) {
     for (const key in preferences) {
       this._prefs[key] = preferences[key];
 
@@ -1569,7 +1569,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         The sandbox holds methods and properties that can be used as
    *         bindings during JS evaluation.
    */
-  _getWebConsoleCommands: function(debuggerGlobal) {
+  _getWebConsoleCommands(debuggerGlobal) {
     const helpers = {
       window: this.evalGlobal,
       makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
@@ -1615,7 +1615,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     return helpers;
   },
 
-  _getWebConsoleCommandsCache: function() {
+  _getWebConsoleCommandsCache() {
     if (!this._webConsoleCommandsCache) {
       const helpers = {
         sandbox: Object.create(null),
@@ -1637,7 +1637,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param nsIConsoleMessage message
    *        The message we need to send to the client.
    */
-  onConsoleServiceMessage: function(message) {
+  onConsoleServiceMessage(message) {
     if (message instanceof Ci.nsIScriptError) {
       this.emit("pageError", {
         pageError: this.preparePageErrorForRemote(message),
@@ -1696,7 +1696,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The object you can send to the remote client.
    */
-  preparePageErrorForRemote: function(pageError) {
+  preparePageErrorForRemote(pageError) {
     const stack = this.prepareStackForRemote(pageError.stack);
     let lineText = pageError.sourceLine;
     if (
@@ -1788,7 +1788,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param object extraProperties
    *        an object whose properties will be folded in the packet that is emitted.
    */
-  onConsoleAPICall: function(message, extraProperties = {}) {
+  onConsoleAPICall(message, extraProperties = {}) {
     this.emit("consoleAPICall", {
       message: this.prepareConsoleMessageForRemote(message),
       ...extraProperties,
@@ -1810,7 +1810,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *        Tells if the window.console object is native or overwritten by script in the page.
    *        Only passed when `name` is "dom-complete" (see devtools/server/actors/webconsole/listeners/document-events.js).
    */
-  onDocumentEvent: function(name, { time, hasNativeConsoleAPI }) {
+  onDocumentEvent(name, { time, hasNativeConsoleAPI }) {
     this.emit("documentEvent", {
       name,
       time,
@@ -2031,7 +2031,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param string fileURI
    *        The requested file URI.
    */
-  onFileActivity: function(fileURI) {
+  onFileActivity(fileURI) {
     this.emit("fileActivity", {
       uri: fileURI,
     });
@@ -2051,7 +2051,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @return object
    *         The object that can be sent to the remote client.
    */
-  prepareConsoleMessageForRemote: function(message, useObjectGlobal = true) {
+  prepareConsoleMessageForRemote(message, useObjectGlobal = true) {
     const result = {
       arguments: message.arguments
         ? message.arguments.map(obj => {
@@ -2129,7 +2129,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @returns {Object} An object containing the properties of the first argument of the
    *                   console.table call.
    */
-  _getConsoleTableMessageItems: function(result) {
+  _getConsoleTableMessageItems(result) {
     if (
       !result ||
       !Array.isArray(result.arguments) ||
@@ -2196,7 +2196,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @param string topic
    *        Notification topic.
    */
-  _onObserverNotification: function(subject, topic) {
+  _onObserverNotification(subject, topic) {
     if (topic === "last-pb-context-exited") {
       this.emit("lastPrivateContextExited");
     }
@@ -2206,7 +2206,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * The "will-navigate" progress listener. This is used to clear the current
    * eval scope.
    */
-  _onWillNavigate: function({ window, isTopLevel }) {
+  _onWillNavigate({ window, isTopLevel }) {
     if (isTopLevel) {
       this._evalGlobal = null;
       EventEmitter.off(this.parentActor, "will-navigate", this._onWillNavigate);
@@ -2218,7 +2218,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * This listener is called when we switch to another frame,
    * mostly to unregister previous listeners and start listening on the new document.
    */
-  _onChangedToplevelDocument: function() {
+  _onChangedToplevelDocument() {
     // Convert the Set to an Array
     const listeners = [...this._listeners];
 

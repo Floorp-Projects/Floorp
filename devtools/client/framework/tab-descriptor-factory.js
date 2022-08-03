@@ -107,7 +107,7 @@ exports.TabDescriptorFactory = {
    * descriptor for a tab without creating a descriptor.
    * @return true/false
    */
-  isKnownTab: function(tab) {
+  isKnownTab(tab) {
     return descriptors.has(tab);
   },
 };

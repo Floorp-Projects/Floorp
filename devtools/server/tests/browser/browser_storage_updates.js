@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
 const TESTS = [
   // index 0
   {
-    action: async function(win) {
+    async action(win) {
       await addCookie("c1", "foobar1");
       await addCookie("c2", "foobar2");
       await localStorageSetItem("l1", "foobar1");
@@ -42,7 +42,7 @@ const TESTS = [
 
   // index 1
   {
-    action: async function() {
+    async action() {
       await addCookie("c1", "new_foobar1");
       await localStorageSetItem("l2", "foobar2");
     },
@@ -72,7 +72,7 @@ const TESTS = [
 
   // index 2
   {
-    action: async function() {
+    async action() {
       await removeCookie("c2");
       await localStorageRemoveItem("l1");
       await localStorageSetItem("l3", "foobar3");
@@ -99,7 +99,7 @@ const TESTS = [
 
   // index 3
   {
-    action: async function() {
+    async action() {
       await removeCookie("c1");
       await addCookie("c3", "foobar3");
       await localStorageRemoveItem("l2");
@@ -135,7 +135,7 @@ const TESTS = [
 
   // index 4
   {
-    action: async function() {
+    async action() {
       await sessionStorageRemoveItem("s1");
     },
     snapshot: {
@@ -162,7 +162,7 @@ const TESTS = [
 
   // index 5
   {
-    action: async function() {
+    async action() {
       await clearCookies();
     },
     snapshot: {
@@ -184,7 +184,7 @@ const TESTS = [
 
   // index 6
   {
-    action: async function() {
+    async action() {
       await clearLocalAndSessionStores();
     },
     snapshot: {

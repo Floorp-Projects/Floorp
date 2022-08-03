@@ -15,7 +15,7 @@ const testToolDefinition = {
   build: (iframeWindow, toolbox) => {
     return {
       target: toolbox.target,
-      toolbox: toolbox,
+      toolbox,
       isReady: true,
       destroy: () => {},
       panelDoc: iframeWindow.document,

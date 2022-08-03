@@ -47,7 +47,7 @@ OriginalSource.prototype = {
    * string.  This is done because the style editor elsewhere expects
    * a long string actor.
    */
-  getText: function() {
+  getText() {
     if (!this._sourcePromise) {
       this._sourcePromise = this._sourceMapService
         .getOriginalSourceText(this._sourceId)
@@ -77,7 +77,7 @@ OriginalSource.prototype = {
    *        `sourceUrl`, `source`, `styleSheet`, `line`, and `column`
    *        properties.
    */
-  getOriginalLocation: function(relatedSheet, line, column) {
+  getOriginalLocation(relatedSheet, line, column) {
     const { href, nodeHref, resourceId: sourceId } = relatedSheet;
     const sourceUrl = href || nodeHref;
     return this._sourceMapService
@@ -96,8 +96,8 @@ OriginalSource.prototype = {
   },
 
   // Dummy implementations, as we never emit an event.
-  on: function() {},
-  off: function() {},
+  on() {},
+  off() {},
 };
 
 exports.OriginalSource = OriginalSource;

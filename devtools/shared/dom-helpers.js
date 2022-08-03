@@ -23,7 +23,7 @@ exports.DOMHelpers = {
    *        (optional) Check that the frame URL corresponds to the provided URL
    *        before calling the callback.
    */
-  onceDOMReady: function(win, callback, targetURL) {
+  onceDOMReady(win, callback, targetURL) {
     if (!win) {
       throw new Error("window can't be null or undefined");
     }

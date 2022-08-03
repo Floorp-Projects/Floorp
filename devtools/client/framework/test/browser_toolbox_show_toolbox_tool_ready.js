@@ -43,7 +43,7 @@ add_task(async function automaticallyBindTexbox() {
     isToolSupported: () => true,
     url: CHROME_URL_ROOT + "doc_lazy_tool.html",
     label: "Lazy",
-    build: function(iframeWindow, toolbox) {
+    build(iframeWindow, toolbox) {
       this.panel = new LazyDevToolsPanel(iframeWindow, toolbox);
       return this.panel.open();
     },

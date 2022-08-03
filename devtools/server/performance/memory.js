@@ -64,7 +64,7 @@ function Memory(parent, frameCache = new StackFrameCache()) {
 }
 
 Memory.prototype = {
-  destroy: function() {
+  destroy() {
     EventEmitter.off(this.parent, "window-ready", this._onWindowReady);
 
     this._mgr = null;
@@ -117,11 +117,11 @@ Memory.prototype = {
   /**
    * Gets the current MemoryBridge attach/detach state.
    */
-  getState: function() {
+  getState() {
     return this.state;
   },
 
-  _clearDebuggees: function() {
+  _clearDebuggees() {
     if (this._dbg) {
       if (this.isRecordingAllocations()) {
         this.dbg.memory.drainAllocationsLog();
@@ -131,7 +131,7 @@ Memory.prototype = {
     }
   },
 
-  _clearFrames: function() {
+  _clearFrames() {
     if (this.isRecordingAllocations()) {
       this._frameCache.clearFrames();
     }
@@ -140,7 +140,7 @@ Memory.prototype = {
   /**
    * Handler for the parent actor's "window-ready" event.
    */
-  _onWindowReady: function({ isTopLevel }) {
+  _onWindowReady({ isTopLevel }) {
     if (this.state == "attached") {
       this._clearDebuggees();
       if (isTopLevel && this.isRecordingAllocations()) {
@@ -154,7 +154,7 @@ Memory.prototype = {
    * Returns a boolean indicating whether or not allocation
    * sites are being tracked.
    */
-  isRecordingAllocations: function() {
+  isRecordingAllocations() {
     return this.dbg.memory.trackingAllocationSites;
   },
 
@@ -389,7 +389,7 @@ Memory.prototype = {
   /*
    * Force a browser-wide GC.
    */
-  forceGarbageCollection: function() {
+  forceGarbageCollection() {
     for (let i = 0; i < 3; i++) {
       Cu.forceGC();
     }
@@ -400,7 +400,7 @@ Memory.prototype = {
    * collection, see
    * https://developer.mozilla.org/en-US/docs/Interfacing_with_the_XPCOM_cycle_collector#What_the_cycle_collector_does
    */
-  forceCycleCollection: function() {
+  forceCycleCollection() {
     Cu.forceCC();
   },
 
@@ -410,7 +410,7 @@ Memory.prototype = {
    *
    * @returns object
    */
-  measure: function() {
+  measure() {
     const result = {};
 
     const jsObjectsSize = {};
@@ -452,14 +452,14 @@ Memory.prototype = {
     return result;
   },
 
-  residentUnique: function() {
+  residentUnique() {
     return this._mgr.residentUnique;
   },
 
   /**
    * Handler for GC events on the Debugger.Memory instance.
    */
-  _onGarbageCollection: function(data) {
+  _onGarbageCollection(data) {
     this.emit("garbage-collection", data);
 
     // If `drainAllocationsTimeout` set, fire an allocations event with the drained log,
@@ -476,7 +476,7 @@ Memory.prototype = {
    * drainAllocationsTimeout was set.
    * Drains allocation log and emits as an event and restarts the timer.
    */
-  _emitAllocations: function() {
+  _emitAllocations() {
     this.emit("allocations", this.getAllocations());
     this._poller.arm();
   },
@@ -484,7 +484,7 @@ Memory.prototype = {
   /**
    * Accesses the docshell to return the current process time.
    */
-  _getCurrentTime: function() {
+  _getCurrentTime() {
     const docShell = this.parent.isRootActor
       ? this.parent.docShell
       : this.parent.originalDocShell;

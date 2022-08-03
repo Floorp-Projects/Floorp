@@ -345,7 +345,7 @@ add_task(async function() {
         columns: ["(index)", "a"],
         rows: [["0", "Object { b: 34 }"]],
       },
-      additionalTest: async function(node) {
+      async additionalTest(node) {
         info("Check that object in a cell can be expanded");
         const objectNode = node.querySelector(".tree .node");
         objectNode.click();

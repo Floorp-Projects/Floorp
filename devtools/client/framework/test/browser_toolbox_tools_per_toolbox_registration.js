@@ -49,7 +49,7 @@ function toolboxRegister(aToolbox) {
     label: "Test Tool",
     inMenu: true,
     isToolSupported: () => true,
-    build: function() {
+    build() {
       info("per-toolbox tool has been built.");
       resolveToolInstanceBuild();
 

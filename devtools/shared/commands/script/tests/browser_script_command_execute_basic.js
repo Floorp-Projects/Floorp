@@ -146,7 +146,7 @@ async function doEvalLongString(commands) {
     input: "window.foobarObject.omgstr",
     result: {
       type: "longString",
-      initial: initial,
+      initial,
       length: str.length,
     },
   });

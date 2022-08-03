@@ -173,7 +173,7 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
   let entries = await pageStyle.getApplied(inspector.selection.nodeFront, {
     inherited: true,
     matchedSelectors: true,
-    filter: filter,
+    filter,
   });
 
   // We may see multiple entries that map to a given rule; filter the

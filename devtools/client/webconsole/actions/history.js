@@ -22,7 +22,7 @@ const {
 function appendToHistory(expression) {
   return {
     type: APPEND_TO_HISTORY,
-    expression: expression,
+    expression,
   };
 }
 

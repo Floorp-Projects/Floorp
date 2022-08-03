@@ -144,7 +144,7 @@ function testTreeItemInsertedCorrectly(tree, doc) {
   tree.add([
     {
       id: "level1.2",
-      node: node,
+      node,
       attachment: {
         foo: "bar",
       },

@@ -22,7 +22,7 @@ function SlottedNodeContainer(markupView, node) {
 }
 
 SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
-  _onMouseDown: function(event) {
+  _onMouseDown(event) {
     if (event.target.classList.contains("reveal-link")) {
       event.stopPropagation();
       event.preventDefault();
@@ -34,7 +34,7 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
   /**
    * Slotted node containers never display children and should not react to toggle.
    */
-  _onToggle: function(event) {
+  _onToggle(event) {
     event.stopPropagation();
   },
 
@@ -47,7 +47,7 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
     );
   },
 
-  _onKeyDown: function(event) {
+  _onKeyDown(event) {
     MarkupContainer.prototype._onKeyDown.call(this, event);
 
     const isActionKey = event.code == "Enter" || event.code == "Space";
@@ -56,7 +56,7 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
     }
   },
 
-  onContainerClick: async function(event) {
+  async onContainerClick(event) {
     if (!event.target.classList.contains("reveal-link")) {
       return;
     }
@@ -64,11 +64,11 @@ SlottedNodeContainer.prototype = extend(MarkupContainer.prototype, {
     this._revealFromSlot();
   },
 
-  isDraggable: function() {
+  isDraggable() {
     return false;
   },
 
-  isSlotted: function() {
+  isSlotted() {
     return true;
   },
 });

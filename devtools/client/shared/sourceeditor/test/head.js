@@ -53,7 +53,7 @@ async function setup(additionalOpts = {}) {
 
     return {
       ed: editor,
-      win: win,
+      win,
       edWin: editor.container.contentWindow.wrappedJSObject,
     };
   } catch (o_O) {

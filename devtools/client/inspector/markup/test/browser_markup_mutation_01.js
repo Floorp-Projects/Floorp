@@ -16,10 +16,10 @@ const TEST_URL = URL_ROOT + "doc_markup_mutation.html";
 const TEST_DATA = [
   {
     desc: "Adding an attribute",
-    test: async function() {
+    async test() {
       await setContentPageElementAttribute("#node1", "newattr", "newattrval");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
       ok(
         [...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
@@ -35,10 +35,10 @@ const TEST_DATA = [
   },
   {
     desc: "Removing an attribute",
-    test: async function() {
+    async test() {
       await removeContentPageElementAttribute("#node1", "newattr");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
       ok(
         ![...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
@@ -50,10 +50,10 @@ const TEST_DATA = [
   },
   {
     desc: "Re-adding an attribute",
-    test: async function() {
+    async test() {
       await setContentPageElementAttribute("#node1", "newattr", "newattrval");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
       ok(
         [...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
@@ -69,14 +69,14 @@ const TEST_DATA = [
   },
   {
     desc: "Changing an attribute",
-    test: async function() {
+    async test() {
       await setContentPageElementAttribute(
         "#node1",
         "newattr",
         "newattrchanged"
       );
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
       ok(
         [...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
@@ -92,7 +92,7 @@ const TEST_DATA = [
   },
   {
     desc: "Adding another attribute does not rerender unchanged attributes",
-    test: async function(inspector) {
+    async test(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
 
       // This test checks the impact on the markup-view nodes after setting attributes on
@@ -111,7 +111,7 @@ const TEST_DATA = [
       );
       await setContentPageElementAttribute("#node1", "otherattr", "othervalue");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
 
       info(
@@ -138,13 +138,13 @@ const TEST_DATA = [
   {
     desc: "Adding ::after element",
     numMutations: 2,
-    test: async function() {
+    async test() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node1 = content.document.querySelector("#node1");
         node1.classList.add("pseudo");
       });
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { children } = await getContainerForSelector("#node1", inspector);
       is(
         children.childNodes.length,
@@ -156,23 +156,23 @@ const TEST_DATA = [
   {
     desc: "Removing ::after element",
     numMutations: 2,
-    test: async function() {
+    async test() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node1 = content.document.querySelector("#node1");
         node1.classList.remove("pseudo");
       });
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
     },
   },
   {
     desc: "Updating the text-content",
-    test: async function() {
+    async test() {
       await setContentPageElementProperty("#node1", "textContent", "newtext");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
@@ -186,14 +186,14 @@ const TEST_DATA = [
   },
   {
     desc: "Adding a second text child",
-    test: async function() {
+    async test() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node1 = content.document.querySelector("#node1");
         const newText = node1.ownerDocument.createTextNode("more");
         node1.appendChild(newText);
       });
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(container.canExpand, "Can expand container with child nodes.");
@@ -205,10 +205,10 @@ const TEST_DATA = [
   },
   {
     desc: "Go from 2 to 1 text child",
-    test: async function() {
+    async test() {
       await setContentPageElementProperty("#node1", "textContent", "newtext");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
@@ -222,10 +222,10 @@ const TEST_DATA = [
   },
   {
     desc: "Removing an only text child",
-    test: async function() {
+    async test() {
       await setContentPageElementProperty("#node1", "innerHTML", "");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(!container.canExpand, "Can't expand empty container.");
@@ -237,10 +237,10 @@ const TEST_DATA = [
   },
   {
     desc: "Go from 0 to 1 text child",
-    test: async function() {
+    async test() {
       await setContentPageElementProperty("#node1", "textContent", "newtext");
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
@@ -255,14 +255,14 @@ const TEST_DATA = [
 
   {
     desc: "Updating the innerHTML",
-    test: async function() {
+    async test() {
       await setContentPageElementProperty(
         "#node2",
         "innerHTML",
         "<div><span>foo</span></div>"
       );
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const container = await getContainerForSelector("#node2", inspector);
 
       const openTags = container.children.querySelectorAll(".open .tag");
@@ -279,7 +279,7 @@ const TEST_DATA = [
   },
   {
     desc: "Removing child nodes",
-    test: async function() {
+    async test() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node4 = content.document.querySelector("#node4");
         while (node4.firstChild) {
@@ -287,21 +287,21 @@ const TEST_DATA = [
         }
       });
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { children } = await getContainerForSelector("#node4", inspector);
       is(children.innerHTML, "", "Children have been removed");
     },
   },
   {
     desc: "Appending a child to a different parent",
-    test: async function() {
+    async test() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node17 = content.document.querySelector("#node17");
         const node2 = content.document.querySelector("#node2");
         node2.appendChild(node17);
       });
     },
-    check: async function(inspector) {
+    async check(inspector) {
       const { children } = await getContainerForSelector("#node16", inspector);
       is(
         children.innerHTML,
@@ -330,7 +330,7 @@ const TEST_DATA = [
     //      node21
     //      node18
     //        node19
-    test: async function() {
+    async test() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
         const node18 = content.document.querySelector("#node18");
         const node20 = content.document.querySelector("#node20");
@@ -339,7 +339,7 @@ const TEST_DATA = [
         node20.appendChild(node18);
       });
     },
-    check: async function(inspector) {
+    async check(inspector) {
       await inspector.markup.expandAll();
 
       const { children } = await getContainerForSelector("#node1", inspector);

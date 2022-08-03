@@ -6,7 +6,7 @@
 // protocol version strings.
 
 Object.defineProperty(this, "NetworkHelper", {
-  get: function() {
+  get() {
     return require("devtools/shared/webconsole/network-helper");
   },
   configurable: true,

@@ -70,7 +70,7 @@ add_task(async function() {
     label: "Test Tools",
     isMenu: true,
     isToolSupported: () => true,
-    build: function() {},
+    build() {},
   });
   await onRegistered;
 

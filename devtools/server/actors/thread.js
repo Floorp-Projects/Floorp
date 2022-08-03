@@ -945,8 +945,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       packet.frame.where = {
         actor: sourceActor.actorID,
-        line: line,
-        column: column,
+        line,
+        column,
       };
       const pkt = onPacket(packet);
 

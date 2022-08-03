@@ -18,7 +18,7 @@ const spec = protocol.generateActorSpec({
 });
 
 exports.TestSetupInParentActor = protocol.ActorClassWithSpec(spec, {
-  callSetupInParent: async function() {
+  async callSetupInParent() {
     // eslint-disable-next-line no-restricted-properties
     this.conn.setupInParent({
       module:

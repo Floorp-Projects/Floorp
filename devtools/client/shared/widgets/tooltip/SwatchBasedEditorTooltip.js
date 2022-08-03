@@ -169,7 +169,7 @@ class SwatchBasedEditorTooltip {
     }
 
     this.swatches.set(swatchEl, {
-      callbacks: callbacks,
+      callbacks,
     });
     swatchEl.addEventListener("click", this._onSwatchClick);
     swatchEl.addEventListener("keydown", this._onSwatchKeyDown);

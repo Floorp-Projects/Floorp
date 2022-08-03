@@ -257,7 +257,7 @@ class HTTPCustomRequestPanel extends Component {
         if (index === i) {
           return {
             ...item,
-            checked: checked,
+            checked,
           };
         }
         return item;

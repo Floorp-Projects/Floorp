@@ -47,7 +47,7 @@ class Sidebar extends PureComponent {
         },
         navItems.map(page => {
           return SidebarItem({
-            page: page,
+            page,
             key: `sidebar-item-${page}`,
             isSelected: isSelected(page),
           });

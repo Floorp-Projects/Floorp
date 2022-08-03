@@ -23,7 +23,7 @@ add_task(async () => {
 
   await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         window.someRandomMethodName = () => {
           // This will not be referred from anywhere.
           // However this is necessary to show as the source code in the debugger.

@@ -216,7 +216,7 @@ function createContextMenu(event, message, webConsoleWrapper) {
       label: l10n.getStr("webconsole.menu.copyAllMessages.label"),
       accesskey: l10n.getStr("webconsole.menu.copyAllMessages.accesskey"),
       disabled: false,
-      click: async function() {
+      async click() {
         const outputText = await getUnvirtualizedConsoleOutputText(
           webConsoleWrapper
         );

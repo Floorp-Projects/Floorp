@@ -76,7 +76,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
    * @param threadActor ThreadActor
    *        The parent thread actor for this frame.
    */
-  initialize: function(frame, threadActor, depth) {
+  initialize(frame, threadActor, depth) {
     Actor.prototype.initialize.call(this, threadActor.conn);
 
     this.frame = frame;
@@ -99,7 +99,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
    * Finalization handler that is called when the actor is being evicted from
    * the pool.
    */
-  destroy: function() {
+  destroy() {
     if (this._frameLifetimePool) {
       this._frameLifetimePool.destroy();
       this._frameLifetimePool = null;
@@ -107,7 +107,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
     Actor.prototype.destroy.call(this);
   },
 
-  getEnvironment: function() {
+  getEnvironment() {
     try {
       if (!this.frame.environment) {
         return {};
@@ -130,7 +130,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
   /**
    * Returns a frame form for use in a protocol message.
    */
-  form: function() {
+  form() {
     // SavedFrame actors have their own frame handling.
     if (!(this.frame instanceof Debugger.Frame)) {
       // The Frame actor shouldn't be used after evaluation is resumed, so
@@ -202,7 +202,7 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
     return form;
   },
 
-  _args: function() {
+  _args() {
     if (!this.frame.onStack || !this.frame.arguments) {
       return [];
     }

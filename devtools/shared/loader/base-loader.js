@@ -408,7 +408,7 @@ function Require(loader, requirer) {
       );
     }
 
-    return { uri: uri, requirement: requirement };
+    return { uri, requirement };
   }
 
   // Expose the `resolve` function for this `Require` instance
@@ -515,7 +515,7 @@ function Loader(options) {
     // allow them to be loaded lazily.
     Object.defineProperty(module, "exports", {
       enumerable: true,
-      get: function() {
+      get() {
         return builtinModuleExports[id];
       },
     });

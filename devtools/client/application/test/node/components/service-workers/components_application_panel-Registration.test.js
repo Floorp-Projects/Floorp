@@ -75,7 +75,7 @@ describe("Registration", () => {
     const wrapper = shallow(
       Registration({
         isDebugEnabled: false,
-        registration: registration,
+        registration,
         store,
       })
     ).dive();

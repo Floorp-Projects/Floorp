@@ -30,12 +30,12 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
    *
    * @constructor
    */
-  initialize: function(inspector) {
+  initialize(inspector) {
     protocol.Actor.prototype.initialize.call(this, inspector.conn);
     this.inspector = inspector;
   },
 
-  destroy: function() {
+  destroy() {
     protocol.Actor.prototype.destroy.call(this);
     this.inspector = null;
   },
@@ -89,7 +89,7 @@ const CompatibilityActor = protocol.ActorClassWithSpec(compatibilitySpec, {
    *      unsupportedBrowsers: <Array>,
    *    }
    */
-  getCSSDeclarationBlockIssues: function(declarationBlock, targetBrowsers) {
+  getCSSDeclarationBlockIssues(declarationBlock, targetBrowsers) {
     return mdnCompatibility.getCSSDeclarationBlockIssues(
       declarationBlock,
       targetBrowsers
