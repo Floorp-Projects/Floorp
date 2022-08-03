@@ -32,7 +32,6 @@ add_task(async function() {
   await testBrowserConsole(publicTab);
 
   await pushPref("devtools.browsertoolbox.fission", true);
-  await pushPref("devtools.browsertoolbox.scope", "everything");
   await testBrowserConsole(publicTab);
 });
 

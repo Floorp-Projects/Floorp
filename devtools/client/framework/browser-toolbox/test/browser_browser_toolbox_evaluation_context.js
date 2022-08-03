@@ -22,8 +22,6 @@ add_task(async function() {
   await pushPref("devtools.webconsole.input.context", true);
   // Force EFT to have targets for all WindowGlobals
   await pushPref("devtools.every-frame-target.enabled", true);
-  // Enable Multiprocess Browser Toolbox
-  await pushPref("devtools.browsertoolbox.scope", "everything");
 
   // Open the test *before* opening the Browser toolbox in order to have the right target title.
   // Once created, the target won't update its title, and so would be "New Tab", instead of "Test tab"

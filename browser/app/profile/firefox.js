@@ -2296,7 +2296,7 @@ pref("devtools.browsertoolbox.fission", true);
 //   All processes, all documents, all workers, all add-ons.
 // - "parent-process" will restrict debugging to the parent process
 //   All privileged javascript, documents and workers running in the parent process.
-pref("devtools.browsertoolbox.scope", "parent-process");
+pref("devtools.browsertoolbox.scope", "everything");
 
 // This preference will enable watching top-level targets from the server side.
 pref("devtools.target-switching.server.enabled", true);
