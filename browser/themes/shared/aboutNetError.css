@@ -228,7 +228,7 @@ body:not(.neterror) #advancedButton {
 }
 
 #errorLongDesc strong {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .title {
