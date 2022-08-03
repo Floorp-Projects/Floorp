@@ -1104,7 +1104,7 @@ static bool WouldDefinePastNonwritableLength(ArrayObject* arr, uint32_t index) {
 static bool ChangeProperty(JSContext* cx, Handle<NativeObject*> obj,
                            HandleId id, HandleObject getter,
                            HandleObject setter, PropertyFlags flags,
-                           PropertyResult* existing) {
+                           PropertyResult* existing, uint32_t* slotOut) {
   MOZ_ASSERT(existing);
 
   Rooted<GetterSetter*> gs(cx);
@@ -1128,18 +1128,17 @@ static bool ChangeProperty(JSContext* cx, Handle<NativeObject*> obj,
     }
   }
 
-  uint32_t slot;
   if (existing->isNativeProperty()) {
-    if (!NativeObject::changeProperty(cx, obj, id, flags, &slot)) {
+    if (!NativeObject::changeProperty(cx, obj, id, flags, slotOut)) {
       return false;
     }
   } else {
-    if (!NativeObject::addProperty(cx, obj, id, flags, &slot)) {
+    if (!NativeObject::addProperty(cx, obj, id, flags, slotOut)) {
       return false;
     }
   }
 
-  obj->setSlot(slot, PrivateGCThingValue(gs));
+  obj->setSlot(*slotOut, PrivateGCThingValue(gs));
   return true;
 }
 
@@ -1203,6 +1202,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     }
   }
 
+  uint32_t slot;
   if constexpr (AddOrChange == IsAddOrChange::Add) {
     if (desc.isAccessorDescriptor()) {
       Rooted<GetterSetter*> gs(
@@ -1210,13 +1210,11 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
       if (!gs) {
         return false;
       }
-      uint32_t slot;
       if (!NativeObject::addProperty(cx, obj, id, flags, &slot)) {
         return false;
       }
       obj->initSlot(slot, PrivateGCThingValue(gs));
     } else {
-      uint32_t slot;
       if (!NativeObject::addProperty(cx, obj, id, flags, &slot)) {
         return false;
       }
@@ -1225,11 +1223,10 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   } else {
     if (desc.isAccessorDescriptor()) {
       if (!ChangeProperty(cx, obj, id, desc.getter(), desc.setter(), flags,
-                          existing)) {
+                          existing, &slot)) {
         return false;
       }
     } else {
-      uint32_t slot;
       if (existing->isNativeProperty()) {
         if (!NativeObject::changeProperty(cx, obj, id, flags, &slot)) {
           return false;
@@ -1243,6 +1240,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     }
   }
 
+  MOZ_ASSERT(slot < obj->slotSpan());
+
   // Clear any existing dense index after adding a sparse indexed property,
   // and investigate converting the object to dense indexes.
   if (id.isInt()) {
@@ -1252,14 +1251,22 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     } else {
       obj->removeDenseElementForSparseIndex(index);
     }
-    DenseElementResult edResult =
-        NativeObject::maybeDensifySparseElements(cx, obj);
-    if (edResult == DenseElementResult::Failure) {
-      return false;
-    }
-    if (edResult == DenseElementResult::Success) {
-      MOZ_ASSERT(!desc.isAccessorDescriptor());
-      return CallAddPropertyHookDense(cx, obj, index, desc.value());
+    // Only try to densify sparse elements if the property we just added/changed
+    // is in the last slot. This avoids a perf cliff in pathological cases: in
+    // maybeDensifySparseElements we densify if the slot span is a power-of-two,
+    // but if we get slots from the free list, the slot span will stay the same
+    // until the free list is empty. This means we'd get quadratic behavior by
+    // trying to densify for each sparse element we add. See bug 1782487.
+    if (slot == obj->slotSpan() - 1) {
+      DenseElementResult edResult =
+          NativeObject::maybeDensifySparseElements(cx, obj);
+      if (edResult == DenseElementResult::Failure) {
+        return false;
+      }
+      if (edResult == DenseElementResult::Success) {
+        MOZ_ASSERT(!desc.isAccessorDescriptor());
+        return CallAddPropertyHookDense(cx, obj, index, desc.value());
+      }
     }
   }
 
