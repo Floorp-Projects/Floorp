@@ -1480,7 +1480,7 @@ pref("services.sync.syncedTabs.showRemoteIcons", true);
 // A preference (in milliseconds) controlling if we sync after a tab change and
 // how long to delay before we schedule the sync
 // Anything <= 0 means disabled
-pref("services.sync.syncedTabs.syncDelayAfterTabChange", 0);
+pref("services.sync.syncedTabs.syncDelayAfterTabChange", 5000);
 
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
