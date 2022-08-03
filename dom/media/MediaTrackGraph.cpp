@@ -1533,9 +1533,9 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateTime,
   // > LIFECYCLE_RUNNING)
 
   // Ignore mutex warning: static during execution of the graph
-  MOZ_PUSH_IGNORE_THREAD_SAFETY
+  PUSH_IGNORE_THREAD_SAFETY
   MOZ_DIAGNOSTIC_ASSERT(mLifecycleState <= LIFECYCLE_RUNNING);
-  MOZ_POP_THREAD_SAFETY
+  POP_THREAD_SAFETY
 
   MOZ_ASSERT(OnGraphThread());
 
@@ -2725,7 +2725,7 @@ bool SourceMediaTrack::PullNewData(GraphTime aDesiredUpToTime) {
 static void MoveToSegment(SourceMediaTrack* aTrack, MediaSegment* aIn,
                           MediaSegment* aOut, TrackTime aCurrentTime,
                           TrackTime aDesiredUpToTime)
-    MOZ_REQUIRES(aTrack->GetMutex()) {
+    REQUIRES(aTrack->GetMutex()) {
   MOZ_ASSERT(aIn->GetType() == aOut->GetType());
   MOZ_ASSERT(aOut->GetDuration() >= aCurrentTime);
   MOZ_ASSERT(aDesiredUpToTime >= aCurrentTime);

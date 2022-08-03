@@ -160,21 +160,21 @@ struct nsPipeReadState {
         mNeedDrain(false) {}
 
   // All members of this type are guarded by the pipe monitor, however it cannot
-  // be named from this type, so the less-reliable MOZ_GUARDED_VAR is used
-  // instead. In the future it would be nice to avoid this, especially as
-  // MOZ_GUARDED_VAR is deprecated.
-  char* mReadCursor MOZ_GUARDED_VAR;
-  char* mReadLimit MOZ_GUARDED_VAR;
-  int32_t mSegment MOZ_GUARDED_VAR;
-  uint32_t mAvailable MOZ_GUARDED_VAR;
+  // be named from this type, so the less-reliable GUARDED_VAR is used instead.
+  // In the future it would be nice to avoid this, especially as GUARDED_VAR is
+  // deprecated.
+  char* mReadCursor GUARDED_VAR;
+  char* mReadLimit GUARDED_VAR;
+  int32_t mSegment GUARDED_VAR;
+  uint32_t mAvailable GUARDED_VAR;
 
   // This flag is managed using the AutoReadSegment RAII stack class.
-  bool mActiveRead MOZ_GUARDED_VAR;
+  bool mActiveRead GUARDED_VAR;
 
   // Set to indicate that the input stream has closed and should be drained,
   // but that drain has been delayed due to an active read.  When the read
   // completes, this flag indicate the drain should then be performed.
-  bool mNeedDrain MOZ_GUARDED_VAR;
+  bool mNeedDrain GUARDED_VAR;
 };
 
 //-----------------------------------------------------------------------------
@@ -217,7 +217,7 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
 
   void SetNonBlocking(bool aNonBlocking) { mBlocking = !aNonBlocking; }
 
-  uint32_t Available() MOZ_REQUIRES(Monitor());
+  uint32_t Available() REQUIRES(Monitor());
 
   // synchronously wait for the pipe to become readable.
   nsresult Wait();
@@ -227,10 +227,10 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
   // evidence.
   MonitorAction OnInputReadable(uint32_t aBytesWritten, nsPipeEvents&,
                                 const ReentrantMonitorAutoEnter& ev)
-      MOZ_REQUIRES(Monitor());
+      REQUIRES(Monitor());
   MonitorAction OnInputException(nsresult, nsPipeEvents&,
                                  const ReentrantMonitorAutoEnter& ev)
-      MOZ_REQUIRES(Monitor());
+      REQUIRES(Monitor());
 
   nsPipeReadState& ReadState() { return mReadState; }
 
@@ -240,13 +240,13 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
 
   // A version of Status() that doesn't acquire the monitor.
   nsresult Status(const ReentrantMonitorAutoEnter& ev) const
-      MOZ_REQUIRES(Monitor());
+      REQUIRES(Monitor());
 
   // The status of this input stream, ignoring the status of the underlying
   // monitor. If this status is errored, the input stream has either already
   // been removed from the pipe, or will be removed from the pipe shortly.
   nsresult InputStatus(const ReentrantMonitorAutoEnter&) const
-      MOZ_REQUIRES(Monitor()) {
+      REQUIRES(Monitor()) {
     return mInputStatus;
   }
 
@@ -261,12 +261,12 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
   // Individual input streams can be closed without effecting the rest of the
   // pipe.  So track individual input stream status separately.  |mInputStatus|
   // is protected by |mPipe->mReentrantMonitor|.
-  nsresult mInputStatus MOZ_GUARDED_BY(Monitor());
+  nsresult mInputStatus GUARDED_BY(Monitor());
   bool mBlocking;
 
   // these variables can only be accessed while inside the pipe's monitor
-  bool mBlocked MOZ_GUARDED_BY(Monitor());
-  CallbackHolder mCallback MOZ_GUARDED_BY(Monitor());
+  bool mBlocked GUARDED_BY(Monitor());
+  CallbackHolder mCallback GUARDED_BY(Monitor());
 
   // requires pipe's monitor to access members; usually treat as an opaque token
   // to pass to nsPipe
@@ -299,16 +299,15 @@ class nsPipeOutputStream : public nsIAsyncOutputStream, public nsIClassInfo {
         mWritable(true) {}
 
   void SetNonBlocking(bool aNonBlocking) { mBlocking = !aNonBlocking; }
-  void SetWritable(bool aWritable) MOZ_REQUIRES(Monitor()) {
+  void SetWritable(bool aWritable) REQUIRES(Monitor()) {
     mWritable = aWritable;
   }
 
   // synchronously wait for the pipe to become writable.
   nsresult Wait();
 
-  MonitorAction OnOutputWritable(nsPipeEvents&) MOZ_REQUIRES(Monitor());
-  MonitorAction OnOutputException(nsresult, nsPipeEvents&)
-      MOZ_REQUIRES(Monitor());
+  MonitorAction OnOutputWritable(nsPipeEvents&) REQUIRES(Monitor());
+  MonitorAction OnOutputException(nsresult, nsPipeEvents&) REQUIRES(Monitor());
 
   ReentrantMonitor& Monitor() const;
 
@@ -321,9 +320,9 @@ class nsPipeOutputStream : public nsIAsyncOutputStream, public nsIClassInfo {
   bool mBlocking;
 
   // these variables can only be accessed while inside the pipe's monitor
-  bool mBlocked MOZ_GUARDED_BY(Monitor());
-  bool mWritable MOZ_GUARDED_BY(Monitor());
-  CallbackHolder mCallback MOZ_GUARDED_BY(Monitor());
+  bool mBlocked GUARDED_BY(Monitor());
+  bool mWritable GUARDED_BY(Monitor());
+  CallbackHolder mCallback GUARDED_BY(Monitor());
 };
 
 //-----------------------------------------------------------------------------
@@ -351,26 +350,23 @@ class nsPipe final {
   //
 
   void PeekSegment(const nsPipeReadState& aReadState, uint32_t aIndex,
-                   char*& aCursor, char*& aLimit)
-      MOZ_REQUIRES(mReentrantMonitor);
+                   char*& aCursor, char*& aLimit) REQUIRES(mReentrantMonitor);
   SegmentChangeResult AdvanceReadSegment(nsPipeReadState& aReadState,
                                          const ReentrantMonitorAutoEnter& ev)
-      MOZ_REQUIRES(mReentrantMonitor);
+      REQUIRES(mReentrantMonitor);
   bool ReadSegmentBeingWritten(nsPipeReadState& aReadState)
-      MOZ_REQUIRES(mReentrantMonitor);
-  uint32_t CountSegmentReferences(int32_t aSegment)
-      MOZ_REQUIRES(mReentrantMonitor);
-  void SetAllNullReadCursors() MOZ_REQUIRES(mReentrantMonitor);
-  bool AllReadCursorsMatchWriteCursor() MOZ_REQUIRES(mReentrantMonitor);
-  void RollBackAllReadCursors(char* aWriteCursor)
-      MOZ_REQUIRES(mReentrantMonitor);
-  void UpdateAllReadCursors(char* aWriteCursor) MOZ_REQUIRES(mReentrantMonitor);
-  void ValidateAllReadCursors() MOZ_REQUIRES(mReentrantMonitor);
+      REQUIRES(mReentrantMonitor);
+  uint32_t CountSegmentReferences(int32_t aSegment) REQUIRES(mReentrantMonitor);
+  void SetAllNullReadCursors() REQUIRES(mReentrantMonitor);
+  bool AllReadCursorsMatchWriteCursor() REQUIRES(mReentrantMonitor);
+  void RollBackAllReadCursors(char* aWriteCursor) REQUIRES(mReentrantMonitor);
+  void UpdateAllReadCursors(char* aWriteCursor) REQUIRES(mReentrantMonitor);
+  void ValidateAllReadCursors() REQUIRES(mReentrantMonitor);
   uint32_t GetBufferSegmentCount(const nsPipeReadState& aReadState,
                                  const ReentrantMonitorAutoEnter& ev) const
-      MOZ_REQUIRES(mReentrantMonitor);
+      REQUIRES(mReentrantMonitor);
   bool IsAdvanceBufferFull(const ReentrantMonitorAutoEnter& ev) const
-      MOZ_REQUIRES(mReentrantMonitor);
+      REQUIRES(mReentrantMonitor);
 
   //
   // methods below may be called while outside the pipe's monitor
@@ -401,39 +397,39 @@ class nsPipe final {
   // a weak reference as the streams will clear their entry here in their
   // destructor.  Using a strong reference would create a reference cycle.
   // Only usable while mReentrantMonitor is locked.
-  nsTArray<nsPipeInputStream*> mInputList MOZ_GUARDED_BY(mReentrantMonitor);
+  nsTArray<nsPipeInputStream*> mInputList GUARDED_BY(mReentrantMonitor);
 
   ReentrantMonitor mReentrantMonitor;
-  nsSegmentedBuffer mBuffer MOZ_GUARDED_BY(mReentrantMonitor);
+  nsSegmentedBuffer mBuffer GUARDED_BY(mReentrantMonitor);
 
   // The maximum number of segments to allow to be buffered in advance
   // of the fastest reader.  This is collection of segments is called
   // the "advance buffer".
-  uint32_t mMaxAdvanceBufferSegmentCount MOZ_GUARDED_BY(mReentrantMonitor);
+  uint32_t mMaxAdvanceBufferSegmentCount GUARDED_BY(mReentrantMonitor);
 
-  int32_t mWriteSegment MOZ_GUARDED_BY(mReentrantMonitor);
-  char* mWriteCursor MOZ_GUARDED_BY(mReentrantMonitor);
-  char* mWriteLimit MOZ_GUARDED_BY(mReentrantMonitor);
+  int32_t mWriteSegment GUARDED_BY(mReentrantMonitor);
+  char* mWriteCursor GUARDED_BY(mReentrantMonitor);
+  char* mWriteLimit GUARDED_BY(mReentrantMonitor);
 
   // |mStatus| is protected by |mReentrantMonitor|.
-  nsresult mStatus MOZ_GUARDED_BY(mReentrantMonitor);
+  nsresult mStatus GUARDED_BY(mReentrantMonitor);
 };
 
 //-----------------------------------------------------------------------------
 
 // Declarations of Monitor() methods on the streams.
 //
-// These must be placed early to provide MOZ_RETURN_CAPABILITY annotations for
-// the thread-safety analysis. This couldn't be done at the declaration due to
+// These must be placed early to provide RETURN_CAPABILITY annotations for the
+// thread-safety analysis. This couldn't be done at the declaration due to
 // nsPipe not yet being defined.
 
 ReentrantMonitor& nsPipeOutputStream::Monitor() const
-    MOZ_RETURN_CAPABILITY(mPipe->mReentrantMonitor) {
+    RETURN_CAPABILITY(mPipe->mReentrantMonitor) {
   return mPipe->mReentrantMonitor;
 }
 
 ReentrantMonitor& nsPipeInputStream::Monitor() const
-    MOZ_RETURN_CAPABILITY(mPipe->mReentrantMonitor) {
+    RETURN_CAPABILITY(mPipe->mReentrantMonitor) {
   return mPipe->mReentrantMonitor;
 }
 
@@ -1804,7 +1800,7 @@ nsresult NS_NewPipe(nsIInputStream** aPipeIn, nsIOutputStream** aPipeOut,
 nsresult NS_NewPipe2(nsIAsyncInputStream** aPipeIn,
                      nsIAsyncOutputStream** aPipeOut, bool aNonBlockingInput,
                      bool aNonBlockingOutput, uint32_t aSegmentSize,
-                     uint32_t aSegmentCount) MOZ_NO_THREAD_SAFETY_ANALYSIS {
+                     uint32_t aSegmentCount) NO_THREAD_SAFETY_ANALYSIS {
   RefPtr<nsPipe> pipe =
       new nsPipe(aSegmentSize ? aSegmentSize : DEFAULT_SEGMENT_SIZE,
                  aSegmentCount ? aSegmentCount : DEFAULT_SEGMENT_COUNT);

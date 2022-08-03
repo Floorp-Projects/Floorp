@@ -28,7 +28,7 @@ namespace IOInterposer {
  * positives.
  */
 
-class MOZ_CAPABILITY Monitor {
+class CAPABILITY Monitor {
  public:
   Monitor() : mLock(PR_NewLock()), mCondVar(PR_NewCondVar(mLock)) {}
 
@@ -39,12 +39,11 @@ class MOZ_CAPABILITY Monitor {
     mLock = nullptr;
   }
 
-  void Lock() MOZ_CAPABILITY_ACQUIRE() { PR_Lock(mLock); }
+  void Lock() CAPABILITY_ACQUIRE() { PR_Lock(mLock); }
 
-  void Unlock() MOZ_CAPABILITY_RELEASE() { PR_Unlock(mLock); }
+  void Unlock() CAPABILITY_RELEASE() { PR_Unlock(mLock); }
 
-  bool Wait(PRIntervalTime aTimeout = PR_INTERVAL_NO_TIMEOUT)
-      MOZ_REQUIRES(this) {
+  bool Wait(PRIntervalTime aTimeout = PR_INTERVAL_NO_TIMEOUT) REQUIRES(this) {
     return PR_WaitCondVar(mCondVar, aTimeout) == PR_SUCCESS;
   }
 
@@ -55,34 +54,33 @@ class MOZ_CAPABILITY Monitor {
   PRCondVar* mCondVar;
 };
 
-class MOZ_SCOPED_CAPABILITY MonitorAutoLock {
+class SCOPED_CAPABILITY MonitorAutoLock {
  public:
-  explicit MonitorAutoLock(Monitor& aMonitor) MOZ_CAPABILITY_ACQUIRE(aMonitor)
+  explicit MonitorAutoLock(Monitor& aMonitor) CAPABILITY_ACQUIRE(aMonitor)
       : mMonitor(aMonitor) {
     mMonitor.Lock();
   }
 
-  ~MonitorAutoLock() MOZ_CAPABILITY_RELEASE() { mMonitor.Unlock(); }
+  ~MonitorAutoLock() CAPABILITY_RELEASE() { mMonitor.Unlock(); }
 
  private:
   Monitor& mMonitor;
 };
 
-class MOZ_SCOPED_CAPABILITY MonitorAutoUnlock {
+class SCOPED_CAPABILITY MonitorAutoUnlock {
  public:
-  explicit MonitorAutoUnlock(Monitor& aMonitor)
-      MOZ_SCOPED_UNLOCK_RELEASE(aMonitor)
+  explicit MonitorAutoUnlock(Monitor& aMonitor) SCOPED_UNLOCK_RELEASE(aMonitor)
       : mMonitor(aMonitor) {
     mMonitor.Unlock();
   }
 
-  ~MonitorAutoUnlock() MOZ_SCOPED_UNLOCK_REACQUIRE() { mMonitor.Lock(); }
+  ~MonitorAutoUnlock() SCOPED_UNLOCK_REACQUIRE() { mMonitor.Lock(); }
 
  private:
   Monitor& mMonitor;
 };
 
-class MOZ_CAPABILITY Mutex {
+class CAPABILITY Mutex {
  public:
   Mutex() : mPRLock(PR_NewLock()) {}
 
@@ -91,21 +89,21 @@ class MOZ_CAPABILITY Mutex {
     mPRLock = nullptr;
   }
 
-  void Lock() MOZ_CAPABILITY_ACQUIRE() { PR_Lock(mPRLock); }
+  void Lock() CAPABILITY_ACQUIRE() { PR_Lock(mPRLock); }
 
-  void Unlock() MOZ_CAPABILITY_RELEASE() { PR_Unlock(mPRLock); }
+  void Unlock() CAPABILITY_RELEASE() { PR_Unlock(mPRLock); }
 
  private:
   PRLock* mPRLock;
 };
 
-class MOZ_SCOPED_CAPABILITY AutoLock {
+class SCOPED_CAPABILITY AutoLock {
  public:
-  explicit AutoLock(Mutex& aLock) MOZ_CAPABILITY_ACQUIRE(aLock) : mLock(aLock) {
+  explicit AutoLock(Mutex& aLock) CAPABILITY_ACQUIRE(aLock) : mLock(aLock) {
     mLock.Lock();
   }
 
-  ~AutoLock() MOZ_CAPABILITY_RELEASE() { mLock.Unlock(); }
+  ~AutoLock() CAPABILITY_RELEASE() { mLock.Unlock(); }
 
  private:
   Mutex& mLock;

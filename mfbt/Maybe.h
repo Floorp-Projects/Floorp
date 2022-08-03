@@ -641,9 +641,9 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
          * Static analyzer gets confused if we have Maybe<MutexAutoLock>,
          * so we suppress thread-safety warnings here
          */
-        MOZ_PUSH_IGNORE_THREAD_SAFETY
+        PUSH_IGNORE_THREAD_SAFETY
         ref().T::~T();
-        MOZ_POP_THREAD_SAFETY
+        POP_THREAD_SAFETY
         poisonData();
       }
       mIsSome = false;

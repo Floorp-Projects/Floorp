@@ -18,33 +18,33 @@
 
 namespace mozilla {
 
-class MOZ_CAPABILITY RecursiveMutex : public BlockingResourceBase {
+class CAPABILITY RecursiveMutex : public BlockingResourceBase {
  public:
   explicit RecursiveMutex(const char* aName);
   ~RecursiveMutex();
 
 #ifdef DEBUG
-  void Lock() MOZ_CAPABILITY_ACQUIRE();
-  void Unlock() MOZ_CAPABILITY_RELEASE();
+  void Lock() CAPABILITY_ACQUIRE();
+  void Unlock() CAPABILITY_RELEASE();
 #else
-  void Lock() MOZ_CAPABILITY_ACQUIRE() { LockInternal(); }
-  void Unlock() MOZ_CAPABILITY_RELEASE() { UnlockInternal(); }
+  void Lock() CAPABILITY_ACQUIRE() { LockInternal(); }
+  void Unlock() CAPABILITY_RELEASE() { UnlockInternal(); }
 #endif
 
 #ifdef DEBUG
   /**
    * AssertCurrentThreadIn
    **/
-  void AssertCurrentThreadIn() const MOZ_ASSERT_CAPABILITY(this);
+  void AssertCurrentThreadIn() const ASSERT_CAPABILITY(this);
   /**
    * AssertNotCurrentThreadIn
    **/
-  void AssertNotCurrentThreadIn() const MOZ_EXCLUDES(this) {
+  void AssertNotCurrentThreadIn() const EXCLUDES(this) {
     // Not currently implemented. See bug 476536 for discussion.
   }
 #else
-  void AssertCurrentThreadIn() const MOZ_ASSERT_CAPABILITY(this) {}
-  void AssertNotCurrentThreadIn() const MOZ_EXCLUDES(this) {}
+  void AssertCurrentThreadIn() const ASSERT_CAPABILITY(this) {}
+  void AssertNotCurrentThreadIn() const EXCLUDES(this) {}
 #endif
 
  private:
@@ -70,16 +70,16 @@ class MOZ_CAPABILITY RecursiveMutex : public BlockingResourceBase {
 #endif
 };
 
-class MOZ_RAII MOZ_SCOPED_CAPABILITY RecursiveMutexAutoLock {
+class MOZ_RAII SCOPED_CAPABILITY RecursiveMutexAutoLock {
  public:
   explicit RecursiveMutexAutoLock(RecursiveMutex& aRecursiveMutex)
-      MOZ_CAPABILITY_ACQUIRE(aRecursiveMutex)
+      CAPABILITY_ACQUIRE(aRecursiveMutex)
       : mRecursiveMutex(&aRecursiveMutex) {
     NS_ASSERTION(mRecursiveMutex, "null mutex");
     mRecursiveMutex->Lock();
   }
 
-  ~RecursiveMutexAutoLock(void) MOZ_CAPABILITY_RELEASE() {
+  ~RecursiveMutexAutoLock(void) CAPABILITY_RELEASE() {
     mRecursiveMutex->Unlock();
   }
 
@@ -92,16 +92,16 @@ class MOZ_RAII MOZ_SCOPED_CAPABILITY RecursiveMutexAutoLock {
   mozilla::RecursiveMutex* mRecursiveMutex;
 };
 
-class MOZ_RAII MOZ_SCOPED_CAPABILITY RecursiveMutexAutoUnlock {
+class MOZ_RAII SCOPED_CAPABILITY RecursiveMutexAutoUnlock {
  public:
   explicit RecursiveMutexAutoUnlock(RecursiveMutex& aRecursiveMutex)
-      MOZ_SCOPED_UNLOCK_RELEASE(aRecursiveMutex)
+      SCOPED_UNLOCK_RELEASE(aRecursiveMutex)
       : mRecursiveMutex(&aRecursiveMutex) {
     NS_ASSERTION(mRecursiveMutex, "null mutex");
     mRecursiveMutex->Unlock();
   }
 
-  ~RecursiveMutexAutoUnlock(void) MOZ_SCOPED_UNLOCK_REACQUIRE() {
+  ~RecursiveMutexAutoUnlock(void) SCOPED_UNLOCK_REACQUIRE() {
     mRecursiveMutex->Lock();
   }
 

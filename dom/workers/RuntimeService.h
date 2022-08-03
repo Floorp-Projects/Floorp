@@ -57,7 +57,7 @@ class RuntimeService final : public nsIObserver {
 
   // Protected by mMutex.
   nsClassHashtable<nsCStringHashKey, WorkerDomainInfo> mDomainMap
-      MOZ_GUARDED_BY(mMutex);
+      GUARDED_BY(mMutex);
 
   // *Not* protected by mMutex.
   nsClassHashtable<nsPtrHashKey<const nsPIDOMWindowInner>,
@@ -181,7 +181,7 @@ class RuntimeService final : public nsIObserver {
   void Cleanup();
 
   void AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers)
-      MOZ_REQUIRES(mMutex);
+      REQUIRES(mMutex);
 
   nsTArray<WorkerPrivate*> GetWorkersForWindow(
       const nsPIDOMWindowInner& aWindow) const;

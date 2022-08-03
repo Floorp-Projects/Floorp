@@ -38,13 +38,13 @@ namespace mozilla {
 namespace mscom {
 namespace detail {
 
-class MOZ_CAPABILITY LiveSet final {
+class CAPABILITY LiveSet final {
  public:
   LiveSet() : mMutex("mozilla::mscom::LiveSet::mMutex") {}
 
-  void Lock() MOZ_CAPABILITY_ACQUIRE(mMutex) { mMutex.Lock(); }
+  void Lock() CAPABILITY_ACQUIRE(mMutex) { mMutex.Lock(); }
 
-  void Unlock() MOZ_CAPABILITY_RELEASE(mMutex) { mMutex.Unlock(); }
+  void Unlock() CAPABILITY_RELEASE(mMutex) { mMutex.Unlock(); }
 
   void Put(IUnknown* aKey, already_AddRefed<IWeakReference> aValue) {
     mMutex.AssertCurrentThreadOwns();
@@ -72,20 +72,20 @@ class MOZ_CAPABILITY LiveSet final {
  * We don't use the normal XPCOM BaseAutoLock because we need the ability
  * to explicitly Unlock.
  */
-class MOZ_RAII MOZ_SCOPED_CAPABILITY LiveSetAutoLock final {
+class MOZ_RAII SCOPED_CAPABILITY LiveSetAutoLock final {
  public:
-  explicit LiveSetAutoLock(LiveSet& aLiveSet) MOZ_CAPABILITY_ACQUIRE(aLiveSet)
+  explicit LiveSetAutoLock(LiveSet& aLiveSet) CAPABILITY_ACQUIRE(aLiveSet)
       : mLiveSet(&aLiveSet) {
     aLiveSet.Lock();
   }
 
-  ~LiveSetAutoLock() MOZ_CAPABILITY_RELEASE() {
+  ~LiveSetAutoLock() CAPABILITY_RELEASE() {
     if (mLiveSet) {
       mLiveSet->Unlock();
     }
   }
 
-  void Unlock() MOZ_CAPABILITY_RELEASE() {
+  void Unlock() CAPABILITY_RELEASE() {
     MOZ_ASSERT(mLiveSet);
     if (mLiveSet) {
       mLiveSet->Unlock();
@@ -466,7 +466,7 @@ HRESULT
 Interceptor::PublishTarget(detail::LiveSetAutoLock& aLiveSetLock,
                            RefPtr<IUnknown> aInterceptor, REFIID aTargetIid,
                            STAUniquePtr<IUnknown> aTarget)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   // Suppress thread safety analysis as this conditionally releases locks.
   RefPtr<IWeakReference> weakRef;
   HRESULT hr = GetWeakReference(getter_AddRefs(weakRef));
@@ -494,7 +494,7 @@ HRESULT
 Interceptor::GetInitialInterceptorForIID(
     detail::LiveSetAutoLock& aLiveSetLock, REFIID aTargetIid,
     STAUniquePtr<IUnknown> aTarget,
-    void** aOutInterceptor) MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    void** aOutInterceptor) NO_THREAD_SAFETY_ANALYSIS {
   // Suppress thread safety analysis as this conditionally releases locks.
   MOZ_ASSERT(aOutInterceptor);
   MOZ_ASSERT(aTargetIid != IID_IMarshal);
@@ -504,9 +504,9 @@ Interceptor::GetInitialInterceptorForIID(
 
   auto hasFailed = [&hr]() -> bool { return FAILED(hr); };
 
-  MOZ_PUSH_IGNORE_THREAD_SAFETY  // Avoid the lambda upsetting analysis.
+  PUSH_IGNORE_THREAD_SAFETY  // Avoid the lambda upsetting analysis.
       auto cleanup = [&aLiveSetLock]() -> void { aLiveSetLock.Unlock(); };
-  MOZ_POP_THREAD_SAFETY
+  POP_THREAD_SAFETY
 
   ExecuteWhen<decltype(hasFailed), decltype(cleanup)> onFail(hasFailed,
                                                              cleanup);
