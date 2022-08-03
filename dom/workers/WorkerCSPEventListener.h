@@ -32,7 +32,7 @@ class WorkerCSPEventListener final : public nsICSPEventListener {
   Mutex mMutex;
 
   // Protected by mutex.
-  RefPtr<WeakWorkerRef> mWorkerRef GUARDED_BY(mMutex);
+  RefPtr<WeakWorkerRef> mWorkerRef MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla::dom

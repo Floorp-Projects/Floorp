@@ -1671,7 +1671,7 @@ nsresult nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 nsresult nsHtml5StreamParser::CopySegmentsToParser(
     nsIInputStream* aInStream, void* aClosure, const char* aFromSegment,
     uint32_t aToOffset, uint32_t aCount,
-    uint32_t* aWriteCount) NO_THREAD_SAFETY_ANALYSIS {
+    uint32_t* aWriteCount) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   nsHtml5StreamParser* parser = static_cast<nsHtml5StreamParser*>(aClosure);
 
   parser->DoDataAvailable(AsBytes(Span(aFromSegment, aCount)));

@@ -145,7 +145,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
       nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
   // lookup the system font for a particular system font type and set
   // the name and style characteristics
@@ -165,7 +165,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
  private:
   friend class gfxPlatformMac;
@@ -174,23 +174,23 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   virtual ~gfxMacPlatformFontList();
 
   // initialize font lists
-  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
-  void InitSharedFontListForPlatform() REQUIRES(mLock) override;
+  nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  void InitSharedFontListForPlatform() MOZ_REQUIRES(mLock) override;
 
   // handle commonly used fonts for which the name table should be loaded at
   // startup
-  void PreloadNamesList() REQUIRES(mLock);
+  void PreloadNamesList() MOZ_REQUIRES(mLock);
 
   // special case font faces treated as font families (set via prefs)
-  void InitSingleFaceList() REQUIRES(mLock);
-  void InitAliasesForSingleFaceList() REQUIRES(mLock);
+  void InitSingleFaceList() MOZ_REQUIRES(mLock);
+  void InitAliasesForSingleFaceList() MOZ_REQUIRES(mLock);
 
   // initialize system fonts
-  void InitSystemFontNames() REQUIRES(mLock);
+  void InitSystemFontNames() MOZ_REQUIRES(mLock);
 
   // helper function to lookup in both hidden system fonts and normal fonts
   gfxFontFamily* FindSystemFontFamily(const nsACString& aFamily)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
 
@@ -205,7 +205,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
                                            Script aRunScript,
                                            const gfxFontStyle* aMatchStyle,
                                            FontFamily& aMatchedFamily)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
   bool UsesSystemFallback() override { return true; }
 
@@ -216,10 +216,10 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   // file is included in .cpp files, so we can't use objective C classes here.
   // But CFStringRef and NSString* are the same thing anyway (they're
   // toll-free bridged).
-  void AddFamily(CFStringRef aFamily) REQUIRES(mLock);
+  void AddFamily(CFStringRef aFamily) MOZ_REQUIRES(mLock);
 
   void AddFamily(const nsACString& aFamilyName, FontVisibility aVisibility)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   static void ActivateFontsFromDir(
       const nsACString& aDir,
@@ -236,7 +236,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
 
   void ReadFaceNamesForFamily(mozilla::fontlist::Family* aFamily,
                               bool aNeedFullnamePostscriptNames)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
 #ifdef MOZ_BUNDLED_FONTS
   void ActivateBundledFonts();

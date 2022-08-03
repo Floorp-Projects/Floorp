@@ -392,7 +392,7 @@ class gfxFontCache final
   // This gets called when the timeout has expired on a single-refcount
   // font; we just delete it.
   void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&)
-      REQUIRES(mMutex) override;
+      MOZ_REQUIRES(mMutex) override;
   void NotifyHandlerEnd() override;
 
   void DestroyDiscard(nsTArray<RefPtr<gfxFont>>& aDiscard);
@@ -440,13 +440,13 @@ class gfxFontCache final
     RefPtr<gfxFont> mFont;
   };
 
-  nsTHashtable<HashEntry> mFonts GUARDED_BY(mMutex);
+  nsTHashtable<HashEntry> mFonts MOZ_GUARDED_BY(mMutex);
 
-  nsTArray<RefPtr<gfxFont>> mTrackerDiscard GUARDED_BY(mMutex);
+  nsTArray<RefPtr<gfxFont>> mTrackerDiscard MOZ_GUARDED_BY(mMutex);
 
   static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
 
-  nsCOMPtr<nsITimer> mWordCacheExpirationTimer GUARDED_BY(mMutex);
+  nsCOMPtr<nsITimer> mWordCacheExpirationTimer MOZ_GUARDED_BY(mMutex);
   std::atomic<bool> mTimerRunning = false;
 };
 
@@ -1826,7 +1826,7 @@ class gfxFont {
       ClearCachedWordsLocked();
     }
   }
-  void ClearCachedWordsLocked() REQUIRES(mLock) {
+  void ClearCachedWordsLocked() MOZ_REQUIRES(mLock) {
     MOZ_ASSERT(mWordCache);
     mWordCache->Clear();
   }
@@ -2145,14 +2145,15 @@ class gfxFont {
     mozilla::UniquePtr<gfxShapedWord> mShapedWord;
   };
 
-  mozilla::UniquePtr<nsTHashtable<CacheHashEntry>> mWordCache GUARDED_BY(mLock);
+  mozilla::UniquePtr<nsTHashtable<CacheHashEntry>> mWordCache
+      MOZ_GUARDED_BY(mLock);
 
   static const uint32_t kShapedWordCacheMaxAge = 3;
 
   nsTArray<mozilla::UniquePtr<gfxGlyphExtents>> mGlyphExtentsArray
-      GUARDED_BY(mLock);
+      MOZ_GUARDED_BY(mLock);
   mozilla::UniquePtr<nsTHashSet<GlyphChangeObserver*>> mGlyphChangeObservers
-      GUARDED_BY(mLock);
+      MOZ_GUARDED_BY(mLock);
 
   // a copy of the font without antialiasing, if needed for separate
   // measurement by mathml code

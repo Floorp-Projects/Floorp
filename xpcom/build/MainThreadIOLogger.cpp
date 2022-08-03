@@ -56,8 +56,8 @@ class MainThreadIOLoggerImpl final : public mozilla::IOInterposeObserver {
   const char* mFileName;
   PRThread* mIOThread;
   mozilla::IOInterposer::Monitor mMonitor;
-  bool mShutdownRequired GUARDED_BY(mMonitor);
-  std::vector<ObservationWithStack> mObservations GUARDED_BY(mMonitor);
+  bool mShutdownRequired MOZ_GUARDED_BY(mMonitor);
+  std::vector<ObservationWithStack> mObservations MOZ_GUARDED_BY(mMonitor);
 };
 
 static mozilla::StaticAutoPtr<MainThreadIOLoggerImpl> sImpl;

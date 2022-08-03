@@ -21,7 +21,7 @@ static PRThread* spawn(void (*run)(void*), void* arg) {
 // Sanity check: tests that can be done on a single thread
 //
 TEST(Synchronization, Sanity)
-NO_THREAD_SAFETY_ANALYSIS {
+MOZ_NO_THREAD_SAFETY_ANALYSIS {
   Mutex lock("sanity::lock");
   lock.Lock();
   lock.AssertCurrentThreadOwns();
@@ -112,7 +112,8 @@ TEST(Synchronization, MonitorContention)
 
 static ReentrantMonitor* gMon2;
 
-static void MonitorContention2_thread(void* /*arg*/) NO_THREAD_SAFETY_ANALYSIS {
+static void MonitorContention2_thread(void* /*arg*/)
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   for (int i = 0; i < 100000; ++i) {
     gMon2->Enter();
     gMon2->AssertCurrentThreadIn();
@@ -144,7 +145,8 @@ TEST(Synchronization, MonitorContention2)
 static ReentrantMonitor* gMon3;
 static int32_t gMonFirst;
 
-static void MonitorSyncSanity_thread(void* /*arg*/) NO_THREAD_SAFETY_ANALYSIS {
+static void MonitorSyncSanity_thread(void* /*arg*/)
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   gMon3->Enter();
   gMon3->AssertCurrentThreadIn();
   if (gMonFirst) {
@@ -239,7 +241,7 @@ TEST(Synchronization, AutoLock)
 //
 // The thread owns assertions make mutex analysis throw spurious warnings
 TEST(Synchronization, AutoTryLock)
-NO_THREAD_SAFETY_ANALYSIS {
+MOZ_NO_THREAD_SAFETY_ANALYSIS {
   Mutex l1 MOZ_UNANNOTATED("autotrylock");
   MutexAutoTryLock autol1(l1);
 
@@ -295,7 +297,7 @@ TEST(Synchronization, AutoUnlock)
 // AutoMonitor tests
 //
 TEST(Synchronization, AutoMonitor)
-NO_THREAD_SAFETY_ANALYSIS {
+MOZ_NO_THREAD_SAFETY_ANALYSIS {
   ReentrantMonitor m1("automonitor");
   ReentrantMonitor m2("automonitor2");
 

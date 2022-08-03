@@ -438,19 +438,19 @@ class SourceBuffer final {
     char* mData;
   };
 
-  nsresult AppendChunk(Maybe<Chunk>&& aChunk) REQUIRES(mMutex);
+  nsresult AppendChunk(Maybe<Chunk>&& aChunk) MOZ_REQUIRES(mMutex);
   Maybe<Chunk> CreateChunk(size_t aCapacity, size_t aExistingCapacity = 0,
                            bool aRoundUp = true);
-  nsresult Compact() REQUIRES(mMutex);
+  nsresult Compact() MOZ_REQUIRES(mMutex);
   static size_t RoundedUpCapacity(size_t aCapacity);
-  size_t FibonacciCapacityWithMinimum(size_t aMinCapacity) REQUIRES(mMutex);
+  size_t FibonacciCapacityWithMinimum(size_t aMinCapacity) MOZ_REQUIRES(mMutex);
 
   //////////////////////////////////////////////////////////////////////////////
   // Iterator / consumer methods.
   //////////////////////////////////////////////////////////////////////////////
 
-  void AddWaitingConsumer(IResumable* aConsumer) REQUIRES(mMutex);
-  void ResumeWaitingConsumers() REQUIRES(mMutex);
+  void AddWaitingConsumer(IResumable* aConsumer) MOZ_REQUIRES(mMutex);
+  void ResumeWaitingConsumers() MOZ_REQUIRES(mMutex);
 
   typedef SourceBufferIterator::State State;
 
@@ -466,9 +466,9 @@ class SourceBuffer final {
   // Helper methods.
   //////////////////////////////////////////////////////////////////////////////
 
-  nsresult HandleError(nsresult aError) REQUIRES(mMutex);
-  bool IsEmpty() REQUIRES(mMutex);
-  bool IsLastChunk(uint32_t aChunk) REQUIRES(mMutex);
+  nsresult HandleError(nsresult aError) MOZ_REQUIRES(mMutex);
+  bool IsEmpty() MOZ_REQUIRES(mMutex);
+  bool IsLastChunk(uint32_t aChunk) MOZ_REQUIRES(mMutex);
 
   //////////////////////////////////////////////////////////////////////////////
   // Member variables.
@@ -478,19 +478,19 @@ class SourceBuffer final {
   mutable Mutex mMutex;
 
   /// The data in this SourceBuffer, stored as a series of Chunks.
-  AutoTArray<Chunk, 1> mChunks GUARDED_BY(mMutex);
+  AutoTArray<Chunk, 1> mChunks MOZ_GUARDED_BY(mMutex);
 
   /// Consumers which are waiting to be notified when new data is available.
-  nsTArray<RefPtr<IResumable>> mWaitingConsumers GUARDED_BY(mMutex);
+  nsTArray<RefPtr<IResumable>> mWaitingConsumers MOZ_GUARDED_BY(mMutex);
 
   /// If present, marks this SourceBuffer complete with the given final status.
-  Maybe<nsresult> mStatus GUARDED_BY(mMutex);
+  Maybe<nsresult> mStatus MOZ_GUARDED_BY(mMutex);
 
   /// Count of active consumers.
-  uint32_t mConsumerCount GUARDED_BY(mMutex);
+  uint32_t mConsumerCount MOZ_GUARDED_BY(mMutex);
 
   /// True if compacting has been performed.
-  bool mCompacted GUARDED_BY(mMutex);
+  bool mCompacted MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace image

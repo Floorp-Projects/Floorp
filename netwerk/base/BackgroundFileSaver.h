@@ -122,17 +122,17 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
   /**
    * True if the worker thread is already waiting to process a change in state.
    */
-  bool mWorkerThreadAttentionRequested GUARDED_BY(mLock){false};
+  bool mWorkerThreadAttentionRequested MOZ_GUARDED_BY(mLock){false};
 
   /**
    * True if the operation should finish as soon as possibile.
    */
-  bool mFinishRequested GUARDED_BY(mLock){false};
+  bool mFinishRequested MOZ_GUARDED_BY(mLock){false};
 
   /**
    * True if the operation completed, with either success or failure.
    */
-  bool mComplete GUARDED_BY(mLock){false};
+  bool mComplete MOZ_GUARDED_BY(mLock){false};
 
   /**
    * Holds the current file saver status.  This is a success status while the
@@ -140,13 +140,13 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * successfully.  This becomes an error status when an error occurs on the
    * worker thread, or when the operation is canceled.
    */
-  nsresult mStatus GUARDED_BY(mLock){NS_OK};
+  nsresult mStatus MOZ_GUARDED_BY(mLock){NS_OK};
 
   /**
    * True if we should append data to the initial target file, instead of
    * overwriting it.
    */
-  bool mAppend GUARDED_BY(mLock){false};
+  bool mAppend MOZ_GUARDED_BY(mLock){false};
 
   /**
    * This is set by the first SetTarget call on the control thread, and contains
@@ -154,14 +154,14 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * is possible to update mActualTarget and open the file.  This is null if no
    * target was ever assigned to this object.
    */
-  nsCOMPtr<nsIFile> mInitialTarget GUARDED_BY(mLock);
+  nsCOMPtr<nsIFile> mInitialTarget MOZ_GUARDED_BY(mLock);
 
   /**
    * This is set by the first SetTarget call on the control thread, and
    * indicates whether mInitialTarget should be kept as partially completed,
    * rather than deleted, if the operation fails or is canceled.
    */
-  bool mInitialTargetKeepPartial GUARDED_BY(mLock){false};
+  bool mInitialTargetKeepPartial MOZ_GUARDED_BY(mLock){false};
 
   /**
    * This is set by subsequent SetTarget calls on the control thread, and
@@ -172,43 +172,43 @@ class BackgroundFileSaver : public nsIBackgroundFileSaver {
    * The target file can be renamed multiple times, though only the most recent
    * rename is guaranteed to be processed by the worker thread.
    */
-  nsCOMPtr<nsIFile> mRenamedTarget GUARDED_BY(mLock);
+  nsCOMPtr<nsIFile> mRenamedTarget MOZ_GUARDED_BY(mLock);
 
   /**
    * This is set by subsequent SetTarget calls on the control thread, and
    * indicates whether mRenamedTarget should be kept as partially completed,
    * rather than deleted, if the operation fails or is canceled.
    */
-  bool mRenamedTargetKeepPartial GUARDED_BY(mLock){false};
+  bool mRenamedTargetKeepPartial MOZ_GUARDED_BY(mLock){false};
 
   /**
    * While NS_AsyncCopy is in progress, allows canceling it.  Null otherwise.
    * This is read by both threads but only written by the worker thread.
    */
-  nsCOMPtr<nsISupports> mAsyncCopyContext GUARDED_BY(mLock);
+  nsCOMPtr<nsISupports> mAsyncCopyContext MOZ_GUARDED_BY(mLock);
 
   /**
    * The SHA 256 hash in raw bytes of the downloaded file. This is written
    * by the worker thread but can be read on the main thread.
    */
-  nsCString mSha256 GUARDED_BY(mLock);
+  nsCString mSha256 MOZ_GUARDED_BY(mLock);
 
   /**
    * Whether or not to compute the hash. Must be set on the main thread before
    * setTarget is called.
    */
-  bool mSha256Enabled GUARDED_BY(mLock){false};
+  bool mSha256Enabled MOZ_GUARDED_BY(mLock){false};
 
   /**
    * Store the signature info.
    */
-  nsTArray<nsTArray<nsTArray<uint8_t>>> mSignatureInfo GUARDED_BY(mLock);
+  nsTArray<nsTArray<nsTArray<uint8_t>>> mSignatureInfo MOZ_GUARDED_BY(mLock);
 
   /**
    * Whether or not to extract the signature. Must be set on the main thread
    * before setTarget is called.
    */
-  bool mSignatureInfoEnabled GUARDED_BY(mLock){false};
+  bool mSignatureInfoEnabled MOZ_GUARDED_BY(mLock){false};
 
   //////////////////////////////////////////////////////////////////////////////
   //// State handled exclusively by the worker thread
@@ -345,18 +345,18 @@ class BackgroundFileSaverStreamListener final : public BackgroundFileSaver,
   /**
    * Whether we should suspend the request because we received too much data.
    */
-  bool mReceivedTooMuchData GUARDED_BY(mSuspensionLock){false};
+  bool mReceivedTooMuchData MOZ_GUARDED_BY(mSuspensionLock){false};
 
   /**
    * Request for which we received too much data.  This is populated when
    * mReceivedTooMuchData becomes true for the first time.
    */
-  nsCOMPtr<nsIRequest> mRequest GUARDED_BY(mSuspensionLock);
+  nsCOMPtr<nsIRequest> mRequest MOZ_GUARDED_BY(mSuspensionLock);
 
   /**
    * Whether mRequest is currently suspended.
    */
-  bool mRequestSuspended GUARDED_BY(mSuspensionLock){false};
+  bool mRequestSuspended MOZ_GUARDED_BY(mSuspensionLock){false};
 
   /**
    * Called while NS_AsyncCopy is copying data.

@@ -85,10 +85,10 @@ class WorkerThread;
 // SharedMutex is a small wrapper around an (internal) reference-counted Mutex
 // object. It exists to avoid changing a lot of code to use Mutex* instead of
 // Mutex&.
-class CAPABILITY SharedMutex {
+class MOZ_CAPABILITY SharedMutex {
   using Mutex = mozilla::Mutex;
 
-  class CAPABILITY RefCountedMutex final : public Mutex {
+  class MOZ_CAPABILITY RefCountedMutex final : public Mutex {
    public:
     explicit RefCountedMutex(const char* aName) : Mutex(aName) {}
 
@@ -106,17 +106,17 @@ class CAPABILITY SharedMutex {
 
   SharedMutex(const SharedMutex& aOther) = default;
 
-  operator Mutex&() RETURN_CAPABILITY(this) { return *mMutex; }
+  operator Mutex&() MOZ_RETURN_CAPABILITY(this) { return *mMutex; }
 
-  operator const Mutex&() const RETURN_CAPABILITY(this) { return *mMutex; }
+  operator const Mutex&() const MOZ_RETURN_CAPABILITY(this) { return *mMutex; }
 
   // We need these to make thread-safety analysis work
-  void Lock() CAPABILITY_ACQUIRE() { mMutex->Lock(); }
-  void Unlock() CAPABILITY_RELEASE() { mMutex->Unlock(); }
+  void Lock() MOZ_CAPABILITY_ACQUIRE() { mMutex->Lock(); }
+  void Unlock() MOZ_CAPABILITY_RELEASE() { mMutex->Unlock(); }
 
   // We can assert we own 'this', but we can't assert we hold mMutex
   void AssertCurrentThreadOwns() const
-      ASSERT_CAPABILITY(this) NO_THREAD_SAFETY_ANALYSIS {
+      MOZ_ASSERT_CAPABILITY(this) MOZ_NO_THREAD_SAFETY_ANALYSIS {
     mMutex->AssertCurrentThreadOwns();
   }
 };
@@ -173,14 +173,14 @@ class WorkerPrivate final
 
   bool Cancel() { return Notify(Canceling); }
 
-  bool Close() REQUIRES(mMutex);
+  bool Close() MOZ_REQUIRES(mMutex);
 
   // The passed principal must be the Worker principal in case of a
   // ServiceWorker and the loading principal for any other type.
   static void OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo,
                                         nsIPrincipal* aPrincipal);
 
-  bool IsDebuggerRegistered() NO_THREAD_SAFETY_ANALYSIS {
+  bool IsDebuggerRegistered() MOZ_NO_THREAD_SAFETY_ANALYSIS {
     AssertIsOnMainThread();
 
     // No need to lock here since this is only ever modified by the same thread.
@@ -369,7 +369,7 @@ class WorkerPrivate final
     return mFetchHandlerWasAdded;
   }
 
-  JSContext* GetJSContext() const NO_THREAD_SAFETY_ANALYSIS {
+  JSContext* GetJSContext() const MOZ_NO_THREAD_SAFETY_ANALYSIS {
     // mJSContext is only modified on the worker thread, so workerthread code
     // can safely read it without a lock
     AssertIsOnWorkerThread();
@@ -547,7 +547,7 @@ class WorkerPrivate final
     return mParentStatus;
   }
 
-  WorkerStatus ParentStatus() const REQUIRES(mMutex) {
+  WorkerStatus ParentStatus() const MOZ_REQUIRES(mMutex) {
     mMutex.AssertCurrentThreadOwns();
     return mParentStatus;
   }
@@ -1115,13 +1115,13 @@ class WorkerPrivate final
   }
 
   ProcessAllControlRunnablesResult ProcessAllControlRunnablesLocked()
-      REQUIRES(mMutex);
+      MOZ_REQUIRES(mMutex);
 
   void EnableMemoryReporter();
 
   void DisableMemoryReporter();
 
-  void WaitForWorkerEvents() REQUIRES(mMutex);
+  void WaitForWorkerEvents() MOZ_REQUIRES(mMutex);
 
   // If the worker shutdown status is equal or greater then aFailStatus, this
   // operation will fail and nullptr will be returned. See WorkerStatus.h for
@@ -1158,7 +1158,8 @@ class WorkerPrivate final
   // to allow runnables to be atomically dispatched in bulk.
   nsresult DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunnable,
                             nsIEventTarget* aSyncLoopTarget,
-                            const MutexAutoLock& aProofOfLock) REQUIRES(mMutex);
+                            const MutexAutoLock& aProofOfLock)
+      MOZ_REQUIRES(mMutex);
 
   // This method dispatches a simple runnable that starts the shutdown procedure
   // after a self.close(). This method is called after a ClearMainEventQueue()
@@ -1197,7 +1198,7 @@ class WorkerPrivate final
   friend class mozilla::dom::WorkerThread;
 
   SharedMutex mMutex;
-  mozilla::CondVar mCondVar GUARDED_BY(mMutex);
+  mozilla::CondVar mCondVar MOZ_GUARDED_BY(mMutex);
 
   // We cannot make this CheckedUnsafePtr<WorkerPrivate> as this would violate
   // our static assert
@@ -1231,7 +1232,7 @@ class WorkerPrivate final
   LocationInfo mLocationInfo;
 
   // Protected by mMutex.
-  workerinternals::JSSettings mJSSettings GUARDED_BY(mMutex);
+  workerinternals::JSSettings mJSSettings MOZ_GUARDED_BY(mMutex);
 
   WorkerDebugger* mDebugger;
 
@@ -1240,9 +1241,9 @@ class WorkerPrivate final
 
   // Touched on multiple threads, protected with mMutex. Only modified on the
   // worker thread
-  JSContext* mJSContext GUARDED_BY(mMutex);
+  JSContext* mJSContext MOZ_GUARDED_BY(mMutex);
   // mThread is only modified on the Worker thread, before calling DoRunLoop
-  RefPtr<WorkerThread> mThread GUARDED_BY(mMutex);
+  RefPtr<WorkerThread> mThread MOZ_GUARDED_BY(mMutex);
   // mPRThread is only modified on another thread in ScheduleWorker(), and is
   // constant for the duration of DoRunLoop.  Static mutex analysis doesn't help
   // here
@@ -1286,7 +1287,7 @@ class WorkerPrivate final
   RefPtr<WorkerCSPEventListener> mCSPEventListener;
 
   // Protected by mMutex.
-  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables GUARDED_BY(mMutex);
+  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables MOZ_GUARDED_BY(mMutex);
 
   // Only touched on the parent thread. This is set only if IsSharedWorker().
   RefPtr<RemoteWorkerChild> mRemoteWorkerController;
@@ -1296,8 +1297,8 @@ class WorkerPrivate final
 
   JS::UniqueChars mDefaultLocale;  // nulled during worker JSContext init
   TimeStamp mKillTime;
-  WorkerStatus mParentStatus GUARDED_BY(mMutex);
-  WorkerStatus mStatus GUARDED_BY(mMutex);
+  WorkerStatus mParentStatus MOZ_GUARDED_BY(mMutex);
+  WorkerStatus mStatus MOZ_GUARDED_BY(mMutex);
 
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
@@ -1430,7 +1431,7 @@ class WorkerPrivate final
   // use our global object's secure state there.
   const bool mIsSecureContext;
 
-  bool mDebuggerRegistered GUARDED_BY(mMutex);
+  bool mDebuggerRegistered MOZ_GUARDED_BY(mMutex);
 
   // During registration, this worker may be marked as not being ready to
   // execute debuggee runnables or content.

@@ -116,8 +116,9 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   // mLoadableCertsLoadedMonitor protects mLoadableCertsLoaded.
   mozilla::Monitor mLoadableCertsLoadedMonitor;
-  bool mLoadableCertsLoaded GUARDED_BY(mLoadableCertsLoadedMonitor);
-  nsresult mLoadableCertsLoadedResult GUARDED_BY(mLoadableCertsLoadedMonitor);
+  bool mLoadableCertsLoaded MOZ_GUARDED_BY(mLoadableCertsLoadedMonitor);
+  nsresult mLoadableCertsLoadedResult
+      MOZ_GUARDED_BY(mLoadableCertsLoadedMonitor);
 
   // mMutex protects all members that are accessed from more than one thread.
   mozilla::Mutex mMutex;
@@ -125,13 +126,13 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   // The following members are accessed from more than one thread:
 
 #ifdef DEBUG
-  nsCString mTestBuiltInRootHash GUARDED_BY(mMutex);
+  nsCString mTestBuiltInRootHash MOZ_GUARDED_BY(mMutex);
 #endif
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier
-      GUARDED_BY(mMutex);
-  nsString mMitmCanaryIssuer GUARDED_BY(mMutex);
-  bool mMitmDetecionEnabled GUARDED_BY(mMutex);
-  mozilla::Vector<EnterpriseCert> mEnterpriseCerts GUARDED_BY(mMutex);
+      MOZ_GUARDED_BY(mMutex);
+  nsString mMitmCanaryIssuer MOZ_GUARDED_BY(mMutex);
+  bool mMitmDetecionEnabled MOZ_GUARDED_BY(mMutex);
+  mozilla::Vector<EnterpriseCert> mEnterpriseCerts MOZ_GUARDED_BY(mMutex);
 
   // The following members are accessed only on the main thread:
   static int mInstanceCount;

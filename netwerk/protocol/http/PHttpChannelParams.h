@@ -182,7 +182,7 @@ struct ParamTraits<mozilla::net::nsHttpRequestHead> {
   typedef mozilla::net::nsHttpRequestHead paramType;
 
   static void Write(MessageWriter* aWriter,
-                    const paramType& aParam) NO_THREAD_SAFETY_ANALYSIS {
+                    const paramType& aParam) MOZ_NO_THREAD_SAFETY_ANALYSIS {
     aParam.Enter();
     WriteParam(aWriter, aParam.mHeaders);
     WriteParam(aWriter, aParam.mMethod);
@@ -225,7 +225,7 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead> {
   typedef mozilla::net::nsHttpResponseHead paramType;
 
   static void Write(MessageWriter* aWriter,
-                    const paramType& aParam) NO_THREAD_SAFETY_ANALYSIS {
+                    const paramType& aParam) MOZ_NO_THREAD_SAFETY_ANALYSIS {
     aParam.Enter();
     WriteParam(aWriter, aParam.mHeaders);
     WriteParam(aWriter, static_cast<uint32_t>(aParam.mVersion));

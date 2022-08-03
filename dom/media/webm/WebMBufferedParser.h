@@ -299,9 +299,9 @@ class WebMBufferedState final {
 
   // Sorted (by offset) map of data offsets to timecodes.  Populated
   // on the main thread as data is received and parsed by WebMBufferedParsers.
-  nsTArray<WebMTimeDataOffset> mTimeMapping GUARDED_BY(mMutex);
+  nsTArray<WebMTimeDataOffset> mTimeMapping MOZ_GUARDED_BY(mMutex);
   // The last complete block parsed. -1 if not set.
-  int64_t mLastBlockOffset GUARDED_BY(mMutex);
+  int64_t mLastBlockOffset MOZ_GUARDED_BY(mMutex);
 
   // Sorted (by offset) live parser instances.  Main thread only.
   nsTArray<WebMBufferedParser> mRangeParsers;

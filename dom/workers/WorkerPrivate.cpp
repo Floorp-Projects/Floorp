@@ -663,7 +663,7 @@ class DebuggerImmediateRunnable : public WorkerRunnable {
 
 // GetJSContext() is safe on the worker thread
 void PeriodicGCTimerCallback(nsITimer* aTimer,
-                             void* aClosure) NO_THREAD_SAFETY_ANALYSIS {
+                             void* aClosure) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   auto* workerPrivate = static_cast<WorkerPrivate*>(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
@@ -673,7 +673,7 @@ void PeriodicGCTimerCallback(nsITimer* aTimer,
 }
 
 void IdleGCTimerCallback(nsITimer* aTimer,
-                         void* aClosure) NO_THREAD_SAFETY_ANALYSIS {
+                         void* aClosure) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   auto* workerPrivate = static_cast<WorkerPrivate*>(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
@@ -943,7 +943,7 @@ class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   // This mutex protects mWorkerPrivate and must be acquired *before* the
   // WorkerPrivate's mutex whenever they must both be held.
   mozilla::Mutex mMutex;
-  WorkerPrivate* mWorkerPrivate GUARDED_BY(mMutex);
+  WorkerPrivate* mWorkerPrivate MOZ_GUARDED_BY(mMutex);
   nsIEventTarget* mWeakNestedEventTarget;
   nsCOMPtr<nsIEventTarget> mNestedEventTarget;
 
@@ -3695,7 +3695,7 @@ void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
 }
 
 bool WorkerPrivate::CollectRuntimeStats(
-    JS::RuntimeStats* aRtStats, bool aAnonymize) NO_THREAD_SAFETY_ANALYSIS {
+    JS::RuntimeStats* aRtStats, bool aAnonymize) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // We don't have a lock to access mJSContext, but it's safe to access on this
   // thread.
   AssertIsOnWorkerThread();

@@ -64,7 +64,7 @@ class gfxDWriteFontFamily final : public gfxFontFamily {
   virtual ~gfxDWriteFontFamily();
 
   void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
-      REQUIRES(mLock) final;
+      MOZ_REQUIRES(mLock) final;
 
   void LocalizedName(nsACString& aLocalizedName) final;
 
@@ -376,8 +376,8 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
   }
 
   // initialize font lists
-  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
-  void InitSharedFontListForPlatform() REQUIRES(mLock) override;
+  nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  void InitSharedFontListForPlatform() MOZ_REQUIRES(mLock) override;
 
   FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
 
@@ -390,7 +390,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
 
   void ReadFaceNamesForFamily(mozilla::fontlist::Family* aFamily,
                               bool aNeedFullnamePostscriptNames)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
   bool ReadFaceNames(mozilla::fontlist::Family* aFamily,
                      mozilla::fontlist::Face* aFace, nsCString& aPSName,
@@ -422,7 +422,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
       nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
   gfxFloat GetForceGDIClassicMaxFontSize() {
     return mForceGDIClassicMaxFontSize;
@@ -437,7 +437,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
   // attempt to use platform-specific fallback for the given character,
   // return null if no usable result found
@@ -446,24 +446,25 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
                                            Script aRunScript,
                                            const gfxFontStyle* aMatchStyle,
                                            FontFamily& aMatchedFamily)
-      REQUIRES(mLock) override;
+      MOZ_REQUIRES(mLock) override;
 
  private:
   friend class gfxDWriteFontFamily;
 
-  nsresult GetFontSubstitutes() REQUIRES(mLock);
+  nsresult GetFontSubstitutes() MOZ_REQUIRES(mLock);
 
-  void GetDirectWriteSubstitutes() REQUIRES(mLock);
+  void GetDirectWriteSubstitutes() MOZ_REQUIRES(mLock);
 
   virtual bool UsesSystemFallback() { return true; }
 
   void GetFontsFromCollection(IDWriteFontCollection* aCollection)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   void AppendFamiliesFromCollection(
       IDWriteFontCollection* aCollection,
       nsTArray<mozilla::fontlist::Family::InitData>& aFamilies,
-      const nsTArray<nsCString>* aForceClassicFams = nullptr) REQUIRES(mLock);
+      const nsTArray<nsCString>* aForceClassicFams = nullptr)
+      MOZ_REQUIRES(mLock);
 
 #ifdef MOZ_BUNDLED_FONTS
   already_AddRefed<IDWriteFontCollection> CreateBundledFontsCollection(

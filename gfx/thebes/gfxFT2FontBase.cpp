@@ -43,7 +43,7 @@ gfxFT2FontBase::gfxFT2FontBase(
 gfxFT2FontBase::~gfxFT2FontBase() { mFTFace->ForgetLockOwner(this); }
 
 FT_Face gfxFT2FontBase::LockFTFace() const
-    CAPABILITY_ACQUIRE(mFTFace) NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_CAPABILITY_ACQUIRE(mFTFace) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   if (!mFTFace->Lock(this)) {
     FT_Set_Transform(mFTFace->GetFace(), nullptr, nullptr);
 
@@ -54,7 +54,7 @@ FT_Face gfxFT2FontBase::LockFTFace() const
 }
 
 void gfxFT2FontBase::UnlockFTFace() const
-    CAPABILITY_RELEASE(mFTFace) NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_CAPABILITY_RELEASE(mFTFace) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   mFTFace->Unlock();
 }
 

@@ -95,13 +95,13 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   };
 
   mutable Mutex mMutex;
-  mutable CondVar mIdleCondVar GUARDED_BY(mMutex);
+  mutable CondVar mIdleCondVar MOZ_GUARDED_BY(mMutex);
 
   // As-of-yet unexecuted runnables queued on this ThrottledEventQueue.
   //
   // Used from any thread; protected by mMutex. Signals mIdleCondVar when
   // emptied.
-  EventQueueSized<64> mEventQueue GUARDED_BY(mMutex);
+  EventQueueSized<64> mEventQueue MOZ_GUARDED_BY(mMutex);
 
   // The event target we dispatch our events (actually, just our Executor) to.
   //
@@ -112,7 +112,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   // queue. mExecutor->mInner points to this Inner, forming a reference loop.
   //
   // Used from any thread; protected by mMutex.
-  nsCOMPtr<nsIRunnable> mExecutor GUARDED_BY(mMutex);
+  nsCOMPtr<nsIRunnable> mExecutor MOZ_GUARDED_BY(mMutex);
 
   const char* const mName;
 
@@ -120,7 +120,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
   // True if this queue is currently paused.
   // Used from any thread; protected by mMutex.
-  bool mIsPaused GUARDED_BY(mMutex);
+  bool mIsPaused MOZ_GUARDED_BY(mMutex);
 
   explicit Inner(nsISerialEventTarget* aBaseTarget, const char* aName,
                  uint32_t aPriority)
@@ -154,7 +154,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
   // Make sure an executor has been queued on our base target. If we already
   // have one, do nothing; otherwise, create and dispatch it.
-  nsresult EnsureExecutor(MutexAutoLock& lock) REQUIRES(mMutex) {
+  nsresult EnsureExecutor(MutexAutoLock& lock) MOZ_REQUIRES(mMutex) {
     if (mExecutor) return NS_OK;
 
     // Note, this creates a ref cycle keeping the inner alive
@@ -308,7 +308,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
     return IsPaused(lock);
   }
 
-  bool IsPaused(const MutexAutoLock& aProofOfLock) const REQUIRES(mMutex) {
+  bool IsPaused(const MutexAutoLock& aProofOfLock) const MOZ_REQUIRES(mMutex) {
     return mIsPaused;
   }
 

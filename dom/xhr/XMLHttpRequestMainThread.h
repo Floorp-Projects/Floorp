@@ -117,7 +117,7 @@ class ArrayBufferBuilder {
   ArrayBufferBuilder& operator=(const ArrayBufferBuilder&&) = delete;
 
   bool SetCapacityInternal(uint32_t aNewCap, const MutexAutoLock& aProofOfLock)
-      REQUIRES(mMutex);
+      MOZ_REQUIRES(mMutex);
 
   static bool AreOverlappingRegions(const uint8_t* aStart1, uint32_t aLength1,
                                     const uint8_t* aStart2, uint32_t aLength2);
@@ -125,10 +125,10 @@ class ArrayBufferBuilder {
   Mutex mMutex;
 
   // All of these are protected by mMutex.
-  uint8_t* mDataPtr GUARDED_BY(mMutex);
-  uint32_t mCapacity GUARDED_BY(mMutex);
-  uint32_t mLength GUARDED_BY(mMutex);
-  void* mMapPtr GUARDED_BY(mMutex);
+  uint8_t* mDataPtr MOZ_GUARDED_BY(mMutex);
+  uint32_t mCapacity MOZ_GUARDED_BY(mMutex);
+  uint32_t mLength MOZ_GUARDED_BY(mMutex);
+  void* mMapPtr MOZ_GUARDED_BY(mMutex);
 
   // This is used in assertions only.
   bool mNeutered;

@@ -37,7 +37,7 @@ class ServiceWorkerRegistrarTest : public ServiceWorkerRegistrar {
   }
 
   nsresult TestReadData() { return ReadData(); }
-  nsresult TestWriteData() NO_THREAD_SAFETY_ANALYSIS {
+  nsresult TestWriteData() MOZ_NO_THREAD_SAFETY_ANALYSIS {
     return WriteData(mData);
   }
   void TestDeleteData() { DeleteData(); }

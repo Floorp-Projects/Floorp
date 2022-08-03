@@ -300,7 +300,7 @@ class SourceList {
   }
 
  private:
-  RefPtr<const ObserverLists> mObserverLists GUARDED_BY(mLock);
+  RefPtr<const ObserverLists> mObserverLists MOZ_GUARDED_BY(mLock);
   // Note, we cannot use mozilla::Mutex here as the ObserverLists may be leaked
   // (We want to monitor IO during shutdown). Furthermore, as we may have to
   // unregister observers during shutdown an OffTheBooksMutex is not an option

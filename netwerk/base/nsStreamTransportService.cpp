@@ -251,7 +251,7 @@ nsStreamTransportService::~nsStreamTransportService() {
 
 nsresult nsStreamTransportService::Init() {
   // Can't be used multithreaded before this
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   MOZ_ASSERT(!mPool);
   mPool = new nsThreadPool();
 
@@ -261,7 +261,7 @@ nsresult nsStreamTransportService::Init() {
   mPool->SetIdleThreadLimit(5);
   mPool->SetIdleThreadTimeoutRegressive(true);
   mPool->SetIdleThreadTimeout(PR_SecondsToInterval(30));
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   if (obsSvc) obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);

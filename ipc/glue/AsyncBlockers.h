@@ -78,7 +78,7 @@ class AsyncBlockers {
   }
 
  private:
-  void MaybeResolve() REQUIRES(mLock) {
+  void MaybeResolve() MOZ_REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
     if (mResolved) {
       return;
@@ -90,8 +90,8 @@ class AsyncBlockers {
     mResolved = true;
   }
   Mutex mLock;
-  nsTArray<void*> mBlockers GUARDED_BY(mLock);
-  bool mResolved GUARDED_BY(mLock) = false;
+  nsTArray<void*> mBlockers MOZ_GUARDED_BY(mLock);
+  bool mResolved MOZ_GUARDED_BY(mLock) = false;
   const RefPtr<GenericPromise::Private> mPromise;
 };
 

@@ -41,10 +41,10 @@ class nsHttpRequestHead {
   // copying headers. If you use it be careful to do it only under
   // nsHttpRequestHead lock!!!
   const nsHttpHeaderArray& Headers() const;
-  void Enter() const CAPABILITY_ACQUIRE(mRecursiveMutex) {
+  void Enter() const MOZ_CAPABILITY_ACQUIRE(mRecursiveMutex) {
     mRecursiveMutex.Lock();
   }
-  void Exit() const CAPABILITY_RELEASE(mRecursiveMutex) {
+  void Exit() const MOZ_CAPABILITY_RELEASE(mRecursiveMutex) {
     mRecursiveMutex.Unlock();
   }
 
@@ -124,19 +124,19 @@ class nsHttpRequestHead {
 
  private:
   // All members must be copy-constructable and assignable
-  nsHttpHeaderArray mHeaders GUARDED_BY(mRecursiveMutex);
-  nsCString mMethod GUARDED_BY(mRecursiveMutex){"GET"_ns};
-  HttpVersion mVersion GUARDED_BY(mRecursiveMutex){HttpVersion::v1_1};
+  nsHttpHeaderArray mHeaders MOZ_GUARDED_BY(mRecursiveMutex);
+  nsCString mMethod MOZ_GUARDED_BY(mRecursiveMutex){"GET"_ns};
+  HttpVersion mVersion MOZ_GUARDED_BY(mRecursiveMutex){HttpVersion::v1_1};
 
   // mRequestURI and mPath are strings instead of an nsIURI
   // because this is used off the main thread
   // TODO: nsIURI is thread-safe now, should be fixable.
-  nsCString mRequestURI GUARDED_BY(mRecursiveMutex);
-  nsCString mPath GUARDED_BY(mRecursiveMutex);
+  nsCString mRequestURI MOZ_GUARDED_BY(mRecursiveMutex);
+  nsCString mPath MOZ_GUARDED_BY(mRecursiveMutex);
 
-  nsCString mOrigin GUARDED_BY(mRecursiveMutex);
-  ParsedMethodType mParsedMethod GUARDED_BY(mRecursiveMutex){kMethod_Get};
-  bool mHTTPS GUARDED_BY(mRecursiveMutex){false};
+  nsCString mOrigin MOZ_GUARDED_BY(mRecursiveMutex);
+  ParsedMethodType mParsedMethod MOZ_GUARDED_BY(mRecursiveMutex){kMethod_Get};
+  bool mHTTPS MOZ_GUARDED_BY(mRecursiveMutex){false};
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
   // function calls nsIHttpHeaderVisitor::VisitHeader while under lock.
@@ -144,7 +144,7 @@ class nsHttpRequestHead {
       "nsHttpRequestHead.mRecursiveMutex"};
 
   // During VisitHeader we sould not allow call to SetHeader.
-  bool mInVisitHeaders GUARDED_BY(mRecursiveMutex){false};
+  bool mInVisitHeaders MOZ_GUARDED_BY(mRecursiveMutex){false};
 
   friend struct IPC::ParamTraits<nsHttpRequestHead>;
 };
