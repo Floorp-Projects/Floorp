@@ -1703,10 +1703,10 @@ void nsJSContext::MaybePokeGC() {
     MOZ_ASSERT(reason == JS::GCReason::EAGER_NURSERY_COLLECTION);
     sScheduler.PokeMinorGC(reason);
   }
-  reason = JS::WantEagerMajorGC(rt);
-  if (reason != JS::GCReason::NO_REASON) {
-    PokeGC(reason, nullptr, 0);
-  }
+
+  // Bug 1772638: For now, only do eager minor GCs. Eager major GCs regress some
+  // benchmarks. Hopefully that will be worked out and this will check for
+  // whether an eager major GC is needed.
 }
 
 void nsJSContext::DoLowMemoryGC() {
