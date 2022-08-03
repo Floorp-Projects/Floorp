@@ -203,8 +203,9 @@ function WrapForValidIteratorNext(value) {
     result = callContentFunction(iterated.nextMethod, iterated.iterator, value);
   }
   // Inlined from IteratorNext.
-  if (!IsObject(result))
+  if (!IsObject(result)) {
     ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, result));
+  }
   return result;
 }
 
