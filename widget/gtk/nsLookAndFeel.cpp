@@ -709,6 +709,9 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozMenuhover:
       aColor = mMenuHover;
       break;
+    case ColorID::MozMenuhoverdisabled:
+      aColor = NS_TRANSPARENT;
+      break;
     case ColorID::MozMenuhovertext:
       aColor = mMenuHoverText;
       break;

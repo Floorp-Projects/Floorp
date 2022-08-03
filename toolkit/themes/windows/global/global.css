@@ -20,34 +20,13 @@
 @media (-moz-windows-non-native-menus) {
   :root {
     /* Override some menu color variables for light browser themes. */
-    --menuitem-hover-background-color: #e0e0e6;
-    --menu-background-color: #f9f9fb;
-    --menu-color: #15141a;
-    --menuitem-disabled-hover-background-color: rgba(224, 224, 230, 0.4);
-    --menu-disabled-color: rgba(21, 20, 26, 0.4);
-    --menu-border-color: #cfcfd8;
     --menu-icon-opacity: 0.7;
-
-    /* Declare menu colors for dark themes, but don't override anything yet. */
-    --dark-menuitem-hover-background-color: #52525e;
-    --dark-menu-background-color: #2b2a33;
-    --dark-menu-color: #fbfbfe;
-    --dark-menuitem-disabled-hover-background-color: rgba(82, 82, 94, 0.4);
-    --dark-menu-disabled-color: rgba(251, 251, 254, 0.4);
-    --dark-menu-border-color: #5b5b66;
-    --dark-menu-icon-opacity: 1;
   }
 
   /* Override the menu color variables for dark browser themes. */
   @media (prefers-color-scheme: dark) {
     :root {
-      --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
-      --menu-background-color: var(--dark-menu-background-color);
-      --menu-color: var(--dark-menu-color);
-      --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
-      --menu-disabled-color: var(--dark-menu-disabled-color);
-      --menu-border-color: var(--dark-menu-border-color);
-      --menu-icon-opacity: var(--dark-menu-icon-opacity);
+      --menu-icon-opacity: 1;
     }
   }
 }
@@ -57,7 +36,6 @@
     /* In high-contrast mode on Windows, ThreeDLightShadow provides more
        contrast than ThreeDShadow. See bug 1022564. */
     --arrowpanel-border-color: ThreeDLightShadow;
-    --menu-border-color: ThreeDLightShadow;
   }
 }
 

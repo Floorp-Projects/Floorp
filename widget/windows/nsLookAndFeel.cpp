@@ -85,55 +85,78 @@ void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
 }
 
-static bool IsHighlightColor(StyleSystemColor aColor) {
-  switch (aColor) {
-    case StyleSystemColor::Highlight:
-    case StyleSystemColor::Selecteditem:
-    case StyleSystemColor::MozMenuhover:
-    case StyleSystemColor::IMESelectedRawTextBackground:
-    case StyleSystemColor::IMESelectedConvertedTextBackground:
-      return true;
-    default:
-      return false;
-  }
-}
-
-static bool IsHighlightTextColor(StyleSystemColor aColor) {
-  switch (aColor) {
-    case StyleSystemColor::Highlighttext:
-    case StyleSystemColor::Selecteditemtext:
-    case StyleSystemColor::MozMenuhovertext:
-    case StyleSystemColor::MozMenubarhovertext:
-    case StyleSystemColor::IMESelectedRawTextForeground:
-    case StyleSystemColor::IMESelectedConvertedTextForeground:
-    case StyleSystemColor::MozDragtargetzone:
-      return true;
-    default:
-      return false;
-  }
-}
-
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                        nscolor& aColor) {
   EnsureInit();
 
-  if (aScheme == ColorScheme::Dark) {
-    if (IsHighlightColor(aID) && mDarkHighlight) {
+  auto IsHighlightColor = [&] {
+    switch (aID) {
+      case ColorID::MozMenuhover:
+        return !LookAndFeel::WindowsNonNativeMenusEnabled();
+      case ColorID::Highlight:
+      case ColorID::Selecteditem:
+      case ColorID::IMESelectedRawTextBackground:
+      case ColorID::IMESelectedConvertedTextBackground:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  auto IsHighlightTextColor = [&] {
+    switch (aID) {
+      case ColorID::MozMenubarhovertext:
+        if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+          return false;
+        }
+        if (!nsUXThemeData::IsAppThemed()) {
+          return nsUXThemeData::AreFlatMenusEnabled();
+        }
+        [[fallthrough]];
+      case ColorID::MozMenuhovertext:
+        if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+          return false;
+        }
+        return !mColorMenuHoverText;
+      case ColorID::Highlight:
+      case ColorID::Highlighttext:
+      case ColorID::Selecteditemtext:
+      case ColorID::IMESelectedRawTextForeground:
+      case ColorID::IMESelectedConvertedTextForeground:
+      case ColorID::MozDragtargetzone:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  if (IsHighlightColor()) {
+    if (aScheme == ColorScheme::Dark && mDarkHighlight) {
       aColor = *mDarkHighlight;
-      return NS_OK;
+    } else {
+      aColor = GetColorForSysColorIndex(COLOR_HIGHLIGHT);
     }
-    if (IsHighlightTextColor(aID) && mDarkHighlightText) {
+    return NS_OK;
+  }
+
+  if (IsHighlightTextColor()) {
+    if (aScheme == ColorScheme::Dark && mDarkHighlightText) {
       aColor = *mDarkHighlightText;
-      return NS_OK;
+    } else {
+      aColor = GetColorForSysColorIndex(COLOR_HIGHLIGHTTEXT);
     }
+    return NS_OK;
+  }
+
+  if (aScheme == ColorScheme::Dark) {
     if (auto color = GenericDarkColor(aID)) {
       aColor = *color;
       return NS_OK;
     }
   }
 
+  static constexpr auto kNonNativeMenuText = NS_RGB(0x15, 0x14, 0x1a);
   nsresult res = NS_OK;
-
   int idx;
   switch (aID) {
     case ColorID::IMERawInputBackground:
@@ -199,19 +222,37 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_GRAYTEXT;
       break;
     case ColorID::MozMenubarhovertext:
+      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        aColor = kNonNativeMenuText;
+        return NS_OK;
+      }
       if (!nsUXThemeData::IsAppThemed()) {
-        idx = nsUXThemeData::AreFlatMenusEnabled() ? COLOR_HIGHLIGHTTEXT
-                                                   : COLOR_MENUTEXT;
+        idx = COLOR_MENUTEXT;
         break;
       }
       [[fallthrough]];
     case ColorID::MozMenuhovertext:
+      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        aColor = kNonNativeMenuText;
+        return NS_OK;
+      }
       if (mColorMenuHoverText) {
         aColor = *mColorMenuHoverText;
         return NS_OK;
       }
       idx = COLOR_HIGHLIGHTTEXT;
       break;
+    case ColorID::MozMenuhover:
+      MOZ_ASSERT(LookAndFeel::WindowsNonNativeMenusEnabled());
+      aColor = NS_RGB(0xe0, 0xe0, 0xe6);
+      return NS_OK;
+    case ColorID::MozMenuhoverdisabled:
+      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        aColor = NS_RGB(0xf0, 0xf0, 0xf3);
+        return NS_OK;
+      }
+      aColor = NS_TRANSPARENT;
+      return NS_OK;
     case ColorID::Inactiveborder:
       idx = COLOR_INACTIVEBORDER;
       break;
@@ -228,10 +269,18 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_INFOTEXT;
       break;
     case ColorID::Menu:
+      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        aColor = NS_RGB(0xf9, 0xf9, 0xfb);
+        return NS_OK;
+      }
       idx = COLOR_MENU;
       break;
     case ColorID::Menutext:
     case ColorID::MozMenubartext:
+      if (LookAndFeel::WindowsNonNativeMenusEnabled()) {
+        aColor = kNonNativeMenuText;
+        return NS_OK;
+      }
       idx = COLOR_MENUTEXT;
       break;
     case ColorID::Scrollbar:
@@ -318,14 +367,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_HOTLIGHT;
       break;
     default:
-      if (IsHighlightColor(aID)) {
-        idx = COLOR_HIGHLIGHT;
-      } else if (IsHighlightTextColor(aID)) {
-        idx = COLOR_HIGHLIGHTTEXT;
-      } else {
-        idx = COLOR_WINDOW;
-        res = NS_ERROR_FAILURE;
-      }
+      idx = COLOR_WINDOW;
+      res = NS_ERROR_FAILURE;
       break;
   }
 

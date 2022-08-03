@@ -388,6 +388,8 @@ class LookAndFeel {
 
   using FontID = mozilla::StyleSystemFont;
 
+  static bool WindowsNonNativeMenusEnabled();
+
   static ColorScheme SystemColorScheme() {
     return GetInt(IntID::SystemUsesDarkTheme) ? ColorScheme::Dark
                                               : ColorScheme::Light;
