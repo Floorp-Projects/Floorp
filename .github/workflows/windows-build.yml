@@ -11,6 +11,11 @@ jobs:
 
     - name: Create environment
       run: |
+        if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole("Administrators"))
+        {
+        Start-Process powershell.exe "-File `"$PSCommandPath`"" -Verb RunAs
+        exit
+        }
         cd D:\a\Floorp\Floorp
         curl -OL https://github.com/Floorp-Projects/Floorp/releases/download/10.0.0/mozilla-build.tar.gz -o D:\a\Floorp\Floorp\mozilla-build.tar.gz
         mkdir C:\mozilla-build
