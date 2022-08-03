@@ -669,22 +669,6 @@ Maybe<PackingInfoInfo> PackingInfoInfo::For(const PackingInfo& pi) {
   return Some(ret);
 }
 
-bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes) {
-  const auto pii = PackingInfoInfo::For(packing);
-  if (!pii) return false;
-  *out_bytes = pii->BytesPerPixel();
-  return true;
-}
-
-uint8_t BytesPerPixel(const PackingInfo& packing) {
-  uint8_t ret;
-  if (MOZ_LIKELY(GetBytesPerPixel(packing, &ret))) return ret;
-
-  gfxCriticalError() << "Bad `packing`: " << gfx::hexa(packing.format) << ", "
-                     << gfx::hexa(packing.type);
-  MOZ_CRASH("Bad `packing`.");
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////

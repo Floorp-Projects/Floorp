@@ -300,8 +300,15 @@ struct PackingInfoInfo final {
 };
 
 const FormatInfo* GetFormat(EffectiveFormat format);
-uint8_t BytesPerPixel(const PackingInfo& packing);
-bool GetBytesPerPixel(const PackingInfo& packing, uint8_t* const out_bytes);
+
+inline uint8_t BytesPerPixel(const PackingInfo& packing) {
+  const auto pii = PackingInfoInfo::For(packing);
+  if (MOZ_LIKELY(pii)) return pii->BytesPerPixel();
+
+  gfxCriticalError() << "Bad BytesPerPixel(" << packing << ")";
+  MOZ_CRASH("Bad `packing`.");
+}
+
 /*
 GLint ComponentSize(const FormatInfo* format, GLenum component);
 GLenum ComponentType(const FormatInfo* format);

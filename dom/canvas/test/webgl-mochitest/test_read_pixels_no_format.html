@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<script src='/tests/SimpleTest/SimpleTest.js'></script>
+</head>
+<body>
+<pre id=e_out></pre>
+<script>
+ok = window.ok || function(e, s) {
+  e_out.textContent += `\n${!e ? 'FAIL' : 'pass'}: ${s}`;
+};
+
+// -
+
+const canvas = document.createElement('canvas')
+document.documentElement.appendChild(canvas)
+const gl = canvas.getContext('webgl2')
+gl.bindBuffer(gl.PIXEL_PACK_BUFFER, gl.createBuffer())
+gl.readPixels(0, 0, 0, 0, gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT), 0, 0);
+const err = gl.getError();
+ok(err == gl.INVALID_ENUM, `err: ${err}`);
+
+ok(true, 'done');
+</script>
+</body>
+</html>
