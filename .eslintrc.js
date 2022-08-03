@@ -130,7 +130,6 @@ module.exports = {
     {
       ...removeOverrides(xpcshellTestConfig),
       files: testPaths.xpcshell.map(path => `${path}**`),
-      excludedFiles: "devtools/**",
     },
     {
       // If it is an xpcshell head file, we turn off global unused variable checks, as it
