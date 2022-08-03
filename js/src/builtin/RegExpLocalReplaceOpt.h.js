@@ -41,8 +41,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     if (globalOrSticky) {
         // 21.2.5.2.2 RegExpBuiltinExec, step 12.a.
         if (lastIndex > lengthS) {
-            if (globalOrSticky)
+            if (globalOrSticky) {
                 rx.lastIndex = 0;
+            }
 
             // Steps 12-16.
             return S;
@@ -59,8 +60,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     // Step 11.b.
     if (result === null) {
         // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
-        if (globalOrSticky)
+        if (globalOrSticky) {
             rx.lastIndex = 0;
+        }
 
         // Steps 12-16.
         return S;
@@ -72,8 +74,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     // Step 11.b.
     if (result === -1) {
         // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
-        if (globalOrSticky)
+        if (globalOrSticky) {
             rx.lastIndex = 0;
+        }
 
         // Steps 12-16.
         return S;
@@ -109,8 +112,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
 #endif
 
     // 21.2.5.2.2 RegExpBuiltinExec, step 15.
-    if (globalOrSticky)
+    if (globalOrSticky) {
        rx.lastIndex = nextSourcePosition;
+    }
 
     var replacement;
     // Steps g-l.
@@ -133,8 +137,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     var accumulatedResult = Substring(S, 0, position) + replacement;
 
     // Step 15.
-    if (nextSourcePosition >= lengthS)
+    if (nextSourcePosition >= lengthS) {
         return accumulatedResult;
+    }
 
     // Step 16.
     return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
