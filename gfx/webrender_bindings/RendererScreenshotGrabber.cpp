@@ -100,9 +100,5 @@ void RendererScreenshotGrabber::ProcessQueue(Renderer* aRenderer) {
   }
 }
 
-bool RendererScreenshotGrabber::HaveScreenshotsToFlush() {
-  return mCurrentFrameQueueItem || !mQueue.IsEmpty();
-}
-
 }  // namespace wr
 }  // namespace mozilla

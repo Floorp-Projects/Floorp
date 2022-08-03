@@ -112,15 +112,10 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
   MOZ_ASSERT(mRenderer);
   MOZ_ASSERT(mBridge);
   MOZ_COUNT_CTOR(RendererOGL);
-  mProcessScreenshotQueueTimer = NS_NewTimer();
 }
 
 RendererOGL::~RendererOGL() {
   MOZ_COUNT_DTOR(RendererOGL);
-
-  mProcessScreenshotQueueTimer->Cancel();
-  mProcessScreenshotQueueTimerRunning = false;
-
   if (!mCompositor->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
@@ -142,46 +137,11 @@ void RendererOGL::Update() {
     wr_renderer_update(mRenderer);
     FlushPipelineInfo();
   }
-
-  if (mProcessScreenshotQueueTimerRunning) {
-    mLastUpdateAndRenderEndTime = TimeStamp::Now();
-  }
 }
 
 static void DoWebRenderDisableNativeCompositor(
     layers::CompositorBridgeParent* aBridge) {
   aBridge->NotifyWebRenderDisableNativeCompositor();
-}
-
-static void FlushScreenshotsQueueCallback(nsITimer* aTimer, void* aClosure) {
-  static_cast<RendererOGL*>(aClosure)->FlushScreenshotsQueue();
-}
-
-void RendererOGL::FlushScreenshotsQueue() {
-  // Flushing the screenshots does a readback from the GPU so we want to avoid
-  // doing that unless the frame was rendered sufficiently far in the past that
-  // the GPU work will have completed by now.
-  if (mLastUpdateAndRenderEndTime &&
-      ((TimeStamp::Now() - mLastUpdateAndRenderEndTime).ToMilliseconds() <
-       100.)) {
-    mProcessScreenshotQueueTimer->InitWithNamedFuncCallback(
-        FlushScreenshotsQueueCallback, this, 500, nsITimer::TYPE_ONE_SHOT,
-        "wr::RendererOGL::FlushScreenshotsQueue");
-    return;
-  }
-
-  mProcessScreenshotQueueTimerRunning = false;
-
-  // Have to call it twice, first to flush mCurrentFrameQueueItem to the queue
-  // and then to flush queue itself.
-  if (mCompositor) {
-    if (!mCompositor->MaybeProcessScreenshotQueue()) {
-      mScreenshotGrabber.MaybeProcessQueue(this);
-    }
-    if (!mCompositor->MaybeProcessScreenshotQueue()) {
-      mScreenshotGrabber.MaybeProcessQueue(this);
-    }
-  }
 }
 
 RenderedFrameId RendererOGL::UpdateAndRender(
@@ -276,24 +236,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 
   if (!mCompositor->MaybeProcessScreenshotQueue()) {
     mScreenshotGrabber.MaybeProcessQueue(this);
-  }
-
-  // When collecting screenshots, we always gather the screenshot for the
-  // *previous* frame and leave the current frame pending until the next frame.
-  // This means that, if there aren't any composites for a while, we may never
-  // captured the last frame's screenshot, so we use a timer here to make sure
-  // that we get the last screenshot.
-  if (!mProcessScreenshotQueueTimerRunning) {
-    if (mCompositor->HaveScreenshotsToFlush() ||
-        mScreenshotGrabber.HaveScreenshotsToFlush()) {
-      mProcessScreenshotQueueTimer->InitWithNamedFuncCallback(
-          FlushScreenshotsQueueCallback, this, 500, nsITimer::TYPE_ONE_SHOT,
-          "wr::RendererOGL::FlushScreenshotsQueue");
-      mProcessScreenshotQueueTimerRunning = true;
-    }
-  }
-  if (mProcessScreenshotQueueTimerRunning) {
-    mLastUpdateAndRenderEndTime = TimeStamp::Now();
   }
 
   // TODO: Flush pending actions such as texture deletions/unlocks and

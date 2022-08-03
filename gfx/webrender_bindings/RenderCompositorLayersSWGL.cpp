@@ -476,9 +476,5 @@ bool RenderCompositorLayersSWGL::MaybeProcessScreenshotQueue() {
   return true;
 }
 
-bool RenderCompositorLayersSWGL::HaveScreenshotsToFlush() {
-  return mProfilerScreenshotGrabber.HaveScreenshotsToFlush();
-}
-
 }  // namespace wr
 }  // namespace mozilla

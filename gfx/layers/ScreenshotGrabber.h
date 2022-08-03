@@ -53,8 +53,6 @@ class ScreenshotGrabber final {
   // composites into main memory and submit each screenshot to the profiler.
   void MaybeProcessQueue();
 
-  bool HaveScreenshotsToFlush();
-
   // Insert a special profiler marker for a composite that didn't do any actual
   // compositing, so that the profiler knows why no screenshot was taken for
   // this frame.

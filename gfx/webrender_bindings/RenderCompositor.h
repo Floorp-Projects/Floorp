@@ -194,8 +194,6 @@ class RenderCompositor {
   }
   virtual bool MaybeProcessScreenshotQueue() { return false; }
 
-  virtual bool HaveScreenshotsToFlush() { return false; }
-
   // Returns FileDescriptor of release fence.
   // Release fence is a fence that is used for waiting until usage/composite of
   // AHardwareBuffer is ended. The fence is delivered to client side via
