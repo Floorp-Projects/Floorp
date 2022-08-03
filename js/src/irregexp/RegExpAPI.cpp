@@ -786,6 +786,10 @@ uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
       substring1, substring2, byteLength);
 }
 
+bool IsCharacterInRangeArray(uint32_t c, ByteArrayData* ranges) {
+  return SMRegExpMacroAssembler::IsCharacterInRangeArray(c, ranges);
+}
+
 #ifdef DEBUG
 bool IsolateShouldSimulateInterrupt(Isolate* isolate) {
   return isolate->shouldSimulateInterrupt_ != 0;

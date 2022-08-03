@@ -239,6 +239,111 @@ void SMRegExpMacroAssembler::CheckCharacterNotInRange(uc16 from, uc16 to,
   CheckCharacterInRangeImpl(from, to, on_not_in_range, Assembler::Above);
 }
 
+/* static */
+bool SMRegExpMacroAssembler::IsCharacterInRangeArray(uint32_t c,
+                                                     ByteArrayData* ranges) {
+  js::AutoUnsafeCallWithABI unsafe;
+  MOZ_ASSERT(ranges->length % sizeof(uint16_t) == 0);
+  uint32_t length = ranges->length / sizeof(uint16_t);
+  MOZ_ASSERT(length > 0);
+
+  // Fast paths.
+  if (c < ranges->get_uint16(0)) {
+    // |c| is lower than the start of the first range.
+    // It is not in the range array.
+    return false;
+  }
+  if (c >= ranges->get_uint16(length - 1)) {
+    // |c| is higher than the last entry. If the table contains an odd
+    // number of entries, the last range is open-ended, so |c| is in
+    // the range array iff |length| is odd.
+    return (length % 2) != 0;
+  }
+
+  // |ranges| is stored as an interval list: an ordered list of
+  // starting points, where every even index marks the beginning of a
+  // range of characters that are included, and every odd index marks
+  // the beginning of a range of characters that are excluded. For
+  // example, the set [1,2,3,7,8,9] would be represented as the
+  // range array [1,4,7,10]. If |ranges| has an odd number of entries,
+  // the last included range is open-ended (so the set containing
+  // every character would be represented as [0]).
+  //
+  // Because of the symmetry between included and excluded ranges, we
+  // can do a binary search for the index in |ranges| with the value
+  // closest to but not exceeding |c|. If that index is even, |c| is
+  // in an included range. If that index is odd, |c| is in an excluded
+  // range.
+  uint32_t lower = 0;
+  uint32_t upper = length;
+  uint32_t mid = 0;
+  do {
+    mid = lower + (upper - lower) / 2;
+    const base::uc16 elem = ranges->get_uint16(mid);
+    if (c < elem) {
+      upper = mid;
+    } else if (c > elem) {
+      lower = mid + 1;
+    } else {
+      break;
+    }
+  } while (lower < upper);
+  uint32_t rangeIndex = c < ranges->get_uint16(mid) ? mid - 1 : mid;
+
+  // Included ranges start at even indices and end at odd indices.
+  return rangeIndex % 2 == 0;
+}
+
+void SMRegExpMacroAssembler::CallIsCharacterInRangeArray(
+    const ZoneList<CharacterRange>* ranges) {
+  Handle<ByteArray> rangeArray = GetOrAddRangeArray(ranges);
+  masm_.movePtr(ImmPtr(rangeArray->inner()), temp0_);
+
+  // Save volatile regs. Temp regs don't need to be saved.
+  LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
+  volatileRegs.takeUnchecked(temp0_);
+  volatileRegs.takeUnchecked(temp1_);
+  if (temp2_ != js::jit::InvalidReg) {
+    volatileRegs.takeUnchecked(temp2_);
+  }
+  masm_.PushRegsInMask(volatileRegs);
+
+  using Fn = bool (*)(uint32_t, ByteArrayData*);
+  masm_.setupUnalignedABICall(temp1_);
+  masm_.passABIArg(current_character_);
+  masm_.passABIArg(temp0_);
+
+  masm_.callWithABI<Fn, ::js::irregexp::IsCharacterInRangeArray>();
+  masm_.storeCallBoolResult(temp1_);
+  masm_.PopRegsInMask(volatileRegs);
+
+  // GetOrAddRangeArray caches previously seen range arrays to reduce
+  // memory usage, so this may not be the first time we've seen this
+  // range array. We only need to transfer ownership from the
+  // HandleScope to the |tables_| vector once.
+  PseudoHandle<ByteArrayData> rawRangeArray =
+      rangeArray->maybeTakeOwnership(isolate());
+  if (rawRangeArray) {
+    AddTable(std::move(rawRangeArray));
+  }
+}
+
+bool SMRegExpMacroAssembler::CheckCharacterInRangeArray(
+    const ZoneList<CharacterRange>* ranges, Label* on_in_range) {
+  CallIsCharacterInRangeArray(ranges);
+  masm_.branchTest32(Assembler::NonZero, temp1_, temp1_,
+                     LabelOrBacktrack(on_in_range));
+  return true;
+}
+
+bool SMRegExpMacroAssembler::CheckCharacterNotInRangeArray(
+    const ZoneList<CharacterRange>* ranges, Label* on_not_in_range) {
+  CallIsCharacterInRangeArray(ranges);
+  masm_.branchTest32(Assembler::Zero, temp1_, temp1_,
+                     LabelOrBacktrack(on_not_in_range));
+  return true;
+}
+
 void SMRegExpMacroAssembler::CheckBitInTable(Handle<ByteArray> table,
                                              Label* on_bit_set) {
   // Claim ownership of the ByteArray from the current HandleScope.
