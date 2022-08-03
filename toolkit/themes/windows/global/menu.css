@@ -53,18 +53,9 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 @media (-moz-windows-non-native-menus) {
-  menu[disabled="true"],
-  menuitem[disabled="true"],
   menu[_moz-menuactive="true"][disabled="true"],
   menuitem[_moz-menuactive="true"][disabled="true"] {
-    color: var(--menu-disabled-color);
-    /* override the default hover disabled style: */
-    background-color: transparent;
-  }
-
-  menu[_moz-menuactive="true"][disabled="true"],
-  menuitem[_moz-menuactive="true"][disabled="true"] {
-    background-color: var(--menuitem-disabled-hover-background-color);
+    background-color: -moz-menuhoverdisabled;
   }
 }
 
@@ -234,20 +225,7 @@ menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
 }
 
-@media (-moz-windows-non-native-menus) {
-  menu[_moz-menuactive="true"]:not([disabled="true"]),
-  menuitem[_moz-menuactive="true"]:not([disabled="true"]) {
-    background-color: var(--menuitem-hover-background-color);
-    color: var(--menu-color);
-  }
-}
-
 /* ::::: menu/menuitems in menulist popups ::::: */
-
-menulist > menupopup {
-  font: inherit;
-  color: FieldText;
-}
 
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
@@ -263,12 +241,12 @@ menulist > menupopup > menu {
     border: 1px solid transparent;
     padding-inline: 5px;
   }
-}
 
-menulist > menupopup > menuitem[_moz-menuactive="true"],
-menulist > menupopup > menu[_moz-menuactive="true"] {
-  background-color: highlight;
-  color: highlighttext;
+  menulist > menupopup > menuitem[_moz-menuactive="true"],
+  menulist > menupopup > menu[_moz-menuactive="true"] {
+    background-color: highlight;
+    color: highlighttext;
+  }
 }
 
 menulist > menupopup > menuitem > .menu-iconic-left,
@@ -300,12 +278,6 @@ menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
 
 menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-iconic-text {
   margin: 0 !important;
-}
-
-@media (-moz-windows-non-native-menus) {
-  menulist > menupopup {
-    color: var(--menu-color);
-  }
 }
 
 /* ::::: checkbox and radio menuitems ::::: */
@@ -402,9 +374,7 @@ menuseparator {
   menuseparator {
     appearance: none;
 
-    border-top: 1px solid var(--menu-border-color);
     border-bottom: none;
-
     padding: 0;
     /* The side margins should align with the start of the menu item text. */
     margin: 2px 1em;

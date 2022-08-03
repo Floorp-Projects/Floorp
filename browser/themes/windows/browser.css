@@ -533,11 +533,12 @@ menupopup[touchmode] menuitem {
     padding: 8px 1em;
     margin: 0;
   }
-  #context-navigation > .menuitem-iconic[_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
-    background-color: var(--menuitem-hover-background-color);
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"] > .menu-iconic-left > .menu-iconic-icon {
+    background-color: -moz-menuhover;
   }
+
   #context-navigation > .menuitem-iconic[_moz-menuactive="true"][disabled="true"] > .menu-iconic-left > .menu-iconic-icon {
-    background-color: var(--menuitem-disabled-hover-background-color);
+    background-color: -moz-menuhoverdisabled;
   }
 
   /* If the menu is wider than the icons strictly need, the <menuitem> elements

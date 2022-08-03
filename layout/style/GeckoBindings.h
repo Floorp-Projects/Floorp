@@ -562,6 +562,8 @@ bool Gecko_IsMainThread();
 mozilla::StyleDisplayMode Gecko_MediaFeatures_GetDisplayMode(
     const mozilla::dom::Document*);
 
+bool Gecko_MediaFeatures_WindowsNonNativeMenus();
+
 bool Gecko_MediaFeatures_ShouldAvoidNativeTheme(const mozilla::dom::Document*);
 bool Gecko_MediaFeatures_UseOverlayScrollbars(const mozilla::dom::Document*);
 uint32_t Gecko_MediaFeatures_GetColorDepth(const mozilla::dom::Document*);

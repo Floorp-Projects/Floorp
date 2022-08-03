@@ -19,16 +19,22 @@ panel {
   --windows-panel-box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 }
 
-menupopup {
-  appearance: auto;
-  -moz-default-appearance: menupopup;
 
-  /* We set the background-color / border here so that it doesn't interfere with native styling. */
-  background-color: Menu;
-  border: 1px solid ThreeDShadow;
-  --panel-background: transparent;
-  --panel-border-color: transparent;
-  --nested-margin: -3px;
+@media not (-moz-windows-non-native-menus) {
+  menupopup {
+    appearance: auto;
+    -moz-default-appearance: menupopup;
+
+    /* Native menus are always light */
+    color-scheme: light !important;
+
+    /* We set the background-color / border here so that it doesn't interfere with native styling. */
+    background-color: Menu;
+    border: 1px solid ThreeDShadow;
+    --panel-background: transparent;
+    --panel-border-color: transparent;
+    --nested-margin: -3px;
+  }
 }
 
 @media (-moz-windows-non-native-menus) {
@@ -43,11 +49,10 @@ menupopup {
     margin: -4px;
     -moz-window-input-region-margin: 4px;
 
-    --panel-color: var(--menu-color);
     --panel-border-radius: 4px;
     --panel-padding: 4px 0;
-    --panel-border-color: var(--menu-border-color);
-    --panel-background: var(--menu-background-color);
+    --panel-border-color: ThreeDShadow;
+    --panel-background: Menu;
     --nested-margin: -10px;
   }
 
@@ -113,6 +118,7 @@ panel[type="arrow"].panel-no-padding::part(content) {
 /* rules for popups associated with menulists */
 
 menulist > menupopup {
+  font: inherit;
   appearance: none;
   background-color: transparent;
   border: none;
@@ -120,14 +126,10 @@ menulist > menupopup {
 }
 
 @media not (-moz-windows-non-native-menus) {
-  menupopup {
-    /* Native menus are always light */
-    color-scheme: light !important;
-  }
-
   /* For Win10, the popup itself needs to have a transparent background because
      otherwise the background color would appear behind the drop shadow. */
   menulist > menupopup {
+    color: FieldText;
     --panel-background: Field;
     --panel-border-color: ThreeDShadow;
   }

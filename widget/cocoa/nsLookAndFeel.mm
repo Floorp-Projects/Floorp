@@ -128,6 +128,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.secondarySelectedControlColor),
                                          aScheme);
       break;
+    case ColorID::MozMenuhoverdisabled:
+      aColor = NS_TRANSPARENT;
+      break;
     case ColorID::MozMenuhover:
     case ColorID::Selecteditem:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
