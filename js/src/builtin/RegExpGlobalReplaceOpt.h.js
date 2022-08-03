@@ -57,8 +57,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
         var result = RegExpMatcher(rx, S, lastIndex);
 
         // Step 11.b.
-        if (result === null)
+        if (result === null) {
             break;
+        }
 
         // Steps 14.a-b (skipped).
         assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
@@ -98,8 +99,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
             }
         }
 
-        if (!IsObject(elemBase))
+        if (!IsObject(elemBase)) {
             replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
+        }
 #else
         replacement = replaceValue;
 #endif
@@ -114,8 +116,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
         // Step 11.c.iii.2.
         if (matchLength === 0) {
             lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
-            if (lastIndex > lengthS)
+            if (lastIndex > lengthS) {
                 break;
+            }
             lastIndex |= 0;
         }
 
@@ -131,8 +134,9 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
     }
 
     // Step 15.
-    if (nextSourcePosition >= lengthS)
+    if (nextSourcePosition >= lengthS) {
         return accumulatedResult;
+    }
 
     // Step 16.
     return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
