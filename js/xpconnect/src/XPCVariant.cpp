@@ -439,7 +439,7 @@ bool XPCVariant::VariantDataToJS(JSContext* cx, nsIVariant* variant,
       if (NS_FAILED(variant->GetAsDouble(&d))) {
         return false;
       }
-      pJSVal.setNumber(d);
+      pJSVal.set(JS_NumberValue(d));
       return true;
     }
     case nsIDataType::VTYPE_BOOL: {
