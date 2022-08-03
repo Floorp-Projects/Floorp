@@ -9,7 +9,6 @@
 
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
-#include "nsIContent.h"
 
 // IID for the nsINodeList interface
 #define NS_INODELIST_IID                             \

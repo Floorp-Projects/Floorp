@@ -1,5 +1,0 @@
-error: Cannot set visibility on `#[ext]` and `impl` block
- --> $DIR/double_vis.rs:4:11
-  |
-4 |     #[ext(pub(super))]
-  |           ^^^
