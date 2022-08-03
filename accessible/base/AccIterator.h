@@ -9,6 +9,7 @@
 
 #include "DocAccessible.h"
 #include "Filters.h"
+#include "nsTArray.h"
 
 #include <memory>
 
@@ -16,6 +17,7 @@ class nsITreeView;
 
 namespace mozilla {
 namespace a11y {
+class DocAccessibleParent;
 
 /**
  * AccIterable is a basic interface for iterators over accessibles.
@@ -296,6 +298,38 @@ class XULTreeItemIterator : public AccIterable {
   int32_t mRowCount;
   int32_t mContainerLevel;
   int32_t mCurrRowIdx;
+};
+
+/**
+ * Used to iterate through a sequence of RemoteAccessibles supplied as an array
+ * of ids. Such id arrays are included in the RemoteAccessible cache.
+ */
+class RemoteAccIterator : public AccIterable {
+ public:
+  /**
+   * Construct with a reference to an array owned somewhere else; e.g. a
+   * RemoteAccessible cache.
+   */
+  RemoteAccIterator(const nsTArray<uint64_t>& aIds, DocAccessibleParent* aDoc)
+      : mIds(aIds), mDoc(aDoc), mIndex(0) {}
+
+  /**
+   * Construct with an array moved from somewhere else. In this case, this
+   * RemoteAccIterator takes ownership of the array. This should be used, for
+   * example, when using sync IPC to retrieve relations.
+   */
+  RemoteAccIterator(nsTArray<uint64_t>&& aIds, DocAccessibleParent* aDoc);
+
+  virtual ~RemoteAccIterator() = default;
+
+  virtual Accessible* Next() override;
+
+ private:
+  // Used when ownership of the array is transferred to this instance.
+  nsTArray<uint64_t> mOwnedIds;
+  const nsTArray<uint64_t>& mIds;
+  DocAccessibleParent* mDoc;
+  uint32_t mIndex;
 };
 
 }  // namespace a11y
