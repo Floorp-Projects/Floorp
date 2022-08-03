@@ -275,7 +275,7 @@ void nsImageLoadingContent::OnUnlockedDraw() {
   // For animated images, though, we want to mark them visible right away so we
   // can call IncrementAnimationConsumers() on them and they'll start animating.
 
-  nsIFrame* frame = GetOurPrimaryImageFrame();
+  nsIFrame* frame = GetOurPrimaryFrame();
   if (!frame) {
     return;
   }
@@ -310,21 +310,6 @@ void nsImageLoadingContent::OnImageIsAnimated(imgIRequest* aRequest) {
   }
   nsLayoutUtils::RegisterImageRequest(GetFramePresContext(), aRequest,
                                       requestFlag);
-}
-
-static bool IsOurImageFrame(nsIFrame* aFrame) {
-  if (nsImageFrame* f = do_QueryFrame(aFrame)) {
-    return f->IsForElement();
-  }
-  return aFrame->IsSVGImageFrame() || aFrame->IsSVGFEImageFrame();
-}
-
-nsIFrame* nsImageLoadingContent::GetOurPrimaryImageFrame() {
-  nsIFrame* frame = AsContent()->GetPrimaryFrame();
-  if (!frame || !IsOurImageFrame(frame)) {
-    return nullptr;
-  }
-  return frame;
 }
 
 /*
@@ -518,8 +503,10 @@ void nsImageLoadingContent::SetSyncDecodingHint(bool aHint) {
 
 void nsImageLoadingContent::MaybeForceSyncDecoding(
     bool aPrepareNextRequest, nsIFrame* aFrame /* = nullptr */) {
-  nsIFrame* frame = GetOurPrimaryImageFrame();
-  if (!frame) {
+  nsIFrame* frame = aFrame ? aFrame : GetOurPrimaryFrame();
+  nsImageFrame* imageFrame = do_QueryFrame(frame);
+  SVGImageFrame* svgImageFrame = do_QueryFrame(frame);
+  if (!imageFrame && !svgImageFrame) {
     return;
   }
 
@@ -537,9 +524,9 @@ void nsImageLoadingContent::MaybeForceSyncDecoding(
     mMostRecentRequestChange = now;
   }
 
-  if (nsImageFrame* imageFrame = do_QueryFrame(frame)) {
+  if (imageFrame) {
     imageFrame->SetForceSyncDecoding(forceSync);
-  } else if (SVGImageFrame* svgImageFrame = do_QueryFrame(frame)) {
+  } else {
     svgImageFrame->SetForceSyncDecoding(forceSync);
   }
 }
@@ -821,8 +808,7 @@ nsImageLoadingContent::GetRequest(int32_t aRequestType,
 
 NS_IMETHODIMP_(void)
 nsImageLoadingContent::FrameCreated(nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame, "aFrame is null");
-  MOZ_ASSERT(IsOurImageFrame(aFrame));
+  NS_ASSERTION(aFrame, "aFrame is null");
 
   MaybeForceSyncDecoding(/* aPrepareNextRequest */ false, aFrame);
   TrackImage(mCurrentRequest, aFrame);
@@ -1185,7 +1171,8 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
         MOZ_ASSERT(mCurrentRequest,
                    "How could we not have a current request here?");
 
-        if (nsImageFrame* f = do_QueryFrame(GetOurPrimaryImageFrame())) {
+        nsImageFrame* f = do_QueryFrame(GetOurPrimaryFrame());
+        if (f) {
           f->NotifyNewCurrentRequest(mCurrentRequest, NS_OK);
         }
       }
@@ -1383,11 +1370,16 @@ Document* nsImageLoadingContent::GetOurCurrentDoc() {
   return AsContent()->GetComposedDoc();
 }
 
+nsIFrame* nsImageLoadingContent::GetOurPrimaryFrame() {
+  return AsContent()->GetPrimaryFrame();
+}
+
 nsPresContext* nsImageLoadingContent::GetFramePresContext() {
-  nsIFrame* frame = GetOurPrimaryImageFrame();
+  nsIFrame* frame = GetOurPrimaryFrame();
   if (!frame) {
     return nullptr;
   }
+
   return frame->PresContext();
 }
 
@@ -1663,7 +1655,7 @@ void nsImageLoadingContent::TrackImage(imgIRequest* aImage,
   }
 
   if (!aFrame) {
-    aFrame = GetOurPrimaryImageFrame();
+    aFrame = GetOurPrimaryFrame();
   }
 
   /* This line is deceptively simple. It hides a lot of subtlety. Before we
