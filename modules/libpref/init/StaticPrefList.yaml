@@ -13492,6 +13492,11 @@
   value: true
   mirror: always
 
+- name: webgl.fake-verts.max
+  type: RelaxedAtomicUint32
+  value: 10*1000*1000  # 10M as vec4 is count*4*4 = 160MB
+  mirror: always
+
 - name: webgl.force-enabled
   type: RelaxedAtomicBool
   value: false
