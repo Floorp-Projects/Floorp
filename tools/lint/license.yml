@@ -60,6 +60,8 @@ license:
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h
         - tools/lint/eslint/eslint-plugin-mozilla/lib/configs
+        # template fragments used to generate .js sources.
+        - toolkit/components/uniffi-bindgen-gecko-js/src/templates/js
         # By design
         - tools/lint/test/
     extensions:
