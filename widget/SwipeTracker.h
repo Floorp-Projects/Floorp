@@ -76,7 +76,7 @@ class SwipeTracker final : public nsARefreshObserver {
   double SwipeSuccessTargetValue() const;
   double ClampToAllowedRange(double aGestureAmount) const;
   bool ComputeSwipeSuccess() const;
-  void StartAnimating(double aTargetValue);
+  void StartAnimating(double aStartValue, double aTargetValue);
   void SwipeFinished(const TimeStamp& aTimeStamp);
   void UnregisterFromRefreshDriver();
   bool SendSwipeEvent(EventMessage aMsg, uint32_t aDirection, double aDelta,

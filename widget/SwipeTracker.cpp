@@ -152,6 +152,19 @@ nsEventStatus SwipeTracker::ProcessEvent(
       eventAmount = -eventAmount;
     }
   }
+
+  // If ComputeSwipeSuccess returned false because the users fingers were moving
+  // slightly away from the target direction then we do not want to display
+  // the UI as if we were at the success threshold as that would give a false
+  // indication that navigation would happen.
+  if (!computedSwipeSuccess && (eventAmount >= kSwipeSuccessThreshold ||
+                                eventAmount <= -kSwipeSuccessThreshold)) {
+    eventAmount = 0.999 * kSwipeSuccessThreshold;
+    if (mGestureAmount < 0.f) {
+      eventAmount = -eventAmount;
+    }
+  }
+
   SendSwipeEvent(eSwipeGestureUpdate, 0, eventAmount, aEvent.mTimeStamp);
 
   if (aEvent.mType == PanGestureInput::PANGESTURE_END) {
@@ -168,15 +181,15 @@ nsEventStatus SwipeTracker::ProcessEvent(
                                    swipeTracker->SwipeFinished(timeStamp);
                                  }));
     } else {
-      StartAnimating(0.0);
+      StartAnimating(eventAmount, 0.0);
     }
   }
 
   return nsEventStatus_eConsumeNoDefault;
 }
 
-void SwipeTracker::StartAnimating(double aTargetValue) {
-  mAxis.SetPosition(mGestureAmount);
+void SwipeTracker::StartAnimating(double aStartValue, double aTargetValue) {
+  mAxis.SetPosition(aStartValue);
   mAxis.SetDestination(aTargetValue);
   mAxis.SetVelocity(mCurrentVelocity);
 
