@@ -19,7 +19,7 @@ namespace mozilla::dom {
 
 class ReadableStream;
 class ReadableStreamDefaultReader;
-class WeakWorkerRef;
+class StrongWorkerRef;
 
 class FetchStreamReader final : public nsIOutputStreamCallback {
  public:
@@ -66,7 +66,8 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
 
   nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
 
-  RefPtr<WeakWorkerRef> mWorkerRef;
+  RefPtr<StrongWorkerRef> mWorkerRef;
+  RefPtr<StrongWorkerRef> mAsyncWaitWorkerRef;
 
   RefPtr<ReadableStreamDefaultReader> mReader;
 
