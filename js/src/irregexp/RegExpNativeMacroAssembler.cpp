@@ -1159,7 +1159,7 @@ void SMRegExpMacroAssembler::initFrameAndRegs() {
   }
 
   // Initialize backtrack stack pointer
-  masm_.loadPtr(AbsoluteAddress(isolate()->top_of_regexp_stack()),
+  masm_.loadPtr(AbsoluteAddress(ExternalReference::TopOfRegexpStack(isolate())),
                 backtrack_stack_pointer_);
   masm_.storePtr(backtrack_stack_pointer_, backtrackStackBase());
 }
@@ -1305,7 +1305,8 @@ void SMRegExpMacroAssembler::stackOverflowHandler() {
                      offsetof(FrameData, backtrackStackBase) + frameOffset);
   masm_.subPtr(bsbAddress, backtrack_stack_pointer_);
 
-  masm_.loadPtr(AbsoluteAddress(isolate()->top_of_regexp_stack()), temp1_);
+  masm_.loadPtr(AbsoluteAddress(ExternalReference::TopOfRegexpStack(isolate())),
+                temp1_);
   masm_.storePtr(temp1_, bsbAddress);
   masm_.addPtr(temp1_, backtrack_stack_pointer_);
 
@@ -1382,7 +1383,7 @@ uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareUnicode(
 /* static */
 bool SMRegExpMacroAssembler::GrowBacktrackStack(RegExpStack* regexp_stack) {
   js::AutoUnsafeCallWithABI unsafe;
-  size_t size = regexp_stack->stack_capacity();
+  size_t size = regexp_stack->memory_size();
   return !!regexp_stack->EnsureCapacity(size * 2);
 }
 
