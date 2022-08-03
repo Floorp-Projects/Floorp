@@ -17,7 +17,7 @@ from voluptuous import Optional
 from taskgraph.actions import render_actions_json
 from taskgraph.create import create_tasks
 from taskgraph.generator import TaskGraphGenerator
-from taskgraph.parameters import Parameters
+from taskgraph.parameters import Parameters, get_version
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.python_path import find_object
 from taskgraph.util.schema import Schema, validate_schema
@@ -159,7 +159,8 @@ def get_decision_parameters(graph_config, options):
         if n in options
     }
 
-    repo = get_repository(os.getcwd())
+    repo_path = os.getcwd()
+    repo = get_repository(repo_path)
     try:
         commit_message = repo.get_commit_message()
     except UnicodeDecodeError:
@@ -173,6 +174,9 @@ def get_decision_parameters(graph_config, options):
     parameters["optimize_target_tasks"] = True
     parameters["existing_tasks"] = {}
     parameters["do_not_optimize"] = []
+    parameters["build_number"] = 1
+    parameters["version"] = get_version(repo_path)
+    parameters["next_version"] = None
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it

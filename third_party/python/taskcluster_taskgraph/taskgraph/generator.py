@@ -13,7 +13,7 @@ from . import filter_tasks
 from .config import GraphConfig, load_graph_config
 from .graph import Graph
 from .morph import morph
-from .optimize import optimize_task_graph
+from .optimize.base import optimize_task_graph
 from .parameters import Parameters
 from .task import Task
 from .taskgraph import TaskGraph
@@ -369,9 +369,8 @@ class TaskGraphGenerator:
             "Adding %d tasks with `always_target` attribute"
             % (len(always_target_tasks) - len(always_target_tasks & target_tasks))
         )
-        target_graph = full_task_graph.graph.transitive_closure(
-            target_tasks | docker_image_tasks | always_target_tasks
-        )
+        requested_tasks = target_tasks | docker_image_tasks | always_target_tasks
+        target_graph = full_task_graph.graph.transitive_closure(requested_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes}, target_graph
         )
@@ -386,6 +385,7 @@ class TaskGraphGenerator:
             do_not_optimize = set(target_task_set.graph.nodes).union(do_not_optimize)
         optimized_task_graph, label_to_taskid = optimize_task_graph(
             target_task_graph,
+            requested_tasks,
             parameters,
             do_not_optimize,
             self._decision_task_id,

@@ -151,21 +151,26 @@ def resolve_keyed_by(
 
 # Schemas for YAML files should use dashed identifiers by default.  If there are
 # components of the schema for which there is a good reason to use another format,
-# they can be whitelisted here.
-WHITELISTED_SCHEMA_IDENTIFIERS = [
+# they can be excepted here.
+EXCEPTED_SCHEMA_IDENTIFIERS = [
     # upstream-artifacts and artifact-map are handed directly to scriptWorker,
     # which expects interCaps
-    lambda path: any(
-        exc in path for exc in ("['upstream-artifacts']", "['artifact-map']")
-    )
+    "upstream-artifacts",
+    "artifact-map",
 ]
 
 
 def check_schema(schema):
     identifier_re = re.compile(r"^\$?[a-z][a-z0-9-]*$")
 
-    def whitelisted(path):
-        return any(f(path) for f in WHITELISTED_SCHEMA_IDENTIFIERS)
+    def excepted(item):
+        for esi in EXCEPTED_SCHEMA_IDENTIFIERS:
+            if isinstance(esi, str):
+                if f"[{esi!r}]" in item:
+                    return True
+            elif esi(item):
+                return True
+        return False
 
     def iter(path, sch):
         def check_identifier(path, k):
@@ -174,7 +179,7 @@ def check_schema(schema):
             elif isinstance(k, voluptuous.NotIn):
                 pass
             elif isinstance(k, str):
-                if not identifier_re.match(k) and not whitelisted(path):
+                if not identifier_re.match(k) and not excepted(path):
                     raise RuntimeError(
                         "YAML schemas should use dashed lower-case identifiers, "
                         "not {!r} @ {}".format(k, path)
@@ -184,7 +189,7 @@ def check_schema(schema):
             elif isinstance(k, (voluptuous.Any, voluptuous.All)):
                 for v in k.validators:
                     check_identifier(path, v)
-            elif not whitelisted(path):
+            elif not excepted(path):
                 raise RuntimeError(
                     "Unexpected type in YAML schema: {} @ {}".format(
                         type(k).__name__, path

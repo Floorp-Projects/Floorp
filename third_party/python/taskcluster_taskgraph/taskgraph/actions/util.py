@@ -14,7 +14,7 @@ from requests.exceptions import HTTPError
 
 from taskgraph import create
 from taskgraph.decision import read_artifact, rename_artifact, write_artifact
-from taskgraph.optimize import optimize_task_graph
+from taskgraph.optimize.base import optimize_task_graph
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.taskcluster import (
     CONCURRENCY,
