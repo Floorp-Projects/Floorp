@@ -26,9 +26,10 @@ jobs:
         ./mach build
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
+        zip -r dist.zip obj-x86_64-apple-darwin/dist/
 
     - name: Publish
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v1
       with:
-        name: floorp-Intel-macOS-x64
-        path: obj-x86_64-apple-darwin/dist/floorp.app
+        name: floorp-Intel-macOS-x64.zip
+        path: dist.zip
