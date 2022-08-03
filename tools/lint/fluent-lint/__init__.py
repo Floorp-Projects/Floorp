@@ -55,7 +55,7 @@ class Linter(visitor.Visitor):
         self.double_quote_re = re.compile(r"\".+\"")
         self.ellipsis_re = re.compile(r"\.\.\.")
 
-        self.brand_names = ["Firefox", "Mozilla"]
+        self.brand_names = ["Firefox", "Mozilla", "Thunderbird"]
         self.minimum_id_length = 9
 
         self.state = {

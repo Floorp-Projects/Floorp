@@ -115,12 +115,13 @@ def test_comment_resource(lint, paths):
 
 def test_brand_names(lint, paths):
     results = lint(paths("brand-names.ftl"))
-    assert len(results) == 8
+    assert len(results) == 11
     assert results[0].rule == "CO01"
     assert results[0].lineno == 1
     assert results[0].column == 16
     assert "Firefox" in results[0].message
     assert "Mozilla" not in results[0].message
+    assert "Thunderbird" not in results[0].message
     assert results[1].rule == "CO01"
     assert results[1].lineno == 4
     assert results[1].column == 16
