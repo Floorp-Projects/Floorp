@@ -41,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Վերջին Էջանիշերը</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Ցուցադրել բոլորը</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Ցուցադրել բոլոր էջանիշերը</string>
 
@@ -355,7 +353,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Հարմարեցնել</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Համաժամեցրեք էջանիշները, պատմությունը և ավելին ձեր Firefox հաշվի հետ</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Համաժամեցրեք էջանիշները, պատմությունը և ավելին ձեր Firefox հաշվի հետ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Մուտք գործեք՝ ներդիրները, էջանիշերը, գաղտնաբառերը և ավելին համաժամեցնելու համար:</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-ի հաշիվ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -527,7 +527,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Միացնել համաժամեցումը</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Միացնել համաժամեցումը</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Համաժամեցրեք և պահեք ձեր տվյալները</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Մուտք գործեք՝ կրկին կապակցվելու համար</string>
 
@@ -744,7 +746,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Գաղտնի կերպ)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Այլ ներդիրներ</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Այլ ներդիրներ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -777,6 +779,13 @@
     <string name="history_synced_from_other_devices">Համաժամեցված այլ սարքից</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Այլ սարքերից</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Մուտք գործե՛ք՝ տեսնելու Ձեր այլ սարքերից համաժամեցված պատմությունը:</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Մուտք գործել</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Կամ ստեղծեք Firefox հաշիվ՝ համաժամացումը սկսելու համար</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1069,8 +1078,6 @@
 
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Էջանիշները պահված են</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Ավելացվել է ընտրյալ կայքերին:</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Ավելացվեց դյուրանցումներում:</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1149,7 +1156,19 @@
     <string name="delete_browsing_data_on_quit_action">Փակել</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Սա կջնջի ձեր դիտարկման բոլոր տվյալները:</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Սա կջնջի ձեր դիտարկման բոլոր տվյալները:</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Ջնջելու ենթակա ժամանակահատվածը</string>
+
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Հեռացնում է պատմությունը (ներառյալ այլ սարքերից համաժամացված պատմությունը), քուքիները և զննարկման այլ տվյալներ:</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Վերջին մեկ ժամում</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Այսօր և երեկ</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Ամենը</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s-ը կջնջի ընտրված դիտարկման տվյալները:</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1161,8 +1180,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Ջնջել դիտարկման տվյալները…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Սա կջնջի բոլոր տարրերը:</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Ջնջել բոլոր կայքերը “%s”-ում</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Չեղարկել</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1578,8 +1597,6 @@
     <string name="addresses_edit_address">Խմբագրել հասցեն</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Կառավարեք հասցեները</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Անուն, ազգանուն</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Անուն</string>
     <!-- The header for the middle name of an address -->
@@ -1685,10 +1702,6 @@
     <string name="no_site_exceptions">Բացառություններ չկան</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս էջանիշը:</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Ավելացնել ընտրյալ կայքերին</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Հեռացնել լավագույն կայքերից</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Ավելացնել դյուրանցումներին</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1765,12 +1778,8 @@
     <string name="synced_tabs_collapse_group">Կոծկել համաժամեցված ներդիրների խումբը</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Լավագույն կայքերի ցանկը լրացել է</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Դյուրանցումների սահմանաչափը լրացել է</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Նոր լավագույն կայքի ավելացման համար հեռացրեք մեկը: Հպեք և սեղմած պահեք կայքը և ընտրեք հեռացնել:</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Նոր դյուրանցում ավելացնելու համար հեռացրեք մեկը: Հպեք և պահեք կայքը ու ընտրեք հեռացնել:</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1780,8 +1789,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Դյուրանցումներ</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Անուն</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Ընտրյալ կայքի անունը</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Դյուրանցման անունը</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
@@ -1854,4 +1861,5 @@
     <string name="experiments_snackbar">Միացնել հեռաչափությունը՝ տվյալներ ուղարկելու համար:</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Անցնել Կարգավորումներին</string>
+    <string name="firefox_suggest_header">Firefox-ի առաջարկ</string>
 </resources>
