@@ -926,8 +926,13 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
         if (NS_FAILED(rv)) {
           NextStream();
         }
+
+        // Unlock and invoke AsyncWaitInternal to wait again.  If this succeeds,
+        // we'll be called again, otherwise fall through and notify.
         MutexAutoUnlock unlock(mLock);
-        return AsyncWaitInternal();
+        if (NS_SUCCEEDED(AsyncWaitInternal())) {
+          return NS_OK;
+        }
       }
     }
 
@@ -935,7 +940,7 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     mAsyncWaitEventTarget = nullptr;
   }
 
-  return callback->OnInputStreamReady(this);
+  return callback ? callback->OnInputStreamReady(this) : NS_OK;
 }
 
 void nsMultiplexInputStream::AsyncWaitCompleted() {
