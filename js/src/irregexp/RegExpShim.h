@@ -639,14 +639,13 @@ class ByteArray : public HeapObject {
 
  public:
   PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
-  byte get(uint32_t index) {
-    MOZ_ASSERT(index < length());
-    return inner()->data()[index];
+  byte get(uint32_t index) { return inner()->get(index); }
+  void set(uint32_t index, byte val) { inner()->set(index, val); }
+  uint16_t get_uint16(uint32_t index) { return inner()->get_uint16(index); }
+  void set_uint16(uint32_t index, uint16_t value) {
+    inner()->set_uint16(index, value);
   }
-  void set(uint32_t index, byte val) {
-    MOZ_ASSERT(index < length());
-    inner()->data()[index] = val;
-  }
+
   uint32_t length() const { return inner()->length; }
   byte* GetDataStartAddress() { return inner()->data(); }
 
