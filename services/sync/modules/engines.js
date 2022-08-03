@@ -42,14 +42,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  OS: "resource://gre/modules/osfile.jsm",
-});
-
 function ensureDirectory(path) {
-  let basename = lazy.OS.Path.dirname(path);
-  return lazy.OS.File.makeDir(basename, {
-    from: lazy.OS.Constants.Path.profileDir,
+  return IOUtils.makeDirectory(PathUtils.parent(path), {
+    createAncestors: true,
   });
 }
 

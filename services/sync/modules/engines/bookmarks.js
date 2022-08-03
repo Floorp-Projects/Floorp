@@ -39,7 +39,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Observers: "resource://services-common/observers.js",
-  OS: "resource://gre/modules/osfile.jsm",
   Resource: "resource://services-sync/resource.js",
 });
 
@@ -725,13 +724,13 @@ BookmarksStore.prototype = {
   },
 
   async _openMirror() {
-    let mirrorPath = lazy.OS.Path.join(
-      lazy.OS.Constants.Path.profileDir,
+    let mirrorPath = PathUtils.join(
+      PathUtils.profileDir,
       "weave",
       "bookmarks.sqlite"
     );
-    await lazy.OS.File.makeDir(lazy.OS.Path.dirname(mirrorPath), {
-      from: lazy.OS.Constants.Path.profileDir,
+    await IOUtils.makeDirectory(PathUtils.parent(mirrorPath), {
+      createAncestors: true,
     });
 
     return lazy.SyncedBookmarksMirror.open({
