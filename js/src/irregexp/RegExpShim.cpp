@@ -51,7 +51,7 @@ template std::ostream& StdoutStream::operator<<(char const* c);
 // Writes the given character to the output escaping everything outside
 // of printable ASCII range.
 std::ostream& operator<<(std::ostream& os, const AsUC16& c) {
-  uc16 v = c.value;
+  base::uc16 v = c.value;
   bool isPrint = 0x20 < v && v <= 0x7e;
   char buf[10];
   const char* format = isPrint ? "%c" : (v <= 0xFF) ? "\\x%02x" : "\\u%04x";
@@ -250,7 +250,8 @@ Handle<FixedArray> Isolate::NewFixedArray(int length) {
 }
 
 template <typename CharT>
-Handle<String> Isolate::InternalizeString(const Vector<const CharT>& str) {
+Handle<String> Isolate::InternalizeString(
+    const base::Vector<const CharT>& str) {
   js::AutoEnterOOMUnsafeRegion oomUnsafe;
   JSAtom* atom = js::AtomizeChars(cx(), str.begin(), str.length());
   if (!atom) {
@@ -260,9 +261,9 @@ Handle<String> Isolate::InternalizeString(const Vector<const CharT>& str) {
 }
 
 template Handle<String> Isolate::InternalizeString(
-    const Vector<const uint8_t>& str);
+    const base::Vector<const uint8_t>& str);
 template Handle<String> Isolate::InternalizeString(
-    const Vector<const char16_t>& str);
+    const base::Vector<const char16_t>& str);
 
 static_assert(JSRegExp::RegistersForCaptureCount(JSRegExp::kMaxCaptures) <=
               RegExpMacroAssembler::kMaxRegisterCount);

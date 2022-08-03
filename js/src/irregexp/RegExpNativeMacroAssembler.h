@@ -59,17 +59,19 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
 
   virtual void CheckCharacter(uint32_t c, Label* on_equal);
   virtual void CheckNotCharacter(uint32_t c, Label* on_not_equal);
-  virtual void CheckCharacterGT(uc16 limit, Label* on_greater);
-  virtual void CheckCharacterLT(uc16 limit, Label* on_less);
+  virtual void CheckCharacterGT(base::uc16 limit, Label* on_greater);
+  virtual void CheckCharacterLT(base::uc16 limit, Label* on_less);
   virtual void CheckCharacterAfterAnd(uint32_t c, uint32_t mask,
                                       Label* on_equal);
   virtual void CheckNotCharacterAfterAnd(uint32_t c, uint32_t mask,
                                          Label* on_not_equal);
-  virtual void CheckNotCharacterAfterMinusAnd(uc16 c, uc16 minus, uc16 mask,
+  virtual void CheckNotCharacterAfterMinusAnd(base::uc16 c, base::uc16 minus,
+                                              base::uc16 mask,
                                               Label* on_not_equal);
   virtual void CheckGreedyLoop(Label* on_tos_equals_current_position);
-  virtual void CheckCharacterInRange(uc16 from, uc16 to, Label* on_in_range);
-  virtual void CheckCharacterNotInRange(uc16 from, uc16 to,
+  virtual void CheckCharacterInRange(base::uc16 from, base::uc16 to,
+                                     Label* on_in_range);
+  virtual void CheckCharacterNotInRange(base::uc16 from, base::uc16 to,
                                         Label* on_not_in_range);
   virtual bool CheckCharacterInRangeArray(
       const ZoneList<CharacterRange>* ranges, Label* on_in_range);
@@ -131,7 +133,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
                           js::jit::Assembler::Condition cond);
   void CheckCharacterAfterAndImpl(uint32_t c, uint32_t and_with, Label* on_cond,
                                   bool negate);
-  void CheckCharacterInRangeImpl(uc16 from, uc16 to, Label* on_cond,
+  void CheckCharacterInRangeImpl(base::uc16 from, base::uc16 to, Label* on_cond,
                                  js::jit::Assembler::Condition cond);
   void CheckNotBackReferenceImpl(int start_reg, bool read_backward,
                                  bool unicode, Label* on_no_match,
