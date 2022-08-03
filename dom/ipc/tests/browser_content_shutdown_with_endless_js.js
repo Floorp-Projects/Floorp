@@ -17,50 +17,38 @@ function pushPref(name, val) {
 async function createAndShutdownContentProcess(url) {
   info("Create and shutdown a content process for " + url);
 
-  let oldChildCount = Services.ppmm.childCount;
-  info("Old process count: " + oldChildCount);
+  // Launch a new process and load url. Sets up a promise that will resolve
+  // on shutdown.
+  let browserParentDestroyed = PromiseUtils.defer();
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      opening: url,
+      waitForLoad: true,
+      forceNewProcess: true,
+    },
+    async function(otherBrowser) {
+      let remoteTab = otherBrowser.frameLoader.remoteTab;
 
-  let tabpromise = BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    opening: url,
-    waitForLoad: true,
-    forceNewProcess: true,
-  });
+      ok(true, "Content process created.");
 
-  let tab = await tabpromise;
+      browserParentDestroyed.resolve(
+        TestUtils.topicObserved(
+          "ipc:browser-destroyed",
+          subject => subject === remoteTab
+        )
+      );
 
-  // It seems that the ppmm counter is racy wrt tabpromise.
-  Services.tm.spinEventLoopUntil(
-    "browser_content_shutdown_with_endless_js",
-    () => Services.ppmm.childCount > oldChildCount
+      // withNewTab will start the shutdown of the child process for us
+    }
   );
 
-  let newChildCount = Services.ppmm.childCount;
-  info("New process count: " + newChildCount);
-
-  // There can be (unrelated) other processes launching, so we cannot do an
-  // exact `newChildCount == oldChildCount + 1` here. This is weird but not
-  // relevant for our test.
-  ok(newChildCount > oldChildCount, "Process created.");
-
-  // Start the shutdown of the child process
-  let tabClosed = BrowserTestUtils.waitForTabClosing(tab);
-  BrowserTestUtils.removeTab(tab);
-  ok(true, "removeTab");
-
-  Services.tm.spinEventLoopUntil(
-    "browser_content_shutdown_with_endless_js",
-    () => Services.ppmm.childCount < newChildCount
-  );
-
-  info("New count: " + Services.ppmm.childCount);
-  await tabClosed;
+  // Now wait for it to really shut down.
+  // If the HANG_PAGE JS is not canceled we will hang here.
+  await browserParentDestroyed.promise;
 
   // If we do not hang and get here, we are fine.
-  ok(
-    Services.ppmm.childCount < newChildCount,
-    "Shutdown of content process complete."
-  );
+  ok(true, "Shutdown of content process.");
 }
 
 add_task(async () => {
