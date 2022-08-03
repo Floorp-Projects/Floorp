@@ -6945,8 +6945,8 @@ nsIFrame* nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame) {
       result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
       break;
     case StyleTextRendering::Auto:
-      if (aStyleFont->mFont.size.ToCSSPixels() <
-          aPresContext->GetAutoQualityMinFontSize()) {
+      if (aPresContext && aStyleFont->mFont.size.ToCSSPixels() <
+                              aPresContext->GetAutoQualityMinFontSize()) {
         result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
       }
       break;
