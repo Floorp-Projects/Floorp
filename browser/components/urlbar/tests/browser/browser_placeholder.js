@@ -54,6 +54,7 @@ add_setup(async function() {
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
       ["browser.search.separatePrivateDefault", false],
+      ["browser.urlbar.suggest.quickactions", false],
     ],
   });
 

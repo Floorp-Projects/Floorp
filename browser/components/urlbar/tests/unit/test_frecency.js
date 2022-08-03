@@ -388,13 +388,21 @@ add_task(async function test_frecency() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.engines", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
   for (let test of tests) {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
 
     await test();
   }
-  for (let type of ["history", "bookmark", "openpage", "searches", "engines"]) {
+  for (let type of [
+    "history",
+    "bookmark",
+    "openpage",
+    "searches",
+    "engines",
+    "quickactions",
+  ]) {
     Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
   }

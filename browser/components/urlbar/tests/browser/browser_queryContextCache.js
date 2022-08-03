@@ -28,6 +28,10 @@ add_task(async function init() {
   await PlacesTestUtils.promiseAsyncUpdates();
   await TestUtils.waitForTick();
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   // Add some URLs to populate both history and top sites. Each URL needs to
   // match `SEARCH_STRING`.
   for (let i = 0; i < TEST_URLS_COUNT; i++) {

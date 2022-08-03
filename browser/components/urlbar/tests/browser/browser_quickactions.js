@@ -20,7 +20,7 @@ let testActionCalled = 0;
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.quickactions.enabled", true],
+      ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
       ["screenshots.browser.component.enabled", true],
       ["extensions.screenshots.disabled", false],

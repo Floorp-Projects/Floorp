@@ -7,6 +7,7 @@
  */
 
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
+const QUICKACTIONS_PREF = "browser.urlbar.suggest.quickactions";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SEARCH_PREF = "browser.search.separatePrivateDefault.ui.enabled";
 
@@ -24,12 +25,14 @@ add_task(async function setup() {
   registerCleanupFunction(async () => {
     Services.search.setDefault(oldDefaultEngine);
     Services.prefs.clearUserPref(SUGGEST_PREF);
+    Services.prefs.clearUserPref(QUICKACTIONS_PREF);
     Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
     Services.prefs.clearUserPref("keyword.enabled");
   });
   Services.search.setDefault(engine);
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(QUICKACTIONS_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
 });

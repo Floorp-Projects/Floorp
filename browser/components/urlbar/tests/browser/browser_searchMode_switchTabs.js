@@ -9,6 +9,10 @@
 
 // Enters search mode using the one-off buttons.
 add_task(async function switchTabs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   // Open three tabs.  We'll enter search mode in tabs 0 and 2.
   let tabs = [];
   for (let i = 0; i < 3; i++) {

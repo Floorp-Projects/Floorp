@@ -227,7 +227,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["suggest.remotetab", true],
 
   // Whether results will include QuickActions.
-  ["quickactions.enabled", false],
+  ["suggest.quickactions", false],
 
   // Whether we will match QuickActions within a phrase and not only a prefix.
   ["quickactions.matchInPhrase", true],

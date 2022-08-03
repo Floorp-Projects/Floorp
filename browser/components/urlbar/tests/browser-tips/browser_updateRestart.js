@@ -26,7 +26,10 @@ let preSteps = [
 add_task(async function test() {
   // Enable the pref that automatically downloads and installs updates.
   await SpecialPowers.pushPrefEnv({
-    set: [[PREF_APP_UPDATE_STAGING_ENABLED, true]],
+    set: [
+      [PREF_APP_UPDATE_STAGING_ENABLED, true],
+      ["browser.urlbar.suggest.quickactions", false],
+    ],
   });
 
   // Set up the "apply" update state.

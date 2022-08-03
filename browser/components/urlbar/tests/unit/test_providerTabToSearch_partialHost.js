@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
   // Disable tab-to-search onboarding results.
   Services.prefs.setIntPref(
     "browser.urlbar.tabToSearch.onboard.interactionsLeft",
@@ -27,6 +28,7 @@ add_task(async function setup() {
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
+    Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
     Services.prefs.clearUserPref(
       "browser.search.separatePrivateDefault.ui.enabled"
     );

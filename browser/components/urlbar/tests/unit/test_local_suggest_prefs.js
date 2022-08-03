@@ -14,6 +14,7 @@ testEngine_setup();
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.engines", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
 
   const uri = Services.io.newURI("http://example.com/");
 
@@ -27,6 +28,7 @@ add_task(async function setup() {
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     Services.prefs.clearUserPref("browser.urlbar.suggest.engines");
+    Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
 
     Services.prefs.clearUserPref("browser.urlbar.suggest.bookmark");
     Services.prefs.clearUserPref("browser.urlbar.suggest.history");

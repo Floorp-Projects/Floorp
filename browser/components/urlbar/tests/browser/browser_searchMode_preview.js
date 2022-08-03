@@ -15,6 +15,10 @@ add_setup(async function() {
     keyword: "@test",
   });
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
   });
