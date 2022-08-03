@@ -13,7 +13,6 @@ jobs:
       run: |
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
-         rustup target add aarch64-apple-darwin
          echo -e "ac_add_options --disable-updater\\nac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=/Users/runner/work/Floorp/Floorp/l10n-central/l10n-central\\nac_add_options --target=aarch64-apple-darwin\\nac_add_options --enable-optimize='-O2 -march=nehalem -mtune=haswell -w'\\nac_add_options --target=x86_64-apple-darwin" >> mozconfig
         ./mach configure
     - name: 🔨Build
