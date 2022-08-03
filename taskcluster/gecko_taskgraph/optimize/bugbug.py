@@ -7,7 +7,8 @@ from fnmatch import fnmatch
 from collections import defaultdict
 from urllib.parse import urlsplit
 
-from gecko_taskgraph.optimize import register_strategy, registry, OptimizationStrategy
+from taskgraph.optimize.base import register_strategy, registry, OptimizationStrategy
+
 from gecko_taskgraph.util.bugbug import (
     BugbugTimeoutException,
     push_schedules,

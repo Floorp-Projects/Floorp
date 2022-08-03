@@ -119,7 +119,7 @@ try_task_config_schema = Schema(
             "optimize-strategies",
             description="Alternative optimization strategies to use instead of the default. "
             "A module path pointing to a dict to be use as the `strategy_override` "
-            "argument in `gecko_taskgraph.optimize.optimize_task_graph`.",
+            "argument in `taskgraph.optimize.base.optimize_task_graph`.",
         ): str,
         Optional("rebuild"): int,
         Optional("tasks-regex"): {
