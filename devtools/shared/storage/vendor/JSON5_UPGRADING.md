@@ -9,7 +9,7 @@
 ```bash
 git clone https://github.com/json5/json5
 cd json5
-git checkout v2.1.0 # checkout the right version tag
+git checkout v2.2.1 # checkout the right version tag
 ```
 
 ## Building
@@ -26,11 +26,11 @@ cp dist/index.js <gecko-dev>/devtools/shared/storage/vendor/json5.js
 - Add the version number to the top of the file:
   ```
   /**
-   * json5 v2.1.0
+   * json5 v2.2.1
    */
   ```
 - Replace instances of `Function('return this')()` with `globalThis`. See Bug 1473549.
 
 ## Update the version:
 
-The current version is 2.1.0. Update this version number everywhere in this file.
+The current version is 2.2.1. Update this version number everywhere in this file.

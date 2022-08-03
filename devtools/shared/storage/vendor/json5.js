@@ -1,5 +1,5 @@
 /**
- * json5 v2.1.0
+ * json5 v2.2.1
  */
 
 (function (global, factory) {
@@ -15,7 +15,8 @@
   var _global = createCommonjsModule(function (module) {
   // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
   var global = module.exports = typeof window != 'undefined' && window.Math == Math
-    ? window : typeof self != 'undefined' && self.Math == Math ? self : globalThis;
+    ? window : typeof self != 'undefined' && self.Math == Math ? self
+    : globalThis;
   if (typeof __g == 'number') { __g = global; } // eslint-disable-line no-undef
   });
 
@@ -314,11 +315,11 @@
 
   var util = {
       isSpaceSeparator: function isSpaceSeparator (c) {
-          return unicode.Space_Separator.test(c)
+          return typeof c === 'string' && unicode.Space_Separator.test(c)
       },
 
       isIdStartChar: function isIdStartChar (c) {
-          return (
+          return typeof c === 'string' && (
               (c >= 'a' && c <= 'z') ||
           (c >= 'A' && c <= 'Z') ||
           (c === '$') || (c === '_') ||
@@ -327,7 +328,7 @@
       },
 
       isIdContinueChar: function isIdContinueChar (c) {
-          return (
+          return typeof c === 'string' && (
               (c >= 'a' && c <= 'z') ||
           (c >= 'A' && c <= 'Z') ||
           (c >= '0' && c <= '9') ||
@@ -338,11 +339,11 @@
       },
 
       isDigit: function isDigit (c) {
-          return /[0-9]/.test(c)
+          return typeof c === 'string' && /[0-9]/.test(c)
       },
 
       isHexDigit: function isHexDigit (c) {
-          return /[0-9A-Fa-f]/.test(c)
+          return typeof c === 'string' && /[0-9A-Fa-f]/.test(c)
       },
   };
 
@@ -1560,15 +1561,20 @@
 
           var product = '';
 
-          for (var i = 0, list = value; i < list.length; i += 1) {
-              var c = list[i];
-
+          for (var i = 0; i < value.length; i++) {
+              var c = value[i];
               switch (c) {
               case "'":
               case '"':
                   quotes[c]++;
                   product += c;
                   continue
+
+              case '\0':
+                  if (util.isDigit(value[i + 1])) {
+                      product += '\\x00';
+                      continue
+                  }
               }
 
               if (replacements[c]) {

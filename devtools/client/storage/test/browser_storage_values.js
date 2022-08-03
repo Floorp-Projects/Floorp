@@ -122,6 +122,7 @@ const testCases = [
     [{ name: "ls3", value: "http://foobar.com/baz.php", dontMatch: true }],
     true,
   ],
+  ["ls4", [{ name: "ls4", value: "0x1" }], false],
   [["sessionStorage", "https://test1.example.org"]],
   ["ss1", [{ name: "ss1", value: "This#is#an#array" }]],
   [
@@ -240,14 +241,21 @@ add_task(async function() {
 
   for (const item of testCases) {
     info("clicking for item " + item);
+    const [path, ruleArray, parsed] = item;
+    const start = performance.now();
 
-    if (Array.isArray(item[0])) {
-      await selectTreeItem(item[0]);
+    if (Array.isArray(path)) {
+      await selectTreeItem(path);
       continue;
-    } else if (item[0]) {
-      await selectTableItem(item[0]);
+    } else if (path) {
+      await selectTableItem(path);
     }
 
-    await findVariableViewProperties(item[1], item[2]);
+    // Parsing "0x1" used to be very slow and memory intensive.
+    // Check that each test case completes in less than 15000ms.
+    const time = performance.now() - start;
+    ok(time < 15000, `item ${item} completed in less than 15000ms ${time}`);
+
+    await findVariableViewProperties(ruleArray, parsed);
   }
 });
