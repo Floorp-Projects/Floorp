@@ -18,6 +18,13 @@ interface RecentTabInteractor {
     fun onRecentTabClicked(tabId: String)
 
     /**
+     * Opens the tabs tray and scroll to the search group.  Called when a user clicks on a search group.
+     *
+     * @param tabId The ID of the tab to open.
+     */
+    fun onRecentSearchGroupClicked(tabId: String)
+
+    /**
      * Show the tabs tray. Called when a user clicks on the "Show all" button besides the recent
      * tabs.
      */

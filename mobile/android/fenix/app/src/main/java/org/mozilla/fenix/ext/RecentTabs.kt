@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import org.mozilla.fenix.home.recenttabs.RecentTab
 
 /**
- * Removes a [RecentTab.Tab] from a list of [RecentTab].
+ * Removes a [RecentTab.Tab] from a list of [RecentTab]. [RecentTab.SearchGroup]s will not be filtered.
  *
  * @param tab [RecentTab] to remove from the list
  */

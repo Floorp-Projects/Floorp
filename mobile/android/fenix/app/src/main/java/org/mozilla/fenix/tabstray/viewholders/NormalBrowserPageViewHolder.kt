@@ -27,6 +27,7 @@ import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.defaultBrowserLayoutColumns
+import org.mozilla.fenix.tabstray.ext.getNormalTrayTabs
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.tabstray.ext.observeFirstInsert
@@ -78,6 +79,7 @@ class NormalBrowserPageViewHolder(
         layoutManager: RecyclerView.LayoutManager
     ) {
         val concatAdapter = adapter as ConcatAdapter
+        val browserAdapter = concatAdapter.browserAdapter
         val inactiveTabAdapter = concatAdapter.inactiveTabsAdapter
         val inactiveTabsAreEnabled = containerView.context.settings().inactiveTabsAreEnabled
 
@@ -85,6 +87,7 @@ class NormalBrowserPageViewHolder(
         // It's safe to read the state directly (i.e. won't cause bugs because of the store actions
         // processed on a separate thread) instead of observing it because this value is only set during
         // the initialState of the TabsTrayStore being created.
+        val focusGroupTabId = tabsTrayStore.state.focusGroupTabId
 
         // Update tabs into the inactive adapter.
         if (inactiveTabsAreEnabled && selectedTab.isNormalTabInactive(maxActiveTime)) {
@@ -97,6 +100,23 @@ class NormalBrowserPageViewHolder(
                 inactiveTabsList.forEach { item ->
                     if (item.id == selectedTab.id) {
                         containerView.post { layoutManager.scrollToPosition(0) }
+
+                        return@observeFirstInsert
+                    }
+                }
+            }
+        }
+
+        if (focusGroupTabId.isNullOrEmpty()) {
+            // Updates tabs into the normal browser tabs adapter.
+            browserAdapter.observeFirstInsert {
+                val activeTabsList = browserStore.state.getNormalTrayTabs(inactiveTabsAreEnabled)
+                activeTabsList.forEachIndexed { tabIndex, trayTab ->
+                    if (trayTab.id == selectedTab.id) {
+                        // Index is based on tabs above (inactive) with our calculated index.
+                        val indexToScrollTo = inactiveTabAdapter.itemCount + tabIndex
+
+                        containerView.post { layoutManager.scrollToPosition(indexToScrollTo) }
 
                         return@observeFirstInsert
                     }

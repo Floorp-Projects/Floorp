@@ -19,9 +19,10 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
  * @property mode Whether the browser tab list is in multi-select mode or not with the set of
  * currently selected tabs.
  * @property inactiveTabs The list of tabs are considered inactive.
- * @property normalTabs The list of normal tabs that do not fall under [inactiveTabs].
+ * @property normalTabs The list of normal tabs that do not fall under [inactiveTabs] or search term groups.
  * @property privateTabs The list of tabs that are [ContentState.private].
  * @property syncing Whether the Synced Tabs feature should fetch the latest tabs from paired devices.
+ * @property focusGroupTabId The search group tab id to focus. Defaults to null.
  */
 data class TabsTrayState(
     val selectedPage: Page = Page.NormalTabs,
@@ -31,6 +32,7 @@ data class TabsTrayState(
     val privateTabs: List<TabSessionState> = emptyList(),
     val syncedTabs: List<SyncedTabsListItem> = emptyList(),
     val syncing: Boolean = false,
+    val focusGroupTabId: String? = null
 ) : State {
 
     /**
@@ -129,6 +131,11 @@ sealed class TabsTrayAction : Action {
     object SyncCompleted : TabsTrayAction()
 
     /**
+     * Removes the [TabsTrayState.focusGroupTabId] of the [TabsTrayState].
+     */
+    object ConsumeFocusGroupTabId : TabsTrayAction()
+
+    /**
      * Updates the list of tabs in [TabsTrayState.inactiveTabs].
      */
     data class UpdateInactiveTabs(val tabs: List<TabSessionState>) : TabsTrayAction()
@@ -177,6 +184,8 @@ internal object TabsTrayReducer {
                 state.copy(syncing = true)
             is TabsTrayAction.SyncCompleted ->
                 state.copy(syncing = false)
+            is TabsTrayAction.ConsumeFocusGroupTabId ->
+                state.copy(focusGroupTabId = null)
             is TabsTrayAction.UpdateInactiveTabs ->
                 state.copy(inactiveTabs = action.tabs)
             is TabsTrayAction.UpdateNormalTabs ->

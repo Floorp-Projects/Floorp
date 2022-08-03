@@ -28,6 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.RecentTabs
+import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -161,5 +162,22 @@ class RecentTabControllerTest {
         }
 
         assertNotNull(RecentTabs.showAllClicked.testGetValue())
+    }
+
+    @Test
+    fun `WHEN handleRecentSearchGroupClicked is called THEN navigate to the tabsTrayFragment and record the correct metric`() {
+        assertNull(SearchTerms.jumpBackInGroupTapped.testGetValue())
+
+        controller.handleRecentSearchGroupClicked("1")
+
+        verify {
+            navController.navigate(
+                match<NavDirections> {
+                    it.actionId == R.id.action_global_tabsTrayFragment &&
+                        it.arguments["focusGroupTabId"] == "1"
+                }
+            )
+        }
+        assertNotNull(SearchTerms.jumpBackInGroupTapped.testGetValue())
     }
 }

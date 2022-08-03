@@ -10,7 +10,7 @@ import androidx.navigation.NavController
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases.SelectTabUseCase
 import mozilla.components.service.glean.private.NoExtras
-import org.mozilla.fenix.GleanMetrics.RecentTabs
+import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
@@ -18,6 +18,7 @@ import org.mozilla.fenix.ext.inProgressMediaTab
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
+import org.mozilla.fenix.GleanMetrics.RecentTabs as RecentTabs
 
 /**
  * An interface that handles the view manipulation of the recent tabs in the Home screen.
@@ -28,6 +29,11 @@ interface RecentTabController {
      * @see [RecentTabInteractor.onRecentTabClicked]
      */
     fun handleRecentTabClicked(tabId: String)
+
+    /**
+     * @see [RecentTabInteractor.onRecentSearchGroupClicked]
+     */
+    fun handleRecentSearchGroupClicked(tabId: String)
 
     /**
      * @see [RecentTabInteractor.onRecentTabShowAllClicked]
@@ -68,6 +74,15 @@ class DefaultRecentTabsController(
         dismissSearchDialogIfDisplayed()
         RecentTabs.showAllClicked.record(NoExtras())
         navController.navigate(HomeFragmentDirections.actionGlobalTabsTrayFragment())
+    }
+
+    override fun handleRecentSearchGroupClicked(tabId: String) {
+        SearchTerms.jumpBackInGroupTapped.record(NoExtras())
+        navController.navigate(
+            HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                focusGroupTabId = tabId
+            )
+        )
     }
 
     override fun handleRecentTabRemoved(tab: RecentTab.Tab) {

@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.recenttabs
 import android.graphics.Bitmap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -28,7 +29,8 @@ class RecentTabsListFeature(
 ) : AbstractBinding<BrowserState>(browserStore) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {
-        // Listen for changes regarding the currently selected tab and in progress media tab.
+        // Listen for changes regarding the currently selected tab, in progress media tab
+        // and search term groups.
         flow
             .map { it.asRecentTabs() }
             .ifChanged()

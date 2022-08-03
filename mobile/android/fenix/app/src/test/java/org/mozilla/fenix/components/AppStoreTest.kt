@@ -147,7 +147,8 @@ class AppStoreTest {
         // Add 2 RecentTabs to the AppStore
         // A new SearchGroup already shown in history should hide the HistoryGroup.
         val recentTab1: RecentTab.Tab = mockk()
-        val recentTabs: List<RecentTab> = listOf(recentTab1)
+        val recentTab2 = RecentTab.SearchGroup(group2.title, "tabId", "url", null, 2)
+        val recentTabs: List<RecentTab> = listOf(recentTab1, recentTab2)
         appStore.dispatch(AppAction.RecentTabsChange(recentTabs)).join()
 
         assertEquals(recentTabs, appStore.state.recentTabs)
@@ -208,6 +209,20 @@ class AppStoreTest {
     }
 
     @Test
+    fun `Test disbanding search group in AppStore`() = runTest {
+        val g1 = RecentHistoryGroup(title = "test One")
+        val g2 = RecentHistoryGroup(title = "test two")
+        val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
+        val h2 = RecentHistoryHighlight(title = "highlight two", url = "url2")
+        val recentHistory: List<RecentlyVisitedItem> = listOf(g1, g2, h1, h2)
+        appStore.dispatch(AppAction.RecentHistoryChange(recentHistory)).join()
+        assertEquals(recentHistory, appStore.state.recentHistory)
+
+        appStore.dispatch(AppAction.DisbandSearchGroupAction("Test one")).join()
+        assertEquals(listOf(g2, h1, h2), appStore.state.recentHistory)
+    }
+
+    @Test
     fun `Test changing hiding collections placeholder`() = runTest {
         assertTrue(appStore.state.showCollectionPlaceholder)
 
@@ -244,7 +259,7 @@ class AppStoreTest {
             val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
-            val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
+            val recentTabs: List<RecentTab> = listOf(mockk(), recentGroup, mockk())
             val recentBookmarks: List<RecentBookmark> = listOf(mockk(), mockk())
             val group1 = RecentHistoryGroup(title = "test One")
             val group2 = RecentHistoryGroup(title = recentGroup.searchTerm.lowercase())

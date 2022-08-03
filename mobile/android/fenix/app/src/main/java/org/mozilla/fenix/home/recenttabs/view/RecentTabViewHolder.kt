@@ -58,6 +58,7 @@ class RecentTabViewHolder(
             RecentTabs(
                 recentTabs = recentTabs.value ?: emptyList(),
                 onRecentTabClick = { recentTabInteractor.onRecentTabClicked(it) },
+                onRecentSearchGroupClick = { recentTabInteractor.onRecentSearchGroupClicked(it) },
                 menuItems = listOf(
                     RecentTabMenuItem(
                         title = stringResource(id = R.string.recent_tab_menu_item_remove),

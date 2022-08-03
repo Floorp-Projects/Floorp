@@ -4,12 +4,16 @@
 
 package org.mozilla.fenix.ext
 
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tabs.ext.hasMediaPlayed
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS
+import org.mozilla.fenix.tabstray.SEARCH_TERM_TAB_GROUPS_MIN_SIZE
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
@@ -25,13 +29,26 @@ const val DEFAULT_ACTIVE_DAYS = 14L
 val maxActiveTime = TimeUnit.DAYS.toMillis(DEFAULT_ACTIVE_DAYS)
 
 /**
- * Get the last opened normal tab or last tab with in progress media.
+ * Get the last opened normal tab, last tab with in progress media and last search term group, if available.
  *
- * @return A list of the last opened tab or an empty list.
+ * @return A list of the last opened tab not part of the last active search group and
+ * the last active search group if these are available or an empty list.
  */
 fun BrowserState.asRecentTabs(): List<RecentTab> {
     return mutableListOf<RecentTab>().apply {
-        lastOpenedNormalTab?.let { add(RecentTab.Tab(it)) }
+        val mostRecentTabsGroup = lastSearchGroup
+        val mostRecentTabNotInGroup = if (mostRecentTabsGroup == null) {
+            lastOpenedNormalTab
+        } else {
+            listOf(selectedNormalTab)
+                .plus(normalTabs.sortedByDescending { it.lastAccess })
+                .filterNot { lastTabGroup?.tabIds?.contains(it?.id) ?: false }
+                .firstOrNull()
+        }
+
+        mostRecentTabNotInGroup?.let { add(RecentTab.Tab(it)) }
+
+        mostRecentTabsGroup?.let { add(it) }
     }
 }
 
@@ -58,6 +75,32 @@ val BrowserState.inProgressMediaTab: TabSessionState?
     get() = normalTabs
         .filter { it.hasMediaPlayed() }
         .maxByOrNull { it.lastMediaAccessState.lastMediaAccess }
+
+/**
+ * Get the most recently accessed [TabGroup].
+ * Result will be `null` if the currently open normal tabs are not part of a search group.
+ */
+val BrowserState.lastTabGroup: TabGroup?
+    get() = tabPartitions[SEARCH_TERM_TAB_GROUPS]?.tabGroups
+        ?.lastOrNull { it.tabIds.size >= SEARCH_TERM_TAB_GROUPS_MIN_SIZE }
+
+/**
+ * Get the most recent search term group.
+ */
+val BrowserState.lastSearchGroup: RecentTab.SearchGroup?
+    get() {
+        val tabGroup = lastTabGroup ?: return null
+        val firstTabId = tabGroup.tabIds.firstOrNull() ?: return null
+        val firstTab = findTab(firstTabId) ?: return null
+
+        return RecentTab.SearchGroup(
+            tabGroup.id,
+            firstTabId,
+            firstTab.content.url,
+            firstTab.content.thumbnail,
+            tabGroup.tabIds.size
+        )
+    }
 
 /**
  * List of all inactive tabs based on [maxActiveTime].
