@@ -67,7 +67,7 @@ add_task(
 add_task(
   async function test_ExperimentFeature_getAllVariables_prefsOverExperiment() {
     const { sandbox, manager } = await setupForExperimentFeature();
-    const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(
+    const { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(
       undefined,
       {
         manager,
@@ -123,7 +123,7 @@ add_task(
   async function test_ExperimentFeature_getAllVariables_experimentOverRemote() {
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
     const { manager } = await setupForExperimentFeature();
-    const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(
+    const { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(
       undefined,
       {
         manager,
