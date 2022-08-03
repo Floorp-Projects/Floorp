@@ -73,6 +73,8 @@ static constexpr RelationData kRelationTypeAtoms[] = {
      RelationType::CONTROLLED_BY},
     {nsGkAtoms::_for, nsGkAtoms::output, RelationType::CONTROLLED_BY,
      RelationType::CONTROLLER_FOR},
+    {nsGkAtoms::aria_describedby, nullptr, RelationType::DESCRIBED_BY,
+     RelationType::DESCRIPTION_FOR},
 };
 
 }  // namespace a11y
