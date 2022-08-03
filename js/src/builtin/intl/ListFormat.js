@@ -67,8 +67,9 @@ function getListFormatInternals(obj) {
 
     // If internal properties have already been computed, use them.
     var internalProps = maybeInternalProperties(internals);
-    if (internalProps)
+    if (internalProps) {
         return internalProps;
+    }
 
     // Otherwise it's time to fully create them.
     internalProps = resolveListFormatInternals(internals.lazyData);
@@ -115,10 +116,11 @@ function InitializeListFormat(listFormat, locales, options) {
     lazyListFormatData.requestedLocales = requestedLocales;
 
     // Steps 4-5.
-    if (options === undefined)
+    if (options === undefined) {
         options = std_Object_create(null);
-    else if (!IsObject(options))
+    } else if (!IsObject(options)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, options === null ? "null" : typeof options);
+    }
 
     // Step 6.
     var opt = new_Record();
