@@ -36,7 +36,7 @@
 #define FOR_EACH_PERFSTATS_METRIC(MACRO) \
   MACRO(DisplayListBuilding)             \
   MACRO(Rasterizing)                     \
-  MACRO(LayerBuilding)                   \
+  MACRO(WrDisplayListBuilding)           \
   MACRO(LayerTransactions)               \
   MACRO(Compositing)                     \
   MACRO(Reflowing)                       \

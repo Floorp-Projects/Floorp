@@ -20,6 +20,7 @@
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/UpdateImageHelper.h"
+#include "mozilla/PerfStats.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "WebRenderCanvasRenderer.h"
@@ -455,6 +456,13 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
             ? wr::GeckoDisplayListType::Full(aGeckoDLBuildTime)
             : wr::GeckoDisplayListType::Partial(aGeckoDLBuildTime);
 
+    // convert from nanoseconds to microseconds
+    auto duration = TimeDuration::FromMicroseconds(
+        double(dlData.mDLDesc.builder_finish_time -
+               dlData.mDLDesc.builder_start_time) /
+        1000.);
+    PerfStats::RecordMeasurement(PerfStats::Metric::WrDisplayListBuilding,
+                                 duration);
     bool ret = WrBridge()->EndTransaction(
         std::move(dlData), mLatestTransactionId, containsSVGGroup,
         mTransactionIdAllocator->GetVsyncId(),
