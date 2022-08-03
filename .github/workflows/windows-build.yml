@@ -45,5 +45,5 @@ jobs:
     - name: Publish
       uses: actions/upload-artifact@master
       with:
-        name: floorp-linux-x64
+        name: floorp-windows-x64
         path: obj-x86_64-pc-mingw32/dist/floorp
