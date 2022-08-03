@@ -54,3 +54,12 @@ about-private-browsing-search-banner-close-button =
 
 about-private-browsing-promo-close-button =
   .title = Close
+
+## Strings used in a “pin promotion” message, which prompts users to pin a private window
+
+about-private-browsing-pin-promo-header = Private browsing freedom in one click
+about-private-browsing-pin-promo-link-text = { PLATFORM() ->
+    [macos] Keep in Dock
+   *[other] Pin to taskbar
+}
+about-private-browsing-pin-promo-title = No saved cookies or history, right from your desktop. Browse like no one’s watching.
