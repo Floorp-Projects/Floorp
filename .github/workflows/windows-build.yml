@@ -11,15 +11,9 @@ jobs:
 
     - name: Create environment
       run: |
-        if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole("Administrators"))
-        {
-        Start-Process powershell.exe "-File `"$PSCommandPath`"" -Verb RunAs
-        exit
-        }
         cd D:\a\Floorp\Floorp
-        curl -OL https://github.com/Floorp-Projects/Floorp/releases/download/10.0.0/mozilla-build.tar.gz -o D:\a\Floorp\Floorp\mozilla-build.tar.gz
-        mkdir C:\mozilla-build
-        tar xvzf mozilla-build.tar.gz -C C:\mozilla-build\
+        curl https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.0.1.exe -o D:\a\Floorp\Floorp\MozillaBuildSetup-4.0.1.exe
+        call D:\a\Floorp\Floorp\MozillaBuildSetup-4.0.1.exe
         cd D:\a\Floorp\Floorp
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
