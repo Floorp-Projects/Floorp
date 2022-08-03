@@ -5,8 +5,9 @@
 function StringProtoHasNoMatch() {
     var ObjectProto = GetBuiltinPrototype("Object");
     var StringProto = GetBuiltinPrototype("String");
-    if (!ObjectHasPrototype(StringProto, ObjectProto))
+    if (!ObjectHasPrototype(StringProto, ObjectProto)) {
         return false;
+    }
     return !(GetBuiltinSymbol("match") in StringProto);
 }
 
@@ -26,8 +27,9 @@ function ThrowIncompatibleMethod(name, thisv) {
 // ES 2016 draft Mar 25, 2016 21.1.3.11.
 function String_match(regexp) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("match", this);
+    }
 
     // Step 2.
     var isPatternString = (typeof regexp === "string");
@@ -36,8 +38,9 @@ function String_match(regexp) {
         var matcher = GetMethod(regexp, GetBuiltinSymbol("match"));
 
         // Step 2.b.
-        if (matcher !== undefined)
+        if (matcher !== undefined) {
             return callContentFunction(matcher, regexp, this);
+        }
     }
 
     // Step 3.
@@ -45,16 +48,18 @@ function String_match(regexp) {
 
     if (isPatternString && IsStringMatchOptimizable()) {
         var flatResult = FlatStringMatch(S, regexp);
-        if (flatResult !== undefined)
+        if (flatResult !== undefined) {
             return flatResult;
+        }
     }
 
     // Step 4.
     var rx = RegExpCreate(regexp);
 
     // Step 5 (optimized case).
-    if (IsStringMatchOptimizable())
+    if (IsStringMatchOptimizable()) {
         return RegExpMatcher(rx, S, 0);
+    }
 
     // Step 5.
     return callContentFunction(GetMethod(rx, GetBuiltinSymbol("match")), rx, S);
@@ -66,8 +71,9 @@ function String_match(regexp) {
 // String.prototype.matchAll ( regexp )
 function String_matchAll(regexp) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("matchAll", this);
+    }
 
     // Step 2.
     if (regexp !== undefined && regexp !== null) {
@@ -91,8 +97,9 @@ function String_matchAll(regexp) {
         var matcher = GetMethod(regexp, GetBuiltinSymbol("matchAll"));
 
         // Step 2.d.
-        if (matcher !== undefined)
+        if (matcher !== undefined) {
             return callContentFunction(matcher, regexp, this);
+        }
     }
 
     // Step 3.
@@ -111,8 +118,9 @@ function String_matchAll(regexp) {
  */
 function String_pad(maxLength, fillString, padEnd) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod(padEnd ? "padEnd" : "padStart", this);
+    }
 
     // Step 2.
     let str = ToString(this);
@@ -122,21 +130,24 @@ function String_pad(maxLength, fillString, padEnd) {
     let strLen = str.length;
 
     // Step 5.
-    if (intMaxLength <= strLen)
+    if (intMaxLength <= strLen) {
         return str;
+    }
 
     // Steps 6-7.
     assert(fillString !== undefined, "never called when fillString is undefined");
     let filler = ToString(fillString);
 
     // Step 8.
-    if (filler === "")
+    if (filler === "") {
         return str;
+    }
 
     // Throw an error if the final string length exceeds the maximum string
     // length. Perform this check early so we can use int32 operations below.
-    if (intMaxLength > MAX_STRING_LENGTH)
+    if (intMaxLength > MAX_STRING_LENGTH) {
         ThrowRangeError(JSMSG_RESULTING_STRING_TOO_LARGE);
+    }
 
     // Step 9.
     let fillLen = intMaxLength - strLen;
@@ -150,8 +161,9 @@ function String_pad(maxLength, fillString, padEnd) {
     truncatedStringFiller += Substring(filler, 0, fillLen % filler.length);
 
     // Step 11.
-    if (padEnd === true)
+    if (padEnd === true) {
         return str + truncatedStringFiller;
+    }
     return truncatedStringFiller + str;
 }
 
@@ -166,8 +178,9 @@ function String_pad_end(maxLength, fillString = " ") {
 function StringProtoHasNoReplace() {
     var ObjectProto = GetBuiltinPrototype("Object");
     var StringProto = GetBuiltinPrototype("String");
-    if (!ObjectHasPrototype(StringProto, ObjectProto))
+    if (!ObjectHasPrototype(StringProto, ObjectProto)) {
         return false;
+    }
     return !(GetBuiltinSymbol("replace") in StringProto);
 }
 
@@ -184,8 +197,9 @@ function Substring(str, from, length) {
 // ES 2016 draft Mar 25, 2016 21.1.3.14.
 function String_replace(searchValue, replaceValue) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("replace", this);
+    }
 
     // Step 2.
     if (!(typeof searchValue === "string" && StringProtoHasNoReplace()) &&
@@ -195,8 +209,9 @@ function String_replace(searchValue, replaceValue) {
         var replacer = GetMethod(searchValue, GetBuiltinSymbol("replace"));
 
         // Step 2.b.
-        if (replacer !== undefined)
+        if (replacer !== undefined) {
             return callContentFunction(replacer, searchValue, this, replaceValue);
+        }
     }
 
     // Step 3.
@@ -218,8 +233,9 @@ function String_replace(searchValue, replaceValue) {
 
     // Step 7.
     var pos = callFunction(std_String_indexOf, string, searchString);
-    if (pos === -1)
+    if (pos === -1) {
         return string;
+    }
 
     // Step 8.
     var replStr = ToString(callContentFunction(replaceValue, undefined, searchString, pos, string));
@@ -229,15 +245,17 @@ function String_replace(searchValue, replaceValue) {
 
     // Step 11.
     var newString;
-    if (pos === 0)
+    if (pos === 0) {
         newString = "";
-    else
+    } else {
         newString = Substring(string, 0, pos);
+    }
 
     newString += replStr;
     var stringLength = string.length;
-    if (tailPos < stringLength)
+    if (tailPos < stringLength) {
         newString += Substring(string, tailPos, stringLength - tailPos);
+    }
 
     // Step 12.
     return newString;
@@ -249,8 +267,9 @@ function String_replace(searchValue, replaceValue) {
 // String.prototype.replaceAll ( searchValue, replaceValue )
 function String_replaceAll(searchValue, replaceValue) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("replaceAll", this);
+    }
 
     // Step 2.
     if (searchValue !== undefined && searchValue !== null) {
@@ -353,8 +372,9 @@ function String_replaceAll(searchValue, replaceValue) {
 function StringProtoHasNoSearch() {
     var ObjectProto = GetBuiltinPrototype("Object");
     var StringProto = GetBuiltinPrototype("String");
-    if (!ObjectHasPrototype(StringProto, ObjectProto))
+    if (!ObjectHasPrototype(StringProto, ObjectProto)) {
         return false;
+    }
     return !(GetBuiltinSymbol("search") in StringProto);
 }
 
@@ -370,8 +390,9 @@ function IsStringSearchOptimizable() {
 // ES 2016 draft Mar 25, 2016 21.1.3.15.
 function String_search(regexp) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("search", this);
+    }
 
     // Step 2.
     var isPatternString = (typeof regexp === "string");
@@ -380,8 +401,9 @@ function String_search(regexp) {
         var searcher = GetMethod(regexp, GetBuiltinSymbol("search"));
 
         // Step 2.b.
-        if (searcher !== undefined)
+        if (searcher !== undefined) {
             return callContentFunction(searcher, regexp, this);
+        }
     }
 
     // Step 3.
@@ -389,8 +411,9 @@ function String_search(regexp) {
 
     if (isPatternString && IsStringSearchOptimizable()) {
         var flatResult = FlatStringSearch(string, regexp);
-        if (flatResult !== -2)
+        if (flatResult !== -2) {
             return flatResult;
+        }
     }
 
     // Step 4.
@@ -403,16 +426,18 @@ function String_search(regexp) {
 function StringProtoHasNoSplit() {
     var ObjectProto = GetBuiltinPrototype("Object");
     var StringProto = GetBuiltinPrototype("String");
-    if (!ObjectHasPrototype(StringProto, ObjectProto))
+    if (!ObjectHasPrototype(StringProto, ObjectProto)) {
         return false;
+    }
     return !(GetBuiltinSymbol("split") in StringProto);
 }
 
 // ES 2016 draft Mar 25, 2016 21.1.3.17.
 function String_split(separator, limit) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("split", this);
+    }
 
     // Optimized path for string.split(string), especially when both strings
     // are constants.  Following sequence of if's cannot be put together in
@@ -437,8 +462,9 @@ function String_split(separator, limit) {
         var splitter = GetMethod(separator, GetBuiltinSymbol("split"));
 
         // Step 2.b.
-        if (splitter !== undefined)
+        if (splitter !== undefined) {
             return callContentFunction(splitter, separator, this, limit);
+        }
     }
 
     // Step 3.
@@ -453,12 +479,14 @@ function String_split(separator, limit) {
         R = ToString(separator);
 
         // Step 10.
-        if (lim === 0)
+        if (lim === 0) {
             return [];
+        }
 
         // Step 11.
-        if (separator === undefined)
+        if (separator === undefined) {
             return [S];
+        }
 
         // Steps 4, 8, 12-18.
         return StringSplitStringLimit(S, R, lim);
@@ -468,8 +496,9 @@ function String_split(separator, limit) {
     R = ToString(separator);
 
     // Step 11.
-    if (separator === undefined)
+    if (separator === undefined) {
         return [S];
+    }
 
     // Optimized path.
     // Steps 4, 8, 12-18.
@@ -480,8 +509,9 @@ function String_split(separator, limit) {
 // 21.1.3.22 String.prototype.substring ( start, end )
 function String_substring(start, end) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("substring", this);
+    }
 
     // Step 2.
     var str = ToString(this);
@@ -523,8 +553,9 @@ SetIsInlinableLargeFunction(String_substring);
 // B.2.3.1 String.prototype.substr ( start, length )
 function String_substr(start, length) {
     // Steps 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("substr", this);
+    }
 
     // Step 2.
     var str = ToString(this);
@@ -539,15 +570,17 @@ function String_substr(start, length) {
     var end = (length === undefined) ? size : ToInteger(length);
 
     // Step 6.
-    if (intStart < 0)
+    if (intStart < 0) {
         intStart = std_Math_max(intStart + size, 0);
+    }
 
     // Step 7.
     var resultLength = std_Math_min(std_Math_max(end, 0), size - intStart);
 
     // Step 8.
-    if (resultLength <= 0)
+    if (resultLength <= 0) {
         return "";
+    }
 
     // Step 9.
     // While |intStart| and |resultLength| are bounded to the length of |str|
@@ -562,8 +595,9 @@ SetIsInlinableLargeFunction(String_substr);
 // Note: String.prototype.concat.length is 1.
 function String_concat(arg1) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("concat", this);
+    }
 
     // Step 2.
     var str = ToString(this);
@@ -599,8 +633,9 @@ function String_concat(arg1) {
 // 21.1.3.19 String.prototype.slice ( start, end )
 function String_slice(start, end) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("slice", this);
+    }
 
     // Step 2.
     var str = ToString(this);
@@ -635,8 +670,9 @@ SetIsInlinableLargeFunction(String_slice);
 // 21.1.3.3 String.prototype.codePointAt ( pos )
 function String_codePointAt(pos) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("codePointAt", this);
+    }
 
     // Step 2.
     var S = ToString(this);
@@ -648,18 +684,21 @@ function String_codePointAt(pos) {
     var size = S.length;
 
     // Step 5.
-    if (position < 0 || position >= size)
+    if (position < 0 || position >= size) {
         return undefined;
+    }
 
     // Steps 6-7.
     var first = callFunction(std_String_charCodeAt, S, position);
-    if (first < 0xD800 || first > 0xDBFF || position + 1 === size)
+    if (first < 0xD800 || first > 0xDBFF || position + 1 === size) {
         return first;
+    }
 
     // Steps 8-9.
     var second = callFunction(std_String_charCodeAt, S, position + 1);
-    if (second < 0xDC00 || second > 0xDFFF)
+    if (second < 0xDC00 || second > 0xDFFF) {
         return first;
+    }
 
     // Step 10.
     return (first - 0xD800) * 0x400 + (second - 0xDC00) + 0x10000;
@@ -669,8 +708,9 @@ function String_codePointAt(pos) {
 // 21.1.3.16 String.prototype.repeat ( count )
 function String_repeat(count) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("repeat", this);
+    }
 
     // Step 2.
     var S = ToString(this);
@@ -679,13 +719,15 @@ function String_repeat(count) {
     var n = ToInteger(count);
 
     // Step 4.
-    if (n < 0)
+    if (n < 0) {
         ThrowRangeError(JSMSG_NEGATIVE_REPETITION_COUNT);
+    }
 
     // Step 5.
     // Inverted condition to handle |Infinity * 0 = NaN| correctly.
-    if (!(n * S.length <= MAX_STRING_LENGTH))
+    if (!(n * S.length <= MAX_STRING_LENGTH)) {
         ThrowRangeError(JSMSG_RESULTING_STRING_TOO_LARGE);
+    }
 
     // Communicate |n|'s possible range to the compiler. We actually use
     // MAX_STRING_LENGTH + 1 as range because that's a valid bit mask. That's
@@ -699,13 +741,15 @@ function String_repeat(count) {
     // Steps 6-7.
     var T = "";
     for (;;) {
-        if (n & 1)
+        if (n & 1) {
             T += S;
+        }
         n >>= 1;
-        if (n)
+        if (n) {
             S += S;
-        else
+        } else {
             break;
+        }
     }
     return T;
 }
@@ -777,8 +821,9 @@ var collatorCache = new_Record();
  */
 function String_localeCompare(that) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("localeCompare", this);
+    }
 
     // Steps 2-3.
     var S = ToString(this);
@@ -813,8 +858,9 @@ function String_localeCompare(that) {
  */
 function String_toLocaleLowerCase() {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("toLocaleLowerCase", this);
+    }
 
     // Step 2.
     var string = ToString(this);
@@ -838,11 +884,13 @@ function String_toLocaleLowerCase() {
     }
 
     // Trivial case: When the input is empty, directly return the empty string.
-    if (string.length === 0)
+    if (string.length === 0) {
         return "";
+    }
 
-    if (requestedLocale === undefined)
+    if (requestedLocale === undefined) {
         requestedLocale = DefaultLocale();
+    }
 
     // Steps 7-16.
     return intl_toLocaleLowerCase(string, requestedLocale);
@@ -855,8 +903,9 @@ function String_toLocaleLowerCase() {
  */
 function String_toLocaleUpperCase() {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("toLocaleUpperCase", this);
+    }
 
     // Step 2.
     var string = ToString(this);
@@ -880,11 +929,13 @@ function String_toLocaleUpperCase() {
     }
 
     // Trivial case: When the input is empty, directly return the empty string.
-    if (string.length === 0)
+    if (string.length === 0) {
         return "";
+    }
 
-    if (requestedLocale === undefined)
+    if (requestedLocale === undefined) {
         requestedLocale = DefaultLocale();
+    }
 
     // Steps 7-16.
     return intl_toLocaleUpperCase(string, requestedLocale);
@@ -906,13 +957,15 @@ function String_static_raw(callSite/*, ...substitutions*/) {
     var literalSegments = ToLength(raw.length);
 
     // Step 6.
-    if (literalSegments === 0)
+    if (literalSegments === 0) {
         return "";
+    }
 
     // Special case for |String.raw `<literal>`| callers to avoid falling into
     // the loop code below.
-    if (literalSegments === 1)
+    if (literalSegments === 1) {
         return ToString(raw[0]);
+    }
 
     // Steps 7-9 were reordered to use the arguments object instead of a rest
     // parameter, because the former is currently more optimized.
@@ -929,8 +982,9 @@ function String_static_raw(callSite/*, ...substitutions*/) {
     // Steps 8-9, 9.d, and 9.i.
     for (var nextIndex = 1; nextIndex < literalSegments; nextIndex++) {
         // Steps 9.e-h.
-        if (nextIndex < arguments.length)
+        if (nextIndex < arguments.length) {
             resultString += ToString(arguments[nextIndex]);
+        }
 
         // Steps 9.a-c.
         resultString += ToString(raw[nextIndex]);
@@ -944,8 +998,9 @@ function String_static_raw(callSite/*, ...substitutions*/) {
 // String.prototype.at ( index )
 function String_at(index) {
     // Step 1.
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("at", this);
+    }
 
     // Step 2.
     var string = ToString(this);
@@ -975,64 +1030,73 @@ function String_at(index) {
 
 // ES6 draft 2014-04-27 B.2.3.3
 function String_big() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("big", this);
+    }
     return "<big>" + ToString(this) + "</big>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.4
 function String_blink() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("blink", this);
+    }
     return "<blink>" + ToString(this) + "</blink>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.5
 function String_bold() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("bold", this);
+    }
     return "<b>" + ToString(this) + "</b>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.6
 function String_fixed() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("fixed", this);
+    }
     return "<tt>" + ToString(this) + "</tt>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.9
 function String_italics() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("italics", this);
+    }
     return "<i>" + ToString(this) + "</i>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.11
 function String_small() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("small", this);
+    }
     return "<small>" + ToString(this) + "</small>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.12
 function String_strike() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("strike", this);
+    }
     return "<strike>" + ToString(this) + "</strike>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.13
 function String_sub() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("sub", this);
+    }
     return "<sub>" + ToString(this) + "</sub>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.14
 function String_sup() {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("sup", this);
+    }
     return "<sup>" + ToString(this) + "</sup>";
 }
 
@@ -1043,32 +1107,36 @@ function EscapeAttributeValue(v) {
 
 // ES6 draft 2014-04-27 B.2.3.2
 function String_anchor(name) {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("anchor", this);
+    }
     var S = ToString(this);
     return '<a name="' + EscapeAttributeValue(name) + '">' + S + "</a>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.7
 function String_fontcolor(color) {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("fontcolor", this);
+    }
     var S = ToString(this);
     return '<font color="' + EscapeAttributeValue(color) + '">' + S + "</font>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.8
 function String_fontsize(size) {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("fontsize", this);
+    }
     var S = ToString(this);
     return '<font size="' + EscapeAttributeValue(size) + '">' + S + "</font>";
 }
 
 // ES6 draft 2014-04-27 B.2.3.10
 function String_link(url) {
-    if (this === undefined || this === null)
+    if (this === undefined || this === null) {
         ThrowIncompatibleMethod("link", this);
+    }
     var S = ToString(this);
     return '<a href="' + EscapeAttributeValue(url) + '">' + S + "</a>";
 }
