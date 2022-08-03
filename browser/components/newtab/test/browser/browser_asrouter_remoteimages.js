@@ -380,11 +380,12 @@ add_task(async function test_remoteImages_prefetch() {
     PREFETCH_FINISHED_TOPIC
   );
 
-  const { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(
-    recipe
-  );
+  const {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(recipe);
 
-  await prefetchFinished;
+  await Promise.all([enrollmentPromise, prefetchFinished]);
 
   try {
     await RemoteImages.withDb(async db => {

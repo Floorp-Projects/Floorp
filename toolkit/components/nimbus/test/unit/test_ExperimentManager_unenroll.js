@@ -200,7 +200,7 @@ add_task(async function test_unenroll_uploadPref() {
   const recipe = ExperimentFakes.recipe("foo");
 
   await manager.onStartup();
-  await ExperimentFakes.enrollmentHelper(recipe, { manager });
+  await ExperimentFakes.enrollmentHelper(recipe, { manager }).enrollmentPromise;
 
   Assert.equal(
     manager.store.get(recipe.slug).active,

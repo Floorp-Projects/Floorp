@@ -84,9 +84,12 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
   recipe.branches[0].slug = "mochitest-active-foo";
   delete recipe.branches[1];
 
-  const { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(
-    recipe
-  );
+  let {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(recipe);
+
+  await enrollmentPromise;
 
   Assert.equal(
     await RemoteSettingsExperimentLoader.evaluateJexl(

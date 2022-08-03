@@ -25,6 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
   JsonSchema: "resource://gre/modules/JsonSchema.jsm",
 });
@@ -169,7 +170,17 @@ const ExperimentTestUtils = {
 
 const ExperimentFakes = {
   manager(store) {
-    return new lazy._ExperimentManager({ store: store || this.store() });
+    let sandbox = lazy.sinon.createSandbox();
+    let manager = new lazy._ExperimentManager({ store: store || this.store() });
+    // We want calls to `store.addEnrollment` to implicitly validate the
+    // enrollment before saving to store
+    let origAddExperiment = manager.store.addEnrollment.bind(manager.store);
+    sandbox.stub(manager.store, "addEnrollment").callsFake(async enrollment => {
+      await ExperimentTestUtils.validateEnrollment(enrollment);
+      return origAddExperiment(enrollment);
+    });
+
+    return manager;
   },
   store() {
     return new ExperimentStore("FakeStore", {
@@ -249,16 +260,24 @@ const ExperimentFakes = {
         },
       ],
     });
-    let { doExperimentCleanup } = await this.enrollmentHelper(recipe, {
-      manager,
-    });
+    let {
+      enrollmentPromise,
+      doExperimentCleanup,
+    } = this.enrollmentHelper(recipe, { manager });
+
+    await enrollmentPromise;
 
     return doExperimentCleanup;
   },
-  async enrollmentHelper(
-    recipe = {},
-    { manager = lazy.ExperimentManager } = {}
-  ) {
+  enrollmentHelper(recipe = {}, { manager = lazy.ExperimentManager } = {}) {
+    let enrollmentPromise = new Promise(resolve =>
+      manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
+        if (experiment.active) {
+          manager.store._syncToChildren({ flush: true });
+          resolve(experiment);
+        }
+      })
+    );
     let unenrollCompleted = slug =>
       new Promise(resolve =>
         manager.store.on(`update:${slug}`, (event, experiment) => {
@@ -285,10 +304,10 @@ const ExperimentFakes = {
       if (!manager.store._isReady) {
         throw new Error("Manager store not ready, call `manager.onStartup`");
       }
-      await manager.enroll(recipe, "enrollmentHelper");
+      manager.enroll(recipe, "enrollmentHelper");
     }
 
-    return { doExperimentCleanup };
+    return { enrollmentPromise, doExperimentCleanup };
   },
   // Experiment store caches in prefs Enrollments for fast sync access
   cleanupStorePrefCache() {
