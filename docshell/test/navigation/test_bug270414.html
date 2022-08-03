@@ -21,8 +21,10 @@ function testChild0() {
   if (!window.window0) {
     window0 = window.open("", "window0", "width=10,height=10");
     window0.document.open();
+    // eslint-disable-next-line no-unsanitized/method
     window0.document.write(headerHTML);
     window0.document.write("<script>navigateByLocation(opener.frames[0])<\/script>");
+    // eslint-disable-next-line no-unsanitized/method
     window0.document.write(footerHTML);
     window0.document.close();
   }
@@ -32,8 +34,10 @@ function testChild1() {
   if (!window.window1) {
     window1 = window.open("", "window1", "width=10,height=10");
     window1.document.open();
+    // eslint-disable-next-line no-unsanitized/method
     window1.document.write(headerHTML);
     window1.document.write("<script>navigateByOpen('child1');<\/script>");
+    // eslint-disable-next-line no-unsanitized/method
     window1.document.write(footerHTML);
     window1.document.close();
   }
@@ -43,8 +47,10 @@ function testChild2() {
   if (!window.window2) {
     window2 = window.open("", "window2", "width=10,height=10");
     window2.document.open();
+    // eslint-disable-next-line no-unsanitized/method
     window2.document.write(headerHTML);
     window2.document.write("<script>navigateByForm('child2');<\/script>");
+    // eslint-disable-next-line no-unsanitized/method
     window2.document.write(footerHTML);
     window2.document.close();
   }
@@ -54,8 +60,10 @@ function testChild3() {
   if (!window.window3) {
     window3 = window.open("", "window3", "width=10,height=10");
     window3.document.open();
+    // eslint-disable-next-line no-unsanitized/method
     window3.document.write(headerHTML);
     window3.document.write("<script>navigateByHyperlink('child3');<\/script>");
+    // eslint-disable-next-line no-unsanitized/method
     window3.document.write(footerHTML);
     window3.document.close();
   }
