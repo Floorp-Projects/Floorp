@@ -25,9 +25,9 @@ namespace data_pipe_detail {
 
 // Helper for queueing up actions to be run once the mutex has been unlocked.
 // Actions will be run in-order.
-class SCOPED_CAPABILITY DataPipeAutoLock {
+class MOZ_SCOPED_CAPABILITY DataPipeAutoLock {
  public:
-  explicit DataPipeAutoLock(Mutex& aMutex) CAPABILITY_ACQUIRE(aMutex)
+  explicit DataPipeAutoLock(Mutex& aMutex) MOZ_CAPABILITY_ACQUIRE(aMutex)
       : mMutex(aMutex) {
     mMutex.Lock();
   }
@@ -39,7 +39,7 @@ class SCOPED_CAPABILITY DataPipeAutoLock {
     mActions.AppendElement(std::move(aAction));
   }
 
-  ~DataPipeAutoLock() CAPABILITY_RELEASE() {
+  ~DataPipeAutoLock() MOZ_CAPABILITY_RELEASE() {
     mMutex.Unlock();
     for (auto& action : mActions) {
       action();
@@ -82,7 +82,7 @@ class DataPipeLink : public NodeController::PortObserver {
         mOffset(aOffset),
         mAvailable(aAvailable) {}
 
-  void Init() EXCLUDES(*mMutex) {
+  void Init() MOZ_EXCLUDES(*mMutex) {
     {
       DataPipeAutoLock lock(*mMutex);
       if (NS_FAILED(mPeerStatus)) {
@@ -94,18 +94,18 @@ class DataPipeLink : public NodeController::PortObserver {
     OnPortStatusChanged();
   }
 
-  void OnPortStatusChanged() final EXCLUDES(*mMutex);
+  void OnPortStatusChanged() final MOZ_EXCLUDES(*mMutex);
 
   // Add a task to notify the callback after `aLock` is unlocked.
   //
   // This method is safe to call multiple times, as after the first time it is
   // called, `mCallback` will be cleared.
-  void NotifyOnUnlock(DataPipeAutoLock& aLock) REQUIRES(*mMutex) {
+  void NotifyOnUnlock(DataPipeAutoLock& aLock) MOZ_REQUIRES(*mMutex) {
     DoNotifyOnUnlock(aLock, mCallback.forget(), mCallbackTarget.forget());
   }
 
   void SendBytesConsumedOnUnlock(DataPipeAutoLock& aLock, uint32_t aBytes)
-      REQUIRES(*mMutex) {
+      MOZ_REQUIRES(*mMutex) {
     MOZ_LOG(gDataPipeLog, LogLevel::Verbose,
             ("SendOnUnlock CONSUMED(%u) %s", aBytes, Describe(aLock).get()));
     if (NS_FAILED(mPeerStatus)) {
@@ -128,7 +128,7 @@ class DataPipeLink : public NodeController::PortObserver {
   }
 
   void SetPeerError(DataPipeAutoLock& aLock, nsresult aStatus,
-                    bool aSendClosed = false) REQUIRES(*mMutex) {
+                    bool aSendClosed = false) MOZ_REQUIRES(*mMutex) {
     MOZ_LOG(gDataPipeLog, LogLevel::Debug,
             ("SetPeerError(%s%s) %s", GetStaticErrorName(aStatus),
              aSendClosed ? ", send" : "", Describe(aLock).get()));
@@ -150,7 +150,7 @@ class DataPipeLink : public NodeController::PortObserver {
     NotifyOnUnlock(aLock);
   }
 
-  nsCString Describe(DataPipeAutoLock& aLock) const REQUIRES(*mMutex) {
+  nsCString Describe(DataPipeAutoLock& aLock) const MOZ_REQUIRES(*mMutex) {
     return nsPrintfCString(
         "[%s(%p) c=%u e=%s o=%u a=%u, cb=%s]",
         mReceiverSide ? "Receiver" : "Sender", this, mCapacity,
@@ -162,20 +162,20 @@ class DataPipeLink : public NodeController::PortObserver {
   // `DataPipeLink`.
   std::shared_ptr<Mutex> mMutex;
 
-  ScopedPort mPort GUARDED_BY(*mMutex);
+  ScopedPort mPort MOZ_GUARDED_BY(*mMutex);
   const RefPtr<SharedMemory> mShmem;
   const uint32_t mCapacity;
   const bool mReceiverSide;
 
-  bool mProcessingSegment GUARDED_BY(*mMutex) = false;
+  bool mProcessingSegment MOZ_GUARDED_BY(*mMutex) = false;
 
-  nsresult mPeerStatus GUARDED_BY(*mMutex) = NS_OK;
-  uint32_t mOffset GUARDED_BY(*mMutex) = 0;
-  uint32_t mAvailable GUARDED_BY(*mMutex) = 0;
+  nsresult mPeerStatus MOZ_GUARDED_BY(*mMutex) = NS_OK;
+  uint32_t mOffset MOZ_GUARDED_BY(*mMutex) = 0;
+  uint32_t mAvailable MOZ_GUARDED_BY(*mMutex) = 0;
 
-  bool mCallbackClosureOnly GUARDED_BY(*mMutex) = false;
-  nsCOMPtr<nsIRunnable> mCallback GUARDED_BY(*mMutex);
-  nsCOMPtr<nsIEventTarget> mCallbackTarget GUARDED_BY(*mMutex);
+  bool mCallbackClosureOnly MOZ_GUARDED_BY(*mMutex) = false;
+  nsCOMPtr<nsIRunnable> mCallback MOZ_GUARDED_BY(*mMutex);
+  nsCOMPtr<nsIEventTarget> mCallbackTarget MOZ_GUARDED_BY(*mMutex);
 };
 
 void DataPipeLink::OnPortStatusChanged() {

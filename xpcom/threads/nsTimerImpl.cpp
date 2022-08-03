@@ -50,16 +50,16 @@ class TimerThreadWrapper {
   void Shutdown();
 
   nsresult AddTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock)
-      REQUIRES(aTimer->mMutex);
+      MOZ_REQUIRES(aTimer->mMutex);
   nsresult RemoveTimer(nsTimerImpl* aTimer, const MutexAutoLock& aProofOfLock)
-      REQUIRES(aTimer->mMutex);
+      MOZ_REQUIRES(aTimer->mMutex);
   TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                              uint32_t aSearchBound);
   uint32_t AllowedEarlyFiringMicroseconds();
 
  private:
   static mozilla::StaticMutex sMutex;
-  TimerThread* mThread GUARDED_BY(sMutex);
+  TimerThread* mThread MOZ_GUARDED_BY(sMutex);
 };
 
 mozilla::StaticMutex TimerThreadWrapper::sMutex;
@@ -308,11 +308,12 @@ static mozilla::LogModule* GetTimerFiringsLog() { return sTimerFiringsLog; }
 /* static */
 mozilla::StaticMutex nsTimerImpl::sDeltaMutex;
 /* static */
-double nsTimerImpl::sDeltaSumSquared GUARDED_BY(nsTimerImpl::sDeltaMutex) = 0;
+double nsTimerImpl::sDeltaSumSquared MOZ_GUARDED_BY(nsTimerImpl::sDeltaMutex) =
+    0;
 /* static */
-double nsTimerImpl::sDeltaSum GUARDED_BY(nsTimerImpl::sDeltaMutex) = 0;
+double nsTimerImpl::sDeltaSum MOZ_GUARDED_BY(nsTimerImpl::sDeltaMutex) = 0;
 /* static */
-double nsTimerImpl::sDeltaNum GUARDED_BY(nsTimerImpl::sDeltaMutex) = 0;
+double nsTimerImpl::sDeltaNum MOZ_GUARDED_BY(nsTimerImpl::sDeltaMutex) = 0;
 
 static void myNS_MeanAndStdDev(double n, double sumOfValues,
                                double sumOfSquaredValues, double* meanResult,

@@ -52,9 +52,9 @@ class FontFaceSetWorkerImpl final : public FontFaceSetImpl {
 
   TimeStamp GetNavigationStartTimeStamp() override;
 
-  RefPtr<ThreadSafeWorkerRef> mWorkerRef GUARDED_BY(mMutex);
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef MOZ_GUARDED_BY(mMutex);
 
-  RefPtr<URLExtraData> mURLExtraData GUARDED_BY(mMutex);
+  RefPtr<URLExtraData> mURLExtraData MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla::dom

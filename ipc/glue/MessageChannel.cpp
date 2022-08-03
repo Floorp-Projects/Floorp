@@ -140,7 +140,7 @@ class AutoEnterTransaction {
  public:
   explicit AutoEnterTransaction(MessageChannel* aChan, int32_t aMsgSeqno,
                                 int32_t aTransactionID, int aNestedLevel)
-      REQUIRES(*aChan->mMonitor)
+      MOZ_REQUIRES(*aChan->mMonitor)
       : mChan(aChan),
         mActive(true),
         mOutgoing(true),
@@ -154,7 +154,7 @@ class AutoEnterTransaction {
 
   explicit AutoEnterTransaction(MessageChannel* aChan,
                                 const IPC::Message& aMessage)
-      REQUIRES(*aChan->mMonitor)
+      MOZ_REQUIRES(*aChan->mMonitor)
       : mChan(aChan),
         mActive(true),
         mOutgoing(false),
@@ -356,7 +356,7 @@ class ChannelCountReporter final : public nsIMemoryReporter {
   using CountTable = nsTHashMap<nsDepCharHashKey, ChannelCounts>;
 
   static StaticMutex sChannelCountMutex;
-  static CountTable* sChannelCounts GUARDED_BY(sChannelCountMutex);
+  static CountTable* sChannelCounts MOZ_GUARDED_BY(sChannelCountMutex);
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

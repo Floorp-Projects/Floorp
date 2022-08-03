@@ -759,7 +759,8 @@ class gfxMacFontFamily final : public gfxFontFamily {
 
   void LocalizedName(nsACString& aLocalizedName) override;
 
-  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr) REQUIRES(mLock) override;
+  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
+      MOZ_REQUIRES(mLock) override;
 
  protected:
   double mSizeHint;
@@ -929,7 +930,8 @@ class gfxSingleFaceMacFontFamily final : public gfxFontFamily {
 
   virtual ~gfxSingleFaceMacFontFamily() = default;
 
-  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr) REQUIRES(mLock) override{};
+  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
+      MOZ_REQUIRES(mLock) override{};
 
   void LocalizedName(nsACString& aLocalizedName) override;
 
@@ -1131,7 +1133,7 @@ void gfxMacPlatformFontList::ActivateFontsFromDir(const nsACString& aDir,
 }
 
 void gfxMacPlatformFontList::ReadSystemFontList(dom::SystemFontList* aList)
-    NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // Note: We rely on the records for mSystemTextFontFamilyName and
   // mSystemDisplayFontFamilyName (if present) being *before* the main
   // font list, so that those names are known in the content process

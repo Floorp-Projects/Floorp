@@ -358,7 +358,7 @@ class nsStorageInputStream final : public nsIInputStream,
   ~nsStorageInputStream() = default;
 
  protected:
-  nsresult Seek(uint32_t aPosition) REQUIRES(mStorageStream->mMutex);
+  nsresult Seek(uint32_t aPosition) MOZ_REQUIRES(mStorageStream->mMutex);
 
   friend class nsStorageStream;
 
@@ -371,7 +371,7 @@ class nsStorageInputStream final : public nsIInputStream,
   uint32_t mLogicalCursor;  // Logical offset into stream
   nsresult mStatus;
 
-  uint32_t SegNum(uint32_t aPosition) REQUIRES(mStorageStream->mMutex) {
+  uint32_t SegNum(uint32_t aPosition) MOZ_REQUIRES(mStorageStream->mMutex) {
     return aPosition >> mStorageStream->mSegmentSizeLog2;
   }
   uint32_t SegOffset(uint32_t aPosition) {

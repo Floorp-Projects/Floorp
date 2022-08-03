@@ -91,21 +91,21 @@ class FileMediaResource : public BaseMediaResource {
   // calling. The implmentation of Read, Seek and ReadAt obtains the
   // lock before calling these Unsafe variants to read or seek.
   nsresult UnsafeRead(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-      REQUIRES(mLock);
-  nsresult UnsafeSeek(int32_t aWhence, int64_t aOffset) REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
+  nsresult UnsafeSeek(int32_t aWhence, int64_t aOffset) MOZ_REQUIRES(mLock);
 
  private:
   // Ensures mSize is initialized, if it can be.
   // mLock must be held when this is called, and mInput must be non-null.
-  void EnsureSizeInitialized() REQUIRES(mLock);
+  void EnsureSizeInitialized() MOZ_REQUIRES(mLock);
   already_AddRefed<MediaByteBuffer> UnsafeMediaReadAt(int64_t aOffset,
                                                       uint32_t aCount)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   // The file size, or -1 if not known. Immutable after Open().
   // Can be used from any thread.
   // XXX FIX?  is this under mLock?   comments are contradictory
-  int64_t mSize GUARDED_BY(mLock);
+  int64_t mSize MOZ_GUARDED_BY(mLock);
 
   // This lock handles synchronisation between calls to Close() and
   // the Read, Seek, etc calls. Close must not be called while a
@@ -116,16 +116,16 @@ class FileMediaResource : public BaseMediaResource {
 
   // Seekable stream interface to file. This can be used from any
   // thread.
-  nsCOMPtr<nsISeekableStream> mSeekable GUARDED_BY(mLock);
+  nsCOMPtr<nsISeekableStream> mSeekable MOZ_GUARDED_BY(mLock);
 
   // Input stream for the media data. This can be used from any
   // thread.
-  nsCOMPtr<nsIInputStream> mInput GUARDED_BY(mLock);
+  nsCOMPtr<nsIInputStream> mInput MOZ_GUARDED_BY(mLock);
 
   // Whether we've attempted to initialize mSize. Note that mSize can be -1
   // when mSizeInitialized is true if we tried and failed to get the size
   // of the file.
-  bool mSizeInitialized GUARDED_BY(mLock);
+  bool mSizeInitialized MOZ_GUARDED_BY(mLock);
   // Set to true if NotifyDataEnded callback has been processed (which only
   // occurs if resource size is known)
   bool mNotifyDataEndedProcessed = false;

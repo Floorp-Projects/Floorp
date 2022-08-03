@@ -69,15 +69,15 @@ class PlatformUIThread : public PlatformThread {
   // Initialize the UI thread that is servicing the timer events
   bool InternalInit();
 
-  HWND hwnd_ GUARDED_BY(cs_) = nullptr;
-  UINT_PTR timerid_ GUARDED_BY(cs_) = 0;
-  unsigned int timeout_ GUARDED_BY(cs_) = 0;
+  HWND hwnd_ MOZ_GUARDED_BY(cs_) = nullptr;
+  UINT_PTR timerid_ MOZ_GUARDED_BY(cs_) = 0;
+  unsigned int timeout_ MOZ_GUARDED_BY(cs_) = 0;
   enum class State {
     UNSTARTED,
     STARTED,
     STOPPED,
   };
-  State state_ GUARDED_BY(cs_) = State::UNSTARTED;
+  State state_ MOZ_GUARDED_BY(cs_) = State::UNSTARTED;
 };
 
 }  // namespace rtc

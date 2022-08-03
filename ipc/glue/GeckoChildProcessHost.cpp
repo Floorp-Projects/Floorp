@@ -898,7 +898,7 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 
 static mozilla::StaticMutex gIPCLaunchThreadMutex;
 static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread
-    GUARDED_BY(gIPCLaunchThreadMutex);
+    MOZ_GUARDED_BY(gIPCLaunchThreadMutex);
 
 class IPCLaunchThreadObserver final : public nsIObserver {
  public:

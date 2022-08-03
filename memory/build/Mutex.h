@@ -44,7 +44,7 @@ static_assert(sizeof(os_unfair_lock) == sizeof(OSSpinLock),
 // places, because they require malloc()ed memory, which causes bootstrapping
 // issues in some cases.  We also can't use constructors, because for statics,
 // they would fire after the first use of malloc, resetting the locks.
-struct CAPABILITY Mutex {
+struct MOZ_CAPABILITY Mutex {
 #if defined(XP_WIN)
   CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
@@ -86,7 +86,7 @@ struct CAPABILITY Mutex {
     return true;
   }
 
-  inline void Lock() CAPABILITY_ACQUIRE() {
+  inline void Lock() MOZ_CAPABILITY_ACQUIRE() {
 #if defined(XP_WIN)
     EnterCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
@@ -109,7 +109,7 @@ struct CAPABILITY Mutex {
 #endif
   }
 
-  inline void Unlock() CAPABILITY_RELEASE() {
+  inline void Unlock() MOZ_CAPABILITY_RELEASE() {
 #if defined(XP_WIN)
     LeaveCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
@@ -137,12 +137,14 @@ struct CAPABILITY Mutex {
 // Ideally, we'd use the same type of locks everywhere, but SRWLocks
 // everywhere incur a performance penalty. See bug 1418389.
 #if defined(XP_WIN)
-struct CAPABILITY StaticMutex {
+struct MOZ_CAPABILITY StaticMutex {
   SRWLOCK mMutex;
 
-  inline void Lock() CAPABILITY_ACQUIRE() { AcquireSRWLockExclusive(&mMutex); }
+  inline void Lock() MOZ_CAPABILITY_ACQUIRE() {
+    AcquireSRWLockExclusive(&mMutex);
+  }
 
-  inline void Unlock() CAPABILITY_RELEASE() {
+  inline void Unlock() MOZ_CAPABILITY_RELEASE() {
     ReleaseSRWLockExclusive(&mMutex);
   }
 };
@@ -168,12 +170,12 @@ typedef Mutex StaticMutex;
 #endif
 
 template <typename T>
-struct SCOPED_CAPABILITY MOZ_RAII AutoLock {
-  explicit AutoLock(T& aMutex) CAPABILITY_ACQUIRE(aMutex) : mMutex(aMutex) {
+struct MOZ_SCOPED_CAPABILITY MOZ_RAII AutoLock {
+  explicit AutoLock(T& aMutex) MOZ_CAPABILITY_ACQUIRE(aMutex) : mMutex(aMutex) {
     mMutex.Lock();
   }
 
-  ~AutoLock() CAPABILITY_RELEASE() { mMutex.Unlock(); }
+  ~AutoLock() MOZ_CAPABILITY_RELEASE() { mMutex.Unlock(); }
 
   AutoLock(const AutoLock&) = delete;
   AutoLock(AutoLock&&) = delete;

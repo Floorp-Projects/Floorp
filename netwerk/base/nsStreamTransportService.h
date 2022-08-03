@@ -36,10 +36,10 @@ class nsStreamTransportService final : public nsIStreamTransportService,
  private:
   ~nsStreamTransportService();
 
-  nsCOMPtr<nsIThreadPool> mPool GUARDED_BY(mShutdownLock);
+  nsCOMPtr<nsIThreadPool> mPool MOZ_GUARDED_BY(mShutdownLock);
 
   mozilla::Mutex mShutdownLock{"nsStreamTransportService.mShutdownLock"};
-  bool mIsShutdown GUARDED_BY(mShutdownLock){false};
+  bool mIsShutdown MOZ_GUARDED_BY(mShutdownLock){false};
 };
 
 }  // namespace net

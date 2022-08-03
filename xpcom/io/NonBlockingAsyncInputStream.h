@@ -71,13 +71,13 @@ class NonBlockingAsyncInputStream final : public nsIAsyncInputStream,
   // This is set when AsyncWait is called with a callback and with
   // WAIT_CLOSURE_ONLY as flag.
   // This is protected by mLock.
-  Maybe<WaitClosureOnly> mWaitClosureOnly GUARDED_BY(mLock);
+  Maybe<WaitClosureOnly> mWaitClosureOnly MOZ_GUARDED_BY(mLock);
 
   // This is protected by mLock.
-  RefPtr<AsyncWaitRunnable> mAsyncWaitCallback GUARDED_BY(mLock);
+  RefPtr<AsyncWaitRunnable> mAsyncWaitCallback MOZ_GUARDED_BY(mLock);
 
   // This is protected by mLock.
-  bool mClosed GUARDED_BY(mLock);
+  bool mClosed MOZ_GUARDED_BY(mLock);
 };
 
 }  // namespace mozilla
