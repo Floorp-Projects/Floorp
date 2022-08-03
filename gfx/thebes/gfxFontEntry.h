@@ -492,14 +492,14 @@ class gfxFontEntry {
   gfxSVGGlyphs* GetSVGGlyphs() const { return mSVGGlyphs; }
 
   // list of gfxFonts that are using SVG glyphs
-  nsTArray<const gfxFont*> mFontsUsingSVGGlyphs MOZ_GUARDED_BY(mLock);
+  nsTArray<const gfxFont*> mFontsUsingSVGGlyphs GUARDED_BY(mLock);
   nsTArray<gfxFontFeature> mFeatureSettings;
   nsTArray<gfxFontVariation> mVariationSettings;
 
   mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, bool>> mSupportedFeatures
-      MOZ_GUARDED_BY(mFeatureInfoLock);
+      GUARDED_BY(mFeatureInfoLock);
   mozilla::UniquePtr<nsTHashMap<nsUint32HashKey, hb_set_t*>> mFeatureInputs
-      MOZ_GUARDED_BY(mFeatureInfoLock);
+      GUARDED_BY(mFeatureInfoLock);
 
   // Color Layer font support. These tables are inert once loaded, so we don't
   // need to hold a lock when reading them.
@@ -615,7 +615,7 @@ class gfxFontEntry {
   // Helper for HasTrackingTable; check/parse the table and cache pointers
   // to the subtables we need. Returns false on failure, in which case the
   // table is unusable.
-  bool ParseTrakTable() MOZ_REQUIRES(mLock);
+  bool ParseTrakTable() REQUIRES(mLock);
 
   // lookup the cmap in cached font data
   virtual already_AddRefed<gfxCharacterMap> GetCMAPFromFontInfo(
@@ -862,12 +862,11 @@ class gfxFontFamily {
   bool CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList);
 
   // Callers must hold a read-lock for as long as they're using the list.
-  const nsTArray<RefPtr<gfxFontEntry>>& GetFontList()
-      MOZ_REQUIRES_SHARED(mLock) {
+  const nsTArray<RefPtr<gfxFontEntry>>& GetFontList() REQUIRES_SHARED(mLock) {
     return mAvailableFonts;
   }
-  void ReadLock() MOZ_ACQUIRE_SHARED(mLock) { mLock.ReadLock(); }
-  void ReadUnlock() MOZ_RELEASE_SHARED(mLock) { mLock.ReadUnlock(); }
+  void ReadLock() ACQUIRE_SHARED(mLock) { mLock.ReadLock(); }
+  void ReadUnlock() RELEASE_SHARED(mLock) { mLock.ReadUnlock(); }
 
   uint32_t FontListLength() const {
     mozilla::AutoReadLock lock(mLock);
@@ -879,7 +878,7 @@ class gfxFontFamily {
     AddFontEntryLocked(aFontEntry);
   }
 
-  void AddFontEntryLocked(RefPtr<gfxFontEntry> aFontEntry) MOZ_REQUIRES(mLock) {
+  void AddFontEntryLocked(RefPtr<gfxFontEntry> aFontEntry) REQUIRES(mLock) {
     // Avoid potentially duplicating entries.
     if (mAvailableFonts.Contains(aFontEntry)) {
       return;
@@ -952,7 +951,7 @@ class gfxFontFamily {
   // This is a no-op in cases where the family is explicitly populated by other
   // means, rather than being asked to find its faces via system API.
   virtual void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
-      MOZ_REQUIRES(mLock){};
+      REQUIRES(mLock){};
   void FindStyleVariations(FontInfoData* aFontInfoData = nullptr) {
     if (mHasStyles) {
       return;
@@ -978,7 +977,7 @@ class gfxFontFamily {
     return mFamilyCharacterMap.test(aCh);
   }
 
-  void ResetCharacterMap() MOZ_REQUIRES(mLock) {
+  void ResetCharacterMap() REQUIRES(mLock) {
     mFamilyCharacterMap.reset();
     mFamilyCharacterMapInitialized = false;
   }
@@ -998,12 +997,12 @@ class gfxFontFamily {
   bool CheckForFallbackFaces() const { return mCheckForFallbackFaces; }
 
   // sort available fonts to put preferred (standard) faces towards the end
-  void SortAvailableFonts() MOZ_REQUIRES(mLock);
+  void SortAvailableFonts() REQUIRES(mLock);
 
   // check whether the family fits into the simple 4-face model,
   // so we can use simplified style-matching;
   // if so set the mIsSimpleFamily flag (defaults to False before we've checked)
-  void CheckForSimpleFamily() MOZ_REQUIRES(mLock);
+  void CheckForSimpleFamily() REQUIRES(mLock);
 
   // For memory reporter
   virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -1046,7 +1045,7 @@ class gfxFontFamily {
                                    bool useFullName = false);
 
   // set whether this font family is in "bad" underline offset blocklist.
-  void SetBadUnderlineFonts() MOZ_REQUIRES(mLock) {
+  void SetBadUnderlineFonts() REQUIRES(mLock) {
     for (auto& f : mAvailableFonts) {
       if (f) {
         f->mIsBadUnderlineFont = true;
@@ -1055,8 +1054,8 @@ class gfxFontFamily {
   }
 
   nsCString mName;
-  nsTArray<RefPtr<gfxFontEntry>> mAvailableFonts MOZ_GUARDED_BY(mLock);
-  gfxSparseBitSet mFamilyCharacterMap MOZ_GUARDED_BY(mLock);
+  nsTArray<RefPtr<gfxFontEntry>> mAvailableFonts GUARDED_BY(mLock);
+  gfxSparseBitSet mFamilyCharacterMap GUARDED_BY(mLock);
 
   mutable mozilla::RWLock mLock;
 
@@ -1069,7 +1068,7 @@ class gfxFontFamily {
   mozilla::Atomic<bool> mCheckedForLegacyFamilyNames;
   mozilla::Atomic<bool> mHasOtherFamilyNames;
 
-  bool mIsSimpleFamily : 1 MOZ_GUARDED_BY(mLock);
+  bool mIsSimpleFamily : 1 GUARDED_BY(mLock);
   bool mIsBadUnderlineFamily : 1;
   bool mSkipDefaultFeatureSpaceCheck : 1;
   bool mCheckForFallbackFaces : 1;  // check other faces for character

@@ -189,7 +189,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /**
    * Called to apply a TrackUpdate to its track.
    */
-  void ApplyTrackUpdate(TrackUpdate* aUpdate) MOZ_REQUIRES(mMonitor);
+  void ApplyTrackUpdate(TrackUpdate* aUpdate) REQUIRES(mMonitor);
   /**
    * Append a ControlMessage to the message queue. This queue is drained
    * during RunInStableState; the messages will run on the graph thread.
@@ -280,13 +280,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * mMonitor must be held.
    * See EnsureRunInStableState
    */
-  void EnsureStableStateEventPosted() MOZ_REQUIRES(mMonitor);
+  void EnsureStableStateEventPosted() REQUIRES(mMonitor);
   /**
    * Generate messages to the main thread to update it for all state changes.
    * mMonitor must be held.
    */
-  void PrepareUpdatesToMainThreadState(bool aFinalUpdate)
-      MOZ_REQUIRES(mMonitor);
+  void PrepareUpdatesToMainThreadState(bool aFinalUpdate) REQUIRES(mMonitor);
   /**
    * If we are rendering in non-realtime mode, we don't want to send messages to
    * the main thread at each iteration for performance reasons. We instead
@@ -320,7 +319,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   void UpdateGraph(GraphTime aEndBlockingDecisions);
 
-  void SwapMessageQueues() MOZ_REQUIRES(mMonitor) {
+  void SwapMessageQueues() REQUIRES(mMonitor) {
     MOZ_ASSERT(OnGraphThreadOrNotRunning());
     mMonitor.AssertCurrentThreadOwns();
     MOZ_ASSERT(mFrontMessageQueue.IsEmpty());
@@ -554,7 +553,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /**
    * Not safe to call off the MediaTrackGraph thread unless monitor is held!
    */
-  GraphDriver* CurrentDriver() const MOZ_NO_THREAD_SAFETY_ANALYSIS {
+  GraphDriver* CurrentDriver() const NO_THREAD_SAFETY_ANALYSIS {
 #ifdef DEBUG
     if (!OnGraphThreadOrNotRunning()) {
       mMonitor.AssertCurrentThreadOwns();
@@ -788,11 +787,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /**
    * State to copy to main thread
    */
-  nsTArray<TrackUpdate> mTrackUpdates MOZ_GUARDED_BY(mMonitor);
+  nsTArray<TrackUpdate> mTrackUpdates GUARDED_BY(mMonitor);
   /**
    * Runnables to run after the next update to main thread state.
    */
-  nsTArray<nsCOMPtr<nsIRunnable>> mUpdateRunnables MOZ_GUARDED_BY(mMonitor);
+  nsTArray<nsCOMPtr<nsIRunnable>> mUpdateRunnables GUARDED_BY(mMonitor);
   /**
    * A list of batches of messages to process. Each batch is processed
    * as an atomic unit.
@@ -806,10 +805,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Message queue in which the main thread appends messages.
    * Access guarded by mMonitor.
    */
-  nsTArray<MessageBlock> mBackMessageQueue MOZ_GUARDED_BY(mMonitor);
+  nsTArray<MessageBlock> mBackMessageQueue GUARDED_BY(mMonitor);
 
   /* True if there will messages to process if we swap the message queues. */
-  bool MessagesQueued() const MOZ_REQUIRES(mMonitor) {
+  bool MessagesQueued() const REQUIRES(mMonitor) {
     mMonitor.AssertCurrentThreadOwns();
     return !mBackMessageQueue.IsEmpty();
   }
@@ -863,8 +862,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP occur on the graph thread at
    * the end of an iteration.  All other transitions occur on the main thread.
    */
-  LifecycleState mLifecycleState MOZ_GUARDED_BY(mMonitor);
-  LifecycleState& LifecycleStateRef() MOZ_NO_THREAD_SAFETY_ANALYSIS {
+  LifecycleState mLifecycleState GUARDED_BY(mMonitor);
+  LifecycleState& LifecycleStateRef() NO_THREAD_SAFETY_ANALYSIS {
 #if DEBUG
     if (mGraphDriverRunning) {
       mMonitor.AssertCurrentThreadOwns();
@@ -874,8 +873,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 #endif
     return mLifecycleState;
   }
-  const LifecycleState& LifecycleStateRef() const
-      MOZ_NO_THREAD_SAFETY_ANALYSIS {
+  const LifecycleState& LifecycleStateRef() const NO_THREAD_SAFETY_ANALYSIS {
 #if DEBUG
     if (mGraphDriverRunning) {
       mMonitor.AssertCurrentThreadOwns();
@@ -901,7 +899,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * forced) has commenced.  Set on the main thread under mMonitor and read on
    * the graph thread under mMonitor.
    **/
-  bool mInterruptJSCalled MOZ_GUARDED_BY(mMonitor) = false;
+  bool mInterruptJSCalled GUARDED_BY(mMonitor) = false;
 
   /**
    * Remove this blocker to unblock shutdown.
@@ -914,7 +912,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * RunInStableState() and the event hasn't run yet.
    * Accessed on both main and MTG thread, mMonitor must be held.
    */
-  bool mPostedRunInStableStateEvent MOZ_GUARDED_BY(mMonitor);
+  bool mPostedRunInStableStateEvent GUARDED_BY(mMonitor);
 
   /**
    * The JSContext of the graph thread.  Set under mMonitor on only the graph
@@ -922,7 +920,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * the thread is about to exit.  Read under mMonitor on the main thread to
    * interrupt running JS for forced shutdown.
    **/
-  JSContext* mJSContext MOZ_GUARDED_BY(mMonitor) = nullptr;
+  JSContext* mJSContext GUARDED_BY(mMonitor) = nullptr;
 
   // Main thread only
 
@@ -1017,7 +1015,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Set based on mProcessedTime at end of iteration.
    * Read by stable state runnable on main thread. Protected by mMonitor.
    */
-  GraphTime mNextMainThreadGraphTime MOZ_GUARDED_BY(mMonitor) = 0;
+  GraphTime mNextMainThreadGraphTime GUARDED_BY(mMonitor) = 0;
 
   /**
    * Cached audio output latency, in seconds. Main thread only. This is reset

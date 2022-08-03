@@ -188,7 +188,7 @@ class GDIFontFamily final : public gfxFontFamily {
         mCharset() {}
 
   void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
-      MOZ_REQUIRES(mLock) override;
+      REQUIRES(mLock) override;
 
   bool FilterForFontList(nsAtom* aLangGroup,
                          const nsACString& aGeneric) const final {
@@ -296,7 +296,7 @@ class gfxGDIFontList final : public gfxPlatformFontList {
   virtual ~gfxGDIFontList() { AutoLock lock(mLock); }
 
   // initialize font lists
-  nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
                                   FontVisibility aVisibility) const override;
@@ -306,7 +306,7 @@ class gfxGDIFontList final : public gfxPlatformFontList {
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
       nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0)
-      MOZ_REQUIRES(mLock) override;
+      REQUIRES(mLock) override;
 
   gfxFontEntry* LookupLocalFont(nsPresContext* aPresContext,
                                 const nsACString& aFontName,
@@ -330,14 +330,14 @@ class gfxGDIFontList final : public gfxPlatformFontList {
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr)
-      MOZ_REQUIRES(mLock) override;
+      REQUIRES(mLock) override;
 
  private:
   friend class gfxWindowsPlatform;
 
   gfxGDIFontList();
 
-  nsresult GetFontSubstitutes() MOZ_REQUIRES(mLock);
+  nsresult GetFontSubstitutes() REQUIRES(mLock);
 
   static int CALLBACK EnumFontFamExProc(ENUMLOGFONTEXW* lpelfe,
                                         NEWTEXTMETRICEXW* lpntme,

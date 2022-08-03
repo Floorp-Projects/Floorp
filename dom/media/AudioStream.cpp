@@ -228,7 +228,7 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
 }
 
 nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 

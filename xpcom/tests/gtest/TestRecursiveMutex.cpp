@@ -15,7 +15,7 @@ using mozilla::RecursiveMutexAutoLock;
 // well, actually recursively acquirable.
 
 TEST(RecursiveMutex, SmokeTest)
-MOZ_NO_THREAD_SAFETY_ANALYSIS {
+NO_THREAD_SAFETY_ANALYSIS {
   RecursiveMutex mutex("testing mutex");
 
   RecursiveMutexAutoLock lock1(mutex);

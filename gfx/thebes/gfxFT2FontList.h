@@ -174,26 +174,26 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   typedef enum { kUnknown, kStandard } StandardFile;
 
   // initialize font lists
-  nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
 
   void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
-                                   StandardFile aStdFile) MOZ_REQUIRES(mLock);
+                                   StandardFile aStdFile) REQUIRES(mLock);
 
   void AppendFacesFromBlob(const nsCString& aFileName, StandardFile aStdFile,
                            hb_blob_t* aBlob, FontNameCache* aCache,
                            uint32_t aTimestamp, uint32_t aFilesize)
-      MOZ_REQUIRES(mLock);
+      REQUIRES(mLock);
 
   void AppendFacesFromFontFile(const nsCString& aFileName,
                                FontNameCache* aCache, StandardFile aStdFile)
-      MOZ_REQUIRES(mLock);
+      REQUIRES(mLock);
 
   void AppendFacesFromOmnijarEntry(nsZipArchive* aReader,
                                    const nsCString& aEntryName,
                                    FontNameCache* aCache, bool aJarChanged)
-      MOZ_REQUIRES(mLock);
+      REQUIRES(mLock);
 
-  void InitSharedFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  void InitSharedFontListForPlatform() REQUIRES(mLock) override;
   void CollectInitData(const FontListEntry& aFLE, const nsCString& aPSName,
                        const nsCString& aFullName, StandardFile aStdFile);
 
@@ -217,23 +217,23 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   bool AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
                                      const nsCString& aFileName,
                                      const nsCString& aFaceList,
-                                     StandardFile aStdFile) MOZ_REQUIRES(mLock);
+                                     StandardFile aStdFile) REQUIRES(mLock);
 
   void AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
                      StandardFile aStdFile, hb_face_t* aFace,
-                     nsCString& aFaceList) MOZ_REQUIRES(mLock);
+                     nsCString& aFaceList) REQUIRES(mLock);
 
-  void FindFonts() MOZ_REQUIRES(mLock);
+  void FindFonts() REQUIRES(mLock);
 
-  void FindFontsInOmnijar(FontNameCache* aCache) MOZ_REQUIRES(mLock);
+  void FindFontsInOmnijar(FontNameCache* aCache) REQUIRES(mLock);
 
   void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC)
-      MOZ_REQUIRES(mLock);
+      REQUIRES(mLock);
 
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr)
-      MOZ_REQUIRES(mLock) override;
+      REQUIRES(mLock) override;
 
   nsTHashSet<nsCString> mSkipSpaceLookupCheckFamilies;
 

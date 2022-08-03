@@ -73,7 +73,7 @@ void APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId) {
 // Takes a conditional lock!
 /*static*/
 void APZUpdater::PrepareForSceneSwap(const wr::WrWindowId& aWindowId)
-    MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    NO_THREAD_SAFETY_ANALYSIS {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
     updater->mApz->LockTree();
   }

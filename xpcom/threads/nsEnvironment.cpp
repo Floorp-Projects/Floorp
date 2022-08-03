@@ -91,9 +91,9 @@ typedef nsBaseHashtableET<nsCharPtrHashKey, char*> EnvEntryType;
 typedef nsTHashtable<EnvEntryType> EnvHashType;
 
 static StaticMutex gEnvHashMutex;
-static EnvHashType* gEnvHash MOZ_GUARDED_BY(gEnvHashMutex) = nullptr;
+static EnvHashType* gEnvHash GUARDED_BY(gEnvHashMutex) = nullptr;
 
-static EnvHashType* EnsureEnvHash() MOZ_REQUIRES(gEnvHashMutex) {
+static EnvHashType* EnsureEnvHash() REQUIRES(gEnvHashMutex) {
   if (!gEnvHash) {
     gEnvHash = new EnvHashType;
   }
