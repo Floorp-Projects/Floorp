@@ -11,10 +11,12 @@ function WeakSetConstructorInit(iterable) {
     var adder = set.add;
 
     // Step 6.b.
-    if (!IsCallable(adder))
+    if (!IsCallable(adder)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, typeof adder);
+    }
 
     // Steps 6.c-8.
-    for (var nextValue of allowContentIter(iterable))
+    for (var nextValue of allowContentIter(iterable)) {
         callContentFunction(adder, set, nextValue);
+    }
 }

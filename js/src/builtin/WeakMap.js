@@ -11,14 +11,16 @@ function WeakMapConstructorInit(iterable) {
     var adder = map.set;
 
     // Step 6.b.
-    if (!IsCallable(adder))
+    if (!IsCallable(adder)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, typeof adder);
+    }
 
     // Steps 6.c-8.
     for (var nextItem of allowContentIter(iterable)) {
         // Step 8.d.
-        if (!IsObject(nextItem))
+        if (!IsObject(nextItem)) {
             ThrowTypeError(JSMSG_INVALID_MAP_ITERABLE, "WeakMap");
+        }
 
         // Steps 8.e-j.
         callContentFunction(adder, map, nextItem[0], nextItem[1]);
