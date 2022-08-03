@@ -54,6 +54,8 @@ class Zone {
     return lifoAlloc_.computedSizeOfExcludingThis() > kExcessLimit;
   }
 
+  js::LifoAlloc& inner() { return lifoAlloc_; }
+
  private:
   js::LifoAlloc& lifoAlloc_;
 };
@@ -297,6 +299,11 @@ class ZoneAllocator {
   }
   bool operator!=(ZoneAllocator const& other) const {
     return zone_ != other.zone_;
+  }
+
+  using Policy = js::LifoAllocPolicy<js::Fallible>;
+  Policy policy() const {
+    return js::LifoAllocPolicy<js::Fallible>(zone_->inner());
   }
 
  private:

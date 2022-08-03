@@ -185,11 +185,12 @@ class DefaultAllocator {
 // It is basically equivalent to js::Vector, and is implemented
 // as a thin wrapper.
 // V8's implementation:
-// https://github.com/v8/v8/blob/master/src/base/small-vector.h
-template <typename T, size_t kSize>
+// https://github.com/v8/v8/blob/main/src/base/small-vector.h
+template <typename T, size_t kSize, typename Allocator = DefaultAllocator>
 class SmallVector {
  public:
-  SmallVector() = default;
+  explicit SmallVector(const Allocator& allocator = DefaultAllocator())
+      : inner_(allocator.policy()) {}
   SmallVector(size_t size) { resize_no_init(size); }
 
   inline bool empty() const { return inner_.empty(); }
@@ -220,7 +221,7 @@ class SmallVector {
   }
 
  private:
-  js::Vector<T, kSize, js::SystemAllocPolicy> inner_;
+  js::Vector<T, kSize, typename Allocator::Policy> inner_;
 };
 
 }  // namespace base
