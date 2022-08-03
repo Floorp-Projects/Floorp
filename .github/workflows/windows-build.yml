@@ -35,7 +35,7 @@ jobs:
         echo MOZ_DATA_REPORTING= >> mozconfig 
         echo MOZ_TELEMETRY_REPORTING= >> mozconfig 
         ./mach configure
-        rm .\MozillaBuildSetup-4.0.1.exe
+        rm .\mozilla-build.tar.gz
     - name: Build & Package
       run: |        
         ./mach build
