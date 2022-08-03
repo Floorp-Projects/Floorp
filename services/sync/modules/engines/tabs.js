@@ -70,6 +70,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SYNC_AFTER_DELAY_MS",
+  "services.sync.syncedTabs.syncDelayAfterTabChange",
+  0
+);
+
 function TabSetRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -585,16 +592,25 @@ TabTracker.prototype = {
   callScheduleSync(scoreIncrement) {
     this.modified = true;
     let { scheduler } = this.engine.service;
-    const delayInMs = lazy.NimbusFeatures.syncAfterTabChange.getVariable(
-      "syncDelayAfterTabChange"
+    let delayInMs = lazy.SYNC_AFTER_DELAY_MS;
+
+    // We have this check to determine if the experiment is enabled and wants
+    // to override the default values (whether to lengthen the delay or disable completely)
+    const override = lazy.NimbusFeatures.syncAfterTabChange.getVariable(
+      "syncDelayAfterTabChangeOverride"
     );
+    if (override) {
+      delayInMs = lazy.NimbusFeatures.syncAfterTabChange.getVariable(
+        "syncDelayAfterTabChange"
+      );
+    }
 
     // If we are part of the experiment don't use score here
     // and instead schedule a sync once we detect a tab change
-    // to ensure the server always has the most up to date tabs
+    // to ensure the server always has the most up to date tabs]
     if (
       delayInMs > 0 &&
-      scheduler.numClients > 1 // Don't constantly schedule syncs for single client users
+      scheduler.numClients > 1 // Only schedule quick syncs for single client users
     ) {
       if (this.tabsQuickWriteTimer) {
         this._log.debug(
