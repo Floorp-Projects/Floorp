@@ -128,7 +128,4 @@ add_task(async function() {
     iframeWorkerTargetAfterGoingBack,
     "The target list handled the worker created in the iframe from the BF Cache"
   );
-
-  targetCommand.destroy();
-  await commands.destroy();
 });
