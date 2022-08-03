@@ -1334,6 +1334,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   }
 
   if (aAttribute == nsGkAtoms::aria_describedby) {
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, this);
     if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
         aModType == dom::MutationEvent_Binding::ADDITION) {
