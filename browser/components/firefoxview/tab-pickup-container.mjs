@@ -16,6 +16,7 @@ class TabPickupContainer extends HTMLElement {
     super();
     this.boundObserve = (...args) => this.observe(...args);
     this._currentSetupStateIndex = -1;
+    this.errorState = null;
   }
   get setupContainerElem() {
     return this.querySelector(".sync-setup-container");
@@ -27,6 +28,11 @@ class TabPickupContainer extends HTMLElement {
 
   get collapsibleButton() {
     return this.querySelector("#collapsible-synced-tabs-button");
+  }
+
+  getWindow() {
+    return this.ownerGlobal.browsingContext.embedderWindowGlobal.browsingContext
+      .window;
   }
 
   connectedCallback() {
@@ -51,15 +57,20 @@ class TabPickupContainer extends HTMLElement {
     }
     if (event.type == "click" && event.target.dataset.action) {
       switch (event.target.dataset.action) {
-        case "view0-primary-action": {
-          TabsSetupFlowManager.openFxASignup(event.target.ownerGlobal);
+        case "view0-sync-error-action":
+        case "view0-network-offline-action": {
+          this.getWindow().gBrowser.reload();
           break;
         }
         case "view1-primary-action": {
-          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+          TabsSetupFlowManager.openFxASignup(event.target.ownerGlobal);
           break;
         }
         case "view2-primary-action": {
+          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+          break;
+        }
+        case "view3-primary-action": {
           TabsSetupFlowManager.syncOpenTabs(event.target);
           break;
         }
@@ -86,9 +97,9 @@ class TabPickupContainer extends HTMLElement {
     }
   }
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic, errorState) {
     if (topic == TOPIC_SETUPSTATE_CHANGED) {
-      this.update();
+      this.update({ errorState });
     }
   }
 
@@ -132,6 +143,7 @@ class TabPickupContainer extends HTMLElement {
     stateIndex = TabsSetupFlowManager.uiStateIndex,
     showMobilePromo = TabsSetupFlowManager.shouldShowMobilePromo,
     showMobilePairSuccess = TabsSetupFlowManager.shouldShowMobileConnectedSuccess,
+    errorState = TabsSetupFlowManager.getErrorType(),
   } = {}) {
     let needsRender = false;
     if (showMobilePromo !== this._showMobilePromo) {
@@ -142,12 +154,46 @@ class TabPickupContainer extends HTMLElement {
       this._showMobilePairSuccess = showMobilePairSuccess;
       needsRender = true;
     }
-    if (stateIndex !== this._currentSetupStateIndex) {
+    if (stateIndex !== this._currentSetupStateIndex || stateIndex == 0) {
       this._currentSetupStateIndex = stateIndex;
       needsRender = true;
+      this.errorState = errorState;
     }
     needsRender && this.render();
   }
+
+  generateErrorMessage() {
+    const errorStateHeader = this.querySelector(
+      "#tabpickup-steps-view0-header"
+    );
+    const errorStateDescription = this.querySelector(
+      "#error-state-description"
+    );
+    const errorStateButton = this.querySelector("#error-state-button");
+
+    document.l10n.setAttributes(
+      errorStateHeader,
+      `firefoxview-tabpickup-${this.errorState}-header`
+    );
+    document.l10n.setAttributes(
+      errorStateDescription,
+      `firefoxview-tabpickup-${this.errorState}-description`
+    );
+
+    errorStateButton.hidden = this.errorState == "fxa-admin-disabled";
+
+    if (this.errorState != "fxa-admin-disabled") {
+      document.l10n.setAttributes(
+        errorStateButton,
+        `firefoxview-tabpickup-${this.errorState}-primarybutton`
+      );
+      errorStateButton.setAttribute(
+        "data-action",
+        `view0-${this.errorState}-action`
+      );
+    }
+  }
+
   render() {
     if (!this.isConnected) {
       return;
@@ -159,10 +205,10 @@ class TabPickupContainer extends HTMLElement {
     let mobileSuccessElem = this.mobileSuccessElem;
 
     const stateIndex = this._currentSetupStateIndex;
-    const isLoading = stateIndex == 3;
+    const isLoading = stateIndex == 4;
 
     // show/hide either the setup or tab list containers, creating each as necessary
-    if (stateIndex < 3) {
+    if (stateIndex < 4) {
       if (!setupElem) {
         this.insertTemplatedElement(
           "sync-setup-template",
@@ -176,6 +222,10 @@ class TabPickupContainer extends HTMLElement {
       }
       setupElem.hidden = false;
       setupElem.selectedViewName = `sync-setup-view${stateIndex}`;
+
+      if (stateIndex == 0 && this.errorState) {
+        this.generateErrorMessage();
+      }
       return;
     }
 
@@ -193,7 +243,7 @@ class TabPickupContainer extends HTMLElement {
     tabsElem.hidden = false;
     tabsElem.classList.toggle("loading", isLoading);
 
-    if (stateIndex == 4) {
+    if (stateIndex == 5) {
       this.collapsibleButton.hidden = false;
     }
     mobilePromoElem.hidden = !this._showMobilePromo;
