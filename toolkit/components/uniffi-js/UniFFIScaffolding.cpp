@@ -16,6 +16,7 @@
 // purpose is to check if MOZ_UNIFFI_FIXTURES is set and only try calling the
 // scaffolding code if it is.
 
+using mozilla::dom::ArrayBuffer;
 using mozilla::dom::GlobalObject;
 using mozilla::dom::Promise;
 using mozilla::dom::RootedDictionary;

@@ -10,6 +10,8 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UniFFIPointerType.h"
 
 namespace mozilla::dom {
