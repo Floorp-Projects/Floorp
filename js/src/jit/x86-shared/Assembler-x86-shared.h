@@ -4777,22 +4777,26 @@ class AssemblerX86Shared : public AssemblerShared {
 
   static size_t PatchWrite_NearCallSize() { return 5; }
   static uintptr_t GetPointer(uint8_t* instPtr) {
-    uintptr_t* ptr = ((uintptr_t*)instPtr) - 1;
-    return *ptr;
+    uint8_t* ptr = instPtr - sizeof(uintptr_t);
+    return mozilla::LittleEndian::readUintptr(ptr);
   }
   // Write a relative call at the start location |dataLabel|.
   // Note that this DOES NOT patch data that comes before |label|.
   static void PatchWrite_NearCall(CodeLocationLabel startLabel,
                                   CodeLocationLabel target) {
     uint8_t* start = startLabel.raw();
-    *start = 0xE8;
+    *start = 0xE8;  // <CALL> rel32
     ptrdiff_t offset = target - startLabel - PatchWrite_NearCallSize();
     MOZ_ASSERT(int32_t(offset) == offset);
-    *((int32_t*)(start + 1)) = offset;
+    mozilla::LittleEndian::writeInt32(start + 1, offset);  // CALL <rel32>
   }
 
   static void PatchWrite_Imm32(CodeLocationLabel dataLabel, Imm32 toWrite) {
-    *((int32_t*)dataLabel.raw() - 1) = toWrite.value;
+    // dataLabel is a code location which targets the end of an instruction
+    // which has a 32 bits immediate. Thus writting a value requires shifting
+    // back to the address of the 32 bits immediate within the instruction.
+    uint8_t* ptr = dataLabel.raw();
+    mozilla::LittleEndian::writeInt32(ptr - sizeof(int32_t), toWrite.value);
   }
 
   static void PatchDataWithValueCheck(CodeLocationLabel data,
@@ -4818,18 +4822,18 @@ class AssemblerX86Shared : public AssemblerShared {
   // Toggle a jmp or cmp emitted by toggledJump().
   static void ToggleToJmp(CodeLocationLabel inst) {
     uint8_t* ptr = (uint8_t*)inst.raw();
-    MOZ_ASSERT(*ptr == 0x3D);
-    *ptr = 0xE9;
+    MOZ_ASSERT(*ptr == 0x3D);  // <CMP> eax, imm32
+    *ptr = 0xE9;               // <JMP> rel32
   }
   static void ToggleToCmp(CodeLocationLabel inst) {
     uint8_t* ptr = (uint8_t*)inst.raw();
-    MOZ_ASSERT(*ptr == 0xE9);
-    *ptr = 0x3D;
+    MOZ_ASSERT(*ptr == 0xE9);  // <JMP> rel32
+    *ptr = 0x3D;               // <CMP> eax, imm32
   }
   static void ToggleCall(CodeLocationLabel inst, bool enabled) {
     uint8_t* ptr = (uint8_t*)inst.raw();
-    MOZ_ASSERT(*ptr == 0x3D ||  // CMP
-               *ptr == 0xE8);   // CALL
+    MOZ_ASSERT(*ptr == 0x3D ||  // <CMP> eax, imm32
+               *ptr == 0xE8);   // <CALL> rel32
     *ptr = enabled ? 0xE8 : 0x3D;
   }
 
