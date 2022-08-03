@@ -117,10 +117,10 @@
     <string name="recent_tabs_show_all_content_description_2">Show all recent tabs button</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term" moz:RemovedIn="105" tools:ignore="UnusedResources">Your search for \"%1$s\"</string>
+    <string name="recent_tabs_search_term">Your search for \"%1$s\"</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2" moz:RemovedIn="105" tools:ignore="UnusedResources">%d sites</string>
+    <string name="recent_tabs_search_term_count_2">%d sites</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">See all synced tabs</string>
     <!-- Accessibility description for device icon used for recent synced tab -->

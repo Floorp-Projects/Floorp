@@ -24,7 +24,7 @@ import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
-import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -56,7 +56,7 @@ class SessionControlViewTest {
 
     @Test
     fun `GIVEN historyMetadata WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
-        val historyMetadata = listOf(RecentlyVisitedItem.RecentHistoryHighlight("title", ""))
+        val historyMetadata = listOf(RecentHistoryGroup("title", emptyList()))
         val settings: Settings = mockk()
 
         every { settings.hasShownHomeOnboardingDialog } returns false
@@ -138,7 +138,7 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf(RecentBookmark())
-        val historyMetadata = emptyList<RecentlyVisitedItem>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
 
         every { settings.showTopSitesFeature } returns true
@@ -173,7 +173,7 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf(RecentBookmark())
-        val historyMetadata = emptyList<RecentlyVisitedItem>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
         val nimbusMessageCard: Message = mockk()
 
@@ -206,7 +206,7 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val historyMetadata = emptyList<RecentlyVisitedItem>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
 
         every { settings.showTopSitesFeature } returns true
@@ -241,7 +241,7 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val historyMetadata = listOf<RecentlyVisitedItem>(mockk())
+        val historyMetadata = listOf(RecentHistoryGroup("title", emptyList()))
         val pocketStories = emptyList<PocketStory>()
 
         every { settings.showTopSitesFeature } returns true
@@ -276,7 +276,7 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val historyMetadata = emptyList<RecentlyVisitedItem>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = listOf(PocketRecommendedStory("", "", "", "", "", 1, 1))
 
         every { settings.showTopSitesFeature } returns true
@@ -312,7 +312,7 @@ class SessionControlViewTest {
         val collections = emptyList<TabCollection>()
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
-        val historyMetadata = emptyList<RecentlyVisitedItem>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketStories = emptyList<PocketStory>()
 
         every { settings.showTopSitesFeature } returns true
@@ -347,7 +347,7 @@ class SessionControlViewTest {
         val collections = listOf(collection)
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>(mockk())
-        val historyMetadata = listOf<RecentlyVisitedItem>(mockk())
+        val historyMetadata = listOf<RecentHistoryGroup>(mockk())
         val pocketStories = listOf<PocketStory>(mockk())
 
         every { settings.showTopSitesFeature } returns true

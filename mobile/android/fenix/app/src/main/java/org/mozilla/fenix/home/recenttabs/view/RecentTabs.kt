@@ -81,6 +81,7 @@ fun RecentTabs(
                         onRecentTabClick = onRecentTabClick
                     )
                 }
+                else -> {}
             }
         }
     }

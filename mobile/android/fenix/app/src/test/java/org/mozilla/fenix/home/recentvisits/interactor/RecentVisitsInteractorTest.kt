@@ -6,12 +6,16 @@ package org.mozilla.fenix.home.recentvisits.interactor
 
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.concept.storage.DocumentType
+import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -41,9 +45,64 @@ class RecentVisitsInteractorTest {
     }
 
     @Test
+    fun handleRecentHistoryGroupClicked() {
+        val historyGroup =
+            RecentHistoryGroup(
+                title = "mozilla",
+                historyMetadata = listOf(
+                    HistoryMetadata(
+                        key = HistoryMetadataKey("http://www.mozilla.com", null, null),
+                        title = "mozilla",
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis(),
+                        totalViewTime = 10,
+                        documentType = DocumentType.Regular,
+                        previewImageUrl = null
+                    )
+                )
+            )
+
+        interactor.onRecentHistoryGroupClicked(historyGroup)
+        verify {
+            recentVisitsController.handleRecentHistoryGroupClicked(historyGroup)
+        }
+    }
+
+    @Test
     fun handleHistoryShowAllClicked() {
         interactor.onHistoryShowAllClicked()
         verify { recentVisitsController.handleHistoryShowAllClicked() }
+    }
+
+    @Test
+    fun onRemoveRecentHistoryGroup() {
+        val historyMetadataKey = HistoryMetadataKey(
+            "http://www.mozilla.com",
+            "mozilla",
+            null
+        )
+
+        val historyGroup =
+            RecentHistoryGroup(
+                title = "mozilla",
+                historyMetadata = listOf(
+                    HistoryMetadata(
+                        key = historyMetadataKey,
+                        title = "mozilla",
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis(),
+                        totalViewTime = 10,
+                        documentType = DocumentType.Regular,
+                        previewImageUrl = null
+                    )
+                )
+            )
+
+        interactor.onRemoveRecentHistoryGroup(historyGroup.title)
+
+        verify {
+            recentVisitsController.handleRemoveRecentHistoryGroup(historyGroup.title)
+        }
     }
 
     @Test

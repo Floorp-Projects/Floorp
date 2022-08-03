@@ -9,14 +9,19 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
+import org.mozilla.fenix.library.history.toHistoryMetadata
 
 /**
  * All possible updates following user interactions with the "Recent visits" section from the Home screen.
@@ -27,6 +32,20 @@ interface RecentVisitsController {
      * Callback for when the "Show all" link is clicked.
      */
     fun handleHistoryShowAllClicked()
+
+    /**
+     * Callback for when the user clicks on a specific [RecentHistoryGroup].
+     *
+     * @param recentHistoryGroup The just clicked [RecentHistoryGroup].
+     */
+    fun handleRecentHistoryGroupClicked(recentHistoryGroup: RecentHistoryGroup)
+
+    /**
+     * Callback for when the user removes a certain [RecentHistoryGroup].
+     *
+     * @param groupTitle Title of the [RecentHistoryGroup] to remove.
+     */
+    fun handleRemoveRecentHistoryGroup(groupTitle: String)
 
     /**
      * Callback for when the user clicks on a specific [RecentHistoryHighlight].
@@ -63,6 +82,39 @@ class DefaultRecentVisitsController(
         navController.navigate(
             HomeFragmentDirections.actionGlobalHistoryFragment()
         )
+    }
+
+    /**
+     * Navigates to the history metadata group fragment to display the group.
+     *
+     * @param recentHistoryGroup The [RecentHistoryGroup] to which to navigate to.
+     */
+    override fun handleRecentHistoryGroupClicked(recentHistoryGroup: RecentHistoryGroup) {
+        navController.navigate(
+            HomeFragmentDirections.actionGlobalHistoryMetadataGroup(
+                title = recentHistoryGroup.title,
+                historyMetadataItems = recentHistoryGroup.historyMetadata
+                    .mapIndexed { index, item -> item.toHistoryMetadata(index) }.toTypedArray()
+            )
+        )
+    }
+
+    /**
+     * Removes a [RecentHistoryGroup] with the given title from the homescreen.
+     *
+     * @param groupTitle The title of the [RecentHistoryGroup] to be removed.
+     */
+    override fun handleRemoveRecentHistoryGroup(groupTitle: String) {
+        // We want to update the UI right away in response to user action without waiting for the IO.
+        // First, dispatch actions that will clean up search groups in the two stores that have
+        // metadata-related state.
+        store.dispatch(HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = groupTitle))
+        appStore.dispatch(AppAction.DisbandSearchGroupAction(searchTerm = groupTitle))
+        // Then, perform the expensive IO work of removing search groups from storage.
+        scope.launch {
+            storage.deleteHistoryMetadata(groupTitle)
+        }
+        RecentSearches.groupDeleted.record(NoExtras())
     }
 
     /**

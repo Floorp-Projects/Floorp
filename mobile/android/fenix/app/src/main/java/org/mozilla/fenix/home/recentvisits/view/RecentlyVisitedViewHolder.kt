@@ -11,11 +11,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
 
@@ -49,6 +51,7 @@ class RecentlyVisitedViewHolder(
                     title = stringResource(R.string.recently_visited_menu_item_remove),
                     onClick = { visit ->
                         when (visit) {
+                            is RecentHistoryGroup -> interactor.onRemoveRecentHistoryGroup(visit.title)
                             is RecentHistoryHighlight -> interactor.onRemoveRecentHistoryHighlight(
                                 visit.url
                             )
@@ -56,11 +59,20 @@ class RecentlyVisitedViewHolder(
                     }
                 )
             ),
-            onRecentVisitClick = { recentlyVisitedItem, _ ->
+            onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
                 when (recentlyVisitedItem) {
                     is RecentHistoryHighlight -> {
                         RecentlyVisitedHomepage.historyHighlightOpened.record(NoExtras())
                         interactor.onRecentHistoryHighlightClicked(recentlyVisitedItem)
+                    }
+                    is RecentHistoryGroup -> {
+                        RecentlyVisitedHomepage.searchGroupOpened.record(NoExtras())
+                        History.recentSearchesTapped.record(
+                            History.RecentSearchesTappedExtra(
+                                pageNumber.toString()
+                            )
+                        )
+                        interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
                     }
                 }
             }

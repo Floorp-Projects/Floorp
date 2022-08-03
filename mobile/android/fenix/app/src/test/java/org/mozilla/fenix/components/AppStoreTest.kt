@@ -31,6 +31,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.filterOut
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.home.CurrentMode
@@ -42,6 +43,7 @@ import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
@@ -131,10 +133,13 @@ class AppStoreTest {
 
     @Test
     fun `Test changing the recent tabs in AppStore`() = runTest {
-        val highlight = RecentHistoryHighlight(title = "title", "")
+        val group1 = RecentHistoryGroup(title = "title1")
+        val group2 = RecentHistoryGroup(title = "title2")
+        val group3 = RecentHistoryGroup(title = "title3")
+        val highlight = RecentHistoryHighlight(title = group2.title, "")
         appStore = AppStore(
             AppState(
-                recentHistory = listOf(highlight)
+                recentHistory = listOf(group1, group2, group3, highlight)
             )
         )
         assertEquals(0, appStore.state.recentTabs.size)
@@ -146,7 +151,7 @@ class AppStoreTest {
         appStore.dispatch(AppAction.RecentTabsChange(recentTabs)).join()
 
         assertEquals(recentTabs, appStore.state.recentTabs)
-        assertEquals(listOf(highlight), appStore.state.recentHistory)
+        assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
     }
 
     @Test
@@ -172,7 +177,7 @@ class AppStoreTest {
     fun `Test changing the history metadata in AppStore`() = runTest {
         assertEquals(0, appStore.state.recentHistory.size)
 
-        val historyMetadata: List<RecentHistoryHighlight> = listOf(mockk(), mockk())
+        val historyMetadata: List<RecentHistoryGroup> = listOf(mockk(), mockk())
         appStore.dispatch(AppAction.RecentHistoryChange(historyMetadata)).join()
 
         assertEquals(historyMetadata, appStore.state.recentHistory)
@@ -180,10 +185,12 @@ class AppStoreTest {
 
     @Test
     fun `Test removing a history highlight from AppStore`() = runTest {
+        val g1 = RecentHistoryGroup(title = "group One")
+        val g2 = RecentHistoryGroup(title = "grup two")
         val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
         val h2 = RecentHistoryHighlight(title = "highlight two", url = "url2")
         val recentHistoryState = AppState(
-            recentHistory = listOf(h1, h2)
+            recentHistory = listOf(g1, g2, h1, h2)
         )
         appStore = AppStore(recentHistoryState)
 
@@ -195,7 +202,7 @@ class AppStoreTest {
 
         appStore.dispatch(AppAction.RemoveRecentHistoryHighlight(h1.url)).join()
         assertEquals(
-            recentHistoryState.copy(recentHistory = listOf(h2)),
+            recentHistoryState.copy(recentHistory = listOf(g1, g2, h2)),
             appStore.state
         )
     }
@@ -234,12 +241,16 @@ class AppStoreTest {
             assertEquals(0, appStore.state.recentHistory.size)
             assertEquals(Mode.Normal, appStore.state.mode)
 
+            val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
             val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
             val recentBookmarks: List<RecentBookmark> = listOf(mockk(), mockk())
-            val highlight = RecentHistoryHighlight("title", "")
-            val recentHistory: List<RecentlyVisitedItem> = listOf(highlight)
+            val group1 = RecentHistoryGroup(title = "test One")
+            val group2 = RecentHistoryGroup(title = recentGroup.searchTerm.lowercase())
+            val group3 = RecentHistoryGroup(title = "test two")
+            val highlight = RecentHistoryHighlight(group2.title, "")
+            val recentHistory: List<RecentlyVisitedItem> = listOf(group1, group2, group3, highlight)
 
             appStore.dispatch(
                 AppAction.Change(
@@ -257,7 +268,7 @@ class AppStoreTest {
             assertEquals(topSites, appStore.state.topSites)
             assertEquals(recentTabs, appStore.state.recentTabs)
             assertEquals(recentBookmarks, appStore.state.recentBookmarks)
-            assertEquals(listOf(highlight), appStore.state.recentHistory)
+            assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
             assertEquals(Mode.Private, appStore.state.mode)
         }
 
@@ -468,5 +479,22 @@ class AppStoreTest {
             )
             assertSame(firstFilteredStories, appStore.state.pocketStories)
         }
+    }
+
+    @Test
+    fun `Test filtering out search groups`() {
+        val group1 = RecentHistoryGroup("title1")
+        val group2 = RecentHistoryGroup("title2")
+        val group3 = RecentHistoryGroup("title3")
+        val highLight1 = RecentHistoryHighlight("title1", "")
+        val highLight2 = RecentHistoryHighlight("title2", "")
+        val highLight3 = RecentHistoryHighlight("title3", "")
+        val recentHistory = listOf(group1, highLight1, group2, highLight2, group3, highLight3)
+
+        assertEquals(recentHistory, recentHistory.filterOut(null))
+        assertEquals(recentHistory, recentHistory.filterOut(""))
+        assertEquals(recentHistory, recentHistory.filterOut(" "))
+        assertEquals(recentHistory - group2, recentHistory.filterOut("Title2"))
+        assertEquals(recentHistory - group3, recentHistory.filterOut("title3"))
     }
 }

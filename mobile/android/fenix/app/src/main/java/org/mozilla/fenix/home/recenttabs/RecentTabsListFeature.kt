@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.recenttabs
 
+import android.graphics.Bitmap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -44,4 +45,21 @@ sealed class RecentTab {
      * @param state Recently viewed [TabSessionState]
      */
     data class Tab(val state: TabSessionState) : RecentTab()
+
+    /**
+     * A search term group that was recently viewed
+     *
+     * @param searchTerm The search term that was recently viewed. Forced to start with uppercase.
+     * @param tabId The id of the tab that was recently viewed
+     * @param url The url that was recently viewed
+     * @param thumbnail The thumbnail of the search term that was recently viewed
+     * @param count The number of tabs in the search term group
+     */
+    data class SearchGroup(
+        val searchTerm: String,
+        val tabId: String,
+        val url: String,
+        val thumbnail: Bitmap?,
+        val count: Int
+    ) : RecentTab()
 }

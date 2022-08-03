@@ -4,8 +4,11 @@
 
 package org.mozilla.fenix.home.recentvisits
 
+import mozilla.components.concept.storage.HistoryMetadata
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
+
 /**
- * History items of previously accessed webpages.
+ * History items as individual or groups of previously accessed webpages.
  */
 sealed class RecentlyVisitedItem {
     /**
@@ -18,4 +21,18 @@ sealed class RecentlyVisitedItem {
         val title: String,
         val url: String
     ) : RecentlyVisitedItem()
+
+    /**
+     * A group of previously accessed webpages related by their search terms.
+     *
+     * @property title The title of the group.
+     * @property historyMetadata A list of [HistoryMetadata] records that matches the title.
+     */
+    data class RecentHistoryGroup(
+        val title: String,
+        val historyMetadata: List<HistoryMetadata> = emptyList()
+    ) : RecentlyVisitedItem()
 }
+
+// The last updated time of the group is based on the most recently updated item in the group
+fun RecentHistoryGroup.lastUpdated(): Long = historyMetadata.maxOf { it.updatedAt }
