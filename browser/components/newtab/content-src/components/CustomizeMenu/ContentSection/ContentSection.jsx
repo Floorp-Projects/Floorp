@@ -9,6 +9,10 @@ export class ContentSection extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onPreferenceSelect = this.onPreferenceSelect.bind(this);
+
+    // Refs are necessary for dynamically measuring drawer heights for slide animations
+    this.topSitesDrawerRef = React.createRef();
+    this.pocketDrawerRef = React.createRef();
   }
 
   inputUserEvent(eventSource, status) {
@@ -23,7 +27,7 @@ export class ContentSection extends React.PureComponent {
 
   onPreferenceSelect(e) {
     let prefName = e.target.getAttribute("preference");
-    const eventSource = e.target.getAttribute("eventSource");
+    const eventSource = e.target.getAttribute("eventSource"); // TOP_SITES, TOP_STORIES, HIGHLIGHTS
     let value;
     if (e.target.nodeName === "SELECT") {
       value = parseInt(e.target.value, 10);
@@ -34,6 +38,49 @@ export class ContentSection extends React.PureComponent {
       }
     }
     this.props.setPref(prefName, value);
+  }
+
+  componentDidMount() {
+    this.setDrawerMargins();
+  }
+
+  componentDidUpdate() {
+    this.setDrawerMargins();
+  }
+
+  setDrawerMargins() {
+    this.setDrawerMargin(
+      `TOP_SITES`,
+      this.props.enabledSections.topSitesEnabled
+    );
+    this.setDrawerMargin(
+      `TOP_STORIES`,
+      this.props.enabledSections.pocketEnabled
+    );
+  }
+
+  setDrawerMargin(drawerID, isOpen) {
+    let drawerRef;
+
+    if (drawerID === `TOP_SITES`) {
+      drawerRef = this.topSitesDrawerRef.current;
+    } else if (drawerID === `TOP_STORIES`) {
+      drawerRef = this.pocketDrawerRef.current;
+    } else {
+      return;
+    }
+
+    let drawerHeight;
+
+    if (drawerRef) {
+      drawerHeight = parseFloat(window.getComputedStyle(drawerRef)?.height);
+
+      if (isOpen) {
+        drawerRef.style.marginTop = `0`;
+      } else {
+        drawerRef.style.marginTop = `-${drawerHeight}px`;
+      }
+    }
   }
 
   render() {
@@ -83,16 +130,8 @@ export class ContentSection extends React.PureComponent {
               className="subtitle"
               data-l10n-id="newtab-custom-shortcuts-subtitle"
             ></p>
-            <div
-              className={`more-info-top-wrapper ${
-                topSitesEnabled ? "" : "shrink"
-              }`}
-            >
-              <div
-                className={`more-information ${
-                  topSitesEnabled ? "expand" : "shrink"
-                }`}
-              >
+            <div className="more-info-top-wrapper">
+              <div className="more-information" ref={this.topSitesDrawerRef}>
                 <select
                   id="row-selector"
                   className="selector"
@@ -176,16 +215,8 @@ export class ContentSection extends React.PureComponent {
                 data-l10n-id="newtab-custom-pocket-subtitle"
               />
               {(mayHaveSponsoredStories || mayHaveRecentSaves) && (
-                <div
-                  className={`more-info-pocket-wrapper ${
-                    pocketEnabled ? "" : "shrink"
-                  }`}
-                >
-                  <div
-                    className={`more-information ${
-                      pocketEnabled ? "expand" : "shrink"
-                    }`}
-                  >
+                <div className="more-info-pocket-wrapper">
+                  <div className="more-information" ref={this.pocketDrawerRef}>
                     {mayHaveSponsoredStories && (
                       <div className="check-wrapper" role="presentation">
                         <input
