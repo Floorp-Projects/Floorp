@@ -7,7 +7,6 @@ const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
 const { RotaryEngine } = ChromeUtils.import(
   "resource://testing-common/services/sync/rotaryengine.js"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { getFxAccountsSingleton } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
@@ -546,7 +545,7 @@ add_task(async function test_engine_fail_ioerror() {
       equal(failureReason.name, "unexpectederror");
       // ensure the profile dir in the exception message has been stripped.
       ok(
-        !failureReason.error.includes(OS.Constants.Path.profileDir),
+        !failureReason.error.includes(PathUtils.profileDir),
         failureReason.error
       );
       ok(failureReason.error.includes("[profileDir]"), failureReason.error);
@@ -671,13 +670,10 @@ add_task(async function test_clean_real_os_error() {
   engine.enabled = true;
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
-  let path =
-    Services.appinfo.OS == "WINNT"
-      ? "no\\such\\path.json"
-      : "no/such/path.json";
+  let path = PathUtils.join(PathUtils.profileDir, "no", "such", "path.json");
   try {
-    await CommonUtils.writeJSON({}, path);
-    throw new Error("should fail to write the file");
+    await IOUtils.readJSON(path);
+    throw new Error("should fail to read the file");
   } catch (ex) {
     engine._errToThrow = ex;
   }
@@ -692,7 +688,7 @@ add_task(async function test_clean_real_os_error() {
       equal(failureReason.name, "unexpectederror");
       equal(
         failureReason.error,
-        "OS error [File/Path not found] during operation open on file no/such/path.json"
+        "OS error [File/Path not found] Could not open the file at [profileDir]/no/such/path.json"
       );
     });
   } finally {

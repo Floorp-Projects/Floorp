@@ -50,7 +50,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.jsm",
   Log: "resource://gre/modules/Log.jsm",
   Logger: "resource://tps/logger.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   Svc: "resource://services-sync/util.js",
   SyncTelemetry: "resource://services-sync/telemetry.js",
@@ -1009,7 +1008,8 @@ var TPS = {
   _getFileRelativeToSourceRoot(testFileURL, relativePath) {
     let file = lazy.fileProtocolHandler.getFileFromURLSpec(testFileURL);
     let root = file.parent.parent.parent.parent.parent; // <root>/services/sync/tests/tps/test_foo.js // <root>/services/sync/tests/tps // <root>/services/sync/tests // <root>/services/sync // <root>/services // <root>
-    root.appendRelativePath(lazy.OS.Path.normalize(relativePath));
+    root.appendRelativePath(relativePath);
+    root.normalize();
     return root;
   },
 
