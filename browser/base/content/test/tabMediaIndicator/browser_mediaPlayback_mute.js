@@ -2,9 +2,9 @@ const PAGE = GetTestWebBasedURL("file_mediaPlayback2.html");
 const FRAME = GetTestWebBasedURL("file_mediaPlaybackFrame2.html");
 
 function wait_for_event(browser, event) {
-  return BrowserTestUtils.waitForEvent(browser, event, false, event => {
+  return BrowserTestUtils.waitForEvent(browser, event, false, e => {
     is(
-      event.originalTarget,
+      e.originalTarget,
       browser,
       "Event must be dispatched to correct browser."
     );
