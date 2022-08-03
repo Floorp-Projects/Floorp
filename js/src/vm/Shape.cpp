@@ -667,6 +667,28 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
   return true;
 }
 
+void NativeObject::maybeFreeDictionaryPropSlots(JSContext* cx,
+                                                DictionaryPropMap* map,
+                                                uint32_t mapLength) {
+  // We can free all non-reserved slots if there are no properties left. We also
+  // handle the case where there's a single slotless property, to support arrays
+  // (array.length is a custom data property).
+
+  MOZ_ASSERT(shape()->dictionaryPropMap() == map);
+  MOZ_ASSERT(shape()->propMapLength() == mapLength);
+
+  if (mapLength > 1 || map->previous()) {
+    return;
+  }
+  if (mapLength == 1 && map->getPropertyInfo(0).hasSlot()) {
+    return;
+  }
+
+  uint32_t numReserved = JSCLASS_RESERVED_SLOTS(getClass());
+  MOZ_ALWAYS_TRUE(ensureSlotsForDictionaryObject(cx, numReserved));
+  map->setFreeList(SHAPE_INVALID_SLOT);
+}
+
 /* static */
 bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
                                   HandleId id) {
@@ -773,6 +795,15 @@ bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
 
   obj->shape()->updateNewDictionaryShape(obj->shape()->objectFlags(), dictMap,
                                          mapLength);
+
+  // If we just deleted the last property, consider shrinking the slots. We only
+  // do this if there are a lot of slots, to avoid allocating/freeing dynamic
+  // slots repeatedly.
+  static constexpr size_t MinSlotSpanForFree = 64;
+  if (obj->dictionaryModeSlotSpan() >= MinSlotSpanForFree) {
+    obj->maybeFreeDictionaryPropSlots(cx, dictMap, mapLength);
+  }
+
   return true;
 }
 
@@ -800,6 +831,9 @@ bool NativeObject::densifySparseElements(JSContext* cx,
   objectFlags.clearFlag(ObjectFlag::Indexed);
 
   obj->shape()->updateNewDictionaryShape(objectFlags, map, mapLength);
+
+  obj->maybeFreeDictionaryPropSlots(cx, map, mapLength);
+
   return true;
 }
 
