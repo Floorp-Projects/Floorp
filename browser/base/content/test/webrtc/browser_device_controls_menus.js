@@ -50,5 +50,6 @@ add_task(async function test_bug_1669801() {
     );
     menupopup.hidePopup();
     await popupHiddenPromise;
+    await closeStream();
   });
 });
