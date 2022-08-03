@@ -491,17 +491,9 @@ xpcAccessible::GetRelationByType(uint32_t aType,
 
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (IntlGeneric()->IsLocal()) {
-    Relation rel = Intl()->RelationByType(static_cast<RelationType>(aType));
-    NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &rel));
-    return NS_OK;
-  }
-
-  RemoteAccessible* proxy = IntlGeneric()->AsRemote();
-  nsTArray<RemoteAccessible*> targets =
-      proxy->RelationByType(static_cast<RelationType>(aType));
-  NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &targets));
-
+  Relation rel =
+      IntlGeneric()->RelationByType(static_cast<RelationType>(aType));
+  NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &rel));
   return NS_OK;
 }
 

@@ -260,10 +260,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual LocalAccessible* FocusedChild();
 
-  /**
-   * Get the relation of the given type.
-   */
-  virtual Relation RelationByType(RelationType aType) const;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods

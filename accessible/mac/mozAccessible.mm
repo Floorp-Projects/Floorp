@@ -991,22 +991,16 @@ struct RoleDescrComparator {
 }
 
 - (NSArray<mozAccessible*>*)getRelationsByType:(RelationType)relationType {
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    NSMutableArray<mozAccessible*>* relations =
-        [[[NSMutableArray alloc] init] autorelease];
-    Relation rel = acc->RelationByType(relationType);
-    while (Accessible* relAcc = rel.Next()) {
-      if (mozAccessible* relNative = GetNativeFromGeckoAccessible(relAcc)) {
-        [relations addObject:relNative];
-      }
+  NSMutableArray<mozAccessible*>* relations =
+      [[[NSMutableArray alloc] init] autorelease];
+  Relation rel = mGeckoAccessible->RelationByType(relationType);
+  while (Accessible* relAcc = rel.Next()) {
+    if (mozAccessible* relNative = GetNativeFromGeckoAccessible(relAcc)) {
+      [relations addObject:relNative];
     }
-
-    return relations;
   }
 
-  RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-  nsTArray<RemoteAccessible*> rel = proxy->RelationByType(relationType);
-  return utils::ConvertToNSArray(rel);
+  return relations;
 }
 
 - (void)handleAccessibleTextChangeEvent:(NSString*)change

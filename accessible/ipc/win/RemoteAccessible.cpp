@@ -16,6 +16,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/a11y/Platform.h"
+#include "Relation.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -108,20 +109,28 @@ static already_AddRefed<Interface> QueryInterface(
   return acc2.forget();
 }
 
-static RemoteAccessible* GetProxyFor(DocAccessibleParent* aDoc,
-                                     IUnknown* aCOMProxy) {
+static Maybe<uint64_t> GetIdFor(DocAccessibleParent* aDoc,
+                                IUnknown* aCOMProxy) {
   RefPtr<IGeckoCustom> custom;
   if (FAILED(aCOMProxy->QueryInterface(IID_IGeckoCustom,
                                        (void**)getter_AddRefs(custom)))) {
-    return nullptr;
+    return Nothing();
   }
 
   uint64_t id;
   if (FAILED(custom->get_ID(&id))) {
-    return nullptr;
+    return Nothing();
   }
 
-  return aDoc->GetAccessible(id);
+  return Some(id);
+}
+
+static RemoteAccessible* GetProxyFor(DocAccessibleParent* aDoc,
+                                     IUnknown* aCOMProxy) {
+  if (auto id = GetIdFor(aDoc, aCOMProxy)) {
+    return aDoc->GetAccessible(*id);
+  }
+  return nullptr;
 }
 
 ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
@@ -390,15 +399,14 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
   return attrsObj.forget();
 }
 
-nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
-    RelationType aType) const {
+Relation RemoteAccessible::RelationByType(RelationType aType) const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::RelationByType(aType);
   }
 
   RefPtr<IAccessible2_2> acc = QueryInterface<IAccessible2_2>(this);
   if (!acc) {
-    return nsTArray<RemoteAccessible*>();
+    return Relation();
   }
 
   _bstr_t relationType;
@@ -410,7 +418,7 @@ nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
   }
 
   if (!relationType) {
-    return nsTArray<RemoteAccessible*>();
+    return Relation();
   }
 
   IUnknown** targets;
@@ -418,18 +426,20 @@ nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
   HRESULT hr =
       acc->get_relationTargetsOfType(relationType, 0, &targets, &nTargets);
   if (FAILED(hr)) {
-    return nsTArray<RemoteAccessible*>();
+    return Relation();
   }
 
-  nsTArray<RemoteAccessible*> proxies;
+  nsTArray<uint64_t> ids;
   for (long idx = 0; idx < nTargets; idx++) {
     IUnknown* target = targets[idx];
-    proxies.AppendElement(GetProxyFor(Document(), target));
+    if (auto id = GetIdFor(Document(), target)) {
+      ids.AppendElement(*id);
+    }
     target->Release();
   }
   CoTaskMemFree(targets);
 
-  return proxies;
+  return Relation(new RemoteAccIterator(std::move(ids), Document()));
 }
 
 double RemoteAccessible::CurValue() const {

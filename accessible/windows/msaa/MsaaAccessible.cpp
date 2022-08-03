@@ -1607,10 +1607,7 @@ MsaaAccessible::accNavigate(
   pvarEndUpAt->vt = VT_EMPTY;
 
   if (xpRelation) {
-    if (mAcc->IsRemote()) {
-      return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-    }
-    Relation rel = mAcc->AsLocal()->RelationByType(*xpRelation);
+    Relation rel = mAcc->RelationByType(*xpRelation);
     navAccessible = rel.Next();
   }
 

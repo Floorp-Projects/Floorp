@@ -26,9 +26,6 @@ class nsAccessibleRelation final : public nsIAccessibleRelation {
  public:
   nsAccessibleRelation(uint32_t aType, Relation* aRel);
 
-  nsAccessibleRelation(uint32_t aType,
-                       const nsTArray<RemoteAccessible*>* aTargets);
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLERELATION
 
