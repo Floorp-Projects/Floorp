@@ -27,6 +27,7 @@
 !define AB_CD                 "@AB_CD@"
 
 !define FileMainEXE           "@MOZ_APP_NAME@.exe"
+!define PrivateBrowsingEXE    "private_browsing.exe"
 !define MainWindowClass       "MozillaWindowClass"
 !define DialogWindowClass     "MozillaDialogClass"
 !define DDEApplication        "Firefox"
@@ -43,10 +44,14 @@
 
 ; The C++ defines in `nsNativeAppSupportWin.h` are 1-based.  The Windows
 ; resource IDs in the registry are 0-based.
-!define IDI_APPICON_ZERO_BASED      "0"
-!define IDI_DOCUMENT_ZERO_BASED     "1"
-!define IDI_PBICON_ZERO_BASED       "4"
-!define IDI_DOCUMENT_PDF_ZERO_BASED "5"
+!define IDI_APPICON_ZERO_BASED       "0"
+!define IDI_DOCUMENT_ZERO_BASED      "1"
+!define IDI_PBICON_ZERO_BASED        "4"
+!define IDI_DOCUMENT_PDF_ZERO_BASED  "5"
+
+; This one is the location of the Private Browsing icon in
+; private_browsing.exe (as opposed to @MOZ_APP_NAME@.exe)
+!define IDI_PBICON_PB_EXE_ZERO_BASED "0"
 
 !define CERTIFICATE_NAME            "Mozilla Corporation"
 !define CERTIFICATE_ISSUER          "DigiCert SHA2 Assured ID Code Signing CA"
