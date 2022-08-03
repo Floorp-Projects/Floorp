@@ -467,7 +467,7 @@ add_task(async function timeout() {
 
     info("Set timeout second");
     await SpecialPowers.pushPrefEnv({
-      set: [["places.sponsoredSession.timeOutSec", 1]],
+      set: [["browser.places.sponsoredSession.timeoutSecs", 1]],
     });
 
     info("Wait 1 sec");

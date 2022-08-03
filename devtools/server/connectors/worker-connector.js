@@ -5,6 +5,7 @@
 "use strict";
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,
@@ -114,6 +115,11 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
           id: dbg.id,
           type: dbg.type,
           url: absoluteURL,
+          // We don't have access to Services.prefs in Worker thread, so pass its value
+          // from here.
+          workerConsoleApiMessagesDispatchedToMainThread: Services.prefs.getBoolPref(
+            "dom.worker.console.dispatch_events_to_main_thread"
+          ),
         },
       })
     );

@@ -24,6 +24,7 @@ Services.scriptloader.loadSubScript(
 
 add_task(async function() {
   await addTab(TEST_URI);
+  await pushPref("devtools.browsertoolbox.scope", "everything");
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,
   });

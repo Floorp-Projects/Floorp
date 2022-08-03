@@ -24,6 +24,7 @@ requestLongerTimeout(4);
  * test locally.
  */
 add_task(async function() {
+  await pushPref("devtools.browsertoolbox.scope", "everything");
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,
   });

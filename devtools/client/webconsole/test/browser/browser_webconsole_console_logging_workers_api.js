@@ -20,12 +20,21 @@ add_task(async function() {
 });
 
 async function testWorkerMessage(directConnectionToWorkerThread = false) {
-  const hud = await openNewTabAndConsole(TEST_URI);
+  await addTab(TEST_URI);
+  // Open the debugger first as it can cause some message to be duplicated (See Bug 1778852)
+  await openDebugger();
+
+  info("Open the console");
+  const hud = await openConsole();
 
   const cachedMessage = await waitFor(() =>
     findConsoleAPIMessage(hud, "initial-message-from-worker")
   );
-  ok(true, "We get the cached message from the worker");
+  is(
+    findConsoleAPIMessages(hud, "initial-message-from-worker").length,
+    1,
+    "We get a single cached message from the worker"
+  );
 
   ok(
     cachedMessage

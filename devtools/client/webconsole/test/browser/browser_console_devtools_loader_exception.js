@@ -14,6 +14,14 @@ add_task(async function() {
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
+  const isFissionEnabledForBrowserConsole = Services.prefs.getBoolPref(
+    "devtools.browsertoolbox.fission",
+    false
+  );
+  if (isFissionEnabledForBrowserConsole) {
+    await pushPref("devtools.browsertoolbox.scope", "everything");
+  }
+
   const wcHud = await openNewTabAndConsole(TEST_URI);
   ok(wcHud, "web console opened");
 
@@ -56,11 +64,6 @@ add_task(async function() {
   ok(url, "we have some source URL after the click");
   ok(url.includes("toolbox.js"), "we have the expected view source URL");
   ok(!url.includes("->"), "no -> in the URL given to view-source");
-
-  const isFissionEnabledForBrowserConsole = Services.prefs.getBoolPref(
-    "devtools.browsertoolbox.fission",
-    false
-  );
 
   const { targetCommand } = bcHud.commands;
   // If Fission is not enabled for the Browser Console (e.g. in Beta at this moment),

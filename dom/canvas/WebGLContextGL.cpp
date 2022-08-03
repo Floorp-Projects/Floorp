@@ -933,10 +933,19 @@ void WebGLContext::ReadPixelsPbo(const webgl::ReadPixelsDesc& desc,
   //////
 
   {
-    const auto bytesPerType =
-        webgl::BytesPerPixel({LOCAL_GL_RED, desc.pi.type});
+    const auto pii = webgl::PackingInfoInfo::For(desc.pi);
+    if (!pii) {
+      GLenum err = LOCAL_GL_INVALID_OPERATION;
+      if (!desc.pi.format || !desc.pi.type) {
+        err = LOCAL_GL_INVALID_ENUM;
+      }
+      GenerateError(err, "`format` (%s) and/or `type` (%s) not acceptable.",
+                    EnumString(desc.pi.format).c_str(),
+                    EnumString(desc.pi.type).c_str());
+      return;
+    }
 
-    if (offset % bytesPerType != 0) {
+    if (offset % pii->bytesPerElement != 0) {
       ErrorInvalidOperation(
           "`offset` must be divisible by the size of `type`"
           " in bytes.");
@@ -1007,8 +1016,8 @@ static bool ArePossiblePackEnums(const WebGLContext* webgl,
 
   if (pi.type == LOCAL_GL_UNSIGNED_INT_24_8) return false;
 
-  uint8_t bytes;
-  if (!GetBytesPerPixel(pi, &bytes)) return false;
+  const auto pii = webgl::PackingInfoInfo::For(pi);
+  if (!pii) return false;
 
   return true;
 }

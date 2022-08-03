@@ -284,6 +284,16 @@ async function watchResources(rootOrWatcherOrTargetActor, resourceTypes) {
       continue;
     }
 
+    // Don't watch for console messages from the worker target if worker messages are still
+    // being cloned to the main process, otherwise we'll get duplicated messages in the
+    // console output (See Bug 1778852).
+    if (
+      resourceType == TYPES.CONSOLE_MESSAGE &&
+      rootOrWatcherOrTargetActor.workerConsoleApiMessagesDispatchedToMainThread
+    ) {
+      continue;
+    }
+
     const watcher = new WatcherClass();
     await watcher.watch(rootOrWatcherOrTargetActor, {
       onAvailable: rootOrWatcherOrTargetActor.notifyResourceAvailable,

@@ -23,6 +23,7 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ipc/Shmem.h"
@@ -522,6 +523,13 @@ struct PackingInfo final {
 
   bool operator==(const PackingInfo& x) const {
     return (format == x.format && type == x.type);
+  }
+
+  template <class T>
+  friend T& operator<<(T& s, const PackingInfo& pi) {
+    s << "PackingInfo{format: " << EnumString(pi.format)
+      << ", type: " << EnumString(pi.type) << "}";
+    return s;
   }
 };
 
