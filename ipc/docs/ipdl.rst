@@ -1181,8 +1181,8 @@ The relevant part of the parent class looks like this:
 .. code-block:: c++
 
     class MyManagerParent : public PMyManagerParent {
-        already_AddRefed<PMyManagerParent> AllocPMyManagedParent();
-        IPCResult RecvPMyManagedConstructor(PMyManagedConstructor* aActor);
+        already_AddRefed<PMyManagedParent> AllocPMyManagedParent();
+        IPCResult RecvPMyManagedConstructor(PMyManagedParent* aActor);
 
         IPCResult Recv__delete__(const nsString& aNote);
         void ActorDestroy(ActorDestroyReason why);
