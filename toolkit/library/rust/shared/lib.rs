@@ -99,6 +99,21 @@ extern crate dap_ffi;
 
 extern crate data_encoding_ffi;
 
+#[cfg(feature = "uniffi_fixtures")]
+mod uniffi_fixtures {
+    extern crate arithmetical;
+    extern crate uniffi_geometry;
+    extern crate uniffi_rondpoint;
+    extern crate uniffi_sprites;
+    extern crate uniffi_todolist;
+
+    arithmetical::uniffi_reexport_scaffolding!();
+    uniffi_geometry::uniffi_reexport_scaffolding!();
+    uniffi_rondpoint::uniffi_reexport_scaffolding!();
+    uniffi_sprites::uniffi_reexport_scaffolding!();
+    uniffi_todolist::uniffi_reexport_scaffolding!();
+}
+
 extern crate log;
 use log::info;
 
