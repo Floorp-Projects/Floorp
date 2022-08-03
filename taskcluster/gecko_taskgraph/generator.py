@@ -10,6 +10,7 @@ import attr
 from taskgraph import filter_tasks
 from taskgraph.config import GraphConfig
 from taskgraph.graph import Graph
+from taskgraph.optimize.base import optimize_task_graph
 from taskgraph.parameters import parameters_loader
 from taskgraph.task import Task
 from taskgraph.taskgraph import TaskGraph
@@ -18,7 +19,6 @@ from taskgraph.util.python_path import find_object
 from taskgraph.util.yaml import load_yaml
 
 from .morph import morph
-from .optimize import optimize_task_graph
 from .util.verify import verifications
 from .config import load_graph_config
 
