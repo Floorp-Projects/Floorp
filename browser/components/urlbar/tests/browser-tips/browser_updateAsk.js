@@ -45,6 +45,10 @@ let postSteps = [
 ];
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   // Disable the pref that automatically downloads and installs updates.
   await UpdateUtils.setAppUpdateAutoEnabled(false);
 

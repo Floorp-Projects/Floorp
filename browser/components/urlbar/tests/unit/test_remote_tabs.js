@@ -63,6 +63,7 @@ add_task(async function setup() {
     Services.prefs.clearUserPref("services.sync.username");
     Services.prefs.clearUserPref("services.sync.registerEngines");
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
+    Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
     await cleanupPlaces();
   });
 
@@ -71,6 +72,7 @@ add_task(async function setup() {
   Services.prefs.setCharPref("services.sync.registerEngines", "");
   // Avoid hitting the network.
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
 });
 
 add_task(async function test_minimal() {

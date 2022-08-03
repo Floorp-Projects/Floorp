@@ -18,7 +18,10 @@ if (AppConstants.platform == "macosx") {
 
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.experimental.hideHeuristic", true]],
+    set: [
+      ["browser.urlbar.experimental.hideHeuristic", true],
+      ["browser.urlbar.suggest.quickactions", false],
+    ],
   });
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();

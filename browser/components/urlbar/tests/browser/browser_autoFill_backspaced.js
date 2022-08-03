@@ -47,10 +47,12 @@ async function test_autocomplete(data) {
 add_task(async function() {
   registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
+    Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
     gURLBar.handleRevert();
     await PlacesUtils.history.clear();
   });
   Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
 
   await PlacesTestUtils.addVisits([
     "http://example.com/",

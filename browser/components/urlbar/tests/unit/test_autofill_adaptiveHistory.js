@@ -8,6 +8,11 @@
 
 testEngine_setup();
 
+registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
+});
+Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
+
 const TEST_DATA = [
   {
     description: "Basic behavior for adaptive history autofill",

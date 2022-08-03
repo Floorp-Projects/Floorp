@@ -37,7 +37,10 @@ add_task(async function init() {
   await Services.search.moveEngine(engine, 0);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault.ui.enabled", false]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", false],
+      ["browser.urlbar.suggest.quickactions", false],
+    ],
   });
 
   registerCleanupFunction(async function() {

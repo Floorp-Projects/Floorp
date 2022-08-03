@@ -19,6 +19,10 @@ add_setup(async function() {
   await Services.search.setDefault(defaultEngine);
   await Services.search.moveEngine(defaultEngine, 0);
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
     await Services.search.setDefault(oldDefaultEngine);

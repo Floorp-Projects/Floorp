@@ -36,9 +36,9 @@ let openUrl = url => {
 // We may want to show these as disabled buttons, that may
 // aid discovery but may also confuse users.
 let currentPageIsWebContentFilter = () =>
-  !currentBrowser().currentURI.spec.startsWith("about:");
+  !currentBrowser()?.currentURI.spec.startsWith("about:");
 let currentBrowser = () =>
-  lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  lazy.BrowserWindowTracker.getTopWindow()?.gBrowser.selectedBrowser;
 
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization(["browser/browser.ftl"], true);

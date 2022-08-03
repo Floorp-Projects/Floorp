@@ -90,6 +90,10 @@ async function updateTopSites(condition, searchShortcuts = false) {
 }
 
 add_task(async function setUp() {
+  Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
+  registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
+  });
   // Set the notification timeout to a really high value to avoid intermittent
   // failures due to the mock extensions not responding in time.
   await SpecialPowers.pushPrefEnv({

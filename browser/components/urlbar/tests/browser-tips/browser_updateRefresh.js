@@ -24,6 +24,10 @@ let preSteps = [
 ];
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   makeProfileResettable();
 
   // Set up the "no updates" update state.

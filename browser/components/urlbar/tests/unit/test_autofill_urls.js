@@ -10,6 +10,11 @@ const PLACES_PROVIDERNAME = "Places";
 // "example.com/foo/" should match http://example.com/foo/.
 testEngine_setup();
 
+registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
+});
+Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
+
 add_task(async function multipleSlashes() {
   await PlacesTestUtils.addVisits([
     {

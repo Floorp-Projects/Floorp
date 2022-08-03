@@ -29,6 +29,7 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", false],
+      ["browser.urlbar.suggest.quickactions", false],
       ["browser.urlbar.shortcuts.quickactions", true],
     ],
   });

@@ -15,7 +15,11 @@ let engine;
 
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.suggest.quickactions", false],
+      ["browser.urlbar.shortcuts.quickactions", false],
+    ],
   });
   engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME

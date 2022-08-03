@@ -26,7 +26,10 @@ function composeAndCheckPanel(string, isPopupOpen) {
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
+    set: [
+      ["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0],
+      ["browser.urlbar.suggest.quickactions", false],
+    ],
   });
 
   await PlacesUtils.history.clear();

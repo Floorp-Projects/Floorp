@@ -24,6 +24,10 @@ let preSteps = [
 ];
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+
   // Set up the "unsupported update" update state.
   await initUpdate(params);
   UrlbarProviderInterventions.checkForBrowserUpdate(true);

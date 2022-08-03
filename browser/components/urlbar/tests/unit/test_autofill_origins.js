@@ -18,6 +18,11 @@ async function cleanup() {
 
 testEngine_setup();
 
+registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
+});
+Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
+
 // "example.com/" should match http://example.com/.  i.e., the search string
 // should be treated as if it didn't have the trailing slash.
 add_task(async function trailingSlash() {
