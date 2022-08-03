@@ -633,12 +633,15 @@ inline uint8_t* ByteArrayData::data() {
 
 // A fixed-size array of bytes.
 class ByteArray : public HeapObject {
+ protected:
   ByteArrayData* inner() const {
     return static_cast<ByteArrayData*>(value().toPrivate());
   }
 
  public:
   PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
+  PseudoHandle<ByteArrayData> maybeTakeOwnership(Isolate* isolate);
+
   byte get(uint32_t index) { return inner()->get(index); }
   void set(uint32_t index, byte val) { inner()->set(index, val); }
   uint16_t get_uint16(uint32_t index) { return inner()->get_uint16(index); }
@@ -654,6 +657,10 @@ class ByteArray : public HeapObject {
     b.setValue(object.value());
     return b;
   }
+
+  bool IsByteArray() const { return true; }
+
+  friend class SMRegExpMacroAssembler;
 };
 
 // Like Handles in SM, V8 handles are references to marked pointers.
@@ -678,7 +685,9 @@ class ByteArray : public HeapObject {
 // managed by the GC but provide the same API to irregexp. The "root"
 // of a pseudohandle is a unique pointer living in a second arena. If
 // the allocated object should outlive the HandleScope, it must be
-// manually moved out of the arena using takeOwnership.
+// manually moved out of the arena using maybeTakeOwnership.
+// (If maybeTakeOwnership is called multiple times, it will return
+// a null pointer on subsequent calls.)
 
 class MOZ_STACK_CLASS HandleScope {
  public:
@@ -1097,6 +1106,8 @@ class Isolate {
  public:
   template <typename T>
   PseudoHandle<T> takeOwnership(void* ptr);
+  template <typename T>
+  PseudoHandle<T> maybeTakeOwnership(void* ptr);
 
   uint32_t liveHandles() const { return handleArena_.Length(); }
   uint32_t livePseudoHandles() const { return uniquePtrArena_.Length(); }
