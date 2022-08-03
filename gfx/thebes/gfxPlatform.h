@@ -778,7 +778,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
     mOverlayInfo = mozilla::Some(aInfo);
   }
 
-  static bool HasVariationFontSupport();
+  bool HasVariationFontSupport() const { return mHasVariationFontSupport; }
 
   bool HasNativeColrFontSupport() const { return mHasNativeColrFontSupport; }
 
@@ -917,10 +917,12 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   virtual bool CanUseHardwareVideoDecoding();
 
+  virtual bool CheckVariationFontSupport() = 0;
+
   int8_t mAllowDownloadableFonts;
 
   // Whether the platform supports rendering OpenType font variations
-  static bool sHasVariationFontSupport;
+  bool mHasVariationFontSupport;
 
   // Whether the platform font APIs have native support for COLR fonts.
   // Set to true during initialization on platforms that implement this.

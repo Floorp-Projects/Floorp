@@ -590,7 +590,7 @@ bool gfxDWriteFontEntry::HasVariations() {
   mHasVariationsInitialized = true;
   mHasVariations = false;
 
-  if (!gfxPlatform::HasVariationFontSupport()) {
+  if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
     return mHasVariations;
   }
 
