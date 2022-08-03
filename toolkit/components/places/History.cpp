@@ -51,6 +51,7 @@
 
 #include "nsIBrowserWindowTracker.h"
 #include "nsImportModule.h"
+#include "mozilla/StaticPrefs_browser.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -1024,11 +1025,6 @@ class InsertVisitedURIs final : public Runnable {
                  "Passed a VisitData with a URI we cannot add to history!");
     }
 #endif
-
-    // Need to get session timeout pref here since static call for Preferences
-    // should run on main thread.
-    mSponsoredSessionTimeoutSec = Preferences::GetUint(
-        "places.sponsoredSession.timeOutSec", 3600 /* Default 1 hour */);
   }
 
   /**
@@ -1224,7 +1220,8 @@ class InsertVisitedURIs final : public Runnable {
 
     if ((aPlace.visitTime -
          aPlace.triggeringSponsoredURLVisitTimeMS * PR_USEC_PER_MSEC) >
-        mSponsoredSessionTimeoutSec * PR_USEC_PER_SEC) {
+        StaticPrefs::browser_places_sponsoredSession_timeoutSecs() *
+            PR_USEC_PER_SEC) {
       // Sponsored session timeout.
       return NS_OK;
     }
@@ -1278,8 +1275,6 @@ class InsertVisitedURIs final : public Runnable {
   bool mIgnoreResults;
 
   uint32_t mSuccessfulUpdatedCount;
-
-  uint32_t mSponsoredSessionTimeoutSec;
 
   /**
    * Strong reference to the History object because we do not want it to
