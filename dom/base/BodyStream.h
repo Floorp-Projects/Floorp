@@ -30,7 +30,7 @@ class ErrorResult;
 namespace dom {
 
 class BodyStream;
-class WeakWorkerRef;
+class StrongWorkerRef;
 class ReadableStream;
 class ReadableStreamController;
 
@@ -200,7 +200,8 @@ class BodyStream final : public nsIInputStreamCallback,
   nsCOMPtr<nsIInputStream> mOriginalInputStream;
   nsCOMPtr<nsIAsyncInputStream> mInputStream;
 
-  RefPtr<WeakWorkerRef> mWorkerRef;
+  RefPtr<StrongWorkerRef> mWorkerRef;
+  RefPtr<StrongWorkerRef> mAsyncWaitWorkerRef;
 };
 
 }  // namespace dom
