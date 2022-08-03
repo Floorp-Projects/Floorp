@@ -21,8 +21,9 @@ function ObjectGetOwnPropertyDescriptors(O) {
         var desc = ObjectGetOwnPropertyDescriptor(obj, key);
 
         // Step 4.c.
-        if (typeof desc !== "undefined")
+        if (typeof desc !== "undefined") {
             DefineDataProperty(descriptors, key, desc);
+        }
     }
 
     // Step 5.
@@ -81,8 +82,9 @@ function ObjectDefineSetter(name, setter) {
     var object = ToObject(this);
 
     // Step 2.
-    if (!IsCallable(setter))
+    if (!IsCallable(setter)) {
         ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "setter");
+    }
 
     // Step 4.
     var key = TO_PROPERTY_KEY(name);
@@ -100,8 +102,9 @@ function ObjectDefineGetter(name, getter) {
     var object = ToObject(this);
 
     // Step 2.
-    if (!IsCallable(getter))
+    if (!IsCallable(getter)) {
         ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "getter");
+    }
 
     // Step 4.
     var key = TO_PROPERTY_KEY(name);
@@ -128,8 +131,9 @@ function ObjectLookupSetter(name) {
         // Step 3.b.
         if (desc) {
             // Step.b.i.
-            if (desc[PROP_DESC_ATTRS_AND_KIND_INDEX] & ACCESSOR_DESCRIPTOR_KIND)
+            if (desc[PROP_DESC_ATTRS_AND_KIND_INDEX] & ACCESSOR_DESCRIPTOR_KIND) {
                 return desc[PROP_DESC_SETTER_INDEX];
+            }
 
             // Step.b.i.
             return undefined;
@@ -157,8 +161,9 @@ function ObjectLookupGetter(name) {
         // Step 3.b.
         if (desc) {
             // Step.b.i.
-            if (desc[PROP_DESC_ATTRS_AND_KIND_INDEX] & ACCESSOR_DESCRIPTOR_KIND)
+            if (desc[PROP_DESC_ATTRS_AND_KIND_INDEX] & ACCESSOR_DESCRIPTOR_KIND) {
                 return desc[PROP_DESC_GETTER_INDEX];
+            }
 
             // Step.b.ii.
             return undefined;
@@ -180,8 +185,9 @@ function ObjectGetOwnPropertyDescriptor(obj, propertyKey) {
     // Step 4 (Call to 6.2.4.4 FromPropertyDescriptor).
 
     // 6.2.4.4 FromPropertyDescriptor, step 1.
-    if (!desc)
+    if (!desc) {
         return undefined;
+    }
 
     // 6.2.4.4 FromPropertyDescriptor, steps 2-5, 8-11.
     var attrsAndKind = desc[PROP_DESC_ATTRS_AND_KIND_INDEX];
@@ -209,8 +215,9 @@ function ObjectGetOwnPropertyDescriptor(obj, propertyKey) {
 // 26.1.3 Reflect.defineProperty ( target, propertyKey, attributes )
 function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
     // Step 1.
-    if (!IsObject(obj))
+    if (!IsObject(obj)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, obj));
+    }
 
     // Step 2.
     propertyKey = TO_PROPERTY_KEY(propertyKey);
@@ -218,20 +225,23 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
     // Step 3 (Call to 6.2.4.5 ToPropertyDescriptor).
 
     // 6.2.4.5 ToPropertyDescriptor, step 1.
-    if (!IsObject(attributes))
+    if (!IsObject(attributes)) {
         ThrowArgTypeNotObject(NOT_OBJECT_KIND_DESCRIPTOR, attributes);
+    }
 
     // 6.2.4.5 ToPropertyDescriptor, step 2.
     var attrs = 0, hasValue = false;
     var value, getter = null, setter = null;
 
     // 6.2.4.5 ToPropertyDescriptor, steps 3-4.
-    if ("enumerable" in attributes)
+    if ("enumerable" in attributes) {
         attrs |= attributes.enumerable ? ATTR_ENUMERABLE : ATTR_NONENUMERABLE;
+    }
 
     // 6.2.4.5 ToPropertyDescriptor, steps 5-6.
-    if ("configurable" in attributes)
+    if ("configurable" in attributes) {
         attrs |= attributes.configurable ? ATTR_CONFIGURABLE : ATTR_NONCONFIGURABLE;
+    }
 
     // 6.2.4.5 ToPropertyDescriptor, steps 7-8.
     if ("value" in attributes) {
@@ -250,22 +260,25 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
     if ("get" in attributes) {
         attrs |= ACCESSOR_DESCRIPTOR_KIND;
         getter = attributes.get;
-        if (!IsCallable(getter) && getter !== undefined)
+        if (!IsCallable(getter) && getter !== undefined) {
             ThrowTypeError(JSMSG_BAD_GET_SET_FIELD, "get");
+        }
     }
 
     // 6.2.4.5 ToPropertyDescriptor, steps 13-14.
     if ("set" in attributes) {
         attrs |= ACCESSOR_DESCRIPTOR_KIND;
         setter = attributes.set;
-        if (!IsCallable(setter) && setter !== undefined)
+        if (!IsCallable(setter) && setter !== undefined) {
             ThrowTypeError(JSMSG_BAD_GET_SET_FIELD, "set");
+        }
     }
 
     if (attrs & ACCESSOR_DESCRIPTOR_KIND) {
         // 6.2.4.5 ToPropertyDescriptor, step 15.
-        if (attrs & DATA_DESCRIPTOR_KIND)
+        if (attrs & DATA_DESCRIPTOR_KIND) {
             ThrowTypeError(JSMSG_INVALID_DESCRIPTOR);
+        }
 
         // Step 4 (accessor descriptor property).
         return DefineProperty(obj, propertyKey, attrs, getter, setter, strict);
@@ -315,8 +328,9 @@ function ObjectFromEntries(iter) {
     const obj = {};
 
     for (const pair of allowContentIter(iter)) {
-        if (!IsObject(pair))
+        if (!IsObject(pair)) {
             ThrowTypeError(JSMSG_INVALID_MAP_ITERABLE, "Object.fromEntries");
+        }
         DefineDataProperty(obj, pair[0], pair[1]);
     }
 
