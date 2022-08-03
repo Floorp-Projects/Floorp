@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG["MOZ_UNIFFI_FIXTURES"]:
+    DEFINES["MOZ_UNIFFI_FIXTURES"] = True
     UNIFIED_SOURCES += [
         "UniFFIFixtureScaffolding.cpp",
     ]
