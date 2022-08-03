@@ -7,8 +7,9 @@ function FunctionBind(thisArg, ...boundArgs) {
     // Step 1.
     var target = this;
     // Step 2.
-    if (!IsCallable(target))
+    if (!IsCallable(target)) {
         ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Function", "bind", target);
+    }
 
     // Step 3 (implicit).
     // Step 4.
@@ -65,13 +66,16 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
     return function $bound() {
         // Ensure we allocate a call-object slot for |boundArgs|, so the
         // debugger can access this value.
-        if (false) void boundArgs;
+        if (false) {
+            void boundArgs;
+        }
 
         var newTarget;
         if (IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === $bound)
+            if (newTarget === $bound) {
                 newTarget = fun;
+            }
             switch (arguments.length) {
               case 0:
                 return constructContentFunction(fun, newTarget);
@@ -116,13 +120,16 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
     return function $bound() {
         // Ensure we allocate a call-object slot for |boundArgs|, so the
         // debugger can access this value.
-        if (false) void boundArgs;
+        if (false) {
+            void boundArgs;
+        }
 
         var newTarget;
         if (IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === $bound)
+            if (newTarget === $bound) {
                 newTarget = fun;
+            }
             switch (arguments.length) {
               case 0:
                 return constructContentFunction(fun, newTarget, bound1);
@@ -159,15 +166,17 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
                 var callArgsCount = arguments.length;
                 var args = std_Array(1 + callArgsCount);
                 DefineDataProperty(args, 0, bound1);
-                for (var i = 0; i < callArgsCount; i++)
+                for (var i = 0; i < callArgsCount; i++) {
                     DefineDataProperty(args, i + 1, arguments[i]);
+                }
                 return args;
             };
         }
 
         var args = FUN_APPLY(combiner, null, arguments);
-        if (newTarget === undefined)
+        if (newTarget === undefined) {
             return bind_applyFunctionN(fun, thisArg, args);
+        }
         return bind_constructFunctionN(fun, newTarget, args);
     };
 }
@@ -179,13 +188,16 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
     return function $bound() {
         // Ensure we allocate a call-object slot for |boundArgs|, so the
         // debugger can access this value.
-        if (false) void boundArgs;
+        if (false) {
+            void boundArgs;
+        }
 
         var newTarget;
         if (IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === $bound)
+            if (newTarget === $bound) {
                 newTarget = fun;
+            }
             switch (arguments.length) {
               case 0:
                 return constructContentFunction(fun, newTarget, bound1, bound2);
@@ -223,15 +235,17 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
                 var args = std_Array(2 + callArgsCount);
                 DefineDataProperty(args, 0, bound1);
                 DefineDataProperty(args, 1, bound2);
-                for (var i = 0; i < callArgsCount; i++)
+                for (var i = 0; i < callArgsCount; i++) {
                     DefineDataProperty(args, i + 2, arguments[i]);
+                }
                 return args;
             };
         }
 
         var args = FUN_APPLY(combiner, null, arguments);
-        if (newTarget === undefined)
+        if (newTarget === undefined) {
             return bind_applyFunctionN(fun, thisArg, args);
+        }
         return bind_constructFunctionN(fun, newTarget, args);
     };
 }
@@ -243,12 +257,14 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
         var newTarget;
         if (IsConstructing()) {
             newTarget = new.target;
-            if (newTarget === $bound)
+            if (newTarget === $bound) {
                 newTarget = fun;
+            }
         }
         if (arguments.length === 0) {
-            if (newTarget !== undefined)
+            if (newTarget !== undefined) {
                 return bind_constructFunctionN(fun, newTarget, boundArgs);
+            }
             return bind_applyFunctionN(fun, thisArg, boundArgs);
         }
 
@@ -257,17 +273,20 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
                 var boundArgsCount = boundArgs.length;
                 var callArgsCount = arguments.length;
                 var args = std_Array(boundArgsCount + callArgsCount);
-                for (var i = 0; i < boundArgsCount; i++)
+                for (var i = 0; i < boundArgsCount; i++) {
                     DefineDataProperty(args, i, boundArgs[i]);
-                for (var i = 0; i < callArgsCount; i++)
+                }
+                for (var i = 0; i < callArgsCount; i++) {
                     DefineDataProperty(args, i + boundArgsCount, arguments[i]);
+                }
                 return args;
             };
         }
 
         var args = FUN_APPLY(combiner, null, arguments);
-        if (newTarget !== undefined)
+        if (newTarget !== undefined) {
             return bind_constructFunctionN(fun, newTarget, args);
+        }
         return bind_applyFunctionN(fun, thisArg, args);
     };
 }
@@ -275,8 +294,9 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
 function bind_mapArguments() {
     var len = arguments.length;
     var args = std_Array(len);
-    for (var i = 0; i < len; i++)
+    for (var i = 0; i < len; i++) {
         DefineDataProperty(args, i, arguments[i]);
+    }
     return args;
 }
 
