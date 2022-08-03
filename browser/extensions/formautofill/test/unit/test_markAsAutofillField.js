@@ -1,5 +1,9 @@
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 const TESTCASES = [
   {
     description: "Form containing 8 fields with autocomplete attribute.",
@@ -93,7 +97,9 @@ const TESTCASES = [
                 <input id="cc-number3" maxlength="4">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: ["cc-number1", "cc-number2", "cc-number3"],
+    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
+      ? ["cc-number1", "cc-number2", "cc-number3"]
+      : [],
   },
   {
     description:
@@ -106,13 +112,9 @@ const TESTCASES = [
                 <input id="cc-number5" maxlength="4">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: [
-      "cc-number1",
-      "cc-number2",
-      "cc-number3",
-      "cc-number4",
-      "cc-number5",
-    ],
+    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
+      ? ["cc-number1", "cc-number2", "cc-number3", "cc-number4", "cc-number5"]
+      : [],
   },
   {
     description:
@@ -126,14 +128,16 @@ const TESTCASES = [
                 <input id="cc-exp-year">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: [
-      "cc-number1",
-      "cc-number2",
-      "cc-number3",
-      "cc-name",
-      "cc-exp-month",
-      "cc-exp-year",
-    ],
+    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
+      ? [
+          "cc-number1",
+          "cc-number2",
+          "cc-number3",
+          "cc-name",
+          "cc-exp-month",
+          "cc-exp-year",
+        ]
+      : ["cc-number3", "cc-name", "cc-exp-month", "cc-exp-year"],
   },
   {
     description:
@@ -149,16 +153,18 @@ const TESTCASES = [
                 <input id="cc-exp-year">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: [
-      "cc-number1",
-      "cc-number2",
-      "cc-number3",
-      "cc-number4",
-      "cc-number5",
-      "cc-name",
-      "cc-exp-month",
-      "cc-exp-year",
-    ],
+    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
+      ? [
+          "cc-number1",
+          "cc-number2",
+          "cc-number3",
+          "cc-number4",
+          "cc-number5",
+          "cc-name",
+          "cc-exp-month",
+          "cc-exp-year",
+        ]
+      : ["cc-number5", "cc-name", "cc-exp-month", "cc-exp-year"],
   },
 ];
 
