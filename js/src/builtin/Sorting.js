@@ -13,8 +13,9 @@ function InsertionSort(array, from, to, comparefn) {
         item = array[i];
         for (j = i - 1; j >= from; j--) {
             swap = array[j];
-            if (callContentFunction(comparefn, undefined, swap, item) <= 0)
+            if (callContentFunction(comparefn, undefined, swap, item) <= 0) {
                 break;
+            }
             array[j + 1] = swap;
         }
         array[j + 1] = item;
@@ -63,10 +64,12 @@ function Merge(list, out, start, mid, end, comparefn) {
 // Helper function for overwriting a sparse array with a
 // dense array, filling remaining slots with holes.
 function MoveHoles(sparse, sparseLen, dense, denseLen) {
-    for (var i = 0; i < denseLen; i++)
+    for (var i = 0; i < denseLen; i++) {
         sparse[i] = dense[i];
-    for (var j = denseLen; j < sparseLen; j++)
+    }
+    for (var j = denseLen; j < sparseLen; j++) {
         delete sparse[j];
+    }
 }
 
 // Iterative, bottom up, mergesort.
@@ -77,12 +80,14 @@ function MergeSort(array, len, comparefn) {
     var denseLen = 0;
 
     for (var i = 0; i < len; i++) {
-        if (i in array)
+        if (i in array) {
             DefineDataProperty(denseList, denseLen++, array[i]);
+        }
     }
 
-    if (denseLen < 1)
+    if (denseLen < 1) {
         return array;
+    }
 
     // Insertion sort for small arrays, where "small" is defined by performance
     // testing.
