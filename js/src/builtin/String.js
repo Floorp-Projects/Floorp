@@ -531,11 +531,15 @@ function String_substring(start, end) {
     // Step 7.
     var finalEnd = std_Math_min(std_Math_max(intEnd, 0), len);
 
-    // Step 8.
-    var from = std_Math_min(finalStart, finalEnd);
-
-    // Step 9.
-    var to = std_Math_max(finalStart, finalEnd);
+    // Steps 8-9.
+    var from, to;
+    if (finalStart < finalEnd) {
+        from = finalStart;
+        to = finalEnd;
+    } else {
+        from = finalEnd;
+        to = finalStart;
+    }
 
     // Step 10.
     // While |from| and |to - from| are bounded to the length of |str| and this
@@ -574,8 +578,9 @@ function String_substr(start, length) {
     var resultLength = std_Math_min(std_Math_max(end, 0), size - intStart);
 
     // Step 8.
-    // Use std_Math_max instead of an early return to allow better Ion optimizations.
-    resultLength = std_Math_max(resultLength, 0);
+    if (resultLength <= 0) {
+        return "";
+    }
 
     // Step 9.
     // While |intStart| and |resultLength| are bounded to the length of |str|
