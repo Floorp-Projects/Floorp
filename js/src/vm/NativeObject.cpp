@@ -384,8 +384,6 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
   MOZ_ASSERT(newCapacity < oldCapacity);
   MOZ_ASSERT(oldCapacity == getSlotsHeader()->capacity());
 
-  uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
-
   ObjectSlots* oldHeaderSlots = ObjectSlots::fromSlots(slots_);
   MOZ_ASSERT(oldHeaderSlots->capacity() == oldCapacity);
 
@@ -395,11 +393,14 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
     size_t nbytes = ObjectSlots::allocSize(oldCapacity);
     RemoveCellMemory(this, nbytes, MemoryUse::ObjectSlots);
     FreeSlots(cx, this, oldHeaderSlots, nbytes);
-    setEmptyDynamicSlots(dictionarySpan);
+    // dictionarySlotSpan is initialized to the correct value by the callers.
+    setEmptyDynamicSlots(0);
     return;
   }
 
   MOZ_ASSERT_IF(!is<ArrayObject>(), newCapacity >= SLOT_CAPACITY_MIN);
+
+  uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
 
   uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
 
