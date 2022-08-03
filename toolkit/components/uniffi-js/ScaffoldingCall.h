@@ -134,8 +134,8 @@ class ScaffoldingCallHandler {
   using RustArgs = std::tuple<typename ArgConverters::RustType...>;
   using IntermediateArgs =
       std::tuple<typename ArgConverters::IntermediateType...>;
-  using RustCallResult = RustCallResult<typename ReturnConverter::RustType>;
-  using TaskPromiseType = MozPromise<RustCallResult, nsresult, true>;
+  using CallResult = RustCallResult<typename ReturnConverter::RustType>;
+  using TaskPromiseType = MozPromise<CallResult, nsresult, true>;
 
   template <size_t I>
   using NthArgConverter =
@@ -180,8 +180,8 @@ class ScaffoldingCallHandler {
   // Call the scaffolding function
   //
   // For async calls this should be called in the worker thread
-  static RustCallResult CallScaffoldingFunc(ScaffoldingFunc aFunc,
-                                            IntermediateArgs&& aArgs) {
+  static CallResult CallScaffoldingFunc(ScaffoldingFunc aFunc,
+                                        IntermediateArgs&& aArgs) {
     return CallScaffoldingFuncHelper(
         aFunc, std::move(aArgs), std::index_sequence_for<ArgConverters...>());
   }
@@ -189,10 +189,10 @@ class ScaffoldingCallHandler {
   // Helper function for CallScaffoldingFunc that uses c++ magic to help with
   // iteration
   template <size_t... Is>
-  static RustCallResult CallScaffoldingFuncHelper(
-      ScaffoldingFunc aFunc, IntermediateArgs&& aArgs,
-      std::index_sequence<Is...> seq) {
-    RustCallResult result;
+  static CallResult CallScaffoldingFuncHelper(ScaffoldingFunc aFunc,
+                                              IntermediateArgs&& aArgs,
+                                              std::index_sequence<Is...> seq) {
+    CallResult result;
 
     auto makeCall = [&]() mutable {
       return aFunc(
@@ -211,7 +211,7 @@ class ScaffoldingCallHandler {
   //
   // This should be called on the main thread
   static void ReturnResult(
-      JSContext* aContext, RustCallResult& aCallResult,
+      JSContext* aContext, CallResult& aCallResult,
       dom::RootedDictionary<dom::UniFFIScaffoldingCallResult>& aReturnValue,
       const nsLiteralCString& aFuncName) {
     switch (aCallResult.mCallStatus.code) {
