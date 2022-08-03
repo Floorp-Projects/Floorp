@@ -36,22 +36,11 @@ bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<Sc
 }
 
 Maybe<already_AddRefed<UniFFIPointer>> UniFFIReadPointer(const GlobalObject& aGlobal, uint64_t aId, const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError) {
-  const UniFFIPointerType* type;
-  switch (aId) {
-    default:
-      return Nothing();
-  }
-  return Some(UniFFIPointer::Read(aArrayBuff, aPosition, type, aError));
+  return Nothing();
 }
 
 bool UniFFIWritePointer(const GlobalObject& aGlobal, uint64_t aId, const UniFFIPointer& aPtr, const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError) {
-  const UniFFIPointerType* type;
-  switch (aId) {
-    default:
-      return false;
-  }
-  aPtr.Write(aArrayBuff, aPosition, type, aError);
-  return true;
+  return false;
 }
 
 }  // namespace mozilla::uniffi

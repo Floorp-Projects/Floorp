@@ -25,6 +25,12 @@ pub struct CPPScaffoldingTemplate<'a> {
     pub object_ids: &'a ObjectIds<'a>,
 }
 
+impl<'a> CPPScaffoldingTemplate<'a> {
+    fn has_any_objects(&self) -> bool {
+        self.ci_list.iter().any(|ci| ci.object_definitions().len() > 0)
+    }
+}
+
 // Define extension traits with methods used in our template code
 
 #[ext(name=ComponentInterfaceCppExt)]

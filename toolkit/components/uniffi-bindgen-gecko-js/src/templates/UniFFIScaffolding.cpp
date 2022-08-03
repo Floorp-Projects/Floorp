@@ -68,6 +68,7 @@ bool {{ prefix }}CallSync(const GlobalObject& aGlobal, uint64_t aId, const Seque
 }
 
 Maybe<already_AddRefed<UniFFIPointer>> {{ prefix }}ReadPointer(const GlobalObject& aGlobal, uint64_t aId, const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError) {
+  {%- if self.has_any_objects() %}
   const UniFFIPointerType* type;
   switch (aId) {
     {%- for ci in ci_list %}
@@ -82,9 +83,13 @@ Maybe<already_AddRefed<UniFFIPointer>> {{ prefix }}ReadPointer(const GlobalObjec
       return Nothing();
   }
   return Some(UniFFIPointer::Read(aArrayBuff, aPosition, type, aError));
+  {%- else %}
+  return Nothing();
+  {%- endif %}
 }
 
 bool {{ prefix }}WritePointer(const GlobalObject& aGlobal, uint64_t aId, const UniFFIPointer& aPtr, const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError) {
+  {%- if self.has_any_objects() %}
   const UniFFIPointerType* type;
   switch (aId) {
     {%- for ci in ci_list %}
@@ -100,6 +105,9 @@ bool {{ prefix }}WritePointer(const GlobalObject& aGlobal, uint64_t aId, const U
   }
   aPtr.Write(aArrayBuff, aPosition, type, aError);
   return true;
+  {%- else %}
+  return false;
+  {%- endif %}
 }
 
 }  // namespace mozilla::uniffi

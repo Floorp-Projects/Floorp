@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_UniFFI_h
 #define mozilla_dom_UniFFI_h
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UniFFIBinding.h"
 
 namespace mozilla::dom {
