@@ -910,32 +910,6 @@ inline Vector<const uc16> String::GetCharVector(
   return flat.ToUC16Vector();
 }
 
-// A flat string reader provides random access to the contents of a
-// string independent of the character width of the string.
-class MOZ_STACK_CLASS FlatStringReader {
- public:
-  FlatStringReader(JSContext* cx, JS::Handle<JSLinearString*> string)
-      : string_(string), length_(string->length()) {}
-
-  FlatStringReader(const mozilla::Range<const char16_t> range)
-      : string_(nullptr), range_(range), length_(range.length()) {}
-
-  int length() { return length_; }
-
-  inline char16_t Get(size_t index) {
-    MOZ_ASSERT(index < length_);
-    if (string_) {
-      return string_->latin1OrTwoByteChar(index);
-    }
-    return range_[index];
-  }
-
- private:
-  JS::Handle<JSLinearString*> string_;
-  const mozilla::Range<const char16_t> range_;
-  size_t length_;
-};
-
 class JSRegExp : public HeapObject {
  public:
   JSRegExp() : HeapObject() {}
