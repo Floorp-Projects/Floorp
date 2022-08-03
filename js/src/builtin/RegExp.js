@@ -9,39 +9,47 @@
 function $RegExpFlagsGetter() {
     // Steps 1-2.
     var R = this;
-    if (!IsObject(R))
+    if (!IsObject(R)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, R === null ? "null" : typeof R);
+    }
 
     // Step 3.
     var result = "";
 
     // Steps 4-5.
-    if (R.hasIndices)
+    if (R.hasIndices) {
         result += "d";
+    }
 
     // Steps 6-7.
-    if (R.global)
+    if (R.global) {
         result += "g";
+    }
 
     // Steps 8-9.
-    if (R.ignoreCase)
+    if (R.ignoreCase) {
         result += "i";
+    }
 
     // Steps 10-11.
-    if (R.multiline)
+    if (R.multiline) {
         result += "m";
+    }
 
     // Steps 12-13.
-    if (R.dotAll)
+    if (R.dotAll) {
         result += "s";
+    }
 
     // Steps 14-15.
-    if (R.unicode)
+    if (R.unicode) {
          result += "u";
+    }
 
     // Steps 16-17
-    if (R.sticky)
+    if (R.sticky) {
         result += "y";
+    }
 
     // Step 18.
     return result;
@@ -55,8 +63,9 @@ function $RegExpToString()
     var R = this;
 
     // Step 2.
-    if (!IsObject(R))
+    if (!IsObject(R)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, R === null ? "null" : typeof R);
+    }
 
     // Step 3.
     var pattern = ToString(R.source);
@@ -85,22 +94,25 @@ function AdvanceStringIndex(S, index) {
     var length = S.length;
 
     // Step 6.
-    if (index + 1 >= length)
+    if (index + 1 >= length) {
         return index + 1;
+    }
 
     // Step 7.
     var first = callFunction(std_String_charCodeAt, S, index);
 
     // Step 8.
-    if (first < 0xD800 || first > 0xDBFF)
+    if (first < 0xD800 || first > 0xDBFF) {
         return index + 1;
+    }
 
     // Step 9.
     var second = callFunction(std_String_charCodeAt, S, index + 1);
 
     // Step 10.
-    if (second < 0xDC00 || second > 0xDFFF)
+    if (second < 0xDC00 || second > 0xDFFF) {
         return index + 1;
+    }
 
     // Step 11.
     return index + 2;
@@ -112,8 +124,9 @@ function RegExpMatch(string) {
     var rx = this;
 
     // Step 2.
-    if (!IsObject(rx))
+    if (!IsObject(rx)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, rx === null ? "null" : typeof rx);
+    }
 
     // Step 3.
     var S = ToString(string);
@@ -144,8 +157,9 @@ function RegExpMatch(string) {
 // steps 4-6.
 function RegExpMatchSlowPath(rx, S) {
     // Steps 4-5.
-    if (!rx.global)
+    if (!rx.global) {
         return RegExpExec(rx, S, false);
+    }
 
     // Step 6.a.
     var fullUnicode = !!rx.unicode;
@@ -165,8 +179,9 @@ function RegExpMatchSlowPath(rx, S) {
         var result = RegExpExec(rx, S, false);
 
         // Step 6.e.ii.
-        if (result === null)
+        if (result === null) {
           return (n === 0) ? null : A;
+        }
 
         // Step 6.e.iii.1.
         var matchStr = ToString(result[0]);
@@ -207,8 +222,9 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
         var result = RegExpMatcher(rx, S, lastIndex);
 
         // Step 6.e.ii.
-        if (result === null)
+        if (result === null) {
             return (n === 0) ? null : A;
+        }
 
         lastIndex = result.index + result[0].length;
 
@@ -221,8 +237,9 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
         // Step 6.e.iii.4.
         if (matchStr === "") {
             lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
-            if (lastIndex > lengthS)
+            if (lastIndex > lengthS) {
                 return A;
+            }
         }
 
         // Step 6.e.iii.5.
@@ -243,8 +260,9 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
 //   * exec
 //   * lastIndex
 function IsRegExpMethodOptimizable(rx) {
-    if (!IsRegExpObject(rx))
+    if (!IsRegExpObject(rx)) {
         return false;
+    }
 
     var RegExpProto = GetBuiltinPrototype("RegExp");
     // If RegExpPrototypeOptimizable and RegExpInstanceOptimizable succeed,
@@ -260,8 +278,9 @@ function RegExpReplace(string, replaceValue) {
     var rx = this;
 
     // Step 2.
-    if (!IsObject(rx))
+    if (!IsObject(rx)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, rx === null ? "null" : typeof rx);
+    }
 
     // Step 3.
     var S = ToString(string);
@@ -281,8 +300,9 @@ function RegExpReplace(string, replaceValue) {
         // Skip if replaceValue is an empty string or a single character.
         // A single character string may contain "$", but that cannot be a
         // substitution.
-        if (replaceValue.length > 1)
+        if (replaceValue.length > 1) {
             firstDollarIndex = GetFirstDollarIndex(replaceValue);
+        }
     }
 
     // Optimized paths.
@@ -310,17 +330,21 @@ function RegExpReplace(string, replaceValue) {
                 return RegExpGlobalReplaceOptSubst(rx, S, lengthS, replaceValue, flags,
                                                    firstDollarIndex);
             }
-            if (lengthS < 0x7fff)
+            if (lengthS < 0x7fff) {
                 return RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags);
+            }
             return RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue, flags);
         }
 
-        if (functionalReplace)
+        if (functionalReplace) {
             return RegExpLocalReplaceOptFunc(rx, S, lengthS, replaceValue);
-        if (firstDollarIndex !== -1)
+        }
+        if (firstDollarIndex !== -1) {
             return RegExpLocalReplaceOptSubst(rx, S, lengthS, replaceValue, firstDollarIndex);
-        if (lengthS < 0x7fff)
+        }
+        if (lengthS < 0x7fff) {
             return RegExpLocalReplaceOptShort(rx, S, lengthS, replaceValue);
+        }
         return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
     }
 
@@ -358,15 +382,17 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
         var result = RegExpExec(rx, S, false);
 
         // Step 11.b.
-        if (result === null)
+        if (result === null) {
             break;
+        }
 
         // Step 11.c.i.
         DefineDataProperty(results, nResults++, result);
 
         // Step 11.c.ii.
-        if (!global)
+        if (!global) {
             break;
+        }
 
         // Step 11.c.iii.1.
         var matchStr = ToString(result[0]);
@@ -414,14 +440,16 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
                 capN = result[n];
 
                 // Step 14.i.ii.
-                if (capN !== undefined)
+                if (capN !== undefined) {
                     ToString(capN);
+                }
             }
             // Step 14.j, 14.l., GetSubstitution Step 11.
             // We don't need namedCaptures, but ToObject is visible to script.
             var namedCaptures = result.groups;
-            if (namedCaptures !== undefined)
+            if (namedCaptures !== undefined) {
                 ToObject(namedCaptures);
+            }
 
             replacement = replaceValue;
         }
@@ -438,8 +466,9 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
     }
 
     // Step 15.
-    if (nextSourcePosition >= lengthS)
+    if (nextSourcePosition >= lengthS) {
         return accumulatedResult;
+    }
 
     // Step 16.
     return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
@@ -468,8 +497,9 @@ function RegExpGetComplexReplacement(result, matched, S, position,
         var capN = result[n];
 
         // Step 14.i.ii.
-        if (capN !== undefined)
+        if (capN !== undefined) {
             capN = ToString(capN);
+        }
 
         // Step 14.i.iii.
         DefineDataProperty(captures, capturesLength++, capN);
@@ -613,8 +643,9 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags)
         var result = RegExpSearcher(rx, S, lastIndex);
 
         // Step 11.b.
-        if (result === -1)
+        if (result === -1) {
             break;
+        }
 
         var position = result & 0x7fff;
         lastIndex = (result >> 15) & 0x7fff;
@@ -629,14 +660,16 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags)
         // Step 11.c.iii.2.
         if (lastIndex === position) {
             lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
-            if (lastIndex > lengthS)
+            if (lastIndex > lengthS) {
                 break;
+            }
         }
     }
 
     // Step 15.
-    if (nextSourcePosition >= lengthS)
+    if (nextSourcePosition >= lengthS) {
         return accumulatedResult;
+    }
 
     // Step 16.
     return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
@@ -722,8 +755,9 @@ function RegExpSearch(string) {
     var rx = this;
 
     // Step 2.
-    if (!IsObject(rx))
+    if (!IsObject(rx)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, rx === null ? "null" : typeof rx);
+    }
 
     // Step 3.
     var S = ToString(string);
@@ -733,8 +767,9 @@ function RegExpSearch(string) {
 
     // Step 5.
     var lastIndexIsZero = SameValue(previousLastIndex, 0);
-    if (!lastIndexIsZero)
+    if (!lastIndexIsZero) {
         rx.lastIndex = 0;
+    }
 
     if (IsRegExpMethodOptimizable(rx) && S.length < 0x7fff) {
         // Step 6.
@@ -757,13 +792,15 @@ function RegExpSearch(string) {
             rx.lastIndex = previousLastIndex;
         } else {
             var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-            if (flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG))
+            if (flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG)) {
                 rx.lastIndex = previousLastIndex;
+            }
         }
 
         // Step 9.
-        if (result === -1)
+        if (result === -1) {
             return -1;
+        }
 
         // Step 10.
         return result & 0x7fff;
@@ -783,24 +820,28 @@ function RegExpSearchSlowPath(rx, S, previousLastIndex) {
     var currentLastIndex = rx.lastIndex;
 
     // Step 8.
-    if (!SameValue(currentLastIndex, previousLastIndex))
+    if (!SameValue(currentLastIndex, previousLastIndex)) {
         rx.lastIndex = previousLastIndex;
+    }
 
     // Step 9.
-    if (result === null)
+    if (result === null) {
         return -1;
+    }
 
     // Step 10.
     return result.index;
 }
 
 function IsRegExpSplitOptimizable(rx, C) {
-    if (!IsRegExpObject(rx))
+    if (!IsRegExpObject(rx)) {
         return false;
+    }
 
     var RegExpCtor = GetBuiltinConstructor("RegExp");
-    if (C !== RegExpCtor)
+    if (C !== RegExpCtor) {
         return false;
+    }
 
     var RegExpProto = RegExpCtor.prototype;
     // If RegExpPrototypeOptimizable succeeds, `RegExpProto.exec` is guaranteed
@@ -816,8 +857,9 @@ function RegExpSplit(string, limit) {
     var rx = this;
 
     // Step 2.
-    if (!IsObject(rx))
+    if (!IsObject(rx)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, rx === null ? "null" : typeof rx);
+    }
 
     // Step 3.
     var S = ToString(string);
@@ -853,10 +895,11 @@ function RegExpSplit(string, limit) {
 
         // Steps 8-9.
         var newFlags;
-        if (callFunction(std_String_includes, flags, "y"))
+        if (callFunction(std_String_includes, flags, "y")) {
             newFlags = flags;
-        else
+        } else {
             newFlags = flags + "y";
+        }
 
         // Step 10.
         splitter = constructContentFunction(C, C, rx, newFlags);
@@ -870,17 +913,19 @@ function RegExpSplit(string, limit) {
 
     // Step 13.
     var lim;
-    if (limit === undefined)
+    if (limit === undefined) {
         lim = MAX_UINT32;
-    else
+    } else {
         lim = limit >>> 0;
+    }
 
     // Step 15.
     var p = 0;
 
     // Step 16.
-    if (lim === 0)
+    if (lim === 0) {
         return A;
+    }
 
     // Step 14 (reordered).
     var size = S.length;
@@ -889,14 +934,16 @@ function RegExpSplit(string, limit) {
     if (size === 0) {
         // Step 17.a.
         var z;
-        if (optimizable)
+        if (optimizable) {
             z = RegExpMatcher(splitter, S, 0);
-        else
+        } else {
             z = RegExpExec(splitter, S, false);
+        }
 
         // Step 17.b.
-        if (z !== null)
+        if (z !== null) {
             return A;
+        }
 
         // Step 17.d.
         DefineDataProperty(A, 0, S);
@@ -919,13 +966,15 @@ function RegExpSplit(string, limit) {
             z = RegExpMatcher(splitter, S, q);
 
             // Step 19.c.
-            if (z === null)
+            if (z === null) {
                 break;
+            }
 
             // splitter.lastIndex is not updated.
             q = z.index;
-            if (q >= size)
+            if (q >= size) {
                 break;
+            }
 
             // Step 19.d.i.
             e = q + z[0].length;
@@ -959,8 +1008,9 @@ function RegExpSplit(string, limit) {
         lengthA++;
 
         // Step 19.d.iv.5.
-        if (lengthA === lim)
+        if (lengthA === lim) {
             return A;
+        }
 
         // Step 19.d.iv.6.
         p = e;
@@ -983,8 +1033,9 @@ function RegExpSplit(string, limit) {
             lengthA++;
 
             // Step 19.d.iv.10.e.
-            if (lengthA === lim)
+            if (lengthA === lim) {
                 return A;
+            }
         }
 
         // Step 19.d.iv.11.
@@ -992,10 +1043,11 @@ function RegExpSplit(string, limit) {
     }
 
     // Steps 20-22.
-    if (p >= size)
+    if (p >= size) {
         DefineDataProperty(A, lengthA, "");
-    else
+    } else {
         DefineDataProperty(A, lengthA, Substring(S, p, size - p));
+    }
 
     // Step 23.
     return A;
@@ -1006,8 +1058,9 @@ function RegExpSplit(string, limit) {
 function RegExp_prototype_Exec(string) {
     // Steps 1-3.
     var R = this;
-    if (!IsObject(R) || !IsRegExpObject(R))
+    if (!IsObject(R) || !IsRegExpObject(R)) {
         return callFunction(CallRegExpMethodIfWrapped, R, string, "RegExp_prototype_Exec");
+    }
 
     // Steps 4-5.
     var S = ToString(string);
@@ -1037,8 +1090,9 @@ function RegExpExec(R, S, forTest) {
     var result = callContentFunction(exec, R, S);
 
     // Step 5.c.
-    if (result !== null && !IsObject(result))
+    if (result !== null && !IsObject(result)) {
         ThrowTypeError(JSMSG_EXEC_NOT_OBJORNULL);
+    }
 
     // Step 5.d.
     return forTest ? result !== null : result;
@@ -1050,8 +1104,9 @@ function RegExpBuiltinExec(R, S, forTest) {
     // 21.2.5.2.1 Runtime Semantics: RegExpExec, step 5.
     // This check is here for RegExpTest.  RegExp_prototype_Exec does same
     // thing already.
-    if (!IsRegExpObject(R))
+    if (!IsRegExpObject(R)) {
         return UnwrapAndCallRegExpBuiltinExec(R, S, forTest);
+    }
 
     // Steps 1-3 (skipped).
 
@@ -1071,8 +1126,9 @@ function RegExpBuiltinExec(R, S, forTest) {
         // Step 12.a.
         if (lastIndex > S.length) {
             // Steps 12.a.i-ii.
-            if (globalOrSticky)
+            if (globalOrSticky) {
                 R.lastIndex = 0;
+            }
             return forTest ? false : null;
         }
     }
@@ -1082,14 +1138,16 @@ function RegExpBuiltinExec(R, S, forTest) {
         var endIndex = RegExpTester(R, S, lastIndex);
         if (endIndex == -1) {
             // Steps 12.a.i-ii, 12.c.i.1-2.
-            if (globalOrSticky)
+            if (globalOrSticky) {
                 R.lastIndex = 0;
+            }
             return false;
         }
 
         // Step 15.
-        if (globalOrSticky)
+        if (globalOrSticky) {
             R.lastIndex = endIndex;
+        }
 
         return true;
     }
@@ -1098,12 +1156,14 @@ function RegExpBuiltinExec(R, S, forTest) {
     var result = RegExpMatcher(R, S, lastIndex);
     if (result === null) {
         // Steps 12.a.i, 12.c.i.
-        if (globalOrSticky)
+        if (globalOrSticky) {
             R.lastIndex = 0;
+        }
     } else {
         // Step 15.
-        if (globalOrSticky)
+        if (globalOrSticky) {
             R.lastIndex = result.index + result[0].length;
+        }
     }
 
     return result;
@@ -1121,8 +1181,9 @@ function CallRegExpBuiltinExec(S, forTest) {
 function RegExpTest(string) {
     // Steps 1-2.
     var R = this;
-    if (!IsObject(R))
+    if (!IsObject(R)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, R === null ? "null" : typeof R);
+    }
 
     // Steps 3-4.
     var S = ToString(string);
@@ -1139,12 +1200,14 @@ function $RegExpSpecies() {
 SetCanonicalName($RegExpSpecies, "get [Symbol.species]");
 
 function IsRegExpMatchAllOptimizable(rx, C) {
-    if (!IsRegExpObject(rx))
+    if (!IsRegExpObject(rx)) {
         return false;
+    }
 
     var RegExpCtor = GetBuiltinConstructor("RegExp");
-    if (C !== RegExpCtor)
+    if (C !== RegExpCtor) {
         return false;
+    }
 
     var RegExpProto = RegExpCtor.prototype;
     return RegExpPrototypeOptimizable(RegExpProto) &&
@@ -1159,8 +1222,9 @@ function RegExpMatchAll(string) {
     var rx = this;
 
     // Step 2.
-    if (!IsObject(rx))
+    if (!IsObject(rx)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, rx === null ? "null" : typeof rx);
+    }
 
     // Step 3.
     var str = ToString(string);
@@ -1278,8 +1342,9 @@ function RegExpStringIteratorNext() {
         {
             // Step 9 (Inlined RegExpBuiltinExec).
             var globalOrSticky = !!(flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG));
-            if (!globalOrSticky)
+            if (!globalOrSticky) {
                 lastIndex = 0;
+            }
 
             var match = (lastIndex <= string.length)
                         ? RegExpMatcher(regexp, string, lastIndex)
