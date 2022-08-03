@@ -46,31 +46,6 @@ class TablePartRule : public PivotRule {
   }
 };
 
-// Iterates through headers explicitly associated with a remote table cell via
-// the headers DOM attribute. These are cached as Accessible ids.
-class RemoteExplicitHeadersIterator : public AccIterable {
- public:
-  RemoteExplicitHeadersIterator(const nsTArray<uint64_t>& aHeaders,
-                                Accessible* aDoc)
-      : mHeaders(aHeaders), mDoc(aDoc), mIndex(0) {}
-
-  virtual Accessible* Next() override {
-    while (mIndex < mHeaders.Length()) {
-      uint64_t id = mHeaders[mIndex++];
-      Accessible* acc = nsAccUtils::GetAccessibleByID(mDoc, id);
-      if (acc) {
-        return acc;
-      }
-    }
-    return nullptr;
-  }
-
- private:
-  const nsTArray<uint64_t>& mHeaders;
-  Accessible* mDoc;
-  uint32_t mIndex;
-};
-
 // The Accessible* keys should only be used for lookup. They should not be
 // dereferenced.
 using CachedTablesMap = nsTHashMap<Accessible*, CachedTableAccessible>;
@@ -382,8 +357,7 @@ UniquePtr<AccIterable> CachedTableCellAccessible::GetExplicitHeadersIterator() {
       if (auto headers =
               remoteAcc->mCachedFields->GetAttribute<nsTArray<uint64_t>>(
                   nsGkAtoms::headers)) {
-        return MakeUnique<RemoteExplicitHeadersIterator>(*headers,
-                                                         remoteAcc->Document());
+        return MakeUnique<RemoteAccIterator>(*headers, remoteAcc->Document());
       }
     }
   } else if (LocalAccessible* localAcc = mAcc->AsLocal()) {

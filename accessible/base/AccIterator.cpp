@@ -8,8 +8,10 @@
 #include "DocAccessible-inl.h"
 #include "XULTreeAccessible.h"
 
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/HTMLLabelElement.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -340,5 +342,26 @@ LocalAccessible* XULTreeItemIterator::Next() {
     mCurrRowIdx++;
   }
 
+  return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// RemoteAccIterator
+////////////////////////////////////////////////////////////////////////////////
+
+RemoteAccIterator::RemoteAccIterator(nsTArray<uint64_t>&& aIds,
+                                     DocAccessibleParent* aDoc)
+    : mOwnedIds(std::move(aIds)), mIds(mOwnedIds), mDoc(aDoc), mIndex(0) {
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+}
+
+Accessible* RemoteAccIterator::Next() {
+  while (mIndex < mIds.Length()) {
+    uint64_t id = mIds[mIndex++];
+    Accessible* acc = mDoc->GetAccessible(id);
+    if (acc) {
+      return acc;
+    }
+  }
   return nullptr;
 }
