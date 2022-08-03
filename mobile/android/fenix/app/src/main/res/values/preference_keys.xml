@@ -236,6 +236,8 @@
     <string name="pref_key_has_inactive_tabs_auto_close_dialog_dismissed" translatable="false">pref_key_has_inactive_tabs_auto_close_dialog_dismissed</string>
     <!-- A value  of `true` means the jump back in onboarding popup has not been shown yet -->
     <string name="pref_key_should_show_jump_back_in_tabs_popup" translatable="false">pref_key_should_show_jump_back_in_tabs_popup</string>
+    <!-- A value  of `true` means the  on-boarding sync CFR have not been shown yet -->
+    <string name="pref_key_should_show_sync_cfr" translatable="false">pref_key_should_show_sync_cfr</string>
 
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 

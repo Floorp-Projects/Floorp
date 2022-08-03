@@ -44,6 +44,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
+import org.mozilla.fenix.nimbus.OnboardingSection
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
@@ -1200,6 +1201,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    private val onboardScreenSection: Map<OnboardingSection, Boolean> get() =
+        FxNimbus.features.onboarding.value().sectionsEnabled
+
     private val homescreenSections: Map<HomeScreenSection, Boolean> get() = try {
         FxNimbus.features.homescreen.value().sectionsEnabled
     } catch (e: NimbusFeatureException) {
@@ -1210,6 +1214,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
         default = { homescreenSections[HomeScreenSection.RECENT_EXPLORATIONS] == true },
         featureFlag = FeatureFlags.historyMetadataUIFeature || isHistoryMetadataEnabled
+    )
+
+    /**
+     * Indicates if sync on-boarding CFR should be shown
+     * Returns true if the [FeatureFlags.showSynCFR] and [R.string.pref_key_should_show_sync_cfr] are true.
+     */
+    var showSyncCFR by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_sync_cfr),
+        featureFlag = FeatureFlags.showSynCFR,
+        default = { onboardScreenSection[OnboardingSection.SYNC_CFR] == true },
     )
 
     /**

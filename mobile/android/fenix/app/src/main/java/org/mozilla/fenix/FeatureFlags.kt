@@ -24,6 +24,11 @@ object FeatureFlags {
     const val syncAddressesFeature = false
 
     /**
+     * Enables the on-boarding sync cfr on the home screen.
+     */
+    val showSynCFR = Config.channel.isDebug
+
+    /**
      * Enables the "recent" tabs feature in the home screen.
      */
     const val showRecentTabsFeature = true

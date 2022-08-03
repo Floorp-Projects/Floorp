@@ -33,6 +33,23 @@ features:
             "contile-top-sites": false,
           }
         }
+  onboarding:
+    description: The homescreen that the user goes to when they press home or new tab.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<OnboardingSection, Boolean>
+        default:
+          {
+            "sync-cfr": false
+          }
+    defaults:
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "sync-cfr": false
+          }
+        }
   nimbus-validation:
     description: "A feature that does not correspond to an application feature suitable for showing
     that Nimbus is working. This should never be used in production."
@@ -305,4 +322,9 @@ types:
           description: A setting in the settings screen.
         homescreen-banner:
           description: A banner in the homescreen.
+    OnboardingSection:
+      description: The identifiers for the sections of the onboarding.
+      variants:
+        sync-cfr:
+          description: Sync onboarding CFR.
 
