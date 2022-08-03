@@ -1,0 +1,2 @@
+# To make sure this process doesn't show a taskbar icon
+MOZ_WINCONSOLE = 0

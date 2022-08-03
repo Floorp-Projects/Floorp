@@ -1,0 +1,29 @@
+SPHINX_TREES["private-browsing-proxy"] = "docs"
+
+SOURCES += ["pbproxy.cpp"]
+
+# For nsNativeAppSupportWin.h icon definitions
+LOCAL_INCLUDES += ["/toolkit/xre"]
+
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
+    # This allows us to use wmain as the entry point on mingw
+    LDFLAGS += [
+        "-municode",
+    ]
+
+RCINCLUDE = "pbproxy.rc"
+DEFINES["UNICODE"] = 1
+DEFINES["MOZ_APP_NAME"] = 'L"{}"'.format(CONFIG["MOZ_APP_NAME"])
+Program("private_browsing")
+
+OS_LIBS += ["shlwapi", "user32"]
+
+DEFINES["PBMODE_ICO"] = '"{}/{}/pbmode.ico"'.format(
+    TOPSRCDIR,
+    CONFIG["MOZ_BRANDING_DIRECTORY"],
+)
+
+DisableStlWrapping()
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")
