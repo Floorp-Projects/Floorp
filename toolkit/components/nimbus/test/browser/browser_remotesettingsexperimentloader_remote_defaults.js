@@ -117,6 +117,7 @@ async function setup(configuration) {
 }
 
 add_task(async function test_remote_fetch_and_ready() {
+  const sandbox = sinon.createSandbox();
   const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
   const barInstance = new ExperimentFeature("bar", BAR_FAKE_FEATURE_MANIFEST);
 
@@ -125,7 +126,6 @@ add_task(async function test_remote_fetch_and_ready() {
     barInstance
   );
 
-  const sandbox = sinon.createSandbox();
   const setExperimentActiveStub = sandbox.stub(
     TelemetryEnvironment,
     "setExperimentActive"
@@ -267,10 +267,12 @@ add_task(async function test_remote_fetch_and_ready() {
 
   cleanupTestFeatures();
   await cleanup();
+  sandbox.restore();
 });
 
 add_task(async function test_remote_fetch_on_updateRecipes() {
-  let sandbox = sinon.createSandbox();
+  const sandbox = sinon.createSandbox();
+
   let updateRecipesStub = sandbox.stub(
     RemoteSettingsExperimentLoader,
     "updateRecipes"
@@ -305,6 +307,7 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
   Services.prefs.clearUserPref(
     "app.update.lastUpdateTime.rs-experiment-loader-timer"
   );
+  sandbox.restore();
 });
 
 add_task(async function test_finalizeRemoteConfigs_cleanup() {
@@ -346,6 +349,7 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
       source: "rs-loader",
     }
   );
+
   let stubFoo = sinon.stub();
   let stubBar = sinon.stub();
   featureFoo.onUpdate(stubFoo);
@@ -411,7 +415,8 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
 // If the remote config data returned from the store is not modified
 // this test should not throw
 add_task(async function remote_defaults_no_mutation() {
-  let sandbox = sinon.createSandbox();
+  const sandbox = sinon.createSandbox();
+
   sandbox.stub(ExperimentAPI._store, "getRolloutForFeature").returns(
     Cu.cloneInto(
       {
@@ -434,6 +439,8 @@ add_task(async function remote_defaults_no_mutation() {
 });
 
 add_task(async function remote_defaults_active_remote_defaults() {
+  const sandbox = sinon.createSandbox();
+
   ExperimentAPI._store._deleteForTests("foo");
   ExperimentAPI._store._deleteForTests("bar");
   let barFeature = new ExperimentFeature("bar", {
@@ -486,20 +493,20 @@ add_task(async function remote_defaults_active_remote_defaults() {
     targeting: "'bar' in activeRollouts",
   });
 
-  // Order is important, rollout2 won't match at first
+  // Order is important, rollout2 won't match at first.
+  // We cannot use setup() here becuase RS returns records in a
+  // non-deterministic order.
+  sandbox
+    .stub(RemoteSettingsExperimentLoader.remoteSettingsClient, "get")
+    .resolves([rollout2, rollout1]);
   const { cleanup } = await setup([rollout2, rollout1]);
-  let updatePromise = new Promise(resolve => barFeature.onUpdate(resolve));
   RemoteSettingsExperimentLoader._initialized = true;
   await RemoteSettingsExperimentLoader.updateRecipes("mochitest");
-
-  await updatePromise;
 
   Assert.ok(barFeature.getVariable("enabled"), "Enabled on first sync");
   Assert.ok(!fooFeature.getVariable("enabled"), "Targeting doesn't match");
 
-  let featureUpdate = new Promise(resolve => fooFeature.onUpdate(resolve));
   await RemoteSettingsExperimentLoader.updateRecipes("mochitest");
-  await featureUpdate;
 
   Assert.ok(fooFeature.getVariable("enabled"), "Targeting should match");
   ExperimentAPI._store._deleteForTests("foo");
@@ -507,6 +514,7 @@ add_task(async function remote_defaults_active_remote_defaults() {
 
   cleanup();
   cleanupTestFeatures();
+  sandbox.restore();
 });
 
 add_task(async function remote_defaults_variables_storage() {
