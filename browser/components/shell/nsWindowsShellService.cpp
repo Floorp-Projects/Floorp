@@ -65,6 +65,7 @@ PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
 #include <mbstring.h>
 
 #define PIN_TO_TASKBAR_SHELL_VERB 5386
+#define PRIVATE_BROWSING_BINARY L"private_browsing.exe"
 
 #undef ACCESS_READ
 
@@ -1322,36 +1323,36 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
       return NS_OK;
     }
 
-    nsTArray<nsString> arguments;
-
-    if (aPrivateBrowsing) {
-      nsAutoString arg;
-      arg.AssignLiteral("-private-window");
-      arguments.AppendElement(arg);
-    }
-
     nsAutoString linkName(aShortcutName);
 
-    wchar_t exePath[MAXPATHLEN] = {};
-    if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoString exeStr;
     nsCOMPtr<nsIFile> exeFile;
-    exeStr.Assign(exePath);
-    nsresult rv = NS_NewLocalFile(exeStr, true, getter_AddRefs(exeFile));
-    if (!NS_SUCCEEDED(rv)) {
-      return NS_ERROR_FILE_NOT_FOUND;
+    if (aPrivateBrowsing) {
+      nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(exeFile));
+      if (!NS_SUCCEEDED(rv)) {
+        return NS_ERROR_FAILURE;
+      }
+      nsAutoString pbExeStr(PRIVATE_BROWSING_BINARY);
+      rv = exeFile->Append(pbExeStr);
+      if (!NS_SUCCEEDED(rv)) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      wchar_t exePath[MAXPATHLEN] = {};
+      if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
+        return NS_ERROR_FAILURE;
+      }
+      nsAutoString exeStr(exePath);
+      nsresult rv = NS_NewLocalFile(exeStr, true, getter_AddRefs(exeFile));
+      if (!NS_SUCCEEDED(rv)) {
+        return NS_ERROR_FILE_NOT_FOUND;
+      }
     }
 
-    uint16_t iconIndex = aPrivateBrowsing ? IDI_PBMODE : IDI_APPICON;
-    // Icon indexes are defined as Resource IDs, but CreateShortcutImpl
-    // needs an index.
-    iconIndex--;
-
+    nsTArray<nsString> arguments;
     rv = CreateShortcutImpl(exeFile, arguments, aShortcutName, exeFile,
-                            iconIndex, aAppUserModelId, FOLDERID_Programs,
+                            // Icon indexes are defined as Resource IDs, but
+                            // CreateShortcutImpl needs an index.
+                            IDI_APPICON - 1, aAppUserModelId, FOLDERID_Programs,
                             linkName, shortcutPath);
     if (!NS_SUCCEEDED(rv)) {
       return NS_ERROR_FILE_NOT_FOUND;

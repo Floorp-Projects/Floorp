@@ -92,6 +92,32 @@ add_task(function test_gifft_memory_dist() {
   Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").clear();
   Assert.equal(24, data.sum, "Histogram's in `memory_unit` units");
   Assert.equal(2, data.values["1"], "Both samples in a low bucket");
+
+  // MemoryDistribution's Accumulate method to takes
+  // a platform specific type (size_t).
+  // Glean's, however, is i64, and, glean_memory_dist is uint64_t
+  // What happens when we give accumulate dubious values?
+  // This may occur on some uncommon platforms.
+  // Note: there are issues in JS with numbers above 2**53
+  Glean.testOnlyIpc.aMemoryDist.accumulate(36893488147419103232);
+  let dubiousValue = Object.entries(
+    Glean.testOnlyIpc.aMemoryDist.testGetValue().values
+  )[0][1];
+  Assert.equal(
+    dubiousValue,
+    1,
+    "Greater than 64-Byte number did not accumulate correctly"
+  );
+
+  // Values lower than the out-of-range value are not clamped
+  // resulting in an exception being thrown from the glean side
+  // when the value exceeds the glean maximum allowed value
+  Glean.testOnlyIpc.aMemoryDist.accumulate(Math.pow(2, 31));
+  Assert.throws(
+    () => Glean.testOnlyIpc.aMemoryDist.testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Did not accumulate correctly"
+  );
 });
 
 add_task(function test_gifft_custom_dist() {

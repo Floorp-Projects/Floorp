@@ -7,7 +7,7 @@
 # - intentionally invalid files
 # - build directories and other items that we need to ignore
 
-!.eslintrc.js
+!.eslintrc*.js
 
 # Always ignore node_modules.
 **/node_modules/

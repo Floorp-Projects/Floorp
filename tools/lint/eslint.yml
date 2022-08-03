@@ -7,6 +7,7 @@ eslint:
     extensions: ['mjs', 'js', 'jsm', 'jsx', 'html', 'sjs', 'xhtml']
     support-files:
         - '**/.eslintrc.js'
+        - '.eslintrc-test-paths.js'
         - '.eslintignore'
         - 'tools/lint/eslint/**'
         # Files that can influence global variables

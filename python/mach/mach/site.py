@@ -162,7 +162,9 @@ class MozSiteMetadata:
             and self.hex_version == other.hex_version
             and self.site_name == other.site_name
             and self.mach_site_packages_source == other.mach_site_packages_source
-            and self.original_python.python_path == other.original_python.python_path
+            # On Windows, execution environment can lead to different cases.  Normalize.
+            and Path(self.original_python.python_path)
+            == Path(other.original_python.python_path)
         )
 
     @classmethod
