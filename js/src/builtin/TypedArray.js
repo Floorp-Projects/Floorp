@@ -16,8 +16,9 @@ function ViewedArrayBufferIfReified(tarray) {
 function IsDetachedBuffer(buffer) {
     // A typed array with a null buffer has never had its buffer exposed to
     // become detached.
-    if (buffer === null)
+    if (buffer === null) {
         return false;
+    }
 
     assert(GuardToArrayBuffer(buffer) !== null || GuardToSharedArrayBuffer(buffer) !== null,
            "non-ArrayBuffer passed to IsDetachedBuffer");
@@ -28,8 +29,9 @@ function IsDetachedBuffer(buffer) {
     // only hot for non-shared memory in SetFromNonTypedArray, so there is an
     // optimization in place there to avoid incurring the cost here.  An
     // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
-    if ((buffer = GuardToArrayBuffer(buffer)) === null)
+    if ((buffer = GuardToArrayBuffer(buffer)) === null) {
         return false;
+    }
 
     var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
     return (flags & JS_ARRAYBUFFER_DETACHED_FLAG) !== 0;
@@ -41,8 +43,9 @@ function TypedArrayLengthMethod() {
 
 function GetAttachedArrayBuffer(tarray) {
     var buffer = ViewedArrayBufferIfReified(tarray);
-    if (IsDetachedBuffer(buffer))
+    if (IsDetachedBuffer(buffer)) {
         ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+    }
     return buffer;
 }
 
@@ -80,23 +83,27 @@ function TypedArraySpeciesConstructor(obj) {
     var ctor = obj.constructor;
 
     // Step 3.
-    if (ctor === undefined)
+    if (ctor === undefined) {
         return ConstructorForTypedArray(obj);
+    }
 
     // Step 4.
-    if (!IsObject(ctor))
+    if (!IsObject(ctor)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, "object's 'constructor' property");
+    }
 
     // Steps 5.
     var s = ctor[GetBuiltinSymbol("species")];
 
     // Step 6.
-    if (s === undefined || s === null)
+    if (s === undefined || s === null) {
         return ConstructorForTypedArray(obj);
+    }
 
     // Step 7.
-    if (IsConstructor(s))
+    if (IsConstructor(s)) {
         return s;
+    }
 
     // Step 8.
     ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "@@species property of object's constructor");
@@ -115,8 +122,9 @@ function ValidateTypedArray(obj) {
 
         /* Steps 3-5 (wrapped typed arrays). */
         if (IsPossiblyWrappedTypedArray(obj)) {
-            if (PossiblyWrappedTypedArrayHasDetachedBuffer(obj))
+            if (PossiblyWrappedTypedArrayHasDetachedBuffer(obj)) {
                 ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+            }
             return false;
         }
     }
@@ -144,8 +152,9 @@ function TypedArrayCreateWithLength(constructor, length) {
                            "TypedArrayLengthMethod");
     }
 
-    if (len < length)
+    if (len < length) {
         ThrowTypeError(JSMSG_SHORT_TYPED_ARRAY_RETURNED, length, len);
+    }
 
     // Step 4.
     return newTypedArray;
@@ -229,16 +238,19 @@ function TypedArrayEvery(callbackfn/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.every");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
@@ -251,8 +263,9 @@ function TypedArrayEvery(callbackfn/*, thisArg*/) {
         var testResult = callContentFunction(callbackfn, thisArg, kValue, k, O);
 
         // Step 6.d.
-        if (!testResult)
+        if (!testResult) {
             return false;
+        }
     }
 
     // Step 7.
@@ -310,8 +323,9 @@ function TypedArrayFill(value, start = 0, end = undefined) {
         buffer = ViewedArrayBufferIfReified(O);
     }
 
-    if (IsDetachedBuffer(buffer))
+    if (IsDetachedBuffer(buffer)) {
         ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+    }
 
     // Step 10.
     for (; k < final; k++) {
@@ -337,16 +351,19 @@ function TypedArrayFilter(callbackfn/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.filter");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     // Step 5.
     var T = arguments.length > 1 ? arguments[1] : undefined;
@@ -399,16 +416,19 @@ function TypedArrayFind(predicate/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.find");
-    if (!IsCallable(predicate))
+    }
+    if (!IsCallable(predicate)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+    }
 
     var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
@@ -418,8 +438,9 @@ function TypedArrayFind(predicate/*, thisArg*/) {
         var kValue = O[k];
 
         // Steps 6.c-d.
-        if (callContentFunction(predicate, thisArg, kValue, k, O))
+        if (callContentFunction(predicate, thisArg, kValue, k, O)) {
             return kValue;
+        }
     }
 
     // Step 7.
@@ -440,24 +461,28 @@ function TypedArrayFindIndex(predicate/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.findIndex");
-    if (!IsCallable(predicate))
+    }
+    if (!IsCallable(predicate)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+    }
 
     var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
     // Steps 5-6.
     for (var k = 0; k < len; k++) {
         // Steps 6.a-f.
-        if (callContentFunction(predicate, thisArg, O[k], k, O))
+        if (callContentFunction(predicate, thisArg, O[k], k, O)) {
             return k;
+        }
     }
 
     // Step 7.
@@ -478,16 +503,19 @@ function TypedArrayForEach(callbackfn/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "TypedArray.prototype.forEach");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
@@ -522,8 +550,9 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
     var len = TypedArrayLength(O);
 
     // Step 4.
-    if (len === 0)
+    if (len === 0) {
         return -1;
+    }
 
     // Step 5.
     var n = ToInteger(fromIndex);
@@ -539,8 +568,9 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
            "TypedArrays with detached buffers have a length of zero");
 
     // Step 7.
-    if (n >= len)
+    if (n >= len) {
         return -1;
+    }
 
     // Steps 7-10.
     // Steps 7-8 are handled implicitly.
@@ -553,8 +583,9 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
         k = len + n;
 
         // Step 10.b.
-        if (k < 0)
+        if (k < 0) {
             k = 0;
+        }
     }
 
     // Step 11.
@@ -563,8 +594,9 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
         assert(k in O, "unexpected missing element");
 
         // Steps 11.b.i-iii.
-        if (O[k] === searchElement)
+        if (O[k] === searchElement) {
             return k;
+        }
     }
 
     // Step 12.
@@ -592,8 +624,9 @@ function TypedArrayJoin(separator) {
     var sep = separator === undefined ? "," : ToString(separator);
 
     // Steps 6 and 9.
-    if (len === 0)
+    if (len === 0) {
         return "";
+    }
 
     // ToString() might have detached the underlying ArrayBuffer. To avoid
     // checking for this condition when looping in step 8.c, do it once here.
@@ -668,8 +701,9 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
     var len = TypedArrayLength(O);
 
     // Step 4.
-    if (len === 0)
+    if (len === 0) {
         return -1;
+    }
 
     // Step 5.
     var n = arguments.length > 1 ? ToInteger(arguments[1]) : len - 1;
@@ -690,8 +724,9 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
         assert(k in O, "unexpected missing element");
 
         // Steps 9.b.i-iii.
-        if (O[k] === searchElement)
+        if (O[k] === searchElement) {
             return k;
+        }
     }
 
     // Step 10.
@@ -713,16 +748,19 @@ function TypedArrayMap(callbackfn/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.map");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     // Step 5.
     var T = arguments.length > 1 ? arguments[1] : undefined;
@@ -759,20 +797,24 @@ function TypedArrayReduce(callbackfn/*, initialValue*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduce");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     // Step 5.
-    if (len === 0 && arguments.length === 1)
+    if (len === 0 && arguments.length === 1) {
         ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
+    }
 
     // Step 6.
     var k = 0;
@@ -803,20 +845,24 @@ function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduceRight");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     // Step 5.
-    if (len === 0 && arguments.length === 1)
+    if (len === 0 && arguments.length === 1) {
         ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
+    }
 
     // Step 6.
     var k = len - 1;
@@ -920,8 +966,9 @@ function TypedArraySlice(start, end) {
             buffer = ViewedArrayBufferIfReified(O);
         }
 
-        if (IsDetachedBuffer(buffer))
+        if (IsDetachedBuffer(buffer)) {
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+        }
 
         // Steps 10-13, 15.
         var sliced = TypedArrayBitwiseSlice(O, A, k, count);
@@ -957,16 +1004,19 @@ function TypedArraySome(callbackfn/*, thisArg*/) {
 
     // Step 3.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(O);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.some");
-    if (!IsCallable(callbackfn))
+    }
+    if (!IsCallable(callbackfn)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+    }
 
     var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
@@ -979,8 +1029,9 @@ function TypedArraySome(callbackfn/*, thisArg*/) {
         var testResult = callContentFunction(callbackfn, thisArg, kValue, k, O);
 
         // Step 6.d.
-        if (testResult)
+        if (testResult) {
             return true;
+        }
     }
 
     // Step 7.
@@ -996,8 +1047,9 @@ function TypedArraySort(comparefn) {
 
     // Step 1.
     if (comparefn !== undefined) {
-        if (!IsCallable(comparefn))
+        if (!IsCallable(comparefn)) {
             ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, comparefn));
+        }
     }
 
     // Step 2.
@@ -1015,11 +1067,13 @@ function TypedArraySort(comparefn) {
     }
 
     // Arrays with less than two elements remain unchanged when sorted.
-    if (len <= 1)
+    if (len <= 1) {
         return obj;
+    }
 
-    if (comparefn === undefined)
+    if (comparefn === undefined) {
         return TypedArrayNativeSort(obj);
+    }
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
     // the user supplied comparefn is wrapped.
@@ -1028,8 +1082,9 @@ function TypedArraySort(comparefn) {
         var v = +callContentFunction(comparefn, undefined, x, y);
 
         // Step b.
-        if (v !== v)
+        if (v !== v) {
             return 0;
+        }
 
         // Step c.
         return v;
@@ -1054,14 +1109,16 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
 
     // Step 2.
     var len;
-    if (isTypedArray)
+    if (isTypedArray) {
         len = TypedArrayLength(array);
-    else
+    } else {
         len = callFunction(CallTypedArrayMethodIfWrapped, array, "TypedArrayLengthMethod");
+    }
 
     // Step 4.
-    if (len === 0)
+    if (len === 0) {
         return "";
+    }
 
     // Step 5.
     var firstElement = array[0];
@@ -1323,8 +1380,9 @@ function TypedArrayIncludes(searchElement, fromIndex = 0) {
     var len = TypedArrayLength(O);
 
     // Step 4.
-    if (len === 0)
+    if (len === 0) {
         return false;
+    }
 
     // Step 5.
     var n = ToInteger(fromIndex);
@@ -1343,15 +1401,17 @@ function TypedArrayIncludes(searchElement, fromIndex = 0) {
         k = len + n;
 
         // Step 10.b.
-        if (k < 0)
+        if (k < 0) {
             k = 0;
+        }
     }
 
     // Step 11.
     while (k < len) {
         // Steps 11.a-b.
-        if (SameValueZero(searchElement, O[k]))
+        if (SameValueZero(searchElement, O[k])) {
             return true;
+        }
 
         // Step 11.c.
         k++;
@@ -1368,15 +1428,17 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
     var C = this;
 
     // Step 2.
-    if (!IsConstructor(C))
+    if (!IsConstructor(C)) {
         ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, typeof C);
+    }
 
     // Step 3.
     var mapping;
     if (mapfn !== undefined) {
         // Step 3.a.
-        if (!IsCallable(mapfn))
+        if (!IsCallable(mapfn)) {
             ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
+        }
 
         // Step 3.b.
         mapping = true;
@@ -1396,8 +1458,9 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
     // Inlined: GetMethod, step 3.
     if (usingIterator !== undefined && usingIterator !== null) {
         // Inlined: GetMethod, step 4.
-        if (!IsCallable(usingIterator))
+        if (!IsCallable(usingIterator)) {
             ThrowTypeError(JSMSG_NOT_ITERABLE, DecompileArg(0, source));
+        }
 
         // Try to take a fast path when there's no mapper function and the
         // constructor is a built-in TypedArray constructor.
@@ -1511,15 +1574,17 @@ function TypedArrayStaticOf(/*...items*/) {
     var C = this;
 
     // Step 4.
-    if (!IsConstructor(C))
+    if (!IsConstructor(C)) {
         ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, typeof C);
+    }
 
     // Step 5.
     var newObj = TypedArrayCreateWithLength(C, len);
 
     // Steps 6-7.
-    for (var k = 0; k < len; k++)
+    for (var k = 0; k < len; k++) {
         newObj[k] = items[k];
+    }
 
     // Step 8.
     return newObj;
@@ -1544,8 +1609,9 @@ function IterableToList(items, method) {
     var iterator = callContentFunction(method, items);
 
     // 7.4.1 GetIterator, step 3.
-    if (!IsObject(iterator))
+    if (!IsObject(iterator)) {
         ThrowTypeError(JSMSG_GET_ITER_RETURNED_PRIMITIVE);
+    }
 
     // 7.4.1 GetIterator, step 4.
     var nextMethod = iterator.next;
@@ -1558,12 +1624,14 @@ function IterableToList(items, method) {
     while (true) {
         // Step 4.a.
         var next = callContentFunction(nextMethod, iterator);
-        if (!IsObject(next))
+        if (!IsObject(next)) {
             ThrowTypeError(JSMSG_ITER_METHOD_RETURNED_PRIMITIVE, "next");
+        }
 
         // Step 4.b.
-        if (next.done)
+        if (next.done) {
             break;
+        }
         DefineDataProperty(values, i++, next.value);
     }
 
@@ -1585,8 +1653,9 @@ function ArrayBufferSlice(start, end) {
     }
 
     // Step 4.
-    if (IsDetachedBuffer(O))
+    if (IsDetachedBuffer(O)) {
         ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+    }
 
     // Step 5.
     var len = ArrayBufferByteLength(O);
@@ -1619,34 +1688,40 @@ function ArrayBufferSlice(start, end) {
     var newBuffer;
     if ((newBuffer = GuardToArrayBuffer(new_)) !== null) {
         // Step 15.
-        if (IsDetachedBuffer(newBuffer))
+        if (IsDetachedBuffer(newBuffer)) {
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+        }
     } else {
         newBuffer = new_;
 
         // Steps 13-14.
-        if (!IsWrappedArrayBuffer(newBuffer))
+        if (!IsWrappedArrayBuffer(newBuffer)) {
             ThrowTypeError(JSMSG_NON_ARRAY_BUFFER_RETURNED);
+        }
 
         isWrapped = true;
 
         // Step 15.
-        if (callFunction(CallArrayBufferMethodIfWrapped, newBuffer, "IsDetachedBufferThis"))
+        if (callFunction(CallArrayBufferMethodIfWrapped, newBuffer, "IsDetachedBufferThis")) {
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+        }
     }
 
     // Step 16.
-    if (newBuffer === O)
+    if (newBuffer === O) {
         ThrowTypeError(JSMSG_SAME_ARRAY_BUFFER_RETURNED);
+    }
 
     // Step 17.
     var actualLen = PossiblyWrappedArrayBufferByteLength(newBuffer);
-    if (actualLen < newLen)
+    if (actualLen < newLen) {
         ThrowTypeError(JSMSG_SHORT_ARRAY_BUFFER_RETURNED, newLen, actualLen);
+    }
 
     // Steps 18-19.
-    if (IsDetachedBuffer(O))
+    if (IsDetachedBuffer(O)) {
         ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+    }
 
     // Steps 20-22.
     ArrayBufferCopyData(newBuffer, 0, O, first, newLen, isWrapped);
@@ -1716,20 +1791,23 @@ function SharedArrayBufferSlice(start, end) {
     var isWrapped = false;
     var newObj;
     if ((newObj = GuardToSharedArrayBuffer(new_)) === null) {
-        if (!IsWrappedSharedArrayBuffer(new_))
+        if (!IsWrappedSharedArrayBuffer(new_)) {
             ThrowTypeError(JSMSG_NON_SHARED_ARRAY_BUFFER_RETURNED);
+        }
         isWrapped = true;
         newObj = new_;
     }
 
     // Step 14.
-    if (newObj === O || SharedArrayBuffersMemorySame(newObj, O))
+    if (newObj === O || SharedArrayBuffersMemorySame(newObj, O)) {
         ThrowTypeError(JSMSG_SAME_SHARED_ARRAY_BUFFER_RETURNED);
+    }
 
     // Step 15.
     var actualLen = PossiblyWrappedSharedArrayBufferByteLength(newObj);
-    if (actualLen < newLen)
+    if (actualLen < newLen) {
         ThrowTypeError(JSMSG_SHORT_SHARED_ARRAY_BUFFER_RETURNED, newLen, actualLen);
+    }
 
     // Steps 16-18.
     SharedArrayBufferCopyData(newObj, 0, O, first, newLen, isWrapped);
