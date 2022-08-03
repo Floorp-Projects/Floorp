@@ -41,15 +41,17 @@ function Number_toLocaleString() {
 
 // ES6 draft ES6 20.1.2.4
 function Number_isFinite(num) {
-    if (typeof num !== "number")
+    if (typeof num !== "number") {
         return false;
+    }
     return num - num === 0;
 }
 
 // ES6 draft ES6 20.1.2.2
 function Number_isNaN(num) {
-    if (typeof num !== "number")
+    if (typeof num !== "number") {
         return false;
+    }
     return num !== num;
 }
 
@@ -59,8 +61,9 @@ function Number_isInteger(number) {
     // Step 1. (Inlined call to IsIntegralNumber)
 
     // 7.2.6 IsIntegralNumber, step 1.
-    if (typeof number !== "number")
+    if (typeof number !== "number") {
         return false;
+    }
 
     var integer = std_Math_trunc(number);
 
@@ -76,15 +79,17 @@ function Number_isSafeInteger(number) {
     // Step 1. (Inlined call to IsIntegralNumber)
 
     // 7.2.6 IsIntegralNumber, step 1.
-    if (typeof number !== "number")
+    if (typeof number !== "number") {
         return false;
+    }
 
     var integer = std_Math_trunc(number);
 
     // 7.2.6 IsIntegralNumber, steps 2-4.
     // |number - integer| to handle the Infinity case correctly.
-    if (number - integer !== 0)
+    if (number - integer !== 0) {
         return false;
+    }
 
     // Steps 1.a, 2.
     return -((2 ** 53) - 1) <= integer && integer <= (2 ** 53) - 1;
