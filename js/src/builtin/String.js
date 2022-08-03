@@ -574,9 +574,8 @@ function String_substr(start, length) {
     var resultLength = std_Math_min(std_Math_max(end, 0), size - intStart);
 
     // Step 8.
-    if (resultLength <= 0) {
-        return "";
-    }
+    // Use std_Math_max instead of an early return to allow better Ion optimizations.
+    resultLength = std_Math_max(resultLength, 0);
 
     // Step 9.
     // While |intStart| and |resultLength| are bounded to the length of |str|
