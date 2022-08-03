@@ -23,6 +23,9 @@ add_task(async function() {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
 
+  // Enable Multiprocess Browser Toolbox
+  await pushPref("devtools.browsertoolbox.scope", "everything");
+
   // Open the tab *after* opening the Browser Toolbox in order to force creating the remote frames
   // late and exercise frame target watching code.
   await addTab(`data:text/html,<div id="test-div">PRINT PREVIEW TEST</div>`);

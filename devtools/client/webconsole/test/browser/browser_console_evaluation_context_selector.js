@@ -9,6 +9,7 @@ add_task(async function() {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.every-frame-target.enabled", true);
   await pushPref("devtools.browsertoolbox.fission", true);
+  await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
