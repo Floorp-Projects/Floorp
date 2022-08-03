@@ -189,9 +189,10 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    * Helper function to get the frame associated with this content. Not named
    * GetPrimaryFrame to prevent ambiguous method names in subclasses.
    *
-   * @return The frame which we belong to, or nullptr if it doesn't exist.
+   * @return The frame we own, or nullptr if it doesn't exist, or isn't
+   * associated with any of our requests.
    */
-  nsIFrame* GetOurPrimaryFrame();
+  nsIFrame* GetOurPrimaryImageFrame();
 
   /**
    * Helper function to get the PresContext associated with this content's
