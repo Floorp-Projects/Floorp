@@ -266,7 +266,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   const addedMessage = Object.freeze(newMessage);
 
   // If the new message isn't the "oldest" one, then we need to insert it at the right
-  // position in the message map.
+  // position in the message map.
   if (isUnsorted) {
     let newMessageIndex = 0;
     // This is can be on a hot path, so we're not using `findIndex`, which could be slow.

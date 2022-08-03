@@ -11,7 +11,7 @@ window.allocs = [];
 window.onload = function() {
   function allocator() {
     for (let i = 0; i < 1000; i++) {
-      window.allocs.push(new Object());
+      window.allocs.push({});
     }
   }
 

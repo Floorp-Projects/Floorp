@@ -31,7 +31,7 @@ window.onload = function() {
     function startAllocating() {
       intervalId = setInterval(() => {
         for (let i = 100000; --i;) {
-          allocs.push(new Object());
+          allocs.push({});
         }
       }, 1);
     }

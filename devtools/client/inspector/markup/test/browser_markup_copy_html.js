@@ -25,7 +25,7 @@ const FORMATTED_HTML = `<body>
 // The inner HTML of the body node from the code above.
 const FORMATTED_INNER_HTML = FORMATTED_HTML.replace(/<\/*body>/g, "")
   .trim()
-  .replace(/^  /gm, "");
+  .replace(/^ {2}/gm, "");
 
 // The formatted outer HTML, using tabs rather than spaces.
 const TABS_FORMATTED_HTML = FORMATTED_HTML.replace(/[ ]{2}/g, "\t");
