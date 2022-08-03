@@ -69,8 +69,9 @@ function getRelativeTimeFormatInternals(obj) {
     assert(internals.type === "RelativeTimeFormat", "bad type escaped getIntlObjectInternals");
 
     var internalProps = maybeInternalProperties(internals);
-    if (internalProps)
+    if (internalProps) {
         return internalProps;
+    }
 
     internalProps = resolveRelativeTimeFormatInternals(internals.lazyData);
     setInternalProperties(internals, internalProps);
@@ -117,10 +118,11 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     lazyRelativeTimeFormatData.requestedLocales = requestedLocales;
 
     // Steps 2-3.
-    if (options === undefined)
+    if (options === undefined) {
         options = std_Object_create(null);
-    else
+    } else {
         options = ToObject(options);
+    }
 
     // Step 4.
     let opt = new_Record();
