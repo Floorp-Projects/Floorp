@@ -191,6 +191,23 @@ addEventListener(
       );
     }
 
+    // ShadowRealm.prototype.evaluate -- should throw exception as per spec.
+    try {
+      var sr = new ShadowRealm();
+      sr.evaluate("var x = 10");
+      onevalexecuted(
+        false,
+        "ShadowRealm.prototype.evaluate(String)",
+        "ShadowRealm.prototype.evaluate(String) was enabled."
+      );
+    } catch (e) {
+      onevalblocked(
+        false,
+        "ShadowRealm.prototype.evaluate(String)",
+        "ShadowRealm.prototype.evaluate(String) was blocked."
+      );
+    }
+
     // setTimeout(eval, 0, str)
     {
       // error is not catchable here, instead, we're going to side-effect

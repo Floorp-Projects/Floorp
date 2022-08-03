@@ -139,6 +139,23 @@ addEventListener(
       );
     }
 
+    // ShadowRealm.prototype.evaluate
+    try {
+      var sr = new ShadowRealm();
+      sr.evaluate("var x = 10");
+      onevalexecuted(
+        true,
+        "ShadowRealm.prototype.evaluate(String)",
+        "ShadowRealm.prototype.evaluate(String) was enabled."
+      );
+    } catch (e) {
+      onevalblocked(
+        true,
+        "ShadowRealm.prototype.evaluate(String)",
+        "ShadowRealm.prototype.evaluate(String) was blocked."
+      );
+    }
+
     function checkResult() {
       //alert(bar);
       if (bar) {
