@@ -995,7 +995,7 @@ struct RoleDescrComparator {
     NSMutableArray<mozAccessible*>* relations =
         [[[NSMutableArray alloc] init] autorelease];
     Relation rel = acc->RelationByType(relationType);
-    while (LocalAccessible* relAcc = rel.Next()) {
+    while (Accessible* relAcc = rel.Next()) {
       if (mozAccessible* relNative = GetNativeFromGeckoAccessible(relAcc)) {
         [relations addObject:relNative];
       }

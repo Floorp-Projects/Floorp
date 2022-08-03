@@ -817,9 +817,9 @@ static void UpdateAtkRelation(RelationType aType, LocalAccessible* aAcc,
 
   Relation rel(aAcc->RelationByType(aType));
   nsTArray<AtkObject*> targets;
-  LocalAccessible* tempAcc = nullptr;
+  Accessible* tempAcc = nullptr;
   while ((tempAcc = rel.Next())) {
-    targets.AppendElement(AccessibleWrap::GetAtkObject(tempAcc));
+    targets.AppendElement(GetWrapperFor(tempAcc));
   }
 
   if (aType == RelationType::EMBEDS && aAcc->IsRoot()) {

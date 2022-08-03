@@ -74,7 +74,7 @@ class Relation {
   /**
    * compute and return the next related accessible.
    */
-  inline LocalAccessible* Next() {
+  inline Accessible* Next() {
     Accessible* target = nullptr;
 
     while (mFirstIter && !(target = mFirstIter->Next())) {
@@ -83,7 +83,12 @@ class Relation {
 
     if (!mFirstIter) mLastIter = nullptr;
 
-    return target ? target->AsLocal() : nullptr;
+    return target;
+  }
+
+  inline LocalAccessible* LocalNext() {
+    Accessible* next = Next();
+    return next ? next->AsLocal() : nullptr;
   }
 
  private:

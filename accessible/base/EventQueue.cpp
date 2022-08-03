@@ -87,7 +87,7 @@ bool EventQueue::PushNameOrDescriptionChange(LocalAccessible* aTarget) {
       }
 
       Relation rel = parent->RelationByType(RelationType::LABEL_FOR);
-      while (LocalAccessible* relTarget = rel.Next()) {
+      while (LocalAccessible* relTarget = rel.LocalNext()) {
         RefPtr<AccEvent> nameChangeEvent =
             new AccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, relTarget);
         pushed |= PushEvent(nameChangeEvent);
@@ -96,7 +96,7 @@ bool EventQueue::PushNameOrDescriptionChange(LocalAccessible* aTarget) {
 
     if (doDesc) {
       Relation rel = parent->RelationByType(RelationType::DESCRIPTION_FOR);
-      while (LocalAccessible* relTarget = rel.Next()) {
+      while (LocalAccessible* relTarget = rel.LocalNext()) {
         RefPtr<AccEvent> descChangeEvent = new AccEvent(
             nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, relTarget);
         pushed |= PushEvent(descChangeEvent);
