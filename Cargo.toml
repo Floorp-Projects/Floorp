@@ -11,6 +11,7 @@ members = [
   "security/manager/ssl/ipcclientcerts",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
+  "toolkit/components/uniffi-bindgen-gecko-js",
   "toolkit/crashreporter/rust_minidump_writer_linux",
   "toolkit/crashreporter/mozwer-rust",
   "toolkit/library/gtest/rust",
