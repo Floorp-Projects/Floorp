@@ -5,6 +5,10 @@
  * Test that Windows alert notifications generate expected XML.
  */
 
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 let gProfD = do_get_profile();
 
 // Setup that allows to use the profile service in xpcshell tests,
@@ -55,7 +59,7 @@ function testAlert(serverEnabled) {
     // &#xA; is "\n".
     let s = ``;
     if (serverEnabled) {
-      s += `program&#xA;firefox&#xA;profile&#xA;${gProfD.path}`;
+      s += `program&#xA;${AppConstants.MOZ_APP_NAME}&#xA;profile&#xA;${gProfD.path}`;
     } else {
       s += `invalid key&#xA;invalid value`;
     }
