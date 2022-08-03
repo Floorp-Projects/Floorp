@@ -145,14 +145,12 @@ class AppStoreTest {
         assertEquals(0, appStore.state.recentTabs.size)
 
         // Add 2 RecentTabs to the AppStore
-        // A new SearchGroup already shown in history should hide the HistoryGroup.
         val recentTab1: RecentTab.Tab = mockk()
-        val recentTab2 = RecentTab.SearchGroup(group2.title, "tabId", "url", null, 2)
-        val recentTabs: List<RecentTab> = listOf(recentTab1, recentTab2)
+        val recentTabs: List<RecentTab> = listOf(recentTab1)
         appStore.dispatch(AppAction.RecentTabsChange(recentTabs)).join()
 
         assertEquals(recentTabs, appStore.state.recentTabs)
-        assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
+        assertEquals(listOf(group1, group2, group3, highlight), appStore.state.recentHistory)
     }
 
     @Test
@@ -256,13 +254,12 @@ class AppStoreTest {
             assertEquals(0, appStore.state.recentHistory.size)
             assertEquals(Mode.Normal, appStore.state.mode)
 
-            val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
-            val recentTabs: List<RecentTab> = listOf(mockk(), recentGroup, mockk())
+            val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
             val recentBookmarks: List<RecentBookmark> = listOf(mockk(), mockk())
             val group1 = RecentHistoryGroup(title = "test One")
-            val group2 = RecentHistoryGroup(title = recentGroup.searchTerm.lowercase())
+            val group2 = RecentHistoryGroup(title = "testSearchTerm")
             val group3 = RecentHistoryGroup(title = "test two")
             val highlight = RecentHistoryHighlight(group2.title, "")
             val recentHistory: List<RecentlyVisitedItem> = listOf(group1, group2, group3, highlight)
@@ -283,7 +280,7 @@ class AppStoreTest {
             assertEquals(topSites, appStore.state.topSites)
             assertEquals(recentTabs, appStore.state.recentTabs)
             assertEquals(recentBookmarks, appStore.state.recentBookmarks)
-            assertEquals(listOf(group1, group3, highlight), appStore.state.recentHistory)
+            assertEquals(listOf(group1, group2, group3, highlight), appStore.state.recentHistory)
             assertEquals(Mode.Private, appStore.state.mode)
         }
 

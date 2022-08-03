@@ -153,7 +153,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 initialState = TabsTrayState(
                     selectedPage = initialPage,
                     mode = initialMode,
-                    focusGroupTabId = args.focusGroupTabId
                 ),
                 middlewares = listOf(
                     TabsTrayMiddleware()

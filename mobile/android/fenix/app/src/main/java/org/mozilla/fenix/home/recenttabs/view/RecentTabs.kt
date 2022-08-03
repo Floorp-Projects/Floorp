@@ -10,7 +10,6 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -44,8 +42,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,7 +49,6 @@ import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.ThumbnailCard
@@ -66,14 +61,12 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param recentTabs List of [RecentTab] to display.
  * @param menuItems List of [RecentTabMenuItem] shown long clicking a [RecentTab].
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
- * @param onRecentSearchGroupClick Invoked when the user clicks on a recent search group.
  */
 @Composable
 fun RecentTabs(
     recentTabs: List<RecentTab>,
     menuItems: List<RecentTabMenuItem>,
     onRecentTabClick: (String) -> Unit = {},
-    onRecentSearchGroupClick: (String) -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -87,16 +80,6 @@ fun RecentTabs(
                         menuItems = menuItems,
                         onRecentTabClick = onRecentTabClick
                     )
-                }
-                is RecentTab.SearchGroup -> {
-                    if (components.settings.searchTermTabGroupsAreEnabled) {
-                        RecentSearchGroupItem(
-                            searchTerm = tab.searchTerm,
-                            tabId = tab.tabId,
-                            count = tab.count,
-                            onSearchGroupClick = onRecentSearchGroupClick
-                        )
-                    }
                 }
             }
         }
@@ -181,81 +164,6 @@ private fun RecentTabItem(
                 tab = tab,
                 onDismissRequest = { isMenuExpanded = false }
             )
-        }
-    }
-}
-
-/**
- * A recent search group item.
- *
- * @param searchTerm The search term for the group.
- * @param tabId The id of the last accessed tab in the group.
- * @param count Count of how many tabs belongs to the group.
- * @param onSearchGroupClick Invoked when the user clicks on a group.
- */
-@Composable
-private fun RecentSearchGroupItem(
-    searchTerm: String,
-    tabId: String,
-    count: Int,
-    onSearchGroupClick: (String) -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(112.dp)
-            .clickable { onSearchGroupClick(tabId) },
-        shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
-        elevation = 6.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_search_group_thumbnail),
-                contentDescription = null,
-                modifier = Modifier.size(108.dp, 80.dp),
-                contentScale = ContentScale.FillWidth,
-                alignment = Alignment.Center
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = stringResource(R.string.recent_tabs_search_term, searchTerm),
-                    color = FirefoxTheme.colors.textPrimary,
-                    fontSize = 14.sp,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 2,
-                )
-
-                Row {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_all_tabs),
-                        modifier = Modifier.size(18.dp),
-                        contentDescription = null,
-                        tint = when (isSystemInDarkTheme()) {
-                            true -> FirefoxTheme.colors.textPrimary
-                            false -> FirefoxTheme.colors.textSecondary
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = stringResource(R.string.recent_tabs_search_term_count_2, count),
-                        color = FirefoxTheme.colors.textSecondary,
-                        fontSize = 12.sp,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
-                }
-            }
         }
     }
 }

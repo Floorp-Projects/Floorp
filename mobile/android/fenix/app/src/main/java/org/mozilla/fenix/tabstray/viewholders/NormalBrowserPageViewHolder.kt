@@ -84,10 +84,6 @@ class NormalBrowserPageViewHolder(
         val inactiveTabsAreEnabled = containerView.context.settings().inactiveTabsAreEnabled
 
         val selectedTab = browserStore.state.selectedNormalTab ?: return
-        // It's safe to read the state directly (i.e. won't cause bugs because of the store actions
-        // processed on a separate thread) instead of observing it because this value is only set during
-        // the initialState of the TabsTrayStore being created.
-        val focusGroupTabId = tabsTrayStore.state.focusGroupTabId
 
         // Update tabs into the inactive adapter.
         if (inactiveTabsAreEnabled && selectedTab.isNormalTabInactive(maxActiveTime)) {
@@ -105,9 +101,7 @@ class NormalBrowserPageViewHolder(
                     }
                 }
             }
-        }
-
-        if (focusGroupTabId.isNullOrEmpty()) {
+        } else {
             // Updates tabs into the normal browser tabs adapter.
             browserAdapter.observeFirstInsert {
                 val activeTabsList = browserStore.state.getNormalTrayTabs(inactiveTabsAreEnabled)
