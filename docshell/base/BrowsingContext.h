@@ -1018,6 +1018,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return true;
   }
 
+  bool CanSet(FieldIndex<IDX_OpenerPolicy>,
+              nsILoadInfo::CrossOriginOpenerPolicy, ContentParent*);
+
   bool CanSet(FieldIndex<IDX_ServiceWorkersTestingEnabled>, bool,
               ContentParent*) {
     return IsTop();

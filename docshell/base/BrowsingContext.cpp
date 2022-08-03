@@ -371,12 +371,25 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     // origin is same origin with the creator's top-level origin.
     // If it is cross origin we should not inherit the CrossOriginOpenerPolicy
     fields.mOpenerPolicy = aOpener->Top()->GetOpenerPolicy();
+
+    // If we inherit a policy which is potentially cross-origin isolated, we
+    // must be in a potentially cross-origin isolated BCG.
+    bool isPotentiallyCrossOriginIsolated =
+        fields.mOpenerPolicy ==
+        nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
+    MOZ_RELEASE_ASSERT(isPotentiallyCrossOriginIsolated ==
+                       group->IsPotentiallyCrossOriginIsolated());
   } else if (aOpener) {
     // They are not same origin
     auto topPolicy = aOpener->Top()->GetOpenerPolicy();
     MOZ_RELEASE_ASSERT(topPolicy == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE ||
                        topPolicy ==
                            nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS);
+  } else if (!aParent && group->IsPotentiallyCrossOriginIsolated()) {
+    // If we're creating a brand-new toplevel BC in a potentially cross-origin
+    // isolated group, it should start out with a strict opener policy.
+    fields.mOpenerPolicy =
+        nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
   }
 
   fields.mHistoryID = nsID::GenerateUUID();
@@ -751,6 +764,11 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
 
   MOZ_DIAGNOSTIC_ASSERT(mGroup);
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      mGroup->IsPotentiallyCrossOriginIsolated() ==
+      (Top()->GetOpenerPolicy() ==
+       nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP));
 
   AssertCoherentLoadContext();
 
@@ -3016,6 +3034,21 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
       }
     }
   });
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_OpenerPolicy>,
+                             nsILoadInfo::CrossOriginOpenerPolicy aPolicy,
+                             ContentParent* aSource) {
+  // A potentially cross-origin isolated BC can't change opener policy, nor can
+  // a BC become potentially cross-origin isolated. An unchanged policy is
+  // always OK.
+  return GetOpenerPolicy() == aPolicy ||
+         (GetOpenerPolicy() !=
+              nsILoadInfo::
+                  OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP &&
+          aPolicy !=
+              nsILoadInfo::
+                  OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP);
 }
 
 auto BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargeting>,

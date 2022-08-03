@@ -4217,11 +4217,15 @@ void Document::AssertDocGroupMatchesKey() const {
   }
 
   if (mDocGroup) {
-    nsAutoCString docGroupKey;
+    MOZ_ASSERT(mDocGroup->GetBrowsingContextGroup() ==
+               GetBrowsingContext()->Group());
 
     // GetKey() can fail, e.g. after the TLD service has shut down.
+    nsAutoCString docGroupKey;
     nsresult rv = mozilla::dom::DocGroup::GetKey(
-        NodePrincipal(), CrossOriginIsolated(), docGroupKey);
+        NodePrincipal(),
+        GetBrowsingContext()->Group()->IsPotentiallyCrossOriginIsolated(),
+        docGroupKey);
     if (NS_SUCCEEDED(rv)) {
       MOZ_ASSERT(mDocGroup->MatchesKey(docGroupKey));
     }
@@ -7547,32 +7551,17 @@ nsIGlobalObject* Document::GetScopeObject() const {
   return scope;
 }
 
-bool Document::CrossOriginIsolated() const {
-  if (auto* bc = GetBrowsingContext()) {
-    return bc->CrossOriginIsolated();
-  }
-
-  // For a data document without a browsing context we check the
-  // cross-origin-isolated state from its creator's inner window.
-  if (mLoadedAsData) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
-    return window && window->GetBrowsingContext() &&
-           window->GetBrowsingContext()->CrossOriginIsolated();
-  }
-
-  return false;
-}
-
 DocGroup* Document::GetDocGroupOrCreate() {
-  if (!mDocGroup) {
+  if (!mDocGroup && GetBrowsingContext()) {
+    BrowsingContextGroup* group = GetBrowsingContext()->Group();
+    MOZ_ASSERT(group);
+
     nsAutoCString docGroupKey;
     nsresult rv = mozilla::dom::DocGroup::GetKey(
-        NodePrincipal(), CrossOriginIsolated(), docGroupKey);
-    if (NS_SUCCEEDED(rv) && mDocumentContainer) {
-      BrowsingContextGroup* group = GetBrowsingContext()->Group();
-      if (group) {
-        mDocGroup = group->AddDocument(docGroupKey, this);
-      }
+        NodePrincipal(), group->IsPotentiallyCrossOriginIsolated(),
+        docGroupKey);
+    if (NS_SUCCEEDED(rv)) {
+      mDocGroup = group->AddDocument(docGroupKey, this);
     }
   }
   return mDocGroup;
@@ -7594,7 +7583,8 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
     // to a window, we should be able to join a DocGroup!
     nsAutoCString docGroupKey;
     nsresult rv = mozilla::dom::DocGroup::GetKey(
-        NodePrincipal(), CrossOriginIsolated(), docGroupKey);
+        NodePrincipal(),
+        browsingContextGroup->IsPotentiallyCrossOriginIsolated(), docGroupKey);
     if (mDocGroup) {
       if (NS_SUCCEEDED(rv)) {
         MOZ_RELEASE_ASSERT(mDocGroup->MatchesKey(docGroupKey));
@@ -7696,6 +7686,8 @@ void Document::SetContainer(nsDocShell* aContainer) {
   }
 
   BrowsingContext* context = aContainer->GetBrowsingContext();
+  MOZ_ASSERT_IF(context && mDocGroup,
+                context->Group() == mDocGroup->GetBrowsingContextGroup());
   if (context && context->IsContent()) {
     SetIsTopLevelContentDocument(context->IsTopContent());
     SetIsContentDocument(true);
@@ -8943,7 +8935,7 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
     return;
   }
 
-  if (CrossOriginIsolated()) {
+  if (GetBrowsingContext()->Group()->IsPotentiallyCrossOriginIsolated()) {
     WarnOnceAbout(Document::eDocumentSetDomainNotAllowed);
     return;
   }

@@ -847,6 +847,15 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
   if (coop ==
       nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
     webProcessType = WebProcessType::WebCoopCoep;
+
+    // If we're changing BrowsingContext, and are going to end up within a
+    // webCOOP+COEP group, ensure we use a cross-origin isolated BCG ID.
+    if (options.mReplaceBrowsingContext) {
+      MOZ_ASSERT(!options.mSpecificGroupId,
+                 "overriding previously-specified BCG ID");
+      options.mSpecificGroupId = BrowsingContextGroup::CreateId(
+          /* aPotentiallyCrossOriginIsolated */ true);
+    }
   }
 
   switch (webProcessType) {

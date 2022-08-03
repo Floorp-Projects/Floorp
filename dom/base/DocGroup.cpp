@@ -193,9 +193,14 @@ void DocGroup::AddDocument(Document* aDocument) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDocuments.Contains(aDocument));
   MOZ_ASSERT(mBrowsingContextGroup);
+  // If the document is loaded as data it may not have a container, in which
+  // case it can be difficult to determine the BrowsingContextGroup it's
+  // associated with. XSLT can also add the document to the DocGroup before it
+  // gets a container in some cases, in which case this will be asserted
+  // elsewhere.
   MOZ_ASSERT_IF(
-      FissionAutostart() && !mDocuments.IsEmpty(),
-      mDocuments[0]->CrossOriginIsolated() == aDocument->CrossOriginIsolated());
+      aDocument->GetBrowsingContext(),
+      aDocument->GetBrowsingContext()->Group() == mBrowsingContextGroup);
   mDocuments.AppendElement(aDocument);
 }
 
