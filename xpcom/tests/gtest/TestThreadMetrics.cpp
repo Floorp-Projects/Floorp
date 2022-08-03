@@ -9,6 +9,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/PerformanceCounter.h"
@@ -22,6 +23,7 @@
 using namespace mozilla;
 using mozilla::Runnable;
 using mozilla::dom::DocGroup;
+using mozilla::dom::Document;
 
 /* A struct that describes a runnable to run and, optionally, a
  * docgroup to dispatch it to.
@@ -118,11 +120,19 @@ class ThreadMetrics : public ::testing::Test {
 
  protected:
   virtual void SetUp() {
+    // FIXME: This is horribly sketchy and relies a ton on BrowsingContextGroup
+    // not doing anything too fancy or asserting invariants it expects to be
+    // held. We should probably try to rework this test or remove it completely
+    // at some point when we can get away with it. Changes to BCGs frequently
+    // cause this test to start failing as it doesn't behave like normal.
+
     // building the DocGroup structure
     RefPtr<dom::BrowsingContextGroup> group =
         dom::BrowsingContextGroup::Create();
-    mDocGroup = group->AddDocument("key"_ns, nullptr);
-    mDocGroup2 = group->AddDocument("key2"_ns, nullptr);
+    MOZ_ALWAYS_SUCCEEDS(NS_NewHTMLDocument(getter_AddRefs(mDocument), true));
+    MOZ_ALWAYS_SUCCEEDS(NS_NewHTMLDocument(getter_AddRefs(mDocument2), true));
+    mDocGroup = group->AddDocument("key"_ns, mDocument);
+    mDocGroup2 = group->AddDocument("key2"_ns, mDocument2);
     mCounter = mDocGroup->GetPerformanceCounter();
     mCounter2 = mDocGroup2->GetPerformanceCounter();
     mThreadMgr = do_GetService("@mozilla.org/thread-manager;1");
@@ -131,11 +141,13 @@ class ThreadMetrics : public ::testing::Test {
   }
 
   virtual void TearDown() {
-    // and remove the document from the doc group (actually, a nullptr)
-    mDocGroup->RemoveDocument(nullptr);
-    mDocGroup2->RemoveDocument(nullptr);
+    // and remove the document from the doc group
+    mDocGroup->RemoveDocument(mDocument);
+    mDocGroup2->RemoveDocument(mDocument2);
     mDocGroup = nullptr;
     mDocGroup2 = nullptr;
+    mDocument = nullptr;
+    mDocument2 = nullptr;
     ProcessAllEvents();
   }
 
@@ -151,6 +163,8 @@ class ThreadMetrics : public ::testing::Test {
 
   uint32_t mOther;
   bool mOldPref;
+  RefPtr<Document> mDocument;
+  RefPtr<Document> mDocument2;
   RefPtr<DocGroup> mDocGroup;
   RefPtr<DocGroup> mDocGroup2;
   RefPtr<PerformanceCounter> mCounter;

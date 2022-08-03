@@ -1808,12 +1808,6 @@ class Document : public nsINode,
   void SetScopeObject(nsIGlobalObject* aGlobal);
 
   /**
-   * Return the cross-origin-isolated state from browsing context. If it's a
-   * data document, we get its creator's state.
-   */
-  bool CrossOriginIsolated() const;
-
-  /**
    * Return the window containing the document (the outer window).
    */
   nsPIDOMWindowOuter* GetWindow() const {

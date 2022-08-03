@@ -1303,7 +1303,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSetDocumentDomain(
         this, "Setting domain that's not a suffix of existing domain value.");
   }
 
-  if (GetBrowsingContext()->CrossOriginIsolated()) {
+  if (Group()->IsPotentiallyCrossOriginIsolated()) {
     return IPC_FAIL(this, "Setting domain in a cross-origin isolated BC.");
   }
 

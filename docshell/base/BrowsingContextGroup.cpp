@@ -51,8 +51,59 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetExisting(
   return nullptr;
 }
 
-already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {
-  return GetOrCreate(nsContentUtils::GenerateBrowsingContextId());
+// Only use 53 bits for the BrowsingContextGroup ID.
+static constexpr uint64_t kBrowsingContextGroupIdTotalBits = 53;
+static constexpr uint64_t kBrowsingContextGroupIdProcessBits = 22;
+static constexpr uint64_t kBrowsingContextGroupIdFlagBits = 1;
+static constexpr uint64_t kBrowsingContextGroupIdBits =
+    kBrowsingContextGroupIdTotalBits - kBrowsingContextGroupIdProcessBits -
+    kBrowsingContextGroupIdFlagBits;
+
+// IDs for the relevant flags
+static constexpr uint64_t kPotentiallyCrossOriginIsolatedFlag = 0x1;
+
+// The next ID value which will be used.
+static uint64_t sNextBrowsingContextGroupId = 1;
+
+// Generate the next ID with the given flags.
+static uint64_t GenerateBrowsingContextGroupId(uint64_t aFlags) {
+  MOZ_RELEASE_ASSERT(aFlags < (uint64_t(1) << kBrowsingContextGroupIdFlagBits));
+  uint64_t childId = XRE_IsContentProcess()
+                         ? ContentChild::GetSingleton()->GetID()
+                         : uint64_t(0);
+  MOZ_RELEASE_ASSERT(childId <
+                     (uint64_t(1) << kBrowsingContextGroupIdProcessBits));
+  uint64_t id = sNextBrowsingContextGroupId++;
+  MOZ_RELEASE_ASSERT(id < (uint64_t(1) << kBrowsingContextGroupIdBits));
+
+  return (childId << (kBrowsingContextGroupIdBits +
+                      kBrowsingContextGroupIdFlagBits)) |
+         (id << kBrowsingContextGroupIdFlagBits) | aFlags;
+}
+
+// Extract flags from the given ID.
+static uint64_t GetBrowsingContextGroupIdFlags(uint64_t aId) {
+  return aId & ((uint64_t(1) << kBrowsingContextGroupIdFlagBits) - 1);
+}
+
+uint64_t BrowsingContextGroup::CreateId(bool aPotentiallyCrossOriginIsolated) {
+  // We encode the potentially cross-origin isolated bit within the ID so that
+  // the information can be recovered whenever the group needs to be re-created
+  // due to e.g. being garbage-collected.
+  //
+  // In the future if we end up needing more complex information stored within
+  // the ID, we can consider converting it to a more complex type, like a
+  // string.
+  uint64_t flags =
+      aPotentiallyCrossOriginIsolated ? kPotentiallyCrossOriginIsolatedFlag : 0;
+  uint64_t id = GenerateBrowsingContextGroupId(flags);
+  MOZ_ASSERT(GetBrowsingContextGroupIdFlags(id) == flags);
+  return id;
+}
+
+already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create(
+    bool aPotentiallyCrossOriginIsolated) {
+  return GetOrCreate(CreateId(aPotentiallyCrossOriginIsolated));
 }
 
 BrowsingContextGroup::BrowsingContextGroup(uint64_t aId) : mId(aId) {
@@ -501,6 +552,11 @@ bool BrowsingContextGroup::DialogsAreBeingAbused() {
   mDialogAbuseCount = 0;
 
   return false;
+}
+
+bool BrowsingContextGroup::IsPotentiallyCrossOriginIsolated() {
+  return GetBrowsingContextGroupIdFlags(mId) &
+         kPotentiallyCrossOriginIsolatedFlag;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
