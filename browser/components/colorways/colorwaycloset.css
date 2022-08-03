@@ -5,7 +5,7 @@
 :root {
   height: 100%;
   --body-columns: 1fr;
-  --body-rows: auto 2fr 1fr auto;
+  --body-rows: auto auto 1fr auto;
   --colorway-name-font-size: 1.5em;
   --colorway-selector-align: center;
   --figure-height: 200px;
@@ -30,11 +30,6 @@
     --homepage-reset-column: 1/4;
     --homepage-reset-align: end;
   }
-
-  #colorway-name,
-  #modal-buttons {
-    margin-block: 4rem 0;
-  }
 }
 
 body {
@@ -52,32 +47,12 @@ fieldset {
   padding: 0;
 }
 
+/* Header */
+
 body > header {
   grid-row: 1;
   margin-top: 1em;
   grid-column: var(--header-column);
-}
-
-figure {
-  align-items: center;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  grid-column: var(--figure-column);
-  grid-row: var(--figure-row);
-}
-
-figure > img {
-  margin-block-start: 2rem;
-  max-width: var(--figure-height);
-  max-height: var(--figure-width);
-  object-fit: scale-down;
-}
-
-#colorway-customization-panel {
-  align-self: center;
-  padding-inline: var(--customization-panel-padding-inline);
-  grid-column: var(--customization-panel-column);
 }
 
 #collection-title {
@@ -106,47 +81,47 @@ figure > img {
   padding: .3em 1em;
 }
 
-#homepage-reset-container:not([hidden]) {
-  display: flex;
-  grid-column: var(--homepage-reset-column);
-  text-align: end;
-}
+/* Illustration */
 
-.reset-prompt,
-.success-prompt {
-  width: 100%;
-  display: flex;
-  flex-flow: row wrap;
+figure {
   align-items: center;
-  justify-content: var(--homepage-reset-align);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  grid-column: var(--figure-column);
+  grid-row: var(--figure-row);
 }
 
-.reset-prompt > span,
-.success-prompt > span {
-  padding-inline-end: 1em;
+figure > img {
+  margin-block-start: 2rem;
+  max-width: var(--figure-height);
+  max-height: var(--figure-width);
+  object-fit: scale-down;
 }
 
-#homepage-reset-container:not(.success) > .success-prompt,
-#homepage-reset-container.success > .reset-prompt {
-  display: none;
+/* Selector and colorway details */
+
+#colorway-customization-panel {
+  align-self: stretch;
+  padding-inline: var(--customization-panel-padding-inline);
+  grid-column: var(--customization-panel-column);
+  display: flex;
+  flex-direction: column;
 }
 
-#homepage-reset-container > .success-prompt span::before {
-  display: inline-block;
-  content: "";
-  background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
-  -moz-context-properties: fill;
-  fill: white;
-  width: 22px;
-  height: 22px;
-  border-radius: 15px;
-  vertical-align: middle;
-  margin-inline-end: 0.5em;
+#colorway-customization-panel > * {
+  flex: 1;
+}
+
+#colorway-selector,
+#modal-buttons {
+  flex: 3;
+  display: flex;
+  align-items: center;
 }
 
 #colorway-selector {
-  margin-block-start: 2rem;
-  text-align: var(--colorway-selector-align);
+  justify-content: var(--colorway-selector-align);
 }
 
 #colorway-selector > input[type="radio"],
@@ -179,13 +154,9 @@ figure > img {
   background-color: unset;
 }
 
-#colorway-description,
-#colorway-intensities {
-  margin-block: 2rem;
-}
-
 #colorway-name {
   font-size: var(--colorway-name-font-size);
+  margin: 0;
 }
 
 #colorway-description {
@@ -224,4 +195,44 @@ figure > img {
 
 #set-colorway {
   margin-inline-start: 0;
+}
+
+/* Homepage reset footer */
+
+#homepage-reset-container:not([hidden]) {
+  display: flex;
+  grid-column: var(--homepage-reset-column);
+  text-align: end;
+}
+
+.reset-prompt,
+.success-prompt {
+  width: 100%;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: var(--homepage-reset-align);
+}
+
+.reset-prompt > span,
+.success-prompt > span {
+  padding-inline-end: 1em;
+}
+
+#homepage-reset-container:not(.success) > .success-prompt,
+#homepage-reset-container.success > .reset-prompt {
+  display: none;
+}
+
+#homepage-reset-container > .success-prompt span::before {
+  display: inline-block;
+  content: "";
+  background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
+  -moz-context-properties: fill;
+  fill: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 15px;
+  vertical-align: middle;
+  margin-inline-end: 0.5em;
 }
