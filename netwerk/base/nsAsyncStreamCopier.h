@@ -57,16 +57,16 @@ class nsAsyncStreamCopier final : public nsIAsyncStreamCopier,
 
   nsCOMPtr<nsIEventTarget> mTarget;
 
-  nsCOMPtr<nsISupports> mCopierCtx GUARDED_BY(mLock);
+  nsCOMPtr<nsISupports> mCopierCtx MOZ_GUARDED_BY(mLock);
 
   mozilla::Mutex mLock{"nsAsyncStreamCopier.mLock"};
 
   nsAsyncCopyMode mMode{NS_ASYNCCOPY_VIA_READSEGMENTS};
   uint32_t mChunkSize;  // only modified in Init
-  nsresult mStatus GUARDED_BY(mLock){NS_OK};
-  bool mIsPending GUARDED_BY(mLock){false};
-  bool mCloseSource GUARDED_BY(mLock){false};
-  bool mCloseSink GUARDED_BY(mLock){false};
+  nsresult mStatus MOZ_GUARDED_BY(mLock){NS_OK};
+  bool mIsPending MOZ_GUARDED_BY(mLock){false};
+  bool mCloseSource MOZ_GUARDED_BY(mLock){false};
+  bool mCloseSink MOZ_GUARDED_BY(mLock){false};
   bool mShouldSniffBuffering{false};  // only modified in Init
 
   friend class ProceedWithAsyncCopy;

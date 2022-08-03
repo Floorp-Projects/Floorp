@@ -211,7 +211,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   // Records true if the TRR service is enabled for the record's effective
   // TRR mode. Also records the TRRSkipReason when the TRR service is not
   // available/enabled.
-  bool TRRServiceEnabledForRecord(nsHostRecord* aRec) REQUIRES(mLock);
+  bool TRRServiceEnabledForRecord(nsHostRecord* aRec) MOZ_REQUIRES(mLock);
 
  private:
   explicit nsHostResolver(uint32_t maxCacheEntries,
@@ -230,11 +230,11 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                                     mozilla::net::TRRSkippedReason aReason,
                                     mozilla::net::TRR* aTRRRequest,
                                     const mozilla::MutexAutoLock& aLock)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
   LookupStatus CompleteLookupByTypeLocked(
       nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
       uint32_t aTtl, bool pb, const mozilla::MutexAutoLock& aLock)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
   nsresult Init();
   static void ComputeEffectiveTRRMode(nsHostRecord* aRec);
   nsresult NativeLookup(nsHostRecord* aRec,
@@ -247,12 +247,12 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   bool GetHostToLookup(AddrHostRecord** result);
   void MaybeRenewHostRecordLocked(nsHostRecord* aRec,
                                   const mozilla::MutexAutoLock& aLock)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   // Cancels host records in the pending queue and also
   // calls CompleteLookup with the NS_ERROR_ABORT result code.
   void ClearPendingQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aPendingQ);
-  nsresult ConditionallyCreateThread(nsHostRecord* rec) REQUIRES(mLock);
+  nsresult ConditionallyCreateThread(nsHostRecord* rec) MOZ_REQUIRES(mLock);
 
   /**
    * Starts a new lookup in the background for entries that are in the grace
@@ -260,10 +260,10 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    */
   nsresult ConditionallyRefreshRecord(nsHostRecord* rec, const nsACString& host,
                                       const mozilla::MutexAutoLock& aLock)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   void AddToEvictionQ(nsHostRecord* rec, const mozilla::MutexAutoLock& aLock)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
 
   void ThreadFunc();
 
@@ -272,7 +272,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                                            const nsACString& aHost,
                                            uint16_t aType, nsresult& aStatus,
                                            const mozilla::MutexAutoLock& aLock)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
   // Called when the host name is an IP address and has been passed.
   already_AddRefed<nsHostRecord> FromCachedIPLiteral(nsHostRecord* aRec);
   // Like the above function, but the host name is not parsed to NetAddr yet.
@@ -282,7 +282,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   already_AddRefed<nsHostRecord> FromUnspecEntry(
       nsHostRecord* aRec, const nsACString& aHost, const nsACString& aTrrServer,
       const nsACString& aOriginSuffix, uint16_t aType, uint16_t aFlags,
-      uint16_t af, bool aPb, nsresult& aStatus) REQUIRES(mLock);
+      uint16_t af, bool aPb, nsresult& aStatus) MOZ_REQUIRES(mLock);
 
   enum {
     METHOD_HIT = 1,
@@ -301,7 +301,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   mutable Mutex mLock{"nsHostResolver.mLock"};
   CondVar mIdleTaskCV;
   nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord> mRecordDB
-      GUARDED_BY(mLock);
+      MOZ_GUARDED_BY(mLock);
   PRTime mCreationTime;
   mozilla::TimeDuration mLongIdleTimeout;
   mozilla::TimeDuration mShortIdleTimeout;
@@ -309,11 +309,11 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   RefPtr<nsIThreadPool> mResolverThreads;
   RefPtr<mozilla::net::NetworkConnectivityService>
       mNCS;  // reference to a singleton
-  mozilla::net::HostRecordQueue mQueue GUARDED_BY(mLock);
-  mozilla::Atomic<bool> mShutdown GUARDED_BY(mLock){true};
-  mozilla::Atomic<uint32_t> mNumIdleTasks GUARDED_BY(mLock){0};
-  mozilla::Atomic<uint32_t> mActiveTaskCount GUARDED_BY(mLock){0};
-  mozilla::Atomic<uint32_t> mActiveAnyThreadCount GUARDED_BY(mLock){0};
+  mozilla::net::HostRecordQueue mQueue MOZ_GUARDED_BY(mLock);
+  mozilla::Atomic<bool> mShutdown MOZ_GUARDED_BY(mLock){true};
+  mozilla::Atomic<uint32_t> mNumIdleTasks MOZ_GUARDED_BY(mLock){0};
+  mozilla::Atomic<uint32_t> mActiveTaskCount MOZ_GUARDED_BY(mLock){0};
+  mozilla::Atomic<uint32_t> mActiveAnyThreadCount MOZ_GUARDED_BY(mLock){0};
 
   // Set the expiration time stamps appropriately.
   void PrepareRecordExpirationAddrRecord(AddrHostRecord* rec) const;

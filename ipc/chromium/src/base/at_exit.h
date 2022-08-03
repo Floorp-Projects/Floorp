@@ -65,7 +65,7 @@ class AtExitManager {
   };
 
   mozilla::Mutex lock_;
-  std::stack<CallbackAndParam> stack_ GUARDED_BY(lock_);
+  std::stack<CallbackAndParam> stack_ MOZ_GUARDED_BY(lock_);
   AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
 
   DISALLOW_COPY_AND_ASSIGN(AtExitManager);

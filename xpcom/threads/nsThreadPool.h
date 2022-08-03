@@ -37,20 +37,20 @@ class nsThreadPool final : public mozilla::Runnable, public nsIThreadPool {
   nsresult PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags);
 
   mozilla::Mutex mMutex;
-  nsCOMArray<nsIThread> mThreads GUARDED_BY(mMutex);
-  mozilla::CondVar mEventsAvailable GUARDED_BY(mMutex);
-  mozilla::EventQueue mEvents GUARDED_BY(mMutex);
-  uint32_t mThreadLimit GUARDED_BY(mMutex);
-  uint32_t mIdleThreadLimit GUARDED_BY(mMutex);
-  uint32_t mIdleThreadTimeout GUARDED_BY(mMutex);
-  uint32_t mIdleCount GUARDED_BY(mMutex);
-  uint32_t mStackSize GUARDED_BY(mMutex);
-  nsCOMPtr<nsIThreadPoolListener> mListener GUARDED_BY(mMutex);
+  nsCOMArray<nsIThread> mThreads MOZ_GUARDED_BY(mMutex);
+  mozilla::CondVar mEventsAvailable MOZ_GUARDED_BY(mMutex);
+  mozilla::EventQueue mEvents MOZ_GUARDED_BY(mMutex);
+  uint32_t mThreadLimit MOZ_GUARDED_BY(mMutex);
+  uint32_t mIdleThreadLimit MOZ_GUARDED_BY(mMutex);
+  uint32_t mIdleThreadTimeout MOZ_GUARDED_BY(mMutex);
+  uint32_t mIdleCount MOZ_GUARDED_BY(mMutex);
+  uint32_t mStackSize MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIThreadPoolListener> mListener MOZ_GUARDED_BY(mMutex);
   mozilla::Atomic<bool, mozilla::Relaxed> mShutdown;
-  bool mRegressiveMaxIdleTime GUARDED_BY(mMutex);
+  bool mRegressiveMaxIdleTime MOZ_GUARDED_BY(mMutex);
   mozilla::Atomic<bool, mozilla::Relaxed> mIsAPoolThreadFree;
   // set once before we start threads
-  nsCString mName GUARDED_BY(mMutex);
+  nsCString mName MOZ_GUARDED_BY(mMutex);
   nsThreadPoolNaming mThreadNaming;  // all data inside this is atomic
 };
 

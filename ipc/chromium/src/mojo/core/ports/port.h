@@ -28,9 +28,9 @@ namespace detail {
 
 // Ports cannot use mozilla::Mutex, as the acquires-before relationships handled
 // by PortLocker can overload the debug-only deadlock detector.
-class CAPABILITY PortMutex : private ::mozilla::detail::MutexImpl {
+class MOZ_CAPABILITY PortMutex : private ::mozilla::detail::MutexImpl {
  public:
-  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {
+  void AssertCurrentThreadOwns() const MOZ_ASSERT_CAPABILITY(this) {
 #ifdef DEBUG
     MOZ_ASSERT(mOwningThread == PR_GetCurrentThread());
 #endif
@@ -40,13 +40,13 @@ class CAPABILITY PortMutex : private ::mozilla::detail::MutexImpl {
   // PortMutex should only be locked/unlocked via PortLocker
   friend class ::mojo::core::ports::PortLocker;
 
-  void Lock() CAPABILITY_ACQUIRE() {
+  void Lock() MOZ_CAPABILITY_ACQUIRE() {
     ::mozilla::detail::MutexImpl::lock();
 #ifdef DEBUG
     mOwningThread = PR_GetCurrentThread();
 #endif
   }
-  void Unlock() CAPABILITY_RELEASE() {
+  void Unlock() MOZ_CAPABILITY_RELEASE() {
 #ifdef DEBUG
     MOZ_ASSERT(mOwningThread == PR_GetCurrentThread());
     mOwningThread = nullptr;

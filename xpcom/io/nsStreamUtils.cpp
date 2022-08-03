@@ -455,7 +455,7 @@ class nsAStreamCopier : public nsIInputStreamCallback,
     return PostContinuationEvent_Locked();
   }
 
-  nsresult PostContinuationEvent_Locked() REQUIRES(mLock) {
+  nsresult PostContinuationEvent_Locked() MOZ_REQUIRES(mLock) {
     nsresult rv = NS_OK;
     if (mEventInProcess) {
       mEventIsPending = true;
@@ -481,12 +481,12 @@ class nsAStreamCopier : public nsIInputStreamCallback,
   nsAsyncCopyProgressFun mProgressCallback;
   void* mClosure;
   uint32_t mChunkSize;
-  bool mEventInProcess GUARDED_BY(mLock);
-  bool mEventIsPending GUARDED_BY(mLock);
+  bool mEventInProcess MOZ_GUARDED_BY(mLock);
+  bool mEventIsPending MOZ_GUARDED_BY(mLock);
   bool mCloseSource;
   bool mCloseSink;
-  bool mCanceled GUARDED_BY(mLock);
-  nsresult mCancelStatus GUARDED_BY(mLock);
+  bool mCanceled MOZ_GUARDED_BY(mLock);
+  nsresult mCancelStatus MOZ_GUARDED_BY(mLock);
 
   // virtual since subclasses call superclass Release()
   virtual ~nsAStreamCopier() = default;

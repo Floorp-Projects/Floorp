@@ -125,8 +125,8 @@ class TRRService : public TRRServiceBase,
   MutexSingleWriter mLock;
 
   nsCString mPrivateCred;  // main thread only
-  nsCString mConfirmationNS GUARDED_BY(mLock){"example.com"_ns};
-  nsCString mBootstrapAddr GUARDED_BY(mLock);
+  nsCString mConfirmationNS MOZ_GUARDED_BY(mLock){"example.com"_ns};
+  nsCString mBootstrapAddr MOZ_GUARDED_BY(mLock);
 
   Atomic<bool, Relaxed> mCaptiveIsPassed{
       false};  // set when captive portal check is passed
@@ -141,9 +141,9 @@ class TRRService : public TRRServiceBase,
       "DataMutex::TRRBlocklist"};
 
   // A set of domains that we should not use TRR for.
-  nsTHashSet<nsCString> mExcludedDomains GUARDED_BY(mLock);
-  nsTHashSet<nsCString> mDNSSuffixDomains GUARDED_BY(mLock);
-  nsTHashSet<nsCString> mEtcHostsDomains GUARDED_BY(mLock);
+  nsTHashSet<nsCString> mExcludedDomains MOZ_GUARDED_BY(mLock);
+  nsTHashSet<nsCString> mDNSSuffixDomains MOZ_GUARDED_BY(mLock);
+  nsTHashSet<nsCString> mEtcHostsDomains MOZ_GUARDED_BY(mLock);
 
   enum class ConfirmationEvent {
     Init,

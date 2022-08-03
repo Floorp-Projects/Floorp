@@ -146,11 +146,11 @@ class TaskQueue final : public AbstractThread,
 
   void MaybeResolveShutdown();
 
-  nsCOMPtr<nsIEventTarget> mTarget GUARDED_BY(mQueueMonitor);
+  nsCOMPtr<nsIEventTarget> mTarget MOZ_GUARDED_BY(mQueueMonitor);
 
   // Handle for this TaskQueue being registered with our target if it implements
   // TaskQueueTracker.
-  UniquePtr<TaskQueueTrackerEntry> mTrackerEntry GUARDED_BY(mQueueMonitor);
+  UniquePtr<TaskQueueTrackerEntry> mTrackerEntry MOZ_GUARDED_BY(mQueueMonitor);
 
   // Monitor that protects the queue, mIsRunning, mIsShutdown and
   // mShutdownTasks;
@@ -162,11 +162,11 @@ class TaskQueue final : public AbstractThread,
   } TaskStruct;
 
   // Queue of tasks to run.
-  Queue<TaskStruct> mTasks GUARDED_BY(mQueueMonitor);
+  Queue<TaskStruct> mTasks MOZ_GUARDED_BY(mQueueMonitor);
 
   // List of tasks to run during shutdown.
   nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
-      GUARDED_BY(mQueueMonitor);
+      MOZ_GUARDED_BY(mQueueMonitor);
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
@@ -218,11 +218,12 @@ class TaskQueue final : public AbstractThread,
 
   // True if we've dispatched an event to the target to execute events from
   // the queue.
-  bool mIsRunning GUARDED_BY(mQueueMonitor);
+  bool mIsRunning MOZ_GUARDED_BY(mQueueMonitor);
 
   // True if we've started our shutdown process.
-  bool mIsShutdown GUARDED_BY(mQueueMonitor);
-  MozPromiseHolder<ShutdownPromise> mShutdownPromise GUARDED_BY(mQueueMonitor);
+  bool mIsShutdown MOZ_GUARDED_BY(mQueueMonitor);
+  MozPromiseHolder<ShutdownPromise> mShutdownPromise
+      MOZ_GUARDED_BY(mQueueMonitor);
 
   // The name of this TaskQueue. Useful when debugging dispatch failures.
   const char* const mName;
@@ -270,7 +271,7 @@ class TaskQueueTracker : public nsISupports {
   friend class TaskQueueTrackerEntry;
 
   Mutex mMutex{"TaskQueueTracker"};
-  LinkedList<TaskQueueTrackerEntry> mEntries GUARDED_BY(mMutex);
+  LinkedList<TaskQueueTrackerEntry> mEntries MOZ_GUARDED_BY(mMutex);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TaskQueueTracker, MOZILLA_TASKQUEUETRACKER_IID)

@@ -388,8 +388,8 @@ class nsThreadShutdownContext final : public nsIThreadShutdown {
   // the joining thread if `StopWaitingAndLeakThread` is called or by the
   // terminating thread upon exiting and notifying the joining thread.
   mozilla::Mutex mJoiningThreadMutex;
-  RefPtr<nsThread> mJoiningThread GUARDED_BY(mJoiningThreadMutex);
-  bool mThreadLeaked GUARDED_BY(mJoiningThreadMutex) = false;
+  RefPtr<nsThread> mJoiningThread MOZ_GUARDED_BY(mJoiningThreadMutex);
+  bool mThreadLeaked MOZ_GUARDED_BY(mJoiningThreadMutex) = false;
 };
 
 // This RAII class controls the duration of the associated nsThread's local

@@ -366,7 +366,8 @@ bool StartupCache::HasEntry(const char* id) {
 }
 
 nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
-                                 uint32_t* length) NO_THREAD_SAFETY_ANALYSIS {
+                                 uint32_t* length)
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   AUTO_PROFILER_LABEL("StartupCache::GetBuffer", OTHER);
 
   NS_ASSERTION(NS_IsMainThread(),
@@ -453,7 +454,7 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
 
 // Makes a copy of the buffer, client retains ownership of inbuf.
 nsresult StartupCache::PutBuffer(const char* id, UniquePtr<char[]>&& inbuf,
-                                 uint32_t len) NO_THREAD_SAFETY_ANALYSIS {
+                                 uint32_t len) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   NS_ASSERTION(NS_IsMainThread(),
                "Startup cache only available on main thread");
   if (StartupCache::gShutdownInitiated) {

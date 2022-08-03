@@ -112,7 +112,7 @@ class AudioClock {
   // protected by the AudioStream monitor on other platforms.
   const UniquePtr<FrameHistory> mFrameHistory
 #  ifndef XP_MACOSX
-      GUARDED_BY(mMutex)
+      MOZ_GUARDED_BY(mMutex)
 #  endif
           ;
 #  ifdef XP_MACOSX
@@ -335,10 +335,10 @@ class AudioStream final {
 
   // Return true if audio frames are valid (correct sampling rate and valid
   // channel count) otherwise false.
-  bool IsValidAudioFormat(Chunk* aChunk) REQUIRES(mMonitor);
+  bool IsValidAudioFormat(Chunk* aChunk) MOZ_REQUIRES(mMonitor);
 
   template <typename Function, typename... Args>
-  int InvokeCubeb(Function aFunction, Args&&... aArgs) REQUIRES(mMonitor);
+  int InvokeCubeb(Function aFunction, Args&&... aArgs) MOZ_REQUIRES(mMonitor);
   bool CheckThreadIdChanged();
   void AssertIsOnAudioThread() const;
 
@@ -382,7 +382,8 @@ class AudioStream final {
   std::atomic<ProfilerThreadId> mAudioThreadId;
   const bool mSandboxed = false;
 
-  MozPromiseHolder<MediaSink::EndedPromise> mEndedPromise GUARDED_BY(mMonitor);
+  MozPromiseHolder<MediaSink::EndedPromise> mEndedPromise
+      MOZ_GUARDED_BY(mMonitor);
   std::atomic<bool> mPlaybackComplete;
   // Both written on the MDSM thread, read on the audio thread.
   std::atomic<float> mPlaybackRate;

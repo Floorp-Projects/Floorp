@@ -879,12 +879,12 @@ nsresult ServiceWorkerRegistrar::ReadData() {
   // XXX NOTE: if we could be accessed multi-threaded here, we would need to
   // find a way to lock around access to mData.  Since we can't, suppress the
   // thread-safety warnings.
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   if (overwrite && NS_FAILED(WriteData(mData))) {
     NS_WARNING("Failed to write data for the ServiceWorker Registations.");
     DeleteData();
   }
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 
   return NS_OK;
 }

@@ -128,24 +128,24 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
  protected:
   mutable ::mozilla::Mutex mMutex;
 
-  uint16_t mCipherSuite GUARDED_BY(mMutex);
-  uint16_t mProtocolVersion GUARDED_BY(mMutex);
-  uint16_t mCertificateTransparencyStatus GUARDED_BY(mMutex);
-  nsCString mKeaGroup GUARDED_BY(mMutex);
-  nsCString mSignatureSchemeName GUARDED_BY(mMutex);
+  uint16_t mCipherSuite MOZ_GUARDED_BY(mMutex);
+  uint16_t mProtocolVersion MOZ_GUARDED_BY(mMutex);
+  uint16_t mCertificateTransparencyStatus MOZ_GUARDED_BY(mMutex);
+  nsCString mKeaGroup MOZ_GUARDED_BY(mMutex);
+  nsCString mSignatureSchemeName MOZ_GUARDED_BY(mMutex);
 
-  bool mIsAcceptedEch GUARDED_BY(mMutex);
-  bool mIsDelegatedCredential GUARDED_BY(mMutex);
+  bool mIsAcceptedEch MOZ_GUARDED_BY(mMutex);
+  bool mIsDelegatedCredential MOZ_GUARDED_BY(mMutex);
 
-  nsCOMPtr<nsIInterfaceRequestor> mCallbacks GUARDED_BY(mMutex);
-  nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain GUARDED_BY(mMutex);
-  bool mNPNCompleted GUARDED_BY(mMutex);
-  nsCString mNegotiatedNPN GUARDED_BY(mMutex);
-  bool mResumed GUARDED_BY(mMutex);
-  bool mIsBuiltCertChainRootBuiltInRoot GUARDED_BY(mMutex);
-  nsCString mPeerId GUARDED_BY(mMutex);
-  nsCString mHostName GUARDED_BY(mMutex);
-  OriginAttributes mOriginAttributes GUARDED_BY(mMutex);
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks MOZ_GUARDED_BY(mMutex);
+  nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain MOZ_GUARDED_BY(mMutex);
+  bool mNPNCompleted MOZ_GUARDED_BY(mMutex);
+  nsCString mNegotiatedNPN MOZ_GUARDED_BY(mMutex);
+  bool mResumed MOZ_GUARDED_BY(mMutex);
+  bool mIsBuiltCertChainRootBuiltInRoot MOZ_GUARDED_BY(mMutex);
+  nsCString mPeerId MOZ_GUARDED_BY(mMutex);
+  nsCString mHostName MOZ_GUARDED_BY(mMutex);
+  OriginAttributes mOriginAttributes MOZ_GUARDED_BY(mMutex);
 
  private:
   static nsresult ReadBoolAndSetAtomicFieldHelper(nsIObjectInputStream* stream,
@@ -188,10 +188,10 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   Atomic<int32_t> mPort;
 
-  nsCOMPtr<nsIX509Cert> mServerCert GUARDED_BY(mMutex);
+  nsCOMPtr<nsIX509Cert> mServerCert MOZ_GUARDED_BY(mMutex);
 
   /* Peer cert chain for failed connections (for error reporting) */
-  nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain GUARDED_BY(mMutex);
+  nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain MOZ_GUARDED_BY(mMutex);
 
   nsresult ReadSSLStatus(nsIObjectInputStream* aStream,
                          MutexAutoLock& aProofOfLock);
@@ -216,7 +216,8 @@ class RememberCertErrorsTable {
     bool mIsNotValidAtThisTime;
     bool mIsUntrusted;
   };
-  nsTHashMap<nsCStringHashKey, CertStateBits> mErrorHosts GUARDED_BY(mMutex);
+  nsTHashMap<nsCStringHashKey, CertStateBits> mErrorHosts
+      MOZ_GUARDED_BY(mMutex);
 
  public:
   void RememberCertHasError(TransportSecurityInfo* infoObject,

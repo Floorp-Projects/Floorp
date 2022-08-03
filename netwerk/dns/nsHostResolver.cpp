@@ -175,7 +175,7 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
 
 nsHostResolver::~nsHostResolver() = default;
 
-nsresult nsHostResolver::Init() NO_THREAD_SAFETY_ANALYSIS {
+nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_FAILED(GetAddrInfoInit())) {
     return NS_ERROR_FAILURE;

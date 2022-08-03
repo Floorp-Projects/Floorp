@@ -1046,7 +1046,7 @@ nsresult nsHttpResponseHead::GetLastModifiedValue(uint32_t* result) {
 }
 
 bool nsHttpResponseHead::operator==(const nsHttpResponseHead& aOther) const
-    NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   nsHttpResponseHead& curr = const_cast<nsHttpResponseHead&>(*this);
   nsHttpResponseHead& other = const_cast<nsHttpResponseHead&>(aOther);
   RecursiveMutexAutoLock monitorOther(other.mRecursiveMutex);

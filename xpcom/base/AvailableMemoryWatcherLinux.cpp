@@ -43,11 +43,11 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
   void UpdateCrashAnnotation(const MutexAutoLock&);
   static bool IsMemoryLow();
 
-  nsCOMPtr<nsITimer> mTimer GUARDED_BY(mMutex);
-  nsCOMPtr<nsIThread> mThread GUARDED_BY(mMutex);
+  nsCOMPtr<nsITimer> mTimer MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIThread> mThread MOZ_GUARDED_BY(mMutex);
 
-  bool mPolling GUARDED_BY(mMutex);
-  bool mUnderMemoryPressure GUARDED_BY(mMutex);
+  bool mPolling MOZ_GUARDED_BY(mMutex);
+  bool mUnderMemoryPressure MOZ_GUARDED_BY(mMutex);
 
   // We might tell polling to start/stop from our polling thread
   // or from the main thread during ::Observe().
@@ -113,7 +113,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsAvailableMemoryWatcher,
                             nsIObserver);
 
 void nsAvailableMemoryWatcher::StopPolling(const MutexAutoLock&)
-    REQUIRES(mMutex) {
+    MOZ_REQUIRES(mMutex) {
   if (mPolling && mTimer) {
     // stop dispatching memory checks to the thread.
     mTimer->Cancel();
@@ -148,7 +148,8 @@ bool nsAvailableMemoryWatcher::IsMemoryLow() {
   return aResult;
 }
 
-void nsAvailableMemoryWatcher::ShutDown(const MutexAutoLock&) REQUIRES(mMutex) {
+void nsAvailableMemoryWatcher::ShutDown(const MutexAutoLock&)
+    MOZ_REQUIRES(mMutex) {
   if (mTimer) {
     mTimer->Cancel();
   }
@@ -201,7 +202,7 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
 }
 
 void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&)
-    REQUIRES(mMutex) {
+    MOZ_REQUIRES(mMutex) {
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::LinuxUnderMemoryPressure,
       mUnderMemoryPressure);
@@ -224,7 +225,7 @@ void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
 // When we change the polling interval, we will need to restart the timer
 // on the new interval.
 void nsAvailableMemoryWatcher::StartPolling(const MutexAutoLock& aLock)
-    REQUIRES(mMutex) {
+    MOZ_REQUIRES(mMutex) {
   uint32_t pollingInterval = mUnderMemoryPressure
                                  ? kLowMemoryPollingIntervalMS
                                  : kHighMemoryPollingIntervalMS;

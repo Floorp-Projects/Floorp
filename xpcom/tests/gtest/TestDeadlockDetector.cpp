@@ -71,7 +71,7 @@ static void DisableCrashReporter() {
 // Single-threaded sanity tests
 
 // Stupidest possible deadlock.
-static int Sanity_Child() NO_THREAD_SAFETY_ANALYSIS {
+static int Sanity_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   DisableCrashReporter();
 
   MUTEX m1("dd.sanity.m1");
@@ -92,7 +92,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(SanityDeathTest)) {
 }
 
 // Slightly less stupid deadlock.
-static int Sanity2_Child() NO_THREAD_SAFETY_ANALYSIS {
+static int Sanity2_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   DisableCrashReporter();
 
   MUTEX m1("dd.sanity2.m1");
@@ -118,7 +118,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity2DeathTest)) {
 #if 0
 // Temporarily disabled, see bug 1370644.
 int
-Sanity3_Child() NO_THREAD_SAFETY_ANALYSIS
+Sanity3_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS
 {
     DisableCrashReporter();
 
@@ -156,7 +156,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity3DeathTest))
 }
 #endif
 
-static int Sanity4_Child() NO_THREAD_SAFETY_ANALYSIS {
+static int Sanity4_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   DisableCrashReporter();
 
   mozilla::ReentrantMonitor m1 MOZ_UNANNOTATED("dd.sanity4.m1");
@@ -179,7 +179,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity4DeathTest)) {
   ASSERT_DEATH_IF_SUPPORTED(Sanity4_Child(), regex);
 }
 
-static int Sanity5_Child() NO_THREAD_SAFETY_ANALYSIS {
+static int Sanity5_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   DisableCrashReporter();
 
   mozilla::RecursiveMutex m1 MOZ_UNANNOTATED("dd.sanity4.m1");
@@ -225,7 +225,7 @@ struct ThreadState {
 #if 0
 // Temporarily disabled, see bug 1370644.
 static void
-TwoThreads_thread(void* arg) NO_THREAD_SAFETY_ANALYSIS
+TwoThreads_thread(void* arg) MOZ_NO_THREAD_SAFETY_ANALYSIS
 {
     ThreadState* state = static_cast<ThreadState*>(arg);
 
@@ -247,7 +247,7 @@ TwoThreads_thread(void* arg) NO_THREAD_SAFETY_ANALYSIS
 }
 
 int
-TwoThreads_Child() NO_THREAD_SAFETY_ANALYSIS
+TwoThreads_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS
 {
     DisableCrashReporter();
 
@@ -284,7 +284,8 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(TwoThreadsDeathTest))
 }
 #endif
 
-static void ContentionNoDeadlock_thread(void* arg) NO_THREAD_SAFETY_ANALYSIS {
+static void ContentionNoDeadlock_thread(void* arg)
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   const uint32_t K = 100000;
 
   ThreadState* state = static_cast<ThreadState*>(arg);
@@ -300,7 +301,7 @@ static void ContentionNoDeadlock_thread(void* arg) NO_THREAD_SAFETY_ANALYSIS {
   }
 }
 
-static int ContentionNoDeadlock_Child() NO_THREAD_SAFETY_ANALYSIS {
+static int ContentionNoDeadlock_Child() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   const size_t kMutexCount = 4;
 
   PRThread* threads[3];

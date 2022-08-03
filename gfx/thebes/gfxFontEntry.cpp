@@ -520,7 +520,7 @@ hb_blob_t* gfxFontEntry::FontTableHashEntry::GetBlob() const {
 bool gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t** aBlob) {
   // Accessing the mFontTableCache pointer is atomic, so we don't need to take
   // a write lock even if we're initializing it here...
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   if (MOZ_UNLIKELY(!mFontTableCache)) {
     // We do this here rather than on fontEntry construction
     // because not all shapers will access the table cache at all.
@@ -533,7 +533,7 @@ bool gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t** aBlob) {
     }
   }
   FontTableCache* cache = GetFontTableCache();
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 
   // ...but we do need a lock to read the actual hashtable contents.
   AutoReadLock lock(mLock);
@@ -548,7 +548,7 @@ bool gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t** aBlob) {
 
 hb_blob_t* gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
                                                   nsTArray<uint8_t>* aBuffer) {
-  PUSH_IGNORE_THREAD_SAFETY
+  MOZ_PUSH_IGNORE_THREAD_SAFETY
   if (MOZ_UNLIKELY(!mFontTableCache)) {
     auto* newCache = new FontTableCache(8);
     if (MOZ_UNLIKELY(!mFontTableCache.compareExchange(nullptr, newCache))) {
@@ -556,7 +556,7 @@ hb_blob_t* gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
     }
   }
   FontTableCache* cache = GetFontTableCache();
-  POP_THREAD_SAFETY
+  MOZ_POP_THREAD_SAFETY
 
   AutoWriteLock lock(mLock);
   FontTableHashEntry* entry = cache->PutEntry(aTag);

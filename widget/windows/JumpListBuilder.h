@@ -46,8 +46,8 @@ class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
   static Atomic<bool> sBuildingList;
 
  private:
-  mscom::AgileReference mJumpListMgr GUARDED_BY(mMonitor);
-  uint32_t mMaxItems GUARDED_BY(mMonitor);
+  mscom::AgileReference mJumpListMgr MOZ_GUARDED_BY(mMonitor);
+  uint32_t mMaxItems MOZ_GUARDED_BY(mMonitor);
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
   ReentrantMonitor mMonitor;

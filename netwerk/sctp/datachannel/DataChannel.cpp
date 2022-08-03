@@ -2376,7 +2376,7 @@ void DataChannelConnection::HandleNotification(
 
 int DataChannelConnection::ReceiveCallback(
     struct socket* sock, void* data, size_t datalen, struct sctp_rcvinfo rcv,
-    int flags) NO_THREAD_SAFETY_ANALYSIS {
+    int flags) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   ASSERT_WEBRTC(!NS_IsMainThread());
   DC_DEBUG(("In ReceiveCallback"));
 

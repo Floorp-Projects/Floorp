@@ -130,7 +130,7 @@ struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
       const AutoNestedEventLoopAnnotation&) = delete;
 
   // The declarations of these statics live in nsThreadManager.cpp.
-  static AutoNestedEventLoopAnnotation* sCurrent GUARDED_BY(sStackMutex);
+  static AutoNestedEventLoopAnnotation* sCurrent MOZ_GUARDED_BY(sStackMutex);
   static StaticMutex sStackMutex;
 
   // We need this to avoid the inclusion of nsExceptionHandler.h here
@@ -138,8 +138,8 @@ struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
   // The implementation lives in nsThreadManager.cpp.
   static void AnnotateXPCOMSpinEventLoopStack(const nsACString& aStack);
 
-  AutoNestedEventLoopAnnotation* mPrev GUARDED_BY(sStackMutex);
-  nsCString mStack GUARDED_BY(sStackMutex);
+  AutoNestedEventLoopAnnotation* mPrev MOZ_GUARDED_BY(sStackMutex);
+  nsCString mStack MOZ_GUARDED_BY(sStackMutex);
 };
 
 // Please see the above notes for the Behavior template parameter.

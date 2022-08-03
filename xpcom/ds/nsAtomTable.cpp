@@ -189,16 +189,16 @@ class nsAtomSubTable {
   Mutex mLock;
   PLDHashTable mTable;
   nsAtomSubTable();
-  void GCLocked(GCKind aKind) REQUIRES(mLock);
+  void GCLocked(GCKind aKind) MOZ_REQUIRES(mLock);
   void AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
-                                    AtomsSizes& aSizes) REQUIRES(mLock);
+                                    AtomsSizes& aSizes) MOZ_REQUIRES(mLock);
 
-  AtomTableEntry* Search(AtomTableKey& aKey) const REQUIRES(mLock) {
+  AtomTableEntry* Search(AtomTableKey& aKey) const MOZ_REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
     return static_cast<AtomTableEntry*>(mTable.Search(&aKey));
   }
 
-  AtomTableEntry* Add(AtomTableKey& aKey) REQUIRES(mLock) {
+  AtomTableEntry* Add(AtomTableKey& aKey) MOZ_REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
     return static_cast<AtomTableEntry*>(mTable.Add(&aKey));  // Infallible
   }

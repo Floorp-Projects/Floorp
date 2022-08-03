@@ -57,12 +57,12 @@ class RLBoxSandboxPool : public nsITimerCallback, public nsINamed {
   virtual ~RLBoxSandboxPool() = default;
 
  private:
-  void StartTimer() REQUIRES(mMutex);
-  void CancelTimer() REQUIRES(mMutex);
+  void StartTimer() MOZ_REQUIRES(mMutex);
+  void CancelTimer() MOZ_REQUIRES(mMutex);
 
-  nsTArray<UniquePtr<RLBoxSandboxDataBase>> mPool GUARDED_BY(mMutex);
-  const size_t mDelaySeconds GUARDED_BY(mMutex);
-  nsCOMPtr<nsITimer> mTimer GUARDED_BY(mMutex);
+  nsTArray<UniquePtr<RLBoxSandboxDataBase>> mPool MOZ_GUARDED_BY(mMutex);
+  const size_t mDelaySeconds MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsITimer> mTimer MOZ_GUARDED_BY(mMutex);
   mozilla::Mutex mMutex;
 };
 

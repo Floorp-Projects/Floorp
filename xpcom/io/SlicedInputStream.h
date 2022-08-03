@@ -84,15 +84,15 @@ class SlicedInputStream final : public nsIAsyncInputStream,
 
   // These four are used for AsyncWait. They are protected by mutex because
   // touched on multiple threads.
-  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback GUARDED_BY(mMutex);
-  nsCOMPtr<nsIEventTarget> mAsyncWaitEventTarget GUARDED_BY(mMutex);
-  uint32_t mAsyncWaitFlags GUARDED_BY(mMutex);
-  uint32_t mAsyncWaitRequestedCount GUARDED_BY(mMutex);
+  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback MOZ_GUARDED_BY(mMutex);
+  nsCOMPtr<nsIEventTarget> mAsyncWaitEventTarget MOZ_GUARDED_BY(mMutex);
+  uint32_t mAsyncWaitFlags MOZ_GUARDED_BY(mMutex);
+  uint32_t mAsyncWaitRequestedCount MOZ_GUARDED_BY(mMutex);
 
   // This is use for nsIAsyncInputStreamLength::AsyncWait.
   // This is protected by mutex.
   nsCOMPtr<nsIInputStreamLengthCallback> mAsyncWaitLengthCallback
-      GUARDED_BY(mMutex);
+      MOZ_GUARDED_BY(mMutex);
 
   Mutex mMutex;
 };

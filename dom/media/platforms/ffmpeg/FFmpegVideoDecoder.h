@@ -53,7 +53,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   ~FFmpegVideoDecoder();
 
   RefPtr<InitPromise> Init() override;
-  void InitCodecContext() REQUIRES(sMutex) override;
+  void InitCodecContext() MOZ_REQUIRES(sMutex) override;
   nsCString GetDescriptionName() const override {
 #ifdef USING_MOZFFVPX
     return "ffvpx video decoder"_ns;

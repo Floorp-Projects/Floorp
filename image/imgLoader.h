@@ -413,7 +413,7 @@ class imgLoader final : public imgILoader,
   // mChromeCache. The union over all imgLoader's of mCache, mChromeCache, and
   // mUncachedImages should be every imgRequest that is alive. These are weak
   // pointers so we rely on the imgRequest destructor to remove itself.
-  imgSet mUncachedImages GUARDED_BY(mUncachedImagesMutex);
+  imgSet mUncachedImages MOZ_GUARDED_BY(mUncachedImagesMutex);
   // The imgRequest can have refs to them held on non-main thread, so we need
   // a mutex because we modify the uncached images set from the imgRequest
   // destructor.
