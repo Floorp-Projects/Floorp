@@ -4403,7 +4403,7 @@ function FillHistoryMenu(aParent) {
   const MAX_HISTORY_MENU_ITEMS = 15;
 
   const tooltipBack = gNavigatorBundle.getString("tabHistory.goBack");
-  const tooltipCurrent = gNavigatorBundle.getString("tabHistory.current");
+  const tooltipCurrent = gNavigatorBundle.getString("tabHistory.reloadCurrent");
   const tooltipForward = gNavigatorBundle.getString("tabHistory.goForward");
 
   function updateSessionHistory(sessionHistory, initial, ssInParent) {
