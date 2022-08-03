@@ -44,10 +44,10 @@ task-defaults:
         platform:
             by-abi:
                 arm64-v8a: android-hw-p2-8-0-android-aarch64-shippable-qr/opt
-                armeabi-v7a: android-hw-g5-7-0-arm7-api-16-shippable-qr/opt
+                armeabi-v7a: android-hw-a51-11-0-aarch64-shippable-qr/opt
     worker-type:
         by-abi:
-            armeabi-v7a: t-bitbar-gw-perf-g5
+            armeabi-v7a: t-bitbar-gw-perf-a51
             arm64-v8a: t-bitbar-gw-perf-p2
     worker:
         max-run-time: 3600
