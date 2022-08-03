@@ -159,12 +159,14 @@ void SMRegExpMacroAssembler::CheckNotCharacter(uint32_t c,
   CheckCharacterImpl(Imm32(c), on_not_equal, Assembler::NotEqual);
 }
 
-void SMRegExpMacroAssembler::CheckCharacterGT(uc16 c, Label* on_greater) {
-  CheckCharacterImpl(Imm32(c), on_greater, Assembler::GreaterThan);
+void SMRegExpMacroAssembler::CheckCharacterGT(base::uc16 limit,
+                                              Label* on_greater) {
+  CheckCharacterImpl(Imm32(limit), on_greater, Assembler::GreaterThan);
 }
 
-void SMRegExpMacroAssembler::CheckCharacterLT(uc16 c, Label* on_less) {
-  CheckCharacterImpl(Imm32(c), on_less, Assembler::LessThan);
+void SMRegExpMacroAssembler::CheckCharacterLT(base::uc16 limit,
+                                              Label* on_less) {
+  CheckCharacterImpl(Imm32(limit), on_less, Assembler::LessThan);
 }
 
 // Bitwise-and the current character with mask and then check for a
@@ -199,7 +201,7 @@ void SMRegExpMacroAssembler::CheckNotCharacterAfterAnd(uint32_t c,
 // Subtract minus from the current character, then bitwise-and the
 // result with mask, then check for a match with c.
 void SMRegExpMacroAssembler::CheckNotCharacterAfterMinusAnd(
-    uc16 c, uc16 minus, uc16 mask, Label* on_not_equal) {
+    base::uc16 c, base::uc16 minus, base::uc16 mask, Label* on_not_equal) {
   masm_.computeEffectiveAddress(Address(current_character_, -minus), temp0_);
   if (c == 0) {
     masm_.branchTest32(Assembler::NonZero, temp0_, Imm32(mask),
@@ -223,18 +225,20 @@ void SMRegExpMacroAssembler::CheckGreedyLoop(Label* on_equal) {
 }
 
 void SMRegExpMacroAssembler::CheckCharacterInRangeImpl(
-    uc16 from, uc16 to, Label* on_cond, Assembler::Condition cond) {
+    base::uc16 from, base::uc16 to, Label* on_cond, Assembler::Condition cond) {
   // x is in [from,to] if unsigned(x - from) <= to - from
   masm_.computeEffectiveAddress(Address(current_character_, -from), temp0_);
   masm_.branch32(cond, temp0_, Imm32(to - from), LabelOrBacktrack(on_cond));
 }
 
-void SMRegExpMacroAssembler::CheckCharacterInRange(uc16 from, uc16 to,
+void SMRegExpMacroAssembler::CheckCharacterInRange(base::uc16 from,
+                                                   base::uc16 to,
                                                    Label* on_in_range) {
   CheckCharacterInRangeImpl(from, to, on_in_range, Assembler::BelowOrEqual);
 }
 
-void SMRegExpMacroAssembler::CheckCharacterNotInRange(uc16 from, uc16 to,
+void SMRegExpMacroAssembler::CheckCharacterNotInRange(base::uc16 from,
+                                                      base::uc16 to,
                                                       Label* on_not_in_range) {
   CheckCharacterInRangeImpl(from, to, on_not_in_range, Assembler::Above);
 }

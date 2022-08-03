@@ -121,13 +121,13 @@ class ZoneList final : public ZoneObject {
   inline int length() const { return length_; }
   inline int capacity() const { return capacity_; }
 
-  Vector<T> ToVector() const { return Vector<T>(data_, length_); }
-  Vector<T> ToVector(int start, int length) const {
-    return Vector<T>(data_ + start, std::min(length_ - start, length));
+  base::Vector<T> ToVector() const { return base::Vector<T>(data_, length_); }
+  base::Vector<T> ToVector(int start, int length) const {
+    return base::Vector<T>(data_ + start, std::min(length_ - start, length));
   }
 
-  Vector<const T> ToConstVector() const {
-    return Vector<const T>(data_, length_);
+  base::Vector<const T> ToConstVector() const {
+    return base::Vector<const T>(data_, length_);
   }
 
   // Adds a copy of the given 'element' to the end of the list,
@@ -144,7 +144,7 @@ class ZoneList final : public ZoneObject {
     AddAll(other.ToVector(), zone);
   }
   // Add all the elements from the vector to this list.
-  void AddAll(const Vector<T>& other, Zone* zone) {
+  void AddAll(const base::Vector<const T>& other, Zone* zone) {
     int result_length = length_ + other.length();
     if (capacity_ < result_length) {
       Resize(result_length, zone);
