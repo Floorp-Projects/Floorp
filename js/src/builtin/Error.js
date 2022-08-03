@@ -7,8 +7,9 @@ function ErrorToString()
 {
   /* Steps 1-2. */
   var obj = this;
-  if (!IsObject(obj))
+  if (!IsObject(obj)) {
     ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Error", "toString", "value");
+  }
 
   /* Steps 3-5. */
   var name = obj.name;
@@ -19,12 +20,14 @@ function ErrorToString()
   msg = (msg === undefined) ? "" : ToString(msg);
 
   /* Step 9. */
-  if (name === "")
+  if (name === "") {
     return msg;
+  }
 
   /* Step 10. */
-  if (msg === "")
+  if (msg === "") {
     return name;
+  }
 
   /* Step 11. */
   return name + ": " + msg;
