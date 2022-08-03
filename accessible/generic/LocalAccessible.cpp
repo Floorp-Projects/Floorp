@@ -1480,7 +1480,7 @@ uint64_t LocalAccessible::State() {
         // If focus is in a child of the tab panel surely the tab is selected!
         Relation rel = RelationByType(RelationType::LABEL_FOR);
         LocalAccessible* relTarget = nullptr;
-        while ((relTarget = rel.Next())) {
+        while ((relTarget = rel.LocalNext())) {
           if (relTarget->Role() == roles::PROPERTYPAGE &&
               FocusMgr()->IsFocusWithin(relTarget)) {
             state |= states::SELECTED;
@@ -1766,7 +1766,7 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
       // Listbox is owned by a combobox
       Relation rel = RelationByType(RelationType::NODE_CHILD_OF);
       LocalAccessible* targetAcc = nullptr;
-      while ((targetAcc = rel.Next())) {
+      while ((targetAcc = rel.LocalNext())) {
         if (targetAcc->IsCombobox()) return roles::COMBOBOX_LIST;
       }
     }
@@ -2470,14 +2470,14 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
   // a name/description provider is added to doc.
   Relation rel = RelationByType(RelationType::LABELLED_BY);
   LocalAccessible* relTarget = nullptr;
-  while ((relTarget = rel.Next())) {
+  while ((relTarget = rel.LocalNext())) {
     if (!relTarget->HasNameDependent()) {
       relTarget->ModifySubtreeContextFlags(eHasNameDependent, true);
     }
   }
 
   rel = RelationByType(RelationType::DESCRIBED_BY);
-  while ((relTarget = rel.Next())) {
+  while ((relTarget = rel.LocalNext())) {
     if (!relTarget->HasDescriptionDependent()) {
       relTarget->ModifySubtreeContextFlags(eHasDescriptionDependent, true);
     }
@@ -3591,7 +3591,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         rel.AppendIter(new IDRefsIterator(mDoc, mContent, relAtom));
       }
 
-      while (LocalAccessible* acc = rel.Next()) {
+      while (LocalAccessible* acc = rel.LocalNext()) {
         ids.AppendElement(acc->IsDoc() ? 0 : acc->ID());
       }
       if (ids.Length()) {

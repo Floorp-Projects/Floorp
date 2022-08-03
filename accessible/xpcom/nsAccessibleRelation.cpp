@@ -17,7 +17,7 @@ using namespace mozilla::a11y;
 nsAccessibleRelation::nsAccessibleRelation(uint32_t aType, Relation* aRel)
     : mType(aType) {
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  LocalAccessible* targetAcc = nullptr;
+  Accessible* targetAcc = nullptr;
   while ((targetAcc = aRel->Next())) {
     mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)));
   }

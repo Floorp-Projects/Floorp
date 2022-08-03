@@ -220,7 +220,8 @@ role XULGroupboxAccessible::NativeRole() const { return roles::GROUPING; }
 
 ENameValueFlag XULGroupboxAccessible::NativeName(nsString& aName) const {
   // XXX: we use the first related accessible only.
-  LocalAccessible* label = RelationByType(RelationType::LABELLED_BY).Next();
+  LocalAccessible* label =
+      RelationByType(RelationType::LABELLED_BY).LocalNext();
   if (label) return label->Name(aName);
 
   return eNameOK;

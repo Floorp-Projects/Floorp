@@ -84,7 +84,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
     }
 
     Relation rel = localAcc->RelationByType(RelationType::CONTAINING_TAB_PANE);
-    AccessibleWrap* tabDoc = static_cast<AccessibleWrap*>(rel.Next());
+    AccessibleWrap* tabDoc = static_cast<AccessibleWrap*>(rel.LocalNext());
     if (!tabDoc) return E_NOINTERFACE;
 
     RefPtr<IAccessible> result;

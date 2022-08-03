@@ -520,9 +520,9 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
     return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
   }
 
-  nsTArray<LocalAccessible*> targets;
+  nsTArray<Accessible*> targets;
   Relation rel = acc->RelationByType(*relationType);
-  LocalAccessible* target = nullptr;
+  Accessible* target = nullptr;
   while (
       (target = rel.Next()) &&
       (aMaxTargets == 0 || static_cast<long>(targets.Length()) < aMaxTargets)) {
@@ -535,8 +535,7 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   if (!*aTargets) return E_OUTOFMEMORY;
 
   for (int32_t i = 0; i < *aNTargets; i++) {
-    RefPtr<IAccessible2> target;
-    targets[i]->GetNativeInterface(getter_AddRefs(target));
+    RefPtr<IAccessible2> target = MsaaAccessible::GetFrom(targets[i]);
     target.forget(&(*aTargets)[i]);
   }
 
