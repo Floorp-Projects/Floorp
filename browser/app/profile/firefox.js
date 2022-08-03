@@ -1942,7 +1942,7 @@ pref("browser.promo.focus.disallowed_regions", "cn");
 pref("browser.promo.focus.enabled", true);
 
 // Default to enabling pin promos to be shown where allowed.
-pref("browser.promo.pin.enabled", false);
+pref("browser.promo.pin.enabled", true);
 
 // Comma separated string of mozilla vpn supported platforms.
 pref("browser.contentblocking.report.vpn_platforms", "win,mac,linux");
