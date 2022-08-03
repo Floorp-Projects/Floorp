@@ -33,14 +33,16 @@ function startOfUnicodeExtensions(locale) {
 
     // Search for "-u-" marking the start of a Unicode extension sequence.
     var start = callFunction(std_String_indexOf, locale, "-u-");
-    if (start < 0)
+    if (start < 0) {
         return -1;
+    }
 
     // And search for "-x-" marking the start of any privateuse component to
     // handle the case when "-u-" was only found within a privateuse subtag.
     var privateExt = callFunction(std_String_indexOf, locale, "-x-");
-    if (privateExt >= 0 && privateExt < start)
+    if (privateExt >= 0 && privateExt < start) {
         return -1;
+    }
 
     return start;
 }
@@ -65,10 +67,12 @@ function endOfUnicodeExtensions(locale, start) {
     // subtag, namely |"-x-" alphanum|. Note the reduced end-limit means
     // indexing inside the loop is always in-range.
     for (var i = start + 5, end = locale.length - 4; i <= end; i++) {
-        if (callFunction(std_String_charCodeAt, locale, i) !== HYPHEN)
+        if (callFunction(std_String_charCodeAt, locale, i) !== HYPHEN) {
             continue;
-        if (callFunction(std_String_charCodeAt, locale, i + 2) === HYPHEN)
+        }
+        if (callFunction(std_String_charCodeAt, locale, i + 2) === HYPHEN) {
             return i;
+        }
 
         // Skip over (i + 1) and (i + 2) because we've just verified they
         // aren't "-", so the next possible delimiter can only be at (i + 3).
@@ -89,8 +93,9 @@ function removeUnicodeExtensions(locale) {
     assertIsValidAndCanonicalLanguageTag(locale, "locale with possible Unicode extension");
 
     var start = startOfUnicodeExtensions(locale);
-    if (start < 0)
+    if (start < 0) {
         return locale;
+    }
 
     var end = endOfUnicodeExtensions(locale, start);
 
@@ -126,8 +131,9 @@ function IsASCIIAlphaString(s) {
 
     for (var i = 0; i < s.length; i++) {
         var c = callFunction(std_String_charCodeAt, s, i);
-        if (!((0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A)))
+        if (!((0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A))) {
             return false;
+        }
     }
     return true;
 }
@@ -143,8 +149,9 @@ var localeCache = {
  * Spec: ECMAScript Internationalization API Specification, 6.2.4.
  */
 function DefaultLocale() {
-    if (intl_IsRuntimeDefaultLocale(localeCache.runtimeDefaultLocale))
+    if (intl_IsRuntimeDefaultLocale(localeCache.runtimeDefaultLocale)) {
         return localeCache.defaultLocale;
+    }
 
     // If we didn't have a cache hit, compute the candidate default locale.
     var runtimeDefaultLocale = intl_RuntimeDefaultLocale();
@@ -168,8 +175,9 @@ function DefaultLocale() {
  */
 function CanonicalizeLocaleList(locales) {
     // Step 1.
-    if (locales === undefined)
+    if (locales === undefined) {
         return [];
+    }
 
     // Step 3 (and the remaining steps).
     var tag = intl_ValidateAndCanonicalizeLanguageTag(locales, false);
@@ -199,8 +207,9 @@ function CanonicalizeLocaleList(locales) {
             var kValue = O[k];
 
             // Step 7.c.ii.
-            if (!(typeof kValue === "string" || IsObject(kValue)))
+            if (!(typeof kValue === "string" || IsObject(kValue))) {
                 ThrowTypeError(JSMSG_INVALID_LOCALES_ELEMENT);
+            }
 
             // Steps 7.c.iii-iv.
             var tag = intl_ValidateAndCanonicalizeLanguageTag(kValue, true);
@@ -208,8 +217,9 @@ function CanonicalizeLocaleList(locales) {
                    "ValidateAndCanonicalizeLanguageTag returns a string value");
 
             // Step 7.c.v.
-            if (callFunction(std_Array_indexOf, seen, tag) === -1)
+            if (callFunction(std_Array_indexOf, seen, tag) === -1) {
                 DefineDataProperty(seen, seen.length, tag);
+            }
         }
 
         // Step 7.d.
@@ -272,8 +282,9 @@ function LookupMatcher(availableLocales, requestedLocales) {
             result.locale = availableLocale;
 
             // Step 2.c.ii.
-            if (locale !== noExtensionsLocale)
+            if (locale !== noExtensionsLocale) {
                 result.extension = getUnicodeExtensions(locale);
+            }
 
             // Step 2.c.iii.
             return result;
@@ -345,8 +356,9 @@ function UnicodeExtensionValue(extension, key) {
             var len = e === -1 ? size - k : e - k;
 
             // Step 5.e.iii.
-            if (len === 2)
+            if (len === 2) {
                 break;
+            }
 
             // Step 5.e.iv.
             if (e === -1) {
@@ -367,8 +379,9 @@ function UnicodeExtensionValue(extension, key) {
     searchValue = "-" + key;
 
     // Steps 7-8.
-    if (callFunction(std_String_endsWith, extension, searchValue))
+    if (callFunction(std_String_endsWith, extension, searchValue)) {
         return "";
+    }
 
     // Step 9 (implicit).
 }
@@ -462,8 +475,9 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
         // Steps 8.i, 8.i.iii.1.
         if (optionsValue !== undefined && optionsValue !== value) {
             // Steps 8.a-d.
-            if (keyLocaleData === undefined)
+            if (keyLocaleData === undefined) {
                 keyLocaleData = callFunction(localeDataProvider[key], null, foundLocale);
+            }
 
             // Step 8.i.iii.
             if (callFunction(std_Array_indexOf, keyLocaleData, optionsValue) !== -1) {
@@ -489,8 +503,9 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     }
 
     // Step 9.
-    if (supportedExtension.length > 2)
+    if (supportedExtension.length > 2) {
         foundLocale = addUnicodeExtension(foundLocale, supportedExtension);
+    }
 
     // Step 10.
     result.locale = foundLocale;
@@ -557,8 +572,9 @@ function LookupSupportedLocales(availableLocales, requestedLocales) {
         var availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
 
         // Step 2.c.
-        if (availableLocale !== undefined)
+        if (availableLocale !== undefined) {
             DefineDataProperty(subset, subset.length, locale);
+        }
     }
 
     // Step 3.
@@ -595,8 +611,9 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
         matcher = options.localeMatcher;
         if (matcher !== undefined) {
             matcher = ToString(matcher);
-            if (matcher !== "lookup" && matcher !== "best fit")
+            if (matcher !== "lookup" && matcher !== "best fit") {
                 ThrowRangeError(JSMSG_INVALID_LOCALE_MATCHER, matcher);
+            }
         }
     }
 
@@ -620,16 +637,18 @@ function GetOption(options, property, type, values, fallback) {
     // Step 2.
     if (value !== undefined) {
         // Steps 2.a-c.
-        if (type === "boolean")
+        if (type === "boolean") {
             value = ToBoolean(value);
-        else if (type === "string")
+        } else if (type === "string") {
             value = ToString(value);
-        else
+        } else {
             assert(false, "GetOption");
+        }
 
         // Step 2.d.
-        if (values !== undefined && callFunction(std_Array_indexOf, values, value) === -1)
+        if (values !== undefined && callFunction(std_Array_indexOf, values, value) === -1) {
             ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, `"${value}"`);
+        }
 
         // Step 2.e.
         return value;
@@ -651,23 +670,27 @@ function GetStringOrBooleanOption(options, property, values, trueValue, falsyVal
     var value = options[property];
 
     // Step 2.
-    if (value === undefined)
+    if (value === undefined) {
         return fallback;
+    }
 
     // Step 3.
-    if (value === true)
+    if (value === true) {
         return trueValue;
+    }
 
     // Steps 4-5.
-    if (!value)
+    if (!value) {
         return falsyValue;
+    }
 
     // Step 6.
     value = ToString(value);
 
     // Step 7.
-    if (callFunction(std_Array_indexOf, values, value) === -1)
+    if (callFunction(std_Array_indexOf, values, value) === -1) {
         return fallback;
+    }
 
     // Step 8.
     return value;
@@ -689,15 +712,17 @@ function DefaultNumberOption(value, minimum, maximum, fallback) {
            "DefaultNumberOption");
 
     // Step 1.
-    if (value === undefined)
+    if (value === undefined) {
         return fallback;
+    }
 
     // Step 2.
     value = ToNumber(value);
 
     // Step 3.
-    if (Number_isNaN(value) || value < minimum || value > maximum)
+    if (Number_isNaN(value) || value < minimum || value > maximum) {
         ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, value);
+    }
 
     // Step 4.
     // Apply bitwise-or to convert -0 to +0 per ES2017, 5.2 and to ensure the
@@ -803,8 +828,9 @@ function setInternalProperties(internals, internalProps) {
 function maybeInternalProperties(internals) {
     assert(IsObject(internals), "non-object passed to maybeInternalProperties");
     var lazyData = internals.lazyData;
-    if (lazyData)
+    if (lazyData) {
         return null;
+    }
     assert(IsObject(internals.internalProps), "missing lazy data and computed internals");
     return internals.internalProps;
 }
@@ -855,25 +881,27 @@ function getInternals(obj) {
 
     // If internal properties have already been computed, use them.
     var internalProps = maybeInternalProperties(internals);
-    if (internalProps)
+    if (internalProps) {
         return internalProps;
+    }
 
     // Otherwise it's time to fully create them.
     var type = internals.type;
-    if (type === "Collator")
+    if (type === "Collator") {
         internalProps = resolveCollatorInternals(internals.lazyData);
-    else if (type === "DateTimeFormat")
+    } else if (type === "DateTimeFormat") {
         internalProps = resolveDateTimeFormatInternals(internals.lazyData);
-    else if (type === "DisplayNames")
+    } else if (type === "DisplayNames") {
       internalProps = resolveDisplayNamesInternals(internals.lazyData);
-    else if (type === "ListFormat")
+    } else if (type === "ListFormat") {
         internalProps = resolveListFormatInternals(internals.lazyData);
-    else if (type === "NumberFormat")
+    } else if (type === "NumberFormat") {
         internalProps = resolveNumberFormatInternals(internals.lazyData);
-    else if (type === "PluralRules")
+    } else if (type === "PluralRules") {
         internalProps = resolvePluralRulesInternals(internals.lazyData);
-    else
+    } else {
         internalProps = resolveRelativeTimeFormatInternals(internals.lazyData);
+    }
     setInternalProperties(internals, internalProps);
     return internalProps;
 }
