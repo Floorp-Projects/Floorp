@@ -1859,11 +1859,16 @@ void nsWindow::WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize) {
 
 void nsWindow::NativeMoveResizeWaylandPopupCallback(
     const GdkRectangle* aFinalSize, bool aFlippedX, bool aFlippedY) {
-#ifdef NIGHTLY_BUILD
   // We're getting move-to-rect callback without move-to-rect call.
-  // That indicates a compositor bug
-  MOZ_DIAGNOSTIC_ASSERT(mWaitingForMoveToRectCallback,
-                        "Bogus move-to-rect callback! A compositor bug?");
+  // That indicates a compositor bug. It happens when a window is hidden and
+  // shown again before move-to-rect callback is fired.
+  // It may lead to incorrect popup placement as we may call
+  // gtk_window_move() between hide & show.
+  // See Bug 1777919.
+#if MOZ_LOGGING
+  if (!mWaitingForMoveToRectCallback) {
+    LOG("  Bogus move-to-rect callback! A compositor bug?");
+  }
 #endif
 
   mWaitingForMoveToRectCallback = false;
