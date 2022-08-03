@@ -34,52 +34,61 @@
     <main>
       <template id="sync-setup-template">
         <named-deck class="sync-setup-container" data-prefix="id:">
-          <div name="sync-setup-view0" data-prefix="id:-view0" class="card zap-card setup-step" data-prefix="aria-labelledby:-view0-header">
-            <h2 data-prefix="id:-view0-header" data-l10n-id="firefoxview-tabpickup-step-signin-header" class="card-header"></h2>
+          <div name="sync-setup-view0" data-prefix="id:-view0" class="card error-state" data-prefix="aria-labelledby:-view0-header">
+            <icon class="icon info primary"></icon><h3 data-prefix="id:-view0-header" class="card-header"></h3>
+            <section>
+              <p>
+                <span id="error-state-description"></span>
+              </p>
+              <button id="error-state-button" class="primary"></button>
+            </section>
+          </div>
+          <div name="sync-setup-view1" data-prefix="id:-view1" class="card zap-card setup-step" data-prefix="aria-labelledby:-view1-header">
+            <h2 data-prefix="id:-view1-header" data-l10n-id="firefoxview-tabpickup-step-signin-header" class="card-header"></h2>
             <section class="step-body">
               <p class="step-content" data-l10n-id="firefoxview-tabpickup-step-signin-description"></p>
-              <button class="primary" data-action="view0-primary-action" data-l10n-id="firefoxview-tabpickup-step-signin-primarybutton"></button>
+              <button class="primary" data-action="view1-primary-action" data-l10n-id="firefoxview-tabpickup-step-signin-primarybutton"></button>
             </section>
             <footer>
-              <progress data-prefix="id:-view0-progress" class="step-progress" max="100" value="11"></progress>
+              <progress data-prefix="id:-view1-progress" class="step-progress" max="100" value="11"></progress>
               <label
-                data-prefix="for:-view0-progress"
+                data-prefix="for:-view1-progress"
                 data-l10n-id="firefoxview-tabpickup-progress-label"
                 data-l10n-args='{"percentValue":"11"}'></label>
             </footer>
           </div>
-          <div name="sync-setup-view1" data-prefix="id:-view1" class="card zap-card setup-step" data-prefix="aria-labelledby:-view1-header">
-            <h2 data-prefix="id:-view1-header" data-l10n-id="firefoxview-tabpickup-adddevice-header" class="card-header"></h2>
+          <div name="sync-setup-view2" data-prefix="id:-view2" class="card zap-card setup-step" data-prefix="aria-labelledby:-view2-header">
+            <h2 data-prefix="id:-view2-header" data-l10n-id="firefoxview-tabpickup-adddevice-header" class="card-header"></h2>
             <section class="step-body">
               <p class="step-content">
                 <span data-l10n-id="firefoxview-tabpickup-adddevice-description"></span>
                 <br/>
                 <a target="_blank" data-support-url="tab-pickup-firefox-view" data-l10n-id="firefoxview-tabpickup-adddevice-learn-how"></a>
               </p>
-              <button class="primary" data-action="view1-primary-action" data-l10n-id="firefoxview-tabpickup-adddevice-primarybutton"></button>
+              <button class="primary" data-action="view2-primary-action" data-l10n-id="firefoxview-tabpickup-adddevice-primarybutton"></button>
             </section>
             <footer>
-              <progress data-prefix="id:-view1-progress" class="step-progress" max="100" value="33"></progress>
+              <progress data-prefix="id:-view2-progress" class="step-progress" max="100" value="33"></progress>
               <label
-                data-prefix="for:-view1-progress"
+                data-prefix="for:-view2-progress"
                 data-l10n-id="firefoxview-tabpickup-progress-label"
                 data-l10n-args='{"percentValue":"33"}'></label>
             </footer>
           </div>
-          <div name="sync-setup-view2" data-prefix="id:-view2" class="card zap-card setup-step" data-prefix="aria-labelledby:-view2-header">
-            <h2 data-prefix="id:-view2-header" data-l10n-id="firefoxview-tabpickup-synctabs-header" class="card-header"></h2>
+          <div name="sync-setup-view3" data-prefix="id:-view3" class="card zap-card setup-step" data-prefix="aria-labelledby:-view3-header">
+            <h2 data-prefix="id:-view3-header" data-l10n-id="firefoxview-tabpickup-synctabs-header" class="card-header"></h2>
             <section class="step-body">
               <p class="step-content">
                 <span  data-l10n-id="firefoxview-tabpickup-synctabs-description"></span>
                 <br/>
                 <a target="_blank" data-support-url="tab-pickup-firefox-view" data-l10n-id="firefoxview-tabpickup-synctabs-learn-how"></a>
               </p>
-              <button class="primary" data-action="view2-primary-action" data-l10n-id="firefoxview-tabpickup-synctabs-primarybutton"></button>
+              <button class="primary" data-action="view3-primary-action" data-l10n-id="firefoxview-tabpickup-synctabs-primarybutton"></button>
             </section>
             <footer>
-              <progress data-prefix="id:-view2-progress" class="step-progress" max="100" value="66"></progress>
+              <progress data-prefix="id:-view3-progress" class="step-progress" max="100" value="66"></progress>
               <label
-                data-prefix="for:-view2-progress"
+                data-prefix="for:-view3-progress"
                 data-l10n-id="firefoxview-tabpickup-progress-label"
                 data-l10n-args='{"percentValue":"66"}'></label>
             </footer>
@@ -95,7 +104,10 @@
             <icon class="icon synced-tabs"></icon>
             <p data-l10n-id="firefoxview-synced-tabs-placeholder" class="placeholder-text"></p>
           </div>
-          <p class="loading-content" data-l10n-id="firefoxview-tabpickup-syncing"></p>
+          <div class="loading-content">
+            <icon class="icon sync"></icon>
+            <p data-l10n-id="firefoxview-tabpickup-syncing"></p>
+          </div>
         </div>
       </template>
 

@@ -1,8 +1,6 @@
 "use strict";
 
 module.exports = {
-  // Extend mochitest rules
-  extends: "plugin:mozilla/mochitest-test",
   // Globals from mediasource.js. We use false to indicate they should not
   // be overwritten in scripts.
   globals: {

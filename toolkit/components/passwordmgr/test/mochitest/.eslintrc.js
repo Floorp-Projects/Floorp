@@ -1,7 +1,6 @@
 "use strict";
 
 module.exports = {
-  extends: ["plugin:mozilla/mochitest-test"],
   globals: {
     promptDone: true,
     startTest: true,

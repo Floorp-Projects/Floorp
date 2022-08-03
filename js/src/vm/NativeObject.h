@@ -678,6 +678,9 @@ class NativeObject : public JSObject {
    */
   bool ensureSlotsForDictionaryObject(JSContext* cx, uint32_t span);
 
+  void maybeFreeDictionaryPropSlots(JSContext* cx, DictionaryPropMap* map,
+                                    uint32_t mapLength);
+
   [[nodiscard]] static bool toDictionaryMode(JSContext* cx,
                                              Handle<NativeObject*> obj);
 

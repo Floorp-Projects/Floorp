@@ -833,8 +833,9 @@ let BrowserUsageTelemetry = {
       )
     ) {
       node = node.parentNode;
-      if (!node) {
-        // A click on a space or label or something we're not interested in.
+      if (!node?.parentNode) {
+        // A click on a space or label or top-level document or something we're
+        // not interested in.
         return;
       }
     }

@@ -9858,13 +9858,13 @@ var FirefoxViewHandler = {
     return document.getElementById("firefox-view-button");
   },
   init() {
+    if (!AppConstants.NIGHTLY_BUILD) {
+      return;
+    }
     const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-notification-manager.sys.mjs"
     );
-    if (
-      AppConstants.NIGHTLY_BUILD &&
-      !Services.prefs.getBoolPref("browser.tabs.firefox-view")
-    ) {
+    if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
       document.getElementById("menu_openFirefoxView").hidden = true;
     } else {
       let shouldShow = FirefoxViewNotificationManager.shouldNotificationDotBeShowing();
