@@ -51,40 +51,41 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
 
   ~nsAvailableMemoryWatcher();
   bool RegisterMemoryResourceHandler(const MutexAutoLock& aLock)
-      REQUIRES(mMutex);
-  void UnregisterMemoryResourceHandler(const MutexAutoLock&) REQUIRES(mMutex);
-  void MaybeSaveMemoryReport(const MutexAutoLock&) REQUIRES(mMutex);
-  void Shutdown(const MutexAutoLock& aLock) REQUIRES(mMutex);
-  bool ListenForLowMemory(const MutexAutoLock&) REQUIRES(mMutex);
-  void OnLowMemory(const MutexAutoLock&) REQUIRES(mMutex);
-  void OnHighMemory(const MutexAutoLock&) REQUIRES(mMutex);
+      MOZ_REQUIRES(mMutex);
+  void UnregisterMemoryResourceHandler(const MutexAutoLock&)
+      MOZ_REQUIRES(mMutex);
+  void MaybeSaveMemoryReport(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
+  void Shutdown(const MutexAutoLock& aLock) MOZ_REQUIRES(mMutex);
+  bool ListenForLowMemory(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
+  void OnLowMemory(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
+  void OnHighMemory(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
   void StartPollingIfUserInteracting(const MutexAutoLock& aLock)
-      REQUIRES(mMutex);
-  void StopPolling(const MutexAutoLock&) REQUIRES(mMutex);
-  void StopPollingIfUserIdle(const MutexAutoLock&) REQUIRES(mMutex);
-  void OnUserInteracting(const MutexAutoLock&) REQUIRES(mMutex);
+      MOZ_REQUIRES(mMutex);
+  void StopPolling(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
+  void StopPollingIfUserIdle(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
+  void OnUserInteracting(const MutexAutoLock&) MOZ_REQUIRES(mMutex);
 
   // The publicly available methods (::Observe() and ::Notify()) are called on
   // the main thread while the ::LowMemoryCallback() method is called by an
   // external thread. All functions called from those must acquire a lock on
   // this mutex before accessing the object's fields to prevent races.
   Mutex mMutex;
-  nsCOMPtr<nsITimer> mTimer GUARDED_BY(mMutex);
-  nsAutoHandle mLowMemoryHandle GUARDED_BY(mMutex);
-  HANDLE mWaitHandle GUARDED_BY(mMutex);
-  bool mPolling GUARDED_BY(mMutex);
+  nsCOMPtr<nsITimer> mTimer MOZ_GUARDED_BY(mMutex);
+  nsAutoHandle mLowMemoryHandle MOZ_GUARDED_BY(mMutex);
+  HANDLE mWaitHandle MOZ_GUARDED_BY(mMutex);
+  bool mPolling MOZ_GUARDED_BY(mMutex);
 
   // Indicates whether to start a timer when user interaction is notified.
   // This flag is needed because the low-memory callback may be triggered when
   // the user is inactive and we want to delay-start the timer.
-  bool mNeedToRestartTimerOnUserInteracting GUARDED_BY(mMutex);
+  bool mNeedToRestartTimerOnUserInteracting MOZ_GUARDED_BY(mMutex);
   // Indicate that the available commit space is low.  The timer handler needs
   // this flag because it is triggered by the low physical memory regardless
   // of the available commit space.
-  bool mUnderMemoryPressure GUARDED_BY(mMutex);
+  bool mUnderMemoryPressure MOZ_GUARDED_BY(mMutex);
 
-  bool mSavedReport GUARDED_BY(mMutex);
-  bool mIsShutdown GUARDED_BY(mMutex);
+  bool mSavedReport MOZ_GUARDED_BY(mMutex);
+  bool mIsShutdown MOZ_GUARDED_BY(mMutex);
 
   // Members below this line are used only in the main thread.
   // No lock is needed.

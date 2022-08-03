@@ -553,7 +553,7 @@ class nsWSAdmissionManager {
 
   FailDelayManager mFailures;
 
-  static nsWSAdmissionManager* sManager GUARDED_BY(sLock);
+  static nsWSAdmissionManager* sManager MOZ_GUARDED_BY(sLock);
   static StaticMutex sLock;
 };
 
@@ -3264,12 +3264,12 @@ WebSocketChannel::Notify(nsITimer* timer) {
     }
 
     AbortSession(NS_ERROR_NET_TIMEOUT_EXTERNAL);
-    PUSH_IGNORE_THREAD_SAFETY
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
     // mReconnectDelayTimer is only modified on MainThread, we can read it
     // without a lock, but ONLY if we're on MainThread!   And if we're not
     // on MainThread, it can't be mReconnectDelayTimer
   } else if (NS_IsMainThread() && timer == mReconnectDelayTimer) {
-    POP_THREAD_SAFETY
+    MOZ_POP_THREAD_SAFETY
     MOZ_ASSERT(mConnecting == CONNECTING_DELAYED,
                "woke up from delay w/o being delayed?");
 

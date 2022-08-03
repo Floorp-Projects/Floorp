@@ -55,12 +55,12 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
-  void Clear() REQUIRES(mLock);
+  void Clear() MOZ_REQUIRES(mLock);
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength)
-      REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target) const
-      REQUIRES(mLock);
-  bool IsEmptyInternal() const REQUIRES(mLock);
+      MOZ_REQUIRES(mLock);
+  bool IsEmptyInternal() const MOZ_REQUIRES(mLock);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
@@ -69,17 +69,17 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   mutable mozilla::Mutex mLock;
   // list of fully stored prefixes, that also form the
   // start of a run of deltas in mIndexDeltas.
-  nsTArray<uint32_t> mIndexPrefixes GUARDED_BY(mLock);
+  nsTArray<uint32_t> mIndexPrefixes MOZ_GUARDED_BY(mLock);
   // array containing arrays of deltas from indices.
   // Index to the place that matches the closest lower
   // prefix from mIndexPrefix. Then every "delta" corresponds
   // to a prefix in the PrefixSet.
   // This array could be empty when we decide to store all the prefixes
   // in mIndexPrefixes.
-  nsTArray<nsTArray<uint16_t> > mIndexDeltas GUARDED_BY(mLock);
+  nsTArray<nsTArray<uint16_t> > mIndexDeltas MOZ_GUARDED_BY(mLock);
 
   // how many prefixes we have.
-  uint32_t mTotalPrefixes GUARDED_BY(mLock);
+  uint32_t mTotalPrefixes MOZ_GUARDED_BY(mLock);
 
   nsCString mName;  // Set in Init() only
   mozilla::CorruptionCanary mCanary;

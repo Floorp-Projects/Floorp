@@ -115,8 +115,8 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
     MOZ_ASSERT(workerPrivate);
 
-    RefPtr<StrongWorkerRef> workerRef =
-        StrongWorkerRef::Create(workerPrivate, "BodyStream", [stream]() { stream->Close(); });
+    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+        workerPrivate, "BodyStream", [stream]() { stream->Close(); });
 
     if (NS_WARN_IF(!workerRef)) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -428,7 +428,7 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
 // thread-safety doesn't handle emplace well
 NS_IMETHODIMP
 BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
-    NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_NO_THREAD_SAFETY_ANALYSIS {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aStream);
   mAsyncWaitWorkerRef = nullptr;

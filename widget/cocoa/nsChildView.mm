@@ -1610,7 +1610,7 @@ void nsChildView::ConfigureAPZCTreeManager() { nsBaseWidget::ConfigureAPZCTreeMa
 
 void nsChildView::ConfigureAPZControllerThread() { nsBaseWidget::ConfigureAPZControllerThread(); }
 
-bool nsChildView::PreRender(WidgetRenderingContext* aContext) NO_THREAD_SAFETY_ANALYSIS {
+bool nsChildView::PreRender(WidgetRenderingContext* aContext) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // The lock makes sure that we don't attempt to tear down the view while
   // compositing. That would make us unable to call postRender on it when the
   // composition is done, thus keeping the GL context locked forever.
@@ -1623,7 +1623,7 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) NO_THREAD_SAFETY_A
   return true;
 }
 
-void nsChildView::PostRender(WidgetRenderingContext* aContext) NO_THREAD_SAFETY_ANALYSIS {
+void nsChildView::PostRender(WidgetRenderingContext* aContext) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   mCompositingLock.Unlock();
 }
 

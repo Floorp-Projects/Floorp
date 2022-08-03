@@ -196,8 +196,8 @@ class TimerEventAllocator {
     FreeEntry* mNext;
   };
 
-  ArenaAllocator<4096> mPool GUARDED_BY(mMonitor);
-  FreeEntry* mFirstFree GUARDED_BY(mMonitor);
+  ArenaAllocator<4096> mPool MOZ_GUARDED_BY(mMonitor);
+  FreeEntry* mFirstFree MOZ_GUARDED_BY(mMonitor);
   mozilla::Monitor mMonitor;
 
  public:

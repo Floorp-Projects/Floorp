@@ -144,7 +144,7 @@ class HRTFDatabaseLoader {
 
   // Holding a m_threadLock is required when accessing m_databaseLoaderThread.
   mozilla::Mutex m_threadLock;
-  PRThread* m_databaseLoaderThread GUARDED_BY(m_threadLock);
+  PRThread* m_databaseLoaderThread MOZ_GUARDED_BY(m_threadLock);
 
   float m_databaseSampleRate;
   mozilla::Atomic<bool> m_databaseLoaded;

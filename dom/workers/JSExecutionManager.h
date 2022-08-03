@@ -104,16 +104,17 @@ class JSExecutionManager {
 
   // Workers waiting to be given permission for execution.
   // Guarded by mExecutionQueueMutex.
-  std::deque<WorkerPrivate*> mExecutionQueue GUARDED_BY(mExecutionQueueMutex);
+  std::deque<WorkerPrivate*> mExecutionQueue
+      MOZ_GUARDED_BY(mExecutionQueueMutex);
 
   // Number of threads currently executing concurrently for this manager.
   // Guarded by mExecutionQueueMutex.
-  int32_t mRunning GUARDED_BY(mExecutionQueueMutex) = 0;
+  int32_t mRunning MOZ_GUARDED_BY(mExecutionQueueMutex) = 0;
 
   // Number of threads allowed to run concurrently for environments managed
   // by this manager.
   // Guarded by mExecutionQueueMutex.
-  int32_t mMaxRunning GUARDED_BY(mExecutionQueueMutex) = 1;
+  int32_t mMaxRunning MOZ_GUARDED_BY(mExecutionQueueMutex) = 1;
 
   // Mutex that guards the execution queue and associated state.
   Mutex mExecutionQueueMutex =
@@ -130,7 +131,8 @@ class JSExecutionManager {
   // Whether the main thread is currently awaiting permission to execute. Main
   // thread execution is always prioritized.
   // Guarded by mExecutionQueueMutex.
-  bool mMainThreadAwaitingExecution GUARDED_BY(mExecutionQueueMutex) = false;
+  bool mMainThreadAwaitingExecution MOZ_GUARDED_BY(mExecutionQueueMutex) =
+      false;
 };
 
 // Helper for managing execution requests and allowing re-entrant permission

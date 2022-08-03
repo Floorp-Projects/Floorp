@@ -464,10 +464,10 @@ uint32_t nsInputStreamPump::OnStateStart() {
     // nsInputStreamPumps are needed (e.g. nsHttpChannel).
     RecursiveMutexAutoUnlock unlock(mMutex);
     // We're on the writing thread
-    PUSH_IGNORE_THREAD_SAFETY
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
     AssertOnThread();
     rv = mListener->OnStartRequest(this);
-    POP_THREAD_SAFETY
+    MOZ_POP_THREAD_SAFETY
   }
 
   // an error returned from OnStartRequest should cause us to abort; however,
@@ -540,7 +540,7 @@ uint32_t nsInputStreamPump::OnStateTransfer() {
 
       // We may be called on non-MainThread even if mOffMainThread is
       // false, due to RetargetDeliveryTo(), so don't use AssertOnThread()
-      PUSH_IGNORE_THREAD_SAFETY
+      MOZ_PUSH_IGNORE_THREAD_SAFETY
       if (mTargetThread) {
         MOZ_ASSERT(mTargetThread->IsOnCurrentThread());
       } else {
@@ -548,7 +548,7 @@ uint32_t nsInputStreamPump::OnStateTransfer() {
       }
       rv = mListener->OnDataAvailable(this, mAsyncStream, mStreamOffset,
                                       odaAvail);
-      POP_THREAD_SAFETY
+      MOZ_POP_THREAD_SAFETY
     }
 
     // don't enter this code if ODA failed or called Cancel
@@ -652,10 +652,10 @@ uint32_t nsInputStreamPump::OnStateStop() {
     RecursiveMutexAutoUnlock unlock(mMutex);
     // We're on the writing thread.
     // We believe that mStatus can't be changed on us here.
-    PUSH_IGNORE_THREAD_SAFETY
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
     AssertOnThread();
     mListener->OnStopRequest(this, mStatus);
-    POP_THREAD_SAFETY
+    MOZ_POP_THREAD_SAFETY
   }
   mTargetThread = nullptr;
   mListener = nullptr;

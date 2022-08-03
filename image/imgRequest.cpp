@@ -90,7 +90,7 @@ nsresult imgRequest::Init(
     nsIRequest* aRequest, nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
     mozilla::dom::Document* aLoadingDocument,
     nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode aCORSMode,
-    nsIReferrerInfo* aReferrerInfo) NO_THREAD_SAFETY_ANALYSIS {
+    nsIReferrerInfo* aReferrerInfo) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
   // Init() can only be called once, and that's before it can be used off
   // mainthread

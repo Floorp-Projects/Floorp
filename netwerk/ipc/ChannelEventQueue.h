@@ -166,7 +166,7 @@ class ChannelEventQueue final {
   void SuspendInternal();
   void ResumeInternal();
 
-  bool MaybeSuspendIfEventsAreSuppressed() REQUIRES(mMutex);
+  bool MaybeSuspendIfEventsAreSuppressed() MOZ_REQUIRES(mMutex);
 
   inline void MaybeFlushQueue();
   void FlushQueue();
@@ -174,13 +174,13 @@ class ChannelEventQueue final {
 
   ChannelEvent* TakeEvent();
 
-  nsTArray<UniquePtr<ChannelEvent>> mEventQueue GUARDED_BY(mMutex);
+  nsTArray<UniquePtr<ChannelEvent>> mEventQueue MOZ_GUARDED_BY(mMutex);
 
-  uint32_t mSuspendCount GUARDED_BY(mMutex);
-  bool mSuspended GUARDED_BY(mMutex);
+  uint32_t mSuspendCount MOZ_GUARDED_BY(mMutex);
+  bool mSuspended MOZ_GUARDED_BY(mMutex);
   uint32_t mForcedCount  // Support ForcedQueueing on multiple thread.
-      GUARDED_BY(mMutex);
-  bool mFlushing GUARDED_BY(mMutex);
+      MOZ_GUARDED_BY(mMutex);
+  bool mFlushing MOZ_GUARDED_BY(mMutex);
 
   // Whether the queue is associated with an XHR. This is lazily instantiated
   // the first time it is needed. These are MainThread-only.
@@ -188,13 +188,13 @@ class ChannelEventQueue final {
   bool mForXMLHttpRequest;
 
   // Keep ptr to avoid refcount cycle: only grab ref during flushing.
-  nsISupports* mOwner GUARDED_BY(mMutex);
+  nsISupports* mOwner MOZ_GUARDED_BY(mMutex);
 
   // For atomic mEventQueue operation and state update
   Mutex mMutex;
 
   // To guarantee event execution order among threads
-  RecursiveMutex mRunningMutex ACQUIRED_BEFORE(mMutex);
+  RecursiveMutex mRunningMutex MOZ_ACQUIRED_BEFORE(mMutex);
 
   friend class AutoEventEnqueuer;
 };

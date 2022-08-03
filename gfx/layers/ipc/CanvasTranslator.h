@@ -272,7 +272,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   UniquePtr<gfx::DataSourceSurface::ScopedMap> mPreparedMap;
   typedef std::unordered_map<int64_t, UniquePtr<SurfaceDescriptor>>
       DescriptorMap;
-  DescriptorMap mSurfaceDescriptors GUARDED_BY(mSurfaceDescriptorsMonitor);
+  DescriptorMap mSurfaceDescriptors MOZ_GUARDED_BY(mSurfaceDescriptorsMonitor);
   Monitor mSurfaceDescriptorsMonitor{
       "CanvasTranslator::mSurfaceDescriptorsMonitor"};
   Atomic<bool> mDeactivated{false};

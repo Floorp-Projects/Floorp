@@ -33,11 +33,11 @@ class DataPipeBase {
                uint32_t aCapacity, nsresult aPeerStatus, uint32_t aOffset,
                uint32_t aAvailable);
 
-  void CloseInternal(DataPipeAutoLock&, nsresult aStatus) REQUIRES(*mMutex);
+  void CloseInternal(DataPipeAutoLock&, nsresult aStatus) MOZ_REQUIRES(*mMutex);
 
   void AsyncWaitInternal(already_AddRefed<nsIRunnable> aCallback,
                          already_AddRefed<nsIEventTarget> aTarget,
-                         bool aClosureOnly) EXCLUDES(*mMutex);
+                         bool aClosureOnly) MOZ_EXCLUDES(*mMutex);
 
   // Like `nsWriteSegmentFun` or `nsReadSegmentFun`.
   using ProcessSegmentFun =
@@ -45,24 +45,25 @@ class DataPipeBase {
                            uint32_t* aProcessedCount)>;
   nsresult ProcessSegmentsInternal(uint32_t aCount,
                                    ProcessSegmentFun aProcessSegment,
-                                   uint32_t* aProcessedCount) EXCLUDES(*mMutex);
+                                   uint32_t* aProcessedCount)
+      MOZ_EXCLUDES(*mMutex);
 
-  nsresult CheckStatus(DataPipeAutoLock&) REQUIRES(*mMutex);
+  nsresult CheckStatus(DataPipeAutoLock&) MOZ_REQUIRES(*mMutex);
 
-  nsCString Describe(DataPipeAutoLock&) REQUIRES(*mMutex);
+  nsCString Describe(DataPipeAutoLock&) MOZ_REQUIRES(*mMutex);
 
   // Thread safety helper to tell the analysis that `mLink->mMutex` is held when
   // `mMutex` is held.
-  void AssertSameMutex(const std::shared_ptr<Mutex>& aMutex) REQUIRES(*mMutex)
-      ASSERT_CAPABILITY(*aMutex) {
+  void AssertSameMutex(const std::shared_ptr<Mutex>& aMutex)
+      MOZ_REQUIRES(*mMutex) MOZ_ASSERT_CAPABILITY(*aMutex) {
     MOZ_ASSERT(mMutex == aMutex);
   }
 
   virtual ~DataPipeBase();
 
   const std::shared_ptr<Mutex> mMutex;
-  nsresult mStatus GUARDED_BY(*mMutex) = NS_OK;
-  RefPtr<DataPipeLink> mLink GUARDED_BY(*mMutex);
+  nsresult mStatus MOZ_GUARDED_BY(*mMutex) = NS_OK;
+  RefPtr<DataPipeLink> mLink MOZ_GUARDED_BY(*mMutex);
 };
 
 template <typename T>

@@ -285,15 +285,15 @@ class imgRequest final : public nsIStreamListener,
   // Member variables protected by mMutex. Note that *all* flags in our bitfield
   // are protected by mMutex; if you're adding a new flag that isn'protected, it
   // must not be a part of this bitfield.
-  RefPtr<ProgressTracker> mProgressTracker GUARDED_BY(mMutex);
-  RefPtr<Image> mImage GUARDED_BY(mMutex);
-  bool mIsMultiPartChannel : 1 GUARDED_BY(mMutex);
-  bool mIsInCache : 1 GUARDED_BY(mMutex);
-  bool mDecodeRequested : 1 GUARDED_BY(mMutex);
-  bool mNewPartPending : 1 GUARDED_BY(mMutex);
-  bool mHadInsecureRedirect : 1 GUARDED_BY(mMutex);
+  RefPtr<ProgressTracker> mProgressTracker MOZ_GUARDED_BY(mMutex);
+  RefPtr<Image> mImage MOZ_GUARDED_BY(mMutex);
+  bool mIsMultiPartChannel : 1 MOZ_GUARDED_BY(mMutex);
+  bool mIsInCache : 1 MOZ_GUARDED_BY(mMutex);
+  bool mDecodeRequested : 1 MOZ_GUARDED_BY(mMutex);
+  bool mNewPartPending : 1 MOZ_GUARDED_BY(mMutex);
+  bool mHadInsecureRedirect : 1 MOZ_GUARDED_BY(mMutex);
   // The ID of the inner window origin, used for error reporting.
-  uint64_t mInnerWindowId GUARDED_BY(mMutex);
+  uint64_t mInnerWindowId MOZ_GUARDED_BY(mMutex);
 };
 
 #endif  // mozilla_image_imgRequest_h

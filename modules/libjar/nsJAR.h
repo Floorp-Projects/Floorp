@@ -83,13 +83,13 @@ class nsJAR final : public nsIZipReader {
   //-- Private data members, protected by mLock
   mozilla::RecursiveMutex mLock;
   // The entry in the zip this zip is reading from
-  nsCString mOuterZipEntry GUARDED_BY(mLock);
+  nsCString mOuterZipEntry MOZ_GUARDED_BY(mLock);
   // The zip/jar file on disk
-  nsCOMPtr<nsIFile> mZipFile GUARDED_BY(mLock);
+  nsCOMPtr<nsIFile> mZipFile MOZ_GUARDED_BY(mLock);
   // The underlying zip archive
-  RefPtr<nsZipArchive> mZip GUARDED_BY(mLock);
+  RefPtr<nsZipArchive> mZip MOZ_GUARDED_BY(mLock);
   // if cached, this points to the cache it's contained in
-  nsZipReaderCache* mCache GUARDED_BY(mLock);
+  nsZipReaderCache* mCache MOZ_GUARDED_BY(mLock);
 };
 
 /**
@@ -172,14 +172,14 @@ class nsZipReaderCache : public nsIZipReaderCache,
   virtual ~nsZipReaderCache();
 
   mozilla::Mutex mLock;
-  uint32_t mCacheSize GUARDED_BY(mLock);
-  ZipsHashtable mZips GUARDED_BY(mLock);
+  uint32_t mCacheSize MOZ_GUARDED_BY(mLock);
+  ZipsHashtable mZips MOZ_GUARDED_BY(mLock);
 
 #ifdef ZIP_CACHE_HIT_RATE
-  uint32_t mZipCacheLookups GUARDED_BY(mLock);
-  uint32_t mZipCacheHits GUARDED_BY(mLock);
-  uint32_t mZipCacheFlushes GUARDED_BY(mLock);
-  uint32_t mZipSyncMisses GUARDED_BY(mLock);
+  uint32_t mZipCacheLookups MOZ_GUARDED_BY(mLock);
+  uint32_t mZipCacheHits MOZ_GUARDED_BY(mLock);
+  uint32_t mZipCacheFlushes MOZ_GUARDED_BY(mLock);
+  uint32_t mZipSyncMisses MOZ_GUARDED_BY(mLock);
 #endif
 
  private:
