@@ -3212,7 +3212,6 @@ option(
     help="Enable UniFFI Fixtures/Examples",
 )
 
-
 set_config("MOZ_UNIFFI_FIXTURES", True, when="--enable-uniffi-fixtures")
 
 # Checks for library functions
