@@ -46,4 +46,6 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: floorp-windows-x64
-        path: obj-x86_64-pc-mingw32/dist/floorp
+        path: 
+           obj-x86_64-pc-mingw32/dist/floorp
+           obj-x86_64-pc-mingw32/dist/install/sea
