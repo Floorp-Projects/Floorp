@@ -55,7 +55,7 @@ function testReturnCommit(doc) {
     createInplaceEditorAndClick(
       {
         initial: "explicit initial",
-        start: function(editor) {
+        start(editor) {
           is(
             editor.input.value,
             "explicit initial",
@@ -76,7 +76,7 @@ function testBlurCommit(doc) {
   return new Promise(resolve => {
     createInplaceEditorAndClick(
       {
-        start: function(editor) {
+        start(editor) {
           is(editor.input.value, "Edit Me!", "textContent of the span used.");
           editor.input.value = "Test Value";
           editor.input.blur();
@@ -95,7 +95,7 @@ function testAdvanceCharCommit(doc) {
     createInplaceEditorAndClick(
       {
         advanceChars: ":",
-        start: function(editor) {
+        start(editor) {
           EventUtils.sendString("Test:");
         },
         done: onDone("Test", true, resolve),
@@ -113,7 +113,7 @@ function testAdvanceCharsFunction(doc) {
     createInplaceEditorAndClick(
       {
         initial: "",
-        advanceChars: function(charCode, text, insertionPoint) {
+        advanceChars(charCode, text, insertionPoint) {
           if (charCode !== KeyboardEvent.DOM_VK_COLON) {
             return false;
           }
@@ -125,7 +125,7 @@ function testAdvanceCharsFunction(doc) {
           // Just to make sure we check it somehow.
           return text.length > 0;
         },
-        start: function(editor) {
+        start(editor) {
           for (const ch of ":Test:") {
             EventUtils.sendChar(ch);
           }
@@ -143,7 +143,7 @@ function testEscapeCancel(doc) {
     createInplaceEditorAndClick(
       {
         initial: "initial text",
-        start: function(editor) {
+        start(editor) {
           editor.input.value = "Test Value";
           EventUtils.sendKey("escape");
         },

@@ -40,7 +40,7 @@ Response.prototype = {
    * @param object ctx
    *    The object writing the response.
    */
-  write: function(ret, ctx) {
+  write(ret, ctx) {
     // Consider that `template` is either directly a `RetVal`,
     // or a dictionary with may be one `RetVal`.
     if (this.template instanceof RetVal) {
@@ -69,7 +69,7 @@ Response.prototype = {
    * @param object ctx
    *    The object reading the response.
    */
-  read: function(packet, ctx) {
+  read(packet, ctx) {
     if (!this.retVal) {
       return undefined;
     }
@@ -95,15 +95,15 @@ var RetVal = function(type) {
 };
 
 RetVal.prototype = {
-  write: function(v, ctx) {
+  write(v, ctx) {
     return this.type.write(v, ctx);
   },
 
-  read: function(v, ctx) {
+  read(v, ctx) {
     return this.type.read(v, ctx);
   },
 
-  isArrayType: function() {
+  isArrayType() {
     // `_type` should always be a string, but a few incorrect RetVal calls
     // pass `0`. See Bug 1677703.
     return typeof this._type === "string" && this._type.startsWith("array:");

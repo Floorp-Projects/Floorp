@@ -160,6 +160,6 @@ function createTableElementsToTestBorderImage({
         }
      }`,
     ],
-    isActive: isActive,
+    isActive,
   };
 }

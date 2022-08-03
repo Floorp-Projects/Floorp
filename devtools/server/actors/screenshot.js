@@ -11,7 +11,7 @@ const {
 const { screenshotSpec } = require("devtools/shared/specs/screenshot");
 
 exports.ScreenshotActor = protocol.ActorClassWithSpec(screenshotSpec, {
-  capture: async function(args) {
+  async capture(args) {
     const browsingContext = BrowsingContext.get(args.browsingContextID);
     return captureScreenshot(args, browsingContext);
   },

@@ -88,7 +88,7 @@ function getFontPreviewData(font, doc, options) {
   const dataURL = canvas.toDataURL("image/png");
 
   return {
-    dataURL: dataURL,
+    dataURL,
     size: textWidth + FONT_PREVIEW_OFFSET * 2,
   };
 }
@@ -205,7 +205,7 @@ function getTextAtLineColumn(text, line, column) {
     offset = 0;
   }
   offset += column - 1;
-  return { offset: offset, text: text.substr(offset) };
+  return { offset, text: text.substr(offset) };
 }
 
 exports.getTextAtLineColumn = getTextAtLineColumn;

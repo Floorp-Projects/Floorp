@@ -208,7 +208,7 @@ function setColumnsWidth(state, action) {
 
   return {
     ...state,
-    columnsData: columnsData,
+    columnsData,
   };
 }
 

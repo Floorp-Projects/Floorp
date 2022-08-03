@@ -104,7 +104,7 @@ var test_transport = async function(transportFactory) {
   }
 
   transport.hooks = {
-    onPacket: function(packet) {
+    onPacket(packet) {
       if (packet.error) {
         transport.hooks.onError(packet);
       } else if (packet.applicationType) {
@@ -114,7 +114,7 @@ var test_transport = async function(transportFactory) {
       }
     },
 
-    onServerHello: function(packet) {
+    onServerHello(packet) {
       // We've received the initial start up packet
       Assert.equal(packet.from, "root");
       Assert.equal(packet.applicationType, "xpcshell-tests");
@@ -135,13 +135,13 @@ var test_transport = async function(transportFactory) {
       send_packets();
     },
 
-    onError: function(packet) {
+    onError(packet) {
       // The explode actor doesn't exist
       Assert.equal(packet.from, "root");
       Assert.equal(packet.error, "noSuchActor");
     },
 
-    onTransportClosed: function() {
+    onTransportClosed() {
       do_throw("Transport closed before we expected");
     },
   };

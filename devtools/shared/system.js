@@ -125,10 +125,10 @@ function getSystemInfo() {
      */
 
     // Returns the endianness of the architecture: either "LE" or "BE"
-    endianness: endianness,
+    endianness,
 
     // Returns the hostname of the machine
-    hostname: hostname,
+    hostname,
 
     // Name of the OS type. Typically the same as `uname -s`. Possible values:
     // https://developer.mozilla.org/en/OS_TARGET

@@ -115,7 +115,7 @@ parentProcessTargetPrototype.isRootActor = true;
  * @return {Array}
  */
 Object.defineProperty(parentProcessTargetPrototype, "docShells", {
-  get: function() {
+  get() {
     // Iterate over all top-level windows and all their docshells.
     let docShells = [];
     for (const { docShell } of Services.ww.getWindowEnumerator()) {

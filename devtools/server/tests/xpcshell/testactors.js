@@ -84,11 +84,11 @@ function TestTabList(connection) {
 TestTabList.prototype = {
   constructor: TestTabList,
   destroy() {},
-  getList: function() {
+  getList() {
     return Promise.resolve([...this._descriptorActors]);
   },
   // Helper method only available for the xpcshell implementation of tablist.
-  getTargetActorForTab: function(title) {
+  getTargetActorForTab(title) {
     const descriptorActor = this._descriptorActors.find(d => d.title === title);
     if (!descriptorActor) {
       return null;
@@ -113,7 +113,7 @@ exports.createRootActor = function createRootActor(connection) {
 };
 
 const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
-  initialize: function(conn, targetActor) {
+  initialize(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.conn = conn;
     this._targetActor = targetActor;
@@ -150,7 +150,7 @@ const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
 });
 
 const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
-  initialize: function(conn, global) {
+  initialize(conn, global) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.conn = conn;
 
@@ -192,7 +192,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     return this._sourcesManager;
   },
 
-  form: function() {
+  form() {
     const response = {
       actor: this.actorID,
       title: this.title,
@@ -214,19 +214,19 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     return { ...response, ...actors };
   },
 
-  detach: function(request) {
+  detach(request) {
     this.threadActor.destroy();
     return { type: "detached" };
   },
 
-  reload: function(request) {
+  reload(request) {
     this.sourcesManager.reset();
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};
   },
 
-  removeActorByName: function(name) {
+  removeActorByName(name) {
     const actor = this._extraActors[name];
     if (this._descriptorActorPool) {
       this._descriptorActorPool.removeActor(actor);

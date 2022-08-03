@@ -211,12 +211,12 @@ class Tabbar extends Component {
 
     const tabs = this.state.tabs.slice();
     tabs[index] = Object.assign({}, tabs[index], {
-      isVisible: isVisible,
+      isVisible,
     });
 
     this.setState(
       Object.assign({}, this.state, {
-        tabs: tabs,
+        tabs,
       })
     );
   }

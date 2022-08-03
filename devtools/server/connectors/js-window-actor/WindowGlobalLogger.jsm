@@ -40,7 +40,7 @@ const WindowGlobalLogger = {
    * @param {String} message
    *        A custom message that will be displayed at the beginning of the log.
    */
-  logWindowGlobal: function(windowGlobal, message) {
+  logWindowGlobal(windowGlobal, message) {
     const { browsingContext } = windowGlobal;
     const { parent } = browsingContext;
     const windowGlobalUri = getWindowGlobalUri(windowGlobal);

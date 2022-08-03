@@ -51,7 +51,7 @@ function run_test() {
   // Make sure we got the test's root actor all set up.
   const client1 = DevToolsServer.connectPipe();
   client1.hooks = {
-    onPacket: function(packet1) {
+    onPacket(packet1) {
       Assert.equal(packet1.from, "root");
       Assert.equal(packet1.applicationType, "xpcshell-tests");
 
@@ -59,7 +59,7 @@ function run_test() {
       // actor.
       const client2 = DevToolsServer.connectPipe();
       client2.hooks = {
-        onPacket: function(packet2) {
+        onPacket(packet2) {
           Assert.equal(packet2.from, "root");
           Assert.notEqual(
             packet1.testConnectionPrefix,
@@ -67,14 +67,14 @@ function run_test() {
           );
           client2.close();
         },
-        onTransportClosed: function(result) {
+        onTransportClosed(result) {
           client1.close();
         },
       };
       client2.ready();
     },
 
-    onTransportClosed: function(result) {
+    onTransportClosed(result) {
       do_test_finished();
     },
   };

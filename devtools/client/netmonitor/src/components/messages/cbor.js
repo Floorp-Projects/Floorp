@@ -267,4 +267,4 @@ function decode(data, tagger, simpleValue) {
   return ret;
 }
 
-module.exports = { decode: decode };
+module.exports = { decode };

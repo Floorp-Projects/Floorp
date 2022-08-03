@@ -54,12 +54,12 @@ BreakpointActor.prototype = {
     }
   },
 
-  destroy: function() {
+  destroy() {
     this.removeScripts();
     this.options = null;
   },
 
-  hasScript: function(script) {
+  hasScript(script) {
     return this.scripts.has(script);
   },
 
@@ -72,7 +72,7 @@ BreakpointActor.prototype = {
    * @param offsets Array
    *        Any offsets in the script the breakpoint is associated with.
    */
-  addScript: function(script, offsets) {
+  addScript(script, offsets) {
     this.scripts.set(script, offsets.concat(this.scripts.get(offsets) || []));
     this._newOffsetsOrOptions(script, offsets, null);
   },
@@ -80,7 +80,7 @@ BreakpointActor.prototype = {
   /**
    * Remove the breakpoints from associated scripts and clear the script cache.
    */
-  removeScripts: function() {
+  removeScripts() {
     for (const [script] of this.scripts) {
       script.clearBreakpoint(this);
     }
@@ -117,7 +117,7 @@ BreakpointActor.prototype = {
    *          - message: string
    *            If the condition throws, this is the thrown message.
    */
-  checkCondition: function(frame, condition) {
+  checkCondition(frame, condition) {
     const completion = frame.eval(condition, { hideFromDebugger: true });
     if (completion) {
       if (completion.throw) {
@@ -143,7 +143,7 @@ BreakpointActor.prototype = {
    *        The stack frame that contained the breakpoint.
    */
   // eslint-disable-next-line complexity
-  hit: function(frame) {
+  hit(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const location = this.threadActor.sourcesManager.getFrameLocation(frame);
@@ -204,7 +204,7 @@ BreakpointActor.prototype = {
     return this.threadActor._pauseAndRespond(frame, reason);
   },
 
-  delete: function() {
+  delete() {
     // Remove from the breakpoint store.
     this.threadActor.breakpointActorMap.deleteActor(this.location);
     // Remove the actual breakpoint from the associated scripts.

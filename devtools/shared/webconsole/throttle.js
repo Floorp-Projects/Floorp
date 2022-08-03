@@ -60,14 +60,14 @@ NetworkThrottleListener.prototype = {
    * @param {nsIStreamListener} originalListener the original listener
    *        for the channel, to which all requests will be sent
    */
-  setOriginalListener: function(originalListener) {
+  setOriginalListener(originalListener) {
     this.originalListener = originalListener;
   },
 
   /**
    * @see nsIStreamListener.onStartRequest.
    */
-  onStartRequest: function(request) {
+  onStartRequest(request) {
     this.originalListener.onStartRequest(request);
     this.queue.start(this);
   },
@@ -75,7 +75,7 @@ NetworkThrottleListener.prototype = {
   /**
    * @see nsIStreamListener.onStopRequest.
    */
-  onStopRequest: function(request, statusCode) {
+  onStopRequest(request, statusCode) {
     this.pendingData.push({ request, statusCode });
     this.queue.dataAvailable(this);
   },
@@ -83,7 +83,7 @@ NetworkThrottleListener.prototype = {
   /**
    * @see nsIStreamListener.onDataAvailable.
    */
-  onDataAvailable: function(request, inputStream, offset, count) {
+  onDataAvailable(request, inputStream, offset, count) {
     if (this.pendingException) {
       throw this.pendingException;
     }
@@ -112,7 +112,7 @@ NetworkThrottleListener.prototype = {
    *         may be queued multiple times, so this does not mean that
    *         all available data has been sent.)
    */
-  sendSomeData: function(bytesPermitted) {
+  sendSomeData(bytesPermitted) {
     if (this.pendingData.length === 0) {
       // Shouldn't happen.
       return { length: 0, done: true };
@@ -160,7 +160,7 @@ NetworkThrottleListener.prototype = {
    * Return the number of pending data requests available for this
    * listener.
    */
-  pendingCount: function() {
+  pendingCount() {
     return this.pendingData.length;
   },
 
@@ -168,7 +168,7 @@ NetworkThrottleListener.prototype = {
    * This is called when an http activity event is delivered.  This
    * object delays the event until the appropriate moment.
    */
-  addActivityCallback: function(
+  addActivityCallback(
     callback,
     httpActivity,
     channel,
@@ -203,7 +203,7 @@ NetworkThrottleListener.prototype = {
    * This is called for a download throttler when the latency timeout
    * has ended.
    */
-  responseStart: function() {
+  responseStart() {
     this.responseStarted = true;
     this.maybeEmitEvents();
   },
@@ -216,7 +216,7 @@ NetworkThrottleListener.prototype = {
    * data from the original event, and update the reported time to be
    * consistent with the delay we're introducing.
    */
-  maybeEmitEvents: function() {
+  maybeEmitEvents() {
     if (this.responseStarted) {
       this.maybeEmit(gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START);
       this.maybeEmit(gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER);
@@ -232,7 +232,7 @@ NetworkThrottleListener.prototype = {
    * Emit an event for |code|, if the appropriate entry in
    * |activities| is defined.
    */
-  maybeEmit: function(code) {
+  maybeEmit(code) {
     if (this.activities[code] !== undefined) {
       const {
         callback,
@@ -285,7 +285,7 @@ NetworkThrottleQueue.prototype = {
    * A helper function that, given a mean and a maximum, returns a
    * random integer between (mean - (max - mean)) and max.
    */
-  random: function(mean, max) {
+  random(mean, max) {
     return mean - (max - mean) + Math.floor(2 * (max - mean) * Math.random());
   },
 
@@ -294,7 +294,7 @@ NetworkThrottleQueue.prototype = {
    * data.  This is called after the initial round trip time for the
    * listener has elapsed.
    */
-  allowDataFrom: function(throttleListener) {
+  allowDataFrom(throttleListener) {
     throttleListener.responseStart();
     this.pendingRequests.delete(throttleListener);
     const count = throttleListener.pendingCount();
@@ -312,7 +312,7 @@ NetworkThrottleQueue.prototype = {
    *
    * @param {NetworkThrottleListener} throttleListener the new listener
    */
-  start: function(throttleListener) {
+  start(throttleListener) {
     this.pendingRequests.add(throttleListener);
     const delay = this.random(this.latencyMean, this.latencyMax);
     if (delay > 0) {
@@ -329,7 +329,7 @@ NetworkThrottleQueue.prototype = {
    * @param {NetworkThrottleListener} throttleListener the listener
    *        which has data available.
    */
-  dataAvailable: function(throttleListener) {
+  dataAvailable(throttleListener) {
     if (!this.pendingRequests.has(throttleListener)) {
       this.downloadQueue.push(throttleListener);
       this.pump();
@@ -340,7 +340,7 @@ NetworkThrottleQueue.prototype = {
    * An internal function that permits individual listeners to send
    * data.
    */
-  pump: function() {
+  pump() {
     // A redirect will cause two NetworkThrottleListeners to be on a
     // listener chain.  In this case, we might recursively call into
     // this method.  Avoid infinite recursion here.
@@ -445,7 +445,7 @@ NetworkThrottleManager.prototype = {
    * @return {NetworkThrottleListener} the new listener, or null if
    *         download throttling is not being done.
    */
-  manage: function(channel) {
+  manage(channel) {
     if (this.downloadQueue) {
       const listener = new NetworkThrottleListener(this.downloadQueue);
       const originalListener = channel.setNewListener(listener);
@@ -460,7 +460,7 @@ NetworkThrottleManager.prototype = {
    *
    * @param {nsITraceableChannel} channel the channel to manage
    */
-  manageUpload: function(channel) {
+  manageUpload(channel) {
     if (this.uploadQueue) {
       channel = channel.QueryInterface(Ci.nsIThrottledInputChannel);
       channel.throttleQueue = this.uploadQueue;

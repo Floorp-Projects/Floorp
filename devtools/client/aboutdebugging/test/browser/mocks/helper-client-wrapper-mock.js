@@ -62,7 +62,7 @@ function createClientMock() {
     // no-op
     getDeviceDescription: () => {},
     // Return default preference value or null if no match.
-    getPreference: function(prefName) {
+    getPreference(prefName) {
       if (prefName in this._preferences) {
         return this._preferences[prefName];
       }
@@ -95,7 +95,7 @@ function createClientMock() {
     // no-op
     getFront: () => {},
     // stores the preference locally (doesn't update about:config)
-    setPreference: function(prefName, value) {
+    setPreference(prefName, value) {
       this._preferences[prefName] = value;
     },
     getPerformancePanelUrl: () => CHROME_URL_ROOT + "empty.html",

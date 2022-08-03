@@ -243,7 +243,7 @@ class ClassList {
       this.previewClasses = [];
       inputClasses.split(" ").forEach(className => {
         this.previewClasses.push({
-          className: className,
+          className,
           wasAppliedOnNode: this.isClassAlreadyApplied(className),
         });
       });

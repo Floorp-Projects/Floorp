@@ -70,7 +70,7 @@ add_task(async function() {
         start: runAutocompletionTest,
         contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
         done: resolve,
-        popup: popup,
+        popup,
       },
       doc
     );

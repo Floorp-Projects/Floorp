@@ -28,8 +28,8 @@ function testNonTrimmed(doc) {
       {
         trimOutput: false,
         multiline: true,
-        initial: initial,
-        start: function(editor) {
+        initial,
+        start(editor) {
           is(
             editor.input.value,
             initial,
@@ -52,9 +52,9 @@ function testTrimmed(doc) {
     const changed = " \nMultiple\nLines\n with more whitespace ";
     createInplaceEditorAndClick(
       {
-        initial: initial,
+        initial,
         multiline: true,
-        start: function(editor) {
+        start(editor) {
           is(
             editor.input.value,
             initial,

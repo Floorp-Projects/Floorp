@@ -19,7 +19,7 @@ var WebConsoleUtils = {
    * @param string string
    * @return nsISupportsString
    */
-  supportsString: function(string) {
+  supportsString(string) {
     const str = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString
     );

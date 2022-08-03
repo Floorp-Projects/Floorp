@@ -109,7 +109,7 @@ AutoRefreshHighlighter.prototype = {
    * @param {Object} options
    *        Object used for passing options
    */
-  show: function(node, options = {}) {
+  show(node, options = {}) {
     const isSameNode = node === this.currentNode;
     const isSameOptions = this._isSameOptions(options);
 
@@ -134,7 +134,7 @@ AutoRefreshHighlighter.prototype = {
   /**
    * Hide the highlighter
    */
-  hide: function() {
+  hide() {
     if (!this.currentNode || !this.highlighterEnv.window) {
       return;
     }
@@ -155,7 +155,7 @@ AutoRefreshHighlighter.prototype = {
    * @param {DOMNode} node
    * @return {Boolean}
    */
-  _isNodeValid: function(node) {
+  _isNodeValid(node) {
     return isNodeValid(node);
   },
 
@@ -163,7 +163,7 @@ AutoRefreshHighlighter.prototype = {
    * Are the provided options the same as the currently stored options?
    * Returns false if there are no options stored currently.
    */
-  _isSameOptions: function(options) {
+  _isSameOptions(options) {
     if (!this.options) {
       return false;
     }
@@ -186,7 +186,7 @@ AutoRefreshHighlighter.prototype = {
   /**
    * Update the stored box quads by reading the current node's box quads.
    */
-  _updateAdjustedQuads: function() {
+  _updateAdjustedQuads() {
     this.currentQuads = {};
 
     for (const region of BOX_MODEL_REGIONS) {
@@ -204,7 +204,7 @@ AutoRefreshHighlighter.prototype = {
    * if any of the points x/y or bounds have change since.
    * @return {Boolean}
    */
-  _hasMoved: function() {
+  _hasMoved() {
     const oldQuads = this.currentQuads;
     this._updateAdjustedQuads();
 
@@ -216,7 +216,7 @@ AutoRefreshHighlighter.prototype = {
    * horizontal and vertical, and return `true` if they have changed since.
    * @return {Boolean}
    */
-  _hasWindowScrolled: function() {
+  _hasWindowScrolled() {
     if (!this.win) {
       return false;
     }
@@ -235,7 +235,7 @@ AutoRefreshHighlighter.prototype = {
    * if they have changed since.
    * @return {Boolean}
    */
-  _haveWindowDimensionsChanged: function() {
+  _haveWindowDimensionsChanged() {
     const { width, height } = getWindowDimensions(this.win);
     const haveChanged =
       this._winDimensions.width !== width ||
@@ -248,7 +248,7 @@ AutoRefreshHighlighter.prototype = {
   /**
    * Update the highlighter if the node has moved since the last update.
    */
-  update: function() {
+  update() {
     if (
       !this._isNodeValid(this.currentNode) ||
       (!this._hasMoved() && !this._haveWindowDimensionsChanged())
@@ -266,14 +266,14 @@ AutoRefreshHighlighter.prototype = {
     this.emit("updated");
   },
 
-  _show: function() {
+  _show() {
     // To be implemented by sub classes
     // When called, sub classes should actually show the highlighter for
     // this.currentNode, potentially using options in this.options
     throw new Error("Custom highlighter class had to implement _show method");
   },
 
-  _update: function() {
+  _update() {
     // To be implemented by sub classes
     // When called, sub classes should update the highlighter shown for
     // this.currentNode
@@ -281,34 +281,34 @@ AutoRefreshHighlighter.prototype = {
     throw new Error("Custom highlighter class had to implement _update method");
   },
 
-  _scrollUpdate: function() {
+  _scrollUpdate() {
     // Can be implemented by sub classes
     // When called, sub classes can upate the highlighter shown for
     // this.currentNode
     // This is called as a result of a page scroll
   },
 
-  _hide: function() {
+  _hide() {
     // To be implemented by sub classes
     // When called, sub classes should actually hide the highlighter
     throw new Error("Custom highlighter class had to implement _hide method");
   },
 
-  _startRefreshLoop: function() {
+  _startRefreshLoop() {
     const win = this.currentNode.ownerGlobal;
     this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
     this.rafWin = win;
     this.update();
   },
 
-  _stopRefreshLoop: function() {
+  _stopRefreshLoop() {
     if (this.rafID && !Cu.isDeadWrapper(this.rafWin)) {
       this.rafWin.cancelAnimationFrame(this.rafID);
     }
     this.rafID = this.rafWin = null;
   },
 
-  destroy: function() {
+  destroy() {
     this.hide();
 
     this.highlighterEnv = null;

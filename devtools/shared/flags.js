@@ -44,7 +44,7 @@ function makePrefTrackedFlag(exports, name, pref) {
     Services.obs.addObserver(unloadObserver, "devtools:loader:destroy");
   }
   Object.defineProperty(exports, name, {
-    get: function() {
+    get() {
       return flag;
     },
   });

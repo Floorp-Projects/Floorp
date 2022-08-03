@@ -757,7 +757,7 @@ async function getPropertiesForRuleIndex(
     declaration.set(`${currProp.name}:${currProp.value}`, {
       propertyName: currProp.name,
       propertyValue: currProp.value,
-      icon: icon,
+      icon,
       data: currProp.isUsed(),
       warning: unused,
       used: !unused,

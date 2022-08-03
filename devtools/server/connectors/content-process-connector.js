@@ -73,7 +73,7 @@ function connectToContentProcess(connection, mm, onDestroy) {
     // Send a message to the content process server startup script to forward it the
     // prefix.
     mm.sendAsyncMessage("debug:init-content-server", {
-      prefix: prefix,
+      prefix,
       // This connector is only used for the Browser Content Toolbox,
       // when creating the content process target from the Process Descriptor.
       sessionContext: createContentProcessSessionContext(),

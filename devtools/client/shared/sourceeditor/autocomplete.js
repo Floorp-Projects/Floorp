@@ -110,10 +110,10 @@ function initializeAutoCompletion(ctx, options = {}) {
   }
 
   autocompleteMap.set(ed, {
-    popup: popup,
-    completer: completer,
-    keyMap: keyMap,
-    destroy: destroy,
+    popup,
+    completer,
+    keyMap,
+    destroy,
     insertingSuggestion: false,
     suggestionInsertedOnce: false,
   });

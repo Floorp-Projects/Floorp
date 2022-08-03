@@ -90,7 +90,7 @@ try {
           prefix,
           sessionContext: createWebExtensionSessionContext(
             {
-              addonId: addonId,
+              addonId,
               browsingContextID: browsingContext.id,
               innerWindowId: browsingContext.currentWindowContext.innerWindowId,
             },
@@ -132,7 +132,7 @@ try {
       }
       actor.manage(actor);
 
-      sendAsyncMessage("debug:actor", { actor: actor.form(), prefix: prefix });
+      sendAsyncMessage("debug:actor", { actor: actor.form(), prefix });
     });
 
     addMessageListener("debug:connect", onConnect);

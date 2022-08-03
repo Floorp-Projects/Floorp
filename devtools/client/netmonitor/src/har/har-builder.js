@@ -53,7 +53,7 @@ HarBuilder.prototype = {
    * @returns {Promise} A promise that resolves to the HAR object when
    * the entire build process is done.
    */
-  build: async function() {
+  async build() {
     this.promises = [];
 
     // Build basic structure for data.
@@ -76,7 +76,7 @@ HarBuilder.prototype = {
 
   // Helpers
 
-  buildPage: function(file) {
+  buildPage(file) {
     const page = {};
 
     // Page start time is set when the first request is processed
@@ -88,7 +88,7 @@ HarBuilder.prototype = {
     return page;
   },
 
-  getPage: function(log, file) {
+  getPage(log, file) {
     const { id } = this._options;
     let page = this._pageMap[id];
     if (page) {
@@ -101,7 +101,7 @@ HarBuilder.prototype = {
     return page;
   },
 
-  buildEntry: async function(log, file) {
+  async buildEntry(log, file) {
     const page = this.getPage(log, file);
 
     const entry = {};
@@ -161,7 +161,7 @@ HarBuilder.prototype = {
     return entry;
   },
 
-  buildPageTimings: function(page, file) {
+  buildPageTimings(page, file) {
     // Event timing info isn't available
     const timings = {
       onContentLoad: -1,
@@ -179,7 +179,7 @@ HarBuilder.prototype = {
     return timings;
   },
 
-  buildRequest: async function(file) {
+  async buildRequest(file) {
     // When using HarAutomation, HarCollector will automatically fetch requestHeaders
     // and requestCookies, but when we use it from netmonitor, FirefoxDataProvider
     // should fetch it itself lazily, via requestData.
@@ -226,7 +226,7 @@ HarBuilder.prototype = {
    *
    * @param {Object} input Request or response header object.
    */
-  buildHeaders: function(input) {
+  buildHeaders(input) {
     if (!input) {
       return [];
     }
@@ -234,7 +234,7 @@ HarBuilder.prototype = {
     return this.buildNameValuePairs(input.headers);
   },
 
-  appendHeadersPostData: function(input = [], file) {
+  appendHeadersPostData(input = [], file) {
     if (!file.requestPostData) {
       return input;
     }
@@ -249,7 +249,7 @@ HarBuilder.prototype = {
     return input;
   },
 
-  buildCookies: function(input) {
+  buildCookies(input) {
     if (!input) {
       return [];
     }
@@ -257,7 +257,7 @@ HarBuilder.prototype = {
     return this.buildNameValuePairs(input.cookies || input);
   },
 
-  buildNameValuePairs: function(entries) {
+  buildNameValuePairs(entries) {
     const result = [];
 
     // HAR requires headers array to be presented, so always
@@ -271,7 +271,7 @@ HarBuilder.prototype = {
       this.fetchData(entry.value).then(value => {
         result.push({
           name: entry.name,
-          value: value,
+          value,
         });
       });
     });
@@ -279,7 +279,7 @@ HarBuilder.prototype = {
     return result;
   },
 
-  buildPostData: async function(file) {
+  async buildPostData(file) {
     // When using HarAutomation, HarCollector will automatically fetch requestPostData
     // and requestHeaders, but when we use it from netmonitor, FirefoxDataProvider
     // should fetch it itself lazily, via requestData.
@@ -344,7 +344,7 @@ HarBuilder.prototype = {
     return postData;
   },
 
-  buildResponse: async function(file) {
+  async buildResponse(file) {
     // When using HarAutomation, HarCollector will automatically fetch responseHeaders
     // and responseCookies, but when we use it from netmonitor, FirefoxDataProvider
     // should fetch it itself lazily, via requestData.
@@ -398,7 +398,7 @@ HarBuilder.prototype = {
     return response;
   },
 
-  buildContent: async function(file) {
+  async buildContent(file) {
     const content = {
       mimeType: file.mimeType,
       size: -1,
@@ -441,7 +441,7 @@ HarBuilder.prototype = {
     return content;
   },
 
-  buildCache: async function(file) {
+  async buildCache(file) {
     const cache = {};
 
     // if resource has changed, return early
@@ -466,7 +466,7 @@ HarBuilder.prototype = {
     return cache;
   },
 
-  buildCacheEntry: function(cacheEntry) {
+  buildCacheEntry(cacheEntry) {
     const cache = {};
 
     if (typeof cacheEntry !== "undefined") {
@@ -489,7 +489,7 @@ HarBuilder.prototype = {
     return cache;
   },
 
-  getBlockingEndTime: function(file) {
+  getBlockingEndTime(file) {
     if (file.resolveStarted && file.connectStarted) {
       return file.resolvingTime;
     }
@@ -509,7 +509,7 @@ HarBuilder.prototype = {
 
   // RDP Helpers
 
-  fetchData: function(string) {
+  fetchData(string) {
     const promise = this._options.getString(string).then(value => {
       return value;
     });

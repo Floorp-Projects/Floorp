@@ -154,8 +154,8 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
     unregister() {
       const { principal, scope } = this._registration;
       const unregisterCallback = {
-        unregisterSucceeded: function() {},
-        unregisterFailed: function() {
+        unregisterSucceeded() {},
+        unregisterFailed() {
           console.error("Failed to unregister the service worker for " + scope);
         },
         QueryInterface: ChromeUtils.generateQI([

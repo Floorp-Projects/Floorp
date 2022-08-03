@@ -34,7 +34,7 @@ function test() {
           removableColumns: true,
           wrapTextInElements: true,
           l10n: {
-            setAttributes: function() {},
+            setAttributes() {},
           },
         });
         startTests();
@@ -128,7 +128,7 @@ function click(node, button = 0) {
       EventUtils.synthesizeMouseAtCenter(
         node,
         {
-          button: button,
+          button,
           type: "contextmenu",
         },
         doc.defaultView

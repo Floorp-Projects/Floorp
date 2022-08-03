@@ -388,7 +388,7 @@ class DOMEventCollector extends MainEventCollector {
         nsIEventListenerInfo: listener,
         capturing: listener.capturing,
         type: listener.type,
-        handler: handler,
+        handler,
         enabled: listener.enabled,
       };
 
@@ -481,8 +481,8 @@ class JQueryEventCollector extends MainEventCollector {
             }
 
             const eventInfo = {
-              type: type,
-              handler: handler,
+              type,
+              handler,
               tags: "jQuery",
               hide: {
                 capturing: true,
@@ -575,7 +575,7 @@ class JQueryLiveEventCollector extends MainEventCollector {
               }
               const eventInfo = {
                 type: event.origType || event.type.substr(selector.length + 1),
-                handler: handler,
+                handler,
                 tags: "jQuery,Live",
                 hide: {
                   capturing: true,

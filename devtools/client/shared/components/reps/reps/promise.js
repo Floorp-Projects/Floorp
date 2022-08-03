@@ -46,7 +46,7 @@ define(function(require, exports, module) {
       ownProperties["<state>"] = { value: state };
       let ownPropertiesLength = 1;
       if (state == "fulfilled") {
-        ownProperties["<value>"] = { value: value };
+        ownProperties["<value>"] = { value };
         ++ownPropertiesLength;
       } else if (state == "rejected") {
         ownProperties["<reason>"] = { value: reason };

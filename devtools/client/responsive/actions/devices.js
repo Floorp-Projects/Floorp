@@ -87,7 +87,7 @@ module.exports = {
   // This function is only exported for testing purposes
   _loadPreferredDevices: loadPreferredDevices,
 
-  updatePreferredDevices: updatePreferredDevices,
+  updatePreferredDevices,
 
   addCustomDevice(device) {
     return async function({ dispatch }) {

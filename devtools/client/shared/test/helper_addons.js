@@ -36,7 +36,7 @@ function removeAddon(addon) {
     info("Removing addon.");
 
     const listener = {
-      onUninstalled: function(uninstalledAddon) {
+      onUninstalled(uninstalledAddon) {
         if (uninstalledAddon != addon) {
           return;
         }

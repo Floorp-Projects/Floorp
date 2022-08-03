@@ -64,7 +64,7 @@ var test_helper = async function(payload) {
   });
   return new Promise(resolve => {
     transport.hooks = {
-      onPacket: function(packet) {
+      onPacket(packet) {
         this.onPacket = function() {
           do_throw(new Error("This connection should be dropped."));
           transport.close();
@@ -74,7 +74,7 @@ var test_helper = async function(payload) {
         transport._outgoing.push(new RawPacket(transport, payload));
         transport._flushOutgoing();
       },
-      onTransportClosed: function(status) {
+      onTransportClosed(status) {
         Assert.ok(true);
         resolve();
       },

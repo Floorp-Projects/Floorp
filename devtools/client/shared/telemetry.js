@@ -791,10 +791,10 @@ function getChartsFromToolId(id) {
   }
 
   return {
-    useTimedEvent: useTimedEvent,
-    timerHist: timerHist,
-    countHist: countHist,
-    countScalar: countScalar,
+    useTimedEvent,
+    timerHist,
+    countHist,
+    countScalar,
   };
 }
 

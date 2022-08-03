@@ -65,7 +65,7 @@ add_task(async function() {
           },
           get myProxyGetter() {
             const handler = {
-              get: function(target, name) {
+              get(target, name) {
                 return name in target ? target[name] : 37;
               },
             };

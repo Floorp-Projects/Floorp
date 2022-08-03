@@ -615,7 +615,7 @@ const getHighlighterHelperFor = type =>
         }
 
         return {
-          getComputedStyle: async function(options = {}) {
+          async getComputedStyle(options = {}) {
             const pageStyle = highlightedNode.inspectorFront.pageStyle;
             return pageStyle.getComputed(highlightedNode, options);
           },
@@ -630,7 +630,7 @@ const getHighlighterHelperFor = type =>
         return highlighter.actorID;
       },
 
-      show: async function(selector = ":root", options, frameSelector = null) {
+      async show(selector = ":root", options, frameSelector = null) {
         if (frameSelector) {
           highlightedNode = await getNodeFrontInFrames(
             [frameSelector, selector],
@@ -642,11 +642,11 @@ const getHighlighterHelperFor = type =>
         return highlighter.show(highlightedNode, options);
       },
 
-      hide: async function() {
+      async hide() {
         await highlighter.hide();
       },
 
-      isElementHidden: async function(id) {
+      async isElementHidden(id) {
         return (
           (await highlighterTestFront.getHighlighterNodeAttribute(
             prefix + id,
@@ -656,14 +656,14 @@ const getHighlighterHelperFor = type =>
         );
       },
 
-      getElementTextContent: async function(id) {
+      async getElementTextContent(id) {
         return highlighterTestFront.getHighlighterNodeTextContent(
           prefix + id,
           highlighter
         );
       },
 
-      getElementAttribute: async function(id, name) {
+      async getElementAttribute(id, name) {
         return highlighterTestFront.getHighlighterNodeAttribute(
           prefix + id,
           name,
@@ -671,7 +671,7 @@ const getHighlighterHelperFor = type =>
         );
       },
 
-      waitForElementAttributeSet: async function(id, name) {
+      async waitForElementAttributeSet(id, name) {
         await poll(async function() {
           const value = await highlighterTestFront.getHighlighterNodeAttribute(
             prefix + id,
@@ -682,7 +682,7 @@ const getHighlighterHelperFor = type =>
         }, `Waiting for element ${id} to have attribute ${name} set`);
       },
 
-      waitForElementAttributeRemoved: async function(id, name) {
+      async waitForElementAttributeRemoved(id, name) {
         await poll(async function() {
           const value = await highlighterTestFront.getHighlighterNodeAttribute(
             prefix + id,
@@ -693,7 +693,7 @@ const getHighlighterHelperFor = type =>
         }, `Waiting for element ${id} to have attribute ${name} removed`);
       },
 
-      synthesizeMouse: async function({
+      async synthesizeMouse({
         selector = ":root",
         center,
         x,
@@ -733,7 +733,7 @@ const getHighlighterHelperFor = type =>
         }
       ),
 
-      finalize: async function() {
+      async finalize() {
         highlightedNode = null;
         await highlighter.finalize();
       },

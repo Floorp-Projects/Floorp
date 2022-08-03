@@ -140,7 +140,7 @@ function filterChange({ action, state, oldState, telemetry, sessionId }) {
   }
 
   telemetry.recordEvent("filters_changed", "netmonitor", null, {
-    trigger: trigger,
+    trigger,
     active: activeFilters.join(","),
     inactive: inactiveFilters.join(","),
     session_id: sessionId,

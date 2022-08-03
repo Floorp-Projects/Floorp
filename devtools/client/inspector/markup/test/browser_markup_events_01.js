@@ -73,7 +73,7 @@ const TEST_DATA = [
   },
   {
     selector: "#noevents",
-    beforeTest: async function(inspector) {
+    async beforeTest(inspector) {
       const nodeMutated = inspector.once("markupmutation");
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
         content.wrappedJSObject.addNoeventsClickHandler()
@@ -94,7 +94,7 @@ const TEST_DATA = [
   },
   {
     selector: "#noevents",
-    beforeTest: async function(inspector) {
+    async beforeTest(inspector) {
       const nodeMutated = inspector.once("markupmutation");
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
         content.wrappedJSObject.removeNoeventsClickHandler()

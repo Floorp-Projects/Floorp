@@ -45,34 +45,34 @@ function MockWindow(docShell) {
   this.docShell = docShell;
 }
 MockWindow.prototype = {
-  QueryInterface: function() {
+  QueryInterface() {
     const self = this;
     return {
-      getInterface: function() {
+      getInterface() {
         return {
-          QueryInterface: function() {
+          QueryInterface() {
             return self.docShell;
           },
         };
       },
     };
   },
-  setTimeout: function(cb) {
+  setTimeout(cb) {
     // Simply return the cb itself so that we can execute it in the test instead
     // of depending on a real timeout
     return cb;
   },
-  clearTimeout: function() {},
+  clearTimeout() {},
 };
 
 function MockDocShell() {
   this.observer = null;
 }
 MockDocShell.prototype = {
-  addWeakReflowObserver: function(observer) {
+  addWeakReflowObserver(observer) {
     this.observer = observer;
   },
-  removeWeakReflowObserver: function() {},
+  removeWeakReflowObserver() {},
   get chromeEventHandler() {
     return {
       addEventListener: (type, cb) => {
@@ -87,7 +87,7 @@ MockDocShell.prototype = {
       },
     };
   },
-  mockResize: function() {
+  mockResize() {
     if (this.resizeCb) {
       this.resizeCb();
     }

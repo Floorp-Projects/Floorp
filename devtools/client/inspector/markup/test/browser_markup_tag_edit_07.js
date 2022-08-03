@@ -107,7 +107,7 @@ var TEST_DATA = [
     expectedAttributes: {
       "data-long": LONG_ATTRIBUTE,
     },
-    setUp: function(inspector) {
+    setUp(inspector) {
       Services.prefs.setBoolPref("devtools.markup.collapseAttributes", false);
     },
     validate: (container, inspector) => {
@@ -117,7 +117,7 @@ var TEST_DATA = [
         .querySelector(".attr-value").textContent;
       is(visibleAttrText, LONG_ATTRIBUTE);
     },
-    tearDown: function(inspector) {
+    tearDown(inspector) {
       Services.prefs.clearUserPref("devtools.markup.collapseAttributes");
     },
   },
@@ -127,7 +127,7 @@ var TEST_DATA = [
     expectedAttributes: {
       "data-long": LONG_ATTRIBUTE,
     },
-    setUp: function(inspector) {
+    setUp(inspector) {
       Services.prefs.setIntPref("devtools.markup.collapseAttributeLength", 2);
     },
     validate: (container, inspector) => {
@@ -140,7 +140,7 @@ var TEST_DATA = [
         .querySelector(".attr-value").textContent;
       is(visibleAttrText, collapsed);
     },
-    tearDown: function(inspector) {
+    tearDown(inspector) {
       Services.prefs.clearUserPref("devtools.markup.collapseAttributeLength");
     },
   },

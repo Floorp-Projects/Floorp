@@ -459,7 +459,7 @@ HTMLTooltip.prototype = {
    *          making content behind this area inaccessible until the tooltip is
    *          dismissed.
    */
-  setContentSize: function({ width = "auto", height = "auto" } = {}) {
+  setContentSize({ width = "auto", height = "auto" } = {}) {
     this.preferredWidth = width;
     this.preferredHeight = height;
   },
@@ -694,7 +694,7 @@ HTMLTooltip.prototype = {
    *                      properties: top, right, bottom, left, width, height
    *                      representing the window rect.
    */
-  _getBoundingRects: function(anchorRect) {
+  _getBoundingRects(anchorRect) {
     let viewportRect;
     let windowRect;
 
@@ -759,7 +759,7 @@ HTMLTooltip.prototype = {
     return { viewportRect, windowRect };
   },
 
-  _measureContainerSize: function() {
+  _measureContainerSize() {
     const xulParent = this.container.parentNode;
     if (this.useXulWrapper && !this.isVisible()) {
       // Move the container out of the XUL Panel to measure it.
@@ -827,7 +827,7 @@ HTMLTooltip.prototype = {
     }
   },
 
-  removeEventListeners: function() {
+  removeEventListeners() {
     this.topWindow.removeEventListener("click", this._onClick, true);
     this.topWindow.removeEventListener("mouseup", this._onMouseup, true);
   },
@@ -836,7 +836,7 @@ HTMLTooltip.prototype = {
    * Check if the tooltip is currently displayed.
    * @return {Boolean} true if the tooltip is visible
    */
-  isVisible: function() {
+  isVisible() {
     return this.container.classList.contains("tooltip-visible");
   },
 
@@ -844,7 +844,7 @@ HTMLTooltip.prototype = {
    * Destroy the tooltip instance. Hide the tooltip if displayed, remove the
    * tooltip container from the document.
    */
-  destroy: function() {
+  destroy() {
     this.hide();
     this.removeEventListeners();
     this.container.remove();
@@ -857,7 +857,7 @@ HTMLTooltip.prototype = {
     }
   },
 
-  _createContainer: function() {
+  _createContainer() {
     const container = this.doc.createElementNS(XHTML_NS, "div");
     container.setAttribute("type", this.type);
 
@@ -886,7 +886,7 @@ HTMLTooltip.prototype = {
     return container;
   },
 
-  _onClick: function(e) {
+  _onClick(e) {
     if (this._isInTooltipContainer(e.target)) {
       return;
     }
@@ -904,7 +904,7 @@ HTMLTooltip.prototype = {
    * If the element that received the mousedown and the mouseup are different, click
    * will not be fired.
    */
-  _onMouseup: function(e) {
+  _onMouseup(e) {
     if (this._isInTooltipContainer(e.target)) {
       return;
     }
@@ -912,7 +912,7 @@ HTMLTooltip.prototype = {
     this.hide({ fromMouseup: true });
   },
 
-  _isInTooltipContainer: function(node) {
+  _isInTooltipContainer(node) {
     // Check if the target is the tooltip arrow.
     if (this.arrow && this.arrow === node) {
       return true;
@@ -939,7 +939,7 @@ HTMLTooltip.prototype = {
     return false;
   },
 
-  _onXulPanelHidden: function() {
+  _onXulPanelHidden() {
     if (this.isVisible()) {
       this.hide();
     }
@@ -950,7 +950,7 @@ HTMLTooltip.prototype = {
    *
    * Returns true if we found something to focus on, false otherwise.
    */
-  focus: function() {
+  focus() {
     const focusableElement = this.panel.querySelector(focusableSelector);
     if (focusableElement) {
       focusableElement.focus();
@@ -963,7 +963,7 @@ HTMLTooltip.prototype = {
    *
    * Returns true if we found something to focus on, false otherwise.
    */
-  focusEnd: function() {
+  focusEnd() {
     const focusableElements = this.panel.querySelectorAll(focusableSelector);
     if (focusableElements.length) {
       focusableElements[focusableElements.length - 1].focus();
@@ -971,22 +971,22 @@ HTMLTooltip.prototype = {
     return focusableElements.length !== 0;
   },
 
-  _getTopWindow: function() {
+  _getTopWindow() {
     return DevToolsUtils.getTopWindow(this.doc.defaultView);
   },
 
   /**
    * Check if the tooltip's owner document has XUL root element.
    */
-  _hasXULRootElement: function() {
+  _hasXULRootElement() {
     return this.doc.documentElement.namespaceURI === XUL_NS;
   },
 
-  _isXULPopupAvailable: function() {
+  _isXULPopupAvailable() {
     return this.doc.nodePrincipal.isSystemPrincipal;
   },
 
-  _createXulPanelWrapper: function() {
+  _createXulPanelWrapper() {
     const panel = this.doc.createXULElement("panel");
 
     // XUL panel is only a way to display DOM elements outside of the document viewport,
@@ -1012,7 +1012,7 @@ HTMLTooltip.prototype = {
     return panel;
   },
 
-  _showXulWrapperAt: function(left, top) {
+  _showXulWrapperAt(left, top) {
     this.xulPanelWrapper.addEventListener(
       "popuphidden",
       this._onXulPanelHidden
@@ -1022,11 +1022,11 @@ HTMLTooltip.prototype = {
     return onPanelShown;
   },
 
-  _moveXulWrapperTo: function(left, top) {
+  _moveXulWrapperTo(left, top) {
     this.xulPanelWrapper.moveTo(left, top);
   },
 
-  _hideXulWrapper: function() {
+  _hideXulWrapper() {
     this.xulPanelWrapper.removeEventListener(
       "popuphidden",
       this._onXulPanelHidden
@@ -1047,7 +1047,7 @@ HTMLTooltip.prototype = {
    * to the "available" screen. By "available" we mean the screen, excluding the OS bars
    * display on screen edges.
    */
-  _convertToScreenRect: function({ left, top, width, height }) {
+  _convertToScreenRect({ left, top, width, height }) {
     // mozInnerScreenX/Y are the coordinates of the top left corner of the window's
     // viewport, excluding chrome UI.
     left += this.doc.defaultView.mozInnerScreenX;

@@ -112,7 +112,7 @@ const proto = {
     };
   },
 
-  rawValue: function() {
+  rawValue() {
     return this.obj.unsafeDereference();
   },
 
@@ -131,7 +131,7 @@ const proto = {
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  form: function() {
+  form() {
     const g = {
       type: "object",
       actor: this.actorID,
@@ -205,7 +205,7 @@ const proto = {
     return g;
   },
 
-  _getOwnPropertyLength: function() {
+  _getOwnPropertyLength() {
     if (isTypedArray(this.obj)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
       return getArrayLength(this.obj);
@@ -225,7 +225,7 @@ const proto = {
     return null;
   },
 
-  getRawObject: function() {
+  getRawObject() {
     let raw = this.obj.unsafeDereference();
 
     // If Cu is not defined, we are running on a worker thread, where xrays
@@ -244,7 +244,7 @@ const proto = {
   /**
    * Populate the `preview` property on `grip` given its type.
    */
-  _populateGripPreview: function(grip, raw) {
+  _populateGripPreview(grip, raw) {
     // Cache obj.class as it can be costly if this is in a hot path (e.g. logging objects
     // within a for loop).
     const className = this.obj.class;
@@ -265,7 +265,7 @@ const proto = {
   /**
    * Returns an object exposing the internal Promise state.
    */
-  promiseState: function() {
+  promiseState() {
     const { state, value, reason } = getPromiseState(this.obj);
     const promiseState = { state };
 
@@ -291,28 +291,28 @@ const proto = {
    *
    * @param options object
    */
-  enumProperties: function(options) {
+  enumProperties(options) {
     return PropertyIteratorActor(this, options, this.conn);
   },
 
   /**
    * Creates an actor to iterate over entries of a Map/Set-like object.
    */
-  enumEntries: function() {
+  enumEntries() {
     return PropertyIteratorActor(this, { enumEntries: true }, this.conn);
   },
 
   /**
    * Creates an actor to iterate over an object symbols properties.
    */
-  enumSymbols: function() {
+  enumSymbols() {
     return SymbolIteratorActor(this, this.conn);
   },
 
   /**
    * Creates an actor to iterate over an object private properties.
    */
-  enumPrivateProperties: function() {
+  enumPrivateProperties() {
     return PrivatePropertiesIteratorActor(this, this.conn);
   },
 
@@ -332,7 +332,7 @@ const proto = {
    *          - {Object} safeGetterValues: an object that maps this.obj's property names
    *                     with safe getters descriptors.
    */
-  prototypeAndProperties: function() {
+  prototypeAndProperties() {
     let objProto = null;
     let names = [];
     let symbols = [];
@@ -382,7 +382,7 @@ const proto = {
    *         An object that maps property names to safe getter descriptors as
    *         defined by the remote debugging protocol.
    */
-  _findSafeGetterValues: function(ownProperties, limit = Infinity) {
+  _findSafeGetterValues(ownProperties, limit = Infinity) {
     const safeGetterValues = Object.create(null);
     let obj = this.obj;
     let level = 0,
@@ -496,7 +496,7 @@ const proto = {
    *         A Set of names of safe getters. This result is cached for each
    *         Debugger.Object.
    */
-  _findSafeGetters: function(object) {
+  _findSafeGetters(object) {
     if (object._safeGetters) {
       return object._safeGetters;
     }
@@ -540,7 +540,7 @@ const proto = {
   /**
    * Handle a protocol request to provide the prototype of the object.
    */
-  prototype: function() {
+  prototype() {
     let objProto = null;
     if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       objProto = this.obj.proto;
@@ -555,7 +555,7 @@ const proto = {
    * @param name string
    *        The property we want the description of.
    */
-  property: function(name) {
+  property(name) {
     if (!name) {
       return this.throwError(
         "missingParameter",
@@ -581,7 +581,7 @@ const proto = {
    *        The actorId of the receiver to be used if the property is a getter.
    *        If null or invalid, the receiver will be the referent.
    */
-  propertyValue: function(name, receiverId) {
+  propertyValue(name, receiverId) {
     if (!name) {
       return this.throwError(
         "missingParameter",
@@ -618,7 +618,7 @@ const proto = {
    * @param {Array<any>} args
    *        The array of un-decoded actor objects, or primitives.
    */
-  apply: function(context, args) {
+  apply(context, args) {
     if (!this.obj.callable) {
       return this.throwError("notCallable", "debugee object is not callable");
     }
@@ -694,7 +694,7 @@ const proto = {
    *         The property descriptor, or undefined if this is not an enumerable
    *         property and onlyEnumerable=true.
    */
-  _propertyDescriptor: function(name, onlyEnumerable) {
+  _propertyDescriptor(name, onlyEnumerable) {
     if (!DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       return undefined;
     }
@@ -753,7 +753,7 @@ const proto = {
   /**
    * Handle a protocol request to get the target and handler internal slots of a proxy.
    */
-  proxySlots: function() {
+  proxySlots() {
     // There could be transparent security wrappers, unwrap to check if it's a proxy.
     // However, retrieve proxyTarget and proxyHandler from `this.obj` to avoid exposing
     // the unwrapped target and handler.
@@ -770,7 +770,7 @@ const proto = {
     };
   },
 
-  customFormatterHeader: function() {
+  customFormatterHeader() {
     const rawValue = this.rawValue();
     const globalWrapper = Cu.getGlobalForObject(rawValue);
     const global = globalWrapper?.wrappedJSObject;
@@ -833,7 +833,7 @@ const proto = {
    * @param number customFormatterIndex
    *        Index of the custom formatter used for the object
    */
-  customFormatterBody: function(customFormatterIndex) {
+  customFormatterBody(customFormatterIndex) {
     const rawValue = this.rawValue();
     const globalWrapper = Cu.getGlobalForObject(rawValue);
     const global = globalWrapper?.wrappedJSObject;
@@ -878,7 +878,7 @@ const proto = {
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release: function() {},
+  release() {},
 };
 
 exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);

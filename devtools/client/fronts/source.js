@@ -89,7 +89,7 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
 
       const newResponse = {
         source: resp,
-        contentType: contentType,
+        contentType,
       };
       return newResponse;
     });

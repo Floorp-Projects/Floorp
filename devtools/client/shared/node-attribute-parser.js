@@ -214,7 +214,7 @@ const ATTRIBUTE_TYPES = new Map([
 ]);
 
 var parsers = {
-  [TYPE_URI]: function(attributeValue) {
+  [TYPE_URI](attributeValue) {
     return [
       {
         type: TYPE_URI,
@@ -222,7 +222,7 @@ var parsers = {
       },
     ];
   },
-  [TYPE_URI_LIST]: function(attributeValue) {
+  [TYPE_URI_LIST](attributeValue) {
     const data = splitBy(attributeValue, " ");
     for (const token of data) {
       if (!token.type) {
@@ -231,7 +231,7 @@ var parsers = {
     }
     return data;
   },
-  [TYPE_JS_RESOURCE_URI]: function(attributeValue) {
+  [TYPE_JS_RESOURCE_URI](attributeValue) {
     return [
       {
         type: TYPE_JS_RESOURCE_URI,
@@ -239,7 +239,7 @@ var parsers = {
       },
     ];
   },
-  [TYPE_CSS_RESOURCE_URI]: function(attributeValue) {
+  [TYPE_CSS_RESOURCE_URI](attributeValue) {
     return [
       {
         type: TYPE_CSS_RESOURCE_URI,
@@ -247,7 +247,7 @@ var parsers = {
       },
     ];
   },
-  [TYPE_IDREF]: function(attributeValue) {
+  [TYPE_IDREF](attributeValue) {
     return [
       {
         type: TYPE_IDREF,
@@ -255,7 +255,7 @@ var parsers = {
       },
     ];
   },
-  [TYPE_IDREF_LIST]: function(attributeValue) {
+  [TYPE_IDREF_LIST](attributeValue) {
     const data = splitBy(attributeValue, " ");
     for (const token of data) {
       if (!token.type) {

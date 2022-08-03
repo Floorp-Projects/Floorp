@@ -215,7 +215,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * @return object
    *         The cache packet - network cache information.
    */
-  getResponseCache: function() {
+  getResponseCache() {
     return {
       cache: this._response.responseCache,
     };
@@ -437,7 +437,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._securityInfo = info;
     this.emit("network-event-update:security-info", "securityInfo", {
       state: info.state,
-      isRacing: isRacing,
+      isRacing,
     });
   },
 
@@ -521,7 +521,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     });
   },
 
-  addResponseCache: function(content) {
+  addResponseCache(content) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;

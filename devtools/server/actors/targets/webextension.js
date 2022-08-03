@@ -176,7 +176,7 @@ webExtensionTargetPrototype.isRootActor = true;
 // Override the ParentProcessTargetActor's override in order to only iterate
 // over the docshells specific to this add-on
 Object.defineProperty(webExtensionTargetPrototype, "docShells", {
-  get: function() {
+  get() {
     // Iterate over all top-level windows and all their docshells.
     let docShells = [];
     for (const window of Services.ww.getWindowEnumerator(null)) {

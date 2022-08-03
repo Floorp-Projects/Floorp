@@ -37,7 +37,7 @@ SelectorHighlighter.prototype = {
    * @param {String} options.selector
    *        Required. CSS selector used with querySelectorAll() to find matching elements.
    */
-  show: async function(node, options = {}) {
+  async show(node, options = {}) {
     this.hide();
 
     if (!isNodeValid(node) || !options.selector) {
@@ -74,7 +74,7 @@ SelectorHighlighter.prototype = {
    *         Configuration options for the BoxModelHighlighter
    * @return {Promise} Promise that resolves when the BoxModelHighlighter is ready
    */
-  _showHighlighter: async function(node, options) {
+  async _showHighlighter(node, options) {
     const highlighter = new BoxModelHighlighter(this.highlighterEnv);
     await highlighter.isReady;
 
@@ -82,14 +82,14 @@ SelectorHighlighter.prototype = {
     this._highlighters.push(highlighter);
   },
 
-  hide: function() {
+  hide() {
     for (const highlighter of this._highlighters) {
       highlighter.destroy();
     }
     this._highlighters = [];
   },
 
-  destroy: function() {
+  destroy() {
     this.hide();
     this.highlighterEnv = null;
   },

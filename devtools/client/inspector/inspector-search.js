@@ -50,7 +50,7 @@ function InspectorSearch(inspector, input, clearBtn) {
 exports.InspectorSearch = InspectorSearch;
 
 InspectorSearch.prototype = {
-  destroy: function() {
+  destroy() {
     this.searchBox.removeEventListener("keydown", this._onKeyDown, true);
     this.searchBox.removeEventListener("input", this._onInput, true);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
@@ -59,7 +59,7 @@ InspectorSearch.prototype = {
     this.autocompleter.destroy();
   },
 
-  _onSearch: function(reverse = false) {
+  _onSearch(reverse = false) {
     this.doFullTextSearch(this.searchBox.value, reverse).catch(console.error);
   },
 
@@ -102,7 +102,7 @@ InspectorSearch.prototype = {
     }
   },
 
-  _onInput: function() {
+  _onInput() {
     if (this.searchBox.value.length === 0) {
       this.searchClearButton.hidden = true;
       this._onSearch();
@@ -111,7 +111,7 @@ InspectorSearch.prototype = {
     }
   },
 
-  _onKeyDown: function(event) {
+  _onKeyDown(event) {
     if (event.keyCode === KeyCodes.DOM_VK_RETURN) {
       this._onSearch(event.shiftKey);
     }
@@ -124,7 +124,7 @@ InspectorSearch.prototype = {
     }
   },
 
-  _onClearSearch: function() {
+  _onClearSearch() {
     this.searchBox.parentNode.classList.remove("devtools-searchbox-no-match");
     this.searchBox.value = "";
     this.searchClearButton.hidden = true;
@@ -304,7 +304,7 @@ SelectorAutocompleter.prototype = {
   /**
    * Removes event listeners and cleans up references.
    */
-  destroy: function() {
+  destroy() {
     this.searchBox.removeEventListener("input", this.showSuggestions, true);
     this.searchBox.removeEventListener(
       "keypress",
@@ -321,7 +321,7 @@ SelectorAutocompleter.prototype = {
   /**
    * Handles keypresses inside the input box.
    */
-  _onSearchKeypress: function(event) {
+  _onSearchKeypress(event) {
     const popup = this.searchPopup;
     switch (event.keyCode) {
       case KeyCodes.DOM_VK_RETURN:
@@ -375,7 +375,7 @@ SelectorAutocompleter.prototype = {
   /**
    * Handles click events from the autocomplete popup.
    */
-  _onSearchPopupClick: function(event) {
+  _onSearchPopupClick(event) {
     const selectedItem = this.searchPopup.selectedItem;
     if (selectedItem) {
       this.searchBox.value = selectedItem.label;
@@ -390,7 +390,7 @@ SelectorAutocompleter.prototype = {
    * Reset previous search results on markup-mutations to make sure we search
    * again after nodes have been added/removed/changed.
    */
-  _onMarkupMutation: function() {
+  _onMarkupMutation() {
     this._searchResults = null;
     this._lastSearched = null;
   },
@@ -401,7 +401,7 @@ SelectorAutocompleter.prototype = {
    * @return {Promise} promise that will resolve when the autocomplete popup is fully
    * displayed or hidden.
    */
-  _showPopup: function(list, popupState) {
+  _showPopup(list, popupState) {
     let total = 0;
     const query = this.searchBox.value;
     const items = [];
@@ -462,7 +462,7 @@ SelectorAutocompleter.prototype = {
   /**
    * Hide the suggestion popup if necessary.
    */
-  hidePopup: function() {
+  hidePopup() {
     const onPopupClosed = this.searchPopup.once("popup-closed");
     this.searchPopup.hidePopup();
     return onPopupClosed;
@@ -472,7 +472,7 @@ SelectorAutocompleter.prototype = {
    * Suggests classes,ids and tags based on the user input as user types in the
    * searchbox.
    */
-  showSuggestions: async function() {
+  async showSuggestions() {
     let query = this.searchBox.value;
     const originalQuery = this.searchBox.value;
 

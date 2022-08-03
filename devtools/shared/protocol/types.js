@@ -150,7 +150,7 @@ types.addType = function(name, typeObject = {}, options = {}) {
       toString() {
         return "[protocol type:" + name + "]";
       },
-      name: name,
+      name,
       primitive: !(typeObject.read || typeObject.write),
       read: identityWrite,
       write: identityWrite,

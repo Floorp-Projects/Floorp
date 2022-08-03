@@ -80,7 +80,7 @@ add_task(async function() {
   const mocks = new Mocks();
   mocks.createUSBRuntime(RUNTIME_ID, {
     channel: "nightly",
-    clientWrapper: clientWrapper,
+    clientWrapper,
     deviceName: DEVICE_NAME,
     isFenix: true,
     name: SERVER_RUNTIME_NAME,

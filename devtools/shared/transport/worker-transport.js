@@ -74,16 +74,16 @@ function WorkerThreadWorkerDebuggerTransport(scope, id) {
 WorkerThreadWorkerDebuggerTransport.prototype = {
   constructor: WorkerThreadWorkerDebuggerTransport,
 
-  ready: function() {
+  ready() {
     this._scope.addEventListener("message", this._onMessage);
   },
 
-  close: function() {
+  close() {
     this._scope.removeEventListener("message", this._onMessage);
     this.hooks?.onTransportClosed();
   },
 
-  send: function(packet) {
+  send(packet) {
     this._scope.postMessage(
       JSON.stringify({
         type: "message",
@@ -93,11 +93,11 @@ WorkerThreadWorkerDebuggerTransport.prototype = {
     );
   },
 
-  startBulkSend: function() {
+  startBulkSend() {
     throw new Error("Can't send bulk data from worker threads!");
   },
 
-  _onMessage: function(event) {
+  _onMessage(event) {
     const packet = JSON.parse(event.data);
     if (packet.type !== "message" || packet.id !== this._id) {
       return;

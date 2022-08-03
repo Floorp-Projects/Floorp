@@ -24,12 +24,12 @@ HarImporter.prototype = {
   /**
    * This is the main method used to import HAR data.
    */
-  import: function(har) {
+  import(har) {
     const json = JSON.parse(har);
     this.doImport(json);
   },
 
-  doImport: function(har) {
+  doImport(har) {
     this.actions.clearRequests();
 
     // Helper map for pages.
@@ -47,7 +47,7 @@ HarImporter.prototype = {
       this.actions.addRequest(
         requestId,
         {
-          startedMs: startedMs,
+          startedMs,
           method: entry.request.method,
           url: entry.request.url,
           urlDetails: getUrlDetails(entry.request.url),

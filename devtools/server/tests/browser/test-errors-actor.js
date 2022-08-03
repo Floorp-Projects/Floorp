@@ -34,7 +34,7 @@ const testErrorsSpec = protocol.generateActorSpec({
 });
 
 const TestErrorsActor = protocol.ActorClassWithSpec(testErrorsSpec, {
-  initialize: function(conn) {
+  initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.conn = conn;
   },

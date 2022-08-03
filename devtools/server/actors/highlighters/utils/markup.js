@@ -119,7 +119,7 @@ ClassList.prototype = {
   get length() {
     return this[_tokens].length;
   },
-  [Symbol.iterator]: function*() {
+  *[Symbol.iterator]() {
     for (let i = 0; i < this.tokens.length; i++) {
       yield this[_tokens][i];
     }

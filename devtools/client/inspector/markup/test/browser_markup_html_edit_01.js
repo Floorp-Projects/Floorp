@@ -14,7 +14,7 @@ const TEST_DATA = [
     selector: "#one",
     oldHTML: '<div id="one">First <em>Div</em></div>',
     newHTML: '<div id="one">First Div</div>',
-    validate: async function() {
+    async validate() {
       const text = await getContentPageElementProperty("#one", "textContent");
       is(text, "First Div", "New div has expected text content");
       const num = await getNumberOfMatchingElementsInContentPage("#one em");
@@ -41,7 +41,7 @@ const TEST_DATA = [
     newHTML:
       '<div id="addedAttribute" class="important" disabled checked>' +
       "addedAttribute</div>",
-    validate: async function({ pageNodeFront, selectedNodeFront }) {
+    async validate({ pageNodeFront, selectedNodeFront }) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
       const html = await getContentPageElementProperty(
         "#addedAttribute",
@@ -67,7 +67,7 @@ const TEST_DATA = [
       '<div id="siblings-before-sibling">before sibling</div>' +
       '<div id="siblings">siblings (updated)</div>' +
       '<div id="siblings-after-sibling">after sibling</div>',
-    validate: async function({ selectedNodeFront, inspector }) {
+    async validate({ selectedNodeFront, inspector }) {
       const beforeSiblingFront = await getNodeFront(
         "#siblings-before-sibling",
         inspector

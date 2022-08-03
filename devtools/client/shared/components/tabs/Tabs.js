@@ -409,7 +409,7 @@ define(function(require, exports, module) {
             {
               id: id ? id + "-panel" : "panel-" + index,
               key: id,
-              style: style,
+              style,
               className: selected ? "tab-panel-box" : "tab-panel-box hidden",
               role: "tabpanel",
               "aria-labelledby": id ? id + "-tab" : "tab-" + index,

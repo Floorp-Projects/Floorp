@@ -90,7 +90,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * @param {Boolean} sessionContext.isServerTargetSwitchingEnabled: Flag to to know if we should
    *        spawn new top level targets for the debugged context.
    */
-  initialize: function(conn, sessionContext) {
+  initialize(conn, sessionContext) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._sessionContext = sessionContext;
     if (sessionContext.type == "browser-element") {
@@ -166,7 +166,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     );
   },
 
-  destroy: function() {
+  destroy() {
     // Force unwatching for all types, even if we weren't watching.
     // This is fine as unwatchTarget is NOOP if we weren't already watching for this target type.
     for (const targetType of Object.values(Targets.TYPES)) {

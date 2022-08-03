@@ -11,7 +11,7 @@ define(function(require, exports, module) {
    * a structure that can be directly consumed by the tree-view component.
    */
   const ObjectProvider = {
-    getChildren: function(object) {
+    getChildren(object) {
       const children = [];
 
       if (object instanceof ObjectProperty) {
@@ -36,7 +36,7 @@ define(function(require, exports, module) {
       return children;
     },
 
-    hasChildren: function(object) {
+    hasChildren(object) {
       if (object instanceof ObjectProperty) {
         object = object.value;
       }
@@ -56,19 +56,19 @@ define(function(require, exports, module) {
       return Object.keys(object).length > 0;
     },
 
-    getLabel: function(object) {
+    getLabel(object) {
       return object instanceof ObjectProperty ? object.name : null;
     },
 
-    getValue: function(object) {
+    getValue(object) {
       return object instanceof ObjectProperty ? object.value : null;
     },
 
-    getKey: function(object) {
+    getKey(object) {
       return object instanceof ObjectProperty ? object.name : null;
     },
 
-    getType: function(object) {
+    getType(object) {
       return object instanceof ObjectProperty
         ? typeof object.value
         : typeof object;

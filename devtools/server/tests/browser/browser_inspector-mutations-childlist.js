@@ -89,7 +89,7 @@ function mutationTest(testSpec) {
 add_task(
   mutationTest({
     autoCleanup: false,
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 0, "Dummy mutation is filtered out.");
     },
   })
@@ -102,7 +102,7 @@ add_task(
     autoCleanup: false,
     load: ["#longlist div"],
     moves: [["#a", "#longlist"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       const remove = mutations[0];
       is(remove.type, "childList", "First mutation should be a childList.");
       ok(remove.removed.length > 0, "First mutation should be a removal.");
@@ -131,7 +131,7 @@ add_task(
     autoCleanup: false,
     load: ["#longlist div", "#longlist-sibling"],
     moves: [["#a", "#longlist-sibling"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       const remove = mutations[0];
       is(remove.type, "childList", "First mutation should be a childList.");
       ok(remove.removed.length > 0, "First mutation should be a removal.");
@@ -161,7 +161,7 @@ add_task(
     autoCleanup: false,
     load: ["#longlist"],
     moves: [["#longlist-sibling", "#longlist"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 2, "Should generate two mutations");
       is(mutations[0].type, "childList", "Should be childList mutations.");
       is(mutations[0].added.length, 0, "Should have no adds.");
@@ -180,7 +180,7 @@ add_task(
     autoCleanup: false,
     load: ["#longlist div"],
     moves: [["#longlist-sibling-firstchild", "#longlist"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 1, "Should generate two mutations");
       is(mutations[0].type, "childList", "Should be childList mutations.");
       is(mutations[0].added.length, 0, "Should have no adds.");
@@ -195,7 +195,7 @@ add_task(
     autoCleanup: false,
     load: ["html"],
     moves: [["#longlist-sibling", "#longlist"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 0, "Should generate no mutations.");
     },
   })
@@ -207,7 +207,7 @@ add_task(
     autoCleanup: false,
     load: ["#longlist div"],
     moves: [["#longlist", null]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 1, "Should generate one mutation.");
       const change = mutations[0];
       is(change.type, "childList", "Should be a childList.");
@@ -229,7 +229,7 @@ add_task(
     autoCleanup: true,
     load: ["#longlist div"],
     moves: [["#longlist", null]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 1, "Should generate one mutation.");
       const change = mutations[0];
       is(change.type, "childList", "Should be a childList.");
@@ -246,7 +246,7 @@ add_task(
     autoCleanup: false,
     load: ["#longlist div"],
     moves: [["#longlist", "#longlist-sibling"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 1, "Should generate one mutation.");
       const change = mutations[0];
       is(change.type, "childList", "Should be a childList.");
@@ -269,7 +269,7 @@ add_task(
     autoCleanup: true,
     load: ["#longlist div"],
     moves: [["#longlist", "#longlist-sibling"]],
-    postCheck: function(walker, mutations) {
+    postCheck(walker, mutations) {
       is(mutations.length, 1, "Should generate one mutation.");
       const change = mutations[0];
       is(change.type, "childList", "Should be a childList.");

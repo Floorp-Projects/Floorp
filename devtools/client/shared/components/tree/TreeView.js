@@ -625,15 +625,15 @@ define(function(require, exports, module) {
           // A label for the child node
           name: provider.getLabel(child),
           // Data type of the child node (used for CSS customization)
-          type: type,
+          type,
           // Class attribute computed from the type.
           rowClass: "treeRow-" + type,
           // Level of the child within the hierarchy (top == 0)
           level: provider.getLevel ? provider.getLevel(child, level) : level,
           // True if this node has children.
-          hasChildren: hasChildren,
+          hasChildren,
           // Value associated with this node (as provided by the data provider)
-          value: value,
+          value,
           // True if the node is expanded.
           open: this.isExpanded(nodePath),
           // Node path
@@ -672,7 +672,7 @@ define(function(require, exports, module) {
 
         const props = Object.assign({}, this.props, {
           key: `${member.path}-${member.active ? "active" : "inactive"}`,
-          member: member,
+          member,
           columns: this.state.columns,
           id: member.path,
           ref: row => row && this.rows.push(row),

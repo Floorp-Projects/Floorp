@@ -6,7 +6,7 @@
 // correctly.
 
 Object.defineProperty(this, "NetworkHelper", {
-  get: function() {
+  get() {
     return require("devtools/shared/webconsole/network-helper");
   },
   configurable: true,
@@ -15,7 +15,7 @@ Object.defineProperty(this, "NetworkHelper", {
 });
 
 const DUMMY_CERT = {
-  getBase64DERString: function() {
+  getBase64DERString() {
     // This is the base64-encoded contents of the "DigiCert ECC Secure Server CA"
     // intermediate certificate as issued by "DigiCert Global Root CA". It was
     // chosen as a test certificate because it has an issuer common name,

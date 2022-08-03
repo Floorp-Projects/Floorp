@@ -21,7 +21,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
    * @param {TargetActor} targetActor
    *    The top-level Actor for this tab.
    */
-  initialize: function(conn, targetActor) {
+  initialize(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.targetActor = targetActor;
 
@@ -34,14 +34,14 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     this.changes = [];
   },
 
-  destroy: function() {
+  destroy() {
     this.clearChanges();
     this.targetActor.off("will-navigate", this.onWillNavigate);
     TrackChangeEmitter.off("track-change", this.onTrackChange);
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  start: function() {
+  start() {
     /**
      * This function currently does nothing and returns nothing. It exists only
      * so that the client can trigger the creation of the ChangesActor through
@@ -50,11 +50,11 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
      */
   },
 
-  changeCount: function() {
+  changeCount() {
     return this.changes.length;
   },
 
-  change: function(index) {
+  change(index) {
     if (index >= 0 && index < this.changes.length) {
       // Return a copy of the change at index.
       return Object.assign({}, this.changes[index]);
@@ -63,7 +63,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     return undefined;
   },
 
-  allChanges: function() {
+  allChanges() {
     /**
      * This function is called by all change event consumers on the client
      * to get their initial state synchronized with the ChangesActor. We
@@ -90,20 +90,20 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
    *          request: Object     // Request data.
    *        }
    */
-  onWillNavigate: function(eventData) {
+  onWillNavigate(eventData) {
     if (eventData.isTopLevel) {
       this.clearChanges();
     }
   },
 
-  pushChange: function(change) {
+  pushChange(change) {
     this.changes.push(change);
     if (this._changesHaveBeenRequested) {
       this.emit("add-change", change);
     }
   },
 
-  popChange: function() {
+  popChange() {
     const change = this.changes.pop();
     if (this._changesHaveBeenRequested) {
       this.emit("remove-change", change);
@@ -111,7 +111,7 @@ const ChangesActor = protocol.ActorClassWithSpec(changesSpec, {
     return change;
   },
 
-  clearChanges: function() {
+  clearChanges() {
     this.changes.length = 0;
     if (this._changesHaveBeenRequested) {
       this.emit("clear-changes");

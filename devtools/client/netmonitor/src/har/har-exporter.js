@@ -17,7 +17,7 @@ var uid = 1;
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log: function(...args) {},
+  log(...args) {},
 };
 
 /**
@@ -108,7 +108,7 @@ const HarExporter = {
    * @param Object options
    *        Configuration object, see save() for detailed description.
    */
-  copy: function(options) {
+  copy(options) {
     return this.fetchHarData(options).then(jsonString => {
       clipboardHelper.copyString(jsonString);
       return jsonString;
@@ -121,7 +121,7 @@ const HarExporter = {
    * @param Object options
    *        Configuration object, see save() for detailed description.
    */
-  getHar: function(options) {
+  getHar(options) {
     return this.fetchHarData(options).then(data => {
       return data ? JSON.parse(data) : null;
     });
@@ -129,7 +129,7 @@ const HarExporter = {
 
   // Helpers
 
-  fetchHarData: function(options) {
+  fetchHarData(options) {
     // Generate page ID
     options.id = options.id || uid++;
 
@@ -190,7 +190,7 @@ const HarExporter = {
    * since it can involve additional RDP communication (e.g. resolving
    * long strings).
    */
-  buildHarData: async function(options) {
+  async buildHarData(options) {
     const { connector } = options;
     const { getTabTarget } = connector;
     const { title } = getTabTarget();
@@ -219,7 +219,7 @@ const HarExporter = {
   /**
    * Build JSON string from the HAR data object.
    */
-  stringify: function(har) {
+  stringify(har) {
     if (!har) {
       return null;
     }

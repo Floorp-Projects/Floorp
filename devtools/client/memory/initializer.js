@@ -29,7 +29,7 @@ const initialize = async function(commands) {
   store = Store();
   const app = createElement(App, {
     toolbox: gToolbox,
-    commands: commands,
+    commands,
     heapWorker: gHeapAnalysesClient,
   });
   const provider = createElement(Provider, { store }, app);

@@ -42,7 +42,7 @@ class WatchpointMap {
       }
 
       this.threadActor._pauseAndRespond(frame, {
-        type: type,
+        type,
         message: label,
       });
     };

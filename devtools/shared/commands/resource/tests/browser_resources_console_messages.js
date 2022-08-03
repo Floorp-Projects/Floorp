@@ -596,7 +596,7 @@ async function logRuntimeMessages(browser, executeInIframe) {
         inAsmJS2();
       }
       return inAsmJS1;
-    })(null, { fromAsmJS: fromAsmJS })();
+    })(null, { fromAsmJS })();
   });
   await SpecialPowers.spawn(browsingContext, [], function frameScript() {
     const sandbox = new Cu.Sandbox(null, { invisibleToDebugger: true });

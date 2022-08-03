@@ -61,7 +61,7 @@ const DevToolsShim = {
    * Returns true if DevTools are enabled. This now only depends on the policy.
    * TODO: Merge isEnabled and isDisabledByPolicy.
    */
-  isEnabled: function() {
+  isEnabled() {
     return !this.isDisabledByPolicy();
   },
 
@@ -69,7 +69,7 @@ const DevToolsShim = {
    * Returns true if the devtools are completely disabled and can not be enabled. All
    * entry points should return without throwing, initDevTools should never be called.
    */
-  isDisabledByPolicy: function() {
+  isDisabledByPolicy() {
     return Services.prefs.getBoolPref(DEVTOOLS_POLICY_DISABLED_PREF, false);
   },
 
@@ -78,7 +78,7 @@ const DevToolsShim = {
    *
    * @return {Boolean} true if DevTools are initialized.
    */
-  isInitialized: function() {
+  isInitialized() {
     return !!this._gDevTools;
   },
 
@@ -89,7 +89,7 @@ const DevToolsShim = {
    * @return {Array<Toolbox>}
    *   An array of toolboxes.
    */
-  getToolboxes: function() {
+  getToolboxes() {
     if (this.isInitialized()) {
       return this._gDevTools.getToolboxes();
     }
@@ -102,7 +102,7 @@ const DevToolsShim = {
    *
    * @param {DevTools} a devtools instance (from client/framework/devtools)
    */
-  register: function(gDevTools) {
+  register(gDevTools) {
     this._gDevTools = gDevTools;
     this._onDevToolsRegistered();
     this._gDevTools.emit("devtools-registered");
@@ -112,7 +112,7 @@ const DevToolsShim = {
    * Unregister the current instance of gDevTools. Should be called by DevTools during
    * shutdown.
    */
-  unregister: function() {
+  unregister() {
     if (this.isInitialized()) {
       this._gDevTools.emit("devtools-unregistered");
       this._gDevTools = null;
@@ -133,7 +133,7 @@ const DevToolsShim = {
    * - toolbox-created
    * - toolbox-destroyed
    */
-  on: function(event, listener) {
+  on(event, listener) {
     if (this.isInitialized()) {
       this._gDevTools.on(event, listener);
     } else {
@@ -145,7 +145,7 @@ const DevToolsShim = {
    * This method is currently only used by devtools code, but is kept here for consistency
    * with on().
    */
-  off: function(event, listener) {
+  off(event, listener) {
     if (this.isInitialized()) {
       this._gDevTools.off(event, listener);
     } else {
@@ -159,7 +159,7 @@ const DevToolsShim = {
    * @param {Object} state
    *                 A SessionStore state object that gets modified by reference
    */
-  saveDevToolsSession: function(state) {
+  saveDevToolsSession(state) {
     if (!this.isInitialized()) {
       return;
     }
@@ -171,7 +171,7 @@ const DevToolsShim = {
    * Called from SessionStore.jsm in mozilla-central when restoring a previous session.
    * Will always be called, even if the session does not contain DevTools related items.
    */
-  restoreDevToolsSession: function(session) {
+  restoreDevToolsSession(session) {
     if (!this.isEnabled()) {
       return;
     }
@@ -204,7 +204,7 @@ const DevToolsShim = {
    *         accessibility inspector or that resolves immediately if DevTools are not
    *         enabled.
    */
-  inspectA11Y: function(tab, domReference) {
+  inspectA11Y(tab, domReference) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
         lazy.DevToolsStartup.openInstallPage("ContextMenu");
@@ -234,7 +234,7 @@ const DevToolsShim = {
    * @return {Promise} a promise that resolves when the node is selected in the inspector
    *         markup view or that resolves immediately if DevTools are not enabled.
    */
-  inspectNode: function(tab, domReference) {
+  inspectNode(tab, domReference) {
     if (!this.isEnabled()) {
       if (!this.isDisabledByPolicy()) {
         lazy.DevToolsStartup.openInstallPage("ContextMenu");
@@ -252,7 +252,7 @@ const DevToolsShim = {
     return this._gDevTools.inspectNode(tab, domReference, startTime);
   },
 
-  _onDevToolsRegistered: function() {
+  _onDevToolsRegistered() {
     // Register all pending event listeners on the real gDevTools object.
     for (const [event, listener] of this.listeners) {
       this._gDevTools.on(event, listener);
@@ -270,7 +270,7 @@ const DevToolsShim = {
    *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
    *        in toolkit/components/telemetry/Histograms.json
    */
-  initDevTools: function(reason) {
+  initDevTools(reason) {
     if (!this.isEnabled()) {
       throw new Error("DevTools are not enabled and can not be initialized.");
     }

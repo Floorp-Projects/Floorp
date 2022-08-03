@@ -122,7 +122,7 @@ function isOther(item) {
 
 module.exports = {
   Filters: {
-    all: all,
+    all,
     html: isHtml,
     css: isCss,
     js: isJs,

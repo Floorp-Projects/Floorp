@@ -26,7 +26,7 @@ add_task(async function() {
     removableColumns: true,
     firstColumn: "col4",
     l10n: {
-      setAttributes: function() {},
+      setAttributes() {},
     },
   });
 

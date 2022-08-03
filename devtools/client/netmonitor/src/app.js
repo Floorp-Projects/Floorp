@@ -74,7 +74,7 @@ NetMonitorApp.prototype = {
     });
 
     // Render the root Application component.
-    render(Provider({ store: store }, app), this.mount);
+    render(Provider({ store }, app), this.mount);
   },
 
   /**

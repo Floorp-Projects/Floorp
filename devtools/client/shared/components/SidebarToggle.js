@@ -78,7 +78,7 @@ class SidebarToggle extends Component {
 
     return button({
       className: classNames.join(" "),
-      title: title,
+      title,
       onClick: this.onClick,
     });
   }

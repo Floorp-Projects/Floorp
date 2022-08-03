@@ -64,7 +64,7 @@ exports.ViewHelpers = {
    *         True if the event was cancelled or a registered handler
    *         called preventDefault.
    */
-  dispatchEvent: function(target, type, detail) {
+  dispatchEvent(target, type, detail) {
     if (!(target instanceof Node)) {
       // Event cancelled.
       return true;
@@ -85,7 +85,7 @@ exports.ViewHelpers = {
    * @param Node node
    *        A node to delegate the methods to.
    */
-  delegateWidgetAttributeMethods: function(widget, node) {
+  delegateWidgetAttributeMethods(widget, node) {
     widget.getAttribute = widget.getAttribute || node.getAttribute.bind(node);
     widget.setAttribute = widget.setAttribute || node.setAttribute.bind(node);
     widget.removeAttribute =
@@ -100,7 +100,7 @@ exports.ViewHelpers = {
    * @param Node node
    *        A node to delegate the methods to.
    */
-  delegateWidgetEventMethods: function(widget, node) {
+  delegateWidgetEventMethods(widget, node) {
     widget.addEventListener =
       widget.addEventListener || node.addEventListener.bind(node);
     widget.removeEventListener =
@@ -114,7 +114,7 @@ exports.ViewHelpers = {
    * @return boolean
    *         True if it looks, walks and quacks like an event emitter.
    */
-  isEventEmitter: function(object) {
+  isEventEmitter(object) {
     return object?.on && object?.off && object?.once && object?.emit;
   },
 
@@ -124,7 +124,7 @@ exports.ViewHelpers = {
    * @return boolean
    *         True if it's a node, false otherwise.
    */
-  isNode: function(object) {
+  isNode(object) {
     return (
       object instanceof Node ||
       object instanceof Element ||
@@ -138,7 +138,7 @@ exports.ViewHelpers = {
    * @param Event e
    *        The event to be prevented.
    */
-  preventScrolling: function(e) {
+  preventScrolling(e) {
     switch (e.keyCode) {
       case KeyCodes.DOM_VK_UP:
       case KeyCodes.DOM_VK_DOWN:
@@ -159,7 +159,7 @@ exports.ViewHelpers = {
    * @param event event
    *        The event triggered by a keydown or keypress on an element
    */
-  isSpaceOrReturn: function(event) {
+  isSpaceOrReturn(event) {
     return (
       event.keyCode === KeyCodes.DOM_VK_SPACE ||
       event.keyCode === KeyCodes.DOM_VK_RETURN
@@ -179,7 +179,7 @@ exports.ViewHelpers = {
    * @param Node pane
    *        The element representing the pane to toggle.
    */
-  togglePane: function(flags, pane) {
+  togglePane(flags, pane) {
     // Make sure a pane is actually available first.
     if (!pane) {
       return;
@@ -330,7 +330,7 @@ Item.prototype = {
    * @return Item
    *         The item associated with the displayed element.
    */
-  append: function(element, options = {}) {
+  append(element, options = {}) {
     const item = new Item(this, element, "", options.attachment);
 
     // Entangle the item with the newly inserted child node.
@@ -356,7 +356,7 @@ Item.prototype = {
    * @param Item item
    *        The item associated with the element to remove.
    */
-  remove: function(item) {
+  remove(item) {
     if (!item) {
       return;
     }
@@ -372,7 +372,7 @@ Item.prototype = {
    * @param Node element
    *        The element displaying the item.
    */
-  _entangleItem: function(item, element) {
+  _entangleItem(item, element) {
     this._itemsByElement.set(element, item);
     item._target = element;
   },
@@ -383,7 +383,7 @@ Item.prototype = {
    * @param Item item
    *        The item describing a target element.
    */
-  _untangleItem: function(item) {
+  _untangleItem(item) {
     if (item.finalize) {
       item.finalize(item);
     }
@@ -401,7 +401,7 @@ Item.prototype = {
    * @param Item item
    *        The item describing a target element.
    */
-  _unlinkItem: function(item) {
+  _unlinkItem(item) {
     this._itemsByElement.delete(item._target);
   },
 
@@ -410,7 +410,7 @@ Item.prototype = {
    * Avoid using `toString` to avoid accidental JSONification.
    * @return string
    */
-  stringify: function() {
+  stringify() {
     return JSON.stringify(
       {
         value: this._value,

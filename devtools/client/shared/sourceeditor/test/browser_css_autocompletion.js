@@ -94,7 +94,7 @@ async function runTests() {
   inspector = await target.getFront("inspector");
   const walker = inspector.walker;
   completer = new CSSCompleter({
-    walker: walker,
+    walker,
     cssProperties: getClientCssProperties(),
   });
   await checkStateAndMoveOn();

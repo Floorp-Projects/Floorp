@@ -32,7 +32,7 @@ window.onload = async function () {
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
     const mockSourceMapService = {
-      _update: function () {
+      _update () {
         this._callback(Services.prefs.getBoolPref(PREF)
           ? {
               url: resolvedLocation.sourceUrl,
@@ -41,7 +41,7 @@ window.onload = async function () {
             }
           : null);
       },
-      subscribeByLocation: function (loc, callback) {
+      subscribeByLocation (loc, callback) {
         this._callback = callback;
         // Resolve immediately.
         this._update();

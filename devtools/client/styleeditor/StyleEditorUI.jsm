@@ -513,7 +513,7 @@ class StyleEditorUI extends EventEmitter {
 
       this.#styleSheetToSelect = {
         stylesheet: href,
-        line: line,
+        line,
         col: ch,
       };
     }
@@ -1188,9 +1188,9 @@ class StyleEditorUI extends EventEmitter {
    */
   selectStyleSheet(stylesheet, line, col) {
     this.#styleSheetToSelect = {
-      stylesheet: stylesheet,
-      line: line,
-      col: col,
+      stylesheet,
+      line,
+      col,
     };
 
     /* Switch to the editor for this sheet, if it exists yet.
@@ -1289,8 +1289,8 @@ class StyleEditorUI extends EventEmitter {
         const { line, column } = rule;
 
         let location = {
-          line: line,
-          column: column,
+          line,
+          column,
           source: editor.styleSheet.href,
           styleSheet: editor.styleSheet,
         };

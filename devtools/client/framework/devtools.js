@@ -439,7 +439,7 @@ DevTools.prototype = {
    * @param {Object} state
    *                 A SessionStore state object that gets modified by reference
    */
-  saveDevToolsSession: function(state) {
+  saveDevToolsSession(state) {
     state.browserConsole = BrowserConsoleManager.getBrowserConsoleSessionState();
     state.browserToolbox = BrowserToolboxLauncher.getBrowserToolboxSessionState();
   },
@@ -447,7 +447,7 @@ DevTools.prototype = {
   /**
    * Restore the devtools session state as provided by SessionStore.
    */
-  restoreDevToolsSession: async function({ browserConsole, browserToolbox }) {
+  async restoreDevToolsSession({ browserConsole, browserToolbox }) {
     if (browserToolbox) {
       BrowserToolboxLauncher.init();
     }
@@ -747,7 +747,7 @@ DevTools.prototype = {
    * Note that is will end up being cached in WebExtension codebase, via
    * DevToolsExtensionPageContextParent.getDevToolsCommands.
    */
-  createCommandsForTabForWebExtension: function(tab) {
+  createCommandsForTabForWebExtension(tab) {
     return CommandsFactory.forTab(tab, { isWebExtension: true });
   },
 
@@ -755,7 +755,7 @@ DevTools.prototype = {
    * Compatibility layer for web-extensions. Used by DevToolsShim for
    * toolkit/components/extensions/ext-c-toolkit.js
    */
-  openBrowserConsole: function() {
+  openBrowserConsole() {
     const {
       BrowserConsoleManager,
     } = require("devtools/client/webconsole/browser-console-manager");

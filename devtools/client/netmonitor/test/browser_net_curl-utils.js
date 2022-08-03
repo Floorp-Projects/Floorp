@@ -361,7 +361,7 @@ async function createCurlData(selected, getLongString, requestData) {
   // Fetch header values.
   for (const { name, value } of requestHeaders.headers) {
     const text = await getLongString(value);
-    data.headers.push({ name: name, value: text });
+    data.headers.push({ name, value: text });
   }
 
   const requestPostData = await requestData(id, "requestPostData");

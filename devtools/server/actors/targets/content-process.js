@@ -50,10 +50,7 @@ const ContentProcessTargetActor = TargetActorMixin(
   Targets.TYPES.PROCESS,
   contentProcessTargetSpec,
   {
-    initialize: function(
-      connection,
-      { isXpcShellTarget = false, sessionContext } = {}
-    ) {
+    initialize(connection, { isXpcShellTarget = false, sessionContext } = {}) {
       Actor.prototype.initialize.call(this, connection);
       this.conn = connection;
       this.threadActor = null;
@@ -138,7 +135,7 @@ const ContentProcessTargetActor = TargetActorMixin(
       return this._dbg;
     },
 
-    form: function() {
+    form() {
       if (!this._consoleActor) {
         this._consoleActor = new WebConsoleActor(this.conn, this);
         this.manage(this._consoleActor);
@@ -177,7 +174,7 @@ const ContentProcessTargetActor = TargetActorMixin(
       return this._workerList;
     },
 
-    listWorkers: function() {
+    listWorkers() {
       return this.ensureWorkerList()
         .getList()
         .then(actors => {
@@ -202,7 +199,7 @@ const ContentProcessTargetActor = TargetActorMixin(
         });
     },
 
-    _onWorkerListChanged: function() {
+    _onWorkerListChanged() {
       this.conn.send({ from: this.actorID, type: "workerListChanged" });
       this._workerList.onListChanged = null;
     },
@@ -213,7 +210,7 @@ const ContentProcessTargetActor = TargetActorMixin(
       );
     },
 
-    destroy: function() {
+    destroy() {
       // Avoid reentrancy. We will destroy the Transport when emitting "destroyed",
       // which will force destroying all actors.
       if (this.destroying) {

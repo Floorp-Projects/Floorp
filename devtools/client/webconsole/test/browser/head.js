@@ -1009,7 +1009,7 @@ function overrideOpenLink(fn) {
     const openLinkIn = function(link, where) {
       browserWindow.openTrustedLinkIn = oldOpenTrustedLinkIn;
       browserWindow.openWebLinkIn = oldOpenWebLinkIn;
-      resolve({ link: link, where });
+      resolve({ link, where });
     };
     browserWindow.openWebLinkIn = browserWindow.openTrustedLinkIn = openLinkIn;
     fn();

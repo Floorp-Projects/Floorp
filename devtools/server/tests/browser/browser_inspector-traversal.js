@@ -192,7 +192,7 @@ add_task(async function testLongListTraversal() {
   // maxNodes with a center in the middle of the list should put that item in the middle
   const center = allChildren[13];
   is(center.id, "n", "Make sure I know how to count letters.");
-  children = await walker.children(longList, { maxNodes: 5, center: center });
+  children = await walker.children(longList, { maxNodes: 5, center });
   await checkArray(walker, children, false, false, "lmnop");
   // maxNodes with the second-to-last item centered should give us the last 5 nodes.
   children = await walker.children(longList, {
@@ -203,7 +203,7 @@ add_task(async function testLongListTraversal() {
   // maxNodes with a start in the middle should start at that node and fetch 5
   const start = allChildren[13];
   is(start.id, "n", "Make sure I know how to count letters.");
-  children = await walker.children(longList, { maxNodes: 5, start: start });
+  children = await walker.children(longList, { maxNodes: 5, start });
   await checkArray(walker, children, false, false, "nopqr");
   // maxNodes near the end should only return what's left
   children = await walker.children(longList, {

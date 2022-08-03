@@ -239,7 +239,7 @@ DevToolsServerConnection.prototype = {
     };
   },
 
-  _queueResponse: function(from, type, responseOrPromise) {
+  _queueResponse(from, type, responseOrPromise) {
     const pendingResponse =
       this._actorResponses.get(from) || Promise.resolve(null);
     const responsePromise = pendingResponse
@@ -455,7 +455,7 @@ DevToolsServerConnection.prototype = {
       }
     } else {
       const message = `Actor ${actorKey} does not recognize the bulk packet type '${type}'`;
-      ret = { error: "unrecognizedPacketType", message: message };
+      ret = { error: "unrecognizedPacketType", message };
       packet.done.reject(new Error(message));
     }
 
@@ -560,8 +560,8 @@ DevToolsServerConnection.prototype = {
 
     return this.parentMessageManager.sendSyncMessage("debug:setup-in-parent", {
       prefix: this.prefix,
-      module: module,
-      setupParent: setupParent,
+      module,
+      setupParent,
     });
   },
 

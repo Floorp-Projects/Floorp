@@ -15,5 +15,5 @@ const helloSpec = protocol.generateActorSpec({
 });
 
 var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
-  hello: function() {},
+  hello() {},
 });

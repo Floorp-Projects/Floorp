@@ -438,10 +438,10 @@ class RequestListContent extends Component {
                   onInitiatorBadgeMouseDown(item.cause),
                 onSecurityIconMouseDown: () =>
                   onSecurityIconMouseDown(item.securityState),
-                onWaterfallMouseDown: onWaterfallMouseDown,
+                onWaterfallMouseDown,
                 requestFilterTypes,
-                openRequestBlockingAndAddUrl: openRequestBlockingAndAddUrl,
-                openRequestBlockingAndDisableUrls: openRequestBlockingAndDisableUrls,
+                openRequestBlockingAndAddUrl,
+                openRequestBlockingAndDisableUrls,
               });
             })
           )

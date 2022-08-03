@@ -48,7 +48,7 @@ window.onload = function() {
       },
       // A mock source map service.
       sourceMapURLService: {
-	      subscribeByLocation: function ({ line, column }, callback) {
+	      subscribeByLocation ({ line, column }, callback) {
 	        const newLine = Number(line.toString().repeat(2));
 	        // Resolve immediately.
           callback({
@@ -118,7 +118,7 @@ window.onload = function() {
       },
       // A mock source map service.
       sourceMapURLService: {
-        subscribeByLocation: function ({ line, column }, callback) {
+        subscribeByLocation ({ line, column }, callback) {
           // Resolve after a while.
           setTimeout(() => {
             const newLine = Number(line.toString().repeat(2));
@@ -217,7 +217,7 @@ window.onload = function() {
       },
       // A mock source map service.
       sourceMapURLService: {
-        subscribeByLocation: function ({ line, column }, callback) {
+        subscribeByLocation ({ line, column }, callback) {
           // Don't call the callback for the second frame to simulate a flaky sourcemap
           // service request.
           if (line === 2) {

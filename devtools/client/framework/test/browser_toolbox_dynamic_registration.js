@@ -21,7 +21,7 @@ function testRegister(aToolbox) {
     label: "Test Tool",
     inMenu: true,
     isToolSupported: () => true,
-    build: function() {},
+    build() {},
   });
 }
 

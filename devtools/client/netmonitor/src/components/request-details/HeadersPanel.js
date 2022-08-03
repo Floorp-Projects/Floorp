@@ -408,8 +408,8 @@ class HeadersPanel extends Component {
           },
           textarea({
             className: "raw-headers",
-            rows: rows,
-            value: value,
+            rows,
+            value,
             readOnly: true,
           })
         )

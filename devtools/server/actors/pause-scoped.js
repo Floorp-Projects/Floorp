@@ -22,17 +22,17 @@ Object.assign(proto, {
    * Creates a pause-scoped actor for the specified object.
    * @see ObjectActor
    */
-  initialize: function(obj, hooks, conn) {
+  initialize(obj, hooks, conn) {
     ObjectActorProto.initialize.call(this, obj, hooks, conn);
     this.hooks.promote = hooks.promote;
     this.hooks.isThreadLifetimePool = hooks.isThreadLifetimePool;
   },
 
-  isPaused: function() {
+  isPaused() {
     return this.threadActor ? this.threadActor.state === "paused" : true;
   },
 
-  withPaused: function(method) {
+  withPaused(method) {
     return function() {
       if (this.isPaused()) {
         return method.apply(this, arguments);

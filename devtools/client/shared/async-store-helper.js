@@ -41,7 +41,7 @@ function asyncStoreHelper(root, mappings) {
   );
 
   store = new Proxy(store, {
-    set: function(target, property, value, receiver) {
+    set(target, property, value, receiver) {
       if (!mappings.hasOwnProperty(property)) {
         throw new Error(`AsyncStore: ${property} is not defined in mappings`);
       }

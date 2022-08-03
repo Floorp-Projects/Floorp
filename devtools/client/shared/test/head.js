@@ -126,7 +126,7 @@ const createHost = async function(
   // too early.
   await waitForPresShell(iframe);
 
-  return { host: host, win: iframe.contentWindow, doc: iframe.contentDocument };
+  return { host, win: iframe.contentWindow, doc: iframe.contentDocument };
 };
 
 /**

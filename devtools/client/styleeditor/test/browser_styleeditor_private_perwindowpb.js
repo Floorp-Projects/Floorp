@@ -49,15 +49,15 @@ function checkDiskCacheFor(fileName) {
 
   return new Promise(resolve => {
     Visitor.prototype = {
-      onCacheStorageInfo: function(num) {
+      onCacheStorageInfo(num) {
         info("disk storage contains " + num + " entries");
       },
-      onCacheEntryInfo: function(uri) {
+      onCacheEntryInfo(uri) {
         const urispec = uri.asciiSpec;
         info(urispec);
         foundPrivateData = foundPrivateData || urispec.includes(fileName);
       },
-      onCacheEntryVisitCompleted: function() {
+      onCacheEntryVisitCompleted() {
         is(foundPrivateData, false, "web content present in disk cache");
         resolve();
       },

@@ -137,8 +137,8 @@ define(function(require, exports, module) {
       {},
       Rep({
         ...props,
-        object: object,
-        mode: mode,
+        object,
+        mode,
       }),
       delim
     );

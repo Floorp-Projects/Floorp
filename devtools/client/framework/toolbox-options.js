@@ -98,7 +98,7 @@ OptionsPanel.prototype = {
     return this;
   },
 
-  _addListeners: function() {
+  _addListeners() {
     Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.addObserver("devtools.theme", this._prefChanged);
     Services.prefs.addObserver(
@@ -118,7 +118,7 @@ OptionsPanel.prototype = {
     this.toolbox.on("webextension-unregistered", this.setupToolsList);
   },
 
-  _removeListeners: function() {
+  _removeListeners() {
     Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
     Services.prefs.removeObserver("devtools.theme", this._prefChanged);
     Services.prefs.removeObserver(
@@ -135,7 +135,7 @@ OptionsPanel.prototype = {
     gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
 
-  _prefChanged: function(subject, topic, prefName) {
+  _prefChanged(subject, topic, prefName) {
     if (prefName === "devtools.cache.disabled") {
       const cacheDisabled = GetPref(prefName);
       const cbx = this.panelDoc.getElementById("devtools-disable-cache");
@@ -147,11 +147,11 @@ OptionsPanel.prototype = {
     }
   },
 
-  _themeRegistered: function(themeId) {
+  _themeRegistered(themeId) {
     this.setupThemeList();
   },
 
-  _themeUnregistered: function(theme) {
+  _themeUnregistered(theme) {
     const themeBox = this.panelDoc.getElementById("devtools-theme-box");
     const themeInput = themeBox.querySelector(`[value=${theme.id}]`);
 
@@ -218,7 +218,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  setupToolsList: function() {
+  setupToolsList() {
     const defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
     const additionalToolsBox = this.panelDoc.getElementById(
       "additional-tools-box"
@@ -377,7 +377,7 @@ OptionsPanel.prototype = {
     this.panelWin.focus();
   },
 
-  setupThemeList: function() {
+  setupThemeList() {
     const themeBox = this.panelDoc.getElementById("devtools-theme-box");
     const themeLabels = themeBox.querySelectorAll("label");
     for (const label of themeLabels) {
@@ -421,7 +421,7 @@ OptionsPanel.prototype = {
   /**
    * Add extra checkbox options bound to a boolean preference.
    */
-  setupAdditionalOptions: function() {
+  setupAdditionalOptions() {
     const prefDefinitions = [];
 
     if (GetPref("devtools.custom-formatters")) {
@@ -596,7 +596,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  updateCurrentTheme: function() {
+  updateCurrentTheme() {
     const currentTheme = GetPref("devtools.theme");
     const themeBox = this.panelDoc.getElementById("devtools-theme-box");
     const themeRadioInput = themeBox.querySelector(`[value=${currentTheme}]`);
@@ -610,7 +610,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  updateSourceMapPref: function() {
+  updateSourceMapPref() {
     const prefName = "devtools.source-map.client-service.enabled";
     const enabled = GetPref(prefName);
     const box = this.panelDoc.querySelector(`[data-pref="${prefName}"]`);
@@ -627,7 +627,7 @@ OptionsPanel.prototype = {
    * @param {Event} event
    *        The event sent by checking / unchecking the disable JS checkbox.
    */
-  _disableJSClicked: function(event) {
+  _disableJSClicked(event) {
     const checked = event.target.checked;
 
     this.commands.targetConfigurationCommand.updateConfiguration({
@@ -635,7 +635,7 @@ OptionsPanel.prototype = {
     });
   },
 
-  destroy: function() {
+  destroy() {
     if (this.destroyed) {
       return;
     }

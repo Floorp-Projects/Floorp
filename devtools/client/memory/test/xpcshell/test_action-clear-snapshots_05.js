@@ -28,7 +28,7 @@ add_task(async function() {
   ]);
 
   const errorHeapWorker = {
-    deleteHeapSnapshot: function() {
+    deleteHeapSnapshot() {
       return Promise.reject("_");
     },
   };

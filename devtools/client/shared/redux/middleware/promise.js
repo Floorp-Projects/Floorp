@@ -44,7 +44,7 @@ function promiseMiddleware({ dispatch, getState }) {
             dispatch(
               Object.assign({}, action, {
                 status: "done",
-                value: value,
+                value,
               })
             );
             resolve(value);

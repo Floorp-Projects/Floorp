@@ -153,7 +153,7 @@ class StatisticsPanel extends Component {
 
     ReactDOM.render(
       MDNLink({
-        url: url,
+        url,
         title: CHARTS_LEARN_MORE,
       }),
       containerNode

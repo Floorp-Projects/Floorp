@@ -22,7 +22,7 @@ const TEST_DATA = [
   {
     desc: "Guides and infobar should be shown by default",
     options: {},
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       let hidden = await highlighterTestFront.getHighlighterNodeAttribute(
         "box-model-infobar-container",
         "hidden"
@@ -47,7 +47,7 @@ const TEST_DATA = [
   {
     desc: "All regions should be shown by default",
     options: {},
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       for (const region of ["margin", "border", "padding", "content"]) {
         const { d } = await highlighterTestFront.getHighlighterRegionPath(
           region
@@ -59,7 +59,7 @@ const TEST_DATA = [
   {
     desc: "Guides can be hidden",
     options: { hideGuides: true },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       for (const side of ["top", "right", "bottom", "left"]) {
         const hidden = await highlighterTestFront.getHighlighterNodeAttribute(
           "box-model-guide-" + side,
@@ -72,7 +72,7 @@ const TEST_DATA = [
   {
     desc: "Infobar can be hidden",
     options: { hideInfoBar: true },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       const hidden = await highlighterTestFront.getHighlighterNodeAttribute(
         "box-model-infobar-container",
         "hidden"
@@ -83,7 +83,7 @@ const TEST_DATA = [
   {
     desc: "One region only can be shown (1)",
     options: { showOnly: "content" },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       let { d } = await highlighterTestFront.getHighlighterRegionPath("margin");
       ok(!d, "margin region is hidden");
 
@@ -100,7 +100,7 @@ const TEST_DATA = [
   {
     desc: "One region only can be shown (2)",
     options: { showOnly: "margin" },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       let { d } = await highlighterTestFront.getHighlighterRegionPath("margin");
       ok(d, "margin region is shown");
 
@@ -117,7 +117,7 @@ const TEST_DATA = [
   {
     desc: "Guides can be drawn around a given region (1)",
     options: { region: "padding" },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       const topY1 = await highlighterTestFront.getHighlighterNodeAttribute(
         "box-model-guide-top",
         "y1"
@@ -157,7 +157,7 @@ const TEST_DATA = [
   {
     desc: "Guides can be drawn around a given region (2)",
     options: { region: "margin" },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       const topY1 = await highlighterTestFront.getHighlighterNodeAttribute(
         "box-model-guide-top",
         "y1"
@@ -197,7 +197,7 @@ const TEST_DATA = [
   {
     desc: "When showOnly is used, other regions can be faded",
     options: { showOnly: "margin", onlyRegionArea: true },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       for (const region of ["margin", "border", "padding", "content"]) {
         const { d } = await highlighterTestFront.getHighlighterRegionPath(
           region
@@ -219,7 +219,7 @@ const TEST_DATA = [
   {
     desc: "When showOnly is used, other regions can be faded (2)",
     options: { showOnly: "padding", onlyRegionArea: true },
-    checkHighlighter: async function(highlighterTestFront) {
+    async checkHighlighter(highlighterTestFront) {
       for (const region of ["margin", "border", "padding", "content"]) {
         const { d } = await highlighterTestFront.getHighlighterRegionPath(
           region

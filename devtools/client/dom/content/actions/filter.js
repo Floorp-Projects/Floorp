@@ -10,7 +10,7 @@ const constants = require("devtools/client/dom/content/constants");
  */
 function setVisibilityFilter(filter) {
   return {
-    filter: filter,
+    filter,
     type: constants.SET_VISIBILITY_FILTER,
   };
 }

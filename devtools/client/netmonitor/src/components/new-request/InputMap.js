@@ -188,7 +188,7 @@ class InputMap extends Component {
                 className: "http-custom-input-value",
                 type: "text",
                 ref: "addInputValue",
-                value: value,
+                value,
                 onChange: e => this.setState({ value: e.target.value }),
                 rows: 1,
                 placeholder: CUSTOM_NEW_REQUEST_INPUT_VALUE,

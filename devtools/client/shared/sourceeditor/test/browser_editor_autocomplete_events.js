@@ -20,7 +20,7 @@ async function runTests() {
     autocomplete: true,
     mode: Editor.modes.css,
     autocompleteOpts: {
-      walker: walker,
+      walker,
       cssProperties: getClientCssProperties(),
     },
   });

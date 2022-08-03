@@ -13,7 +13,7 @@ add_task(async function() {
   let good = true;
   const listener = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe: function(subject) {
+    observe(subject) {
       if (
         subject instanceof Ci.nsIScriptError &&
         subject.category === "XPConnect JavaScript" &&

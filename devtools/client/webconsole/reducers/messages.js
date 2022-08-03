@@ -772,7 +772,7 @@ function setVisibleMessages({
       // we track the message's ancestors and their state
       while (ancestorId) {
         ancestors.push({
-          ancestorId: ancestorId,
+          ancestorId,
           matchedFilters: matchedGroups.has(ancestorId),
           isOpen: messagesUiById.includes(ancestorId),
           isCurrentlyVisible: visibleMessages.includes(ancestorId),

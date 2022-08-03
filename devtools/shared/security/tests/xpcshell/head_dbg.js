@@ -46,7 +46,7 @@ function scriptErrorLogLevel(message) {
 // Register a console listener, so console messages don't just disappear
 // into the ether.
 var listener = {
-  observe: function(message) {
+  observe(message) {
     let string;
     try {
       message.QueryInterface(Ci.nsIScriptError);

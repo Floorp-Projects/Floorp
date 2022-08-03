@@ -144,7 +144,7 @@ const readSnapshot = (exports.readSnapshot = TaskCache.declareCacheableTask({
     return id;
   },
 
-  task: async function(heapWorker, id, removeFromCache, dispatch, getState) {
+  async task(heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(
       [states.SAVED, states.IMPORTING].includes(snapshot.state),
@@ -205,7 +205,7 @@ function makeTakeCensusTask({
       return `take-census-task-${thisTakeCensusTaskId}-${id}`;
     },
 
-    task: async function(heapWorker, id, removeFromCache, dispatch, getState) {
+    async task(heapWorker, id, removeFromCache, dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
       if (!snapshot) {
         removeFromCache();
@@ -557,7 +557,7 @@ const computeDominatorTree = (exports.computeDominatorTree = TaskCache.declareCa
       return id;
     },
 
-    task: async function(heapWorker, id, removeFromCache, dispatch, getState) {
+    async task(heapWorker, id, removeFromCache, dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
       assert(
         !snapshot.dominatorTree?.dominatorTreeId,
@@ -602,7 +602,7 @@ const fetchDominatorTree = (exports.fetchDominatorTree = TaskCache.declareCachea
       return id;
     },
 
-    task: async function(heapWorker, id, removeFromCache, dispatch, getState) {
+    async task(heapWorker, id, removeFromCache, dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
       assert(
         dominatorTreeIsComputed(snapshot),
@@ -658,7 +658,7 @@ exports.fetchImmediatelyDominated = TaskCache.declareCacheableTask({
     return `${id}-${lazyChildren.key()}`;
   },
 
-  task: async function(
+  async task(
     heapWorker,
     id,
     lazyChildren,
@@ -728,7 +728,7 @@ const computeAndFetchDominatorTree = (exports.computeAndFetchDominatorTree = Tas
       return id;
     },
 
-    task: async function(heapWorker, id, removeFromCache, dispatch, getState) {
+    async task(heapWorker, id, removeFromCache, dispatch, getState) {
       const dominatorTreeId = await dispatch(
         computeDominatorTree(heapWorker, id)
       );

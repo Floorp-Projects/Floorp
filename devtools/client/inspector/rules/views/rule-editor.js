@@ -81,7 +81,7 @@ function RuleEditor(ruleView, rule) {
 }
 
 RuleEditor.prototype = {
-  destroy: function() {
+  destroy() {
     this.rule.domRule.off("location-changed");
     this.toolbox.off("tool-registered", this._onToolChanged);
     this.toolbox.off("tool-unregistered", this._onToolChanged);
@@ -111,7 +111,7 @@ RuleEditor.prototype = {
     return trait && !this.rule.elementStyle.element.isAnonymous;
   },
 
-  _create: function() {
+  _create() {
     this.element = this.doc.createElement("div");
     this.element.className = "ruleview-rule devtools-monospace";
     this.element.dataset.ruleId = this.rule.domRule.actorID;
@@ -274,7 +274,7 @@ RuleEditor.prototype = {
   /**
    * Called when a tool is registered or unregistered.
    */
-  _onToolChanged: function() {
+  _onToolChanged() {
     // When the source editor is registered, update the source links
     // to be clickable; and if it is unregistered, update the links to
     // be unclickable.  However, some links are never clickable, so
@@ -292,11 +292,11 @@ RuleEditor.prototype = {
    * Event handler called when a property changes on the
    * StyleRuleActor.
    */
-  _locationChanged: function() {
+  _locationChanged() {
     this.updateSourceLink();
   },
 
-  _onSourceClick: function() {
+  _onSourceClick() {
     if (this.source.hasAttribute("unselectable")) {
       return;
     }
@@ -319,7 +319,7 @@ RuleEditor.prototype = {
    * @param {Object | null} originalLocation
    *        The original position object (url/line/column) or null.
    */
-  _updateLocation: function(originalLocation) {
+  _updateLocation(originalLocation) {
     let displayURL = this.rule.sheet?.href;
     const constructed = this.rule.sheet?.constructed;
     let line = this.rule.ruleLine;
@@ -345,7 +345,7 @@ RuleEditor.prototype = {
     sourceLabel.textContent = sourceTextContent;
   },
 
-  updateSourceLink: function() {
+  updateSourceLink() {
     if (this.rule.isSystem) {
       const sourceLabel = this.element.querySelector(
         ".ruleview-rule-source-label"
@@ -404,7 +404,7 @@ RuleEditor.prototype = {
    * @param {Boolean} reset
    *        True to completely reset the rule editor before populating.
    */
-  populate: function(reset) {
+  populate(reset) {
     // Clear out existing viewers.
     while (this.selectorText.hasChildNodes()) {
       this.selectorText.removeChild(this.selectorText.lastChild);
@@ -499,7 +499,7 @@ RuleEditor.prototype = {
    * @return {TextProperty}
    *        The new property
    */
-  addProperty: function(name, value, priority, enabled, siblingProp) {
+  addProperty(name, value, priority, enabled, siblingProp) {
     const prop = this.rule.createProperty(
       name,
       value,
@@ -538,7 +538,7 @@ RuleEditor.prototype = {
    * @param {TextProperty} siblingProp
    *        Optional, the property next to which all new props should be added.
    */
-  addProperties: function(properties, siblingProp) {
+  addProperties(properties, siblingProp) {
     if (!properties || !properties.length) {
       return;
     }
@@ -569,7 +569,7 @@ RuleEditor.prototype = {
    * name is given, we'll create a real TextProperty and add it to the
    * rule.
    */
-  newProperty: function() {
+  newProperty() {
     // If we're already creating a new property, ignore this.
     if (!this.closeBrace.hasAttribute("tabindex")) {
       return;
@@ -616,7 +616,7 @@ RuleEditor.prototype = {
    * @param {Boolean} commit
    *        True if the value should be committed.
    */
-  _onNewProperty: function(value, commit) {
+  _onNewProperty(value, commit) {
     if (!value || !commit) {
       return;
     }
@@ -645,7 +645,7 @@ RuleEditor.prototype = {
    * added, since we want to wait until after the inplace editor `destroy`
    * event has been fired to keep consistent UI state.
    */
-  _newPropertyDestroy: function() {
+  _newPropertyDestroy() {
     // We're done, make the close brace focusable again.
     this.closeBrace.setAttribute("tabindex", "0");
 
@@ -755,7 +755,7 @@ RuleEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _moveSelectorFocus: function(direction) {
+  _moveSelectorFocus(direction) {
     if (!direction || direction === Services.focus.MOVEFOCUS_BACKWARD) {
       return;
     }

@@ -132,7 +132,7 @@ ToolboxHostManager.prototype = {
     return toolbox;
   },
 
-  setMinWidthWithZoom: function() {
+  setMinWidthWithZoom() {
     const zoomValue = parseFloat(Services.prefs.getCharPref(ZOOM_VALUE_PREF));
 
     if (isNaN(zoomValue)) {

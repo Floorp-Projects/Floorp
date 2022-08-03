@@ -16,7 +16,7 @@ add_task(async () => {
 
   const { extension } = await installTemporaryExtensionFromXPI(
     {
-      background: function() {
+      background() {
         const open = indexedDB.open("TestDatabase", 1);
 
         open.onupgradeneeded = function() {

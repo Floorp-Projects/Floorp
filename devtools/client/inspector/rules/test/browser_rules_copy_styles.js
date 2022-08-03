@@ -142,7 +142,7 @@ add_task(async function() {
       },
     },
     {
-      setup: async function() {
+      async setup() {
         await disableProperty(view, 0);
       },
       desc: "Test Copy Rule with Disabled Property",
@@ -166,7 +166,7 @@ add_task(async function() {
       },
     },
     {
-      setup: async function() {
+      async setup() {
         await disableProperty(view, 4);
       },
       desc: "Test Copy Rule with Disabled Property with Comment",

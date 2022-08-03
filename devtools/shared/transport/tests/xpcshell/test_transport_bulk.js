@@ -86,7 +86,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
 
   // Client
   transport.hooks = {
-    onPacket: function(packet) {
+    onPacket(packet) {
       // We've received the initial start up packet
       Assert.equal(packet.from, "root");
 
@@ -112,7 +112,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
         .then(write_data);
     },
 
-    onTransportClosed: function() {
+    onTransportClosed() {
       do_throw("Transport closed before we expected");
     },
   };

@@ -65,7 +65,7 @@ define(function(require, exports, module) {
 
     return {
       "data-link-actor-id": object.actor,
-      className: className,
+      className,
       title: shouldRenderTooltip ? `Symbol(${name})` : null,
     };
   }

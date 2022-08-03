@@ -185,7 +185,7 @@ function recordConnectionAttempt(connectionId, runtimeId, status, store) {
     connection_id: connectionId,
     connection_type: runtime.type,
     runtime_id: getTelemetryRuntimeId(runtimeId),
-    status: status,
+    status,
   });
 }
 

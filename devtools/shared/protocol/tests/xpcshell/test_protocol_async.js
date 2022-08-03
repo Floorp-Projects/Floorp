@@ -43,7 +43,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 const RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  initialize: function(conn) {
+  initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
@@ -53,12 +53,12 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  simpleReturn: function() {
+  simpleReturn() {
     return this.sequence++;
   },
 
   // Guarantee that this resolves after simpleReturn returns.
-  promiseReturn: async function(toWait) {
+  async promiseReturn(toWait) {
     const sequence = this.sequence++;
 
     // Wait until the number of requests specified by toWait have
@@ -70,12 +70,12 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return sequence;
   },
 
-  simpleThrow: function() {
+  simpleThrow() {
     throw new Error(this.sequence++);
   },
 
   // Guarantee that this resolves after simpleReturn returns.
-  promiseThrow: function(toWait) {
+  promiseThrow(toWait) {
     return this.promiseReturn(toWait).then(Promise.reject);
   },
 });

@@ -130,7 +130,7 @@ BrowserToolboxLauncher.prototype = {
   /**
    * Initializes the devtools server.
    */
-  _initServer: function() {
+  _initServer() {
     if (this.devToolsServer) {
       dumpn("The chrome toolbox server is already running.");
       return;
@@ -295,7 +295,7 @@ BrowserToolboxLauncher.prototype = {
   /**
    * Creates and initializes the profile & process for the remote debugger.
    */
-  _create: function() {
+  _create() {
     dumpn("Initializing chrome debugging process.");
 
     let command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
@@ -431,7 +431,7 @@ BrowserToolboxLauncher.prototype = {
   /**
    * Closes the remote debugging server and kills the toolbox process.
    */
-  close: async function() {
+  async close() {
     if (this.closed) {
       return;
     }

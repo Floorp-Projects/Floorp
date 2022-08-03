@@ -30,17 +30,17 @@ const inContentSpec = protocol.generateActorSpec({
 });
 
 exports.InContentActor = protocol.ActorClassWithSpec(inContentSpec, {
-  initialize: function(conn) {
+  initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
 
-  isInContent: function() {
+  isInContent() {
     return (
       Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT
     );
   },
 
-  spawnInParent: async function(url) {
+  async spawnInParent(url) {
     const actorID = await this.conn.spawnActorInParentProcess(this.actorID, {
       module: url,
       constructor: "InParentActor",
@@ -69,7 +69,7 @@ const inParentSpec = protocol.generateActorSpec({
 });
 
 exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
-  initialize: function(conn, a1, a2, a3, mm) {
+  initialize(conn, a1, a2, a3, mm) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // We save all arguments to later assert them in `test` request
     this.conn = conn;
@@ -77,7 +77,7 @@ exports.InParentActor = protocol.ActorClassWithSpec(inParentSpec, {
     this.mm = mm;
   },
 
-  test: function() {
+  test() {
     return {
       args: this.args,
       isInParent:

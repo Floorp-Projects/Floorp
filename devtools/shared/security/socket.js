@@ -368,7 +368,7 @@ SocketListener.prototype = {
   /**
    * Validate that all options have been set to a supported configuration.
    */
-  _validateOptions: function() {
+  _validateOptions() {
     if (this.portOrPath === null) {
       throw new Error("Must set a port / path to listen on.");
     }
@@ -380,7 +380,7 @@ SocketListener.prototype = {
   /**
    * Listens on the given port or socket file for remote debugger connections.
    */
-  open: function() {
+  open() {
     this._validateOptions();
     this._devToolsServer.addSocketListener(this);
 
@@ -427,7 +427,7 @@ SocketListener.prototype = {
       });
   },
 
-  _advertise: function() {
+  _advertise() {
     if (!this.discoverable || !this.port) {
       return;
     }
@@ -441,7 +441,7 @@ SocketListener.prototype = {
     discovery.addService("devtools", advertisement);
   },
 
-  _createSocketInstance: function() {
+  _createSocketInstance() {
     return Cc["@mozilla.org/network/server-socket;1"].createInstance(
       Ci.nsIServerSocket
     );
@@ -451,7 +451,7 @@ SocketListener.prototype = {
    * Closes the SocketListener.  Notifies the server to remove the listener from
    * the set of active SocketListeners.
    */
-  close: function() {
+  close() {
     if (this.discoverable && this.port) {
       discovery.removeService("devtools");
     }
@@ -510,7 +510,7 @@ SocketListener.prototype = {
   },
   "SocketListener.onSocketAccepted"),
 
-  onStopListening: function(socket, status) {
+  onStopListening(socket, status) {
     dumpn("onStopListening, status: " + status);
   },
 };

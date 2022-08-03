@@ -44,7 +44,7 @@ function newConnection(prefix) {
 
   const transport = DevToolsServer.connectPipe(prefix);
 
-  return { conn: conn, transport: transport };
+  return { conn, transport };
 }
 
 /* Create the main connection for these tests. */
@@ -142,7 +142,7 @@ function newSubconnection(prefix) {
   };
   gMainConnection.setForwarding(prefix, transport);
 
-  return { conn: conn, transport: transport };
+  return { conn, transport };
 }
 
 /* Create a second root actor, to which we can forward things. */

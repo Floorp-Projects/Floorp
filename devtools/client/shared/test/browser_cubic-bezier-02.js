@@ -198,8 +198,8 @@ async function pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
 
 function getKeyEvent(target, keyCode, shift = false) {
   return {
-    target: target,
-    keyCode: keyCode,
+    target,
+    keyCode,
     shiftKey: shift,
     preventDefault: () => {},
   };

@@ -44,7 +44,7 @@ window.onload = function () {
       onViewSourceInDebugger: () => {},
       // A mock source map service.
       sourceMapURLService: {
-        subscribeByLocation: function ({ line, column }, callback) {
+        subscribeByLocation ({ line, column }, callback) {
           const newLine = line === 99 ? 1 : 7;
           // Resolve immediately.
           callback({

@@ -344,11 +344,11 @@ DevToolsStartup.prototype = {
    */
   profilerRecordingButtonCreated: false,
 
-  isDisabledByPolicy: function() {
+  isDisabledByPolicy() {
     return Services.prefs.getBoolPref(DEVTOOLS_POLICY_DISABLED_PREF, false);
   },
 
-  handle: function(cmdLine) {
+  handle(cmdLine) {
     const flags = this.readCommandLineFlags(cmdLine);
 
     // handle() can be called after browser startup (e.g. opening links from other apps).
@@ -535,7 +535,7 @@ DevToolsStartup.prototype = {
     const subviewId = "PanelUI-developer-tools-view";
 
     const item = {
-      id: id,
+      id,
       type: "view",
       viewId: panelviewId,
       shortcutId: "key_toggleToolbox",
@@ -829,7 +829,7 @@ DevToolsStartup.prototype = {
     return k;
   },
 
-  initDevTools: function(reason, key = "") {
+  initDevTools(reason, key = "") {
     // In the case of the --jsconsole and --jsdebugger command line parameters
     // there is no browser window yet so we don't send any telemetry yet.
     if (reason !== "CommandLine") {
@@ -846,7 +846,7 @@ DevToolsStartup.prototype = {
     return require;
   },
 
-  handleConsoleFlag: function(cmdLine) {
+  handleConsoleFlag(cmdLine) {
     const window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
       const require = this.initDevTools("CommandLine");
@@ -865,7 +865,7 @@ DevToolsStartup.prototype = {
   },
 
   // Open the toolbox on the selected tab once the browser starts up.
-  handleDevToolsFlag: async function(window) {
+  async handleDevToolsFlag(window) {
     const require = this.initDevTools("CommandLine");
     const { gDevTools } = require("devtools/client/framework/devtools");
     await gDevTools.showToolboxForTab(window.gBrowser.selectedTab);
@@ -894,7 +894,7 @@ DevToolsStartup.prototype = {
     return remoteDebuggingEnabled;
   },
 
-  handleDebuggerFlag: function(cmdLine, binaryPath) {
+  handleDebuggerFlag(cmdLine, binaryPath) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
@@ -953,7 +953,7 @@ DevToolsStartup.prototype = {
    * --start-debugger-server ws:
    *   Start the WebSocket server on the default port (taken from d.d.remote-port)
    */
-  handleDevToolsServerFlag: function(cmdLine, portOrPath) {
+  handleDevToolsServerFlag(cmdLine, portOrPath) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
@@ -1215,7 +1215,7 @@ DevToolsStartup.prototype = {
 const JsonView = {
   initialized: false,
 
-  initialize: function() {
+  initialize() {
     // Prevent loading the frame script multiple times if we call this more than once.
     if (this.initialized) {
       return;
@@ -1234,7 +1234,7 @@ const JsonView = {
    * Save JSON to a file needs to be implemented here
    * in the parent process.
    */
-  onSave: function(message) {
+  onSave(message) {
     const browser = message.target;
     const chrome = browser.ownerGlobal;
     if (message.data === null) {

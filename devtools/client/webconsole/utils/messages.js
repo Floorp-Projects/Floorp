@@ -622,7 +622,7 @@ function createSimpleTableMessage(columns, items, timeStamp) {
     type: MESSAGE_TYPE.SIMPLE_TABLE,
     columns,
     items,
-    timeStamp: timeStamp,
+    timeStamp,
   });
 }
 

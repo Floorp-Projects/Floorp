@@ -35,7 +35,7 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
     }
   },
 
-  destroy: function() {
+  destroy() {
     this.targetActor.off("window-ready", this.onWindowReady);
 
     this.stopListening();
@@ -44,7 +44,7 @@ const EventSourceActor = ActorClassWithSpec(eventSourceSpec, {
 
   // Actor API.
 
-  startListening: function() {
+  startListening() {
     this.stopListening();
     this.innerWindowID = this.targetActor.window.windowGlobalChild.innerWindowId;
     eventSourceEventService.addListener(this.innerWindowID, this);

@@ -161,15 +161,15 @@ NetMonitorAPI.prototype = {
    *        a function that takes ({harEntry, requestId})
    *        as first argument.
    */
-  addRequestFinishedListener: function(listener) {
+  addRequestFinishedListener(listener) {
     this._requestFinishedListeners.add(listener);
   },
 
-  removeRequestFinishedListener: function(listener) {
+  removeRequestFinishedListener(listener) {
     this._requestFinishedListeners.delete(listener);
   },
 
-  hasRequestFinishedListeners: function() {
+  hasRequestFinishedListeners() {
     return this._requestFinishedListeners.size > 0;
   },
 

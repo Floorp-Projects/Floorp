@@ -215,7 +215,7 @@ BrowserLoaderBuilder.prototype = {
    * @param { Boolean } destructure
    *    Pass true if the property name is a member of the module's exports.
    */
-  lazyRequireGetter: function(obj, properties, module, destructure) {
+  lazyRequireGetter(obj, properties, module, destructure) {
     if (Array.isArray(properties) && !destructure) {
       throw new Error(
         "Pass destructure=true to call lazyRequireGetter with an array of properties"
