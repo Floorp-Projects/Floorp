@@ -18,18 +18,14 @@ MAX_DEPENDENCIES = 99
 # to the production Taskcluster deployment used for CI.
 tc_util.PRODUCTION_TASKCLUSTER_ROOT_URL = "https://firefox-ci-tc.services.mozilla.com"
 
-# Schemas for YAML files should use dashed identifiers by default.  If there are
+# Schemas for YAML files should use dashed identifiers by default. If there are
 # components of the schema for which there is a good reason to use another format,
-# they can be whitelisted here.
-schema.WHITELISTED_SCHEMA_IDENTIFIERS.extend(
+# exceptions can be added here.
+schema.EXCEPTED_SCHEMA_IDENTIFIERS.extend(
     [
-        # upstream-artifacts are handed directly to scriptWorker, which expects interCaps
-        lambda path: "[{!r}]".format("upstream-artifacts") in path,
-        lambda path: (
-            "[{!r}]".format("test_name") in path
-            or "[{!r}]".format("json_location") in path
-            or "[{!r}]".format("video_location") in path
-        ),
+        "test_name",
+        "json_location",
+        "video_location",
     ]
 )
 
