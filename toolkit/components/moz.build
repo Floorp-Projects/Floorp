@@ -75,6 +75,7 @@ DIRS += [
     "timermanager",
     "tooltiptext",
     "typeaheadfind",
+    "uniffi-js",
     "utils",
     "url-classifier",
     "urlformatter",

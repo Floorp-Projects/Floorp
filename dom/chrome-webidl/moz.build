@@ -81,6 +81,7 @@ WEBIDL_FILES = [
     "SessionStoreUtils.webidl",
     "StructuredCloneHolder.webidl",
     "TelemetryStopwatch.webidl",
+    "UniFFI.webidl",
     "UserInteraction.webidl",
     "WebExtensionContentScript.webidl",
     "WebExtensionPolicy.webidl",
