@@ -1113,8 +1113,6 @@ pref("browser.sessionstore.upgradeBackup.maxUpgradeBackups", 3);
 pref("browser.sessionstore.debug", false);
 // Forget closed windows/tabs after two weeks
 pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
-// Platform collects data for session store
-pref("browser.sessionstore.platform_collection", true);
 // Platform collects session storage data for session store
 pref("browser.sessionstore.collect_session_storage", true);
 
