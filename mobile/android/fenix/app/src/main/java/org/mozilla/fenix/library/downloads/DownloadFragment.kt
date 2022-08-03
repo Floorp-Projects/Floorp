@@ -91,6 +91,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     @VisibleForTesting
     internal fun provideDownloads(state: BrowserState): List<DownloadItem> {
         return state.downloads.values
+            .distinctBy { it.fileName }
             .sortedByDescending { it.createdTime } // sort from newest to oldest
             .map {
                 DownloadItem(

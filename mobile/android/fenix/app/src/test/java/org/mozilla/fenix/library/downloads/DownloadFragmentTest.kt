@@ -147,4 +147,37 @@ class DownloadFragmentTest {
         val list = fragment.provideDownloads(state)
         assertEquals(expectedList[0].size, list[0].size)
     }
+
+    @Test
+    fun `WHEN two download states point to the same existing file THEN only one download item is displayed`() {
+        val fragment = DownloadFragment()
+        val downloadedFile0 = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "1.pdf"
+        )
+        val state: BrowserState = mockk(relaxed = true)
+        every { state.downloads } returns mapOf(
+            "1" to DownloadState(
+                id = "1",
+                createdTime = 1,
+                url = "url",
+                fileName = "1.pdf",
+                contentLength = 100,
+                status = DownloadState.Status.COMPLETED
+            ),
+            "2" to DownloadState(
+                id = "2",
+                createdTime = 2,
+                url = "url",
+                fileName = "1.pdf",
+                contentLength = 100,
+                status = DownloadState.Status.COMPLETED
+            )
+        )
+
+        downloadedFile0.createNewFile()
+        val providedList = fragment.provideDownloads(state)
+
+        assertEquals(1, providedList.size)
+    }
 }
