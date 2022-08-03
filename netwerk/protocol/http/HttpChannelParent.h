@@ -42,10 +42,6 @@ class HttpBackgroundChannelParent;
 class ParentChannelListener;
 class ChannelEventQueue;
 
-// Note: nsIInterfaceRequestor must be the first base so that do_QueryObject()
-// works correctly on this object, as it's needed to compute a void* pointing to
-// the beginning of this object.
-
 class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public PHttpChannelParent,
                                 public nsIParentRedirectingChannel,
