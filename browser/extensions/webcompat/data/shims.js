@@ -668,20 +668,6 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
-    id: "Hamropatro",
-    platform: "all",
-    name: "Hamropatro",
-    bug: "1660446",
-    contentScripts: [
-      {
-        js: "hamropatro.js",
-        matches: ["*://we.hamropatro.com/login*"],
-        runAt: "document_start",
-      },
-    ],
-    onlyIfDFPIActive: true,
-  },
-  {
     id: "Kinja",
     platform: "all",
     name: "Kinja",
@@ -732,23 +718,6 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
-    id: "Humblebundle",
-    platform: "all",
-    name: "Humblebundle",
-    bug: "1742553",
-    contentScripts: [
-      {
-        js: "humblebundle.js",
-        matches: [
-          "*://www.humblebundle.com/login*",
-          "*://www.humblebundle.com/signup*",
-        ],
-        runAt: "document_start",
-      },
-    ],
-    onlyIfDFPIActive: true,
-  },
-  {
     id: "History",
     platform: "all",
     name: "History.com",
@@ -771,20 +740,6 @@ const AVAILABLE_SHIMS = [
       {
         js: "crave-ca.js",
         matches: ["*://account.bellmedia.ca/login*"],
-        runAt: "document_start",
-      },
-    ],
-    onlyIfDFPIActive: true,
-  },
-  {
-    id: "LaPresse.ca",
-    platform: "all",
-    name: "LaPresse.ca",
-    bug: "1779490",
-    contentScripts: [
-      {
-        js: "lapresse.js",
-        matches: ["*://www.lapresse.ca/*"],
         runAt: "document_start",
       },
     ],
@@ -829,6 +784,16 @@ const AVAILABLE_SHIMS = [
         matches: ["*://www.blogger.com/blog/*"],
         runAt: "document_end",
       },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "FirebaseSignIn",
+    platform: "all",
+    name: "Firebase Sign-In",
+    bug: "1782772",
+    requestStorageAccessForRedirect: [
+      ["*://*/*", "*://*.firebaseapp.com/*/auth/*signInViaRedirect*"],
     ],
     onlyIfDFPIActive: true,
   },
