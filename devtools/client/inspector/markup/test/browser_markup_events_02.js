@@ -60,7 +60,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":88:29",
+        filename: TEST_URL + ":89:19",
         attributes: ["Bubbling"],
         handler: "function() {\n" + '  alert("boundHandleEvent");\n' + "}",
       },
@@ -71,7 +71,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":94:47",
+        filename: TEST_URL + ":95:47",
         attributes: ["Bubbling"],
         handler:
           "function functionProceededByInlineComment() {\n" +
@@ -85,7 +85,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":99:50",
+        filename: TEST_URL + ":100:50",
         attributes: ["Bubbling"],
         handler:
           "function functionProceededByStreamingComment() {\n" +
@@ -99,7 +99,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":74:34",
+        filename: TEST_URL + ":75:34",
         attributes: ["Bubbling"],
         handler: "function() {\n" + '  alert("obj.anonObjectMethod");\n' + "}",
       },
@@ -110,7 +110,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":78:34",
+        filename: TEST_URL + ":79:34",
         attributes: ["Bubbling"],
         handler: "function kay() {\n" + '  alert("obj.objectMethod");\n' + "}",
       },

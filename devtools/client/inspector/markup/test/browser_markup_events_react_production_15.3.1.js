@@ -28,7 +28,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_URL + ":21:33",
+        filename: TEST_URL + ":22:33",
         attributes: ["React", "Bubbling"],
         handler: `
           function() {
@@ -77,7 +77,7 @@ const TEST_DATA = [
       },
       {
         type: "onMouseUp",
-        filename: TEST_URL + ":21:33",
+        filename: TEST_URL + ":22:33",
         attributes: ["React", "Bubbling"],
         handler: `
           function() {
