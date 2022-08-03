@@ -438,7 +438,8 @@ void gfxPlatform::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
 }
 
 gfxPlatform::gfxPlatform()
-    : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo),
+    : mHasVariationFontSupport(false),
+      mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo),
       mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo),
       mFrameStatsCollector(this, &gfxPlatform::GetFrameStats),
       mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
@@ -775,26 +776,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 #undef REPORT_INTERNER
 #undef REPORT_DATA_STORE
 
-bool gfxPlatform::sHasVariationFontSupport = false;
-
-bool gfxPlatform::HasVariationFontSupport() {
-  static bool initialized = false;
-  if (!initialized) {
-#if defined(XP_WIN)
-    sHasVariationFontSupport = gfxWindowsPlatform::CheckVariationFontSupport();
-#elif defined(XP_MACOSX)
-    sHasVariationFontSupport = gfxPlatformMac::CheckVariationFontSupport();
-#elif defined(MOZ_WIDGET_GTK)
-    sHasVariationFontSupport = gfxPlatformGtk::CheckVariationFontSupport();
-#elif defined(ANDROID)
-    sHasVariationFontSupport = gfxAndroidPlatform::CheckVariationFontSupport();
-#else
-#  error "No gfxPlatform implementation available"
-#endif
-  }
-  return sHasVariationFontSupport;
-}
-
 void gfxPlatform::Init() {
   MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
   MOZ_RELEASE_ASSERT(!XRE_IsRDDProcess(), "GFX: Not allowed in RDD process.");
@@ -974,6 +955,8 @@ void gfxPlatform::Init() {
 
   InitLayersIPC();
 
+  gPlatform->mHasVariationFontSupport = gPlatform->CheckVariationFontSupport();
+
   // This *create* the platform font list instance, but may not *initialize* it
   // yet if the gfx.font-list.lazy-init.enabled pref is set. The first *use*
   // of the list will ensure it is initialized.
@@ -1029,7 +1012,7 @@ void gfxPlatform::Init() {
 
   if (XRE_IsParentProcess()) {
     Preferences::Unlock(FONT_VARIATIONS_PREF);
-    if (!gfxPlatform::HasVariationFontSupport()) {
+    if (!gPlatform->HasVariationFontSupport()) {
       // Ensure variation fonts are disabled and the pref is locked.
       Preferences::SetBool(FONT_VARIATIONS_PREF, false, PrefValueKind::Default);
       Preferences::SetBool(FONT_VARIATIONS_PREF, false);

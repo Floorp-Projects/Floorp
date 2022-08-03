@@ -62,14 +62,13 @@ class gfxPlatformGtk final : public gfxPlatform {
     return !mIsX11Display && !gfxPlatform::IsHeadless();
   }
 
-  static bool CheckVariationFontSupport();
-
  protected:
   void InitX11EGLConfig();
   void InitDmabufConfig();
   bool InitVAAPIConfig(bool aForceEnabledByUser);
   void InitPlatformGPUProcessPrefs() override;
   void InitWebRenderConfig() override;
+  bool CheckVariationFontSupport() override;
   void BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut) override;
 
  private:
