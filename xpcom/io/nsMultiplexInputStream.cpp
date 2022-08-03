@@ -827,10 +827,6 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     mAsyncWaitFlags = aFlags;
     mAsyncWaitRequestedCount = aRequestedCount;
     mAsyncWaitEventTarget = aEventTarget;
-
-    if (!mAsyncWaitCallback) {
-      return NS_OK;
-    }
   }
 
   return AsyncWaitInternal();
@@ -838,6 +834,7 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
 nsresult nsMultiplexInputStream::AsyncWaitInternal() {
   nsCOMPtr<nsIAsyncInputStream> stream;
+  nsIInputStreamCallback* asyncWaitCallback = nullptr;
   uint32_t asyncWaitFlags = 0;
   uint32_t asyncWaitRequestedCount = 0;
   nsCOMPtr<nsIEventTarget> asyncWaitEventTarget;
@@ -869,6 +866,7 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
       }
     }
 
+    asyncWaitCallback = mAsyncWaitCallback ? this : nullptr;
     asyncWaitFlags = mAsyncWaitFlags;
     asyncWaitRequestedCount = mAsyncWaitRequestedCount;
     asyncWaitEventTarget = mAsyncWaitEventTarget;
@@ -879,12 +877,14 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
   // If we are here it's because we are already closed, or if the current stream
   // is not async. In both case we have to execute the callback.
   if (!stream) {
-    AsyncWaitRunnable::Create(this, asyncWaitEventTarget);
+    if (asyncWaitCallback) {
+      AsyncWaitRunnable::Create(this, asyncWaitEventTarget);
+    }
     return NS_OK;
   }
 
-  return stream->AsyncWait(this, asyncWaitFlags, asyncWaitRequestedCount,
-                           asyncWaitEventTarget);
+  return stream->AsyncWait(asyncWaitCallback, asyncWaitFlags,
+                           asyncWaitRequestedCount, asyncWaitEventTarget);
 }
 
 NS_IMETHODIMP
