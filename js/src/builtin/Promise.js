@@ -9,8 +9,9 @@ function Promise_finally(onFinally) {
     var promise = this;
 
     // Step 2.
-    if (!IsObject(promise))
+    if (!IsObject(promise)) {
         ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Promise", "finally", "value");
+    }
 
     // Step 3.
     var C = SpeciesConstructor(promise, GetBuiltinConstructor("Promise"));
