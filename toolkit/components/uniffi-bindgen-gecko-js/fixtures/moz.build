@@ -17,3 +17,5 @@ components = [
 EXTRA_JS_MODULES["components-utils"] = [
     "generated/{}.jsm".format(component) for component in components
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
