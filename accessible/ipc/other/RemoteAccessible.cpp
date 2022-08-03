@@ -78,6 +78,10 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
     RelationType aType) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::RelationByType(aType);
+  }
+
   nsTArray<uint64_t> targetIDs;
   Unused << mDoc->SendRelationByType(mID, static_cast<uint32_t>(aType),
                                      &targetIDs);
