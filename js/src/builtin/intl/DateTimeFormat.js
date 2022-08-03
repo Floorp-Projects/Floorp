@@ -81,8 +81,9 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     // Copy the hourCycle setting, if present, to the format options. But
     // only do this if no hour12 option is present, because the latter takes
     // precedence over hourCycle.
-    if (r.hc !== null && formatOpt.hour12 === undefined)
+    if (r.hc !== null && formatOpt.hour12 === undefined) {
         formatOpt.hourCycle = r.hc;
+    }
 
     // Steps 26-31, more or less - see comment after this function.
     if (lazyDateTimeFormatData.patternOption !== undefined) {
@@ -127,8 +128,9 @@ function getDateTimeFormatInternals(obj) {
 
     // If internal properties have already been computed, use them.
     var internalProps = maybeInternalProperties(internals);
-    if (internalProps)
+    if (internalProps) {
         return internalProps;
+    }
 
     // Otherwise it's time to fully create them.
     internalProps = resolveDateTimeFormatInternals(internals.lazyData);
@@ -192,8 +194,9 @@ var timeZoneCache = {
  * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
  */
 function DefaultTimeZone() {
-    if (intl_isDefaultTimeZone(timeZoneCache.icuDefaultTimeZone))
+    if (intl_isDefaultTimeZone(timeZoneCache.icuDefaultTimeZone)) {
         return timeZoneCache.defaultTimeZone;
+    }
 
     // Verify that the current ICU time zone is a valid ECMA-402 time zone.
     var icuDefaultTimeZone = intl_defaultTimeZone();
@@ -217,8 +220,9 @@ function DefaultTimeZone() {
         }
 
         // Fallback to "UTC" if everything else fails.
-        if (timeZone === null)
+        if (timeZone === null) {
             timeZone = "UTC";
+        }
     }
 
     // Canonicalize the ICU time zone, e.g. change Etc/UTC to UTC.
@@ -341,8 +345,9 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
         // Step 18.b.
         var timeZone = intl_IsValidTimeZoneName(tz);
-        if (timeZone === null)
+        if (timeZone === null) {
             ThrowRangeError(JSMSG_INVALID_TIME_ZONE, tz);
+        }
 
         // Step 18.c.
         tz = CanonicalizeTimeZoneName(timeZone);
@@ -423,8 +428,9 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
     // Steps 29-30.
     // Pass hr12 on to ICU.
-    if (hr12 !== undefined)
+    if (hr12 !== undefined) {
         formatOpt.hour12 = hr12;
+    }
 
     // Step 32.
     //
@@ -459,10 +465,11 @@ function ToDateTimeOptions(options, required, defaults) {
     assert(typeof defaults === "string", "ToDateTimeOptions");
 
     // Steps 1-2.
-    if (options === undefined)
+    if (options === undefined) {
         options = null;
-    else
+    } else {
         options = ToObject(options);
+    }
     options = std_Object_create(options);
 
     // Step 3.
@@ -470,28 +477,37 @@ function ToDateTimeOptions(options, required, defaults) {
 
     // Step 4.
     if (required === "date" || required === "any") {
-        if (options.weekday !== undefined)
+        if (options.weekday !== undefined) {
             needDefaults = false;
-        if (options.year !== undefined)
+        }
+        if (options.year !== undefined) {
             needDefaults = false;
-        if (options.month !== undefined)
+        }
+        if (options.month !== undefined) {
             needDefaults = false;
-        if (options.day !== undefined)
+        }
+        if (options.day !== undefined) {
             needDefaults = false;
+        }
     }
 
     // Step 5.
     if (required === "time" || required === "any") {
-        if (options.dayPeriod !== undefined)
+        if (options.dayPeriod !== undefined) {
             needDefaults = false;
-        if (options.hour !== undefined)
+        }
+        if (options.hour !== undefined) {
             needDefaults = false;
-        if (options.minute !== undefined)
+        }
+        if (options.minute !== undefined) {
             needDefaults = false;
-        if (options.second !== undefined)
+        }
+        if (options.second !== undefined) {
             needDefaults = false;
-        if (options.fractionalSecondDigits !== undefined)
+        }
+        if (options.fractionalSecondDigits !== undefined) {
             needDefaults = false;
+        }
     }
 
     // "DateTimeFormat dateStyle & timeStyle" propsal
@@ -499,14 +515,17 @@ function ToDateTimeOptions(options, required, defaults) {
     var dateStyle = options.dateStyle;
     var timeStyle = options.timeStyle;
 
-    if (dateStyle !== undefined || timeStyle !== undefined)
+    if (dateStyle !== undefined || timeStyle !== undefined) {
         needDefaults = false;
+    }
 
-    if (required === "date" && timeStyle !== undefined)
+    if (required === "date" && timeStyle !== undefined) {
         ThrowTypeError(JSMSG_INVALID_DATETIME_STYLE, "timeStyle", "toLocaleDateString");
+    }
 
-    if (required === "time" && dateStyle !== undefined)
+    if (required === "time" && dateStyle !== undefined) {
         ThrowTypeError(JSMSG_INVALID_DATETIME_STYLE, "dateStyle", "toLocaleTimeString");
+    }
 
     // Step 6.
     if (needDefaults && (defaults === "date" || defaults === "all")) {
