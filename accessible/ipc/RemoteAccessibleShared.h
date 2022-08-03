@@ -48,11 +48,7 @@ void Description(nsString& aDesc) const override;
  */
 virtual already_AddRefed<AccAttributes> Attributes() override;
 
-/**
- * Return set of targets of given relation type.
- */
-virtual nsTArray<RemoteAccessible*> RelationByType(
-    RelationType aType) const override;
+virtual Relation RelationByType(RelationType aType) const override;
 
 bool IsSearchbox() const;
 

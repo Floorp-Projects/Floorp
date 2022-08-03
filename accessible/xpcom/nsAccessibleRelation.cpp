@@ -23,16 +23,6 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType, Relation* aRel)
   }
 }
 
-nsAccessibleRelation::nsAccessibleRelation(
-    uint32_t aType, const nsTArray<RemoteAccessible*>* aTargets)
-    : mType(aType) {
-  mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  for (uint32_t idx = 0; idx < aTargets->Length(); ++idx) {
-    mTargets->AppendElement(
-        static_cast<nsIAccessible*>(ToXPC(aTargets->ElementAt(idx))));
-  }
-}
-
 nsAccessibleRelation::~nsAccessibleRelation() {}
 
 // nsISupports

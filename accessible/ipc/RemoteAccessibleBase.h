@@ -183,7 +183,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsRect BoundsInAppUnits() const override;
 
-  virtual nsTArray<RemoteAccessible*> RelationByType(RelationType aType) const;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   virtual uint64_t State() override;
 

@@ -74,12 +74,9 @@ ia2Accessible::get_nRelations(long* aNRelations) {
   if (!aNRelations) return E_INVALIDARG;
   *aNRelations = 0;
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    return CO_E_OBJNOTCONNECTED;
   }
 
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
@@ -97,12 +94,9 @@ ia2Accessible::get_relation(long aRelationIndex,
   if (!aRelation || aRelationIndex < 0) return E_INVALIDARG;
   *aRelation = nullptr;
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    return CO_E_OBJNOTCONNECTED;
   }
 
   long relIdx = 0;
@@ -135,12 +129,9 @@ ia2Accessible::get_relations(long aMaxRelations,
   if (!aRelation || !aNRelations || aMaxRelations <= 0) return E_INVALIDARG;
   *aNRelations = 0;
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    return CO_E_OBJNOTCONNECTED;
   }
 
   for (uint32_t idx = 0;
@@ -512,12 +503,9 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   }
   if (!relationType) return E_INVALIDARG;
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    return CO_E_OBJNOTCONNECTED;
   }
 
   nsTArray<Accessible*> targets;

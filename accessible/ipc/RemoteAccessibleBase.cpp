@@ -24,6 +24,7 @@
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
 #include "Pivot.h"
+#include "Relation.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
 
@@ -627,12 +628,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
 }
 
 template <class Derived>
-nsTArray<RemoteAccessible*> RemoteAccessibleBase<Derived>::RelationByType(
+Relation RemoteAccessibleBase<Derived>::RelationByType(
     RelationType aType) const {
-  nsTArray<RemoteAccessible*> accs;
-
+  Relation rel;
   if (!mCachedFields) {
-    return accs;
+    return rel;
   }
 
   for (auto data : kRelationTypeAtoms) {
@@ -643,11 +643,7 @@ nsTArray<RemoteAccessible*> RemoteAccessibleBase<Derived>::RelationByType(
 
     if (auto maybeIds =
             mCachedFields->GetAttribute<nsTArray<uint64_t>>(data.mAtom)) {
-      for (uint64_t id : *maybeIds) {
-        if (RemoteAccessible* acc = mDoc->GetAccessible(id)) {
-          accs.AppendElement(acc);
-        }
-      }
+      rel.AppendIter(new RemoteAccIterator(*maybeIds, Document()));
     }
     // Each relation type has only one relevant cached attribute,
     // so break after we've handled the attr for this type,
@@ -658,16 +654,11 @@ nsTArray<RemoteAccessible*> RemoteAccessibleBase<Derived>::RelationByType(
   if (auto accRelMapEntry = mDoc->mReverseRelations.Lookup(ID())) {
     if (auto reverseIdsEntry =
             accRelMapEntry.Data().Lookup(static_cast<uint64_t>(aType))) {
-      nsTArray<uint64_t>& reverseIds = reverseIdsEntry.Data();
-      for (uint64_t id : reverseIds) {
-        if (RemoteAccessible* acc = mDoc->GetAccessible(id)) {
-          accs.AppendElement(acc);
-        }
-      }
+      rel.AppendIter(new RemoteAccIterator(reverseIdsEntry.Data(), Document()));
     }
   }
 
-  return accs;
+  return rel;
 }
 
 template <class Derived>

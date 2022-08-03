@@ -13,6 +13,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/a11y/Platform.h"
+#include "Relation.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -76,8 +77,7 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
   return attrs.forget();
 }
 
-nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
-    RelationType aType) const {
+Relation RemoteAccessible::RelationByType(RelationType aType) const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::RelationByType(aType);
   }
@@ -85,16 +85,7 @@ nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
   nsTArray<uint64_t> targetIDs;
   Unused << mDoc->SendRelationByType(mID, static_cast<uint32_t>(aType),
                                      &targetIDs);
-
-  size_t targetCount = targetIDs.Length();
-  nsTArray<RemoteAccessible*> targets(targetCount);
-  for (size_t i = 0; i < targetCount; i++) {
-    if (RemoteAccessible* proxy = mDoc->GetAccessible(targetIDs[i])) {
-      targets.AppendElement(proxy);
-    }
-  }
-
-  return targets;
+  return Relation(new RemoteAccIterator(std::move(targetIDs), Document()));
 }
 
 void RemoteAccessible::Relations(
