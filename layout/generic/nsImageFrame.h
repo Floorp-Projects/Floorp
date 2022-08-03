@@ -102,6 +102,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void SetupForContentURLRequest();
   bool ShouldShowBrokenImageIcon() const;
 
+  bool IsForElement() const { return mKind == Kind::ImageElement; }
+
   const mozilla::StyleImage* GetImageFromStyle() const;
 
 #ifdef ACCESSIBILITY
