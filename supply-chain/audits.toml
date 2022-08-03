@@ -99,6 +99,12 @@ criteria = "safe-to-deploy"
 delta = "0.4.0 -> 0.5.0"
 notes = "The repository for this crate belongs in the Mozilla org."
 
+[[audits.extend]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "1.1.2"
+notes = "Inspected the crate and noted that the impl block comes directly from the proc-macro input.  If no new code can be added by this crate, I don't think there can be any issues."
+
 [[audits.flagset]]
 who = "Ryan Hunt <rhunt@eqrion.net>"
 criteria = "safe-to-deploy"

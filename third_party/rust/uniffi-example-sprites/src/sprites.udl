@@ -1,0 +1,22 @@
+
+namespace sprites {
+  Point translate([ByRef] Point position, Vector direction);
+};
+
+dictionary Point {
+  double x;
+  double y;
+};
+
+dictionary Vector {
+  double dx;
+  double dy;
+};
+
+interface Sprite {
+  constructor(Point? initial_position);
+  [Name=new_relative_to] constructor(Point reference, Vector direction);
+  Point get_position();
+  void move_to(Point position);
+  void move_by(Vector direction);
+};
