@@ -14,13 +14,15 @@ function CreateListFromArrayLikeForArgs(obj) {
     var len = ToLength(obj.length);
 
     // This version of CreateListFromArrayLike is only used for argument lists.
-    if (len > MAX_ARGS_LENGTH)
+    if (len > MAX_ARGS_LENGTH) {
         ThrowRangeError(JSMSG_TOO_MANY_ARGUMENTS);
+    }
 
     // Steps 4-6.
     var list = std_Array(len);
-    for (var i = 0; i < len; i++)
+    for (var i = 0; i < len; i++) {
         DefineDataProperty(list, i, obj[i]);
+    }
 
     // Step 7.
     return list;
@@ -30,8 +32,9 @@ function CreateListFromArrayLikeForArgs(obj) {
 // 26.1.1 Reflect.apply ( target, thisArgument, argumentsList )
 function Reflect_apply(target, thisArgument, argumentsList) {
     // Step 1.
-    if (!IsCallable(target))
+    if (!IsCallable(target)) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, target));
+    }
 
     // Step 2.
     if (!IsObject(argumentsList)) {
@@ -47,15 +50,17 @@ function Reflect_apply(target, thisArgument, argumentsList) {
 // 26.1.2 Reflect.construct ( target, argumentsList [ , newTarget ] )
 function Reflect_construct(target, argumentsList/*, newTarget*/) {
     // Step 1.
-    if (!IsConstructor(target))
+    if (!IsConstructor(target)) {
         ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(0, target));
+    }
 
     // Steps 2-3.
     var newTarget;
     if (arguments.length > 2) {
         newTarget = arguments[2];
-        if (!IsConstructor(newTarget))
+        if (!IsConstructor(newTarget)) {
             ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(2, newTarget));
+        }
     } else {
         newTarget = target;
     }
@@ -115,8 +120,9 @@ function Reflect_defineProperty(obj, propertyKey, attributes) {
 // 26.1.6 Reflect.getOwnPropertyDescriptor ( target, propertyKey )
 function Reflect_getOwnPropertyDescriptor(target, propertyKey) {
     // Step 1.
-    if (!IsObject(target))
+    if (!IsObject(target)) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, target));
+    }
 
     // Steps 2-3.
     // The other steps are identical to Object.getOwnPropertyDescriptor().
