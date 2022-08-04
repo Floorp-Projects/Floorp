@@ -11,7 +11,7 @@ const PRIMITIVE_TYPES = [
   { value: -0, serialized: { type: "number", value: "-0" } },
   {
     value: Number.POSITIVE_INFINITY,
-    serialized: { type: "number", value: "+Infinity" },
+    serialized: { type: "number", value: "Infinity" },
   },
   {
     value: Number.NEGATIVE_INFINITY,
