@@ -1190,7 +1190,7 @@ InterceptedHttpChannel::GetCacheEntryId(uint64_t* aCacheEntryId) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetCacheTokenFetchCount(int32_t* _retval) {
+InterceptedHttpChannel::GetCacheTokenFetchCount(uint32_t* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
 
   if (mSynthesizedCacheInfo) {

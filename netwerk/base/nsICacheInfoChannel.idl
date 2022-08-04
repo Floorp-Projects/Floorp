@@ -34,7 +34,7 @@ interface nsICacheInfoChannel : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE if the cache entry or the alternate data
    *         cache entry cannot be read.
    */
-  readonly attribute int32_t cacheTokenFetchCount;
+  readonly attribute uint32_t cacheTokenFetchCount;
 
   /**
    * Get expiration time from cache token. This attribute is equivalent to

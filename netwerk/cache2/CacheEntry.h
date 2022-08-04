@@ -63,7 +63,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult GetKey(nsACString& aKey);
   nsresult GetCacheEntryId(uint64_t* aCacheEntryId);
   nsresult GetPersistent(bool* aPersistToDisk);
-  nsresult GetFetchCount(int32_t* aFetchCount);
+  nsresult GetFetchCount(uint32_t* aFetchCount);
   nsresult GetLastFetched(uint32_t* aLastFetched);
   nsresult GetLastModified(uint32_t* aLastModified);
   nsresult GetExpirationTime(uint32_t* aExpirationTime);
@@ -442,7 +442,7 @@ class CacheEntryHandle final : public nsICacheEntry {
   NS_IMETHOD GetPersistent(bool* aPersistent) override {
     return mEntry->GetPersistent(aPersistent);
   }
-  NS_IMETHOD GetFetchCount(int32_t* aFetchCount) override {
+  NS_IMETHOD GetFetchCount(uint32_t* aFetchCount) override {
     return mEntry->GetFetchCount(aFetchCount);
   }
   NS_IMETHOD GetLastFetched(uint32_t* aLastFetched) override {

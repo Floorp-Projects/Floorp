@@ -56,7 +56,7 @@ interface nsICacheEntry : nsISupports
   /**
    * Get the number of times the cache entry has been opened.
    */
-  readonly attribute long  fetchCount;
+  readonly attribute uint32_t  fetchCount;
 
   /**
    * Get the last time the cache entry was opened (in seconds since the Epoch).

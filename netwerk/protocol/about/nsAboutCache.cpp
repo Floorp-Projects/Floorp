@@ -328,7 +328,7 @@ nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount,
 NS_IMETHODIMP
 nsAboutCache::Channel::OnCacheEntryInfo(nsIURI* aURI,
                                         const nsACString& aIdEnhance,
-                                        int64_t aDataSize, int32_t aFetchCount,
+                                        int64_t aDataSize, uint32_t aFetchCount,
                                         uint32_t aLastModified,
                                         uint32_t aExpirationTime, bool aPinned,
                                         nsILoadContextInfo* aInfo) {

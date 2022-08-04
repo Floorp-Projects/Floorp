@@ -1045,10 +1045,10 @@ nsresult CacheEntry::GetCacheEntryId(uint64_t* aCacheEntryId) {
   return NS_OK;
 }
 
-nsresult CacheEntry::GetFetchCount(int32_t* aFetchCount) {
+nsresult CacheEntry::GetFetchCount(uint32_t* aFetchCount) {
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
 
-  return mFile->GetFetchCount(reinterpret_cast<uint32_t*>(aFetchCount));
+  return mFile->GetFetchCount(aFetchCount);
 }
 
 nsresult CacheEntry::GetLastFetched(uint32_t* aLastFetched) {

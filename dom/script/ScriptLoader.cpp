@@ -2043,7 +2043,7 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
   bool hasSourceLengthMin = false;
   bool hasFetchCountMin = false;
   size_t sourceLengthMin = 100;
-  int32_t fetchCountMin = 4;
+  uint32_t fetchCountMin = 4;
 
   LOG(("ScriptLoadRequest (%p): Bytecode-cache: strategy = %d.", aRequest,
        strategy));
@@ -2092,7 +2092,7 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
   // bytecode-cache optimization, such that we do not waste time on entry which
   // are going to be dropped soon.
   if (hasFetchCountMin) {
-    int32_t fetchCount = 0;
+    uint32_t fetchCount = 0;
     if (NS_FAILED(aRequest->mCacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Cannot get fetchCount.",
            aRequest));
