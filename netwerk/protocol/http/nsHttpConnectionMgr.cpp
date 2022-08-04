@@ -1723,18 +1723,22 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
     // connection.
     RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(ent, false, true);
     RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
-    RefPtr<nsHttpConnection> newTunnel;
-    connTCP->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
-    ConnectionEntry* specificEnt = mCT.GetWeak(ci->HashKey());
-    if (!specificEnt) {
-      RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
-      specificEnt = new ConnectionEntry(clone);
-      mCT.InsertOrUpdate(clone->HashKey(), RefPtr{specificEnt});
+    if (ci->UsingHttpsProxy() && ci->UsingConnect()) {
+      RefPtr<nsHttpConnection> newTunnel;
+      connTCP->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
+      ConnectionEntry* specificEnt = mCT.GetWeak(ci->HashKey());
+      if (!specificEnt) {
+        RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
+        specificEnt = new ConnectionEntry(clone);
+        mCT.InsertOrUpdate(clone->HashKey(), RefPtr{specificEnt});
+      }
+      specificEnt->InsertIntoActiveConns(newTunnel);
+      trans->SetConnection(nullptr);
+      newTunnel->SetInSpdyTunnel();
+      rv = DispatchTransaction(specificEnt, trans, newTunnel);
+    } else {
+      rv = DispatchTransaction(ent, trans, connTCP);
     }
-    specificEnt->InsertIntoActiveConns(newTunnel);
-    trans->SetConnection(nullptr);
-    newTunnel->SetInSpdyTunnel();
-    rv = DispatchTransaction(specificEnt, trans, newTunnel);
   } else {
     if (!ent->AllowHttp2()) {
       trans->DisableSpdy();
