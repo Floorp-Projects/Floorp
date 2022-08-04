@@ -270,8 +270,7 @@ already_AddRefed<nsHttpConnection> Http2StreamTunnel::CreateHttpConnection(
 nsresult Http2StreamTunnel::CallToReadData(uint32_t count,
                                            uint32_t* countRead) {
   LOG(("Http2StreamTunnel::CallToReadData this=%p", this));
-  mOutput->OnSocketReady(NS_OK);
-  return NS_OK;
+  return mOutput->OnSocketReady(NS_OK);
 }
 
 nsresult Http2StreamTunnel::CallToWriteData(uint32_t count,
@@ -280,8 +279,7 @@ nsresult Http2StreamTunnel::CallToWriteData(uint32_t count,
   if (!mInput->HasCallback()) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
-  mInput->OnSocketReady(NS_OK);
-  return NS_OK;
+  return mInput->OnSocketReady(NS_OK);
 }
 
 nsresult Http2StreamTunnel::GenerateHeaders(nsCString& aCompressedData,
@@ -317,7 +315,7 @@ OutputStreamTunnel::OutputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
 }
 
-void OutputStreamTunnel::OnSocketReady(nsresult condition) {
+nsresult OutputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("OutputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32
        " callback=%p]\n",
        this, static_cast<uint32_t>(condition), mCallback.get()));
@@ -333,18 +331,30 @@ void OutputStreamTunnel::OnSocketReady(nsresult condition) {
   }
   callback = std::move(mCallback);
 
+  nsresult rv = NS_OK;
   if (callback) {
-    callback->OnOutputStreamReady(this);
-    RefPtr<nsHttpConnection> conn = do_QueryObject(callback);
-    MOZ_RELEASE_ASSERT(conn);
-    RefPtr<Http2StreamTunnel> tunnel;
-    nsresult rv = GetStream(getter_AddRefs(tunnel));
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    if (conn->RequestDone()) {
-      tunnel->SetRequestDone();
-    }
+    rv = callback->OnOutputStreamReady(this);
+    MaybeSetRequestDone(callback);
+  }
+
+  return rv;
+}
+
+void OutputStreamTunnel::MaybeSetRequestDone(
+    nsIOutputStreamCallback* aCallback) {
+  RefPtr<nsHttpConnection> conn = do_QueryObject(aCallback);
+  if (!conn) {
+    return;
+  }
+
+  RefPtr<Http2StreamTunnel> tunnel;
+  nsresult rv = GetStream(getter_AddRefs(tunnel));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (conn->RequestDone()) {
+    tunnel->SetRequestDone();
   }
 }
 
@@ -452,7 +462,7 @@ InputStreamTunnel::InputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
 }
 
-void InputStreamTunnel::OnSocketReady(nsresult condition) {
+nsresult InputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("InputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(condition)));
 
@@ -467,9 +477,7 @@ void InputStreamTunnel::OnSocketReady(nsresult condition) {
   }
   callback = std::move(mCallback);
 
-  if (callback) {
-    callback->OnInputStreamReady(this);
-  }
+  return callback ? callback->OnInputStreamReady(this) : NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(InputStreamTunnel, nsIInputStream, nsIAsyncInputStream)

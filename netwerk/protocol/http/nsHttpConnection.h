@@ -102,7 +102,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   uint32_t TimeToLive();
 
   bool NeedSpdyTunnel() {
-    return mConnInfo->UsingHttpsProxy() && !mTLSFilter &&
+    return mConnInfo->UsingHttpsProxy() && !mHasTLSTransportLayer &&
            mConnInfo->UsingConnect();
   }
 
@@ -373,6 +373,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
 
   bool mRequestDone{false};
+  bool mHasTLSTransportLayer{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
