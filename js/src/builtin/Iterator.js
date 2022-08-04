@@ -9,9 +9,10 @@ function IteratorIdentity() {
 /* ECMA262 7.2.7 */
 function IteratorNext(iteratorRecord, value) {
   // Steps 1-2.
-  const result = (arguments.length < 2
+  const result =
+    arguments.length < 2
       ? callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator)
-      : callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator, value));
+      : callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator, value);
   // Step 3.
   if (!IsObject(result)) {
     ThrowTypeError(JSMSG_OBJECT_REQUIRED, result);
@@ -132,16 +133,9 @@ function IteratorStep(iteratorRecord, value) {
   // Steps 2-3.
   let result;
   if (arguments.length === 2) {
-    result = callContentFunction(
-      iteratorRecord.nextMethod,
-      iteratorRecord.iterator,
-      value
-    );
+    result = callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator, value);
   } else {
-    result = callContentFunction(
-      iteratorRecord.nextMethod,
-      iteratorRecord.iterator
-    );
+    result = callContentFunction(iteratorRecord.nextMethod, iteratorRecord.iterator);
   }
 
   // IteratorNext Step 3.
@@ -188,18 +182,26 @@ function WrapForValidIteratorNext(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToWrapForValidIterator(O)) === null) {
     if (arguments.length === 0) {
-      return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
-                          "WrapForValidIteratorNext");
+      return callFunction(
+        CallWrapForValidIteratorMethodIfWrapped,
+        this,
+        "WrapForValidIteratorNext"
+      );
     }
-    return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
-                        value, "WrapForValidIteratorNext");
+    return callFunction(
+      CallWrapForValidIteratorMethodIfWrapped,
+      this,
+      value,
+      "WrapForValidIteratorNext"
+    );
   }
   const iterated = UnsafeGetReservedSlot(O, ITERATED_SLOT);
   // Step 3.
   let result;
   if (arguments.length === 0) {
     result = callContentFunction(iterated.nextMethod, iterated.iterator);
-  } else { // Step 4.
+  } else {
+    // Step 4.
     result = callContentFunction(iterated.nextMethod, iterated.iterator, value);
   }
   // Inlined from IteratorNext.
@@ -214,8 +216,12 @@ function WrapForValidIteratorReturn(value) {
   // Step 1-2.
   let O = this;
   if (!IsObject(O) || (O = GuardToWrapForValidIterator(O)) === null) {
-    return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
-                        value, "WrapForValidIteratorReturn");
+    return callFunction(
+      CallWrapForValidIteratorMethodIfWrapped,
+      this,
+      value,
+      "WrapForValidIteratorReturn"
+    );
   }
   const iterated = UnsafeGetReservedSlot(O, ITERATED_SLOT);
 
@@ -241,8 +247,12 @@ function WrapForValidIteratorThrow(value) {
   // Step 1-2.
   let O = this;
   if (!IsObject(O) || (O = GuardToWrapForValidIterator(O)) === null) {
-    return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
-                        value, "WrapForValidIteratorThrow");
+    return callFunction(
+      CallWrapForValidIteratorMethodIfWrapped,
+      this,
+      value,
+      "WrapForValidIteratorThrow"
+    );
   }
   const iterated = UnsafeGetReservedSlot(O, ITERATED_SLOT);
   // Step 3.
@@ -261,8 +271,7 @@ function WrapForValidIteratorThrow(value) {
 function IteratorHelperNext(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
-    return callFunction(CallIteratorHelperMethodIfWrapped, this,
-                        value, "IteratorHelperNext");
+    return callFunction(CallIteratorHelperMethodIfWrapped, this, value, "IteratorHelperNext");
   }
   const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callContentFunction(GeneratorNext, generator, value);
@@ -271,8 +280,7 @@ function IteratorHelperNext(value) {
 function IteratorHelperReturn(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
-    return callFunction(CallIteratorHelperMethodIfWrapped, this,
-                        value, "IteratorHelperReturn");
+    return callFunction(CallIteratorHelperMethodIfWrapped, this, value, "IteratorHelperReturn");
   }
   const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callContentFunction(GeneratorReturn, generator, value);
@@ -281,8 +289,7 @@ function IteratorHelperReturn(value) {
 function IteratorHelperThrow(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
-    return callFunction(CallIteratorHelperMethodIfWrapped, this,
-                        value, "IteratorHelperThrow");
+    return callFunction(CallIteratorHelperMethodIfWrapped, this, value, "IteratorHelperThrow");
   }
   const generator = UnsafeGetReservedSlot(O, ITERATOR_HELPER_GENERATOR_SLOT);
   return callContentFunction(GeneratorThrow, generator, value);
@@ -341,9 +348,11 @@ function* IteratorMapGenerator(iterated, mapper) {
     yield;
     needClose = false;
 
-    for (let next = IteratorStep(iterated, lastValue);
-        next;
-        next = IteratorStep(iterated, lastValue)) {
+    for (
+      let next = IteratorStep(iterated, lastValue);
+      next;
+      next = IteratorStep(iterated, lastValue)
+    ) {
       // Step c.
       const value = next.value;
 
@@ -386,9 +395,11 @@ function* IteratorFilterGenerator(iterated, filterer) {
     yield;
     needClose = false;
 
-    for (let next = IteratorStep(iterated, lastValue);
-        next;
-        next = IteratorStep(iterated, lastValue)) {
+    for (
+      let next = IteratorStep(iterated, lastValue);
+      next;
+      next = IteratorStep(iterated, lastValue)
+    ) {
       // Step c.
       const value = next.value;
 
@@ -491,9 +502,11 @@ function* IteratorDropGenerator(iterated, remaining) {
     // Step 2.
     let lastValue;
     // Step 3.
-    for (let next = IteratorStep(iterated, lastValue);
-        next;
-        next = IteratorStep(iterated, lastValue)) {
+    for (
+      let next = IteratorStep(iterated, lastValue);
+      next;
+      next = IteratorStep(iterated, lastValue)
+    ) {
       // Steps c-d.
       const value = next.value;
 
@@ -530,9 +543,11 @@ function* IteratorAsIndexedPairsGenerator(iterated) {
     yield;
     needClose = false;
 
-    for (let next = IteratorStep(iterated, lastValue), index = 0;
-        next;
-        next = IteratorStep(iterated, lastValue), index++) {
+    for (
+      let next = IteratorStep(iterated, lastValue), index = 0;
+      next;
+      next = IteratorStep(iterated, lastValue), index++
+    ) {
       // Steps c-d.
       const value = next.value;
 
@@ -572,9 +587,7 @@ function* IteratorFlatMapGenerator(iterated, mapper) {
     yield;
     needClose = false;
 
-    for (let next = IteratorStep(iterated);
-        next;
-        next = IteratorStep(iterated)) {
+    for (let next = IteratorStep(iterated); next; next = IteratorStep(iterated)) {
       // Step c.
       const value = next.value;
 
@@ -633,7 +646,9 @@ function IteratorReduce(reducer/*, initialValue*/) {
 /* Iterator Helpers proposal 2.1.5.9 */
 function IteratorToArray() {
   // Step 1.
-  const iterated = {[GetBuiltinSymbol("iterator")]: () => this};
+  const iterated = {
+    [GetBuiltinSymbol("iterator")]: () => this
+  };
   // Steps 2-3.
   return [...allowContentIter(iterated)];
 }

@@ -354,8 +354,10 @@ function bind_constructFunctionN(fun, newTarget, args) {
     case 12:
       return constructContentFunction(fun, newTarget, SPREAD(args, 12));
     default:
-      assert(args.length !== 0,
-             "bound function construction without args should be handled by caller");
+      assert(
+        args.length !== 0,
+        "bound function construction without args should be handled by caller"
+      );
       return ConstructFunction(fun, newTarget, args);
   }
 }
