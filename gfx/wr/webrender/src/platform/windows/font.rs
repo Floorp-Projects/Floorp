@@ -150,10 +150,6 @@ impl FontContext {
         })
     }
 
-    pub fn has_font(&self, font_key: &FontKey) -> bool {
-        self.fonts.contains_key(font_key)
-    }
-
     fn add_font_descriptor(&mut self, font_key: &FontKey, desc: &dwrote::FontDescriptor) {
         let system_fc = dwrote::FontCollection::get_system(false);
         if let Some(font) = system_fc.get_font_from_descriptor(desc) {
