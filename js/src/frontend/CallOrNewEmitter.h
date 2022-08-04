@@ -328,10 +328,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
   [[nodiscard]] bool emitThis();
 
-  // Used by BytecodeEmitter::emitPipeline to reuse CallOrNewEmitter instance
-  // across multiple chained calls.
-  void reset();
-
   [[nodiscard]] bool prepareForNonSpreadArguments();
   [[nodiscard]] bool prepareForSpreadArguments();
 
