@@ -1,0 +1,296 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing cmd_absPos command</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body contenteditable></body>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  (function testTogglingPositionInBodyChildText() {
+    const description = "testTogglingPositionInBodyChildText";
+    const textNode = document.createTextNode("abc");
+    document.body.appendChild(textNode);
+    getSelection().collapse(textNode, 1);
+
+    SpecialPowers.doCommand(window, "cmd_absPos");
+    const div = textNode.parentNode;
+    is(
+      div.tagName.toLowerCase(),
+      "div",
+      `${
+        description
+      }: a <div> element should be created and the text node should be wrapped in it`
+    );
+    is(
+      div.style.position,
+      "absolute",
+      `${description}: position of the <div> should be set to "absolute"`
+    );
+    isnot(
+      div.style.top,
+      "",
+      `${description}: top of the <div> should be set`
+    );
+    isnot(
+      div.style.left,
+      "",
+      `${description}: left of the <div> should be set`
+    );
+    ok(
+      getSelection().isCollapsed,
+      `${
+        description
+      }: selection should be collapsed (making it absolutely positioned)`
+    );
+    // Collapsing selection to start of the absolutely positioned <div> seems
+    // odd.  Why don't we keep selection in the new <div>?
+    is(
+      getSelection().focusNode,
+      div,
+      `${
+        description
+      }: selection should be collapsed in the absolutely positioned <div>`
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      `${
+        description
+      }: selection should be collapsed at start of the absolutely positioned <div>`
+    );
+
+    SpecialPowers.doCommand(window, "cmd_absPos");
+    ok(
+      !div.isConnected,
+      `${description}: the <div> should be removed from the <body>`
+    );
+    is(
+      div.style.position,
+      "",
+      `${description}: position of the <div> should be unset`
+    );
+    is(
+      div.style.top,
+      "",
+      `${description}: top of the <div> should be unset`
+    );
+    is(
+      div.style.left,
+      "",
+      `${description}: left of the <div> should be unset`
+    );
+    ok(
+      getSelection().isCollapsed,
+      `${
+        description
+      }: selection should be collapsed (making it in normal flow)`
+    );
+    // If we change the above behavior, we can keep selection collapsed in the
+    // text node here.
+    is(
+      getSelection().focusNode,
+      document.body,
+      `${description}: selection should be collapsed in the <body>`
+    );
+    todo_is(
+      getSelection().focusNode.childNodes.item(
+        getSelection().focusOffset
+      ),
+      textNode,
+      `${description}: selection should be collapsed after the text node`
+    );
+    textNode.remove();
+  })();
+
+  (function testTogglingPositionOfDivContainingCaret() {
+    const description = "testTogglingPositionOfDivContainingCaret";
+    const div = document.createElement("div");
+    div.innerHTML = "abc";
+    document.body.appendChild(div);
+    const textNode = div.firstChild;
+    getSelection().collapse(textNode, 1);
+    SpecialPowers.doCommand(window, "cmd_absPos");
+    is(
+      div.style.position,
+      "absolute",
+      `${description}: position of the <div> should be set to "absolute"`
+    );
+    isnot(
+      div.style.top,
+      "",
+      `${description}: top of the <div> should be set`
+    );
+    isnot(
+      div.style.left,
+      "",
+      `${description}: left of the <div> should be set`
+    );
+    ok(
+      getSelection().isCollapsed,
+      `${
+        description
+      }: selection should be collapsed (making it absolutely positioned)`
+    );
+    is(
+      getSelection().focusNode,
+      textNode,
+      `${
+        description
+      }: selection should be collapsed in the absolutely positioned <div>`
+    );
+    is(
+      getSelection().focusOffset,
+      1,
+      `${
+        description
+      }: selection should be collapsed at same offset in the absolutely positioned <div>`
+    );
+
+    SpecialPowers.doCommand(window, "cmd_absPos");
+    ok(
+      !div.isConnected,
+      `${description}: the <div> should be removed from the <body>`
+    );
+    is(
+      div.style.position,
+      "",
+      `${description}: position of the <div> should be unset`
+    );
+    is(
+      div.style.top,
+      "",
+      `${description}: top of the <div> should be unset`
+    );
+    is(
+      div.style.left,
+      "",
+      `${description}: left of the <div> should be unset`
+    );
+    ok(
+      getSelection().isCollapsed,
+      `${
+        description
+      }: selection should be collapsed (making it in normal flow)`
+    );
+    is(
+      getSelection().focusNode,
+      textNode,
+      `${description}: selection should be collapsed in the <div>`
+    );
+    is(
+      getSelection().focusOffset,
+      1,
+      `${description}: selection should be collapsed at same offset in the <div>`
+    );
+    div.remove();
+    textNode.remove();
+  })();
+
+  (function testTogglingPositionOfDivContainingSelectionRange() {
+    const description = "testTogglingPositionOfDivContainingSelectionRange";
+    const div = document.createElement("div");
+    div.innerHTML = "abc";
+    document.body.appendChild(div);
+    const textNode = div.firstChild;
+    getSelection().setBaseAndExtent(textNode, 1, textNode, 2);
+    SpecialPowers.doCommand(window, "cmd_absPos");
+    is(
+      div.style.position,
+      "absolute",
+      `${description}: position of the <div> should be set to "absolute"`
+    );
+    isnot(
+      div.style.top,
+      "",
+      `${description}: top of the <div> should be set`
+    );
+    isnot(
+      div.style.left,
+      "",
+      `${description}: left of the <div> should be set`
+    );
+    is(
+      getSelection().anchorNode,
+      textNode,
+      `${
+        description
+      }: selection should start from the text node in the absolutely positioned <div>`
+    );
+    is(
+      getSelection().anchorOffset,
+      1,
+      `${
+        description
+      }: selection should start from "b" in the text node in the absolutely positioned <div>`
+    );
+    is(
+      getSelection().focusNode,
+      textNode,
+      `${
+        description
+      }: selection should end in the text node in the absolutely positioned <div>`
+    );
+    is(
+      getSelection().focusOffset,
+      2,
+      `${
+        description
+      }: selection should end after "b" absolutely positioned <div>`
+    );
+
+    getSelection().setBaseAndExtent(textNode, 1, textNode, 2);
+    SpecialPowers.doCommand(window, "cmd_absPos");
+    ok(
+      !div.isConnected,
+      `${description}: the <div> should be removed from the <body>`
+    );
+    is(
+      div.style.position,
+      "",
+      `${description}: position of the <div> should be unset`
+    );
+    is(
+      div.style.top,
+      "",
+      `${description}: top of the <div> should be unset`
+    );
+    is(
+      div.style.left,
+      "",
+      `${description}: left of the <div> should be unset`
+    );
+    is(
+      getSelection().anchorNode,
+      textNode,
+      `${description}: selection should start from the text node in the <div>`
+    );
+    is(
+      getSelection().anchorOffset,
+      1,
+      `${
+        description
+      }: selection should start from "b" in the text node in the <div>`
+    );
+    is(
+      getSelection().focusNode,
+      textNode,
+      `${description}: selection should end in the text node in the <div>`
+    );
+    is(
+      getSelection().focusOffset,
+      2,
+      `${description}: selection should end after "b" <div>`
+    );
+    div.remove();
+    textNode.remove();
+  })();
+
+  document.body.removeAttribute("contenteditable");
+  SimpleTest.finish();
+});
+</script>
+</html>

@@ -5191,7 +5191,8 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal(
       // If we've already found an ancestor block element indented, we need to
       // split it and remove the block element first.
       if (indentedParentElement) {
-        MOZ_ASSERT(indentedParentElement == content);
+        NS_WARNING_ASSERTION(indentedParentElement == content,
+                             "Indented parent element is not the <blockquote>");
         SplitRangeOffFromNodeResult outdentResult = OutdentPartOfBlock(
             *indentedParentElement, *firstContentToBeOutdented,
             *lastContentToBeOutdented, indentedParentIndentedWith);
@@ -10028,8 +10029,6 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
 
 EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction(
     const Element& aEditingHost) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-
   AutoPlaceholderBatch treatAsOneTransaction(
       *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
   IgnoredErrorResult ignoredError;
