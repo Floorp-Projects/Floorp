@@ -4692,7 +4692,8 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
-      cx, &ec, cx->tempLifoAlloc(), input.get(), srcBuf, scopeKind);
+      cx, &ec, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
+      input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }
@@ -4722,8 +4723,8 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
 
   MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  RefPtr<JS::Stencil> stencil =
-      js::frontend::ParseModuleToStencil(cx, &ec, input.get(), srcBuf);
+  RefPtr<JS::Stencil> stencil = js::frontend::ParseModuleToStencil(
+      cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf);
   if (!stencil) {
     return nullptr;
   }
