@@ -32,6 +32,9 @@ const RemoteImagesTestUtils = {
     const { filename, recordId, mimetype, hash, url, size } = imageInfo;
 
     const server = new HttpServer();
+
+    this._originalServerlURL = null;
+
     server.start(-1);
 
     const baseURL = `http://localhost:${server.identity.primaryPort}/`;
@@ -93,11 +96,17 @@ const RemoteImagesTestUtils = {
       }
     );
 
+    this._originalServerlURL = Services.prefs.getCharPref(RS_SERVER_PREF);
     Services.prefs.setCharPref(RS_SERVER_PREF, `${baseURL}v1`);
 
     return async () => {
       await new Promise(resolve => server.stop(() => resolve()));
-      Services.prefs.clearUserPref(RS_SERVER_PREF);
+
+      // If we use clearUserPref, then we will reset to the default branch value
+      // (i.e., the *real* RS server) which will cause test failures due to trying
+      // to access an outside URL.
+      Services.prefs.setCharPref(RS_SERVER_PREF, this._originalServerlURL);
+      this._originalServerlURL = null;
       await RemoteImagesTestUtils.wipeCache();
     };
   },
