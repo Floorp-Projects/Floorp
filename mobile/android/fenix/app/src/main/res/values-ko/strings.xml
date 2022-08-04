@@ -79,6 +79,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">닫기</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">닫기</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">카메라 액세스가 필요합니다. Android 설정으로 이동하여 권한을 누른 다음 허용을 누르세요.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -1646,8 +1649,6 @@
     <string name="addresses_edit_address">주소 편집</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">주소 관리</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">이름</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">이름</string>
     <!-- The header for the middle name of an address -->
