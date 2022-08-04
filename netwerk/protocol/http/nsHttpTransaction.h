@@ -495,21 +495,11 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   Atomic<bool, Relaxed> mClassOfServiceIncremental{false};
 
  public:
-  // setting TunnelProvider to non-null means the transaction should only
-  // be dispatched on a specific ConnectionInfo Hash Key (as opposed to a
-  // generic wild card one). That means in the specific case of carrying this
-  // transaction on an HTTP/2 tunnel it will only be dispatched onto an
-  // existing tunnel instead of triggering creation of a new one.
-  // The tunnel provider is used for ASpdySession::MaybeReTunnel() checks.
-
-  void SetTunnelProvider(ASpdySession* provider) { mTunnelProvider = provider; }
-  ASpdySession* TunnelProvider() { return mTunnelProvider; }
   nsIInterfaceRequestor* SecurityCallbacks() { return mCallbacks; }
   // Called when this transaction is inserted in the pending queue.
   void OnPendingQueueInserted(const nsACString& aConnectionHashKey);
 
  private:
-  RefPtr<ASpdySession> mTunnelProvider;
   TransactionObserverFunc mTransactionObserver;
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
