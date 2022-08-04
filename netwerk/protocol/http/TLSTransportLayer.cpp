@@ -10,6 +10,8 @@
 #include "TLSTransportLayer.h"
 #include "nsISocketProvider.h"
 #include "Http2StreamTunnel.h"
+#include "nsSocketTransport2.h"
+#include "nsSocketProviderService.h"
 
 namespace mozilla::net {
 

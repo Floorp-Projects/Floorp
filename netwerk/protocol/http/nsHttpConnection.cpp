@@ -38,7 +38,6 @@
 #include "sslt.h"
 #include "NSSErrorsService.h"
 #include "Http2ConnectTransaction.h"
-#include "TLSFilterTransaction.h"
 #include "TLSTransportLayer.h"
 #include "mozilla/StaticPrefs_network.h"
 
@@ -438,24 +437,6 @@ void nsHttpConnection::Reset0RttForSpdy() {
   mDid0RTTSpdy = false;
 }
 
-nsresult nsHttpConnection::OnTunnelNudged(TLSFilterTransaction* trans) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("nsHttpConnection::OnTunnelNudged %p\n", this));
-  if (trans != mTLSFilter) {
-    return NS_OK;
-  }
-  LOG(("nsHttpConnection::OnTunnelNudged %p Calling OnSocketWritable\n", this));
-  if (mInSpdyTunnel) {
-    // TODO this will not be needed after bug 1772201 is fixed.
-    nsresult rv = ResumeRecv();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    return ResumeSend();
-  }
-  return OnSocketWritable();
-}
-
 // called on the socket thread
 nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
                                     int32_t pri) {
@@ -590,7 +571,7 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
   nsHttpConnectionInfo* transCI = httpTransaction->ConnectionInfo();
 
   bool needTunnel = transCI->UsingHttpsProxy();
-  needTunnel = needTunnel && !mTLSFilter;
+  needTunnel = needTunnel && !mHasTLSTransportLayer;
   needTunnel = needTunnel && transCI->UsingConnect();
   needTunnel = needTunnel && httpTransaction->QueryHttpTransaction();
 
@@ -674,8 +655,6 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
 
   if (NS_FAILED(reason)) {
     if (mIdleMonitoring) EndIdleMonitoring();
-
-    mTLSFilter = nullptr;
 
     // The connection and security errors clear out alt-svc mappings
     // in case any previously validated ones are now invalid
@@ -1110,18 +1089,6 @@ nsresult nsHttpConnection::TakeTransport(nsISocketTransport** aTransport,
   mSocketTransport->SetSecurityCallbacks(nullptr);
   mSocketTransport->SetEventSink(nullptr, nullptr);
 
-  // The nsHttpConnection will go away soon, so if there is a TLS Filter
-  // being used (e.g. for wss CONNECT tunnel from a proxy connected to
-  // via https) that filter needs to take direct control of the
-  // streams
-  if (mTLSFilter) {
-    nsCOMPtr<nsIAsyncInputStream> ref1(mSocketIn);
-    nsCOMPtr<nsIAsyncOutputStream> ref2(mSocketOut);
-    mTLSFilter->newIODriver(ref1, ref2, getter_AddRefs(mSocketIn),
-                            getter_AddRefs(mSocketOut));
-    mTLSFilter = nullptr;
-  }
-
   mSocketTransport.forget(aTransport);
   mSocketIn.forget(aInputStream);
   mSocketOut.forget(aOutputStream);
@@ -1214,16 +1181,11 @@ void nsHttpConnection::UpdateTCPKeepalive(nsITimer* aTimer, void* aClosure) {
 
 void nsHttpConnection::GetSecurityInfo(nsISupports** secinfo) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("nsHttpConnection::GetSecurityInfo trans=%p tlsfilter=%p socket=%p\n",
-       mTransaction.get(), mTLSFilter.get(), mSocketTransport.get()));
+  LOG(("nsHttpConnection::GetSecurityInfo trans=%p socket=%p\n",
+       mTransaction.get(), mSocketTransport.get()));
 
   if (mTransaction &&
       NS_SUCCEEDED(mTransaction->GetTransactionSecurityInfo(secinfo))) {
-    return;
-  }
-
-  if (mTLSFilter &&
-      NS_SUCCEEDED(mTLSFilter->GetTransactionSecurityInfo(secinfo))) {
     return;
   }
 
@@ -1363,9 +1325,6 @@ nsresult nsHttpConnection::ForceSend() {
   LOG(("nsHttpConnection::ForceSend [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  if (mTLSFilter) {
-    return mTLSFilter->NudgeTunnel(this);
-  }
   return MaybeForceSendIO();
 }
 
@@ -1412,9 +1371,6 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
        "]\n",
        this, trans, static_cast<uint32_t>(reason)));
 
-  MOZ_ASSERT((trans == mTransaction) ||
-             (mTLSFilter && !mTLSFilter->Transaction()) ||
-             (mTLSFilter && mTLSFilter->Transaction() == trans));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (mCurrentBytesRead > mMaxBytesRead) mMaxBytesRead = mCurrentBytesRead;
@@ -1428,29 +1384,6 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
     mSpdySession->SetCleanShutdown(aIsShutdown);
     mUsingSpdyVersion = SpdyVersion::NONE;
     mSpdySession = nullptr;
-  }
-
-  if (!mTransaction && mTLSFilter) {
-    // In case of a race when the transaction is being closed before the tunnel
-    // is established we need to carry closing status on the proxied
-    // transaction.
-    // Not doing this leads to use of this closed connection to activate the
-    // not closed transaction what will likely lead to a use of a closed ssl
-    // socket and may cause a crash because of an unexpected use.
-    //
-    // There can possibly be two states: the actual transaction is still hanging
-    // of off the filter, or has not even been assigned on it yet.  In the
-    // latter case we simply must close the transaction given to us via the
-    // argument.
-    if (!mTLSFilter->Transaction()) {
-      if (trans) {
-        LOG(("  closing transaction directly"));
-        trans->Close(reason);
-      }
-    } else {
-      LOG(("  closing transactin hanging of off mTLSFilter"));
-      mTLSFilter->Close(reason);
-    }
   }
 
   if (mTransaction) {
@@ -1532,11 +1465,6 @@ nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
   }
 
   nsresult rv = mSocketOut->Write(buf, count, countRead);
-
-  // TODO this will not be needed after bug 1772201 is fixed.
-  if ((rv == NS_BASE_STREAM_WOULD_BLOCK) && mInSpdyTunnel) {
-    mSocketOut->AsyncWait(this, 0, 0, nullptr);
-  }
   if (NS_FAILED(rv)) {
     mSocketOutCondition = rv;
   } else if (*countRead == 0) {
@@ -1660,10 +1588,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
       again = false;
     } else if (NS_FAILED(mSocketOutCondition)) {
       if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
-        if (mTLSFilter) {
-          LOG(("  blocked tunnel (handshake?)\n"));
-          rv = mTLSFilter->NudgeTunnel(this);
-        } else if (!mTlsHandshaker->EarlyDataCanNotBeUsed()) {
+        if (!mTlsHandshaker->EarlyDataCanNotBeUsed()) {
           // continue writing
           // We are not going to poll for write if the handshake is in progress,
           // but early data cannot be used.
@@ -1723,10 +1648,6 @@ nsresult nsHttpConnection::OnWriteSegment(char* buf, uint32_t count,
   }
 
   nsresult rv = mSocketIn->Read(buf, count, countWritten);
-  // TODO this will not be needed after bug 1772201 is fixed.
-  if ((rv == NS_BASE_STREAM_WOULD_BLOCK) && mInSpdyTunnel) {
-    mSocketIn->AsyncWait(this, 0, 0, nullptr);
-  }
   if (NS_FAILED(rv)) {
     mSocketInCondition = rv;
   } else if (*countWritten == 0) {
@@ -1831,7 +1752,7 @@ nsresult nsHttpConnection::OnSocketReadable() {
 void nsHttpConnection::SetupSecondaryTLS(
     nsAHttpTransaction* aHttp2ConnectTransaction) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(!mTLSFilter);
+  MOZ_ASSERT(!mHasTLSTransportLayer);
   LOG(
       ("nsHttpConnection %p SetupSecondaryTLS %s %d "
        "aHttp2ConnectTransaction=%p\n",
