@@ -128,11 +128,6 @@ class MOZ_RAII AutoCheckRecursionLimit {
   }
 
   MOZ_ALWAYS_INLINE bool checkWasiRecursionLimit() const {
-    // WASI has two limits:
-    // 1) The stack pointer in linear memory that grows to zero. See
-    //    --stack-first in js/src/shell/moz.build.
-    // 2) The JSContext::wasiRecursionDepth that counts recursion depth.
-    //    Here we should check both.
     if (context_.is<JSContext*>()) {
       JSContext* cx = context_.as<JSContext*>();
       if (!CheckWasiRecursionLimit(cx)) {
