@@ -754,15 +754,17 @@ add_task(async function test_featureIds_is_stored() {
   recipe.bucketConfig.count = recipe.bucketConfig.total;
   const store = ExperimentFakes.store();
   const manager = ExperimentFakes.manager(store);
+  const sandbox = sinon.createSandbox();
+  sandbox.spy(store, "addEnrollment");
 
   await manager.onStartup();
 
-  const {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(recipe, { manager });
-
-  await enrollmentPromise;
+  const { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(
+    recipe,
+    {
+      manager,
+    }
+  );
 
   Assert.ok(manager.store.addEnrollment.calledOnce, "experiment is stored");
   let [enrollment] = manager.store.addEnrollment.firstCall.args;
@@ -774,6 +776,7 @@ add_task(async function test_featureIds_is_stored() {
   );
 
   await doExperimentCleanup();
+  sandbox.restore();
 });
 
 add_task(async function experiment_and_rollout_enroll_and_cleanup() {
