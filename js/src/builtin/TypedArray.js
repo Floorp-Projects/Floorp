@@ -1242,7 +1242,7 @@ function TypedArraySubarray(begin, end) {
   var elementSize = TypedArrayElementSize(obj);
 
   // Step 14.
-  var beginByteOffset = srcByteOffset + (beginIndex * elementSize);
+  var beginByteOffset = srcByteOffset + beginIndex * elementSize;
 
   // Steps 15-16.
   return TypedArraySpeciesCreateWithBuffer(obj, buffer, beginByteOffset, newLength);
