@@ -121,7 +121,7 @@ function SortArray(obj, comparefn) {
         }
 
         /* Step 4.a. */
-        var v = ToNumber(wrappedCompareFn(x, y));
+        var v = ToNumber(callContentFunction(wrappedCompareFn, undefined, x, y));
 
         /* Step 4.b-c. */
         return v !== v ? 0 : v;
