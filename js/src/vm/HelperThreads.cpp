@@ -725,7 +725,8 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
 
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   stencil_ = frontend::CompileGlobalScriptToStencil(
-      cx, ec, tempLifoAlloc, *stencilInput_, data, scopeKind);
+      cx, ec, cx->stackLimitForCurrentPrincipal(), tempLifoAlloc,
+      *stencilInput_, data, scopeKind);
   if (!stencil_) {
     return;
   }
@@ -755,7 +756,8 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
     return;
   }
 
-  stencil_ = frontend::ParseModuleToStencil(cx, ec, *stencilInput_, data);
+  stencil_ = frontend::ParseModuleToStencil(
+      cx, ec, cx->stackLimitForCurrentPrincipal(), *stencilInput_, data);
   if (!stencil_) {
     return;
   }
@@ -1136,8 +1138,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
       MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
       // Parse and generate bytecode for the inner function.
-      innerStencil =
-          DelazifyCanonicalScriptedFunction(cx, &ec_, borrow, scriptIndex);
+      innerStencil = DelazifyCanonicalScriptedFunction(
+          cx, &ec_, cx->stackLimitForCurrentPrincipal(), borrow, scriptIndex);
       if (!innerStencil) {
         return false;
       }

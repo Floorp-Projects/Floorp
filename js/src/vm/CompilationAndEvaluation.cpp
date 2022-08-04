@@ -69,7 +69,8 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   CHECK_THREAD(cx);
 
   MainThreadErrorContext ec(cx);
-  return frontend::CompileGlobalScript(cx, &ec, options, srcBuf, scopeKind);
+  return frontend::CompileGlobalScript(
+      cx, &ec, cx->stackLimitForCurrentPrincipal(), options, srcBuf, scopeKind);
 }
 
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -97,7 +98,8 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
   auto stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-      cx, &ec, input.get(), srcBuf, scopeKind);
+      cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf,
+      scopeKind);
   if (!stencil) {
     return nullptr;
   }
@@ -570,8 +572,9 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   options.setIsRunOnce(true);
 
   MainThreadErrorContext ec(cx);
-  RootedScript script(
-      cx, frontend::CompileGlobalScript(cx, &ec, options, srcBuf, scopeKind));
+  RootedScript script(cx, frontend::CompileGlobalScript(
+                              cx, &ec, cx->stackLimitForCurrentPrincipal(),
+                              options, srcBuf, scopeKind));
   if (!script) {
     return false;
   }
