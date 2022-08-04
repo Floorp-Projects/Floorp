@@ -44,11 +44,6 @@ object FeatureFlags {
     const val inactiveTabs = true
 
     /**
-     * Identifies and separates the tabs list with a group containing search term tabs.
-     */
-    val tabGroupFeature = Config.channel.isNightlyOrDebug
-
-    /**
      * Allows tabs to be dragged around as long as tab groups are disabled
      */
     val tabReorderingFeature = Config.channel.isNightlyOrDebug

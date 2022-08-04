@@ -601,9 +601,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grid</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Search groups</string>
+    <string name="tab_view_search_term_tab_groups" moz:RemovedIn="105" tools:ignore="UnusedResources">Search groups</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Group related sites together</string>
+    <string name="tab_view_search_term_tab_groups_summary" moz:RemovedIn="105" tools:ignore="UnusedResources">Group related sites together</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Close tabs</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

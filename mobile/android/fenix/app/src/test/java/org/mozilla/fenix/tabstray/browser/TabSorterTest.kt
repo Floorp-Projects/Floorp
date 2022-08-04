@@ -22,7 +22,6 @@ class TabSorterTest {
     @Before
     fun setUp() {
         every { settings.inactiveTabsAreEnabled }.answers { true }
-        every { settings.searchTermTabGroupsAreEnabled }.answers { true }
     }
 
     @Test
@@ -90,7 +89,6 @@ class TabSorterTest {
     @Test
     fun `WHEN inactive tabs are disabled THEN adapter have only normal tabs`() {
         every { settings.inactiveTabsAreEnabled }.answers { false }
-        every { settings.searchTermTabGroupsAreEnabled }.answers { false }
         val tabSorter = TabSorter(settings, tabsTrayStore)
 
         tabSorter.updateTabs(

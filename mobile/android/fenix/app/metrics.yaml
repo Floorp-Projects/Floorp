@@ -2123,19 +2123,6 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: 107
-  search_term_groups_enabled:
-    type: boolean
-    description: |
-      Is search term group in tabs tray on?
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/22057
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/22058
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 107
 
 search.default_engine:
   code:
@@ -7746,85 +7733,6 @@ addresses:
     metadata:
       tags:
         - Autofill
-
-search_terms:
-  number_of_search_term_group:
-    type: event
-    description: |
-      Number of search term group when tabs tray is opened.
-    extra_keys:
-      count:
-        type: string
-        description: |
-          The number of tabs per search group
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/22057
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/22058
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 107
-  average_tabs_per_group:
-    type: event
-    description: |
-      Number of search term tabs per group when tabs tray is opened.
-    extra_keys:
-      count:
-        type: string
-        description: |
-          The average number of tabs per search group
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/22057
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/22058
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 107
-  jump_back_in_group_tapped:
-    type: event
-    description: |
-      User tapped on the jump back in search term group.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/22057
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/22058
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 107
-  group_size_distribution:
-    type: custom_distribution
-    description: |
-      The distribution of search term tab group sizes. Rather than reporting
-      individual sizes directly as integers, it is currently desired to
-      report the sizes according to certain size ranges.
-      The "buckets" for reporting group sizes will be mapped as follows:
-      * 2 tabs -> 1
-      * 3-5 tabs -> 2
-      * 6-10 tabs -> 3
-      * 11+ tabs -> 4
-      Where the reported number will be 1, 2, 3, or 4, accordingly.
-      As an example, say a user has three groups of sizes 3, 6, and 15. The
-      app will report 2, 3, and 4 when this metric is tracked.
-    range_min: 1
-    range_max: 4
-    bucket_count: 5
-    histogram_type: linear
-    unit: tab_group_size_code
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/22410
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/22479
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 108
 
 messaging:
   message_shown:
