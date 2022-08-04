@@ -3273,13 +3273,18 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(CallContent)
     CASE(CallIgnoresRv)
     CASE(CallIter)
+    CASE(CallContentIter)
     CASE(SuperCall) {
       static_assert(JSOpLength_Call == JSOpLength_New,
                     "call and new must be the same size");
+      static_assert(JSOpLength_Call == JSOpLength_CallContent,
+                    "call and call-content must be the same size");
       static_assert(JSOpLength_Call == JSOpLength_CallIgnoresRv,
                     "call and call-ignores-rv must be the same size");
       static_assert(JSOpLength_Call == JSOpLength_CallIter,
                     "call and calliter must be the same size");
+      static_assert(JSOpLength_Call == JSOpLength_CallContentIter,
+                    "call and call-content-iter must be the same size");
       static_assert(JSOpLength_Call == JSOpLength_SuperCall,
                     "call and supercall must be the same size");
 
@@ -3314,14 +3319,17 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
             goto error;
           }
         } else {
-          if (op == JSOp::CallIter && args.calleev().isPrimitive()) {
+          if ((op == JSOp::CallIter || op == JSOp::CallContentIter) &&
+              args.calleev().isPrimitive()) {
             MOZ_ASSERT(args.length() == 0, "thisv must be on top of the stack");
             ReportValueError(cx, JSMSG_NOT_ITERABLE, -1, args.thisv(), nullptr);
             goto error;
           }
 
-          CallReason reason = op == JSOp::CallContent ? CallReason::CallContent
-                                                      : CallReason::Call;
+          CallReason reason =
+              (op == JSOp::CallContent || op == JSOp::CallContentIter)
+                  ? CallReason::CallContent
+                  : CallReason::Call;
           if (!CallFromStack(cx, args, reason)) {
             goto error;
           }

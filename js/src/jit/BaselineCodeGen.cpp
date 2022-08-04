@@ -4297,6 +4297,11 @@ bool BaselineCodeGen<Handler>::emit_CallIter() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CallContentIter() {
+  return emitCall(JSOp::CallContentIter);
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_New() {
   return emitCall(JSOp::New);
 }
