@@ -2306,10 +2306,17 @@ class HTMLEditor final : public EditorBase,
    * ChangeMarginStart() changes margin of aElement to indent or outdent.
    * If it's rtl text, margin-right will be changed.  Otherwise, margin-left.
    * XXX This is not aware of vertical writing-mode.
+   *
+   * @param aElement            The element whose start margin should be
+   *                            changed.
+   * @param aChangeMargin       Whether increase or decrease the margin.
+   * @param aEditingHost        The editing host.
+   * @return                    May suggest a suggest point to put caret.
    */
   enum class ChangeMargin { Increase, Decrease };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin,
+                    const Element& aEditingHost);
 
   /**
    * HandleCSSIndentAtSelectionInternal() indents around Selection with CSS.
@@ -2381,6 +2388,7 @@ class HTMLEditor final : public EditorBase,
    *                            CSS margin property.
    *                            `HTML` if aBlockElement is `<blockquote>`
    *                            or something.
+   * @param aEditingHost        The editing host.
    * @return                    The left content is new created element
    *                            splitting before aStartOfOutdent.
    *                            The right content is existing element.
@@ -2392,7 +2400,8 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffFromNodeResult
   OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
                      nsIContent& aEndOutdent,
-                     BlockIndentedWith aBlockIndentedWith);
+                     BlockIndentedWith aBlockIndentedWith,
+                     const Element& aEditingHost);
 
   /**
    * HandleOutdentAtSelectionInternal() outdents contents around Selection.
