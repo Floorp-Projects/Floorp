@@ -553,7 +553,7 @@ bool FT2FontEntry::HasVariations() {
       mHasVariations =
           mFTFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
     } else {
-      mHasVariations = gfxPlatform::GetPlatform()->HasVariationFontSupport() &&
+      mHasVariations = gfxPlatform::HasVariationFontSupport() &&
                        HasFontTable(TRUETYPE_TAG('f', 'v', 'a', 'r'));
     }
   }
