@@ -15,13 +15,18 @@ const {
 } = require("../head");
 const {
   createContext,
+  findSource,
+  getCM,
+  hoverOnToken,
   openDebuggerAndLog,
   pauseDebugger,
   reloadDebuggerAndLog,
   removeBreakpoints,
   resume,
+  selectSource,
   step,
-  hoverOnToken,
+  waitForText,
+  waitUntil,
 } = require("./debugger-helpers");
 
 const IFRAME_BASE_URL =
@@ -50,6 +55,7 @@ module.exports = async function() {
 
   await testProjectSearch(tab, toolbox);
   await testPreview(tab, toolbox, EXPECTED_FUNCTION);
+  await testOpeningLargeMinifiedFile(tab, toolbox);
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
@@ -143,5 +149,57 @@ async function testPreview(tab, toolbox, testFunction) {
 
   await removeBreakpoints(dbg);
   await resume(dbg);
+  await garbageCollect();
+}
+
+async function testOpeningLargeMinifiedFile(tab, toolbox) {
+  dump("Waiting for debugger panel\n");
+  const panel = await toolbox.getPanelWhenReady("jsdebugger");
+
+  dump("Creating context\n");
+  const dbg = await createContext(panel);
+
+  dump("Add minified.js (large minified file)\n");
+  const file = `${IFRAME_BASE_URL}custom/debugger/static/js/minified.js`;
+
+  const messageManager = tab.linkedBrowser.messageManager;
+
+  // We don't want to impact the other tests from this file, so we add a new big minified
+  // file from the content process instead of having it directly in iframe.html.
+  messageManager.loadFrameScript(
+    `data:application/javascript,(${encodeURIComponent(
+      `function () {
+        const scriptEl = content.document.createElement("script");
+        scriptEl.setAttribute("type", "text/javascript");
+        scriptEl.setAttribute("src", "${file}");
+        content.document.body.append(scriptEl);
+      }`
+    )})()`,
+    true
+  );
+
+  dump("Wait until source is available\n");
+  await waitUntil(() => findSource(dbg, file));
+
+  const fileFirstChars = `(()=>{var e,t,n,r,o={82603`;
+  const cm = getCM(dbg);
+  const onCodeMirrorTextRendered = new Promise(res =>
+    cm.on("changes", function onChanges(_, changes) {
+      if (changes.some(change => change.text[0].includes(fileFirstChars))) {
+        cm.off("changes", onChanges);
+        res();
+      }
+    })
+  );
+
+  dump("Open minified.js (large minified file)\n");
+  const test = runTest("custom.jsdebugger.open-large-minified-file.DAMP");
+  await selectSource(dbg, file);
+  await waitForText(dbg, file, fileFirstChars);
+  await onCodeMirrorTextRendered;
+  test.done();
+
+  dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [file]);
+
   await garbageCollect();
 }
