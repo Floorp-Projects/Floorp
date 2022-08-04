@@ -1300,14 +1300,15 @@ class HTMLEditor final : public EditorBase,
    * @param aTag                        The name of element to be inserted
    *                                    after calling this method.
    * @param aStartOfDeepestRightNode    The start point of deepest right node.
-   *                                    This point must be descendant of
-   *                                    active editing host.
+   *                                    This point must be in aEditingHost.
+   * @param aEditingHost                The editing host.
    * @return                            When succeeded, SplitPoint() returns
    *                                    the point to insert the element.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
   MaybeSplitAncestorsForInsertWithTransaction(
-      nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode);
+      nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode,
+      const Element& aEditingHost);
 
   /**
    * InsertElementWithSplittingAncestorsWithTransaction() is a wrapper of
