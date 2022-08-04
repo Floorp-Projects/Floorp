@@ -6125,19 +6125,24 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType,
   }
 
   if (createEmptyDivElement) {
-    if (IsSelectionRangeContainerNotContent()) {
+    if (!SelectionRef().RangeCount() || IsSelectionRangeContainerNotContent()) {
       NS_WARNING("Mutaiton event listener might have changed the selection");
       return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
     }
-    EditActionResult result =
-        AlignContentsAtSelectionWithEmptyDivElement(aAlignType);
-    NS_WARNING_ASSERTION(
-        result.Succeeded(),
-        "HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement() failed");
-    if (result.Handled()) {
-      restoreSelectionLater.Abort();
+    const auto pointToInsertDivElement =
+        GetFirstSelectionStartPoint<EditorDOMPoint>();
+    CreateElementResult newDivElementOrError = InsertDivElementToAlignContents(
+        pointToInsertDivElement, aAlignType, aEditingHost);
+    if (newDivElementOrError.isErr()) {
+      NS_WARNING("HTMLEditor::InsertDivElementToAlignContents() failed");
+      return newDivElementOrError.unwrapErr();
     }
-    return result.Rv();
+    restoreSelectionLater.Abort();
+    TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
+    nsresult rv = newDivElementOrError.SuggestCaretPointTo(*this, {});
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
   }
 
   nsresult rv = AlignNodesAndDescendants(arrayOfContents, aAlignType);
@@ -6146,44 +6151,33 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType,
   return rv;
 }
 
-EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
-    const nsAString& aAlignType) {
+CreateElementResult HTMLEditor::InsertDivElementToAlignContents(
+    const EditorDOMPoint& aPointToInsert, const nsAString& aAlignType,
+    const Element& aEditingHost) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  RefPtr<Element> editingHost = ComputeEditingHost();
-  if (MOZ_UNLIKELY(NS_WARN_IF(!editingHost))) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
-
-  const nsRange* firstRange = SelectionRef().GetRangeAt(0);
-  if (NS_WARN_IF(!firstRange)) {
-    return EditActionResult(NS_ERROR_FAILURE);
-  }
-
-  EditorDOMPoint atStartOfSelection(firstRange->StartRef());
-  if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-    return EditActionResult(NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return CreateElementResult(NS_ERROR_FAILURE);
   }
 
   CreateElementResult createNewDivElementResult =
       InsertElementWithSplittingAncestorsWithTransaction(
-          *nsGkAtoms::div, atStartOfSelection,
-          BRElementNextToSplitPoint::Delete, *editingHost);
+          *nsGkAtoms::div, aPointToInsert, BRElementNextToSplitPoint::Delete,
+          aEditingHost);
   if (createNewDivElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
         "nsGkAtoms::div, BRElementNextToSplitPoint::Delete) failed");
-    return EditActionResult(createNewDivElementResult.unwrapErr());
+    return createNewDivElementResult;
   }
-  // We'll update selection below and nobody refers selection until then.
-  // Therefore, we don't need to update selection here.
+  // We'll suggest start of the new <div>, so we don't need the suggested
+  // position.
   createNewDivElementResult.IgnoreCaretPointSuggestion();
 
+  MOZ_ASSERT(createNewDivElementResult.GetNewNode());
   RefPtr<Element> newDivElement = createNewDivElementResult.UnwrapNewNode();
-  MOZ_ASSERT(newDivElement);
-  // Remember our new block for postprocessing
-  TopLevelEditSubActionDataRef().mNewBlockElement = newDivElement;
   // Set up the alignment on the div, using HTML or CSS
   Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
       SetBlockElementAlign(*newDivElement, aAlignType,
@@ -6192,9 +6186,9 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
     NS_WARNING(
         "HTMLEditor::SetBlockElementAlign(EditTarget::"
         "OnlyDescendantsExceptTable) failed");
-    return EditActionResult(pointToPutCaretOrError.unwrapErr());
+    return CreateElementResult(pointToPutCaretOrError.unwrapErr());
   }
-  // We don't need to put caret here because we'll put caret below.
+  // We don't need the new suggested position too.
 
   // Put in a padding <br> element for empty last line so that it won't get
   // deleted.
@@ -6205,13 +6199,11 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
     NS_WARNING(
         "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
         "failed");
-    return EditActionResult(insertPaddingBRElementResult.unwrapErr());
+    return insertPaddingBRElementResult;
   }
   insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
-  nsresult rv = CollapseSelectionToStartOf(*newDivElement);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionToStartOf() failed");
-  return EditActionHandled(rv);
+
+  return CreateElementResult(newDivElement, EditorDOMPoint(newDivElement, 0u));
 }
 
 nsresult HTMLEditor::AlignNodesAndDescendants(
