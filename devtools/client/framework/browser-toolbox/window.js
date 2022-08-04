@@ -81,6 +81,10 @@ var connect = async function() {
     "devtools.webconsole.input.context",
     env.get("MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT") === "1"
   );
+  // Similar, but for the Browser Toolbox mode
+  if (env.get("MOZ_BROWSER_TOOLBOX_FORCE_MULTIPROCESS") === "1") {
+    Services.prefs.setCharPref("devtools.browsertoolbox.scope", "everything");
+  }
 
   const port = env.get("MOZ_BROWSER_TOOLBOX_PORT");
 
