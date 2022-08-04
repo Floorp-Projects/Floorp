@@ -581,9 +581,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true
     )
 
-    val enabledTotalCookieProtection: Boolean by lazy {
-        FxNimbus.features.engineSettings.value().totalCookieProtectionEnabled
-    }
+    val enabledTotalCookieProtection: Boolean
+        get() = FxNimbus.features.engineSettings.value().totalCookieProtectionEnabled
 
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),

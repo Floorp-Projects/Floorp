@@ -434,12 +434,28 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     private fun setupNimbusObserver(nimbus: Observable<NimbusInterface.Observer>) {
         nimbus.register(object : NimbusInterface.Observer {
             override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+                // To workaround a caching bug in Nimbus that appears when we try to query an
+                // experiment **before** `FxNimbus.initialize` is called we need to set the `api`
+                // value again so that we can still access the NimbusApi that is wrapped
+                // in `FxNimbus.initialize.getSdk`.
+                //
+                // We set this value here to minimize the race between setting the `api` value and
+                // the callers of FxNimbus.
+                // See: https://github.com/mozilla/application-services/issues/5075
+                FxNimbus.api = components.analytics.experiments
                 onNimbusStartupAndUpdate()
             }
         })
     }
 
     private fun onNimbusStartupAndUpdate() {
+        // When Nimbus has successfully started up, we can apply our engine settings experiment.
+        // Any previous value that was set on the engine will be overridden from those set in
+        // Core.Engine.DefaultSettings.
+        // NOTE ⚠️: Any startup experiment we want to run needs to have it's value re-applied here.
+        components.core.engine.settings.trackingProtectionPolicy =
+            components.core.trackingProtectionPolicyFactory.createTrackingProtectionPolicy()
+
         val settings = settings()
         if (FeatureFlags.messagingFeature && settings.isExperimentationEnabled) {
             components.appStore.dispatch(AppAction.MessagingAction.Restore)
