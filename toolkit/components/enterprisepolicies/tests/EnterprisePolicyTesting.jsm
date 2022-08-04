@@ -7,7 +7,6 @@
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 const lazy = {};
 ChromeUtils.defineModuleGetter(
@@ -31,9 +30,7 @@ var EnterprisePolicyTesting = {
 
       // This file gets automatically deleted by FileTestUtils
       // at the end of the test run.
-      await OS.File.writeAtomic(filePath, JSON.stringify(json), {
-        encoding: "utf-8",
-      });
+      await IOUtils.writeJSON(filePath, json);
     } else {
       filePath = json;
     }
