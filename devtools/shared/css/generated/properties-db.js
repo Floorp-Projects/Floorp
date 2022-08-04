@@ -11709,10 +11709,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "aspect-ratio",
-    "layout.css.aspect-ratio.enabled"
-  ],
-  [
     "container-type",
     "layout.css.container-queries.enabled"
   ],
