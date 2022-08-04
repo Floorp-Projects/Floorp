@@ -2509,7 +2509,6 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
-
     metadata:
       tags:
         - Bookmarks
@@ -4574,7 +4573,6 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: 111
-
     metadata:
       tags:
         - TrackingProtection
@@ -6051,7 +6049,6 @@ addons:
     notification_emails:
       - android-probes@mozilla.com
     expires: 116
-
     metadata:
       tags:
         - WebExtensions
@@ -7012,7 +7009,6 @@ awesomebar:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
-
     metadata:
       tags:
         - Search
