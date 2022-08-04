@@ -2415,9 +2415,11 @@ class HTMLEditor final : public EditorBase,
    *                            as its child.
    * @param aAlignType          New value of align attribute of `<div>`
    *                            element.
+   * @return                    A candidate position to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AlignBlockContentsWithDivElement(
-      dom::Element& aBlockElement, const nsAString& aAlignType);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  AlignBlockContentsWithDivElement(Element& aBlockElement,
+                                   const nsAString& aAlignType);
 
   /**
    * AlignContentsInAllTableCellsAndListItems() calls
@@ -2427,8 +2429,9 @@ class HTMLEditor final : public EditorBase,
    * @param aElement            The node which is or whose descendants should
    *                            be aligned to aAlignType.
    * @param aAlignType          New value of `align` attribute of `<div>`.
+   * @return                    A candidate position to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   AlignContentsInAllTableCellsAndListItems(dom::Element& aElement,
                                            const nsAString& aAlignType);
 
