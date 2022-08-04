@@ -35,7 +35,13 @@ function MapForEach(callbackfn, thisArg = undefined) {
 
   // Steps 2-3.
   if (!IsObject(M) || (M = GuardToMapObject(M)) === null) {
-    return callFunction(CallMapMethodIfWrapped, this, callbackfn, thisArg, "MapForEach");
+    return callFunction(
+      CallMapMethodIfWrapped,
+      this,
+      callbackfn,
+      thisArg,
+      "MapForEach"
+    );
   }
 
   // Step 4.
@@ -75,7 +81,11 @@ function MapIteratorNext() {
 
   // Steps 2-3.
   if (!IsObject(O) || (O = GuardToMapIterator(O)) === null) {
-    return callFunction(CallMapIteratorMethodIfWrapped, this, "MapIteratorNext");
+    return callFunction(
+      CallMapIteratorMethodIfWrapped,
+      this,
+      "MapIteratorNext"
+    );
   }
 
   // Steps 4-5 (implemented in GetNextMapEntryForIterator).

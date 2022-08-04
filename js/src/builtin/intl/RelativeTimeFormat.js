@@ -63,14 +63,20 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
  * Returns an object containing the RelativeTimeFormat internal properties of |obj|.
  */
 function getRelativeTimeFormatInternals(obj) {
-  assert(IsObject(obj), "getRelativeTimeFormatInternals called with non-object");
+  assert(
+    IsObject(obj),
+    "getRelativeTimeFormatInternals called with non-object"
+  );
   assert(
     intl_GuardToRelativeTimeFormat(obj) !== null,
     "getRelativeTimeFormatInternals called with non-RelativeTimeFormat"
   );
 
   var internals = getIntlObjectInternals(obj);
-  assert(internals.type === "RelativeTimeFormat", "bad type escaped getIntlObjectInternals");
+  assert(
+    internals.type === "RelativeTimeFormat",
+    "bad type escaped getIntlObjectInternals"
+  );
 
   var internalProps = maybeInternalProperties(internals);
   if (internalProps) {
@@ -94,7 +100,10 @@ function getRelativeTimeFormatInternals(obj) {
  * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.1.1.
  */
 function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
-  assert(IsObject(relativeTimeFormat), "InitializeRelativeimeFormat called with non-object");
+  assert(
+    IsObject(relativeTimeFormat),
+    "InitializeRelativeimeFormat called with non-object"
+  );
   assert(
     intl_GuardToRelativeTimeFormat(relativeTimeFormat) !== null,
     "InitializeRelativeTimeFormat called with non-RelativeTimeFormat"
@@ -133,11 +142,23 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
   let opt = new_Record();
 
   // Steps 5-6.
-  let matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+  let matcher = GetOption(
+    options,
+    "localeMatcher",
+    "string",
+    ["lookup", "best fit"],
+    "best fit"
+  );
   opt.localeMatcher = matcher;
 
   // Steps 7-9.
-  let numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
+  let numberingSystem = GetOption(
+    options,
+    "numberingSystem",
+    "string",
+    undefined,
+    undefined
+  );
   if (numberingSystem !== undefined) {
     numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(
       numberingSystem,
@@ -150,14 +171,30 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
   lazyRelativeTimeFormatData.opt = opt;
 
   // Steps 16-17.
-  const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
+  const style = GetOption(
+    options,
+    "style",
+    "string",
+    ["long", "short", "narrow"],
+    "long"
+  );
   lazyRelativeTimeFormatData.style = style;
 
   // Steps 18-19.
-  const numeric = GetOption(options, "numeric", "string", ["always", "auto"], "always");
+  const numeric = GetOption(
+    options,
+    "numeric",
+    "string",
+    ["always", "auto"],
+    "always"
+  );
   lazyRelativeTimeFormatData.numeric = numeric;
 
-  initializeIntlObject(relativeTimeFormat, "RelativeTimeFormat", lazyRelativeTimeFormatData);
+  initializeIntlObject(
+    relativeTimeFormat,
+    "RelativeTimeFormat",
+    lazyRelativeTimeFormatData
+  );
 }
 
 /**
@@ -194,7 +231,9 @@ function Intl_RelativeTimeFormat_format(value, unit) {
   // Step 2.
   if (
     !IsObject(relativeTimeFormat) ||
-    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null
+    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(
+      relativeTimeFormat
+    )) === null
   ) {
     return callFunction(
       intl_CallRelativeTimeFormatMethodIfWrapped,
@@ -229,7 +268,9 @@ function Intl_RelativeTimeFormat_formatToParts(value, unit) {
   // Step 2.
   if (
     !IsObject(relativeTimeFormat) ||
-    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null
+    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(
+      relativeTimeFormat
+    )) === null
   ) {
     return callFunction(
       intl_CallRelativeTimeFormatMethodIfWrapped,
@@ -262,7 +303,9 @@ function Intl_RelativeTimeFormat_resolvedOptions() {
   // Steps 2-3.
   if (
     !IsObject(relativeTimeFormat) ||
-    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null
+    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(
+      relativeTimeFormat
+    )) === null
   ) {
     return callFunction(
       intl_CallRelativeTimeFormatMethodIfWrapped,

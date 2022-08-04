@@ -35,7 +35,11 @@ function String_match(regexp) {
 
   // Step 2.
   var isPatternString = typeof regexp === "string";
-  if (!(isPatternString && StringProtoHasNoMatch()) && regexp !== undefined && regexp !== null) {
+  if (
+    !(isPatternString && StringProtoHasNoMatch()) &&
+    regexp !== undefined &&
+    regexp !== null
+  ) {
     // Step 2.a.
     var matcher = GetMethod(regexp, GetBuiltinSymbol("match"));
 
@@ -110,7 +114,11 @@ function String_matchAll(regexp) {
   var rx = RegExpCreate(regexp, "g");
 
   // Step 5.
-  return callContentFunction(GetMethod(rx, GetBuiltinSymbol("matchAll")), rx, string);
+  return callContentFunction(
+    GetMethod(rx, GetBuiltinSymbol("matchAll")),
+    rx,
+    string
+  );
 }
 
 /**
@@ -156,7 +164,11 @@ function String_pad(maxLength, fillString, padEnd) {
   // Step 10.
   // Perform an int32 division to ensure String_repeat is not called with a
   // double to avoid repeated bailouts in ToInteger.
-  let truncatedStringFiller = callFunction(String_repeat, filler, (fillLen / filler.length) | 0);
+  let truncatedStringFiller = callFunction(
+    String_repeat,
+    filler,
+    (fillLen / filler.length) | 0
+  );
 
   truncatedStringFiller += Substring(filler, 0, fillLen % filler.length);
 
@@ -188,8 +200,14 @@ function StringProtoHasNoReplace() {
 // Caller should check the range of |from| and |length|.
 function Substring(str, from, length) {
   assert(typeof str === "string", "|str| should be a string");
-  assert((from | 0) === from, "coercing |from| into int32 should not change the value");
-  assert((length | 0) === length, "coercing |length| into int32 should not change the value");
+  assert(
+    (from | 0) === from,
+    "coercing |from| into int32 should not change the value"
+  );
+  assert(
+    (length | 0) === length,
+    "coercing |length| into int32 should not change the value"
+  );
 
   return SubstringKernel(str, from | 0, length | 0);
 }
@@ -240,7 +258,9 @@ function String_replace(searchValue, replaceValue) {
   }
 
   // Step 8.
-  var replStr = ToString(callContentFunction(replaceValue, undefined, searchString, pos, string));
+  var replStr = ToString(
+    callContentFunction(replaceValue, undefined, searchString, pos, string)
+  );
 
   // Step 10.
   var tailPos = pos + searchString.length;
@@ -336,7 +356,12 @@ function String_replaceAll(searchValue, replaceValue) {
     // whereas |"abc".indexOf("", 4)| returns 3. That means we need to
     // exit the loop when |nextPosition| is smaller than |position| and
     // not just when |nextPosition| is -1.
-    var nextPosition = callFunction(std_String_indexOf, string, searchString, position);
+    var nextPosition = callFunction(
+      std_String_indexOf,
+      string,
+      searchString,
+      position
+    );
     if (nextPosition < position) {
       break;
     }
@@ -344,13 +369,23 @@ function String_replaceAll(searchValue, replaceValue) {
 
     // Step 14.a.
     var replacement = ToString(
-      callContentFunction(replaceValue, undefined, searchString, position, string)
+      callContentFunction(
+        replaceValue,
+        undefined,
+        searchString,
+        position,
+        string
+      )
     );
 
     // Step 14.b (not applicable).
 
     // Step 14.c.
-    var stringSlice = Substring(string, endOfLastMatch, position - endOfLastMatch);
+    var stringSlice = Substring(
+      string,
+      endOfLastMatch,
+      position - endOfLastMatch
+    );
 
     // Step 14.d.
     result += stringSlice + replacement;
@@ -401,7 +436,11 @@ function String_search(regexp) {
 
   // Step 2.
   var isPatternString = typeof regexp === "string";
-  if (!(isPatternString && StringProtoHasNoSearch()) && regexp !== undefined && regexp !== null) {
+  if (
+    !(isPatternString && StringProtoHasNoSearch()) &&
+    regexp !== undefined &&
+    regexp !== null
+  ) {
     // Step 2.a.
     var searcher = GetMethod(regexp, GetBuiltinSymbol("search"));
 
@@ -425,7 +464,11 @@ function String_search(regexp) {
   var rx = RegExpCreate(regexp);
 
   // Step 5.
-  return callContentFunction(GetMethod(rx, GetBuiltinSymbol("search")), rx, string);
+  return callContentFunction(
+    GetMethod(rx, GetBuiltinSymbol("search")),
+    rx,
+    string
+  );
 }
 
 function StringProtoHasNoSplit() {
@@ -657,10 +700,14 @@ function String_slice(start, end) {
   var intEnd = end === undefined ? len : ToInteger(end);
 
   // Step 6.
-  var from = intStart < 0 ? std_Math_max(len + intStart, 0) : std_Math_min(intStart, len);
+  var from =
+    intStart < 0
+      ? std_Math_max(len + intStart, 0)
+      : std_Math_min(intStart, len);
 
   // Step 7.
-  var to = intEnd < 0 ? std_Math_max(len + intEnd, 0) : std_Math_min(intEnd, len);
+  var to =
+    intEnd < 0 ? std_Math_max(len + intEnd, 0) : std_Math_min(intEnd, len);
 
   // Step 8.
   var span = std_Math_max(to - from, 0);
@@ -769,7 +816,12 @@ function String_repeat(count) {
 function String_iterator() {
   // Step 1.
   if (this === undefined || this === null) {
-    ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO2, "String", "Symbol.iterator", ToString(this));
+    ThrowTypeError(
+      JSMSG_INCOMPATIBLE_PROTO2,
+      "String",
+      "Symbol.iterator",
+      ToString(this)
+    );
   }
 
   // Step 2.
@@ -785,7 +837,11 @@ function String_iterator() {
 function StringIteratorNext() {
   var obj = this;
   if (!IsObject(obj) || (obj = GuardToStringIterator(obj)) === null) {
-    return callFunction(CallStringIteratorMethodIfWrapped, this, "StringIteratorNext");
+    return callFunction(
+      CallStringIteratorMethodIfWrapped,
+      this,
+      "StringIteratorNext"
+    );
   }
 
   var S = UnsafeGetStringFromReservedSlot(obj, ITERATOR_SLOT_TARGET);
@@ -889,7 +945,8 @@ function String_toLocaleLowerCase() {
     var requestedLocales = CanonicalizeLocaleList(locales);
 
     // Steps 4-6.
-    requestedLocale = requestedLocales.length > 0 ? requestedLocales[0] : undefined;
+    requestedLocale =
+      requestedLocales.length > 0 ? requestedLocales[0] : undefined;
   }
 
   // Trivial case: When the input is empty, directly return the empty string.
@@ -934,7 +991,8 @@ function String_toLocaleUpperCase() {
     var requestedLocales = CanonicalizeLocaleList(locales);
 
     // Steps 4-6.
-    requestedLocale = requestedLocales.length > 0 ? requestedLocales[0] : undefined;
+    requestedLocale =
+      requestedLocales.length > 0 ? requestedLocales[0] : undefined;
   }
 
   // Trivial case: When the input is empty, directly return the empty string.

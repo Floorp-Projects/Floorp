@@ -118,7 +118,10 @@ function SpeciesConstructor(obj, defaultConstructor) {
   }
 
   // Step 8.
-  ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "@@species property of object's constructor");
+  ThrowTypeError(
+    JSMSG_NOT_CONSTRUCTOR,
+    "@@species property of object's constructor"
+  );
 }
 
 function GetTypeError(msg) {
@@ -182,7 +185,10 @@ function CopyDataProperties(target, source, excludedItems) {
 
     // We abbreviate this by calling propertyIsEnumerable which is faster
     // and returns false for not defined properties.
-    if (!hasOwn(key, excludedItems) && callFunction(std_Object_propertyIsEnumerable, from, key)) {
+    if (
+      !hasOwn(key, excludedItems) &&
+      callFunction(std_Object_propertyIsEnumerable, from, key)
+    ) {
       DefineDataProperty(target, key, from[key]);
     }
   }

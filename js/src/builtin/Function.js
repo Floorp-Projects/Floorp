@@ -134,30 +134,80 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
         case 0:
           return constructContentFunction(fun, newTarget, bound1);
         case 1:
-          return constructContentFunction(fun, newTarget, bound1, SPREAD(arguments, 1));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            SPREAD(arguments, 1)
+          );
         case 2:
-          return constructContentFunction(fun, newTarget, bound1, SPREAD(arguments, 2));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            SPREAD(arguments, 2)
+          );
         case 3:
-          return constructContentFunction(fun, newTarget, bound1, SPREAD(arguments, 3));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            SPREAD(arguments, 3)
+          );
         case 4:
-          return constructContentFunction(fun, newTarget, bound1, SPREAD(arguments, 4));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            SPREAD(arguments, 4)
+          );
         case 5:
-          return constructContentFunction(fun, newTarget, bound1, SPREAD(arguments, 5));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            SPREAD(arguments, 5)
+          );
       }
     } else {
       switch (arguments.length) {
         case 0:
           return callContentFunction(fun, thisArg, bound1);
         case 1:
-          return callContentFunction(fun, thisArg, bound1, SPREAD(arguments, 1));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            SPREAD(arguments, 1)
+          );
         case 2:
-          return callContentFunction(fun, thisArg, bound1, SPREAD(arguments, 2));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            SPREAD(arguments, 2)
+          );
         case 3:
-          return callContentFunction(fun, thisArg, bound1, SPREAD(arguments, 3));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            SPREAD(arguments, 3)
+          );
         case 4:
-          return callContentFunction(fun, thisArg, bound1, SPREAD(arguments, 4));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            SPREAD(arguments, 4)
+          );
         case 5:
-          return callContentFunction(fun, thisArg, bound1, SPREAD(arguments, 5));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            SPREAD(arguments, 5)
+          );
       }
     }
 
@@ -202,30 +252,90 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
         case 0:
           return constructContentFunction(fun, newTarget, bound1, bound2);
         case 1:
-          return constructContentFunction(fun, newTarget, bound1, bound2, SPREAD(arguments, 1));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            bound2,
+            SPREAD(arguments, 1)
+          );
         case 2:
-          return constructContentFunction(fun, newTarget, bound1, bound2, SPREAD(arguments, 2));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            bound2,
+            SPREAD(arguments, 2)
+          );
         case 3:
-          return constructContentFunction(fun, newTarget, bound1, bound2, SPREAD(arguments, 3));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            bound2,
+            SPREAD(arguments, 3)
+          );
         case 4:
-          return constructContentFunction(fun, newTarget, bound1, bound2, SPREAD(arguments, 4));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            bound2,
+            SPREAD(arguments, 4)
+          );
         case 5:
-          return constructContentFunction(fun, newTarget, bound1, bound2, SPREAD(arguments, 5));
+          return constructContentFunction(
+            fun,
+            newTarget,
+            bound1,
+            bound2,
+            SPREAD(arguments, 5)
+          );
       }
     } else {
       switch (arguments.length) {
         case 0:
           return callContentFunction(fun, thisArg, bound1, bound2);
         case 1:
-          return callContentFunction(fun, thisArg, bound1, bound2, SPREAD(arguments, 1));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            bound2,
+            SPREAD(arguments, 1)
+          );
         case 2:
-          return callContentFunction(fun, thisArg, bound1, bound2, SPREAD(arguments, 2));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            bound2,
+            SPREAD(arguments, 2)
+          );
         case 3:
-          return callContentFunction(fun, thisArg, bound1, bound2, SPREAD(arguments, 3));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            bound2,
+            SPREAD(arguments, 3)
+          );
         case 4:
-          return callContentFunction(fun, thisArg, bound1, bound2, SPREAD(arguments, 4));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            bound2,
+            SPREAD(arguments, 4)
+          );
         case 5:
-          return callContentFunction(fun, thisArg, bound1, bound2, SPREAD(arguments, 5));
+          return callContentFunction(
+            fun,
+            thisArg,
+            bound1,
+            bound2,
+            SPREAD(arguments, 5)
+          );
       }
     }
 
@@ -251,7 +361,10 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
 }
 
 function bind_bindFunctionN(fun, thisArg, boundArgs) {
-  assert(boundArgs.length > 2, "Fast paths should be used for few-bound-args cases.");
+  assert(
+    boundArgs.length > 2,
+    "Fast paths should be used for few-bound-args cases."
+  );
   var combiner = null;
   return function $bound() {
     var newTarget;

@@ -93,7 +93,10 @@ function AsyncIteratorHelperNext(value) {
       "AsyncIteratorHelperNext"
     );
   }
-  const generator = UnsafeGetReservedSlot(O, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT);
+  const generator = UnsafeGetReservedSlot(
+    O,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT
+  );
   return callFunction(IntrinsicAsyncGeneratorNext, generator, value);
 }
 
@@ -107,7 +110,10 @@ function AsyncIteratorHelperReturn(value) {
       "AsyncIteratorHelperReturn"
     );
   }
-  const generator = UnsafeGetReservedSlot(O, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT);
+  const generator = UnsafeGetReservedSlot(
+    O,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT
+  );
   return callFunction(IntrinsicAsyncGeneratorReturn, generator, value);
 }
 
@@ -121,7 +127,10 @@ function AsyncIteratorHelperThrow(value) {
       "AsyncIteratorHelperThrow"
     );
   }
-  const generator = UnsafeGetReservedSlot(O, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT);
+  const generator = UnsafeGetReservedSlot(
+    O,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT
+  );
   return callFunction(IntrinsicAsyncGeneratorThrow, generator, value);
 }
 
@@ -144,7 +153,11 @@ function AsyncIteratorMap(mapper) {
   const iteratorHelper = NewAsyncIteratorHelper();
   const generator = AsyncIteratorMapGenerator(iterated, mapper);
   callFunction(IntrinsicAsyncGeneratorNext, generator);
-  UnsafeSetReservedSlot(iteratorHelper, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT, generator);
+  UnsafeSetReservedSlot(
+    iteratorHelper,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
   return iteratorHelper;
 }
 
@@ -191,7 +204,11 @@ function AsyncIteratorFilter(filterer) {
   const iteratorHelper = NewAsyncIteratorHelper();
   const generator = AsyncIteratorFilterGenerator(iterated, filterer);
   callFunction(IntrinsicAsyncGeneratorNext, generator);
-  UnsafeSetReservedSlot(iteratorHelper, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT, generator);
+  UnsafeSetReservedSlot(
+    iteratorHelper,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
   return iteratorHelper;
 }
 
@@ -242,7 +259,11 @@ function AsyncIteratorTake(limit) {
   const iteratorHelper = NewAsyncIteratorHelper();
   const generator = AsyncIteratorTakeGenerator(iterated, remaining);
   callFunction(IntrinsicAsyncGeneratorNext, generator);
-  UnsafeSetReservedSlot(iteratorHelper, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT, generator);
+  UnsafeSetReservedSlot(
+    iteratorHelper,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
   return iteratorHelper;
 }
 
@@ -292,7 +313,11 @@ function AsyncIteratorDrop(limit) {
   const iteratorHelper = NewAsyncIteratorHelper();
   const generator = AsyncIteratorDropGenerator(iterated, remaining);
   callFunction(IntrinsicAsyncGeneratorNext, generator);
-  UnsafeSetReservedSlot(iteratorHelper, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT, generator);
+  UnsafeSetReservedSlot(
+    iteratorHelper,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
   return iteratorHelper;
 }
 
@@ -341,7 +366,11 @@ function AsyncIteratorAsIndexedPairs() {
   const iteratorHelper = NewAsyncIteratorHelper();
   const generator = AsyncIteratorAsIndexedPairsGenerator(iterated);
   callFunction(IntrinsicAsyncGeneratorNext, generator);
-  UnsafeSetReservedSlot(iteratorHelper, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT, generator);
+  UnsafeSetReservedSlot(
+    iteratorHelper,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
   return iteratorHelper;
 }
 
@@ -387,7 +416,11 @@ function AsyncIteratorFlatMap(mapper) {
   const iteratorHelper = NewAsyncIteratorHelper();
   const generator = AsyncIteratorFlatMapGenerator(iterated, mapper);
   callFunction(IntrinsicAsyncGeneratorNext, generator);
-  UnsafeSetReservedSlot(iteratorHelper, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT, generator);
+  UnsafeSetReservedSlot(
+    iteratorHelper,
+    ASYNC_ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
   return iteratorHelper;
 }
 
@@ -399,7 +432,11 @@ async function* AsyncIteratorFlatMapGenerator(iterated, mapper) {
     needClose = false;
 
     // Step 1.
-    for (let next = await IteratorNext(iterated); !next.done; next = await IteratorNext(iterated)) {
+    for (
+      let next = await IteratorNext(iterated);
+      !next.done;
+      next = await IteratorNext(iterated)
+    ) {
       // Step c.
       const value = next.value;
 
@@ -451,7 +488,12 @@ async function AsyncIteratorReduce(reducer /*, initialValue*/) {
   // Step 5.
   for await (const value of allowContentIter(iterated)) {
     // Steps d-h.
-    accumulator = await callContentFunction(reducer, undefined, accumulator, value);
+    accumulator = await callContentFunction(
+      reducer,
+      undefined,
+      accumulator,
+      value
+    );
   }
   // Step 5b.
   return accumulator;

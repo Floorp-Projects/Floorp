@@ -8,7 +8,10 @@ function CreateListFromArrayLikeForArgs(obj) {
   // Step 1 (not applicable).
 
   // Step 2.
-  assert(IsObject(obj), "object must be passed to CreateListFromArrayLikeForArgs");
+  assert(
+    IsObject(obj),
+    "object must be passed to CreateListFromArrayLikeForArgs"
+  );
 
   // Step 3.
   var len = ToLength(obj.length);
@@ -143,7 +146,12 @@ function Reflect_getOwnPropertyDescriptor(target, propertyKey) {
 function Reflect_has(target, propertyKey) {
   // Step 1.
   if (!IsObject(target)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.has", ToSource(target));
+    ThrowTypeError(
+      JSMSG_OBJECT_REQUIRED_ARG,
+      "`target`",
+      "Reflect.has",
+      ToSource(target)
+    );
   }
 
   // Steps 2-3 are identical to the runtime semantics of the "in" operator.
@@ -155,7 +163,12 @@ function Reflect_has(target, propertyKey) {
 function Reflect_get(target, propertyKey /*, receiver*/) {
   // Step 1.
   if (!IsObject(target)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.get", ToSource(target));
+    ThrowTypeError(
+      JSMSG_OBJECT_REQUIRED_ARG,
+      "`target`",
+      "Reflect.get",
+      ToSource(target)
+    );
   }
 
   // Step 3 (reordered).
