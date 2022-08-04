@@ -7,11 +7,17 @@
 "no-feature-firefox-desktop":
   description: A dummy feature for experiments that target no feature.
   owner: barret@mozilla.com
+  applications:
+    - firefox-desktop
+    - firefox-desktop-background-task
   hasExposure: false
   variables: {}
 testFeature:
   description: Test only feature
   owner: barret@mozilla.com
+  applications:
+    - firefox-desktop
+    - firefox-desktop-background-task
   hasExposure: false
   isEarlyStartup: true
   variables:
@@ -521,6 +527,9 @@ pbNewtab:
   variables: {}
 backgroundTaskMessage:
   description: "A Firefox Messaging System message for the background task message channel"
+  owner: nalexander@mozilla.com
+  applications:
+    - firefox-desktop-background-task
   hasExposure: true
   exposureDescription: >-
     Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.

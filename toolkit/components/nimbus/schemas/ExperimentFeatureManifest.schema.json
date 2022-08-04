@@ -13,6 +13,18 @@
           "type": "string",
           "description": "The owner of the feature."
         },
+        "applications": {
+          "description": "The applications that can enroll in experiments for this feature. Defaults to firefox-desktop if not present.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "firefox-desktop",
+              "firefox-desktop-background-task"
+            ]
+          },
+          "minItems": 1
+        },
         "hasExposure": {
           "type": "boolean",
           "description": "If the feature sends an exposure event."
