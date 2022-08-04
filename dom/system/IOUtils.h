@@ -60,17 +60,6 @@ class IOUtils final {
  public:
   class IOError;
 
-  enum class ShutdownPhase : uint8_t {
-    ProfileBeforeChange,
-    SendTelemetry,
-    XpcomWillShutdown,
-    Count,
-  };
-
-  template <typename T>
-  using PhaseArray =
-      EnumeratedArray<IOUtils::ShutdownPhase, IOUtils::ShutdownPhase::Count, T>;
-
   static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
                                         const ReadOptions& aOptions,
@@ -203,9 +192,6 @@ class IOUtils final {
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
-
-  static void GetSendTelemetry(GlobalObject& aGlobal,
-                               JS::MutableHandle<JS::Value>, ErrorResult& aRv);
 
   static RefPtr<SyncReadFile> OpenFileForSyncReading(GlobalObject& aGlobal,
                                                      const nsAString& aPath,
@@ -512,10 +498,6 @@ class IOUtils final {
                                              const nsCString& aAttr);
 #endif
 
-  static void GetShutdownClient(GlobalObject& aGlobal,
-                                JS::MutableHandle<JS::Value> aClient,
-                                ErrorResult& aRv, const ShutdownPhase aPhase);
-
   enum class EventQueueStatus {
     Uninitialized,
     Initialized,
@@ -593,16 +575,17 @@ class IOUtils::EventQueue final {
   template <typename OkT, typename Fn>
   RefPtr<IOPromise<OkT>> Dispatch(Fn aFunc);
 
+  Result<already_AddRefed<nsIAsyncShutdownClient>, nsresult>
+  GetProfileBeforeChangeClient();
+
   Result<already_AddRefed<nsIAsyncShutdownBarrier>, nsresult>
-  GetShutdownBarrier(const ShutdownPhase aPhase);
-  Result<already_AddRefed<nsIAsyncShutdownClient>, nsresult> GetShutdownClient(
-      const ShutdownPhase aPhase);
+  GetProfileBeforeChangeBarrier();
 
  private:
   nsresult SetShutdownHooks();
 
   nsCOMPtr<nsISerialEventTarget> mBackgroundEventTarget;
-  IOUtils::PhaseArray<nsCOMPtr<nsIAsyncShutdownBarrier>> mBarriers;
+  nsCOMPtr<nsIAsyncShutdownBarrier> mProfileBeforeChangeBarrier;
 };
 
 /**
@@ -722,28 +705,18 @@ class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker,
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
   NS_DECL_NSIASYNCSHUTDOWNCOMPLETIONCALLBACK
 
-  explicit IOUtilsShutdownBlocker(const IOUtils::ShutdownPhase aPhase)
-      : mPhase(aPhase) {}
+  enum Phase {
+    ProfileBeforeChange,
+    XpcomWillShutdown,
+  };
+
+  explicit IOUtilsShutdownBlocker(Phase aPhase) : mPhase(aPhase) {}
 
  private:
   virtual ~IOUtilsShutdownBlocker() = default;
 
-  /**
-   * Called on the main thread after the event queue has been flushed.
-   */
-  void OnFlush();
-
-  static constexpr IOUtils::PhaseArray<const char16_t*> PHASE_NAMES{
-      u"profile-before-change",
-      u"profile-before-change-telemetry",
-      u"xpcom-will-shutdown",
-  };
-
-  // The last shutdown phase before we should shut down the event loop.
-  static constexpr auto LAST_IO_PHASE = IOUtils::ShutdownPhase::SendTelemetry;
-
-  IOUtils::ShutdownPhase mPhase;
-  nsCOMPtr<nsIAsyncShutdownClient> mParentClient;
+  Phase mPhase;
+  RefPtr<nsIAsyncShutdownClient> mParentClient;
 };
 
 /**
