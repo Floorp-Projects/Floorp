@@ -465,8 +465,8 @@ gfxFont* MacOSFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
 bool MacOSFontEntry::HasVariations() {
   if (!mHasVariationsInitialized) {
     mHasVariationsInitialized = true;
-    mHasVariations =
-        gfxPlatform::HasVariationFontSupport() && HasFontTable(TRUETYPE_TAG('f', 'v', 'a', 'r'));
+    mHasVariations = gfxPlatform::GetPlatform()->HasVariationFontSupport() &&
+                     HasFontTable(TRUETYPE_TAG('f', 'v', 'a', 'r'));
   }
 
   return mHasVariations;
@@ -887,7 +887,7 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
       fontEntry->mFixedPitch = true;
     }
 
-    if (gfxPlatform::HasVariationFontSupport()) {
+    if (gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
       fontEntry->SetupVariationRanges();
     }
 
@@ -1488,7 +1488,7 @@ static gfxFontFamily* CreateFamilyForSystemFont(NSFont* aFont, const nsACString&
   CopyUTF16toUTF8(nameUTF16, psName);
 
   MacOSFontEntry* fe = new MacOSFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
-  MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
+  MOZ_ASSERT(gfxPlatform::GetPlatform()->HasVariationFontSupport());
   fe->SetupVariationRanges();
 
   familyEntry->AddFontEntry(fe);
