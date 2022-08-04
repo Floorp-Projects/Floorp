@@ -5,16 +5,16 @@
 "use strict";
 
 module.exports = {
-  "plugins": [
-    "spidermonkey-js"
+  plugins: ["spidermonkey-js"],
+
+  overrides: [
+    {
+      files: ["*.js"],
+      processor: "spidermonkey-js/processor",
+    },
   ],
 
-  "overrides": [{
-    "files": ["*.js"],
-    "processor": "spidermonkey-js/processor",
-  }],
-
-  "rules": {
+  rules: {
     // We should fix those at some point, but we use this to detect NaNs.
     "no-self-compare": "off",
     "no-lonely-if": "off",
@@ -23,5 +23,5 @@ module.exports = {
     // Disabled until we can use let/const to fix those erorrs,
     // and undefined names cause an exception and abort during runtime initialization.
     "no-redeclare": "off",
-  }
+  },
 };
