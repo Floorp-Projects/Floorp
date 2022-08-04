@@ -18,8 +18,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 // Shortcuts for conditions.
@@ -207,10 +205,13 @@ add_task(async function test_xpcom_graph_wait() {
     .get("MOZ_UPLOAD_DIR");
   profilePath =
     profilePath ||
-    FileUtils.getDir("ProfD", [`testBackgroundTask-${Math.random()}`], true)
-      .path;
+    (await IOUtils.createUniqueFile(
+      PathUtils.profileDir,
+      "testBackgroundTask",
+      0o600
+    ));
 
-  profilePath = OS.Path.join(profilePath, "profile_backgroundtask_wait.json");
+  profilePath = PathUtils.join(profilePath, "profile_backgroundtask_wait.json");
   await IOUtils.remove(profilePath, { ignoreAbsent: true });
 
   let extraEnv = {
@@ -221,8 +222,7 @@ add_task(async function test_xpcom_graph_wait() {
   let exitCode = await do_backgroundtask("wait", { extraEnv });
   Assert.equal(0, exitCode);
 
-  let fileContents = await IOUtils.readUTF8(profilePath);
-  let rootProfile = JSON.parse(fileContents);
+  let rootProfile = await IOUtils.readJSON(profilePath);
   let profile = rootProfile.threads[0];
 
   const nameCol = profile.markers.schema.name;
