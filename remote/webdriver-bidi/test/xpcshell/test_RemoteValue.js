@@ -221,6 +221,80 @@ const REMOTE_COMPLEX_VALUES = [
     },
     deserializable: true,
   },
+  {
+    value: {},
+    maxDepth: 1,
+    serialized: {
+      type: "object",
+      value: [],
+    },
+    deserializable: true,
+  },
+  {
+    value: {
+      "1": 1,
+      "2": "2",
+      foo: true,
+    },
+    serialized: {
+      type: "object",
+    },
+  },
+  {
+    value: {
+      "1": 1,
+      "2": "2",
+      foo: true,
+    },
+    maxDepth: 0,
+    serialized: {
+      type: "object",
+    },
+  },
+  {
+    value: {
+      "1": 1,
+      "2": "2",
+      foo: true,
+    },
+    maxDepth: 1,
+    serialized: {
+      type: "object",
+      value: [
+        ["1", { type: "number", value: 1 }],
+        ["2", { type: "string", value: "2" }],
+        ["foo", { type: "boolean", value: true }],
+      ],
+    },
+    deserializable: true,
+  },
+  {
+    value: {
+      "1": 1,
+      "2": "2",
+      "3": {
+        bar: "foo",
+      },
+      foo: true,
+    },
+    maxDepth: 2,
+    serialized: {
+      type: "object",
+      value: [
+        ["1", { type: "number", value: 1 }],
+        ["2", { type: "string", value: "2" }],
+        [
+          "3",
+          {
+            type: "object",
+            value: [["bar", { type: "string", value: "foo" }]],
+          },
+        ],
+        ["foo", { type: "boolean", value: true }],
+      ],
+    },
+    deserializable: true,
+  },
 ];
 
 const { deserialize, serialize, stringify } = ChromeUtils.import(
@@ -492,6 +566,29 @@ add_test(function test_deserializeLocalValuesInvalidValues() {
         [[]],
         [["1"]],
         [{ "1": "2" }],
+        [
+          [
+            { type: "number", value: "1" },
+            { type: "number", value: "2" },
+          ],
+        ],
+        [
+          [
+            { type: "object", value: [] },
+            { type: "number", value: "1" },
+          ],
+        ],
+        [
+          [
+            {
+              type: "regexp",
+              value: {
+                pattern: "foo",
+              },
+            },
+            { type: "number", value: "1" },
+          ],
+        ],
       ],
     },
   ];
