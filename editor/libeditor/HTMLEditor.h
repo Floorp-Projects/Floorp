@@ -2531,25 +2531,26 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
+   * @param aEditingHost        The editing host.
+   * @return                    Last created <div> element which should contain
+   *                            caret and candidate position which may be
+   *                            outside the <div> element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AlignNodesAndDescendants(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult AlignNodesAndDescendants(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
-      const nsAString& aAlignType);
+      const nsAString& aAlignType, const Element& aEditingHost);
 
   /**
-   * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
-   * This creates AutoSelectionRestorer.  Therefore, even if this returns
-   * NS_OK, we might have been destroyed.  So, every caller needs to check if
-   * Destroyed() returns false before modifying the DOM tree or changing
-   * Selection.
-   * NOTE: Call AlignAsSubAction() instead.
+   * AlignContentsAtRanges() aligns contents around aRanges to aAlignType.
    *
+   * @param aRanges             The ranges where should be aligned.
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AlignContentsAtSelection(
-      const nsAString& aAlignType, const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  AlignContentsAtRanges(AutoRangeArray& aRanges, const nsAString& aAlignType,
+                        const Element& aEditingHost);
 
   /**
    * AlignAsSubAction() handles "align" command with `Selection`.
