@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const { HandlerServiceTestUtils } = ChromeUtils.import(
   "resource://testing-common/HandlerServiceTestUtils.jsm"
 );
@@ -68,7 +66,7 @@ function downloadHadFinished(publicList) {
 
 async function removeTheFile(download) {
   Assert.ok(
-    await OS.File.exists(download.target.path),
+    await IOUtils.exists(download.target.path),
     "The file should have been downloaded."
   );
 

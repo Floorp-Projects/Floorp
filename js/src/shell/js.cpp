@@ -4929,7 +4929,9 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   MainThreadErrorContext ec(cx);
-  RootedObject module(cx, frontend::CompileModule(cx, &ec, options, srcBuf));
+  RootedObject module(
+      cx, frontend::CompileModule(cx, &ec, cx->stackLimitForCurrentPrincipal(),
+                                  options, srcBuf));
   if (!module) {
     return false;
   }
@@ -5436,10 +5438,11 @@ template <typename Unit>
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (goal == frontend::ParseGoal::Script) {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, &ec, input.get(), srcBuf, ScopeKind::Global);
+        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf,
+        ScopeKind::Global);
   } else {
-    stencil =
-        frontend::ParseModuleToExtensibleStencil(cx, &ec, input.get(), srcBuf);
+    stencil = frontend::ParseModuleToExtensibleStencil(
+        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf);
   }
 
   if (!stencil) {

@@ -2196,32 +2196,7 @@ class MOZ_STACK_CLASS SelectedTableCellScanner final {
     }
   }
 
-  explicit SelectedTableCellScanner(const AutoRangeArray& aRanges) {
-    if (aRanges.Ranges().IsEmpty()) {
-      return;
-    }
-    Element* firstSelectedCellElement =
-        HTMLEditUtils::GetTableCellElementIfOnlyOneSelected(
-            aRanges.FirstRangeRef());
-    if (!firstSelectedCellElement) {
-      return;  // We're not in table cell selection mode.
-    }
-    mSelectedCellElements.SetCapacity(aRanges.Ranges().Length());
-    mSelectedCellElements.AppendElement(*firstSelectedCellElement);
-    for (uint32_t i = 1; i < aRanges.Ranges().Length(); i++) {
-      nsRange* range = aRanges.Ranges()[i];
-      if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-        continue;  // Shouldn't occur in normal conditions.
-      }
-      // Just ignore selection ranges which do not select only one table
-      // cell element.  This is possible case if web apps sets multiple
-      // selections and first range selects a table cell element.
-      if (Element* selectedCellElement =
-              HTMLEditUtils::GetTableCellElementIfOnlyOneSelected(*range)) {
-        mSelectedCellElements.AppendElement(*selectedCellElement);
-      }
-    }
-  }
+  explicit SelectedTableCellScanner(const AutoRangeArray& aRanges);
 
   bool IsInTableCellSelectionMode() const {
     return !mSelectedCellElements.IsEmpty();

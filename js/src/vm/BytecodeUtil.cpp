@@ -1956,7 +1956,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     case JSOp::Call:
     case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
-    case JSOp::CallIter: {
+    case JSOp::CallIter:
+    case JSOp::CallContentIter: {
       uint16_t argc = GET_ARGC(pc);
       return decompilePCForStackOperand(pc, -int32_t(argc + 2)) &&
              write(argc ? "(...)" : "()");

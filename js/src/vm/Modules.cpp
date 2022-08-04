@@ -115,7 +115,8 @@ static JSObject* CompileModuleHelper(JSContext* cx,
   CHECK_THREAD(cx);
 
   MainThreadErrorContext ec(cx);
-  return frontend::CompileModule(cx, &ec, options, srcBuf);
+  return frontend::CompileModule(cx, &ec, cx->stackLimitForCurrentPrincipal(),
+                                 options, srcBuf);
 }
 
 JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,

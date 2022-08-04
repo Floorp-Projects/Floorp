@@ -1355,6 +1355,11 @@ JS_PUBLIC_API void js::DecWasiRecursionDepth(JSContext* cx) {
 }
 
 JS_PUBLIC_API bool js::CheckWasiRecursionLimit(JSContext* cx) {
+  // WASI has two limits:
+  // 1) The stack pointer in linear memory that grows to zero. See
+  //    --stack-first in js/src/shell/moz.build.
+  // 2) The JS::RootingContext::wasiRecursionDepth that counts recursion depth.
+  //    Here we should check both.
   if (JS::RootingContext::get(cx)->wasiRecursionDepth >=
       JS::RootingContext::wasiRecursionDepthLimit) {
     return false;

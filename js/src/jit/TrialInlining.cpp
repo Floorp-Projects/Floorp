@@ -437,6 +437,7 @@ static uint32_t GetMaxCalleeNumActuals(BytecodeLocation loc) {
     case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
+    case JSOp::CallContentIter:
     case JSOp::New:
     case JSOp::NewContent:
     case JSOp::SuperCall:
@@ -758,6 +759,7 @@ bool TrialInliner::tryInlining() {
       case JSOp::CallContent:
       case JSOp::CallIgnoresRv:
       case JSOp::CallIter:
+      case JSOp::CallContentIter:
       case JSOp::New:
       case JSOp::NewContent:
       case JSOp::SuperCall:

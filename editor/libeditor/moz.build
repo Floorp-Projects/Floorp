@@ -35,6 +35,7 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    "AutoRangeArray.cpp",
     "ChangeAttributeTransaction.cpp",
     "ChangeStyleTransaction.cpp",
     "CompositionTransaction.cpp",

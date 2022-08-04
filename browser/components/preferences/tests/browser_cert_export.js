@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 var MockFilePicker = SpecialPowers.MockFilePicker;
 
 function createTemporarySaveDirectory() {
@@ -96,7 +94,13 @@ async function checkCertExportWorks(
   await finishedExporting;
   MockFilePicker.cleanup();
   if (destFile && destFile.exists()) {
-    let contents = await OS.File.read(destFile.path, { encoding });
+    let contents;
+    if (encoding === "utf-8") {
+      contents = await IOUtils.readUTF8(destFile.path);
+    } else {
+      is(encoding, "", "expected either utf-8 or empty string for encoding");
+      contents = await IOUtils.read(destFile.path);
+    }
     stringOrArrayEquals(
       contents,
       expectedFileContents,

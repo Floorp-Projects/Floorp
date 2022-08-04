@@ -790,9 +790,6 @@ class EditorBase : public nsIEditor,
   struct MOZ_STACK_CLASS TopLevelEditSubActionData final {
     friend class AutoEditActionDataSetter;
 
-    // If we have created a new block element, set to it.
-    RefPtr<Element> mNewBlockElement;
-
     // Set selected range before edit.  Then, RangeUpdater keep modifying
     // the range while we're changing the DOM tree.
     RefPtr<RangeItem> mSelectedRange;
@@ -882,7 +879,6 @@ class EditorBase : public nsIEditor,
       if (!mSelectedRange) {
         return;
       }
-      mNewBlockElement = nullptr;
       mSelectedRange->Clear();
       mChangedRange->Reset();
       if (mCachedInlineStyles.isSome()) {
