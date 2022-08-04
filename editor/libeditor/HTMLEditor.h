@@ -4321,10 +4321,32 @@ class HTMLEditor final : public EditorBase,
   }
 
  protected:
-  // Helper for Handle[CSS|HTML]IndentAtSelectionInternal
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  IndentListChild(RefPtr<Element>* aCurList, const EditorDOMPoint& aCurPoint,
-                  nsIContent& aContent);
+  /**
+   * IndentListChildWithTransaction() is a helper method of
+   * Handle(CSS|HTML)IndentAtSelectionInternal().
+   *
+   * @param aSubListElement     [in/out] Specify a sub-list element of the
+   *                            container of aPointInListElement or nullptr.
+   *                            When there is no proper sub-list element to
+   *                            move aContentMovingToSubList, this method
+   *                            inserts a new sub-list element and update this
+   *                            to it.
+   * @param aPointInListElement A point in a list element whose child should
+   *                            be indented.  If this method creates new list
+   *                            element into the list element, this inserts
+   *                            the new list element to this point.
+   * @param aContentMovingToSubList
+   *                            A content node which is a child of a list
+   *                            element and should be moved into a sub-list
+   *                            element.
+   * @param aEditingHost        The editing host.
+   * @return                    A candidate caret position.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  IndentListChildWithTransaction(RefPtr<Element>* aSubListElement,
+                                 const EditorDOMPoint& aPointInListElement,
+                                 nsIContent& aContentMovingToSubList,
+                                 const Element& aEditingHost);
 
   /**
    * Stack based helper class for saving/restoring selection.  Note that this
