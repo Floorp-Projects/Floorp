@@ -20,12 +20,15 @@
 // steps 11.a-16.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is false
-function FUNC_NAME(rx, S, lengthS, replaceValue
+function FUNC_NAME(
+  rx,
+  S,
+  lengthS,
+  replaceValue,
 #ifdef SUBSTITUTION
-                   , firstDollarIndex
+  firstDollarIndex
 #endif
-                  )
-{
+) {
   // 21.2.5.2.2 RegExpBuiltinExec, step 4.
   var lastIndex = ToLength(rx.lastIndex);
 
@@ -127,8 +130,14 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     namedCaptures = ToObject(namedCaptures);
   }
   // Step l.ii
-  replacement = RegExpGetSubstitution(result, S, position, replaceValue, firstDollarIndex,
-                                      namedCaptures);
+  replacement = RegExpGetSubstitution(
+    result,
+    S,
+    position,
+    replaceValue,
+    firstDollarIndex,
+    namedCaptures
+  );
 #else
   replacement = replaceValue;
 #endif
