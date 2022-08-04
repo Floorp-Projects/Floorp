@@ -27,7 +27,7 @@ jobs:
         ./mach build
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-        zip -r dist.zip obj-x86_64-apple-darwin/dist/
+        zip -r dist.zip obj-x86_64-apple-darwin20.6.0/dist/
 
     - name: Publish
       uses: actions/upload-artifact@v1
