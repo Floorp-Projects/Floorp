@@ -152,6 +152,26 @@ event.synthesizeTouchAtPoint = function(left, top, opts, win) {
   return _getEventUtils(win).synthesizeTouchAtPoint(left, top, opts, win);
 };
 
+/**
+ * Synthesise a wheel scroll event at a point.
+ *
+ * @param {number} left
+ *     Offset from viewport left, in CSS pixels
+ * @param {number} top
+ *     Offset from viewport top, in CSS pixels
+ * @param {Object} opts
+ *     Object which may contain the properties "shiftKey", "ctrlKey",
+ *     "altKey", "metaKey", "accessKey", "deltaX", "deltaY", "deltaZ",
+ *     "deltaMode", "lineOrPageDeltaX", "lineOrPageDeltaY", "isMomentum",
+ *     "isNoLineOrPageDelta", "isCustomizedByPrefs", "expectedOverflowDeltaX",
+ *     "expectedOverflowDeltaY"
+ * @param {Window} win
+ *     Window object.
+ */
+event.synthesizeWheelAtPoint = function(left, top, opts, win) {
+  return _getEventUtils(win).synthesizeWheelAtPoint(left, top, opts, win);
+};
+
 event.synthesizeMultiTouch = function(opts, win) {
   const modifiers = _getEventUtils(win)._parseModifiers(opts);
   win.windowUtils.sendTouchEvent(
