@@ -2328,27 +2328,13 @@ class HTMLEditor final : public EditorBase,
       AutoRangeArray& aRanges, const Element& aEditingHost);
 
   /**
-   * HandleHTMLIndentAtSelectionInternal() indents around Selection with HTML.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   * NOTE: Use HandleHTMLIndentAtSelection() instead.
+   * HandleCSSIndentAroundRanges() indents around aRanges with HTML.
    *
+   * @param aRanges             The ranges where the content should be indented.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleHTMLIndentAtSelectionInternal(const Element& aEditingHost);
-
-  /**
-   * HandleHTMLIndentAtSelection() indents around Selection with HTML.
-   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
-   *       want to call this directly, you should check whether you need
-   *       do do something which `HandleIndentAtSelection()` does.
-   *
-   * @param aEditingHost        The editing host.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleHTMLIndentAtSelection(const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleHTMLIndentAroundRanges(
+      AutoRangeArray& aRanges, const Element& aEditingHost);
 
   /**
    * HandleIndentAtSelection() indents around Selection with HTML or CSS.
