@@ -76,7 +76,7 @@
         android:id="@+id/usernameHeader"
         style="@style/CaptionTextStyle"
         android:layout_width="0dp"
-        android:layout_height="16dp"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:paddingStart="3dp"
         android:paddingEnd="0dp"

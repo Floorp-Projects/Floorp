@@ -19,7 +19,7 @@
             android:id="@+id/card_number_title"
             style="@style/CaptionTextStyle"
             android:layout_width="wrap_content"
-            android:layout_height="16dp"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:letterSpacing="0.05"
             android:paddingStart="3dp"
