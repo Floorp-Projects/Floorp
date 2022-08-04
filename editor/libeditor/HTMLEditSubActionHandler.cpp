@@ -6273,14 +6273,23 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
       AutoEditorDOMPointOffsetInvalidator lockChild(atContent);
       // MOZ_KnownLive(*listOrListItemElement): An element of aArrayOfContents
       // which is array of OwningNonNull.
-      nsresult rv = RemoveAlignFromDescendants(
-          MOZ_KnownLive(*listOrListItemElement), aAlignType,
-          EditTarget::OnlyDescendantsExceptTable);
-      if (NS_FAILED(rv)) {
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+          RemoveAlignFromDescendants(MOZ_KnownLive(*listOrListItemElement),
+                                     aAlignType,
+                                     EditTarget::OnlyDescendantsExceptTable);
+      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::RemoveAlignFromDescendants(EditTarget::"
             "OnlyDescendantsExceptTable) failed");
-        return rv;
+        return pointToPutCaretOrError.unwrapErr();
+      }
+      if (AllowsTransactionsToChangeSelection() &&
+          pointToPutCaretOrError.inspect().IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return rv;
+        }
       }
 
       if (useCSS) {
@@ -9584,13 +9593,14 @@ nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
   return NS_OK;
 }
 
-nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
-                                                const nsAString& aAlignType,
-                                                EditTarget aEditTarget) {
+Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveAlignFromDescendants(
+    Element& aElement, const nsAString& aAlignType, EditTarget aEditTarget) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!aElement.IsHTMLElement(nsGkAtoms::table));
 
-  bool useCSS = IsCSSEnabled();
+  const bool useCSS = IsCSSEnabled();
+
+  EditorDOMPoint pointToPutCaret;
 
   // Let's remove all alignment hints in the children of aNode; it can
   // be an ALIGN attribute (in case we just remove it) or a CENTER
@@ -9613,16 +9623,21 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
 
     if (content->IsHTMLElement(nsGkAtoms::center)) {
       OwningNonNull<Element> centerElement = *content->AsElement();
-      nsresult rv = RemoveAlignFromDescendants(
-          centerElement, aAlignType, EditTarget::OnlyDescendantsExceptTable);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::RemoveAlignFromDescendants(EditTarget::"
-            "OnlyDescendantsExceptTable) failed");
-        return rv;
+      {
+        Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+            RemoveAlignFromDescendants(centerElement, aAlignType,
+                                       EditTarget::OnlyDescendantsExceptTable);
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+          NS_WARNING(
+              "HTMLEditor::RemoveAlignFromDescendants(EditTarget::"
+              "OnlyDescendantsExceptTable) failed");
+          return pointToPutCaretOrError;
+        }
+        if (pointToPutCaretOrError.inspect().IsSet()) {
+          pointToPutCaret = pointToPutCaretOrError.unwrap();
+        }
       }
 
-      EditorDOMPoint pointToPutCaret;
       // We may have to insert a `<br>` element before first child of the
       // `<center>` element because it should be first element of a hard line
       // even after removing the `<center>` element.
@@ -9632,7 +9647,7 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
         if (maybeInsertBRElementBeforeFirstChildResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::EnsureHardLineBeginsWithFirstChildOf() failed");
-          return maybeInsertBRElementBeforeFirstChildResult.unwrapErr();
+          return Err(maybeInsertBRElementBeforeFirstChildResult.unwrapErr());
         }
         if (maybeInsertBRElementBeforeFirstChildResult
                 .HasCaretPointSuggestion()) {
@@ -9649,7 +9664,7 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
             EnsureHardLineEndsWithLastChildOf(centerElement);
         if (maybeInsertBRElementAfterLastChildResult.isErr()) {
           NS_WARNING("HTMLEditor::EnsureHardLineEndsWithLastChildOf() failed");
-          return maybeInsertBRElementAfterLastChildResult.unwrapErr();
+          return Err(maybeInsertBRElementAfterLastChildResult.unwrapErr());
         }
         if (maybeInsertBRElementAfterLastChildResult
                 .HasCaretPointSuggestion()) {
@@ -9663,18 +9678,11 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
             RemoveContainerWithTransaction(centerElement);
         if (MOZ_UNLIKELY(unwrapCenterElementResult.isErr())) {
           NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-          return unwrapCenterElementResult.inspectErr();
+          return Err(unwrapCenterElementResult.inspectErr());
         }
         if (unwrapCenterElementResult.inspect().IsSet()) {
           pointToPutCaret = unwrapCenterElementResult.unwrap();
         }
-      }
-      if (!AllowsTransactionsToChangeSelection() && !pointToPutCaret.IsSet()) {
-        continue;
-      }
-      if (NS_FAILED(rv = CollapseSelectionTo(pointToPutCaret))) {
-        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return rv;
       }
       continue;
     }
@@ -9684,18 +9692,18 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
       continue;
     }
 
-    OwningNonNull<Element> blockOrHRElement = *content->AsElement();
+    const OwningNonNull<Element> blockOrHRElement = *content->AsElement();
     if (HTMLEditUtils::SupportsAlignAttr(blockOrHRElement)) {
       nsresult rv =
           RemoveAttributeWithTransaction(blockOrHRElement, *nsGkAtoms::align);
       if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_FAILED(rv)) {
         NS_WARNING(
             "EditorBase::RemoveAttributeWithTransaction(nsGkAtoms::align) "
             "failed");
-        return rv;
+        return Err(rv);
       }
     }
     if (useCSS) {
@@ -9704,18 +9712,18 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
         nsresult rv = SetAttributeOrEquivalent(
             blockOrHRElement, nsGkAtoms::align, aAlignType, false);
         if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
+          return Err(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "EditorBase::SetAttributeOrEquivalent(nsGkAtoms::align) failed");
-          return rv;
+          return Err(rv);
         }
       } else {
         nsStyledElement* styledBlockOrHRElement =
             nsStyledElement::FromNode(blockOrHRElement);
         if (NS_WARN_IF(!styledBlockOrHRElement)) {
-          return NS_ERROR_FAILURE;
+          return Err(NS_ERROR_FAILURE);
         }
         // MOZ_KnownLive(*styledBlockOrHRElement): It's `blockOrHRElement
         // which is OwningNonNull.
@@ -9728,31 +9736,30 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
           NS_WARNING(
               "CSSEditUtils::RemoveCSSInlineStyleWithTransaction(nsGkAtoms::"
               "textAlign) failed");
-          return pointToPutCaretOrError.unwrapErr();
+          return pointToPutCaretOrError;
         }
-        if (AllowsTransactionsToChangeSelection() &&
-            pointToPutCaretOrError.inspect().IsSet()) {
-          nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
-          if (NS_FAILED(rv)) {
-            NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-            return rv;
-          }
+        if (pointToPutCaretOrError.inspect().IsSet()) {
+          pointToPutCaret = pointToPutCaretOrError.unwrap();
         }
       }
     }
     if (!blockOrHRElement->IsHTMLElement(nsGkAtoms::table)) {
       // unless this is a table, look at children
-      nsresult rv = RemoveAlignFromDescendants(
-          blockOrHRElement, aAlignType, EditTarget::OnlyDescendantsExceptTable);
-      if (NS_FAILED(rv)) {
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+          RemoveAlignFromDescendants(blockOrHRElement, aAlignType,
+                                     EditTarget::OnlyDescendantsExceptTable);
+      if (pointToPutCaretOrError.isErr()) {
         NS_WARNING(
             "HTMLEditor::RemoveAlignFromDescendants(EditTarget::"
             "OnlyDescendantsExceptTable) failed");
-        return rv;
+        return pointToPutCaretOrError;
+      }
+      if (pointToPutCaretOrError.inspect().IsSet()) {
+        pointToPutCaret = pointToPutCaretOrError.unwrap();
       }
     }
   }
-  return NS_OK;
+  return pointToPutCaret;
 }
 
 CreateElementResult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
@@ -9833,11 +9840,19 @@ nsresult HTMLEditor::SetBlockElementAlign(Element& aBlockOrHRElement,
              HTMLEditUtils::SupportsAlignAttr(aBlockOrHRElement));
 
   if (!aBlockOrHRElement.IsHTMLElement(nsGkAtoms::table)) {
-    nsresult rv =
+    Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
         RemoveAlignFromDescendants(aBlockOrHRElement, aAlignType, aEditTarget);
-    if (NS_FAILED(rv)) {
+    if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       NS_WARNING("HTMLEditor::RemoveAlignFromDescendants() failed");
-      return rv;
+      return pointToPutCaretOrError.unwrapErr();
+    }
+    if (AllowsTransactionsToChangeSelection() &&
+        pointToPutCaretOrError.inspect().IsSet()) {
+      nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+        return rv;
+      }
     }
   }
   nsresult rv = SetAttributeOrEquivalent(&aBlockOrHRElement, nsGkAtoms::align,
