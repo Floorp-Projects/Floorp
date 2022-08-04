@@ -139,10 +139,31 @@ var runlater = function() {};
 runlater.prototype = {
   req: null,
   resp: null,
+  fin: true,
 
   onTimeout: function onTimeout() {
+    Compressor.prototype.compress = originalCompressHeaders;
     this.resp.writeHead(200);
-    this.resp.end("It's all good 750ms.");
+    if (this.fin) {
+      this.resp.end("It's all good 750ms.");
+    }
+  },
+};
+
+var runConnectLater = function() {};
+runConnectLater.prototype = {
+  req: null,
+  resp: null,
+  connect: false,
+
+  onTimeout: function onTimeout() {
+    if (this.connect) {
+      this.resp.writeHead(200);
+      this.connect = true;
+      setTimeout(executeRunLaterCatchError, 50, this);
+    } else {
+      this.resp.end("HTTP/1.1 200\n\r\n\r");
+    }
   },
 };
 
@@ -166,6 +187,10 @@ moreData.prototype = {
 };
 
 function executeRunLater(arg) {
+  arg.onTimeout();
+}
+
+function executeRunLaterCatchError(arg) {
   arg.onTimeout();
 }
 
@@ -244,7 +269,10 @@ function handleRequest(req, res) {
   // the headers to have something illegal in them
   Compressor.prototype.compress = originalCompressHeaders;
 
-  var u = url.parse(req.url, true);
+  var u = "";
+  if (req.url != undefined) {
+    u = url.parse(req.url, true);
+  }
   var content = getHttpContent(u.pathname);
   var push, push1, push1a, push2, push3;
 
@@ -570,10 +598,33 @@ function handleRequest(req, res) {
     process.exit();
   }
 
-  if (u.pathname === "/750ms") {
+  if (req.method == "CONNECT") {
+    if (req.headers.host == "illegalhpacksoft.example.com:80") {
+      illegalheader_conn = req.stream.connection;
+      Compressor.prototype.compress = insertSoftIllegalHpack;
+    } else if (req.headers.host == "illegalhpackhard.example.com:80") {
+      Compressor.prototype.compress = insertHardIllegalHpack;
+    } else if (req.headers.host == "750.example.com:80") {
+      // This response will mock a response through a proxy to a HTTP server.
+      // After 750ms , a 200 response for the proxy will be sent then
+      // after additional 50ms a 200 response for the HTTP GET request.
+      let rl = new runConnectLater();
+      rl.req = req;
+      rl.resp = res;
+      setTimeout(executeRunLaterCatchError, 750, rl);
+      return;
+    }
+  } else if (u.pathname === "/750ms") {
     let rl = new runlater();
     rl.req = req;
     rl.resp = res;
+    setTimeout(executeRunLater, 750, rl);
+    return;
+  } else if (u.pathname === "/750msNoData") {
+    let rl = new runlater();
+    rl.req = req;
+    rl.resp = res;
+    rl.fin = false;
     setTimeout(executeRunLater, 750, rl);
     return;
   } else if (u.pathname === "/multiplex1" && req.httpVersionMajor === 2) {
