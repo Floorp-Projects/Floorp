@@ -343,10 +343,6 @@ impl FontContext {
         }
     }
 
-    pub fn has_font(&self, font_key: &FontKey) -> bool {
-        self.faces.contains_key(font_key)
-    }
-
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
         if !self.faces.contains_key(font_key) {
             let len = bytes.len();
