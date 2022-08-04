@@ -221,7 +221,8 @@ function DefaultTimeZone() {
       offset === (offset | 0),
       "milliseconds offset shouldn't be able to exceed int32_t range"
     );
-    var offsetHours = offset / msPerHour, offsetHoursFraction = offset % msPerHour;
+    var offsetHours = offset / msPerHour;
+    var offsetHoursFraction = offset % msPerHour;
     if (offsetHoursFraction === 0) {
       // Etc/GMT + offset uses POSIX-style signs, i.e. a positive offset
       // means a location west of GMT.
@@ -341,7 +342,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   localeOpt.nu = numberingSystem;
 
   // Step 6.
-  var hr12  = GetOption(options, "hour12", "boolean", undefined, undefined);
+  var hr12 = GetOption(options, "hour12", "boolean", undefined, undefined);
 
   // Step 7.
   var hc = GetOption(options, "hourCycle", "string", ["h11", "h12", "h23", "h24"], undefined);
@@ -691,7 +692,7 @@ function createDateTimeFormatFormat(dtf) {
     );
 
     // Steps 3-4.
-    var x = (date === undefined) ? std_Date_now() : ToNumber(date);
+    var x = date === undefined ? std_Date_now() : ToNumber(date);
 
     // Step 5.
     return intl_FormatDateTime(dtf, x, /* formatToParts = */ false);
@@ -752,7 +753,7 @@ function Intl_DateTimeFormat_formatToParts(date) {
   }
 
   // Steps 4-5.
-  var x = (date === undefined) ? std_Date_now() : ToNumber(date);
+  var x = date === undefined ? std_Date_now() : ToNumber(date);
 
   // Ensure the DateTimeFormat internals are resolved.
   getDateTimeFormatInternals(dtf);

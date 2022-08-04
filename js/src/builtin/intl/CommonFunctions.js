@@ -135,7 +135,7 @@ function IsASCIIAlphaString(s) {
 
   for (var i = 0; i < s.length; i++) {
     var c = callFunction(std_String_charCodeAt, s, i);
-    if (!((0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A))) {
+    if (!((0x41 <= c && c <= 0x5a) || (0x61 <= c && c <= 0x7a))) {
       return false;
     }
   }

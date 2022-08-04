@@ -193,9 +193,9 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
   const hasSignificantDigits = mnsd !== undefined || mxsd !== undefined;
   const hasFractionDigits = mnfd !== undefined || mxfd !== undefined;
 
-  const needSignificantDigits = (roundingPriority !== "auto") || hasSignificantDigits;
+  const needSignificantDigits = roundingPriority !== "auto" || hasSignificantDigits;
   const needFractionalDigits =
-    (roundingPriority !== "auto") ||
+    roundingPriority !== "auto" ||
     !(hasSignificantDigits || (!hasFractionDigits && notation === "compact"));
 
   if (needSignificantDigits) {
@@ -293,7 +293,7 @@ function toASCIIUpperCase(s) {
   for (var i = 0; i < s.length; i++) {
     var c = callFunction(std_String_charCodeAt, s, i);
     result +=
-      0x61 <= c && c <= 0x7A ? callFunction(std_String_fromCharCode, null, c & ~0x20) : s[i];
+      0x61 <= c && c <= 0x7a ? callFunction(std_String_fromCharCode, null, c & ~0x20) : s[i];
   }
   return result;
 }
@@ -346,7 +346,7 @@ function IsWellFormedUnitIdentifier(unitIdentifier) {
 
 #if DEBUG || MOZ_SYSTEM_ICU
 var availableMeasurementUnits = {
-  value: null
+  value: null,
 };
 #endif
 
@@ -721,7 +721,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
       "halfFloor",
       "halfExpand",
       "halfTrunc",
-      "halfEven"
+      "halfEven",
     ],
     "halfExpand"
   );
