@@ -236,7 +236,7 @@ function TypedArrayEntries() {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.7 %TypedArray%.prototype.every ( callbackfn [ , thisArg ] )
-function TypedArrayEvery(callbackfn/*, thisArg*/) {
+function TypedArrayEvery(callbackfn /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -343,7 +343,7 @@ function TypedArrayFill(value, start = 0, end = undefined) {
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // %TypedArray%.prototype.filter ( callbackfn [ , thisArg ] )
-function TypedArrayFilter(callbackfn/*, thisArg*/) {
+function TypedArrayFilter(callbackfn /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -410,7 +410,7 @@ function TypedArrayFilter(callbackfn/*, thisArg*/) {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.10 %TypedArray%.prototype.find ( predicate [ , thisArg ] )
-function TypedArrayFind(predicate/*, thisArg*/) {
+function TypedArrayFind(predicate /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -455,7 +455,7 @@ function TypedArrayFind(predicate/*, thisArg*/) {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.11 %TypedArray%.prototype.findIndex ( predicate [ , thisArg ] )
-function TypedArrayFindIndex(predicate/*, thisArg*/) {
+function TypedArrayFindIndex(predicate /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -497,7 +497,7 @@ function TypedArrayFindIndex(predicate/*, thisArg*/) {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.12 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] )
-function TypedArrayForEach(callbackfn/*, thisArg*/) {
+function TypedArrayForEach(callbackfn /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -697,7 +697,7 @@ function TypedArrayKeys() {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.17 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] )
-function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
+function TypedArrayLastIndexOf(searchElement /*, fromIndex*/) {
   // Step 2.
   if (!IsObject(this) || !IsTypedArray(this)) {
     if (arguments.length > 1) {
@@ -762,7 +762,7 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 22.2.3.19 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] )
-function TypedArrayMap(callbackfn/*, thisArg*/) {
+function TypedArrayMap(callbackfn /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -813,7 +813,7 @@ SetIsInlinableLargeFunction(TypedArrayMap);
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.20 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] )
-function TypedArrayReduce(callbackfn/*, initialValue*/) {
+function TypedArrayReduce(callbackfn /*, initialValue*/) {
   // Step 1.
   var O = this;
 
@@ -861,7 +861,7 @@ function TypedArrayReduce(callbackfn/*, initialValue*/) {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.21 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] )
-function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
+function TypedArrayReduceRight(callbackfn /*, initialValue*/) {
   // Step 1.
   var O = this;
 
@@ -1017,7 +1017,7 @@ function TypedArraySlice(start, end) {
 // ES2021 draft rev 190d474c3d8728653fbf8a5a37db1de34b9c1472
 // Plus <https://github.com/tc39/ecma262/pull/2221>
 // 22.2.3.25 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] )
-function TypedArraySome(callbackfn/*, thisArg*/) {
+function TypedArraySome(callbackfn /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -1290,7 +1290,7 @@ SetIsInlinableLargeFunction(TypedArrayAt);
 
 // https://github.com/tc39/proposal-array-find-from-last
 // %TypedArray%.prototype.findLast ( predicate, thisArg )
-function TypedArrayFindLast(predicate/*, thisArg*/) {
+function TypedArrayFindLast(predicate /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -1334,7 +1334,7 @@ function TypedArrayFindLast(predicate/*, thisArg*/) {
 
 // https://github.com/tc39/proposal-array-find-from-last
 // %TypedArray%.prototype.findLastIndex ( predicate, thisArg )
-function TypedArrayFindLastIndex(predicate/*, thisArg*/) {
+function TypedArrayFindLastIndex(predicate /*, thisArg*/) {
   // Step 1.
   var O = this;
 
@@ -2005,7 +2005,7 @@ function TypedArrayToSorted(comparefn) {
    * sorts the copy, rather than calling a sort method that copies the list and then
    * copying the result again */
   // Equivalent to steps 10-11
-  for(var k = 0; k < len; k++) {
+  for (var k = 0; k < len; k++) {
     A[k] = O[k];
   }
 
@@ -2092,7 +2092,7 @@ function TypedArrayToSpliced(start, deleteCount, ...items) {
 
   // Step 17. For each element E of items, do
   // Copy all the new items.
-  for(var j = 0; j < insertCount; j++) {
+  for (var j = 0; j < insertCount; j++) {
     // Step 17.a. omitted - Let Pi be ! ToString(𝔽(i)).
     // i coerced to String by property access
     // Step 17.b. Perform ? Set(A, i, E, true).
@@ -2102,7 +2102,7 @@ function TypedArrayToSpliced(start, deleteCount, ...items) {
 
   // Step 18. Repeat, while r < newLen,
   // Copy all the items after the deleted / added items
-  while(i < newLen) {
+  while (i < newLen) {
     // Step 18.a. omitted - Let Pi be ! ToString(𝔽(i)).
     // i coerced to String by property access
     // Step 18.b. omitted - Let from be ! ToString(𝔽(r)).
