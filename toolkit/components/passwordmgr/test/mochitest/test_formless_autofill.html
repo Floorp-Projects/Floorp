@@ -23,7 +23,7 @@ let doneSetupPromise = new Promise(resolve => {
   });
 });
 
-add_task(async function setup() {
+add_setup(async () => {
   info("Waiting for loads and setup");
   await doneSetupPromise;
 

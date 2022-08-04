@@ -47,7 +47,7 @@ function spinEventLoop() {
   return Promise.resolve();
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   listenForUnexpectedPopupShown();
 });
 

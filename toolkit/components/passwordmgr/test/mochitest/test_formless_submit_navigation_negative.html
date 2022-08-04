@@ -24,7 +24,7 @@ function submissionProcessed(...args) {
   info("got: " + JSON.stringify(args));
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.formlessCapture.enabled", true],

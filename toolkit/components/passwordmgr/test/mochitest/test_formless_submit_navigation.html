@@ -21,7 +21,7 @@ let loadPromise = new Promise(resolve => {
   });
 });
 
-add_task(async function setup() {
+add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.formlessCapture.enabled", true],

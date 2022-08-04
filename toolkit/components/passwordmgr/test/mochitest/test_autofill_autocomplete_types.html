@@ -97,7 +97,7 @@ let loadPromise = loadFormIntoWindow(DEFAULT_ORIGIN, `
   Test for Login Manager: Skip over inappropriate autcomplete types when finding username field
  */
 
-add_task(async function setup() {
+add_setup(async () => {
   ok(readyPromise, "check promise is available");
   await readyPromise;
 });

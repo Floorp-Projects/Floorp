@@ -32,7 +32,7 @@ addLoginsInParent(
 let username = document.getElementById("uname");
 let password = document.getElementById("pword");
 
-add_task(async function setup() {
+add_setup(async () => {
   ok(readyPromise, "check promise is available");
   await readyPromise;
 });
