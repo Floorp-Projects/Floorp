@@ -46,8 +46,6 @@ using namespace dom;
 
 nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
     bool aEnabled, nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eSetPositionToAbsoluteOrStatic, aPrincipal);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
