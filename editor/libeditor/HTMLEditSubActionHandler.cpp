@@ -6337,12 +6337,21 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
         //     we need to align contents in other type blocks?
         // MOZ_KnownLive(*listOrListItemElement): An element of aArrayOfContents
         // which is array of OwningNonNull.
-        nsresult rv = AlignContentsInAllTableCellsAndListItems(
-            MOZ_KnownLive(*listOrListItemElement), aAlignType);
-        if (NS_FAILED(rv)) {
+        Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+            AlignContentsInAllTableCellsAndListItems(
+                MOZ_KnownLive(*listOrListItemElement), aAlignType);
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
           NS_WARNING(
               "HTMLEditor::AlignContentsInAllTableCellsAndListItems() failed");
-          return rv;
+          return pointToPutCaretOrError.unwrapErr();
+        }
+        if (AllowsTransactionsToChangeSelection() &&
+            pointToPutCaretOrError.inspect().IsSet()) {
+          nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+          if (NS_FAILED(rv)) {
+            NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+            return rv;
+          }
         }
         createdDivElement = nullptr;
         continue;
@@ -6435,7 +6444,8 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
   return NS_OK;
 }
 
-nsresult HTMLEditor::AlignContentsInAllTableCellsAndListItems(
+Result<EditorDOMPoint, nsresult>
+HTMLEditor::AlignContentsInAllTableCellsAndListItems(
     Element& aElement, const nsAString& aAlignType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -6451,21 +6461,26 @@ nsresult HTMLEditor::AlignContentsInAllTableCellsAndListItems(
       arrayOfTableCellsAndListItems);
 
   // Now that we have the list, align their contents as requested
+  EditorDOMPoint pointToPutCaret;
   for (auto& tableCellOrListItemElement : arrayOfTableCellsAndListItems) {
     // MOZ_KnownLive because 'arrayOfTableCellsAndListItems' is guaranteed to
     // keep it alive.
-    nsresult rv = AlignBlockContentsWithDivElement(
-        MOZ_KnownLive(tableCellOrListItemElement), aAlignType);
-    if (NS_FAILED(rv)) {
+    Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+        AlignBlockContentsWithDivElement(
+            MOZ_KnownLive(tableCellOrListItemElement), aAlignType);
+    if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       NS_WARNING("HTMLEditor::AlignBlockContentsWithDivElement() failed");
-      return rv;
+      return pointToPutCaretOrError;
+    }
+    if (pointToPutCaretOrError.inspect().IsSet()) {
+      pointToPutCaret = pointToPutCaretOrError.unwrap();
     }
   }
 
-  return NS_OK;
+  return pointToPutCaret;
 }
 
-nsresult HTMLEditor::AlignBlockContentsWithDivElement(
+Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
     Element& aBlockElement, const nsAString& aAlignType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -6475,7 +6490,7 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
       aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableContent) {
     // This block has no editable content, nothing to align.
-    return NS_OK;
+    return EditorDOMPoint();
   }
 
   // If there is only one editable content and it's a `<div>` element,
@@ -6488,12 +6503,17 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
         MOZ_KnownLive(firstEditableContent->AsElement()), nsGkAtoms::align,
         aAlignType, false);
     if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+      NS_WARNING(
+          "EditorBase::SetAttributeOrEquivalent(nsGkAtoms::align) caused "
+          "destroying the editor");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::SetAttributeOrEquivalent(nsGkAtoms::align) failed");
-    return rv;
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "EditorBase::SetAttributeOrEquivalent(nsGkAtoms::align) failed");
+      return Err(rv);
+    }
+    return EditorDOMPoint();
   }
 
   // Otherwise, we need to insert a `<div>` element to set `align` attribute.
@@ -6521,52 +6541,30 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes, "
         "nsGkAtoms::div) failed");
-    return createNewDivElementResult.unwrapErr();
+    return Err(createNewDivElementResult.unwrapErr());
   }
-  nsresult rv = createNewDivElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  EditorDOMPoint pointToPutCaret = createNewDivElementResult.UnwrapCaretPoint();
+
   RefPtr<Element> newDivElement = createNewDivElementResult.UnwrapNewNode();
   MOZ_ASSERT(newDivElement);
   // XXX This is tricky and does not work with mutation event listeners.
   //     But I'm not sure what we should do if new content is inserted.
   //     Anyway, I don't think that we should move editable contents
   //     over non-editable contents.  Chrome does no do that.
-  EditorDOMPoint pointToPutCaret;
   while (lastEditableContent && (lastEditableContent != newDivElement)) {
     MoveNodeResult moveNodeResult = MoveNodeWithTransaction(
         *lastEditableContent, EditorDOMPoint(newDivElement, 0u));
     if (moveNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return moveNodeResult.unwrapErr();
+      return Err(moveNodeResult.unwrapErr());
     }
-    moveNodeResult.MoveCaretPointTo(
-        pointToPutCaret, *this,
-        {SuggestCaret::OnlyIfHasSuggestion,
-         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (moveNodeResult.HasCaretPointSuggestion()) {
+      pointToPutCaret = moveNodeResult.UnwrapCaretPoint();
+    }
     lastEditableContent = HTMLEditUtils::GetLastChild(
         aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
   }
-  if (pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionTo() caused destroying the editor");
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionTo() failed, but ignored");
-  }
-  return NS_OK;
+  return pointToPutCaret;
 }
 
 Result<EditorRawDOMRange, nsresult>
