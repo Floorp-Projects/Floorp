@@ -10,6 +10,7 @@
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsWeakReference.h"
 #include "prio.h"
 
 namespace mozilla::net {
@@ -46,7 +47,8 @@ namespace mozilla::net {
 
 class TLSTransportLayer final : public nsISocketTransport,
                                 public nsIInputStreamCallback,
-                                public nsIOutputStreamCallback {
+                                public nsIOutputStreamCallback,
+                                public nsSupportsWeakReference {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TLSTRANSPORTLAYER_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -57,7 +59,8 @@ class TLSTransportLayer final : public nsISocketTransport,
 
   explicit TLSTransportLayer(nsISocketTransport* aTransport,
                              nsIAsyncInputStream* aInputStream,
-                             nsIAsyncOutputStream* aOutputStream);
+                             nsIAsyncOutputStream* aOutputStream,
+                             nsIInputStreamCallback* aOwner);
   bool Init(const char* aTLSHost, int32_t aTLSPort);
   nsIAsyncInputStream* GetInputStreamWrapper() {
     return mSocketInWrapper.get();
@@ -91,7 +94,7 @@ class TLSTransportLayer final : public nsISocketTransport,
     nsCOMPtr<nsIAsyncInputStream> mSocketIn;
 
     nsresult mStatus{NS_OK};
-    RefPtr<TLSTransportLayer> mTransport;
+    nsWeakPtr mWeakTransport;
   };
 
   class OutputStreamWrapper : public nsIAsyncOutputStream {
@@ -118,7 +121,7 @@ class TLSTransportLayer final : public nsISocketTransport,
     nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 
     nsresult mStatus{NS_OK};
-    RefPtr<TLSTransportLayer> mTransport;
+    nsWeakPtr mWeakTransport;
   };
 
   virtual ~TLSTransportLayer();
@@ -148,6 +151,7 @@ class TLSTransportLayer final : public nsISocketTransport,
   nsCOMPtr<nsIInputStreamCallback> mInputCallback;
   nsCOMPtr<nsIOutputStreamCallback> mOutputCallback;
   PRFileDesc* mFD{nullptr};
+  nsCOMPtr<nsIInputStreamCallback> mOwner;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TLSTransportLayer, NS_TLSTRANSPORTLAYER_IID)

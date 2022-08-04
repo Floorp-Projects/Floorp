@@ -1850,7 +1850,7 @@ void nsHttpConnection::SetupSecondaryTLS(
   mWeakTrans = do_GetWeakReference(aHttp2ConnectTransaction);
 
   RefPtr<TLSTransportLayer> transportLayer =
-      new TLSTransportLayer(mSocketTransport, mSocketIn, mSocketOut);
+      new TLSTransportLayer(mSocketTransport, mSocketIn, mSocketOut, this);
   if (transportLayer->Init(ci->Origin(), ci->OriginPort())) {
     mSocketIn = transportLayer->GetInputStreamWrapper();
     mSocketOut = transportLayer->GetOutputStreamWrapper();
