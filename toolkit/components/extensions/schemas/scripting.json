@@ -191,8 +191,9 @@
           },
           "persistAcrossSessions": {
             "type": "boolean",
-            "enum": [false],
-            "description": "Specifies if this content script will persist into future sessions. This is currently NOT supported."
+            "optional": true,
+            "default": true,
+            "description": "Specifies if this content script will persist into future sessions. Defaults to true."
           },
           "css": {
             "type": "array",
@@ -350,8 +351,7 @@
                 "persistAcrossSessions": {
                   "type": "boolean",
                   "optional": true,
-                  "enum": [false],
-                  "description": "Specifies if this content script will persist into future sessions. This is currently NOT supported."
+                  "description": "Specifies if this content script will persist into future sessions."
                 }
               }
             }
