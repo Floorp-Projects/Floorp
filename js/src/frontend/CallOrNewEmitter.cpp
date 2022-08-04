@@ -47,6 +47,7 @@ bool CallOrNewEmitter::emitNameCallee(TaggedParserAtomIndex name) {
 [[nodiscard]] PropOpEmitter& CallOrNewEmitter::prepareForPropCallee(
     bool isSuperProp) {
   MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
 
   //                [stack]
 
@@ -62,6 +63,7 @@ bool CallOrNewEmitter::emitNameCallee(TaggedParserAtomIndex name) {
 [[nodiscard]] ElemOpEmitter& CallOrNewEmitter::prepareForElemCallee(
     bool isSuperElem) {
   MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
 
   //                [stack]
 
@@ -77,6 +79,7 @@ bool CallOrNewEmitter::emitNameCallee(TaggedParserAtomIndex name) {
 PrivateOpEmitter& CallOrNewEmitter::prepareForPrivateCallee(
     TaggedParserAtomIndex privateName) {
   MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
 
   //                [stack]
 
@@ -90,6 +93,7 @@ PrivateOpEmitter& CallOrNewEmitter::prepareForPrivateCallee(
 
 bool CallOrNewEmitter::prepareForFunctionCallee() {
   MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
 
   //                [stack]
 
@@ -99,6 +103,7 @@ bool CallOrNewEmitter::prepareForFunctionCallee() {
 
 bool CallOrNewEmitter::emitSuperCallee() {
   MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
 
   //                [stack]
 
@@ -121,6 +126,7 @@ bool CallOrNewEmitter::emitSuperCallee() {
 
 bool CallOrNewEmitter::prepareForOtherCallee() {
   MOZ_ASSERT(state_ == State::Start);
+  MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
 
   //                [stack]
 
