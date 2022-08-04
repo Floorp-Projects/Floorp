@@ -45,29 +45,44 @@ export class SearchSettings {
   _batchTask = null;
 
   /**
-   * The current metadata stored in the settings. This stores:
-   *   - current
-   *       The current user-set default engine. The associated hash is called
-   *       'hash'.
-   *   - private
-   *       The current user-set private engine. The associated hash is called
-   *       'privateHash'.
-   *
-   * All of the above have associated hash fields to validate the value is set
-   * by the application.
-   */
-  _metaData = {};
-
-  /**
    * A reference to the search service so that we can save the engines list.
    */
   _searchService = null;
 
   /*
-   * A copy of the settings so we can persist metadata for engines that
-   * are not currently active.
+   * A copy of the user's settings so we can persist metadata for engines that
+   * are not currently active and metadata for the user's settings.
+   *
+   * Structre of settings:
+   * Object { version: <number>,
+   *          engines: [...],
+   *          metaData: {...},
+   *        }
+   *
+   * Settings metaData properties:
+   * @property {string} current
+   *    The current user-set default engine. The associated hash is called
+   *    'hash'.
+   * @property {string} private
+   *    The current user-set private engine. The associated hash is called
+   *    'privateHash'.
+   *    The current and prviate objects have associated hash fields to validate
+   *    the value is set by the application.
+   * @property {string} appDefaultEngine
+   * @property {string} channel
+   *    Configuration is restricted to the specified channel. ESR is an example
+   *    of a channel.
+   * @property {string} distroID
+   *    Specifies which distribution the default engine is included in.
+   * @property {string} experiment
+   *    Specifies if the application is running on an experiment.
+   * @property {string} locale
+   * @property {string} region
+   * @property {boolean} useSavedOrder
+   *    True if the user's order information stored in settings is used.
+   *
    */
-  _currentSettings = null;
+  #currentSettings = null;
 
   addObservers() {
     Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
@@ -108,12 +123,19 @@ export class SearchSettings {
       lazy.logConsole.warn("get: No settings file exists, new profile?", ex);
       json = {};
     }
-    if (json.metaData) {
-      this._metaData = json.metaData;
+
+    this.#currentSettings = json;
+
+    if (!this.#currentSettings.metaData) {
+      this.#currentSettings.metaData = {};
     }
+
     // Versions of gecko older than 82 stored the order flag as a preference.
     // This was changed in version 6 of the settings file.
-    if (json.version < 6 || !("useSavedOrder" in this._metaData)) {
+    if (
+      this.#currentSettings.version < 6 ||
+      !("useSavedOrder" in this.#currentSettings.metaData)
+    ) {
       const prefName = lazy.SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder";
       let useSavedOrder = Services.prefs.getBoolPref(prefName, false);
 
@@ -123,7 +145,6 @@ export class SearchSettings {
       Services.prefs.clearUserPref(prefName);
     }
 
-    this._currentSettings = json;
     return json;
   }
 
@@ -194,13 +215,13 @@ export class SearchSettings {
     // Allows us to force a settings refresh should the settings format change.
     settings.version = lazy.SearchUtils.SETTINGS_VERSION;
     settings.engines = [...this._searchService._engines.values()];
-    settings.metaData = this._metaData;
+    settings.metaData = this.#currentSettings.metaData;
 
     // Persist metadata for AppProvided engines even if they aren't currently
     // active, this means if they become active again their settings
     // will be restored.
-    if (this._currentSettings?.engines) {
-      for (let engine of this._currentSettings.engines) {
+    if (this.#currentSettings?.engines) {
+      for (let engine of this.#currentSettings.engines) {
         let included = settings.engines.some(e => e._name == engine._name);
         if (engine._isAppProvided && !included) {
           settings.engines.push(engine);
@@ -209,7 +230,7 @@ export class SearchSettings {
     }
 
     // Update the local copy.
-    this._currentSettings = settings;
+    this.#currentSettings = settings;
 
     try {
       if (!settings.engines.length) {
@@ -242,7 +263,7 @@ export class SearchSettings {
    *   The value to set.
    */
   setAttribute(name, val) {
-    this._metaData[name] = val;
+    this.#currentSettings.metaData[name] = val;
     this._delayedWrite();
   }
 
@@ -256,8 +277,8 @@ export class SearchSettings {
    *   The value to set.
    */
   setVerifiedAttribute(name, val) {
-    this._metaData[name] = val;
-    this._metaData[
+    this.#currentSettings.metaData[name] = val;
+    this.#currentSettings.metaData[
       this.getHashName(name)
     ] = lazy.SearchUtils.getVerificationHash(val);
     this._delayedWrite();
@@ -272,7 +293,18 @@ export class SearchSettings {
    *   The value of the attribute, or undefined if not known.
    */
   getAttribute(name) {
-    return this._metaData[name] ?? undefined;
+    return this.#currentSettings.metaData[name] ?? undefined;
+  }
+
+  /**
+   * Gets a copy of the settings metadata.
+   *
+   * @returns {*}
+   *   A copy of the settings metadata object.
+   *
+   */
+  getSettingsMetaData() {
+    return { ...this.#currentSettings.metaData };
   }
 
   /**
