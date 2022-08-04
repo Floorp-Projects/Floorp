@@ -281,9 +281,7 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
      * Let propertyKey be ? ToPropertyKey(
      *   ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
      */
-    var propertyKey = TO_PROPERTY_KEY(
-      callContentFunction(callbackfn, T, kValue, k, O)
-    );
+    var propertyKey = TO_PROPERTY_KEY(callContentFunction(callbackfn, T, kValue, k, O));
 
     /* Step 6.d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue). */
     if (!groups[propertyKey]) {
@@ -442,8 +440,7 @@ function ArrayReduce(callbackfn /*, initialValue*/) {
     /* Step b */
     if (k in O) {
       /* Step c. */
-      accumulator = callContentFunction(callbackfn, undefined,
-                                        accumulator, O[k], k, O);
+      accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
     }
   }
 
@@ -506,8 +503,7 @@ function ArrayReduceRight(callbackfn /*, initialValue*/) {
     /* Step b */
     if (k in O) {
       /* Step c. */
-      accumulator = callContentFunction(callbackfn, undefined,
-                                        accumulator, O[k], k, O);
+      accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
     }
   }
 
@@ -594,22 +590,21 @@ function ArrayCopyWithin(target, start, end = undefined) {
   var relativeTarget = ToInteger(target);
 
   // Step 4.
-  var to = relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0)
-                              : std_Math_min(relativeTarget, len);
+  var to =
+    relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0) : std_Math_min(relativeTarget, len);
 
   // Step 5.
   var relativeStart = ToInteger(start);
 
   // Step 6.
-  var from = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
-                               : std_Math_min(relativeStart, len);
+  var from =
+    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
 
   // Step 7.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 8.
-  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
-                              : std_Math_min(relativeEnd, len);
+  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
 
   // Step 9.
   var count = std_Math_min(final - from, len - to);
@@ -664,17 +659,14 @@ function ArrayFill(value, start = 0, end = undefined) {
   var relativeStart = ToInteger(start);
 
   // Step 4.
-  var k = relativeStart < 0
-          ? std_Math_max(len + relativeStart, 0)
-          : std_Math_min(relativeStart, len);
+  var k =
+    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
 
   // Step 5.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 6.
-  var final = relativeEnd < 0
-              ? std_Math_max(len + relativeEnd, 0)
-              : std_Math_min(relativeEnd, len);
+  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
 
   // Step 7.
   for (; k < final; k++) {
@@ -701,8 +693,7 @@ function ArrayIteratorNext() {
   // Step 1-3.
   var obj = this;
   if (!IsObject(obj) || (obj = GuardToArrayIterator(obj)) === null) {
-    return callFunction(CallArrayIteratorMethodIfWrapped, this,
-                        "ArrayIteratorNext");
+    return callFunction(CallArrayIteratorMethodIfWrapped, this, "ArrayIteratorNext");
   }
 
   // Step 4.
@@ -851,8 +842,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
   var len = ToLength(arrayLike.length);
 
   // Steps 12-14.
-  var A = IsConstructor(C) ? constructContentFunction(C, C, len)
-                           : std_Array(len);
+  var A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
 
   // Steps 15-16.
   for (var k = 0; k < len; k++) {
