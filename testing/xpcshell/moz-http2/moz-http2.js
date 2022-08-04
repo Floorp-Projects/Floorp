@@ -139,30 +139,10 @@ var runlater = function() {};
 runlater.prototype = {
   req: null,
   resp: null,
-  fin: true,
 
   onTimeout: function onTimeout() {
     this.resp.writeHead(200);
-    if (this.fin) {
-      this.resp.end("It's all good 750ms.");
-    }
-  },
-};
-
-var runConnectLater = function() {};
-runConnectLater.prototype = {
-  req: null,
-  resp: null,
-  connect: false,
-
-  onTimeout: function onTimeout() {
-    if (this.connect) {
-      this.resp.writeHead(200);
-      this.connect = true;
-      setTimeout(executeRunLaterCatchError, 50, this);
-    } else {
-      this.resp.end("HTTP/1.1 200\n\r\n\r");
-    }
+    this.resp.end("It's all good 750ms.");
   },
 };
 
@@ -189,8 +169,63 @@ function executeRunLater(arg) {
   arg.onTimeout();
 }
 
-function executeRunLaterCatchError(arg) {
-  arg.onTimeout();
+var Compressor = http2_compression.Compressor;
+var HeaderSetCompressor = http2_compression.HeaderSetCompressor;
+var originalCompressHeaders = Compressor.prototype.compress;
+
+function insertSoftIllegalHpack(headers) {
+  var originalCompressed = originalCompressHeaders.apply(this, headers);
+  var illegalLiteral = Buffer.from([
+    0x00, // Literal, no index
+    0x08, // Name: not huffman encoded, 8 bytes long
+    0x3a,
+    0x69,
+    0x6c,
+    0x6c,
+    0x65,
+    0x67,
+    0x61,
+    0x6c, // :illegal
+    0x10, // Value: not huffman encoded, 16 bytes long
+    // REALLY NOT LEGAL
+    0x52,
+    0x45,
+    0x41,
+    0x4c,
+    0x4c,
+    0x59,
+    0x20,
+    0x4e,
+    0x4f,
+    0x54,
+    0x20,
+    0x4c,
+    0x45,
+    0x47,
+    0x41,
+    0x4c,
+  ]);
+  var newBufferLength = originalCompressed.length + illegalLiteral.length;
+  var concatenated = Buffer.alloc(newBufferLength);
+  originalCompressed.copy(concatenated, 0);
+  illegalLiteral.copy(concatenated, originalCompressed.length);
+  return concatenated;
+}
+
+function insertHardIllegalHpack(headers) {
+  var originalCompressed = originalCompressHeaders.apply(this, headers);
+  // Now we have to add an invalid header
+  var illegalIndexed = HeaderSetCompressor.integer(5000, 7);
+  // The above returns an array of buffers, but there's only one buffer, so
+  // get rid of the array.
+  illegalIndexed = illegalIndexed[0];
+  // Set the first bit to 1 to signal this is an indexed representation
+  illegalIndexed[0] |= 0x80;
+  var newBufferLength = originalCompressed.length + illegalIndexed.length;
+  var concatenated = Buffer.alloc(newBufferLength);
+  originalCompressed.copy(concatenated, 0);
+  illegalIndexed.copy(concatenated, originalCompressed.length);
+  return concatenated;
 }
 
 var h11required_conn = null;
@@ -205,10 +240,11 @@ var gDoHRequestCount = 0;
 
 // eslint-disable-next-line complexity
 function handleRequest(req, res) {
-  var u = "";
-  if (req.url != undefined) {
-    u = url.parse(req.url, true);
-  }
+  // We do this first to ensure nothing goes wonky in our tests that don't want
+  // the headers to have something illegal in them
+  Compressor.prototype.compress = originalCompressHeaders;
+
+  var u = url.parse(req.url, true);
   var content = getHttpContent(u.pathname);
   var push, push1, push1a, push2, push3;
 
@@ -534,41 +570,10 @@ function handleRequest(req, res) {
     process.exit();
   }
 
-  if (req.method == "CONNECT") {
-    if (req.headers.host == "illegalhpacksoft.example.com:80") {
-      illegalheader_conn = req.stream.connection;
-      res.setHeader("Content-Type", "text/html");
-      res.setHeader("x-softillegalhpack", "true");
-      res.writeHead(200);
-      res.end(content);
-      return;
-    } else if (req.headers.host == "illegalhpackhard.example.com:80") {
-      res.setHeader("Content-Type", "text/html");
-      res.setHeader("x-hardillegalhpack", "true");
-      res.writeHead(200);
-      res.end(content);
-      return;
-    } else if (req.headers.host == "750.example.com:80") {
-      // This response will mock a response through a proxy to a HTTP server.
-      // After 750ms , a 200 response for the proxy will be sent then
-      // after additional 50ms a 200 response for the HTTP GET request.
-      let rl = new runConnectLater();
-      rl.req = req;
-      rl.resp = res;
-      setTimeout(executeRunLaterCatchError, 750, rl);
-      return;
-    }
-  } else if (u.pathname === "/750ms") {
+  if (u.pathname === "/750ms") {
     let rl = new runlater();
     rl.req = req;
     rl.resp = res;
-    setTimeout(executeRunLater, 750, rl);
-    return;
-  } else if (u.pathname === "/750msNoData") {
-    let rl = new runlater();
-    rl.req = req;
-    rl.resp = res;
-    rl.fin = false;
     setTimeout(executeRunLater, 750, rl);
     return;
   } else if (u.pathname === "/multiplex1" && req.httpVersionMajor === 2) {
@@ -1649,19 +1654,13 @@ function handleRequest(req, res) {
     // This will cause the compressor to compress a header that is not legal,
     // but only affects the stream, not the session.
     illegalheader_conn = req.stream.connection;
-    res.setHeader("Content-Type", "text/html");
-    res.setHeader("x-softillegalhpack", "true");
-    res.writeHead(200);
-    res.end(content);
-    return;
+    Compressor.prototype.compress = insertSoftIllegalHpack;
+    // Fall through to the default response behavior
   } else if (u.pathname === "/illegalhpackhard") {
     // This will cause the compressor to insert an HPACK instruction that will
     // cause a session failure.
-    res.setHeader("Content-Type", "text/html");
-    res.setHeader("x-hardillegalhpack", "true");
-    res.writeHead(200);
-    res.end(content);
-    return;
+    Compressor.prototype.compress = insertHardIllegalHpack;
+    // Fall through to default response behavior
   } else if (u.pathname === "/illegalhpack_validate") {
     if (req.stream.connection === illegalheader_conn) {
       res.setHeader("X-Did-Goaway", "no");

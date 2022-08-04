@@ -33,7 +33,6 @@ class Http2PushedStream;
 class Http2StreamBase;
 class Http2StreamTunnel;
 class nsHttpTransaction;
-class nsHttpConnection;
 
 enum Http2StreamBaseType { Normal, WebSocket, Tunnel, ServerPush };
 
@@ -64,7 +63,7 @@ class Http2Session final : public ASpdySession,
                                      enum SpdyVersion version,
                                      bool attemptingEarlyData);
 
-  [[nodiscard]] bool AddStream(nsAHttpTransaction*, int32_t, bool,
+  [[nodiscard]] bool AddStream(nsAHttpTransaction*, int32_t, bool, bool,
                                nsIInterfaceRequestor*) override;
   bool CanReuse() override { return !mShouldGoAway && !mClosed; }
   bool RoomForMoreStreams() override;
@@ -237,7 +236,6 @@ class Http2Session final : public ASpdySession,
 
   // a similar version for Http2StreamBase
   void TransactionHasDataToWrite(Http2StreamBase*);
-  void TransactionHasDataToRecv(Http2StreamBase* caller);
 
   // an overload of nsAHttpSegementReader
   [[nodiscard]] virtual nsresult CommitToSegmentSize(
@@ -273,6 +271,7 @@ class Http2Session final : public ASpdySession,
   uint32_t InitialRwin() { return mInitialRwin; }
 
   void SendPing() override;
+  [[nodiscard]] bool MaybeReTunnel(nsAHttpTransaction*) override;
   bool UseH2Deps() { return mUseH2Deps; }
   void SetCleanShutdown(bool) override;
 
@@ -291,12 +290,6 @@ class Http2Session final : public ASpdySession,
   void IncrementTrrCounter() { mTrrStreams++; }
 
   bool CanAcceptWebsocket() override;
-
-  already_AddRefed<nsHttpConnection> CreateTunnelStream(
-      nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
-      PRIntervalTime aRtt) override;
-
-  void CleanupStream(Http2StreamBase*, nsresult, errorType);
 
  private:
   Http2Session(nsISocketTransport*, enum SpdyVersion version,
@@ -333,6 +326,7 @@ class Http2Session final : public ASpdySession,
   void GeneratePriority(uint32_t, uint8_t);
   void GenerateRstStream(uint32_t, uint32_t);
   void GenerateGoAway(uint32_t);
+  void CleanupStream(Http2StreamBase*, nsresult, errorType);
   void CleanupStream(uint32_t, nsresult, errorType);
   void CloseStream(Http2StreamBase*, nsresult);
   void SendHello();
@@ -371,7 +365,6 @@ class Http2Session final : public ASpdySession,
                                      uint32_t*);
 
   void Shutdown(nsresult aReason);
-  void ShutdownStream(Http2StreamBase* aStream, nsresult aResult);
 
   nsresult SessionError(enum errorType);
 
@@ -404,7 +397,6 @@ class Http2Session final : public ASpdySession,
   nsTHashMap<nsUint32HashKey, Http2StreamBase*> mStreamIDHash;
   nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http2StreamBase>
       mStreamTransactionHash;
-  nsTArray<RefPtr<Http2StreamTunnel>> mTunnelStreams;
 
   nsTArray<WeakPtr<Http2StreamBase>> mReadyForWrite;
   nsTArray<WeakPtr<Http2StreamBase>> mQueuedStreams;
@@ -599,6 +591,15 @@ class Http2Session final : public ASpdySession,
   bool mPeerFailedHandshake;
 
  private:
+  /// connect tunnels
+  void DispatchOnTunnel(nsAHttpTransaction*, nsIInterfaceRequestor*);
+  void CreateTunnel(nsHttpTransaction*, nsHttpConnectionInfo*,
+                    nsIInterfaceRequestor*);
+  void RegisterTunnel(Http2StreamTunnel*);
+  void UnRegisterTunnel(Http2StreamTunnel*);
+  uint32_t FindTunnelCount(nsHttpConnectionInfo*);
+  uint32_t FindTunnelCount(nsCString const&);
+  nsTHashMap<nsCStringHashKey, uint32_t> mTunnelHash;
   uint32_t mTrrStreams;
 
   // websockets

@@ -32,7 +32,7 @@
 
 namespace mozilla::net {
 
-Http2StreamBase::Http2StreamBase(uint64_t aTransactionTabId,
+Http2StreamBase::Http2StreamBase(nsAHttpTransaction* httpTransaction,
                                  Http2Session* session, int32_t priority,
                                  uint64_t bcId)
     : mSession(
@@ -43,7 +43,7 @@ Http2StreamBase::Http2StreamBase(uint64_t aTransactionTabId,
       mQueued(0),
       mSocketTransport(session->SocketTransport()),
       mCurrentTopBrowsingContextId(bcId),
-      mTransactionTabId(aTransactionTabId),
+      mTransaction(httpTransaction),
       mTxInlineFrameSize(Http2Session::kDefaultBufferSize),
       mChunkSize(session->SendingChunkSize()),
       mRequestBlockedOnRead(0),
@@ -58,7 +58,9 @@ Http2StreamBase::Http2StreamBase(uint64_t aTransactionTabId,
       mBypassInputBuffer(0) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG1(("Http2StreamBase::Http2StreamBase %p", this));
+  nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
+  LOG1(("Http2StreamBase::Http2StreamBase %p trans=%p atrans=%p", this, trans,
+        httpTransaction));
 
   mServerReceiveWindow = session->GetServerInitialStreamWindow();
   mClientReceiveWindow = session->PushAllowance();
@@ -81,6 +83,10 @@ Http2StreamBase::Http2StreamBase(uint64_t aTransactionTabId,
   }
   MOZ_ASSERT(httpPriority >= 0);
   SetPriority(static_cast<uint32_t>(httpPriority));
+
+  if (trans) {
+    mTransactionTabId = trans->TopBrowsingContextId();
+  }
 }
 
 Http2StreamBase::~Http2StreamBase() {
@@ -93,6 +99,7 @@ Http2StreamBase::~Http2StreamBase() {
 
 already_AddRefed<Http2Session> Http2StreamBase::Session() {
   RefPtr<Http2Session> session = do_QueryReferent(mSession);
+  MOZ_RELEASE_ASSERT(session);
   return session.forget();
 }
 
@@ -107,12 +114,7 @@ nsresult Http2StreamBase::ReadSegments(nsAHttpSegmentReader* reader,
         reader, count, mUpstreamState));
   RefPtr<Http2Session> session = Session();
   // Reader is nullptr when this is a push stream.
-  MOZ_DIAGNOSTIC_ASSERT(!reader || (reader == session) ||
-                        (IsTunnel() && NS_FAILED(Condition())));
-
-  if (NS_FAILED(Condition())) {
-    return Condition();
-  }
+  MOZ_DIAGNOSTIC_ASSERT(!reader || (reader == session));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -142,7 +144,7 @@ nsresult Http2StreamBase::ReadSegments(nsAHttpSegmentReader* reader,
       // Call into the HTTP Transaction to generate the HTTP request
       // stream. That stream will show up in OnReadSegment().
       mSegmentReader = reader;
-      rv = CallToReadData(count, countRead);
+      rv = mTransaction->ReadSegments(this, count, countRead);
       mSegmentReader = nullptr;
 
       LOG3(("Http2StreamBase::ReadSegments %p trans readsegments rv %" PRIx32
@@ -198,7 +200,7 @@ nsresult Http2StreamBase::ReadSegments(nsAHttpSegmentReader* reader,
       // If the sending flow control window is open (!mBlockedOnRwin) then
       // continue sending the request
       if (!mBlockedOnRwin && mOpenGenerated && !mTxInlineFrameUsed &&
-          NS_SUCCEEDED(rv) && (!*countRead) && CloseSendStreamWhenDone()) {
+          NS_SUCCEEDED(rv) && (!*countRead)) {
         MOZ_ASSERT(!mQueued);
         MOZ_ASSERT(mRequestHeadersDone);
         LOG3(
@@ -301,19 +303,30 @@ nsresult Http2StreamBase::WriteSegments(nsAHttpSegmentWriter* writer,
         mUpstreamState));
 
   mSegmentWriter = writer;
-  nsresult rv = CallToWriteData(count, countWritten);
+  nsresult rv = mTransaction->WriteSegments(this, count, countWritten);
 
   if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
     // consuming transaction won't take data. but we need to read it into a
     // buffer so that it won't block other streams. but we should not advance
     // the flow control window so that we'll eventually push back on the sender.
-    rv = BufferInput(count, countWritten);
-    LOG3(("Http2StreamBase::WriteSegments %p Buffered %" PRIX32 " %d\n", this,
-          static_cast<uint32_t>(rv), *countWritten));
-  }
 
-  LOG3(("Http2StreamBase::WriteSegments %" PRIX32 "",
-        static_cast<uint32_t>(rv)));
+    // with tunnels you need to make sure that this is an underlying connction
+    // established that can be meaningfully giving this signal
+    bool doBuffer = true;
+    if (IsTunnel()) {
+      RefPtr<Http2ConnectTransaction> qiTrans(
+          mTransaction->QueryHttp2ConnectTransaction());
+      if (qiTrans) {
+        doBuffer = qiTrans->ConnectedReadyForInput();
+      }
+    }
+    // stash this data
+    if (doBuffer) {
+      rv = BufferInput(count, countWritten);
+      LOG3(("Http2StreamBase::WriteSegments %p Buffered %" PRIX32 " %d\n", this,
+            static_cast<uint32_t>(rv), *countWritten));
+    }
+  }
   mSegmentWriter = nullptr;
   return rv;
 }
@@ -375,8 +388,11 @@ nsresult Http2StreamBase::GenerateOpen() {
 
   mOpenGenerated = 1;
 
-  LOG3(("Http2StreamBase %p Stream ID 0x%X [session=%p]\n", this, mStreamID,
-        session.get()));
+  nsHttpRequestHead* head = mTransaction->RequestHead();
+  nsAutoCString requestURI;
+  head->RequestURI(requestURI);
+  LOG3(("Http2StreamBase %p Stream ID 0x%X [session=%p] for URI %s\n", this,
+        mStreamID, session.get(), requestURI.get()));
 
   if (mStreamID >= 0x80000000) {
     // streamID must fit in 31 bits. Evading This is theoretically possible
@@ -394,16 +410,78 @@ nsresult Http2StreamBase::GenerateOpen() {
   // Now we need to convert the flat http headers into a set
   // of HTTP/2 headers by writing to mTxInlineFrame{sz}
 
-  nsCString compressedData;
-  uint8_t firstFrameFlags = Http2Session::kFlag_PRIORITY;
-
-  nsresult rv = GenerateHeaders(compressedData, firstFrameFlags);
+  nsAutoCStringN<1025> compressedData;
+  nsAutoCString authorityHeader;
+  nsresult rv = head->GetHeader(nsHttp::Host, authorityHeader);
   if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false);
     return rv;
   }
 
-  if (firstFrameFlags | Http2Session::kFlag_END_STREAM) {
+  nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
+
+  bool isWebsocket = false;
+  if (head->IsConnect()) {
+    Http2ConnectTransaction* scTrans =
+        mTransaction->QueryHttp2ConnectTransaction();
+    MOZ_ASSERT(scTrans);
+
+    mRequestBodyLenRemaining = 0x0fffffffffffffffULL;
+
+    if (scTrans->IsWebsocket()) {
+      isWebsocket = true;
+    } else {
+      // This is a tunnel
+      // Our normal authority has an implicit port, best to use an
+      // explicit one with a tunnel
+      nsHttpConnectionInfo* ci = mTransaction->ConnectionInfo();
+      if (!ci) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      authorityHeader = ci->GetOrigin();
+      authorityHeader.Append(':');
+      authorityHeader.AppendInt(ci->OriginPort());
+    }
+  }
+
+  nsAutoCString method;
+  nsAutoCString path;
+  head->Method(method);
+  head->Path(path);
+  bool useSimpleConnect = head->IsConnect();
+  nsAutoCString protocol;
+  if (isWebsocket) {
+    useSimpleConnect = false;
+    protocol.AppendLiteral("websocket");
+  }
+  rv = session->Compressor()->EncodeHeaderBlock(
+      mFlatHttpRequestHeaders, method, path, authorityHeader, scheme, protocol,
+      useSimpleConnect, compressedData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int64_t clVal = session->Compressor()->GetParsedContentLength();
+  if (clVal != -1) {
+    mRequestBodyLenRemaining = clVal;
+  }
+
+  // Determine whether to put the fin bit on the header frame or whether
+  // to wait for a data packet to put it on.
+  uint8_t firstFrameFlags = Http2Session::kFlag_PRIORITY;
+
+  if (head->IsGet() || head->IsHead()) {
+    // for GET and HEAD place the fin bit right on the
+    // header packet
+
     SetSentFin(true);
+    firstFrameFlags |= Http2Session::kFlag_END_STREAM;
+  } else if (head->IsPost() || head->IsPut() || head->IsConnect()) {
+    // place fin in a data frame even for 0 length messages for iterop
+  } else if (!mRequestBodyLenRemaining) {
+    // for other HTTP extension methods, rely on the content-length
+    // to determine whether or not to put fin on headers
+    SetSentFin(true);
+    firstFrameFlags |= Http2Session::kFlag_END_STREAM;
   }
 
   // split this one HEADERS frame up into N HEADERS + CONTINUATION frames if it
@@ -444,9 +522,9 @@ nsresult Http2StreamBase::GenerateOpen() {
   UpdatePriorityDependency();
   LOG1(
       ("Http2StreamBase %p Generating %d bytes of HEADERS for stream 0x%X with "
-       "priority weight %u dep 0x%X frames %u\n",
+       "priority weight %u dep 0x%X frames %u uri=%s\n",
        this, mTxInlineFrameUsed, mStreamID, mPriorityWeight,
-       mPriorityDependency, numFrames));
+       mPriorityDependency, numFrames, requestURI.get()));
 
   uint32_t outputOffset = 0;
   uint32_t compressedDataOffset = 0;
@@ -489,8 +567,13 @@ nsresult Http2StreamBase::GenerateOpen() {
 
   Telemetry::Accumulate(Telemetry::SPDY_SYN_SIZE, compressedData.Length());
 
-  mFlatHttpRequestHeaders.Truncate();
+  // The size of the input headers is approximate
+  uint32_t ratio =
+      compressedData.Length() * 100 /
+      (11 + requestURI.Length() + mFlatHttpRequestHeaders.Length());
 
+  mFlatHttpRequestHeaders.Truncate();
+  Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
   return NS_OK;
 }
 
@@ -510,7 +593,7 @@ void Http2StreamBase::AdjustInitialWindow() {
   // don't allow windows less than push
   uint32_t bump = 0;
   RefPtr<Http2Session> session = Session();
-  nsHttpTransaction* trans = HttpTransaction();
+  nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
   if (trans && trans->InitialRwin()) {
     bump = (trans->InitialRwin() > mClientReceiveWindow)
                ? (trans->InitialRwin() - mClientReceiveWindow)
@@ -546,10 +629,8 @@ void Http2StreamBase::UpdateTransportReadEvents(uint32_t count) {
     return;
   }
 
-  if (Transaction()) {
-    Transaction()->OnTransportStatus(mSocketTransport,
-                                     NS_NET_STATUS_RECEIVING_FROM, mTotalRead);
-  }
+  mTransaction->OnTransportStatus(mSocketTransport,
+                                  NS_NET_STATUS_RECEIVING_FROM, mTotalRead);
 }
 
 void Http2StreamBase::UpdateTransportSendEvents(uint32_t count) {
@@ -572,17 +653,15 @@ void Http2StreamBase::UpdateTransportSendEvents(uint32_t count) {
     mSocketTransport->SetSendBufferSize(bufferSize);
   }
 
-  if ((mUpstreamState != SENDING_FIN_STREAM) && Transaction()) {
-    Transaction()->OnTransportStatus(mSocketTransport, NS_NET_STATUS_SENDING_TO,
-                                     mTotalSent);
+  if (mUpstreamState != SENDING_FIN_STREAM) {
+    mTransaction->OnTransportStatus(mSocketTransport, NS_NET_STATUS_SENDING_TO,
+                                    mTotalSent);
   }
 
   if (!mSentWaitingFor && !mRequestBodyLenRemaining) {
     mSentWaitingFor = 1;
-    if (Transaction()) {
-      Transaction()->OnTransportStatus(mSocketTransport,
-                                       NS_NET_STATUS_WAITING_FOR, 0);
-    }
+    mTransaction->OnTransportStatus(mSocketTransport, NS_NET_STATUS_WAITING_FOR,
+                                    0);
   }
 }
 
@@ -787,7 +866,7 @@ nsresult Http2StreamBase::ConvertResponseHeaders(
   if (httpResponseCode == 421) {
     // Origin Frame requires 421 to remove this origin from the origin set
     RefPtr<Http2Session> session = Session();
-    session->Received421(ConnectionInfo());
+    session->Received421(mTransaction->ConnectionInfo());
   }
 
   if (aHeadersIn.Length() && aHeadersOut.Length()) {
@@ -820,7 +899,7 @@ nsresult Http2StreamBase::ConvertResponseTrailers(
     return rv;
   }
 
-  nsHttpTransaction* trans = HttpTransaction();
+  nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
   if (trans) {
     trans->SetHttpTrailers(flatTrailers);
   } else {
@@ -830,8 +909,13 @@ nsresult Http2StreamBase::ConvertResponseTrailers(
   return NS_OK;
 }
 
+void Http2StreamBase::Close(nsresult reason) {
+  mTransaction->Close(reason);
+  mSession = nullptr;
+}
+
 void Http2StreamBase::SetResponseIsComplete() {
-  nsHttpTransaction* trans = HttpTransaction();
+  nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
   if (trans) {
     trans->SetResponseIsComplete();
   }
@@ -931,7 +1015,7 @@ void Http2StreamBase::UpdatePriorityDependency() {
     return;
   }
 
-  nsHttpTransaction* trans = HttpTransaction();
+  nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
   if (!trans) {
     return;
   }
@@ -1012,7 +1096,7 @@ void Http2StreamBase::TopBrowsingContextIdChangedInternal(uint64_t id) {
 
     nsHttp::NotifyActiveTabLoadOptimization();
   } else {
-    nsHttpTransaction* trans = HttpTransaction();
+    nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
     if (!trans) {
       return;
     }
@@ -1076,9 +1160,7 @@ nsresult Http2StreamBase::OnReadSegment(const char* buf, uint32_t count,
         mUpstreamState));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (!mSegmentReader) {
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
+  MOZ_ASSERT(mSegmentReader, "OnReadSegment with null mSegmentReader");
 
   nsresult rv = NS_ERROR_UNEXPECTED;
   uint32_t dataLength;
@@ -1234,9 +1316,7 @@ nsresult Http2StreamBase::OnWriteSegment(char* buf, uint32_t count,
         count, mUpstreamState, mStreamID));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (!mSegmentWriter) {
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
+  MOZ_ASSERT(mSegmentWriter);
 
   // sometimes we have read data from the network and stored it in a pipe
   // so that other streams can proceed when the gecko caller is not processing
@@ -1261,17 +1341,13 @@ nsresult Http2StreamBase::OnWriteSegment(char* buf, uint32_t count,
 // -----------------------------------------------------------------------------
 
 bool Http2StreamBase::Do0RTT() {
-  MOZ_ASSERT(Transaction());
-  mAttempting0RTT = false;
-  nsAHttpTransaction* trans = Transaction();
-  if (trans) {
-    mAttempting0RTT = trans->Do0RTT();
-  }
+  MOZ_ASSERT(mTransaction);
+  mAttempting0RTT = mTransaction->Do0RTT();
   return mAttempting0RTT;
 }
 
 nsresult Http2StreamBase::Finish0RTT(bool aRestart, bool aAlpnChanged) {
-  MOZ_ASSERT(Transaction());
+  MOZ_ASSERT(mTransaction);
   mAttempting0RTT = false;
   // Instead of passing (aRestart, aAlpnChanged) here, we use aAlpnChanged for
   // both arguments because as long as the alpn token stayed the same, we can
@@ -1282,15 +1358,11 @@ nsresult Http2StreamBase::Finish0RTT(bool aRestart, bool aAlpnChanged) {
   // ..
   // however, we send in the aRestart value to indicate that early data failed
   // for devtools purposes
-  nsresult rv = NS_OK;
-  nsAHttpTransaction* trans = Transaction();
-  if (trans) {
-    rv = trans->Finish0RTT(aAlpnChanged, aAlpnChanged);
-    if (aRestart) {
-      nsHttpTransaction* hTrans = trans->QueryHttpTransaction();
-      if (hTrans) {
-        hTrans->Refused0RTT();
-      }
+  nsresult rv = mTransaction->Finish0RTT(aAlpnChanged, aAlpnChanged);
+  if (aRestart) {
+    nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
+    if (trans) {
+      trans->Refused0RTT();
     }
   }
   return rv;
@@ -1302,17 +1374,6 @@ nsresult Http2StreamBase::GetOriginAttributes(mozilla::OriginAttributes* oa) {
   }
 
   return mSocketTransport->GetOriginAttributes(oa);
-}
-
-nsHttpTransaction* Http2StreamBase::HttpTransaction() {
-  return (Transaction()) ? Transaction()->QueryHttpTransaction() : nullptr;
-}
-
-nsHttpConnectionInfo* Http2StreamBase::ConnectionInfo() {
-  if (Transaction()) {
-    return Transaction()->ConnectionInfo();
-  }
-  return nullptr;
 }
 
 }  // namespace mozilla::net
