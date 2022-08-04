@@ -2280,9 +2280,9 @@
   folds_to: custom
   alias_set: none
 
-# Guard the input index is greater than the dense initialized length of an
-# object.
-- name: GuardIndexGreaterThanDenseInitLength
+# Guard the input index is either greater than the dense initialized length of
+# an object, or a hole element.
+- name: GuardIndexIsNotDenseElement
   operands:
     object: Object
     index: Int32

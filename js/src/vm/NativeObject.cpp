@@ -1821,13 +1821,12 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx,
                                         bool strict) {
   MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<PlainObject>());
 
+  // This helper doesn't handle the case where the index is a dense element.
+  MOZ_ASSERT(int_id >= 0);
+  MOZ_ASSERT(!obj->containsDenseElement(int_id));
+
   MOZ_ASSERT(PropertyKey::fitsInInt(int_id));
   RootedId id(cx, PropertyKey::Int(int_id));
-
-  // This helper doesn't handle the case where the index may be in the dense
-  // elements
-  MOZ_ASSERT(int_id >= 0);
-  MOZ_ASSERT(uint32_t(int_id) >= obj->getDenseInitializedLength());
 
   // First decide if this is an add or an update. Because the IC guards have
   // already ensured this exists exterior to the dense array range, and the
@@ -1837,7 +1836,8 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx,
   PropMap* map = obj->shape()->lookup(cx, id, &index);
 
   // If we didn't find the property, we're on the add path: delegate to
-  // AddOrChangeProperty.
+  // AddOrChangeProperty. This will add either a sparse element or a dense
+  // element.
   if (map == nullptr) {
     Rooted<PropertyDescriptor> desc(
         cx, PropertyDescriptor::Data(v, {JS::PropertyAttribute::Configurable,
@@ -2103,6 +2103,10 @@ static inline bool GeneralizedGetProperty(JSContext* cx, JSObject* obj, jsid id,
 bool js::GetSparseElementHelper(JSContext* cx, Handle<NativeObject*> obj,
                                 int32_t int_id, MutableHandleValue result) {
   MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<PlainObject>());
+
+  // This helper doesn't handle the case where the index is a dense element.
+  MOZ_ASSERT(int_id >= 0);
+  MOZ_ASSERT(!obj->containsDenseElement(int_id));
 
   // Indexed properties can not exist on the prototype chain.
   MOZ_ASSERT(!PrototypeMayHaveIndexedProperties(obj));

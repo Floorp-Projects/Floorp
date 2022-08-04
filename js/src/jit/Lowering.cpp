@@ -5936,8 +5936,8 @@ void LIRGenerator::visitGuardInt32IsNonNegative(MGuardInt32IsNonNegative* ins) {
   redefine(ins, index);
 }
 
-void LIRGenerator::visitGuardIndexGreaterThanDenseInitLength(
-    MGuardIndexGreaterThanDenseInitLength* ins) {
+void LIRGenerator::visitGuardIndexIsNotDenseElement(
+    MGuardIndexIsNotDenseElement* ins) {
   MDefinition* object = ins->object();
   MOZ_ASSERT(object->type() == MIRType::Object);
 
@@ -5947,7 +5947,7 @@ void LIRGenerator::visitGuardIndexGreaterThanDenseInitLength(
   LDefinition spectreTemp =
       BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
 
-  auto* guard = new (alloc()) LGuardIndexGreaterThanDenseInitLength(
+  auto* guard = new (alloc()) LGuardIndexIsNotDenseElement(
       useRegister(object), useRegister(index), temp(), spectreTemp);
   assignSnapshot(guard, ins->bailoutKind());
   add(guard, ins);

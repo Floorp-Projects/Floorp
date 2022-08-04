@@ -1198,12 +1198,12 @@ bool WarpCacheIRTranspiler::emitGuardInt32IsNonNegative(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardIndexGreaterThanDenseInitLength(
+bool WarpCacheIRTranspiler::emitGuardIndexIsNotDenseElement(
     ObjOperandId objId, Int32OperandId indexId) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
-  auto* ins = MGuardIndexGreaterThanDenseInitLength::New(alloc(), obj, index);
+  auto* ins = MGuardIndexIsNotDenseElement::New(alloc(), obj, index);
   add(ins);
   setOperand(indexId, ins);
   return true;

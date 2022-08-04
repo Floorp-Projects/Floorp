@@ -6428,8 +6428,8 @@ AliasSet MGuardIsExtensible::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
-AliasSet MGuardIndexGreaterThanDenseInitLength::getAliasSet() const {
-  return AliasSet::Load(AliasSet::ObjectFields);
+AliasSet MGuardIndexIsNotDenseElement::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::Element);
 }
 
 AliasSet MGuardIndexIsValidUpdateOrAdd::getAliasSet() const {

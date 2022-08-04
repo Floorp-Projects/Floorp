@@ -2544,12 +2544,17 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
   NativeObject* nobj = &obj->as<NativeObject>();
 
   // Stub doesn't handle negative indices.
-  if (index > INT_MAX) {
+  if (index > INT32_MAX) {
     return AttachDecision::NoAction;
   }
 
-  // We also need to be past the end of the dense capacity, to ensure sparse.
-  if (index < nobj->getDenseInitializedLength()) {
+  // The object must have sparse elements.
+  if (!nobj->isIndexed()) {
+    return AttachDecision::NoAction;
+  }
+
+  // The index must not be for a dense element.
+  if (nobj->containsDenseElement(index)) {
     return AttachDecision::NoAction;
   }
 
@@ -2580,7 +2585,7 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
   }
 
   // The helper we are going to call only applies to non-dense elements.
-  writer.guardIndexGreaterThanDenseInitLength(objId, indexId);
+  writer.guardIndexIsNotDenseElement(objId, indexId);
 
   // Ensures we are able to efficiently able to map to an integral jsid.
   writer.guardInt32IsNonNegative(indexId);
@@ -2674,7 +2679,7 @@ AttachDecision GetPropIRGenerator::tryAttachGenericElement(
     NativeObject* nobj = &obj->as<NativeObject>();
     TestMatchingNativeReceiver(writer, nobj, objId);
   }
-  writer.guardIndexGreaterThanDenseInitLength(objId, indexId);
+  writer.guardIndexIsNotDenseElement(objId, indexId);
   writer.callNativeGetElementResult(objId, indexId);
   writer.returnFromIC();
 
@@ -4254,12 +4259,12 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
   }
 
   // Stub doesn't handle negative indices.
-  if (index > INT_MAX) {
+  if (index > INT32_MAX) {
     return AttachDecision::NoAction;
   }
 
-  // We also need to be past the end of the dense capacity, to ensure sparse.
-  if (index < nobj->getDenseInitializedLength()) {
+  // The index must not be for a dense element.
+  if (nobj->containsDenseElement(index)) {
     return AttachDecision::NoAction;
   }
 
@@ -4293,7 +4298,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
   }
 
   // The helper we are going to call only applies to non-dense elements.
-  writer.guardIndexGreaterThanDenseInitLength(objId, indexId);
+  writer.guardIndexIsNotDenseElement(objId, indexId);
 
   // Guard extensible: We may be trying to add a new element, and so we'd best
   // be able to do so safely.
