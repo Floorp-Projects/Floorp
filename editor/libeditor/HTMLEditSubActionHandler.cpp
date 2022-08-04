@@ -561,15 +561,30 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
 
     // If we created a new block, make sure caret is in it.
     if (TopLevelEditSubActionDataRef().mNewBlockElement &&
-        SelectionRef().IsCollapsed()) {
-      nsresult rv = EnsureCaretInBlockElement(
-          MOZ_KnownLive(*TopLevelEditSubActionDataRef().mNewBlockElement));
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return NS_ERROR_EDITOR_DESTROYED;
+        SelectionRef().IsCollapsed() && SelectionRef().RangeCount()) {
+      const auto firstRangeStartPoint =
+          GetFirstSelectionStartPoint<EditorRawDOMPoint>();
+      if (MOZ_LIKELY(firstRangeStartPoint.IsSet())) {
+        const Result<EditorRawDOMPoint, nsresult> pointToPutCaretOrError =
+            HTMLEditUtils::ComputePointToPutCaretInElementIfOutside<
+                EditorRawDOMPoint>(
+                *TopLevelEditSubActionDataRef().mNewBlockElement,
+                firstRangeStartPoint);
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+          NS_WARNING(
+              "HTMLEditUtils::ComputePointToPutCaretInElementIfOutside() "
+              "failed, but ignored");
+        } else if (pointToPutCaretOrError.inspect().IsSet()) {
+          nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+          if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          NS_WARNING_ASSERTION(
+              NS_SUCCEEDED(rv),
+              "EditorBase::CollapseSelectionTo() failed, but ignored");
+        }
       }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::EnsureSelectionInBlockElement() failed, but ignored");
     }
 
     // Adjust selection for insert text, html paste, and delete actions if
@@ -8803,79 +8818,6 @@ nsresult HTMLEditor::InsertBRElementToEmptyListItemsAndTableCellsInRange(
         "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
   return NS_OK;
-}
-
-nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(SelectionRef().IsCollapsed());
-
-  const auto atCaret = GetFirstSelectionStartPoint<EditorRawDOMPoint>();
-  if (NS_WARN_IF(!atCaret.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Use ranges and RangeUtils::CompareNodeToRange() to compare selection
-  // start to new block.
-  RefPtr<StaticRange> staticRange =
-      StaticRange::Create(atCaret.ToRawRangeBoundary(),
-                          atCaret.ToRawRangeBoundary(), IgnoreErrors());
-  if (!staticRange) {
-    NS_WARNING("StaticRange::Create() failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  bool nodeBefore, nodeAfter;
-  nsresult rv = RangeUtils::CompareNodeToRange(&aElement, staticRange,
-                                               &nodeBefore, &nodeAfter);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("RangeUtils::CompareNodeToRange() failed");
-    return rv;
-  }
-
-  if (nodeBefore && nodeAfter) {
-    return NS_OK;  // selection is inside block
-  }
-
-  if (nodeBefore) {
-    // selection is after block.  put at end of block.
-    nsIContent* lastEditableContent = HTMLEditUtils::GetLastChild(
-        aElement, {WalkTreeOption::IgnoreNonEditableNode});
-    if (!lastEditableContent) {
-      lastEditableContent = &aElement;
-    }
-    EditorRawDOMPoint endPoint;
-    if (lastEditableContent->IsText() ||
-        HTMLEditUtils::IsContainerNode(*lastEditableContent)) {
-      endPoint.SetToEndOf(lastEditableContent);
-    } else {
-      endPoint.SetAfter(lastEditableContent);
-      if (NS_WARN_IF(!endPoint.IsSet())) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-    nsresult rv = CollapseSelectionTo(endPoint);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::CollapseSelectionTo() failed");
-    return rv;
-  }
-
-  // selection is before block.  put at start of block.
-  nsIContent* firstEditableContent = HTMLEditUtils::GetFirstChild(
-      aElement, {WalkTreeOption::IgnoreNonEditableNode});
-  if (!firstEditableContent) {
-    firstEditableContent = &aElement;
-  }
-  EditorRawDOMPoint atStartOfBlock;
-  if (firstEditableContent->IsText() ||
-      HTMLEditUtils::IsContainerNode(*firstEditableContent)) {
-    atStartOfBlock.Set(firstEditableContent);
-  } else {
-    atStartOfBlock.Set(firstEditableContent, 0);
-  }
-  rv = CollapseSelectionTo(atStartOfBlock);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
 }
 
 void HTMLEditor::SetSelectionInterlinePosition() {

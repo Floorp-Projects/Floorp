@@ -2613,14 +2613,6 @@ class HTMLEditor final : public EditorBase,
   void SetSelectionInterlinePosition();
 
   /**
-   * EnsureSelectionInBlockElement() may move caret into aElement or its
-   * parent block if caret is outside of them.  Don't call this when
-   * `Selection` is not collapsed.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureCaretInBlockElement(dom::Element& aElement);
-
-  /**
    * Called by `HTMLEditor::OnEndHandlingTopLevelEditSubAction()`.  This may
    * adjust Selection, remove unnecessary empty nodes, create `<br>` elements
    * if needed, etc.
