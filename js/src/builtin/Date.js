@@ -44,7 +44,9 @@ var dateTimeFormatCache = new_Record();
  */
 function GetCachedFormat(format, required, defaults) {
   assert(
-    format === "dateTimeFormat" || format === "dateFormat" || format === "timeFormat",
+    format === "dateTimeFormat" ||
+      format === "dateFormat" ||
+      format === "timeFormat",
     "unexpected format key: please update the comment by dateTimeFormatCache"
   );
 

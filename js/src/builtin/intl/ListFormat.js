@@ -61,10 +61,16 @@ function resolveListFormatInternals(lazyListFormatData) {
  */
 function getListFormatInternals(obj) {
   assert(IsObject(obj), "getListFormatInternals called with non-object");
-  assert(intl_GuardToListFormat(obj) !== null, "getListFormatInternals called with non-ListFormat");
+  assert(
+    intl_GuardToListFormat(obj) !== null,
+    "getListFormatInternals called with non-ListFormat"
+  );
 
   var internals = getIntlObjectInternals(obj);
-  assert(internals.type === "ListFormat", "bad type escaped getIntlObjectInternals");
+  assert(
+    internals.type === "ListFormat",
+    "bad type escaped getIntlObjectInternals"
+  );
 
   // If internal properties have already been computed, use them.
   var internalProps = maybeInternalProperties(internals);
@@ -122,7 +128,10 @@ function InitializeListFormat(listFormat, locales, options) {
   if (options === undefined) {
     options = std_Object_create(null);
   } else if (!IsObject(options)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED, options === null ? "null" : typeof options);
+    ThrowTypeError(
+      JSMSG_OBJECT_REQUIRED,
+      options === null ? "null" : typeof options
+    );
   }
 
   // Step 6.
@@ -130,7 +139,13 @@ function InitializeListFormat(listFormat, locales, options) {
   lazyListFormatData.opt = opt;
 
   // Steps 7-8.
-  let matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+  let matcher = GetOption(
+    options,
+    "localeMatcher",
+    "string",
+    ["lookup", "best fit"],
+    "best fit"
+  );
   opt.localeMatcher = matcher;
 
   // Compute formatting options.
@@ -146,7 +161,13 @@ function InitializeListFormat(listFormat, locales, options) {
   lazyListFormatData.type = type;
 
   // Steps 14-15.
-  var style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
+  var style = GetOption(
+    options,
+    "style",
+    "string",
+    ["long", "short", "narrow"],
+    "long"
+  );
   lazyListFormatData.style = style;
 
   // We've done everything that must be done now: mark the lazy data as fully
@@ -188,7 +209,12 @@ function StringListFromIterable(iterable, methodName) {
   for (var element of allowContentIter(iterable)) {
     // Step 5.b.ii.
     if (typeof element !== "string") {
-      ThrowTypeError(JSMSG_NOT_EXPECTED_TYPE, methodName, "string", typeof element);
+      ThrowTypeError(
+        JSMSG_NOT_EXPECTED_TYPE,
+        methodName,
+        "string",
+        typeof element
+      );
     }
 
     // Step 5.b.iii.
@@ -207,8 +233,16 @@ function Intl_ListFormat_format(list) {
   var listFormat = this;
 
   // Steps 2-3.
-  if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
-    return callFunction(intl_CallListFormatMethodIfWrapped, this, list, "Intl_ListFormat_format");
+  if (
+    !IsObject(listFormat) ||
+    (listFormat = intl_GuardToListFormat(listFormat)) === null
+  ) {
+    return callFunction(
+      intl_CallListFormatMethodIfWrapped,
+      this,
+      list,
+      "Intl_ListFormat_format"
+    );
   }
 
   // Step 4.
@@ -234,7 +268,10 @@ function Intl_ListFormat_formatToParts(list) {
   var listFormat = this;
 
   // Steps 2-3.
-  if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
+  if (
+    !IsObject(listFormat) ||
+    (listFormat = intl_GuardToListFormat(listFormat)) === null
+  ) {
     return callFunction(
       intl_CallListFormatMethodIfWrapped,
       this,
@@ -248,7 +285,9 @@ function Intl_ListFormat_formatToParts(list) {
 
   // We can directly return if |stringList| contains less than two elements.
   if (stringList.length < 2) {
-    return stringList.length === 0 ? [] : [{ type: "element", value: stringList[0] }];
+    return stringList.length === 0
+      ? []
+      : [{ type: "element", value: stringList[0] }];
   }
 
   // Ensure the ListFormat internals are resolved.
@@ -266,7 +305,10 @@ function Intl_ListFormat_resolvedOptions() {
   var listFormat = this;
 
   // Steps 2-3.
-  if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
+  if (
+    !IsObject(listFormat) ||
+    (listFormat = intl_GuardToListFormat(listFormat)) === null
+  ) {
     return callFunction(
       intl_CallListFormatMethodIfWrapped,
       this,

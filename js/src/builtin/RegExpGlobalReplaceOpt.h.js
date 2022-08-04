@@ -81,7 +81,12 @@ function FUNC_NAME(
     // Steps g-l.
     var replacement;
 #if defined(FUNCTIONAL)
-    replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
+    replacement = RegExpGetFunctionalReplacement(
+      result,
+      S,
+      position,
+      replaceValue
+    );
 #elif defined(SUBSTITUTION)
     // Step l.i
     var namedCaptures = result.groups;
@@ -112,7 +117,12 @@ function FUNC_NAME(
     }
 
     if (!IsObject(elemBase)) {
-      replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
+      replacement = RegExpGetFunctionalReplacement(
+        result,
+        S,
+        position,
+        replaceValue
+      );
     }
 #else
     replacement = replaceValue;
@@ -120,14 +130,17 @@ function FUNC_NAME(
 
     // Step 14.m.ii.
     accumulatedResult +=
-      Substring(S, nextSourcePosition, position - nextSourcePosition) + replacement;
+      Substring(S, nextSourcePosition, position - nextSourcePosition) +
+      replacement;
 
     // Step 14.m.iii.
     nextSourcePosition = lastIndex;
 
     // Step 11.c.iii.2.
     if (matchLength === 0) {
-      lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+      lastIndex = fullUnicode
+        ? AdvanceStringIndex(S, lastIndex)
+        : lastIndex + 1;
       if (lastIndex > lengthS) {
         break;
       }
@@ -138,7 +151,8 @@ function FUNC_NAME(
     // Ensure the current source and flags match the original regexp, the
     // replaceValue function may have called RegExp#compile.
     if (
-      UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
+      UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !==
+        originalSource ||
       UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags
     ) {
       rx = RegExpConstructRaw(originalSource, originalFlags);
@@ -152,5 +166,8 @@ function FUNC_NAME(
   }
 
   // Step 16.
-  return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+  return (
+    accumulatedResult +
+    Substring(S, nextSourcePosition, lengthS - nextSourcePosition)
+  );
 }

@@ -29,7 +29,10 @@ function InsertionSort(array, from, to, comparefn) {
 function Merge(list, out, start, mid, end, comparefn) {
   // Skip lopsided runs to avoid doing useless work.
   // Skip calling the comparator if the sub-list is already sorted.
-  if (mid >= end || callContentFunction(comparefn, undefined, list[mid], list[mid + 1]) <= 0) {
+  if (
+    mid >= end ||
+    callContentFunction(comparefn, undefined, list[mid], list[mid + 1]) <= 0
+  ) {
     for (var i = start; i <= end; i++) {
       DefineDataProperty(out, i, list[i]);
     }
@@ -134,7 +137,10 @@ function MergeSort(array, len, comparefn) {
 function MergeTypedArray(list, out, start, mid, end, comparefn) {
   // Skip lopsided runs to avoid doing useless work.
   // Skip calling the comparator if the sub-list is already sorted.
-  if (mid >= end || callContentFunction(comparefn, undefined, list[mid], list[mid + 1]) <= 0) {
+  if (
+    mid >= end ||
+    callContentFunction(comparefn, undefined, list[mid], list[mid + 1]) <= 0
+  ) {
     for (var i = start; i <= end; i++) {
       out[i] = list[i];
     }
@@ -167,7 +173,10 @@ function MergeTypedArray(list, out, start, mid, end, comparefn) {
 
 // Iterative, bottom up, mergesort. Optimized version for TypedArrays.
 function MergeSortTypedArray(array, len, comparefn) {
-  assert(IsPossiblyWrappedTypedArray(array), "MergeSortTypedArray works only with typed arrays.");
+  assert(
+    IsPossiblyWrappedTypedArray(array),
+    "MergeSortTypedArray works only with typed arrays."
+  );
 
   // Use the same TypedArray kind for the buffer.
   var C = ConstructorForTypedArray(array);

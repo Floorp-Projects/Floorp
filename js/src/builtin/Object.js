@@ -213,7 +213,10 @@ function ObjectGetOwnPropertyDescriptor(obj, propertyKey) {
   }
 
   // 6.2.4.4 FromPropertyDescriptor, steps 2-3, 6-11.
-  assert(attrsAndKind & ACCESSOR_DESCRIPTOR_KIND, "expected accessor property descriptor");
+  assert(
+    attrsAndKind & ACCESSOR_DESCRIPTOR_KIND,
+    "expected accessor property descriptor"
+  );
   return {
     get: desc[PROP_DESC_GETTER_INDEX],
     set: desc[PROP_DESC_SETTER_INDEX],

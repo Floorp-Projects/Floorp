@@ -505,7 +505,13 @@ function SetForEach(callbackfn, thisArg = undefined) {
 
   // Steps 2-3.
   if (!IsObject(S) || (S = GuardToSetObject(S)) === null) {
-    return callFunction(CallSetMethodIfWrapped, this, callbackfn, thisArg, "SetForEach");
+    return callFunction(
+      CallSetMethodIfWrapped,
+      this,
+      callbackfn,
+      thisArg,
+      "SetForEach"
+    );
   }
 
   // Step 4.
@@ -552,7 +558,11 @@ function SetIteratorNext() {
 
   // Steps 2-3.
   if (!IsObject(O) || (O = GuardToSetIterator(O)) === null) {
-    return callFunction(CallSetIteratorMethodIfWrapped, this, "SetIteratorNext");
+    return callFunction(
+      CallSetIteratorMethodIfWrapped,
+      this,
+      "SetIteratorNext"
+    );
   }
 
   // Steps 4-5 (implemented in GetNextSetEntryForIterator).

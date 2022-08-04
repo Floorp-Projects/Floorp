@@ -130,7 +130,10 @@ function getDateTimeFormatInternals(obj) {
   );
 
   var internals = getIntlObjectInternals(obj);
-  assert(internals.type === "DateTimeFormat", "bad type escaped getIntlObjectInternals");
+  assert(
+    internals.type === "DateTimeFormat",
+    "bad type escaped getIntlObjectInternals"
+  );
 
   // If internal properties have already been computed, use them.
   var internalProps = maybeInternalProperties(internals);
@@ -153,7 +156,11 @@ function UnwrapDateTimeFormat(dtf) {
     IsObject(dtf) &&
     intl_GuardToDateTimeFormat(dtf) === null &&
     !intl_IsWrappedDateTimeFormat(dtf) &&
-    callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), dtf)
+    callFunction(
+      std_Object_isPrototypeOf,
+      GetBuiltinPrototype("DateTimeFormat"),
+      dtf
+    )
   ) {
     dtf = dtf[intlFallbackSymbol()];
   }
@@ -172,7 +179,10 @@ function CanonicalizeTimeZoneName(timeZone) {
 
   // Step 1. (Not applicable, the input is already a valid IANA time zone.)
   assert(timeZone !== "Etc/Unknown", "Invalid time zone");
-  assert(timeZone === intl_IsValidTimeZoneName(timeZone), "Time zone name not normalized");
+  assert(
+    timeZone === intl_IsValidTimeZoneName(timeZone),
+    "Time zone name not normalized"
+  );
 
   // Step 2.
   var ianaTimeZone = intl_canonicalizeTimeZone(timeZone);
@@ -226,7 +236,8 @@ function DefaultTimeZone() {
     if (offsetHoursFraction === 0) {
       // Etc/GMT + offset uses POSIX-style signs, i.e. a positive offset
       // means a location west of GMT.
-      timeZone = "Etc/GMT" + (offsetHours < 0 ? "+" : "-") + std_Math_abs(offsetHours);
+      timeZone =
+        "Etc/GMT" + (offsetHours < 0 ? "+" : "-") + std_Math_abs(offsetHours);
 
       // Check if the fallback is valid.
       timeZone = intl_IsValidTimeZoneName(timeZone);
@@ -258,8 +269,17 @@ function DefaultTimeZone() {
  *
  * Spec: ECMAScript Internationalization API Specification, 12.1.1.
  */
-function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, mozExtensions) {
-  assert(IsObject(dateTimeFormat), "InitializeDateTimeFormat called with non-Object");
+function InitializeDateTimeFormat(
+  dateTimeFormat,
+  thisValue,
+  locales,
+  options,
+  mozExtensions
+) {
+  assert(
+    IsObject(dateTimeFormat),
+    "InitializeDateTimeFormat called with non-Object"
+  );
   assert(
     intl_GuardToDateTimeFormat(dateTimeFormat) !== null,
     "InitializeDateTimeFormat called with non-DateTimeFormat"
@@ -324,12 +344,22 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   var calendar = GetOption(options, "calendar", "string", undefined, undefined);
 
   if (calendar !== undefined) {
-    calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(calendar, "calendar", "ca");
+    calendar = intl_ValidateAndCanonicalizeUnicodeExtensionType(
+      calendar,
+      "calendar",
+      "ca"
+    );
   }
 
   localeOpt.ca = calendar;
 
-  var numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
+  var numberingSystem = GetOption(
+    options,
+    "numberingSystem",
+    "string",
+    undefined,
+    undefined
+  );
 
   if (numberingSystem !== undefined) {
     numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(
@@ -345,7 +375,13 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   var hr12 = GetOption(options, "hour12", "boolean", undefined, undefined);
 
   // Step 7.
-  var hc = GetOption(options, "hourCycle", "string", ["h11", "h12", "h23", "h24"], undefined);
+  var hc = GetOption(
+    options,
+    "hourCycle",
+    "string",
+    ["h11", "h12", "h23", "h24"],
+    undefined
+  );
 
   // Step 8.
   if (hr12 !== undefined) {
@@ -396,8 +432,20 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     ["narrow", "short", "long"],
     undefined
   );
-  formatOpt.era = GetOption(options, "era", "string", ["narrow", "short", "long"], undefined);
-  formatOpt.year = GetOption(options, "year", "string", ["2-digit", "numeric"], undefined);
+  formatOpt.era = GetOption(
+    options,
+    "era",
+    "string",
+    ["narrow", "short", "long"],
+    undefined
+  );
+  formatOpt.year = GetOption(
+    options,
+    "year",
+    "string",
+    ["2-digit", "numeric"],
+    undefined
+  );
   formatOpt.month = GetOption(
     options,
     "month",
@@ -405,7 +453,13 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     ["2-digit", "numeric", "narrow", "short", "long"],
     undefined
   );
-  formatOpt.day = GetOption(options, "day", "string", ["2-digit", "numeric"], undefined);
+  formatOpt.day = GetOption(
+    options,
+    "day",
+    "string",
+    ["2-digit", "numeric"],
+    undefined
+  );
   formatOpt.dayPeriod = GetOption(
     options,
     "dayPeriod",
@@ -413,9 +467,27 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     ["narrow", "short", "long"],
     undefined
   );
-  formatOpt.hour = GetOption(options, "hour", "string", ["2-digit", "numeric"], undefined);
-  formatOpt.minute = GetOption(options, "minute", "string", ["2-digit", "numeric"], undefined);
-  formatOpt.second = GetOption(options, "second", "string", ["2-digit", "numeric"], undefined);
+  formatOpt.hour = GetOption(
+    options,
+    "hour",
+    "string",
+    ["2-digit", "numeric"],
+    undefined
+  );
+  formatOpt.minute = GetOption(
+    options,
+    "minute",
+    "string",
+    ["2-digit", "numeric"],
+    undefined
+  );
+  formatOpt.second = GetOption(
+    options,
+    "second",
+    "string",
+    ["2-digit", "numeric"],
+    undefined
+  );
   formatOpt.fractionalSecondDigits = GetNumberOption(
     options,
     "fractionalSecondDigits",
@@ -427,7 +499,14 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     options,
     "timeZoneName",
     "string",
-    ["short", "long", "shortOffset", "longOffset", "shortGeneric", "longGeneric"],
+    [
+      "short",
+      "long",
+      "shortOffset",
+      "longOffset",
+      "shortGeneric",
+      "longGeneric",
+    ],
     undefined
   );
 
@@ -507,12 +586,20 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   //
   // We've done everything that must be done now: mark the lazy data as fully
   // computed and install it.
-  initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
+  initializeIntlObject(
+    dateTimeFormat,
+    "DateTimeFormat",
+    lazyDateTimeFormatData
+  );
 
   // 12.2.1, steps 4-5.
   if (
     dateTimeFormat !== thisValue &&
-    callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), thisValue)
+    callFunction(
+      std_Object_isPrototypeOf,
+      GetBuiltinPrototype("DateTimeFormat"),
+      thisValue
+    )
   ) {
     DefineDataProperty(
       thisValue,
@@ -596,11 +683,19 @@ function ToDateTimeOptions(options, required, defaults) {
   }
 
   if (required === "date" && timeStyle !== undefined) {
-    ThrowTypeError(JSMSG_INVALID_DATETIME_STYLE, "timeStyle", "toLocaleDateString");
+    ThrowTypeError(
+      JSMSG_INVALID_DATETIME_STYLE,
+      "timeStyle",
+      "toLocaleDateString"
+    );
   }
 
   if (required === "time" && dateStyle !== undefined) {
-    ThrowTypeError(JSMSG_INVALID_DATETIME_STYLE, "dateStyle", "toLocaleTimeString");
+    ThrowTypeError(
+      JSMSG_INVALID_DATETIME_STYLE,
+      "dateStyle",
+      "toLocaleTimeString"
+    );
   }
 
   // Step 6.
@@ -784,7 +879,11 @@ function Intl_DateTimeFormat_formatRange(startDate, endDate) {
 
   // Step 3.
   if (startDate === undefined || endDate === undefined) {
-    ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end", "formatRange");
+    ThrowTypeError(
+      JSMSG_UNDEFINED_DATE,
+      startDate === undefined ? "start" : "end",
+      "formatRange"
+    );
   }
 
   // Step 4.
@@ -883,7 +982,11 @@ function Intl_DateTimeFormat_resolvedOptions() {
     if (hasTimeStyle) {
       // timeStyle (unlike dateStyle) requires resolving the pattern to
       // ensure "hourCycle" and "hour12" properties are added to |result|.
-      intl_resolveDateTimeFormatComponents(dtf, result, /* includeDateTimeFields = */ false);
+      intl_resolveDateTimeFormatComponents(
+        dtf,
+        result,
+        /* includeDateTimeFields = */ false
+      );
     }
     if (hasDateStyle) {
       DefineDataProperty(result, "dateStyle", internals.dateStyle);
@@ -893,7 +996,11 @@ function Intl_DateTimeFormat_resolvedOptions() {
     }
   } else {
     // Components bag or a (Mozilla-only) raw pattern.
-    intl_resolveDateTimeFormatComponents(dtf, result, /* includeDateTimeFields = */ true);
+    intl_resolveDateTimeFormatComponents(
+      dtf,
+      result,
+      /* includeDateTimeFields = */ true
+    );
   }
 
   // Step 6.

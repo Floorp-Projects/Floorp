@@ -220,14 +220,24 @@ function TupleConcat() {
 // Tuple.prototype.includes()
 function TupleIncludes(valueToFind /* , fromIndex */) {
   var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
-  return callFunction(std_Array_includes, ThisTupleValue(this), valueToFind, fromIndex);
+  return callFunction(
+    std_Array_includes,
+    ThisTupleValue(this),
+    valueToFind,
+    fromIndex
+  );
 }
 
 // proposal-record-tuple
 // Tuple.prototype.indexOf()
 function TupleIndexOf(valueToFind /* , fromIndex */) {
   var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
-  return callFunction(std_Array_indexOf, ThisTupleValue(this), valueToFind, fromIndex);
+  return callFunction(
+    std_Array_indexOf,
+    ThisTupleValue(this),
+    valueToFind,
+    fromIndex
+  );
 }
 
 // proposal-record-tuple
@@ -241,7 +251,9 @@ function TupleJoin(separator) {
   // Steps 3-4
   var sep = ",";
   if (separator != undefined && separator !== null) {
-    let toString = IsCallable(separator.toString) ? separator.toString : std_Object_toString;
+    let toString = IsCallable(separator.toString)
+      ? separator.toString
+      : std_Object_toString;
     sep = callContentFunction(toString, separator);
   }
 
@@ -262,7 +274,9 @@ function TupleJoin(separator) {
     // Step 7c
     var next = "";
     if (element != undefined && element != null) {
-      let toString = IsCallable(element.toString) ? element.toString : std_Object_toString;
+      let toString = IsCallable(element.toString)
+        ? element.toString
+        : std_Object_toString;
       next = callContentFunction(toString, element);
     }
     // Step 7d
@@ -278,9 +292,18 @@ function TupleJoin(separator) {
 // Tuple.prototype.lastIndexOf()
 function TupleLastIndexOf(valueToFind /* , fromIndex */) {
   if (arguments.length < 2) {
-    return callFunction(std_Array_lastIndexOf, ThisTupleValue(this), valueToFind);
+    return callFunction(
+      std_Array_lastIndexOf,
+      ThisTupleValue(this),
+      valueToFind
+    );
   }
-  return callFunction(std_Array_lastIndexOf, ThisTupleValue(this), valueToFind, arguments[1]);
+  return callFunction(
+    std_Array_lastIndexOf,
+    ThisTupleValue(this),
+    valueToFind,
+    arguments[1]
+  );
 }
 
 // proposal-record-tuple
@@ -301,7 +324,12 @@ function TupleToString() {
 // Tuple.prototype.toLocaleString()
 function TupleToLocaleString(locales, options) {
   var T = ThisTupleValue(this);
-  return callContentFunction(ArrayToLocaleString, TupleToArray(T), locales, options);
+  return callContentFunction(
+    ArrayToLocaleString,
+    TupleToArray(T),
+    locales,
+    options
+  );
 }
 
 // proposal-record-tuple
@@ -360,7 +388,9 @@ function TupleFilter(callbackfn) {
     /* Step 7a. */
     var kValue = list[k];
     /* Step 7b. */
-    var selected = ToBoolean(callContentFunction(callbackfn, T, kValue, k, list));
+    var selected = ToBoolean(
+      callContentFunction(callbackfn, T, kValue, k, list)
+    );
     /* Step 7c. */
     if (selected) {
       /* Step 7c.i. */
@@ -434,16 +464,30 @@ function TupleReduce(callbackfn /*, initialVal */) {
   if (arguments.length < 2) {
     return callContentFunction(ArrayReduce, ThisTupleValue(this), callbackfn);
   }
-  return callContentFunction(ArrayReduce, ThisTupleValue(this), callbackfn, arguments[1]);
+  return callContentFunction(
+    ArrayReduce,
+    ThisTupleValue(this),
+    callbackfn,
+    arguments[1]
+  );
 }
 
 // proposal-record-tuple
 // Tuple.prototype.reduceRight()
 function TupleReduceRight(callbackfn /*, initialVal*/) {
   if (arguments.length < 2) {
-    return callContentFunction(ArrayReduceRight, ThisTupleValue(this), callbackfn);
+    return callContentFunction(
+      ArrayReduceRight,
+      ThisTupleValue(this),
+      callbackfn
+    );
   }
-  return callContentFunction(ArrayReduceRight, ThisTupleValue(this), callbackfn, arguments[1]);
+  return callContentFunction(
+    ArrayReduceRight,
+    ThisTupleValue(this),
+    callbackfn,
+    arguments[1]
+  );
 }
 
 // proposal-record-tuple
@@ -483,7 +527,13 @@ function FlattenIntoTuple(target, source, depth) {
     /* Step 6a. */
     if (mapperIsPresent) {
       /* Step 6a.i. */
-      element = callContentFunction(mapperFunction, thisArg, element, sourceIndex, source);
+      element = callContentFunction(
+        mapperFunction,
+        thisArg,
+        element,
+        sourceIndex,
+        source
+      );
       /* Step 6a.ii. */
       if (IsObject(element)) {
         ThrowTypeError(JSMSG_RECORD_TUPLE_NO_OBJECT);
@@ -624,7 +674,9 @@ function TupleFrom(items /*, mapFn, thisArg */) {
     /* Step 10b */
     let kValue = arrayLike[k];
     /* Step 10c-d */
-    let mappedValue = mapping ? callContentFunction(mapfn, thisArg, kValue, k) : kValue;
+    let mappedValue = mapping
+      ? callContentFunction(mapfn, thisArg, kValue, k)
+      : kValue;
     /* Step 10e */
     if (IsObject(mappedValue)) {
       ThrowTypeError(JSMSG_RECORD_TUPLE_NO_OBJECT);

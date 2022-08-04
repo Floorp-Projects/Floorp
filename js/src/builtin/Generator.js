@@ -9,7 +9,12 @@ function GeneratorNext(val) {
 
   if (!IsSuspendedGenerator(this)) {
     if (!IsObject(this) || !IsGeneratorObject(this)) {
-      return callFunction(CallGeneratorMethodIfWrapped, this, val, "GeneratorNext");
+      return callFunction(
+        CallGeneratorMethodIfWrapped,
+        this,
+        val,
+        "GeneratorNext"
+      );
     }
 
     if (GeneratorObjectIsClosed(this)) {
@@ -34,7 +39,12 @@ function GeneratorNext(val) {
 function GeneratorThrow(val) {
   if (!IsSuspendedGenerator(this)) {
     if (!IsObject(this) || !IsGeneratorObject(this)) {
-      return callFunction(CallGeneratorMethodIfWrapped, this, val, "GeneratorThrow");
+      return callFunction(
+        CallGeneratorMethodIfWrapped,
+        this,
+        val,
+        "GeneratorThrow"
+      );
     }
 
     if (GeneratorObjectIsClosed(this)) {
@@ -59,7 +69,12 @@ function GeneratorThrow(val) {
 function GeneratorReturn(val) {
   if (!IsSuspendedGenerator(this)) {
     if (!IsObject(this) || !IsGeneratorObject(this)) {
-      return callFunction(CallGeneratorMethodIfWrapped, this, val, "GeneratorReturn");
+      return callFunction(
+        CallGeneratorMethodIfWrapped,
+        this,
+        val,
+        "GeneratorReturn"
+      );
     }
 
     if (GeneratorObjectIsClosed(this)) {

@@ -281,7 +281,9 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
      * Let propertyKey be ? ToPropertyKey(
      *   ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
      */
-    var propertyKey = TO_PROPERTY_KEY(callContentFunction(callbackfn, T, kValue, k, O));
+    var propertyKey = TO_PROPERTY_KEY(
+      callContentFunction(callbackfn, T, kValue, k, O)
+    );
 
     /* Step 6.d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue). */
     if (!groups[propertyKey]) {
@@ -440,7 +442,14 @@ function ArrayReduce(callbackfn /*, initialValue*/) {
     /* Step b */
     if (k in O) {
       /* Step c. */
-      accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
+      accumulator = callContentFunction(
+        callbackfn,
+        undefined,
+        accumulator,
+        O[k],
+        k,
+        O
+      );
     }
   }
 
@@ -503,7 +512,14 @@ function ArrayReduceRight(callbackfn /*, initialValue*/) {
     /* Step b */
     if (k in O) {
       /* Step c. */
-      accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
+      accumulator = callContentFunction(
+        callbackfn,
+        undefined,
+        accumulator,
+        O[k],
+        k,
+        O
+      );
     }
   }
 
@@ -591,20 +607,27 @@ function ArrayCopyWithin(target, start, end = undefined) {
 
   // Step 4.
   var to =
-    relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0) : std_Math_min(relativeTarget, len);
+    relativeTarget < 0
+      ? std_Math_max(len + relativeTarget, 0)
+      : std_Math_min(relativeTarget, len);
 
   // Step 5.
   var relativeStart = ToInteger(start);
 
   // Step 6.
   var from =
-    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
+    relativeStart < 0
+      ? std_Math_max(len + relativeStart, 0)
+      : std_Math_min(relativeStart, len);
 
   // Step 7.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 8.
-  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
+  var final =
+    relativeEnd < 0
+      ? std_Math_max(len + relativeEnd, 0)
+      : std_Math_min(relativeEnd, len);
 
   // Step 9.
   var count = std_Math_min(final - from, len - to);
@@ -660,13 +683,18 @@ function ArrayFill(value, start = 0, end = undefined) {
 
   // Step 4.
   var k =
-    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
+    relativeStart < 0
+      ? std_Math_max(len + relativeStart, 0)
+      : std_Math_min(relativeStart, len);
 
   // Step 5.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 6.
-  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
+  var final =
+    relativeEnd < 0
+      ? std_Math_max(len + relativeEnd, 0)
+      : std_Math_min(relativeEnd, len);
 
   // Step 7.
   for (; k < final; k++) {
@@ -693,7 +721,11 @@ function ArrayIteratorNext() {
   // Step 1-3.
   var obj = this;
   if (!IsObject(obj) || (obj = GuardToArrayIterator(obj)) === null) {
-    return callFunction(CallArrayIteratorMethodIfWrapped, this, "ArrayIteratorNext");
+    return callFunction(
+      CallArrayIteratorMethodIfWrapped,
+      this,
+      "ArrayIteratorNext"
+    );
   }
 
   // Step 4.
@@ -821,7 +853,9 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
       */
 
       // Steps 5.e.vi-vii.
-      var mappedValue = mapping ? callContentFunction(mapfn, T, nextValue, k) : nextValue;
+      var mappedValue = mapping
+        ? callContentFunction(mapfn, T, nextValue, k)
+        : nextValue;
 
       // Steps 5.e.ii (reordered), 5.e.viii.
       DefineDataProperty(A, k++, mappedValue);
@@ -842,7 +876,9 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
   var len = ToLength(arrayLike.length);
 
   // Steps 12-14.
-  var A = IsConstructor(C) ? constructContentFunction(C, C, len) : std_Array(len);
+  var A = IsConstructor(C)
+    ? constructContentFunction(C, C, len)
+    : std_Array(len);
 
   // Steps 15-16.
   for (var k = 0; k < len; k++) {
@@ -850,7 +886,9 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
     var kValue = items[k];
 
     // Steps 16.d-e.
-    var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
+    var mappedValue = mapping
+      ? callContentFunction(mapfn, T, kValue, k)
+      : kValue;
 
     // Steps 16.f-g.
     DefineDataProperty(A, k, mappedValue);
@@ -919,9 +957,18 @@ function ArrayToLocaleString(locales, options) {
     R = "";
   } else {
 #if JS_HAS_INTL_API
-    R = ToString(callContentFunction(firstElement.toLocaleString, firstElement, locales, options));
+    R = ToString(
+      callContentFunction(
+        firstElement.toLocaleString,
+        firstElement,
+        locales,
+        options
+      )
+    );
 #else
-    R = ToString(callContentFunction(firstElement.toLocaleString, firstElement));
+    R = ToString(
+      callContentFunction(firstElement.toLocaleString, firstElement)
+    );
 #endif
   }
 
@@ -938,9 +985,18 @@ function ArrayToLocaleString(locales, options) {
     R += separator;
     if (!(nextElement === undefined || nextElement === null)) {
 #if JS_HAS_INTL_API
-      R += ToString(callContentFunction(nextElement.toLocaleString, nextElement, locales, options));
+      R += ToString(
+        callContentFunction(
+          nextElement.toLocaleString,
+          nextElement,
+          locales,
+          options
+        )
+      );
 #else
-      R += ToString(callContentFunction(nextElement.toLocaleString, nextElement));
+      R += ToString(
+        callContentFunction(nextElement.toLocaleString, nextElement)
+      );
 #endif
     }
   }
@@ -1184,7 +1240,15 @@ function ArrayFlat(/* depth */) {
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.1.3.10.1 FlattenIntoArray ( target, source, sourceLen, start, depth [ , mapperFunction, thisArg ] )
-function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
+function FlattenIntoArray(
+  target,
+  source,
+  sourceLen,
+  start,
+  depth,
+  mapperFunction,
+  thisArg
+) {
   // Step 1.
   var targetIndex = start;
 
@@ -1200,7 +1264,13 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
         assert(arguments.length === 7, "thisArg is present");
 
         // Step 3.c.ii.2.
-        element = callContentFunction(mapperFunction, thisArg, element, sourceIndex, source);
+        element = callContentFunction(
+          mapperFunction,
+          thisArg,
+          element,
+          sourceIndex,
+          source
+        );
       }
 
       // Step 3.c.iii.
@@ -1218,7 +1288,13 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
         var elementLen = ToLength(element.length);
 
         // Step 3.c.v.2.
-        targetIndex = FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1);
+        targetIndex = FlattenIntoArray(
+          target,
+          element,
+          elementLen,
+          targetIndex,
+          depth - 1
+        );
       } else {
         // Step 3.c.vi.1.
         if (targetIndex >= MAX_NUMERIC_INDEX) {
