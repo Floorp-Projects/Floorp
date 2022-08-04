@@ -158,7 +158,7 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   void SetupSecondaryTLS(
       nsAHttpTransaction* aHttp2ConnectTransaction = nullptr);
-  void SetInSpdyTunnel(bool arg);
+  void SetInSpdyTunnel();
 
   // Check active connections for traffic (or not). SPDY connections send a
   // ping, ordinary HTTP connections get some time to get traffic to be
@@ -197,6 +197,11 @@ class nsHttpConnection final : public HttpConnectionBase,
   [[nodiscard]] static nsresult ReadFromStream(nsIInputStream*, void*,
                                                const char*, uint32_t, uint32_t,
                                                uint32_t*);
+
+  nsresult CreateTunnelStream(nsAHttpTransaction* httpTransaction,
+                              nsHttpConnection** aHttpConnection);
+
+  bool RequestDone() { return mRequestDone; }
 
  private:
   enum HttpConnectionState {
@@ -366,6 +371,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   int64_t mTotalBytesWritten = 0;  // does not include CONNECT tunnel
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
+
+  bool mRequestDone{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)

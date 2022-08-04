@@ -952,11 +952,8 @@ bool nsHttpConnectionMgr::DispatchPendingQ(
     bool alreadyDnsAndConnectSocketOrWaitingForTLS =
         pendingTransInfo->IsAlreadyClaimedInitializingConn();
 
-    rv = TryDispatchTransaction(
-        ent,
-        alreadyDnsAndConnectSocketOrWaitingForTLS ||
-            !!pendingTransInfo->Transaction()->TunnelProvider(),
-        pendingTransInfo);
+    rv = TryDispatchTransaction(ent, alreadyDnsAndConnectSocketOrWaitingForTLS,
+                                pendingTransInfo);
     if (NS_SUCCEEDED(rv) || (rv != NS_ERROR_NOT_AVAILABLE)) {
       if (NS_SUCCEEDED(rv)) {
         LOG(("  dispatching pending transaction...\n"));
@@ -1300,11 +1297,11 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
 
   LOG(
       ("nsHttpConnectionMgr::TryDispatchTransaction without conn "
-       "[trans=%p ci=%p ci=%s caps=%x tunnelprovider=%p "
-       "onlyreused=%d active=%zu idle=%zu]\n",
+       "[trans=%p ci=%p ci=%s caps=%x onlyreused=%d active=%zu "
+       "idle=%zu]\n",
        trans, ent->mConnInfo.get(), ent->mConnInfo->HashKey().get(),
-       uint32_t(trans->Caps()), trans->TunnelProvider(), onlyReusedConnection,
-       ent->ActiveConnsLength(), ent->IdleConnectionsLength()));
+       uint32_t(trans->Caps()), onlyReusedConnection, ent->ActiveConnsLength(),
+       ent->IdleConnectionsLength()));
 
   uint32_t caps = trans->Caps();
 
@@ -1463,11 +1460,6 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
         return NS_OK;
       }
     }
-  } else if (trans->TunnelProvider() &&
-             trans->TunnelProvider()->MaybeReTunnel(trans)) {
-    LOG(("   sort of dispatched step 4a tunnel requeue trans=%p\n", trans));
-    // the tunnel provider took responsibility for making a new tunnel
-    return NS_OK;
   }
 
   // step 5
@@ -1671,7 +1663,7 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
       RefPtr<Http2Session> session = pushedStream->Session();
       LOG(("  ProcessNewTransaction %p tied to h2 session push %p\n", trans,
            session.get()));
-      return session->AddStream(trans, trans->Priority(), false, false, nullptr)
+      return session->AddStream(trans, trans->Priority(), false, nullptr)
                  ? NS_OK
                  : NS_ERROR_UNEXPECTED;
     }
@@ -1682,9 +1674,10 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
   MOZ_ASSERT(ci);
   MOZ_ASSERT(!ci->IsHttp3() || !(trans->Caps() & NS_HTTP_DISALLOW_HTTP3));
 
+  bool isWildcard = false;
   ConnectionEntry* ent = GetOrCreateConnectionEntry(
-      ci, !!trans->TunnelProvider(), trans->Caps() & NS_HTTP_DISALLOW_SPDY,
-      trans->Caps() & NS_HTTP_DISALLOW_HTTP3);
+      ci, false, trans->Caps() & NS_HTTP_DISALLOW_SPDY,
+      trans->Caps() & NS_HTTP_DISALLOW_HTTP3, &isWildcard);
   MOZ_ASSERT(ent);
 
   if (gHttpHandler->EchConfigEnabled(ci->IsHttp3())) {
@@ -1725,13 +1718,29 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
 
     trans->SetConnection(nullptr);
     rv = DispatchTransaction(ent, trans, conn);
+  } else if (isWildcard) {
+    // We have a HTTP/2 session to the proxy, create a new tunneled
+    // connection.
+    RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(ent, false, true);
+    RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
+    RefPtr<nsHttpConnection> newTunnel;
+    connTCP->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
+    ConnectionEntry* specificEnt = mCT.GetWeak(ci->HashKey());
+    if (!specificEnt) {
+      RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
+      specificEnt = new ConnectionEntry(clone);
+      mCT.InsertOrUpdate(clone->HashKey(), RefPtr{specificEnt});
+    }
+    specificEnt->InsertIntoActiveConns(newTunnel);
+    trans->SetConnection(nullptr);
+    newTunnel->SetInSpdyTunnel();
+    rv = DispatchTransaction(specificEnt, trans, newTunnel);
   } else {
     if (!ent->AllowHttp2()) {
       trans->DisableSpdy();
     }
     pendingTransInfo = new PendingTransactionInfo(trans);
-    rv = TryDispatchTransaction(ent, !!trans->TunnelProvider(),
-                                pendingTransInfo);
+    rv = TryDispatchTransaction(ent, false, pendingTransInfo);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -2334,8 +2343,9 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
     // this can happen if the connection is made outside of the
     // connection manager and is being "reclaimed" for use with
     // future transactions. HTTP/2 tunnels work like this.
-    ent =
-        GetOrCreateConnectionEntry(conn->ConnectionInfo(), true, false, false);
+    bool isWildcard = false;
+    ent = GetOrCreateConnectionEntry(conn->ConnectionInfo(), true, false, false,
+                                     &isWildcard);
     LOG(
         ("nsHttpConnectionMgr::OnMsgReclaimConnection conn %p "
          "forced new hash entry %s\n",
@@ -3268,10 +3278,12 @@ void nsHttpConnectionMgr::TimeoutTick() {
 
 ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
     nsHttpConnectionInfo* specificCI, bool prohibitWildCard, bool aNoHttp2,
-    bool aNoHttp3, bool* aAvailableForDispatchNow) {
+    bool aNoHttp3, bool* aIsWildcard, bool* aAvailableForDispatchNow) {
   if (aAvailableForDispatchNow) {
     *aAvailableForDispatchNow = false;
   }
+  *aIsWildcard = false;
+
   // step 1
   ConnectionEntry* specificEnt = mCT.GetWeak(specificCI->HashKey());
   if (specificEnt && specificEnt->AvailableForDispatchNow()) {
@@ -3316,6 +3328,7 @@ ConnectionEntry* nsHttpConnectionMgr::GetOrCreateConnectionEntry(
       if (aAvailableForDispatchNow) {
         *aAvailableForDispatchNow = true;
       }
+      *aIsWildcard = true;
       return wildCardEnt;
     }
   }
@@ -3334,9 +3347,10 @@ void nsHttpConnectionMgr::DoSpeculativeConnection(
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(aTrans);
 
+  bool isWildcard = false;
   ConnectionEntry* ent = GetOrCreateConnectionEntry(
       aTrans->ConnectionInfo(), false, aTrans->Caps() & NS_HTTP_DISALLOW_SPDY,
-      aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3);
+      aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3, &isWildcard);
   if (!aFetchHTTPSRR &&
       gHttpHandler->EchConfigEnabled(aTrans->ConnectionInfo()->IsHttp3())) {
     // This happens when this is called from
@@ -3400,9 +3414,11 @@ void nsHttpConnectionMgr::DoFallbackConnection(SpeculativeTransaction* aTrans,
   LOG(("nsHttpConnectionMgr::DoFallbackConnection"));
 
   bool availableForDispatchNow = false;
+  bool aIsWildcard = false;
   ConnectionEntry* ent = GetOrCreateConnectionEntry(
       aTrans->ConnectionInfo(), false, aTrans->Caps() & NS_HTTP_DISALLOW_SPDY,
-      aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3, &availableForDispatchNow);
+      aTrans->Caps() & NS_HTTP_DISALLOW_HTTP3, &aIsWildcard,
+      &availableForDispatchNow);
 
   if (availableForDispatchNow) {
     LOG(
@@ -3533,8 +3549,9 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
     return;
   }
 
+  bool isWildcard = false;
   ConnectionEntry* wcEnt =
-      GetOrCreateConnectionEntry(wildCardCI, true, false, false);
+      GetOrCreateConnectionEntry(wildCardCI, true, false, false, &isWildcard);
   if (wcEnt == ent) {
     // nothing to do!
     return;
