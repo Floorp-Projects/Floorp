@@ -28,7 +28,7 @@ Test the login-filter component
 
 let gLoginFilter;
 let gLoginList;
-add_task(async function setup() {
+add_setup(async () => {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);

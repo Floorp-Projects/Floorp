@@ -31,7 +31,7 @@ let options = {
   confirmButtonLabel: "confirm-delete-dialog-confirm-button"
 };
 let cancelButton, confirmButton, gConfirmationDialog;
-add_task(async function setup() {
+add_setup(async () => {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   await importDependencies(templateFrame, displayEl);
