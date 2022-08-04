@@ -8,8 +8,12 @@ function ViewedArrayBufferIfReified(tarray) {
   assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
 
   var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
-  assert(buf === null || (IsObject(buf) && (GuardToArrayBuffer(buf) !== null || GuardToSharedArrayBuffer(buf) !== null)),
-         "unexpected value in buffer slot");
+  assert(
+    buf === null ||
+      (IsObject(buf) &&
+        (GuardToArrayBuffer(buf) !== null || GuardToSharedArrayBuffer(buf) !== null)),
+    "unexpected value in buffer slot"
+  );
   return buf;
 }
 
@@ -20,8 +24,10 @@ function IsDetachedBuffer(buffer) {
     return false;
   }
 
-  assert(GuardToArrayBuffer(buffer) !== null || GuardToSharedArrayBuffer(buffer) !== null,
-         "non-ArrayBuffer passed to IsDetachedBuffer");
+  assert(
+    GuardToArrayBuffer(buffer) !== null || GuardToSharedArrayBuffer(buffer) !== null,
+    "non-ArrayBuffer passed to IsDetachedBuffer"
+  );
 
   // Shared array buffers are not detachable.
   //
@@ -137,8 +143,7 @@ function ValidateTypedArray(obj) {
 // 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
 function TypedArrayCreateWithLength(constructor, length) {
   // Step 1.
-  var newTypedArray = constructContentFunction(constructor, constructor,
-                                               length);
+  var newTypedArray = constructContentFunction(constructor, constructor, length);
 
   // Step 2.
   var isTypedArray = ValidateTypedArray(newTypedArray);
@@ -148,8 +153,7 @@ function TypedArrayCreateWithLength(constructor, length) {
   if (isTypedArray) {
     len = TypedArrayLength(newTypedArray);
   } else {
-    len = callFunction(CallTypedArrayMethodIfWrapped, newTypedArray,
-                       "TypedArrayLengthMethod");
+    len = callFunction(CallTypedArrayMethodIfWrapped, newTypedArray, "TypedArrayLengthMethod");
   }
 
   if (len < length) {
@@ -164,8 +168,13 @@ function TypedArrayCreateWithLength(constructor, length) {
 // 22.2.4.6 TypedArrayCreate ( constructor, argumentList )
 function TypedArrayCreateWithBuffer(constructor, buffer, byteOffset, length) {
   // Step 1.
-  var newTypedArray = constructContentFunction(constructor, constructor,
-                                               buffer, byteOffset, length);
+  var newTypedArray = constructContentFunction(
+    constructor,
+    constructor,
+    buffer,
+    byteOffset,
+    length
+  );
 
   // Step 2.
   ValidateTypedArray(newTypedArray);
@@ -279,8 +288,7 @@ SetIsInlinableLargeFunction(TypedArrayEvery);
 function TypedArrayFill(value, start = 0, end = undefined) {
   // This function is not generic.
   if (!IsObject(this) || !IsTypedArray(this)) {
-    return callFunction(CallTypedArrayMethodIfWrapped, this, value, start, end,
-                        "TypedArrayFill");
+    return callFunction(CallTypedArrayMethodIfWrapped, this, value, start, end, "TypedArrayFill");
   }
 
   // Step 1.
@@ -304,17 +312,14 @@ function TypedArrayFill(value, start = 0, end = undefined) {
   var relativeStart = ToInteger(start);
 
   // Step 6.
-  var k = relativeStart < 0
-          ? std_Math_max(len + relativeStart, 0)
-          : std_Math_min(relativeStart, len);
+  var k =
+    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
 
   // Step 7.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 8.
-  var final = relativeEnd < 0
-              ? std_Math_max(len + relativeEnd, 0)
-              : std_Math_min(relativeEnd, len);
+  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
 
   // Step 9.
   if (buffer === null) {
@@ -537,8 +542,13 @@ SetIsInlinableLargeFunction(TypedArrayForEach);
 function TypedArrayIndexOf(searchElement, fromIndex = 0) {
   // Step 2.
   if (!IsObject(this) || !IsTypedArray(this)) {
-    return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement, fromIndex,
-                        "TypedArrayIndexOf");
+    return callFunction(
+      CallTypedArrayMethodIfWrapped,
+      this,
+      searchElement,
+      fromIndex,
+      "TypedArrayIndexOf"
+    );
   }
 
   GetAttachedArrayBuffer(this);
@@ -564,8 +574,10 @@ function TypedArrayIndexOf(searchElement, fromIndex = 0) {
   // This let's us avoid executing the HasProperty operation in step 11.a.
   len = TypedArrayLength(O);
 
-  assert(len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
-         "TypedArrays with detached buffers have a length of zero");
+  assert(
+    len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+    "TypedArrays with detached buffers have a length of zero"
+  );
 
   // Step 7.
   if (n >= len) {
@@ -631,14 +643,18 @@ function TypedArrayJoin(separator) {
   // ToString() might have detached the underlying ArrayBuffer. To avoid
   // checking for this condition when looping in step 8.c, do it once here.
   if (TypedArrayLength(O) === 0) {
-    assert(IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
-           "TypedArrays with detached buffers have a length of zero");
+    assert(
+      IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+      "TypedArrays with detached buffers have a length of zero"
+    );
 
     return callFunction(String_repeat, ",", len - 1);
   }
 
-  assert(!IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
-         "TypedArrays with detached buffers have a length of zero");
+  assert(
+    !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+    "TypedArrays with detached buffers have a length of zero"
+  );
 
   var element0 = O[0];
 
@@ -685,11 +701,20 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
   // Step 2.
   if (!IsObject(this) || !IsTypedArray(this)) {
     if (arguments.length > 1) {
-      return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement, arguments[1],
-                          "TypedArrayLastIndexOf");
+      return callFunction(
+        CallTypedArrayMethodIfWrapped,
+        this,
+        searchElement,
+        arguments[1],
+        "TypedArrayLastIndexOf"
+      );
     }
-    return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement,
-                        "TypedArrayLastIndexOf");
+    return callFunction(
+      CallTypedArrayMethodIfWrapped,
+      this,
+      searchElement,
+      "TypedArrayLastIndexOf"
+    );
   }
 
   GetAttachedArrayBuffer(this);
@@ -712,8 +737,10 @@ function TypedArrayLastIndexOf(searchElement/*, fromIndex*/) {
   // This let's us avoid executing the HasProperty operation in step 9.a.
   len = TypedArrayLength(O);
 
-  assert(len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
-         "TypedArrays with detached buffers have a length of zero");
+  assert(
+    len === 0 || !IsDetachedBuffer(ViewedArrayBufferIfReified(O)),
+    "TypedArrays with detached buffers have a length of zero"
+  );
 
   // Steps 6-8.
   var k = n >= 0 ? std_Math_min(n, len - 1) : len + n;
@@ -939,17 +966,14 @@ function TypedArraySlice(start, end) {
   var relativeStart = ToInteger(start);
 
   // Step 5.
-  var k = relativeStart < 0
-          ? std_Math_max(len + relativeStart, 0)
-          : std_Math_min(relativeStart, len);
+  var k =
+    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
 
   // Step 6.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 7.
-  var final = relativeEnd < 0
-              ? std_Math_max(len + relativeEnd, 0)
-              : std_Math_min(relativeEnd, len);
+  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
 
   // Step 8.
   var count = std_Math_max(final - k, 0);
@@ -1127,7 +1151,9 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
   // Omit the 'if' clause in step 6, since typed arrays can't have undefined
   // or null elements.
 #if JS_HAS_INTL_API
-  var R = ToString(callContentFunction(firstElement.toLocaleString, firstElement, locales, options));
+  var R = ToString(
+    callContentFunction(firstElement.toLocaleString, firstElement, locales, options)
+  );
 #else
   var R = ToString(callContentFunction(firstElement.toLocaleString, firstElement));
 #endif
@@ -1175,8 +1201,7 @@ function TypedArraySubarray(begin, end) {
   // Steps 2-3.
   // This function is not generic.
   if (!IsObject(obj) || !IsTypedArray(obj)) {
-    return callFunction(CallTypedArrayMethodIfWrapped, this, begin, end,
-                        "TypedArraySubarray");
+    return callFunction(CallTypedArrayMethodIfWrapped, this, begin, end, "TypedArraySubarray");
   }
 
   // Step 4.
@@ -1196,15 +1221,19 @@ function TypedArraySubarray(begin, end) {
   var relativeBegin = ToInteger(begin);
 
   // Step 7.
-  var beginIndex = relativeBegin < 0 ? std_Math_max(srcLength + relativeBegin, 0)
-                                     : std_Math_min(relativeBegin, srcLength);
+  var beginIndex =
+    relativeBegin < 0
+      ? std_Math_max(srcLength + relativeBegin, 0)
+      : std_Math_min(relativeBegin, srcLength);
 
   // Step 8.
   var relativeEnd = end === undefined ? srcLength : ToInteger(end);
 
   // Step 9.
-  var endIndex = relativeEnd < 0 ? std_Math_max(srcLength + relativeEnd, 0)
-                                 : std_Math_min(relativeEnd, srcLength);
+  var endIndex =
+    relativeEnd < 0
+      ? std_Math_max(srcLength + relativeEnd, 0)
+      : std_Math_min(relativeEnd, srcLength);
 
   // Step 10.
   var newLength = std_Math_max(endIndex - beginIndex, 0);
@@ -1228,8 +1257,7 @@ function TypedArrayAt(index) {
   // Step 2.
   // This function is not generic.
   if (!IsObject(obj) || !IsTypedArray(obj)) {
-    return callFunction(CallTypedArrayMethodIfWrapped, obj, index,
-                        "TypedArrayAt");
+    return callFunction(CallTypedArrayMethodIfWrapped, obj, index, "TypedArrayAt");
   }
   GetAttachedArrayBuffer(obj);
 
@@ -1367,8 +1395,13 @@ SetCanonicalName($TypedArrayValues, "values");
 function TypedArrayIncludes(searchElement, fromIndex = 0) {
   // Step 2.
   if (!IsObject(this) || !IsTypedArray(this)) {
-    return callFunction(CallTypedArrayMethodIfWrapped, this, searchElement,
-                        fromIndex, "TypedArrayIncludes");
+    return callFunction(
+      CallTypedArrayMethodIfWrapped,
+      this,
+      searchElement,
+      fromIndex,
+      "TypedArrayIncludes"
+    );
   }
 
   GetAttachedArrayBuffer(this);
@@ -1466,9 +1499,11 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
     // constructor is a built-in TypedArray constructor.
     if (!mapping && IsTypedArrayConstructor(C) && IsObject(source)) {
       // The source is a TypedArray using the default iterator.
-      if (usingIterator === $TypedArrayValues && IsTypedArray(source) &&
-          ArrayIteratorPrototypeOptimizable())
-      {
+      if (
+        usingIterator === $TypedArrayValues &&
+        IsTypedArray(source) &&
+        ArrayIteratorPrototypeOptimizable()
+      ) {
         // Step 7.a.
         // Omitted but we still need to throw if |source| was detached.
         GetAttachedArrayBuffer(source);
@@ -1489,9 +1524,11 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
       }
 
       // The source is a packed array using the default iterator.
-      if (usingIterator === $ArrayValues && IsPackedArray(source) &&
-          ArrayIteratorPrototypeOptimizable())
-      {
+      if (
+        usingIterator === $ArrayValues &&
+        IsPackedArray(source) &&
+        ArrayIteratorPrototypeOptimizable()
+      ) {
         // Steps 7.b-c.
         var targetObj = constructContentFunction(C, C, source.length);
 
@@ -1648,8 +1685,7 @@ function ArrayBufferSlice(start, end) {
   // Steps 2-3,
   // This function is not generic.
   if (!IsObject(O) || (O = GuardToArrayBuffer(O)) === null) {
-    return callFunction(CallArrayBufferMethodIfWrapped, this, start, end,
-                        "ArrayBufferSlice");
+    return callFunction(CallArrayBufferMethodIfWrapped, this, start, end, "ArrayBufferSlice");
   }
 
   // Step 4.
@@ -1664,15 +1700,14 @@ function ArrayBufferSlice(start, end) {
   var relativeStart = ToInteger(start);
 
   // Step 7.
-  var first = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
-                                : std_Math_min(relativeStart, len);
+  var first =
+    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
 
   // Step 8.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 9.
-  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
-                              : std_Math_min(relativeEnd, len);
+  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
 
   // Step 10.
   var newLen = std_Math_max(final - first, 0);
@@ -1757,8 +1792,13 @@ function SharedArrayBufferSlice(start, end) {
   // Steps 2-3.
   // This function is not generic.
   if (!IsObject(O) || (O = GuardToSharedArrayBuffer(O)) === null) {
-    return callFunction(CallSharedArrayBufferMethodIfWrapped, this, start, end,
-                        "SharedArrayBufferSlice");
+    return callFunction(
+      CallSharedArrayBufferMethodIfWrapped,
+      this,
+      start,
+      end,
+      "SharedArrayBufferSlice"
+    );
   }
 
   // Step 4.
@@ -1768,15 +1808,14 @@ function SharedArrayBufferSlice(start, end) {
   var relativeStart = ToInteger(start);
 
   // Step 6.
-  var first = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
-                                : std_Math_min(relativeStart, len);
+  var first =
+    relativeStart < 0 ? std_Math_max(len + relativeStart, 0) : std_Math_min(relativeStart, len);
 
   // Step 7.
   var relativeEnd = end === undefined ? len : ToInteger(end);
 
   // Step 8.
-  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
-                              : std_Math_min(relativeEnd, len);
+  var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0) : std_Math_min(relativeEnd, len);
 
   // Step 9.
   var newLen = std_Math_max(final - first, 0);
@@ -1822,11 +1861,13 @@ function SharedArrayBufferSlice(start, end) {
 function TypedArrayCreateSameType(exemplar, length) {
   // Step 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
   let contentType = GetTypedArrayKind(exemplar);
-  assert(contentType !== undefined, "in TypedArrayCreateSameType, exemplar does not have a [[ContentType]] internal slot");
+  assert(
+    contentType !== undefined,
+    "in TypedArrayCreateSameType, exemplar does not have a [[ContentType]] internal slot"
+  );
 
   // Step 2. Let constructor be the intrinsic object listed in column one of Table 63 for exemplar.[[TypedArrayName]].
   let constructor = GetTypedArrayConstructorFromKind(contentType);
-
 
   // Step 4 omitted. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots. - guaranteed by the TypedArray implementation
   // Step 5 omitted. Assert: result.[[ContentType]] is exemplar.[[ContentType]]. - guaranteed by the typed array implementation
@@ -1873,11 +1914,13 @@ function TypedArrayToReversed() {
 // ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
 // 10.4.5.9 IsValidIntegerIndex ( O, index )
 function isValidIntegerIndex(a, index) {
-  return (!IsDetachedBuffer(ViewedArrayBufferIfReified(a))
-          && Number_isInteger(index)
-          && !SameValue(index, -0)
-          && index >= 0
-          && index < TypedArrayLength(a));
+  return (
+    !IsDetachedBuffer(ViewedArrayBufferIfReified(a)) &&
+    Number_isInteger(index) &&
+    !SameValue(index, -0) &&
+    index >= 0 &&
+    index < TypedArrayLength(a)
+  );
 }
 
 // https://github.com/tc39/proposal-change-array-by-copy
@@ -1975,7 +2018,14 @@ function TypedArrayToSorted(comparefn) {
 function TypedArrayToSpliced(start, deleteCount, ...items) {
   // Step 2. Perform ? ValidateTypedArray(this)
   if (!IsObject(this) || !IsTypedArray(this)) {
-    return callFunction(CallTypedArrayMethodIfWrapped, this, "TypedArrayToSpliced", start, deleteCount, items);
+    return callFunction(
+      CallTypedArrayMethodIfWrapped,
+      this,
+      "TypedArrayToSpliced",
+      start,
+      deleteCount,
+      items
+    );
   }
 
   // Step 1. Let O be ? ToObject(this value).
