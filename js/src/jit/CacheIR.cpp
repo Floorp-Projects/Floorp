@@ -10087,6 +10087,7 @@ AttachDecision CallIRGenerator::tryAttachStub() {
     case JSOp::CallContent:
     case JSOp::CallIgnoresRv:
     case JSOp::CallIter:
+    case JSOp::CallContentIter:
     case JSOp::SpreadCall:
     case JSOp::New:
     case JSOp::NewContent:
