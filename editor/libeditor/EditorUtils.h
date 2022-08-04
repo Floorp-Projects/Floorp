@@ -364,6 +364,25 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   }
 
   /**
+   * Check whether all ranges in content nodes or not.  If the ranges is empty,
+   * this returns false.
+   */
+  [[nodiscard]] bool IsInContent() const {
+    if (mRanges.IsEmpty()) {
+      return false;
+    }
+    for (const OwningNonNull<nsRange>& range : mRanges) {
+      if (MOZ_UNLIKELY(!range->IsPositioned() || !range->GetStartContainer() ||
+                       !range->GetStartContainer()->IsContent() ||
+                       !range->GetEndContainer() ||
+                       !range->GetEndContainer()->IsContent())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * EnsureOnlyEditableRanges() removes ranges which cannot modify.
    * Note that this is designed only for `HTMLEditor` because this must not
    * be required by `TextEditor`.
