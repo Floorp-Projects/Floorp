@@ -2105,16 +2105,19 @@ nsresult IOUtils::EventQueue::SetShutdownHooks() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsCOMPtr<nsIAsyncShutdownBlocker> profileBeforeChangeBlocker;
+
   // Create a shutdown blocker for the profile-before-change phase.
   {
-    nsCOMPtr<nsIAsyncShutdownBlocker> blocker =
+    profileBeforeChangeBlocker =
         new IOUtilsShutdownBlocker(ShutdownPhase::ProfileBeforeChange);
 
-    nsCOMPtr<nsIAsyncShutdownClient> profileBeforeChange;
-    MOZ_TRY(svc->GetProfileBeforeChange(getter_AddRefs(profileBeforeChange)));
-    MOZ_RELEASE_ASSERT(profileBeforeChange);
+    nsCOMPtr<nsIAsyncShutdownClient> globalClient;
+    MOZ_TRY(svc->GetProfileBeforeChange(getter_AddRefs(globalClient)));
+    MOZ_RELEASE_ASSERT(globalClient);
 
-    MOZ_TRY(profileBeforeChange->AddBlocker(blocker, FILE, __LINE__, STACK));
+    MOZ_TRY(globalClient->AddBlocker(profileBeforeChangeBlocker, FILE, __LINE__,
+                                     STACK));
   }
 
   // Create the shutdown barrier for profile-before-change so that consumers can
@@ -2135,19 +2138,43 @@ nsresult IOUtils::EventQueue::SetShutdownHooks() {
     mBarriers[ShutdownPhase::ProfileBeforeChange] = std::move(barrier);
   }
 
+  // Create a shutdown blocker for the xpcom-will-shutdown phase.
   {
-    // Create a shutdown blocker for the xpcom-will-shutdown phase.
-    //
-    // We do not need to create a barrier for this -- it is just a fallback to
-    // ensure that the profile-before-change blockers run when the shutdown
-    // phase doesn't exist (e.g., in xpcshell tests).
-    nsCOMPtr<nsIAsyncShutdownClient> xpcomWillShutdown;
-    MOZ_TRY(svc->GetXpcomWillShutdown(getter_AddRefs(xpcomWillShutdown)));
-    MOZ_RELEASE_ASSERT(xpcomWillShutdown);
+    nsCOMPtr<nsIAsyncShutdownClient> globalClient;
+    MOZ_TRY(svc->GetXpcomWillShutdown(getter_AddRefs(globalClient)));
+    MOZ_RELEASE_ASSERT(globalClient);
 
     nsCOMPtr<nsIAsyncShutdownBlocker> blocker =
         new IOUtilsShutdownBlocker(ShutdownPhase::XpcomWillShutdown);
-    MOZ_TRY(xpcomWillShutdown->AddBlocker(blocker, FILE, __LINE__, STACK));
+    MOZ_TRY(globalClient->AddBlocker(
+        blocker, FILE, __LINE__, u"IOUtils::EventQueue::SetShutdownHooks"_ns));
+  }
+
+  // Create a shutdown barrier for the xpcom-will-shutdown phase.
+  //
+  // The blocker we just created will wait for all clients registered on this
+  // barrier to finish.
+  //
+  // The only client registered on this barrier should be a blocker for the
+  // previous phase. This is to ensure that all shutdown IO happens when
+  // shutdown phases do not happen (e.g., in xpcshell tests where
+  // profile-before-change does not occur).
+  {
+    nsCOMPtr<nsIAsyncShutdownBarrier> barrier;
+
+    MOZ_TRY(svc->MakeBarrier(
+        u"IOUtils: waiting for xpcomWillShutdown IO to complete"_ns,
+        getter_AddRefs(barrier)));
+    MOZ_RELEASE_ASSERT(barrier);
+
+    // Add a blocker on the previous shutdown phase.
+    nsCOMPtr<nsIAsyncShutdownClient> client;
+    MOZ_TRY(barrier->GetClient(getter_AddRefs(client)));
+
+    client->AddBlocker(profileBeforeChangeBlocker, FILE, __LINE__,
+                       u"IOUtils::EventQueue::SetShutdownHooks"_ns);
+
+    mBarriers[ShutdownPhase::XpcomWillShutdown] = std::move(barrier);
   }
 
   return NS_OK;
@@ -2323,9 +2350,7 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::BlockShutdown(
 
     mParentClient = aBarrierClient;
 
-    barrier = state->mEventQueue
-                  ->GetShutdownBarrier(ShutdownPhase::ProfileBeforeChange)
-                  .unwrapOr(nullptr);
+    barrier = state->mEventQueue->GetShutdownBarrier(mPhase).unwrapOr(nullptr);
   }
 
   // We cannot barrier->Wait() while holding the mutex because it will lead to
@@ -2348,26 +2373,28 @@ NS_IMETHODIMP IOUtilsShutdownBlocker::Done() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   auto state = IOUtils::sState.Lock();
-  MOZ_RELEASE_ASSERT(state->mEventQueue);
 
-  // This method is called once we have served all shutdown clients. Now we
-  // flush the remaining IO queue and forbid additional IO requests.
-  state->mEventQueue->Dispatch<Ok>([]() { return Ok{}; })
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [self = RefPtr(this)]() {
-               if (self->mParentClient) {
-                 Unused << NS_WARN_IF(
-                     NS_FAILED(self->mParentClient->RemoveBlocker(self)));
-                 self->mParentClient = nullptr;
+  if (state->mEventQueue) {
+    MOZ_RELEASE_ASSERT(state->mQueueStatus == EventQueueStatus::Initialized);
 
-                 auto state = IOUtils::sState.Lock();
-                 MOZ_RELEASE_ASSERT(state->mEventQueue);
-                 state->mEventQueue = nullptr;
-               }
-             });
+    // This method is called once we have served all shutdown clients. Now we
+    // flush the remaining IO queue and forbid additional IO requests.
+    state->mEventQueue->Dispatch<Ok>([]() { return Ok{}; })
+        ->Then(GetMainThreadSerialEventTarget(), __func__,
+               [self = RefPtr(this)]() {
+                 if (self->mParentClient) {
+                   Unused << NS_WARN_IF(
+                       NS_FAILED(self->mParentClient->RemoveBlocker(self)));
+                   self->mParentClient = nullptr;
 
-  MOZ_RELEASE_ASSERT(state->mQueueStatus == EventQueueStatus::Initialized);
-  state->mQueueStatus = EventQueueStatus::Shutdown;
+                   auto state = IOUtils::sState.Lock();
+                   MOZ_RELEASE_ASSERT(state->mEventQueue);
+                   state->mEventQueue = nullptr;
+                 }
+               });
+
+    state->mQueueStatus = EventQueueStatus::Shutdown;
+  }
 
   return NS_OK;
 }
