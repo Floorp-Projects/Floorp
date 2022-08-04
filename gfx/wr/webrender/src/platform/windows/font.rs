@@ -142,6 +142,10 @@ fn is_bitmap_font(font: &FontInstance) -> bool {
 }
 
 impl FontContext {
+    pub fn distribute_across_threads() -> bool {
+        true
+    }
+
     pub fn new() -> Result<FontContext, ResourceCacheError> {
         Ok(FontContext {
             fonts: FastHashMap::default(),
@@ -545,6 +549,12 @@ impl FontContext {
             None
         };
         (scaled_size as f32, x_scale, y_scale, bitmaps, transform)
+    }
+
+    pub fn begin_rasterize(_font: &FontInstance) {
+    }
+
+    pub fn end_rasterize(_font: &FontInstance) {
     }
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
