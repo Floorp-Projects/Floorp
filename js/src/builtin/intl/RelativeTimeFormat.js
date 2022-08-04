@@ -32,11 +32,13 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
   var RelativeTimeFormat = relativeTimeFormatInternalProperties;
 
   // Steps 10-11.
-  const r = ResolveLocale("RelativeTimeFormat",
-                          lazyRelativeTimeFormatData.requestedLocales,
-                          lazyRelativeTimeFormatData.opt,
-                          RelativeTimeFormat.relevantExtensionKeys,
-                          RelativeTimeFormat.localeData);
+  const r = ResolveLocale(
+    "RelativeTimeFormat",
+    lazyRelativeTimeFormatData.requestedLocales,
+    lazyRelativeTimeFormatData.opt,
+    RelativeTimeFormat.relevantExtensionKeys,
+    RelativeTimeFormat.localeData
+  );
 
   // Steps 12-13.
   internalProps.locale = r.locale;
@@ -62,8 +64,10 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
  */
 function getRelativeTimeFormatInternals(obj) {
   assert(IsObject(obj), "getRelativeTimeFormatInternals called with non-object");
-  assert(intl_GuardToRelativeTimeFormat(obj) !== null,
-         "getRelativeTimeFormatInternals called with non-RelativeTimeFormat");
+  assert(
+    intl_GuardToRelativeTimeFormat(obj) !== null,
+    "getRelativeTimeFormatInternals called with non-RelativeTimeFormat"
+  );
 
   var internals = getIntlObjectInternals(obj);
   assert(internals.type === "RelativeTimeFormat", "bad type escaped getIntlObjectInternals");
@@ -90,10 +94,11 @@ function getRelativeTimeFormatInternals(obj) {
  * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.1.1.
  */
 function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
-  assert(IsObject(relativeTimeFormat),
-         "InitializeRelativeimeFormat called with non-object");
-  assert(intl_GuardToRelativeTimeFormat(relativeTimeFormat) !== null,
-         "InitializeRelativeTimeFormat called with non-RelativeTimeFormat");
+  assert(IsObject(relativeTimeFormat), "InitializeRelativeimeFormat called with non-object");
+  assert(
+    intl_GuardToRelativeTimeFormat(relativeTimeFormat) !== null,
+    "InitializeRelativeTimeFormat called with non-RelativeTimeFormat"
+  );
 
   // Lazy RelativeTimeFormat data has the following structure:
   //
@@ -134,9 +139,11 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
   // Steps 7-9.
   let numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
   if (numberingSystem !== undefined) {
-    numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(numberingSystem,
-                                                                       "numberingSystem",
-                                                                       "nu");
+    numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(
+      numberingSystem,
+      "numberingSystem",
+      "nu"
+    );
   }
   opt.nu = numberingSystem;
 
@@ -185,11 +192,17 @@ function Intl_RelativeTimeFormat_format(value, unit) {
   let relativeTimeFormat = this;
 
   // Step 2.
-  if (!IsObject(relativeTimeFormat) ||
-      (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
-  {
-    return callFunction(intl_CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
-                        "Intl_RelativeTimeFormat_format");
+  if (
+    !IsObject(relativeTimeFormat) ||
+    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null
+  ) {
+    return callFunction(
+      intl_CallRelativeTimeFormatMethodIfWrapped,
+      this,
+      value,
+      unit,
+      "Intl_RelativeTimeFormat_format"
+    );
   }
 
   // Step 3.
@@ -214,11 +227,17 @@ function Intl_RelativeTimeFormat_formatToParts(value, unit) {
   let relativeTimeFormat = this;
 
   // Step 2.
-  if (!IsObject(relativeTimeFormat) ||
-      (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
-  {
-    return callFunction(intl_CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
-                        "Intl_RelativeTimeFormat_formatToParts");
+  if (
+    !IsObject(relativeTimeFormat) ||
+    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null
+  ) {
+    return callFunction(
+      intl_CallRelativeTimeFormatMethodIfWrapped,
+      this,
+      value,
+      unit,
+      "Intl_RelativeTimeFormat_formatToParts"
+    );
   }
 
   // Step 3.
@@ -241,11 +260,15 @@ function Intl_RelativeTimeFormat_resolvedOptions() {
   var relativeTimeFormat = this;
 
   // Steps 2-3.
-  if (!IsObject(relativeTimeFormat) ||
-      (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
-  {
-    return callFunction(intl_CallRelativeTimeFormatMethodIfWrapped, this,
-                        "Intl_RelativeTimeFormat_resolvedOptions");
+  if (
+    !IsObject(relativeTimeFormat) ||
+    (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null
+  ) {
+    return callFunction(
+      intl_CallRelativeTimeFormatMethodIfWrapped,
+      this,
+      "Intl_RelativeTimeFormat_resolvedOptions"
+    );
   }
 
   var internals = getRelativeTimeFormatInternals(relativeTimeFormat);

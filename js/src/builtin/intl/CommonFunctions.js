@@ -56,8 +56,10 @@ function endOfUnicodeExtensions(locale, start) {
   assert(Substring(locale, start, 3) === "-u-", "start points to Unicode extension sequence");
 
   #define HYPHEN 0x2D
-  assert(std_String_fromCharCode(HYPHEN) === "-",
-         "code unit constant should match the expected character");
+  assert(
+    std_String_fromCharCode(HYPHEN) === "-",
+    "code unit constant should match the expected character"
+  );
 
   // Search for the start of the next singleton or privateuse subtag.
   //
@@ -104,8 +106,10 @@ function removeUnicodeExtensions(locale) {
   var combined = left + right;
 
   assertIsValidAndCanonicalLanguageTag(combined, "the recombined locale");
-  assert(startOfUnicodeExtensions(combined) < 0,
-         "recombination failed to remove all Unicode locale extension sequences");
+  assert(
+    startOfUnicodeExtensions(combined) < 0,
+    "recombination failed to remove all Unicode locale extension sequences"
+  );
 
   return combined;
 }
@@ -158,8 +162,10 @@ function DefaultLocale() {
   var locale = intl_supportedLocaleOrFallback(runtimeDefaultLocale);
 
   assertIsValidAndCanonicalLanguageTag(locale, "the computed default locale");
-  assert(startOfUnicodeExtensions(locale) < 0,
-         "the computed default locale must not contain a Unicode extension sequence");
+  assert(
+    startOfUnicodeExtensions(locale) < 0,
+    "the computed default locale must not contain a Unicode extension sequence"
+  );
 
   // Cache the computed locale until the runtime default locale changes.
   localeCache.defaultLocale = locale;
@@ -182,8 +188,10 @@ function CanonicalizeLocaleList(locales) {
   // Step 3 (and the remaining steps).
   var tag = intl_ValidateAndCanonicalizeLanguageTag(locales, false);
   if (tag !== null) {
-    assert(typeof tag === "string",
-           "intl_ValidateAndCanonicalizeLanguageTag returns a string value");
+    assert(
+      typeof tag === "string",
+      "intl_ValidateAndCanonicalizeLanguageTag returns a string value"
+    );
     return [tag];
   }
 
@@ -213,8 +221,7 @@ function CanonicalizeLocaleList(locales) {
 
       // Steps 7.c.iii-iv.
       var tag = intl_ValidateAndCanonicalizeLanguageTag(kValue, true);
-      assert(typeof tag === "string",
-             "ValidateAndCanonicalizeLanguageTag returns a string value");
+      assert(typeof tag === "string", "ValidateAndCanonicalizeLanguageTag returns a string value");
 
       // Step 7.c.v.
       if (callFunction(std_Array_indexOf, seen, tag) === -1) {
@@ -319,9 +326,11 @@ function BestFitMatcher(availableLocales, requestedLocales) {
  */
 function UnicodeExtensionValue(extension, key) {
   assert(typeof extension === "string", "extension is a string value");
-  assert(callFunction(std_String_startsWith, extension, "-u-") &&
-         getUnicodeExtensions("und" + extension) === extension,
-         "extension is a Unicode extension subtag");
+  assert(
+    callFunction(std_String_startsWith, extension, "-u-") &&
+      getUnicodeExtensions("und" + extension) === extension,
+    "extension is a Unicode extension subtag"
+  );
   assert(typeof key === "string", "key is a string value");
 
   // Step 1.
@@ -395,12 +404,19 @@ function UnicodeExtensionValue(extension, key) {
  *
  * Spec: ECMAScript Internationalization API Specification, 9.2.6.
  */
-function ResolveLocale(availableLocales, requestedLocales, options, relevantExtensionKeys, localeData) {
+function ResolveLocale(
+  availableLocales,
+  requestedLocales,
+  options,
+  relevantExtensionKeys,
+  localeData
+) {
   // Steps 1-3.
   var matcher = options.localeMatcher;
-  var r = (matcher === "lookup")
-          ? LookupMatcher(availableLocales, requestedLocales)
-          : BestFitMatcher(availableLocales, requestedLocales);
+  var r =
+    matcher === "lookup"
+      ? LookupMatcher(availableLocales, requestedLocales)
+      : BestFitMatcher(availableLocales, requestedLocales);
 
   // Step 4.
   var foundLocale = r.locale;
@@ -467,10 +483,10 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     var optionsValue = options[key];
 
     // Step 8.i.ii.
-    assert(typeof optionsValue === "string" ||
-           optionsValue === undefined ||
-           optionsValue === null,
-           "unexpected type for options value");
+    assert(
+      typeof optionsValue === "string" || optionsValue === undefined || optionsValue === null,
+      "unexpected type for options value"
+    );
 
     // Steps 8.i, 8.i.iii.1.
     if (optionsValue !== undefined && optionsValue !== value) {
@@ -489,9 +505,10 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     // Locale data provides default value.
     if (value === undefined) {
       // Steps 8.a-f.
-      value = keyLocaleData === undefined
-              ? callFunction(localeDataProvider.default[key], null, foundLocale)
-              : keyLocaleData[0];
+      value =
+        keyLocaleData === undefined
+          ? callFunction(localeDataProvider.default[key], null, foundLocale)
+          : keyLocaleData[0];
     }
 
     // Step 8.j.
@@ -521,15 +538,18 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
  */
 function addUnicodeExtension(locale, extension) {
   assert(typeof locale === "string", "locale is a string value");
-  assert(!callFunction(std_String_startsWith, locale, "x-"),
-         "unexpected privateuse-only locale");
-  assert(startOfUnicodeExtensions(locale) < 0,
-         "Unicode extension subtag already present in locale");
+  assert(!callFunction(std_String_startsWith, locale, "x-"), "unexpected privateuse-only locale");
+  assert(
+    startOfUnicodeExtensions(locale) < 0,
+    "Unicode extension subtag already present in locale"
+  );
 
   assert(typeof extension === "string", "extension is a string value");
-  assert(callFunction(std_String_startsWith, extension, "-u-") &&
-         getUnicodeExtensions("und" + extension) === extension,
-         "extension is a Unicode extension subtag");
+  assert(
+    callFunction(std_String_startsWith, extension, "-u-") &&
+      getUnicodeExtensions("und" + extension) === extension,
+    "extension is a Unicode extension subtag"
+  );
 
   // Step 9.a.
   var privateIndex = callFunction(std_String_indexOf, locale, "-x-");
@@ -618,9 +638,9 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
   }
 
   // Steps 2-5.
-  return (matcher === undefined || matcher === "best fit")
-         ? BestFitSupportedLocales(availableLocales, requestedLocales)
-         : LookupSupportedLocales(availableLocales, requestedLocales);
+  return matcher === undefined || matcher === "best fit"
+    ? BestFitSupportedLocales(availableLocales, requestedLocales)
+    : LookupSupportedLocales(availableLocales, requestedLocales);
 }
 
 /**
@@ -706,10 +726,14 @@ function GetStringOrBooleanOption(options, property, values, trueValue, falsyVal
 function DefaultNumberOption(value, minimum, maximum, fallback) {
   assert(typeof minimum === "number" && (minimum | 0) === minimum, "DefaultNumberOption");
   assert(typeof maximum === "number" && (maximum | 0) === maximum, "DefaultNumberOption");
-  assert(fallback === undefined || (typeof fallback === "number" && (fallback | 0) === fallback),
-         "DefaultNumberOption");
-  assert(fallback === undefined || (minimum <= fallback && fallback <= maximum),
-         "DefaultNumberOption");
+  assert(
+    fallback === undefined || (typeof fallback === "number" && (fallback | 0) === fallback),
+    "DefaultNumberOption"
+  );
+  assert(
+    fallback === undefined || (minimum <= fallback && fallback <= maximum),
+    "DefaultNumberOption"
+  );
 
   // Step 1.
   if (value === undefined) {
@@ -768,14 +792,16 @@ function intlFallbackSymbol() {
  */
 function initializeIntlObject(obj, type, lazyData) {
   assert(IsObject(obj), "Non-object passed to initializeIntlObject");
-  assert((type === "Collator" && intl_GuardToCollator(obj) !== null) ||
-         (type === "DateTimeFormat" && intl_GuardToDateTimeFormat(obj) !== null) ||
-         (type === "DisplayNames" && intl_GuardToDisplayNames(obj) !== null) ||
-         (type === "ListFormat" && intl_GuardToListFormat(obj) !== null) ||
-         (type === "NumberFormat" && intl_GuardToNumberFormat(obj) !== null) ||
-         (type === "PluralRules" && intl_GuardToPluralRules(obj) !== null) ||
-         (type === "RelativeTimeFormat" && intl_GuardToRelativeTimeFormat(obj) !== null),
-         "type must match the object's class");
+  assert(
+    (type === "Collator" && intl_GuardToCollator(obj) !== null) ||
+      (type === "DateTimeFormat" && intl_GuardToDateTimeFormat(obj) !== null) ||
+      (type === "DisplayNames" && intl_GuardToDisplayNames(obj) !== null) ||
+      (type === "ListFormat" && intl_GuardToListFormat(obj) !== null) ||
+      (type === "NumberFormat" && intl_GuardToNumberFormat(obj) !== null) ||
+      (type === "PluralRules" && intl_GuardToPluralRules(obj) !== null) ||
+      (type === "RelativeTimeFormat" && intl_GuardToRelativeTimeFormat(obj) !== null),
+    "type must match the object's class"
+  );
   assert(IsObject(lazyData), "non-object lazy data");
 
   // The meaning of an internals object for an object |obj| is as follows.
@@ -803,8 +829,10 @@ function initializeIntlObject(obj, type, lazyData) {
   internals.lazyData = lazyData;
   internals.internalProps = null;
 
-  assert(UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT) === undefined,
-         "Internal slot already initialized?");
+  assert(
+    UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT) === undefined,
+    "Internal slot already initialized?"
+  );
   UnsafeSetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT, internals);
 }
 
@@ -845,27 +873,31 @@ function maybeInternalProperties(internals) {
  */
 function getIntlObjectInternals(obj) {
   assert(IsObject(obj), "getIntlObjectInternals called with non-Object");
-  assert(intl_GuardToCollator(obj) !== null ||
-         intl_GuardToDateTimeFormat(obj) !== null ||
-         intl_GuardToDisplayNames(obj) !== null ||
-         intl_GuardToListFormat(obj) !== null ||
-         intl_GuardToNumberFormat(obj) !== null ||
-         intl_GuardToPluralRules(obj) !== null ||
-         intl_GuardToRelativeTimeFormat(obj) !== null,
-         "getIntlObjectInternals called with non-Intl object");
+  assert(
+    intl_GuardToCollator(obj) !== null ||
+      intl_GuardToDateTimeFormat(obj) !== null ||
+      intl_GuardToDisplayNames(obj) !== null ||
+      intl_GuardToListFormat(obj) !== null ||
+      intl_GuardToNumberFormat(obj) !== null ||
+      intl_GuardToPluralRules(obj) !== null ||
+      intl_GuardToRelativeTimeFormat(obj) !== null,
+    "getIntlObjectInternals called with non-Intl object"
+  );
 
   var internals = UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT);
 
   assert(IsObject(internals), "internals not an object");
   assert(hasOwn("type", internals), "missing type");
-  assert((internals.type === "Collator" && intl_GuardToCollator(obj) !== null) ||
-         (internals.type === "DateTimeFormat" && intl_GuardToDateTimeFormat(obj) !== null) ||
-         (internals.type === "DisplayNames" && intl_GuardToDisplayNames(obj) !== null) ||
-         (internals.type === "ListFormat" && intl_GuardToListFormat(obj) !== null) ||
-         (internals.type === "NumberFormat" && intl_GuardToNumberFormat(obj) !== null) ||
-         (internals.type === "PluralRules" && intl_GuardToPluralRules(obj) !== null) ||
-         (internals.type === "RelativeTimeFormat" && intl_GuardToRelativeTimeFormat(obj) !== null),
-         "type must match the object's class");
+  assert(
+    (internals.type === "Collator" && intl_GuardToCollator(obj) !== null) ||
+      (internals.type === "DateTimeFormat" && intl_GuardToDateTimeFormat(obj) !== null) ||
+      (internals.type === "DisplayNames" && intl_GuardToDisplayNames(obj) !== null) ||
+      (internals.type === "ListFormat" && intl_GuardToListFormat(obj) !== null) ||
+      (internals.type === "NumberFormat" && intl_GuardToNumberFormat(obj) !== null) ||
+      (internals.type === "PluralRules" && intl_GuardToPluralRules(obj) !== null) ||
+      (internals.type === "RelativeTimeFormat" && intl_GuardToRelativeTimeFormat(obj) !== null),
+    "type must match the object's class"
+  );
   assert(hasOwn("lazyData", internals), "missing lazyData");
   assert(hasOwn("internalProps", internals), "missing internalProps");
 

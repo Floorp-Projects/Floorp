@@ -33,11 +33,13 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
   var localeData = PluralRules.localeData;
 
   // Step 11.
-  const r = ResolveLocale("PluralRules",
-                          lazyPluralRulesData.requestedLocales,
-                          lazyPluralRulesData.opt,
-                          PluralRules.relevantExtensionKeys,
-                          localeData);
+  const r = ResolveLocale(
+    "PluralRules",
+    lazyPluralRulesData.requestedLocales,
+    lazyPluralRulesData.opt,
+    PluralRules.relevantExtensionKeys,
+    localeData
+  );
 
   // Step 12.
   internalProps.locale = r.locale;
@@ -74,8 +76,10 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
  */
 function getPluralRulesInternals(obj) {
   assert(IsObject(obj), "getPluralRulesInternals called with non-object");
-  assert(intl_GuardToPluralRules(obj) !== null,
-         "getPluralRulesInternals called with non-PluralRules");
+  assert(
+    intl_GuardToPluralRules(obj) !== null,
+    "getPluralRulesInternals called with non-PluralRules"
+  );
 
   var internals = getIntlObjectInternals(obj);
   assert(internals.type === "PluralRules", "bad type escaped getIntlObjectInternals");
@@ -103,8 +107,10 @@ function getPluralRulesInternals(obj) {
  */
 function InitializePluralRules(pluralRules, locales, options) {
   assert(IsObject(pluralRules), "InitializePluralRules called with non-object");
-  assert(intl_GuardToPluralRules(pluralRules) !== null,
-         "InitializePluralRules called with non-PluralRules");
+  assert(
+    intl_GuardToPluralRules(pluralRules) !== null,
+    "InitializePluralRules called with non-PluralRules"
+  );
 
   // Lazy PluralRules data has the following structure:
   //
@@ -201,8 +207,12 @@ function Intl_PluralRules_select(value) {
 
   // Steps 2-3.
   if (!IsObject(pluralRules) || (pluralRules = intl_GuardToPluralRules(pluralRules)) === null) {
-    return callFunction(intl_CallPluralRulesMethodIfWrapped, this, value,
-                        "Intl_PluralRules_select");
+    return callFunction(
+      intl_CallPluralRulesMethodIfWrapped,
+      this,
+      value,
+      "Intl_PluralRules_select"
+    );
   }
 
   // Step 4.
@@ -226,14 +236,23 @@ function Intl_PluralRules_selectRange(start, end) {
 
   // Step 2.
   if (!IsObject(pluralRules) || (pluralRules = intl_GuardToPluralRules(pluralRules)) === null) {
-    return callFunction(intl_CallPluralRulesMethodIfWrapped, this, start, end,
-                        "Intl_PluralRules_selectRange");
+    return callFunction(
+      intl_CallPluralRulesMethodIfWrapped,
+      this,
+      start,
+      end,
+      "Intl_PluralRules_selectRange"
+    );
   }
 
   // Step 3.
   if (start === undefined || end === undefined) {
-    ThrowTypeError(JSMSG_UNDEFINED_NUMBER, start === undefined ? "start" : "end",
-                   "PluralRules", "selectRange");
+    ThrowTypeError(
+      JSMSG_UNDEFINED_NUMBER,
+      start === undefined ? "start" : "end",
+      "PluralRules",
+      "selectRange"
+    );
   }
 
   // Step 4.
@@ -257,8 +276,11 @@ function Intl_PluralRules_resolvedOptions() {
 
   // Steps 2-3.
   if (!IsObject(pluralRules) || (pluralRules = intl_GuardToPluralRules(pluralRules)) === null) {
-    return callFunction(intl_CallPluralRulesMethodIfWrapped, this,
-                        "Intl_PluralRules_resolvedOptions");
+    return callFunction(
+      intl_CallPluralRulesMethodIfWrapped,
+      this,
+      "Intl_PluralRules_resolvedOptions"
+    );
   }
 
   var internals = getPluralRulesInternals(pluralRules);
@@ -271,9 +293,10 @@ function Intl_PluralRules_resolvedOptions() {
   };
 
   // Min/Max fraction digits are either both present or not present at all.
-  assert(hasOwn("minimumFractionDigits", internals) ===
-         hasOwn("maximumFractionDigits", internals),
-         "minimumFractionDigits is present iff maximumFractionDigits is present");
+  assert(
+    hasOwn("minimumFractionDigits", internals) === hasOwn("maximumFractionDigits", internals),
+    "minimumFractionDigits is present iff maximumFractionDigits is present"
+  );
 
   if (hasOwn("minimumFractionDigits", internals)) {
     DefineDataProperty(result, "minimumFractionDigits", internals.minimumFractionDigits);
@@ -281,15 +304,14 @@ function Intl_PluralRules_resolvedOptions() {
   }
 
   // Min/Max significant digits are either both present or not present at all.
-  assert(hasOwn("minimumSignificantDigits", internals) ===
-         hasOwn("maximumSignificantDigits", internals),
-         "minimumSignificantDigits is present iff maximumSignificantDigits is present");
+  assert(
+    hasOwn("minimumSignificantDigits", internals) === hasOwn("maximumSignificantDigits", internals),
+    "minimumSignificantDigits is present iff maximumSignificantDigits is present"
+  );
 
   if (hasOwn("minimumSignificantDigits", internals)) {
-    DefineDataProperty(result, "minimumSignificantDigits",
-                       internals.minimumSignificantDigits);
-    DefineDataProperty(result, "maximumSignificantDigits",
-                       internals.maximumSignificantDigits);
+    DefineDataProperty(result, "minimumSignificantDigits", internals.minimumSignificantDigits);
+    DefineDataProperty(result, "maximumSignificantDigits", internals.maximumSignificantDigits);
   }
 
   // Step 6.

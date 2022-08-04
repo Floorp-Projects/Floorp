@@ -39,9 +39,9 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
 
   var mozExtensions = lazyDisplayNamesData.mozExtensions;
 
-  var DisplayNames = mozExtensions ?
-                     mozDisplayNamesInternalProperties :
-                     displayNamesInternalProperties;
+  var DisplayNames = mozExtensions
+    ? mozDisplayNamesInternalProperties
+    : displayNamesInternalProperties;
 
   // Compute effective locale.
 
@@ -49,11 +49,14 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
   var localeData = DisplayNames.localeData;
 
   // Step 10.
-  var r = ResolveLocale("DisplayNames",
-                        lazyDisplayNamesData.requestedLocales,
-                        lazyDisplayNamesData.opt,
-                        DisplayNames.relevantExtensionKeys,
-                        localeData);
+  var r = ResolveLocale(
+    "DisplayNames",
+    lazyDisplayNamesData.requestedLocales,
+    lazyDisplayNamesData.opt,
+    DisplayNames.relevantExtensionKeys,
+    localeData
+  );
+
   // Step 12.
   internalProps.style = lazyDisplayNamesData.style;
 
@@ -86,8 +89,10 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
  */
 function getDisplayNamesInternals(obj) {
   assert(IsObject(obj), "getDisplayNamesInternals called with non-object");
-  assert(intl_GuardToDisplayNames(obj) !== null,
-         "getDisplayNamesInternals called with non-DisplayNames");
+  assert(
+    intl_GuardToDisplayNames(obj) !== null,
+    "getDisplayNamesInternals called with non-DisplayNames"
+  );
 
   var internals = getIntlObjectInternals(obj);
   assert(internals.type === "DisplayNames", "bad type escaped getIntlObjectInternals");
@@ -117,8 +122,10 @@ function getDisplayNamesInternals(obj) {
  */
 function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
   assert(IsObject(displayNames), "InitializeDisplayNames called with non-object");
-  assert(intl_GuardToDisplayNames(displayNames) !== null,
-         "InitializeDisplayNames called with non-DisplayNames");
+  assert(
+    intl_GuardToDisplayNames(displayNames) !== null,
+    "InitializeDisplayNames called with non-DisplayNames"
+  );
 
   // Lazy DisplayNames data has the following structure:
   //
@@ -183,7 +190,13 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
   // Step 10.
   var style;
   if (mozExtensions) {
-    style = GetOption(options, "style", "string", ["narrow", "short", "abbreviated", "long"], "long");
+    style = GetOption(
+      options,
+      "style",
+      "string",
+      ["narrow", "short", "abbreviated", "long"],
+      "long"
+    );
   } else {
     style = GetOption(options, "style", "string", ["narrow", "short", "long"], "long");
   }
@@ -194,14 +207,32 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
   // Step 12.
   var type;
   if (mozExtensions) {
-    type = GetOption(options, "type", "string",
-                     ["language", "region", "script", "currency", "calendar", "dateTimeField",
-                      "weekday", "month", "quarter", "dayPeriod"],
-                      undefined);
+    type = GetOption(
+      options,
+      "type",
+      "string",
+      [
+        "language",
+        "region",
+        "script",
+        "currency",
+        "calendar",
+        "dateTimeField",
+        "weekday",
+        "month",
+        "quarter",
+        "dayPeriod"
+      ],
+      undefined
+    );
   } else {
-    type = GetOption(options, "type", "string",
-                     ["language", "region", "script", "currency", "calendar", "dateTimeField"],
-                     undefined);
+    type = GetOption(
+      options,
+      "type",
+      "string",
+      ["language", "region", "script", "currency", "calendar", "dateTimeField"],
+      undefined
+    );
   }
 
   // Step 13.
@@ -219,8 +250,13 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
   lazyDisplayNamesData.fallback = fallback;
 
   // Step 24.
-  var languageDisplay = GetOption(options, "languageDisplay", "string", ["dialect", "standard"],
-                                  "dialect");
+  var languageDisplay = GetOption(
+    options,
+    "languageDisplay",
+    "string",
+    ["dialect", "standard"],
+    "dialect"
+  );
 
   // Step 25.
   if (type === "language") {
@@ -271,8 +307,16 @@ function Intl_DisplayNames_of(code) {
   var {locale, calendar = "", style, type, languageDisplay = "", fallback} = internals;
 
   // Steps 5-10.
-  return intl_ComputeDisplayName(displayNames, locale, calendar, style, languageDisplay, fallback,
-                                 type, code);
+  return intl_ComputeDisplayName(
+    displayNames,
+    locale,
+    calendar,
+    style,
+    languageDisplay,
+    fallback,
+    type,
+    code
+  );
 }
 
 /**
@@ -284,8 +328,11 @@ function Intl_DisplayNames_resolvedOptions() {
 
   // Steps 2-3.
   if (!IsObject(displayNames) || (displayNames = intl_GuardToDisplayNames(displayNames)) === null) {
-    return callFunction(intl_CallDisplayNamesMethodIfWrapped, this,
-                        "Intl_DisplayNames_resolvedOptions");
+    return callFunction(
+      intl_CallDisplayNamesMethodIfWrapped,
+      this,
+      "Intl_DisplayNames_resolvedOptions"
+    );
   }
 
   var internals = getDisplayNamesInternals(displayNames);
@@ -299,8 +346,10 @@ function Intl_DisplayNames_resolvedOptions() {
   };
 
   // languageDisplay is only present for language display names.
-  assert(hasOwn("languageDisplay", internals) === (internals.type === "language"),
-         "languageDisplay is present iff type is 'language'");
+  assert(
+    hasOwn("languageDisplay", internals) === (internals.type === "language"),
+    "languageDisplay is present iff type is 'language'"
+  );
 
   if (hasOwn("languageDisplay", internals)) {
     DefineDataProperty(options, "languageDisplay", internals.languageDisplay);

@@ -63,11 +63,13 @@ function Intl_getCalendarInfo(locales) {
   // 5. Let r be ResolveLocale(%DateTimeFormat%.[[availableLocales]],
   //    requestedLocales, localeOpt,
   //    %DateTimeFormat%.[[relevantExtensionKeys]], localeData).
-  const r = ResolveLocale("DateTimeFormat",
-                          requestedLocales,
-                          localeOpt,
-                          DateTimeFormat.relevantExtensionKeys,
-                          localeData);
+  const r = ResolveLocale(
+    "DateTimeFormat",
+    requestedLocales,
+    localeOpt,
+    DateTimeFormat.relevantExtensionKeys,
+    localeData
+  );
 
   // 6. Let result be GetCalendarInfo(r.[[locale]]).
   const result = intl_GetCalendarInfo(r.locale);
