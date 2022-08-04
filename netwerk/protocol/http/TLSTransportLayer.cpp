@@ -22,7 +22,8 @@ NS_IMPL_ISUPPORTS(TLSTransportLayer::InputStreamWrapper, nsIInputStream,
 
 TLSTransportLayer::InputStreamWrapper::InputStreamWrapper(
     nsIAsyncInputStream* aInputStream, TLSTransportLayer* aTransport)
-    : mSocketIn(aInputStream), mTransport(aTransport) {}
+    : mSocketIn(aInputStream),
+      mWeakTransport(do_GetWeakReference(aTransport)) {}
 
 NS_IMETHODIMP
 TLSTransportLayer::InputStreamWrapper::Close() {
@@ -47,9 +48,13 @@ NS_IMETHODIMP
 TLSTransportLayer::InputStreamWrapper::Read(char* buf, uint32_t count,
                                             uint32_t* countRead) {
   LOG(("TLSTransportLayer::InputStreamWrapper::Read [this=%p]\n", this));
+  RefPtr<TLSTransportLayer> transport = do_QueryReferent(mWeakTransport);
+  if (!transport) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   mStatus = NS_OK;
-  int32_t bytesRead = PR_Read(mTransport->mFD, buf, count);
+  int32_t bytesRead = PR_Read(transport->mFD, buf, count);
   if (bytesRead == -1) {
     PRErrorCode code = PR_GetError();
     if (code == PR_WOULD_BLOCK_ERROR) {
@@ -113,13 +118,20 @@ NS_IMETHODIMP
 TLSTransportLayer::InputStreamWrapper::AsyncWait(
     nsIInputStreamCallback* callback, uint32_t flags, uint32_t amount,
     nsIEventTarget* target) {
+  RefPtr<TLSTransportLayer> transport = do_QueryReferent(mWeakTransport);
+  if (!transport) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   LOG(
       ("TLSTransportLayer::InputStreamWrapper::AsyncWait [this=%p, "
        "callback=%p]\n",
        this, callback));
-  mTransport->mInputCallback = callback;
+  transport->mInputCallback = callback;
+  // Don't bother to call PR_POLL when |callback| is NULL. We call |AsyncWait|
+  // directly to null out the underlying callback.
   if (!callback) {
-    return mSocketIn->AsyncWait(nullptr, flags, amount, target);
+    return mSocketIn->AsyncWait(nullptr, 0, 0, nullptr);
   }
 
   PRPollDesc pd;
@@ -139,7 +151,8 @@ NS_IMPL_ISUPPORTS(TLSTransportLayer::OutputStreamWrapper, nsIOutputStream,
 
 TLSTransportLayer::OutputStreamWrapper::OutputStreamWrapper(
     nsIAsyncOutputStream* aOutputStream, TLSTransportLayer* aTransport)
-    : mSocketOut(aOutputStream), mTransport(aTransport) {}
+    : mSocketOut(aOutputStream),
+      mWeakTransport(do_GetWeakReference(aTransport)) {}
 
 NS_IMETHODIMP
 TLSTransportLayer::OutputStreamWrapper::Close() {
@@ -167,11 +180,15 @@ TLSTransportLayer::OutputStreamWrapper::Write(const char* buf, uint32_t count,
                                               uint32_t* countWritten) {
   LOG(("TLSTransportLayer::OutputStreamWrapper::Write [this=%p count=%u]\n",
        this, count));
+  RefPtr<TLSTransportLayer> transport = do_QueryReferent(mWeakTransport);
+  if (!transport) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   *countWritten = 0;
   mStatus = NS_OK;
 
-  int32_t written = PR_Write(mTransport->mFD, buf, count);
+  int32_t written = PR_Write(transport->mFD, buf, count);
   LOG(
       ("TLSTransportLayer::OutputStreamWrapper::Write %p PRWrite(%d) = %d "
        "%d\n",
@@ -238,14 +255,21 @@ NS_IMETHODIMP
 TLSTransportLayer::OutputStreamWrapper::AsyncWait(
     nsIOutputStreamCallback* callback, uint32_t flags, uint32_t amount,
     nsIEventTarget* target) {
+  RefPtr<TLSTransportLayer> transport = do_QueryReferent(mWeakTransport);
+  if (!transport) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   LOG(
       ("TLSTransportLayer::OutputStreamWrapper::AsyncWait [this=%p, "
-       "mOutputCallback=%p"
+       "mOutputCallback=%p "
        "callback=%p]\n",
-       this, mTransport->mOutputCallback.get(), callback));
-  mTransport->mOutputCallback = callback;
+       this, transport->mOutputCallback.get(), callback));
+  transport->mOutputCallback = callback;
+  // Don't bother to call PR_POLL when |callback| is NULL. We call |AsyncWait|
+  // directly to null out the underlying callback.
   if (!callback) {
-    return mSocketOut->AsyncWait(nullptr, flags, amount, target);
+    return mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);
   }
 
   PRPollDesc pd;
@@ -272,14 +296,17 @@ NS_INTERFACE_MAP_BEGIN(TLSTransportLayer)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(TLSTransportLayer)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 TLSTransportLayer::TLSTransportLayer(nsISocketTransport* aTransport,
                                      nsIAsyncInputStream* aInputStream,
-                                     nsIAsyncOutputStream* aOutputStream)
+                                     nsIAsyncOutputStream* aOutputStream,
+                                     nsIInputStreamCallback* aOwner)
     : mSocketTransport(aTransport),
       mSocketInWrapper(new InputStreamWrapper(aInputStream, this)),
-      mSocketOutWrapper(new OutputStreamWrapper(aOutputStream, this)) {
+      mSocketOutWrapper(new OutputStreamWrapper(aOutputStream, this)),
+      mOwner(aOwner) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSTransportLayer ctor this=[%p]", this));
 }
@@ -418,14 +445,32 @@ NS_IMETHODIMP
 TLSTransportLayer::Close(nsresult aReason) {
   LOG(("TLSTransportLayer::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aReason)));
-  mSocketInWrapper = nullptr;
-  mSocketOutWrapper = nullptr;
+
   mInputCallback = nullptr;
   mOutputCallback = nullptr;
   if (mSocketTransport) {
-    Unused << mSocketTransport->Close(aReason);
+    mSocketTransport->Close(aReason);
     mSocketTransport = nullptr;
   }
+
+  if (mOwner) {
+    RefPtr<TLSTransportLayer> self = this;
+    Unused << NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "TLSTransportLayer::Close", [self{std::move(self)}]() {
+          nsCOMPtr<nsIInputStreamCallback> inputCallback =
+              std::move(self->mOwner);
+          if (inputCallback) {
+            // This is hack. We need to make
+            // nsHttpConnection::OnInputStreamReady be called, so
+            // nsHttpConnection::CloseTransaction can be called to release the
+            // transaction.
+            Unused << inputCallback->OnInputStreamReady(self->mSocketInWrapper);
+            self->mSocketInWrapper = nullptr;
+            self->mSocketOutWrapper = nullptr;
+          }
+        }));
+  }
+
   return NS_OK;
 }
 
