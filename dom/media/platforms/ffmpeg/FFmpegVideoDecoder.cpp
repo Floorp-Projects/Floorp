@@ -43,6 +43,7 @@
 #  define AV_PIX_FMT_YUV422P10LE PIX_FMT_YUV422P10LE
 #  define AV_PIX_FMT_YUV444P PIX_FMT_YUV444P
 #  define AV_PIX_FMT_YUV444P10LE PIX_FMT_YUV444P10LE
+#  define AV_PIX_FMT_GBRP PIX_FMT_GBRP
 #  define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
 #if LIBAVCODEC_VERSION_MAJOR > 58
@@ -124,6 +125,9 @@ static AVPixelFormat ChoosePixelFormat(AVCodecContext* aCodecContext,
         FFMPEG_LOG("Requesting pixel format YUV444P12LE.");
         return AV_PIX_FMT_YUV444P12LE;
 #endif
+      case AV_PIX_FMT_GBRP:
+        FFMPEG_LOG("Requesting pixel format GBRP.");
+        return AV_PIX_FMT_GBRP;
       default:
         break;
     }
@@ -1049,12 +1053,10 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   b.mPlanes[0].mWidth = mFrame->width;
   b.mPlanes[0].mHeight = mFrame->height;
   if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P ||
-      mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE
+      mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P10LE ||
+      mCodecContext->pix_fmt == AV_PIX_FMT_GBRP
 #if LIBAVCODEC_VERSION_MAJOR >= 57
       || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
-#endif
-#if defined(FFMPEG_AV1_DECODE)
-      || mCodecContext->pix_fmt == AV_PIX_FMT_GBRP
 #endif
   ) {
     b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
