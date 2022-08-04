@@ -499,6 +499,7 @@ async function testIframeNavigations() {
       1,
       "Without fission/EFT, there is only the top level target"
     );
+    await commands.destroy();
     return;
   }
   is(targets.length, 2, "retrieved the top level and the iframe targets");

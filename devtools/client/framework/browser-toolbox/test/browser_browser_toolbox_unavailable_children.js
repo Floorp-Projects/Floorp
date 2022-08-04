@@ -24,6 +24,7 @@ requestLongerTimeout(4);
 add_task(async function() {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
+  await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const tab = await addTab(
     "https://example.com/document-builder.sjs?html=<div id=pick-me>Pickme"

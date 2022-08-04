@@ -16,6 +16,7 @@ add_task(async function() {
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
   await pushPref("devtools.browserconsole.contentMessages", true);
+  await pushPref("devtools.browsertoolbox.scope", "everything");
   await addTab(TEST_URI);
 
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
