@@ -17,6 +17,7 @@ jobs:
         cd D:\a\Floorp\Floorp
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
+        New-Item D:\a\Floorp\Floorp\mozconfig -type file 
         Set-Content mozconfig "ac_add_options --enable-updater"
         Add-Content mozconfig "ac_add_options --with-app-name=floorp" 
         Add-Content mozconfig "ac_add_options --with-app-basename=Floorp" 
