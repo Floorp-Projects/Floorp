@@ -184,6 +184,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWSendToDeviceEmailsSupported.bind(this), window, {
       defineAs: "AWSendToDeviceEmailsSupported",
     });
+
+    Cu.exportFunction(this.AWNewScreen.bind(this), window, {
+      defineAs: "AWNewScreen",
+    });
   }
 
   /**
@@ -344,6 +348,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
     return this.wrapPromise(
       this.sendQuery("AWPage:SEND_TO_DEVICE_EMAILS_SUPPORTED")
     );
+  }
+
+  AWNewScreen(screenId) {
+    return this.wrapPromise(this.sendQuery("AWPage:NEW_SCREEN", screenId));
   }
 
   /**

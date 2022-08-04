@@ -2707,4 +2707,4 @@ pref("browser.places.snapshots.expiration.userManaged.days", 420);
 
 // If the user has seen the Firefox View feature tour this value reflects the tour
 // message id, the id of the last screen they saw, and whether they completed the tour
-pref("browser.browser.firefoxView.featureTour", "default, default, true");
+pref("browser.firefox-view.feature-tour", "{\"message\":\"\",\"screen\":\"\",\"complete\":true}");

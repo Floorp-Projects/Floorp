@@ -12,3 +12,4 @@ browser.jar:
     content/browser/recently-closed-tabs.mjs
     content/browser/colorways-card.mjs
     content/browser/colorway-background.svg (content/colorway-background.svg)
+    content/browser/featureCallout.mjs

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @use 'sass:math';
 @import '../styles/normalize';
+@import '../styles/feature-callout';
 
 $break-point-small: 570px;
 $break-point-medium: 610px;
