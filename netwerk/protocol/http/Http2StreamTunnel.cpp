@@ -37,8 +37,6 @@ void Http2StreamTunnel::HandleResponseHeaders(nsACString& aHeadersOut,
 
 // TODO We do not need this. Fix in bug 1772212.
 void Http2StreamTunnel::ClearTransactionsBlockedOnTunnel() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
   nsresult rv = gHttpHandler->ConnMgr()->ProcessPendingQ(mConnectionInfo);
   if (NS_FAILED(rv)) {
     LOG3(
@@ -90,13 +88,13 @@ void Http2StreamTunnel::CloseStream(nsresult aReason) {
   RefPtr<Http2Session> session = Session();
   if (NS_SUCCEEDED(mCondition)) {
     mSession = nullptr;
+    // Let the session pickup that the stream has been closed.
+    mCondition = aReason;
     if (NS_SUCCEEDED(aReason)) {
       aReason = NS_BASE_STREAM_CLOSED;
     }
     mOutput->OnSocketReady(aReason);
     mInput->OnSocketReady(aReason);
-    // Let the session pickup that the stream has been closed.
-    mCondition = aReason;
   }
 }
 
@@ -403,6 +401,7 @@ OutputStreamTunnel::CloseWithStatus(nsresult reason) {
   mCondition = reason;
 
   RefPtr<Http2StreamTunnel> tunnel = do_QueryReferent(mWeakStream);
+  mWeakStream = nullptr;
   if (!tunnel) {
     return NS_OK;
   }
@@ -528,6 +527,7 @@ InputStreamTunnel::CloseWithStatus(nsresult reason) {
   mCondition = reason;
 
   RefPtr<Http2StreamTunnel> tunnel = do_QueryReferent(mWeakStream);
+  mWeakStream = nullptr;
   if (!tunnel) {
     return NS_OK;
   }
@@ -621,7 +621,6 @@ nsresult InputStreamTunnel::GetSession(Http2Session** aSession) {
     return rv;
   }
   RefPtr<Http2Session> session = tunnel->Session();
-  MOZ_ASSERT(session);
   if (!session) {
     return NS_ERROR_UNEXPECTED;
   }
