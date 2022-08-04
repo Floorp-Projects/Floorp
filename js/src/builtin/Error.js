@@ -12,11 +12,11 @@ function ErrorToString() {
 
   /* Steps 3-5. */
   var name = obj.name;
-  name = (name === undefined) ? "Error" : ToString(name);
+  name = name === undefined ? "Error" : ToString(name);
 
   /* Steps 6-8. */
   var msg = obj.message;
-  msg = (msg === undefined) ? "" : ToString(msg);
+  msg = msg === undefined ? "" : ToString(msg);
 
   /* Step 9. */
   if (name === "") {
