@@ -32,10 +32,7 @@ function SetUnion(iterable) {
 
   // Step 2. If Type(set) is not Object, throw a TypeError exception.
   if (!IsObject(set)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 3. Let Ctr be ? SpeciesConstructor(set, %Set%).
@@ -67,10 +64,7 @@ function SetIntersection(iterable) {
 
   // Step 2. If Type(set) is not Object, throw a TypeError exception.
   if (!IsObject(set)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 3. Let Ctr be ? SpeciesConstructor(set, %Set%).
@@ -152,10 +146,7 @@ function SetDifference(iterable) {
 
   // Step 2. If Type(set) is not Object, throw a TypeError exception.
   if (!IsObject(set)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 3. Let Ctr be ? SpeciesConstructor(set, %Set%).
@@ -212,10 +203,7 @@ function SetSymmetricDifference(iterable) {
 
   // Step 2. If Type(set) is not Object, throw a TypeError exception.
   if (!IsObject(set)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 3. Let Ctr be ? SpeciesConstructor(set, %Set%).
@@ -300,10 +288,7 @@ function SetIsSubsetOf(iterable) {
 
   // Step 3. If Type(iterable) is not Object, throw a TypeError exception.
   if (!IsObject(iterable)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 4. Let otherSet be iterable.
@@ -370,10 +355,7 @@ function SetIsSupersetOf(iterable) {
 
   // Step 2. If Type(set) is not Object, throw a TypeError exception.
   if (!IsObject(set)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 3. Let hasCheck be ? Get(set, "has").
@@ -430,10 +412,7 @@ function SetIsDisjointFrom(iterable) {
 
   // Step 2. If Type(set) is not Object, throw a TypeError exception.
   if (!IsObject(set)) {
-    ThrowTypeError(
-        JSMSG_OBJECT_REQUIRED,
-        set === null ? "null" : typeof set
-    );
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, set === null ? "null" : typeof set);
   }
 
   // Step 3. Let hasCheck be ? Get(set, "has").

@@ -222,16 +222,14 @@ function TupleConcat() {
 // Tuple.prototype.includes()
 function TupleIncludes(valueToFind /* , fromIndex */) {
   var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
-  return callFunction(std_Array_includes, ThisTupleValue(this), valueToFind,
-                      fromIndex);
+  return callFunction(std_Array_includes, ThisTupleValue(this), valueToFind, fromIndex);
 }
 
 // proposal-record-tuple
 // Tuple.prototype.indexOf()
 function TupleIndexOf(valueToFind /* , fromIndex */) {
   var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
-  return callFunction(std_Array_indexOf, ThisTupleValue(this),
-                      valueToFind, fromIndex);
+  return callFunction(std_Array_indexOf, ThisTupleValue(this), valueToFind, fromIndex);
 }
 
 // proposal-record-tuple
@@ -282,11 +280,9 @@ function TupleJoin(separator) {
 // Tuple.prototype.lastIndexOf()
 function TupleLastIndexOf(valueToFind /* , fromIndex */) {
   if (arguments.length < 2) {
-    return callFunction(std_Array_lastIndexOf, ThisTupleValue(this),
-                        valueToFind);
+    return callFunction(std_Array_lastIndexOf, ThisTupleValue(this), valueToFind);
   }
-  return callFunction(std_Array_lastIndexOf, ThisTupleValue(this),
-                      valueToFind, arguments[1]);
+  return callFunction(std_Array_lastIndexOf, ThisTupleValue(this), valueToFind, arguments[1]);
 }
 
 // proposal-record-tuple
@@ -307,8 +303,7 @@ function TupleToString() {
 // Tuple.prototype.toLocaleString()
 function TupleToLocaleString(locales, options) {
   var T = ThisTupleValue(this);
-  return callContentFunction(ArrayToLocaleString, TupleToArray(T),
-                             locales, options);
+  return callContentFunction(ArrayToLocaleString, TupleToArray(T), locales, options);
 }
 
 // proposal-record-tuple
@@ -334,8 +329,7 @@ SetCanonicalName($TupleValues, "values");
 // proposal-record-tuple
 // Tuple.prototype.every()
 function TupleEvery(callbackfn) {
-  return callContentFunction(ArrayEvery, ThisTupleValue(this),
-                             callbackfn);
+  return callContentFunction(ArrayEvery, ThisTupleValue(this), callbackfn);
 }
 
 // proposal-record-tuple
@@ -385,22 +379,19 @@ function TupleFilter(callbackfn) {
 // proposal-record-tuple
 // Tuple.prototype.find()
 function TupleFind(predicate) {
-  return callContentFunction(ArrayFind, ThisTupleValue(this),
-                             predicate);
+  return callContentFunction(ArrayFind, ThisTupleValue(this), predicate);
 }
 
 // proposal-record-tuple
 // Tuple.prototype.findIndex()
 function TupleFindIndex(predicate) {
-  return callContentFunction(ArrayFindIndex, ThisTupleValue(this),
-                             predicate);
+  return callContentFunction(ArrayFindIndex, ThisTupleValue(this), predicate);
 }
 
 // proposal-record-tuple
 // Tuple.prototype.forEach()
 function TupleForEach(callbackfn) {
-  return callContentFunction(ArrayForEach, ThisTupleValue(this),
-                             callbackfn);
+  return callContentFunction(ArrayForEach, ThisTupleValue(this), callbackfn);
 }
 
 // proposal-record-tuple
@@ -443,29 +434,24 @@ function TupleMap(callbackfn) {
 // Tuple.prototype.reduce()
 function TupleReduce(callbackfn /*, initialVal */) {
   if (arguments.length < 2) {
-    return callContentFunction(ArrayReduce, ThisTupleValue(this),
-                               callbackfn);
+    return callContentFunction(ArrayReduce, ThisTupleValue(this), callbackfn);
   }
-  return callContentFunction(ArrayReduce, ThisTupleValue(this),
-                                 callbackfn, arguments[1]);
+  return callContentFunction(ArrayReduce, ThisTupleValue(this), callbackfn, arguments[1]);
 }
 
 // proposal-record-tuple
 // Tuple.prototype.reduceRight()
 function TupleReduceRight(callbackfn /*, initialVal*/) {
   if (arguments.length < 2) {
-    return callContentFunction(ArrayReduceRight, ThisTupleValue(this),
-                               callbackfn);
+    return callContentFunction(ArrayReduceRight, ThisTupleValue(this), callbackfn);
   }
-  return callContentFunction(ArrayReduceRight, ThisTupleValue(this),
-                                 callbackfn, arguments[1]);
+  return callContentFunction(ArrayReduceRight, ThisTupleValue(this), callbackfn, arguments[1]);
 }
 
 // proposal-record-tuple
 // Tuple.prototype.some()
 function TupleSome(callbackfn) {
-  return callContentFunction(ArraySome, ThisTupleValue(this),
-                             callbackfn);
+  return callContentFunction(ArraySome, ThisTupleValue(this), callbackfn);
 }
 
 function FlattenIntoTuple(target, source, depth) {
@@ -483,8 +469,10 @@ function FlattenIntoTuple(target, source, depth) {
   var mapperIsPresent = arguments.length > 3;
   if (mapperIsPresent) {
     mapperFunction = arguments[3];
-    assert(IsCallable(mapperFunction) && arguments.length > 4 && depth === 1,
-           "FlattenIntoTuple: mapper function must be callable, thisArg present, and depth === 1");
+    assert(
+      IsCallable(mapperFunction) && arguments.length > 4 && depth === 1,
+      "FlattenIntoTuple: mapper function must be callable, thisArg present, and depth === 1"
+    );
     thisArg = arguments[4];
   }
 
