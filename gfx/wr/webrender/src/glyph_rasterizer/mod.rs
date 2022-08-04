@@ -76,6 +76,7 @@ impl GlyphRasterizer {
         assert!(self.has_font(font.font_key));
 
         let glyph_key_cache = glyph_cache.insert_glyph_key_cache_for_font(&font);
+        let mut batch_size = 0;
 
         // select glyphs that have not been requested yet.
         for key in glyph_keys {
@@ -105,17 +106,7 @@ impl GlyphRasterizer {
             match self.pending_glyph_requests.get_mut(&font) {
                 Some(container) => {
                     container.push(*key);
-
-                    // If the batch for this font instance is big enough, kick off an async
-                    // job to start rasterizing these glyphs on other threads now.
-                    if container.len() == 8 {
-                        let glyphs = mem::replace(container, SmallVec::new());
-                        self.flush_glyph_requests(
-                            font.clone(),
-                            glyphs,
-                            true,
-                        );
-                    }
+                    batch_size = container.len();
                 }
                 None => {
                     // If no batch exists for this font instance, add the glyph to a new one.
@@ -127,6 +118,14 @@ impl GlyphRasterizer {
             }
 
             glyph_key_cache.add_glyph(*key, GlyphCacheEntry::Pending);
+        }
+
+        // If the batch for this font instance is big enough, kick off an async
+        // job to start rasterizing these glyphs on other threads now.
+        if batch_size >= 8 {
+            let container = self.pending_glyph_requests.get_mut(&font).unwrap();
+            let glyphs = mem::replace(container, SmallVec::new());
+            self.flush_glyph_requests(font, glyphs, true);
         }
     }
 
@@ -150,13 +149,14 @@ impl GlyphRasterizer {
 
         let can_use_r8_format = self.can_use_r8_format;
 
+        let job_font = font.clone();
         let process_glyph = move |key: &GlyphKey| -> GlyphRasterJob {
             profile_scope!("glyph-raster");
             let mut context = font_contexts.lock_current_context();
             let mut job = GlyphRasterJob {
-                font: Arc::clone(&font),
+                font: Arc::clone(&job_font),
                 key: key.clone(),
-                result: context.rasterize_glyph(&font, key),
+                result: context.rasterize_glyph(&job_font, key),
             };
 
             if let Ok(ref mut glyph) = job.result {
@@ -185,7 +185,7 @@ impl GlyphRasterizer {
                 assert_eq!((glyph.left.fract(), glyph.top.fract()), (0.0, 0.0));
 
                 // Check if the glyph has a bitmap that needs to be downscaled.
-                glyph.downscale_bitmap_if_required(&font);
+                glyph.downscale_bitmap_if_required(&job_font);
 
                 // Convert from BGRA8 to R8 if required. In the future we can make it the
                 // backends' responsibility to output glyphs in the desired format,
@@ -209,16 +209,32 @@ impl GlyphRasterizer {
             // glyphs in the thread pool.
             profile_scope!("spawning process_glyph jobs");
             self.workers.install(|| {
-                glyphs.par_iter().for_each(|key| {
-                    let job = process_glyph(key);
-                    self.glyph_tx.send(job).unwrap();
-                });
+                FontContext::begin_rasterize(&font);
+                // If the FontContext supports distributing a font across multiple threads,
+                // then use par_iter so different glyphs of the same font are processed on
+                // multiple threads.
+                if FontContext::distribute_across_threads() {
+                    glyphs.par_iter().for_each(|key| {
+                        let job = process_glyph(key);
+                        self.glyph_tx.send(job).unwrap();
+                    });
+                } else {
+                    // For FontContexts that prefer to localize a font to a single thread,
+                    // just process all the glyphs on the same worker to avoid contention.
+                    for key in glyphs {
+                        let job = process_glyph(&key);
+                        self.glyph_tx.send(job).unwrap();
+                    }
+                }
+                FontContext::end_rasterize(&font);
             });
         } else {
+            FontContext::begin_rasterize(&font);
             for key in glyphs {
                 let job = process_glyph(&key);
                 self.glyph_tx.send(job).unwrap();
             }
+            FontContext::end_rasterize(&font);
         }
     }
 
