@@ -174,7 +174,7 @@ function deserialize(/* realm, */ serializedValue) {
       }
 
       // Otherwise it has to be one of the special strings
-      lazy.assert.in(value, ["NaN", "-0", "+Infinity", "-Infinity"]);
+      lazy.assert.in(value, ["NaN", "-0", "Infinity", "-Infinity"]);
       return Number(value);
     case "boolean":
       lazy.assert.boolean(
@@ -354,7 +354,7 @@ function serialize(
   } else if (Object.is(value, -0)) {
     return { type: "number", value: "-0" };
   } else if (Object.is(value, Infinity)) {
-    return { type: "number", value: "+Infinity" };
+    return { type: "number", value: "Infinity" };
   } else if (Object.is(value, -Infinity)) {
     return { type: "number", value: "-Infinity" };
   } else if (type == "bigint") {
