@@ -7,20 +7,26 @@ function AsyncIteratorIdentity() {
 }
 
 function AsyncGeneratorNext(val) {
-  assert(IsAsyncGeneratorObject(this),
-         "ThisArgument must be a generator object for async generators");
+  assert(
+    IsAsyncGeneratorObject(this),
+    "ThisArgument must be a generator object for async generators"
+  );
   return resumeGenerator(this, val, "next");
 }
 
 function AsyncGeneratorThrow(val) {
-  assert(IsAsyncGeneratorObject(this),
-         "ThisArgument must be a generator object for async generators");
+  assert(
+    IsAsyncGeneratorObject(this),
+    "ThisArgument must be a generator object for async generators"
+  );
   return resumeGenerator(this, val, "throw");
 }
 
 function AsyncGeneratorReturn(val) {
-  assert(IsAsyncGeneratorObject(this),
-         "ThisArgument must be a generator object for async generators");
+  assert(
+    IsAsyncGeneratorObject(this),
+    "ThisArgument must be a generator object for async generators"
+  );
   return resumeGenerator(this, val, "return");
 }
 
@@ -80,8 +86,12 @@ function GetAsyncIteratorDirectWrapper(obj) {
 function AsyncIteratorHelperNext(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToAsyncIteratorHelper(O)) === null) {
-    return callFunction(CallAsyncIteratorHelperMethodIfWrapped, this,
-                        value, "AsyncIteratorHelperNext");
+    return callFunction(
+      CallAsyncIteratorHelperMethodIfWrapped,
+      this,
+      value,
+      "AsyncIteratorHelperNext"
+    );
   }
   const generator = UnsafeGetReservedSlot(O, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT);
   return callFunction(IntrinsicAsyncGeneratorNext, generator, value);
@@ -90,8 +100,12 @@ function AsyncIteratorHelperNext(value) {
 function AsyncIteratorHelperReturn(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToAsyncIteratorHelper(O)) === null) {
-    return callFunction(CallAsyncIteratorHelperMethodIfWrapped, this,
-                        value, "AsyncIteratorHelperReturn");
+    return callFunction(
+      CallAsyncIteratorHelperMethodIfWrapped,
+      this,
+      value,
+      "AsyncIteratorHelperReturn"
+    );
   }
   const generator = UnsafeGetReservedSlot(O, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT);
   return callFunction(IntrinsicAsyncGeneratorReturn, generator, value);
@@ -100,8 +114,12 @@ function AsyncIteratorHelperReturn(value) {
 function AsyncIteratorHelperThrow(value) {
   let O = this;
   if (!IsObject(O) || (O = GuardToAsyncIteratorHelper(O)) === null) {
-    return callFunction(CallAsyncIteratorHelperMethodIfWrapped, this,
-                        value, "AsyncIteratorHelperThrow");
+    return callFunction(
+      CallAsyncIteratorHelperMethodIfWrapped,
+      this,
+      value,
+      "AsyncIteratorHelperThrow"
+    );
   }
   const generator = UnsafeGetReservedSlot(O, ASYNC_ITERATOR_HELPER_GENERATOR_SLOT);
   return callFunction(IntrinsicAsyncGeneratorThrow, generator, value);
@@ -140,9 +158,11 @@ async function* AsyncIteratorMapGenerator(iterated, mapper) {
     yield;
     needClose = false;
 
-    for (let next = await IteratorNext(iterated, lastValue);
-        !next.done;
-        next = await IteratorNext(iterated, lastValue)) {
+    for (
+      let next = await IteratorNext(iterated, lastValue);
+      !next.done;
+      next = await IteratorNext(iterated, lastValue)
+    ) {
       // Step c.
       const value = next.value;
 
@@ -185,9 +205,11 @@ async function* AsyncIteratorFilterGenerator(iterated, filterer) {
     yield;
     needClose = false;
 
-    for (let next = await IteratorNext(iterated, lastValue);
-        !next.done;
-        next = await IteratorNext(iterated, lastValue)) {
+    for (
+      let next = await IteratorNext(iterated, lastValue);
+      !next.done;
+      next = await IteratorNext(iterated, lastValue)
+    ) {
       // Step c.
       const value = next.value;
 
@@ -292,9 +314,11 @@ async function* AsyncIteratorDropGenerator(iterated, remaining) {
     // Step 2.
     let lastValue;
     // Step 3.
-    for (let next = await IteratorNext(iterated, lastValue);
-        !next.done;
-        next = await IteratorNext(iterated, lastValue)) {
+    for (
+      let next = await IteratorNext(iterated, lastValue);
+      !next.done;
+      next = await IteratorNext(iterated, lastValue)
+    ) {
       // Steps c-d.
       const value = next.value;
 
@@ -331,9 +355,11 @@ async function* AsyncIteratorAsIndexedPairsGenerator(iterated) {
     // Step 2.
     let lastValue;
     // Step 3.
-    for (let next = await IteratorNext(iterated, lastValue), index = 0;
-        !next.done;
-        next = await IteratorNext(iterated, lastValue), index++) {
+    for (
+      let next = await IteratorNext(iterated, lastValue), index = 0;
+      !next.done;
+      next = await IteratorNext(iterated, lastValue), index++
+    ) {
       // Steps c-g.
       const value = next.value;
 
@@ -373,9 +399,7 @@ async function* AsyncIteratorFlatMapGenerator(iterated, mapper) {
     needClose = false;
 
     // Step 1.
-    for (let next = await IteratorNext(iterated);
-        !next.done;
-        next = await IteratorNext(iterated)) {
+    for (let next = await IteratorNext(iterated); !next.done; next = await IteratorNext(iterated)) {
       // Step c.
       const value = next.value;
 

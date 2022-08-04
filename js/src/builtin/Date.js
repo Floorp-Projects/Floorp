@@ -44,16 +44,16 @@ var dateTimeFormatCache = new_Record();
  * |format| must be a key from the "formatters" Record described above.
  */
 function GetCachedFormat(format, required, defaults) {
-  assert(format === "dateTimeFormat" ||
-         format === "dateFormat" ||
-         format === "timeFormat",
-         "unexpected format key: please update the comment by " +
-         "dateTimeFormatCache");
+  assert(
+    format === "dateTimeFormat" || format === "dateFormat" || format === "timeFormat",
+    "unexpected format key: please update the comment by dateTimeFormatCache"
+  );
 
   var formatters;
-  if (!intl_IsRuntimeDefaultLocale(dateTimeFormatCache.runtimeDefaultLocale) ||
-      !intl_isDefaultTimeZone(dateTimeFormatCache.icuDefaultTimeZone))
-  {
+  if (
+    !intl_IsRuntimeDefaultLocale(dateTimeFormatCache.runtimeDefaultLocale) ||
+    !intl_isDefaultTimeZone(dateTimeFormatCache.icuDefaultTimeZone)
+  ) {
     formatters = dateTimeFormatCache.formatters = new_Record();
     dateTimeFormatCache.runtimeDefaultLocale = intl_RuntimeDefaultLocale();
     dateTimeFormatCache.icuDefaultTimeZone = intl_defaultTimeZone();

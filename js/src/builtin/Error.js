@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* ES6 20140718 draft 19.5.3.4. */
-function ErrorToString()
-{
+function ErrorToString() {
   /* Steps 1-2. */
   var obj = this;
   if (!IsObject(obj)) {
@@ -33,7 +32,6 @@ function ErrorToString()
   return name + ": " + msg;
 }
 
-function ErrorToStringWithTrailingNewline()
-{
+function ErrorToStringWithTrailingNewline() {
   return FUN_APPLY(ErrorToString, this, []) + "\n";
 }
