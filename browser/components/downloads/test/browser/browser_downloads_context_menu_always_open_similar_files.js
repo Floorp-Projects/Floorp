@@ -3,8 +3,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 let gMimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 let gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService
@@ -33,7 +31,7 @@ async function createDownloadFile() {
   }
   info("Created download directory: " + gDownloadDir);
   TestFiles.txt = await createDownloadedFile(
-    OS.Path.join(gDownloadDir, "downloaded.txt"),
+    PathUtils.join(gDownloadDir, "downloaded.txt"),
     "Test file"
   );
   info("Created downloaded text file at:" + TestFiles.txt.path);
