@@ -31,3 +31,7 @@ pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false
 
 // Don't refresh experiments while a background task is running.
 pref("app.normandy.run_interval_seconds", 0);
+
+// Use a separate Nimbus application ID from regular Firefox Desktop.
+// This prevents enrolling in regular desktop experiments.
+pref("nimbus.appId", "firefox-desktop-background-task");
