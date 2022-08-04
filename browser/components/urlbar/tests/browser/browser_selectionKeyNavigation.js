@@ -82,93 +82,119 @@ add_task(async function upKey() {
 });
 
 add_task(async function pageDownKey() {
-  for (const ctrlKey of [false, true]) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "exam",
-      fireInputEvent: true,
-    });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exam",
+    fireInputEvent: true,
+  });
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
+  let pageCount = Math.ceil((MAX_RESULTS - 1) / UrlbarUtils.PAGE_UP_DOWN_DELTA);
+  for (let i = 0; i < pageCount; i++) {
+    EventUtils.synthesizeKey("KEY_PageDown");
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
-      0,
-      "The heuristic autofill result should be selected initially"
-    );
-    let pageCount = Math.ceil(
-      (MAX_RESULTS - 1) / UrlbarUtils.PAGE_UP_DOWN_DELTA
-    );
-    for (let i = 0; i < pageCount; i++) {
-      EventUtils.synthesizeKey("KEY_PageDown", { ctrlKey });
-      Assert.equal(
-        UrlbarTestUtils.getSelectedRowIndex(window),
-        Math.min((i + 1) * UrlbarUtils.PAGE_UP_DOWN_DELTA, MAX_RESULTS - 1)
-      );
-    }
-    EventUtils.synthesizeKey("KEY_PageDown", { ctrlKey });
-    Assert.equal(
-      UrlbarTestUtils.getSelectedRowIndex(window),
-      0,
-      "Page down at end should wrap around to first result"
+      Math.min((i + 1) * UrlbarUtils.PAGE_UP_DOWN_DELTA, MAX_RESULTS - 1)
     );
   }
+  EventUtils.synthesizeKey("KEY_PageDown");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    0,
+    "Page down at end should wrap around to first result"
+  );
 });
 
 add_task(async function pageUpKey() {
-  for (const ctrlKey of [false, true]) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "exam",
-      fireInputEvent: true,
-    });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exam",
+    fireInputEvent: true,
+  });
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    0,
+    "The heuristic autofill result should be selected initially"
+  );
+  EventUtils.synthesizeKey("KEY_PageUp");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedRowIndex(window),
+    MAX_RESULTS - 1,
+    "Page up at start should wrap around to last result"
+  );
+  let pageCount = Math.ceil((MAX_RESULTS - 1) / UrlbarUtils.PAGE_UP_DOWN_DELTA);
+  for (let i = 0; i < pageCount; i++) {
+    EventUtils.synthesizeKey("KEY_PageUp");
     Assert.equal(
       UrlbarTestUtils.getSelectedRowIndex(window),
-      0,
-      "The heuristic autofill result should be selected initially"
+      Math.max(MAX_RESULTS - 1 - (i + 1) * UrlbarUtils.PAGE_UP_DOWN_DELTA, 0)
     );
-    EventUtils.synthesizeKey("KEY_PageUp", { ctrlKey });
-    Assert.equal(
-      UrlbarTestUtils.getSelectedRowIndex(window),
-      MAX_RESULTS - 1,
-      "Page up at start should wrap around to last result"
-    );
-    let pageCount = Math.ceil(
-      (MAX_RESULTS - 1) / UrlbarUtils.PAGE_UP_DOWN_DELTA
-    );
-    for (let i = 0; i < pageCount; i++) {
-      EventUtils.synthesizeKey("KEY_PageUp", { ctrlKey });
-      Assert.equal(
-        UrlbarTestUtils.getSelectedRowIndex(window),
-        Math.max(MAX_RESULTS - 1 - (i + 1) * UrlbarUtils.PAGE_UP_DOWN_DELTA, 0)
-      );
-    }
   }
 });
 
 add_task(async function pageDownKeyShowsView() {
-  for (const ctrlKey of [false, true]) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "exam",
-      fireInputEvent: true,
-    });
-    await UrlbarTestUtils.promisePopupClose(window);
-    EventUtils.synthesizeKey("KEY_PageDown", { ctrlKey });
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    Assert.ok(UrlbarTestUtils.isPopupOpen(window));
-    Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
-  }
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exam",
+    fireInputEvent: true,
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_PageDown");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.ok(UrlbarTestUtils.isPopupOpen(window));
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
 });
 
 add_task(async function pageUpKeyShowsView() {
-  for (const ctrlKey of [false, true]) {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "exam",
-      fireInputEvent: true,
-    });
-    await UrlbarTestUtils.promisePopupClose(window);
-    EventUtils.synthesizeKey("KEY_PageUp", { ctrlKey });
-    await UrlbarTestUtils.promiseSearchComplete(window);
-    Assert.ok(UrlbarTestUtils.isPopupOpen(window));
-    Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
-  }
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exam",
+    fireInputEvent: true,
+  });
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_PageUp");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.ok(UrlbarTestUtils.isPopupOpen(window));
+  Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 0);
+});
+
+add_task(async function pageDownKeyWithCtrlKey() {
+  const previousTab = gBrowser.selectedTab;
+  const currentTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exam",
+    fireInputEvent: true,
+  });
+  EventUtils.synthesizeKey("KEY_PageDown", { ctrlKey: true });
+  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.equal(gBrowser.selectedTab, previousTab);
+  BrowserTestUtils.removeTab(currentTab);
+});
+
+add_task(async function pageUpKeyWithCtrlKey() {
+  const previousTab = gBrowser.selectedTab;
+  const currentTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "exam",
+    fireInputEvent: true,
+  });
+  EventUtils.synthesizeKey("KEY_PageUp", { ctrlKey: true });
+  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.equal(gBrowser.selectedTab, previousTab);
+  BrowserTestUtils.removeTab(currentTab);
 });
