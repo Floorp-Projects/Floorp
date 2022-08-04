@@ -5,6 +5,7 @@
 
 #include "HTMLEditor.h"
 
+#include "AutoRangeArray.h"
 #include "EditAction.h"
 #include "EditorBase.h"
 #include "EditorDOMPoint.h"

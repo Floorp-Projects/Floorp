@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "AutoRangeArray.h"
 #include "EditAction.h"
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
