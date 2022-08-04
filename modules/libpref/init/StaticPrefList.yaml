@@ -7646,13 +7646,6 @@
   value: false
   mirror: always
 
-# Whether the `aspect-ratio` in css-sizing-4 is enabled.
-- name: layout.css.aspect-ratio.enabled
-  type: bool
-  value: true
-  mirror: always
-  rust: true
-
 # Is the codepath for using cached scrollbar styles enabled?
 - name: layout.css.cached-scrollbar-styles.enabled
   type: bool

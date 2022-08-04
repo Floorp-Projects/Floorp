@@ -61,6 +61,7 @@ var FUNC_NEGATIVE = "cubic-bezier(0.25, -2, 0.75, 1)";
 var FUNC_OVERONE = "cubic-bezier(0.25, 0, 0.75, 3)";
 
 var supported_properties = {
+    "aspect-ratio" : [ test_aspect_ratio_transition ],
     "border-bottom-left-radius": [ test_radius_transition ],
     "border-bottom-right-radius": [ test_radius_transition ],
     "border-top-left-radius": [ test_radius_transition ],
@@ -422,40 +423,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
   supported_properties["rotate"] = [ test_rotate_transition ];
   supported_properties["scale"] = [ test_scale_transition ];
   supported_properties["translate"] = [ test_translate_transition ];
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.aspect-ratio.enabled")) {
-  function test_aspect_ratio_transition(prop) {
-    [
-      // No transition between auto and <ratio>.
-      { start: "auto", end: "1 / 1",
-        expected: "1 / 1" },
-      // No transition between auto && <ratio> and <ratio>.
-      { start: "auto 1 / 1", end: "1 / 1",
-        expected: "1 / 1" },
-      // No transition between auto && <ratio> and auto.
-      { start: "auto 1 / 1", end: "auto",
-        expected: "auto" },
-      { start: "1 / 2", end: "8 / 1",
-        expected: "1 / 1" },
-      { start: "auto 1 / 2", end: "auto 8 / 1",
-        expected: "auto 1 / 1" },
-    ].forEach(test => {
-      div.style.transitionProperty = 'none';
-      div.style[prop] = test.start;
-      is(cs[prop], test.start,
-         `aspect-ratio: computed value before transition`);
-      div.style.transitionProperty = prop;
-      div.style[prop] = test.end;
-      is(cs[prop], test.expected,
-         `aspect-ratio: interpolation of aspect-ratio`);
-      // We check distance only if there is a transition.
-      if (test.end != test.expected) {
-        check_distance(prop, test.start, test.expected, test.end);
-      }
-    });
-  }
-  supported_properties["aspect-ratio"] = [ test_aspect_ratio_transition ];
 }
 
 supported_properties["scrollbar-color"] = [
@@ -3097,6 +3064,37 @@ function test_font_variations_transition(prop) {
   is(cs.getPropertyValue(prop), "\"wght\" 1.5, \"wdth\" 0.75",
      "font-variation-settings property " + prop + ": interpolation of font-variation-settings");
   check_distance(prop, "\"wght\" 2, \"wdth\" 0.5", "\"wght\" 1.5, \"wdth\" 0.75", "\"wght\" 0, \"wdth\" 1.5");
+}
+
+function test_aspect_ratio_transition(prop) {
+  [
+    // No transition between auto and <ratio>.
+    { start: "auto", end: "1 / 1",
+      expected: "1 / 1" },
+    // No transition between auto && <ratio> and <ratio>.
+    { start: "auto 1 / 1", end: "1 / 1",
+      expected: "1 / 1" },
+    // No transition between auto && <ratio> and auto.
+    { start: "auto 1 / 1", end: "auto",
+      expected: "auto" },
+    { start: "1 / 2", end: "8 / 1",
+      expected: "1 / 1" },
+    { start: "auto 1 / 2", end: "auto 8 / 1",
+      expected: "auto 1 / 1" },
+  ].forEach(test => {
+    div.style.transitionProperty = 'none';
+    div.style[prop] = test.start;
+    is(cs[prop], test.start,
+       `aspect-ratio: computed value before transition`);
+    div.style.transitionProperty = prop;
+    div.style[prop] = test.end;
+    is(cs[prop], test.expected,
+       `aspect-ratio: interpolation of aspect-ratio`);
+    // We check distance only if there is a transition.
+    if (test.end != test.expected) {
+      check_distance(prop, test.start, test.expected, test.end);
+    }
+  });
 }
 
 var OMTAdiv;
