@@ -6133,7 +6133,9 @@ void nsWindow::PauseCompositorFlickering() {
         COMPOSITOR_PAUSE_TIMEOUT,
         [](void* data) -> gint {
           nsWindow* window = static_cast<nsWindow*>(data);
-          window->ResumeCompositorFlickering();
+          if (!window->IsDestroyed()) {
+            window->ResumeCompositorFlickering();
+          }
           return true;
         },
         this);
