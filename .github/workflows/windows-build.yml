@@ -17,22 +17,22 @@ jobs:
         cd D:\a\Floorp\Floorp
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
-        echo ac_add_options --enable-updater >> mozconfig 
-        echo ac_add_options --with-app-name=floorp >> mozconfig 
-        echo ac_add_options --with-app-basename=Floorp >> mozconfig 
-        echo ac_add_options --with-branding=browser/branding/official >> mozconfig 
-        echo ac_add_options --disable-crashreporter >> mozconfig 
-        echo ac_add_options --enable-proxy-bypass-protection >> mozconfig 
-        echo ac_add_options --disable-verify-mar >> mozconfig 
-        echo ac_add_options --enable-update-channel=release >> mozconfig 
-        echo ac_add_options --with-mozilla-api-keyfile=D:/a/Floorp/Floorp/apis/api-mozilla-key >> mozconfig 
-        echo ac_add_options --with-google-location-service-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-location-service-key >> mozconfig 
-        echo ac_add_options --with-google-safebrowsing-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-safe-browsing-key >> mozconfig 
-        echo ac_add_options --enable-bootstrap >> mozconfig 
-        echo ac_add_options --with-l10n-base=D:/a/Floorp/Floorp/l10n-central/l10n-central >> mozconfig 
-        echo MOZ_REQUIRE_SIGNING= >> mozconfig 
-        echo MOZ_DATA_REPORTING= >> mozconfig 
-        echo MOZ_TELEMETRY_REPORTING= >> mozconfig 
+        Set-Content mozconfig "ac_add_options --enable-updater"
+        Add-Content mozconfig "ac_add_options --with-app-name=floorp" 
+        Add-Content mozconfig "ac_add_options --with-app-basename=Floorp" 
+        Add-Content mozconfig "ac_add_options --with-branding=browser/branding/official" 
+        Add-Content mozconfig "ac_add_options --disable-crashreporter" 
+        Add-Content mozconfig "ac_add_options --enable-proxy-bypass-protection" 
+        Add-Content mozconfig "ac_add_options --disable-verify-mar" 
+        Add-Content mozconfig "ac_add_options --enable-update-channel=release" 
+        Add-Content mozconfig "ac_add_options --with-mozilla-api-keyfile=D:/a/Floorp/Floorp/apis/api-mozilla-key" 
+        Add-Content mozconfig "ac_add_options --with-google-location-service-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-location-service-key" 
+        Add-Content mozconfig "ac_add_options --with-google-safebrowsing-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-safe-browsing-key" 
+        Add-Content mozconfig "ac_add_options --enable-bootstrap" 
+        Add-Content mozconfig "ac_add_options --with-l10n-base=D:/a/Floorp/Floorp/l10n-central/l10n-central" 
+        Add-Content mozconfig "MOZ_REQUIRE_SIGNING=" 
+        Add-Content mozconfig "MOZ_DATA_REPORTING=" 
+        Add-Content mozconfig "MOZ_TELEMETRY_REPORTING=" 
         ./mach configure
         rm .\mozilla-build.tar.gz
     - name: Build & Package
