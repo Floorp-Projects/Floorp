@@ -29,6 +29,7 @@
 #include "frontend/Parser.h"               // Parser, PropListType
 #include "frontend/ParserAtom.h"           // TaggedParserAtomIndex, ParserAtom
 #include "frontend/ScriptIndex.h"          // ScriptIndex
+#include "frontend/SelfHostedIter.h"       // SelfHostedIter
 #include "frontend/SourceNotes.h"          // SrcNoteType
 #include "frontend/ValueUsage.h"           // ValueUsage
 #include "js/AllocPolicy.h"                // ReportOutOfMemory
@@ -814,25 +815,28 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   // emitIterator expects the iterable to already be on the stack.
   // It will replace that stack value with the corresponding iterator
-  [[nodiscard]] bool emitIterator();
+  [[nodiscard]] bool emitIterator(
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
 
-  [[nodiscard]] bool emitAsyncIterator();
+  [[nodiscard]] bool emitAsyncIterator(
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
 
   // Pops iterator from the top of the stack. Pushes the result of |.next()|
   // onto the stack.
   [[nodiscard]] bool emitIteratorNext(
       const mozilla::Maybe<uint32_t>& callSourceCoordOffset,
-      IteratorKind kind = IteratorKind::Sync, bool allowSelfHosted = false);
+      IteratorKind kind = IteratorKind::Sync,
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
   [[nodiscard]] bool emitIteratorCloseInScope(
       EmitterScope& currentScope, IteratorKind iterKind = IteratorKind::Sync,
       CompletionKind completionKind = CompletionKind::Normal,
-      bool allowSelfHosted = false);
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
   [[nodiscard]] bool emitIteratorCloseInInnermostScope(
       IteratorKind iterKind = IteratorKind::Sync,
       CompletionKind completionKind = CompletionKind::Normal,
-      bool allowSelfHosted = false) {
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny) {
     return emitIteratorCloseInScope(*innermostEmitterScope(), iterKind,
-                                    completionKind, allowSelfHosted);
+                                    completionKind, selfHostedIter);
   }
 
   template <typename InnerEmitter>
@@ -984,12 +988,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // it must be specified using `storeElementOp`.
   // When emitSpread() finishes, the stack only contains the values representing
   // the spread target.
-  [[nodiscard]] bool emitSpread(bool allowSelfHosted, int spreadeeStackItems,
-                                JSOp storeElementOp);
+  [[nodiscard]] bool emitSpread(SelfHostedIter selfHostedIter,
+                                int spreadeeStackItems, JSOp storeElementOp);
   // This shortcut can be used when spreading into arrays, as it assumes
   // `spreadeeStackItems = 2` (|ARRAY INDEX|) and `storeElementOp =
   // JSOp::InitElemInc`
-  [[nodiscard]] bool emitSpread(bool allowSelfHosted = false);
+  [[nodiscard]] bool emitSpread(
+      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
 
   enum class ClassNameKind {
     // The class name is defined through its BindingIdentifier, if present.
@@ -1048,7 +1053,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       JSContext* cx);
 
  private:
-  [[nodiscard]] bool allowSelfHostedIter(ParseNode* parseNode);
+  [[nodiscard]] SelfHostedIter getSelfHostedIterFor(ParseNode* parseNode);
 
   [[nodiscard]] bool emitSelfHostedGetBuiltinConstructorOrPrototype(
       CallNode* callNode, bool isConstructor);
