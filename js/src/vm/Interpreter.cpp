@@ -180,13 +180,51 @@ void js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain,
   }
 }
 
-bool js::Debug_CheckSelfHosted(JSContext* cx, HandleValue fun) {
-#ifndef DEBUG
+#ifdef DEBUG
+static bool IsSelfHostedOrKnownBuiltinCtor(JSFunction* fun, JSContext* cx) {
+  if (fun->isSelfHostedOrIntrinsic()) {
+    return true;
+  }
+
+  // GetBuiltinConstructor in ArrayGroupToMap
+  if (fun == cx->global()->maybeGetConstructor(JSProto_Map)) {
+    return true;
+  }
+
+  // GetBuiltinConstructor in intlFallbackSymbol
+  if (fun == cx->global()->maybeGetConstructor(JSProto_Symbol)) {
+    return true;
+  }
+
+  // ConstructorForTypedArray in MergeSortTypedArray
+  if (fun == cx->global()->maybeGetConstructor(JSProto_Int8Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Uint8Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Int16Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Uint16Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Int32Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Uint32Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Float32Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Float64Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_Uint8ClampedArray) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_BigInt64Array) ||
+      fun == cx->global()->maybeGetConstructor(JSProto_BigUint64Array)) {
+    return true;
+  }
+
+  return false;
+}
+#endif  // DEBUG
+
+bool js::Debug_CheckSelfHosted(JSContext* cx, HandleValue funVal) {
+#ifdef DEBUG
+  JSFunction* fun = &UncheckedUnwrap(&funVal.toObject())->as<JSFunction>();
+  MOZ_ASSERT(IsSelfHostedOrKnownBuiltinCtor(fun, cx),
+             "functions directly called inside self-hosted JS must be one of "
+             "selfhosted function, self-hosted intrinsic, or known built-in "
+             "constructor");
+#else
   MOZ_CRASH("self-hosted checks should only be done in Debug builds");
 #endif
-
-  RootedObject funObj(cx, UncheckedUnwrap(&fun.toObject()));
-  MOZ_ASSERT(funObj->as<JSFunction>().isSelfHostedOrIntrinsic());
 
   // This is purely to police self-hosted code. There is no actual operation.
   return true;

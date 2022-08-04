@@ -7122,6 +7122,19 @@ bool BytecodeEmitter::emitDeleteElementInOptChain(PropertyByValueBase* elemExpr,
   return true;
 }
 
+bool BytecodeEmitter::emitDebugCheckSelfHosted() {
+  //                [stack] CALLEE
+
+#ifdef DEBUG
+  if (!emit1(JSOp::DebugCheckSelfHosted)) {
+    //              [stack] CALLEE
+    return false;
+  }
+#endif
+
+  return true;
+}
+
 bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
   // Special-casing of callFunction to emit bytecode that directly
   // invokes the callee with the correct |this| object and arguments.
@@ -7150,9 +7163,11 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
   }
 
 #ifdef DEBUG
-  if (emitterMode == BytecodeEmitter::SelfHosting &&
-      calleeNode->name() == TaggedParserAtomIndex::WellKnown::callFunction()) {
-    if (!emit1(JSOp::DebugCheckSelfHosted)) {
+  MOZ_ASSERT(op == JSOp::Call || op == JSOp::CallContent ||
+             op == JSOp::NewContent);
+  if (op == JSOp::Call) {
+    if (!emitDebugCheckSelfHosted()) {
+      //            [stack] CALLEE
       return false;
     }
   }

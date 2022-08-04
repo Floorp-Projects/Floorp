@@ -934,6 +934,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                    bool isSpread, CallOrNewEmitter& cone);
   [[nodiscard]] bool emitCallOrNew(
       CallNode* callNode, ValueUsage valueUsage = ValueUsage::WantValue);
+  [[nodiscard]] bool emitDebugCheckSelfHosted();
   [[nodiscard]] bool emitSelfHostedCallFunction(CallNode* callNode, JSOp op);
   [[nodiscard]] bool emitSelfHostedResumeGenerator(CallNode* callNode);
   [[nodiscard]] bool emitSelfHostedForceInterpreter();
