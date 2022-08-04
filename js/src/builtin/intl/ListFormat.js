@@ -11,7 +11,7 @@ function listFormatLocaleData() {
 }
 var listFormatInternalProperties = {
   localeData: listFormatLocaleData,
-  relevantExtensionKeys: []
+  relevantExtensionKeys: [],
 };
 
 /**
@@ -248,7 +248,7 @@ function Intl_ListFormat_formatToParts(list) {
 
   // We can directly return if |stringList| contains less than two elements.
   if (stringList.length < 2) {
-    return stringList.length === 0 ? [] : [{type: "element", value: stringList[0]}];
+    return stringList.length === 0 ? [] : [{ type: "element", value: stringList[0] }];
   }
 
   // Ensure the ListFormat internals are resolved.
