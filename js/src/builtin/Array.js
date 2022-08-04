@@ -301,7 +301,7 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
    *  b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
    */
   for (var propertyKey in groups) {
-    DefineDataProperty(object, propertyKey, groups[propertyKey])
+    DefineDataProperty(object, propertyKey, groups[propertyKey]);
   }
 
   /* Step 9. Return obj. */
@@ -610,7 +610,7 @@ function ArrayCopyWithin(target, start, end = undefined) {
   var count = std_Math_min(final - from, len - to);
 
   // Steps 10-12.
-  if (from < to && to < (from + count)) {
+  if (from < to && to < from + count) {
     // Steps 10.b-c.
     from = from + count - 1;
     to = to + count - 1;
@@ -1014,9 +1014,9 @@ function ArraySpeciesCreate(originalArray, length) {
 // ES 2017 draft (April 8, 2016) 22.1.3.1.1
 function IsConcatSpreadable(O) {
   // Step 1.
-  if (!IsObject(O)
+  if (!IsObject(O) // eslint-disable-line prettier/prettier
 #ifdef ENABLE_RECORD_TUPLE
-      && !IsTuple(O)
+      && !IsTuple(O) // eslint-disable-line prettier/prettier
 #endif
   ) {
     return false;
@@ -1055,7 +1055,8 @@ function ArrayConcat(arg1) {
   // Step 4 (implicit in |arguments|).
 
   // Step 5.
-  var i = 0, argsLen = arguments.length;
+  var i = 0;
+  var argsLen = arguments.length;
 
   // Step 5.a (first element).
   var E = O;
