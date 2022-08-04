@@ -18,11 +18,15 @@ add_task(async function() {
     targetCommand,
   } = await initMultiProcessResourceCommand();
 
+  const d = Date.now();
+  const CACHED_MESSAGE_TEXT = `cached-${d}`;
+  const LIVE_MESSAGE_TEXT = `live-${d}`;
+
   info(
     "Log some messages *before* calling ResourceCommand.watchResources in order to " +
       "assert the behavior of already existing messages."
   );
-  console.log("foobar");
+  console.log(CACHED_MESSAGE_TEXT);
 
   info("Wait for existing browser mochitest log");
   const { onResource } = await resourceCommand.waitForNextResource(
@@ -30,7 +34,7 @@ add_task(async function() {
     {
       ignoreExistingResources: false,
       predicate({ message }) {
-        return message.arguments[0] === "foobar";
+        return message.arguments[0] === CACHED_MESSAGE_TEXT;
       },
     }
   );
@@ -49,11 +53,11 @@ add_task(async function() {
     {
       ignoreExistingResources: false,
       predicate({ message }) {
-        return message.arguments[0] === "foobar2";
+        return message.arguments[0] === LIVE_MESSAGE_TEXT;
       },
     }
   );
-  console.log("foobar2");
+  console.log(LIVE_MESSAGE_TEXT);
 
   info("Wait for runtime browser mochitest log");
   const runtimeLogResource = await onMochitestRuntimeLog;
