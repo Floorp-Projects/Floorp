@@ -1,0 +1,101 @@
+$max-z-index: 2147483647;
+
+.onboardingContainer.featureCallout {
+  position: absolute;
+
+  &,
+  & .outer-wrapper {
+    height: 0;
+  }
+
+  // sass-lint:disable no-color-literals
+  .screen {
+    &[pos='callout'] {
+      // Max value for z-index
+      z-index: $max-z-index - 1;
+      height: fit-content;
+      min-height: unset;
+      background-color: transparent;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+      .brand-logo {
+        margin: 30px 45px 0;
+      }
+
+      .welcome-text {
+        align-items: baseline;
+        text-align: start;
+        margin-inline: 30px;
+        padding: 20px 0 0;
+
+        h1,
+        h2 {
+          font-size: 0.8em;
+          margin: 0;
+        }
+
+        h1 {
+          font-weight: bold;
+        }
+
+        h2 {
+          margin-block: 10px;
+        }
+      }
+
+      // Secondary section is not included in callouts
+      .section-secondary {
+        display: none;
+      }
+
+      .section-main {
+        height: fit-content;
+        width: fit-content;
+
+        .main-content {
+          overflow: hidden;
+          border: 1px solid #CFCFD8;
+          box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
+          border-radius: 4px;
+          padding-block: 0 40px;
+          width: 25em;
+
+          .steps {
+            align-self: baseline;
+            margin: -38px 30px -30px;
+          }
+
+          .dismiss-button {
+            margin-block: 25px -45px;
+            z-index: 1;
+          }
+        }
+      }
+
+      .action-buttons {
+        .primary,
+        .secondary-cta .secondary {
+          padding: 4px 16px;
+          font-size: 0.8em;
+          height: 2em;
+        }
+
+        .primary {
+          font-weight: bold;
+          float: inline-end;
+          margin-inline: 10px 30px;
+          background-color: var(--in-content-button-background);
+          color: var(--in-content-button-text-color);
+
+          &:hover {
+            background-color: var(--in-content-button-background-hover);
+          }
+        }
+
+        .secondary-cta {
+          float: inline-end;
+        }
+      }
+    }
+  }
+}

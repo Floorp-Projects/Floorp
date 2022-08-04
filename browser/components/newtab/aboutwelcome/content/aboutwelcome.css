@@ -31,6 +31,82 @@ input {
   display: none !important;
 }
 
+.onboardingContainer.featureCallout {
+  position: absolute;
+}
+.onboardingContainer.featureCallout, .onboardingContainer.featureCallout .outer-wrapper {
+  height: 0;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] {
+  z-index: 2147483646;
+  height: fit-content;
+  min-height: unset;
+  background-color: transparent;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .brand-logo {
+  margin: 30px 45px 0;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text {
+  align-items: baseline;
+  text-align: start;
+  margin-inline: 30px;
+  padding: 20px 0 0;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h1,
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
+  font-size: 0.8em;
+  margin: 0;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h1 {
+  font-weight: bold;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
+  margin-block: 10px;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-secondary {
+  display: none;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main {
+  height: fit-content;
+  width: fit-content;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content {
+  overflow: hidden;
+  border: 1px solid #CFCFD8;
+  box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
+  border-radius: 4px;
+  padding-block: 0 40px;
+  width: 25em;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps {
+  align-self: baseline;
+  margin: -38px 30px -30px;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
+  margin-block: 25px -45px;
+  z-index: 1;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary {
+  padding: 4px 16px;
+  font-size: 0.8em;
+  height: 2em;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary {
+  font-weight: bold;
+  float: inline-end;
+  margin-inline: 10px 30px;
+  background-color: var(--in-content-button-background);
+  color: var(--in-content-button-text-color);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta {
+  float: inline-end;
+}
+
 html {
   height: 100%;
 }

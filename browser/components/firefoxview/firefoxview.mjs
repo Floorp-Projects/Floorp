@@ -4,8 +4,11 @@
 
 "use strict";
 
+import { showFeatureCallout } from "./featureCallout.mjs";
+
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("recently-closed-tabs-container").onLoad();
+  showFeatureCallout("FIREFOX_VIEW_FEATURE_TOUR");
 });
 
 window.addEventListener("unload", () => {
