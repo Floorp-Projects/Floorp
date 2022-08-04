@@ -91,6 +91,11 @@
 		right:0;
 		height: 40px;
 }
+@media  (-moz-platform: macos){
+	.titlebar-buttonbox{
+	  margin-top: 12px;
+	}
+  }
 /* Mac specific. You should set that font-smoothing pref to true if you are on any platform where window controls are on left */
 @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
   :root{ --uc-titlebar-padding: 0px !important }

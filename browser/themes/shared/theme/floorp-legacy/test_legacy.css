@@ -1599,6 +1599,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   outline-offset: -1px !important;
 }
 
+.tabbrowser-tab:not([usercontextid]) > .tab-stack > .tab-background > .tab-context-line{
+  display: none;
+}
+
 
 
 @supports not -moz-bool-pref("uc.tweak.floating-tabs") {
@@ -2630,11 +2634,15 @@ spacer[part="overflow-end-indicator"] {
 }
 
 
-#identity-box #notification-popup-box {
+#identity-box #notification-popup-box .notification-anchor-icon  {
   padding: 0 !important;
   margin: 0 !important;
   position: relative !important;
   bottom: 5px !important;
+}
+
+#notification-popup-box{
+  background: none !important
 }
 
 /*トラッキング情報*/
@@ -3433,3 +3441,4 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 :root:not([lwtheme-mozlightdark], [style*="--lwt-accent-color: rgb(28, 27, 34); --lwt-text-color: rgba(251, 251, 254);"]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected="true"], [multiselected])>.tab-stack>.tab-background:-moz-lwtheme {
   box-shadow: none !important;
 }
+
