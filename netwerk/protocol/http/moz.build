@@ -160,6 +160,7 @@ UNIFIED_SOURCES += [
     "SpeculativeTransaction.cpp",
     "TLSFilterTransaction.cpp",
     "TlsHandshaker.cpp",
+    "TLSTransportLayer.cpp",
     "TRRServiceChannel.cpp",
 ]
 
