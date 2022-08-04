@@ -242,8 +242,11 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
   }
 
   // 6.2.4.5 ToPropertyDescriptor, step 2.
-  var attrs = 0, hasValue = false;
-  var value, getter = null, setter = null;
+  var attrs = 0;
+  var hasValue = false;
+  var value;
+  var getter = null;
+  var setter = null;
 
   // 6.2.4.5 ToPropertyDescriptor, steps 3-4.
   if ("enumerable" in attributes) {

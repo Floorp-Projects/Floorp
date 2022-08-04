@@ -49,7 +49,7 @@ function IteratorClose(iteratorRecord, value) {
  */
 function GetIteratorSync(obj) {
   // Steps 1 & 2 skipped as we know we want the sync iterator method
-  var method = GetMethod(obj, GetBuiltinSymbol("iterator"))
+  var method = GetMethod(obj, GetBuiltinSymbol("iterator"));
 
   // Step 3. Let iterator be ? Call(method, obj).
   var iterator = callContentFunction(method, obj);
@@ -66,7 +66,7 @@ function GetIteratorSync(obj) {
   var iteratorRecord = {
     iterator,
     nextMethod,
-    done: false
+    done: false,
   };
 
   // Step 7. Return iteratorRecord.
@@ -123,7 +123,7 @@ function GetIteratorDirectWrapper(obj) {
       if (returnMethod !== undefined && returnMethod !== null) {
         return callContentFunction(returnMethod, obj, value);
       }
-      return {done: true, value};
+      return { done: true, value };
     },
   };
 }
@@ -608,7 +608,7 @@ function* IteratorFlatMapGenerator(iterated, mapper) {
 }
 
 /* Iterator Helpers proposal 2.1.5.8 */
-function IteratorReduce(reducer/*, initialValue*/) {
+function IteratorReduce(reducer /*, initialValue*/) {
   // Step 1.
   const iterated = GetIteratorDirectWrapper(this);
 
@@ -647,7 +647,7 @@ function IteratorReduce(reducer/*, initialValue*/) {
 function IteratorToArray() {
   // Step 1.
   const iterated = {
-    [GetBuiltinSymbol("iterator")]: () => this
+    [GetBuiltinSymbol("iterator")]: () => this,
   };
   // Steps 2-3.
   return [...allowContentIter(iterated)];

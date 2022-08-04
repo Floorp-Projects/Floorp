@@ -92,6 +92,7 @@ function Number_isSafeInteger(number) {
   }
 
   // Steps 1.a, 2.
+  // eslint-disable-next-line prettier/prettier
   return -((2 ** 53) - 1) <= integer && integer <= (2 ** 53) - 1;
 }
 
