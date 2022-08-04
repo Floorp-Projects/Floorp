@@ -2,7 +2,9 @@
 ## The modifications done are part of the documentation for enabling core18 snaps.
 ## https://snapcraft.io/docs/t/creating-docker-images-for-snapcraft/11739
 
-FROM ubuntu:bionic
+# /!\ The base image must follow the version of the `coreXX` package
+# https://forum.snapcraft.io/t/issues-dockerizing-a-snapcraft-build-process/30294/5
+FROM ubuntu:focal
 
 ENV LANG='en_US.UTF-8' \
     LANGUAGE='en_US:en' \
@@ -11,7 +13,10 @@ ENV LANG='en_US.UTF-8' \
     SNAP='/snap/snapcraft/current' \
     SNAP_NAME='snapcraft' \
     SNAP_ARCH='amd64' \
-    TERM='dumb'
+    TERM='dumb' \
+    TZ='Etc/UTC'
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Grab dependencies. snapd is now required per https://github.com/snapcore/snapcraft/pull/3210
 RUN apt-get update && \
@@ -34,13 +39,16 @@ locale-gen "$LANG"
 
 COPY download_and_install_snap.sh .
 
-# Grab the core snap (for backwards compatibility)
-RUN bash download_and_install_snap.sh 'core' 
-# Grab the core18 snap (which snapcraft uses as a base)
-RUN bash download_and_install_snap.sh 'core18'
-RUN bash download_and_install_snap.sh 'gnome-3-34-1804'
-RUN bash download_and_install_snap.sh 'gnome-3-34-1804-sdk'
+RUN bash download_and_install_snap.sh 'core20'
+RUN bash download_and_install_snap.sh 'gnome-3-38-2004'
+RUN bash download_and_install_snap.sh 'gnome-3-38-2004-sdk'
 RUN bash download_and_install_snap.sh 'snapcraft'
+
+# Fix Python3 installation: Make sure we use the interpreter from
+# the snapcraft snap:
+RUN unlink /snap/snapcraft/current/usr/bin/python3 && \
+    ln -s /snap/snapcraft/current/usr/bin/python3.* /snap/snapcraft/current/usr/bin/python3 && \
+    echo /snap/snapcraft/current/lib/python3.*/site-packages >> /snap/snapcraft/current/usr/lib/python3/dist-packages/site-packages.pth
 
 # Create a snapcraft runner (TODO: move version detection to the core of snapcraft).
 RUN mkdir -p /snap/bin
