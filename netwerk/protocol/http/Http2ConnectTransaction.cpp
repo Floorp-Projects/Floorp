@@ -301,7 +301,7 @@ bool Http2ConnectTransaction::MapStreamToHttpConnection(
     mDrivingTransaction->SetH2WSTransaction(this);
   } else {
     mTunneledConn->SetupSecondaryTLS(this);
-    mTunneledConn->SetInSpdyTunnel();
+    mTunneledConn->SetInSpdyTunnel(true);
   }
 
   // make the originating transaction stick to the tunneled conn
