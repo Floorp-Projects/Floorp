@@ -184,6 +184,22 @@ def old_configure_for(old_configure_path, extra_env=None):
             env["AWK"] = awk
             env["AC_MACRODIR"] = os.path.join(build_env.topsrcdir, "build", "autoconf")
 
+            try:
+               
+            except CalledProcessError as exc:
+                # Autoconf on win32 may break due to a bad $PATH.  Let the user know
+                # their $PATH is suspect.
+                if mozillabuild:
+                    mozillabuild_path = normsep(mozillabuild[0])
+                    sh_path = normsep(find_program("sh"))
+                    if mozillabuild_path not in sh_path:
+                        log.warning(
+                            "The '{}msys/bin' directory is not first in $PATH. "
+                            "This may cause autoconf to fail. ($PATH is currently "
+                            "set to: {})".format(mozillabuild_path, os.environ["PATH"])
+                        )
+                die("autoconf exited with return code {}".format(exc.returncode))
+
             # Make old-configure append to config.log, where we put our own log.
             # This could be done with a m4 macro, but it's way easier this way
             script = script.replace(b">./config.log", b">>${CONFIG_LOG=./config.log}")
