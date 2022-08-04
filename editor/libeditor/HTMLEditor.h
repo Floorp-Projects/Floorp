@@ -2446,16 +2446,16 @@ class HTMLEditor final : public EditorBase,
    * first child of aRemovingContainerElement if it will not be start of a
    * hard line after removing aRemovingContainerElement.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureHardLineBeginsWithFirstChildOf(dom::Element& aRemovingContainerElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  EnsureHardLineBeginsWithFirstChildOf(Element& aRemovingContainerElement);
 
   /**
    * EnsureHardLineEndsWithLastChildOf() inserts `<br>` element after last
    * child of aRemovingContainerElement if it will not be end of a hard line
    * after removing aRemovingContainerElement.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureHardLineEndsWithLastChildOf(dom::Element& aRemovingContainerElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  EnsureHardLineEndsWithLastChildOf(Element& aRemovingContainerElement);
 
   /**
    * RemoveAlignFromDescendants() removes align attributes, text-align
