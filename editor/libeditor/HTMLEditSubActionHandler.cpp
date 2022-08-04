@@ -6078,12 +6078,21 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType,
       // header; in HTML 4, it can directly carry the ALIGN attribute and we
       // don't need to make a div! If we are in CSS mode, all the work is done
       // in SetBlockElementAlign().
-      nsresult rv =
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
           SetBlockElementAlign(MOZ_KnownLive(*content->AsElement()), aAlignType,
                                EditTarget::OnlyDescendantsExceptTable);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::SetBlockElementAlign() failed");
-      return rv;
+      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+        NS_WARNING("HTMLEditor::SetBlockElementAlign() failed");
+        return pointToPutCaretOrError.unwrapErr();
+      }
+      if (AllowsTransactionsToChangeSelection() &&
+          pointToPutCaretOrError.inspect().IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return rv;
+        }
+      }
     }
 
     if (content->IsHTMLElement(nsGkAtoms::br)) {
@@ -6176,14 +6185,17 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   // Remember our new block for postprocessing
   TopLevelEditSubActionDataRef().mNewBlockElement = newDivElement;
   // Set up the alignment on the div, using HTML or CSS
-  nsresult rv = SetBlockElementAlign(*newDivElement, aAlignType,
-                                     EditTarget::OnlyDescendantsExceptTable);
-  if (NS_FAILED(rv)) {
+  Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+      SetBlockElementAlign(*newDivElement, aAlignType,
+                           EditTarget::OnlyDescendantsExceptTable);
+  if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
     NS_WARNING(
         "HTMLEditor::SetBlockElementAlign(EditTarget::"
         "OnlyDescendantsExceptTable) failed");
-    return EditActionResult(rv);
+    return EditActionResult(pointToPutCaretOrError.unwrapErr());
   }
+  // We don't need to put caret here because we'll put caret below.
+
   // Put in a padding <br> element for empty last line so that it won't get
   // deleted.
   CreateElementResult insertPaddingBRElementResult =
@@ -6196,7 +6208,7 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
     return EditActionResult(insertPaddingBRElementResult.unwrapErr());
   }
   insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
-  rv = CollapseSelectionToStartOf(*newDivElement);
+  nsresult rv = CollapseSelectionToStartOf(*newDivElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::CollapseSelectionToStartOf() failed");
   return EditActionHandled(rv);
@@ -6234,14 +6246,22 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
     // don't need to nest it, just set the alignment.  In CSS, assign the
     // corresponding CSS styles in SetBlockElementAlign().
     if (HTMLEditUtils::SupportsAlignAttr(content)) {
-      nsresult rv =
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
           SetBlockElementAlign(MOZ_KnownLive(*content->AsElement()), aAlignType,
                                EditTarget::NodeAndDescendantsExceptTable);
-      if (NS_FAILED(rv)) {
+      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::SetBlockElementAlign(EditTarget::"
             "NodeAndDescendantsExceptTable) failed");
-        return rv;
+        return pointToPutCaretOrError.unwrapErr();
+      }
+      if (AllowsTransactionsToChangeSelection() &&
+          pointToPutCaretOrError.inspect().IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return rv;
+        }
       }
       // Clear out createdDivElement so that we don't put nodes after this one
       // into it
@@ -6373,14 +6393,28 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
       // Remember our new block for postprocessing
       TopLevelEditSubActionDataRef().mNewBlockElement = newDivElement;
       // Set up the alignment on the div
-      rv = SetBlockElementAlign(*newDivElement, aAlignType,
-                                EditTarget::OnlyDescendantsExceptTable);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+          SetBlockElementAlign(*newDivElement, aAlignType,
+                               EditTarget::OnlyDescendantsExceptTable);
+      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.inspectErr() ==
+                         NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING(
+              "HTMLEditor::SetBlockElementAlign(EditTarget::"
+              "OnlyDescendantsExceptTable) failed");
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING(
+            "HTMLEditor::SetBlockElementAlign(EditTarget::"
+            "OnlyDescendantsExceptTable) failed, but ignored");
+      } else if (AllowsTransactionsToChangeSelection() &&
+                 pointToPutCaretOrError.inspect().IsSet()) {
+        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return rv;
+        }
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::SetBlockElementAlign(EditTarget::"
-                           "OnlyDescendantsExceptTable) failed, but ignored");
       createdDivElement = std::move(newDivElement);
     }
 
@@ -9830,40 +9864,37 @@ CreateElementResult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
   return insertBRElementResult;
 }
 
-nsresult HTMLEditor::SetBlockElementAlign(Element& aBlockOrHRElement,
-                                          const nsAString& aAlignType,
-                                          EditTarget aEditTarget) {
+Result<EditorDOMPoint, nsresult> HTMLEditor::SetBlockElementAlign(
+    Element& aBlockOrHRElement, const nsAString& aAlignType,
+    EditTarget aEditTarget) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(HTMLEditUtils::IsBlockElement(aBlockOrHRElement) ||
              aBlockOrHRElement.IsHTMLElement(nsGkAtoms::hr));
   MOZ_ASSERT(IsCSSEnabled() ||
              HTMLEditUtils::SupportsAlignAttr(aBlockOrHRElement));
 
+  EditorDOMPoint pointToPutCaret;
   if (!aBlockOrHRElement.IsHTMLElement(nsGkAtoms::table)) {
     Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
         RemoveAlignFromDescendants(aBlockOrHRElement, aAlignType, aEditTarget);
     if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       NS_WARNING("HTMLEditor::RemoveAlignFromDescendants() failed");
-      return pointToPutCaretOrError.unwrapErr();
+      return pointToPutCaretOrError;
     }
-    if (AllowsTransactionsToChangeSelection() &&
-        pointToPutCaretOrError.inspect().IsSet()) {
-      nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return rv;
-      }
+    if (pointToPutCaretOrError.inspect().IsSet()) {
+      pointToPutCaret = pointToPutCaretOrError.unwrap();
     }
   }
   nsresult rv = SetAttributeOrEquivalent(&aBlockOrHRElement, nsGkAtoms::align,
                                          aAlignType, false);
   if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::SetAttributeOrEquivalent(nsGkAtoms::align) failed");
-  return rv;
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::SetAttributeOrEquivalent(nsGkAtoms::align) failed");
+    return Err(rv);
+  }
+  return pointToPutCaret;
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::ChangeMarginStart(
