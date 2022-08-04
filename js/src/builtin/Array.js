@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* ES5 15.4.4.16. */
-function ArrayEvery(callbackfn/*, thisArg*/) {
+function ArrayEvery(callbackfn /*, thisArg*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -40,7 +40,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
 SetIsInlinableLargeFunction(ArrayEvery);
 
 /* ES5 15.4.4.17. */
-function ArraySome(callbackfn/*, thisArg*/) {
+function ArraySome(callbackfn /*, thisArg*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -131,7 +131,7 @@ function SortArray(obj, comparefn) {
 }
 
 /* ES5 15.4.4.18. */
-function ArrayForEach(callbackfn/*, thisArg*/) {
+function ArrayForEach(callbackfn /*, thisArg*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -166,7 +166,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
 SetIsInlinableLargeFunction(ArrayForEach);
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.15. */
-function ArrayMap(callbackfn/*, thisArg*/) {
+function ArrayMap(callbackfn /*, thisArg*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -205,7 +205,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
 SetIsInlinableLargeFunction(ArrayMap);
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.7 Array.prototype.filter. */
-function ArrayFilter(callbackfn/*, thisArg*/) {
+function ArrayFilter(callbackfn /*, thisArg*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -251,7 +251,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
 //
 // Array.prototype.groupBy
 // https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
-function ArrayGroup(callbackfn/*, thisArg*/) {
+function ArrayGroup(callbackfn /*, thisArg*/) {
   /* Step 1. Let O be ? ToObject(this value). */
   var O = ToObject(this);
 
@@ -287,7 +287,7 @@ function ArrayGroup(callbackfn/*, thisArg*/) {
 
     /* Step 6.d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue). */
     if (!groups[propertyKey]) {
-      var elements = [ kValue ];
+      var elements = [kValue];
       DefineDataProperty(groups, propertyKey, elements);
     } else {
       var lenElements = groups[propertyKey].length;
@@ -314,7 +314,7 @@ function ArrayGroup(callbackfn/*, thisArg*/) {
 //
 // Array.prototype.groupToMap
 // https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
-function ArrayGroupToMap(callbackfn/*, thisArg*/) {
+function ArrayGroupToMap(callbackfn /*, thisArg*/) {
   /* Step 1. Let O be ? ToObject(this value). */
   var O = ToObject(this);
 
@@ -358,7 +358,7 @@ function ArrayGroupToMap(callbackfn/*, thisArg*/) {
     /* Step 6.c.
      * Let key be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
      */
-    var propertyKey = callContentFunction(callbackfn,T, kValue, k, O);
+    var propertyKey = callContentFunction(callbackfn, T, kValue, k, O);
 
     /* Skipping Step 6.d. If key is -0𝔽, set key to +0𝔽.
      *
@@ -373,7 +373,7 @@ function ArrayGroupToMap(callbackfn/*, thisArg*/) {
      * and 8.a-b as a result.
      */
     if (!callFunction(std_Map_get, map, propertyKey)) {
-      var elements = [ kValue ];
+      var elements = [kValue];
       callFunction(std_Map_set, map, propertyKey, elements);
     } else {
       var elements = callFunction(std_Map_get, map, propertyKey);
@@ -388,7 +388,7 @@ function ArrayGroupToMap(callbackfn/*, thisArg*/) {
 #endif
 
 /* ES5 15.4.4.21. */
-function ArrayReduce(callbackfn/*, initialValue*/) {
+function ArrayReduce(callbackfn /*, initialValue*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -452,7 +452,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
 }
 
 /* ES5 15.4.4.22. */
-function ArrayReduceRight(callbackfn/*, initialValue*/) {
+function ArrayReduceRight(callbackfn /*, initialValue*/) {
   /* Step 1. */
   var O = ToObject(this);
 
@@ -516,7 +516,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
 }
 
 /* ES6 draft 2013-05-14 15.4.3.23. */
-function ArrayFind(predicate/*, thisArg*/) {
+function ArrayFind(predicate /*, thisArg*/) {
   /* Steps 1-2. */
   var O = ToObject(this);
 
@@ -550,7 +550,7 @@ function ArrayFind(predicate/*, thisArg*/) {
 }
 
 /* ES6 draft 2013-05-14 15.4.3.23. */
-function ArrayFindIndex(predicate/*, thisArg*/) {
+function ArrayFindIndex(predicate /*, thisArg*/) {
   /* Steps 1-2. */
   var O = ToObject(this);
 
@@ -1139,7 +1139,7 @@ function ArrayConcat(arg1) {
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 22.1.3.11 Array.prototype.flatMap ( mapperFunction [ , thisArg ] )
-function ArrayFlatMap(mapperFunction/*, thisArg*/) {
+function ArrayFlatMap(mapperFunction /*, thisArg*/) {
   // Step 1.
   var O = ToObject(this);
 
@@ -1347,7 +1347,7 @@ function ArrayToSorted(comparefn) {
 
 // https://github.com/tc39/proposal-array-find-from-last
 // Array.prototype.findLast ( predicate, thisArg )
-function ArrayFindLast(predicate/*, thisArg*/) {
+function ArrayFindLast(predicate /*, thisArg*/) {
   /* Steps 1. */
   var O = ToObject(this);
 
@@ -1380,7 +1380,7 @@ function ArrayFindLast(predicate/*, thisArg*/) {
 
 // https://github.com/tc39/proposal-array-find-from-last
 // Array.prototype.findLastIndex ( predicate, thisArg )
-function ArrayFindLastIndex(predicate/*, thisArg*/) {
+function ArrayFindLastIndex(predicate /*, thisArg*/) {
   /* Steps 1. */
   var O = ToObject(this);
 
