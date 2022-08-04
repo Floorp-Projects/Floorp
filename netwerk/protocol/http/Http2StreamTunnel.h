@@ -71,15 +71,25 @@ class Http2StreamTunnel : public Http2StreamBase,
   nsresult mCondition{NS_OK};
 };
 
+// f9d10060-f5d4-443e-ba59-f84ea975c5f0
+#define NS_OUTPUTSTREAMTUNNEL_IID                    \
+  {                                                  \
+    0xf9d10060, 0xf5d4, 0x443e, {                    \
+      0xba, 0x59, 0xf8, 0x4e, 0xa9, 0x75, 0xc5, 0xf0 \
+    }                                                \
+  }
+
 class OutputStreamTunnel : public nsIAsyncOutputStream {
  public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_OUTPUTSTREAMTUNNEL_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   NS_DECL_NSIASYNCOUTPUTSTREAM
 
   explicit OutputStreamTunnel(Http2StreamTunnel* aStream);
 
-  void OnSocketReady(nsresult condition);
+  nsresult OnSocketReady(nsresult condition);
+  void MaybeSetRequestDone(nsIOutputStreamCallback* aCallback);
 
  private:
   virtual ~OutputStreamTunnel() {}
@@ -100,7 +110,7 @@ class InputStreamTunnel : public nsIAsyncInputStream {
 
   explicit InputStreamTunnel(Http2StreamTunnel* aStream);
 
-  void OnSocketReady(nsresult condition);
+  nsresult OnSocketReady(nsresult condition);
   bool HasCallback() { return !!mCallback; }
 
  private:
@@ -115,6 +125,7 @@ class InputStreamTunnel : public nsIAsyncInputStream {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http2StreamTunnel, NS_HTTP2STREAMTUNNEL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(OutputStreamTunnel, NS_OUTPUTSTREAMTUNNEL_IID)
 
 }  // namespace mozilla::net
 

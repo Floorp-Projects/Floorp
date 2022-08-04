@@ -2866,7 +2866,9 @@ nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   if (mConnection) {
     mConnection->TransactionHasDataToRecv(this);
     nsresult rv = mConnection->ResumeRecv();
-    if (NS_FAILED(rv)) NS_ERROR("ResumeRecv failed");
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+      NS_ERROR("ResumeRecv failed");
+    }
   }
   return NS_OK;
 }
