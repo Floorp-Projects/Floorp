@@ -424,10 +424,9 @@ nsresult Http2PushedStream::GenerateHeaders(nsCString& aCompressedData,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult Http2PushedStream::Close(nsresult reason) {
+void Http2PushedStream::CloseStream(nsresult reason) {
   mTransaction->Close(reason);
   mSession = nullptr;
-  return NS_OK;
 }
 
 //////////////////////////////////////////

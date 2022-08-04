@@ -78,7 +78,7 @@ class Http2PushedStream final : public Http2StreamBase {
   nsresult ConvertPushHeaders(Http2Decompressor* decompressor,
                               nsACString& aHeadersIn, nsACString& aHeadersOut);
 
-  nsresult Close(nsresult reason) override;
+  void CloseStream(nsresult reason) override;
 
  protected:
   nsresult CallToReadData(uint32_t count, uint32_t* countRead) override;

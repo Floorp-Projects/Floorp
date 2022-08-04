@@ -21,7 +21,7 @@ class Http2StreamWebSocket : public Http2StreamBase {
   nsIRequestContext* RequestContext() override {
     return mTransaction ? mTransaction->RequestContext() : nullptr;
   }
-  nsresult Close(nsresult reason) override;
+  void CloseStream(nsresult reason) override;
 
  protected:
   nsresult CallToReadData(uint32_t count, uint32_t* countRead) override;
