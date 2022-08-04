@@ -49,8 +49,7 @@ function MapForEach(callbackfn, thisArg = undefined) {
   // Inlined: MapIteratorNext
   var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
   if (!mapIterationResultPair) {
-    mapIterationResultPair = iteratorTemp.mapIterationResultPair =
-        CreateMapIterationResultPair();
+    mapIterationResultPair = iteratorTemp.mapIterationResultPair = CreateMapIterationResultPair();
   }
 
   while (true) {
@@ -84,8 +83,7 @@ function MapIteratorNext() {
 
   var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
   if (!mapIterationResultPair) {
-    mapIterationResultPair = iteratorTemp.mapIterationResultPair =
-        CreateMapIterationResultPair();
+    mapIterationResultPair = iteratorTemp.mapIterationResultPair = CreateMapIterationResultPair();
   }
 
   var retVal = {value: undefined, done: true};

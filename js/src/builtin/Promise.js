@@ -43,7 +43,9 @@ function Promise_finally(onFinally) {
       // https://github.com/tc39/ecma262/issues/933
 
       // Step 8.
-      return callContentFunction(promise.then, promise, function() { return value; });
+      return callContentFunction(promise.then, promise, function() {
+        return value;
+      });
     };
 
     // CatchFinally Function.
@@ -63,7 +65,9 @@ function Promise_finally(onFinally) {
       // https://github.com/tc39/ecma262/issues/933
 
       // Step 8.
-      return callContentFunction(promise.then, promise, function() { throw reason; });
+      return callContentFunction(promise.then, promise, function() {
+        throw reason;
+      });
     };
   }
 

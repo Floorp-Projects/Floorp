@@ -38,8 +38,12 @@ function Reflect_apply(target, thisArgument, argumentsList) {
 
   // Step 2.
   if (!IsObject(argumentsList)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`argumentsList`", "Reflect.apply",
-                   ToSource(argumentsList));
+    ThrowTypeError(
+      JSMSG_OBJECT_REQUIRED_ARG,
+      "`argumentsList`",
+      "Reflect.apply",
+      ToSource(argumentsList)
+    );
   }
 
   // Steps 2-4.
@@ -67,14 +71,19 @@ function Reflect_construct(target, argumentsList/*, newTarget*/) {
 
   // Step 4.
   if (!IsObject(argumentsList)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`argumentsList`", "Reflect.construct",
-                   ToSource(argumentsList));
+    ThrowTypeError(
+      JSMSG_OBJECT_REQUIRED_ARG,
+      "`argumentsList`",
+      "Reflect.construct",
+      ToSource(argumentsList)
+    );
   }
 
   // Fast path when we can avoid calling CreateListFromArrayLikeForArgs().
-  var args = (IsPackedArray(argumentsList) && argumentsList.length <= MAX_ARGS_LENGTH)
-             ? argumentsList
-             : CreateListFromArrayLikeForArgs(argumentsList);
+  var args =
+    (IsPackedArray(argumentsList) && argumentsList.length <= MAX_ARGS_LENGTH)
+      ? argumentsList
+      : CreateListFromArrayLikeForArgs(argumentsList);
 
   // Step 5.
   switch (args.length) {
@@ -134,8 +143,7 @@ function Reflect_getOwnPropertyDescriptor(target, propertyKey) {
 function Reflect_has(target, propertyKey) {
   // Step 1.
   if (!IsObject(target)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.has",
-                   ToSource(target));
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.has", ToSource(target));
   }
 
   // Steps 2-3 are identical to the runtime semantics of the "in" operator.
@@ -147,8 +155,7 @@ function Reflect_has(target, propertyKey) {
 function Reflect_get(target, propertyKey/*, receiver*/) {
   // Step 1.
   if (!IsObject(target)) {
-    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.get",
-                   ToSource(target));
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.get", ToSource(target));
   }
 
   // Step 3 (reordered).

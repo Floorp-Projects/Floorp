@@ -90,8 +90,14 @@ function ObjectDefineSetter(name, setter) {
   var key = TO_PROPERTY_KEY(name);
 
   // Steps 3, 5.
-  DefineProperty(object, key, ACCESSOR_DESCRIPTOR_KIND | ATTR_ENUMERABLE | ATTR_CONFIGURABLE,
-                 null, setter, true);
+  DefineProperty(
+    object,
+    key,
+    ACCESSOR_DESCRIPTOR_KIND | ATTR_ENUMERABLE | ATTR_CONFIGURABLE,
+    null,
+    setter,
+    true
+  );
 
   // Step 6. (implicit)
 }
@@ -110,8 +116,14 @@ function ObjectDefineGetter(name, getter) {
   var key = TO_PROPERTY_KEY(name);
 
   // Steps 3, 5.
-  DefineProperty(object, key, ACCESSOR_DESCRIPTOR_KIND | ATTR_ENUMERABLE | ATTR_CONFIGURABLE,
-                 getter, null, true);
+  DefineProperty(
+    object,
+    key,
+    ACCESSOR_DESCRIPTOR_KIND | ATTR_ENUMERABLE | ATTR_CONFIGURABLE,
+    getter,
+    null,
+    true
+  );
 
   // Step 6. (implicit)
 }
@@ -288,9 +300,10 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
   if (hasValue) {
     // Use the inlinable DefineDataProperty function when possible.
     if (strict) {
-      if ((attrs & (ATTR_ENUMERABLE | ATTR_CONFIGURABLE | ATTR_WRITABLE)) ===
-          (ATTR_ENUMERABLE | ATTR_CONFIGURABLE | ATTR_WRITABLE))
-      {
+      if (
+        (attrs & (ATTR_ENUMERABLE | ATTR_CONFIGURABLE | ATTR_WRITABLE)) ===
+        (ATTR_ENUMERABLE | ATTR_CONFIGURABLE | ATTR_WRITABLE)
+      ) {
         DefineDataProperty(obj, propertyKey, value);
         return true;
       }
