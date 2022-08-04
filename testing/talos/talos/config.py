@@ -242,7 +242,9 @@ def skip_test(test_instance, config):
     # Determines if a test should be skipped, and returns
     # a message with a reason why or None if it doesn't need
     # to be skipped
-    if not getattr(test_instance, "pine", True) and config.get("project") == "pine":
+    if not getattr(test_instance, "pine", True) and config.get(
+        "project", ""
+    ).startswith("pine"):
         return "Broken on the pine branch"
     return None
 
