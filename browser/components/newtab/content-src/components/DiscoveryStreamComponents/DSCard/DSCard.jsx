@@ -317,11 +317,10 @@ export class _DSCard extends React.PureComponent {
       );
     }
 
-    const { isRecentSave, DiscoveryStream } = this.props;
+    const { isRecentSave, DiscoveryStream, saveToPocketCard } = this.props;
 
     const {
       pocketButtonEnabled,
-      saveToPocketCard,
       hideDescriptions,
       compactImages,
       imageGradient,
