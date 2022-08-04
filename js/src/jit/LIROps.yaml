@@ -3106,7 +3106,7 @@
   operands:
     index: WordSized
 
-- name: GuardIndexGreaterThanDenseInitLength
+- name: GuardIndexIsNotDenseElement
   operands:
     object: WordSized
     index: WordSized

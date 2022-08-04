@@ -3604,8 +3604,8 @@ bool CacheIRCompiler::emitGuardInt32IsNonNegative(Int32OperandId indexId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength(
-    ObjOperandId objId, Int32OperandId indexId) {
+bool CacheIRCompiler::emitGuardIndexIsNotDenseElement(ObjOperandId objId,
+                                                      Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
@@ -3620,13 +3620,17 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength(
   // Load obj->elements.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-  // Ensure index >= initLength.
-  Label outOfBounds;
+  // Ensure index >= initLength or the element is a hole.
+  Label notDense;
   Address capacity(scratch, ObjectElements::offsetOfInitializedLength());
-  masm.spectreBoundsCheck32(index, capacity, spectreScratch, &outOfBounds);
-  masm.jump(failure->label());
-  masm.bind(&outOfBounds);
+  masm.spectreBoundsCheck32(index, capacity, spectreScratch, &notDense);
 
+  BaseValueIndex element(scratch, index);
+  masm.branchTestMagic(Assembler::Equal, element, &notDense);
+
+  masm.jump(failure->label());
+
+  masm.bind(&notDense);
   return true;
 }
 

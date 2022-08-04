@@ -540,7 +540,7 @@
     obj: ObjId
     index: Int32Id
 
-- name: GuardIndexGreaterThanDenseInitLength
+- name: GuardIndexIsNotDenseElement
   shared: true
   transpile: true
   cost_estimate: 1
