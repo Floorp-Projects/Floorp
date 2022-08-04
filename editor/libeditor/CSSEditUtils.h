@@ -134,10 +134,12 @@ class CSSEditUtils final {
    * @param aProperty       [IN] The CSS property atom to remove.
    * @param aPropertyValue  [IN] The value of the property we have to remove
    *                             if the property accepts more than one value.
+   * @return                A candidate point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSInlineStyleWithTransaction(
-      nsStyledElement& aStyledElement, nsAtom* aProperty,
-      const nsAString& aPropertyValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveCSSInlineStyleWithTransaction(nsStyledElement& aStyledElement,
+                                      nsAtom* aProperty,
+                                      const nsAString& aPropertyValue);
 
   /**
    * Answers true is the property can be removed by setting a "none" CSS value

@@ -9720,14 +9720,23 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
         // MOZ_KnownLive(*styledBlockOrHRElement): It's `blockOrHRElement
         // which is OwningNonNull.
         nsAutoString dummyCssValue;
-        nsresult rv = mCSSEditUtils->RemoveCSSInlineStyleWithTransaction(
-            MOZ_KnownLive(*styledBlockOrHRElement), nsGkAtoms::textAlign,
-            dummyCssValue);
-        if (NS_FAILED(rv)) {
+        Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+            mCSSEditUtils->RemoveCSSInlineStyleWithTransaction(
+                MOZ_KnownLive(*styledBlockOrHRElement), nsGkAtoms::textAlign,
+                dummyCssValue);
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
           NS_WARNING(
               "CSSEditUtils::RemoveCSSInlineStyleWithTransaction(nsGkAtoms::"
               "textAlign) failed");
-          return rv;
+          return pointToPutCaretOrError.unwrapErr();
+        }
+        if (AllowsTransactionsToChangeSelection() &&
+            pointToPutCaretOrError.inspect().IsSet()) {
+          nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+          if (NS_FAILED(rv)) {
+            NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+            return rv;
+          }
         }
       }
     }

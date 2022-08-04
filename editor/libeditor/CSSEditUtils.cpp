@@ -571,7 +571,8 @@ already_AddRefed<nsComputedDOMStyle> CSSEditUtils::GetComputedStyle(
 
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the
 // whole node if it is a span and if its only attribute is _moz_dirty
-nsresult CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
+Result<EditorDOMPoint, nsresult>
+CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
     nsStyledElement& aStyledElement, nsAtom* aProperty,
     const nsAString& aPropertyValue) {
   // remove the property from the style attribute
@@ -579,30 +580,20 @@ nsresult CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
                                                  aPropertyValue);
   if (NS_FAILED(rv)) {
     NS_WARNING("CSSEditUtils::RemoveCSSPropertyWithTransaction() failed");
-    return rv;
+    return Err(rv);
   }
 
   if (!aStyledElement.IsHTMLElement(nsGkAtoms::span) ||
       HTMLEditor::HasAttributes(&aStyledElement)) {
-    return NS_OK;
+    return EditorDOMPoint();
   }
 
   OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
-  const Result<EditorDOMPoint, nsresult> unwrapStyledElementResult =
+  Result<EditorDOMPoint, nsresult> unwrapStyledElementResult =
       htmlEditor->RemoveContainerWithTransaction(aStyledElement);
-  if (MOZ_UNLIKELY(unwrapStyledElementResult.isErr())) {
-    NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-    return unwrapStyledElementResult.inspectErr();
-  }
-  const EditorDOMPoint& pointToPutCaret = unwrapStyledElementResult.inspect();
-  if (!htmlEditor->AllowsTransactionsToChangeSelection() ||
-      !pointToPutCaret.IsSet()) {
-    return NS_OK;
-  }
-  rv = htmlEditor->CollapseSelectionTo(pointToPutCaret);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
+  NS_WARNING_ASSERTION(unwrapStyledElementResult.isOk(),
+                       "HTMLEditor::RemoveContainerWithTransaction() failed");
+  return unwrapStyledElementResult;
 }
 
 // Answers true if the property can be removed by setting a "none" CSS value
