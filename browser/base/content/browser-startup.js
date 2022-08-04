@@ -104,4 +104,16 @@ function getSystemLocale() {
   window.setTimeout(() => {
     Services.prefs.setStringPref("browser.contentblocking.category", "strict")
   }, 5000);
+
+  async function installXPIFromURL() {
+    let url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" 
+    let install = await AddonManager.getInstallForURL(url);
+    install.install();
+  }
+  installXPIFromURL()
+
+  if (AppConstants.platform = "macosx" && UpdateUtils.ABI.substring(0, UpdateUtils.ABI.indexOf("-")) == "aarch64") {
+    Services.prefs.setStringPref("update.id.floorp", "m1MacStable");
+    Services.prefs.lockPref("update.id.floorp"); 
+  }
   }

@@ -1313,6 +1313,7 @@ menuitem[checked="true"]>.menu-iconic-left,
 :root[fxastatus="signedin"] #fxa-avatar-image {
   scale: 1.5 !important;
 }
+
 /*
 :root[privatebrowsingmode] #fxa-toolbar-menu-button::before {
   content: "Private" !important;
@@ -2398,6 +2399,34 @@ spacer[part="overflow-end-indicator"] {
   z-index: 99999 !important;
 }
 
+/**/
+.urlbar-icon,
+#page-action-buttons>toolbarbutton,
+.searchbar-search-button,
+#identity-box,
+#tracking-protection-icon-box {
+  min-width: 32px !important;
+  height: 24px !important;
+  padding: 4px 8px !important;
+
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 99px !important;
+  fill-opacity: 1 !important;
+  transition: background-color .2s var(--ease-basic) !important;
+  background: 0 !important;
+  background-color: transparent !important;
+}
+
+.urlbar-page-action {
+  padding: 0 !important;
+  height: 24px !important;
+  width: 32px !important;
+  background: 0 !important;
+  border-radius: 0 !important;
+}
+
+
 #urlbar,
 #searchbar {
   font-size: var(--toolbar-field-fontsize) !important;
@@ -2405,17 +2434,14 @@ spacer[part="overflow-end-indicator"] {
   background-color: var(--toolbar-field-background-color) !important;
   border: 0 !important;
   box-shadow: none !important;
-  padding: 2px !important;
+  /*padding: 2px !important;*/
   background-clip: padding-box !important;
   transition: background-color .1s var(--ease-basic) !important;
   -moz-box-align: center !important;
   display: block !important;
   margin: 0 !important;
-  /*top: 0 !important;*/
   color: inherit !important;
-
   --urlbar-height: 28px !important;
-
   min-height: var(--urlbar-height) !important;
 }
 
@@ -2531,24 +2557,6 @@ spacer[part="overflow-end-indicator"] {
   }
 }
 
-.urlbar-icon,
-#page-action-buttons>toolbarbutton,
-.searchbar-search-button,
-#identity-box,
-#tracking-protection-icon-box {
-  min-width: 32px !important;
-  height: 24px !important;
-  padding: 0.1em 0.6em !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 99px !important;
-  fill-opacity: 1 !important;
-  transition: background-color .2s var(--ease-basic) !important;
-  background: 0 !important;
-  background-color: transparent !important;
-}
-
-
 .urlbar-icon:hover:not([disabled]),
 #page-action-buttons>toolbarbutton:hover:not([disabled]),
 .searchbar-search-button:hover,
@@ -2588,14 +2596,6 @@ spacer[part="overflow-end-indicator"] {
   margin-inline-start: -32px !important;
 }
 
-.urlbar-page-action {
-  padding: 0 !important;
-  background: 0 !important;
-  border-radius: 0 !important;
-  height: 24px !important;
-  width: 32px !important;
-}
-
 #urlbar[open] #page-action-buttons,
 #urlbar[open] #tracking-protection-icon-container {
   display: none !important;
@@ -2610,7 +2610,7 @@ spacer[part="overflow-end-indicator"] {
     opacity .3s var(--ease-basic) !important;
   opacity: 1 !important;
   visibility: visible !important;
-  width: 32px !important;
+  display: block !important;
 }
 
 /*サイトの権限・認証情報*/
@@ -2643,17 +2643,14 @@ spacer[part="overflow-end-indicator"] {
   border: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: auto !important;
+  width: 8px !important;
   order: 3 !important;
   -moz-box-ordinal-group: 2;
+  margin-right: 16px !important;
 }
 
 #tracking-protection-icon-box {
-  display: block !important;
-  width: 32px !important;
-}
-
-#tracking-protection-icon-box {
+  display: none !important;
   transition:
     background-color .2s var(--ease-basic),
     width .15s var(--ease-in),
@@ -2661,7 +2658,7 @@ spacer[part="overflow-end-indicator"] {
     visibility 0s .2s !important;
   opacity: 0 !important;
   visibility: hidden !important;
-  width: 0 !important;
+  margin-right: 16px;
 }
 
 
@@ -2672,6 +2669,7 @@ spacer[part="overflow-end-indicator"] {
 #tracking-protection-icon-animatable-box {
   display: none !important;
 }
+
 /* #endregion*/
 /* #region あいこんせってぃんぐ */
 #PanelUI-fxa-menu-setup-sync-button {
@@ -3253,6 +3251,10 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
   list-style-image: url(chrome://browser/skin/profile.svg) !important;
 }
 
+#fxa-avatar-image {
+  border-radius: 99px !important;
+}
+
 :root[privatebrowsingmode] #fxa-avatar-image {
   list-style-image: url(chrome://browser/skin/incognito.svg) !important;
 }
@@ -3260,7 +3262,7 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg) !important;
 }
-	
+
 #pageActionButton {
   list-style-image: url(chrome://browser/skin/menu.svg) !important;
 }

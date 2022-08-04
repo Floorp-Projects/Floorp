@@ -1,0 +1,52 @@
+name: Windows x64 Build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create environment
+      run: |
+        cd D:\a\Floorp\Floorp
+        curl -OL https://github.com/Floorp-Projects/Floorp/releases/download/10.0.0/mozilla-build.zip
+        Expand-Archive -Path D:\a\Floorp\Floorp\mozilla-build.zip -DestinationPath C:\mozilla-build\
+        cd D:\a\Floorp\Floorp
+        git clone https://github.com/floorp-projects/l10n-central
+        ./mach bootstrap
+        New-Item D:\a\Floorp\Floorp\mozconfig -type file 
+        Set-Content mozconfig "ac_add_options --enable-updater"
+        Add-Content mozconfig "ac_add_options --with-app-name=floorp" 
+        Add-Content mozconfig "ac_add_options --with-app-basename=Floorp" 
+        Add-Content mozconfig "ac_add_options --with-branding=browser/branding/official" 
+        Add-Content mozconfig "ac_add_options --disable-crashreporter" 
+        Add-Content mozconfig "ac_add_options --enable-proxy-bypass-protection" 
+        Add-Content mozconfig "ac_add_options --disable-verify-mar" 
+        Add-Content mozconfig "ac_add_options --enable-update-channel=release" 
+        Add-Content mozconfig "ac_add_options --with-mozilla-api-keyfile=D:/a/Floorp/Floorp/apis/api-mozilla-key" 
+        Add-Content mozconfig "ac_add_options --with-google-location-service-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-location-service-key" 
+        Add-Content mozconfig "ac_add_options --with-google-safebrowsing-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-safe-browsing-key" 
+        Add-Content mozconfig "ac_add_options --enable-bootstrap" 
+        Add-Content mozconfig "ac_add_options --with-l10n-base=D:/a/Floorp/Floorp/l10n-central/l10n-central" 
+        Add-Content mozconfig "MOZ_REQUIRE_SIGNING=" 
+        Add-Content mozconfig "MOZ_DATA_REPORTING=" 
+        Add-Content mozconfig "MOZ_TELEMETRY_REPORTING=" 
+        ./mach configure
+        rm .\mozilla-build.zip
+    - name: Build & Package
+      run: |        
+        ./mach build
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
+
+    - name: Publish
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-windows-x64
+        path: 
+           obj-x86_64-pc-mingw32/dist/floorp
+           obj-x86_64-pc-mingw32/dist/install/sea

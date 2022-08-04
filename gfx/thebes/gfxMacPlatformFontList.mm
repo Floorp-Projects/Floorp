@@ -432,7 +432,7 @@ nsresult MacOSFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     // Temporarily retain charmap, until the shared version is
     // ready for use.
     if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
-      Unused << charmap.forget();
+      charmap.get()->AddRef();
     }
   }
 

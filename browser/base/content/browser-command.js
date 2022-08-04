@@ -48,3 +48,16 @@ function bosshascomming() {
     let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
     new nsLocalFile(profileDir,).reveal();
   }
+
+  function restartbrowser(){
+  Services.obs.notifyObservers(null, "startupcache-invalidate");
+
+    let env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
+
+    Services.startup.quit(
+      Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+    );
+  }
