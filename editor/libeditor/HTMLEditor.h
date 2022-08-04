@@ -1230,13 +1230,6 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * Try to get parent list element at `Selection`.  This returns first find
-   * parent list element of common ancestor of ranges (looking for it from
-   * first range to last range).
-   */
-  Element* GetParentListElementAtSelection() const;
-
-  /**
    * GetRangeExtendedToHardLineEdgesForBlockEditAction() returns an extended
    * range if aRange should be extended before handling a block level editing.
    * If aRange start and/or end point <br> or something non-editable point, they
