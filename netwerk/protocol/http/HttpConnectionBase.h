@@ -17,6 +17,7 @@
 #include "TimingStruct.h"
 #include "HttpTrafficAnalyzer.h"
 
+#include "mozilla/net/DNS.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"

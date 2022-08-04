@@ -10,6 +10,7 @@
 #include "TLSTransportLayer.h"
 #include "nsISocketProvider.h"
 #include "Http2StreamTunnel.h"
+#include "nsQueryObject.h"
 #include "nsSocketTransport2.h"
 #include "nsSocketProviderService.h"
 

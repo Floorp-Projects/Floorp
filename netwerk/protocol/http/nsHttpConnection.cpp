@@ -28,6 +28,7 @@
 #include "nsISupportsPriority.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsCRT.h"
+#include "nsQueryObject.h"
 #include "nsPreloadedStream.h"
 #include "nsProxyRelease.h"
 #include "nsSocketTransport2.h"

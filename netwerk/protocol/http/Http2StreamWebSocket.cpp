@@ -15,6 +15,9 @@
 
 #include "Http2StreamWebSocket.h"
 #include "Http2ConnectTransaction.h"
+#include "Http2Session.h"
+#include "mozilla/Telemetry.h"
+#include "nsHttpTransaction.h"
 
 namespace mozilla::net {
 
