@@ -71,6 +71,7 @@ class ThreeDotMenuMainRobot {
     fun verifyFindInPageButton() = assertFindInPageButton()
     fun verifyWhatsNewButton() = assertWhatsNewButton()
     fun verifyAddToTopSitesButton() = assertAddToTopSitesButton()
+    fun verifyRemoveFromShortcutsButton() = assertRemoveFromShortcutsButton()
     fun verifyAddToMobileHome() = assertAddToMobileHome()
     fun verifyDesktopSite() = assertDesktopSite()
     fun verifyDownloadsButton() = assertDownloadsButton()
@@ -325,6 +326,13 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
+        fun clickRemoveFromShortcuts(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            removeFromShortcutsButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openAddToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text("Add to Home screen")), waitingTime)
             addToHomeScreenButton().click()
@@ -513,11 +521,24 @@ private fun assertReaderViewAppearanceButton(visible: Boolean) {
 private fun addToTopSitesButton() =
     onView(allOf(withText(R.string.browser_menu_add_to_shortcuts)))
 
+private fun removeFromShortcutsButton() =
+    onView(allOf(withText(R.string.browser_menu_remove_from_shortcuts)))
+
 private fun assertAddToTopSitesButton() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
                 hasDescendant(withText(R.string.browser_menu_add_to_shortcuts))
+            )
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertRemoveFromShortcutsButton() {
+
+    onView(withId(R.id.mozac_browser_menu_recyclerView))
+        .perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                hasDescendant(withText(R.string.browser_menu_settings))
             )
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

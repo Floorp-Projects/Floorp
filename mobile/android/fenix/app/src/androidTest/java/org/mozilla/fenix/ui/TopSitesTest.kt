@@ -172,6 +172,30 @@ class TopSitesTest {
     }
 
     @Test
+    fun verifyRemoveTopSiteFromMainMenu() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val defaultWebPageTitle = "Test_Page_1"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+            expandMenu()
+            verifyAddToTopSitesButton()
+        }.addToFirefoxHome {
+            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
+        }.goToHomescreen {
+            verifyExistingTopSitesList()
+            verifyExistingTopSitesTabs(defaultWebPageTitle)
+        }.openTopSiteTabWithTitle(defaultWebPageTitle) {
+        }.openThreeDotMenu {
+            verifyRemoveFromShortcutsButton()
+        }.clickRemoveFromShortcuts {
+        }.goToHomescreen {
+            verifyNotExistingTopSitesList(defaultWebPageTitle)
+        }
+    }
+
+    @Test
     fun verifyDefaultTopSitesLocale_EN() {
         // en-US defaults
         val defaultTopSites = arrayOf(
