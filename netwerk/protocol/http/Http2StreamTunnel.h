@@ -92,13 +92,14 @@ class OutputStreamTunnel : public nsIAsyncOutputStream {
   void MaybeSetRequestDone(nsIOutputStreamCallback* aCallback);
 
  private:
-  virtual ~OutputStreamTunnel() {}
+  virtual ~OutputStreamTunnel();
 
   nsresult GetStream(Http2StreamTunnel** aStream);
   nsresult GetSession(Http2Session** aSession);
 
   nsWeakPtr mWeakStream;
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
+  nsCOMPtr<nsIEventTarget> mSocketThread;
   nsresult mCondition{NS_OK};
 };
 
@@ -114,13 +115,14 @@ class InputStreamTunnel : public nsIAsyncInputStream {
   bool HasCallback() { return !!mCallback; }
 
  private:
-  virtual ~InputStreamTunnel() = default;
+  virtual ~InputStreamTunnel();
 
   nsresult GetStream(Http2StreamTunnel** aStream);
   nsresult GetSession(Http2Session** aSession);
 
   nsWeakPtr mWeakStream;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
+  nsCOMPtr<nsIEventTarget> mSocketThread;
   nsresult mCondition{NS_OK};
 };
 

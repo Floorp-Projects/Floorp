@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "PendingTransactionInfo.h"
+#include "NullHttpTransaction.h"
 
 // Log on level :5, instead of default :4.
 #undef LOG
