@@ -23,6 +23,7 @@ interface nsICacheStorageVisitor : nsISupports
   void onCacheEntryInfo(in nsIURI aURI,
                         in ACString aIdEnhance,
                         in int64_t aDataSize,
+                        in int64_t aAltDataSize,
                         in uint32_t aFetchCount,
                         in uint32_t aLastModifiedTime,
                         in uint32_t aExpirationTime,
