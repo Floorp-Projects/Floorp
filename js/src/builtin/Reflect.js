@@ -52,7 +52,7 @@ function Reflect_apply(target, thisArgument, argumentsList) {
 
 // ES2017 draft rev a785b0832b071f505a694e1946182adeab84c972
 // 26.1.2 Reflect.construct ( target, argumentsList [ , newTarget ] )
-function Reflect_construct(target, argumentsList/*, newTarget*/) {
+function Reflect_construct(target, argumentsList /*, newTarget*/) {
   // Step 1.
   if (!IsConstructor(target)) {
     ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(0, target));
@@ -81,7 +81,7 @@ function Reflect_construct(target, argumentsList/*, newTarget*/) {
 
   // Fast path when we can avoid calling CreateListFromArrayLikeForArgs().
   var args =
-    (IsPackedArray(argumentsList) && argumentsList.length <= MAX_ARGS_LENGTH)
+    IsPackedArray(argumentsList) && argumentsList.length <= MAX_ARGS_LENGTH
       ? argumentsList
       : CreateListFromArrayLikeForArgs(argumentsList);
 
@@ -152,7 +152,7 @@ function Reflect_has(target, propertyKey) {
 
 // ES2018 draft rev 0525bb33861c7f4e9850f8a222c89642947c4b9c
 // 26.1.5 Reflect.get ( target, propertyKey [ , receiver ] )
-function Reflect_get(target, propertyKey/*, receiver*/) {
+function Reflect_get(target, propertyKey /*, receiver*/) {
   // Step 1.
   if (!IsObject(target)) {
     ThrowTypeError(JSMSG_OBJECT_REQUIRED_ARG, "`target`", "Reflect.get", ToSource(target));

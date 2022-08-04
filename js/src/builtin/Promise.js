@@ -27,6 +27,7 @@ function Promise_finally(onFinally) {
   } else {
     // ThenFinally Function.
     // The parentheses prevent the infering of a function name.
+    // eslint-disable-next-line prettier/prettier
     (thenFinally) = function(value) {
       // Steps 1-2 (implicit).
 
@@ -49,6 +50,7 @@ function Promise_finally(onFinally) {
     };
 
     // CatchFinally Function.
+    // eslint-disable-next-line prettier/prettier
     (catchFinally) = function(reason) {
       // Steps 1-2 (implicit).
 

@@ -86,7 +86,7 @@ function MapIteratorNext() {
     mapIterationResultPair = iteratorTemp.mapIterationResultPair = CreateMapIterationResultPair();
   }
 
-  var retVal = {value: undefined, done: true};
+  var retVal = { value: undefined, done: true };
 
   // Step 10.a, 11.
   var done = GetNextMapEntryForIterator(O, mapIterationResultPair);
