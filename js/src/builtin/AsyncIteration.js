@@ -77,7 +77,7 @@ function GetAsyncIteratorDirectWrapper(obj) {
       if (returnMethod !== undefined && returnMethod !== null) {
         return callContentFunction(returnMethod, obj, value);
       }
-      return {done: true, value};
+      return { done: true, value };
     },
   };
 }
@@ -420,7 +420,7 @@ async function* AsyncIteratorFlatMapGenerator(iterated, mapper) {
 }
 
 /* Iterator Helpers proposal 2.1.6.8 */
-async function AsyncIteratorReduce(reducer/*, initialValue*/) {
+async function AsyncIteratorReduce(reducer /*, initialValue*/) {
   // Step 1.
   const iterated = GetAsyncIteratorDirectWrapper(this);
 
@@ -460,7 +460,7 @@ async function AsyncIteratorReduce(reducer/*, initialValue*/) {
 /* Iterator Helpers proposal 2.1.6.9 */
 async function AsyncIteratorToArray() {
   // Step 1.
-  const iterated = {[GetBuiltinSymbol("asyncIterator")]: () => this};
+  const iterated = { [GetBuiltinSymbol("asyncIterator")]: () => this };
   // Step 2.
   const items = [];
   let index = 0;
@@ -524,7 +524,7 @@ async function AsyncIteratorEvery(fn) {
   // Step 3.
   for await (const value of allowContentIter(iterated)) {
     // Steps d-h.
-    if (!await callContentFunction(fn, undefined, value)) {
+    if (!(await callContentFunction(fn, undefined, value))) {
       return false;
     }
   }

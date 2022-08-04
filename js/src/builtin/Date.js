@@ -34,7 +34,6 @@
 // 3) create the desired formatter and store and return it.
 var dateTimeFormatCache = new_Record();
 
-
 /**
  * Get a cached DateTimeFormat formatter object, created like so:
  *
@@ -103,7 +102,6 @@ function Date_toLocaleString() {
   return intl_FormatDateTime(dateTimeFormat, x, /* formatToParts = */ false);
 }
 
-
 /**
  * Format this Date object into a date string, using the locale and formatting
  * options provided.
@@ -136,7 +134,6 @@ function Date_toLocaleDateString() {
   // Step 7.
   return intl_FormatDateTime(dateTimeFormat, x, /* formatToParts = */ false);
 }
-
 
 /**
  * Format this Date object into a time string, using the locale and formatting
