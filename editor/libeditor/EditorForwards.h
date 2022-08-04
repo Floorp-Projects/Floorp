@@ -71,7 +71,6 @@ using EditorRawDOMPointInText = EditorDOMPointBase<dom::Text*, nsIContent*>;
  * classes
  ******************************************************************************/
 
-class AutoRangeArray;           // mozilla/EditorUtils.h
 class AutoSelectionRangeArray;  // mozilla/EditorUtils.h
 class AutoStyleCacheArray;      // mozilla/TypeInState.h
 class ChangeStyleTransaction;   // mozilla/ChangeStyleTransaction.h
@@ -87,6 +86,7 @@ class StyleCache;               // mozilla/TypeInState.h
 class TextEditor;               // mozilla/TextEditor.h
 class TypeInState;              // mozilla/TypeInState.h
 
+class AutoRangeArray;               // AutoRangeArray.h
 class ChangeAttributeTransaction;   // ChangeAttributeTransaction.h
 class CompositionTransaction;       // CompositionTransaction.h
 class DeleteNodeTransaction;        // DeleteNodeTransaction.h
@@ -96,7 +96,7 @@ class EditAggregateTransaction;     // EditAggregateTransaction.h
 class EditorEventListener;          // EditorEventListener.h
 class EditResult;                   // HTMLEditHelpers.h
 class HTMLEditorEventListener;      // HTMLEditorEventListener.h
-class InsertNodeTransaction;        // IntertNodeTransaction.h
+class InsertNodeTransaction;        // InsertNodeTransaction.h
 class InsertTextTransaction;        // InsertTextTransaction.h
 class InterCiter;                   // InterCiter.h
 class JoinNodesResult;              // HTMLEditHelpers.h

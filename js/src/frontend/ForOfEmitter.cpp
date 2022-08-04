@@ -19,9 +19,9 @@ using mozilla::Nothing;
 
 ForOfEmitter::ForOfEmitter(BytecodeEmitter* bce,
                            const EmitterScope* headLexicalEmitterScope,
-                           bool allowSelfHostedIter, IteratorKind iterKind)
+                           SelfHostedIter selfHostedIter, IteratorKind iterKind)
     : bce_(bce),
-      allowSelfHostedIter_(allowSelfHostedIter),
+      selfHostedIter_(selfHostedIter),
       iterKind_(iterKind),
       headLexicalEmitterScope_(headLexicalEmitterScope) {}
 
@@ -45,12 +45,12 @@ bool ForOfEmitter::emitInitialize(uint32_t forPos) {
   tdzCacheForIteratedValue_.reset();
 
   if (iterKind_ == IteratorKind::Async) {
-    if (!bce_->emitAsyncIterator()) {
+    if (!bce_->emitAsyncIterator(selfHostedIter_)) {
       //            [stack] NEXT ITER
       return false;
     }
   } else {
-    if (!bce_->emitIterator()) {
+    if (!bce_->emitIterator(selfHostedIter_)) {
       //            [stack] NEXT ITER
       return false;
     }
@@ -60,7 +60,7 @@ bool ForOfEmitter::emitInitialize(uint32_t forPos) {
   // stack.
 
   int32_t iterDepth = bce_->bytecodeSection().stackDepth();
-  loopInfo_.emplace(bce_, iterDepth, allowSelfHostedIter_, iterKind_);
+  loopInfo_.emplace(bce_, iterDepth, selfHostedIter_, iterKind_);
 
   if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
     //              [stack] NEXT ITER
@@ -107,7 +107,7 @@ bool ForOfEmitter::emitInitialize(uint32_t forPos) {
   }
 
   if (!bce_->emitIteratorNext(mozilla::Some(forPos), iterKind_,
-                              allowSelfHostedIter_)) {
+                              selfHostedIter_)) {
     //              [stack] NEXT ITER RESULT
     return false;
   }

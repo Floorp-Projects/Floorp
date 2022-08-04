@@ -37,6 +37,8 @@ add_task(async () => {
     }
 
     var originalExec = RegExp.prototype.exec;
+
+    var promptIterable = { [Symbol.iterator]() { return { next: prompt } } };
   </script>`);
 
   const commands = await CommandsFactory.forTab(tab);
@@ -52,6 +54,7 @@ add_task(async () => {
   await forceLexicalInit(commands);
   await doSimpleEagerEval(commands);
   await doEagerEvalWithSideEffect(commands);
+  await doEagerEvalWithSideEffectIterator(commands);
   await doEagerEvalWithSideEffectMonkeyPatched(commands);
 
   await commands.destroy();
@@ -285,6 +288,9 @@ async function doEagerEvalWithSideEffect(commands) {
     // Indirectly call a function with Function.prototype.apply.
     "Reflect.apply(prompt, null, []);",
     "'aaaaaaaa'.replace(/(a)(a)(a)(a)(a)(a)(a)(a)/, prompt)",
+
+    // Indirect call on obj[Symbol.iterator]().next.
+    "Array.from(promptIterable)",
   ];
 
   for (const code of testData) {
@@ -299,6 +305,50 @@ async function doEagerEvalWithSideEffect(commands) {
     ok(!response.exception, "no eval exception");
     ok(!response.helperResult, "no helper result");
   }
+}
+
+async function doEagerEvalWithSideEffectIterator(commands) {
+  // Indirect call on %ArrayIterator%.prototype.next,
+
+  // Create an iterable object that reuses iterator across multiple call.
+  let response = await commands.scriptCommand.execute(`
+var arr = [1, 2, 3];
+var iterator = arr[Symbol.iterator]();
+var iterable = { [Symbol.iterator]() { return iterator; } };
+"ok";
+`);
+  checkObject(response, {
+    result: "ok",
+  });
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
+
+  const testData = [
+    "Array.from(iterable)",
+    "new Map(iterable)",
+    "new Set(iterable)",
+  ];
+
+  for (const code of testData) {
+    response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(response, {
+      input: code,
+      result: { type: "undefined" },
+    });
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+
+  // Verify the iterator's internal state isn't modified.
+  response = await commands.scriptCommand.execute(`[...iterator].join(",")`);
+  checkObject(response, {
+    result: "1,2,3",
+  });
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
 }
 
 async function doEagerEvalWithSideEffectMonkeyPatched(commands) {

@@ -13,6 +13,7 @@
 
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, LoopControl
 #include "frontend/IteratorKind.h"               // IteratorKind
+#include "frontend/SelfHostedIter.h"             // SelfHostedIter
 #include "frontend/TryEmitter.h"                 // TryEmitter
 #include "vm/CompletionKind.h"                   // CompletionKind
 
@@ -63,13 +64,13 @@ class ForOfLoopControl : public LoopControl {
   // emitBeginCodeNeedingIteratorClose and emitEndCodeNeedingIteratorClose.
   uint32_t numYieldsAtBeginCodeNeedingIterClose_;
 
-  bool allowSelfHosted_;
+  SelfHostedIter selfHostedIter_;
 
   IteratorKind iterKind_;
 
  public:
   ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth,
-                   bool allowSelfHosted, IteratorKind iterKind);
+                   SelfHostedIter selfHostedIter, IteratorKind iterKind);
 
   [[nodiscard]] bool emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce);
   [[nodiscard]] bool emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce);

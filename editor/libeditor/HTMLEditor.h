@@ -1594,16 +1594,20 @@ class HTMLEditor final : public EditorBase,
       Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
 
   /**
-   * ChangeSelectedHardLinesToList() converts selected ranges to specified
-   * list element.  If there is different type of list elements, this method
-   * converts them to specified list items too.  Basically, each hard line
-   * will be wrapped with a list item element.  However, only when `<p>`
+   * ConvertContentAroundRangesToList() converts contents around aRanges to
+   * specified list element.  If there is different type of list elements, this
+   * method converts them to specified list items too.  Basically, each hard
+   * line will be wrapped with a list item element.  However, only when `<p>`
    * element is selected, its child `<br>` elements won't be treated as
    * hard line separators.  Perhaps, this is a bug.
-   * NOTE: This method creates AutoSelectionRestorer.  Therefore, each caller
-   *       need to check if the editor is still available even if this returns
-   *       NS_OK.
    *
+   * @param aRanges     [in/out] The ranges which will be converted to list.
+   *                    The instance must not have saved ranges because it'll
+   *                    be used in this method.
+   *                    If succeeded, this will have selection ranges which
+   *                    should be applied to `Selection`.
+   *                    If failed, this keeps storing original selection
+   *                    ranges.
    * @param aListElementTagName         The new list element tag name.
    * @param aListItemElementTagName     The new list item element tag name.
    * @param aBulletType                 If this is not empty string, it's set
@@ -1615,11 +1619,11 @@ class HTMLEditor final : public EditorBase,
    * @param aEditingHost                The editing host.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  ChangeSelectedHardLinesToList(nsAtom& aListElementTagName,
-                                nsAtom& aListItemElementTagName,
-                                const nsAString& aBulletType,
-                                SelectAllOfCurrentList aSelectAllOfCurrentList,
-                                const Element& aEditingHost);
+  ConvertContentAroundRangesToList(
+      AutoRangeArray& aRanges, nsAtom& aListElementTagName,
+      nsAtom& aListItemElementTagName, const nsAString& aBulletType,
+      SelectAllOfCurrentList aSelectAllOfCurrentList,
+      const Element& aEditingHost);
 
   /**
    * MakeOrChangeListAndListItemAsSubAction() handles create list commands with
@@ -2302,62 +2306,42 @@ class HTMLEditor final : public EditorBase,
    * ChangeMarginStart() changes margin of aElement to indent or outdent.
    * If it's rtl text, margin-right will be changed.  Otherwise, margin-left.
    * XXX This is not aware of vertical writing-mode.
+   *
+   * @param aElement            The element whose start margin should be
+   *                            changed.
+   * @param aChangeMargin       Whether increase or decrease the margin.
+   * @param aEditingHost        The editing host.
+   * @return                    May suggest a suggest point to put caret.
    */
   enum class ChangeMargin { Increase, Decrease };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  ChangeMarginStart(Element& aElement, ChangeMargin aChangeMargin,
+                    const Element& aEditingHost);
 
   /**
-   * HandleCSSIndentAtSelectionInternal() indents around Selection with CSS.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   * NOTE: Use HandleCSSIndentAtSelection() instead.
+   * HandleCSSIndentAroundRanges() indents around aRanges with CSS.
    *
+   * @param aRanges             The ranges where the content should be indented.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleCSSIndentAtSelectionInternal(const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleCSSIndentAroundRanges(
+      AutoRangeArray& aRanges, const Element& aEditingHost);
 
   /**
-   * HandleHTMLIndentAtSelectionInternal() indents around Selection with HTML.
-   * This method creates AutoSelectionRestorer.  Therefore, each caller
-   * need to check if the editor is still available even if this returns
-   * NS_OK.
-   * NOTE: Use HandleHTMLIndentAtSelection() instead.
+   * HandleCSSIndentAroundRanges() indents around aRanges with HTML.
    *
+   * @param aRanges             The ranges where the content should be indented.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleHTMLIndentAtSelectionInternal(const Element& aEditingHost);
-
-  /**
-   * HandleCSSIndentAtSelection() indents around Selection with CSS.
-   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
-   *       want to call this directly, you should check whether you need
-   *       do do something which `HandleIndentAtSelection()` does.
-   *
-   * @param aEditingHost        The editing host.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleCSSIndentAtSelection(const Element& aEditingHost);
-
-  /**
-   * HandleHTMLIndentAtSelection() indents around Selection with HTML.
-   * NOTE: This is a helper method of `HandleIndentAtSelection()`.  If you
-   *       want to call this directly, you should check whether you need
-   *       do do something which `HandleIndentAtSelection()` does.
-   *
-   * @param aEditingHost        The editing host.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandleHTMLIndentAtSelection(const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleHTMLIndentAroundRanges(
+      AutoRangeArray& aRanges, const Element& aEditingHost);
 
   /**
    * HandleIndentAtSelection() indents around Selection with HTML or CSS.
    *
    * @param aEditingHost        The editing host.
    */
+  // TODO: Make this take AutoRangeArray instead of retrieving `Selection`
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleIndentAtSelection(const Element& aEditingHost);
 
@@ -2377,6 +2361,7 @@ class HTMLEditor final : public EditorBase,
    *                            CSS margin property.
    *                            `HTML` if aBlockElement is `<blockquote>`
    *                            or something.
+   * @param aEditingHost        The editing host.
    * @return                    The left content is new created element
    *                            splitting before aStartOfOutdent.
    *                            The right content is existing element.
@@ -2388,7 +2373,8 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffFromNodeResult
   OutdentPartOfBlock(Element& aBlockElement, nsIContent& aStartOfOutdent,
                      nsIContent& aEndOutdent,
-                     BlockIndentedWith aBlockIndentedWith);
+                     BlockIndentedWith aBlockIndentedWith,
+                     const Element& aEditingHost);
 
   /**
    * HandleOutdentAtSelectionInternal() outdents contents around Selection.
@@ -2429,9 +2415,11 @@ class HTMLEditor final : public EditorBase,
    *                            as its child.
    * @param aAlignType          New value of align attribute of `<div>`
    *                            element.
+   * @return                    A candidate position to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AlignBlockContentsWithDivElement(
-      dom::Element& aBlockElement, const nsAString& aAlignType);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  AlignBlockContentsWithDivElement(Element& aBlockElement,
+                                   const nsAString& aAlignType);
 
   /**
    * AlignContentsInAllTableCellsAndListItems() calls
@@ -2441,8 +2429,9 @@ class HTMLEditor final : public EditorBase,
    * @param aElement            The node which is or whose descendants should
    *                            be aligned to aAlignType.
    * @param aAlignType          New value of `align` attribute of `<div>`.
+   * @return                    A candidate position to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   AlignContentsInAllTableCellsAndListItems(dom::Element& aElement,
                                            const nsAString& aAlignType);
 
@@ -2460,16 +2449,16 @@ class HTMLEditor final : public EditorBase,
    * first child of aRemovingContainerElement if it will not be start of a
    * hard line after removing aRemovingContainerElement.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureHardLineBeginsWithFirstChildOf(dom::Element& aRemovingContainerElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  EnsureHardLineBeginsWithFirstChildOf(Element& aRemovingContainerElement);
 
   /**
    * EnsureHardLineEndsWithLastChildOf() inserts `<br>` element after last
    * child of aRemovingContainerElement if it will not be end of a hard line
    * after removing aRemovingContainerElement.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureHardLineEndsWithLastChildOf(dom::Element& aRemovingContainerElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  EnsureHardLineEndsWithLastChildOf(Element& aRemovingContainerElement);
 
   /**
    * RemoveAlignFromDescendants() removes align attributes, text-align
@@ -2486,13 +2475,15 @@ class HTMLEditor final : public EditorBase,
    *                    descendants of aElement.
    *                    If `NodeAndDescendantsExceptTable`, modifies `aElement`
    *                    and its descendants.
+   * @return            A candidate point to put caret.
    */
   enum class EditTarget {
     OnlyDescendantsExceptTable,
     NodeAndDescendantsExceptTable
   };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveAlignFromDescendants(
-      Element& aElement, const nsAString& aAlignType, EditTarget aEditTarget);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveAlignFromDescendants(Element& aElement, const nsAString& aAlignType,
+                             EditTarget aEditTarget);
 
   /**
    * SetBlockElementAlign() resets `align` attribute, `text-align` property
@@ -2511,22 +2502,28 @@ class HTMLEditor final : public EditorBase,
    *                            descendants of aBlockOrHRElement.
    *                            If `NodeAndDescendantsExceptTable`, modifies
    *                            aBlockOrHRElement and its descendants.
+   * @return                    A candidate point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   SetBlockElementAlign(Element& aBlockOrHRElement, const nsAString& aAlignType,
                        EditTarget aEditTarget);
 
   /**
-   * AlignContentsAtSelectionWithEmptyDivElement() inserts new `<div>` element
-   * at `Selection` to align selected contents.  This returns as "handled"
-   * if this modifies `Selection` so that callers shouldn't modify `Selection`
-   * in such case especially when using AutoSelectionRestorer.
+   * InsertDivElementToAlignContents() inserts a new <div> element (which has
+   * only a padding <br> element) to aPointToInsert for a placeholder whose
+   * contents will be aligned.
    *
+   * @param aPointToInsert      A point to insert new empty <div>.
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
+   * @param aEditingHost        The editing host.
+   * @return                    New <div> element which has only a padding <br>
+   *                            element and is styled to align contents.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  AlignContentsAtSelectionWithEmptyDivElement(const nsAString& aAlignType);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  InsertDivElementToAlignContents(const EditorDOMPoint& aPointToInsert,
+                                  const nsAString& aAlignType,
+                                  const Element& aEditingHost);
 
   /**
    * AlignNodesAndDescendants() make contents of nodes in aArrayOfContents and
@@ -2534,25 +2531,26 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
+   * @param aEditingHost        The editing host.
+   * @return                    Last created <div> element which should contain
+   *                            caret and candidate position which may be
+   *                            outside the <div> element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AlignNodesAndDescendants(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult AlignNodesAndDescendants(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
-      const nsAString& aAlignType);
+      const nsAString& aAlignType, const Element& aEditingHost);
 
   /**
-   * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
-   * This creates AutoSelectionRestorer.  Therefore, even if this returns
-   * NS_OK, we might have been destroyed.  So, every caller needs to check if
-   * Destroyed() returns false before modifying the DOM tree or changing
-   * Selection.
-   * NOTE: Call AlignAsSubAction() instead.
+   * AlignContentsAtRanges() aligns contents around aRanges to aAlignType.
    *
+   * @param aRanges             The ranges where should be aligned.
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AlignContentsAtSelection(
-      const nsAString& aAlignType, const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  AlignContentsAtRanges(AutoRangeArray& aRanges, const nsAString& aAlignType,
+                        const Element& aEditingHost);
 
   /**
    * AlignAsSubAction() handles "align" command with `Selection`.
@@ -2641,8 +2639,6 @@ class HTMLEditor final : public EditorBase,
    * SetSelectionToAbsoluteAsSubAction() move selected contents to first
    * selected `<div>` element or newly created `<div>` element and make
    * the `<div>` element positioned absolutely.
-   * mNewBlockElement of TopLevelEditSubActionData will be set to the `<div>`
-   * element.
    *
    * @param aEditingHost        The editing host.
    */
@@ -4308,10 +4304,32 @@ class HTMLEditor final : public EditorBase,
   }
 
  protected:
-  // Helper for Handle[CSS|HTML]IndentAtSelectionInternal
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  IndentListChild(RefPtr<Element>* aCurList, const EditorDOMPoint& aCurPoint,
-                  nsIContent& aContent);
+  /**
+   * IndentListChildWithTransaction() is a helper method of
+   * Handle(CSS|HTML)IndentAtSelectionInternal().
+   *
+   * @param aSubListElement     [in/out] Specify a sub-list element of the
+   *                            container of aPointInListElement or nullptr.
+   *                            When there is no proper sub-list element to
+   *                            move aContentMovingToSubList, this method
+   *                            inserts a new sub-list element and update this
+   *                            to it.
+   * @param aPointInListElement A point in a list element whose child should
+   *                            be indented.  If this method creates new list
+   *                            element into the list element, this inserts
+   *                            the new list element to this point.
+   * @param aContentMovingToSubList
+   *                            A content node which is a child of a list
+   *                            element and should be moved into a sub-list
+   *                            element.
+   * @param aEditingHost        The editing host.
+   * @return                    A candidate caret position.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  IndentListChildWithTransaction(RefPtr<Element>* aSubListElement,
+                                 const EditorDOMPoint& aPointInListElement,
+                                 nsIContent& aContentMovingToSubList,
+                                 const Element& aEditingHost);
 
   /**
    * Stack based helper class for saving/restoring selection.  Note that this

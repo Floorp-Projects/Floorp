@@ -617,7 +617,14 @@ void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   HelperThreadState().parseFinishedList(locked).insertBack(this);
 }
 
+static inline JS::NativeStackLimit GetStackLimit() {
+  return JS::GetNativeStackLimit(GetNativeStackBase(),
+                                 HelperThreadState().stackQuota);
+}
+
 void ParseTask::runTask(AutoLockHelperThreadState& lock) {
+  stackLimit = GetStackLimit();
+
   AutoSetHelperThreadContext usesContext(contextOptions, lock);
 
   AutoUnlockHelperThreadState unlock(lock);
@@ -725,7 +732,7 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
 
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   stencil_ = frontend::CompileGlobalScriptToStencil(
-      cx, ec, tempLifoAlloc, *stencilInput_, data, scopeKind);
+      cx, ec, stackLimit, tempLifoAlloc, *stencilInput_, data, scopeKind);
   if (!stencil_) {
     return;
   }
@@ -755,7 +762,8 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
     return;
   }
 
-  stencil_ = frontend::ParseModuleToStencil(cx, ec, *stencilInput_, data);
+  stencil_ =
+      frontend::ParseModuleToStencil(cx, ec, stackLimit, *stencilInput_, data);
   if (!stencil_) {
     return;
   }
@@ -1119,6 +1127,8 @@ void DelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 }
 
 bool DelazifyTask::runTask(JSContext* cx) {
+  stackLimit = GetStackLimit();
+
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextOffThreadFrontendErrors recordErrors(&this->ec_);
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
@@ -1136,8 +1146,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
       MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
       // Parse and generate bytecode for the inner function.
-      innerStencil =
-          DelazifyCanonicalScriptedFunction(cx, &ec_, borrow, scriptIndex);
+      innerStencil = DelazifyCanonicalScriptedFunction(cx, &ec_, stackLimit,
+                                                       borrow, scriptIndex);
       if (!innerStencil) {
         return false;
       }

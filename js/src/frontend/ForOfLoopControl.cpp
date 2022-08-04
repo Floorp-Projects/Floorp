@@ -15,11 +15,12 @@ using namespace js;
 using namespace js::frontend;
 
 ForOfLoopControl::ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth,
-                                   bool allowSelfHosted, IteratorKind iterKind)
+                                   SelfHostedIter selfHostedIter,
+                                   IteratorKind iterKind)
     : LoopControl(bce, StatementKind::ForOfLoop),
       iterDepth_(iterDepth),
       numYieldsAtBeginCodeNeedingIterClose_(UINT32_MAX),
-      allowSelfHosted_(allowSelfHosted),
+      selfHostedIter_(selfHostedIter),
       iterKind_(iterKind) {}
 
 bool ForOfLoopControl::emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce) {
@@ -127,7 +128,7 @@ bool ForOfLoopControl::emitIteratorCloseInScope(
     BytecodeEmitter* bce, EmitterScope& currentScope,
     CompletionKind completionKind /* = CompletionKind::Normal */) {
   return bce->emitIteratorCloseInScope(currentScope, iterKind_, completionKind,
-                                       allowSelfHosted_);
+                                       selfHostedIter_);
 }
 
 // Since we're in the middle of emitting code that will leave

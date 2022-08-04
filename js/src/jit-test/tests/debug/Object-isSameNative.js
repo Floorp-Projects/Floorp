@@ -42,5 +42,8 @@ dbg.onNativeCall = (callee, reason) => {
 for (let i = 0; i < 5; i++) {
   rv.length = 0;
   gdbg.executeInGlobal(`f()`);
-  assertEqArray(rv, ["print", "print", "push", "sort"]);
+  assertEqArray(rv, [
+    "print", "print", "push",
+    "sort", "print", "print",
+  ]);
 }

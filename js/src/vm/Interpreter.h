@@ -677,7 +677,7 @@ bool ThrowObjectCoercible(JSContext* cx, HandleValue value);
 
 bool DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
 
-bool Debug_CheckSelfHosted(JSContext* cx, HandleValue v);
+bool Debug_CheckSelfHosted(JSContext* cx, HandleValue funVal);
 
 bool CheckClassHeritageOperation(JSContext* cx, HandleValue heritage);
 
