@@ -1330,7 +1330,10 @@ add_task(async function() {
 });
 
 async function withOnlineExperiment(callback) {
-  let { doExperimentCleanup } = await ExperimentFakes.enrollmentHelper(
+  let {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(
     ExperimentFakes.recipe("firefox-suggest-offline-vs-online", {
       active: true,
       branches: [
@@ -1348,6 +1351,7 @@ async function withOnlineExperiment(callback) {
       ],
     })
   );
+  await enrollmentPromise;
   await callback();
   await doExperimentCleanup();
 }
