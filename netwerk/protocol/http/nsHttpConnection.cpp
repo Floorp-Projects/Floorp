@@ -323,7 +323,8 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
   }
 
   nsresult rv = NS_OK;
-  bool spdyProxy = mConnInfo->UsingHttpsProxy() && !mHasTLSTransportLayer;
+  bool spdyProxy = mConnInfo->UsingHttpsProxy() && mConnInfo->UsingConnect() &&
+                   !mHasTLSTransportLayer;
   if (spdyProxy) {
     RefPtr<nsHttpConnectionInfo> wildCardProxyCi;
     rv = mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
