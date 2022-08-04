@@ -193,8 +193,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   static void InitMemoryReportersForGPUProcess();
 
-  static bool CheckVariationFontSupport();
-
  protected:
   bool AccelerateLayersByDefault() override { return true; }
   nsTArray<uint8_t> GetPlatformCMSOutputProfileData() override;
@@ -207,6 +205,9 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   BackendPrefsData GetBackendPrefs() const override;
 
+  bool CheckVariationFontSupport() override;
+
+ protected:
   RenderMode mRenderMode;
 
  private:
