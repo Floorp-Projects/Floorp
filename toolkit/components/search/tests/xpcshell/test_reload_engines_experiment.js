@@ -125,7 +125,9 @@ add_task(async function test_config_updated_engine_changes() {
   );
 
   Assert.equal(
-    Services.search.wrappedJSObject._settings.getAttribute("useSavedOrder"),
+    Services.search.wrappedJSObject._settings.getMetaDataAttribute(
+      "useSavedOrder"
+    ),
     false,
     "Should not have set the useSavedOrder preference"
   );
