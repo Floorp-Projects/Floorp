@@ -2669,11 +2669,13 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
   AutoRangeArray selectionRanges(SelectionRef());
-  rv = FormatBlockContainerWithTransaction(selectionRanges, aTagName,
-                                           *editingHost);
-  if (NS_FAILED(rv)) {
+  Result<RefPtr<Element>, nsresult> suggestBlockElementToPutCaretOrError =
+      FormatBlockContainerWithTransaction(selectionRanges, aTagName,
+                                          *editingHost);
+  TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
+  if (suggestBlockElementToPutCaretOrError.isErr()) {
     NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
-    return rv;
+    return suggestBlockElementToPutCaretOrError.unwrapErr();
   }
 
   if (selectionRanges.HasSavedRanges()) {
@@ -2694,6 +2696,39 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
       NS_SUCCEEDED(rv),
       "HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() "
       "failed");
+
+  if (!suggestBlockElementToPutCaretOrError.inspect() ||
+      !SelectionRef().IsCollapsed()) {
+    return rv;
+  }
+  const auto firstSelectionStartPoint =
+      GetFirstSelectionStartPoint<EditorRawDOMPoint>();
+  if (MOZ_UNLIKELY(!firstSelectionStartPoint.IsSet())) {
+    return rv;
+  }
+  Result<EditorRawDOMPoint, nsresult> pointInBlockElementOrError =
+      HTMLEditUtils::ComputePointToPutCaretInElementIfOutside<
+          EditorRawDOMPoint>(*suggestBlockElementToPutCaretOrError.inspect(),
+                             firstSelectionStartPoint);
+  if (MOZ_UNLIKELY(pointInBlockElementOrError.isErr())) {
+    NS_WARNING(
+        "HTMLEditUtils::ComputePointToPutCaretInElementIfOutside() failed, but "
+        "ignored");
+    return rv;
+  }
+  // Note that if the point is unset, it means that firstSelectionStartPoint is
+  // in the block element.
+  if (pointInBlockElementOrError.inspect().IsSet()) {
+    nsresult rvOfCollapseSelection =
+        CollapseSelectionTo(pointInBlockElementOrError.inspect());
+    if (MOZ_UNLIKELY(rvOfCollapseSelection == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvOfCollapseSelection),
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
+  }
   return rv;
 }
 

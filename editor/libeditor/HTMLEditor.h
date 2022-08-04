@@ -1396,10 +1396,12 @@ class HTMLEditor final : public EditorBase,
    * @param aArrayOfContents    Nodes which will be moved into created
    *                            <blockquote> elements.
    * @param aEditingHost        The editing host.
-   * @return                    A suggest of caret position if succeeded.  It
-   *                            may be unset if there is no suggestion.
+   * @return                    A blockquote element which is created at last
+   *                            and a suggest of caret position if succeeded.
+   *                            The caret suggestion may be unset if there is
+   *                            no suggestion.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   WrapContentsInBlockquoteElementsWithTransaction(
       const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
       const Element& aEditingHost);
@@ -1435,9 +1437,10 @@ class HTMLEditor final : public EditorBase,
    * @param aArrayOfContents    Must be descendants of a node.
    * @param aBlockTag           The element name of new block elements.
    * @param aEditingHost        The editing host.
-   * @return                    May suggest a point to put caret if succeeded.
+   * @return                    The latest created new block element and a
+   *                            suggest point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   CreateOrChangeBlockContainerElement(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag,
       const Element& aEditingHost);
@@ -1460,10 +1463,13 @@ class HTMLEditor final : public EditorBase,
    *                    Otherwise, CreateOrChangeBlockContainerElement() will be
    *                    called.
    * @param aEditingHost        The editing host.
+   * @return                    If selection should be finally collapsed in a
+   *                            created block element, this returns the element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FormatBlockContainerWithTransaction(
-      AutoRangeArray& aSelectionRanges, nsAtom& aBlockType,
-      const Element& aEditingHost);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  FormatBlockContainerWithTransaction(AutoRangeArray& aSelectionRanges,
+                                      nsAtom& aBlockType,
+                                      const Element& aEditingHost);
 
   /**
    * InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() determines if
