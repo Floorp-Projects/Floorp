@@ -85,6 +85,21 @@ Http2StreamTunnel::OpenOutputStream(uint32_t aFlags, uint32_t aSegmentSize,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void Http2StreamTunnel::CloseStream(nsresult aReason) {
+  LOG(("Http2StreamTunnel::CloseStream this=%p", this));
+  RefPtr<Http2Session> session = Session();
+  if (NS_SUCCEEDED(mCondition)) {
+    mSession = nullptr;
+    if (NS_SUCCEEDED(aReason)) {
+      aReason = NS_BASE_STREAM_CLOSED;
+    }
+    mOutput->OnSocketReady(aReason);
+    mInput->OnSocketReady(aReason);
+    // Let the session pickup that the stream has been closed.
+    mCondition = aReason;
+  }
+}
+
 NS_IMETHODIMP
 Http2StreamTunnel::Close(nsresult aReason) {
   LOG(("Http2StreamTunnel::Close this=%p", this));
@@ -98,7 +113,6 @@ Http2StreamTunnel::Close(nsresult aReason) {
     mInput->CloseWithStatus(aReason);
     // Let the session pickup that the stream has been closed.
     mCondition = aReason;
-    session->TransactionHasDataToWrite(this);
   }
   return NS_OK;
 }

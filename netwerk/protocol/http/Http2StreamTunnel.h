@@ -48,6 +48,7 @@ class Http2StreamTunnel : public Http2StreamBase,
 
   void SetRequestDone() { mSendClosed = true; }
   nsresult Condition() override { return mCondition; }
+  void CloseStream(nsresult reason) override;
 
  protected:
   ~Http2StreamTunnel();

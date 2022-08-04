@@ -83,7 +83,7 @@ class Http2StreamBase : public nsAHttpSegmentReader,
   nsHttpTransaction* HttpTransaction();
   virtual nsIRequestContext* RequestContext() { return nullptr; }
 
-  virtual nsresult Close(nsresult reason) = 0;
+  virtual void CloseStream(nsresult reason) = 0;
   void SetResponseIsComplete();
 
   void SetRecvdFin(bool aStatus);
