@@ -3371,6 +3371,17 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           NS_WARNING("HTMLEditor::ChangeListElementType() failed");
           return EditActionResult(convertListTypeResult.unwrapErr());
         }
+        rv = convertListTypeResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+          return EditActionResult(rv);
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
         const Result<EditorDOMPoint, nsresult> unwrapNewListElementResult =
             RemoveBlockContainerWithTransaction(
                 MOZ_KnownLive(*convertListTypeResult.GetNewNode()));
@@ -3401,6 +3412,17 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         NS_WARNING("HTMLEditor::ChangeListElementType() failed");
         return EditActionResult(convertListTypeResult.unwrapErr());
       }
+      nsresult rv = convertListTypeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+        return EditActionResult(rv);
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
       curList = convertListTypeResult.UnwrapNewNode();
       prevListItem = nullptr;
       continue;
@@ -5744,73 +5766,68 @@ CreateElementResult HTMLEditor::ChangeListElementType(Element& aListElement,
                                                       nsAtom& aNewListItemTag) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  for (nsIContent* childContent = aListElement.GetFirstChild(); childContent;
-       childContent = childContent->GetNextSibling()) {
+  EditorDOMPoint pointToPutCaret;
+
+  AutoTArray<OwningNonNull<nsIContent>, 32> listElementChildren;
+  HTMLEditor::GetChildNodesOf(aListElement, listElementChildren);
+
+  for (const OwningNonNull<nsIContent>& childContent : listElementChildren) {
     if (!childContent->IsElement()) {
       continue;
     }
-    if (HTMLEditUtils::IsListItem(childContent->AsElement()) &&
+    Element* childElement = childContent->AsElement();
+    if (HTMLEditUtils::IsListItem(childElement) &&
         !childContent->IsHTMLElement(&aNewListItemTag)) {
-      OwningNonNull<Element> listItemElement = *childContent->AsElement();
+      // MOZ_KnownLive(childElement) because its lifetime is guaranteed by
+      // listElementChildren.
       CreateElementResult newListItemElementOrError =
-          ReplaceContainerWithTransaction(listItemElement, aNewListItemTag);
+          ReplaceContainerWithTransaction(MOZ_KnownLive(*childElement),
+                                          aNewListItemTag);
       if (newListItemElementOrError.isErr()) {
         NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
         return newListItemElementOrError;
       }
-      nsresult rv = newListItemElementOrError.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                  SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-        return CreateElementResult(rv);
-      }
-      NS_WARNING_ASSERTION(
-          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-          "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-      childContent = newListItemElementOrError.GetNewNode();
+      newListItemElementOrError.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       continue;
     }
-    if (HTMLEditUtils::IsAnyListElement(childContent->AsElement()) &&
-        !childContent->IsHTMLElement(&aNewListTag)) {
+    if (HTMLEditUtils::IsAnyListElement(childElement) &&
+        !childElement->IsHTMLElement(&aNewListTag)) {
       // XXX List elements shouldn't have other list elements as their
       //     child.  Why do we handle such invalid tree?
       //     -> Maybe, for bug 525888.
-      OwningNonNull<Element> listElement = *childContent->AsElement();
-      CreateElementResult convertListTypeResult =
-          ChangeListElementType(listElement, aNewListTag, aNewListItemTag);
+      // MOZ_KnownLive(childElement) because its lifetime is guaranteed by
+      // listElementChildren.
+      CreateElementResult convertListTypeResult = ChangeListElementType(
+          MOZ_KnownLive(*childElement), aNewListTag, aNewListItemTag);
       if (convertListTypeResult.isErr()) {
         NS_WARNING("HTMLEditor::ChangeListElementType() failed");
         return convertListTypeResult;
       }
-      childContent = convertListTypeResult.GetNewNode();
+      convertListTypeResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       continue;
     }
   }
 
   if (aListElement.IsHTMLElement(&aNewListTag)) {
-    return CreateElementResult(&aListElement);
+    return CreateElementResult(&aListElement, std::move(pointToPutCaret));
   }
 
+  // XXX If we replace the list element, shouldn't we create it first and then,
+  //     move children into it before inserting the new list element into the
+  //     DOM tree? Then, we could reduce the cost of dispatching DOM mutation
+  //     events.
   CreateElementResult listElementOrError =
       ReplaceContainerWithTransaction(aListElement, aNewListTag);
   if (listElementOrError.isErr()) {
     NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
     return listElementOrError;
   }
-  nsresult rv = listElementOrError.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return CreateElementResult(rv);
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-  return CreateElementResult(listElementOrError.UnwrapNewNode());
+  listElementOrError.MoveCaretPointTo(pointToPutCaret,
+                                      {SuggestCaret::OnlyIfHasSuggestion});
+  return CreateElementResult(listElementOrError.UnwrapNewNode(),
+                             std::move(pointToPutCaret));
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
