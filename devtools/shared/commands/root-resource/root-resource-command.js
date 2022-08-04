@@ -170,12 +170,7 @@ class RootResourceCommand {
       cachedResource => !resourceTypes.includes(cachedResource.resourceType)
     );
 
-    if (
-      resourceTypes.length &&
-      // @backward-compat { version 103 } The clearResources functionality was added in 103 and
-      // not supported in old servers.
-      this.rootFront.traits.supportsClearResources
-    ) {
+    if (resourceTypes.length) {
       this.rootFront.clearResources(resourceTypes);
     }
   }

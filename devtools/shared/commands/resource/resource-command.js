@@ -101,12 +101,7 @@ class ResourceCommand {
     const resourcesToClear = resourceTypes.filter(resourceType =>
       this.hasResourceCommandSupport(resourceType)
     );
-    if (
-      resourcesToClear.length &&
-      // @backward-compat { version 103 } The clearResources functionality was added in 103 and
-      // not supported in old servers.
-      this.targetCommand.hasTargetWatcherSupport("supportsClearResources")
-    ) {
+    if (resourcesToClear.length) {
       this.watcherFront.clearResources(resourcesToClear);
     }
   }

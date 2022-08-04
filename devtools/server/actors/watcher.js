@@ -198,8 +198,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       traits: {
         ...this.sessionContext.supportedTargets,
         resources: this.sessionContext.supportedResources,
-        // @backward-compat { version 103 } Clear resources not supported by old servers
-        supportsClearResources: true,
       },
     };
   },
