@@ -519,7 +519,7 @@ add_task(async function test_contentscripts_register_js() {
   await extension.unload();
 });
 
-// Test that the contentScript.register options are correctly translated
+// Test that the contentScripts.register options are correctly translated
 // into the expected WebExtensionContentScript properties.
 add_task(async function test_contentscripts_register_all_options() {
   async function background() {
@@ -648,7 +648,7 @@ add_task(async function test_contentscripts_register_cookieStoreId() {
         cookieStoreId: "not_a_valid_cookieStoreId",
       }),
       /Invalid cookieStoreId/,
-      "contentScript.register with an invalid cookieStoreId"
+      "contentScripts.register with an invalid cookieStoreId"
     );
 
     if (!navigator.userAgent.includes("Android")) {
@@ -659,7 +659,7 @@ add_task(async function test_contentscripts_register_cookieStoreId() {
           cookieStoreId: "firefox-container-999",
         }),
         /Invalid cookieStoreId/,
-        "contentScript.register with an invalid cookieStoreId"
+        "contentScripts.register with an invalid cookieStoreId"
       );
     } else {
       // On Android, any firefox-container-... is treated as valid, so it doesn't
@@ -679,7 +679,7 @@ add_task(async function test_contentscripts_register_cookieStoreId() {
         cookieStoreId: "",
       }),
       /Invalid cookieStoreId/,
-      "contentScript.register with an invalid cookieStoreId"
+      "contentScripts.register with an invalid cookieStoreId"
     );
 
     browser.test.sendMessage("background_ready");
