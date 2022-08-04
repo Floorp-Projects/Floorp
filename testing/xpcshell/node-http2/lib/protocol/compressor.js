@@ -1166,6 +1166,68 @@ Compressor.prototype.compress = function compress(headers) {
   while (chunk = compressor.read()) {
     chunks.push(chunk);
   }
+
+  function insertSoftIllegalHpack(originalCompressed) {
+    var illegalLiteral = Buffer.from([
+      0x00, // Literal, no index
+      0x08, // Name: not huffman encoded, 8 bytes long
+      0x3a,
+      0x69,
+      0x6c,
+      0x6c,
+      0x65,
+      0x67,
+      0x61,
+      0x6c, // :illegal
+      0x10, // Value: not huffman encoded, 16 bytes long
+      // REALLY NOT LEGAL
+      0x52,
+      0x45,
+      0x41,
+      0x4c,
+      0x4c,
+      0x59,
+      0x20,
+      0x4e,
+      0x4f,
+      0x54,
+      0x20,
+      0x4c,
+      0x45,
+      0x47,
+      0x41,
+      0x4c,
+    ]);
+    var newBufferLength = originalCompressed.length + illegalLiteral.length;
+    var concatenated = Buffer.alloc(newBufferLength);
+    originalCompressed.copy(concatenated, 0);
+    illegalLiteral.copy(concatenated, originalCompressed.length);
+    return concatenated;
+  }
+
+  function insertHardIllegalHpack(originalCompressed) {
+    // Now we have to add an invalid header
+    var illegalIndexed = HeaderSetCompressor.integer(5000, 7);
+    // The above returns an array of buffers, but there's only one buffer, so
+    // get rid of the array.
+    illegalIndexed = illegalIndexed[0];
+    // Set the first bit to 1 to signal this is an indexed representation
+    illegalIndexed[0] |= 0x80;
+    var newBufferLength = originalCompressed.length + illegalIndexed.length;
+    var concatenated = Buffer.alloc(newBufferLength);
+    originalCompressed.copy(concatenated, 0);
+    illegalIndexed.copy(concatenated, originalCompressed.length);
+    return concatenated;
+  }
+
+  if ("x-softillegalhpack" in headers) {
+    return insertSoftIllegalHpack(concat(chunks));
+  }
+
+  if ("x-hardillegalhpack" in headers) {
+    return insertHardIllegalHpack(concat(chunks));
+  }
+
   return concat(chunks);
 };
 

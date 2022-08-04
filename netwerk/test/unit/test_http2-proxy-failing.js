@@ -66,23 +66,28 @@ function make_channel(url) {
   );
 }
 
-function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL) {
+function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL, delay = 0) {
   return new Promise(resolve => {
-    channel.asyncOpen(
-      new ChannelListener(
-        (request, data) => {
-          request.QueryInterface(Ci.nsIHttpChannel);
-          const status = request.status;
-          const http_code = status ? undefined : request.responseStatus;
-          request.QueryInterface(Ci.nsIProxiedChannel);
-          const proxy_connect_response_code =
-            request.httpProxyConnectResponseCode;
-          resolve({ status, http_code, data, proxy_connect_response_code });
-        },
-        null,
-        flags
-      )
+    var listener = new ChannelListener(
+      (request, data) => {
+        request.QueryInterface(Ci.nsIHttpChannel);
+        const status = request.status;
+        const http_code = status ? undefined : request.responseStatus;
+        request.QueryInterface(Ci.nsIProxiedChannel);
+        const proxy_connect_response_code =
+          request.httpProxyConnectResponseCode;
+        resolve({ status, http_code, data, proxy_connect_response_code });
+      },
+      null,
+      flags
     );
+    if (delay > 0) {
+      do_timeout(delay, function() {
+        channel.asyncOpen(listener);
+      });
+    } else {
+      channel.asyncOpen(listener);
+    }
   });
 }
 
@@ -123,7 +128,8 @@ add_task(
     let should_succeed = get_response(make_channel(`http://750.example.com`));
     const failed = await get_response(
       make_channel(`http://illegalhpacksoft.example.com`),
-      CL_EXPECT_FAILURE
+      CL_EXPECT_FAILURE,
+      20
     );
 
     const succeeded = await should_succeed;
