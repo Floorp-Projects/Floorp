@@ -656,6 +656,9 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       if (NS_WARN_IF(convertListTypeResult.EditorDestroyed())) {
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
+      // There is AutoTransactionConserveSelection above, therefore, we don't
+      // need to update selection here.
+      convertListTypeResult.IgnoreCaretPointSuggestion();
       NS_WARNING_ASSERTION(
           convertListTypeResult.isOk(),
           "HTMLEditor::ChangeListElementType() failed, but ignored");
