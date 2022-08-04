@@ -5995,6 +5995,7 @@ NS_IMETHODIMP EditorBase::SetNewlineHandling(int32_t aNewlineHandling) {
 bool EditorBase::IsSelectionRangeContainerNotContent() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
+  // TODO: Make all callers use !AutoRangeArray::IsInContent() instead.
   const uint32_t rangeCount = SelectionRef().RangeCount();
   for (const uint32_t i : IntegerRange(rangeCount)) {
     MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);

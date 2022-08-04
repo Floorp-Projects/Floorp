@@ -4147,6 +4147,9 @@ EditActionResult HTMLEditor::IndentAsSubAction(const Element& aEditingHost) {
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
+  // TODO: Investigate when we need to put a `<br>` element after indenting
+  //       ranges.  Then, we could stop calling this here, or maybe we need to
+  //       do it while moving content nodes.
   nsresult rv = MaybeInsertPaddingBRElementForEmptyLastLineAtSelection();
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
@@ -4291,9 +4294,18 @@ EditActionResult HTMLEditor::HandleIndentAtSelection(
   }
 
   if (IsCSSEnabled()) {
-    nsresult rv = HandleCSSIndentAtSelection(aEditingHost);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::HandleCSSIndentAtSelection() failed");
+    AutoRangeArray selectionRanges(SelectionRef());
+    nsresult rv = HandleCSSIndentAroundRanges(selectionRanges, aEditingHost);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::HandleCSSIndentAroundRanges() failed");
+      return EditActionHandled(rv);
+    }
+    rv = selectionRanges.ApplyTo(SelectionRef());
+    if (MOZ_UNLIKELY(Destroyed())) {
+      NS_WARNING("AutoRangeArray::ApplyTo() caused destroying the editor");
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::ApplyTo() failed");
     return EditActionHandled(rv);
   }
   rv = HandleHTMLIndentAtSelection(aEditingHost);
@@ -4302,15 +4314,23 @@ EditActionResult HTMLEditor::HandleIndentAtSelection(
   return EditActionHandled(rv);
 }
 
-nsresult HTMLEditor::HandleCSSIndentAtSelection(const Element& aEditingHost) {
+nsresult HTMLEditor::HandleCSSIndentAroundRanges(AutoRangeArray& aRanges,
+                                                 const Element& aEditingHost) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+  MOZ_ASSERT(!aRanges.Ranges().IsEmpty());
+  MOZ_ASSERT(aRanges.IsInContent());
+
+  if (aRanges.Ranges().IsEmpty()) {
+    NS_WARNING("There is no selection range");
+    return NS_ERROR_FAILURE;
+  }
 
   // XXX Why do we do this only when there is only one selection range?
-  if (!SelectionRef().IsCollapsed() && SelectionRef().RangeCount() == 1u) {
+  if (!aRanges.IsCollapsed() && aRanges.Ranges().Length() == 1u) {
     Result<EditorRawDOMRange, nsresult> extendedRange =
         GetRangeExtendedToHardLineEdgesForBlockEditAction(
-            SelectionRef().GetRangeAt(0u), aEditingHost);
+            aRanges.FirstRangeRef(), aEditingHost);
     if (MOZ_UNLIKELY(extendedRange.isErr())) {
       NS_WARNING(
           "HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction() "
@@ -4318,46 +4338,26 @@ nsresult HTMLEditor::HandleCSSIndentAtSelection(const Element& aEditingHost) {
       return extendedRange.unwrapErr();
     }
     // Note that end point may be prior to start point.  So, we
-    // cannot use Selection::SetStartAndEndInLimit() here.
-    IgnoredErrorResult error;
-    SelectionRef().SetBaseAndExtentInLimiter(
-        extendedRange.inspect().StartRef().ToRawRangeBoundary(),
-        extendedRange.inspect().EndRef().ToRawRangeBoundary(), error);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (error.Failed()) {
-      NS_WARNING("Selection::SetBaseAndExtentInLimiter() failed");
-      return error.StealNSResult();
+    // cannot use SetStartAndEnd() here.
+    nsresult rv = aRanges.SetBaseAndExtent(extendedRange.inspect().StartRef(),
+                                           extendedRange.inspect().EndRef());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("AutoRangeArray::SetBaseAndExtent() failed");
+      return rv;
     }
   }
 
-  // HandleCSSIndentAtSelectionInternal() creates AutoSelectionRestorer.
-  // Therefore, even if it returns NS_OK, editor might have been destroyed
-  // at restoring Selection.
-  nsresult rv = HandleCSSIndentAtSelectionInternal(aEditingHost);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
+  if (NS_WARN_IF(!aRanges.SaveAndTrackRanges(*this))) {
+    return NS_ERROR_FAILURE;
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::HandleCSSIndentAtSelectionInternal() failed");
-  return rv;
-}
 
-nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
-    const Element& aEditingHost) {
-  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
-  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
-
-  AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
 
   // short circuit: detect case of collapsed selection inside an <li>.
   // just sublist that <li>.  This prevents bug 97797.
 
-  if (SelectionRef().IsCollapsed()) {
-    const auto atCaret = GetFirstSelectionStartPoint<EditorRawDOMPoint>();
+  if (aRanges.IsCollapsed()) {
+    const auto atCaret = aRanges.GetFirstRangeStartPoint<EditorRawDOMPoint>();
     if (NS_WARN_IF(!atCaret.IsSet())) {
       return NS_ERROR_FAILURE;
     }
@@ -4372,15 +4372,14 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
     }
   }
 
+  EditorDOMPoint pointToPutCaret;
   if (arrayOfContents.IsEmpty()) {
-    EditorDOMPoint pointToPutCaret;
     {
-      AutoRangeArray extendedSelectionRanges(SelectionRef());
-      extendedSelectionRanges
-          .ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-              EditSubAction::eIndent, aEditingHost);
+      AutoRangeArray extendedRanges(aRanges);
+      extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+          EditSubAction::eIndent, aEditingHost);
       Result<EditorDOMPoint, nsresult> splitResult =
-          extendedSelectionRanges
+          extendedRanges
               .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
                   *this);
       if (MOZ_UNLIKELY(splitResult.isErr())) {
@@ -4393,7 +4392,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
       if (splitResult.inspect().IsSet()) {
         pointToPutCaret = splitResult.unwrap();
       }
-      nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+      nsresult rv = extendedRanges.CollectEditTargetNodes(
           *this, arrayOfContents, EditSubAction::eIndent,
           AutoRangeArray::CollectNonEditableNodes::Yes);
       if (NS_FAILED(rv)) {
@@ -4415,36 +4414,24 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
     if (splitAtBRElementsResult.inspect().IsSet()) {
       pointToPutCaret = splitAtBRElementsResult.unwrap();
     }
-
-    if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
-      nsresult rv = CollapseSelectionTo(pointToPutCaret);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-        return rv;
-      }
-    }
   }
 
   // If there is no visible and editable nodes in the edit targets, make an
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (HTMLEditUtils::IsEmptyOneHardLine(arrayOfContents)) {
-    // get selection location
-    const nsRange* firstRange = SelectionRef().GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    const auto atStartOfSelection =
-        EditorBase::GetFirstSelectionStartPoint<EditorDOMPoint>();
-    if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+    const EditorDOMPoint pointToInsertDivElement =
+        pointToPutCaret.IsSet()
+            ? std::move(pointToPutCaret)
+            : aRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
+    if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
       return NS_ERROR_FAILURE;
     }
 
     // make sure we can put a block here
     CreateElementResult createNewDivElementResult =
         InsertElementWithSplittingAncestorsWithTransaction(
-            *nsGkAtoms::div, atStartOfSelection,
+            *nsGkAtoms::div, pointToInsertDivElement,
             BRElementNextToSplitPoint::Keep, aEditingHost);
     if (createNewDivElementResult.isErr()) {
       NS_WARNING(
@@ -4452,14 +4439,11 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
           "nsGkAtoms::div) failed");
       return createNewDivElementResult.unwrapErr();
     }
-    // We'll update selection below, and nobody refers selection until then.
-    // Therefore, we don't need to touch selection here.
+    // We'll collapse ranges below, so we don't need to touch the ranges here.
     createNewDivElementResult.IgnoreCaretPointSuggestion();
     const RefPtr<Element> newDivElement =
         createNewDivElementResult.UnwrapNewNode();
     MOZ_ASSERT(newDivElement);
-    // remember our new block for postprocessing
-    TopLevelEditSubActionDataRef().mNewBlockElement = newDivElement;
     const Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
         ChangeMarginStart(*newDivElement, ChangeMargin::Increase, aEditingHost);
     if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
@@ -4471,9 +4455,6 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
           "HTMLEditor::ChangeMarginStart(ChangeMargin::Increase) failed, but "
           "ignored");
     }
-    // We'll collapse selection into the new <div> element soon so that we don't
-    // need to update selection here.
-
     // delete anything that was in the list of nodes
     // XXX We don't need to remove the nodes from the array for performance.
     for (const OwningNonNull<nsIContent>& content : arrayOfContents) {
@@ -4484,18 +4465,47 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
         return rv;
       }
     }
-    // Don't restore the selection
-    restoreSelectionLater.Abort();
-    // put selection in new block
-    nsresult rv = CollapseSelectionToStartOf(*newDivElement);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::CollapseSelectionToStartOf() failed");
+    TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
+    aRanges.ClearSavedRanges();
+    nsresult rv = aRanges.Collapse(EditorDOMPoint(newDivElement, 0u));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::Collapse() failed");
     return rv;
   }
 
-  // Ok, now go through all the nodes and put them in a blockquote,
-  // or whatever is appropriate.
-  RefPtr<Element> curList, curQuote;
+  RefPtr<Element> latestNewBlockElement;
+  auto RestoreSavedRangesAndCollapseInLatestBlockElementIfOutside =
+      [&]() -> nsresult {
+    MOZ_ASSERT(aRanges.HasSavedRanges());
+    aRanges.RestoreFromSavedRanges();
+
+    if (!latestNewBlockElement || !aRanges.IsCollapsed() ||
+        aRanges.Ranges().IsEmpty()) {
+      return NS_OK;
+    }
+
+    const auto firstRangeStartRawPoint =
+        aRanges.GetFirstRangeStartPoint<EditorRawDOMPoint>();
+    if (MOZ_UNLIKELY(!firstRangeStartRawPoint.IsSet())) {
+      return NS_OK;
+    }
+    Result<EditorRawDOMPoint, nsresult> pointInNewBlockElementOrError =
+        HTMLEditUtils::ComputePointToPutCaretInElementIfOutside<
+            EditorRawDOMPoint>(*latestNewBlockElement, firstRangeStartRawPoint);
+    if (MOZ_UNLIKELY(pointInNewBlockElementOrError.isErr())) {
+      NS_WARNING(
+          "HTMLEditUtils::ComputePointToPutCaretInElementIfOutside() failed, "
+          "but ignored");
+      return NS_OK;
+    }
+    if (!pointInNewBlockElementOrError.inspect().IsSet()) {
+      return NS_OK;
+    }
+    return aRanges.Collapse(pointInNewBlockElementOrError.unwrap());
+  };
+
+  // Ok, now go through all the nodes and put them into sub-list element
+  // elements and new <div> elements which have start margin.
+  RefPtr<Element> subListElement, divElement;
   for (OwningNonNull<nsIContent>& content : arrayOfContents) {
     // Here's where we actually figure out what to do.
     EditorDOMPoint atContent(content);
@@ -4510,31 +4520,24 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
     }
 
     if (HTMLEditUtils::IsAnyListElement(atContent.GetContainer())) {
-      const RefPtr<Element> listElement = curList;
+      const RefPtr<Element> oldSubListElement = subListElement;
       // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
       // keep it alive.
       Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-          IndentListChildWithTransaction(&curList, atContent,
+          IndentListChildWithTransaction(&subListElement, atContent,
                                          MOZ_KnownLive(content), aEditingHost);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::IndentListChildWithTransaction() failed");
         return pointToPutCaretOrError.unwrapErr();
       }
-      if (curList != listElement) {
+      if (subListElement != oldSubListElement) {
         // New list element is created, so we should put caret into the new list
         // element.
-        TopLevelEditSubActionDataRef().mNewBlockElement = curList;
+        latestNewBlockElement = subListElement;
+        TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
       }
-      if (AllowsTransactionsToChangeSelection() &&
-          pointToPutCaretOrError.inspect().IsSet()) {
-        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
-        if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "EditorBase::CollapseSelectionTo() failed, but ignored");
+      if (pointToPutCaretOrError.inspect().IsSet()) {
+        pointToPutCaret = pointToPutCaretOrError.unwrap();
       }
       continue;
     }
@@ -4542,34 +4545,38 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
     // Not a list item.
 
     if (HTMLEditUtils::IsBlockElement(content)) {
-      const Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
           ChangeMarginStart(MOZ_KnownLive(*content->AsElement()),
                             ChangeMargin::Increase, aEditingHost);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
-        if (NS_WARN_IF(pointToPutCaretOrError.inspectErr() ==
-                       NS_ERROR_EDITOR_DESTROYED)) {
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.inspectErr() ==
+                         NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING(
+              "HTMLEditor::ChangeMarginStart(ChangeMargin::Increase) failed");
           return NS_ERROR_EDITOR_DESTROYED;
         }
         NS_WARNING(
             "HTMLEditor::ChangeMarginStart(ChangeMargin::Increase) failed, but "
             "ignored");
-      } else if (AllowsTransactionsToChangeSelection() &&
-                 pointToPutCaretOrError.inspect().IsSet()) {
-        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
-        if (NS_FAILED(rv)) {
-          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-          return rv;
-        }
+      } else if (pointToPutCaretOrError.inspect().IsSet()) {
+        pointToPutCaret = pointToPutCaretOrError.unwrap();
       }
-      curQuote = nullptr;
+      divElement = nullptr;
       continue;
     }
 
-    if (!curQuote) {
+    if (!divElement) {
       // First, check that our element can contain a div.
       if (!HTMLEditUtils::CanNodeContain(*atContent.GetContainer(),
                                          *nsGkAtoms::div)) {
-        return NS_OK;  // cancelled
+        // XXX This is odd, why do we stop indenting remaining content nodes?
+        //     Perhaps, `continue` is better.
+        nsresult rv =
+            RestoreSavedRangesAndCollapseInLatestBlockElementIfOutside();
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "RestoreSavedRangesAndCollapseInLatestBlockElement"
+                             "IfOutside() failed");
+        return rv;
       }
 
       CreateElementResult createNewDivElementResult =
@@ -4582,20 +4589,17 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
             "nsGkAtoms::div) failed");
         return createNewDivElementResult.unwrapErr();
       }
-      nsresult rv = createNewDivElementResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-        return rv;
-      }
-      RefPtr<Element> newDivElement = createNewDivElementResult.UnwrapNewNode();
-      MOZ_ASSERT(newDivElement);
-      const Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-          ChangeMarginStart(*newDivElement, ChangeMargin::Increase,
-                            aEditingHost);
+      pointToPutCaret = createNewDivElementResult.UnwrapCaretPoint();
+
+      MOZ_ASSERT(createNewDivElementResult.GetNewNode());
+      divElement = createNewDivElementResult.UnwrapNewNode();
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+          ChangeMarginStart(*divElement, ChangeMargin::Increase, aEditingHost);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
-        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.inspectErr() ==
+                         NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING(
+              "HTMLEditor::ChangeMarginStart(ChangeMargin::Increase) failed");
           return NS_ERROR_EDITOR_DESTROYED;
         }
         NS_WARNING(
@@ -4603,40 +4607,32 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal(
             "ignored");
       } else if (AllowsTransactionsToChangeSelection() &&
                  pointToPutCaretOrError.inspect().IsSet()) {
-        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
-        if (NS_FAILED(rv)) {
-          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-          return rv;
-        }
+        pointToPutCaret = pointToPutCaretOrError.unwrap();
       }
-      // remember our new block for postprocessing
-      TopLevelEditSubActionDataRef().mNewBlockElement = newDivElement;
-      curQuote = std::move(newDivElement);
-      // curQuote is now the correct thing to put content in
+
+      latestNewBlockElement = divElement;
+      TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
     }
 
-    // tuck the node into the end of the active blockquote
+    // Move the content into the <div> which has start margin.
     // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
     // keep it alive.
-    const MoveNodeResult moveNodeResult =
-        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *curQuote);
+    MoveNodeResult moveNodeResult =
+        MoveNodeToEndWithTransaction(MOZ_KnownLive(content), *divElement);
     if (moveNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return moveNodeResult.unwrapErr();
     }
-    nsresult rv = moveNodeResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("MoveNodeResult::SuggestCaretPointTo() failed");
-      return rv;
+    if (moveNodeResult.HasCaretPointSuggestion()) {
+      pointToPutCaret = moveNodeResult.UnwrapCaretPoint();
     }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
   }
-  return NS_OK;
+
+  nsresult rv = RestoreSavedRangesAndCollapseInLatestBlockElementIfOutside();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "RestoreSavedRangesAndCollapseInLatestBlockElementIfOutside() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::HandleHTMLIndentAtSelection(const Element& aEditingHost) {
