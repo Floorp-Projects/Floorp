@@ -9,12 +9,13 @@
 #include <algorithm>
 #include <utility>
 
+#include "AutoRangeArray.h"
+#include "CSSEditUtils.h"
+#include "EditAction.h"
 #include "HTMLEditUtils.h"
 #include "WSRunObject.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/CSSEditUtils.h"
-#include "mozilla/EditAction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Element.h"
