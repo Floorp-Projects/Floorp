@@ -17,6 +17,7 @@
 #include "Http2StreamTunnel.h"
 #include "Http2ConnectTransaction.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla::net {
 
@@ -313,6 +314,12 @@ nsresult Http2StreamTunnel::GenerateHeaders(nsCString& aCompressedData,
 
 OutputStreamTunnel::OutputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
+  mSocketThread = NS_GetCurrentThread();
+}
+
+OutputStreamTunnel::~OutputStreamTunnel() {
+  NS_ProxyRelease("OutputStreamTunnel::~OutputStreamTunnel", mSocketThread,
+                  mWeakStream.forget());
 }
 
 nsresult OutputStreamTunnel::OnSocketReady(nsresult condition) {
@@ -460,6 +467,12 @@ OutputStreamTunnel::AsyncWait(nsIOutputStreamCallback* callback, uint32_t flags,
 
 InputStreamTunnel::InputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
+  mSocketThread = NS_GetCurrentThread();
+}
+
+InputStreamTunnel::~InputStreamTunnel() {
+  NS_ProxyRelease("InputStreamTunnel::~InputStreamTunnel", mSocketThread,
+                  mWeakStream.forget());
 }
 
 nsresult InputStreamTunnel::OnSocketReady(nsresult condition) {
