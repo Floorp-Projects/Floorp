@@ -19,6 +19,7 @@ add_task(async function() {
     "devtools.browsertoolbox.fission",
     false
   );
+  await pushPref("devtools.browsertoolbox.scope", "everything");
 
   const topWindow = Services.wm.getMostRecentWindow("navigator:browser");
   is(
