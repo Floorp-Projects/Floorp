@@ -6,7 +6,7 @@ function TupleToArray(obj) {
   var len = TupleLength(obj);
   var items = std_Array(len);
 
-  for(var k = 0; k < len; k++) {
+  for (var k = 0; k < len; k++) {
     DefineDataProperty(items, k, obj[k]);
   }
   return items;
@@ -31,7 +31,7 @@ function TupleToSorted(comparefn) {
 
 // proposal-record-tuple
 // Tuple.prototype.toSpliced()
-function TupleToSpliced(start, deleteCount, /*, ...items */) {
+function TupleToSpliced(start, deleteCount /*, ...items */) {
   /* Steps 1-2. */
   var list = ThisTupleValue(this);
 
@@ -73,7 +73,6 @@ function TupleToSpliced(start, deleteCount, /*, ...items */) {
     ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
   }
 
-
   /* Step 10. */
   var k = 0;
   /* Step 11. */
@@ -84,7 +83,7 @@ function TupleToSpliced(start, deleteCount, /*, ...items */) {
   var newList = [];
 
   /* Step 14. */
-  while(k < actualStart) {
+  while (k < actualStart) {
     /* Step 14a. */
     let E = list[k];
     /* Step 14b. */
@@ -96,7 +95,7 @@ function TupleToSpliced(start, deleteCount, /*, ...items */) {
   /* Step 15. */
   var itemK = 0;
   /* Step 16. */
-  while(itemK < itemCount) {
+  while (itemK < itemCount) {
     /* Step 16a. */
     let E = arguments[itemK + 2];
     /* Step 16b. */
@@ -113,7 +112,7 @@ function TupleToSpliced(start, deleteCount, /*, ...items */) {
   /* Step 17. */
   itemK = actualStart + actualDeleteCount;
   /* Step 18. */
-  while(itemK < len) {
+  while (itemK < len) {
     /* Step 18a. */
     let E = list[itemK];
     /* Step 18b. */
@@ -144,7 +143,7 @@ function TupleToReversed() {
     /* Step 5a. */
     let E = T[k];
     /* Step 5b. */
-    DefineDataProperty(newList, (len - k) - 1, E);
+    DefineDataProperty(newList, len - k - 1, E);
   }
 
   /* Step 5. */
@@ -162,7 +161,7 @@ function TupleConcat() {
   var n = list.length;
   /* Step 4 not necessary due to changed step 2. */
   /* Step 5 */
-  for(var i = 0; i < arguments.length; i++) {
+  for (var i = 0; i < arguments.length; i++) {
     /* Step 5a. */
     let E = arguments[i];
     /* Step 5b. */
@@ -178,7 +177,7 @@ function TupleConcat() {
         ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
       }
       /* Step 5c.iv */
-      while(k < len) {
+      while (k < len) {
         /* Step 5c.iv.2 */
         var exists = E[k] !== undefined;
         /* Step 5c.iv.3 */
@@ -197,9 +196,8 @@ function TupleConcat() {
         /* Step 5c.iv.5 */
         k++;
       }
-    }
-    /* Step 5d. */
-    else {
+    } else {
+      /* Step 5d. */
       /* Step 5d.ii. */
       if (n >= MAX_NUMERIC_INDEX) {
         ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
@@ -322,7 +320,7 @@ function TupleKeys() {
 // Tuple.prototype.values()
 function $TupleValues() {
   return CreateArrayIterator(this, ITEM_KIND_VALUE);
-};
+}
 
 SetCanonicalName($TupleValues, "values");
 
@@ -358,7 +356,7 @@ function TupleFilter(callbackfn) {
 
   /* Step 7. */
   var T = arguments.length > 1 ? arguments[1] : undefined;
-  while(k < len) {
+  while (k < len) {
     /* Step 7a. */
     var kValue = list[k];
     /* Step 7b. */
@@ -413,7 +411,7 @@ function TupleMap(callbackfn) {
 
   /* Steps 6-7. */
   var thisArg = arguments.length > 1 ? arguments[1] : undefined;
-  for(var k = 0; k < len; k++) {
+  for (var k = 0; k < len; k++) {
     /* Step 7a. */
     var kValue = list[k];
     /* Step 7b. */
@@ -558,7 +556,7 @@ function TupleFlatMap(mapperFunction /*, thisArg*/) {
   return std_Tuple_unchecked(flat);
 }
 
-function TupleFrom(items, /*, mapFn, thisArg */) {
+function TupleFrom(items /*, mapFn, thisArg */) {
   /* Step 1 */
   var mapping;
   var mapfn = arguments.length < 2 ? undefined : arguments[1];
