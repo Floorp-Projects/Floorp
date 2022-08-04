@@ -4,7 +4,7 @@ summary: Mozilla Firefox web browser
 description:  Firefox is a powerful, extensible web browser with support for modern web application technologies.
 confinement: strict
 grade: stable
-base: core18
+base: core20
 compression: lzo
 
 apps:
@@ -12,7 +12,7 @@ apps:
     command: firefox
     command-chain: [tmpdir]
     desktop: distribution/firefox.desktop
-    extensions: [gnome-3-34]
+    extensions: [gnome-3-38]
     environment:
       HOME: "$SNAP_USER_COMMON"
       GTK_USE_PORTAL: 1
@@ -78,10 +78,10 @@ parts:
   cleanup:
     after: [firefox]
     plugin: nil
-    build-snaps: [core18, gnome-3-34-1804]
+    build-snaps: [core20, gnome-3-38-2004]
     override-prime: |
       set -eux
-      for snap in "core18" "gnome-3-34-1804"; do
+      for snap in "core20" "gnome-3-38-2004"; do
         cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
       done
 
