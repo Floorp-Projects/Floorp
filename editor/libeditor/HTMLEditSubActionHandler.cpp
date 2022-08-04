@@ -9622,32 +9622,53 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
         return rv;
       }
 
+      EditorDOMPoint pointToPutCaret;
       // We may have to insert a `<br>` element before first child of the
       // `<center>` element because it should be first element of a hard line
       // even after removing the `<center>` element.
-      rv = EnsureHardLineBeginsWithFirstChildOf(centerElement);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::EnsureHardLineBeginsWithFirstChildOf() failed");
-        return rv;
+      {
+        CreateElementResult maybeInsertBRElementBeforeFirstChildResult =
+            EnsureHardLineBeginsWithFirstChildOf(centerElement);
+        if (maybeInsertBRElementBeforeFirstChildResult.isErr()) {
+          NS_WARNING(
+              "HTMLEditor::EnsureHardLineBeginsWithFirstChildOf() failed");
+          return maybeInsertBRElementBeforeFirstChildResult.unwrapErr();
+        }
+        if (maybeInsertBRElementBeforeFirstChildResult
+                .HasCaretPointSuggestion()) {
+          pointToPutCaret =
+              maybeInsertBRElementBeforeFirstChildResult.UnwrapCaretPoint();
+        }
       }
 
       // We may have to insert a `<br>` element after last child of the
       // `<center>` element because it should be last element of a hard line
       // even after removing the `<center>` element.
-      rv = EnsureHardLineEndsWithLastChildOf(centerElement);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::EnsureHardLineEndsWithLastChildOf() failed");
-        return rv;
+      {
+        CreateElementResult maybeInsertBRElementAfterLastChildResult =
+            EnsureHardLineEndsWithLastChildOf(centerElement);
+        if (maybeInsertBRElementAfterLastChildResult.isErr()) {
+          NS_WARNING("HTMLEditor::EnsureHardLineEndsWithLastChildOf() failed");
+          return maybeInsertBRElementAfterLastChildResult.unwrapErr();
+        }
+        if (maybeInsertBRElementAfterLastChildResult
+                .HasCaretPointSuggestion()) {
+          pointToPutCaret =
+              maybeInsertBRElementAfterLastChildResult.UnwrapCaretPoint();
+        }
       }
 
-      const Result<EditorDOMPoint, nsresult> unwrapCenterElementResult =
-          RemoveContainerWithTransaction(centerElement);
-      if (MOZ_UNLIKELY(unwrapCenterElementResult.isErr())) {
-        NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
-        return unwrapCenterElementResult.inspectErr();
+      {
+        Result<EditorDOMPoint, nsresult> unwrapCenterElementResult =
+            RemoveContainerWithTransaction(centerElement);
+        if (MOZ_UNLIKELY(unwrapCenterElementResult.isErr())) {
+          NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
+          return unwrapCenterElementResult.inspectErr();
+        }
+        if (unwrapCenterElementResult.inspect().IsSet()) {
+          pointToPutCaret = unwrapCenterElementResult.unwrap();
+        }
       }
-      const EditorDOMPoint& pointToPutCaret =
-          unwrapCenterElementResult.inspect();
       if (!AllowsTransactionsToChangeSelection() && !pointToPutCaret.IsSet()) {
         continue;
       }
@@ -9725,99 +9746,72 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
   return NS_OK;
 }
 
-nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
+CreateElementResult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     Element& aRemovingContainerElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsIContent* firstEditableChild = HTMLEditUtils::GetFirstChild(
       aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableChild) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   if (HTMLEditUtils::IsBlockElement(*firstEditableChild) ||
       firstEditableChild->IsHTMLElement(nsGkAtoms::br)) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousSibling(
       aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!previousEditableContent) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   if (HTMLEditUtils::IsBlockElement(*previousEditableContent) ||
       previousEditableContent->IsHTMLElement(nsGkAtoms::br)) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   CreateElementResult insertBRElementResult = InsertBRElement(
       WithTransaction::Yes, EditorDOMPoint(&aRemovingContainerElement, 0u));
-  if (insertBRElementResult.isErr()) {
-    NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return insertBRElementResult.unwrapErr();
-  }
-  // XXX Is this intentional selection change?
-  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return rv;
-  }
   NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
-  return NS_OK;
+      insertBRElementResult.isOk(),
+      "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+  return insertBRElementResult;
 }
 
-nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
+CreateElementResult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     Element& aRemovingContainerElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsIContent* firstEditableContent = HTMLEditUtils::GetLastChild(
       aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!firstEditableContent) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   if (HTMLEditUtils::IsBlockElement(*firstEditableContent) ||
       firstEditableContent->IsHTMLElement(nsGkAtoms::br)) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   nsIContent* nextEditableContent = HTMLEditUtils::GetPreviousSibling(
       aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
   if (!nextEditableContent) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   if (HTMLEditUtils::IsBlockElement(*nextEditableContent) ||
       nextEditableContent->IsHTMLElement(nsGkAtoms::br)) {
-    return NS_OK;
+    return CreateElementResult::NotHandled();
   }
 
   CreateElementResult insertBRElementResult = InsertBRElement(
       WithTransaction::Yes, EditorDOMPoint::AtEndOf(aRemovingContainerElement));
-  if (insertBRElementResult.isErr()) {
-    NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return insertBRElementResult.unwrapErr();
-  }
-  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return rv;
-  }
   NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-  MOZ_ASSERT(insertBRElementResult.GetNewNode());
-  return NS_OK;
+      insertBRElementResult.isOk(),
+      "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+  return insertBRElementResult;
 }
 
 nsresult HTMLEditor::SetBlockElementAlign(Element& aBlockOrHRElement,
