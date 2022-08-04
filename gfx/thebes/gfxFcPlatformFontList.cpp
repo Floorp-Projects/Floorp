@@ -951,7 +951,7 @@ bool gfxFontconfigFontEntry::HasVariations() {
   mHasVariationsInitialized = true;
   mHasVariations = false;
 
-  if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+  if (!gfxPlatform::HasVariationFontSupport()) {
     return mHasVariations;
   }
 
@@ -1036,7 +1036,7 @@ void gfxFontconfigFontFamily::FindStyleVariationsLocked(
     gfxFontconfigFontEntry* fontEntry =
         new gfxFontconfigFontEntry(faceName, face, mContainsAppFonts);
 
-    if (gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
+    if (gfxPlatform::HasVariationFontSupport()) {
       fontEntry->SetupVariationRanges();
     }
 
