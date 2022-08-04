@@ -232,6 +232,10 @@ fn is_bitmap_font(font: &FontInstance) -> bool {
 }
 
 impl FontContext {
+    pub fn distribute_across_threads() -> bool {
+        true
+    }
+
     pub fn new() -> Result<FontContext, ResourceCacheError> {
         debug!("Test for subpixel AA support: {:?}", *FONT_SMOOTHING_MODE);
 
@@ -513,6 +517,12 @@ impl FontContext {
                 };
             }
         }
+    }
+
+    pub fn begin_rasterize(_font: &FontInstance) {
+    }
+
+    pub fn end_rasterize(_font: &FontInstance) {
     }
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
