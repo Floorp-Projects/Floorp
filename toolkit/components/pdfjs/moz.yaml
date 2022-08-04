@@ -45,6 +45,7 @@ vendoring:
     - action: run-script
       script: 'update.sh'
       cwd: '{yaml_dir}'
+      args: ['{revision}']
 
 updatebot:
     maintainer-phab: "pdfjs-reviewers"
