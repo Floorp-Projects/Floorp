@@ -17,7 +17,6 @@ case "$TARGET" in
 x86_64-unknown-linux-gnu)
     # Native Linux Build
     EXE=
-    FEATURES="--features vendored-openssl"
     # {CC,CXX} and TARGET_{CC,CXX} must be set because a build.rs file builds
     # some C and C++ code.
     export RUSTFLAGS="-Clinker=clang++ -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
@@ -30,7 +29,6 @@ x86_64-unknown-linux-gnu)
 *-apple-darwin)
     # Cross-compiling for Mac on Linux.
     EXE=
-    FEATURES=
     export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
     export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
     export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
@@ -46,7 +44,6 @@ x86_64-unknown-linux-gnu)
 *-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.
     EXE=.exe
-    FEATURES=
     # Some magic that papers over differences in case-sensitivity/insensitivity on Linux
     # and Windows file systems.
     export LD_PRELOAD="/builds/worker/fetches/liblowercase/liblowercase.so"
@@ -76,7 +73,7 @@ PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR/$FETCH
 
-cargo build --verbose --release --target "$TARGET" --bin $PROJECT $FEATURES
+cargo build --verbose --release --target "$TARGET" --bin $PROJECT
 
 cd ..
 mkdir $PROJECT
