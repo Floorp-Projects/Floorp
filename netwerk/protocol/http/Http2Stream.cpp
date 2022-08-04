@@ -34,7 +34,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
 
 Http2Stream::~Http2Stream() { ClearPushSource(); }
 
-nsresult Http2Stream::Close(nsresult reason) {
+void Http2Stream::CloseStream(nsresult reason) {
   // In case we are connected to a push, make sure the push knows we are closed,
   // so it doesn't try to give us any more DATA that comes on it after our
   // close.
@@ -42,8 +42,6 @@ nsresult Http2Stream::Close(nsresult reason) {
 
   mTransaction->Close(reason);
   mSession = nullptr;
-
-  return NS_OK;
 }
 
 void Http2Stream::ClearPushSource() {

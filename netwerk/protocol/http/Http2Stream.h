@@ -16,7 +16,7 @@ class Http2Stream : public Http2StreamBase {
   Http2Stream(nsAHttpTransaction* httpTransaction, Http2Session* session,
               int32_t priority, uint64_t bcId);
 
-  nsresult Close(nsresult reason) override;
+  void CloseStream(nsresult reason) override;
   Http2Stream* GetHttp2Stream() override { return this; }
   uint32_t GetWireStreamId() override;
 
