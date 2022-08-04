@@ -10034,10 +10034,46 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction(
     }
   }
 
+  auto EnsureCaretInElementIfCollapsedOutside =
+      [&](Element& aElement) MOZ_CAN_RUN_SCRIPT {
+        if (!SelectionRef().IsCollapsed() || !SelectionRef().RangeCount()) {
+          return NS_OK;
+        }
+        const auto firstRangeStartPoint =
+            GetFirstSelectionStartPoint<EditorRawDOMPoint>();
+        if (MOZ_UNLIKELY(!firstRangeStartPoint.IsSet())) {
+          return NS_OK;
+        }
+        const Result<EditorRawDOMPoint, nsresult> pointToPutCaretOrError =
+            HTMLEditUtils::ComputePointToPutCaretInElementIfOutside<
+                EditorRawDOMPoint>(aElement, firstRangeStartPoint);
+        if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+          NS_WARNING(
+              "HTMLEditUtils::ComputePointToPutCaretInElementIfOutside() "
+              "failed, but ignored");
+          return NS_OK;
+        }
+        if (!pointToPutCaretOrError.inspect().IsSet()) {
+          return NS_OK;
+        }
+        nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+        if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::CollapseSelectionTo() failed, but ignored");
+        return NS_OK;
+      };
+
   RefPtr<Element> focusElement = GetSelectionContainerElement();
   if (focusElement && HTMLEditUtils::IsImage(focusElement)) {
-    TopLevelEditSubActionDataRef().mNewBlockElement = std::move(focusElement);
-    return EditActionHandled();
+    nsresult rv = EnsureCaretInElementIfCollapsedOutside(*focusElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EnsureCaretInElementIfCollapsedOutside() failed");
+    TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
+    return EditActionHandled(rv);
   }
 
   // XXX Why do we do this only when there is only one selection range?
@@ -10103,10 +10139,15 @@ EditActionResult HTMLEditor::SetSelectionToAbsoluteAsSubAction(
   if (NS_WARN_IF(Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::SetPositionToAbsoluteOrStatic() failed");
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::SetPositionToAbsoluteOrStatic() failed");
+    return EditActionHandled(rv);
+  }
 
-  TopLevelEditSubActionDataRef().mNewBlockElement = std::move(divElement);
+  rv = EnsureCaretInElementIfCollapsedOutside(*divElement);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EnsureCaretInElementIfCollapsedOutside() failed");
+  TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
   return EditActionHandled(rv);
 }
 
