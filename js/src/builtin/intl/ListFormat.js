@@ -32,11 +32,13 @@ function resolveListFormatInternals(lazyListFormatData) {
   var localeData = ListFormat.localeData;
 
   // Step 10.
-  var r = ResolveLocale("ListFormat",
-                        lazyListFormatData.requestedLocales,
-                        lazyListFormatData.opt,
-                        ListFormat.relevantExtensionKeys,
-                        localeData);
+  var r = ResolveLocale(
+    "ListFormat",
+    lazyListFormatData.requestedLocales,
+    lazyListFormatData.opt,
+    ListFormat.relevantExtensionKeys,
+    localeData
+  );
 
   // Step 11.
   internalProps.locale = r.locale;
@@ -59,8 +61,7 @@ function resolveListFormatInternals(lazyListFormatData) {
  */
 function getListFormatInternals(obj) {
   assert(IsObject(obj), "getListFormatInternals called with non-object");
-  assert(intl_GuardToListFormat(obj) !== null,
-         "getListFormatInternals called with non-ListFormat");
+  assert(intl_GuardToListFormat(obj) !== null, "getListFormatInternals called with non-ListFormat");
 
   var internals = getIntlObjectInternals(obj);
   assert(internals.type === "ListFormat", "bad type escaped getIntlObjectInternals");
@@ -90,8 +91,10 @@ function getListFormatInternals(obj) {
  */
 function InitializeListFormat(listFormat, locales, options) {
   assert(IsObject(listFormat), "InitializeListFormat called with non-object");
-  assert(intl_GuardToListFormat(listFormat) !== null,
-         "InitializeListFormat called with non-ListFormat");
+  assert(
+    intl_GuardToListFormat(listFormat) !== null,
+    "InitializeListFormat called with non-ListFormat"
+  );
 
   // Lazy ListFormat data has the following structure:
   //
@@ -133,8 +136,13 @@ function InitializeListFormat(listFormat, locales, options) {
   // Compute formatting options.
 
   // Steps 12-13.
-  var type = GetOption(options, "type", "string", ["conjunction", "disjunction", "unit"],
-                       "conjunction");
+  var type = GetOption(
+    options,
+    "type",
+    "string",
+    ["conjunction", "disjunction", "unit"],
+    "conjunction"
+  );
   lazyListFormatData.type = type;
 
   // Steps 14-15.
@@ -200,8 +208,7 @@ function Intl_ListFormat_format(list) {
 
   // Steps 2-3.
   if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
-    return callFunction(intl_CallListFormatMethodIfWrapped, this, list,
-                        "Intl_ListFormat_format");
+    return callFunction(intl_CallListFormatMethodIfWrapped, this, list, "Intl_ListFormat_format");
   }
 
   // Step 4.
@@ -228,8 +235,12 @@ function Intl_ListFormat_formatToParts(list) {
 
   // Steps 2-3.
   if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
-    return callFunction(intl_CallListFormatMethodIfWrapped, this, list,
-                        "Intl_ListFormat_formatToParts");
+    return callFunction(
+      intl_CallListFormatMethodIfWrapped,
+      this,
+      list,
+      "Intl_ListFormat_formatToParts"
+    );
   }
 
   // Step 4.
@@ -256,8 +267,11 @@ function Intl_ListFormat_resolvedOptions() {
 
   // Steps 2-3.
   if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
-    return callFunction(intl_CallListFormatMethodIfWrapped, this,
-                        "Intl_ListFormat_resolvedOptions");
+    return callFunction(
+      intl_CallListFormatMethodIfWrapped,
+      this,
+      "Intl_ListFormat_resolvedOptions"
+    );
   }
 
   var internals = getListFormatInternals(listFormat);

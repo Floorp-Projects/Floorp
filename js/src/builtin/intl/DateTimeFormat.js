@@ -60,11 +60,13 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
   var localeData = DateTimeFormat.localeData;
 
   // Step 11.
-  var r = ResolveLocale("DateTimeFormat",
-                        lazyDateTimeFormatData.requestedLocales,
-                        lazyDateTimeFormatData.localeOpt,
-                        DateTimeFormat.relevantExtensionKeys,
-                        localeData);
+  var r = ResolveLocale(
+    "DateTimeFormat",
+    lazyDateTimeFormatData.requestedLocales,
+    lazyDateTimeFormatData.localeOpt,
+    DateTimeFormat.relevantExtensionKeys,
+    localeData
+  );
 
   // Steps 12-13, 15.
   internalProps.locale = r.locale;
@@ -88,8 +90,10 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
   // Steps 26-31, more or less - see comment after this function.
   if (lazyDateTimeFormatData.patternOption !== undefined) {
     internalProps.pattern = lazyDateTimeFormatData.patternOption;
-  } else if (lazyDateTimeFormatData.dateStyle !== undefined ||
-             lazyDateTimeFormatData.timeStyle !== undefined) {
+  } else if (
+    lazyDateTimeFormatData.dateStyle !== undefined ||
+    lazyDateTimeFormatData.timeStyle !== undefined
+  ) {
     internalProps.hourCycle = formatOpt.hourCycle;
     internalProps.hour12 = formatOpt.hour12;
     internalProps.dateStyle = lazyDateTimeFormatData.dateStyle;
@@ -120,8 +124,10 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
  */
 function getDateTimeFormatInternals(obj) {
   assert(IsObject(obj), "getDateTimeFormatInternals called with non-object");
-  assert(intl_GuardToDateTimeFormat(obj) !== null,
-         "getDateTimeFormatInternals called with non-DateTimeFormat");
+  assert(
+    intl_GuardToDateTimeFormat(obj) !== null,
+    "getDateTimeFormatInternals called with non-DateTimeFormat"
+  );
 
   var internals = getIntlObjectInternals(obj);
   assert(internals.type === "DateTimeFormat", "bad type escaped getIntlObjectInternals");
@@ -143,11 +149,12 @@ function getDateTimeFormatInternals(obj) {
  */
 function UnwrapDateTimeFormat(dtf) {
   // Steps 2 and 4 (error handling moved to caller).
-  if (IsObject(dtf) &&
-      intl_GuardToDateTimeFormat(dtf) === null &&
-      !intl_IsWrappedDateTimeFormat(dtf) &&
-      callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), dtf))
-  {
+  if (
+    IsObject(dtf) &&
+    intl_GuardToDateTimeFormat(dtf) === null &&
+    !intl_IsWrappedDateTimeFormat(dtf) &&
+    callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), dtf)
+  ) {
     dtf = dtf[intlFallbackSymbol()];
   }
   return dtf;
@@ -170,7 +177,10 @@ function CanonicalizeTimeZoneName(timeZone) {
   // Step 2.
   var ianaTimeZone = intl_canonicalizeTimeZone(timeZone);
   assert(ianaTimeZone !== "Etc/Unknown", "Invalid canonical time zone");
-  assert(ianaTimeZone === intl_IsValidTimeZoneName(ianaTimeZone), "Unsupported canonical time zone");
+  assert(
+    ianaTimeZone === intl_IsValidTimeZoneName(ianaTimeZone),
+    "Unsupported canonical time zone"
+  );
 
   // Step 3.
   if (ianaTimeZone === "Etc/UTC" || ianaTimeZone === "Etc/GMT") {
@@ -207,8 +217,10 @@ function DefaultTimeZone() {
     // hour offsets.
     const msPerHour = 60 * 60 * 1000;
     var offset = intl_defaultTimeZoneOffset();
-    assert(offset === (offset | 0),
-           "milliseconds offset shouldn't be able to exceed int32_t range");
+    assert(
+      offset === (offset | 0),
+      "milliseconds offset shouldn't be able to exceed int32_t range"
+    );
     var offsetHours = offset / msPerHour, offsetHoursFraction = offset % msPerHour;
     if (offsetHoursFraction === 0) {
       // Etc/GMT + offset uses POSIX-style signs, i.e. a positive offset
@@ -247,8 +259,10 @@ function DefaultTimeZone() {
  */
 function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, mozExtensions) {
   assert(IsObject(dateTimeFormat), "InitializeDateTimeFormat called with non-Object");
-  assert(intl_GuardToDateTimeFormat(dateTimeFormat) !== null,
-         "InitializeDateTimeFormat called with non-DateTimeFormat");
+  assert(
+    intl_GuardToDateTimeFormat(dateTimeFormat) !== null,
+    "InitializeDateTimeFormat called with non-DateTimeFormat"
+  );
 
   // Lazy DateTimeFormat data has the following structure:
   //
@@ -297,9 +311,13 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   lazyDateTimeFormatData.localeOpt = localeOpt;
 
   // Steps 4-5.
-  var localeMatcher =
-      GetOption(options, "localeMatcher", "string", ["lookup", "best fit"],
-                "best fit");
+  var localeMatcher = GetOption(
+    options,
+    "localeMatcher",
+    "string",
+    ["lookup", "best fit"],
+    "best fit"
+  );
   localeOpt.localeMatcher = localeMatcher;
 
   var calendar = GetOption(options, "calendar", "string", undefined, undefined);
@@ -313,9 +331,11 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   var numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
 
   if (numberingSystem !== undefined) {
-    numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(numberingSystem,
-                                                                       "numberingSystem",
-                                                                       "nu");
+    numberingSystem = intl_ValidateAndCanonicalizeUnicodeExtensionType(
+      numberingSystem,
+      "numberingSystem",
+      "nu"
+    );
   }
 
   localeOpt.nu = numberingSystem;
@@ -368,23 +388,47 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 
   // Step 22.
   // 12.1, Table 5: Components of date and time formats.
-  formatOpt.weekday = GetOption(options, "weekday", "string", ["narrow", "short", "long"],
-                                undefined);
+  formatOpt.weekday = GetOption(
+    options,
+    "weekday",
+    "string",
+    ["narrow", "short", "long"],
+    undefined
+  );
   formatOpt.era = GetOption(options, "era", "string", ["narrow", "short", "long"], undefined);
   formatOpt.year = GetOption(options, "year", "string", ["2-digit", "numeric"], undefined);
-  formatOpt.month = GetOption(options, "month", "string",
-                              ["2-digit", "numeric", "narrow", "short", "long"], undefined);
+  formatOpt.month = GetOption(
+    options,
+    "month",
+    "string",
+    ["2-digit", "numeric", "narrow", "short", "long"],
+    undefined
+  );
   formatOpt.day = GetOption(options, "day", "string", ["2-digit", "numeric"], undefined);
-  formatOpt.dayPeriod = GetOption(options, "dayPeriod", "string", ["narrow", "short", "long"],
-                                  undefined);
+  formatOpt.dayPeriod = GetOption(
+    options,
+    "dayPeriod",
+    "string",
+    ["narrow", "short", "long"],
+    undefined
+  );
   formatOpt.hour = GetOption(options, "hour", "string", ["2-digit", "numeric"], undefined);
   formatOpt.minute = GetOption(options, "minute", "string", ["2-digit", "numeric"], undefined);
   formatOpt.second = GetOption(options, "second", "string", ["2-digit", "numeric"], undefined);
-  formatOpt.fractionalSecondDigits = GetNumberOption(options, "fractionalSecondDigits", 1, 3,
-                                                     undefined);
-  formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long",
-                                     "shortOffset", "longOffset", "shortGeneric", "longGeneric"],
-                                     undefined);
+  formatOpt.fractionalSecondDigits = GetNumberOption(
+    options,
+    "fractionalSecondDigits",
+    1,
+    3,
+    undefined
+  );
+  formatOpt.timeZoneName = GetOption(
+    options,
+    "timeZoneName",
+    "string",
+    ["short", "long", "shortOffset", "longOffset", "shortGeneric", "longGeneric"],
+    undefined
+  );
 
   // Steps 23-24 provided by ICU - see comment after this function.
 
@@ -394,32 +438,58 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   // requested format matcher on the floor after this.  In any case, even if
   // doing so is justified, we have to do this work here in case it triggers
   // getters or similar. (bug 852837)
-  var formatMatcher =
-      GetOption(options, "formatMatcher", "string", ["basic", "best fit"],
-                "best fit");
+  var formatMatcher = GetOption(
+    options,
+    "formatMatcher",
+    "string",
+    ["basic", "best fit"],
+    "best fit"
+  );
   void formatMatcher;
 
   // "DateTimeFormat dateStyle & timeStyle" propsal
   // https://github.com/tc39/proposal-intl-datetime-style
-  var dateStyle = GetOption(options, "dateStyle", "string", ["full", "long", "medium", "short"],
-                            undefined);
+  var dateStyle = GetOption(
+    options,
+    "dateStyle",
+    "string",
+    ["full", "long", "medium", "short"],
+    undefined
+  );
   lazyDateTimeFormatData.dateStyle = dateStyle;
 
-  var timeStyle = GetOption(options, "timeStyle", "string", ["full", "long", "medium", "short"],
-                            undefined);
+  var timeStyle = GetOption(
+    options,
+    "timeStyle",
+    "string",
+    ["full", "long", "medium", "short"],
+    undefined
+  );
   lazyDateTimeFormatData.timeStyle = timeStyle;
 
   if (dateStyle !== undefined || timeStyle !== undefined) {
     var optionsList = [
-      "weekday", "era", "year", "month", "day", "dayPeriod", "hour", "minute", "second",
-      "fractionalSecondDigits", "timeZoneName",
+      "weekday",
+      "era",
+      "year",
+      "month",
+      "day",
+      "dayPeriod",
+      "hour",
+      "minute",
+      "second",
+      "fractionalSecondDigits",
+      "timeZoneName",
     ];
 
     for (var i = 0; i < optionsList.length; i++) {
       var option = optionsList[i];
       if (formatOpt[option] !== undefined) {
-        ThrowTypeError(JSMSG_INVALID_DATETIME_OPTION, option,
-                       dateStyle !== undefined ? "dateStyle" : "timeStyle");
+        ThrowTypeError(
+          JSMSG_INVALID_DATETIME_OPTION,
+          option,
+          dateStyle !== undefined ? "dateStyle" : "timeStyle"
+        );
       }
     }
   }
@@ -439,11 +509,16 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
   initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
 
   // 12.2.1, steps 4-5.
-  if (dateTimeFormat !== thisValue &&
-      callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), thisValue))
-  {
-    DefineDataProperty(thisValue, intlFallbackSymbol(), dateTimeFormat,
-                        ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
+  if (
+    dateTimeFormat !== thisValue &&
+    callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), thisValue)
+  ) {
+    DefineDataProperty(
+      thisValue,
+      intlFallbackSymbol(),
+      dateTimeFormat,
+      ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE
+    );
 
     return thisValue;
   }
@@ -610,8 +685,10 @@ function createDateTimeFormatFormat(dtf) {
 
     // Step 2.
     assert(IsObject(dtf), "dateTimeFormatFormatToBind called with non-Object");
-    assert(intl_GuardToDateTimeFormat(dtf) !== null,
-           "dateTimeFormatFormatToBind called with non-DateTimeFormat");
+    assert(
+      intl_GuardToDateTimeFormat(dtf) !== null,
+      "dateTimeFormatFormatToBind called with non-DateTimeFormat"
+    );
 
     // Steps 3-4.
     var x = (date === undefined) ? std_Date_now() : ToNumber(date);
@@ -635,8 +712,11 @@ function $Intl_DateTimeFormat_format_get() {
   var thisArg = UnwrapDateTimeFormat(this);
   var dtf = thisArg;
   if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
-    return callFunction(intl_CallDateTimeFormatMethodIfWrapped, thisArg,
-                        "$Intl_DateTimeFormat_format_get");
+    return callFunction(
+      intl_CallDateTimeFormatMethodIfWrapped,
+      thisArg,
+      "$Intl_DateTimeFormat_format_get"
+    );
   }
 
   var internals = getDateTimeFormatInternals(dtf);
@@ -663,8 +743,12 @@ function Intl_DateTimeFormat_formatToParts(date) {
 
   // Steps 2-3.
   if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
-    return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, date,
-                        "Intl_DateTimeFormat_formatToParts");
+    return callFunction(
+      intl_CallDateTimeFormatMethodIfWrapped,
+      this,
+      date,
+      "Intl_DateTimeFormat_formatToParts"
+    );
   }
 
   // Steps 4-5.
@@ -688,14 +772,18 @@ function Intl_DateTimeFormat_formatRange(startDate, endDate) {
 
   // Step 2.
   if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
-    return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
-                        "Intl_DateTimeFormat_formatRange");
+    return callFunction(
+      intl_CallDateTimeFormatMethodIfWrapped,
+      this,
+      startDate,
+      endDate,
+      "Intl_DateTimeFormat_formatRange"
+    );
   }
 
   // Step 3.
   if (startDate === undefined || endDate === undefined) {
-    ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end",
-                   "formatRange");
+    ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end", "formatRange");
   }
 
   // Step 4.
@@ -722,14 +810,22 @@ function Intl_DateTimeFormat_formatRangeToParts(startDate, endDate) {
 
   // Step 2.
   if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
-    return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
-                        "Intl_DateTimeFormat_formatRangeToParts");
+    return callFunction(
+      intl_CallDateTimeFormatMethodIfWrapped,
+      this,
+      startDate,
+      endDate,
+      "Intl_DateTimeFormat_formatRangeToParts"
+    );
   }
 
   // Step 3.
   if (startDate === undefined || endDate === undefined) {
-    ThrowTypeError(JSMSG_UNDEFINED_DATE, startDate === undefined ? "start" : "end",
-                   "formatRangeToParts");
+    ThrowTypeError(
+      JSMSG_UNDEFINED_DATE,
+      startDate === undefined ? "start" : "end",
+      "formatRangeToParts"
+    );
   }
 
   // Step 4.
@@ -755,8 +851,11 @@ function Intl_DateTimeFormat_resolvedOptions() {
   var thisArg = UnwrapDateTimeFormat(this);
   var dtf = thisArg;
   if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
-    return callFunction(intl_CallDateTimeFormatMethodIfWrapped, thisArg,
-                        "Intl_DateTimeFormat_resolvedOptions");
+    return callFunction(
+      intl_CallDateTimeFormatMethodIfWrapped,
+      thisArg,
+      "Intl_DateTimeFormat_resolvedOptions"
+    );
   }
 
   // Ensure the internals are resolved.

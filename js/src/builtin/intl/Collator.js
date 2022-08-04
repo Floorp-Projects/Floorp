@@ -19,20 +19,20 @@ function resolveCollatorInternals(lazyCollatorData) {
 
   // Steps 6-7.
   var collatorIsSorting = lazyCollatorData.usage === "sort";
-  var localeData = collatorIsSorting
-                   ? Collator.sortLocaleData
-                   : Collator.searchLocaleData;
+  var localeData = collatorIsSorting ? Collator.sortLocaleData : Collator.searchLocaleData;
 
   // Compute effective locale.
   // Step 16.
   var relevantExtensionKeys = Collator.relevantExtensionKeys;
 
   // Step 17.
-  var r = ResolveLocale("Collator",
-                        lazyCollatorData.requestedLocales,
-                        lazyCollatorData.opt,
-                        relevantExtensionKeys,
-                        localeData);
+  var r = ResolveLocale(
+    "Collator",
+    lazyCollatorData.requestedLocales,
+    lazyCollatorData.opt,
+    relevantExtensionKeys,
+    localeData
+  );
 
   // Step 18.
   internalProps.locale = r.locale;
@@ -177,13 +177,24 @@ function InitializeCollator(collator, locales, options) {
   opt.kn = numericValue;
 
   // Steps 14-15.
-  var caseFirstValue = GetOption(options, "caseFirst", "string", ["upper", "lower", "false"], undefined);
+  var caseFirstValue = GetOption(
+    options,
+    "caseFirst",
+    "string",
+    ["upper", "lower", "false"],
+    undefined
+  );
   opt.kf = caseFirstValue;
 
   // Compute remaining collation options.
   // Step 24.
-  var s = GetOption(options, "sensitivity", "string",
-                    ["base", "accent", "case", "variant"], undefined);
+  var s = GetOption(
+    options,
+    "sensitivity",
+    "string",
+    ["base", "accent", "case", "variant"],
+    undefined
+  );
   lazyCollatorData.rawSensitivity = s;
 
   // Step 27.
@@ -331,7 +342,10 @@ function createCollatorCompare(collator) {
 
     // Step 2.
     assert(IsObject(collator), "collatorCompareToBind called with non-object");
-    assert(intl_GuardToCollator(collator) !== null, "collatorCompareToBind called with non-Collator");
+    assert(
+      intl_GuardToCollator(collator) !== null,
+      "collatorCompareToBind called with non-Collator"
+    );
 
     // Steps 3-6
     var X = ToString(x);
