@@ -629,15 +629,14 @@ static inline bool IsUseOfName(ParseNode* pn, TaggedParserAtomIndex name) {
   return pn->isName(name);
 }
 
-static inline bool IsIgnoredDirectiveName(JSContext* cx,
-                                          TaggedParserAtomIndex atom) {
+static inline bool IsIgnoredDirectiveName(TaggedParserAtomIndex atom) {
   return atom != TaggedParserAtomIndex::WellKnown::useStrict();
 }
 
-static inline bool IsIgnoredDirective(JSContext* cx, ParseNode* pn) {
+static inline bool IsIgnoredDirective(ParseNode* pn) {
   return pn->isKind(ParseNodeKind::ExpressionStmt) &&
          UnaryKid(pn)->isKind(ParseNodeKind::StringExpr) &&
-         IsIgnoredDirectiveName(cx, UnaryKid(pn)->as<NameNode>().atom());
+         IsIgnoredDirectiveName(UnaryKid(pn)->as<NameNode>().atom());
 }
 
 static inline bool IsEmptyStatement(ParseNode* pn) {
@@ -2809,7 +2808,7 @@ static bool CheckPrecedingStatements(ModuleValidatorShared& m,
 
   ParseNode* stmt = ListHead(stmtList);
   for (unsigned i = 0, n = ListLength(stmtList); i < n; i++) {
-    if (!IsIgnoredDirective(m.cx(), stmt)) {
+    if (!IsIgnoredDirective(stmt)) {
       return m.fail(stmt, "invalid asm.js statement");
     }
   }
@@ -3140,8 +3139,7 @@ static bool CheckModuleProcessingDirectives(ModuleValidator<Unit>& m) {
       return true;
     }
 
-    if (!IsIgnoredDirectiveName(m.cx(),
-                                ts.anyCharsAccess().currentToken().atom())) {
+    if (!IsIgnoredDirectiveName(ts.anyCharsAccess().currentToken().atom())) {
       return m.failCurrentOffset("unsupported processing directive");
     }
 
@@ -3222,7 +3220,7 @@ static bool CheckProcessingDirectives(ModuleValidatorShared& m,
                                       ParseNode** stmtIter) {
   ParseNode* stmt = *stmtIter;
 
-  while (stmt && IsIgnoredDirective(m.cx(), stmt)) {
+  while (stmt && IsIgnoredDirective(stmt)) {
     stmt = NextNode(stmt);
   }
 
