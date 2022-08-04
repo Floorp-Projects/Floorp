@@ -247,10 +247,6 @@ impl FontContext {
         })
     }
 
-    pub fn has_font(&self, font_key: &FontKey) -> bool {
-        self.ct_font_descs.contains_key(font_key)
-    }
-
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
         if self.ct_font_descs.contains_key(font_key) {
             return;
