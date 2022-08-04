@@ -438,6 +438,7 @@ class nsWindow final : public nsBaseWidget {
   } WindowCompositorState;
 
   // Pause compositor to avoid rendering artifacts from content process.
+  void ResumeCompositorImpl();
   void ResumeCompositorFlickering();
   void ResumeCompositorFromCompositorThread();
   void PauseCompositorFlickering();
