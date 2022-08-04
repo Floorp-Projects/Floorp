@@ -382,25 +382,8 @@ class PointerInputSource extends InputSource {
   }
 }
 
-/**
- * Input state associated with a wheel-type device.
- */
-class WheelInputSource extends InputSource {
-  static type = "wheel";
-
-  static fromJSON(state, actionSequence) {
-    const { id } = actionSequence;
-    return new this(id);
-  }
-}
-
 const inputSourceTypes = new Map();
-for (const cls of [
-  NullInputSource,
-  KeyInputSource,
-  PointerInputSource,
-  WheelInputSource,
-]) {
+for (let cls of [NullInputSource, KeyInputSource, PointerInputSource]) {
   inputSourceTypes.set(cls.type, cls);
 }
 
@@ -1085,142 +1068,6 @@ class PointerMoveAction extends PointerAction {
 }
 
 /**
- * Action associated with a wheel input device
- *
- */
-class WheelAction extends Action {
-  static type = "wheel";
-}
-
-/**
- * Action associated with scrolling a scroll wheel
- *
- * @param {number} duration - Duration of scroll in ms.
- * @param {Origin} origin - Origin of target coordinates.
- * @param {number} x - X value of scroll coordinates.
- * @param {number} y - Y value of scroll coordinates.
- * @param {number} deltaX - Number of CSS pixels to scroll in X direction.
- * @param {number} deltaY - Number of CSS pixels to scroll in Y direction
- */
-class WheelScrollAction extends WheelAction {
-  static subtype = "scroll";
-  affectsWallClockTime = true;
-
-  constructor(id, { duration, origin, x, y, deltaX, deltaY }) {
-    super(id);
-    this.duration = duration;
-    this.origin = origin;
-    this.x = x;
-    this.y = y;
-    this.deltaX = deltaX;
-    this.deltaY = deltaY;
-  }
-
-  static fromJSON(id, actionItem) {
-    const { duration, origin, x, y, deltaX, deltaY } = actionItem;
-    if (duration !== undefined) {
-      lazy.assert.positiveInteger(
-        duration,
-        lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
-      );
-    }
-    const originObject = Origin.fromJSON(origin);
-    if (x !== undefined) {
-      lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
-    }
-    if (y !== undefined) {
-      lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
-    }
-    if (deltaX !== undefined) {
-      lazy.assert.integer(
-        deltaX,
-        lazy.pprint`Expected 'deltaX' (${deltaX}) to be an Integer`
-      );
-    }
-    if (deltaY !== undefined) {
-      lazy.assert.integer(
-        deltaY,
-        lazy.pprint`Expected 'deltaY' (${deltaY}) to be an Integer`
-      );
-    }
-
-    return new this(id, {
-      duration,
-      origin: originObject,
-      x,
-      y,
-      deltaX,
-      deltaY,
-    });
-  }
-
-  async dispatch(state, inputSource, tickDuration, win) {
-    lazy.logger.trace(
-      `Dispatch ${this.constructor.name} with id: ${this.id} deltaX: ${this.deltaX} deltaY: ${this.deltaY}`
-    );
-    const scrollCoordinates = this.origin.getTargetCoordinates(
-      state,
-      inputSource,
-      [this.x, this.y],
-      win
-    );
-    assertInViewPort(scrollCoordinates, win);
-
-    const startX = 0;
-    const startY = 0;
-    // This is an action-local state that holds the amount of scroll completed
-    const deltaPosition = [startX, startY];
-    await moveOverTime(
-      [[startX, startY]],
-      [[this.deltaX, this.deltaY]],
-      this.duration ?? tickDuration,
-      deltaTarget =>
-        this.performOneWheelScroll(
-          scrollCoordinates,
-          deltaPosition,
-          deltaTarget,
-          win
-        )
-    );
-  }
-
-  /**
-   * Perform one part of a wheel scroll corresponding to a specific emitted event.
-   *
-   * @param {Array<number>} scrollCoordinates - [x, y] viewport coordinates of the scroll.
-   * @param {Array<number>} deltaPosition - [deltaX, deltaY] coordinates of the scroll before this event.
-   * @param {Array<Array<number>>} deltaTargets - Array of [deltaX, deltaY] coordinates to scroll to.
-   * @param {WindowProxy} win - Current window global.
-   */
-  performOneWheelScroll(scrollCoordinates, deltaPosition, deltaTargets, win) {
-    if (deltaTargets.length !== 1) {
-      throw new Error("Can only scroll one wheel at a time");
-    }
-    if (deltaPosition[0] == this.deltaX && deltaPosition[1] == this.deltaY) {
-      return;
-    }
-    const deltaTarget = deltaTargets[0];
-    const deltaX = deltaTarget[0] - deltaPosition[0];
-    const deltaY = deltaTarget[1] - deltaPosition[1];
-    const eventData = new WheelEventData({
-      deltaX,
-      deltaY,
-      deltaZ: 0,
-    });
-    lazy.event.synthesizeWheelAtPoint(
-      scrollCoordinates[0],
-      scrollCoordinates[1],
-      eventData,
-      win
-    );
-
-    // Update the current scroll position for the caller
-    deltaPosition[0] = deltaTarget[0];
-    deltaPosition[1] = deltaTarget[1];
-  }
-}
-
-/**
  * Group of actions representing behaviour of all touch pointers during a single tick.
  *
  * For touch pointers, we need to call into the platform once with all
@@ -1496,7 +1343,7 @@ for (const cls of [
  *
  * startCoords and targetCoords are lists of [x,y] positions in some space
  * (e.g. screen position or scroll delta). This function will linearly
- * interpolate intermediate positions, sending out roughly one event
+ * interoplate intermediate positions, sending out roughly one event
  * per frame to simulate moving between startCoord and targetCoord in
  * a time of tickDuration milliseconds. The callback function is
  * responsible for actually emitting the event, given the current
@@ -1532,13 +1379,13 @@ async function moveOverTime(startCoords, targetCoords, duration, callback) {
   }
 
   if (duration === 0) {
-    // transition to destination in one step
+    // move pointer to destination in one step
     callback(targetCoords);
     return;
   }
 
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  // interval between transitions in ms, based on common vsync
+  // interval between pointermove increments in ms, based on common vsync
   const fps60 = 17;
 
   const distances = targetCoords.map((targetCoord, i) => {
@@ -1547,8 +1394,8 @@ async function moveOverTime(startCoords, targetCoords, duration, callback) {
   });
   const ONE_SHOT = Ci.nsITimer.TYPE_ONE_SHOT;
   const startTime = Date.now();
-  const transitions = (async () => {
-    // wait |fps60| ms before performing first incremental transition
+  const intermediatePointerEvents = (async () => {
+    // wait |fps60| ms before performing first incremental pointer move
     await new Promise(resolveTimer =>
       timer.initWithCallback(resolveTimer, fps60, ONE_SHOT)
     );
@@ -1564,7 +1411,7 @@ async function moveOverTime(startCoords, targetCoords, duration, callback) {
         ];
       });
       callback(intermediateTargets);
-      // wait |fps60| ms before performing next transition
+      // wait |fps60| ms before performing next pointer move
       await new Promise(resolveTimer =>
         timer.initWithCallback(resolveTimer, fps60, ONE_SHOT)
       );
@@ -1573,9 +1420,9 @@ async function moveOverTime(startCoords, targetCoords, duration, callback) {
     }
   })();
 
-  await transitions;
+  await intermediatePointerEvents;
 
-  // perform last transitionafter all incremental moves are resolved and
+  // perform last pointer move after all incremental moves are resolved and
   // durationRatio is close enough to 1
   callback(targetCoords);
 }
@@ -1588,7 +1435,6 @@ for (const cls of [
   PointerDownAction,
   PointerUpAction,
   PointerMoveAction,
-  WheelScrollAction,
 ]) {
   if (!actionTypes.has(cls.type)) {
     actionTypes.set(cls.type, new Map());
@@ -1997,17 +1843,12 @@ class PointerEventData extends InputEventData {
       this.metaKey = otherInputSource.meta || this.metaKey;
       this.shiftKey = otherInputSource.shift || this.shiftKey;
     }
-    const allButtons = Array.from(inputSource.pressed);
+    let allButtons = Array.from(inputSource.pressed);
     this.buttons = allButtons.reduce((a, i) => a + Math.pow(2, i), 0);
   }
 }
 
-/**
- * Representation of a mouse input event
- *
- * @param {string} type - Event type.
- * @param {number} button - Mouse button number.
- */
+/** Collect properties associated with mouse pointer events */
 class MouseEventData extends PointerEventData {
   constructor(type, options = {}) {
     super(type);
@@ -2020,26 +1861,6 @@ class MouseEventData extends PointerEventData {
   update(state, inputSource) {
     super.update(state, inputSource);
     this.id = inputSource.pointer.id;
-  }
-}
-
-/**
- * Representation of a wheel scroll event
- *
- * @param {Object} options - Named arguments.
- * @param {number} options.deltaX - Scroll delta X.
- * @param {number} options.deltaY - Scroll delta Y.
- * @param {number} options.deltaY - Scroll delta Z (current always 0).
- * @param {number=} deltaMode - Scroll delta mode (current always 0).
- */
-class WheelEventData extends InputEventData {
-  constructor(options) {
-    super();
-    const { deltaX, deltaY, deltaZ, deltaMode = 0 } = options;
-    this.deltaX = deltaX;
-    this.deltaY = deltaY;
-    this.deltaZ = deltaZ;
-    this.deltaMode = deltaMode;
   }
 }
 
