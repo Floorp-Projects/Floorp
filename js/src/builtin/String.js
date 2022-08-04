@@ -34,7 +34,7 @@ function String_match(regexp) {
   }
 
   // Step 2.
-  var isPatternString = (typeof regexp === "string");
+  var isPatternString = typeof regexp === "string";
   if (!(isPatternString && StringProtoHasNoMatch()) && regexp !== undefined && regexp !== null) {
     // Step 2.a.
     var matcher = GetMethod(regexp, GetBuiltinSymbol("match"));
@@ -188,8 +188,8 @@ function StringProtoHasNoReplace() {
 // Caller should check the range of |from| and |length|.
 function Substring(str, from, length) {
   assert(typeof str === "string", "|str| should be a string");
-  assert(from | 0 === from, "coercing |from| into int32 should not change the value");
-  assert(length | 0 === length, "coercing |length| into int32 should not change the value");
+  assert((from | 0) === from, "coercing |from| into int32 should not change the value");
+  assert((length | 0) === length, "coercing |length| into int32 should not change the value");
 
   return SubstringKernel(str, from | 0, length | 0);
 }
@@ -400,7 +400,7 @@ function String_search(regexp) {
   }
 
   // Step 2.
-  var isPatternString = (typeof regexp === "string");
+  var isPatternString = typeof regexp === "string";
   if (!(isPatternString && StringProtoHasNoSearch()) && regexp !== undefined && regexp !== null) {
     // Step 2.a.
     var searcher = GetMethod(regexp, GetBuiltinSymbol("search"));
@@ -530,7 +530,7 @@ function String_substring(start, end) {
   var intStart = ToInteger(start);
 
   // Step 5.
-  var intEnd = (end === undefined) ? len : ToInteger(end);
+  var intEnd = end === undefined ? len : ToInteger(end);
 
   // Step 6.
   var finalStart = std_Math_min(std_Math_max(intStart, 0), len);
@@ -574,7 +574,7 @@ function String_substr(start, length) {
   var size = str.length;
   // Use |size| instead of +Infinity to avoid performing calculations with
   // doubles. (The result is the same either way.)
-  var end = (length === undefined) ? size : ToInteger(length);
+  var end = length === undefined ? size : ToInteger(length);
 
   // Step 6.
   if (intStart < 0) {
@@ -654,13 +654,13 @@ function String_slice(start, end) {
   var intStart = ToInteger(start);
 
   // Step 5.
-  var intEnd = (end === undefined) ? len : ToInteger(end);
+  var intEnd = end === undefined ? len : ToInteger(end);
 
   // Step 6.
-  var from = (intStart < 0) ? std_Math_max(len + intStart, 0) : std_Math_min(intStart, len);
+  var from = intStart < 0 ? std_Math_max(len + intStart, 0) : std_Math_min(intStart, len);
 
   // Step 7.
-  var to = (intEnd < 0) ? std_Math_max(len + intEnd, 0) : std_Math_min(intEnd, len);
+  var to = intEnd < 0 ? std_Math_max(len + intEnd, 0) : std_Math_min(intEnd, len);
 
   // Step 8.
   var span = std_Math_max(to - from, 0);
@@ -697,18 +697,18 @@ function String_codePointAt(pos) {
 
   // Steps 6-7.
   var first = callFunction(std_String_charCodeAt, S, position);
-  if (first < 0xD800 || first > 0xDBFF || position + 1 === size) {
+  if (first < 0xd800 || first > 0xdbff || position + 1 === size) {
     return first;
   }
 
   // Steps 8-9.
   var second = callFunction(std_String_charCodeAt, S, position + 1);
-  if (second < 0xDC00 || second > 0xDFFF) {
+  if (second < 0xdc00 || second > 0xdfff) {
     return first;
   }
 
   // Step 10.
-  return (first - 0xD800) * 0x400 + (second - 0xDC00) + 0x10000;
+  return (first - 0xd800) * 0x400 + (second - 0xdc00) + 0x10000;
 }
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
@@ -803,10 +803,10 @@ function StringIteratorNext() {
 
   var charCount = 1;
   var first = callFunction(std_String_charCodeAt, S, index);
-  if (first >= 0xD800 && first <= 0xDBFF && index + 1 < size) {
+  if (first >= 0xd800 && first <= 0xdbff && index + 1 < size) {
     var second = callFunction(std_String_charCodeAt, S, index + 1);
-    if (second >= 0xDC00 && second <= 0xDFFF) {
-      first = (first - 0xD800) * 0x400 + (second - 0xDC00) + 0x10000;
+    if (second >= 0xdc00 && second <= 0xdfff) {
+      first = (first - 0xd800) * 0x400 + (second - 0xdc00) + 0x10000;
       charCount = 2;
     }
   }
@@ -953,7 +953,7 @@ function String_toLocaleUpperCase() {
 
 // ES2018 draft rev 8fadde42cf6a9879b4ab0cb6142b31c4ee501667
 // 21.1.2.4 String.raw ( template, ...substitutions )
-function String_static_raw(callSite/*, ...substitutions*/) {
+function String_static_raw(callSite /*, ...substitutions*/) {
   // Steps 1-2 (not applicable).
 
   // Step 3.
