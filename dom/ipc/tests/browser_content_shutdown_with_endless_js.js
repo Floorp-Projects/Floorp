@@ -39,6 +39,10 @@ async function createAndShutdownContentProcess(url) {
         )
       );
 
+      // Give the content process some extra time before we start its shutdown.
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       // withNewTab will start the shutdown of the child process for us
     }
   );
