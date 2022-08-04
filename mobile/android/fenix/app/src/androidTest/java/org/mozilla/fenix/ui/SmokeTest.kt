@@ -372,6 +372,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing with frequent ANR: https://github.com/mozilla-mobile/fenix/issues/25926")
     @Test
     // Device or AVD requires a Google Services Android OS installation with Play Store installed
     // Verifies the Open in app button when an app is installed
