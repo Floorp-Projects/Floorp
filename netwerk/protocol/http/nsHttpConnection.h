@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "TLSFilterTransaction.h"
 #include "mozilla/Mutex.h"
 #include "ARefBase.h"
 #include "TimingStruct.h"
@@ -24,6 +23,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
 #include "nsITlsHandshakeListener.h"
@@ -58,8 +58,7 @@ class nsHttpConnection final : public HttpConnectionBase,
                                public nsIInputStreamCallback,
                                public nsIOutputStreamCallback,
                                public nsITransportEventSink,
-                               public nsIInterfaceRequestor,
-                               public NudgeTunnelCallback {
+                               public nsIInterfaceRequestor {
  private:
   virtual ~nsHttpConnection();
 
@@ -73,7 +72,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NUDGETUNNELCALLBACK
 
   nsHttpConnection();
 
@@ -277,7 +275,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsresult mSocketInCondition{NS_ERROR_NOT_INITIALIZED};
   nsresult mSocketOutCondition{NS_ERROR_NOT_INITIALIZED};
 
-  RefPtr<TLSFilterTransaction> mTLSFilter;
   nsWeakPtr mWeakTrans;  // Http2ConnectTransaction *
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
