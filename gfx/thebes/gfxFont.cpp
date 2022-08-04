@@ -2849,12 +2849,13 @@ static char16_t IsBoundarySpace(char16_t aChar, char16_t aNextChar) {
 #  define GFX_MAYBE_UNUSED
 #endif
 
-template <typename T>
-gfxShapedWord* gfxFont::GetShapedWord(
+template <typename T, typename Func>
+bool gfxFont::ProcessShapedWordInternal(
     DrawTarget* aDrawTarget, const T* aText, uint32_t aLength, uint32_t aHash,
     Script aRunScript, nsAtom* aLanguage, bool aVertical,
     int32_t aAppUnitsPerDevUnit, gfx::ShapedTextFlags aFlags,
-    RoundingFlags aRounding, gfxTextPerfMetrics* aTextPerf GFX_MAYBE_UNUSED) {
+    RoundingFlags aRounding, gfxTextPerfMetrics* aTextPerf GFX_MAYBE_UNUSED,
+    Func aCallback) {
   CacheHashKey key(aText, aLength, aHash, aRunScript, aLanguage,
                    aAppUnitsPerDevUnit, aFlags, aRounding);
   {
@@ -2871,7 +2872,8 @@ gfxShapedWord* gfxFont::GetShapedWord(
           aTextPerf->current.wordCacheHit++;
         }
 #endif
-        return sw;
+        aCallback(sw);
+        return true;
       }
     }
   }
@@ -2885,7 +2887,7 @@ gfxShapedWord* gfxFont::GetShapedWord(
                             aAppUnitsPerDevUnit, aFlags, aRounding);
   if (!sw) {
     NS_WARNING("failed to create gfxShapedWord - expect missing text");
-    return nullptr;
+    return false;
   }
   DebugOnly<bool> ok = ShapeText(aDrawTarget, aText, 0, aLength, aRunScript,
                                  aLanguage, aVertical, aRounding, sw);
@@ -2910,7 +2912,7 @@ gfxShapedWord* gfxFont::GetShapedWord(
     if (!entry) {
       NS_WARNING("failed to create word cache entry - expect missing text");
       delete sw;
-      return nullptr;
+      return false;
     }
 
     // It's unlikely, but maybe another thread got there before us...
@@ -2924,7 +2926,8 @@ gfxShapedWord* gfxFont::GetShapedWord(
         aTextPerf->current.wordCacheHit++;
       }
 #endif
-      return sw;
+      aCallback(sw);
+      return true;
     }
 
     entry->mShapedWord.reset(sw);
@@ -2934,18 +2937,12 @@ gfxShapedWord* gfxFont::GetShapedWord(
       aTextPerf->current.wordCacheMiss++;
     }
 #endif
+    aCallback(sw);
   }
 
   gfxFontCache::GetCache()->RunWordCacheExpirationTimer();
-
-  return sw;
+  return true;
 }
-
-template gfxShapedWord* gfxFont::GetShapedWord(
-    DrawTarget* aDrawTarget, const uint8_t* aText, uint32_t aLength,
-    uint32_t aHash, Script aRunScript, nsAtom* aLanguage, bool aVertical,
-    int32_t aAppUnitsPerDevUnit, gfx::ShapedTextFlags aFlags,
-    RoundingFlags aRounding, gfxTextPerfMetrics* aTextPerf);
 
 bool gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const {
   const gfxShapedWord* sw = mShapedWord.get();
@@ -2982,6 +2979,17 @@ bool gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const {
                "didn't expect 8-bit text here");
   return (0 == memcmp(sw->TextUnicode(), aKey->mText.mDouble,
                       aKey->mLength * sizeof(char16_t)));
+}
+
+bool gfxFont::ProcessSingleSpaceShapedWord(
+    DrawTarget* aDrawTarget, bool aVertical, int32_t aAppUnitsPerDevUnit,
+    gfx::ShapedTextFlags aFlags, RoundingFlags aRounding,
+    const std::function<void(gfxShapedWord*)>& aCallback) {
+  static const uint8_t space = ' ';
+  return ProcessShapedWordInternal(
+      aDrawTarget, &space, 1, gfxShapedWord::HashMix(0, ' '), Script::LATIN,
+      /* aLanguage = */ nullptr, aVertical, aAppUnitsPerDevUnit, aFlags,
+      aRounding, nullptr, aCallback);
 }
 
 bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const uint8_t* aText,
@@ -3325,12 +3333,13 @@ bool gfxFont::SplitAndInitTextRun(
           wordFlags |= gfx::ShapedTextFlags::TEXT_IS_8BIT;
         }
       }
-      gfxShapedWord* sw = GetShapedWord(
+      bool processed = ProcessShapedWordInternal(
           aDrawTarget, aString + wordStart, length, hash, aRunScript, aLanguage,
-          vertical, appUnitsPerDevUnit, wordFlags, rounding, tp);
-      if (sw) {
-        aTextRun->CopyGlyphDataFrom(sw, aRunStart + wordStart);
-      } else {
+          vertical, appUnitsPerDevUnit, wordFlags, rounding, tp,
+          [&](gfxShapedWord* aShapedWord) {
+            aTextRun->CopyGlyphDataFrom(aShapedWord, aRunStart + wordStart);
+          });
+      if (!processed) {
         return false;  // failed, presumably out of memory?
       }
     }
@@ -3348,16 +3357,17 @@ bool gfxFont::SplitAndInitTextRun(
         // Avoid tautological-constant-out-of-range-compare in 8-bit:
         DebugOnly<char16_t> boundary16 = boundary;
         NS_ASSERTION(boundary16 < 256, "unexpected boundary!");
-        gfxShapedWord* sw = GetShapedWord(
+        bool processed = ProcessShapedWordInternal(
             aDrawTarget, &boundary, 1, gfxShapedWord::HashMix(0, boundary),
             aRunScript, aLanguage, vertical, appUnitsPerDevUnit,
-            flags | gfx::ShapedTextFlags::TEXT_IS_8BIT, rounding, tp);
-        if (sw) {
-          aTextRun->CopyGlyphDataFrom(sw, aRunStart + i);
-          if (boundary == ' ') {
-            aTextRun->GetCharacterGlyphs()[aRunStart + i].SetIsSpace();
-          }
-        } else {
+            flags | gfx::ShapedTextFlags::TEXT_IS_8BIT, rounding, tp,
+            [&](gfxShapedWord* aShapedWord) {
+              aTextRun->CopyGlyphDataFrom(aShapedWord, aRunStart + i);
+              if (boundary == ' ') {
+                aTextRun->GetCharacterGlyphs()[aRunStart + i].SetIsSpace();
+              }
+            });
+        if (!processed) {
           return false;
         }
       }
