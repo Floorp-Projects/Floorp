@@ -569,7 +569,9 @@ void GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget,
   // actions.  So, we should set their native key binding to none before
   // dispatch to avoid crash on PuppetWidget and avoid running redundant
   // path to look for native key bindings.
-  event.PreventNativeKeyBindings();
+  if (nsIWidget::UsePuppetWidgets()) {
+    event.PreventNativeKeyBindings();
+  }
   NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
   mDispatcher->DispatchKeyboardEvent(msg, event, status);
 }
