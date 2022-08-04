@@ -154,7 +154,7 @@ let chromeScript = runInParent(() => {
 
 let prompter2 = new PrompterProxy(chromeScript);
 
-add_task(async function setup() {
+add_setup(async () => {
   let initComplete = new Promise((resolve) =>
     chromeScript.addMessageListener("initDone", resolve)
   );

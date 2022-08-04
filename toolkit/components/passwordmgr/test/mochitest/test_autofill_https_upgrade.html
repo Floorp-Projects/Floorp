@@ -46,7 +46,7 @@ async function prepareLoginsAndProcessForm(url, logins = []) {
   await processedPromise;
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   await SpecialPowers.pushPrefEnv({"set": [
     ["signon.schemeUpgrades", true],
     ["signon.includeOtherSubdomainsInLookup", true],

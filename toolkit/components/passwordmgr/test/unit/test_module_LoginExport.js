@@ -57,7 +57,7 @@ function exportAuthLogin(modifications) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   let oldLogins = Services.logins;
   Services.logins = { getAllLoginsAsync: sinon.stub() };
   registerCleanupFunction(() => {

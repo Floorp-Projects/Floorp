@@ -20,7 +20,7 @@ const NEW_PASSWORD_TEMPLATE_ARG = {
   isProbablyANewPasswordField: true,
 };
 
-add_task(async function setup() {
+add_setup(async () => {
   Services.prefs.setBoolPref("signon.generation.available", true);
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 

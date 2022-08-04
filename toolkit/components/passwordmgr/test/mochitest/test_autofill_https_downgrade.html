@@ -58,7 +58,7 @@ async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPa
   }
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   await SpecialPowers.pushPrefEnv({"set": [
     ["signon.schemeUpgrades", true],
     ["dom.security.https_first", false],

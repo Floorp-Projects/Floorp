@@ -24,7 +24,7 @@ function waitForFills(fillCount) {
   return Promise.all(promises);
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   // This test should run without any existing loaded recipes interfering.
   await resetRecipes();
 

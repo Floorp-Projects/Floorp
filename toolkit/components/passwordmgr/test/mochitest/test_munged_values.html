@@ -60,7 +60,7 @@ let loadPromise = new Promise(resolve => {
   });
 });
 
-add_task(async function setup() {
+add_setup(async () => {
   info("Waiting for setup and page and window loads");
   await readyPromise;
   await loadPromise;
