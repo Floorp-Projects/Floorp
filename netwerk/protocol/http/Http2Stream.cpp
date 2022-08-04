@@ -21,9 +21,20 @@
 
 namespace mozilla::net {
 
+Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
+                         Http2Session* session, int32_t priority, uint64_t bcId)
+    : Http2StreamBase(
+          (httpTransaction->QueryHttpTransaction())
+              ? httpTransaction->QueryHttpTransaction()->TopBrowsingContextId()
+              : 0,
+          session, priority, bcId),
+      mTransaction(httpTransaction) {
+  LOG1(("Http2Stream::Http2Stream %p trans=%p", this, httpTransaction));
+}
+
 Http2Stream::~Http2Stream() { ClearPushSource(); }
 
-void Http2Stream::Close(nsresult reason) {
+nsresult Http2Stream::Close(nsresult reason) {
   // In case we are connected to a push, make sure the push knows we are closed,
   // so it doesn't try to give us any more DATA that comes on it after our
   // close.
@@ -31,6 +42,8 @@ void Http2Stream::Close(nsresult reason) {
 
   mTransaction->Close(reason);
   mSession = nullptr;
+
+  return NS_OK;
 }
 
 void Http2Stream::ClearPushSource() {
@@ -216,6 +229,73 @@ nsresult Http2Stream::OnWriteSegment(char* buf, uint32_t count,
   }
 
   return Http2StreamBase::OnWriteSegment(buf, count, countWritten);
+}
+
+nsresult Http2Stream::CallToReadData(uint32_t count, uint32_t* countRead) {
+  return mTransaction->ReadSegments(this, count, countRead);
+}
+
+nsresult Http2Stream::CallToWriteData(uint32_t count, uint32_t* countWritten) {
+  return mTransaction->WriteSegments(this, count, countWritten);
+}
+
+// This is really a headers frame, but open is pretty clear from a workflow pov
+nsresult Http2Stream::GenerateHeaders(nsCString& aCompressedData,
+                                      uint8_t& firstFrameFlags) {
+  nsHttpRequestHead* head = mTransaction->RequestHead();
+  nsAutoCString requestURI;
+  head->RequestURI(requestURI);
+  RefPtr<Http2Session> session = Session();
+  LOG3(("Http2Stream %p Stream ID 0x%X [session=%p] for URI %s\n", this,
+        mStreamID, session.get(), requestURI.get()));
+
+  nsAutoCString authorityHeader;
+  nsresult rv = head->GetHeader(nsHttp::Host, authorityHeader);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false);
+    return rv;
+  }
+
+  nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
+
+  nsAutoCString method;
+  nsAutoCString path;
+  head->Method(method);
+  head->Path(path);
+
+  rv = session->Compressor()->EncodeHeaderBlock(
+      mFlatHttpRequestHeaders, method, path, authorityHeader, scheme,
+      EmptyCString(), false, aCompressedData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int64_t clVal = session->Compressor()->GetParsedContentLength();
+  if (clVal != -1) {
+    mRequestBodyLenRemaining = clVal;
+  }
+
+  // Determine whether to put the fin bit on the header frame or whether
+  // to wait for a data packet to put it on.
+
+  if (head->IsGet() || head->IsHead()) {
+    // for GET and HEAD place the fin bit right on the
+    // header packet
+    firstFrameFlags |= Http2Session::kFlag_END_STREAM;
+  } else if (head->IsPost() || head->IsPut() || head->IsConnect()) {
+    // place fin in a data frame even for 0 length messages for iterop
+  } else if (!mRequestBodyLenRemaining) {
+    // for other HTTP extension methods, rely on the content-length
+    // to determine whether or not to put fin on headers
+    firstFrameFlags |= Http2Session::kFlag_END_STREAM;
+  }
+
+  // The size of the input headers is approximate
+  uint32_t ratio =
+      aCompressedData.Length() * 100 /
+      (11 + requestURI.Length() + mFlatHttpRequestHeaders.Length());
+
+  Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
+
+  return NS_OK;
 }
 
 }  // namespace mozilla::net

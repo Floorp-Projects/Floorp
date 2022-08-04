@@ -17,6 +17,19 @@
 #include "Http2ConnectTransaction.h"
 
 namespace mozilla::net {
+
+Http2StreamWebSocket::Http2StreamWebSocket(nsAHttpTransaction* httpTransaction,
+                                           Http2Session* session,
+                                           int32_t priority, uint64_t bcId)
+    : Http2StreamBase(
+          (httpTransaction->QueryHttpTransaction())
+              ? httpTransaction->QueryHttpTransaction()->TopBrowsingContextId()
+              : 0,
+          session, priority, bcId),
+      mTransaction(httpTransaction) {
+  LOG1(("Http2Stream::Http2Stream %p trans=%p", this, httpTransaction));
+}
+
 // ConvertResponseHeaders is used to convert the response headers
 // into HTTP/1 format and report some telemetry
 void Http2StreamWebSocket::HandleResponseHeaders(nsACString& aHeadersOut,
@@ -36,6 +49,64 @@ bool Http2StreamWebSocket::MapStreamToHttpConnection(
 
   return qiTrans->MapStreamToHttpConnection(
       mSocketTransport, mTransaction->ConnectionInfo(), aFlat407Headers, -1);
+}
+
+nsresult Http2StreamWebSocket::CallToReadData(uint32_t count,
+                                              uint32_t* countRead) {
+  return mTransaction->ReadSegments(this, count, countRead);
+}
+
+nsresult Http2StreamWebSocket::CallToWriteData(uint32_t count,
+                                               uint32_t* countWritten) {
+  return mTransaction->WriteSegments(this, count, countWritten);
+}
+
+nsresult Http2StreamWebSocket::GenerateHeaders(nsCString& aCompressedData,
+                                               uint8_t& firstFrameFlags) {
+  nsHttpRequestHead* head = mTransaction->RequestHead();
+  nsAutoCString requestURI;
+  head->RequestURI(requestURI);
+
+  RefPtr<Http2Session> session = Session();
+
+  LOG3(("Http2StreamWebSocket %p Stream ID 0x%X [session=%p] for URI %s\n",
+        this, mStreamID, session.get(), requestURI.get()));
+
+  nsAutoCString authorityHeader;
+  nsresult rv = head->GetHeader(nsHttp::Host, authorityHeader);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false);
+    return rv;
+  }
+
+  nsDependentCString scheme(head->IsHTTPS() ? "https" : "http");
+
+  nsAutoCString method;
+  nsAutoCString path;
+  head->Method(method);
+  head->Path(path);
+
+  rv = session->Compressor()->EncodeHeaderBlock(
+      mFlatHttpRequestHeaders, method, path, authorityHeader, scheme,
+      "websocket"_ns, false, aCompressedData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mRequestBodyLenRemaining = 0x0fffffffffffffffULL;
+
+  // The size of the input headers is approximate
+  uint32_t ratio =
+      aCompressedData.Length() * 100 /
+      (11 + requestURI.Length() + mFlatHttpRequestHeaders.Length());
+
+  Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
+
+  return NS_OK;
+}
+
+nsresult Http2StreamWebSocket::Close(nsresult reason) {
+  mTransaction->Close(reason);
+  mSession = nullptr;
+  return NS_OK;
 }
 
 }  // namespace mozilla::net

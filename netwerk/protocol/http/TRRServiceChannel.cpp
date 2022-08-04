@@ -377,6 +377,9 @@ nsresult TRRServiceChannel::BeginConnect() {
   StoreAllowAltSvc(XRE_IsParentProcess() && LoadAllowAltSvc());
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
   bool http3Allowed = Http3Allowed();
+  if (!http3Allowed) {
+    mCaps |= NS_HTTP_DISALLOW_HTTP3;
+  }
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
@@ -539,7 +542,13 @@ nsresult TRRServiceChannel::SetupTransaction() {
   if (!LoadAllowSpdy()) {
     mCaps |= NS_HTTP_DISALLOW_SPDY;
   }
-  if (!LoadAllowHttp3()) {
+  // Check a proxy info from mConnectionInfo. TRR channel may use a proxy that
+  // is set in mConnectionInfo but acutally the channel do not have mProxyInfo
+  // set. This can happend when network.trr.async_connInfo is true.
+  bool useNonDirectProxy = mConnectionInfo->ProxyInfo()
+                               ? !mConnectionInfo->ProxyInfo()->IsDirect()
+                               : false;
+  if (!Http3Allowed() || useNonDirectProxy) {
     mCaps |= NS_HTTP_DISALLOW_HTTP3;
   }
   if (LoadBeConservative()) {
