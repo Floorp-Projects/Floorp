@@ -22,15 +22,19 @@
 // steps 8.b-16.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is true
-function FUNC_NAME(rx, S, lengthS, replaceValue, flags
+function FUNC_NAME(
+  rx,
+  S,
+  lengthS,
+  replaceValue,
+  flags,
 #ifdef SUBSTITUTION
-                   , firstDollarIndex
+  firstDollarIndex,
 #endif
 #ifdef ELEMBASE
-                   , elemBase
+  elemBase
 #endif
-                  )
-{
+) {
   // Step 8.a.
   var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
 
@@ -85,14 +89,22 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
       namedCaptures = ToObject(namedCaptures);
     }
     // Step l.ii
-    replacement = RegExpGetSubstitution(result, S, position, replaceValue,
-                                        firstDollarIndex, namedCaptures);
+    replacement = RegExpGetSubstitution(
+      result,
+      S,
+      position,
+      replaceValue,
+      firstDollarIndex,
+      namedCaptures
+    );
 #elif defined(ELEMBASE)
     if (IsObject(elemBase)) {
       var prop = GetStringDataProperty(elemBase, matched);
       if (prop !== undefined) {
-        assert(typeof prop === "string",
-               "GetStringDataProperty should return either string or undefined");
+        assert(
+          typeof prop === "string",
+          "GetStringDataProperty should return either string or undefined"
+        );
         replacement = prop;
       } else {
         elemBase = undefined;
@@ -107,8 +119,8 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
 #endif
 
     // Step 14.m.ii.
-    accumulatedResult += Substring(S, nextSourcePosition,
-                                   position - nextSourcePosition) + replacement;
+    accumulatedResult +=
+      Substring(S, nextSourcePosition, position - nextSourcePosition) + replacement;
 
     // Step 14.m.iii.
     nextSourcePosition = lastIndex;
@@ -125,9 +137,10 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
 #if defined(FUNCTIONAL) || defined(ELEMBASE)
     // Ensure the current source and flags match the original regexp, the
     // replaceValue function may have called RegExp#compile.
-    if (UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
-        UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags)
-    {
+    if (
+      UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
+      UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags
+    ) {
       rx = RegExpConstructRaw(originalSource, originalFlags);
     }
 #endif
