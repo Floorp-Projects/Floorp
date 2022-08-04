@@ -2639,8 +2639,6 @@ class HTMLEditor final : public EditorBase,
    * SetSelectionToAbsoluteAsSubAction() move selected contents to first
    * selected `<div>` element or newly created `<div>` element and make
    * the `<div>` element positioned absolutely.
-   * mNewBlockElement of TopLevelEditSubActionData will be set to the `<div>`
-   * element.
    *
    * @param aEditingHost        The editing host.
    */

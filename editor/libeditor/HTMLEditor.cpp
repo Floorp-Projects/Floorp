@@ -2672,7 +2672,6 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   Result<RefPtr<Element>, nsresult> suggestBlockElementToPutCaretOrError =
       FormatBlockContainerWithTransaction(selectionRanges, aTagName,
                                           *editingHost);
-  TopLevelEditSubActionDataRef().mNewBlockElement = nullptr;
   if (suggestBlockElementToPutCaretOrError.isErr()) {
     NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
     return suggestBlockElementToPutCaretOrError.unwrapErr();
