@@ -2472,13 +2472,15 @@ class HTMLEditor final : public EditorBase,
    *                    descendants of aElement.
    *                    If `NodeAndDescendantsExceptTable`, modifies `aElement`
    *                    and its descendants.
+   * @return            A candidate point to put caret.
    */
   enum class EditTarget {
     OnlyDescendantsExceptTable,
     NodeAndDescendantsExceptTable
   };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveAlignFromDescendants(
-      Element& aElement, const nsAString& aAlignType, EditTarget aEditTarget);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  RemoveAlignFromDescendants(Element& aElement, const nsAString& aAlignType,
+                             EditTarget aEditTarget);
 
   /**
    * SetBlockElementAlign() resets `align` attribute, `text-align` property
