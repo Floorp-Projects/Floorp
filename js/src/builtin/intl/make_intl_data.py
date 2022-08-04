@@ -3136,8 +3136,8 @@ def writeCurrencyFile(published, currencies, out):
             sorted(currencies, key=itemgetter(0)), itemgetter(0)
         ):
             for (_, minorUnits, currencyName, countryName) in entries:
-                println("    // {} ({})".format(currencyName, countryName))
-            println("    {}: {},".format(currency, minorUnits))
+                println("  // {} ({})".format(currencyName, countryName))
+            println("  {}: {},".format(currency, minorUnits))
         println("};")
 
 
@@ -3562,7 +3562,7 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
         sanctioned_units_object = json.dumps(
             {unit: True for unit in sorted(sanctioned_units)},
             sort_keys=True,
-            indent=4,
+            indent=2,
             separators=(",", ": "),
         )
 
@@ -3577,9 +3577,11 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
  */"""
         )
 
+        println("/* eslint-disable prettier/prettier */")
         println(
             "var sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_object)
         )
+        println("/* eslint-enable prettier/prettier */")
 
     sanctioned_h_file = os.path.join(intl_components_src_dir, "MeasureUnitGenerated.h")
     with io.open(sanctioned_h_file, mode="w", encoding="utf-8", newline="") as f:
