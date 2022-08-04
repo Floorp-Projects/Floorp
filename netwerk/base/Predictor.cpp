@@ -1818,7 +1818,8 @@ Predictor::Resetter::OnCacheStorageInfo(uint32_t entryCount,
 
 NS_IMETHODIMP
 Predictor::Resetter::OnCacheEntryInfo(nsIURI* uri, const nsACString& idEnhance,
-                                      int64_t dataSize, uint32_t fetchCount,
+                                      int64_t dataSize, int64_t altDataSize,
+                                      uint32_t fetchCount,
                                       uint32_t lastModifiedTime,
                                       uint32_t expirationTime, bool aPinned,
                                       nsILoadContextInfo* aInfo) {
