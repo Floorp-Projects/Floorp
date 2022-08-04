@@ -36,6 +36,17 @@ constexpr NativeStackLimit NativeStackLimitMin = UINTPTR_MAX;
 constexpr NativeStackLimit NativeStackLimitMax = 0;
 #endif
 
+inline NativeStackLimit GetNativeStackLimit(NativeStackBase base,
+                                            NativeStackSize size) {
+#if JS_STACK_GROWTH_DIRECTION > 0
+  MOZ_ASSERT(base <= size_t(-1) - size);
+  return base + size - 1;
+#else   // stack grows up
+  MOZ_ASSERT(base >= size);
+  return base - (size - 1);
+#endif  // stack grows down
+}
+
 }  // namespace JS
 
 /**
