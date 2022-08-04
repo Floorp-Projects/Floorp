@@ -11,7 +11,7 @@
   --figure-height: 200px;
   --figure-width: 200px;
   --homepage-reset-column: 1;
-  --homepage-reset-align: space-between;
+  --homepage-reset-align: start;
 }
 
 @media (min-width: 50em) {
@@ -202,7 +202,6 @@ figure > img {
 #homepage-reset-container:not([hidden]) {
   display: flex;
   grid-column: var(--homepage-reset-column);
-  text-align: end;
 }
 
 .reset-prompt,
@@ -224,7 +223,7 @@ figure > img {
   display: none;
 }
 
-#homepage-reset-container > .success-prompt span::before {
+#homepage-reset-container > .success-prompt > span::before {
   display: inline-block;
   content: "";
   background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
