@@ -345,6 +345,8 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   explicit AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange);
   template <typename PT, typename CT>
   explicit AutoRangeArray(const EditorDOMPointBase<PT, CT>& aPoint);
+  // The copy constructor copies everything except saved ranges.
+  explicit AutoRangeArray(const AutoRangeArray& aOther);
 
   ~AutoRangeArray();
 

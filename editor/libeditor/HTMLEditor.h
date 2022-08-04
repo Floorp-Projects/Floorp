@@ -1594,16 +1594,20 @@ class HTMLEditor final : public EditorBase,
       Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
 
   /**
-   * ChangeSelectedHardLinesToList() converts selected ranges to specified
-   * list element.  If there is different type of list elements, this method
-   * converts them to specified list items too.  Basically, each hard line
-   * will be wrapped with a list item element.  However, only when `<p>`
+   * ConvertContentAroundRangesToList() converts contents around aRanges to
+   * specified list element.  If there is different type of list elements, this
+   * method converts them to specified list items too.  Basically, each hard
+   * line will be wrapped with a list item element.  However, only when `<p>`
    * element is selected, its child `<br>` elements won't be treated as
    * hard line separators.  Perhaps, this is a bug.
-   * NOTE: This method creates AutoSelectionRestorer.  Therefore, each caller
-   *       need to check if the editor is still available even if this returns
-   *       NS_OK.
    *
+   * @param aRanges     [in/out] The ranges which will be converted to list.
+   *                    The instance must not have saved ranges because it'll
+   *                    be used in this method.
+   *                    If succeeded, this will have selection ranges which
+   *                    should be applied to `Selection`.
+   *                    If failed, this keeps storing original selection
+   *                    ranges.
    * @param aListElementTagName         The new list element tag name.
    * @param aListItemElementTagName     The new list item element tag name.
    * @param aBulletType                 If this is not empty string, it's set
@@ -1615,11 +1619,11 @@ class HTMLEditor final : public EditorBase,
    * @param aEditingHost                The editing host.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  ChangeSelectedHardLinesToList(nsAtom& aListElementTagName,
-                                nsAtom& aListItemElementTagName,
-                                const nsAString& aBulletType,
-                                SelectAllOfCurrentList aSelectAllOfCurrentList,
-                                const Element& aEditingHost);
+  ConvertContentAroundRangesToList(
+      AutoRangeArray& aRanges, nsAtom& aListElementTagName,
+      nsAtom& aListItemElementTagName, const nsAString& aBulletType,
+      SelectAllOfCurrentList aSelectAllOfCurrentList,
+      const Element& aEditingHost);
 
   /**
    * MakeOrChangeListAndListItemAsSubAction() handles create list commands with

@@ -85,6 +85,16 @@ AutoRangeArray::AutoRangeArray(const dom::Selection& aSelection) {
   Initialize(aSelection);
 }
 
+AutoRangeArray::AutoRangeArray(const AutoRangeArray& aOther)
+    : mAnchorFocusRange(aOther.mAnchorFocusRange),
+      mDirection(aOther.mDirection) {
+  mRanges.SetCapacity(aOther.mRanges.Length());
+  for (const OwningNonNull<nsRange>& range : aOther.mRanges) {
+    RefPtr<nsRange> clonedRange = range->CloneRange();
+    mRanges.AppendElement(std::move(clonedRange));
+  }
+}
+
 template <typename PointType>
 AutoRangeArray::AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange) {
   MOZ_ASSERT(aRange.IsPositionedAndValid());
