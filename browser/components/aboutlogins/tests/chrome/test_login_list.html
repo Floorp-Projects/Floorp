@@ -89,7 +89,7 @@ const TEST_BREACH = {
 const TEST_BREACHES_MAP = new Map();
 TEST_BREACHES_MAP.set(TEST_LOGIN_1.guid, TEST_BREACH);
 
-add_task(async function setup() {
+add_setup(async () => {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   await importDependencies(templateFrame, displayEl);
