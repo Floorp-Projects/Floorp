@@ -2506,16 +2506,21 @@ class HTMLEditor final : public EditorBase,
                        EditTarget aEditTarget);
 
   /**
-   * AlignContentsAtSelectionWithEmptyDivElement() inserts new `<div>` element
-   * at `Selection` to align selected contents.  This returns as "handled"
-   * if this modifies `Selection` so that callers shouldn't modify `Selection`
-   * in such case especially when using AutoSelectionRestorer.
+   * InsertDivElementToAlignContents() inserts a new <div> element (which has
+   * only a padding <br> element) to aPointToInsert for a placeholder whose
+   * contents will be aligned.
    *
+   * @param aPointToInsert      A point to insert new empty <div>.
    * @param aAlignType          New align attribute value where the contents
    *                            should be aligned to.
+   * @param aEditingHost        The editing host.
+   * @return                    New <div> element which has only a padding <br>
+   *                            element and is styled to align contents.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
-  AlignContentsAtSelectionWithEmptyDivElement(const nsAString& aAlignType);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
+  InsertDivElementToAlignContents(const EditorDOMPoint& aPointToInsert,
+                                  const nsAString& aAlignType,
+                                  const Element& aEditingHost);
 
   /**
    * AlignNodesAndDescendants() make contents of nodes in aArrayOfContents and
