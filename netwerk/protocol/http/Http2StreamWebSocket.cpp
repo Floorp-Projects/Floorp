@@ -103,10 +103,9 @@ nsresult Http2StreamWebSocket::GenerateHeaders(nsCString& aCompressedData,
   return NS_OK;
 }
 
-nsresult Http2StreamWebSocket::Close(nsresult reason) {
+void Http2StreamWebSocket::CloseStream(nsresult reason) {
   mTransaction->Close(reason);
   mSession = nullptr;
-  return NS_OK;
 }
 
 }  // namespace mozilla::net

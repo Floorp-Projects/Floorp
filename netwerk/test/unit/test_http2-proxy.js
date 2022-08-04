@@ -19,6 +19,14 @@
  * - check we don't try to ask for credentials or otherwise authenticate to
  *   the proxy when 407 is returned and there is no Proxy-Authenticate
  *   response header sent
+ * - a stream reset for a connect stream to the proxy does not cause session to
+ *   be closed and the request through the proxy will failed.
+ * - a "soft" stream error on a connection to the origin server will close the
+ *   stream, but it will not close niether the HTTP/2 session to the proxy nor
+ *   to the origin server.
+ * - a "hard" stream error on a connection to the origin server will close the
+ *   HTTP/2 session to the origin server, but it will not close the HTTP/2
+ *   session to the proxy.
  */
 
 /* eslint-env node */
@@ -282,6 +290,11 @@ class http2ProxyCode {
         stream.end();
         return;
       }
+      if (target == "reset.example.com:443") {
+        // always reset the stream.
+        stream.close(0x0);
+        return;
+      }
 
       const net = require("net");
       const socket = net.connect(serverPort, "127.0.0.1", () => {
@@ -536,6 +549,39 @@ add_task(async function proxy_too_many_requests_failure() {
   );
 });
 
+add_task(async function proxy_stream_reset_failure() {
+  const { status, http_code, proxy_connect_response_code } = await get_response(
+    make_channel(`https://reset.example.com/`),
+    CL_EXPECT_FAILURE
+  );
+
+  Assert.equal(status, Cr.NS_ERROR_NET_INTERRUPT);
+  Assert.equal(proxy_connect_response_code, 0);
+  Assert.equal(http_code, undefined);
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session created by 429 after 504"
+  );
+});
+
+// The soft errors are not closing the session.
+add_task(async function origin_server_stream_soft_failure() {
+  const { status, http_code, proxy_connect_response_code } = await get_response(
+    make_channel(`https://foo.example.com/illegalhpacksoft`),
+    CL_EXPECT_FAILURE
+  );
+
+  Assert.equal(status, Cr.NS_ERROR_ILLEGAL_VALUE);
+  Assert.equal(proxy_connect_response_code, 200);
+  Assert.equal(http_code, undefined);
+  Assert.equal(
+    await proxy_session_counter(),
+    1,
+    "No new session closed by soft stream errors"
+  );
+});
+
 // Make sure that the above error codes don't kill the session and we still reach the end server
 add_task(async function proxy_success_still_one_session() {
   const foo = await get_response(
@@ -556,7 +602,7 @@ add_task(async function proxy_success_still_one_session() {
   Assert.equal(
     await proxy_session_counter(),
     1,
-    "No new session created after proxy error codes"
+    "No new session created after stream error codes"
   );
 });
 
@@ -621,3 +667,90 @@ add_task(async function proxy_bad_gateway_failure_isolated() {
     "No new session created by 502"
   );
 });
+
+add_task(async function proxy_success_check_number_of_session() {
+  const foo = await get_response(
+    make_channel(`https://foo.example.com/random-request-1`)
+  );
+  const alt1 = await get_response(
+    make_channel(`https://alt1.example.com/random-request-2`)
+  );
+  const lh = await get_response(
+    make_channel(`https://localhost/random-request-3`)
+  );
+
+  Assert.equal(foo.status, Cr.NS_OK);
+  Assert.equal(foo.proxy_connect_response_code, 200);
+  Assert.equal(foo.http_code, 200);
+  Assert.ok(foo.data.match("random-request-1"));
+  Assert.ok(foo.data.match("You Win!"));
+  Assert.equal(alt1.status, Cr.NS_OK);
+  Assert.equal(alt1.proxy_connect_response_code, 200);
+  Assert.equal(alt1.http_code, 200);
+  Assert.ok(alt1.data.match("random-request-2"));
+  Assert.ok(alt1.data.match("You Win!"));
+  Assert.equal(lh.status, Cr.NS_OK);
+  Assert.equal(lh.proxy_connect_response_code, 200);
+  Assert.equal(lh.http_code, 200);
+  Assert.ok(lh.data.match("random-request-3"));
+  Assert.ok(lh.data.match("You Win!"));
+  Assert.equal(
+    await proxy_session_counter(),
+    2,
+    "The number of sessions has not changed"
+  );
+});
+
+// The hard errors are closing the session.
+// TODO this tests is stolled some times because TLSFilterTransaction does not
+// write data promptly to the Http2StreamTunnel. This should be fixed in bug 1772201.
+add_task(async function origin_server_stream_hard_failure() {
+  const { status, http_code, proxy_connect_response_code } = await get_response(
+    make_channel(`https://foo.example.com/illegalhpackhard`),
+    CL_EXPECT_FAILURE
+  );
+
+  Assert.equal(status, 0x804b0053);
+  Assert.equal(proxy_connect_response_code, 200);
+  Assert.equal(http_code, undefined);
+  Assert.equal(
+    await proxy_session_counter(),
+    2,
+    "No new session created after a hard stream failure, but a new one will be created if a ne request is sent."
+  );
+});
+
+add_task(
+  async function proxy_success_check_number_of_session_should_increase() {
+    const foo = await get_response(
+      make_channel(`https://foo.example.com/random-request-1`)
+    );
+    const alt1 = await get_response(
+      make_channel(`https://alt1.example.com/random-request-2`)
+    );
+    const lh = await get_response(
+      make_channel(`https://localhost/random-request-3`)
+    );
+
+    Assert.equal(foo.status, Cr.NS_OK);
+    Assert.equal(foo.proxy_connect_response_code, 200);
+    Assert.equal(foo.http_code, 200);
+    Assert.ok(foo.data.match("random-request-1"));
+    Assert.ok(foo.data.match("You Win!"));
+    Assert.equal(alt1.status, Cr.NS_OK);
+    Assert.equal(alt1.proxy_connect_response_code, 200);
+    Assert.equal(alt1.http_code, 200);
+    Assert.ok(alt1.data.match("random-request-2"));
+    Assert.ok(alt1.data.match("You Win!"));
+    Assert.equal(lh.status, Cr.NS_OK);
+    Assert.equal(lh.proxy_connect_response_code, 200);
+    Assert.equal(lh.http_code, 200);
+    Assert.ok(lh.data.match("random-request-3"));
+    Assert.ok(lh.data.match("You Win!"));
+    Assert.equal(
+      await proxy_session_counter(),
+      3,
+      "Just one new session has been created."
+    );
+  }
+);
