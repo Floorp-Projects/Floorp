@@ -122,6 +122,7 @@ bool NameOpEmitter::emitGet() {
     switch (loc_.kind()) {
       case NameLocation::Kind::Dynamic:
       case NameLocation::Kind::Global:
+        MOZ_ASSERT(bce_->emitterMode != BytecodeEmitter::SelfHosting);
         if (bce_->needsImplicitThis() || bce_->sc->hasNonSyntacticScope()) {
           MOZ_ASSERT_IF(bce_->needsImplicitThis(),
                         loc_.kind() == NameLocation::Kind::Dynamic);
@@ -142,6 +143,12 @@ bool NameOpEmitter::emitGet() {
       case NameLocation::Kind::ArgumentSlot:
       case NameLocation::Kind::FrameSlot:
       case NameLocation::Kind::EnvironmentCoordinate:
+        if (bce_->emitterMode == BytecodeEmitter::SelfHosting) {
+          if (!bce_->emitDebugCheckSelfHosted()) {
+            //      [stack] CALLEE
+            return false;
+          }
+        }
         if (!bce_->emit1(JSOp::Undefined)) {
           //        [stack] CALLEE UNDEF
           return false;
