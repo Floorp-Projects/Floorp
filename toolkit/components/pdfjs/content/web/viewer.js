@@ -14681,7 +14681,7 @@ function FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printRe
   this.printContainer = printContainer;
   this._printResolution = printResolution || 150;
   this._optionalContentConfigPromise = optionalContentConfigPromise || pdfDocument.getOptionalContentConfig();
-  this._optionalContentConfigPromise = printAnnotationStoragePromise || Promise.resolve();
+  this._printAnnotationStoragePromise = printAnnotationStoragePromise || Promise.resolve();
 }
 
 FirefoxPrintService.prototype = {
