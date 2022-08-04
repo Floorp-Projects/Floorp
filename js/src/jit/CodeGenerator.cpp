@@ -16310,7 +16310,7 @@ void CodeGenerator::visitCallAddOrUpdateSparseElement(
   pushArg(object);
 
   using Fn =
-      bool (*)(JSContext*, Handle<ArrayObject*>, int32_t, HandleValue, bool);
+      bool (*)(JSContext*, Handle<NativeObject*>, int32_t, HandleValue, bool);
   callVM<Fn, js::AddOrUpdateSparseElementHelper>(lir);
 }
 
@@ -16322,7 +16322,7 @@ void CodeGenerator::visitCallGetSparseElement(LCallGetSparseElement* lir) {
   pushArg(object);
 
   using Fn =
-      bool (*)(JSContext*, Handle<ArrayObject*>, int32_t, MutableHandleValue);
+      bool (*)(JSContext*, Handle<NativeObject*>, int32_t, MutableHandleValue);
   callVM<Fn, js::GetSparseElementHelper>(lir);
 }
 

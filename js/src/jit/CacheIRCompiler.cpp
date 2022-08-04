@@ -1943,6 +1943,9 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::Array:
       clasp = &ArrayObject::class_;
       break;
+    case GuardClassKind::PlainObject:
+      clasp = &PlainObject::class_;
+      break;
     case GuardClassKind::ArrayBuffer:
       clasp = &ArrayBufferObject::class_;
       break;
@@ -1967,8 +1970,8 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::Map:
       clasp = &MapObject::class_;
       break;
-    default:
-      MOZ_ASSERT_UNREACHABLE();
+    case GuardClassKind::JSFunction:
+      MOZ_CRASH("JSFunction handled before switch");
   }
   MOZ_ASSERT(clasp);
 
@@ -7613,7 +7616,7 @@ bool CacheIRCompiler::emitCallGetSparseElementResult(ObjOperandId objId,
   masm.Push(id);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext * cx, Handle<ArrayObject*> obj, int32_t int_id,
+  using Fn = bool (*)(JSContext * cx, Handle<NativeObject*> obj, int32_t int_id,
                       MutableHandleValue result);
   callvm.call<Fn, GetSparseElementHelper>();
   return true;

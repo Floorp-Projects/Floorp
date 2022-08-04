@@ -372,6 +372,8 @@ const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
   switch (kind) {
     case GuardClassKind::Array:
       return &ArrayObject::class_;
+    case GuardClassKind::PlainObject:
+      return &PlainObject::class_;
     case GuardClassKind::ArrayBuffer:
       return &ArrayBufferObject::class_;
     case GuardClassKind::SharedArrayBuffer:
@@ -388,9 +390,10 @@ const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
       return &SetObject::class_;
     case GuardClassKind::Map:
       return &MapObject::class_;
-    default:
-      MOZ_CRASH("not yet supported");
+    case GuardClassKind::JSFunction:
+      break;
   }
+  MOZ_CRASH("unexpected kind");
 }
 
 bool WarpCacheIRTranspiler::emitGuardAnyClass(ObjOperandId objId,
