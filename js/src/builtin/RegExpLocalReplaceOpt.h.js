@@ -26,121 +26,121 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
 #endif
                   )
 {
-    // 21.2.5.2.2 RegExpBuiltinExec, step 4.
-    var lastIndex = ToLength(rx.lastIndex);
+  // 21.2.5.2.2 RegExpBuiltinExec, step 4.
+  var lastIndex = ToLength(rx.lastIndex);
 
-    // 21.2.5.2.2 RegExpBuiltinExec, step 5.
-    // Side-effects in step 4 can recompile the RegExp, so we need to read the
-    // flags again and handle the case when global was enabled even though this
-    // function is optimized for non-global RegExps.
-    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+  // 21.2.5.2.2 RegExpBuiltinExec, step 5.
+  // Side-effects in step 4 can recompile the RegExp, so we need to read the
+  // flags again and handle the case when global was enabled even though this
+  // function is optimized for non-global RegExps.
+  var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
 
-    // 21.2.5.2.2 RegExpBuiltinExec, steps 6-7.
-    var globalOrSticky = !!(flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG));
+  // 21.2.5.2.2 RegExpBuiltinExec, steps 6-7.
+  var globalOrSticky = !!(flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG));
 
-    if (globalOrSticky) {
-        // 21.2.5.2.2 RegExpBuiltinExec, step 12.a.
-        if (lastIndex > lengthS) {
-            if (globalOrSticky) {
-                rx.lastIndex = 0;
-            }
+  if (globalOrSticky) {
+    // 21.2.5.2.2 RegExpBuiltinExec, step 12.a.
+    if (lastIndex > lengthS) {
+      if (globalOrSticky) {
+        rx.lastIndex = 0;
+      }
 
-            // Steps 12-16.
-            return S;
-        }
-    } else {
-        // 21.2.5.2.2 RegExpBuiltinExec, step 8.
-        lastIndex = 0;
+      // Steps 12-16.
+      return S;
     }
+  } else {
+    // 21.2.5.2.2 RegExpBuiltinExec, step 8.
+    lastIndex = 0;
+  }
 
 #if !defined(SHORT_STRING)
-    // Step 11.a.
-    var result = RegExpMatcher(rx, S, lastIndex);
+  // Step 11.a.
+  var result = RegExpMatcher(rx, S, lastIndex);
 
-    // Step 11.b.
-    if (result === null) {
-        // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
-        if (globalOrSticky) {
-            rx.lastIndex = 0;
-        }
-
-        // Steps 12-16.
-        return S;
+  // Step 11.b.
+  if (result === null) {
+    // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
+    if (globalOrSticky) {
+      rx.lastIndex = 0;
     }
+
+    // Steps 12-16.
+    return S;
+  }
 #else
-    // Step 11.a.
-    var result = RegExpSearcher(rx, S, lastIndex);
+  // Step 11.a.
+  var result = RegExpSearcher(rx, S, lastIndex);
 
-    // Step 11.b.
-    if (result === -1) {
-        // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
-        if (globalOrSticky) {
-            rx.lastIndex = 0;
-        }
-
-        // Steps 12-16.
-        return S;
+  // Step 11.b.
+  if (result === -1) {
+    // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
+    if (globalOrSticky) {
+      rx.lastIndex = 0;
     }
+
+    // Steps 12-16.
+    return S;
+  }
 #endif
 
-    // Steps 11.c, 12-13.
+  // Steps 11.c, 12-13.
 
 #if !defined(SHORT_STRING)
-    // Steps 14.a-b.
-    assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
+  // Steps 14.a-b.
+  assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
 
-    // Step 14.c.
-    var matched = result[0];
+  // Step 14.c.
+  var matched = result[0];
 
-    // Step 14.d.
-    var matchLength = matched.length;
+  // Step 14.d.
+  var matchLength = matched.length;
 
-    // Step 14.e-f.
-    var position = result.index;
+  // Step 14.e-f.
+  var position = result.index;
 
-    // Step 14.m.iii (reordered)
-    // To set rx.lastIndex before RegExpGetFunctionalReplacement.
-    var nextSourcePosition = position + matchLength;
+  // Step 14.m.iii (reordered)
+  // To set rx.lastIndex before RegExpGetFunctionalReplacement.
+  var nextSourcePosition = position + matchLength;
 #else
-    // Steps 14.a-d (skipped).
+  // Steps 14.a-d (skipped).
 
-    // Step 14.e-f.
-    var position = result & 0x7fff;
+  // Step 14.e-f.
+  var position = result & 0x7fff;
 
-    // Step 14.l.iii (reordered)
-    var nextSourcePosition = (result >> 15) & 0x7fff;
+  // Step 14.l.iii (reordered)
+  var nextSourcePosition = (result >> 15) & 0x7fff;
 #endif
 
-    // 21.2.5.2.2 RegExpBuiltinExec, step 15.
-    if (globalOrSticky) {
-       rx.lastIndex = nextSourcePosition;
-    }
+  // 21.2.5.2.2 RegExpBuiltinExec, step 15.
+  if (globalOrSticky) {
+    rx.lastIndex = nextSourcePosition;
+  }
 
-    var replacement;
-    // Steps g-l.
+  var replacement;
+  // Steps g-l.
 #if defined(FUNCTIONAL)
-    replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
+  replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
 #elif defined(SUBSTITUTION)
-    // Step l.i
-    var namedCaptures = result.groups;
-    if (namedCaptures !== undefined) {
-        namedCaptures = ToObject(namedCaptures);
-    }
-    // Step l.ii
-    replacement = RegExpGetSubstitution(result, S, position, replaceValue, firstDollarIndex,
-                                        namedCaptures);
+  // Step l.i
+  var namedCaptures = result.groups;
+  if (namedCaptures !== undefined) {
+    namedCaptures = ToObject(namedCaptures);
+  }
+  // Step l.ii
+  replacement = RegExpGetSubstitution(result, S, position, replaceValue, firstDollarIndex,
+                                      namedCaptures);
 #else
-    replacement = replaceValue;
+  replacement = replaceValue;
 #endif
 
-    // Step 14.m.ii.
-    var accumulatedResult = Substring(S, 0, position) + replacement;
+  // Step 14.m.ii.
+  var accumulatedResult = Substring(S, 0, position) + replacement;
 
-    // Step 15.
-    if (nextSourcePosition >= lengthS) {
-        return accumulatedResult;
-    }
+  // Step 15.
+  if (nextSourcePosition >= lengthS) {
+    return accumulatedResult;
+  }
 
-    // Step 16.
-    return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+  // Step 16.
+  return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
 }

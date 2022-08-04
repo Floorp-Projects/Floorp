@@ -31,113 +31,113 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
 #endif
                   )
 {
-    // Step 8.a.
-    var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
+  // Step 8.a.
+  var fullUnicode = !!(flags & REGEXP_UNICODE_FLAG);
 
-    // Step 8.b.
-    var lastIndex = 0;
-    rx.lastIndex = 0;
+  // Step 8.b.
+  var lastIndex = 0;
+  rx.lastIndex = 0;
 
 #if defined(FUNCTIONAL) || defined(ELEMBASE)
-    // Save the original source and flags, so we can check if the replacer
-    // function recompiled the regexp.
-    var originalSource = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
-    var originalFlags = flags;
+  // Save the original source and flags, so we can check if the replacer
+  // function recompiled the regexp.
+  var originalSource = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
+  var originalFlags = flags;
 #endif
 
-    // Step 12 (reordered).
-    var accumulatedResult = "";
+  // Step 12 (reordered).
+  var accumulatedResult = "";
 
-    // Step 13 (reordered).
-    var nextSourcePosition = 0;
+  // Step 13 (reordered).
+  var nextSourcePosition = 0;
 
-    // Step 11.
-    while (true) {
-        // Step 11.a.
-        var result = RegExpMatcher(rx, S, lastIndex);
+  // Step 11.
+  while (true) {
+    // Step 11.a.
+    var result = RegExpMatcher(rx, S, lastIndex);
 
-        // Step 11.b.
-        if (result === null) {
-            break;
-        }
+    // Step 11.b.
+    if (result === null) {
+      break;
+    }
 
-        // Steps 14.a-b (skipped).
-        assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
+    // Steps 14.a-b (skipped).
+    assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
 
-        // Step 14.c.
-        var matched = result[0];
+    // Step 14.c.
+    var matched = result[0];
 
-        // Step 14.d.
-        var matchLength = matched.length | 0;
+    // Step 14.d.
+    var matchLength = matched.length | 0;
 
-        // Steps 14.e-f.
-        var position = result.index | 0;
-        lastIndex = position + matchLength;
+    // Steps 14.e-f.
+    var position = result.index | 0;
+    lastIndex = position + matchLength;
 
-        // Steps g-l.
-        var replacement;
+    // Steps g-l.
+    var replacement;
 #if defined(FUNCTIONAL)
-        replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
+    replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
 #elif defined(SUBSTITUTION)
-        // Step l.i
-        var namedCaptures = result.groups;
-        if (namedCaptures !== undefined) {
-            namedCaptures = ToObject(namedCaptures);
-        }
-        // Step l.ii
-        replacement = RegExpGetSubstitution(result, S, position, replaceValue,
-                                            firstDollarIndex, namedCaptures);
+    // Step l.i
+    var namedCaptures = result.groups;
+    if (namedCaptures !== undefined) {
+      namedCaptures = ToObject(namedCaptures);
+    }
+    // Step l.ii
+    replacement = RegExpGetSubstitution(result, S, position, replaceValue,
+                                        firstDollarIndex, namedCaptures);
 #elif defined(ELEMBASE)
-        if (IsObject(elemBase)) {
-            var prop = GetStringDataProperty(elemBase, matched);
-            if (prop !== undefined) {
-                assert(typeof prop === "string",
-                       "GetStringDataProperty should return either string or undefined");
-                replacement = prop;
-            } else {
-                elemBase = undefined;
-            }
-        }
+    if (IsObject(elemBase)) {
+      var prop = GetStringDataProperty(elemBase, matched);
+      if (prop !== undefined) {
+        assert(typeof prop === "string",
+               "GetStringDataProperty should return either string or undefined");
+        replacement = prop;
+      } else {
+        elemBase = undefined;
+      }
+    }
 
-        if (!IsObject(elemBase)) {
-            replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
-        }
+    if (!IsObject(elemBase)) {
+      replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
+    }
 #else
-        replacement = replaceValue;
+    replacement = replaceValue;
 #endif
 
-        // Step 14.m.ii.
-        accumulatedResult += Substring(S, nextSourcePosition,
-                                       position - nextSourcePosition) + replacement;
+    // Step 14.m.ii.
+    accumulatedResult += Substring(S, nextSourcePosition,
+                                   position - nextSourcePosition) + replacement;
 
-        // Step 14.m.iii.
-        nextSourcePosition = lastIndex;
+    // Step 14.m.iii.
+    nextSourcePosition = lastIndex;
 
-        // Step 11.c.iii.2.
-        if (matchLength === 0) {
-            lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
-            if (lastIndex > lengthS) {
-                break;
-            }
-            lastIndex |= 0;
-        }
+    // Step 11.c.iii.2.
+    if (matchLength === 0) {
+      lastIndex = fullUnicode ? AdvanceStringIndex(S, lastIndex) : lastIndex + 1;
+      if (lastIndex > lengthS) {
+        break;
+      }
+      lastIndex |= 0;
+    }
 
 #if defined(FUNCTIONAL) || defined(ELEMBASE)
-        // Ensure the current source and flags match the original regexp, the
-        // replaceValue function may have called RegExp#compile.
-        if (UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
-            UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags)
-        {
-            rx = RegExpConstructRaw(originalSource, originalFlags);
-        }
+    // Ensure the current source and flags match the original regexp, the
+    // replaceValue function may have called RegExp#compile.
+    if (UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
+        UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags)
+    {
+      rx = RegExpConstructRaw(originalSource, originalFlags);
+    }
 #endif
-    }
+  }
 
-    // Step 15.
-    if (nextSourcePosition >= lengthS) {
-        return accumulatedResult;
-    }
+  // Step 15.
+  if (nextSourcePosition >= lengthS) {
+    return accumulatedResult;
+  }
 
-    // Step 16.
-    return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
+  // Step 16.
+  return accumulatedResult + Substring(S, nextSourcePosition, lengthS - nextSourcePosition);
 }
