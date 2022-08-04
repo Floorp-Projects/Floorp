@@ -724,6 +724,13 @@ class MOZ_STACK_CLASS AutoRangeArray final {
       EditSubAction aEditSubAction,
       CollectNonEditableNodes aCollectNonEditableNodes) const;
 
+  /**
+   * Retrieve a closest ancestor list element of a common ancestor of _A_ range
+   * of the ranges.  This tries to retrieve it from the first range to the last
+   * range.
+   */
+  dom::Element* GetClosestAncestorAnyListElementOfRange() const;
+
  private:
   static nsresult ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
       nsRange& aRange, EditSubAction aEditSubAction,

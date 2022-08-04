@@ -1157,6 +1157,22 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
   return NS_OK;
 }
 
+Element* AutoRangeArray::GetClosestAncestorAnyListElementOfRange() const {
+  for (const OwningNonNull<nsRange>& range : mRanges) {
+    nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
+    if (MOZ_UNLIKELY(!commonAncestorNode)) {
+      continue;
+    }
+    for (Element* element :
+         commonAncestorNode->InclusiveAncestorsOfType<Element>()) {
+      if (HTMLEditUtils::IsAnyListElement(element)) {
+        return element;
+      }
+    }
+  }
+  return nullptr;
+}
+
 /******************************************************************************
  * some general purpose editor utils
  *****************************************************************************/

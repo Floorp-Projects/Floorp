@@ -3131,26 +3131,27 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
   AutoSelectionRestorer restoreSelectionLater(*this);
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  Element* parentListElement =
-      aSelectAllOfCurrentList == SelectAllOfCurrentList::Yes
-          ? GetParentListElementAtSelection()
-          : nullptr;
-  if (parentListElement) {
-    arrayOfContents.AppendElement(
-        OwningNonNull<nsIContent>(*parentListElement));
-  } else {
-    // TODO: We don't need AutoTransactionsConserveSelection here in the normal
-    //       cases, but removing this may cause the behavior with the legacy
-    //       mutation event listeners.  We should try to delete this in a bug.
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    {
-      AutoRangeArray extendedSelectionRanges(SelectionRef());
-      extendedSelectionRanges
-          .ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-              EditSubAction::eCreateOrChangeList, aEditingHost);
+  {
+    AutoRangeArray selectionRanges(SelectionRef());
+    Element* parentListElement =
+        aSelectAllOfCurrentList == SelectAllOfCurrentList::Yes
+            ? selectionRanges.GetClosestAncestorAnyListElementOfRange()
+            : nullptr;
+    if (parentListElement) {
+      arrayOfContents.AppendElement(
+          OwningNonNull<nsIContent>(*parentListElement));
+    } else {
+      // TODO: We don't need AutoTransactionsConserveSelection here in the
+      //       normal cases, but removing this may cause the behavior with the
+      //       legacy mutation event listeners.  We should try to delete this in
+      //       a bug.
+      AutoTransactionsConserveSelection dontChangeMySelection(*this);
+
+      selectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+          EditSubAction::eCreateOrChangeList, aEditingHost);
       Result<EditorDOMPoint, nsresult> splitResult =
-          extendedSelectionRanges
+          selectionRanges
               .SplitTextNodesAtEndBoundariesAndParentInlineElementsAtBoundaries(
                   *this);
       if (MOZ_UNLIKELY(splitResult.isErr())) {
@@ -3160,7 +3161,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             " failed");
         return EditActionResult(splitResult.unwrapErr());
       }
-      nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
+      nsresult rv = selectionRanges.CollectEditTargetNodes(
           *this, arrayOfContents, EditSubAction::eCreateOrChangeList,
           AutoRangeArray::CollectNonEditableNodes::No);
       if (NS_FAILED(rv)) {
@@ -3169,16 +3170,16 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             "eCreateOrChangeList, CollectNonEditableNodes::No) failed");
         return EditActionResult(rv);
       }
-    }
 
-    const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
-        MaybeSplitElementsAtEveryBRElement(arrayOfContents,
-                                           EditSubAction::eCreateOrChangeList);
-    if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
-          "eCreateOrChangeList) failed");
-      return EditActionResult(splitAtBRElementsResult.inspectErr());
+      const Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
+          MaybeSplitElementsAtEveryBRElement(
+              arrayOfContents, EditSubAction::eCreateOrChangeList);
+      if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
+            "eCreateOrChangeList) failed");
+        return EditActionResult(splitAtBRElementsResult.inspectErr());
+      }
     }
   }
 
@@ -6826,25 +6827,6 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::MaybeSplitElementsAtEveryBRElement(
     default:
       return EditorDOMPoint();
   }
-}
-
-Element* HTMLEditor::GetParentListElementAtSelection() const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
-
-  const uint32_t rangeCount = SelectionRef().RangeCount();
-  for (const uint32_t i : IntegerRange(rangeCount)) {
-    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
-    nsRange* range = SelectionRef().GetRangeAt(i);
-    MOZ_ASSERT(range);
-    for (nsINode* parent = range->GetClosestCommonInclusiveAncestor(); parent;
-         parent = parent->GetParentNode()) {
-      if (HTMLEditUtils::IsAnyListElement(parent)) {
-        return parent->AsElement();
-      }
-    }
-  }
-  return nullptr;
 }
 
 Result<EditorDOMPoint, nsresult>
