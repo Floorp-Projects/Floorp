@@ -15,9 +15,11 @@ function IsStringMatchOptimizable() {
   var RegExpProto = GetBuiltinPrototype("RegExp");
   // If RegExpPrototypeOptimizable succeeds, `exec` and `@@match` are
   // guaranteed to be data properties.
-  return RegExpPrototypeOptimizable(RegExpProto) &&
-         RegExpProto.exec === RegExp_prototype_Exec &&
-         RegExpProto[GetBuiltinSymbol("match")] === RegExpMatch;
+  return (
+    RegExpPrototypeOptimizable(RegExpProto) &&
+    RegExpProto.exec === RegExp_prototype_Exec &&
+    RegExpProto[GetBuiltinSymbol("match")] === RegExpMatch
+  );
 }
 
 function ThrowIncompatibleMethod(name, thisv) {
@@ -154,8 +156,7 @@ function String_pad(maxLength, fillString, padEnd) {
   // Step 10.
   // Perform an int32 division to ensure String_repeat is not called with a
   // double to avoid repeated bailouts in ToInteger.
-  let truncatedStringFiller = callFunction(String_repeat, filler,
-                                           (fillLen / filler.length) | 0);
+  let truncatedStringFiller = callFunction(String_repeat, filler, (fillLen / filler.length) | 0);
 
   truncatedStringFiller += Substring(filler, 0, fillLen % filler.length);
 
@@ -201,9 +202,11 @@ function String_replace(searchValue, replaceValue) {
   }
 
   // Step 2.
-  if (!(typeof searchValue === "string" && StringProtoHasNoReplace()) &&
-      searchValue !== undefined && searchValue !== null)
-  {
+  if (
+    !(typeof searchValue === "string" && StringProtoHasNoReplace()) &&
+    searchValue !== undefined &&
+    searchValue !== null
+  ) {
     // Step 2.a.
     var replacer = GetMethod(searchValue, GetBuiltinSymbol("replace"));
 
@@ -340,8 +343,9 @@ function String_replaceAll(searchValue, replaceValue) {
     position = nextPosition;
 
     // Step 14.a.
-    var replacement = ToString(callContentFunction(replaceValue, undefined, searchString,
-                                                   position, string));
+    var replacement = ToString(
+      callContentFunction(replaceValue, undefined, searchString, position, string)
+    );
 
     // Step 14.b (not applicable).
 
@@ -381,9 +385,11 @@ function IsStringSearchOptimizable() {
   var RegExpProto = GetBuiltinPrototype("RegExp");
   // If RegExpPrototypeOptimizable succeeds, `exec` and `@@search` are
   // guaranteed to be data properties.
-  return RegExpPrototypeOptimizable(RegExpProto) &&
-         RegExpProto.exec === RegExp_prototype_Exec &&
-         RegExpProto[GetBuiltinSymbol("search")] === RegExpSearch;
+  return (
+    RegExpPrototypeOptimizable(RegExpProto) &&
+    RegExpProto.exec === RegExp_prototype_Exec &&
+    RegExpProto[GetBuiltinSymbol("search")] === RegExpSearch
+  );
 }
 
 // ES 2016 draft Mar 25, 2016 21.1.3.15.
@@ -454,9 +460,11 @@ function String_split(separator, limit) {
   }
 
   // Step 2.
-  if (!(typeof separator == "string" && StringProtoHasNoSplit()) &&
-      separator !== undefined && separator !== null)
-  {
+  if (
+    !(typeof separator == "string" && StringProtoHasNoSplit()) &&
+    separator !== undefined &&
+    separator !== null
+  ) {
     // Step 2.a.
     var splitter = GetMethod(separator, GetBuiltinSymbol("split"));
 
@@ -731,10 +739,14 @@ function String_repeat(count) {
   // Communicate |n|'s possible range to the compiler. We actually use
   // MAX_STRING_LENGTH + 1 as range because that's a valid bit mask. That's
   // fine because it's only used as optimization hint.
-  assert(TO_INT32(MAX_STRING_LENGTH + 1) == MAX_STRING_LENGTH + 1,
-         "MAX_STRING_LENGTH + 1 must fit in int32");
-  assert(((MAX_STRING_LENGTH + 1) & (MAX_STRING_LENGTH + 2)) === 0,
-         "MAX_STRING_LENGTH + 1 can be used as a bitmask");
+  assert(
+    TO_INT32(MAX_STRING_LENGTH + 1) == MAX_STRING_LENGTH + 1,
+    "MAX_STRING_LENGTH + 1 must fit in int32"
+  );
+  assert(
+    ((MAX_STRING_LENGTH + 1) & (MAX_STRING_LENGTH + 2)) === 0,
+    "MAX_STRING_LENGTH + 1 can be used as a bitmask"
+  );
   n = n & (MAX_STRING_LENGTH + 1);
 
   // Steps 6-7.
@@ -757,8 +769,7 @@ function String_repeat(count) {
 function String_iterator() {
   // Step 1.
   if (this === undefined || this === null) {
-    ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO2, "String", "Symbol.iterator",
-                   ToString(this));
+    ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO2, "String", "Symbol.iterator", ToString(this));
   }
 
   // Step 2.
@@ -774,8 +785,7 @@ function String_iterator() {
 function StringIteratorNext() {
   var obj = this;
   if (!IsObject(obj) || (obj = GuardToStringIterator(obj)) === null) {
-    return callFunction(CallStringIteratorMethodIfWrapped, this,
-                        "StringIteratorNext");
+    return callFunction(CallStringIteratorMethodIfWrapped, this, "StringIteratorNext");
   }
 
   var S = UnsafeGetStringFromReservedSlot(obj, ITERATOR_SLOT_TARGET);
