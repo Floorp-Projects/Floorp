@@ -57,76 +57,66 @@ const EXPORTED_SYMBOLS = ["BrowserToolboxLauncher"];
 const processes = new Set();
 
 /**
- * Constructor for creating a process that will hold a chrome toolbox.
- *
- * @param function onClose [optional]
- *        A function called when the process stops running.
- * @param function onRun [optional]
- *        A function called when the process starts running.
- * @param boolean overwritePreferences [optional]
- *        Set to force overwriting the toolbox profile's preferences with the
- *        current set of preferences.
+ * @typedef {Object} BrowserToolboxLauncherArgs
+ * @property {function} onClose - A function called when the process stops running.
+ * @property {function} onRun - A function called when the process starts running.
+ * @property {boolean} overwritePreferences - Set to force overwriting the toolbox
+ *                     profile's preferences with the current set of preferences.
  */
-function BrowserToolboxLauncher(onClose, onRun, overwritePreferences) {
-  const emitter = new EventEmitter();
-  this.on = emitter.on.bind(emitter);
-  this.off = emitter.off.bind(emitter);
-  this.once = emitter.once.bind(emitter);
-  // Forward any events to the shared emitter.
-  this.emit = function(...args) {
-    emitter.emit(...args);
-    BrowserToolboxLauncher.emit(...args);
-  };
 
-  if (onClose) {
-    this.once("close", onClose);
-  }
-  if (onRun) {
-    this.once("run", onRun);
+class BrowserToolboxLauncher extends EventEmitter {
+  /**
+   * Initializes and starts a chrome toolbox process if the appropriated prefs are enabled
+   *
+   * @param {BrowserToolboxLauncherArgs} args
+   * @return {BrowserToolboxLauncher|null} The created instance, or null if the required prefs
+   *         are not set.
+   */
+  static init(args) {
+    if (
+      !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
+      !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
+    ) {
+      console.error("Could not start Browser Toolbox, you need to enable it.");
+      return null;
+    }
+    return new BrowserToolboxLauncher(args);
   }
 
-  this._telemetry = new Telemetry();
-
-  this.close = this.close.bind(this);
-  Services.obs.addObserver(this.close, "quit-application");
-  this._initServer();
-  this._initProfile(overwritePreferences);
-  this._create();
-
-  processes.add(this);
-}
-
-EventEmitter.decorate(BrowserToolboxLauncher);
-
-/**
- * Initializes and starts a chrome toolbox process.
- *
- * See BrowserToolboxLauncher jsdoc for the arguments.
- */
-BrowserToolboxLauncher.init = function({
-  onClose,
-  onRun,
-  overwritePreferences,
-} = {}) {
-  if (
-    !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
-    !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
-  ) {
-    console.error("Could not start Browser Toolbox, you need to enable it.");
-    return null;
+  /**
+   * Figure out if there are any open Browser Toolboxes that'll need to be restored.
+   * @return {boolean}
+   */
+  static getBrowserToolboxSessionState() {
+    return processes.size !== 0;
   }
-  return new BrowserToolboxLauncher(onClose, onRun, overwritePreferences);
-};
 
-/**
- * Figure out if there are any open Browser Toolboxes that'll need to be restored.
- * @return bool
- */
-BrowserToolboxLauncher.getBrowserToolboxSessionState = function() {
-  return processes.size !== 0;
-};
+  /**
+   * Constructor for creating a process that will hold a chrome toolbox.
+   *
+   * @param {...BrowserToolboxLauncherArgs} args
+   */
+  constructor({ onClose, onRun, overwritePreferences } = {}) {
+    super();
 
-BrowserToolboxLauncher.prototype = {
+    if (onClose) {
+      this.once("close", onClose);
+    }
+    if (onRun) {
+      this.once("run", onRun);
+    }
+
+    this._telemetry = new Telemetry();
+
+    this.close = this.close.bind(this);
+    Services.obs.addObserver(this.close, "quit-application");
+    this._initServer();
+    this._initProfile(overwritePreferences);
+    this._create();
+
+    processes.add(this);
+  }
+
   /**
    * Initializes the devtools server.
    */
@@ -194,7 +184,7 @@ BrowserToolboxLauncher.prototype = {
     dump(
       `DevTools Server for Browser Toolbox listening on port: ${this.port}\n`
     );
-  },
+  }
 
   /**
    * Initializes a profile for the remote debugger process.
@@ -290,7 +280,7 @@ BrowserToolboxLauncher.prototype = {
       "Finished creating the chrome toolbox user profile at: " +
         this._dbgProfilePath
     );
-  },
+  }
 
   /**
    * Creates and initializes the profile & process for the remote debugger.
@@ -426,7 +416,7 @@ BrowserToolboxLauncher.prototype = {
         );
       }
     );
-  },
+  }
 
   /**
    * Closes the remote debugging server and kills the toolbox process.
@@ -470,8 +460,8 @@ BrowserToolboxLauncher.prototype = {
     }
     this.loader = null;
     this._telemetry = null;
-  },
-};
+  }
+}
 
 /**
  * Helper method for debugging.
