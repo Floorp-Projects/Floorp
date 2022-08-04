@@ -24,6 +24,7 @@ EXTRA_JS_MODULES += [
     "ExtensionPreferencesManager.jsm",
     "ExtensionProcessScript.jsm",
     "extensionProcessScriptLoader.js",
+    "ExtensionScriptingStore.jsm",
     "ExtensionSettingsStore.jsm",
     "ExtensionShortcuts.jsm",
     "ExtensionStorage.jsm",

@@ -235,60 +235,6 @@ add_task(async function test_validate_registerContentScripts_params() {
   await extension.unload();
 });
 
-add_task(async function test_validate_registerContentScripts_persistAcrossSessions() {
-  let extension = makeExtension({
-    async background() {
-      const TEST_CASES = [
-        {
-          title: "no persistAcrossSessions option",
-          params: [
-            {
-              id: "script",
-              js: ["script.js"],
-              matches: ["*://mochi.test/*"],
-            },
-          ],
-          expectedError: /Property "persistAcrossSessions" is required/,
-        },
-        {
-          title: "persistAcrossSessions: true",
-          params: [
-            {
-              id: "script",
-              js: ["script.js"],
-              matches: ["*://mochi.test/*"],
-              persistAcrossSessions: true,
-            },
-          ],
-          expectedError: /persistAcrossSessions: Invalid value true/,
-        },
-      ];
-
-      for (const { title, params, expectedError } of TEST_CASES) {
-        browser.test.assertThrows(
-          () => {
-            browser.scripting.registerContentScripts(params);
-          },
-          expectedError,
-          `${title} - got expected error`
-        );
-      }
-
-      let scripts = await browser.scripting.getRegisteredContentScripts();
-      browser.test.assertEq(0, scripts.length, "expected no registered script");
-
-      browser.test.notifyPass("test-finished");
-    },
-    files: {
-      "script.js": "",
-    },
-  });
-
-  await extension.startup();
-  await extension.awaitFinish("test-finished");
-  await extension.unload();
-});
-
 add_task(async function test_registerContentScripts_with_already_registered_id() {
   let extension = makeExtension({
     async background() {
@@ -1577,43 +1523,6 @@ add_task(async function test_updateContentScripts() {
     ],
   });
 
-  await extension.unload();
-});
-
-add_task(async function test_validate_updateContentScripts_persistAcrossSessions() {
-  let extension = makeExtension({
-    async background() {
-      const script = {
-        id: "script",
-        js: ["script.js"],
-        matches: ["*://mochi.test/*"],
-        persistAcrossSessions: false,
-      };
-
-      await browser.scripting.registerContentScripts([script]);
-
-      browser.test.assertThrows(
-        () => {
-          browser.scripting.updateContentScripts([
-            {
-              id: script.id,
-              persistAcrossSessions: true,
-            },
-          ]);
-        },
-        /persistAcrossSessions: Invalid value true/,
-        "got expected error"
-      );
-
-      browser.test.notifyPass("test-finished");
-    },
-    files: {
-      "script.js": "",
-    },
-  });
-
-  await extension.startup();
-  await extension.awaitFinish("test-finished");
   await extension.unload();
 });
 

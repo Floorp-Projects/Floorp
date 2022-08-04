@@ -59,6 +59,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
+  ExtensionScriptingStore: "resource://gre/modules/ExtensionScriptingStore.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
@@ -480,6 +481,13 @@ var ExtensionAddonObserver = {
     lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
       `Clear ServiceWorkers for ${addon.id}`,
       lazy.ServiceWorkerCleanUp.removeFromPrincipal(principal)
+    );
+
+    // Clear the persisted dynamic content scripts created with the scripting
+    // API (if any).
+    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
+      `Clear scripting store for ${addon.id}`,
+      lazy.ExtensionScriptingStore.clear(addon.id)
     );
 
     if (!Services.prefs.getBoolPref(LEAVE_STORAGE_PREF, false)) {
@@ -3052,6 +3060,20 @@ class Extension extends ExtensionData {
       }
 
       GlobalManager.init(this);
+
+      if (this.hasPermission("scripting")) {
+        this.state = "Startup: Initialize scripting store";
+        // We have to await here because `initSharedData` depends on the data
+        // fetched from the scripting store. This has to be done early because
+        // we need the data to run the content scripts in existing pages at
+        // startup.
+        try {
+          await lazy.ExtensionScriptingStore.initExtension(this);
+          this.state = "Startup: Scripting store initialized";
+        } catch (err) {
+          this.logError(`Failed to initialize scripting store: ${err}`);
+        }
+      }
 
       this.initSharedData();
 
