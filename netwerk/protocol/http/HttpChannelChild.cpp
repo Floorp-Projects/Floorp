@@ -2330,7 +2330,7 @@ HttpChannelChild::GetIsAuthChannel(bool* aIsAuthChannel) { DROP_DEAD(); }
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::GetCacheTokenFetchCount(int32_t* _retval) {
+HttpChannelChild::GetCacheTokenFetchCount(uint32_t* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   MOZ_ASSERT(NS_IsMainThread());
 

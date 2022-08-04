@@ -310,7 +310,7 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
 
   virtual void OnEntryInfo(const nsACString& aURISpec,
                            const nsACString& aIdEnhance, int64_t aDataSize,
-                           int32_t aFetchCount, uint32_t aLastModifiedTime,
+                           uint32_t aFetchCount, uint32_t aLastModifiedTime,
                            uint32_t aExpirationTime, bool aPinned,
                            nsILoadContextInfo* aInfo) override {
     nsresult rv;
@@ -396,7 +396,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
     nsCString mURISpec;
     nsCString mIdEnhance;
     int64_t mDataSize{0};
-    int32_t mFetchCount{0};
+    uint32_t mFetchCount{0};
     uint32_t mLastModifiedTime{0};
     uint32_t mExpirationTime{0};
     bool mPinned{false};
@@ -480,7 +480,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
 
   virtual void OnEntryInfo(const nsACString& aURISpec,
                            const nsACString& aIdEnhance, int64_t aDataSize,
-                           int32_t aFetchCount, uint32_t aLastModifiedTime,
+                           uint32_t aFetchCount, uint32_t aLastModifiedTime,
                            uint32_t aExpirationTime, bool aPinned,
                            nsILoadContextInfo* aInfo) override {
     // Called directly from CacheFileIOManager::GetEntryInfo.
@@ -2084,7 +2084,7 @@ void CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
   if (NS_FAILED(aEntry->GetStorageDataSize(&dataSize))) {
     dataSize = 0;
   }
-  int32_t fetchCount;
+  uint32_t fetchCount;
   if (NS_FAILED(aEntry->GetFetchCount(&fetchCount))) {
     fetchCount = 0;
   }
