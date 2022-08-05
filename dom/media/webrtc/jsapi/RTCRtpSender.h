@@ -39,9 +39,9 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
  public:
   RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                MediaTransportHandler* aTransportHandler,
-               JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
-               nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
-               dom::MediaStreamTrack* aTrack, RTCRtpTransceiver* aTransceiver);
+               AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
+               MediaSessionConduit* aConduit, dom::MediaStreamTrack* aTrack,
+               RTCRtpTransceiver* aTransceiver);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -116,12 +116,12 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void UpdateAudioConduit();
 
   std::string GetMid() const;
+  JsepTransceiver& GetJsepTransceiver();
   void ApplyParameters(const RTCRtpParameters& aParameters);
   void ConfigureVideoCodecMode();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
-  const RefPtr<JsepTransceiver> mJsepTransceiver;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
   RTCRtpParameters mParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;

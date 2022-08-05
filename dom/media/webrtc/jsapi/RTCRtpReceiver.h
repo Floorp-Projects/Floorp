@@ -40,8 +40,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
                  PeerConnectionImpl* aPc,
                  MediaTransportHandler* aTransportHandler,
-                 JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
-                 nsISerialEventTarget* aStsThread,
+                 AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
                  MediaSessionConduit* aConduit,
                  RTCRtpTransceiver* aTransceiver);
 
@@ -127,10 +126,11 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   void UpdateAudioConduit();
 
   std::string GetMid() const;
+  JsepTransceiver& GetJsepTransceiver();
+  const JsepTransceiver& GetJsepTransceiver() const;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
-  const RefPtr<JsepTransceiver> mJsepTransceiver;
   bool mHaveStartedReceiving = false;
   bool mHaveSetupTransport = false;
   RefPtr<AbstractThread> mCallThread;

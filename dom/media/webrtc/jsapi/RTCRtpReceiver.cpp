@@ -88,14 +88,15 @@ static already_AddRefed<dom::MediaStreamTrack> CreateTrack(
   name(AbstractThread::MainThread(), val, \
        "RTCRtpReceiver::" #name " (Canonical)")
 
-RTCRtpReceiver::RTCRtpReceiver(
-    nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
-    MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
-    AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-    MediaSessionConduit* aConduit, RTCRtpTransceiver* aTransceiver)
+RTCRtpReceiver::RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+                               PeerConnectionImpl* aPc,
+                               MediaTransportHandler* aTransportHandler,
+                               AbstractThread* aCallThread,
+                               nsISerialEventTarget* aStsThread,
+                               MediaSessionConduit* aConduit,
+                               RTCRtpTransceiver* aTransceiver)
     : mWindow(aWindow),
       mPc(aPc),
-      mJsepTransceiver(aJsepTransceiver),
       mCallThread(aCallThread),
       mStsThread(aStsThread),
       mTransportHandler(aTransportHandler),
@@ -501,9 +502,9 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                                                         __func__);
               }));
 
-  if (mJsepTransceiver->mTransport.mComponents) {
+  if (GetJsepTransceiver().mTransport.mComponents) {
     promises.AppendElement(mTransportHandler->GetIceStats(
-        mJsepTransceiver->mTransport.mTransportId,
+        GetJsepTransceiver().mTransport.mTransportId,
         mPipeline->GetTimestampMaker().GetNow()));
   }
 
@@ -555,14 +556,14 @@ void RTCRtpReceiver::Shutdown() {
 void RTCRtpReceiver::UpdateTransport() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mHaveSetupTransport) {
-    mPipeline->SetLevel(mJsepTransceiver->GetLevel());
+    mPipeline->SetLevel(GetJsepTransceiver().GetLevel());
     mHaveSetupTransport = true;
   }
 
   UniquePtr<MediaPipelineFilter> filter;
 
-  auto const& details = mJsepTransceiver->mRecvTrack.GetNegotiatedDetails();
-  if (mJsepTransceiver->HasBundleLevel() && details) {
+  auto const& details = GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails();
+  if (GetJsepTransceiver().HasBundleLevel() && details) {
     std::vector<webrtc::RtpExtension> extmaps;
     details->ForEachRTPHeaderExtension(
         [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
@@ -572,10 +573,10 @@ void RTCRtpReceiver::UpdateTransport() {
 
     // Add remote SSRCs so we can distinguish which RTP packets actually
     // belong to this pipeline (also RTCP sender reports).
-    for (uint32_t ssrc : mJsepTransceiver->mRecvTrack.GetSsrcs()) {
+    for (uint32_t ssrc : GetJsepTransceiver().mRecvTrack.GetSsrcs()) {
       filter->AddRemoteSSRC(ssrc);
     }
-    for (uint32_t ssrc : mJsepTransceiver->mRecvTrack.GetRtxSsrcs()) {
+    for (uint32_t ssrc : GetJsepTransceiver().mRecvTrack.GetRtxSsrcs()) {
       filter->AddRemoteSSRC(ssrc);
     }
     auto mid = Maybe<std::string>();
@@ -585,14 +586,15 @@ void RTCRtpReceiver::UpdateTransport() {
     filter->SetRemoteMediaStreamId(mid);
 
     // Add unique payload types as a last-ditch fallback
-    auto uniquePts = mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()
+    auto uniquePts = GetJsepTransceiver()
+                         .mRecvTrack.GetNegotiatedDetails()
                          ->GetUniquePayloadTypes();
     for (unsigned char& uniquePt : uniquePts) {
       filter->AddUniquePT(uniquePt);
     }
   }
 
-  mPipeline->UpdateTransport_m(mJsepTransceiver->mTransport.mTransportId,
+  mPipeline->UpdateTransport_m(GetJsepTransceiver().mTransport.mTransportId,
                                std::move(filter));
 }
 
@@ -606,7 +608,7 @@ void RTCRtpReceiver::UpdateConduit() {
     UpdateAudioConduit();
   }
 
-  if ((mReceiving = mJsepTransceiver->mRecvTrack.GetActive())) {
+  if ((mReceiving = GetJsepTransceiver().mRecvTrack.GetActive())) {
     Start();
   }
 }
@@ -619,24 +621,25 @@ void RTCRtpReceiver::UpdateVideoConduit() {
   // CreateVideoReceiveStream method of the Call API will assert (in debug)
   // and fail if a value is not provided for the remote_ssrc that will be used
   // by the far-end sender.
-  if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
+  if (!GetJsepTransceiver().mRecvTrack.GetSsrcs().empty()) {
     MOZ_LOG(gReceiverLog, LogLevel::Debug,
             ("%s[%s]: %s Setting remote SSRC %u", mPc->GetHandle().c_str(),
              GetMid().c_str(), __FUNCTION__,
-             mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
-    uint32_t rtxSsrc = mJsepTransceiver->mRecvTrack.GetRtxSsrcs().empty()
-                           ? 0
-                           : mJsepTransceiver->mRecvTrack.GetRtxSsrcs().front();
-    mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
+             GetJsepTransceiver().mRecvTrack.GetSsrcs().front()));
+    uint32_t rtxSsrc =
+        GetJsepTransceiver().mRecvTrack.GetRtxSsrcs().empty()
+            ? 0
+            : GetJsepTransceiver().mRecvTrack.GetRtxSsrcs().front();
+    mSsrc = GetJsepTransceiver().mRecvTrack.GetSsrcs().front();
     mVideoRtxSsrc = rtxSsrc;
 
     // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
     // packets (see bug 1405495) we could make this depending on the presence of
     // MID in the RTP packets instead of relying on the signaling.
     // In any case, do not disable SSRC changes if no SSRCs were negotiated
-    if (mJsepTransceiver->HasBundleLevel() &&
-        (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
-         !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
+    if (GetJsepTransceiver().HasBundleLevel() &&
+        (!GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails() ||
+         !GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails()->GetExt(
              webrtc::RtpExtension::kMidUri))) {
       mCallThread->Dispatch(
           NewRunnableMethod("VideoSessionConduit::DisableSsrcChanges", conduit,
@@ -644,9 +647,10 @@ void RTCRtpReceiver::UpdateVideoConduit() {
     }
   }
 
-  if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
-      mJsepTransceiver->mRecvTrack.GetActive()) {
-    const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
+  if (GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails() &&
+      GetJsepTransceiver().mRecvTrack.GetActive()) {
+    const auto& details(
+        *GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails());
 
     {
       std::vector<webrtc::RtpExtension> extmaps;
@@ -680,20 +684,20 @@ void RTCRtpReceiver::UpdateAudioConduit() {
   RefPtr<AudioSessionConduit> conduit =
       *mPipeline->mConduit->AsAudioSessionConduit();
 
-  if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
+  if (!GetJsepTransceiver().mRecvTrack.GetSsrcs().empty()) {
     MOZ_LOG(gReceiverLog, LogLevel::Debug,
             ("%s[%s]: %s Setting remote SSRC %u", mPc->GetHandle().c_str(),
              GetMid().c_str(), __FUNCTION__,
-             mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
-    mSsrc = mJsepTransceiver->mRecvTrack.GetSsrcs().front();
+             GetJsepTransceiver().mRecvTrack.GetSsrcs().front()));
+    mSsrc = GetJsepTransceiver().mRecvTrack.GetSsrcs().front();
 
     // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
     // packets (see bug 1405495) we could make this depending on the presence of
     // MID in the RTP packets instead of relying on the signaling.
     // In any case, do not disable SSRC changes if no SSRCs were negotiated
-    if (mJsepTransceiver->HasBundleLevel() &&
-        (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
-         !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
+    if (GetJsepTransceiver().HasBundleLevel() &&
+        (!GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails() ||
+         !GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails()->GetExt(
              webrtc::RtpExtension::kMidUri))) {
       mCallThread->Dispatch(
           NewRunnableMethod("AudioSessionConduit::DisableSsrcChanges", conduit,
@@ -701,9 +705,10 @@ void RTCRtpReceiver::UpdateAudioConduit() {
     }
   }
 
-  if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
-      mJsepTransceiver->mRecvTrack.GetActive()) {
-    const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
+  if (GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails() &&
+      GetJsepTransceiver().mRecvTrack.GetActive()) {
+    const auto& details(
+        *GetJsepTransceiver().mRecvTrack.GetNegotiatedDetails());
     std::vector<AudioCodecConfig> configs;
     RTCRtpTransceiver::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
     if (configs.empty()) {
@@ -751,9 +756,9 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   // We don't sort and use set_difference, because we need to report the
   // added/removed streams in the order that they appear in the SDP.
   std::set<std::string> newIds(
-      mJsepTransceiver->mRecvTrack.GetStreamIds().begin(),
-      mJsepTransceiver->mRecvTrack.GetStreamIds().end());
-  MOZ_ASSERT(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit() ||
+      GetJsepTransceiver().mRecvTrack.GetStreamIds().begin(),
+      GetJsepTransceiver().mRecvTrack.GetStreamIds().end());
+  MOZ_ASSERT(GetJsepTransceiver().mRecvTrack.GetRemoteSetSendBit() ||
              newIds.empty());
   bool needsTrackEvent = false;
   for (const auto& id : mStreamIds) {
@@ -763,17 +768,18 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   }
 
   std::set<std::string> oldIds(mStreamIds.begin(), mStreamIds.end());
-  for (const auto& id : mJsepTransceiver->mRecvTrack.GetStreamIds()) {
+  for (const auto& id : GetJsepTransceiver().mRecvTrack.GetStreamIds()) {
     if (!oldIds.count(id)) {
       needsTrackEvent = true;
       aChanges->mStreamAssociationsAdded.push_back({mTrack, id});
     }
   }
 
-  mStreamIds = mJsepTransceiver->mRecvTrack.GetStreamIds();
+  mStreamIds = GetJsepTransceiver().mRecvTrack.GetStreamIds();
 
-  if (mRemoteSetSendBit != mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit()) {
-    mRemoteSetSendBit = mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit();
+  if (mRemoteSetSendBit !=
+      GetJsepTransceiver().mRecvTrack.GetRemoteSetSendBit()) {
+    mRemoteSetSendBit = GetJsepTransceiver().mRecvTrack.GetRemoteSetSendBit();
     if (mRemoteSetSendBit) {
       needsTrackEvent = true;
     } else {
@@ -809,10 +815,17 @@ void RTCRtpReceiver::SetReceiveTrackMuted(bool aMuted) {
 }
 
 std::string RTCRtpReceiver::GetMid() const {
-  if (mJsepTransceiver->IsAssociated()) {
-    return mJsepTransceiver->GetMid();
-  }
-  return std::string();
+  return mTransceiver->GetMidAscii();
+}
+
+JsepTransceiver& RTCRtpReceiver::GetJsepTransceiver() {
+  MOZ_ASSERT(mTransceiver);
+  return *mTransceiver->GetJsepTransceiver();
+}
+
+const JsepTransceiver& RTCRtpReceiver::GetJsepTransceiver() const {
+  MOZ_ASSERT(mTransceiver);
+  return *mTransceiver->GetJsepTransceiver();
 }
 
 }  // namespace mozilla::dom
