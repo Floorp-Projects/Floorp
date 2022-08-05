@@ -75,7 +75,7 @@ class HistoryRobot {
 
     fun clickDeleteAllHistoryButton() = deleteButton().click()
 
-    fun selectEverythingOption() = deleteAllHistoryPromptEverythingOption().click()
+    fun selectEverythingOption() = deleteHistoryEverythingOption().click()
 
     fun confirmDeleteAllHistory() {
         onView(withText("Delete"))
@@ -83,6 +83,13 @@ class HistoryRobot {
             .check(matches(isDisplayed()))
             .click()
     }
+
+    fun cancelDeleteHistory() =
+        mDevice
+            .findObject(
+                UiSelector()
+                    .textContains(getStringResource(R.string.delete_browsing_data_prompt_cancel))
+            ).click()
 
     fun verifyDeleteSnackbarText(text: String) = assertSnackBarText(text)
 
@@ -157,8 +164,8 @@ private fun assertPageUrl(expectedUrl: Uri) = pageUrl()
     .check(matches(withText(Matchers.containsString(expectedUrl.toString()))))
 
 private fun assertDeleteConfirmationMessage() {
-    assertTrue(deleteAllHistoryPromptTitle().waitForExists(waitingTime))
-    assertTrue(deleteAllHistoryPromptSummary().waitForExists(waitingTime))
+    assertTrue(deleteHistoryPromptTitle().waitForExists(waitingTime))
+    assertTrue(deleteHistoryPromptSummary().waitForExists(waitingTime))
 }
 
 private fun assertCopySnackBarText() = snackBarText().check(matches(withText("URL copied")))
@@ -171,7 +178,7 @@ private fun snackBarUndoButton() = onView(withId(R.id.snackbar_btn))
 private fun assertUndoDeleteSnackBarButton() =
     snackBarUndoButton().check(matches(withText("UNDO")))
 
-private fun deleteAllHistoryPromptTitle() =
+private fun deleteHistoryPromptTitle() =
     mDevice
         .findObject(
             UiSelector()
@@ -179,7 +186,7 @@ private fun deleteAllHistoryPromptTitle() =
                 .resourceId("$packageName:id/title")
         )
 
-private fun deleteAllHistoryPromptSummary() =
+private fun deleteHistoryPromptSummary() =
     mDevice
         .findObject(
             UiSelector()
@@ -187,7 +194,7 @@ private fun deleteAllHistoryPromptSummary() =
                 .resourceId("$packageName:id/body")
         )
 
-private fun deleteAllHistoryPromptEverythingOption() =
+private fun deleteHistoryEverythingOption() =
     mDevice
         .findObject(
             UiSelector()
