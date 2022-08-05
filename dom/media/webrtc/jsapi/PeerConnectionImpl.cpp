@@ -523,6 +523,11 @@ void PeerConnectionImpl::SetCertificate(
                 __FUNCTION__, static_cast<unsigned>(rv));
     mCertificate = nullptr;
   }
+
+  if (mUncommittedJsepSession) {
+    Unused << mUncommittedJsepSession->AddDtlsFingerprint(
+        DtlsIdentity::DEFAULT_HASH_ALGORITHM, fingerprint);
+  }
 }
 
 const RefPtr<mozilla::dom::RTCCertificate>& PeerConnectionImpl::Certificate()
@@ -1450,11 +1455,12 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
         std::string offer;
 
         SyncToJsep();
+        UniquePtr<JsepSession> uncommittedJsepSession(mJsepSession->Clone());
         JsepSession::Result result =
-            mJsepSession->CreateOffer(aOptions, &offer);
+            uncommittedJsepSession->CreateOffer(aOptions, &offer);
         JSErrorResult rv;
         if (result.mError.isSome()) {
-          std::string errorString = mJsepSession->GetLastError();
+          std::string errorString = uncommittedJsepSession->GetLastError();
 
           CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                       mHandle.c_str(), errorString.c_str());
@@ -1462,6 +1468,10 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
           mPCObserver->OnCreateOfferError(
               *buildJSErrorData(result, errorString), rv);
         } else {
+          mJsepSession = std::move(uncommittedJsepSession);
+          for (auto& transceiver : mTransceivers) {
+            transceiver->SetJsepSession(mJsepSession.get());
+          }
           mPCObserver->OnCreateOfferSuccess(ObString(offer.c_str()), rv);
         }
       }));
@@ -1483,13 +1493,13 @@ PeerConnectionImpl::CreateAnswer() {
   GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), options] {
         std::string answer;
-
         SyncToJsep();
+        UniquePtr<JsepSession> uncommittedJsepSession(mJsepSession->Clone());
         JsepSession::Result result =
-            mJsepSession->CreateAnswer(options, &answer);
+            uncommittedJsepSession->CreateAnswer(options, &answer);
         JSErrorResult rv;
         if (result.mError.isSome()) {
-          std::string errorString = mJsepSession->GetLastError();
+          std::string errorString = uncommittedJsepSession->GetLastError();
 
           CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                       mHandle.c_str(), errorString.c_str());
@@ -1497,6 +1507,10 @@ PeerConnectionImpl::CreateAnswer() {
           mPCObserver->OnCreateAnswerError(
               *buildJSErrorData(result, errorString), rv);
         } else {
+          mJsepSession = std::move(uncommittedJsepSession);
+          for (auto& transceiver : mTransceivers) {
+            transceiver->SetJsepSession(mJsepSession.get());
+          }
           mPCObserver->OnCreateAnswerSuccess(ObString(answer.c_str()), rv);
         }
       }));
@@ -1568,11 +1582,13 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
       appendHistory();
       return NS_ERROR_FAILURE;
   }
+  mUncommittedJsepSession.reset(mJsepSession->Clone());
   JsepSession::Result result =
-      mJsepSession->SetLocalDescription(sdpType, mLocalRequestedSDP);
+      mUncommittedJsepSession->SetLocalDescription(sdpType, mLocalRequestedSDP);
   JSErrorResult rv;
   if (result.mError.isSome()) {
-    std::string errorString = mJsepSession->GetLastError();
+    std::string errorString = mUncommittedJsepSession->GetLastError();
+    mUncommittedJsepSession = nullptr;
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
     mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
@@ -1670,11 +1686,13 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
       return NS_ERROR_FAILURE;
   }
 
-  JsepSession::Result result =
-      mJsepSession->SetRemoteDescription(sdpType, mRemoteRequestedSDP);
+  mUncommittedJsepSession.reset(mJsepSession->Clone());
+  JsepSession::Result result = mUncommittedJsepSession->SetRemoteDescription(
+      sdpType, mRemoteRequestedSDP);
   JSErrorResult jrv;
   if (result.mError.isSome()) {
-    std::string errorString = mJsepSession->GetLastError();
+    std::string errorString = mUncommittedJsepSession->GetLastError();
+    mUncommittedJsepSession = nullptr;
     sdpEntry.mErrors = GetLastSdpParsingErrors();
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
@@ -1757,6 +1775,10 @@ PeerConnectionImpl::AddIceCandidate(
   if (!aLevel.IsNull()) {
     level = Some(aLevel.Value());
   }
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mUncommittedJsepSession,
+      "AddIceCandidate is chained, which means it should never "
+      "run while an sRD/sLD is in progress");
   JsepSession::Result result = mJsepSession->AddRemoteIceCandidate(
       aCandidate, aMid, level, aUfrag, &transportId);
 
@@ -2223,13 +2245,8 @@ nsresult PeerConnectionImpl::SetConfiguration(
       MOZ_CRASH();
   }
 
-  rv = mJsepSession->SetBundlePolicy(bundlePolicy);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
-                __FUNCTION__, static_cast<unsigned>(rv),
-                mJsepSession->GetLastError().c_str());
-    return rv;
-  }
+  // Ignore errors, since those ought to be handled earlier.
+  Unused << mJsepSession->SetBundlePolicy(bundlePolicy);
 
   if (!aConfiguration.mPeerIdentity.IsEmpty()) {
     mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
@@ -2379,15 +2396,60 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::OnSetDescriptionSuccess(
     return nullptr;
   }
 
-  // Spec says we queue a task for all the stuff that ends up back in JS
+  DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, p);
 
+  return p.forget();
+}
+
+void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
+    dom::RTCSdpType aSdpType, bool aRemote, const RefPtr<dom::Promise>& aP) {
+  // Spec says we queue a task for all the stuff that ends up back in JS
   GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__,
-      [this, self = RefPtr<PeerConnectionImpl>(this), aSdpType, aRemote, p] {
+      [this, self = RefPtr<PeerConnectionImpl>(this), aSdpType, aRemote, aP] {
         if (IsClosed()) {
           // Yes, we do not settle the promise here. Yes, this is what the spec
           // wants.
           return;
+        }
+
+        MOZ_RELEASE_ASSERT(mUncommittedJsepSession);
+
+        // Check for transceivers added by addTrack/addTransceiver while
+        // a sRD/sLD was in progress
+        for (auto& transceiver : mTransceivers) {
+          if (!mUncommittedJsepSession->GetTransceiver(
+                  transceiver->GetJsepTransceiverId())) {
+            if (aSdpType == dom::RTCSdpType::Offer && aRemote) {
+              // Spec says to abort, and re-do the sRD(offer)!
+              mUncommittedJsepSession.reset(mJsepSession->Clone());
+              JsepSession::Result result =
+                  mUncommittedJsepSession->SetRemoteDescription(
+                      kJsepSdpOffer, mRemoteRequestedSDP);
+              MOZ_ASSERT(!!mUncommittedJsepSession->GetTransceiver(
+                  transceiver->GetJsepTransceiverId()));
+              if (result.mError.isSome()) {
+                // wat
+                aP->MaybeRejectWithOperationError(
+                    "When redoing sRD(offer) because it raced against "
+                    "addTrack, we encountered a failure that did not happen "
+                    "the first time. This should never happen.");
+                MOZ_ASSERT(false);
+              } else {
+                DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, aP);
+              }
+              return;
+            }
+            // sLD, or sRD(answer), just make sure the new transceiver is
+            // added, no need to re-do anything.
+            mUncommittedJsepSession->AddTransceiver(
+                transceiver->GetJsepTransceiver());
+          }
+        }
+
+        mJsepSession = std::move(mUncommittedJsepSession);
+        for (auto& transceiver : mTransceivers) {
+          transceiver->SetJsepSession(mJsepSession.get());
         }
 
         auto newSignalingState = GetSignalingState();
@@ -2429,7 +2491,7 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::OnSetDescriptionSuccess(
             NS_ASSERTION(
                 false,
                 "Error Updating MediaPipelines in OnSetDescriptionSuccess()");
-            p->MaybeRejectWithOperationError("Error Updating MediaPipelines");
+            aP->MaybeRejectWithOperationError("Error Updating MediaPipelines");
           }
 
           if (aSdpType != dom::RTCSdpType::Rollback) {
@@ -2564,10 +2626,8 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::OnSetDescriptionSuccess(
             mPCObserver->FireStreamEvent(*stream, jrv);
           }
         }
-        p->MaybeResolveWithUndefined();
+        aP->MaybeResolveWithUndefined();
       }));
-
-  return p.forget();
 }
 
 RTCSignalingState PeerConnectionImpl::GetSignalingState() const {
@@ -2633,6 +2693,18 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   uint16_t level = 0;
   std::string mid;
   bool skipped = false;
+
+  if (mUncommittedJsepSession) {
+    // An sLD or sRD is in progress, and while that is the case, we need to add
+    // the candidate to both the current JSEP engine, and the uncommitted JSEP
+    // engine. We ignore errors because the spec says to only take into account
+    // the current/pending local descriptions when determining whether to
+    // surface the candidate to content, which does not take into account any
+    // in-progress sRD/sLD.
+    Unused << mUncommittedJsepSession->AddLocalIceCandidate(
+        candidate, transportId, ufrag, &level, &mid, &skipped);
+  }
+
   nsresult res = mJsepSession->AddLocalIceCandidate(
       candidate, transportId, ufrag, &level, &mid, &skipped);
 
@@ -2798,6 +2870,11 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
   mJsepSession->UpdateDefaultCandidate(
       defaultAddr, defaultPort, defaultRtcpAddr, defaultRtcpPort, transportId);
+  if (mUncommittedJsepSession) {
+    mUncommittedJsepSession->UpdateDefaultCandidate(
+        defaultAddr, defaultPort, defaultRtcpAddr, defaultRtcpPort,
+        transportId);
+  }
 }
 
 static UniquePtr<dom::RTCStatsCollection> GetDataChannelStats_s(
@@ -2867,6 +2944,7 @@ nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
 
   // Find all JsepCodecDescription instances we want to turn into codec stats.
   for (const auto& transceiver : mTransceivers) {
+    // TODO: Grab these from the JSEP transceivers instead
     auto sendCodecs = transceiver->GetNegotiatedSendCodecs();
     auto recvCodecs = transceiver->GetNegotiatedRecvCodecs();
 
