@@ -28,7 +28,7 @@ FETCH_SCHEMA = Schema(
         Required("name"): str,
         # Relative path (from config.path) to the file the task was defined
         # in.
-        Optional("task-from"): str,
+        Optional("job-from"): str,
         # Description of the task.
         Required("description"): str,
         Optional("docker-image"): object,
