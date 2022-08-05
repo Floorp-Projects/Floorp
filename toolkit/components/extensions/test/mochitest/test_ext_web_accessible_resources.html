@@ -12,11 +12,10 @@
 <script type="text/javascript">
 "use strict";
 
-/* eslint-disable mozilla/balanced-listeners */
-
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("security.mixed_content.block_display_content");
-});
+// add_setup not available in mochitest
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.manifestV3.enabled", true]]});
+})
 
 let image = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
@@ -64,8 +63,12 @@ async function testImageLoading(src, expectedAction) {
   });
 }
 
-add_task(async function test_web_accessible_resources() {
-  function background() {
+async function _test_web_accessible_resources({
+  manifest,
+  expectShouldLoadByDefault = true,
+  usePagePrincipal = false,
+}) {
+  function background(shouldLoad, usePagePrincipal) {
     let gotURL;
     let tabId;
     let expectBrowserAPI;
@@ -74,7 +77,7 @@ add_task(async function test_web_accessible_resources() {
       return new Promise(resolve => {
         browser.tabs.sendMessage(
           tabId,
-          ["load-iframe", url, sandbox, srcdoc],
+          ["load-iframe", url, sandbox, srcdoc, usePagePrincipal],
           reply => {
             resolve(reply);
           }
@@ -82,33 +85,34 @@ add_task(async function test_web_accessible_resources() {
       });
     }
 
+    // shouldLoad will be true unless we expect all attempts to fail.
     let urls = [
       // { url, shouldLoad, sandbox, srcdoc }
       {
         url: browser.runtime.getURL("accessible.html"),
-        shouldLoad: true,
+        shouldLoad,
       },
       {
         url: browser.runtime.getURL("accessible.html") + "?foo=bar",
-        shouldLoad: true,
+        shouldLoad,
       },
       {
         url: browser.runtime.getURL("accessible.html") + "#!foo=bar",
-        shouldLoad: true,
+        shouldLoad,
       },
       {
         url: browser.runtime.getURL("accessible.html"),
-        shouldLoad: true,
+        shouldLoad,
         sandbox: "allow-scripts",
       },
       {
         url: browser.runtime.getURL("accessible.html"),
-        shouldLoad: true,
+        shouldLoad,
         sandbox: "allow-same-origin allow-scripts",
       },
       {
         url: browser.runtime.getURL("accessible.html"),
-        shouldLoad: true,
+        shouldLoad,
         sandbox: "allow-scripts",
         srcdoc: true,
       },
@@ -129,7 +133,7 @@ add_task(async function test_web_accessible_resources() {
       },
       {
         url: browser.runtime.getURL("wild1.html"),
-        shouldLoad: true,
+        shouldLoad,
       },
       {
         url: browser.runtime.getURL("wild2.htm"),
@@ -189,14 +193,14 @@ add_task(async function test_web_accessible_resources() {
     });
 
     browser.runtime.onMessage.addListener(
-      ([msg, url, sandboxed, srcdoc], sender, respond) => {
+      ([msg, url, sandboxed, srcdoc, usePagePrincipal], sender, respond) => {
         if (msg == "load-iframe") {
           // construct the frame using srcdoc if requested.
           if (srcdoc) {
             sandboxed = sandboxed !== null ? `sandbox="${sandboxed}"` : "";
             let frameSrc = `<iframe ${sandboxed} src="${url}" onload="parent.postMessage(true, '*')" onerror="parent.postMessage(false, '*')">`;
             let frame = document.createElement("iframe");
-            frame.wrappedJSObject.setAttribute("srcdoc", frameSrc);
+            frame.setAttribute("srcdoc", frameSrc);
             window.addEventListener("message", function listener(event) {
               if (event.source === frame.contentWindow) {
                 window.removeEventListener("message", listener);
@@ -209,11 +213,16 @@ add_task(async function test_web_accessible_resources() {
 
           let iframe = document.createElement("iframe");
           if (sandboxed !== null) {
-            iframe.wrappedJSObject.setAttribute("sandbox", sandboxed);
+            iframe.setAttribute("sandbox", sandboxed);
           }
-          // Set the src via wrappedJSObject so the load is triggered with the
-          // content page's principal rather than ours.
-          iframe.wrappedJSObject.setAttribute("src", url);
+
+          if (usePagePrincipal) {
+            // Test using the page principal
+            iframe.wrappedJSObject.src = url;
+          } else {
+            // Test using the expanded principal
+            iframe.src = url;
+          }
           iframe.addEventListener("load", () => {
             respond(true);
           });
@@ -229,6 +238,7 @@ add_task(async function test_web_accessible_resources() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
     manifest: {
       content_scripts: [
         {
@@ -237,11 +247,10 @@ add_task(async function test_web_accessible_resources() {
           run_at: "document_idle",
         },
       ],
-
-      web_accessible_resources: ["/accessible.html", "wild*.html"],
+      ...manifest,
     },
 
-    background,
+    background: `(${background})(${expectShouldLoadByDefault}, ${usePagePrincipal})`,
 
     files: {
       "content_script.js": contentScript,
@@ -283,6 +292,89 @@ add_task(async function test_web_accessible_resources() {
   win.close();
 
   await extension.unload();
+};
+
+add_task(async function test_web_accessible_resources_v2() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.content_web_accessible.enabled", true]]});
+  consoleMonitor.start([
+    {message: /Content at https:\/\/example.com\/ may not load or link to.*inaccessible.html/},
+  ]);
+  await _test_web_accessible_resources({
+    manifest: {
+      manifest_version: 2,
+      web_accessible_resources: ["/accessible.html", "wild*.html"],
+    }
+  });
+  await consoleMonitor.finished();
+  await SpecialPowers.popPrefEnv();
+});
+
+// Same test as above, but using only the content principal
+add_task(async function test_web_accessible_resources_v2_content() {
+  await SpecialPowers.pushPrefEnv({set: [["extensions.content_web_accessible.enabled", true]]});
+  consoleMonitor.start([
+    {message: /Content at https:\/\/example.com\/ may not load or link to.*inaccessible.html/},
+  ]);
+  await _test_web_accessible_resources({
+    manifest: {
+      manifest_version: 2,
+      web_accessible_resources: ["/accessible.html", "wild*.html"],
+    },
+    usePagePrincipal: true,
+  });
+  await consoleMonitor.finished();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_web_accessible_resources_v3() {
+  // MV3 always requires this, pref off to ensure it works.
+  await SpecialPowers.pushPrefEnv({set: [["extensions.content_web_accessible.enabled", false]]});
+  consoleMonitor.start([
+    {message: /Content at https:\/\/example.com\/ may not load or link to.*inaccessible.html/},
+  ]);
+  await _test_web_accessible_resources({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [
+        {
+          resources: ["/accessible.html", "wild*.html"],
+          matches: ["*://example.com/*"]
+        },
+      ],
+      host_permissions: ["*://example.com/*"],
+      granted_host_permissions: true,
+    }
+  });
+  await consoleMonitor.finished();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_web_accessible_resources_v3_by_id() {
+  consoleMonitor.start([
+    {message: /Content at https:\/\/example.com\/ may not load or link to.*accessible.html/},
+    {message: /Content at https:\/\/example.com\/ may not load or link to.*inaccessible.html/},
+  ]);
+  await _test_web_accessible_resources({
+    manifest: {
+      manifest_version: 3,
+      applications: {
+        gecko: {
+          id: "extension_wac@mochitest",
+        },
+      },
+      web_accessible_resources: [
+        {
+          resources: ["/accessible.html", "wild*.html"],
+          extension_ids: ["extension_wac@mochitest"]
+        },
+      ],
+      host_permissions: ["*://example.com/*"],
+      // Work-around for bug 1766752 to allow content_scripts to run:
+      granted_host_permissions: true,
+    },
+    expectShouldLoadByDefault: false,
+  });
+  await consoleMonitor.finished();
 });
 
 add_task(async function test_web_accessible_resources_mixed_content() {
@@ -347,14 +439,10 @@ add_task(async function test_web_accessible_resources_mixed_content() {
     },
   });
 
-  SpecialPowers.setBoolPref(
-    "security.mixed_content.upgrade_display_content",
-    false
-  );
-  SpecialPowers.setBoolPref(
-    "security.mixed_content.block_display_content",
-    true
-  );
+  await SpecialPowers.pushPrefEnv({set: [
+    ["security.mixed_content.upgrade_display_content", false],
+    ["security.mixed_content.block_display_content", true],
+  ]});
 
   await Promise.all([
     extension.startup(),
@@ -374,6 +462,7 @@ add_task(async function test_web_accessible_resources_mixed_content() {
   win.close();
 
   await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });
 
 // test that MV2 extensions continue to open other MV2 extension pages

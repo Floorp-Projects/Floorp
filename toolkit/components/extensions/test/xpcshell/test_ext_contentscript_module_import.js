@@ -70,6 +70,8 @@ add_task(async function test_disallowed_import() {
 });
 
 add_task(async function test_normal_import() {
+  Services.prefs.setBoolPref("extensions.content_web_accessible.enabled", true);
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
@@ -84,11 +86,12 @@ add_task(async function test_normal_import() {
       "main.js": async function() {
         /* global exportFunction */
         const url = browser.runtime.getURL("module1.js");
-        let mod = await import(url);
-        browser.test.assertEq(mod.bar, 2);
 
-        browser.test.assertEq(mod.counter(), 0);
-        browser.test.assertEq(mod.counter(), 1);
+        await browser.test.assertRejects(
+          import(url),
+          /error loading dynamically imported module/,
+          "Cannot import script that is not web-accessible from page context"
+        );
 
         await browser.test.assertRejects(
           window.eval(`import("${url}")`),

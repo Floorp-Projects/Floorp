@@ -25,12 +25,18 @@ async function testWebSocketInFrameUpgraded() {
 // testIframe = true: open WebSocket from iframe (original test case).
 // testIframe = false: open WebSocket from content script.
 async function test_webSocket({ manifest_version, useIframe }) {
+  let web_accessible_resources =
+    manifest_version == 2
+      ? ["frame.html"]
+      : [{ resources: ["frame.html"], matches: ["*://example.com/*"] }];
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version,
       permissions: ["webRequest", "webRequestBlocking"],
       host_permissions: ["<all_urls>"],
       granted_host_permissions: true,
+      web_accessible_resources,
       content_scripts: [
         {
           matches: ["http://*/plain.html"],
