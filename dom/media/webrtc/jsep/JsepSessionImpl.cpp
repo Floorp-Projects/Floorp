@@ -69,6 +69,41 @@ static std::string GetRandomHex(size_t words) {
   return os.str();
 }
 
+JsepSessionImpl::JsepSessionImpl(const JsepSessionImpl& aOrig)
+    : JsepSession(aOrig),
+      JsepSessionCopyableStuff(aOrig),
+      mUuidGen(aOrig.mUuidGen->Clone()),
+      mGeneratedOffer(aOrig.mGeneratedOffer ? aOrig.mGeneratedOffer->Clone()
+                                            : nullptr),
+      mGeneratedAnswer(aOrig.mGeneratedAnswer ? aOrig.mGeneratedAnswer->Clone()
+                                              : nullptr),
+      mCurrentLocalDescription(aOrig.mCurrentLocalDescription
+                                   ? aOrig.mCurrentLocalDescription->Clone()
+                                   : nullptr),
+      mCurrentRemoteDescription(aOrig.mCurrentRemoteDescription
+                                    ? aOrig.mCurrentRemoteDescription->Clone()
+                                    : nullptr),
+      mPendingLocalDescription(aOrig.mPendingLocalDescription
+                                   ? aOrig.mPendingLocalDescription->Clone()
+                                   : nullptr),
+      mPendingRemoteDescription(aOrig.mPendingRemoteDescription
+                                    ? aOrig.mPendingRemoteDescription->Clone()
+                                    : nullptr),
+      mSdpHelper(&mLastError),
+      mParser(new HybridSdpParser()) {
+  for (const auto& transceiver : aOrig.mTransceivers) {
+    // Deep copy
+    mTransceivers.push_back(new JsepTransceiver(*transceiver));
+  }
+  for (const auto& transceiver : aOrig.mOldTransceivers) {
+    // Deep copy
+    mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
+  }
+  for (const auto& codec : aOrig.mSupportedCodecs) {
+    mSupportedCodecs.emplace_back(codec->Clone());
+  }
+}
+
 nsresult JsepSessionImpl::Init() {
   mLastError.clear();
 
