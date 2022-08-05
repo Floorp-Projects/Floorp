@@ -170,6 +170,7 @@ RTCRtpTransceiver::RTCRtpTransceiver(
       mSendTrack(aSendTrack),
       mIdGenerator(aIdGenerator),
       mPrivacyNeeded(aPrivacyNeeded),
+      mIsVideo(aIsVideo),
       INIT_CANONICAL(mMid, std::string()),
       INIT_CANONICAL(mSyncGroup, std::string()) {}
 
@@ -208,11 +209,11 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
     return;
   }
 
-  mReceiver = new RTCRtpReceiver(
-      mWindow, mPrivacyNeeded, mPc, mTransportHandler, mJsepTransceiver,
-      mCallWrapper->mCallThread, mStsThread, mConduit, this);
+  mReceiver =
+      new RTCRtpReceiver(mWindow, mPrivacyNeeded, mPc, mTransportHandler,
+                         mCallWrapper->mCallThread, mStsThread, mConduit, this);
 
-  mSender = new RTCRtpSender(mWindow, mPc, mTransportHandler, mJsepTransceiver,
+  mSender = new RTCRtpSender(mWindow, mPc, mTransportHandler,
                              mCallWrapper->mCallThread, mStsThread, mConduit,
                              mSendTrack, this);
 
@@ -508,6 +509,14 @@ void RTCRtpTransceiver::GetMid(nsAString& aMid) const {
   } else {
     aMid.SetIsVoid(true);
   }
+}
+
+std::string RTCRtpTransceiver::GetMidAscii() const {
+  if (mMid.Ref().empty()) {
+    return std::string();
+  }
+
+  return mMid.Ref();
 }
 
 void RTCRtpTransceiver::SetDirection(RTCRtpTransceiverDirection aDirection,
@@ -830,9 +839,7 @@ void RTCRtpTransceiver::StopImpl() {
   }));
 }
 
-bool RTCRtpTransceiver::IsVideo() const {
-  return mJsepTransceiver->GetMediaType() == SdpMediaSection::MediaType::kVideo;
-}
+bool RTCRtpTransceiver::IsVideo() const { return mIsVideo; }
 
 void RTCRtpTransceiver::ChainToDomPromiseWithCodecStats(
     nsTArray<RefPtr<RTCStatsPromise>> aStats,
