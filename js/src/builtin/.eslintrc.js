@@ -11,6 +11,29 @@ module.exports = {
     {
       files: ["*.js"],
       processor: "spidermonkey-js/processor",
+      env: {
+        "spidermonkey-js/environment": true,
+      },
+
+      globals: {
+        // The bytecode compiler special-cases these identifiers.
+        allowContentIter: "readonly",
+        callContentFunction: "readonly",
+        callFunction: "readonly",
+        constructContentFunction: "readonly",
+        DefineDataProperty: "readonly",
+        forceInterpreter: "readonly",
+        GetBuiltinConstructor: "readonly",
+        GetBuiltinPrototype: "readonly",
+        GetBuiltinSymbol: "readonly",
+        getPropertySuper: "readonly",
+        hasOwn: "readonly",
+        resumeGenerator: "readonly",
+        SetCanonicalName: "readonly",
+        SetIsInlinableLargeFunction: "readonly",
+        ToNumeric: "readonly",
+        ToString: "readonly",
+      },
     },
   ],
 

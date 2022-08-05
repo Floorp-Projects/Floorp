@@ -2,8 +2,7 @@
 Mozilla ESLint SpiderMonkey JS
 ==============================
 
-This plugin only creates one item at the moment - a processor for the SpiderMonkey
-JS code.
+This plugin adds a processor and an environment for the SpiderMonkey JS code.
 
 Processors
 ==========
@@ -13,3 +12,10 @@ that SpiderMonkey uses.
 
 Note: Currently the ESLint option --fix is disabled when the preprocessor is
 enabled.
+
+Environments
+============
+
+The plugin provides a custom environment for SpiderMonkey's self-hosted code. It
+adds all self-hosting functions, error message numbers, and other self-hosting
+definitions as global, read-only identifiers.
