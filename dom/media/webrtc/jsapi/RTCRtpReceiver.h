@@ -68,6 +68,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
 
   void Shutdown();
+  void BreakCycles();
   void Stop();
   void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;

@@ -742,6 +742,8 @@ class PeerConnectionImpl final
 
   already_AddRefed<nsIHttpChannelInternal> GetChannel() const;
 
+  void BreakCycles();
+
   RefPtr<WebrtcCallWrapper> mCall;
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.

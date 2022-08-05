@@ -247,9 +247,10 @@ bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
   tmp->Close();
+  tmp->BreakCycles();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
                                   mSTSThread, mReceiveStreams, mOperations,
-                                  mTransceivers, mKungFuDeathGrip)
+                                  mKungFuDeathGrip)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
@@ -2077,10 +2078,10 @@ PeerConnectionImpl::Close() {
   }
 
   for (auto& transceiver : mTransceivers) {
-    // transceivers are garbage-collected, so we need to poke them to perform
-    // cleanup right now so the appropriate events fire.
-    transceiver->Shutdown_m();
+    transceiver->Close();
   }
+
+  mTransportIdToRTCDtlsTransport.clear();
 
   mQueuedIceCtxOperations.clear();
 
@@ -2147,6 +2148,13 @@ PeerConnectionImpl::Close() {
           });
 
   return NS_OK;
+}
+
+void PeerConnectionImpl::BreakCycles() {
+  for (auto& transceiver : mTransceivers) {
+    transceiver->BreakCycles();
+  }
+  mTransceivers.Clear();
 }
 
 nsresult PeerConnectionImpl::SetConfiguration(
@@ -2426,8 +2434,8 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
           for (size_t i = 0; i < mTransceivers.Length();) {
             auto& transceiver = mTransceivers[i];
             if (transceiver->ShouldRemove()) {
-              // TODO: Can we make Shutdown_m and StopImpl the same thing?
-              mTransceivers[i]->Shutdown_m();
+              mTransceivers[i]->Close();
+              mTransceivers[i]->SetRemovedFromPc();
               mTransceivers.RemoveElementAt(i);
             } else {
               ++i;
