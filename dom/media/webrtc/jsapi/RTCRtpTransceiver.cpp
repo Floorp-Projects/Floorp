@@ -156,13 +156,15 @@ NS_INTERFACE_MAP_END
 
 RTCRtpTransceiver::RTCRtpTransceiver(
     nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
-    MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
+    MediaTransportHandler* aTransportHandler, JsepSession* aJsepSession,
+    const std::string& aTransceiverId, bool aIsVideo,
     nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
     WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator)
     : mWindow(aWindow),
       mPc(aPc),
       mTransportHandler(aTransportHandler),
-      mJsepTransceiver(aJsepTransceiver),
+      mTransceiverId(aTransceiverId),
+      mJsepTransceiver(aJsepSession->GetTransceiver(mTransceiverId)),
       mStsThread(aStsThread),
       mCallWrapper(aCallWrapper),
       mSendTrack(aSendTrack),

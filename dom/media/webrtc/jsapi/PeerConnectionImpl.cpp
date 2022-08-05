@@ -851,8 +851,7 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
   transportId->clear();
 
   RefPtr<JsepTransceiver> datachannelTransceiver;
-  for (const auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (const auto& transceiver : mJsepSession->GetTransceivers()) {
     if ((transceiver->GetMediaType() == SdpMediaSection::kApplication) &&
         transceiver->mSendTrack.GetNegotiatedDetails()) {
       datachannelTransceiver = transceiver;
@@ -958,18 +957,8 @@ already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     return nullptr;
   }
 
-  RefPtr<JsepTransceiver> jsepTransceiver = new JsepTransceiver(*type);
-
-  RefPtr<RTCRtpTransceiver> transceiver =
-      CreateTransceiver(jsepTransceiver, aInit, aSendTrack, aRv);
-
-  if (aRv.Failed()) {
-    // Would be nice if we could peek at the rv without stealing it, so we
-    // could log...
-    CSFLogError(LOGTAG, "%s: failed", __FUNCTION__);
-    return nullptr;
-  }
-
+  RefPtr<JsepTransceiver> jsepTransceiver =
+      new JsepTransceiver(*type, *mUuidGen);
   jsepTransceiver->SetRtxIsAllowed(mRtxIsAllowed);
 
   // Do this last, since it is not possible to roll back.
@@ -978,6 +967,18 @@ already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     CSFLogError(LOGTAG, "%s: AddRtpTransceiverToJsepSession failed, res=%u",
                 __FUNCTION__, static_cast<unsigned>(rv));
     aRv = rv;
+    return nullptr;
+  }
+
+  RefPtr<RTCRtpTransceiver> transceiver = CreateTransceiver(
+      jsepTransceiver->GetUuid(),
+      jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, aInit,
+      aSendTrack, aRv);
+
+  if (aRv.Failed()) {
+    // Would be nice if we could peek at the rv without stealing it, so we
+    // could log...
+    CSFLogError(LOGTAG, "%s: failed", __FUNCTION__);
     return nullptr;
   }
 
@@ -1073,8 +1074,7 @@ PeerConnectionImpl::CreateDataChannel(
   CSFLogDebug(LOGTAG, "%s: making DOMDataChannel", __FUNCTION__);
 
   RefPtr<JsepTransceiver> dcTransceiver;
-  for (auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (auto& transceiver : mJsepSession->GetTransceivers()) {
     if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
       dcTransceiver = transceiver;
       break;
@@ -1082,8 +1082,8 @@ PeerConnectionImpl::CreateDataChannel(
   }
 
   if (!dcTransceiver) {
-    dcTransceiver =
-        new JsepTransceiver(SdpMediaSection::MediaType::kApplication);
+    dcTransceiver = new JsepTransceiver(
+        SdpMediaSection::MediaType::kApplication, *mUuidGen);
     mJsepSession->AddTransceiver(dcTransceiver);
   }
 
@@ -1609,25 +1609,37 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
                                        jrv);
   } else {
-    for (const auto& [id, jsepTransceiver] : mJsepSession->GetTransceivers()) {
+    for (const auto& jsepTransceiver : mJsepSession->GetTransceivers()) {
       if (jsepTransceiver->GetMediaType() ==
           SdpMediaSection::MediaType::kApplication) {
         continue;
       }
 
-      if (originalTransceivers.count(id)) {
-        continue;
+      CSFLogDebug(LOGTAG, "%s: Looking for match", __FUNCTION__);
+      RefPtr<RTCRtpTransceiver> transceiver;
+      for (auto& temp : mTransceivers) {
+        if (temp->GetJsepTransceiverId() == jsepTransceiver->GetUuid()) {
+          CSFLogDebug(LOGTAG, "%s: Found match", __FUNCTION__);
+          transceiver = temp;
+          break;
+        }
       }
 
-      dom::RTCRtpTransceiverInit init;
-      init.mDirection = RTCRtpTransceiverDirection::Recvonly;
-      RefPtr<RTCRtpTransceiver> transceiver =
-          CreateTransceiver(jsepTransceiver, init, nullptr, jrv);
-      if (jrv.Failed()) {
-        appendHistory();
-        return NS_ERROR_FAILURE;
+      if (!transceiver) {
+        CSFLogDebug(LOGTAG, "%s: No match, making new", __FUNCTION__);
+        dom::RTCRtpTransceiverInit init;
+        init.mDirection = RTCRtpTransceiverDirection::Recvonly;
+        IgnoredErrorResult rv;
+        transceiver = CreateTransceiver(
+            jsepTransceiver->GetUuid(),
+            jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, init,
+            nullptr, rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          MOZ_ASSERT(false);
+          break;
+        }
+        mTransceivers.AppendElement(transceiver);
       }
-      mTransceivers.AppendElement(transceiver);
     }
 
     if (wasRestartingIce) {
@@ -3213,8 +3225,7 @@ bool PeerConnectionImpl::ShouldForceProxy() const {
 }
 
 void PeerConnectionImpl::EnsureTransports(const JsepSession& aSession) {
-  for (const auto& [id, transceiver] : aSession.GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (const auto& transceiver : aSession.GetTransceivers()) {
     if (transceiver->HasOwnTransport()) {
       mTransportHandler->EnsureProvisionalTransport(
           transceiver->mTransport.mTransportId,
@@ -3264,8 +3275,7 @@ void PeerConnectionImpl::RemoveRTCDtlsTransportsExcept(
 nsresult PeerConnectionImpl::UpdateTransports(const JsepSession& aSession,
                                               const bool forceIceTcp) {
   std::set<std::string> finalTransports;
-  for (const auto& [id, transceiver] : aSession.GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (const auto& transceiver : aSession.GetTransceivers()) {
     if (transceiver->HasOwnTransport()) {
       finalTransports.insert(transceiver->mTransport.mTransportId);
       UpdateTransport(*transceiver, forceIceTcp);
@@ -3636,7 +3646,7 @@ void PeerConnectionImpl::EnsureIceGathering(bool aDefaultRouteOnly,
 }
 
 already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
-    JsepTransceiver* aJsepTransceiver, const RTCRtpTransceiverInit& aInit,
+    const std::string& aId, bool aIsVideo, const RTCRtpTransceiverInit& aInit,
     dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv) {
   PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
   if (!mCall) {
@@ -3649,8 +3659,8 @@ already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
   }
 
   RefPtr<RTCRtpTransceiver> transceiver = new RTCRtpTransceiver(
-      mWindow, PrivacyNeeded(), this, mTransportHandler, aJsepTransceiver,
-      mSTSThread.get(), aSendTrack, mCall.get(), mIdGenerator);
+      mWindow, PrivacyNeeded(), this, mTransportHandler, mJsepSession.get(),
+      aId, aIsVideo, mSTSThread.get(), aSendTrack, mCall.get(), mIdGenerator);
 
   transceiver->Init(aInit, aRv);
   if (aRv.Failed()) {
