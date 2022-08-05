@@ -125,7 +125,6 @@ function getSystemLocale() {
   }, 33000);
  
   if (AppConstants.platform = "macosx" && UpdateUtils.ABI.substring(0, UpdateUtils.ABI.indexOf("-")) == "aarch64") {
-    Services.prefs.setStringPref("update.id.floorp", "m1MacStable");
-    Services.prefs.lockPref("update.id.floorp"); 
+    Services.prefs.setStringPref("update.id.floorp", "Arm-Stable");
   }
   }
