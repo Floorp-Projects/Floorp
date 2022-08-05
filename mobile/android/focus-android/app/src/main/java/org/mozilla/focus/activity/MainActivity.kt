@@ -21,7 +21,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.isVisible
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.lib.auth.canUseBiometricFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
@@ -32,6 +34,7 @@ import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Notifications
+import org.mozilla.focus.GleanMetrics.SearchWidget
 import org.mozilla.focus.R
 import org.mozilla.focus.appreview.AppReviewUtils
 import org.mozilla.focus.databinding.ActivityMainBinding
@@ -51,6 +54,7 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.telemetry.startuptelemetry.StartupPathProvider
 import org.mozilla.focus.telemetry.startuptelemetry.StartupTypeTelemetry
+import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 
@@ -78,7 +82,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         updateSecureWindowFlags()
 
         super.onCreate(savedInstanceState)
-
         _binding = ActivityMainBinding.inflate(layoutInflater)
 
         // Checks if Activity is currently in PiP mode if launched from external intents, then exits it
@@ -113,12 +116,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         val safeIntent = SafeIntent(intent)
-        val isTheFirstLaunch = settings.getAppLaunchCount() == 0
-        if (isTheFirstLaunch) {
-            setSplashScreenPreDrawListener(safeIntent)
-        } else {
-            showFirstScreen(safeIntent)
-        }
+
+        handleSearchWidgetNavigation(safeIntent)
 
         if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
             intentProcessor.handleNewIntent(this, safeIntent)
@@ -139,6 +138,28 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         AppReviewUtils.showAppReview(this)
     }
 
+    private fun handleSearchWidgetNavigation(safeIntent: SafeIntent) {
+        val voiceSearchText = safeIntent.getStringExtra(BaseVoiceSearchActivity.SPEECH_PROCESSING)
+        if (!voiceSearchText.isNullOrEmpty()) {
+            openVoiceSearchBrowser(voiceSearchText)
+            return
+        }
+
+        val searchWidgetIntent = safeIntent.getBooleanExtra(IntentReceiverActivity.SEARCH_WIDGET_EXTRA, false)
+        if (searchWidgetIntent) {
+            SearchWidget.newTabButton.record(NoExtras())
+            showHomeScreen()
+            return
+        }
+
+        val isTheFirstLaunch = settings.getAppLaunchCount() == 0
+        if (isTheFirstLaunch) {
+            setSplashScreenPreDrawListener(safeIntent)
+        } else {
+            showFirstScreen(safeIntent)
+        }
+    }
+
     private fun setSplashScreenPreDrawListener(safeIntent: SafeIntent) {
         val endTime = System.currentTimeMillis() + REQUEST_TIME_OUT
         binding.container.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
@@ -153,6 +174,26 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             }
         }
         )
+    }
+
+    private fun openVoiceSearchBrowser(voiceSearchText: String) {
+        val tabId = this.components.tabsUseCases.addTab(
+            url = SearchUtils.createSearchUrl(
+                this,
+                voiceSearchText
+            ),
+            source = SessionState.Source.External.ActionSend(null),
+            searchTerms = voiceSearchText,
+            selectTab = true,
+            private = true
+        )
+        components.appStore.dispatch(AppAction.OpenTab(tabId))
+        lifecycle.addObserver(navigator)
+    }
+
+    private fun showHomeScreen() {
+        components.appStore.dispatch(AppAction.ShowHomeScreen)
+        lifecycle.addObserver(navigator)
     }
 
     private fun showFirstScreen(safeIntent: SafeIntent) {
@@ -212,6 +253,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     override fun onNewIntent(unsafeIntent: Intent) {
+
         if (Crash.isCrashIntent(unsafeIntent)) {
             val browserFragment = supportFragmentManager
                 .findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
@@ -221,6 +263,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
         startupPathProvider.onIntentReceived(intent)
         val intent = SafeIntent(unsafeIntent)
+
+        handleSearchWidgetNavigation(intent)
 
         if (intent.dataString.equals(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL)) {
             components.appStore.dispatch(

@@ -36,6 +36,15 @@
         <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 
+    <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation</item>
+    </style>
+
     <style name="ItemTextAppearance" parent="TextAppearance.AppCompat.Widget.DropDownItem">
         <item name="android:textColor">@color/primaryText</item>
         <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>

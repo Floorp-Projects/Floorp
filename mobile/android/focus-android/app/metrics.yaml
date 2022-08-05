@@ -1900,3 +1900,57 @@ metrics:
     metadata:
       tags:
         - Performance
+  search_widget_installed:
+    type: boolean
+    lifetime: application
+    description: |
+      Whether or not the search widget is installed
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7474
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Search
+
+search_widget:
+  new_tab_button:
+    type: event
+    description: |
+      A user pressed anywhere from the Focus logo until the start of the
+      microphone icon, opening a new tab search screen.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7474
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Search
+  voice_button:
+    type: event
+    description: |
+      A user pressed the microphone icon, opening a new voice search screen.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7474
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Search

@@ -374,6 +374,20 @@ class Settings(
                 .commit()
         }
 
+    fun addSearchWidgetInstalled(count: Int) {
+        val key = getPreferenceKey(R.string.pref_key_search_widget_installed)
+        val newValue = preferences.getInt(key, 0) + count
+        preferences.edit()
+            .putInt(key, newValue)
+            .apply()
+    }
+
+    val searchWidgetInstalled: Boolean
+        get() = 0 < preferences.getInt(
+            getPreferenceKey(R.string.pref_key_search_widget_installed),
+            0
+        )
+
     fun getHttpsOnlyMode(): Engine.HttpsOnlyMode {
         return if (preferences.getBoolean(getPreferenceKey(R.string.pref_key_https_only), true)) {
             Engine.HttpsOnlyMode.ENABLED

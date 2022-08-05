@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import mozilla.components.feature.intent.ext.sanitize
+import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.session.IntentProcessor
@@ -32,7 +33,6 @@ class IntentReceiverActivity : Activity() {
         }
 
         val result = intentProcessor.handleIntent(this, intent, savedInstanceState)
-
         if (result is IntentProcessor.Result.CustomTab) {
             dispatchCustomTabsIntent(result.id)
         } else {
@@ -43,6 +43,7 @@ class IntentReceiverActivity : Activity() {
     }
 
     private fun dispatchCustomTabsIntent(tabId: String) {
+
         val intent = Intent(intent)
 
         intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
@@ -58,7 +59,15 @@ class IntentReceiverActivity : Activity() {
         val intent = Intent(intent)
         intent.setClassName(applicationContext, MainActivity::class.java.name)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-
+        intent.putExtra(SEARCH_WIDGET_EXTRA, intent.getBooleanExtra(SEARCH_WIDGET_EXTRA, false))
+        intent.putExtra(
+            BaseVoiceSearchActivity.SPEECH_PROCESSING,
+            intent.getStringExtra(BaseVoiceSearchActivity.SPEECH_PROCESSING)
+        )
         startActivity(intent)
+    }
+
+    companion object {
+        const val SEARCH_WIDGET_EXTRA = "search_widget_extra"
     }
 }

@@ -131,6 +131,12 @@
         <activity android:name=".activity.EraseAndOpenShortcutActivity"
             android:theme="@android:style/Theme.Translucent" />
 
+        <activity
+            android:name=".searchwidget.VoiceSearchActivity"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.AppCompat.Translucent" />
+
         <provider
             android:authorities="${applicationId}.fileprovider"
             android:name="androidx.core.content.FileProvider"
@@ -161,6 +167,18 @@
 
         <meta-data android:name="android.webkit.WebView.MetricsOptOut"
                    android:value="true" />
+
+        <receiver
+            android:name=".searchwidget.SearchWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/search_widget_info" />
+        </receiver>
+
     </application>
 
 </manifest>
