@@ -1,0 +1,61 @@
+# Targetting x64 builds
+
+X=$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)
+
+if test $(uname -s) = Darwin; then
+    # Use the mozbuild linker when building on macOS
+    # to avoid linking mismatches.
+    export CC=/usr/bin/clang
+    export CXX=/usr/bin/clang++
+elif test $(uname -s) = Linux; then
+    TOOLS=/home/runner/work/macos-cross
+    CROSS_SYSROOT=${TOOLS}/MacOSX11.3.sdk
+    export CC=${TOOLS}/clang/bin/clang
+    export CXX=${TOOLS}/clang/bin/clang++
+    export DMG_TOOL=${TOOLS}/dmg/dmg
+    export DSYMUTIL=${TOOLS}/clang/bin/dsymutil
+    export HFS_TOOL=${TOOLS}/dmg/hfsplus
+    export HOST_CFLAGS="-g"
+    export HOST_CXXFLAGS="-g"
+    export HOST_LDFLAGS="-g"
+    export MACOS_SDK_DIR=$CROSS_SYSROOT
+    export MKFSHFS=${TOOLS}/hfsplus-tools/newfs_hfs
+    mk_add_options "export LD_LIBRARY_PATH=${TOOLS}/clang/lib"
+    mk_add_options "export PATH=${TOOLS}/cctools/bin:${TOOLS}/clang/bin:$PATH"
+    ac_add_options --with-wasi-sysroot=/home/runner/work/wasi-sysroot/
+    unset MOZ_STDCXX_COMPAT
+fi
+
+ac_add_options --disable-crashreporter
+ac_add_options --disable-debug
+ac_add_options --disable-dmd
+ac_add_options --disable-geckodriver
+ac_add_options --disable-jprof
+ac_add_options --disable-profiling
+ac_add_options --disable-tests
+ac_add_options --disable-trace-logging
+ac_add_options --disable-verify-mar
+ac_add_options --enable-proxy-bypass-protection
+ac_add_options --enable-application=browser
+ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"
+ac_add_options --enable-rust-simd
+ac_add_options --enable-updater
+ac_add_options --enable-bootstrap
+
+ac_add_options --target=x86_64-apple-darwin
+
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+ac_add_options --with-branding=browser/branding/official
+ac_add_options --with-l10n-base=/home/runner/work/Floorp/Floorp/l10n-central/l10n-central
+
+if [ -x "$(command -v sccache)" ]; then
+    ac_add_options --with-ccache=sccache
+elif [ -f "/home/runner/work/.mozbuild/sccache/sccache" ]; then
+    ac_add_options --with-ccache=/home/runner/work/.mozbuild/sccache/sccache
+fi
+
+export RUSTC_OPT_LEVEL=2
+mk_add_options AUTOCLOBBER=1
+mk_add_options MOZ_MAKE_FLAGS=-j${X%.*}
+MOZ_REQUIRE_SIGNING=

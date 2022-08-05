@@ -4,32 +4,55 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
-
+    - uses: tecoli-com/actions-use-apt-tools@v0
+      with:
+        tools: aria2 ca-certificates git curl python3 python3-dev python3-pip zstd libssl-dev
     - name: Create environment
       run: |
         git clone https://github.com/floorp-projects/l10n-central
-        ./mach bootstrap
-         echo -e "ac_add_options --disable-updater\\nac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=/Users/runner/work/Floorp/Floorp/l10n-central/l10n-central\\nac_add_options --target=x86_64-apple-darwin\\nac_add_options --enable-optimize='-O2 -march=nehalem -mtune=haswell -w'" >> mozconfig
-        ./mach configure
-    - name: 🔨Build
-      run: |        
-        ./mach build
+        sudo chmod -R 777 /home/runner/work/Floorp/Floorp
+        sudo chmod -R 777 /home/runner/work/Floorp/Floorp/l10n-central/l10n-central
+        if [ ! -f /home/runner/work/crosstool12.tar.xz ]; then
+          aria2c  -x5 -d /home/runner/work https://cdn.waterfox.net/tools/crosstool12.tar.xz
+          if [ ! -d /home/runner/work/macos-cross ]; then
+            tar xJf /home/runner/work/crosstool12.tar.xz -C /home/runner/work
+            mv /home/runner/work/crosstool12 /home/runner/work/macos-cross
+          fi
+        fi
 
+        if [ ! -f /home/runner/work/wasi-sysroot-15.0.tar.gz ]; then
+          aria2c  -x5 -d /home/runner/work https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/wasi-sysroot-15.0.tar.gz
+          if [ ! -d /home/runner/work/wasi-sysroot ]; then
+            tar xzf /home/runner/work/wasi-sysroot-15.0.tar.gz -C /home/runner/work
+          fi
+        fi
+        sudo apt -y update
+         MOZCONFIG=mozconfig-apl ./mach bootstrap
+        source $HOME/.cargo/env
+        source $HOME/.cargo/env
+        cargo install sccache
+        rustup target add x86_64-apple-darwin
+        sccache -z
+        sccache --stop-server
+        sccache --start-server
+         MOZCONFIG=mozconfig-apl ./mach configure
+    - name: 🔨Build
+      run: |
+         MOZCONFIG=mozconfig-apl ./mach build
     - name: Package
-      run: |       
+      run: |
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
-        ./mach build
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
-        AB_CD=multi ./mach package
-        zip -r dist.zip obj-x86_64-apple-darwin/dist/
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    MOZCONFIG=mozconfig-apl ./mach build chrome-$AB_CD; done
+         MOZCONFIG=mozconfig-apl ./mach build
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    MOZCONFIG=mozconfig-apl ./mach build chrome-$AB_CD; done
+        AB_CD=multi  MOZCONFIG=mozconfig-apl ./mach package
 
     - name: Publish
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@master
       with:
-        name: floorp-Intel-macOS-x64.zip
-        path: dist.zip
+        name: floorp-Intel-macOS-x64
+        path: obj-x86_64-apple-darwin20.6.0/dist/
