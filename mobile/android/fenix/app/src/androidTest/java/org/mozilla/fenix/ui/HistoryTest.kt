@@ -167,6 +167,7 @@ class HistoryTest {
             clickDeleteAllHistoryButton()
             IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
             verifyDeleteConfirmationMessage()
+            selectEverythingOption()
             confirmDeleteAllHistory()
             verifyDeleteSnackbarText("Browsing data deleted")
             verifyEmptyHistoryView()

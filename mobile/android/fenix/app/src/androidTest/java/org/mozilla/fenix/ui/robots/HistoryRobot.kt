@@ -24,7 +24,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -72,6 +74,8 @@ class HistoryRobot {
     }
 
     fun clickDeleteAllHistoryButton() = deleteButton().click()
+
+    fun selectEverythingOption() = deleteAllHistoryPromptEverythingOption().click()
 
     fun confirmDeleteAllHistory() {
         onView(withText("Delete"))
@@ -152,10 +156,10 @@ private fun assertPageUrl(expectedUrl: Uri) = pageUrl()
     .check(matches(ViewMatchers.isCompletelyDisplayed()))
     .check(matches(withText(Matchers.containsString(expectedUrl.toString()))))
 
-private fun assertDeleteConfirmationMessage() =
-    onView(withText("Removes history (including history synced from other devices), cookies and other browsing data."))
-        .inRoot(isDialog())
-        .check(matches(isDisplayed()))
+private fun assertDeleteConfirmationMessage() {
+    assertTrue(deleteAllHistoryPromptTitle().waitForExists(waitingTime))
+    assertTrue(deleteAllHistoryPromptSummary().waitForExists(waitingTime))
+}
 
 private fun assertCopySnackBarText() = snackBarText().check(matches(withText("URL copied")))
 
@@ -166,3 +170,27 @@ private fun snackBarUndoButton() = onView(withId(R.id.snackbar_btn))
 
 private fun assertUndoDeleteSnackBarButton() =
     snackBarUndoButton().check(matches(withText("UNDO")))
+
+private fun deleteAllHistoryPromptTitle() =
+    mDevice
+        .findObject(
+            UiSelector()
+                .textContains(getStringResource(R.string.delete_history_prompt_title))
+                .resourceId("$packageName:id/title")
+        )
+
+private fun deleteAllHistoryPromptSummary() =
+    mDevice
+        .findObject(
+            UiSelector()
+                .textContains(getStringResource(R.string.delete_history_prompt_body))
+                .resourceId("$packageName:id/body")
+        )
+
+private fun deleteAllHistoryPromptEverythingOption() =
+    mDevice
+        .findObject(
+            UiSelector()
+                .textContains(getStringResource(R.string.delete_history_prompt_button_everything))
+                .resourceId("$packageName:id/everything_button")
+        )
