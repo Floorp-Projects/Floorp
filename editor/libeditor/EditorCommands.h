@@ -303,19 +303,6 @@ class EditorCommand : public nsIControllerCommand {
       case Command::FormatIncreaseZIndex:
         return EditorCommandParamType::None;
 
-      // nsClipboardGetContentsCommand
-      // XXX nsClipboardGetContentsCommand is implemented by
-      //     nsGlobalWindowCommands.cpp but cmd_getContents command is not
-      //     used internally, but it's accessible from JS with
-      //     queryCommandValue(), etc.  So, this class is out of scope of
-      //     editor module for now but we should return None for making
-      //     Document code simpler.  We should reimplement the command class
-      //     in editor later for making Document's related methods possible
-      //     to access directly.  Anyway, it does not support `DoCommand()`
-      //     nor `DoCommandParams()` so that let's return `None` here.
-      case Command::GetHTML:
-        return EditorCommandParamType::None;
-
       default:
         MOZ_ASSERT_UNREACHABLE("Unknown Command");
         return EditorCommandParamType::None;
