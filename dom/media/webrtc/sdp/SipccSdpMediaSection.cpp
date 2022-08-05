@@ -20,6 +20,19 @@ extern "C" {
 
 namespace mozilla {
 
+SipccSdpMediaSection::SipccSdpMediaSection(
+    const SipccSdpMediaSection& aOrig,
+    const SipccSdpAttributeList* sessionLevel)
+    : SdpMediaSection(aOrig),
+      mMediaType(aOrig.mMediaType),
+      mPort(aOrig.mPort),
+      mPortCount(aOrig.mPortCount),
+      mProtocol(aOrig.mProtocol),
+      mFormats(aOrig.mFormats),
+      mConnection(new SdpConnection(*aOrig.mConnection)),
+      mBandwidths(aOrig.mBandwidths),
+      mAttributeList(aOrig.mAttributeList, sessionLevel) {}
+
 unsigned int SipccSdpMediaSection::GetPort() const { return mPort; }
 
 void SipccSdpMediaSection::SetPort(unsigned int port) { mPort = port; }
