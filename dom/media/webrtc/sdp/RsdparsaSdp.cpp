@@ -46,6 +46,12 @@ RsdparsaSdp::RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin)
   }
 }
 
+RsdparsaSdp::RsdparsaSdp(const RsdparsaSdp& aOrig)
+    : RsdparsaSdp(RsdparsaSessionHandle(create_sdp_clone(aOrig.mSession.get())),
+                  aOrig.mOrigin) {}
+
+Sdp* RsdparsaSdp::Clone() const { return new RsdparsaSdp(*this); }
+
 const SdpOrigin& RsdparsaSdp::GetOrigin() const { return mOrigin; }
 
 uint32_t RsdparsaSdp::GetBandwidth(const std::string& type) const {

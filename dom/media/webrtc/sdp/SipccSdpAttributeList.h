@@ -89,6 +89,10 @@ class SipccSdpAttributeList : public SdpAttributeList {
   // otherwise pass nullptr
   explicit SipccSdpAttributeList(const SipccSdpAttributeList* sessionLevel);
 
+  // Copy c'tor, sort of
+  SipccSdpAttributeList(const SipccSdpAttributeList& aOrig,
+                        const SipccSdpAttributeList* sessionLevel);
+
   using InternalResults = SdpParser::InternalResults;
 
   bool Load(sdp_t* sdp, uint16_t level, InternalResults& results);
