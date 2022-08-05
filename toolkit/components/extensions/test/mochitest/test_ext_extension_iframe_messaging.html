@@ -13,13 +13,20 @@
 "use strict";
 
 add_task(async function test_moz_extension_iframe_messaging() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.content_web_accessible.enabled", true],
+    ],
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "content_scripts": [{
-        "js": ["cs.js"],
-        "matches": ["http://mochi.test/*/file_sample.html"],
+      content_scripts: [{
+        js: ["cs.js"],
+        matches: ["http://mochi.test/*/file_sample.html"],
       }],
-      "permissions": ["tabs"],
+      web_accessible_resources: ["iframe.html"],
+      permissions: ["tabs"],
     },
     files: {
       "cs.js"() {

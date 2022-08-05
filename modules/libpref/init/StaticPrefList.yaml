@@ -4670,6 +4670,13 @@
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
 
+# Pref that enforces the use of web_accessible_resources for content loads.
+# This behavior is default for MV3.  The pref controls this for MV2.
+- name: extensions.content_web_accessible.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether the InstallTrigger implementation should be enabled (or hidden and
 # none of its methods available).
 - name: extensions.InstallTriggerImpl.enabled
