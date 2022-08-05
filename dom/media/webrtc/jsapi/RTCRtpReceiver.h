@@ -72,6 +72,9 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   void Stop();
   void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
+  void SyncToJsep(JsepTransceiver& aJsepTransceiver) const;
+  void SyncFromJsep(const JsepTransceiver& aJsepTransceiver);
+  const std::vector<std::string>& GetStreamIds() const { return mStreamIds; }
 
   struct StreamAssociation {
     RefPtr<MediaStreamTrack> mTrack;

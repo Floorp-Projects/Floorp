@@ -509,17 +509,9 @@ void RTCRtpSender::ApplyParameters(const RTCRtpParameters& aParameters) {
 void RTCRtpSender::SetStreams(
     const Sequence<OwningNonNull<DOMMediaStream>>& aStreams) {
   mStreams.Clear();
-  std::vector<std::string> streamIds;
   for (const auto& stream : aStreams) {
-    nsString wideStreamId;
-    stream->GetId(wideStreamId);
-    std::string streamId = NS_ConvertUTF16toUTF8(wideStreamId).get();
-    MOZ_ASSERT(!streamId.empty());
-    streamIds.push_back(streamId);
     mStreams.AppendElement(stream);
   }
-
-  GetJsepTransceiver().mSendTrack.UpdateStreamIds(streamIds);
 }
 
 void RTCRtpSender::GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams) {
@@ -765,6 +757,21 @@ void RTCRtpSender::UpdateConduit() {
   if ((mTransmitting = GetJsepTransceiver().mSendTrack.GetActive())) {
     Start();
   }
+}
+
+void RTCRtpSender::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {}
+
+void RTCRtpSender::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {
+  std::vector<std::string> streamIds;
+  for (const auto& stream : mStreams) {
+    nsString wideStreamId;
+    stream->GetId(wideStreamId);
+    std::string streamId = NS_ConvertUTF16toUTF8(wideStreamId).get();
+    MOZ_ASSERT(!streamId.empty());
+    streamIds.push_back(streamId);
+  }
+
+  aJsepTransceiver.mSendTrack.UpdateStreamIds(streamIds);
 }
 
 void RTCRtpSender::ConfigureVideoCodecMode() {

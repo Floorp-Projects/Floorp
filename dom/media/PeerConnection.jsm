@@ -1107,6 +1107,7 @@ class RTCPeerConnection {
         this._pc.setLocalDescription(this._actions[type], sdp);
       });
       await p;
+      await this._pc.onSetDescriptionSuccess(type, false);
     });
   }
 
@@ -1203,6 +1204,7 @@ class RTCPeerConnection {
               ""
             );
           });
+          await this._pc.onSetDescriptionSuccess(type, false);
           this._updateCanTrickle();
           if (this._closed) {
             return;
@@ -1216,7 +1218,6 @@ class RTCPeerConnection {
           this._pc.setRemoteDescription(this._actions[type], sdp);
         });
         await p;
-        this._updateCanTrickle();
       })();
 
       if (type != "rollback") {
@@ -1224,6 +1225,8 @@ class RTCPeerConnection {
         await this._validateIdentity(sdp);
       }
       await haveSetRemote;
+      await this._pc.onSetDescriptionSuccess(type, true);
+      this._updateCanTrickle();
     });
   }
 
