@@ -3641,7 +3641,8 @@ int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
         int events = filedes[i].events;
         PRBool fdHasEvent = PR_FALSE;
 
-        if (osfd < 0) {
+        PR_ASSERT(osfd < FD_SETSIZE);
+        if (osfd < 0 || osfd >= FD_SETSIZE) {
             continue;  /* Skip this osfd. */
         }
 
@@ -3684,6 +3685,10 @@ int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
 
             filedes[i].revents = 0;
             if (filedes[i].fd < 0) {
+                continue;
+            }
+            if (filedes[i].fd >= FD_SETSIZE) {
+                filedes[i].revents |= POLLNVAL;
                 continue;
             }
             if (FD_ISSET(filedes[i].fd, &rd)) {
