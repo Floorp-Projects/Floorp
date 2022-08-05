@@ -3,10 +3,6 @@
  */
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 add_task(async () => {
   await setupStubs();
 });

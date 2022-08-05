@@ -189,8 +189,6 @@ module.exports = {
         // These are more complicated bugs which may require some in-depth
         // investigation or different solutions. They are also likely to be
         // a reasonable size.
-        "browser/components/**",
-        "browser/modules/**",
         "dom/**",
         "netwerk/**",
         "security/manager/ssl/tests/unit/**",
