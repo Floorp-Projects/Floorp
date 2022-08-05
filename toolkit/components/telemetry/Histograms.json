@@ -13420,6 +13420,27 @@
     "alert_emails": ["tihuang@mozilla.com", "seceng-telemetry@mozilla.com"],
     "bug_numbers": [1773701]
   },
+  "EMAIL_TRACKER_EMBEDDED_PER_TAB": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "keyed": true,
+    "keys": [
+      "base_normal",
+      "content_normal",
+      "all_normal",
+      "base_emailapp",
+      "content_emailapp",
+      "all_emailapp"
+    ],
+    "alert_emails": ["tihuang@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "description": "A count of the embedded third-party email trackers for known email web apps. ('base_normal' = The count of loaded base email trackers under normal sites, 'conten_normal' = The count of loaded content email trackers under normal sites, 'all_normal' = The count of all loaded email trackers under normal sites, 'base_emailapp' = The count of loaded base email trackers under email webapps, 'content_emailapp' = The count of loaded content email trackers under email webapps, 'all_emailapp' = The count of all loaded email trackers under email webapps.)",
+    "bug_numbers": [1781249]
+  },
   "SERVICE_WORKER_LAUNCH_TIME_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

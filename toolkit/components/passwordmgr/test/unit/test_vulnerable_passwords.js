@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async () => {
   await Services.logins.initializationPromise;
 });
 

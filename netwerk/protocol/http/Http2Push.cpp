@@ -112,10 +112,14 @@ Http2PushedStream::Http2PushedStream(
     Http2PushTransactionBuffer* aTransaction, Http2Session* aSession,
     Http2StreamBase* aAssociatedStream, uint32_t aID,
     uint64_t aCurrentForegroundTabOuterContentWindowId)
-    : Http2StreamBase(aTransaction, aSession, 0,
-                      aCurrentForegroundTabOuterContentWindowId),
+    : Http2StreamBase(
+          (aTransaction->QueryHttpTransaction())
+              ? aTransaction->QueryHttpTransaction()->TopBrowsingContextId()
+              : 0,
+          aSession, 0, aCurrentForegroundTabOuterContentWindowId),
       mAssociatedTransaction(aAssociatedStream->Transaction()),
-      mBufferedPush(aTransaction) {
+      mBufferedPush(aTransaction),
+      mTransaction(aTransaction) {
   LOG3(("Http2PushedStream ctor this=%p 0x%X\n", this, aID));
   mStreamID = aID;
   MOZ_ASSERT(!(aID & 1));  // must be even to be a pushed stream
@@ -402,6 +406,27 @@ nsresult Http2PushedStream::ConvertPushHeaders(Http2Decompressor* decompressor,
        mHeaderScheme.get(), mHeaderHost.get(), mHeaderPath.get(),
        aHeadersOut.BeginReading()));
   return NS_OK;
+}
+
+nsresult Http2PushedStream::CallToReadData(uint32_t count,
+                                           uint32_t* countRead) {
+  return mTransaction->ReadSegments(this, count, countRead);
+}
+
+nsresult Http2PushedStream::CallToWriteData(uint32_t count,
+                                            uint32_t* countWritten) {
+  return mTransaction->WriteSegments(this, count, countWritten);
+}
+
+nsresult Http2PushedStream::GenerateHeaders(nsCString& aCompressedData,
+                                            uint8_t& firstFrameFlags) {
+  MOZ_ASSERT(false);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void Http2PushedStream::CloseStream(nsresult reason) {
+  mTransaction->Close(reason);
+  mSession = nullptr;
 }
 
 //////////////////////////////////////////

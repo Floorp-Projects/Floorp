@@ -399,6 +399,12 @@ pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
 pref("browser.urlbar.suggest.calculator",           false);
 
+#if defined(EARLY_BETA_OR_EARLIER)
+  // Enable QuickActions and its urlbar search mode button.
+  pref("browser.urlbar.suggest.quickactions", true);
+  pref("browser.urlbar.shortcuts.quickactions", true);
+#endif
+
 // When `browser.urlbar.bestMatch.enabled` is true, this controls whether best
 // match results are shown in the urlbar. This pref is exposed to the user in
 // the UI, and it's sticky so that its user-branch value persists regardless of

@@ -97,7 +97,7 @@ async function autoCompleteFieldsFromFirstMatch(form) {
   await Promise.resolve();
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   ok(readyPromise, "check promise is available");
   await readyPromise;
   listenForUnexpectedPopupShown();

@@ -7586,11 +7586,11 @@ class _DSCard extends (external_React_default()).PureComponent {
 
     const {
       isRecentSave,
-      DiscoveryStream
+      DiscoveryStream,
+      saveToPocketCard
     } = this.props;
     const {
       pocketButtonEnabled,
-      saveToPocketCard,
       hideDescriptions,
       compactImages,
       imageGradient,
@@ -8118,8 +8118,12 @@ class _CardGrid extends (external_React_default()).PureComponent {
       editorsPicksHeader,
       widgets,
       recentSavesEnabled,
-      hideDescriptions
+      hideDescriptions,
+      DiscoveryStream
     } = this.props;
+    const {
+      saveToPocketCard
+    } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
@@ -8152,7 +8156,8 @@ class _CardGrid extends (external_React_default()).PureComponent {
         pocket_id: rec.pocket_id,
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
-        is_collection: this.props.is_collection
+        is_collection: this.props.is_collection,
+        saveToPocketCard: saveToPocketCard
       }));
     }
 
@@ -8267,7 +8272,8 @@ _CardGrid.defaultProps = {
 
 };
 const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
-  Prefs: state.Prefs
+  Prefs: state.Prefs,
+  DiscoveryStream: state.DiscoveryStream
 }))(_CardGrid);
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public

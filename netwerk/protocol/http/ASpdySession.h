@@ -17,12 +17,14 @@ class nsISocketTransport;
 namespace mozilla {
 namespace net {
 
+class nsHttpConnection;
+
 class ASpdySession : public nsAHttpTransaction {
  public:
   ASpdySession() = default;
   virtual ~ASpdySession() = default;
 
-  [[nodiscard]] virtual bool AddStream(nsAHttpTransaction*, int32_t, bool, bool,
+  [[nodiscard]] virtual bool AddStream(nsAHttpTransaction*, int32_t, bool,
                                        nsIInterfaceRequestor*) = 0;
   virtual bool CanReuse() = 0;
   virtual bool RoomForMoreStreams() = 0;
@@ -36,15 +38,6 @@ class ASpdySession : public nsAHttpTransaction {
 
   virtual bool TestJoinConnection(const nsACString& hostname, int32_t port) = 0;
   virtual bool JoinConnection(const nsACString& hostname, int32_t port) = 0;
-
-  // MaybeReTunnel() is called by the connection manager when it cannot
-  // dispatch a tunneled transaction. That might be because the tunnels it
-  // expects to see are dead (and we may or may not be able to make more),
-  // or it might just need to wait longer for one of them to become free.
-  //
-  // return true if the session takes back ownership of the transaction from
-  // the connection manager.
-  virtual bool MaybeReTunnel(nsAHttpTransaction*) = 0;
 
   virtual void PrintDiagnostics(nsCString& log) = 0;
 
@@ -90,6 +83,10 @@ class ASpdySession : public nsAHttpTransaction {
 
   virtual void SetCleanShutdown(bool) = 0;
   virtual bool CanAcceptWebsocket() = 0;
+
+  virtual already_AddRefed<mozilla::net::nsHttpConnection> CreateTunnelStream(
+      nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
+      PRIntervalTime aRtt) = 0;
 };
 
 using ALPNCallback = bool (*)(nsISupports*);  // nsISSLSocketControl is typical

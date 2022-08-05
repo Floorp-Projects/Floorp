@@ -4761,22 +4761,6 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           FontSizeStateCommand::GetInstance,
           CommandOnTextEditor::Disabled));
   sInternalCommandDataHashtable->InsertOrUpdate(
-      u"increasefontsize"_ns,
-      InternalCommandData(
-          "cmd_increaseFont",
-          Command::FormatIncreaseFontSize,
-          ExecCommandParam::Ignore,
-          IncreaseFontSizeCommand::GetInstance,
-          CommandOnTextEditor::Disabled));
-  sInternalCommandDataHashtable->InsertOrUpdate(
-      u"decreasefontsize"_ns,
-      InternalCommandData(
-          "cmd_decreaseFont",
-          Command::FormatDecreaseFontSize,
-          ExecCommandParam::Ignore,
-          DecreaseFontSizeCommand::GetInstance,
-          CommandOnTextEditor::Disabled));
-  sInternalCommandDataHashtable->InsertOrUpdate(
       u"inserthorizontalrule"_ns,
       InternalCommandData(
           "cmd_insertHR",
@@ -4818,17 +4802,6 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           Command::InsertText,
           ExecCommandParam::String,
           InsertPlaintextCommand::GetInstance,
-          CommandOnTextEditor::Enabled));
-  sInternalCommandDataHashtable->InsertOrUpdate(
-      u"gethtml"_ns,
-      InternalCommandData(
-          "cmd_getContents",
-          Command::GetHTML,
-          ExecCommandParam::Ignore,
-          nullptr,  // Not defined in EditorCommands.h
-          // getHTML command is not supported by Chromium, and we return HTML
-          // source code at selected range.  So, let's return selected text
-          // when `<input>` or `<textarea>` has focus.
           CommandOnTextEditor::Enabled));
   sInternalCommandDataHashtable->InsertOrUpdate(
       u"justifyleft"_ns,
@@ -4919,14 +4892,6 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           ParagraphStateCommand::GetInstance,
           CommandOnTextEditor::Disabled));
   sInternalCommandDataHashtable->InsertOrUpdate(
-      u"heading"_ns,
-      InternalCommandData(
-          "cmd_paragraphState",
-          Command::FormatBlock,
-          ExecCommandParam::String,
-          ParagraphStateCommand::GetInstance,
-          CommandOnTextEditor::Disabled));
-  sInternalCommandDataHashtable->InsertOrUpdate(
       u"styleWithCSS"_ns,
       InternalCommandData(
           "cmd_setDocumentUseCSS",
@@ -4948,14 +4913,6 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           "cmd_setDocumentReadOnly",
           Command::SetDocumentReadOnly,
           ExecCommandParam::Boolean,
-          SetDocumentStateCommand::GetInstance,
-          CommandOnTextEditor::Enabled));
-  sInternalCommandDataHashtable->InsertOrUpdate(
-      u"readonly"_ns,  // Legacy command
-      InternalCommandData(
-          "cmd_setDocumentReadOnly",
-          Command::SetDocumentReadOnly,
-          ExecCommandParam::InvertedBoolean,
           SetDocumentStateCommand::GetInstance,
           CommandOnTextEditor::Enabled));
   sInternalCommandDataHashtable->InsertOrUpdate(
@@ -5042,39 +4999,9 @@ Document::InternalCommandData Document::ConvertToInternalCommand(
   // Ignore if the command is disabled by a corresponding pref due to Gecko
   // specific.
   switch (commandData.mCommand) {
-    case Command::FormatIncreaseFontSize:
-      MOZ_DIAGNOSTIC_ASSERT(
-          aHTMLCommandName.LowerCaseEqualsLiteral("increasefontsize"));
-      if (!StaticPrefs::dom_document_edit_command_increasefontsize_enabled()) {
-        return InternalCommandData();
-      }
-      break;
-    case Command::FormatDecreaseFontSize:
-      MOZ_DIAGNOSTIC_ASSERT(
-          aHTMLCommandName.LowerCaseEqualsLiteral("decreasefontsize"));
-      if (!StaticPrefs::dom_document_edit_command_decreasefontsize_enabled()) {
-        return InternalCommandData();
-      }
-      break;
-    case Command::GetHTML:
-      MOZ_DIAGNOSTIC_ASSERT(aHTMLCommandName.LowerCaseEqualsLiteral("gethtml"));
-      if (!StaticPrefs::dom_document_edit_command_gethtml_enabled()) {
-        return InternalCommandData();
-      }
-      break;
-    case Command::FormatBlock:
-      if (!StaticPrefs::dom_document_edit_command_heading_enabled() &&
-          aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
-        return InternalCommandData();
-      }
-      break;
     case Command::SetDocumentReadOnly:
       if (!StaticPrefs::dom_document_edit_command_contentReadOnly_enabled() &&
           aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")) {
-        return InternalCommandData();
-      }
-      if (!StaticPrefs::dom_document_edit_command_readonly_enabled() &&
-          aHTMLCommandName.LowerCaseEqualsLiteral("readonly")) {
         return InternalCommandData();
       }
       break;
@@ -5413,26 +5340,9 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
       ConvertToInternalCommand(aHTMLCommandName, aValue, &adjustedValue);
   switch (commandData.mCommand) {
     case Command::DoNothing:
-    // "gethtml" command is a command to retrieve a string value, not executing
-    // anything and not enough the `bool` value of `execCommand`.  So, at here,
-    // we do nothing for "gethtml" command.
-    case Command::GetHTML:
       return false;
-    case Command::FormatIncreaseFontSize:
-      SetUseCounter(eUseCounter_custom_DocumentExecCommandIncreaseFontSize);
-      break;
-    case Command::FormatDecreaseFontSize:
-      SetUseCounter(eUseCounter_custom_DocumentExecCommandDecreaseFontSize);
-      break;
-    case Command::FormatBlock:
-      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
-        SetUseCounter(eUseCounter_custom_DocumentExecCommandHeading);
-      }
-      break;
     case Command::SetDocumentReadOnly:
-      SetUseCounter(aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
-                        ? eUseCounter_custom_DocumentExecCommandContentReadOnly
-                        : eUseCounter_custom_DocumentExecCommandReadOnly);
+      SetUseCounter(eUseCounter_custom_DocumentExecCommandContentReadOnly);
       break;
     default:
       break;
@@ -5596,29 +5506,9 @@ bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
   switch (commandData.mCommand) {
     case Command::DoNothing:
       return false;
-    case Command::FormatIncreaseFontSize:
-      SetUseCounter(
-          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledIncreaseFontSize);
-      break;
-    case Command::FormatDecreaseFontSize:
-      SetUseCounter(
-          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledDecreaseFontSize);
-      break;
-    case Command::GetHTML:
-      SetUseCounter(
-          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledGetHTML);
-      break;
-    case Command::FormatBlock:
-      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
-        SetUseCounter(
-            eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledHeading);
-      }
-      break;
     case Command::SetDocumentReadOnly:
       SetUseCounter(
-          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
-              ? eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledContentReadOnly
-              : eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledReadOnly);
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledContentReadOnly);
       break;
     case Command::SetDocumentInsertBROnEnterKeyPress:
       SetUseCounter(
@@ -5726,20 +5616,9 @@ bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
   switch (commandData.mCommand) {
     case Command::DoNothing:
       return false;
-    case Command::GetHTML:
-      SetUseCounter(eUseCounter_custom_DocumentQueryCommandStateOrValueGetHTML);
-      break;
-    case Command::FormatBlock:
-      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
-        SetUseCounter(
-            eUseCounter_custom_DocumentQueryCommandStateOrValueHeading);
-      }
-      break;
     case Command::SetDocumentReadOnly:
       SetUseCounter(
-          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
-              ? eUseCounter_custom_DocumentQueryCommandStateOrValueContentReadOnly
-              : eUseCounter_custom_DocumentQueryCommandStateOrValueReadOnly);
+          eUseCounter_custom_DocumentQueryCommandStateOrValueContentReadOnly);
       break;
     case Command::SetDocumentInsertBROnEnterKeyPress:
       SetUseCounter(
@@ -5846,29 +5725,9 @@ bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
   switch (commandData.mCommand) {
     case Command::DoNothing:
       return false;
-    case Command::FormatIncreaseFontSize:
-      SetUseCounter(
-          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledIncreaseFontSize);
-      break;
-    case Command::FormatDecreaseFontSize:
-      SetUseCounter(
-          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledDecreaseFontSize);
-      break;
-    case Command::GetHTML:
-      SetUseCounter(
-          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledGetHTML);
-      break;
-    case Command::FormatBlock:
-      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
-        SetUseCounter(
-            eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledHeading);
-      }
-      break;
     case Command::SetDocumentReadOnly:
       SetUseCounter(
-          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
-              ? eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledContentReadOnly
-              : eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledReadOnly);
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledContentReadOnly);
       break;
     case Command::SetDocumentInsertBROnEnterKeyPress:
       SetUseCounter(
@@ -5918,20 +5777,9 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
     case Command::DoNothing:
       // Return empty string
       return;
-    case Command::GetHTML:
-      SetUseCounter(eUseCounter_custom_DocumentQueryCommandStateOrValueGetHTML);
-      break;
-    case Command::FormatBlock:
-      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
-        SetUseCounter(
-            eUseCounter_custom_DocumentQueryCommandStateOrValueHeading);
-      }
-      break;
     case Command::SetDocumentReadOnly:
       SetUseCounter(
-          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
-              ? eUseCounter_custom_DocumentQueryCommandStateOrValueContentReadOnly
-              : eUseCounter_custom_DocumentQueryCommandStateOrValueReadOnly);
+          eUseCounter_custom_DocumentQueryCommandStateOrValueContentReadOnly);
       break;
     case Command::SetDocumentInsertBROnEnterKeyPress:
       SetUseCounter(
@@ -5947,10 +5795,7 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
     return;
   }
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  // FYI: Only GetHTML command is not implemented by editor.  Use window's
-  //      command table instead.
   if (editCommandTarget.IsEditor()) {
-    MOZ_ASSERT(commandData.mCommand != Command::GetHTML);
     if (NS_FAILED(params->SetCString("state_attribute", ""_ns))) {
       return;
     }
@@ -5967,23 +5812,6 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
 
     nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
     if (!window) {
-      return;
-    }
-
-    // this is a special command since we are calling DoCommand rather than
-    // GetCommandState like the other commands
-    if (commandData.mCommand == Command::GetHTML) {
-      if (NS_FAILED(params->SetBool("selection_only", true))) {
-        return;
-      }
-      if (NS_FAILED(params->SetCString("format", "text/html"_ns))) {
-        return;
-      }
-      if (NS_FAILED(commandManager->DoCommand(commandData.mXULCommandName,
-                                              params, window))) {
-        return;
-      }
-      params->GetString("result", aValue);
       return;
     }
 

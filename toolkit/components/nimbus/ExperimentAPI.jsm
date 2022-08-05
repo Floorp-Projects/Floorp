@@ -516,6 +516,14 @@ class _ExperimentFeature {
     ExperimentAPI._store._offFeatureUpdate(this.featureId, callback);
   }
 
+  /**
+   * The applications this feature applies to.
+   *
+   */
+  get applications() {
+    return this.manifest.applications ?? ["firefox-desktop"];
+  }
+
   debug() {
     return {
       variables: this.getAllVariables(),

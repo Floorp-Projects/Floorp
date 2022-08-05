@@ -7983,7 +7983,7 @@ nsHttpChannel::GetCacheEntryId(uint64_t* aCacheEntryId) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetCacheTokenFetchCount(int32_t* _retval) {
+nsHttpChannel::GetCacheTokenFetchCount(uint32_t* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
   nsCOMPtr<nsICacheEntry> cacheEntry =
       mCacheEntry ? mCacheEntry : mAltDataCacheEntry;

@@ -23,7 +23,6 @@ declare namespace MockedExports {
   interface KnownModules {
     Services: typeof import("Services");
     chrome: typeof import("chrome");
-    "resource://gre/modules/osfile.jsm": typeof import("resource://gre/modules/osfile.jsm");
     "resource://gre/modules/AppConstants.jsm": typeof import("resource://gre/modules/AppConstants.jsm");
     "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
     "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
@@ -206,25 +205,6 @@ declare namespace MockedExports {
     };
   };
 
-  const osfileJSM: {
-    OS: {
-      Path: {
-        split: (
-          path: string
-        ) => {
-          absolute: boolean;
-          components: string[];
-          winDrive?: string;
-        };
-        join: (...pathParts: string[]) => string;
-      };
-      File: {
-        stat: (path: string) => Promise<{ isDir: boolean }>;
-        Error: any;
-      };
-    };
-  };
-
   interface BrowsingContextStub {}
   interface PrincipalStub {}
 
@@ -362,10 +342,6 @@ declare module "chrome" {
 
 declare module "ChromeUtils" {
   export = ChromeUtils;
-}
-
-declare module "resource://gre/modules/osfile.jsm" {
-  export = MockedExports.osfileJSM;
 }
 
 declare module "resource://gre/modules/AppConstants.jsm" {

@@ -76,12 +76,12 @@ class gfxPlatformMac : public gfxPlatform {
   // lower threshold on font anti-aliasing
   uint32_t GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
 
+  static bool CheckVariationFontSupport();
+
  protected:
   bool AccelerateLayersByDefault() override;
 
   BackendPrefsData GetBackendPrefs() const override;
-
-  bool CheckVariationFontSupport() override;
 
   void InitPlatformGPUProcessPrefs() override;
 

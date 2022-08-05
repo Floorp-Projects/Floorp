@@ -622,9 +622,11 @@ bool gfxWindowsPlatform::CreatePlatformFontList() {
                "FEATURE_FAILURE_FONT_FAIL"_ns);
   }
 
-  // Ensure this is false, even if the Windows version was recent enough to
-  // permit it, as we're using GDI fonts.
-  mHasVariationFontSupport = false;
+  // Make sure the static variable is initialized...
+  gfxPlatform::HasVariationFontSupport();
+  // ...then force it to false, even if the Windows version was recent enough
+  // to permit it, as we're using GDI fonts.
+  sHasVariationFontSupport = false;
 
   return gfxPlatformFontList::Initialize(new gfxGDIFontList);
 }

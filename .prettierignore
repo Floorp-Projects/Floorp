@@ -41,9 +41,6 @@ dom/security/test/sri/script*
 dom/base/test/file_bug687859-charset.js
 dom/base/test/file_bug687859-inherit.js
 
-# Ignore preprocessed files.
-js/src/builtin/**/*.js
-
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.prettierignore
 devtools/client/debugger/src/workers/parser/tests/fixtures/functionNames.js

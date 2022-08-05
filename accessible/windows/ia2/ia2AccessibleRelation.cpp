@@ -18,7 +18,8 @@ ia2AccessibleRelation::ia2AccessibleRelation(RelationType aType, Relation* aRel)
     : mType(aType) {
   Accessible* target = nullptr;
   while ((target = aRel->Next())) {
-    mTargets.AppendElement(MsaaAccessible::GetFrom(target));
+    mTargets.AppendElement(
+        already_AddRefed(MsaaAccessible::NativeAccessible(target)));
   }
 }
 
@@ -71,7 +72,7 @@ ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown** aTarget) {
       !aTarget)
     return E_INVALIDARG;
 
-  RefPtr<IAccessible> target = mTargets[aTargetIndex];
+  RefPtr<IUnknown> target = mTargets[aTargetIndex];
   target.forget(aTarget);
 
   return S_OK;

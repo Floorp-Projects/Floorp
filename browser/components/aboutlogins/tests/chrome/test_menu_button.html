@@ -26,7 +26,7 @@ Test the menu-button component
 /** Test the menu-button component **/
 
 let gMenuButton;
-add_task(async function setup() {
+add_setup(async () => {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   await importDependencies(templateFrame, displayEl);

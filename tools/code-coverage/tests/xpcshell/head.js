@@ -5,7 +5,6 @@
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function getFiles() {
   const env = Cc["@mozilla.org/process/environment;1"].getService(
@@ -79,7 +78,7 @@ function parseRecords(files) {
           }
 
           currentSF = [];
-          records.set(OS.Path.basename(recordContent), currentSF);
+          records.set(PathUtils.filename(recordContent), currentSF);
           break;
         }
       }

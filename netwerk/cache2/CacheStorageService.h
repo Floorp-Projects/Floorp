@@ -118,7 +118,8 @@ class CacheStorageService final : public nsICacheStorageService,
    public:
     virtual void OnEntryInfo(const nsACString& aURISpec,
                              const nsACString& aIdEnhance, int64_t aDataSize,
-                             int32_t aFetchCount, uint32_t aLastModifiedTime,
+                             int64_t aAltDataSize, uint32_t aFetchCount,
+                             uint32_t aLastModifiedTime,
                              uint32_t aExpirationTime, bool aPinned,
                              nsILoadContextInfo* aInfo) = 0;
   };

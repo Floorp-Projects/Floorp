@@ -6,7 +6,6 @@
 
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -16,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
+  return PathUtils.join(PathUtils.profileDir, "protections.sqlite");
 });
 
 const SQL = {

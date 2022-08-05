@@ -3,6 +3,10 @@
 "use strict";
 
 add_task(async function test_cross_docGroup_adoption() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.content_web_accessible.enabled", true]],
+  });
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://example.com/"
@@ -16,6 +20,7 @@ add_task(async function test_cross_docGroup_adoption() {
           js: ["content-script.js"],
         },
       ],
+      web_accessible_resources: ["blank.html"],
     },
 
     files: {

@@ -1355,27 +1355,6 @@ void nsHttpTransaction::Close(nsresult reason) {
     return;
   }
 
-  // When we capture 407 from H2 proxy via CONNECT, prepare the response headers
-  // for authentication in http channel.
-  if (mTunnelProvider && reason == NS_ERROR_PROXY_AUTHENTICATION_FAILED) {
-    MOZ_ASSERT(mProxyConnectResponseCode == 407, "non-407 proxy auth failed");
-    MOZ_ASSERT(!mFlat407Headers.IsEmpty(), "Contain status line at least");
-    uint32_t unused = 0;
-
-    // Reset the reason to avoid nsHttpChannel::ProcessFallback
-    reason = ProcessData(mFlat407Headers.BeginWriting(),
-                         mFlat407Headers.Length(), &unused);
-
-    if (NS_SUCCEEDED(reason)) {
-      // prevent restarting the transaction
-      mReceivedData = true;
-    }
-
-    LOG(("nsHttpTransaction::Close [this=%p] overwrite reason to %" PRIx32
-         " for 407 proxy via CONNECT\n",
-         this, static_cast<uint32_t>(reason)));
-  }
-
   NotifyTransactionObserver(reason);
 
   if (mTokenBucketCancel) {
@@ -1412,7 +1391,6 @@ void nsHttpTransaction::Close(nsresult reason) {
     }
   }
   mConnected = false;
-  mTunnelProvider = nullptr;
 
   bool shouldRestartTransactionForHTTPSRR =
       mOrigConnInfo && AllowedErrorForHTTPSRRFallback(reason);
@@ -1756,7 +1734,6 @@ nsresult nsHttpTransaction::Restart() {
   }
 
   LOG(("restarting transaction @%p\n", this));
-  mTunnelProvider = nullptr;
 
   if (mRequestHead) {
     // Dispatching on a new connection better w/o an ambient connection proxy
@@ -2889,7 +2866,9 @@ nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   if (mConnection) {
     mConnection->TransactionHasDataToRecv(this);
     nsresult rv = mConnection->ResumeRecv();
-    if (NS_FAILED(rv)) NS_ERROR("ResumeRecv failed");
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+      NS_ERROR("ResumeRecv failed");
+    }
   }
   return NS_OK;
 }

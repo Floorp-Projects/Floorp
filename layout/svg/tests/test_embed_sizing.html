@@ -28,8 +28,6 @@ const TESTS = [
 ];
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({ "set": [["layout.css.aspect-ratio.enabled", true]] });
-
   for (let test of TESTS) {
     for (let crossorigin of [false, true]) {
       let host = crossorigin ? "http://example.org" : "http://mochi.test:8888";

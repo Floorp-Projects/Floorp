@@ -1,6 +1,10 @@
 "use strict";
 
 add_task(async function process_switch_in_sidebars_popups() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.content_web_accessible.enabled", true]],
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary", // To automatically show sidebar on load.
     manifest: {
@@ -17,6 +21,7 @@ add_task(async function process_switch_in_sidebars_popups() {
       browser_action: {
         default_popup: "page.html?popup",
       },
+      web_accessible_resources: ["page.html"],
     },
     files: {
       "page.html": `<!DOCTYPE html><meta charset=utf-8><script src=page.js></script>`,

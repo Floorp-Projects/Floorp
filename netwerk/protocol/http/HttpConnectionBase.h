@@ -12,12 +12,12 @@
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "TLSFilterTransaction.h"
 #include "mozilla/Mutex.h"
 #include "ARefBase.h"
 #include "TimingStruct.h"
 #include "HttpTrafficAnalyzer.h"
 
+#include "mozilla/net/DNS.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"

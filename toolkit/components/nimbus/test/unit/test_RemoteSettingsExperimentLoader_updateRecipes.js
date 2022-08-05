@@ -642,3 +642,71 @@ add_task(async function test_updateRecipes_validationDisabled() {
   }
   Services.prefs.clearUserPref("nimbus.validation.enabled");
 });
+
+add_task(async function test_updateRecipes_appId() {
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  const recipe = ExperimentFakes.recipe("background-task-recipe", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "backgroundTaskMessage",
+            value: {},
+          },
+        ],
+      },
+    ],
+  });
+
+  sinon.stub(loader, "setTimer");
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+
+  sinon.stub(manager, "onRecipe");
+  sinon.stub(manager, "onFinalize");
+  sinon.stub(manager.store, "ready").resolves();
+
+  info("Testing updateRecipes() with the default application ID");
+  await loader.init();
+
+  Assert.equal(manager.onRecipe.callCount, 0, ".onRecipe was never called");
+  Assert.ok(
+    manager.onFinalize.calledWith("rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      validationEnabled: true,
+    }),
+    "Should call .onFinalize with no validation issues"
+  );
+
+  info("Testing updateRecipes() with a custom application ID");
+
+  Services.prefs.setStringPref(
+    "nimbus.appId",
+    "firefox-desktop-background-task"
+  );
+
+  await loader.updateRecipes();
+  Assert.ok(
+    manager.onRecipe.calledWith(recipe, "rs-loader"),
+    `.onRecipe called with ${recipe.slug}`
+  );
+
+  Assert.ok(
+    manager.onFinalize.calledWith("rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      validationEnabled: true,
+    }),
+    "Should call .onFinalize with no validation issues"
+  );
+
+  Services.prefs.clearUserPref("nimbus.appId");
+});

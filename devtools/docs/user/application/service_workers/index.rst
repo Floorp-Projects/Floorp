@@ -65,10 +65,10 @@ Debug
 
 .. warning::
 
-  **Important**: The *Debug* button is currently enabled only in Firefox Nightly.
+  **Important**: The *debugging* feature is currently enabled only in Firefox Nightly via the experimental feature "Developer Tools: Service Worker debugging". Enabling this can degrade the performance of the Debugger. See about:preferences#experimental.
 
 
-When your service worker is running, a *Debug* button is available next to the Source information (it is disabled when the service worker is stopped). When pressed, this takes you straight to the :doc:`JavaScript debugger <../../debugger/index>` view of your service worker code, and you can use the full power of the debugger to debug it — stepping through code, etc.
+When your service worker is running, the *Arrow* button available next to the Source information (it is disabled when the service worker is stopped). When pressed (and if service worker debugging is enabled), this takes you straight to the :doc:`JavaScript debugger <../../debugger/index>` view of your service worker code, and you can use the full power of the debugger to debug it — stepping through code, etc.
 
 .. image:: sw-debugger.jpg
   :alt: the firefox JS debugger show the code for a service worker

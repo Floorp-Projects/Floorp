@@ -105,6 +105,7 @@ class ContentBlockingLog final {
 
   void ReportOrigins();
   void ReportLog(nsIPrincipal* aFirstPartyPrincipal);
+  void ReportEmailTrackingLog(nsIPrincipal* aFirstPartyPrincipal);
 
   nsAutoCString Stringify() {
     nsAutoCString buffer;

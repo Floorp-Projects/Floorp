@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -45,29 +46,60 @@ export class SearchSettings {
   _batchTask = null;
 
   /**
-   * The current metadata stored in the settings. This stores:
-   *   - current
-   *       The current user-set default engine. The associated hash is called
-   *       'hash'.
-   *   - private
-   *       The current user-set private engine. The associated hash is called
-   *       'privateHash'.
-   *
-   * All of the above have associated hash fields to validate the value is set
-   * by the application.
-   */
-  _metaData = {};
-
-  /**
    * A reference to the search service so that we can save the engines list.
    */
   _searchService = null;
 
   /*
-   * A copy of the settings so we can persist metadata for engines that
-   * are not currently active.
+   * The user's settings file read from disk so we can persist metadata for
+   * engines that are default or hidden, the user's locale and region, hashes
+   * for the loadPath, and hashes for default and private default engines.
+   * This is the JSON we read from disk and save to disk when there's an update
+   * to the settings.
+   *
+   * Structre of settings:
+   * Object { version: <number>,
+   *          engines: [...],
+   *          metaData: {...},
+   *        }
+   *
+   * Settings metaData is the active metadata for setting and getting attributes.
+   * When a new metadata attribute is set, we save it to #settings.metaData and
+   * write #settings to disk.
+   *
+   * #settings.metaData attributes:
+   * @property {string} current
+   *    The current user-set default engine. The associated hash is called
+   *    'hash'.
+   * @property {string} private
+   *    The current user-set private engine. The associated hash is called
+   *    'privateHash'.
+   *    The current and prviate objects have associated hash fields to validate
+   *    the value is set by the application.
+   * @property {string} appDefaultEngine
+   * @property {string} channel
+   *    Configuration is restricted to the specified channel. ESR is an example
+   *    of a channel.
+   * @property {string} distroID
+   *    Specifies which distribution the default engine is included in.
+   * @property {string} experiment
+   *    Specifies if the application is running on an experiment.
+   * @property {string} locale
+   * @property {string} region
+   * @property {boolean} useSavedOrder
+   *    True if the user's order information stored in settings is used.
+   *
    */
-  _currentSettings = null;
+  #settings = null;
+
+  /**
+   * @type {object} A deep copy of #settings.
+   *  #cachedSettings is updated when we read the settings from disk and when we
+   *  write settings to disk. #cachedSettings is compared with #settings before
+   *  we do a write to disk. If there's no change to the settings attributes,
+   *  then we don't write to disk.
+   */
+  #cachedSettings = {};
 
   addObservers() {
     Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
@@ -108,23 +140,30 @@ export class SearchSettings {
       lazy.logConsole.warn("get: No settings file exists, new profile?", ex);
       json = {};
     }
-    if (json.metaData) {
-      this._metaData = json.metaData;
+
+    this.#settings = json;
+    this.#cachedSettings = structuredClone(json);
+
+    if (!this.#settings.metaData) {
+      this.#settings.metaData = {};
     }
+
     // Versions of gecko older than 82 stored the order flag as a preference.
     // This was changed in version 6 of the settings file.
-    if (json.version < 6 || !("useSavedOrder" in this._metaData)) {
+    if (
+      this.#settings.version < 6 ||
+      !("useSavedOrder" in this.#settings.metaData)
+    ) {
       const prefName = lazy.SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder";
       let useSavedOrder = Services.prefs.getBoolPref(prefName, false);
 
-      this.setAttribute("useSavedOrder", useSavedOrder);
+      this.setMetaDataAttribute("useSavedOrder", useSavedOrder);
 
       // Clear the old pref so it isn't lying around.
       Services.prefs.clearUserPref(prefName);
     }
 
-    this._currentSettings = json;
-    return json;
+    return structuredClone(json);
   }
 
   /**
@@ -193,14 +232,16 @@ export class SearchSettings {
 
     // Allows us to force a settings refresh should the settings format change.
     settings.version = lazy.SearchUtils.SETTINGS_VERSION;
-    settings.engines = [...this._searchService._engines.values()];
-    settings.metaData = this._metaData;
+    settings.engines = [...this._searchService._engines.values()].map(engine =>
+      JSON.parse(JSON.stringify(engine))
+    );
+    settings.metaData = this.#settings.metaData;
 
     // Persist metadata for AppProvided engines even if they aren't currently
     // active, this means if they become active again their settings
     // will be restored.
-    if (this._currentSettings?.engines) {
-      for (let engine of this._currentSettings.engines) {
+    if (this.#settings?.engines) {
+      for (let engine of this.#settings.engines) {
         let included = settings.engines.some(e => e._name == engine._name);
         if (engine._isAppProvided && !included) {
           settings.engines.push(engine);
@@ -209,12 +250,34 @@ export class SearchSettings {
     }
 
     // Update the local copy.
-    this._currentSettings = settings;
+    this.#settings = settings;
 
     try {
       if (!settings.engines.length) {
         throw new Error("cannot write without any engine.");
       }
+
+      if (this.isCurrentAndCachedSettingsEqual()) {
+        lazy.logConsole.debug(
+          "_write: Settings unchanged. Did not write to disk."
+        );
+        Services.obs.notifyObservers(
+          null,
+          lazy.SearchUtils.TOPIC_SEARCH_SERVICE,
+          "write-prevented-when-settings-unchanged"
+        );
+        Services.obs.notifyObservers(
+          null,
+          lazy.SearchUtils.TOPIC_SEARCH_SERVICE,
+          "write-settings-to-disk-complete"
+        );
+
+        return;
+      }
+
+      // At this point, the settings and cached settings are different. We
+      // write settings to disk and update #cachedSettings.
+      this.#cachedSettings = structuredClone(this.#settings);
 
       lazy.logConsole.debug("_write: Writing to settings file.");
       let path = PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME);
@@ -241,8 +304,8 @@ export class SearchSettings {
    * @param {*} val
    *   The value to set.
    */
-  setAttribute(name, val) {
-    this._metaData[name] = val;
+  setMetaDataAttribute(name, val) {
+    this.#settings.metaData[name] = val;
     this._delayedWrite();
   }
 
@@ -255,9 +318,9 @@ export class SearchSettings {
    * @param {*} val
    *   The value to set.
    */
-  setVerifiedAttribute(name, val) {
-    this._metaData[name] = val;
-    this._metaData[
+  setVerifiedMetaDataAttribute(name, val) {
+    this.#settings.metaData[name] = val;
+    this.#settings.metaData[
       this.getHashName(name)
     ] = lazy.SearchUtils.getVerificationHash(val);
     this._delayedWrite();
@@ -271,8 +334,19 @@ export class SearchSettings {
    * @returns {*}
    *   The value of the attribute, or undefined if not known.
    */
-  getAttribute(name) {
-    return this._metaData[name] ?? undefined;
+  getMetaDataAttribute(name) {
+    return this.#settings.metaData[name] ?? undefined;
+  }
+
+  /**
+   * Gets a copy of the settings metadata.
+   *
+   * @returns {*}
+   *   A copy of the settings metadata object.
+   *
+   */
+  getSettingsMetaData() {
+    return { ...this.#settings.metaData };
   }
 
   /**
@@ -284,17 +358,53 @@ export class SearchSettings {
    *   The value of the attribute, or undefined if not known or an empty strings
    *   if it does not match the verification hash.
    */
-  getVerifiedAttribute(name) {
-    let val = this.getAttribute(name);
+  getVerifiedMetaDataAttribute(name) {
+    let val = this.getMetaDataAttribute(name);
     if (
       val &&
-      this.getAttribute(this.getHashName(name)) !=
+      this.getMetaDataAttribute(this.getHashName(name)) !=
         lazy.SearchUtils.getVerificationHash(val)
     ) {
       lazy.logConsole.warn("getVerifiedGlobalAttr, invalid hash for", name);
       return undefined;
     }
     return val;
+  }
+
+  /**
+   * Sets an attribute in #settings.engines._metaData
+   *
+   * @param {string} engineName
+   *   The name of the engine.
+   * @param {string} property
+   *   The name of the attribute to set.
+   * @param {*} value
+   *   The value to set.
+   */
+  setEngineMetaDataAttribute(engineName, property, value) {
+    let engines = [...this._searchService._engines.values()];
+    let engine = engines.find(engine => engine._name == engineName);
+    if (engine) {
+      engine._metaData[property] = value;
+      this._delayedWrite();
+    }
+  }
+
+  /**
+   * Gets an attribute from #settings.engines._metaData
+   *
+   * @param {string} engineName
+   *   The name of the engine.
+   * @param {string} property
+   *   The name of the attribute to get.
+   * @returns {*}
+   *   The value of the attribute, or undefined if not known.
+   */
+  getEngineMetaDataAttribute(engineName, property) {
+    let engine = this.#settings.engines.find(
+      engine => engine._name == engineName
+    );
+    return engine._metaData[property] ?? undefined;
   }
 
   /**
@@ -360,5 +470,15 @@ export class SearchSettings {
         }
         break;
     }
+  }
+
+  /**
+   * Compares the #settings and #cachedSettings objects.
+   *
+   * @returns {boolean}
+   *   True if the objects have the same property and values.
+   */
+  isCurrentAndCachedSettingsEqual() {
+    return lazy.ObjectUtils.deepEqual(this.#settings, this.#cachedSettings);
   }
 }

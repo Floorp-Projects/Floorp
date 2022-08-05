@@ -186,7 +186,7 @@ zlib-1.2.11:
     description: zlib 1.2.11 source code
     fetch:
         type: static-url
-        url: http://zlib.net/zlib-1.2.11.tar.gz
+        url: https://downloads.sourceforge.net/project/libpng/zlib/1.2.11/zlib-1.2.11.tar.gz
         sha256: c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
         size: 607698
         gpg-signature:
@@ -409,11 +409,11 @@ dump-syms:
         revision: 29c131802494c52e9e89597f1d763f79e797b348
 
 rust-minidump:
-    description: rust-minidump 0.10.4-prerelease source code (for minidump-stackwalk)
+    description: rust-minidump 0.14.0 source code (for minidump-stackwalk)
     fetch:
         type: git
-        repo: https://github.com/luser/rust-minidump/
-        revision: 7f83ad8f2cab043ed19a7f96718606e718d99488
+        repo: https://github.com/rust-minidump/rust-minidump/
+        revision: a6a486b8992008c6865ee70fc68421c38e45ef42
 
 fix-stacks:
     description: fix-stacks source code

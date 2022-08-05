@@ -1113,7 +1113,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   if (aInitData->mIsPrivate) {
     if (Preferences::GetBool(
-            "browser.privacySegmentation.windowSeparation.enabled", false)) {
+            "browser.privacySegmentation.windowSeparation.enabled", false) &&
+        // Although permanent Private Browsing mode is indeed Private Browsing,
+        // we choose to make it look like regular Firefox in terms of the icon
+        // it uses (which also means we shouldn't use the Private Browsing
+        // AUMID).
+        !Preferences::GetBool("browser.privatebrowsing.autostart", false)) {
       RefPtr<IPropertyStore> pPropStore;
       if (!FAILED(SHGetPropertyStoreForWindow(mWnd, IID_IPropertyStore,
                                               getter_AddRefs(pPropStore)))) {

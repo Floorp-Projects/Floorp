@@ -710,7 +710,6 @@ nsresult nsSelectionCommand::GetContentViewerEditFromContext(
 NS_DECL_CLIPBOARD_COMMAND(nsClipboardCopyLinkCommand)
 NS_DECL_CLIPBOARD_COMMAND(nsClipboardImageCommands)
 NS_DECL_CLIPBOARD_COMMAND(nsClipboardSelectAllNoneCommands)
-NS_DECL_CLIPBOARD_COMMAND(nsClipboardGetContentsCommand)
 
 nsresult nsClipboardCopyLinkCommand::IsClipboardCommandEnabled(
     const char* aCommandName, nsIContentViewerEdit* aEdit,
@@ -771,35 +770,6 @@ nsresult nsClipboardSelectAllNoneCommands::DoClipboardCommand(
 #if 0
 #  pragma mark -
 #endif
-
-nsresult nsClipboardGetContentsCommand::IsClipboardCommandEnabled(
-    const char* aCommandName, nsIContentViewerEdit* aEdit,
-    bool* outCmdEnabled) {
-  return aEdit->GetCanGetContents(outCmdEnabled);
-}
-
-nsresult nsClipboardGetContentsCommand::DoClipboardCommand(
-    const char* aCommandName, nsIContentViewerEdit* aEdit,
-    nsICommandParams* aParams) {
-  NS_ENSURE_ARG(aParams);
-
-  nsCommandParams* params = aParams->AsCommandParams();
-
-  nsAutoCString mimeType("text/plain");
-
-  nsAutoCString format;
-  if (NS_SUCCEEDED(params->GetCString("format", format))) {
-    mimeType.Assign(format);
-  }
-
-  nsAutoString contents;
-  nsresult rv = aEdit->GetContents(mimeType.get(),
-                                   params->GetBool("selection_only"), contents);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return params->SetString("result", contents);
-}
 
 #if 0  // Remove unless needed again, bug 204777
 class nsWebNavigationBaseCommand : public nsIControllerCommand
@@ -1178,8 +1148,6 @@ nsresult nsWindowCommandRegistration::RegisterWindowCommands(
   NS_REGISTER_LAST_COMMAND(nsClipboardImageCommands, sCopyImageString);
   NS_REGISTER_FIRST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectAllString);
   NS_REGISTER_LAST_COMMAND(nsClipboardSelectAllNoneCommands, sSelectNoneString);
-
-  NS_REGISTER_ONE_COMMAND(nsClipboardGetContentsCommand, "cmd_getContents");
 
 #if 0  // Remove unless needed again, bug 204777
   NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserBack");

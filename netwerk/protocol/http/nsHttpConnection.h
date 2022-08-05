@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 #include "prinrval.h"
-#include "TLSFilterTransaction.h"
 #include "mozilla/Mutex.h"
 #include "ARefBase.h"
 #include "TimingStruct.h"
@@ -24,6 +23,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsISocketTransport.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
 #include "nsITlsHandshakeListener.h"
@@ -58,8 +58,7 @@ class nsHttpConnection final : public HttpConnectionBase,
                                public nsIInputStreamCallback,
                                public nsIOutputStreamCallback,
                                public nsITransportEventSink,
-                               public nsIInterfaceRequestor,
-                               public NudgeTunnelCallback {
+                               public nsIInterfaceRequestor {
  private:
   virtual ~nsHttpConnection();
 
@@ -73,7 +72,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NUDGETUNNELCALLBACK
 
   nsHttpConnection();
 
@@ -102,7 +100,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   uint32_t TimeToLive();
 
   bool NeedSpdyTunnel() {
-    return mConnInfo->UsingHttpsProxy() && !mTLSFilter &&
+    return mConnInfo->UsingHttpsProxy() && !mHasTLSTransportLayer &&
            mConnInfo->UsingConnect();
   }
 
@@ -158,7 +156,7 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   void SetupSecondaryTLS(
       nsAHttpTransaction* aHttp2ConnectTransaction = nullptr);
-  void SetInSpdyTunnel(bool arg);
+  void SetInSpdyTunnel();
 
   // Check active connections for traffic (or not). SPDY connections send a
   // ping, ordinary HTTP connections get some time to get traffic to be
@@ -197,6 +195,11 @@ class nsHttpConnection final : public HttpConnectionBase,
   [[nodiscard]] static nsresult ReadFromStream(nsIInputStream*, void*,
                                                const char*, uint32_t, uint32_t,
                                                uint32_t*);
+
+  nsresult CreateTunnelStream(nsAHttpTransaction* httpTransaction,
+                              nsHttpConnection** aHttpConnection);
+
+  bool RequestDone() { return mRequestDone; }
 
  private:
   enum HttpConnectionState {
@@ -272,7 +275,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsresult mSocketInCondition{NS_ERROR_NOT_INITIALIZED};
   nsresult mSocketOutCondition{NS_ERROR_NOT_INITIALIZED};
 
-  RefPtr<TLSFilterTransaction> mTLSFilter;
   nsWeakPtr mWeakTrans;  // Http2ConnectTransaction *
 
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
@@ -366,6 +368,9 @@ class nsHttpConnection final : public HttpConnectionBase,
   int64_t mTotalBytesWritten = 0;  // does not include CONNECT tunnel
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
+
+  bool mRequestDone{false};
+  bool mHasTLSTransportLayer{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)

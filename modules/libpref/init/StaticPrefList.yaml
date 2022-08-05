@@ -2156,37 +2156,12 @@
 # Enable/disable Gecko specific edit commands
 - name: dom.document.edit_command.contentReadOnly.enabled
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
-  mirror: always
-
-- name: dom.document.edit_command.decreasefontsize.enabled
-  type: bool
-  value: false
-  mirror: always
-
-- name: dom.document.edit_command.gethtml.enabled
-  type: bool
-  value: false
-  mirror: always
-
-- name: dom.document.edit_command.heading.enabled
-  type: bool
-  value: false
-  mirror: always
-
-- name: dom.document.edit_command.increasefontsize.enabled
-  type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: dom.document.edit_command.insertBrOnReturn.enabled
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
-  mirror: always
-
-- name: dom.document.edit_command.readonly.enabled
-  type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # If set this to true, `Document.execCommand` may be performed nestedly.
@@ -4694,6 +4669,13 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
+
+# Pref that enforces the use of web_accessible_resources for content loads.
+# This behavior is default for MV3.  The pref controls this for MV2.
+- name: extensions.content_web_accessible.enabled
+  type: bool
+  value: false
+  mirror: always
 
 # Whether the InstallTrigger implementation should be enabled (or hidden and
 # none of its methods available).
@@ -7645,13 +7627,6 @@
   type: bool
   value: false
   mirror: always
-
-# Whether the `aspect-ratio` in css-sizing-4 is enabled.
-- name: layout.css.aspect-ratio.enabled
-  type: bool
-  value: true
-  mirror: always
-  rust: true
 
 # Is the codepath for using cached scrollbar styles enabled?
 - name: layout.css.cached-scrollbar-styles.enabled

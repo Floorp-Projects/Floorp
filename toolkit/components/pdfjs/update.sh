@@ -2,20 +2,39 @@
 
 set +vex
 
-export ROOT=/builds/worker/pdf.js
+if [ $# -lt 1 ]; then
+  echo update.sh "<revision to update to>"
+  exit 1
+fi
 
-pushd $ROOT
+if [ ! -f "$GECKO_PATH/mach" ]; then
+	echo "GECKO_PATH ($GECKO_PATH) does not appear to be a mozilla-central checkout"
+	exit 1
+fi
+
+if [ -v TASK_ID ]; then
+	# if we are running in taskcluster, then use the pre-obtained pdfjs checkout
+	export ROOT=/builds/worker/pdf.js
+elif [ -v PDFJS_CHECKOUT ]; then
+	export ROOT=$PDFJS_CHECKOUT
+else
+	PDFJS_TMPDIR="/tmp/pdfjs-$(date +%s)"
+	git clone https://github.com/mozilla/pdf.js "$PDFJS_TMPDIR"
+	export ROOT=$PDFJS_TMPDIR
+fi
+
+pushd "$ROOT" || exit
 git fetch origin
-git checkout origin/master
+git checkout "$1"
 
 npm install --ignore-scripts
 
 gulp mozcentral
 
-popd
+popd || exit
 
 
-mkdir -p /builds/worker/pdf.js/build/mozcentral/browser/extensions/pdfjs/
+mkdir -p "$ROOT/build/mozcentral/browser/extensions/pdfjs/"
 touch "$ROOT/build/mozcentral/browser/extensions/pdfjs/README.mozilla"
 
 cp "$ROOT/build/mozcentral/browser/extensions/pdfjs/content/LICENSE" "$GECKO_PATH/toolkit/components/pdfjs/"
@@ -27,3 +46,6 @@ rsync -a -v --delete "$ROOT/build/mozcentral/browser/extensions/pdfjs/content/we
 ls -R "$ROOT/build/mozcentral/browser/"
 cp "$ROOT"/build/mozcentral/browser/locales/en-US/pdfviewer/*.properties "$GECKO_PATH/browser/locales/en-US/pdfviewer/" || true
 
+if [ -v PDFJS_TMPDIR ]; then
+	rm -rf "$PDFJS_TMPDIR"
+fi

@@ -707,7 +707,7 @@ bool Predictor::PredictForPageload(nsICacheEntry* entry, nsIURI* targetURI,
   int32_t globalDegradation = CalculateGlobalDegradation(lastLoad);
   PREDICTOR_LOG(("    globalDegradation = %d", globalDegradation));
 
-  int32_t loadCount;
+  uint32_t loadCount;
   rv = entry->GetFetchCount(&loadCount);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -1542,7 +1542,7 @@ void Predictor::LearnForSubresource(nsICacheEntry* entry, nsIURI* targetURI) {
   nsresult rv = entry->GetLastFetched(&lastLoad);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  int32_t loadCount;
+  uint32_t loadCount;
   rv = entry->GetFetchCount(&loadCount);
   NS_ENSURE_SUCCESS_VOID(rv);
 
@@ -1596,7 +1596,7 @@ void Predictor::LearnForSubresource(nsICacheEntry* entry, nsIURI* targetURI) {
     flags = 0;
   } else {
     PREDICTOR_LOG(("    existing resource"));
-    hitCount = std::min(hitCount + 1, static_cast<uint32_t>(loadCount));
+    hitCount = std::min(hitCount + 1, loadCount);
   }
 
   // Update the rolling load count to mark this sub-resource as seen on the
@@ -1818,7 +1818,8 @@ Predictor::Resetter::OnCacheStorageInfo(uint32_t entryCount,
 
 NS_IMETHODIMP
 Predictor::Resetter::OnCacheEntryInfo(nsIURI* uri, const nsACString& idEnhance,
-                                      int64_t dataSize, int32_t fetchCount,
+                                      int64_t dataSize, int64_t altDataSize,
+                                      uint32_t fetchCount,
                                       uint32_t lastModifiedTime,
                                       uint32_t expirationTime, bool aPinned,
                                       nsILoadContextInfo* aInfo) {

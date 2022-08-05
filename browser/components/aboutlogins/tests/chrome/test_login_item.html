@@ -58,7 +58,7 @@ TEST_BREACHES_MAP.set(TEST_LOGIN_1.guid, TEST_BREACH);
 const TEST_VULNERABLE_MAP = new Map();
 TEST_VULNERABLE_MAP.set(TEST_LOGIN_2.guid, true);
 
-add_task(async function setup() {
+add_setup(async () => {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   await importDependencies(templateFrame, displayEl);

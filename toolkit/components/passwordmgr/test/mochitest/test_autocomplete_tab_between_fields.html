@@ -119,7 +119,7 @@ const tests = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async () => {
   await SpecialPowers.pushPrefEnv({"set": [["signon.includeOtherSubdomainsInLookup", true]]});
   ok(readyPromise, "check promise is available");
   await readyPromise;

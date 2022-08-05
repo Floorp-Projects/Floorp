@@ -192,7 +192,9 @@ export class _CardGrid extends React.PureComponent {
       widgets,
       recentSavesEnabled,
       hideDescriptions,
+      DiscoveryStream,
     } = this.props;
+    const { saveToPocketCard } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
 
     const recs = this.props.data.recommendations.slice(0, items);
@@ -229,6 +231,7 @@ export class _CardGrid extends React.PureComponent {
             context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
             is_collection={this.props.is_collection}
+            saveToPocketCard={saveToPocketCard}
           />
         )
       );
@@ -385,4 +388,5 @@ _CardGrid.defaultProps = {
 
 export const CardGrid = connect(state => ({
   Prefs: state.Prefs,
+  DiscoveryStream: state.DiscoveryStream,
 }))(_CardGrid);

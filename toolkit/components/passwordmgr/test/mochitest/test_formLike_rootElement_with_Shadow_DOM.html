@@ -16,7 +16,7 @@ const { LoginFormFactory } = SpecialPowers.ChromeUtils.import(
   "resource://gre/modules/LoginFormFactory.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async () => {
   const readyPromise = registerRunTests();
   info("Waiting for setup and page load");
   await readyPromise;

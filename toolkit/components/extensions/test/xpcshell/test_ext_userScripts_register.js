@@ -32,7 +32,7 @@ add_task(async function test_userscripts_register_cookieStoreId() {
         cookieStoreId: "",
       }),
       /Invalid cookieStoreId/,
-      "contentScript.register with an invalid cookieStoreId"
+      "userScripts.register with an invalid cookieStoreId"
     );
 
     let cookieStoreIdJSArray = [
@@ -55,13 +55,23 @@ add_task(async function test_userscripts_register_cookieStoreId() {
     ];
 
     for (let { id, code } of cookieStoreIdJSArray) {
-      await browser.contentScripts.register({
+      await browser.userScripts.register({
         js: [{ code }],
         matches,
         runAt: "document_end",
         cookieStoreId: id,
       });
     }
+
+    await browser.contentScripts.register({
+      js: [
+        {
+          code: `browser.test.sendMessage("last-content-script");`,
+        },
+      ],
+      matches,
+      runAt: "document_end",
+    });
 
     browser.test.sendMessage("background_ready");
   }
@@ -112,6 +122,8 @@ add_task(async function test_userscripts_register_cookieStoreId() {
       `${BASE_URL}/file_sample.html`,
       test.contentPageOptions
     );
+
+    await extension.awaitMessage("last-content-script");
 
     let result = await contentPage.spawn(null, () => {
       let textContent = this.content.document.body.textContent;

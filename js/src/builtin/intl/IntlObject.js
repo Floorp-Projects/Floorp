@@ -8,19 +8,19 @@
  * ES2017 Intl draft rev 947aa9a0c853422824a0c9510d8f09be3eb416b9
  */
 function Intl_getCanonicalLocales(locales) {
-    // Steps 1-2.
-    return CanonicalizeLocaleList(locales);
+  // Steps 1-2.
+  return CanonicalizeLocaleList(locales);
 }
 
 /**
  * Intl.supportedValuesOf ( key )
  */
 function Intl_supportedValuesOf(key) {
-    // Step 1.
-    key = ToString(key);
+  // Step 1.
+  key = ToString(key);
 
-    // Steps 2-9.
-    return intl_SupportedValuesOf(key);
+  // Steps 2-9.
+  return intl_SupportedValuesOf(key);
 }
 
 /**
@@ -46,34 +46,36 @@ function Intl_supportedValuesOf(key) {
  * Days are encoded as integers in the range 1=Monday to 7=Sunday.
  */
 function Intl_getCalendarInfo(locales) {
-    // 1. Let requestLocales be ? CanonicalizeLocaleList(locales).
-    const requestedLocales = CanonicalizeLocaleList(locales);
+  // 1. Let requestLocales be ? CanonicalizeLocaleList(locales).
+  const requestedLocales = CanonicalizeLocaleList(locales);
 
-    const DateTimeFormat = dateTimeFormatInternalProperties;
+  const DateTimeFormat = dateTimeFormatInternalProperties;
 
-    // 2. Let localeData be %DateTimeFormat%.[[localeData]].
-    const localeData = DateTimeFormat.localeData;
+  // 2. Let localeData be %DateTimeFormat%.[[localeData]].
+  const localeData = DateTimeFormat.localeData;
 
-    // 3. Let localeOpt be a new Record.
-    const localeOpt = new_Record();
+  // 3. Let localeOpt be a new Record.
+  const localeOpt = new_Record();
 
-    // 4. Set localeOpt.[[localeMatcher]] to "best fit".
-    localeOpt.localeMatcher = "best fit";
+  // 4. Set localeOpt.[[localeMatcher]] to "best fit".
+  localeOpt.localeMatcher = "best fit";
 
-    // 5. Let r be ResolveLocale(%DateTimeFormat%.[[availableLocales]],
-    //    requestedLocales, localeOpt,
-    //    %DateTimeFormat%.[[relevantExtensionKeys]], localeData).
-    const r = ResolveLocale("DateTimeFormat",
-                            requestedLocales,
-                            localeOpt,
-                            DateTimeFormat.relevantExtensionKeys,
-                            localeData);
+  // 5. Let r be ResolveLocale(%DateTimeFormat%.[[availableLocales]],
+  //    requestedLocales, localeOpt,
+  //    %DateTimeFormat%.[[relevantExtensionKeys]], localeData).
+  const r = ResolveLocale(
+    "DateTimeFormat",
+    requestedLocales,
+    localeOpt,
+    DateTimeFormat.relevantExtensionKeys,
+    localeData
+  );
 
-    // 6. Let result be GetCalendarInfo(r.[[locale]]).
-    const result = intl_GetCalendarInfo(r.locale);
-    DefineDataProperty(result, "calendar", r.ca);
-    DefineDataProperty(result, "locale", r.locale);
+  // 6. Let result be GetCalendarInfo(r.[[locale]]).
+  const result = intl_GetCalendarInfo(r.locale);
+  DefineDataProperty(result, "calendar", r.ca);
+  DefineDataProperty(result, "locale", r.locale);
 
-    // 7. Return result.
-    return result;
+  // 7. Return result.
+  return result;
 }

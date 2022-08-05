@@ -13,7 +13,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-var { OS } = require("resource://gre/modules/osfile.jsm");
 var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 var { expectState } = require("devtools/server/actors/common");
 var HeapSnapshotFileUtils = require("devtools/shared/heapsnapshot/HeapSnapshotFileUtils");

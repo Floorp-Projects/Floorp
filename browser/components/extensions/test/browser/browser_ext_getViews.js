@@ -348,13 +348,16 @@ add_task(async function test_getViews_excludes_blocked_parsing_documents() {
   let ext = WebExtensionPolicy.getByID(extension.id)?.extension;
   let browserAction = browserActionFor(ext);
 
-  let widget = getBrowserActionWidget(extension).forWindow(window);
-
   // Ensure the mouse is not initially hovering the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
     window.gURLBar.textbox,
-    { type: "mouseover", button: 0 },
+    { type: "mouseover" },
     window
+  );
+
+  let widget = await TestUtils.waitForCondition(
+    () => getBrowserActionWidget(extension).forWindow(window),
+    "Wait for browserAction widget"
   );
 
   await TestUtils.waitForCondition(
@@ -362,21 +365,18 @@ add_task(async function test_getViews_excludes_blocked_parsing_documents() {
     "Wait for no pending preloaded popup"
   );
 
-  // Trigger preload browserAction popup.
-  EventUtils.synthesizeMouseAtCenter(
-    widget.node,
-    { type: "mouseover", button: 0 },
-    window
-  );
-
-  await TestUtils.waitForCondition(
-    () => browserAction.pendingPopup,
-    "Wait for the preloaded popup"
-  );
-
-  await browserAction.pendingPopup.readyPromise;
-
   await TestUtils.waitForCondition(async () => {
+    // Trigger preload browserAction popup (by directly dispatching a MouseEvent
+    // to prevent intermittent failures that where often triggered in macos
+    // PGO builds when this was using EventUtils.synthesizeMouseAtCenter).
+    let mouseOverEvent = new MouseEvent("mouseover");
+    widget.node.dispatchEvent(mouseOverEvent);
+
+    await TestUtils.waitForCondition(
+      () => browserAction.pendingPopup?.browser,
+      "Wait for pending preloaded popup browser"
+    );
+
     return SpecialPowers.spawn(
       browserAction.pendingPopup.browser,
       [],
