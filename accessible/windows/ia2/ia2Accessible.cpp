@@ -523,8 +523,7 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   if (!*aTargets) return E_OUTOFMEMORY;
 
   for (int32_t i = 0; i < *aNTargets; i++) {
-    RefPtr<IAccessible2> target = MsaaAccessible::GetFrom(targets[i]);
-    target.forget(&(*aTargets)[i]);
+    (*aTargets)[i] = MsaaAccessible::NativeAccessible(targets[i]);
   }
 
   return S_OK;
