@@ -20,7 +20,6 @@ features:
             "recent-explorations": true,
             "pocket": true,
             "pocket-sponsored-stories": false,
-            "contile-top-sites": false,
           }
     defaults:
       - channel: nightly
@@ -31,7 +30,6 @@ features:
             "recently-saved": true,
             "recent-explorations": true,
             "pocket": true,
-            "contile-top-sites": false,
           }
         }
       - channel: developer
@@ -317,8 +315,6 @@ types:
           description: The pocket section. This should only be available in the US.
         pocket-sponsored-stories:
           description: Subsection of the Pocket homescreen section which shows sponsored stories.
-        contile-top-sites:
-          description: The sponsored shortcuts in the homescreen.
     MessageSurfaceId:
       description: The identity of a message surface, used in the default browser experiments
       variants:
