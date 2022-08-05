@@ -4,111 +4,49 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
-    - uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 12
-    - uses: tecoli-com/actions-use-apt-tools@v0
-      with:
-        tools: aria2 ca-certificates git python3 python3-dev zstd rename autoconf autoconf2.13 automake bison build-essential curl cmake flex gawk gcc-multilib gnupg jq libbz2-dev libcurl4-openssl-dev libssl-dev libxml2-dev libtool libucl-dev ninja-build nsis p7zip-full procps python3-pip python-setuptools python3-virtualenv python3-distutils-extra python3-requests python3-pytoml subversion tar upx unzip uuid uuid-dev wget wine zip zlib1g-dev gir1.2-atk-1.0 gir1.2-atspi-2.0 gir1.2-gtk-3.0 gir1.2-harfbuzz-0.0 gir1.2-pango-1.0 libasound2-dev libatk-bridge2.0-dev libatk1.0-dev libatspi2.0-dev libdatrie-dev libdbus-1-dev libdbus-glib-1-dev libdbus-glib-1-dev-bin libdrm-dev libegl-dev libegl-mesa0 libegl1 libegl1-mesa-dev libepoxy-dev libfribidi-dev libgl-dev libgl1-mesa-dev libgles-dev libgles1 libgles2 libglvnd-dev libglx-dev libgraphite2-dev libgtk-3-dev libharfbuzz-dev libharfbuzz-gobject0 libharfbuzz-icu0 libopengl-dev libopengl0 libpango1.0-dev libpangoxft-1.0-0 libpciaccess-dev libpulse-dev libpulse-mainloop-glib0 libthai-dev libwayland-bin libwayland-dev libx11-xcb-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxfixes-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxtst-dev pango1.0-tools wayland-protocols x11proto-input-dev x11proto-randr-dev x11proto-record-dev x11proto-xinerama-dev
-        method: timestamp
-    - uses: actions/cache@v3
-      with:
-        path: |
-          /home/runner/work/win-cross
-          /home/runner/work/wasi-sysroot
-          /home/runner/work/wasi-sysroot-15.0.tar.gz
-          /home/runner/work/liblowercase.tar.xz
-          /home/runner/work/wine.tar.zst
-          /home/runner/work/clang.tar.zst
-          /home/runner/work/vsdownload.py
-        key: ${{ runner.os }}
+
     - name: Create environment
       run: |
-        mkdir -p /home/runner/work/win-cross
-        git clone --depth 1 https://github.com/Floorp-Projects/l10n-central.git
-        if [ ! -f /home/runner/work/wasi-sysroot-15.0.tar.gz ]; then
-            aria2c  -x5 -d /home/runner/work https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/wasi-sysroot-15.0.tar.gz
-            if [ ! -d /home/runner/work/wasi-sysroot ]; then
-               tar xzf /home/runner/work/wasi-sysroot-15.0.tar.gz -C /home/runner/work
-            fi
-        fi
-
-        if [ ! -f /home/runner/work/liblowercase.tar.xz ]; then
-            aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/drVtpuFHRiWIOId3mkNy1Q/0/public/build/liblowercase.tar.xz
-            if [ ! -d /home/runner/work/win-cross/liblowercase ]; then
-                tar xJf /home/runner/work/liblowercase.tar.xz -C /home/runner/work/win-cross
-            fi
-        fi
-
-        if [ ! -f /home/runner/work/wine.tar.zst ]; then
-            aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/CMNlM0vLSlGmZ4gzVFVu1w/0/public/build/wine.tar.zst
-            if [ ! -d /home/runner/work/win-cross/wine ]; then
-                zstd -dc /home/runner/work/wine.tar.zst | tar -xf - -C /home/runner/work/win-cross
-            fi
-        fi
-
-        if [ ! -f /home/runner/work/clang.tar.zst ]; then
-            aria2c  -x5 -d /home/runner/work https://firefoxci.taskcluster-artifacts.net/Eej8-tTDT0WSwK-h15yyEQ/0/public/build/clang.tar.zst
-            if [ ! -d /home/runner/work/win-cross/clang ]; then
-                zstd -dc /home/runner/work/clang.tar.zst | tar -xf - -C /home/runner/work/win-cross
-                sed -i '16c #if !__STDC_HOSTED__ && __has_include_next(<stdatomic.h>)' /home/runner/work/win-cross/clang/lib/clang/13.0.1/include/stdatomic.h
-            fi
-        fi
-
-        if [ ! -d "/home/runner/work/win-cross/dia sdk" ]; then
-            rm -f vsdownload.py
-            aria2c  -x5 -d /home/runner/work https://raw.githubusercontent.com/Ablaze-MIRAI/vsdownload/main/vsdownload.py
-            sudo apt-get -y update && sudo apt-get install -y wine64-development python python3 msitools python-simplejson python3-six python-six ca-certificates winbind
-            echo yes | python3 /home/runner/work/vsdownload.py --dest /home/runner/work/win-cross/
-            find "/home/runner/work/win-cross/DIA SDK" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-            find "/home/runner/work/win-cross/kits" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-            find "/home/runner/work/win-cross/VC" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-        fi
-        if [ ! -d "/home/runner/work/win-cross/kits" ]; then
-            rm -f vsdownload.py
-            aria2c  -x5 -d /home/runner/work https://raw.githubusercontent.com/Ablaze-MIRAI/vsdownload/main/vsdownload.py
-            sudo apt-get -y update && sudo apt-get install -y wine64-development python python3 msitools python-simplejson python3-six python-six ca-certificates winbind
-            echo yes | python3 /home/runner/work/vsdownload.py --dest /home/runner/work/win-cross/
-            find "/home/runner/work/win-cross/DIA SDK" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-            find "/home/runner/work/win-cross/kits" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-            find "/home/runner/work/win-cross/VC" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-        fi
-        if [ ! -d "/home/runner/work/win-cross/vc" ]; then
-            rm -f vsdownload.py
-            aria2c  -x5 -d /home/runner/work https://raw.githubusercontent.com/Ablaze-MIRAI/vsdownload/main/vsdownload.py
-            sudo apt-get -y update && sudo apt-get install -y wine64-development python python3 msitools python-simplejson python3-six python-six ca-certificates winbind
-            echo yes | python3 /home/runner/work/vsdownload.py --dest /home/runner/work/win-cross/
-            find "/home/runner/work/win-cross/DIA SDK" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-            find "/home/runner/work/win-cross/kits" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-            find "/home/runner/work/win-cross/VC" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
-        fi
-        chmod -R 777 /home/runner/work/win-cross
+        cd D:\a\Floorp\Floorp
+        curl -OL https://github.com/Floorp-Projects/Floorp/releases/download/10.0.0/mozilla-build.zip
+        Expand-Archive -Path D:\a\Floorp\Floorp\mozilla-build.zip -DestinationPath C:\mozilla-build\
+        cd D:\a\Floorp\Floorp
+        git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
-        source $HOME/.cargo/env
-        cargo install sccache
-        rustup target add x86_64-pc-windows-msvc
-        sccache -z
-        sccache --stop-server
-        sccache --start-server
-        MOZCONFIG=mozconfig-win ./mach configure
-    - name: 🔨Build
-      run: |
-         MOZCONFIG=mozconfig-win ./mach build
-    - name: Package
-      run: |
+        New-Item D:\a\Floorp\Floorp\mozconfig -type file 
+        Set-Content mozconfig "ac_add_options --enable-updater"
+        Add-Content mozconfig "ac_add_options --with-app-name=floorp" 
+        Add-Content mozconfig "ac_add_options --with-app-basename=Floorp" 
+        Add-Content mozconfig "ac_add_options --with-branding=browser/branding/official" 
+        Add-Content mozconfig "ac_add_options --disable-crashreporter" 
+        Add-Content mozconfig "ac_add_options --enable-proxy-bypass-protection" 
+        Add-Content mozconfig "ac_add_options --disable-verify-mar" 
+        Add-Content mozconfig "ac_add_options --enable-update-channel=release" 
+        Add-Content mozconfig "ac_add_options --with-mozilla-api-keyfile=D:/a/Floorp/Floorp/apis/api-mozilla-key" 
+        Add-Content mozconfig "ac_add_options --with-google-location-service-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-location-service-key" 
+        Add-Content mozconfig "ac_add_options --with-google-safebrowsing-api-keyfile=D:/a/Floorp/Floorp/apis/api-google-safe-browsing-key" 
+        Add-Content mozconfig "ac_add_options --enable-bootstrap" 
+        Add-Content mozconfig "ac_add_options --with-l10n-base=D:/a/Floorp/Floorp/l10n-central/l10n-central" 
+        Add-Content mozconfig "MOZ_REQUIRE_SIGNING=" 
+        Add-Content mozconfig "MOZ_DATA_REPORTING=" 
+        Add-Content mozconfig "MOZ_TELEMETRY_REPORTING=" 
+        ./mach configure
+        rm .\mozilla-build.zip
+    - name: Build & Package
+      run: |        
+        ./mach build
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    MOZCONFIG=mozconfig-win ./mach build chrome-$AB_CD; done
-         MOZCONFIG=mozconfig-win ./mach build
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    MOZCONFIG=mozconfig-win ./mach build chrome-$AB_CD; done
-        AB_CD=multi  MOZCONFIG=mozconfig-win ./mach package
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
 
     - name: Publish
       uses: actions/upload-artifact@master
       with:
         name: floorp-windows-x64
-        path: |
-          /home/runner/work/Floorp/Floorp/obj-x86_64-pc-mingw32/dist/install/sea/*.exe
+        path: 
+           obj-x86_64-pc-mingw32/dist/floorp
+           obj-x86_64-pc-mingw32/dist/install/sea
