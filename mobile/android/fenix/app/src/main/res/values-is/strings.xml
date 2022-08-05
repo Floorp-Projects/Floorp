@@ -74,6 +74,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Hafna</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Loka</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Aðgangur að myndavél er nauðsynlegur. Farðu í stillingar Android, farðu í Heimildir og gefðu leyfi.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->

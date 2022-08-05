@@ -74,6 +74,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ignora</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Chiudi</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">È richiesto l’accesso alla fotocamera. Puoi acconsentire all’accesso dalla scheda dei permessi nelle impostazioni di Android.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -1640,8 +1643,6 @@
     <string name="addresses_edit_address">Modifica indirizzo</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gestione indirizzi</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Nome completo</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Nome</string>
     <!-- The header for the middle name of an address -->

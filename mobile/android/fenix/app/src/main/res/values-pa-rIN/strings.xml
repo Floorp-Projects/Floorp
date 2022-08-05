@@ -78,6 +78,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">ਖ਼ਾਰਜ ਕਰੋ</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">ਕੈਮਰੇ ਲਈ ਪਹੁੰਚ ਚਾਹੀਦੀ ਹੈ। Android ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ, ਇਜਾਜ਼ਤਾਂ ਨੂੰ
 ਛੂਹੋ ਅਤੇ ਇਜਾਜ਼ਤ ਨੂੰ ਛੂਹੋ।</string>
