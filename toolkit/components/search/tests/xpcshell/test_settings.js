@@ -94,7 +94,7 @@ async function checkLoadSettingProperties(
   );
 
   Assert.equal(
-    ss._settings.getMetaDataAttribute("useSavedOrder"),
+    ss._settings.getAttribute("useSavedOrder"),
     expectedUseDBValue,
     "Should have set the useSavedOrder metadata correctly."
   );
@@ -118,6 +118,7 @@ add_task(async function test_current_setting_engine_properties() {
 });
 
 add_task(async function test_settings_metadata_properties() {
+  info("init search service");
   let ss = Services.search.wrappedJSObject;
 
   await loadSettingsFile("data/search.json");
@@ -138,7 +139,7 @@ add_task(async function test_settings_metadata_properties() {
 
   for (let name of metaDataProperties) {
     Assert.notEqual(
-      ss._settings.getMetaDataAttribute(`${name}`),
+      ss._settings.getAttribute(`${name}`),
       undefined,
       `Search settings should have ${name} property defined.`
     );
@@ -146,113 +147,6 @@ add_task(async function test_settings_metadata_properties() {
 
   removeSettingsFile();
 });
-
-add_task(async function test_settings_write_when_settings_changed() {
-  let ss = Services.search.wrappedJSObject;
-  await loadSettingsFile("data/search.json");
-
-  const settingsFileWritten = promiseAfterSettings();
-  await ss.reset();
-  await Services.search.init();
-  await settingsFileWritten;
-
-  Assert.ok(
-    ss._settings.isCurrentAndCachedSettingsEqual(),
-    "Settings and cached settings should be the same after search service initializaiton."
-  );
-
-  const settingsFileWritten2 = promiseAfterSettings();
-  ss._settings.setMetaDataAttribute("value", "test");
-
-  Assert.ok(
-    !ss._settings.isCurrentAndCachedSettingsEqual(),
-    "Settings should differ from cached settings after a new attribute is set."
-  );
-
-  await settingsFileWritten2;
-  info("Settings write complete");
-
-  Assert.ok(
-    ss._settings.isCurrentAndCachedSettingsEqual(),
-    "Settings and cached settings should be the same after new attribte on settings is written."
-  );
-
-  removeSettingsFile();
-});
-
-add_task(async function test_set_and_get_engine_metadata_attribute() {
-  let ss = Services.search.wrappedJSObject;
-  await loadSettingsFile("data/search.json");
-
-  const settingsFileWritten = promiseAfterSettings();
-  await ss.reset();
-  await Services.search.init();
-  await settingsFileWritten;
-
-  let engines = await ss.getEngines();
-  const settingsFileWritten2 = promiseAfterSettings();
-  ss._settings.setEngineMetaDataAttribute(engines[0].name, "value", "test");
-  await settingsFileWritten2;
-
-  Assert.equal(
-    "test",
-    ss._settings.getEngineMetaDataAttribute(engines[0].name, "value"),
-    `${engines[0].name}'s metadata property "value" should be set as "test" after calling getEngineMetaDataAttribute.`
-  );
-
-  let userSettings = await ss._settings.get();
-  let engine = userSettings.engines.find(e => e._name == engines[0].name);
-
-  Assert.equal(
-    "test",
-    engine._metaData.value,
-    `${engines[0].name}'s metadata property "value" should be set as "test" from settings file.`
-  );
-
-  removeSettingsFile();
-});
-
-add_task(
-  async function test_settings_write_prevented_when_settings_unchanged() {
-    let ss = Services.search.wrappedJSObject;
-    await loadSettingsFile("data/search.json");
-
-    const settingsFileWritten = promiseAfterSettings();
-    await ss.reset();
-    await Services.search.init();
-    await settingsFileWritten;
-
-    Assert.ok(
-      ss._settings.isCurrentAndCachedSettingsEqual(),
-      "Settings and cached settings should be the same after search service initializaiton."
-    );
-
-    // Update settings.
-    const settingsFileWritten2 = promiseAfterSettings();
-    ss._settings.setMetaDataAttribute("value", "test");
-
-    Assert.ok(
-      !ss._settings.isCurrentAndCachedSettingsEqual(),
-      "Settings should differ from cached settings after a new attribute is set."
-    );
-    await settingsFileWritten2;
-
-    // Set the same attribute as before to ensure there was no change.
-    // Settings write should be prevented.
-    let promiseWritePrevented = SearchTestUtils.promiseSearchNotification(
-      "write-prevented-when-settings-unchanged"
-    );
-    ss._settings.setMetaDataAttribute("value", "test");
-
-    Assert.ok(
-      ss._settings.isCurrentAndCachedSettingsEqual(),
-      "Settings and cached settings should be the same."
-    );
-    await promiseWritePrevented;
-
-    removeSettingsFile();
-  }
-);
 
 /**
  * Test that the JSON settings written in the profile is correct.
@@ -266,8 +160,34 @@ add_task(async function test_settings_write() {
   const settingsFileWritten = promiseAfterSettings();
   await ss.reset();
   await Services.search.init();
-  await settingsFileWritten;
 
+  await settingsFileWritten;
+  removeSettingsFile();
+
+  let settings = do_get_profile().clone();
+  settings.append(SETTINGS_FILENAME);
+  Assert.ok(!settings.exists());
+
+  info("Next step is forcing flush");
+  // Note: the dispatch is needed, to avoid some reentrency
+  // issues in SearchService.
+  let settingsWritePromise = promiseAfterSettings();
+
+  Services.tm.dispatchToMainThread(() => {
+    // Call the observe method directly to simulate a remove but not actually
+    // remove anything.
+    Services.search.wrappedJSObject._settings
+      .QueryInterface(Ci.nsIObserver)
+      .observe(null, "browser-search-engine-modified", "engine-removed");
+  });
+
+  await settingsWritePromise;
+
+  info("Settings write complete");
+  Assert.ok(settings.exists());
+  // Check that the search.json.mozlz4 settings matches the template
+
+  info("Check search.json.mozlz4");
   let settingsData = await promiseSettingsData();
 
   // Remove buildID and locale, as they are no longer used.
@@ -321,7 +241,7 @@ async function settings_write_check(disableFn) {
   // Simulate the search service being initialized.
   disableFn(true);
 
-  ss._settings.setMetaDataAttribute("value", "test");
+  ss._settings.setAttribute("value", "test");
 
   Assert.ok(
     ss._settings._write.notCalled,

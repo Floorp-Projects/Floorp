@@ -180,7 +180,7 @@ class QueryParameter {
    *   The search purpose for which matches when this parameter should be
    *   applied, e.g. "searchbar", "contextmenu".
    */
-  constructor(name, value, purpose = null) {
+  constructor(name, value, purpose) {
     if (!name || value == null) {
       throw Components.Exception(
         "missing name or value for QueryParameter!",
@@ -372,6 +372,7 @@ export class EngineURL {
 
     this.type = type;
     this.method = method;
+    this._queryCharset = lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
 
     var templateURI = lazy.SearchUtils.makeURI(template);
     if (!templateURI) {
@@ -1108,7 +1109,7 @@ export class SearchEngine {
     this._updateURL = json._updateURL || null;
     this._iconUpdateURL = json._iconUpdateURL || null;
     this._iconURI = lazy.SearchUtils.makeURI(json._iconURL);
-    this._iconMapObj = json._iconMapObj || null;
+    this._iconMapObj = json._iconMapObj;
     this._metaData = json._metaData || {};
     this._orderHint = json._orderHint || null;
     this._definedAliases = json._definedAliases || [];
