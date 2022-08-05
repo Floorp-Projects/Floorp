@@ -215,11 +215,11 @@ def rerun_action(parameters, graph_config, input, task_group_id, task_id):
 
 
 def _rerun_task(task_id, label):
-    state = taskcluster.state_task(task_id)
-    if state not in RERUN_STATES:
+    status = taskcluster.status_task(task_id)
+    if status not in RERUN_STATES:
         logger.warning(
             "No need to rerun {}: state '{}' not in {}!".format(
-                label, state, RERUN_STATES
+                label, status, RERUN_STATES
             )
         )
         return

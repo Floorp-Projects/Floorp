@@ -41,7 +41,7 @@ docker_image_schema = Schema(
         Optional("symbol"): str,
         # relative path (from config.path) to the file the docker image was defined
         # in.
-        Optional("task-from"): str,
+        Optional("job-from"): str,
         # Arguments to use for the Dockerfile.
         Optional("args"): {str: str},
         # Name of the docker image definition under taskcluster/docker, when
