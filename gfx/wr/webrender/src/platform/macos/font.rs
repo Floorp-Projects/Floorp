@@ -232,6 +232,10 @@ fn is_bitmap_font(font: &FontInstance) -> bool {
 }
 
 impl FontContext {
+    pub fn distribute_across_threads() -> bool {
+        true
+    }
+
     pub fn new() -> Result<FontContext, ResourceCacheError> {
         debug!("Test for subpixel AA support: {:?}", *FONT_SMOOTHING_MODE);
 
@@ -245,10 +249,6 @@ impl FontContext {
             graphics_context: GraphicsContext::new(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
         })
-    }
-
-    pub fn has_font(&self, font_key: &FontKey) -> bool {
-        self.ct_font_descs.contains_key(font_key)
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: Arc<Vec<u8>>, index: u32) {
@@ -517,6 +517,12 @@ impl FontContext {
                 };
             }
         }
+    }
+
+    pub fn begin_rasterize(_font: &FontInstance) {
+    }
+
+    pub fn end_rasterize(_font: &FontInstance) {
     }
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {

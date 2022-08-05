@@ -1453,8 +1453,8 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   WindowContext::Discard();
 
   // Report content blocking log when destroyed.
-  // There shouldn't have any content blocking log when a documnet is loaded in
-  // the parent process(See NotifyContentBlockingeEvent), so we could skip
+  // There shouldn't have any content blocking log when a document is loaded in
+  // the parent process(See NotifyContentBlockingEvent), so we could skip
   // reporting log when it is in-process.
   if (!IsInProcess()) {
     RefPtr<BrowserParent> browserParent =
@@ -1468,6 +1468,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
         if (mDocumentURI && (net::SchemeIsHTTP(mDocumentURI) ||
                              net::SchemeIsHTTPS(mDocumentURI))) {
           GetContentBlockingLog()->ReportOrigins();
+          GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());
         }
       }
     }

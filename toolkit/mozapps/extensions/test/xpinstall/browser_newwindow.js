@@ -5,6 +5,7 @@
 
 let win;
 let popupPromise;
+let newtabPromise;
 const exampleURI = Services.io.newURI("http://example.com");
 async function test() {
   waitForExplicitFinish(); // have to call this ourselves because we're async.
@@ -36,7 +37,7 @@ async function test() {
   );
 
   const url = `${TESTROOT}installtrigger.html?${triggers}`;
-  BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+  newtabPromise = BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
   popupPromise = BrowserTestUtils.waitForEvent(
     win.PanelUI.notificationPanel,
     "popupshown"
@@ -73,6 +74,13 @@ async function finish_test(count) {
   win.PanelUI.notificationPanel
     .querySelector("popupnotification[popupid=addon-installed]")
     .button.click();
+
+  // Wait for the promise returned by BrowserTestUtils.openNewForegroundTab
+  // to be resolved before removing the window to prevent an uncaught exception
+  // triggered from inside openNewForegroundTab to trigger a test failure due
+  // to a race between openNewForegroundTab and closeWindow calls, e.g. as for
+  // Bug 1728482).
+  await newtabPromise;
 
   // Now finish the test:
   await BrowserTestUtils.closeWindow(win);

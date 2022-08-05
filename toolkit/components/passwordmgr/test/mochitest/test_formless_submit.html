@@ -32,7 +32,7 @@ let loadPromise = new Promise(resolve => {
   });
 });
 
-add_task(async function setup() {
+add_setup(async () => {
   info("Waiting for page and frame loads");
   await loadPromise;
 

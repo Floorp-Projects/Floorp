@@ -112,7 +112,7 @@ async function handleCommandLine(commandLine) {
   Services.prefs.clearUserPref("services.settings.loglevel");
   Services.prefs.clearUserPref("toolkit.backgroundtasks.loglevel");
   if (commandLine.handleFlag("debug", CASE_INSENSITIVE)) {
-    console.log("Saw --debug, not showing any alerts");
+    console.log("Saw --debug, making logging verbose");
     Services.prefs.setBoolPref("services.settings.preview_enabled", true);
     Services.prefs.setCharPref(
       "browser.newtabpage.activity-stream.asrouter.debugLogLevel",

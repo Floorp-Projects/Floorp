@@ -34,7 +34,7 @@ addLoginsInParent(
 let iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
-add_task(async function setup() {
+add_setup(async () => {
   let processedPromise = promiseFormsProcessed();
   iframe.src = "/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
   await new Promise(resolve => {

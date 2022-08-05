@@ -139,7 +139,7 @@ MsaaRootAccessible::get_accFocus(
   if (!docProxy) {
     return hr;
   }
-  RefPtr<IDispatch> docDisp = NativeAccessible(docProxy);
+  RefPtr<IDispatch> docDisp = already_AddRefed(NativeAccessible(docProxy));
   if (!docDisp) {
     return E_FAIL;
   }

@@ -117,22 +117,26 @@ class SpliceableJSONWriter;
 
 static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_ENTRIES =
 #  if !defined(GP_PLAT_arm_android)
-    MakePowerOfTwo32<1024 * 1024>();  // 1M entries = 8MB
+    MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
 #  else
-    MakePowerOfTwo32<128 * 1024>();  // 128k entries = 1MB
+    MakePowerOfTwo32<2 * 1024 * 1024>();           // 2M entries = 16MB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
 // systems.
+// Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
+// https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
 static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_STARTUP_ENTRIES =
 #  if !defined(GP_PLAT_arm_android)
-    MakePowerOfTwo32<4 * 1024 * 1024>();  // 4M entries = 32MB
+    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
 #  else
-    MakePowerOfTwo32<256 * 1024>();  // 256k entries = 2MB
+    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
 #  endif
 
-#  define BASE_PROFILER_DEFAULT_DURATION 20
-#  define BASE_PROFILER_DEFAULT_INTERVAL 1
+// Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
+// https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
+#  define BASE_PROFILER_DEFAULT_INTERVAL 1 /* millisecond */
+#  define BASE_PROFILER_MAX_INTERVAL 5000  /* milliseconds */
 
 // Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will
 // also be started. This call must happen before any other profiler calls

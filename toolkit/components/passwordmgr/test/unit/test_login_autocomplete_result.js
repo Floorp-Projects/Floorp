@@ -82,7 +82,7 @@ matchingLogins.push(
   )
 );
 
-add_task(async function setup() {
+add_setup(async () => {
   // Get a profile so we have storage access and insert the logins to get unique GUIDs.
   do_get_profile();
   matchingLogins = await Services.logins.addLogins(matchingLogins);

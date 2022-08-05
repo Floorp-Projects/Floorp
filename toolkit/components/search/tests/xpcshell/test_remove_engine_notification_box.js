@@ -215,10 +215,10 @@ add_task(async function test_default_engine_changed_and_metadata_unchanged() {
     SearchUtils.TOPIC_ENGINE_MODIFIED
   );
 
-  info("Set user metadata to the same properties as cache _metadata.");
+  info("Set user settings metadata to the same properties as cached metadata.");
   await Services.search.wrappedJSObject._fetchEngineSelectorEngines();
   userSettings.metaData = {
-    ...Services.search.wrappedJSObject._settings._metaData,
+    ...Services.search.wrappedJSObject._settings.getSettingsMetaData(),
   };
 
   await reloadEngines(structuredClone(userSettings));

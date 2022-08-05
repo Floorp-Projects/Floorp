@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <limits>
 #include "CacheLog.h"
 #include "CacheFileIOManager.h"
 
@@ -10,6 +11,7 @@
 #include "CacheStorageService.h"
 #include "CacheIndex.h"
 #include "CacheFileUtils.h"
+#include "nsError.h"
 #include "nsThreadUtils.h"
 #include "CacheFile.h"
 #include "CacheObserver.h"
@@ -2451,13 +2453,30 @@ nsresult CacheFileIOManager::GetEntryInfo(
 
   // Pick all data to pass to the callback.
   int64_t dataSize = metadata->Offset();
+  int64_t altDataSize = 0;
   uint32_t fetchCount = metadata->GetFetchCount();
   uint32_t expirationTime = metadata->GetExpirationTime();
   uint32_t lastModified = metadata->GetLastModified();
 
+  const char* altDataElement =
+      metadata->GetElement(CacheFileUtils::kAltDataKey);
+  if (altDataElement) {
+    int64_t altDataOffset = std::numeric_limits<int64_t>::max();
+    if (NS_SUCCEEDED(CacheFileUtils::ParseAlternativeDataInfo(
+            altDataElement, &altDataOffset, nullptr)) &&
+        altDataOffset < dataSize) {
+      dataSize = altDataOffset;
+      altDataSize = metadata->Offset() - altDataOffset;
+    } else {
+      LOG(("CacheFileIOManager::GetEntryInfo() invalid alternative data info"));
+      return NS_OK;
+    }
+  }
+
   // Call directly on the callback.
-  aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, fetchCount, lastModified,
-                         expirationTime, metadata->Pinned(), info);
+  aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, altDataSize, fetchCount,
+                         lastModified, expirationTime, metadata->Pinned(),
+                         info);
 
   return NS_OK;
 }

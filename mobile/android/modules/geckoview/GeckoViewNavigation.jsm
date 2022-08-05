@@ -18,6 +18,7 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
@@ -597,8 +598,16 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     const { contentPrincipal } = this.browser;
     let permissions;
-    if (contentPrincipal) {
-      const rawPerms = Services.perms.getAllForPrincipal(contentPrincipal);
+    if (
+      contentPrincipal &&
+      lazy.GeckoViewUtils.isSupportedPermissionsPrincipal(contentPrincipal)
+    ) {
+      let rawPerms = [];
+      try {
+        rawPerms = Services.perms.getAllForPrincipal(contentPrincipal);
+      } catch (ex) {
+        warn`Could not get permissions for principal. ${ex}`;
+      }
       permissions = rawPerms.map(this.serializePermission);
 
       // The only way for apps to set permissions is to get hold of an existing

@@ -543,11 +543,17 @@ class VendorManifest(MozbuildObject):
                     },
                     "action: {type} command: {command} working dir: {run_dir} args: {args}",
                 )
+                extra_env = (
+                    {"GECKO_PATH": os.getcwd()}
+                    if "GECKO_PATH" not in os.environ
+                    else {}
+                )
                 self.run_process(
                     args=[command] + args,
                     cwd=run_dir,
                     log_name=command,
                     require_unix_environment=True,
+                    append_env=extra_env,
                 )
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"

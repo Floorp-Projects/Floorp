@@ -42,6 +42,7 @@ static inline void profiler_shutdown(
 
 #else  // !MOZ_GECKO_PROFILER
 
+#  include "BaseProfiler.h"
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/MozPromise.h"
@@ -53,28 +54,14 @@ static inline void profiler_shutdown(
 //---------------------------------------------------------------------------
 
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
-#  if !defined(GP_PLAT_arm_android)
-    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
-#  else
-    mozilla::MakePowerOfTwo32<2 * 1024 * 1024>();  // 2M entries = 16MB
-#  endif
+    mozilla::baseprofiler::BASE_PROFILER_DEFAULT_ENTRIES;
 
-// Startup profiling usually need to capture more data, especially on slow
-// systems.
-// Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
-// https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
-#  if !defined(GP_PLAT_arm_android)
-    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
-#  else
-    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
-#  endif
+    mozilla::baseprofiler::BASE_PROFILER_DEFAULT_STARTUP_ENTRIES;
 
-#  define PROFILER_DEFAULT_DURATION 20 /* seconds, for tests only */
-// Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
-// https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
-#  define PROFILER_DEFAULT_INTERVAL 1  /* millisecond */
-#  define PROFILER_MAX_INTERVAL 5000   /* milliseconds */
+#  define PROFILER_DEFAULT_INTERVAL BASE_PROFILER_DEFAULT_INTERVAL
+#  define PROFILER_MAX_INTERVAL BASE_PROFILER_MAX_INTERVAL
+
 #  define PROFILER_DEFAULT_ACTIVE_TAB_ID 0
 
 // Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will

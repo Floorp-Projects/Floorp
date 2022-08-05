@@ -416,6 +416,23 @@ function serialize(
 
     return remoteValue;
   }
+  // TODO: Bug 1770754. Remove the if condition when the serialization of all the other types is implemented,
+  // since then the serialization of plain objects should be the fallback.
+  else if (className == "Object") {
+    const remoteValue = { type: "object" };
+
+    if (maxDepth !== null && maxDepth > 0) {
+      remoteValue.value = serializeMapping(
+        Object.entries(value),
+        maxDepth /*,
+          ownershipType,
+          serializationInternalMap,
+          realm */
+      );
+    }
+
+    return remoteValue;
+  }
 
   lazy.logger.warn(
     `Unsupported type: ${type} for remote value: ${stringify(value)}`

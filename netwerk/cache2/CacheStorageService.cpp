@@ -310,9 +310,9 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
 
   virtual void OnEntryInfo(const nsACString& aURISpec,
                            const nsACString& aIdEnhance, int64_t aDataSize,
-                           int32_t aFetchCount, uint32_t aLastModifiedTime,
-                           uint32_t aExpirationTime, bool aPinned,
-                           nsILoadContextInfo* aInfo) override {
+                           int64_t aAltDataSize, uint32_t aFetchCount,
+                           uint32_t aLastModifiedTime, uint32_t aExpirationTime,
+                           bool aPinned, nsILoadContextInfo* aInfo) override {
     nsresult rv;
 
     nsCOMPtr<nsIURI> uri;
@@ -321,9 +321,9 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
       return;
     }
 
-    rv = mCallback->OnCacheEntryInfo(uri, aIdEnhance, aDataSize, aFetchCount,
-                                     aLastModifiedTime, aExpirationTime,
-                                     aPinned, aInfo);
+    rv = mCallback->OnCacheEntryInfo(uri, aIdEnhance, aDataSize, aAltDataSize,
+                                     aFetchCount, aLastModifiedTime,
+                                     aExpirationTime, aPinned, aInfo);
     if (NS_FAILED(rv)) {
       LOG(("  callback failed, canceling the walk"));
       mCancel = true;
@@ -382,8 +382,8 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
       }
 
       rv = mWalker->mCallback->OnCacheEntryInfo(
-          uri, mIdEnhance, mDataSize, mFetchCount, mLastModifiedTime,
-          mExpirationTime, mPinned, mInfo);
+          uri, mIdEnhance, mDataSize, mAltDataSize, mFetchCount,
+          mLastModifiedTime, mExpirationTime, mPinned, mInfo);
       if (NS_FAILED(rv)) {
         mWalker->mCancel = true;
       }
@@ -396,7 +396,8 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
     nsCString mURISpec;
     nsCString mIdEnhance;
     int64_t mDataSize{0};
-    int32_t mFetchCount{0};
+    int64_t mAltDataSize{0};
+    uint32_t mFetchCount{0};
     uint32_t mLastModifiedTime{0};
     uint32_t mExpirationTime{0};
     bool mPinned{false};
@@ -480,9 +481,9 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
 
   virtual void OnEntryInfo(const nsACString& aURISpec,
                            const nsACString& aIdEnhance, int64_t aDataSize,
-                           int32_t aFetchCount, uint32_t aLastModifiedTime,
-                           uint32_t aExpirationTime, bool aPinned,
-                           nsILoadContextInfo* aInfo) override {
+                           int64_t aAltDataSize, uint32_t aFetchCount,
+                           uint32_t aLastModifiedTime, uint32_t aExpirationTime,
+                           bool aPinned, nsILoadContextInfo* aInfo) override {
     // Called directly from CacheFileIOManager::GetEntryInfo.
 
     // Invoke onCacheEntryInfo on the main thread for this entry.
@@ -490,6 +491,7 @@ class WalkDiskCacheRunnable : public WalkCacheRunnable {
     info->mURISpec = aURISpec;
     info->mIdEnhance = aIdEnhance;
     info->mDataSize = aDataSize;
+    info->mAltDataSize = aAltDataSize;
     info->mFetchCount = aFetchCount;
     info->mLastModifiedTime = aLastModifiedTime;
     info->mExpirationTime = aExpirationTime;
@@ -2084,7 +2086,11 @@ void CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
   if (NS_FAILED(aEntry->GetStorageDataSize(&dataSize))) {
     dataSize = 0;
   }
-  int32_t fetchCount;
+  int64_t altDataSize;
+  if (NS_FAILED(aEntry->GetAltDataSize(&altDataSize))) {
+    altDataSize = 0;
+  }
+  uint32_t fetchCount;
   if (NS_FAILED(aEntry->GetFetchCount(&fetchCount))) {
     fetchCount = 0;
   }
@@ -2097,8 +2103,9 @@ void CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
     expirationTime = 0;
   }
 
-  aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, fetchCount, lastModified,
-                         expirationTime, aEntry->IsPinned(), info);
+  aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, altDataSize, fetchCount,
+                         lastModified, expirationTime, aEntry->IsPinned(),
+                         info);
 }
 
 // static

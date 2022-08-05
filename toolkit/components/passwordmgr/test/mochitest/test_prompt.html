@@ -83,7 +83,7 @@ function initLogins() {
   Services.logins.addLogin(login2E);
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   runInParent(initLogins);
 });
 

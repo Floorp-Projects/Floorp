@@ -2042,7 +2042,7 @@ var add_task = (function() {
   }
 
   // The "add_task" function
-  return function(generatorFunction) {
+  return function(generatorFunction, options = { isSetup: false }) {
     if (task_list.length === 0) {
       // This is the first time add_task has been called.
       // First, confirm that SimpleTest is available.
@@ -2099,12 +2099,18 @@ var add_task = (function() {
                 skipTask(name);
                 continue;
               }
-              info("add_task | Entering test " + name);
+              const taskInfo = action =>
+                info(
+                  `${
+                    task.isSetup ? "add_setup" : "add_task"
+                  } | ${action} ${name}`
+                );
+              taskInfo("Entering");
               let result = await task();
               if (isGenerator(result)) {
                 ok(false, "Task returned a generator");
               }
-              info("add_task | Leaving test " + name);
+              taskInfo("Leaving");
             }
           } catch (ex) {
             try {
@@ -2139,10 +2145,21 @@ var add_task = (function() {
     generatorFunction.only = () => (run_only_this_task = generatorFunction);
     // Add the task to the list of tasks to run after
     // the main thread is finished.
-    task_list.push(generatorFunction);
+    if (options.isSetup) {
+      generatorFunction.isSetup = true;
+      let lastSetupIndex = task_list.findLastIndex(t => t.isSetup) + 1;
+      task_list.splice(lastSetupIndex, 0, generatorFunction);
+    } else {
+      task_list.push(generatorFunction);
+    }
     return generatorFunction;
   };
 })();
+
+// Like add_task, but setup tasks are executed first.
+function add_setup(generatorFunction) {
+  return add_task(generatorFunction, { isSetup: true });
+}
 
 // Request complete log when using failure patterns so that failure info
 // from infra can be useful.

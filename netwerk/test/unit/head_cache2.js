@@ -306,6 +306,7 @@ VisitCallback.prototype = {
     aURI,
     aIdEnhance,
     aDataSize,
+    aAltDataSize,
     aFetchCount,
     aLastModifiedTime,
     aExpirationTime,

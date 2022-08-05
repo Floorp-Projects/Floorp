@@ -142,16 +142,16 @@ fn is_bitmap_font(font: &FontInstance) -> bool {
 }
 
 impl FontContext {
+    pub fn distribute_across_threads() -> bool {
+        true
+    }
+
     pub fn new() -> Result<FontContext, ResourceCacheError> {
         Ok(FontContext {
             fonts: FastHashMap::default(),
             variations: FastHashMap::default(),
             gamma_luts: FastHashMap::default(),
         })
-    }
-
-    pub fn has_font(&self, font_key: &FontKey) -> bool {
-        self.fonts.contains_key(font_key)
     }
 
     fn add_font_descriptor(&mut self, font_key: &FontKey, desc: &dwrote::FontDescriptor) {
@@ -549,6 +549,12 @@ impl FontContext {
             None
         };
         (scaled_size as f32, x_scale, y_scale, bitmaps, transform)
+    }
+
+    pub fn begin_rasterize(_font: &FontInstance) {
+    }
+
+    pub fn end_rasterize(_font: &FontInstance) {
     }
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {

@@ -32,7 +32,7 @@ let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
 
-add_task(async function setup() {
+add_setup(async () => {
   ok(readyPromise, "check promise is available");
   await readyPromise;
 });

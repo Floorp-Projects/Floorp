@@ -276,7 +276,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   ConnectionEntry* GetOrCreateConnectionEntry(
       nsHttpConnectionInfo*, bool prohibitWildCard, bool aNoHttp2,
-      bool aNoHttp3, bool* aAvailableForDispatchNow = nullptr);
+      bool aNoHttp3, bool* aIsWildcard,
+      bool* aAvailableForDispatchNow = nullptr);
 
   [[nodiscard]] nsresult MakeNewConnection(
       ConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo);

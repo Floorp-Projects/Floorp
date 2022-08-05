@@ -170,6 +170,15 @@ add_task(async function my_test() {
 });
 ```
 
+Use `add_setup()` when asynchronous test task is meant to prepare test for run.
+All setup tasks are executed once in order they appear prior to any test tasks.
+
+```js
+add_setup(async () => {
+  await clearStorage();
+});
+```
+
 Or alternatively, manually call `waitForExplicitFinish` and `finish`:
 
 ```js

@@ -49,6 +49,7 @@ const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
 const NIMBUS_DEBUG_PREF = "nimbus.debug";
 const NIMBUS_VALIDATION_PREF = "nimbus.validation.enabled";
+const NIMBUS_APPID_PREF = "nimbus.appId";
 
 const STUDIES_ENABLED_CHANGED = "nimbus:studies-enabled-changed";
 
@@ -63,6 +64,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "NIMBUS_DEBUG",
   NIMBUS_DEBUG_PREF,
   false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "APP_ID",
+  NIMBUS_APPID_PREF,
+  "firefox-desktop"
 );
 
 const SCHEMAS = {
@@ -261,6 +268,35 @@ class _RemoteSettingsExperimentLoader {
             }
             continue;
           }
+        }
+
+        const featureIds =
+          r.featureIds ??
+          r.branches
+            .flatMap(branch => branch.features ?? [branch.feature])
+            .map(featureDef => featureDef.featureId);
+
+        let haveAllFeatures = true;
+
+        for (const featureId of featureIds) {
+          const feature = lazy.NimbusFeatures[featureId];
+
+          // If validation is enabled, we want to catch this later in
+          // _validateBranches to collect the correct stats for telemetry.
+          if (!feature) {
+            continue;
+          }
+
+          if (!feature.applications.includes(lazy.APP_ID)) {
+            lazy.log.debug(
+              `${r.id} uses feature ${featureId} which is not enabled for this application (${lazy.APP_ID}) -- skipping`
+            );
+            haveAllFeatures = false;
+            break;
+          }
+        }
+        if (!haveAllFeatures) {
+          continue;
         }
 
         let type = r.isRollout ? "rollout" : "experiment";

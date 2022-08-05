@@ -153,7 +153,7 @@ async function promiseACPopupClosed() {
   }, "Wait for AC popup to be closed");
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   listenForUnexpectedPopupShown();
 });
 

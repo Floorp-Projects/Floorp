@@ -82,7 +82,7 @@ const tests = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async () => {
   ok(readyPromise, "check promise is available");
   await readyPromise;
   win = window.open("about:blank");

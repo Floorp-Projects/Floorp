@@ -156,10 +156,9 @@ UNIFIED_SOURCES += [
     "PendingTransactionInfo.cpp",
     "PendingTransactionQueue.cpp",
     "QuicSocketControl.cpp",
-    "SocketWrapper.cpp",
     "SpeculativeTransaction.cpp",
-    "TLSFilterTransaction.cpp",
     "TlsHandshaker.cpp",
+    "TLSTransportLayer.cpp",
     "TRRServiceChannel.cpp",
 ]
 

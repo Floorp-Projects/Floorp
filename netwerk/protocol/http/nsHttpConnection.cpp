@@ -28,6 +28,7 @@
 #include "nsISupportsPriority.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsCRT.h"
+#include "nsQueryObject.h"
 #include "nsPreloadedStream.h"
 #include "nsProxyRelease.h"
 #include "nsSocketTransport2.h"
@@ -38,7 +39,7 @@
 #include "sslt.h"
 #include "NSSErrorsService.h"
 #include "Http2ConnectTransaction.h"
-#include "TLSFilterTransaction.h"
+#include "TLSTransportLayer.h"
 #include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla::net {
@@ -322,7 +323,8 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
   }
 
   nsresult rv = NS_OK;
-  bool spdyProxy = mConnInfo->UsingHttpsProxy() && !mTLSFilter;
+  bool spdyProxy = mConnInfo->UsingHttpsProxy() && mConnInfo->UsingConnect() &&
+                   !mHasTLSTransportLayer;
   if (spdyProxy) {
     RefPtr<nsHttpConnectionInfo> wildCardProxyCi;
     rv = mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
@@ -334,9 +336,28 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
   }
 
   if (!mDid0RTTSpdy && mTransaction) {
-    rv = MoveTransactionsToSpdy(status, list);
-    if (NS_FAILED(rv)) {
-      return;
+    if (spdyProxy) {
+      if (NS_FAILED(status)) {
+        mSpdySession->SetConnection(mTransaction->Connection());
+        mTransaction->SetConnection(nullptr);
+        mTransaction->DoNotRemoveAltSvc();
+        mTransaction->Close(NS_ERROR_NET_RESET);
+        mTransaction = nullptr;
+      } else {
+        for (auto trans : list) {
+          if (!mSpdySession->Connection()) {
+            mSpdySession->SetConnection(trans->Connection());
+          }
+          trans->SetConnection(nullptr);
+          trans->DoNotRemoveAltSvc();
+          trans->Close(NS_ERROR_NET_RESET);
+        }
+      }
+    } else {
+      rv = MoveTransactionsToSpdy(status, list);
+      if (NS_FAILED(rv)) {
+        return;
+      }
     }
   }
 
@@ -351,17 +372,8 @@ void nsHttpConnection::StartSpdy(nsISSLSocketControl* sslControl,
 
   mIdleTimeout = gHttpHandler->SpdyTimeout() * mDefaultTimeoutFactor;
 
-  if (!mTLSFilter) {
-    mTransaction = mSpdySession;
-  } else {
-    rv = mTLSFilter->SetProxiedTransaction(mSpdySession);
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("nsHttpConnection::StartSpdy [%p] SetProxiedTransaction failed"
-           " rv[0x%x]",
-           this, static_cast<uint32_t>(rv)));
-    }
-  }
+  mTransaction = mSpdySession;
+
   if (mDontReuse) {
     mSpdySession->DontReuse();
   }
@@ -424,16 +436,6 @@ void nsHttpConnection::Reset0RttForSpdy() {
   // We have to reset this here, just in case we end up starting spdy again,
   // so it can actually do everything it needs to do.
   mDid0RTTSpdy = false;
-}
-
-nsresult nsHttpConnection::OnTunnelNudged(TLSFilterTransaction* trans) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("nsHttpConnection::OnTunnelNudged %p\n", this));
-  if (trans != mTLSFilter) {
-    return NS_OK;
-  }
-  LOG(("nsHttpConnection::OnTunnelNudged %p Calling OnSocketWritable\n", this));
-  return OnSocketWritable();
 }
 
 // called on the socket thread
@@ -540,22 +542,6 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
          this, static_cast<uint32_t>(rv)));
   }
 
-  if (mTLSFilter) {
-    RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
-    rv = mTLSFilter->SetProxiedTransaction(trans, baseTrans);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (mTransaction->ConnectionInfo()->UsingConnect()) {
-      Http2ConnectTransaction* trans =
-          baseTrans ? baseTrans->QueryHttp2ConnectTransaction() : nullptr;
-      if (trans && !trans->IsWebsocket()) {
-        // If we are here, the tunnel is already established. Let the
-        // transaction know that proxy connect is successful.
-        mTransaction->OnProxyConnectComplete(200);
-      }
-    }
-    mTransaction = mTLSFilter;
-  }
-
   trans->OnActivated();
 
   rv = OnOutputStreamReady(mSocketOut);
@@ -586,13 +572,13 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
   nsHttpConnectionInfo* transCI = httpTransaction->ConnectionInfo();
 
   bool needTunnel = transCI->UsingHttpsProxy();
-  needTunnel = needTunnel && !mTLSFilter;
+  needTunnel = needTunnel && !mHasTLSTransportLayer;
   needTunnel = needTunnel && transCI->UsingConnect();
   needTunnel = needTunnel && httpTransaction->QueryHttpTransaction();
 
   // Let the transaction know that the tunnel is already established and we
   // don't need to setup the tunnel again.
-  if (transCI->UsingConnect() && mEverUsedSpdy && mTLSFilter) {
+  if (transCI->UsingConnect() && mEverUsedSpdy && mHasTLSTransportLayer) {
     httpTransaction->OnProxyConnectComplete(200);
   }
 
@@ -608,8 +594,8 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
        needTunnel ? " over tunnel" : (isWebsocket ? " websocket" : "")));
 
   if (mSpdySession) {
-    if (!mSpdySession->AddStream(httpTransaction, priority, needTunnel,
-                                 isWebsocket, mCallbacks)) {
+    if (!mSpdySession->AddStream(httpTransaction, priority, isWebsocket,
+                                 mCallbacks)) {
       MOZ_ASSERT(false);  // this cannot happen!
       httpTransaction->Close(NS_ERROR_ABORT);
       return NS_ERROR_FAILURE;
@@ -617,6 +603,19 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
   }
 
   Unused << ResumeSend();
+  return NS_OK;
+}
+
+nsresult nsHttpConnection::CreateTunnelStream(
+    nsAHttpTransaction* httpTransaction, nsHttpConnection** aHttpConnection) {
+  if (!mSpdySession) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<nsHttpConnection> conn =
+      mSpdySession->CreateTunnelStream(httpTransaction, mCallbacks, mRtt);
+
+  conn.forget(aHttpConnection);
   return NS_OK;
 }
 
@@ -658,8 +657,6 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
   if (NS_FAILED(reason)) {
     if (mIdleMonitoring) EndIdleMonitoring();
 
-    mTLSFilter = nullptr;
-
     // The connection and security errors clear out alt-svc mappings
     // in case any previously validated ones are now invalid
     if (((reason == NS_ERROR_NET_RESET) ||
@@ -681,7 +678,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
       // a Alert record might be superfulous to a clean HTTP/SPDY shutdown.
       // Never block to do this and limit it to a small amount of data.
       // During shutdown just be fast!
-      if (mSocketIn && !aIsShutdown) {
+      if (mSocketIn && !aIsShutdown && !mInSpdyTunnel) {
         char buffer[4000];
         uint32_t count, total = 0;
         nsresult rv;
@@ -1008,6 +1005,7 @@ void nsHttpConnection::HandleTunnelResponse(uint16_t responseStatus,
     LOG(("proxy CONNECT failed! endtoendssl=%d onlyconnect=%d\n", isHttps,
          onlyConnect));
     mTransaction->SetProxyConnectFailed();
+    mDontReuse = true;
   }
 }
 
@@ -1091,18 +1089,6 @@ nsresult nsHttpConnection::TakeTransport(nsISocketTransport** aTransport,
 
   mSocketTransport->SetSecurityCallbacks(nullptr);
   mSocketTransport->SetEventSink(nullptr, nullptr);
-
-  // The nsHttpConnection will go away soon, so if there is a TLS Filter
-  // being used (e.g. for wss CONNECT tunnel from a proxy connected to
-  // via https) that filter needs to take direct control of the
-  // streams
-  if (mTLSFilter) {
-    nsCOMPtr<nsIAsyncInputStream> ref1(mSocketIn);
-    nsCOMPtr<nsIAsyncOutputStream> ref2(mSocketOut);
-    mTLSFilter->newIODriver(ref1, ref2, getter_AddRefs(mSocketIn),
-                            getter_AddRefs(mSocketOut));
-    mTLSFilter = nullptr;
-  }
 
   mSocketTransport.forget(aTransport);
   mSocketIn.forget(aInputStream);
@@ -1196,16 +1182,11 @@ void nsHttpConnection::UpdateTCPKeepalive(nsITimer* aTimer, void* aClosure) {
 
 void nsHttpConnection::GetSecurityInfo(nsISupports** secinfo) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("nsHttpConnection::GetSecurityInfo trans=%p tlsfilter=%p socket=%p\n",
-       mTransaction.get(), mTLSFilter.get(), mSocketTransport.get()));
+  LOG(("nsHttpConnection::GetSecurityInfo trans=%p socket=%p\n",
+       mTransaction.get(), mSocketTransport.get()));
 
   if (mTransaction &&
       NS_SUCCEEDED(mTransaction->GetTransactionSecurityInfo(secinfo))) {
-    return;
-  }
-
-  if (mTLSFilter &&
-      NS_SUCCEEDED(mTLSFilter->GetTransactionSecurityInfo(secinfo))) {
     return;
   }
 
@@ -1283,10 +1264,21 @@ nsresult nsHttpConnection::ResumeRecv() {
   mLastReadTime = PR_IntervalNow();
 
   if (mSocketIn) {
-    if (!mTLSFilter || !mTLSFilter->HasDataToRecv() || NS_FAILED(ForceRecv())) {
-      return mSocketIn->AsyncWait(this, 0, 0, nullptr);
+    if (mHasTLSTransportLayer) {
+      RefPtr<TLSTransportLayer> tlsTransportLayer =
+          do_QueryObject(mSocketTransport);
+      if (tlsTransportLayer) {
+        bool hasDataToRecv = tlsTransportLayer->HasDataToRecv();
+        if (hasDataToRecv && NS_SUCCEEDED(ForceRecv())) {
+          return NS_OK;
+        }
+        Unused << mSocketIn->AsyncWait(this, 0, 0, nullptr);
+        // We have to return an error here to let the underlying layer know this
+        // connection doesn't read any data.
+        return NS_BASE_STREAM_WOULD_BLOCK;
+      }
     }
-    return NS_OK;
+    return mSocketIn->AsyncWait(this, 0, 0, nullptr);
   }
 
   MOZ_ASSERT_UNREACHABLE("no socket input stream");
@@ -1334,9 +1326,6 @@ nsresult nsHttpConnection::ForceSend() {
   LOG(("nsHttpConnection::ForceSend [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  if (mTLSFilter) {
-    return mTLSFilter->NudgeTunnel(this);
-  }
   return MaybeForceSendIO();
 }
 
@@ -1383,9 +1372,6 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
        "]\n",
        this, trans, static_cast<uint32_t>(reason)));
 
-  MOZ_ASSERT((trans == mTransaction) ||
-             (mTLSFilter && !mTLSFilter->Transaction()) ||
-             (mTLSFilter && mTLSFilter->Transaction() == trans));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (mCurrentBytesRead > mMaxBytesRead) mMaxBytesRead = mCurrentBytesRead;
@@ -1399,29 +1385,6 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
     mSpdySession->SetCleanShutdown(aIsShutdown);
     mUsingSpdyVersion = SpdyVersion::NONE;
     mSpdySession = nullptr;
-  }
-
-  if (!mTransaction && mTLSFilter) {
-    // In case of a race when the transaction is being closed before the tunnel
-    // is established we need to carry closing status on the proxied
-    // transaction.
-    // Not doing this leads to use of this closed connection to activate the
-    // not closed transaction what will likely lead to a use of a closed ssl
-    // socket and may cause a crash because of an unexpected use.
-    //
-    // There can possibly be two states: the actual transaction is still hanging
-    // of off the filter, or has not even been assigned on it yet.  In the
-    // latter case we simply must close the transaction given to us via the
-    // argument.
-    if (!mTLSFilter->Transaction()) {
-      if (trans) {
-        LOG(("  closing transaction directly"));
-        trans->Close(reason);
-      }
-    } else {
-      LOG(("  closing transactin hanging of off mTLSFilter"));
-      mTLSFilter->Close(reason);
-    }
   }
 
   if (mTransaction) {
@@ -1626,10 +1589,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
       again = false;
     } else if (NS_FAILED(mSocketOutCondition)) {
       if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK) {
-        if (mTLSFilter) {
-          LOG(("  blocked tunnel (handshake?)\n"));
-          rv = mTLSFilter->NudgeTunnel(this);
-        } else if (!mTlsHandshaker->EarlyDataCanNotBeUsed()) {
+        if (!mTlsHandshaker->EarlyDataCanNotBeUsed()) {
           // continue writing
           // We are not going to poll for write if the handshake is in progress,
           // but early data cannot be used.
@@ -1654,6 +1614,11 @@ nsresult nsHttpConnection::OnSocketWritable() {
                                         NS_NET_STATUS_WAITING_FOR, 0);
 
         rv = ResumeRecv();  // start reading
+      }
+      // When Spdy tunnel is used we need to explicitly set when a request is
+      // done.
+      if ((mState != HttpConnectionState::SETTING_UP_TUNNEL) && !mSpdySession) {
+        mRequestDone = true;
       }
       again = false;
     } else if (writeAttempts >= maxWriteAttempts) {
@@ -1741,7 +1706,7 @@ nsresult nsHttpConnection::OnSocketReadable() {
           ("nsHttpConnection::OnSocketReadable %p return due to inactive "
            "tunnel setup but incomplete NPN state\n",
            this));
-      if (mTlsHandshaker->EarlyDataAvailable()) {
+      if (mTlsHandshaker->EarlyDataAvailable() || mHasTLSTransportLayer) {
         rv = ResumeRecv();
       }
       break;
@@ -1788,7 +1753,7 @@ nsresult nsHttpConnection::OnSocketReadable() {
 void nsHttpConnection::SetupSecondaryTLS(
     nsAHttpTransaction* aHttp2ConnectTransaction) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(!mTLSFilter);
+  MOZ_ASSERT(!mHasTLSTransportLayer);
   LOG(
       ("nsHttpConnection %p SetupSecondaryTLS %s %d "
        "aHttp2ConnectTransaction=%p\n",
@@ -1804,21 +1769,22 @@ void nsHttpConnection::SetupSecondaryTLS(
   }
   MOZ_ASSERT(ci);
 
-  mTLSFilter = new TLSFilterTransaction(mTransaction, ci->Origin(),
-                                        ci->OriginPort(), this, this);
-
-  if (mTransaction) {
-    mTransaction = mTLSFilter;
-  }
   mWeakTrans = do_GetWeakReference(aHttp2ConnectTransaction);
+
+  RefPtr<TLSTransportLayer> transportLayer =
+      new TLSTransportLayer(mSocketTransport, mSocketIn, mSocketOut, this);
+  if (transportLayer->Init(ci->Origin(), ci->OriginPort())) {
+    mSocketIn = transportLayer->GetInputStreamWrapper();
+    mSocketOut = transportLayer->GetOutputStreamWrapper();
+    mSocketTransport = transportLayer;
+    mHasTLSTransportLayer = true;
+    LOG(("Create mTLSTransportLayer %p", this));
+  }
 }
 
-void nsHttpConnection::SetInSpdyTunnel(bool arg) {
-  MOZ_ASSERT(mTLSFilter);
-  mInSpdyTunnel = arg;
-
-  // don't setup another tunnel :)
-  SetTunnelSetupDone();
+void nsHttpConnection::SetInSpdyTunnel() {
+  mInSpdyTunnel = true;
+  mForcePlainText = true;
 }
 
 // static
@@ -2089,7 +2055,13 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream* in) {
   }
 
   nsresult rv = OnSocketReadable();
-  if (NS_FAILED(rv)) CloseTransaction(mTransaction, rv);
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    return rv;
+  }
+
+  if (NS_FAILED(rv)) {
+    CloseTransaction(mTransaction, rv);
+  }
 
   return NS_OK;
 }
@@ -2109,6 +2081,10 @@ nsHttpConnection::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   }
 
   nsresult rv = OnSocketWritable();
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    return NS_OK;
+  }
+
   if (NS_FAILED(rv)) CloseTransaction(mTransaction, rv);
 
   return NS_OK;
@@ -2407,13 +2383,12 @@ void nsHttpConnection::HandshakeDoneInternal() {
   Telemetry::Accumulate(Telemetry::SPDY_NPN_CONNECT, UsingSpdy());
 
   mTlsHandshaker->FinishNPNSetup(true, true);
-  return;
+  Unused << ResumeSend();
 }
 
 void nsHttpConnection::SetTunnelSetupDone() {
-  MOZ_ASSERT(mProxyConnectStream || mInSpdyTunnel);
-  MOZ_ASSERT((mState == HttpConnectionState::SETTING_UP_TUNNEL) ||
-             mInSpdyTunnel);
+  MOZ_ASSERT(mProxyConnectStream);
+  MOZ_ASSERT(mState == HttpConnectionState::SETTING_UP_TUNNEL);
 
   ChangeState(HttpConnectionState::REQUEST);
   mProxyConnectStream = nullptr;

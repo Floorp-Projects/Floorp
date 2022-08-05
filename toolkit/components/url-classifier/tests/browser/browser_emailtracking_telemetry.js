@@ -22,15 +22,27 @@ const EMAIL_TRACKER_PAGE = EMAIL_TRACKER_DOMAIN + TEST_PATH + "page.html";
 const EMAIL_TRACKER_IMAGE = EMAIL_TRACKER_DOMAIN + TEST_PATH + "raptor.jpg";
 
 const TELEMETRY_EMAIL_TRACKER_COUNT = "EMAIL_TRACKER_COUNT";
+const TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB =
+  "EMAIL_TRACKER_EMBEDDED_PER_TAB";
 
 const LABEL_BASE_NORMAL = 0;
 const LABEL_CONTENT_NORMAL = 1;
 const LABEL_BASE_EMAIL_WEBAPP = 2;
 const LABEL_CONTENT_EMAIL_WEBAPP = 3;
 
+const KEY_BASE_NORMAL = "base_normal";
+const KEY_CONTENT_NORMAL = "content_normal";
+const KEY_ALL_NORMAL = "all_normal";
+const KEY_BASE_EMAILAPP = "base_emailapp";
+const KEY_CONTENT_EMAILAPP = "content_emailapp";
+const KEY_ALL_EMAILAPP = "all_emailapp";
+
 async function clearTelemetry() {
   Services.telemetry.getSnapshotForHistograms("main", true /* clear */);
   Services.telemetry.getHistogramById(TELEMETRY_EMAIL_TRACKER_COUNT).clear();
+  Services.telemetry
+    .getKeyedHistogramById(TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB)
+    .clear();
 }
 
 async function loadImage(browser, url) {
@@ -68,6 +80,30 @@ async function getTelemetryProbe(key, label, checkCntFn) {
   return histogram.values[label] || 0;
 }
 
+async function getKeyedHistogram(histogram_id, key, bucket, checkCntFn) {
+  let histogram;
+
+  // Wait until the telemetry probe appears.
+  await TestUtils.waitForCondition(() => {
+    let histograms = Services.telemetry.getSnapshotForKeyedHistograms(
+      "main",
+      false /* clear */
+    ).parent;
+
+    histogram = histograms[histogram_id];
+
+    let checkRes = false;
+
+    if (histogram && histogram[key]) {
+      checkRes = checkCntFn ? checkCntFn(histogram[key].values[bucket]) : true;
+    }
+
+    return checkRes;
+  });
+
+  return histogram[key].values[bucket] || 0;
+}
+
 async function checkTelemetryProbe(key, label, expectedCnt) {
   let cnt = await getTelemetryProbe(key, label, cnt => {
     if (cnt === undefined) {
@@ -78,6 +114,18 @@ async function checkTelemetryProbe(key, label, expectedCnt) {
   });
 
   is(cnt, expectedCnt, "There should be expected count in telemetry.");
+}
+
+async function checkKeyedHistogram(histogram_id, key, bucket, expectedCnt) {
+  let cnt = await getKeyedHistogram(histogram_id, key, bucket, cnt => {
+    if (cnt === undefined) {
+      cnt = 0;
+    }
+
+    return cnt == expectedCnt;
+  });
+
+  is(cnt, expectedCnt, "There should be expected count in keyed telemetry.");
 }
 
 function checkNoTelemetryProbe(key) {
@@ -193,6 +241,8 @@ add_task(async function test_email_tracking_telemetry() {
       0
     );
   });
+  // Make sure the tab was closed properly before clearing Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
 
   await clearTelemetry();
 });
@@ -208,6 +258,8 @@ add_task(async function test_no_telemetry_for_first_party_email_tracker() {
     // Verify that there was no telemetry recorded.
     checkNoTelemetryProbe(TELEMETRY_EMAIL_TRACKER_COUNT);
   });
+  // Make sure the tab was closed properly before clearing Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
 
   await clearTelemetry();
 });
@@ -233,7 +285,139 @@ add_task(async function test_disable_email_data_collection() {
     // Verify that there was no telemetry recorded.
     checkNoTelemetryProbe(TELEMETRY_EMAIL_TRACKER_COUNT);
   });
+  // Make sure the tab was closed properly before clearing Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
 
   await SpecialPowers.popPrefEnv();
+  await clearTelemetry();
+});
+
+add_task(async function test_email_tracker_embedded_telemetry() {
+  // First, we open a page without loading any email trackers.
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async _ => {});
+  // Make sure the tab was closed properly before checking Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
+
+  // Check that the telemetry has been record properly for normal page. The
+  // telemetry should show there was no email tracker loaded.
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_BASE_NORMAL,
+    0,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_CONTENT_NORMAL,
+    0,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_ALL_NORMAL,
+    0,
+    1
+  );
+
+  // Second, Open a email webapp tab that doesn't a load email tracker.
+  await BrowserTestUtils.withNewTab(TEST_EMAIL_WEBAPP_PAGE, async _ => {});
+  // Make sure the tab was closed properly before checking Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
+
+  // Check that the telemetry has been record properly for the email webapp. The
+  // telemetry should show there was no email tracker loaded.
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_BASE_EMAILAPP,
+    0,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_CONTENT_EMAILAPP,
+    0,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_ALL_EMAILAPP,
+    0,
+    1
+  );
+
+  // Third, open a page with one email tracker loaded.
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async browser => {
+    // Load a image from the email tracker
+    let res = await loadImage(browser, EMAIL_TRACKER_IMAGE);
+
+    is(res, false, "The image is blocked.");
+  });
+  // Make sure the tab was closed properly before checking Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
+
+  // Verify that the telemetry has been record properly, The telemetry should
+  // show there was one base email tracker loaded.
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_BASE_NORMAL,
+    1,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_CONTENT_NORMAL,
+    0,
+    2
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_ALL_NORMAL,
+    0,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_ALL_NORMAL,
+    1,
+    1
+  );
+
+  // Open a page and load the same email tracker multiple times. There
+  // should be only one count for the same tracker.
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async browser => {
+    // Load a image from the email tracker two times.
+    await loadImage(browser, EMAIL_TRACKER_IMAGE);
+    await loadImage(browser, EMAIL_TRACKER_IMAGE);
+  });
+  // Make sure the tab was closed properly before checking Telemetry.
+  await BrowserUtils.promiseObserved("window-global-destroyed");
+
+  // Verify that there is still only one count when loading the same tracker
+  // multiple times.
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_BASE_NORMAL,
+    1,
+    2
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_CONTENT_NORMAL,
+    0,
+    3
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_ALL_NORMAL,
+    0,
+    1
+  );
+  await checkKeyedHistogram(
+    TELEMETRY_EMAIL_TRACKER_EMBEDDED_PER_TAB,
+    KEY_ALL_NORMAL,
+    1,
+    2
+  );
+
   await clearTelemetry();
 });
