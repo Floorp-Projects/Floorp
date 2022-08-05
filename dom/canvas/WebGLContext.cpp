@@ -1159,18 +1159,16 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
       return onFailure();
     }
 
-    const auto stride = CheckedInt<size_t>(mappedData.size.width) * 4;
-    const auto byteSize = stride * mappedData.size.height;
-    MOZ_RELEASE_ASSERT(byteSize.isValid());
-    MOZ_RELEASE_ASSERT(mappedData.stride ==
-                       static_cast<int64_t>(stride.value()));
-    Range<uint8_t> range = {mappedData.data, byteSize.value()};
+    Range<uint8_t> range = {mappedData.data,
+                            data->AsBufferTextureData()->GetBufferSize()};
 
     // If we have a surface representing the front buffer, then try to snapshot
     // that. Otherwise, when there is no surface, we read back directly from the
     // WebGL framebuffer.
-    auto valid = surf ? FrontBufferSnapshotInto(surf, Some(range))
-                      : SnapshotInto(fb->mGLName, size, range);
+    auto valid =
+        surf ? FrontBufferSnapshotInto(surf, Some(range),
+                                       Some(mappedData.stride))
+             : SnapshotInto(fb->mGLName, size, range, Some(mappedData.stride));
     if (!valid) {
       return onFailure();
     }
@@ -1242,15 +1240,15 @@ Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
 }
 
 Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
-    const Maybe<Range<uint8_t>> maybeDest) {
+    const Maybe<Range<uint8_t>> maybeDest, const Maybe<size_t> destStride) {
   const auto& front = mSwapChain.FrontBuffer();
   if (!front) return {};
-  return FrontBufferSnapshotInto(front, maybeDest);
+  return FrontBufferSnapshotInto(front, maybeDest, destStride);
 }
 
 Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
     const std::shared_ptr<gl::SharedSurface>& front,
-    const Maybe<Range<uint8_t>> maybeDest) {
+    const Maybe<Range<uint8_t>> maybeDest, const Maybe<size_t> destStride) {
   const auto& size = front->mDesc.size;
   if (!maybeDest) return Some(*uvec2::FromSize(size));
 
@@ -1266,14 +1264,29 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
 
   // -
 
-  return SnapshotInto(front->mFb ? front->mFb->mFB : 0, size, *maybeDest);
+  return SnapshotInto(front->mFb ? front->mFb->mFB : 0, size, *maybeDest,
+                      destStride);
 }
 
 Maybe<uvec2> WebGLContext::SnapshotInto(GLuint srcFb, const gfx::IntSize& size,
-                                        const Range<uint8_t>& dest) {
+                                        const Range<uint8_t>& dest,
+                                        const Maybe<size_t> destStride) {
+  const auto minStride = CheckedInt<size_t>(size.width) * 4;
+  if (!minStride.isValid()) {
+    gfxCriticalError() << "SnapshotInto: invalid stride, width:" << size.width;
+    return {};
+  }
+  size_t stride = destStride.valueOr(minStride.value());
+  if (stride < minStride.value() || (stride % 4) != 0) {
+    gfxCriticalError() << "SnapshotInto: invalid stride, width:" << size.width
+                       << ", stride:" << stride;
+    return {};
+  }
+
   gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
   if (IsWebGL2()) {
-    gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
+    gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH,
+                     stride > minStride.value() ? stride / 4 : 0);
     gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
     gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
   }
@@ -1301,21 +1314,36 @@ Maybe<uvec2> WebGLContext::SnapshotInto(GLuint srcFb, const gfx::IntSize& size,
 
   // -
 
-  const auto stride = CheckedInt<size_t>(size.width) * 4;
-  const auto srcByteCount = stride * size.height;
+  const auto srcByteCount = CheckedInt<size_t>(stride) * size.height;
   if (!srcByteCount.isValid()) {
     gfxCriticalError() << "SnapshotInto: invalid srcByteCount, width:"
                        << size.width << ", height:" << size.height;
     return {};
   }
   const auto dstByteCount = dest.length();
-  if (srcByteCount.value() != dstByteCount) {
+  if (srcByteCount.value() > dstByteCount) {
     gfxCriticalError() << "SnapshotInto: srcByteCount:" << srcByteCount.value()
-                       << " != dstByteCount:" << dstByteCount;
+                       << " > dstByteCount:" << dstByteCount;
     return {};
   }
+  uint8_t* dstPtr = dest.begin().get();
   gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
-                  LOCAL_GL_UNSIGNED_BYTE, dest.begin().get());
+                  LOCAL_GL_UNSIGNED_BYTE, dstPtr);
+
+  if (!IsWebGL2() && stride > minStride.value() && size.height > 1) {
+    // WebGL 1 doesn't support PACK_ROW_LENGTH. Instead, we read the data tight
+    // into the front of the buffer, and use memmove (since the source and dest
+    // may overlap) starting from the back to move it to the correct stride
+    // offsets. We don't move the first row as it is already in the right place.
+    uint8_t* destRow = dstPtr + stride * (size.height - 1);
+    const uint8_t* srcRow = dstPtr + minStride.value() * (size.height - 1);
+    while (destRow > dstPtr) {
+      memmove(destRow, srcRow, minStride.value());
+      destRow -= stride;
+      srcRow -= minStride.value();
+    }
+  }
+
   return Some(*uvec2::FromSize(size));
 }
 

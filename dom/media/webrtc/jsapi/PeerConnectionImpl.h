@@ -126,6 +126,9 @@ class RemoteSourceStreamInfo;
 class PCUuidGenerator : public mozilla::JsepUuidGenerator {
  public:
   virtual bool Generate(std::string* idp) override;
+  virtual mozilla::JsepUuidGenerator* Clone() const override {
+    return new PCUuidGenerator(*this);
+  }
 
  private:
   nsCOMPtr<nsIUUIDGenerator> mGenerator;
@@ -458,7 +461,8 @@ class PeerConnectionImpl final
   // Gets the RTC Signaling State of the JSEP session
   dom::RTCSignalingState GetSignalingState() const;
 
-  void OnSetDescriptionSuccess(JsepSdpType sdpType, bool remote);
+  already_AddRefed<dom::Promise> OnSetDescriptionSuccess(
+      dom::RTCSdpType aSdpType, bool aRemote, ErrorResult& aError);
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
@@ -552,6 +556,13 @@ class PeerConnectionImpl final
   MOZ_CAN_RUN_SCRIPT
   void RunNextOperation(ErrorResult& aError);
 
+  void SyncToJsep();
+  void SyncFromJsep();
+
+  void DoSetDescriptionSuccessPostProcessing(dom::RTCSdpType aSdpType,
+                                             bool aRemote,
+                                             const RefPtr<dom::Promise>& aP);
+
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
   // any other attributes of this class.
@@ -618,6 +629,12 @@ class PeerConnectionImpl final
   // The JSEP negotiation session.
   mozilla::UniquePtr<PCUuidGenerator> mUuidGen;
   mozilla::UniquePtr<mozilla::JsepSession> mJsepSession;
+  // There are lots of error cases where we want to abandon an sRD/sLD _after_
+  // it has already been applied to the JSEP engine, and revert back to the
+  // previous state. We also want to ensure that the various modifications
+  // to the JSEP engine are not exposed to JS until the sRD/sLD completes,
+  // which is why we have a new "uncommitted" JSEP engine.
+  mozilla::UniquePtr<mozilla::JsepSession> mUncommittedJsepSession;
   unsigned long mIceRestartCount;
   unsigned long mIceRollbackCount;
 
@@ -725,7 +742,7 @@ class PeerConnectionImpl final
   nsresult UpdateMediaPipelines();
 
   already_AddRefed<dom::RTCRtpTransceiver> CreateTransceiver(
-      JsepTransceiver* aJsepTransceiver,
+      const std::string& aId, bool aIsVideo,
       const dom::RTCRtpTransceiverInit& aInit,
       dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv);
 
@@ -738,6 +755,8 @@ class PeerConnectionImpl final
   bool AnyCodecHasPluginID(uint64_t aPluginID);
 
   already_AddRefed<nsIHttpChannelInternal> GetChannel() const;
+
+  void BreakCycles();
 
   RefPtr<WebrtcCallWrapper> mCall;
 

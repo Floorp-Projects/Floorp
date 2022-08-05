@@ -27,6 +27,8 @@ class RsdparsaSdp final : public Sdp {
  public:
   explicit RsdparsaSdp(RsdparsaSessionHandle session, const SdpOrigin& origin);
 
+  Sdp* Clone() const override;
+
   const SdpOrigin& GetOrigin() const override;
 
   // Note: connection information is always retrieved from media sections
@@ -57,6 +59,7 @@ class RsdparsaSdp final : public Sdp {
 
  private:
   RsdparsaSdp() : mOrigin("", 0, 0, sdp::kIPv4, "") {}
+  RsdparsaSdp(const RsdparsaSdp& aOrig);
 
   RsdparsaSessionHandle mSession;
   SdpOrigin mOrigin;

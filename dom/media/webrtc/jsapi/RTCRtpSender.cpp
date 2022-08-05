@@ -21,8 +21,19 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpSender, mWindow, mPc, mSenderTrack,
-                                      mTransceiver, mStreams, mDtmf)
+LazyLogModule gSenderLog("RTCRtpSender");
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(RTCRtpSender)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpSender)
+  // We do not do anything here, we wait for BreakCycles to be called
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpSender)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow, mPc, mSenderTrack, mTransceiver,
+                                    mStreams, mDtmf)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(RTCRtpSender)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCRtpSender)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCRtpSender)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCRtpSender)
@@ -30,14 +41,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCRtpSender)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-LazyLogModule gSenderLog("RTCRtpSender");
-
 #define INIT_CANONICAL(name, val) \
   name(AbstractThread::MainThread(), val, "RTCRtpSender::" #name " (Canonical)")
 
 RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                            MediaTransportHandler* aTransportHandler,
-                           JsepTransceiver* aJsepTransceiver,
                            AbstractThread* aCallThread,
                            nsISerialEventTarget* aStsThread,
                            MediaSessionConduit* aConduit,
@@ -45,7 +53,6 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                            RTCRtpTransceiver* aTransceiver)
     : mWindow(aWindow),
       mPc(aPc),
-      mJsepTransceiver(aJsepTransceiver),
       mSenderTrack(aTrack),
       mTransceiver(aTransceiver),
       INIT_CANONICAL(mSsrcs, Ssrcs()),
@@ -492,7 +499,7 @@ void RTCRtpSender::ApplyParameters(const RTCRtpParameters& aParameters) {
     }
   }
 
-  if (mJsepTransceiver->mSendTrack.SetJsConstraints(constraints)) {
+  if (GetJsepTransceiver().mSendTrack.SetJsConstraints(constraints)) {
     if (mPipeline->Transmitting()) {
       UpdateConduit();
     }
@@ -502,17 +509,9 @@ void RTCRtpSender::ApplyParameters(const RTCRtpParameters& aParameters) {
 void RTCRtpSender::SetStreams(
     const Sequence<OwningNonNull<DOMMediaStream>>& aStreams) {
   mStreams.Clear();
-  std::vector<std::string> streamIds;
   for (const auto& stream : aStreams) {
-    nsString wideStreamId;
-    stream->GetId(wideStreamId);
-    std::string streamId = NS_ConvertUTF16toUTF8(wideStreamId).get();
-    MOZ_ASSERT(!streamId.empty());
-    streamIds.push_back(streamId);
     mStreams.AppendElement(stream);
   }
-
-  mJsepTransceiver->mSendTrack.UpdateStreamIds(streamIds);
 }
 
 void RTCRtpSender::GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams) {
@@ -712,21 +711,30 @@ void RTCRtpSender::Shutdown() {
   mPipeline = nullptr;
 }
 
+void RTCRtpSender::BreakCycles() {
+  mWindow = nullptr;
+  mPc = nullptr;
+  mSenderTrack = nullptr;
+  mTransceiver = nullptr;
+  mStreams.Clear();
+  mDtmf = nullptr;
+}
+
 void RTCRtpSender::UpdateTransport() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mHaveSetupTransport) {
-    mPipeline->SetLevel(mJsepTransceiver->GetLevel());
+    mPipeline->SetLevel(GetJsepTransceiver().GetLevel());
     mHaveSetupTransport = true;
   }
 
-  mPipeline->UpdateTransport_m(mJsepTransceiver->mTransport.mTransportId,
+  mPipeline->UpdateTransport_m(GetJsepTransceiver().mTransport.mTransportId,
                                nullptr);
 }
 
 void RTCRtpSender::UpdateConduit() {
   // NOTE(pkerr) - the Call API requires the both local_ssrc and remote_ssrc be
   // set to a non-zero value or the CreateVideo...Stream call will fail.
-  if (NS_WARN_IF(mJsepTransceiver->mSendTrack.GetSsrcs().empty())) {
+  if (NS_WARN_IF(GetJsepTransceiver().mSendTrack.GetSsrcs().empty())) {
     MOZ_ASSERT(
         false,
         "No local ssrcs! This is a bug in the jsep engine, and should never "
@@ -737,18 +745,33 @@ void RTCRtpSender::UpdateConduit() {
   mTransmitting = false;
   Stop();
 
-  mSsrcs = mJsepTransceiver->mSendTrack.GetSsrcs();
-  mVideoRtxSsrcs = mJsepTransceiver->mSendTrack.GetRtxSsrcs();
-  mCname = mJsepTransceiver->mSendTrack.GetCNAME();
+  mSsrcs = GetJsepTransceiver().mSendTrack.GetSsrcs();
+  mVideoRtxSsrcs = GetJsepTransceiver().mSendTrack.GetRtxSsrcs();
+  mCname = GetJsepTransceiver().mSendTrack.GetCNAME();
 
   if (mPipeline->mConduit->type() == MediaSessionConduit::VIDEO) {
     UpdateVideoConduit();
   } else {
     UpdateAudioConduit();
   }
-  if ((mTransmitting = mJsepTransceiver->mSendTrack.GetActive())) {
+  if ((mTransmitting = GetJsepTransceiver().mSendTrack.GetActive())) {
     Start();
   }
+}
+
+void RTCRtpSender::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {}
+
+void RTCRtpSender::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {
+  std::vector<std::string> streamIds;
+  for (const auto& stream : mStreams) {
+    nsString wideStreamId;
+    stream->GetId(wideStreamId);
+    std::string streamId = NS_ConvertUTF16toUTF8(wideStreamId).get();
+    MOZ_ASSERT(!streamId.empty());
+    streamIds.push_back(streamId);
+  }
+
+  aJsepTransceiver.mSendTrack.UpdateStreamIds(streamIds);
 }
 
 void RTCRtpSender::ConfigureVideoCodecMode() {
@@ -788,9 +811,10 @@ void RTCRtpSender::UpdateVideoConduit() {
   // It is possible for SDP to signal that there is a send track, but there not
   // actually be a send track, according to the specification; all that needs to
   // happen is for the transceiver to be configured to send...
-  if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&
-      mJsepTransceiver->mSendTrack.GetActive()) {
-    const auto& details(*mJsepTransceiver->mSendTrack.GetNegotiatedDetails());
+  if (GetJsepTransceiver().mSendTrack.GetNegotiatedDetails() &&
+      GetJsepTransceiver().mSendTrack.GetActive()) {
+    const auto& details(
+        *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
 
     {
       std::vector<webrtc::RtpExtension> extmaps;
@@ -824,9 +848,10 @@ void RTCRtpSender::UpdateVideoConduit() {
 }
 
 void RTCRtpSender::UpdateAudioConduit() {
-  if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&
-      mJsepTransceiver->mSendTrack.GetActive()) {
-    const auto& details(*mJsepTransceiver->mSendTrack.GetNegotiatedDetails());
+  if (GetJsepTransceiver().mSendTrack.GetNegotiatedDetails() &&
+      GetJsepTransceiver().mSendTrack.GetActive()) {
+    const auto& details(
+        *GetJsepTransceiver().mSendTrack.GetNegotiatedDetails());
     std::vector<AudioCodecConfig> configs;
     RTCRtpTransceiver::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
     if (configs.empty()) {
@@ -910,11 +935,10 @@ RefPtr<MediaPipelineTransmit> RTCRtpSender::GetPipeline() const {
   return mPipeline;
 }
 
-std::string RTCRtpSender::GetMid() const {
-  if (mJsepTransceiver->IsAssociated()) {
-    return mJsepTransceiver->GetMid();
-  }
-  return std::string();
+std::string RTCRtpSender::GetMid() const { return mTransceiver->GetMidAscii(); }
+
+JsepTransceiver& RTCRtpSender::GetJsepTransceiver() {
+  return *mTransceiver->GetJsepTransceiver();
 }
 
 }  // namespace mozilla::dom

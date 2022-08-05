@@ -513,12 +513,16 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   // appropriately.
   void EndOfFrame();
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
-  Maybe<uvec2> FrontBufferSnapshotInto(const Maybe<Range<uint8_t>>);
+  Maybe<uvec2> FrontBufferSnapshotInto(
+      const Maybe<Range<uint8_t>> dest,
+      const Maybe<size_t> destStride = Nothing());
   Maybe<uvec2> FrontBufferSnapshotInto(
       const std::shared_ptr<gl::SharedSurface>& front,
-      const Maybe<Range<uint8_t>>);
+      const Maybe<Range<uint8_t>> dest,
+      const Maybe<size_t> destStride = Nothing());
   Maybe<uvec2> SnapshotInto(GLuint srcFb, const gfx::IntSize& size,
-                            const Range<uint8_t>& dest);
+                            const Range<uint8_t>& dest,
+                            const Maybe<size_t> destStride = Nothing());
   gl::SwapChain* GetSwapChain(WebGLFramebuffer*, const bool webvr);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
                                                   const bool webvr);

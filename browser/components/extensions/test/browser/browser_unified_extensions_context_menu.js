@@ -222,7 +222,7 @@ add_task(async function test_manage_extension() {
   TelemetryTestUtils.assertEvents(
     [
       {
-        object: "browserAction",
+        object: "unifiedExtensions",
         value: null,
         extra: { addonId: extension.id, action: "manage" },
       },
@@ -270,7 +270,7 @@ add_task(async function test_report_extension() {
     );
     is(
       reportDialogParams.report.reportEntryPoint,
-      "toolbar_context_menu",
+      "unified_context_menu",
       "abuse report dialog has the expected reportEntryPoint"
     );
 
@@ -331,7 +331,7 @@ add_task(async function test_remove_extension() {
   TelemetryTestUtils.assertEvents(
     [
       {
-        object: "browserAction",
+        object: "unifiedExtensions",
         value: "accepted",
         extra: { addonId: extension.id, action: "uninstall" },
       },
@@ -392,7 +392,7 @@ add_task(async function test_remove_extension_cancelled() {
   TelemetryTestUtils.assertEvents(
     [
       {
-        object: "browserAction",
+        object: "unifiedExtensions",
         value: "cancelled",
         extra: { addonId: extension.id, action: "uninstall" },
       },

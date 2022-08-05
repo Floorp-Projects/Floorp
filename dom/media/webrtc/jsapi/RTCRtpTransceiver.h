@@ -12,7 +12,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "ErrorList.h"
-#include "jsep/JsepTransceiver.h"
+#include "jsep/JsepSession.h"
 #include "transport/transportlayer.h"  // For TransportLayer::State
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 
@@ -20,7 +20,6 @@ class nsIPrincipal;
 
 namespace mozilla {
 class PeerIdentity;
-class JsepTransceiver;
 class MediaSessionConduit;
 class VideoSessionConduit;
 class AudioSessionConduit;
@@ -58,14 +57,12 @@ class RTCRtpTransceiver : public nsISupports,
   /**
    * |aSendTrack| might or might not be set.
    */
-  RTCRtpTransceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                    PeerConnectionImpl* aPc,
-                    MediaTransportHandler* aTransportHandler,
-                    JsepTransceiver* aJsepTransceiver,
-                    nsISerialEventTarget* aStsThread,
-                    MediaStreamTrack* aSendTrack,
-                    WebrtcCallWrapper* aCallWrapper,
-                    RTCStatsIdGenerator* aIdGenerator);
+  RTCRtpTransceiver(
+      nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
+      MediaTransportHandler* aTransportHandler, JsepSession* aJsepSession,
+      const std::string& aTransceiverId, bool aIsVideo,
+      nsISerialEventTarget* aStsThread, MediaStreamTrack* aSendTrack,
+      WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator);
 
   void Init(const RTCRtpTransceiverInit& aInit, ErrorResult& aRv);
 
@@ -80,7 +77,9 @@ class RTCRtpTransceiver : public nsISupports,
   nsresult SyncWithMatchingVideoConduits(
       nsTArray<RefPtr<RTCRtpTransceiver>>& transceivers);
 
-  void Shutdown_m();
+  void Close();
+
+  void BreakCycles();
 
   bool ConduitHasPluginID(uint64_t aPluginID);
 
@@ -105,7 +104,10 @@ class RTCRtpTransceiver : public nsISupports,
 
   bool CanSendDTMF() const;
   bool Stopped() const { return mStopped; }
-  void SyncWithJsep();
+  void SyncToJsep() const;
+  void SyncFromJsep();
+  void SetJsepSession(JsepSession* aJsepSession);
+  std::string GetMidAscii() const;
 
   void UpdateDtlsTransportState(const std::string& aTransportId,
                                 TransportLayer::State aState);
@@ -116,17 +118,15 @@ class RTCRtpTransceiver : public nsISupports,
     return mJsepTransceiver->mTransport.mTransportId;
   }
 
+  RefPtr<JsepTransceiver> GetJsepTransceiver() const {
+    return mJsepTransceiver;
+  }
+
   bool IsVideo() const;
 
-  bool IsSending() const {
-    return !mJsepTransceiver->IsStopped() &&
-           mJsepTransceiver->mSendTrack.GetActive();
-  }
+  bool IsSending() const;
 
-  bool IsReceiving() const {
-    return !mJsepTransceiver->IsStopped() &&
-           mJsepTransceiver->mRecvTrack.GetActive();
-  }
+  bool IsReceiving() const;
 
   bool ShouldRemove() const;
 
@@ -144,6 +144,10 @@ class RTCRtpTransceiver : public nsISupports,
   RefPtr<ActivePayloadTypesPromise> GetActivePayloadTypes() const;
 
   MediaSessionConduit* GetConduit() const { return mConduit; }
+
+  const std::string& GetJsepTransceiverId() const { return mTransceiverId; }
+
+  void SetRemovedFromPc() { mHandlingUnlink = true; }
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -188,7 +192,8 @@ class RTCRtpTransceiver : public nsISupports,
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<MediaTransportHandler> mTransportHandler;
-  const RefPtr<JsepTransceiver> mJsepTransceiver;
+  const std::string mTransceiverId;
+  RefPtr<JsepTransceiver> mJsepTransceiver;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   // state for webrtc.org that is shared between all transceivers
   RefPtr<WebrtcCallWrapper> mCallWrapper;
@@ -211,6 +216,24 @@ class RTCRtpTransceiver : public nsISupports,
   bool mShutdown = false;
   bool mHasBeenUsedToSend = false;
   bool mPrivacyNeeded = false;
+  bool mShouldRemove = false;
+  bool mHasTransport = false;
+  bool mIsVideo;
+  // This is really nasty. Most of the time, PeerConnectionImpl needs to be in
+  // charge of unlinking each RTCRtpTransceiver, because it needs to perform
+  // stats queries on its way out, which requires all of the RTCRtpTransceivers
+  // (and their transitive dependencies) to stick around until those stats
+  // queries are finished. However, when an RTCRtpTransceiver is removed from
+  // the PeerConnectionImpl due to negotiation, the PeerConnectionImpl
+  // releases its reference, which means the PeerConnectionImpl cannot be in
+  // charge of the unlink anymore. We cannot do the unlink when this reference
+  // is released either, because RTCRtpTransceiver might have some work it needs
+  // to do first. Also, JS may be maintaining a reference to the
+  // RTCRtpTransceiver (or one of its dependencies), which means it must remain
+  // fully functional after it is removed (meaning it cannot release any of its
+  // dependencies, or vice versa).
+  bool mHandlingUnlink = false;
+  std::string mTransportId;
 
   Canonical<std::string> mMid;
   Canonical<std::string> mSyncGroup;

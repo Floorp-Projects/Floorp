@@ -26,6 +26,17 @@ SipccSdpAttributeList::SipccSdpAttributeList(
   memset(&mAttributes, 0, sizeof(mAttributes));
 }
 
+SipccSdpAttributeList::SipccSdpAttributeList(
+    const SipccSdpAttributeList& aOrig,
+    const SipccSdpAttributeList* sessionLevel)
+    : SipccSdpAttributeList(sessionLevel) {
+  for (size_t i = 0; i < kNumAttributeTypes; ++i) {
+    if (aOrig.mAttributes[i]) {
+      mAttributes[i] = aOrig.mAttributes[i]->Clone();
+    }
+  }
+}
+
 SipccSdpAttributeList::~SipccSdpAttributeList() {
   for (size_t i = 0; i < kNumAttributeTypes; ++i) {
     delete mAttributes[i];

@@ -39,9 +39,9 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
  public:
   RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                MediaTransportHandler* aTransportHandler,
-               JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
-               nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
-               dom::MediaStreamTrack* aTrack, RTCRtpTransceiver* aTransceiver);
+               AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
+               MediaSessionConduit* aConduit, dom::MediaStreamTrack* aTrack,
+               RTCRtpTransceiver* aTransceiver);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -74,6 +74,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams);
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();
+  void BreakCycles();
   void Stop();
   void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
@@ -86,6 +87,8 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   // This is called when we set an answer (ie; when the transport is finalized).
   void UpdateTransport();
   void UpdateConduit();
+  void SyncToJsep(JsepTransceiver& aJsepTransceiver) const;
+  void SyncFromJsep(const JsepTransceiver& aJsepTransceiver);
 
   AbstractCanonical<Ssrcs>* CanonicalSsrcs() { return &mSsrcs; }
   AbstractCanonical<Ssrcs>* CanonicalVideoRtxSsrcs() { return &mVideoRtxSsrcs; }
@@ -116,12 +119,12 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void UpdateAudioConduit();
 
   std::string GetMid() const;
+  JsepTransceiver& GetJsepTransceiver();
   void ApplyParameters(const RTCRtpParameters& aParameters);
   void ConfigureVideoCodecMode();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
-  const RefPtr<JsepTransceiver> mJsepTransceiver;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
   RTCRtpParameters mParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;
