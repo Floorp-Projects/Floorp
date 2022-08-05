@@ -1239,7 +1239,7 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
     return;
   }
 
-  auto face(GetFontEntry()->GetHBFace());
+  hb_face_t* face = GetFontEntry()->GetHBFace();
 
   // GSUB lookups - examine per script
   if (hb_ot_layout_has_substitution(face)) {
@@ -1327,6 +1327,7 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
     mFontEntry->mHasSpaceFeaturesNonKerning = hasNonKerning;
   }
 
+  hb_face_destroy(face);
   mFontEntry->mHasSpaceFeatures = result;
 
   if (MOZ_UNLIKELY(log)) {
@@ -4319,12 +4320,15 @@ bool gfxFont::TryGetMathTable() {
     return !!mMathTable;
   }
 
-  auto face(GetFontEntry()->GetHBFace());
-  if (hb_ot_math_has_data(face)) {
-    auto* mathTable = new gfxMathTable(face, GetAdjustedSize());
-    if (!mMathTable.compareExchange(nullptr, mathTable)) {
-      delete mathTable;
+  hb_face_t* face = GetFontEntry()->GetHBFace();
+  if (face) {
+    if (hb_ot_math_has_data(face)) {
+      auto* mathTable = new gfxMathTable(face, GetAdjustedSize());
+      if (!mMathTable.compareExchange(nullptr, mathTable)) {
+        delete mathTable;
+      }
     }
+    hb_face_destroy(face);
   }
   mMathInitialized = true;
 

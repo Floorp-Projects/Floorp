@@ -1171,8 +1171,9 @@ bool gfxHarfBuzzShaper::Initialize() {
 hb_font_t* gfxHarfBuzzShaper::CreateHBFont(gfxFont* aFont,
                                            hb_font_funcs_t* aFontFuncs,
                                            FontCallbackData* aCallbackData) {
-  auto face(aFont->GetFontEntry()->GetHBFace());
-  hb_font_t* result = hb_font_create(face);
+  hb_face_t* hbFace = aFont->GetFontEntry()->GetHBFace();
+  hb_font_t* result = hb_font_create(hbFace);
+  hb_face_destroy(hbFace);
 
   if (aFontFuncs && aCallbackData) {
     if (aFontFuncs == sNominalGlyphFunc) {
