@@ -167,13 +167,21 @@ concat.forEach(function(t) {
   checkUtf8Equal(rope, t.expected);
 });
 
-var ab = newRope("a", "b");
-var abc = newRope(ab, "c");
-var ef = newRope("e", "f");
-var def = newRope("d", ef);
-var abcdef = newRope(abc, def);
-var abcdefab = newRope(abcdef, ab);
-checkUtf8Equal(abcdefab, "abcdefab");
+{
+  var ab = newRope("a", "b");
+  var abc = newRope(ab, "c");
+  var ef = newRope("e", "f");
+  var def = newRope("d", ef);
+  var abcdef = newRope(abc, def);
+  var abcdefab = newRope(abcdef, ab);
+  checkUtf8Equal(abcdefab, "abcdefab");
+}
+
+{
+  var right = newRope("\ude0a", ".");
+  var rope = newRope("\ud83d", right);
+  checkUtf8Equal(rope, "\ud83d\ude0a.");
+}
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);

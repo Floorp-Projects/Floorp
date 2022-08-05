@@ -254,15 +254,6 @@ static cairo_surface_t* GetAsImageSurface(cairo_surface_t* aSurface) {
   return nullptr;
 }
 
-// We're creating a subimage from the parent image's data (in aData) without
-// altering that data or its stride. This constrains the values in aRect, and
-// how they're used. Callers must see to it that the parent fully contains the
-// subimage. Here we ensure that no clipping is done in the X dimension at the
-// beginning of any line. (To do otherwise would require creating a copy of
-// aData from parts of every line in aData (from aRect.Y() to aRect.Height()),
-// and setting the copy to a different stride.) A non-zero aRect.X() is used
-// only to specify the subimage's location in its parent (via
-// cairo_surface_set_device_offset()). This change resolves bug 1719215.
 static cairo_surface_t* CreateSubImageForData(unsigned char* aData,
                                               const IntRect& aRect, int aStride,
                                               SurfaceFormat aFormat) {
@@ -270,12 +261,14 @@ static cairo_surface_t* CreateSubImageForData(unsigned char* aData,
     gfxWarning() << "DrawTargetCairo.CreateSubImageForData null aData";
     return nullptr;
   }
-  unsigned char* data = aData + aRect.Y() * aStride;
+  unsigned char* data =
+      aData + aRect.Y() * aStride + aRect.X() * BytesPerPixel(aFormat);
 
   cairo_surface_t* image = cairo_image_surface_create_for_data(
       data, GfxFormatToCairoFormat(aFormat), aRect.Width(), aRect.Height(),
       aStride);
-  // Set the subimage's location in its parent
+  // Set the subimage's device offset so that in remains in the same place
+  // relative to the parent
   cairo_surface_set_device_offset(image, -aRect.X(), -aRect.Y());
   return image;
 }

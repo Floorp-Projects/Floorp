@@ -275,6 +275,9 @@ function remoteSettingsFunction() {
         reportStatus = UptakeTelemetry.STATUS.CONTENT_ERROR;
       } else if (/Server/.test(e.message)) {
         reportStatus = UptakeTelemetry.STATUS.SERVER_ERROR;
+        // If the server replied with bad request, clear the last ETag
+        // value to unblock the next run of synchronization.
+        gPrefs.clearUserPref(PREF_SETTINGS_LAST_ETAG);
       } else if (/Timeout/.test(e.message)) {
         reportStatus = UptakeTelemetry.STATUS.TIMEOUT_ERROR;
       } else if (/NetworkError/.test(e.message)) {

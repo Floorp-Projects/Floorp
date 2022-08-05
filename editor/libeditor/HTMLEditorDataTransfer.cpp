@@ -3195,6 +3195,10 @@ NS_IMETHODIMP HTMLEditor::Rewrap(bool aRespectNewlines) {
   InternetCiter::Rewrap(current, wrapWidth, firstLineOffset, aRespectNewlines,
                         wrapped);
 
+  if (wrapped.IsEmpty()) {
+    return NS_OK;
+  }
+
   if (isCollapsed) {
     DebugOnly<nsresult> rvIgnored = SelectAllInternal();
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),

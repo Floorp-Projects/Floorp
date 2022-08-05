@@ -242,25 +242,24 @@ def get_vscode_running():
     """Return if the vscode is currently running."""
     try:
         import psutil
+
+        for proc in psutil.process_iter():
+            try:
+                # On Windows we have "Code.exe"
+                # On MacOS we have "Code Helper (Renderer)"
+                # On Linux we have ""
+                if (
+                    proc.name == "Code.exe"
+                    or proc.name == "Code Helper (Renderer)"
+                    or proc.name == "code"
+                ):
+                    return True
+            except Exception:
+                # may not be able to access process info for all processes
+                continue
     except Exception:
-        psutil = None
-
-    if not psutil:
-        return None
-
-    for proc in psutil.process_iter():
-        try:
-            # On Windows we have "Code.exe"
-            # On MacOS we have "Code Helper (Renderer)"
-            # On Linux we have ""
-            if (
-                proc.name == "Code.exe"
-                or proc.name == "Code Helper (Renderer)"
-                or proc.name == "code"
-            ):
-                return True
-        except Exception:
-            # may not be able to access process info for all processes
-            continue
+        # On some platforms, sometimes, the generator throws an
+        # exception preventing us to enumerate.
+        return False
 
     return False

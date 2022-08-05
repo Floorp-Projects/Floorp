@@ -11,11 +11,16 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "Utils",
+  "resource://services-settings/Utils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -63,7 +68,7 @@ this.PersonalityProvider = class PersonalityProvider {
     if (this._baseAttachmentsURL) {
       return this._baseAttachmentsURL;
     }
-    const server = Services.prefs.getCharPref("services.settings.server");
+    const server = Utils.SERVER_URL;
     const serverInfo = await (
       await fetch(`${server}/`, {
         credentials: "omit",
