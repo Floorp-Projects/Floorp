@@ -58,13 +58,6 @@ function endOfUnicodeExtensions(locale, start) {
     "start points to Unicode extension sequence"
   );
 
-  /* global HYPHEN */
-  #define HYPHEN 0x2D
-  assert(
-    std_String_fromCharCode(HYPHEN) === "-",
-    "code unit constant should match the expected character"
-  );
-
   // Search for the start of the next singleton or privateuse subtag.
   //
   // Begin searching after the smallest possible Unicode locale extension
@@ -73,10 +66,10 @@ function endOfUnicodeExtensions(locale, start) {
   // subtag, namely |"-x-" alphanum|. Note the reduced end-limit means
   // indexing inside the loop is always in-range.
   for (var i = start + 5, end = locale.length - 4; i <= end; i++) {
-    if (callFunction(std_String_charCodeAt, locale, i) !== HYPHEN) {
+    if (locale[i] !== "-") {
       continue;
     }
-    if (callFunction(std_String_charCodeAt, locale, i + 2) === HYPHEN) {
+    if (locale[i + 2] === "-") {
       return i;
     }
 
@@ -84,8 +77,6 @@ function endOfUnicodeExtensions(locale, start) {
     // aren't "-", so the next possible delimiter can only be at (i + 3).
     i += 2;
   }
-
-  #undef HYPHEN
 
   // If no singleton or privateuse subtag was found, the Unicode extension
   // sequence extends until the end of the string.
