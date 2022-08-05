@@ -27,6 +27,23 @@ module.exports = {
         "spidermonkey-js/environment": true,
       },
 
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "script",
+
+        // Self-hosted code defaults to strict mode.
+        ecmaFeatures: {
+          impliedStrict: true,
+        },
+
+        // Strict mode has to be enabled separately for the Babel parser.
+        babelOptions: {
+          parserOpts: {
+            strictMode: true,
+          },
+        },
+      },
+
       globals: {
         // The bytecode compiler special-cases these identifiers.
         allowContentIter: "readonly",
