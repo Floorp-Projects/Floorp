@@ -58,6 +58,7 @@ function endOfUnicodeExtensions(locale, start) {
     "start points to Unicode extension sequence"
   );
 
+  /* global HYPHEN */
   #define HYPHEN 0x2D
   assert(
     std_String_fromCharCode(HYPHEN) === "-",
