@@ -30,15 +30,24 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpReceiver, mWindow, mPc, mTrack)
+LazyLogModule gReceiverLog("RTCRtpReceiver");
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(RTCRtpReceiver)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpReceiver)
+  // We do not do anything here, we wait for BreakCycles to be called
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpReceiver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow, mPc, mTransceiver, mTrack)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(RTCRtpReceiver)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCRtpReceiver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCRtpReceiver)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCRtpReceiver)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-LazyLogModule gReceiverLog("RTCRtpReceiver");
 
 static PrincipalHandle GetPrincipalHandle(nsPIDOMWindowInner* aWindow,
                                           bool aPrivacyNeeded) {
@@ -547,10 +556,15 @@ void RTCRtpReceiver::Shutdown() {
     mPipeline->Shutdown();
     mPipeline = nullptr;
   }
-  mTransceiver = nullptr;
   mCallThread = nullptr;
   mRtcpByeListener.DisconnectIfExists();
   mRtcpTimeoutListener.DisconnectIfExists();
+}
+
+void RTCRtpReceiver::BreakCycles() {
+  mWindow = nullptr;
+  mPc = nullptr;
+  mTrack = nullptr;
 }
 
 void RTCRtpReceiver::UpdateTransport() {

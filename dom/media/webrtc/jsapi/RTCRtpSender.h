@@ -74,6 +74,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   void GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams);
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();
+  void BreakCycles();
   void Stop();
   void Start();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;

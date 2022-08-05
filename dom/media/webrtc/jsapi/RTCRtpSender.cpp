@@ -21,16 +21,25 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpSender, mWindow, mPc, mSenderTrack,
-                                      mTransceiver, mStreams, mDtmf)
+LazyLogModule gSenderLog("RTCRtpSender");
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(RTCRtpSender)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpSender)
+  // We do not do anything here, we wait for BreakCycles to be called
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpSender)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow, mPc, mSenderTrack, mTransceiver,
+                                    mStreams, mDtmf)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(RTCRtpSender)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCRtpSender)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCRtpSender)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCRtpSender)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-LazyLogModule gSenderLog("RTCRtpSender");
 
 #define INIT_CANONICAL(name, val) \
   name(AbstractThread::MainThread(), val, "RTCRtpSender::" #name " (Canonical)")
@@ -708,6 +717,15 @@ void RTCRtpSender::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   mPipeline->Shutdown();
   mPipeline = nullptr;
+}
+
+void RTCRtpSender::BreakCycles() {
+  mWindow = nullptr;
+  mPc = nullptr;
+  mSenderTrack = nullptr;
+  mTransceiver = nullptr;
+  mStreams.Clear();
+  mDtmf = nullptr;
 }
 
 void RTCRtpSender::UpdateTransport() {

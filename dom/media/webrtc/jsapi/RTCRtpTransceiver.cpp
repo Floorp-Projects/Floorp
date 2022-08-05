@@ -130,10 +130,9 @@ MOZ_MTLOG_MODULE("RTCRtpTransceiver")
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(RTCRtpTransceiver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpTransceiver)
-  // We do not unlink mPc from here; PeerConnectionImpl invokes the necessary
-  // teardown code itself during unlink.
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow, mReceiver, mSendTrack, mSender,
-                                  mDtlsTransport, mLastStableDtlsTransport)
+  if (tmp->mHandlingUnlink) {
+    tmp->BreakCycles();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpTransceiver)
@@ -347,7 +346,7 @@ void RTCRtpTransceiver::InitConduitControl() {
       }));
 }
 
-void RTCRtpTransceiver::Shutdown_m() {
+void RTCRtpTransceiver::Close() {
   // Called via PCImpl::Close -> PCImpl::CloseInt -> PCImpl::ShutdownMedia ->
   // PCMedia::SelfDestruct.  Satisfies step 7 of
   // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-close
@@ -356,6 +355,18 @@ void RTCRtpTransceiver::Shutdown_m() {
     mDtlsTransport->UpdateState(TransportLayer::TS_CLOSED);
   }
   StopImpl();
+}
+
+void RTCRtpTransceiver::BreakCycles() {
+  mSender->BreakCycles();
+  mReceiver->BreakCycles();
+  mWindow = nullptr;
+  mSendTrack = nullptr;
+  mSender = nullptr;
+  mReceiver = nullptr;
+  mDtlsTransport = nullptr;
+  mLastStableDtlsTransport = nullptr;
+  mPc = nullptr;
 }
 
 nsresult RTCRtpTransceiver::UpdateTransport() {
