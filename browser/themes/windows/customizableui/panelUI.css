@@ -29,6 +29,7 @@
   appearance: none;
   border: none;
   padding-inline-start: 3px;
+  -moz-window-input-region-margin: 0;
 }
 
 #BMB_bookmarksPopup menupopup {
