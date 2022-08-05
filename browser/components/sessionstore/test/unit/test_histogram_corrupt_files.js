@@ -13,7 +13,7 @@ const Telemetry = Services.telemetry;
 const HistogramId = "FX_SESSION_RESTORE_ALL_FILES_CORRUPT";
 
 // Prepare the session file.
-var profd = do_get_profile();
+do_get_profile();
 const { SessionFile } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionFile.jsm"
 );

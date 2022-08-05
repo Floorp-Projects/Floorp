@@ -821,6 +821,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #define FUNC_NAME RegExpGlobalReplaceOpt
 #include "RegExpGlobalReplaceOpt.h.js"
 #undef FUNC_NAME
+/* global RegExpGlobalReplaceOpt */
 
 // Conditions:
 //   * global flag is true
@@ -830,6 +831,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #include "RegExpGlobalReplaceOpt.h.js"
 #undef FUNCTIONAL
 #undef FUNC_NAME
+/* global RegExpGlobalReplaceOptFunc */
 
 // Conditions:
 //   * global flag is true
@@ -839,6 +841,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #include "RegExpGlobalReplaceOpt.h.js"
 #undef ELEMBASE
 #undef FUNC_NAME
+/* global RegExpGlobalReplaceOptElemBase */
 
 // Conditions:
 //   * global flag is true
@@ -848,6 +851,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #include "RegExpGlobalReplaceOpt.h.js"
 #undef SUBSTITUTION
 #undef FUNC_NAME
+/* global RegExpGlobalReplaceOptSubst */
 
 // Conditions:
 //   * global flag is false
@@ -855,6 +859,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #define FUNC_NAME RegExpLocalReplaceOpt
 #include "RegExpLocalReplaceOpt.h.js"
 #undef FUNC_NAME
+/* global RegExpLocalReplaceOpt */
 
 // Conditions:
 //   * global flag is false
@@ -865,6 +870,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #include "RegExpLocalReplaceOpt.h.js"
 #undef SHORT_STRING
 #undef FUNC_NAME
+/* global RegExpLocalReplaceOptShort */
 
 // Conditions:
 //   * global flag is false
@@ -874,6 +880,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #include "RegExpLocalReplaceOpt.h.js"
 #undef FUNCTIONAL
 #undef FUNC_NAME
+/* global RegExpLocalReplaceOptFunc */
 
 // Conditions:
 //   * global flag is false
@@ -883,6 +890,7 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, flags) {
 #include "RegExpLocalReplaceOpt.h.js"
 #undef SUBSTITUTION
 #undef FUNC_NAME
+/* global RegExpLocalReplaceOptSubst */
 
 // ES2017 draft rev 6390c2f1b34b309895d31d8c0512eac8660a0210
 // 21.2.5.9 RegExp.prototype [ @@search ] ( string )

@@ -19,12 +19,20 @@
 
 namespace mozilla {
 
+class JsepUuidGenerator {
+ public:
+  virtual ~JsepUuidGenerator() = default;
+  virtual bool Generate(std::string* id) = 0;
+  virtual JsepUuidGenerator* Clone() const = 0;
+};
+
 class JsepTransceiver {
  private:
   ~JsepTransceiver(){};
 
  public:
   explicit JsepTransceiver(SdpMediaSection::MediaType type,
+                           JsepUuidGenerator& aUuidGen,
                            SdpDirectionAttribute::Direction jsDirection =
                                SdpDirectionAttribute::kSendrecv)
       : mJsDirection(jsDirection),
@@ -37,7 +45,11 @@ class JsepTransceiver {
         mStopped(false),
         mRemoved(false),
         mNegotiated(false),
-        mCanRecycle(false) {}
+        mCanRecycle(false) {
+    if (!aUuidGen.Generate(&mUuid)) {
+      MOZ_CRASH();
+    }
+  }
 
   // Can't use default copy c'tor because of the refcount members. Ugh.
   JsepTransceiver(const JsepTransceiver& orig)
@@ -45,6 +57,7 @@ class JsepTransceiver {
         mSendTrack(orig.mSendTrack),
         mRecvTrack(orig.mRecvTrack),
         mTransport(orig.mTransport),
+        mUuid(orig.mUuid),
         mMid(orig.mMid),
         mLevel(orig.mLevel),
         mBundleLevel(orig.mBundleLevel),
@@ -164,6 +177,8 @@ class JsepTransceiver {
 
   bool CanRecycle() const { return mCanRecycle; }
 
+  const std::string& GetUuid() const { return mUuid; }
+
   // Convenience function
   SdpMediaSection::MediaType GetMediaType() const {
     MOZ_ASSERT(mRecvTrack.GetMediaType() == mSendTrack.GetMediaType());
@@ -192,6 +207,7 @@ class JsepTransceiver {
   JsepTransport mTransport;
 
  private:
+  std::string mUuid;
   // Stuff that is not negotiated
   std::string mMid;
   size_t mLevel;  // SIZE_MAX if no level

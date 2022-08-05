@@ -49,12 +49,6 @@ async function tagURI(uri, tags) {
   PlacesUtils.tagging.tagURI(uri, tags);
 }
 
-async function preSearch() {
-  await PlacesTestUtils.promiseAsyncUpdates();
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesUtils.history.clear();
-}
-
 var uri1 = Services.io.newURI("http://site.tld/1");
 var uri2 = Services.io.newURI("http://site.tld/2");
 var uri3 = Services.io.newURI("http://aaaaaaaaaa/1");

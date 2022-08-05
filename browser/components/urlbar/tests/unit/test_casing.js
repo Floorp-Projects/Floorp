@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const AUTOFILL_PROVIDERNAME = "Autofill";
-const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
 const PLACES_PROVIDERNAME = "Places";
 
 testEngine_setup();

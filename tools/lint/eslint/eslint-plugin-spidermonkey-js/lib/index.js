@@ -14,4 +14,7 @@ module.exports = {
   processors: {
     processor: require("../lib/processors/self-hosted"),
   },
+  environments: {
+    environment: require("../lib/environments/self-hosted"),
+  },
 };

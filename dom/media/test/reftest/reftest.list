@@ -12,4 +12,4 @@ skip-if(Android) fuzzy(0-84,0-771156) fails-if(useDrawSnapshot) skip-if(/^Window
 # Set media.dormant-on-pause-timeout-ms to avoid decoders becoming dormant and busting test, skip on android as test is too noisy and unstable
 skip-if(Android) pref(media.dormant-on-pause-timeout-ms,-1) fuzzy(0-20,0-500) == frame_order_mp4.html frame_order_mp4-ref.html
 skip-if(Android) fuzzy(0-20,0-270000) == incorrect_display_in_bytestream_vp8.html incorrect_display_in_bytestream_vp8-ref.html
-skip-if(Android) fuzzy(0-20,0-210000) == incorrect_display_in_bytestream_vp9.html incorrect_display_in_bytestream_vp9-ref.html
+skip-if(Android) fuzzy(0-20,0-279035) == incorrect_display_in_bytestream_vp9.html incorrect_display_in_bytestream_vp9-ref.html

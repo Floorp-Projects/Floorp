@@ -71,6 +71,8 @@ class JsepSession {
       : mName(name), mState(kJsepStateStable), mNegotiations(0) {}
   virtual ~JsepSession() {}
 
+  virtual JsepSession* Clone() const = 0;
+
   virtual nsresult Init() = 0;
 
   // Accessors for basic properties.
@@ -107,8 +109,7 @@ class JsepSession {
   template <class UnaryFunction>
   void ForEachCodec(UnaryFunction& function) {
     std::for_each(Codecs().begin(), Codecs().end(), function);
-    for (auto& [id, transceiver] : GetTransceivers()) {
-      (void)id;  // Lame, but no better way to do this right now.
+    for (auto& transceiver : GetTransceivers()) {
       transceiver->mSendTrack.ForEachCodec(function);
       transceiver->mRecvTrack.ForEachCodec(function);
     }
@@ -117,16 +118,24 @@ class JsepSession {
   template <class BinaryPredicate>
   void SortCodecs(BinaryPredicate& sorter) {
     std::stable_sort(Codecs().begin(), Codecs().end(), sorter);
-    for (auto& [id, transceiver] : GetTransceivers()) {
-      (void)id;  // Lame, but no better way to do this right now.
+    for (auto& transceiver : GetTransceivers()) {
       transceiver->mSendTrack.SortCodecs(sorter);
       transceiver->mRecvTrack.SortCodecs(sorter);
     }
   }
 
-  virtual const std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers()
+  // Returns transceivers in the order they were added.
+  virtual const std::vector<RefPtr<JsepTransceiver>>& GetTransceivers()
       const = 0;
-  virtual std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers() = 0;
+  virtual std::vector<RefPtr<JsepTransceiver>>& GetTransceivers() = 0;
+  RefPtr<JsepTransceiver> GetTransceiver(const std::string& aId) const {
+    for (const auto& transceiver : GetTransceivers()) {
+      if (transceiver->GetUuid() == aId) {
+        return transceiver;
+      }
+    }
+    return nullptr;
+  }
   virtual nsresult AddTransceiver(RefPtr<JsepTransceiver> transceiver) = 0;
 
   class Result {
@@ -198,8 +207,7 @@ class JsepSession {
     memset(receiving, 0, sizeof(receiving));
     memset(sending, 0, sizeof(sending));
 
-    for (const auto& [id, transceiver] : GetTransceivers()) {
-      (void)id;  // Lame, but no better way to do this right now.
+    for (const auto& transceiver : GetTransceivers()) {
       if (transceiver->mRecvTrack.GetActive() ||
           transceiver->GetMediaType() == SdpMediaSection::kApplication) {
         receiving[transceiver->mRecvTrack.GetMediaType()]++;

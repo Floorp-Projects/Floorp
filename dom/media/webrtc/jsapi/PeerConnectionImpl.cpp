@@ -247,9 +247,10 @@ bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
   tmp->Close();
+  tmp->BreakCycles();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
                                   mSTSThread, mReceiveStreams, mOperations,
-                                  mTransceivers, mKungFuDeathGrip)
+                                  mKungFuDeathGrip)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
@@ -521,6 +522,11 @@ void PeerConnectionImpl::SetCertificate(
     CSFLogError(LOGTAG, "%s: Couldn't set DTLS credentials, rv=%u",
                 __FUNCTION__, static_cast<unsigned>(rv));
     mCertificate = nullptr;
+  }
+
+  if (mUncommittedJsepSession) {
+    Unused << mUncommittedJsepSession->AddDtlsFingerprint(
+        DtlsIdentity::DEFAULT_HASH_ALGORITHM, fingerprint);
   }
 }
 
@@ -851,8 +857,7 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
   transportId->clear();
 
   RefPtr<JsepTransceiver> datachannelTransceiver;
-  for (const auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (const auto& transceiver : mJsepSession->GetTransceivers()) {
     if ((transceiver->GetMediaType() == SdpMediaSection::kApplication) &&
         transceiver->mSendTrack.GetNegotiatedDetails()) {
       datachannelTransceiver = transceiver;
@@ -958,18 +963,8 @@ already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     return nullptr;
   }
 
-  RefPtr<JsepTransceiver> jsepTransceiver = new JsepTransceiver(*type);
-
-  RefPtr<RTCRtpTransceiver> transceiver =
-      CreateTransceiver(jsepTransceiver, aInit, aSendTrack, aRv);
-
-  if (aRv.Failed()) {
-    // Would be nice if we could peek at the rv without stealing it, so we
-    // could log...
-    CSFLogError(LOGTAG, "%s: failed", __FUNCTION__);
-    return nullptr;
-  }
-
+  RefPtr<JsepTransceiver> jsepTransceiver =
+      new JsepTransceiver(*type, *mUuidGen);
   jsepTransceiver->SetRtxIsAllowed(mRtxIsAllowed);
 
   // Do this last, since it is not possible to roll back.
@@ -981,12 +976,25 @@ already_AddRefed<RTCRtpTransceiver> PeerConnectionImpl::AddTransceiver(
     return nullptr;
   }
 
+  RefPtr<RTCRtpTransceiver> transceiver = CreateTransceiver(
+      jsepTransceiver->GetUuid(),
+      jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, aInit,
+      aSendTrack, aRv);
+
+  if (aRv.Failed()) {
+    // Would be nice if we could peek at the rv without stealing it, so we
+    // could log...
+    CSFLogError(LOGTAG, "%s: failed", __FUNCTION__);
+    return nullptr;
+  }
+
   mTransceivers.AppendElement(transceiver);
   return transceiver.forget();
 }
 
 bool PeerConnectionImpl::CheckNegotiationNeeded() {
   MOZ_ASSERT(mSignalingState == RTCSignalingState::Stable);
+  SyncToJsep();
   return !mLocalIceCredentialsToReplace.empty() ||
          mJsepSession->CheckNegotiationNeeded();
 }
@@ -1073,8 +1081,7 @@ PeerConnectionImpl::CreateDataChannel(
   CSFLogDebug(LOGTAG, "%s: making DOMDataChannel", __FUNCTION__);
 
   RefPtr<JsepTransceiver> dcTransceiver;
-  for (auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (auto& transceiver : mJsepSession->GetTransceivers()) {
     if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
       dcTransceiver = transceiver;
       break;
@@ -1082,8 +1089,8 @@ PeerConnectionImpl::CreateDataChannel(
   }
 
   if (!dcTransceiver) {
-    dcTransceiver =
-        new JsepTransceiver(SdpMediaSection::MediaType::kApplication);
+    dcTransceiver = new JsepTransceiver(
+        SdpMediaSection::MediaType::kApplication, *mUuidGen);
     mJsepSession->AddTransceiver(dcTransceiver);
   }
 
@@ -1258,6 +1265,51 @@ void PeerConnectionImpl::RunNextOperation(ErrorResult& aError) {
   UpdateNegotiationNeeded();
 }
 
+void PeerConnectionImpl::SyncToJsep() {
+  for (const auto& transceiver : mTransceivers) {
+    transceiver->SyncToJsep();
+  }
+}
+
+void PeerConnectionImpl::SyncFromJsep() {
+  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
+  for (const auto& jsepTransceiver : mJsepSession->GetTransceivers()) {
+    if (jsepTransceiver->GetMediaType() ==
+        SdpMediaSection::MediaType::kApplication) {
+      continue;
+    }
+
+    CSFLogDebug(LOGTAG, "%s: Looking for match", __FUNCTION__);
+    RefPtr<RTCRtpTransceiver> transceiver;
+    for (auto& temp : mTransceivers) {
+      if (temp->GetJsepTransceiverId() == jsepTransceiver->GetUuid()) {
+        CSFLogDebug(LOGTAG, "%s: Found match", __FUNCTION__);
+        transceiver = temp;
+        break;
+      }
+    }
+
+    if (!transceiver) {
+      CSFLogDebug(LOGTAG, "%s: No match, making new", __FUNCTION__);
+      dom::RTCRtpTransceiverInit init;
+      init.mDirection = RTCRtpTransceiverDirection::Recvonly;
+      IgnoredErrorResult rv;
+      transceiver = CreateTransceiver(
+          jsepTransceiver->GetUuid(),
+          jsepTransceiver->GetMediaType() == SdpMediaSection::kVideo, init,
+          nullptr, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        MOZ_ASSERT(false);
+        return;
+      }
+      mTransceivers.AppendElement(transceiver);
+    }
+
+    CSFLogDebug(LOGTAG, "%s: Syncing transceiver", __FUNCTION__);
+    transceiver->SyncFromJsep();
+  }
+}
+
 already_AddRefed<dom::Promise> PeerConnectionImpl::MakePromise(
     ErrorResult& aError) const {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
@@ -1402,11 +1454,13 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), aOptions] {
         std::string offer;
 
+        SyncToJsep();
+        UniquePtr<JsepSession> uncommittedJsepSession(mJsepSession->Clone());
         JsepSession::Result result =
-            mJsepSession->CreateOffer(aOptions, &offer);
+            uncommittedJsepSession->CreateOffer(aOptions, &offer);
         JSErrorResult rv;
         if (result.mError.isSome()) {
-          std::string errorString = mJsepSession->GetLastError();
+          std::string errorString = uncommittedJsepSession->GetLastError();
 
           CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                       mHandle.c_str(), errorString.c_str());
@@ -1414,6 +1468,10 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions) {
           mPCObserver->OnCreateOfferError(
               *buildJSErrorData(result, errorString), rv);
         } else {
+          mJsepSession = std::move(uncommittedJsepSession);
+          for (auto& transceiver : mTransceivers) {
+            transceiver->SetJsepSession(mJsepSession.get());
+          }
           mPCObserver->OnCreateOfferSuccess(ObString(offer.c_str()), rv);
         }
       }));
@@ -1435,12 +1493,13 @@ PeerConnectionImpl::CreateAnswer() {
   GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<PeerConnectionImpl>(this), options] {
         std::string answer;
-
+        SyncToJsep();
+        UniquePtr<JsepSession> uncommittedJsepSession(mJsepSession->Clone());
         JsepSession::Result result =
-            mJsepSession->CreateAnswer(options, &answer);
+            uncommittedJsepSession->CreateAnswer(options, &answer);
         JSErrorResult rv;
         if (result.mError.isSome()) {
-          std::string errorString = mJsepSession->GetLastError();
+          std::string errorString = uncommittedJsepSession->GetLastError();
 
           CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                       mHandle.c_str(), errorString.c_str());
@@ -1448,11 +1507,30 @@ PeerConnectionImpl::CreateAnswer() {
           mPCObserver->OnCreateAnswerError(
               *buildJSErrorData(result, errorString), rv);
         } else {
+          mJsepSession = std::move(uncommittedJsepSession);
+          for (auto& transceiver : mTransceivers) {
+            transceiver->SetJsepSession(mJsepSession.get());
+          }
           mPCObserver->OnCreateAnswerSuccess(ObString(answer.c_str()), rv);
         }
       }));
 
   return NS_OK;
+}
+
+dom::RTCSdpType ToDomSdpType(JsepSdpType aType) {
+  switch (aType) {
+    case kJsepSdpOffer:
+      return dom::RTCSdpType::Offer;
+    case kJsepSdpAnswer:
+      return dom::RTCSdpType::Answer;
+    case kJsepSdpPranswer:
+      return dom::RTCSdpType::Pranswer;
+    case kJsepSdpRollback:
+      return dom::RTCSdpType::Rollback;
+  }
+
+  MOZ_CRASH("Nonexistent JsepSdpType");
 }
 
 NS_IMETHODIMP
@@ -1464,7 +1542,6 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
     return NS_ERROR_FAILURE;
   }
 
-  JSErrorResult rv;
   STAMP_TIMECARD(mTimeCard, "Set Local Description");
 
   if (AnyLocalTrackHasPeerIdentity()) {
@@ -1482,6 +1559,8 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
   };
 
   mLocalRequestedSDP = aSDP;
+
+  SyncToJsep();
 
   bool wasRestartingIce = mJsepSession->IsIceRestarting();
   JsepSdpType sdpType;
@@ -1503,10 +1582,13 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
       appendHistory();
       return NS_ERROR_FAILURE;
   }
+  mUncommittedJsepSession.reset(mJsepSession->Clone());
   JsepSession::Result result =
-      mJsepSession->SetLocalDescription(sdpType, mLocalRequestedSDP);
+      mUncommittedJsepSession->SetLocalDescription(sdpType, mLocalRequestedSDP);
+  JSErrorResult rv;
   if (result.mError.isSome()) {
-    std::string errorString = mJsepSession->GetLastError();
+    std::string errorString = mUncommittedJsepSession->GetLastError();
+    mUncommittedJsepSession = nullptr;
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
     mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
@@ -1517,10 +1599,15 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    OnSetDescriptionSuccess(sdpType, false);
+    mPCObserver->OnSetDescriptionSuccess(rv);
   }
 
   appendHistory();
+
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
   return NS_OK;
 }
 
@@ -1547,7 +1634,6 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     return NS_ERROR_FAILURE;
   }
 
-  JSErrorResult jrv;
   if (action == IPeerConnection::kActionOffer) {
     if (!PeerConnectionCtx::GetInstance()->isReady()) {
       // Uh oh. We're not ready yet. Enqueue this operation. (This must be a
@@ -1577,6 +1663,8 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     }
   };
 
+  SyncToJsep();
+
   mRemoteRequestedSDP = aSDP;
   bool wasRestartingIce = mJsepSession->IsIceRestarting();
   JsepSdpType sdpType;
@@ -1598,46 +1686,32 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
       return NS_ERROR_FAILURE;
   }
 
-  auto originalTransceivers = mJsepSession->GetTransceivers();
-  JsepSession::Result result =
-      mJsepSession->SetRemoteDescription(sdpType, mRemoteRequestedSDP);
+  mUncommittedJsepSession.reset(mJsepSession->Clone());
+  JsepSession::Result result = mUncommittedJsepSession->SetRemoteDescription(
+      sdpType, mRemoteRequestedSDP);
+  JSErrorResult jrv;
   if (result.mError.isSome()) {
-    std::string errorString = mJsepSession->GetLastError();
+    std::string errorString = mUncommittedJsepSession->GetLastError();
+    mUncommittedJsepSession = nullptr;
     sdpEntry.mErrors = GetLastSdpParsingErrors();
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s", __FUNCTION__,
                 mHandle.c_str(), errorString.c_str());
     mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
                                        jrv);
   } else {
-    for (const auto& [id, jsepTransceiver] : mJsepSession->GetTransceivers()) {
-      if (jsepTransceiver->GetMediaType() ==
-          SdpMediaSection::MediaType::kApplication) {
-        continue;
-      }
-
-      if (originalTransceivers.count(id)) {
-        continue;
-      }
-
-      dom::RTCRtpTransceiverInit init;
-      init.mDirection = RTCRtpTransceiverDirection::Recvonly;
-      RefPtr<RTCRtpTransceiver> transceiver =
-          CreateTransceiver(jsepTransceiver, init, nullptr, jrv);
-      if (jrv.Failed()) {
-        appendHistory();
-        return NS_ERROR_FAILURE;
-      }
-      mTransceivers.AppendElement(transceiver);
-    }
-
     if (wasRestartingIce) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    OnSetDescriptionSuccess(sdpType, true);
+    mPCObserver->OnSetDescriptionSuccess(jrv);
   }
 
   appendHistory();
+
+  if (jrv.Failed()) {
+    return jrv.StealNSResult();
+  }
+
   return NS_OK;
 }
 
@@ -1701,6 +1775,10 @@ PeerConnectionImpl::AddIceCandidate(
   if (!aLevel.IsNull()) {
     level = Some(aLevel.Value());
   }
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mUncommittedJsepSession,
+      "AddIceCandidate is chained, which means it should never "
+      "run while an sRD/sLD is in progress");
   JsepSession::Result result = mJsepSession->AddRemoteIceCandidate(
       aCandidate, aMid, level, aUfrag, &transportId);
 
@@ -2065,10 +2143,10 @@ PeerConnectionImpl::Close() {
   }
 
   for (auto& transceiver : mTransceivers) {
-    // transceivers are garbage-collected, so we need to poke them to perform
-    // cleanup right now so the appropriate events fire.
-    transceiver->Shutdown_m();
+    transceiver->Close();
   }
+
+  mTransportIdToRTCDtlsTransport.clear();
 
   mQueuedIceCtxOperations.clear();
 
@@ -2137,6 +2215,13 @@ PeerConnectionImpl::Close() {
   return NS_OK;
 }
 
+void PeerConnectionImpl::BreakCycles() {
+  for (auto& transceiver : mTransceivers) {
+    transceiver->BreakCycles();
+  }
+  mTransceivers.Clear();
+}
+
 nsresult PeerConnectionImpl::SetConfiguration(
     const RTCConfiguration& aConfiguration) {
   nsresult rv = mTransportHandler->SetIceConfig(
@@ -2160,13 +2245,8 @@ nsresult PeerConnectionImpl::SetConfiguration(
       MOZ_CRASH();
   }
 
-  rv = mJsepSession->SetBundlePolicy(bundlePolicy);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
-                __FUNCTION__, static_cast<unsigned>(rv),
-                mJsepSession->GetLastError().c_str());
-    return rv;
-  }
+  // Ignore errors, since those ought to be handled earlier.
+  Unused << mJsepSession->SetBundlePolicy(bundlePolicy);
 
   if (!aConfiguration.mPeerIdentity.IsEmpty()) {
     mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
@@ -2307,34 +2387,134 @@ DOMMediaStream* PeerConnectionImpl::CreateReceiveStream(
   return mReceiveStreams.LastElement();
 }
 
-void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
-                                                 bool remote) {
-  // Spec says we queue a task for all the stuff that ends up back in JS
-  auto newSignalingState = GetSignalingState();
+already_AddRefed<dom::Promise> PeerConnectionImpl::OnSetDescriptionSuccess(
+    dom::RTCSdpType aSdpType, bool aRemote, ErrorResult& aError) {
+  CSFLogDebug(LOGTAG, __FUNCTION__);
 
+  RefPtr<dom::Promise> p = MakePromise(aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, p);
+
+  return p.forget();
+}
+
+void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
+    dom::RTCSdpType aSdpType, bool aRemote, const RefPtr<dom::Promise>& aP) {
+  // Spec says we queue a task for all the stuff that ends up back in JS
   GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
-      __func__, [this, self = RefPtr<PeerConnectionImpl>(this),
-                 newSignalingState, sdpType, remote] {
+      __func__,
+      [this, self = RefPtr<PeerConnectionImpl>(this), aSdpType, aRemote, aP] {
         if (IsClosed()) {
+          // Yes, we do not settle the promise here. Yes, this is what the spec
+          // wants.
           return;
         }
 
+        MOZ_RELEASE_ASSERT(mUncommittedJsepSession);
+
+        // Check for transceivers added by addTrack/addTransceiver while
+        // a sRD/sLD was in progress
+        for (auto& transceiver : mTransceivers) {
+          if (!mUncommittedJsepSession->GetTransceiver(
+                  transceiver->GetJsepTransceiverId())) {
+            if (aSdpType == dom::RTCSdpType::Offer && aRemote) {
+              // Spec says to abort, and re-do the sRD(offer)!
+              mUncommittedJsepSession.reset(mJsepSession->Clone());
+              JsepSession::Result result =
+                  mUncommittedJsepSession->SetRemoteDescription(
+                      kJsepSdpOffer, mRemoteRequestedSDP);
+              MOZ_ASSERT(!!mUncommittedJsepSession->GetTransceiver(
+                  transceiver->GetJsepTransceiverId()));
+              if (result.mError.isSome()) {
+                // wat
+                aP->MaybeRejectWithOperationError(
+                    "When redoing sRD(offer) because it raced against "
+                    "addTrack, we encountered a failure that did not happen "
+                    "the first time. This should never happen.");
+                MOZ_ASSERT(false);
+              } else {
+                DoSetDescriptionSuccessPostProcessing(aSdpType, aRemote, aP);
+              }
+              return;
+            }
+            // sLD, or sRD(answer), just make sure the new transceiver is
+            // added, no need to re-do anything.
+            mUncommittedJsepSession->AddTransceiver(
+                transceiver->GetJsepTransceiver());
+          }
+        }
+
+        mJsepSession = std::move(mUncommittedJsepSession);
+        for (auto& transceiver : mTransceivers) {
+          transceiver->SetJsepSession(mJsepSession.get());
+        }
+
+        auto newSignalingState = GetSignalingState();
+        SyncFromJsep();
         // Section 4.4.1.5 Set the RTCSessionDescription:
-        if (sdpType == mozilla::kJsepSdpRollback) {
+        if (aSdpType == dom::RTCSdpType::Rollback) {
           // - step 4.5.10, type is rollback
           RollbackRTCDtlsTransports();
-        } else if (!(remote && sdpType == mozilla::kJsepSdpOffer)) {
+        } else if (!(aRemote && aSdpType == dom::RTCSdpType::Offer)) {
           // - step 4.5.9 type is not rollback
           // - step 4.5.9.1 when remote is false
           // - step 4.5.9.2.13 when remote is true, type answer or pranswer
           // More simply: not rollback, and not for remote offers.
-          bool markAsStable = sdpType == kJsepSdpOffer &&
+          bool markAsStable = aSdpType == dom::RTCSdpType::Offer &&
                               mSignalingState == RTCSignalingState::Stable;
           UpdateRTCDtlsTransports(markAsStable);
         }
 
-        for (auto& transceiver : mTransceivers) {
-          transceiver->SyncWithJsep();
+        // Did we just apply a local description?
+        if (!aRemote) {
+          // We'd like to handle this in PeerConnectionImpl::UpdateNetworkState.
+          // Unfortunately, if the WiFi switch happens quickly, we never see
+          // that state change.  We need to detect the ice restart here and
+          // reset the PeerConnectionImpl's stun addresses so they are
+          // regathered when PeerConnectionImpl::GatherIfReady is called.
+          if (mJsepSession->IsIceRestarting()) {
+            ResetStunAddrsForIceRestart();
+          }
+          EnsureTransports(*mJsepSession);
+        }
+
+        if (mJsepSession->GetState() == kJsepStateStable) {
+          // If we're rolling back a local offer, we might need to remove some
+          // transports, and stomp some MediaPipeline setup, but nothing further
+          // needs to be done.
+          UpdateTransports(*mJsepSession, mForceIceTcp);
+          if (NS_FAILED(UpdateMediaPipelines())) {
+            CSFLogError(LOGTAG, "Error Updating MediaPipelines");
+            NS_ASSERTION(
+                false,
+                "Error Updating MediaPipelines in OnSetDescriptionSuccess()");
+            aP->MaybeRejectWithOperationError("Error Updating MediaPipelines");
+          }
+
+          if (aSdpType != dom::RTCSdpType::Rollback) {
+            InitializeDataChannel();
+            StartIceChecks(*mJsepSession);
+          }
+
+          // Telemetry: record info on the current state of
+          // streams/renegotiations/etc Note: this code gets run on rollbacks as
+          // well!
+
+          // Update the max channels used with each direction for each type
+          uint16_t receiving[SdpMediaSection::kMediaTypes];
+          uint16_t sending[SdpMediaSection::kMediaTypes];
+          mJsepSession->CountTracksAndDatachannels(receiving, sending);
+          for (size_t i = 0; i < SdpMediaSection::kMediaTypes; i++) {
+            if (mMaxReceiving[i] < receiving[i]) {
+              mMaxReceiving[i] = receiving[i];
+            }
+            if (mMaxSending[i] < sending[i]) {
+              mMaxSending[i] = sending[i];
+            }
+          }
         }
 
         mPendingRemoteDescription =
@@ -2348,7 +2528,7 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
         mPendingOfferer = mJsepSession->IsPendingOfferer();
         mCurrentOfferer = mJsepSession->IsCurrentOfferer();
 
-        if (sdpType == mozilla::kJsepSdpAnswer) {
+        if (aSdpType == dom::RTCSdpType::Answer) {
           std::set<std::pair<std::string, std::string>> iceCredentials =
               mJsepSession->GetLocalIceCredentials();
           std::vector<std::pair<std::string, std::string>>
@@ -2374,7 +2554,7 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
           mPCObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
         }
 
-        if (remote) {
+        if (aRemote) {
           dom::RTCRtpReceiver::StreamAssociationChanges changes;
           for (const auto& transceiver : mTransceivers) {
             transceiver->Receiver()->UpdateStreams(&changes);
@@ -2414,8 +2594,8 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
           for (size_t i = 0; i < mTransceivers.Length();) {
             auto& transceiver = mTransceivers[i];
             if (transceiver->ShouldRemove()) {
-              // TODO: Can we make Shutdown_m and StopImpl the same thing?
-              mTransceivers[i]->Shutdown_m();
+              mTransceivers[i]->Close();
+              mTransceivers[i]->SetRemovedFromPc();
               mTransceivers.RemoveElementAt(i);
             } else {
               ++i;
@@ -2446,62 +2626,8 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(JsepSdpType sdpType,
             mPCObserver->FireStreamEvent(*stream, jrv);
           }
         }
-
-        mPCObserver->OnSetDescriptionSuccess(jrv);
+        aP->MaybeResolveWithUndefined();
       }));
-
-  // We do this after queueing the above task, to ensure that ICE state
-  // changes don't start happening before sRD finishes.
-
-  // Did we just apply a local description?
-  if (!remote) {
-    // We'd like to handle this in PeerConnectionImpl::UpdateNetworkState.
-    // Unfortunately, if the WiFi switch happens quickly, we never see
-    // that state change.  We need to detect the ice restart here and
-    // reset the PeerConnectionImpl's stun addresses so they are
-    // regathered when PeerConnectionImpl::GatherIfReady is called.
-    if (mJsepSession->IsIceRestarting()) {
-      ResetStunAddrsForIceRestart();
-    }
-    EnsureTransports(*mJsepSession);
-  }
-
-  if (mJsepSession->GetState() != kJsepStateStable) {
-    return;  // The rest of this stuff is done only when offer/answer is done
-  }
-
-  // If we're rolling back a local offer, we might need to remove some
-  // transports, and stomp some MediaPipeline setup, but nothing further
-  // needs to be done.
-  UpdateTransports(*mJsepSession, mForceIceTcp);
-  if (NS_FAILED(UpdateMediaPipelines())) {
-    CSFLogError(LOGTAG, "Error Updating MediaPipelines");
-    NS_ASSERTION(false,
-                 "Error Updating MediaPipelines in OnSetDescriptionSuccess()");
-    // XXX what now?  Not much we can do but keep going, without major
-    // restructuring
-  }
-
-  if (sdpType != kJsepSdpRollback) {
-    InitializeDataChannel();
-    StartIceChecks(*mJsepSession);
-  }
-
-  // Telemetry: record info on the current state of streams/renegotiations/etc
-  // Note: this code gets run on rollbacks as well!
-
-  // Update the max channels used with each direction for each type
-  uint16_t receiving[SdpMediaSection::kMediaTypes];
-  uint16_t sending[SdpMediaSection::kMediaTypes];
-  mJsepSession->CountTracksAndDatachannels(receiving, sending);
-  for (size_t i = 0; i < SdpMediaSection::kMediaTypes; i++) {
-    if (mMaxReceiving[i] < receiving[i]) {
-      mMaxReceiving[i] = receiving[i];
-    }
-    if (mMaxSending[i] < sending[i]) {
-      mMaxSending[i] = sending[i];
-    }
-  }
 }
 
 RTCSignalingState PeerConnectionImpl::GetSignalingState() const {
@@ -2567,6 +2693,18 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
   uint16_t level = 0;
   std::string mid;
   bool skipped = false;
+
+  if (mUncommittedJsepSession) {
+    // An sLD or sRD is in progress, and while that is the case, we need to add
+    // the candidate to both the current JSEP engine, and the uncommitted JSEP
+    // engine. We ignore errors because the spec says to only take into account
+    // the current/pending local descriptions when determining whether to
+    // surface the candidate to content, which does not take into account any
+    // in-progress sRD/sLD.
+    Unused << mUncommittedJsepSession->AddLocalIceCandidate(
+        candidate, transportId, ufrag, &level, &mid, &skipped);
+  }
+
   nsresult res = mJsepSession->AddLocalIceCandidate(
       candidate, transportId, ufrag, &level, &mid, &skipped);
 
@@ -2732,6 +2870,11 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
   mJsepSession->UpdateDefaultCandidate(
       defaultAddr, defaultPort, defaultRtcpAddr, defaultRtcpPort, transportId);
+  if (mUncommittedJsepSession) {
+    mUncommittedJsepSession->UpdateDefaultCandidate(
+        defaultAddr, defaultPort, defaultRtcpAddr, defaultRtcpPort,
+        transportId);
+  }
 }
 
 static UniquePtr<dom::RTCStatsCollection> GetDataChannelStats_s(
@@ -2801,6 +2944,7 @@ nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
 
   // Find all JsepCodecDescription instances we want to turn into codec stats.
   for (const auto& transceiver : mTransceivers) {
+    // TODO: Grab these from the JSEP transceivers instead
     auto sendCodecs = transceiver->GetNegotiatedSendCodecs();
     auto recvCodecs = transceiver->GetNegotiatedRecvCodecs();
 
@@ -3213,8 +3357,7 @@ bool PeerConnectionImpl::ShouldForceProxy() const {
 }
 
 void PeerConnectionImpl::EnsureTransports(const JsepSession& aSession) {
-  for (const auto& [id, transceiver] : aSession.GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (const auto& transceiver : aSession.GetTransceivers()) {
     if (transceiver->HasOwnTransport()) {
       mTransportHandler->EnsureProvisionalTransport(
           transceiver->mTransport.mTransportId,
@@ -3264,8 +3407,7 @@ void PeerConnectionImpl::RemoveRTCDtlsTransportsExcept(
 nsresult PeerConnectionImpl::UpdateTransports(const JsepSession& aSession,
                                               const bool forceIceTcp) {
   std::set<std::string> finalTransports;
-  for (const auto& [id, transceiver] : aSession.GetTransceivers()) {
-    (void)id;  // Lame, but no better way to do this right now.
+  for (const auto& transceiver : aSession.GetTransceivers()) {
     if (transceiver->HasOwnTransport()) {
       finalTransports.insert(transceiver->mTransport.mTransportId);
       UpdateTransport(*transceiver, forceIceTcp);
@@ -3636,7 +3778,7 @@ void PeerConnectionImpl::EnsureIceGathering(bool aDefaultRouteOnly,
 }
 
 already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
-    JsepTransceiver* aJsepTransceiver, const RTCRtpTransceiverInit& aInit,
+    const std::string& aId, bool aIsVideo, const RTCRtpTransceiverInit& aInit,
     dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv) {
   PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
   if (!mCall) {
@@ -3649,13 +3791,15 @@ already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
   }
 
   RefPtr<RTCRtpTransceiver> transceiver = new RTCRtpTransceiver(
-      mWindow, PrivacyNeeded(), this, mTransportHandler, aJsepTransceiver,
-      mSTSThread.get(), aSendTrack, mCall.get(), mIdGenerator);
+      mWindow, PrivacyNeeded(), this, mTransportHandler, mJsepSession.get(),
+      aId, aIsVideo, mSTSThread.get(), aSendTrack, mCall.get(), mIdGenerator);
 
   transceiver->Init(aInit, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
+
+  transceiver->SyncToJsep();
 
   if (aSendTrack) {
     // implement checking for peerIdentity (where failure == black/silence)

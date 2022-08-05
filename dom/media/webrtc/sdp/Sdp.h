@@ -86,6 +86,8 @@ class Sdp {
   Sdp() = default;
   virtual ~Sdp() = default;
 
+  virtual Sdp* Clone() const = 0;
+
   virtual const SdpOrigin& GetOrigin() const = 0;
   // Note: connection information is always retrieved from media sections
   virtual uint32_t GetBandwidth(const std::string& type) const = 0;

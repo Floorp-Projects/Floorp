@@ -70,6 +70,9 @@ class SipccSdpMediaSection final : public SdpMediaSection {
         mProtocol(static_cast<Protocol>(0)),
         mAttributeList(sessionLevel) {}
 
+  SipccSdpMediaSection(const SipccSdpMediaSection& aOrig,
+                       const SipccSdpAttributeList* sessionLevel);
+
   bool Load(sdp_t* sdp, uint16_t level, InternalResults& results);
   bool LoadConnection(sdp_t* sdp, uint16_t level, InternalResults& results);
   bool LoadProtocol(sdp_t* sdp, uint16_t level, InternalResults& results);

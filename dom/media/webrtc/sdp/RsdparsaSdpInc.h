@@ -353,6 +353,7 @@ void sdp_free_string(char* string);
 nsresult parse_sdp(StringView sdp, bool fail_on_warning, RustSdpSession** ret,
                    RustSdpError** err);
 RustSdpSession* sdp_new_reference(RustSdpSession* aSess);
+RustSdpSession* create_sdp_clone(const RustSdpSession* aSess);
 void sdp_free_session(RustSdpSession* ret);
 size_t sdp_get_error_line_num(const RustSdpError* err);
 char* sdp_get_error_message(const RustSdpError* err);

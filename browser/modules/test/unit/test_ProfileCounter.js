@@ -59,15 +59,6 @@ function setNewDummyTelemetryClientId() {
   ++gDummyTelemetryClientId;
 }
 
-// This function clears the pref that prevents this profile from being counted
-// more than once per installation.
-function clearProfileCountedPref() {
-  const updateDirectory = getDummyUpdateDirectory();
-  const hash = updateDirectory.leafName;
-  const prefName = `browser.engagement.profileCounted.${hash}`;
-  Services.prefs.clearUserPref(prefName);
-}
-
 // Returns null if the (fake) profile count file hasn't been created yet.
 function getProfileCount() {
   // Strict equality to ensure distinguish properly between a non-existent

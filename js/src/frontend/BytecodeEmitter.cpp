@@ -7985,6 +7985,9 @@ bool BytecodeEmitter::emitCallOrNew(
     // Calls to "forceInterpreter", "callFunction",
     // "callContentFunction", or "resumeGenerator" in self-hosted
     // code generate inline bytecode.
+    //
+    // NOTE: The list of special instruction names has to be kept in sync with
+    // "js/src/builtin/.eslintrc.js".
     auto calleeName = calleeNode->as<NameNode>().name();
     if (calleeName == TaggedParserAtomIndex::WellKnown::callFunction()) {
       return emitSelfHostedCallFunction(callNode, JSOp::Call);

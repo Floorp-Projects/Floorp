@@ -18,6 +18,18 @@
 
 namespace mozilla {
 
+SipccSdp::SipccSdp(const SipccSdp& aOrig)
+    : mOrigin(aOrig.mOrigin),
+      mBandwidths(aOrig.mBandwidths),
+      mAttributeList(aOrig.mAttributeList, nullptr) {
+  for (const auto& msection : aOrig.mMediaSections) {
+    mMediaSections.emplace_back(
+        new SipccSdpMediaSection(*msection, &mAttributeList));
+  }
+}
+
+Sdp* SipccSdp::Clone() const { return new SipccSdp(*this); }
+
 const SdpOrigin& SipccSdp::GetOrigin() const { return mOrigin; }
 
 uint32_t SipccSdp::GetBandwidth(const std::string& type) const {
