@@ -7,6 +7,8 @@ package mozilla.components.feature.media.fullscreen
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.os.Build
+import android.view.Window
+import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
@@ -23,12 +25,14 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
@@ -319,5 +323,50 @@ class MediaSessionFullscreenFeatureTest {
         featureForExternalAppBrowser.start()
 
         assertNotEquals(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, externalActivity.requestedOrientation)
+    }
+
+    @Test
+    fun `GIVEN the selected tab in fullscreen mode WHEN the media is paused or stopped THEN release the wake lock of the device`() {
+        val activity: Activity = mock()
+        val window: Window = mock()
+
+        whenever(activity.window).thenReturn(window)
+
+        val elementMetadata = MediaSession.ElementMetadata()
+        val initialState = BrowserState(
+            tabs = listOf(
+                createTab(
+                    "https://www.mozilla.org", id = "tab1",
+                    mediaSessionState = MediaSessionState(
+                        mock(),
+                        elementMetadata = elementMetadata,
+                        playbackState = MediaSession.PlaybackState.PLAYING,
+                        fullscreen = true
+                    )
+                )
+            ),
+            selectedTabId = "tab1"
+        )
+        val store = BrowserStore(initialState)
+
+        val feature = MediaSessionFullscreenFeature(
+            activity,
+            store,
+            null
+        )
+        feature.start()
+        verify(activity.window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction("tab1", MediaSession.PlaybackState.PAUSED))
+        store.waitUntilIdle()
+        verify(activity.window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        store.dispatch(MediaSessionAction.UpdateMediaPlaybackStateAction("tab1", MediaSession.PlaybackState.PLAYING))
+        store.waitUntilIdle()
+        verify(activity.window, atLeastOnce()).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction("tab1"))
+        store.waitUntilIdle()
+        verify(activity.window, atLeastOnce()).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 }

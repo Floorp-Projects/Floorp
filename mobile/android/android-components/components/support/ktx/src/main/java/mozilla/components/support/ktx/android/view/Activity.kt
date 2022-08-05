@@ -6,7 +6,6 @@ package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
 import android.view.View
-import android.view.WindowManager
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewCompat.onApplyWindowInsets
@@ -21,7 +20,7 @@ import mozilla.components.support.base.log.logger.Logger
  * - a system visibility listener: [View.OnSystemUiVisibilityChangeListener] for below APIs.
  *
  * to restore immersive mode if interactions with various other widgets like the keyboard or dialogs
- * got the activity out of immersive mode without [exitImmersiveModeIfNeeded] being called.
+ * got the activity out of immersive mode without [exitImmersiveMode] being called.
  */
 fun Activity.enterToImmersiveMode() {
     setAsImmersive()
@@ -30,7 +29,6 @@ fun Activity.enterToImmersiveMode() {
 
 @VisibleForTesting
 internal fun Activity.setAsImmersive() {
-    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     window.getWindowInsetsController().apply {
         hide(WindowInsetsCompat.Type.systemBars())
         systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -57,15 +55,9 @@ internal fun Activity.enableImmersiveModeRestore() {
 /**
  * Attempts to come out from immersive mode.
  */
-fun Activity.exitImmersiveModeIfNeeded() {
-    if (WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON and window.attributes.flags == 0) {
-        // We left immersive mode already.
-        return
-    }
-
+fun Activity.exitImmersiveMode() {
     ViewCompat.setOnApplyWindowInsetsListener(window.decorView, null)
 
-    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     window.getWindowInsetsController().apply {
         show(WindowInsetsCompat.Type.systemBars())
     }

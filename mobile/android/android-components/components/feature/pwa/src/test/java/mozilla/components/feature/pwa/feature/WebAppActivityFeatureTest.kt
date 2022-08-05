@@ -9,7 +9,6 @@ import android.content.pm.ActivityInfo
 import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.Window
-import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.components.browser.icons.BrowserIcons
@@ -22,7 +21,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
 import org.robolectric.Shadows.shadowOf
@@ -52,13 +50,11 @@ class WebAppActivityFeatureTest {
             display = WebAppManifest.DisplayMode.STANDALONE
         )
         WebAppActivityFeature(activity, icons, basicManifest).onResume(mock())
-        verify(window, never()).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         val fullscreenManifest = basicManifest.copy(
             display = WebAppManifest.DisplayMode.FULLSCREEN
         )
         WebAppActivityFeature(activity, icons, fullscreenManifest).onResume(mock())
-        verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     @Test

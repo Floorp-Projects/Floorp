@@ -7,6 +7,7 @@ package mozilla.components.feature.media.fullscreen
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.os.Build
+import android.view.WindowManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -37,6 +39,7 @@ class MediaSessionFullscreenFeature(
                 tab.filter { it.mediaSessionState != null && it.mediaSessionState!!.fullscreen }
             }.ifChanged().collect { states ->
                 processFullscreen(states)
+                processDeviceSleepMode(states)
             }
         }
     }
@@ -63,6 +66,23 @@ class MediaSessionFullscreenFeature(
                             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                     }
                 else -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+            }
+        }
+    }
+
+    private fun processDeviceSleepMode(sessionStates: List<SessionState>) {
+        val activeTabState = sessionStates.firstOrNull()
+        if (activeTabState == null || activeTabState.mediaSessionState?.fullscreen != true) {
+            return
+        }
+        activeTabState.mediaSessionState?.let {
+            when (activeTabState.mediaSessionState?.playbackState) {
+                MediaSession.PlaybackState.PLAYING -> {
+                    activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+                else -> {
+                    activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
             }
         }
     }

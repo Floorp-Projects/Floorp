@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewTreeObserver
 import android.view.Window
 import android.view.WindowInsets
-import android.view.WindowManager
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
@@ -21,7 +20,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -59,7 +57,6 @@ class ActivityTest {
         activity.enterToImmersiveMode()
 
         // verify entering immersive mode
-        verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         // verify that the immersive mode restoration is set as expected
@@ -70,7 +67,6 @@ class ActivityTest {
     fun `check setAsImmersive sets the correct flags`() {
         activity.setAsImmersive()
 
-        verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         verify(window.decorView, never()).setOnSystemUiVisibilityChangeListener(any())
@@ -95,7 +91,6 @@ class ActivityTest {
         insetListenerCaptor.value.onApplyWindowInsets(window.decorView, windowInsets)
 
         // Cannot test if "setAsImmersive()" was called it being an extension function but we can check the effect of that call.
-        verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
     }
@@ -118,39 +113,16 @@ class ActivityTest {
     }
 
     @Test
-    fun `check exitImmersiveModeIfNeeded sets the correct flags`() {
-        val attributes = mock(WindowManager.LayoutParams::class.java)
-        `when`(window.attributes).thenReturn(attributes)
-        attributes.flags = 0
+    fun `check exitImmersiveMode sets the correct flags`() {
+        activity.exitImmersiveMode()
 
-        activity.exitImmersiveModeIfNeeded()
-
-        verify(window, never()).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        verify(decorView, never()).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
-        verify(decorView, never()).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.inv()
-        verify(decorView, never()).setOnApplyWindowInsetsListener(null)
-
-        attributes.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-
-        activity.exitImmersiveModeIfNeeded()
-
-        verify(window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         verify(decorView, times(2)).systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         verify(decorView).setOnApplyWindowInsetsListener(null)
     }
 
     @Test
-    fun `check exitImmersiveModeIfNeeded correctly cleanups the insets listeners`() {
-        val attributes = mock(WindowManager.LayoutParams::class.java)
-        `when`(window.attributes).thenReturn(attributes)
-        attributes.flags = 0
-
-        activity.exitImmersiveModeIfNeeded()
-
-        verify(decorView, never()).setOnApplyWindowInsetsListener(null)
-
-        attributes.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-        activity.exitImmersiveModeIfNeeded()
+    fun `check exitImmersiveMode correctly cleanups the insets listeners`() {
+        activity.exitImmersiveMode()
 
         verify(decorView).setOnApplyWindowInsetsListener(null)
     }
