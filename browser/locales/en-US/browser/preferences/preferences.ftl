@@ -1565,3 +1565,6 @@ click-to-option =
 
 ## sidebar
 profiles-button-label = Manage profiles
+
+appmenuitem-reboot =
+ .label = Reboot
