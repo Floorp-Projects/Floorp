@@ -461,7 +461,8 @@ class PeerConnectionImpl final
   // Gets the RTC Signaling State of the JSEP session
   dom::RTCSignalingState GetSignalingState() const;
 
-  void OnSetDescriptionSuccess(JsepSdpType sdpType, bool remote);
+  already_AddRefed<dom::Promise> OnSetDescriptionSuccess(
+      dom::RTCSdpType aSdpType, bool aRemote, ErrorResult& aError);
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
@@ -554,6 +555,9 @@ class PeerConnectionImpl final
 
   MOZ_CAN_RUN_SCRIPT
   void RunNextOperation(ErrorResult& aError);
+
+  void SyncToJsep();
+  void SyncFromJsep();
 
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate

@@ -85,6 +85,10 @@ interface PeerConnectionImpl  {
   /* Notify DOM window if this plugin crash is ours. */
   boolean pluginCrash(unsigned long long pluginId, DOMString name);
 
+  // Only throws if promise creation fails
+  [Throws]
+  Promise<void> onSetDescriptionSuccess(RTCSdpType type, boolean remote);
+
   /* Attributes */
   /* This provides the implementation with the certificate it uses to
    * authenticate itself.  The JS side must set this before calling

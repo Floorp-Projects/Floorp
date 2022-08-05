@@ -234,7 +234,6 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
   // TODO(bug 1401592): apply aInit.mSendEncodings to mSender
   mSender->SetStreams(aInit.mStreams);
   mDirection = aInit.mDirection;
-  mJsepTransceiver->mJsDirection = ToSdpDirection(mDirection);
 }
 
 void RTCRtpTransceiver::SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport,
@@ -457,41 +456,38 @@ bool RTCRtpTransceiver::ConduitHasPluginID(uint64_t aPluginID) {
   return mConduit && mConduit->HasCodecPluginID(aPluginID);
 }
 
-void RTCRtpTransceiver::SyncWithJsep() {
+void RTCRtpTransceiver::SyncFromJsep() {
   MOZ_MTLOG(ML_DEBUG, mPc->GetHandle()
                           << "[" << mMid.Ref() << "]: " << __FUNCTION__
-                          << " Syncing with JSEP transceiver");
-
+                          << " Syncing from JSEP transceiver");
   if (mShutdown) {
     // Shutdown_m has already been called, probably due to pc.close(). Just
     // nod and smile.
     return;
   }
 
+  auto jsepTransceiver = GetJsepTransceiver();
+
   // Transceivers can stop due to JSEP negotiation, so we need to check that
-  if (mJsepTransceiver->IsStopped()) {
+  if (jsepTransceiver->IsStopped()) {
     StopImpl();
   }
 
-  // If a SRD has unset the receive bit, stop the receive pipeline so incoming
-  // RTP does not unmute the receive track.
-  if (!mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit() ||
-      !mJsepTransceiver->mRecvTrack.GetActive()) {
-    mReceiver->Stop();
-  }
+  mReceiver->SyncFromJsep(*jsepTransceiver);
+  mSender->SyncFromJsep(*jsepTransceiver);
 
   // mid from JSEP
-  if (mJsepTransceiver->IsAssociated()) {
-    mMid = mJsepTransceiver->GetMid();
+  if (jsepTransceiver->IsAssociated()) {
+    mMid = jsepTransceiver->GetMid();
   } else {
     mMid = std::string();
   }
 
   // currentDirection from JSEP, but not if "this transceiver has never been
   // represented in an offer/answer exchange"
-  if (mJsepTransceiver->HasLevel() && mJsepTransceiver->IsNegotiated()) {
-    if (IsReceiving()) {
-      if (IsSending()) {
+  if (jsepTransceiver->HasLevel() && jsepTransceiver->IsNegotiated()) {
+    if (jsepTransceiver->mRecvTrack.GetActive()) {
+      if (jsepTransceiver->mSendTrack.GetActive()) {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Sendrecv);
         mHasBeenUsedToSend = true;
       } else {
@@ -505,6 +501,26 @@ void RTCRtpTransceiver::SyncWithJsep() {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Inactive);
       }
     }
+  }
+
+  mShouldRemove = jsepTransceiver->IsRemoved();
+  mHasTransport = jsepTransceiver->HasLevel() && !jsepTransceiver->IsStopped();
+}
+
+void RTCRtpTransceiver::SyncToJsep() const {
+  MOZ_MTLOG(ML_DEBUG, mPc->GetHandle()
+                          << "[" << mMid.Ref() << "]: " << __FUNCTION__
+                          << " Syncing to JSEP transceiver");
+
+  auto jsepTransceiver = GetJsepTransceiver();
+  mReceiver->SyncToJsep(*jsepTransceiver);
+  mSender->SyncToJsep(*jsepTransceiver);
+  jsepTransceiver->mJsDirection = ToSdpDirection(mDirection);
+  if (mStopped) {
+    jsepTransceiver->Stop();
+  }
+  if (mAddTrackMagic) {
+    jsepTransceiver->SetAddTrackMagic();
   }
 }
 
@@ -548,19 +564,17 @@ void RTCRtpTransceiver::SetDirection(RTCRtpTransceiverDirection aDirection,
 
 void RTCRtpTransceiver::SetDirectionInternal(
     RTCRtpTransceiverDirection aDirection) {
-  mJsepTransceiver->mJsDirection = ToSdpDirection(aDirection);
+  // We do not update the direction on the JsepTransceiver until sync
   mDirection = aDirection;
 }
 
 void RTCRtpTransceiver::SetAddTrackMagic() {
   // TODO(bug 1767820): Refactor this to only forbid removal, not to set the
   // magic bit
-  mJsepTransceiver->SetAddTrackMagic();
+  mAddTrackMagic = true;
 }
 
-bool RTCRtpTransceiver::ShouldRemove() const {
-  return mJsepTransceiver->IsRemoved();
-}
+bool RTCRtpTransceiver::ShouldRemove() const { return mShouldRemove; }
 
 bool RTCRtpTransceiver::CanSendDTMF() const {
   // Spec says: "If connection's RTCPeerConnectionState is not "connected"
@@ -840,7 +854,6 @@ void RTCRtpTransceiver::StopImpl() {
   }
   mStopped = true;
   mCurrentDirection.SetNull();
-  mJsepTransceiver->Stop();
   auto self = nsMainThreadPtrHandle<RTCRtpTransceiver>(
       new nsMainThreadPtrHolder<RTCRtpTransceiver>(
           "RTCRtpTransceiver::StopImpl::self", this, false));
