@@ -217,7 +217,6 @@ class RTCRtpTransceiver : public nsISupports,
   bool mHasBeenUsedToSend = false;
   bool mPrivacyNeeded = false;
   bool mShouldRemove = false;
-  bool mAddTrackMagic = false;
   bool mHasTransport = false;
   bool mIsVideo;
   // This is really nasty. Most of the time, PeerConnectionImpl needs to be in
