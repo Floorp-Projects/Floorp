@@ -126,6 +126,9 @@ class RemoteSourceStreamInfo;
 class PCUuidGenerator : public mozilla::JsepUuidGenerator {
  public:
   virtual bool Generate(std::string* idp) override;
+  virtual mozilla::JsepUuidGenerator* Clone() const override {
+    return new PCUuidGenerator(*this);
+  }
 
  private:
   nsCOMPtr<nsIUUIDGenerator> mGenerator;
@@ -725,7 +728,7 @@ class PeerConnectionImpl final
   nsresult UpdateMediaPipelines();
 
   already_AddRefed<dom::RTCRtpTransceiver> CreateTransceiver(
-      JsepTransceiver* aJsepTransceiver,
+      const std::string& aId, bool aIsVideo,
       const dom::RTCRtpTransceiverInit& aInit,
       dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv);
 

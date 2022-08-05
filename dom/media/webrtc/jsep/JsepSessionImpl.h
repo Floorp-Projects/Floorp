@@ -20,12 +20,6 @@
 
 namespace mozilla {
 
-class JsepUuidGenerator {
- public:
-  virtual ~JsepUuidGenerator() {}
-  virtual bool Generate(std::string* id) = 0;
-};
-
 class JsepSessionImpl : public JsepSession {
  public:
   JsepSessionImpl(const std::string& name, UniquePtr<JsepUuidGenerator> uuidgen)
@@ -138,13 +132,12 @@ class JsepSessionImpl : public JsepSession {
   virtual std::set<std::pair<std::string, std::string>> GetLocalIceCredentials()
       const override;
 
-  virtual const std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers()
+  virtual const std::vector<RefPtr<JsepTransceiver>>& GetTransceivers()
       const override {
     return mTransceivers;
   }
 
-  virtual std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers()
-      override {
+  virtual std::vector<RefPtr<JsepTransceiver>>& GetTransceivers() override {
     return mTransceivers;
   }
 
@@ -237,11 +230,10 @@ class JsepSessionImpl : public JsepSession {
   void SetIceRestarting(bool restarting);
 
   // !!!NOT INDEXED BY LEVEL!!! The level mapping is done with
-  // JsepTransceiver::mLevel. The keys are opaque, stable identifiers that are
-  // unique within the JsepSession.
-  std::map<size_t, RefPtr<JsepTransceiver>> mTransceivers;
+  // JsepTransceiver::mLevel. The keys are UUIDs.
+  std::vector<RefPtr<JsepTransceiver>> mTransceivers;
   // So we can rollback. Not as simple as just going back to the old, though...
-  std::map<size_t, RefPtr<JsepTransceiver>> mOldTransceivers;
+  std::vector<RefPtr<JsepTransceiver>> mOldTransceivers;
 
   Maybe<bool> mIsPendingOfferer;
   Maybe<bool> mIsCurrentOfferer;

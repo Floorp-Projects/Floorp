@@ -12,7 +12,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "ErrorList.h"
-#include "jsep/JsepTransceiver.h"
+#include "jsep/JsepSession.h"
 #include "transport/transportlayer.h"  // For TransportLayer::State
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 
@@ -20,7 +20,6 @@ class nsIPrincipal;
 
 namespace mozilla {
 class PeerIdentity;
-class JsepTransceiver;
 class MediaSessionConduit;
 class VideoSessionConduit;
 class AudioSessionConduit;
@@ -58,14 +57,12 @@ class RTCRtpTransceiver : public nsISupports,
   /**
    * |aSendTrack| might or might not be set.
    */
-  RTCRtpTransceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-                    PeerConnectionImpl* aPc,
-                    MediaTransportHandler* aTransportHandler,
-                    JsepTransceiver* aJsepTransceiver,
-                    nsISerialEventTarget* aStsThread,
-                    MediaStreamTrack* aSendTrack,
-                    WebrtcCallWrapper* aCallWrapper,
-                    RTCStatsIdGenerator* aIdGenerator);
+  RTCRtpTransceiver(
+      nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
+      MediaTransportHandler* aTransportHandler, JsepSession* aJsepSession,
+      const std::string& aTransceiverId, bool aIsVideo,
+      nsISerialEventTarget* aStsThread, MediaStreamTrack* aSendTrack,
+      WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator);
 
   void Init(const RTCRtpTransceiverInit& aInit, ErrorResult& aRv);
 
@@ -145,6 +142,8 @@ class RTCRtpTransceiver : public nsISupports,
 
   MediaSessionConduit* GetConduit() const { return mConduit; }
 
+  const std::string& GetJsepTransceiverId() const { return mTransceiverId; }
+
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCRtpTransceiver)
@@ -188,7 +187,8 @@ class RTCRtpTransceiver : public nsISupports,
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<MediaTransportHandler> mTransportHandler;
-  const RefPtr<JsepTransceiver> mJsepTransceiver;
+  const std::string mTransceiverId;
+  RefPtr<JsepTransceiver> mJsepTransceiver;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   // state for webrtc.org that is shared between all transceivers
   RefPtr<WebrtcCallWrapper> mCallWrapper;
