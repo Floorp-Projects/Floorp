@@ -1,0 +1,54 @@
+CROSS_BUILD=1
+TOOLS=/home/runner/work/win-cross
+export WINDOWSSDKDIR="${TOOLS}/kits/10"
+EXTRA_PATH="${TOOLS}/clang/bin:${TOOLS}/vc/tools/msvc/14.32.31326/bin/hostx64/x64:"
+X=$(($(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)))
+
+export CC="${TOOLS}/clang/bin/clang-cl"
+export CXX="${TOOLS}/clang/bin/clang-cl"
+export DIA_SDK_PATH="${TOOLS}/dia sdk"
+export HOST_CC="${TOOLS}/clang/bin/clang"
+export HOST_CXX="${TOOLS}/clang/bin/clang++"
+export MIDL="${TOOLS}/wine/bin/widl"
+export MOZ_INCLUDE_SOURCE_INFO=1
+export MOZ_STUB_INSTALLER=1
+export RUSTC_OPT_LEVEL=2
+export WIN32_REDIST_DIR="${TOOLS}/vc/redist/msvc/14.32.31326/x64/microsoft.vc143.crt/"
+export WIN_UCRT_REDIST_DIR="${WINDOWSSDKDIR}/redist/10.0.19041.0/ucrt/dlls/x64"
+export WINE="${TOOLS}/wine/bin/wine64"
+export WINEDEBUG=-all
+
+mk_add_options "export LD_PRELOAD=${TOOLS}/liblowercase/liblowercase.so"
+mk_add_options "export LOWERCASE_DIRS=${TOOLS}"
+mk_add_options "export PATH=$EXTRA_PATH$PATH"
+mk_add_options MOZ_MAKE_FLAGS=-j${X%.*}
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+ac_add_options --with-branding=browser/branding/official
+ac_add_options --with-l10n-base=/home/runner/work/Floorp/Floorp/l10n-central/l10n-central
+ac_add_options --with-wasi-sysroot=/home/runner/work/wasi-sysroot/
+ac_add_options --disable-bits-download
+ac_add_options --disable-crashreporter
+ac_add_options --disable-debug
+ac_add_options --disable-dmd
+ac_add_options --disable-geckodriver
+ac_add_options --disable-maintenance-service
+ac_add_options --disable-parental-controls
+ac_add_options --disable-profiling
+ac_add_options --disable-tests
+ac_add_options --disable-verify-mar
+if [ -x "$(command -v sccache)" ]; then
+    ac_add_options --with-ccache=sccache
+elif [ -f "/home/runner/work/.mozbuild/sccache/sccache" ]; then
+    ac_add_options --with-ccache=/home/runner/work/.mozbuild/sccache/sccache
+fi
+ac_add_options --enable-install-strip
+ac_add_options --enable-optimize="-O2 -Qvec -w -clang:-ftree-vectorize -clang:-msse3 -clang:-mssse3 -clang:-msse4.1 -clang:-mtune=haswell"
+ac_add_options --enable-proxy-bypass-protection
+ac_add_options --enable-rust-simd
+ac_add_options --enable-strip
+ac_add_options --enable-updater
+
+ac_add_options --target=x86_64-pc-mingw32
+
+MOZ_REQUIRE_SIGNING=
