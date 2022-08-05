@@ -893,6 +893,11 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
     const CompositableHandle& aHandle) {
   const auto& lookup = mCanvasMap.find(aHandle.Value());
   MOZ_ASSERT(lookup != mCanvasMap.end());
+  if (lookup == mCanvasMap.end()) {
+    NS_WARNING("WebGPU presenting on a destroyed swap chain!");
+    return IPC_OK();
+  }
+
   RefPtr<PresentationData> data = lookup->second.get();
   mCanvasMap.erase(lookup);
   data->mTextureHost = nullptr;
