@@ -1143,7 +1143,7 @@ var BrowserAddonUI = {
     }
   },
 
-  async manageAddon(addonId) {
+  async manageAddon(addonId, eventObject) {
     let addon = addonId && (await AddonManager.getAddonByID(addonId));
     if (!addon) {
       return;
@@ -1151,7 +1151,7 @@ var BrowserAddonUI = {
 
     BrowserOpenAddonsMgr("addons://detail/" + encodeURIComponent(addon.id));
     AMTelemetry.recordActionEvent({
-      object: "browserAction",
+      object: eventObject,
       action: "manage",
       extra: { addonId: addon.id },
     });
@@ -1415,21 +1415,21 @@ var gUnifiedExtensions = {
     const id = this._getExtensionId(menu);
 
     await this.togglePanel();
-    await BrowserAddonUI.manageAddon(id);
+    await BrowserAddonUI.manageAddon(id, "unifiedExtensions");
   },
 
   async removeExtension(menu) {
     const id = this._getExtensionId(menu);
 
     await this.togglePanel();
-    await BrowserAddonUI.removeAddon(id, "browserAction");
+    await BrowserAddonUI.removeAddon(id, "unifiedExtensions");
   },
 
   async reportExtension(menu) {
     const id = this._getExtensionId(menu);
 
     await this.togglePanel();
-    await BrowserAddonUI.reportAddon(id, "toolbar_context_menu");
+    await BrowserAddonUI.reportAddon(id, "unified_context_menu");
   },
 
   _getExtensionId(menu) {

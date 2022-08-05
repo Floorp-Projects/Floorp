@@ -339,6 +339,7 @@ addonsManager:
       - customize
       - pageAction
       - doorhanger
+      - unifiedExtensions
     extra_keys:
       action: >
         The action that was performed. Options include disable, enable, uninstall, undo, contribute, preferences,
@@ -359,7 +360,7 @@ addonsManager:
       - "firefox"
       - "fennec"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1513344, 1546248, 1590736, 1630596, 1672570, 1699225, 1714251, 1749878]
+    bug_numbers: [1500147, 1513344, 1546248, 1590736, 1630596, 1672570, 1699225, 1714251, 1749878, 1780746]
     release_channel_collection: opt-out
   report:
     description: >
@@ -369,6 +370,7 @@ addonsManager:
       - amo
       - menu
       - toolbar_context_menu
+      - unified_context_menu
       - uninstall
     extra_keys:
       addon_type: >
@@ -385,7 +387,7 @@ addonsManager:
       - "fennec"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1544927, 1580561, 1590736, 1630596, 1672570, 1714251, 1749878]
+    bug_numbers: [1544927, 1580561, 1590736, 1630596, 1672570, 1714251, 1749878, 1780746]
     release_channel_collection: opt-out
 
 blocklist:
