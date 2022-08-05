@@ -19,10 +19,6 @@ const BROWSER_B = createDummyBrowser("https://example.org/foo");
 const EXPIRY_MS_A = 1000000;
 const EXPIRY_MS_B = 1000001;
 
-let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-  "https://example.com"
-);
-
 function createDummyBrowser(spec) {
   let uri = Services.io.newURI(spec);
   return {

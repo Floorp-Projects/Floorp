@@ -3,10 +3,6 @@
 
 "use strict";
 
-function URI(str) {
-  return Services.io.newURI(str);
-}
-
 add_task(async function test_setup_preexisting_permissions() {
   // Pre-existing ALLOW permissions that should be overriden
   // with DENY.
