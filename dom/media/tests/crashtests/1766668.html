@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    await navigator.mediaDevices.getUserMedia({ 'audio': {} })
+    const peer = new RTCPeerConnection({ 'iceServers': [{ 'urls': 'stun:23.21.150.121' }], 'peerIdentity': 'B' }, {})
+    const stream = await navigator.mediaDevices.getUserMedia({ 'audio': {} })
+    stream.getTracks().forEach((track) => peer.addTrack(track, stream))
+    try { offer = await peer.createOffer({}) } catch (e) { }
+    await peer.setRemoteDescription(offer)
+  })
+</script>
