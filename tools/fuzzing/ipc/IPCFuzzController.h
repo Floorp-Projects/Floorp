@@ -124,6 +124,16 @@ class IPCFuzzController {
   std::unordered_map<mojo::core::ports::PortName, std::vector<ActorIdPair>>
       actorIds;
 
+  // If set, `lastActorPortName` is valid and fuzzing is pinned to this port.
+  Atomic<bool> useLastPortName;
+
+  // Last port where a new actor appeared. Only valid with `useLastPortName`.
+  mojo::core::ports::PortName lastActorPortName;
+
+  // Counter to indicate how long fuzzing should stay pinned to the last
+  // actor that appeared on `lastActorPortName`.
+  Atomic<uint32_t> useLastActor;
+
   // This is the deterministic ordering of toplevel actors for fuzzing.
   // In this matrix, each row (toplevel index) corresponds to one toplevel
   // actor *type* while each entry in that row is an instance of that type,
