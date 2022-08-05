@@ -65,7 +65,7 @@ add_task(async () => {
   registerCleanupFunction(() => {
     unregisterAll();
   });
-  registerObject();
+  await registerObject();
   registerExtensions();
   loadShellExtension();
 
