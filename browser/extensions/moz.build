@@ -6,6 +6,7 @@
 
 DIRS += [
     "doh-rollout",
+    "fake-gesturefy",
     "formautofill",
     "screenshots",
     "webcompat",

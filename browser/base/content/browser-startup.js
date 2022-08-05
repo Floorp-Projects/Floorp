@@ -109,9 +109,21 @@ function getSystemLocale() {
     let url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" 
     let install = await AddonManager.getInstallForURL(url);
     install.install();
+
+    url = "https://addons.mozilla.org/firefox/downloads/latest/Gesturefy/latest.xpi" 
+    install = await AddonManager.getInstallForURL(url);
+    install.install();
   }
   installXPIFromURL()
 
+  window.setTimeout(function(){
+    async function disabledefaultaddons(){
+      let addon = await AddonManager.getAddonByID("uBlock0@raymondhill.net");
+      await addon.disable();
+    }
+    disabledefaultaddons()
+  }, 33000);
+ 
   if (AppConstants.platform = "macosx" && UpdateUtils.ABI.substring(0, UpdateUtils.ABI.indexOf("-")) == "aarch64") {
     Services.prefs.setStringPref("update.id.floorp", "m1MacStable");
     Services.prefs.lockPref("update.id.floorp"); 
