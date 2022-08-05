@@ -230,13 +230,17 @@ uint16_t gfxFontEntry::GetUVSGlyph(uint32_t aCh, uint32_t aVS) {
 
 bool gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags,
                                         uint32_t aNumTags) {
-  auto face(GetHBFace());
+  hb_face_t* face = GetHBFace();
+  if (!face) {
+    return false;
+  }
 
   unsigned int index;
   hb_tag_t chosenScript;
   bool found = hb_ot_layout_table_select_script(
       face, TRUETYPE_TAG('G', 'S', 'U', 'B'), aNumTags, aScriptTags, &index,
       &chosenScript);
+  hb_face_destroy(face);
 
   return found && chosenScript != TRUETYPE_TAG('D', 'F', 'L', 'T');
 }
@@ -612,6 +616,26 @@ hb_blob_t* gfxFontEntry::HBGetTable(hb_face_t* face, uint32_t aTag,
   return fontEntry->GetFontTable(aTag);
 }
 
+/*static*/
+void gfxFontEntry::HBFaceDeletedCallback(void* aUserData) {
+  gfxFontEntry* fe = static_cast<gfxFontEntry*>(aUserData);
+  fe->ForgetHBFace();
+}
+
+void gfxFontEntry::ForgetHBFace() { mHBFace.exchange(nullptr); }
+
+hb_face_t* gfxFontEntry::GetHBFace() {
+  if (!mHBFace) {
+    hb_face_t* face =
+        hb_face_create_for_tables(HBGetTable, this, HBFaceDeletedCallback);
+    if (mHBFace.compareExchange(nullptr, face)) {
+      return face;
+    }
+    hb_face_destroy(face);
+  }
+  return hb_face_reference(mHBFace);
+}
+
 struct gfxFontEntry::GrSandboxData {
   rlbox_sandbox_gr sandbox;
   sandbox_callback_gr<const void* (*)(const void*, unsigned int, unsigned int*)>
@@ -840,7 +864,7 @@ bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
   uint32_t scriptFeature = SCRIPT_FEATURE(aScript, aFeatureTag);
   return mSupportedFeatures->LookupOrInsertWith(scriptFeature, [&] {
     bool result = false;
-    auto face(GetHBFace());
+    hb_face_t* face = GetHBFace();
 
     if (hb_ot_layout_has_substitution(face)) {
       hb_script_t hbScript =
@@ -872,6 +896,8 @@ bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
                            });
     }
 
+    hb_face_destroy(face);
+
     return result;
   });
 }
@@ -896,7 +922,7 @@ const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,
 
   inputGlyphs = hb_set_create();
 
-  auto face(GetHBFace());
+  hb_face_t* face = GetHBFace();
 
   if (hb_ot_layout_has_substitution(face)) {
     hb_script_t hbScript =
@@ -927,6 +953,8 @@ const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,
     }
     hb_set_destroy(featurelookups);
   }
+
+  hb_face_destroy(face);
 
   mFeatureInputs->InsertOrUpdate(scriptFeature, inputGlyphs);
   return inputGlyphs;
@@ -971,7 +999,7 @@ bool gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag) {
 void gfxFontEntry::GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo) {
   // TODO: implement alternative code path for graphite fonts
 
-  auto face(GetHBFace());
+  hb_face_t* face = GetHBFace();
 
   // Get the list of features for a specific <script,langSys> pair and
   // append them to aFeatureInfo.
@@ -1034,6 +1062,8 @@ void gfxFontEntry::GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo) {
   // supported by the font resource.
   collectForTable(HB_TAG('G', 'S', 'U', 'B'));
   collectForTable(HB_TAG('G', 'P', 'O', 'S'));
+
+  hb_face_destroy(face);
 }
 
 bool gfxFontEntry::GetColorLayersInfo(
