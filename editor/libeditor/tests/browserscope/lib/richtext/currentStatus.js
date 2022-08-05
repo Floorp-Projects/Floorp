@@ -19,7 +19,7 @@ var knownFailures = {
   },
   'a' : {
     'createbookmark-0' : true,
-    'decreasefontsize-0' : !SpecialPowers.getBoolPref("dom.document.edit_command.decreasefontsize.enabled"),
+    'decreasefontsize-0' : true,
     'fontsize-1' : true,
     'subscript-1' : true,
     'superscript-1' : true,

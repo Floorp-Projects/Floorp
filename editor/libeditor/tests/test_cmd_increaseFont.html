@@ -10,13 +10,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=767684
 <script>
 SimpleTest.waitForExplicitFinish();
 (async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.document.edit_command.increasefontsize.enabled", true]
-    ],
-  });
   getSelection().selectAllChildren(document.querySelector("div"));
-  document.execCommand("increaseFontSize");
+  SpecialPowers.doCommand(window, "cmd_increaseFont");
   is(
     document.querySelector("div").innerHTML,
     "<big>foo<b>bar</b>baz</big>",
