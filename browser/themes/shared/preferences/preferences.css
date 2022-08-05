@@ -4,6 +4,10 @@
 
 @namespace html "http://www.w3.org/1999/xhtml";
 
+.profiles-icon {
+  list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
+}
+
 #browserContainersExtensionContent{
   display: none !important;
 }

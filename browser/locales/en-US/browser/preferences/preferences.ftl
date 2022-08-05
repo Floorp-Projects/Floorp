@@ -1562,3 +1562,6 @@ floorp-translater = Translation Function Settings
 click-to-option =
     .label = Open Settings...
     .accesskey = O
+
+## sidebar
+profiles-button-label = Manage profiles
