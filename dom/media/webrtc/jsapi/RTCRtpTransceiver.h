@@ -106,6 +106,7 @@ class RTCRtpTransceiver : public nsISupports,
   bool Stopped() const { return mStopped; }
   void SyncToJsep() const;
   void SyncFromJsep();
+  void SetJsepSession(JsepSession* aJsepSession);
   std::string GetMidAscii() const;
 
   void UpdateDtlsTransportState(const std::string& aTransportId,
@@ -123,15 +124,9 @@ class RTCRtpTransceiver : public nsISupports,
 
   bool IsVideo() const;
 
-  bool IsSending() const {
-    return !mJsepTransceiver->IsStopped() &&
-           mJsepTransceiver->mSendTrack.GetActive();
-  }
+  bool IsSending() const;
 
-  bool IsReceiving() const {
-    return !mJsepTransceiver->IsStopped() &&
-           mJsepTransceiver->mRecvTrack.GetActive();
-  }
+  bool IsReceiving() const;
 
   bool ShouldRemove() const;
 

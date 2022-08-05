@@ -368,8 +368,14 @@ void RTCRtpTransceiver::BreakCycles() {
   mPc = nullptr;
 }
 
+// TODO: Only called from one place in PeerConnectionImpl, synchronously, when
+// the JSEP engine has successfully completed an offer/answer exchange. This is
+// a bit squirrely, since identity validation happens asynchronously in
+// PeerConnection.jsm. This probably needs to happen once all the "in parallel"
+// steps have succeeded, but before we queue the task for JS observable state
+// updates.
 nsresult RTCRtpTransceiver::UpdateTransport() {
-  if (!mJsepTransceiver->HasLevel() || mJsepTransceiver->IsStopped()) {
+  if (!mHasTransport) {
     return NS_OK;
   }
 
@@ -379,14 +385,8 @@ nsresult RTCRtpTransceiver::UpdateTransport() {
 }
 
 nsresult RTCRtpTransceiver::UpdateConduit() {
-  if (mJsepTransceiver->IsStopped()) {
+  if (mStopped) {
     return NS_OK;
-  }
-
-  if (mJsepTransceiver->IsAssociated()) {
-    mMid = mJsepTransceiver->GetMid();
-  } else {
-    mMid = std::string();
   }
 
   mReceiver->UpdateConduit();
@@ -397,9 +397,15 @@ nsresult RTCRtpTransceiver::UpdateConduit() {
 
 void RTCRtpTransceiver::ResetSync() { mSyncGroup = std::string(); }
 
+// TODO: Only called from one place in PeerConnectionImpl, synchronously, when
+// the JSEP engine has successfully completed an offer/answer exchange. This is
+// a bit squirrely, since identity validation happens asynchronously in
+// PeerConnection.jsm. This probably needs to happen once all the "in parallel"
+// steps have succeeded, but before we queue the task for JS observable state
+// updates.
 nsresult RTCRtpTransceiver::SyncWithMatchingVideoConduits(
     nsTArray<RefPtr<RTCRtpTransceiver>>& transceivers) {
-  if (mJsepTransceiver->IsStopped()) {
+  if (mStopped) {
     return NS_OK;
   }
 
@@ -413,8 +419,8 @@ nsresult RTCRtpTransceiver::SyncWithMatchingVideoConduits(
   }
 
   std::set<std::string> myReceiveStreamIds;
-  myReceiveStreamIds.insert(mJsepTransceiver->mRecvTrack.GetStreamIds().begin(),
-                            mJsepTransceiver->mRecvTrack.GetStreamIds().end());
+  myReceiveStreamIds.insert(mReceiver->GetStreamIds().begin(),
+                            mReceiver->GetStreamIds().end());
 
   for (RefPtr<RTCRtpTransceiver>& transceiver : transceivers) {
     if (!transceiver->IsValid()) {
@@ -429,7 +435,7 @@ nsresult RTCRtpTransceiver::SyncWithMatchingVideoConduits(
     // Maybe could make this more efficient by cacheing this set, but probably
     // not worth it.
     for (const std::string& streamId :
-         transceiver->mJsepTransceiver->mRecvTrack.GetStreamIds()) {
+         transceiver->Receiver()->GetStreamIds()) {
       if (myReceiveStreamIds.count(streamId)) {
         // Ok, we have one video, one non-video - cross the streams!
         mSyncGroup = streamId;
@@ -494,7 +500,7 @@ void RTCRtpTransceiver::SyncFromJsep() {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Recvonly);
       }
     } else {
-      if (IsSending()) {
+      if (jsepTransceiver->mSendTrack.GetActive()) {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Sendonly);
         mHasBeenUsedToSend = true;
       } else {
@@ -524,9 +530,16 @@ void RTCRtpTransceiver::SyncToJsep() const {
   }
 }
 
+// TODO: Unify with SyncFromJsep
+void RTCRtpTransceiver::SetJsepSession(JsepSession* aJsepSession) {
+  mJsepTransceiver = aJsepSession->GetTransceiver(mTransceiverId);
+  MOZ_RELEASE_ASSERT(mJsepTransceiver);
+}
+
 void RTCRtpTransceiver::GetKind(nsAString& aKind) const {
   // The transceiver kind of an RTCRtpTransceiver is defined by the kind of the
   // associated RTCRtpReceiver's MediaStreamTrack object.
+  MOZ_ASSERT(mReceiver && mReceiver->Track());
   mReceiver->Track()->GetKind(aKind);
 }
 
@@ -593,7 +606,7 @@ bool RTCRtpTransceiver::CanSendDTMF() const {
   // Ok, it looks like the connection is up and sending. Did we negotiate
   // telephone-event?
   JsepTrackNegotiatedDetails* details =
-      mJsepTransceiver->mSendTrack.GetNegotiatedDetails();
+      GetJsepTransceiver()->mSendTrack.GetNegotiatedDetails();
   if (NS_WARN_IF(!details || !details->GetEncodingCount())) {
     // What?
     return false;
@@ -646,13 +659,15 @@ static void JsepCodecDescToAudioCodecConfig(
   (*aConfig)->mCbrEnabled = aCodec.mCbrEnabled;
 }
 
+// TODO: This and the next function probably should move to JsepTransceiver
 Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
 RTCRtpTransceiver::GetNegotiatedSendCodecs() const {
-  if (!IsSending()) {
+  auto jsepTransceiver = GetJsepTransceiver();
+  if (!jsepTransceiver->mSendTrack.GetActive()) {
     return Nothing();
   }
 
-  const auto* details = mJsepTransceiver->mSendTrack.GetNegotiatedDetails();
+  const auto* details = jsepTransceiver->mSendTrack.GetNegotiatedDetails();
   if (!details) {
     return Nothing();
   }
@@ -666,11 +681,12 @@ RTCRtpTransceiver::GetNegotiatedSendCodecs() const {
 
 Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
 RTCRtpTransceiver::GetNegotiatedRecvCodecs() const {
-  if (!IsReceiving()) {
+  auto jsepTransceiver = GetJsepTransceiver();
+  if (!jsepTransceiver->mRecvTrack.GetActive()) {
     return Nothing();
   }
 
-  const auto* details = mJsepTransceiver->mRecvTrack.GetNegotiatedDetails();
+  const auto* details = jsepTransceiver->mRecvTrack.GetNegotiatedDetails();
   if (!details) {
     return Nothing();
   }
@@ -864,6 +880,16 @@ void RTCRtpTransceiver::StopImpl() {
 }
 
 bool RTCRtpTransceiver::IsVideo() const { return mIsVideo; }
+
+bool RTCRtpTransceiver::IsSending() const {
+  return mCurrentDirection == Nullable(RTCRtpTransceiverDirection::Sendonly) ||
+         mCurrentDirection == Nullable(RTCRtpTransceiverDirection::Sendrecv);
+}
+
+bool RTCRtpTransceiver::IsReceiving() const {
+  return mCurrentDirection == Nullable(RTCRtpTransceiverDirection::Recvonly) ||
+         mCurrentDirection == Nullable(RTCRtpTransceiverDirection::Sendrecv);
+}
 
 void RTCRtpTransceiver::ChainToDomPromiseWithCodecStats(
     nsTArray<RefPtr<RTCStatsPromise>> aStats,

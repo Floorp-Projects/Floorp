@@ -559,6 +559,10 @@ class PeerConnectionImpl final
   void SyncToJsep();
   void SyncFromJsep();
 
+  void DoSetDescriptionSuccessPostProcessing(dom::RTCSdpType aSdpType,
+                                             bool aRemote,
+                                             const RefPtr<dom::Promise>& aP);
+
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
   // any other attributes of this class.
@@ -625,6 +629,12 @@ class PeerConnectionImpl final
   // The JSEP negotiation session.
   mozilla::UniquePtr<PCUuidGenerator> mUuidGen;
   mozilla::UniquePtr<mozilla::JsepSession> mJsepSession;
+  // There are lots of error cases where we want to abandon an sRD/sLD _after_
+  // it has already been applied to the JSEP engine, and revert back to the
+  // previous state. We also want to ensure that the various modifications
+  // to the JSEP engine are not exposed to JS until the sRD/sLD completes,
+  // which is why we have a new "uncommitted" JSEP engine.
+  mozilla::UniquePtr<mozilla::JsepSession> mUncommittedJsepSession;
   unsigned long mIceRestartCount;
   unsigned long mIceRollbackCount;
 
