@@ -197,7 +197,7 @@ async function maybeSubmitBackgroundUpdatePing() {
   lazy.log.info(`${SLUG}: submitted "background-update" ping`);
 }
 
-async function runBackgroundTask() {
+async function runBackgroundTask(commandLine) {
   let SLUG = "runBackgroundTask";
   lazy.log.error(`${SLUG}: backgroundupdate`);
 
@@ -246,6 +246,9 @@ async function runBackgroundTask() {
   // downloading, and applying updates, since such prefs should be be per-installation prefs, using
   // the mechanisms of Bug 1691486.  Sadly using this mechanism for many relevant prefs (namely
   // `app.update.BITS.enabled` and `app.update.service.enabled`) is difficult: see Bug 1657533.
+  //
+  // We also read any Nimbus targeting snapshot from the default profile.
+  let defaultProfileTargetingSnapshot = {};
   try {
     let defaultProfilePrefs;
     await lazy.BackgroundTasksUtils.withProfileLock(async lock => {
@@ -255,7 +258,11 @@ async function runBackgroundTask() {
           name.startsWith("datareporting.") || // For Glean.
           name.startsWith("logging.") || // For Glean.
           name.startsWith("telemetry.fog.") || // For Glean.
-          name.startsWith("app.partner.") // For our metrics.
+          name.startsWith("app.partner.") || // For our metrics.
+          name === "app.shield.optoutstudies.enabled" || // For Nimbus.
+          name === "services.settings.server" || // For Remote Settings via Nimbus.
+          name === "services.settings.preview_enabled" || // For Remote Settings via Nimbus.
+          name === "messaging-system.rsexperimentloader.collection_id" // For Firefox Messaging System.
         );
       };
 
@@ -267,6 +274,21 @@ async function runBackgroundTask() {
         lock
       );
       Glean.backgroundUpdate.clientId.set(telemetryClientID);
+
+      try {
+        defaultProfileTargetingSnapshot = await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot();
+      } catch (f) {
+        if (DOMException.isInstance(f) && f.name === "NotFoundError") {
+          lazy.log.info(
+            `${SLUG}: no default profile targeting snapshot exists`
+          );
+        } else {
+          lazy.log.warn(
+            `${SLUG}: ignoring exception reading default profile targeting snapshot`,
+            f
+          );
+        }
+      }
     });
 
     for (let [name, value] of Object.entries(defaultProfilePrefs)) {
@@ -326,10 +348,20 @@ async function runBackgroundTask() {
   Services.fog.initializeFOG(gleanRoot, "firefox.desktop.background.update");
 
   // For convenience, mirror our loglevel.
-  Services.prefs.setCharPref(
-    "toolkit.backgroundtasks.loglevel",
-    Services.prefs.getCharPref("app.update.background.loglevel", "error")
+  let logLevel = Services.prefs.getCharPref(
+    "app.update.background.loglevel",
+    "error"
   );
+  const logLevelPrefs = [
+    "browser.newtabpage.activity-stream.asrouter.debugLogLevel",
+    "messaging-system.log",
+    "services.settings.loglevel",
+    "toolkit.backgroundtasks.loglevel",
+  ];
+  for (let logLevelPref of logLevelPrefs) {
+    lazy.log.info(`${SLUG}: setting ${logLevelPref}=${logLevel}`);
+    Services.prefs.setCharPref(logLevelPref, logLevel);
+  }
 
   // The langpack updating mechanism expects the addons manager, but in background task mode, the
   // addons manager is not present.  Since we can't update langpacks from the background task
@@ -354,6 +386,28 @@ async function runBackgroundTask() {
 
     lazy.log.info(`${SLUG}: attempted background update`);
     Glean.backgroundUpdate.exitCodeSuccess.set(true);
+
+    try {
+      // Now that we've pumped the update loop, we can start Nimbus and the Firefox Messaging System
+      // and see if we should message the user.  This minimizes the risk of messaging impacting the
+      // function of the background update system.
+      await lazy.BackgroundTasksUtils.enableNimbus(commandLine);
+
+      await lazy.BackgroundTasksUtils.enableFirefoxMessagingSystem(
+        defaultProfileTargetingSnapshot.environment
+      );
+    } catch (f) {
+      // Try to make it easy to witness errors in this system.  We can pass through any exception
+      // without disrupting (future) background updates.
+      //
+      // Most meaningful issues with the Nimbus/experiments system will be reported via Glean
+      // events.
+      lazy.log.warning(
+        `${SLUG}: exception raised from Nimbus/Firefox Messaging System`,
+        f
+      );
+      throw f;
+    }
   } catch (e) {
     // TODO: in the future, we might want to classify failures into transient and persistent and
     // backoff the update task in the face of continuous persistent errors.
