@@ -525,9 +525,6 @@ void RTCRtpTransceiver::SyncToJsep() const {
   if (mStopped) {
     jsepTransceiver->Stop();
   }
-  if (mAddTrackMagic) {
-    jsepTransceiver->SetAddTrackMagic();
-  }
 }
 
 // TODO: Unify with SyncFromJsep
@@ -584,7 +581,9 @@ void RTCRtpTransceiver::SetDirectionInternal(
 void RTCRtpTransceiver::SetAddTrackMagic() {
   // TODO(bug 1767820): Refactor this to only forbid removal, not to set the
   // magic bit
-  mAddTrackMagic = true;
+  // We do this immediately, without waiting for a SyncToJsep, because this is
+  // set at transceiver creation time.
+  GetJsepTransceiver()->SetAddTrackMagic();
 }
 
 bool RTCRtpTransceiver::ShouldRemove() const { return mShouldRemove; }
