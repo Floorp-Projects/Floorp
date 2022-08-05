@@ -113,8 +113,6 @@ void WebRenderImageHost::UseRemoteTexture(const RemoteTextureId aTextureId,
                                           const base::ProcessId aForPid,
                                           const gfx::IntSize aSize,
                                           const TextureFlags aFlags) {
-  MOZ_ASSERT(bool(GetAsyncRef()));
-
   RefPtr<WebRenderImageHost> self = this;
   const auto callback = [=](const RemoteTextureId textureId,
                             const RemoteTextureOwnerId ownerId,
