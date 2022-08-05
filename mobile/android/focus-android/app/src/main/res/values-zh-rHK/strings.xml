@@ -13,12 +13,12 @@
     <string name="action_save">儲存</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
-    <string name="urlbar_hint">搜尋或者輸入地址</string>
+    <string name="urlbar_hint">搜尋或輸入地址</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">你嘅瀏覽歷史已被刪除。</string>
 
-    <string name="feedback_erase2">瀏覽歷史已被刪除</string>
+    <string name="feedback_erase2">已清除瀏覽歷史</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Tab 嘅瀏覽歷史記錄已被刪除。</string>
@@ -328,6 +328,10 @@
      overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
     <string name="content_description_dismiss_input">收到</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">刪除瀏覽紀錄</string>
+
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
      https pages.. -->
     <string name="content_description_lock">安全連線</string>
@@ -408,6 +412,9 @@
     <string name="dialog_addtohomescreen_action_cancel">取消</string>
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">唔好</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">刪除瀏覽紀錄</string>
 
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
@@ -524,10 +531,10 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">解鎖 %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">解鎖 %1$s</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">請觸碰指紋感應器以繼續。</string>
+    <string moz:removedIn="103" name="biometric_auth_description">請觸碰指紋感應器以繼續。</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">指紋圖標</string>
@@ -568,9 +575,6 @@
 
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">立即切換去新 tab 度嘅連結</string>
-
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">安全瀏覽</string>
 
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">阻擋潛在嘅危險同欺詐網站</string>
@@ -640,6 +644,9 @@
     <string name="preference_dark_theme">深色</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">按省電模式決定</string>
+
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">跟返裝置嘅佈景主題</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
