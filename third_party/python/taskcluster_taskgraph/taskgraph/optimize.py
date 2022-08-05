@@ -11,41 +11,31 @@ task.
 See ``taskcluster/docs/optimization.rst`` for more information.
 """
 
-import datetime
+
 import logging
-from abc import ABCMeta, abstractmethod, abstractproperty
+import os
 from collections import defaultdict
 
 from slugid import nice as slugid
 
-from taskgraph.graph import Graph
-from taskgraph.taskgraph import TaskGraph
-from taskgraph.util.parameterization import resolve_task_references, resolve_timestamps
-from taskgraph.util.python_path import import_sibling_modules
+from . import files_changed
+from .graph import Graph
+from .taskgraph import TaskGraph
+from .util.parameterization import resolve_task_references
+from .util.taskcluster import find_task_id
 
 logger = logging.getLogger(__name__)
-registry = {}
 
-
-def register_strategy(name, args=()):
-    def wrap(cls):
-        if name not in registry:
-            registry[name] = cls(*args)
-            if not hasattr(registry[name], "description"):
-                registry[name].description = name
-        return cls
-
-    return wrap
+TOPSRCDIR = os.path.abspath(os.path.join(__file__, "../../../"))
 
 
 def optimize_task_graph(
     target_task_graph,
-    requested_tasks,
     params,
     do_not_optimize,
     decision_task_id,
     existing_tasks=None,
-    strategy_override=None,
+    strategies=None,
 ):
     """
     Perform task optimization, returning a taskgraph and a map from label to
@@ -56,15 +46,13 @@ def optimize_task_graph(
         existing_tasks = {}
 
     # instantiate the strategies for this optimization process
-    strategies = registry.copy()
-    if strategy_override:
-        strategies.update(strategy_override)
+    if not strategies:
+        strategies = _make_default_strategies()
 
     optimizations = _get_optimizations(target_task_graph, strategies)
 
     removed_tasks = remove_tasks(
         target_task_graph=target_task_graph,
-        requested_tasks=requested_tasks,
         optimizations=optimizations,
         params=params,
         do_not_optimize=do_not_optimize,
@@ -92,15 +80,20 @@ def optimize_task_graph(
     )
 
 
+def _make_default_strategies():
+    return {
+        "never": OptimizationStrategy(),  # "never" is the default behavior
+        "index-search": IndexSearch(),
+        "skip-unless-changed": SkipUnlessChanged(),
+    }
+
+
 def _get_optimizations(target_task_graph, strategies):
     def optimizations(label):
         task = target_task_graph.tasks[label]
         if task.optimization:
             opt_by, arg = list(task.optimization.items())[0]
-            strategy = strategies[opt_by]
-            if hasattr(strategy, "description"):
-                opt_by += f" ({strategy.description})"
-            return (opt_by, strategy, arg)
+            return (opt_by, strategies[opt_by], arg)
         else:
             return ("never", strategies["never"], None)
 
@@ -123,9 +116,7 @@ def _log_optimization(verb, opt_counts, opt_reasons=None):
         logger.info(f"No tasks {verb} during optimization")
 
 
-def remove_tasks(
-    target_task_graph, requested_tasks, params, optimizations, do_not_optimize
-):
+def remove_tasks(target_task_graph, params, optimizations, do_not_optimize):
     """
     Implement the "Removing Tasks" phase, returning a set of task labels of all removed tasks.
     """
@@ -205,12 +196,6 @@ def remove_tasks(
             _keep("dependent tasks")
             continue
 
-        # Some tasks in the task graph only exist because they were required
-        # by a task that has just been optimized away. They can now be removed.
-        if label not in requested_tasks:
-            _remove("dependents optimized")
-            continue
-
         # Call the optimization strategy.
         task = tasks[label]
         opt_by, opt, arg = optimizations(label)
@@ -267,8 +252,7 @@ def replace_tasks(
     """
     opt_counts = defaultdict(int)
     replaced = set()
-    dependents_of = target_task_graph.graph.reverse_links_dict()
-    dependencies_of = target_task_graph.graph.links_dict()
+    links_dict = target_task_graph.graph.links_dict()
 
     for label in target_task_graph.graph.visit_postorder():
         # if we're not allowed to optimize, that's easy..
@@ -276,9 +260,7 @@ def replace_tasks(
             continue
 
         # if this task depends on un-replaced, un-removed tasks, do not replace
-        if any(
-            l not in replaced and l not in removed_tasks for l in dependencies_of[label]
-        ):
+        if any(l not in replaced and l not in removed_tasks for l in links_dict[label]):
             continue
 
         # if the task already exists, that's an easy replacement
@@ -292,16 +274,7 @@ def replace_tasks(
         # call the optimization strategy
         task = target_task_graph.tasks[label]
         opt_by, opt, arg = optimizations(label)
-
-        # compute latest deadline of dependents (if any)
-        dependents = [target_task_graph.tasks[l] for l in dependents_of[label]]
-        deadline = None
-        if dependents:
-            now = datetime.datetime.utcnow()
-            deadline = max(
-                resolve_timestamps(now, task.task["deadline"]) for task in dependents
-            )
-        repl = opt.should_replace_task(task, params, deadline, arg)
+        repl = opt.should_replace_task(task, params, arg)
         if repl:
             if repl is True:
                 # True means remove this task; get_subgraph will catch any
@@ -404,148 +377,95 @@ def get_subgraph(
     return TaskGraph(tasks_by_taskid, Graph(set(tasks_by_taskid), edges_by_taskid))
 
 
-@register_strategy("never")
 class OptimizationStrategy:
     def should_remove_task(self, task, params, arg):
         """Determine whether to optimize this task by removing it.  Returns
         True to remove."""
         return False
 
-    def should_replace_task(self, task, params, deadline, arg):
+    def should_replace_task(self, task, params, arg):
         """Determine whether to optimize this task by replacing it.  Returns a
         taskId to replace this task, True to replace with nothing, or False to
         keep the task."""
         return False
 
 
-@register_strategy("always")
-class Always(OptimizationStrategy):
-    def should_remove_task(self, task, params, arg):
-        return True
+class Either(OptimizationStrategy):
+    """Given one or more optimization strategies, remove a task if any of them
+    says to, and replace with a task if any finds a replacement (preferring the
+    earliest).  By default, each substrategy gets the same arg, but split_args
+    can return a list of args for each strategy, if desired."""
 
-
-class CompositeStrategy(OptimizationStrategy, metaclass=ABCMeta):
     def __init__(self, *substrategies, **kwargs):
-        self.substrategies = []
-        missing = set()
-        for sub in substrategies:
-            if isinstance(sub, str):
-                if sub not in registry.keys():
-                    missing.add(sub)
-                    continue
-                sub = registry[sub]
-
-            self.substrategies.append(sub)
-
-        if missing:
-            raise TypeError(
-                "substrategies aren't registered: {}".format(
-                    ",  ".join(sorted(missing))
-                )
-            )
-
+        self.substrategies = substrategies
         self.split_args = kwargs.pop("split_args", None)
         if not self.split_args:
-            self.split_args = lambda arg, substrategies: [arg] * len(substrategies)
+            self.split_args = lambda arg: [arg] * len(substrategies)
         if kwargs:
             raise TypeError("unexpected keyword args")
 
-    @abstractproperty
-    def description(self):
-        """A textual description of the combined substrategies."""
-
-    @abstractmethod
-    def reduce(self, results):
-        """Given all substrategy results as a generator, return the overall
-        result."""
-
-    def _generate_results(self, fname, *args):
-        *passthru, arg = args
-        for sub, arg in zip(
-            self.substrategies, self.split_args(arg, self.substrategies)
-        ):
-            yield getattr(sub, fname)(*passthru, arg)
-
-    def should_remove_task(self, *args):
-        results = self._generate_results("should_remove_task", *args)
-        return self.reduce(results)
-
-    def should_replace_task(self, *args):
-        results = self._generate_results("should_replace_task", *args)
-        return self.reduce(results)
-
-
-class Any(CompositeStrategy):
-    """Given one or more optimization strategies, remove or replace a task if any of them
-    says to.
-
-    Replacement will use the value returned by the first strategy that says to replace.
-    """
-
-    @property
-    def description(self):
-        return "-or-".join([s.description for s in self.substrategies])
-
-    @classmethod
-    def reduce(cls, results):
-        for rv in results:
+    def _for_substrategies(self, arg, fn):
+        for sub, arg in zip(self.substrategies, self.split_args(arg)):
+            rv = fn(sub, arg)
             if rv:
                 return rv
         return False
 
+    def should_remove_task(self, task, params, arg):
+        return self._for_substrategies(
+            arg, lambda sub, arg: sub.should_remove_task(task, params, arg)
+        )
 
-class All(CompositeStrategy):
-    """Given one or more optimization strategies, remove or replace a task if all of them
-    says to.
-
-    Replacement will use the value returned by the first strategy passed in.
-    Note the values used for replacement need not be the same, as long as they
-    all say to replace.
-    """
-
-    @property
-    def description(self):
-        return "-and-".join([s.description for s in self.substrategies])
-
-    @classmethod
-    def reduce(cls, results):
-        for rv in results:
-            if not rv:
-                return rv
-        return True
+    def should_replace_task(self, task, params, arg):
+        return self._for_substrategies(
+            arg, lambda sub, arg: sub.should_replace_task(task, params, arg)
+        )
 
 
-class Alias(CompositeStrategy):
-    """Provides an alias to an existing strategy.
+class IndexSearch(OptimizationStrategy):
 
-    This can be useful to swap strategies in and out without needing to modify
-    the task transforms.
-    """
+    # A task with no dependencies remaining after optimization will be replaced
+    # if artifacts exist for the corresponding index_paths.
+    # Otherwise, we're in one of the following cases:
+    # - the task has un-optimized dependencies
+    # - the artifacts have expired
+    # - some changes altered the index_paths and new artifacts need to be
+    # created.
+    # In every of those cases, we need to run the task to create or refresh
+    # artifacts.
 
-    def __init__(self, strategy):
-        super().__init__(strategy)
+    def should_replace_task(self, task, params, index_paths):
+        "Look for a task with one of the given index paths"
+        for index_path in index_paths:
+            try:
+                task_id = find_task_id(
+                    index_path, use_proxy=bool(os.environ.get("TASK_ID"))
+                )
+                return task_id
+            except KeyError:
+                # 404 will end up here and go on to the next index path
+                pass
 
-    @property
-    def description(self):
-        return self.substrategies[0].description
-
-    def reduce(self, results):
-        return next(results)
-
-
-class Not(CompositeStrategy):
-    """Given a strategy, returns the opposite."""
-
-    def __init__(self, strategy):
-        super().__init__(strategy)
-
-    @property
-    def description(self):
-        return "not-" + self.substrategies[0].description
-
-    def reduce(self, results):
-        return not next(results)
+        return False
 
 
-# Trigger registration in sibling modules.
-import_sibling_modules()
+class SkipUnlessChanged(OptimizationStrategy):
+    def should_remove_task(self, task, params, file_patterns):
+        if params.get("repository_type") != "hg":
+            raise RuntimeError(
+                "SkipUnlessChanged optimization only works with mercurial repositories"
+            )
+
+        # pushlog_id == -1 - this is the case when run from a cron.yml job
+        if params.get("pushlog_id") == -1:
+            return False
+
+        changed = files_changed.check(params, file_patterns)
+        if not changed:
+            logger.debug(
+                'no files found matching a pattern in `skip-unless-changed` for "{}"'.format(
+                    task.label
+                )
+            )
+            return True
+        return False
