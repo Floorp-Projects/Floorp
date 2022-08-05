@@ -127,6 +127,13 @@ void IPCFuzzController::OnActorConnected(IProtocol* protocol) {
     MOZ_FUZZING_NYX_DEBUG(
         "DEBUG: IPCFuzzController::OnActorConnected() Mutex locked\n");
     actorIds[*portName].emplace_back(protocol->Id(), protocol->GetProtocolId());
+
+    // Fix the port we will be using for at least the next 5 messages
+    useLastPortName = true;
+    lastActorPortName = *portName;
+
+    // Use this actor for the next 5 messages
+    useLastActor = 5;
   } else {
     MOZ_FUZZING_NYX_PRINT("WARNING: No port name on actor?!\n");
   }
@@ -356,17 +363,25 @@ bool IPCFuzzController::MakeTargetDecision(
     return false;
   }
 
-  *name = portInstances[portInstanceIndex % portInstances.size()];
+  if (useLastActor) {
+    useLastActor--;
+    *name = lastActorPortName;
 
-  auto seqNos = portSeqNos[*name];
+    MOZ_FUZZING_NYX_PRINT("DEBUG: MakeTargetDecision: Pinned to last actor.\n");
 
-  // Hand out the correct sequence numbers
-  *seqno = seqNos.first - 1;
-  *fseqno = seqNos.second + 1;
-
-  if (update) {
-    portSeqNos.insert_or_assign(*name,
-                                std::pair<int32_t, uint64_t>(*seqno, *fseqno));
+    // Once we stop pinning to the last actor, we need to decide if we
+    // want to keep the pinning on the port itself. We use one of the
+    // unused upper bits of portIndex for this purpose.
+    if (!useLastActor && (portIndex & (1 << 7))) {
+      MOZ_FUZZING_NYX_PRINT(
+          "DEBUG: MakeTargetDecision: Released pinning on last port.\n");
+      useLastPortName = false;
+    }
+  } else if (useLastPortName) {
+    *name = lastActorPortName;
+    MOZ_FUZZING_NYX_PRINT("DEBUG: MakeTargetDecision: Pinned to last port.\n");
+  } else {
+    *name = portInstances[portInstanceIndex % portInstances.size()];
   }
 
   // We should always have at least one actor per port
@@ -384,7 +399,23 @@ bool IPCFuzzController::MakeTargetDecision(
     return false;
   }
 
-  actorIndex %= actors.size();
+  auto seqNos = portSeqNos[*name];
+
+  // Hand out the correct sequence numbers
+  *seqno = seqNos.first - 1;
+  *fseqno = seqNos.second + 1;
+
+  if (update) {
+    portSeqNos.insert_or_assign(*name,
+                                std::pair<int32_t, uint64_t>(*seqno, *fseqno));
+  }
+
+  if (useLastActor) {
+    actorIndex = actors.size() - 1;
+  } else {
+    actorIndex %= actors.size();
+  }
+
   ActorIdPair ids = actors[actorIndex];
   *actorId = ids.first;
 
@@ -602,6 +633,9 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
   Nyx::instance().start();
 
   uint32_t expected_messages = 0;
+
+  IPCFuzzController::instance().useLastActor = 0;
+  IPCFuzzController::instance().useLastPortName = false;
 
   for (int i = 0; i < 16; ++i) {
     if (!buffer.initLengthUninitialized(maxMsgSize)) {
