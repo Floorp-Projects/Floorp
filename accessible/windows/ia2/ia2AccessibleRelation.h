@@ -53,7 +53,7 @@ class ia2AccessibleRelation final : public IAccessibleRelation {
   ia2AccessibleRelation& operator=(const ia2AccessibleRelation&);
 
   RelationType mType;
-  nsTArray<RefPtr<MsaaAccessible>> mTargets;
+  nsTArray<RefPtr<IUnknown>> mTargets;
 };
 
 /**
