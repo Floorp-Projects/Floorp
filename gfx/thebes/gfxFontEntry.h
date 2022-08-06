@@ -363,11 +363,30 @@ class gfxFontEntry {
   // NOTE that harfbuzz and graphite handle ownership/lifetime of the face
   // object in completely different ways.
 
-  // Get HarfBuzz face corresponding to this font file.
-  // Caller must release with hb_face_destroy() when finished with it,
-  // and the font entry will be notified via ForgetHBFace.
-  hb_face_t* GetHBFace();
-  void ForgetHBFace();
+  // Create a HarfBuzz face corresponding to this font file.
+  // Our reference to the underlying hb_face_t will be released when the
+  // returned AutoHBFace goes out of scope, but the hb_face_t itself may
+  // be kept alive by other references (e.g. if an hb_font_t has been
+  // instantiated for it).
+  class MOZ_STACK_CLASS AutoHBFace {
+   public:
+    explicit AutoHBFace(hb_face_t* aFace) : mFace(aFace) {}
+    ~AutoHBFace() { hb_face_destroy(mFace); }
+
+    operator hb_face_t*() const { return mFace; }
+
+    // Not default-constructible, not copyable.
+    AutoHBFace() = delete;
+    AutoHBFace(const AutoHBFace&) = delete;
+    AutoHBFace& operator=(const AutoHBFace&) = delete;
+
+   private:
+    hb_face_t* mFace;
+  };
+
+  AutoHBFace GetHBFace() {
+    return AutoHBFace(hb_face_create_for_tables(HBGetTable, this, nullptr));
+  }
 
   // Get the sandbox instance that graphite is running in.
   rlbox_sandbox_gr* GetGrSandbox();
