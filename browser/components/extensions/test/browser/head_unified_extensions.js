@@ -93,6 +93,10 @@ const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
     ".unified-extensions-item-open-menu"
   );
   ok(button, "expected 'open menu' button");
+  // Make sure the button is visible before clicking on it (below) since the
+  // list of extensions can have a scrollbar (when there are many extensions
+  // and/or the window is small-ish).
+  button.scrollIntoView({ block: "center" });
 
   const menu = win.document.getElementById("unified-extensions-context-menu");
   ok(menu, "expected menu");
