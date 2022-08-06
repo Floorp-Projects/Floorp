@@ -5940,7 +5940,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeGetReservedSlot(
   ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objId = writer.guardToObject(arg0Id);
 
-  // BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot ensures that the
+  // BytecodeEmitter::assertSelfHostedUnsafeGetReservedSlot ensures that the
   // slot argument is constant. (At least for direct calls)
 
   switch (native) {
@@ -5991,7 +5991,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeSetReservedSlot() {
   ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objId = writer.guardToObject(arg0Id);
 
-  // BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot ensures that the
+  // BytecodeEmitter::assertSelfHostedUnsafeSetReservedSlot ensures that the
   // slot argument is constant. (At least for direct calls)
 
   // Get the value to set.
