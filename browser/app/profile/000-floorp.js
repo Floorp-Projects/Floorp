@@ -15,7 +15,18 @@
 //Floorpアップデートの最新版である旨の通知を許可
 pref("enable.floorp.updater.latest", false);
 pref("enable.floorp.update", true);
+#ifdef XP_MACOSX
 pref("update.id.floorp", "stable");
+#endif
+
+#ifdef XP_WIN
+pref("update.id.floorp", "windows");
+#endif
+
+#ifdef XP_LINUX
+pref("update.id.floorp", "linux");
+#endif
+
 
 //ブラウザーUIのカスタマイズ設定
 pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除

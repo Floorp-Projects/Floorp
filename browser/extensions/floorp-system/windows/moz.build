@@ -11,6 +11,7 @@ DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "background-script.js",
     "manifest.json",
+    "update.js"
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ja"] += [
@@ -24,6 +25,8 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["en"]
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
     "API/aboutConfigPrefs.js",
     "API/aboutConfigPrefs.json",
+    "API/BrowserInfo.js",
+    "API/BrowserInfo.json",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
