@@ -1448,42 +1448,6 @@ bool BytecodeEmitter::emitSuperBase() {
   return emit1(JSOp::SuperBase);
 }
 
-bool BytecodeEmitter::ensureArgs(CallNode* callNode, uint32_t requiredArgs) {
-  ListNode* argsList = &callNode->right()->as<ListNode>();
-  if (argsList->count() != requiredArgs) {
-    reportNeedMoreArgsError(callNode, requiredArgs);
-    return false;
-  }
-  return true;
-}
-
-static const char* SelfHostedCallFunctionName(TaggedParserAtomIndex name) {
-  if (name.isWellKnownAtomId()) {
-    auto atomId = name.toWellKnownAtomId();
-    return GetWellKnownAtomInfo(atomId).content;
-  }
-  MOZ_CRASH("Unknown self-hosted call function name");
-}
-
-void BytecodeEmitter::reportNeedMoreArgsError(CallNode* callNode,
-                                              uint32_t requiredArgs) {
-  NameNode* calleeNode = &callNode->left()->as<NameNode>();
-  ListNode* argsList = &callNode->right()->as<ListNode>();
-
-  const char* errorName = SelfHostedCallFunctionName(calleeNode->name());
-
-  char requiredArgsStr[40];
-  SprintfLiteral(requiredArgsStr, "%u", requiredArgs);
-
-  const char* pluralizer = requiredArgs > 1 ? "s" : "";
-
-  char actualArgsStr[40];
-  SprintfLiteral(actualArgsStr, "%u", argsList->count());
-
-  reportError(callNode, JSMSG_MORE_ARGS_NEEDED, errorName, requiredArgsStr,
-              pluralizer, actualArgsStr);
-}
-
 void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
   uint32_t offset = pn ? pn->pn_pos.begin : *scriptStartOffset;
 
@@ -7452,15 +7416,11 @@ bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(CallNode* callNode) {
 }
 
 #ifdef DEBUG
-bool BytecodeEmitter::checkSelfHostedExpectedTopLevel(CallNode* callNode,
-                                                      ParseNode* node) {
+void BytecodeEmitter::assertSelfHostedExpectedTopLevel(ParseNode* node) {
   // The function argument is expected to be a simple binding/function name.
   // Eg. `function foo() { }; SpecialIntrinsic(foo)`
-  if (!node->isKind(ParseNodeKind::Name)) {
-    reportError(callNode, JSMSG_UNEXPECTED_TYPE, "function argument",
-                "not a binding name");
-    return false;
-  }
+  MOZ_ASSERT(node->isKind(ParseNodeKind::Name),
+             "argument must be a function name");
   TaggedParserAtomIndex targetName = node->as<NameNode>().name();
 
   // The special intrinsics must follow the target functions definition. A
@@ -7470,12 +7430,8 @@ bool BytecodeEmitter::checkSelfHostedExpectedTopLevel(CallNode* callNode,
 
   // The target function must match the most recently defined top-level
   // self-hosted function.
-  if (prevSelfHostedTopLevelFunction->explicitName() != targetName) {
-    reportError(callNode, JSMSG_SELFHOST_DECORATOR_MUST_FOLLOW);
-    return false;
-  }
-
-  return true;
+  MOZ_ASSERT(prevSelfHostedTopLevelFunction->explicitName() == targetName,
+             "selfhost decorator must immediately follow target function");
 }
 #endif
 
@@ -7483,10 +7439,10 @@ bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
     CallNode* callNode) {
 #ifdef DEBUG
   ListNode* argsList = &callNode->right()->as<ListNode>();
+
   MOZ_ASSERT(argsList->count() == 1);
-  if (!checkSelfHostedExpectedTopLevel(callNode, argsList->head())) {
-    return false;
-  }
+
+  assertSelfHostedExpectedTopLevel(argsList->head());
 #endif
 
   MOZ_ASSERT(prevSelfHostedTopLevelFunction->isInitialCompilation);
@@ -7502,9 +7458,7 @@ bool BytecodeEmitter::emitSelfHostedSetCanonicalName(CallNode* callNode) {
   MOZ_ASSERT(argsList->count() == 2);
 
 #ifdef DEBUG
-  if (!checkSelfHostedExpectedTopLevel(callNode, argsList->head())) {
-    return false;
-  }
+  assertSelfHostedExpectedTopLevel(argsList->head());
 #endif
 
   ParseNode* nameNode = argsList->last();
@@ -7522,44 +7476,28 @@ bool BytecodeEmitter::emitSelfHostedSetCanonicalName(CallNode* callNode) {
 }
 
 #ifdef DEBUG
-bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(CallNode* callNode) {
-  ListNode* argsList = &callNode->right()->as<ListNode>();
-
-  if (!ensureArgs(callNode, 2)) {
-    return false;
-  }
+void BytecodeEmitter::assertSelfHostedUnsafeGetReservedSlot(
+    ListNode* argsList) {
+  MOZ_ASSERT(argsList->count() == 2);
 
   ParseNode* objNode = argsList->head();
   ParseNode* slotNode = objNode->pn_next;
 
   // Ensure that the slot argument is fixed, this is required by the JITs.
-  if (!slotNode->isKind(ParseNodeKind::NumberExpr)) {
-    reportError(callNode, JSMSG_UNEXPECTED_TYPE, "slot argument",
-                "not a constant");
-    return false;
-  }
-
-  return true;
+  MOZ_ASSERT(slotNode->isKind(ParseNodeKind::NumberExpr),
+             "slot argument must be a constant");
 }
 
-bool BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot(CallNode* callNode) {
-  ListNode* argsList = &callNode->right()->as<ListNode>();
-
-  if (!ensureArgs(callNode, 3)) {
-    return false;
-  }
+void BytecodeEmitter::assertSelfHostedUnsafeSetReservedSlot(
+    ListNode* argsList) {
+  MOZ_ASSERT(argsList->count() == 3);
 
   ParseNode* objNode = argsList->head();
   ParseNode* slotNode = objNode->pn_next;
 
   // Ensure that the slot argument is fixed, this is required by the JITs.
-  if (!slotNode->isKind(ParseNodeKind::NumberExpr)) {
-    reportError(callNode, JSMSG_UNEXPECTED_TYPE, "slot argument",
-                "not a constant");
-    return false;
-  }
-
-  return true;
+  MOZ_ASSERT(slotNode->isKind(ParseNodeKind::NumberExpr),
+             "slot argument must be a constant");
 }
 #endif
 
@@ -8054,16 +7992,12 @@ bool BytecodeEmitter::emitCallOrNew(
         calleeName == TaggedParserAtomIndex::WellKnown::
                           UnsafeGetBooleanFromReservedSlot()) {
       // Make sure that this call is correct, but don't emit any special code.
-      if (!checkSelfHostedUnsafeGetReservedSlot(callNode)) {
-        return false;
-      }
+      assertSelfHostedUnsafeGetReservedSlot(argsList);
     }
     if (calleeName ==
         TaggedParserAtomIndex::WellKnown::UnsafeSetReservedSlot()) {
       // Make sure that this call is correct, but don't emit any special code.
-      if (!checkSelfHostedUnsafeSetReservedSlot(callNode)) {
-        return false;
-      }
+      assertSelfHostedUnsafeSetReservedSlot(argsList);
     }
 #endif
     // Fall through
