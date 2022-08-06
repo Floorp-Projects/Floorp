@@ -68,21 +68,14 @@ class LanguageStorage(private val context: Context) {
     }
 
     /**
-     * Not every locale we ship can be used on every device, due to
-     * font or rendering constraints.
-     * This method filters down the list before generating the descriptor array.
+     * This method generates the descriptor array.
      */
     private fun getUsableLocales(): Array<LocaleDescriptor?> {
         val shippingLocales = LocaleManager.getPackagedLocaleTags()
         val initialCount: Int = shippingLocales.size
         val locales: MutableSet<LocaleDescriptor> = HashSet(initialCount)
         for (tag in shippingLocales) {
-            val descriptor = LocaleDescriptor(tag)
-            if (!descriptor.isUsable()) {
-                Logger.warn("Skipping locale $tag on this device.")
-                continue
-            }
-            locales.add(descriptor)
+            locales.add(LocaleDescriptor(tag))
         }
         val usableCount = locales.size
         val descriptors: Array<LocaleDescriptor?> = locales.toTypedArray()

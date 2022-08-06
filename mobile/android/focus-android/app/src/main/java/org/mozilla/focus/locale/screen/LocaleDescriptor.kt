@@ -96,35 +96,6 @@ class LocaleDescriptor(private val localeTag: String) : Comparable<LocaleDescrip
         }
     }
 
-    /**
-     * See Bug 1023451 Comment 10 for the research that led to
-     * this method.
-     *
-     * @return true if this locale can be used for displaying UI
-     * on this device without known issues.
-     */
-    fun isUsable(): Boolean {
-        // Oh, for Java 7 switch statements.
-        // Bengali sometimes has an English label if the Bengali script
-        // is missing. This prevents us from simply checking character
-        // rendering for bn-IN; we'll get a false positive for "B", not "ব".
-        //
-        // This doesn't seem to affect other Bengali-script locales
-        // (below), which always have a label in native script.
-        if (localeTag == "bn-IN" && !nativeName!!.startsWith("বাংলা")) {
-            // We're on an Android version that doesn't even have
-            // characters to say বাংলা. Definite failure.
-            return false
-        }
-
-        // These locales use a script that is often unavailable
-        // on common Android devices. Make sure we can show them.
-        // See documentation for CharacterValidator.
-        // Note that bn-IN is checked here even if it passed above.
-        return localeTag != "or" && localeTag != "my" && localeTag != "pa-IN" &&
-            localeTag != "gu-IN" && localeTag != "bn-IN"
-    }
-
     fun getTag(): String {
         return localeTag
     }
