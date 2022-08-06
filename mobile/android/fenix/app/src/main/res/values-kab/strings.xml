@@ -127,11 +127,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="recent_tabs_show_all_content_description_2">Sken tqeffalt n meṛṛa accaren n melmi kan</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Anadi-inek•inem i \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Anadi-inek•inem i \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d yismal</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d yismal</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Wali akk accaren yemtawan</string>
@@ -804,6 +804,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="history_sign_in_message">Qqen akken ad twaliḍ azray yemtawan seg yibenkan-ik-nniḍen.</string>
     <!-- The synced history sign in dialog button text -->
     <string name="history_sign_in_button">Qqen</string>
+
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Neɣ fren amiḍan Firefox i beddu n umtawi</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->

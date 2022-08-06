@@ -41,10 +41,9 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Последни отметки</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Последно запазени отметки</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Показване на всички</string>
+
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Премахване</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s е произведен от Mozilla.</string>
@@ -114,7 +113,7 @@
 
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Търсене на \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Търсене на \&quot;%1$s\&quot;</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -218,14 +217,15 @@
     <string name="search_suggestions_onboarding_title">Показване на предложения за търсене в поверителни раздели?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s ще споделя със стандартната търсачката, въвежданото в адресната лента.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Научете повече</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Търсене с %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Търсете директно от адресната лента</string>
 
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Какво е новото във %s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Вече е по-лесно да продължите откъдето сте спрели.</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -289,6 +289,12 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Ако е включено, поверителните раздели ще са видими от отворените приложения</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Добавяне на икона за поверителен режим</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Режим „само HTTPS“</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Включено</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Изключено</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Научете повече</string>
     <!-- Preference for accessibility -->
@@ -312,7 +318,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Външен вид</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Синхронизирайте отметки, пароли и други с вашия Firefox Account</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Синхронизирайте отметки, пароли и други с вашия Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -379,6 +385,11 @@
     <string name="customize_toggle_recently_visited">Наскоро посетени</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Тапети</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Спонсорирани препратки</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -460,7 +471,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Включване на Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Включване на Sync</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Влезте, за да свържете отново</string>
     <!-- Preference for removing FxA account -->
@@ -658,7 +669,7 @@
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Запазване на раздели в списък</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Меню Раздели</string>
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Меню Раздели</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Изтриване на списък</string>
@@ -678,7 +689,7 @@
     <string name="pwa_site_controls_title_private">%1$s (поверителен режим)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Други раздели</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Други раздели</string>
 
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Изчистване на история</string>
@@ -923,6 +934,8 @@
     <string name="share_link_all_apps_subheader">Всички действия</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Последно използвани</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Копиране в системния буфер</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Вписване в Sync</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -974,8 +987,6 @@
     <string name="snackbar_tabs_closed">Разделите са затворени</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Отметките са запазени!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Добавено към най-посещаваните страници!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Поверителният раздел е затворен</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1055,7 +1066,8 @@
     <string name="delete_browsing_data_on_quit_action">Изход</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Това ще изтрие цялата история на разглеждане.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Това ще изтрие цялата история на разглеждане.</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s ще изтрие избраните данни от историята на разглеждане.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1068,35 +1080,6 @@
 
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Изтриване на данни от разглеждане…</string>
-
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview вече е Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">
-        Firefox Nightly се обновява всяка нощ и предлага нови, експериментални възможности.
-        Поради това, той може да е по-нестабилен. Изтеглете Firefox beta browser, ако предпочитате по-стабилно потребителско усещане.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Вземете Firefox за Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly е преместен</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">
-        Това приложение повече няма да получава обновявания по сигурността. Спрете да го използвате и преминете към новия Nightly.
-        \n\nЗа да прехвърлите вашите отметки, данни за вход и история към друго приложение създайте Firefox Account.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Преминете към новият Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly е преместен</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">
-        Това приложение повече няма да получава обновявания по сигурността. Изтеглете новия Nightly и спрете да го използвате.
-        \n\nЗа да прехвърлите вашите отметки, данни за вход и история към друго приложение създайте Firefox Account.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Вземете новия Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1414,6 +1397,8 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню за сортиране на регистрации</string>
 
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Адреси</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Банкови карти</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1428,6 +1413,11 @@
     <string name="preferences_credit_cards_add_credit_card">Добавяне на карта</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Управление на карти</string>
+
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Добавяне на адрес</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Управление на адреси</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Добавяне на карта</string>
@@ -1475,6 +1465,9 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Отключете, за да използвате запазената банкова карта</string>
 
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Първо име</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Добавяне на търсеща машина</string>
     <!-- Title of the Edit search engine screen -->
@@ -1516,20 +1509,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s е изтрита</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Добре дошли в един чисто нов %s</string>
-
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Очаква се напълно преработен четец с подобрена производителност и възможности, които да ви помогнат да направите повече онлайн.\n\nИзчакайте, докато добавяме към %s вашите</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Обновяване на %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Стартиране на %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Миграцията е завършена</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Пароли</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">За да разрешите:</string>
     <!-- First step for the allowing a permission -->
@@ -1554,8 +1533,6 @@
     <string name="no_site_exceptions">Няма изключения</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Сигурен ли сте, че искате да изтриете отметката?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Добавяне към предпочитаните</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Проверено от: %1$s</string>
@@ -1619,18 +1596,11 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Няма отворени раздели</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Пределът за добавяне на предпочитани страници е достигнат</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">За да добавите друга предпочитана страница премахнете някоя. Натиснете и задръжте върху нея, след това я премахнете.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Добре, разбрах</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Наименование</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Име на предпочитана страница</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Добре</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
