@@ -6,6 +6,7 @@
 
 unified-extensions-item {
   display: flex;
+  flex-shrink: 0;
 }
 
 unified-extensions-item.no-hover:hover {

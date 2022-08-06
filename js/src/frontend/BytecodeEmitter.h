@@ -329,12 +329,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   void initFromBodyPosition(TokenPos bodyPosition);
 
-  /*
-   * Helpers for reporting when we have insufficient args.
-   */
-  [[nodiscard]] bool ensureArgs(CallNode* callNode, uint32_t requiredArgs);
-  void reportNeedMoreArgsError(CallNode* callNode, uint32_t requiredArgs);
-
  public:
   BytecodeEmitter(ErrorContext* ec, JS::NativeStackLimit stackLimit,
                   const EitherParser& parser, SharedContext* sc,
@@ -951,10 +945,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
       CallNode* callNode);
   [[nodiscard]] bool emitSelfHostedSetCanonicalName(CallNode* callNode);
 #ifdef DEBUG
-  [[nodiscard]] bool checkSelfHostedExpectedTopLevel(CallNode* callNode,
-                                                     ParseNode* node);
-  [[nodiscard]] bool checkSelfHostedUnsafeGetReservedSlot(CallNode* callNode);
-  [[nodiscard]] bool checkSelfHostedUnsafeSetReservedSlot(CallNode* callNode);
+  void assertSelfHostedExpectedTopLevel(ParseNode* node);
+  void assertSelfHostedUnsafeGetReservedSlot(ListNode* argsList);
+  void assertSelfHostedUnsafeSetReservedSlot(ListNode* argsList);
 #endif
 
   [[nodiscard]] bool emitDo(BinaryNode* doNode);
