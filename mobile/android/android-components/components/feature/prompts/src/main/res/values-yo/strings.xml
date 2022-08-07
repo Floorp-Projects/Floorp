@@ -4,6 +4,8 @@
     <string name="mozac_feature_prompts_ok">Ó DÁA</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">Parẹ́</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Ṣe ìdíwọ́ fún ojú-ìwé yìí láti ṣẹ̀dá ìsọ̀rọ̀ńgbèsì mìíràn</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Ṣètò</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -36,6 +38,9 @@
     <string name="mozac_feature_prompt_login_update_headline">Ṣe ìsọdituntun fún ohun-ìwọlé yìí?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Ṣe àfikún orúkọ-aṣàmúlò mọ́ ọ̀rọ̀-ìṣínà tó wà ní ìpamọ́?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">Lébẹ́ẹ̀lì fún títẹ ọ̀rọ̀ sí</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Yan àwọ̀ kan</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
@@ -88,6 +93,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Tún dátà ráńṣẹ́ sí sáìtì yí?</string>
+    <string name="mozac_feature_prompt_repost_message">Dídá ojú-ìwé yìí padà lé è sọ àwọn ìṣẹ̀lẹ̀ àìpẹ́ di méjì, gẹ́gẹ́ bíi ka máa fi owó ránṣé tàbí fífi ọ̀rọ̀ àsọyé ránṣẹ́ lẹ́ẹ̀mejì.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Fi dátà ráńṣẹ́ lẹ́ẹ̀kan si</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
@@ -106,6 +112,9 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">Fí káàdì yí pamọ́ dáada?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">  Ṣe ìsọdituntun fún ọjọ́ òpin-ìlò káàdì?</string>
+
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">A ó sọ nọ́ḿbà káàdì di kóòdù. A ò ní ṣe ìfipamọ́ kóòdù ààbò.</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
