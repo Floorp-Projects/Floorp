@@ -72,6 +72,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ยกเลิก</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">ยกเลิก</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">จำเป็นต้องมีการเข้าถึงกล้อง ไปที่การตั้งค่า Android แตะสิทธิอนุญาต แล้วแตะอนุญาต</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -119,11 +122,11 @@
     <string name="recent_tabs_show_all_content_description_2">แสดงปุ่มแท็บล่าสุดทั้งหมด</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">การค้นหา \&quot;%1$s\&quot; ของคุณ</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">การค้นหา \&quot;%1$s\&quot; ของคุณ</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d เว็บไซต์</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d เว็บไซต์</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">ดูแท็บที่ซิงค์ทั้งหมด</string>
@@ -356,6 +359,8 @@
     <string name="preferences_customize">ปรับแต่ง</string>
     <!-- Preference description for banner about signing in -->
     <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ซิงค์ที่คั่นหน้า, ประวัติ, และอื่น ๆ ด้วยบัญชี Firefox ของคุณ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">ลงชื่อเข้าเพื่อซิงค์แท็บ ที่คั่นหน้า รหัสผ่าน และอื่น ๆ ของคุณ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">บัญชี Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -528,6 +533,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">เปิด Sync</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">ซิงค์และบันทึกข้อมูลของคุณ</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ลงชื่อเข้าเพื่อเชื่อมต่ออีกครั้ง</string>
     <!-- Preference for removing FxA account -->
@@ -1584,8 +1591,6 @@
     <string name="addresses_edit_address">แก้ไขที่อยู่</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">จัดการที่อยู่</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">ชื่อเต็ม</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">ชื่อจริง</string>
     <!-- The header for the middle name of an address -->

@@ -124,11 +124,11 @@
     <string name="recent_tabs_show_all_content_description_2">Afichar lo boton dels onglets recents</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Vòstre recèrca per \« %1$s \ »</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Vòstre recèrca per \« %1$s \ »</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d sites</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sites</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Veire totes los onglets sincronizats</string>
@@ -1136,13 +1136,13 @@
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Va venir lo tèxt dels sites mai grand o mai pichon</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_font_size_title">Talha de poliça</string>
+    <string name="preference_accessibility_font_size_title">Talha de polissa</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_2">Talha de poliça automatica</string>
+    <string name="preference_accessibility_auto_size_2">Talha de polissa automatica</string>
 
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">La talha de poliça correspondrà a la talha dels paramètres Android. Desactivatz aquesta opcion per gerir la talha de la poliça.</string>
+    <string name="preference_accessibility_auto_size_summary">La talha de polissa correspondrà a la talha dels paramètres Android. Desactivatz aquesta opcion per gerir la talha de la polissa.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Suprimir las donadas de navegacion</string>
