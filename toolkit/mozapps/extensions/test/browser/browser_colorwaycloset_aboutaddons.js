@@ -1,164 +1,34 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-const { BuiltInThemeConfig } = ChromeUtils.import(
-  "resource:///modules/BuiltInThemeConfig.jsm"
-);
-
-const { ColorwayClosetOpener } = ChromeUtils.import(
-  "resource:///modules/ColorwayClosetOpener.jsm"
-);
-const { BuiltInThemes } = ChromeUtils.import(
-  "resource:///modules/BuiltInThemes.jsm"
+/* import-globals-from ../../../../../browser/components/colorways/tests/browser/head.js */
+loadTestSubscript(
+  "../../../../../browser/components/colorways/tests/browser/head.js"
 );
 
 AddonTestUtils.initMochitest(this);
 
-const kTestThemeId = "test-colorway@mozilla.org";
-const kTestExpiredThemeId = `expired-${kTestThemeId}`;
-// Mock collection l10n is part of the mocked fluent resources.
-const mockL10nId = "colorway-collection-test-mock";
-
-// Return a mock expiry date set 1 year ahead from the current date.
-function getMockExpiry() {
-  const expireDate = new Date();
-  expireDate.setFullYear(expireDate.getFullYear() + 1);
-  return expireDate;
-}
-
-function getMockThemeXpi(id) {
-  return AddonTestUtils.createTempWebExtensionFile({
-    manifest: {
-      name: "Monochromatic Theme",
-      applications: { gecko: { id } },
-      theme: {},
-    },
-  });
-}
-
-function setMockThemeToExpired(id) {
-  let yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday = yesterday.toISOString().split("T")[0];
-  // Add the test theme to our list of built-in themes so that aboutaddons.js
-  // will think this theme is expired.
-  BuiltInThemes.builtInThemeMap.set(id, {
-    version: "1.0",
-    expiry: yesterday,
-    // We use the manifest from Light theme since we know it will be in-tree
-    // indefinitely.
-    path: "resource://builtin-themes/light/",
-  });
-}
-
-function setBuiltInThemeConfigMock(...args) {
-  info("Mocking BuiltInThemeConfig.findActiveColorwaysCollection");
-  BuiltInThemeConfig.findActiveColorwayCollection = () => {
-    // Return no active collection
-    if (!args || !args.length) {
-      info("Return no active collection");
-      return null;
-    }
-
-    const { mockExpiry, mockL10nId } = args[0];
-    info(
-      `Return mock active colorway collection with expiry set to: ${
-        mockExpiry.toUTCString().split("T")[0]
-      }`
-    );
-    return {
-      id: "colorway-test-collection",
-      expiry: mockExpiry,
-      l10nId: {
-        title: mockL10nId,
-      },
-      cardImagePath: "mockCollectionPreview.avif",
-    };
-  };
-}
-
-function clearBuiltInThemeConfigMock(originalFindActiveCollection) {
-  info("Cleaning up BuiltInThemeConfigMock");
-  if (
-    BuiltInThemeConfig.findActiveColorwayCollection !==
-    originalFindActiveCollection
-  ) {
-    BuiltInThemeConfig.findActiveColorwayCollection = originalFindActiveCollection;
-  }
-}
-
 add_setup(async function() {
-  info("Register mock fluent locale strings");
+  registerMockCollectionL10nIds();
+});
 
-  let tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
-  tmpDir.append("l10n-colorwaycloset-mocks");
-
-  await IOUtils.makeDirectory(tmpDir.path, { ignoreExisting: true });
-  await IOUtils.writeUTF8(
-    PathUtils.join(tmpDir.path, "mock-colorways.ftl"),
-    [
-      "colorway-collection-test-mock = Mock collection title",
-      "colorway-collection-test-mock-short-description = Mock collection subheading",
-    ].join("\n")
-  );
-
-  let resProto = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-
-  resProto.setSubstitution(
-    "l10n-colorwaycloset-mocks",
-    Services.io.newFileURI(tmpDir)
-  );
-
-  let mockSource = new L10nFileSource(
-    "colorwayscloset-mocks",
-    "app",
-    ["en-US"],
-    "resource://l10n-colorwaycloset-mocks/"
-  );
-
-  let l10nReg = L10nRegistry.getInstance();
-  l10nReg.registerSources([mockSource]);
-
-  registerCleanupFunction(async () => {
-    l10nReg.removeSources([mockSource]);
-    resProto.setSubstitution("l10n-colorwaycloset-mocks", null);
-    info(`Clearing temporary directory ${tmpDir.path}`);
-    await IOUtils.remove(tmpDir.path, { recursive: true, ignoreAbsent: true });
-  });
-
-  // Confirm that the mock fluent resources are available as expected.
-  let bundles = l10nReg.generateBundles(["en-US"], ["mock-colorways.ftl"]);
-  let bundle0 = (await bundles.next()).value;
-  is(
-    bundle0.locales[0],
-    "en-US",
-    "Got the expected locale in the mock L10nFileSource"
-  );
-  ok(
-    bundle0.hasMessage("colorway-collection-test-mock"),
-    "Got the expected l10n id in the mock L10nFileSource"
-  );
-
+/**
+ * Verifies that BuiltInThemes.findActiveColorwayCollection has proper l10n data if an active collection is found.
+ * This function is for catching possible missing l10n data for an active collection - which was originally loaded in Nightly only
+ * (also see Bug 1774422). A collection is unavailable on all channels once past its expiry date. Testing functionality for both
+ * active and expired collections should be done using stubs.
+ */
+add_task(async function verifyActiveCollectionL10nStrings() {
   info(
-    "Verify data returned by BuiltInThemeConfig.findActiveColorwayCollection is in the expected format"
+    "Verify data returned by BuiltInThemes.findActiveColorwayCollection is in the expected format"
   );
-  let collection = BuiltInThemeConfig.findActiveColorwayCollection();
+  let collection = BuiltInThemes.findActiveColorwayCollection();
 
-  // The active collection was originally Nightly only and is unavailable on all channels once past
-  // its expiry date. Bug 1774432 aims to improve the ways BuiltInThemes and BuiltInThemeConfig
-  // are mocked for tests that rely on an active collection, even after a collection expires.
   if (collection) {
     info("Found an active collection");
-    ok(collection.l10nId, "Collection in BuiltInThemeConfig has l10n data");
-    ok(
-      collection.l10nId?.title,
-      "Collection in BuiltInThemeConfig has valid l10n title"
-    );
+    ok(collection.l10nId, "Collection l10n data");
+    ok(collection.l10nId?.title, "Collection has valid l10n title");
+    ok(collection.l10nId?.description, "Collection has valid l10n description");
   } else {
     info("Couldn't find an active collection");
   }
@@ -169,29 +39,17 @@ add_setup(async function() {
  * is available and the colorway closet pref is enabled.
  */
 add_task(async function testColorwayClosetPrefEnabled() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  // Mock BuiltInThemeConfig.findActiveColorwaysCollection with test colorways.
-  const originalFindActiveCollection =
-    BuiltInThemeConfig.findActiveColorwayCollection;
-  registerCleanupFunction(() => {
-    clearBuiltInThemeConfigMock(originalFindActiveCollection);
-  });
-
-  // Mock expiry date string and BuiltInThemeConfig.findActiveColorwayCollection()
-  const mockExpiry = getMockExpiry();
-
-  setBuiltInThemeConfigMock({ mockExpiry, mockL10nId });
-
-  const themeXpi = getMockThemeXpi(kTestThemeId);
-  const { addon } = await AddonTestUtils.promiseInstallFile(themeXpi);
+  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
 
-  // Add mocked fluent resources for the mocked active colorway collection.
+  // Add mocked fluent resources
   doc.l10n.addResourceIds(["mock-colorways.ftl"]);
 
   let colorwaySection = getSection(doc, "colorways-section");
@@ -258,7 +116,7 @@ add_task(async function testColorwayClosetPrefEnabled() {
   await closeView(win);
   await addon.uninstall(true);
   await SpecialPowers.popPrefEnv();
-  clearBuiltInThemeConfigMock(originalFindActiveCollection);
+  clearBuiltInThemesStubs();
 });
 
 /**
@@ -266,20 +124,23 @@ add_task(async function testColorwayClosetPrefEnabled() {
  * is available but the colorway closet pref is disabled.
  */
 add_task(async function testColorwayClosetSectionPrefDisabled() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.theme.colorway-closet", false]],
   });
-  const themeXpi = getMockThemeXpi(kTestThemeId);
-  const { addon } = await AddonTestUtils.promiseInstallFile(themeXpi);
+
+  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
   let colorwaySection = getSection(doc, "colorways-section");
+
   ok(!colorwaySection, "colorway section should not be found");
 
   await closeView(win);
   await addon.uninstall(true);
   await SpecialPowers.popPrefEnv();
+  clearBuiltInThemesStubs();
 });
 
 /**
@@ -287,32 +148,14 @@ add_task(async function testColorwayClosetSectionPrefDisabled() {
  * is selected.
  */
 add_task(async function testButtonOpenModal() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
+  const clearColorwayClosetOpenerStubs = initColorwayClosetOpenerStubs();
+
   await SpecialPowers.pushPrefEnv({
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  // Mock BuiltInThemeConfig.findActiveColorwaysCollection with test colorways.
-  const originalFindActiveCollection =
-    BuiltInThemeConfig.findActiveColorwayCollection;
-  registerCleanupFunction(() => {
-    clearBuiltInThemeConfigMock(originalFindActiveCollection);
-  });
-
-  // Mock expiry date string and BuiltInThemeConfig.findActiveColorwayCollection()
-  const mockExpiry = getMockExpiry();
-  setBuiltInThemeConfigMock({ mockExpiry, mockL10nId });
-
-  let originalOpenModal = ColorwayClosetOpener.openModal;
-  const clearOpenModalMock = () => {
-    if (originalOpenModal) {
-      ColorwayClosetOpener.openModal = originalOpenModal;
-      originalOpenModal = null;
-    }
-  };
-  registerCleanupFunction(clearOpenModalMock);
-
-  const themeXpi = getMockThemeXpi(kTestThemeId);
-  const { addon } = await AddonTestUtils.promiseInstallFile(themeXpi);
+  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -325,21 +168,16 @@ add_task(async function testButtonOpenModal() {
 
   let colorwaysButton = card.querySelector("#colorways-button");
   ok(colorwaysButton, "colorway collection button found");
-  let colorwayOpenerPromise = new Promise(resolve => {
-    ColorwayClosetOpener.openModal = () => {
-      ok(true, "openModal was called");
-      resolve();
-    };
-  });
+
   colorwaysButton.click();
-  info("Waiting for openModal promise to resolve");
-  await colorwayOpenerPromise;
+
+  ok(ColorwayClosetOpener.openModal.calledOnce, "Got expected openModal call");
 
   await closeView(win);
   await addon.uninstall(true);
-  clearOpenModalMock();
   await SpecialPowers.popPrefEnv();
-  clearBuiltInThemeConfigMock(originalFindActiveCollection);
+  clearBuiltInThemesStubs();
+  clearColorwayClosetOpenerStubs();
 });
 
 /**
@@ -347,46 +185,27 @@ add_task(async function testButtonOpenModal() {
  * colorway themes, while disabled unexpired ones do not.
  */
 add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  // Mock BuiltInThemeConfig.findActiveColorwaysCollection with test colorways.
-  const originalFindActiveCollection =
-    BuiltInThemeConfig.findActiveColorwayCollection;
-  registerCleanupFunction(() => {
-    clearBuiltInThemeConfigMock(originalFindActiveCollection);
-  });
-
-  // Mock expiry date string and BuiltInThemeConfig.findActiveColorwayCollection()
-  const mockExpiry = getMockExpiry();
-  setBuiltInThemeConfigMock({ mockExpiry, mockL10nId });
-
   // Set expired theme as a retained colorway theme
   const retainedThemePrefName = "browser.theme.retainedExpiredThemes";
   await SpecialPowers.pushPrefEnv({
-    set: [[retainedThemePrefName, JSON.stringify([kTestExpiredThemeId])]],
+    set: [
+      [retainedThemePrefName, JSON.stringify([NO_INTENSITY_EXPIRED_THEME_ID])],
+    ],
   });
-  const themeXpiExpiredAddon = getMockThemeXpi(kTestExpiredThemeId);
-  const expiredAddon = (
-    await AddonTestUtils.promiseInstallFile(themeXpiExpiredAddon)
-  ).addon;
+  const { addon: expiredAddon } = await installTestTheme(
+    NO_INTENSITY_EXPIRED_THEME_ID
+  );
 
   // Set up a valid addon that acts as a colorway theme that is not yet expired
-  const validThemeId = `valid-${kTestThemeId}`;
-  const themeXpiValidAddon = getMockThemeXpi(validThemeId);
-  const validAddon = (
-    await AddonTestUtils.promiseInstallFile(themeXpiValidAddon)
-  ).addon;
+  const { addon: validAddon } = await installTestTheme(NO_INTENSITY_THEME_ID);
 
   await expiredAddon.disable();
   await validAddon.disable();
-
-  // Make the test theme appear expired.
-  setMockThemeToExpired(kTestExpiredThemeId);
-  registerCleanupFunction(() => {
-    BuiltInThemes.builtInThemeMap.delete(kTestExpiredThemeId);
-  });
 
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -420,15 +239,16 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
 
   info("Verifying cards in list of retained colorway themes");
   let expiredAddonCard = colorwaySection.querySelector(
-    `addon-card[addon-id='${kTestExpiredThemeId}']`
+    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_THEME_ID}']`
   );
   ok(
     colorwaySection.contains(expiredAddonCard),
     "Colorways section contains the expired theme."
   );
+
   let disabledSection = getSection(doc, "theme-disabled-section");
   expiredAddonCard = disabledSection.querySelector(
-    `addon-card[addon-id='${kTestExpiredThemeId}']`
+    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_THEME_ID}']`
   );
   ok(
     !disabledSection.contains(expiredAddonCard),
@@ -436,7 +256,7 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
   );
 
   let validAddonCard = colorwaySection.querySelector(
-    `addon-card[addon-id='${validThemeId}']`
+    `addon-card[addon-id='${NO_INTENSITY_THEME_ID}']`
   );
   ok(
     !colorwaySection.contains(validAddonCard),
@@ -448,7 +268,7 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
   await validAddon.uninstall(true);
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
-  clearBuiltInThemeConfigMock(originalFindActiveCollection);
+  clearBuiltInThemesStubs();
 });
 
 /**
@@ -456,42 +276,28 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
  * collection, and that retained themes are still visible.
  */
 add_task(async function testColorwayNoActiveCollection() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs(false);
   await SpecialPowers.pushPrefEnv({
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  // Mock BuiltInThemeConfig.findActiveColorwaysCollection with test colorways.
-  const originalFindActiveCollection =
-    BuiltInThemeConfig.findActiveColorwayCollection;
-  registerCleanupFunction(() => {
-    clearBuiltInThemeConfigMock(originalFindActiveCollection);
-  });
-
-  setBuiltInThemeConfigMock();
-
   // Set expired theme as a retained colorway theme
   const retainedThemePrefName = "browser.theme.retainedExpiredThemes";
   await SpecialPowers.pushPrefEnv({
-    set: [[retainedThemePrefName, JSON.stringify([kTestExpiredThemeId])]],
+    set: [
+      [retainedThemePrefName, JSON.stringify([NO_INTENSITY_EXPIRED_THEME_ID])],
+    ],
   });
-  const themeXpiExpiredAddon = getMockThemeXpi(kTestExpiredThemeId);
-  const expiredAddon = (
-    await AddonTestUtils.promiseInstallFile(themeXpiExpiredAddon)
-  ).addon;
-
+  const { addon: expiredAddon } = await installTestTheme(
+    NO_INTENSITY_EXPIRED_THEME_ID
+  );
   await expiredAddon.disable();
-
-  // Make the test theme appear expired.
-  setMockThemeToExpired(kTestExpiredThemeId);
-  registerCleanupFunction(() => {
-    BuiltInThemes.builtInThemeMap.delete(kTestExpiredThemeId);
-  });
 
   let win = await loadInitialView("theme");
   let doc = win.document;
   let colorwaySection = getSection(doc, "colorways-section");
-  ok(colorwaySection, "colorway section was found");
 
+  ok(colorwaySection, "colorway section was found");
   ok(
     !colorwaySection.querySelector("colorways-card"),
     "colorway closet card was not found"
@@ -510,7 +316,7 @@ add_task(async function testColorwayNoActiveCollection() {
   );
 
   let expiredAddonCard = colorwaySection.querySelector(
-    `addon-card[addon-id='${kTestExpiredThemeId}']`
+    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_THEME_ID}']`
   );
   ok(
     colorwaySection.contains(expiredAddonCard),
@@ -521,7 +327,7 @@ add_task(async function testColorwayNoActiveCollection() {
   await expiredAddon.uninstall(true);
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
-  clearBuiltInThemeConfigMock(originalFindActiveCollection);
+  clearBuiltInThemesStubs();
 });
 
 /**
@@ -529,29 +335,17 @@ add_task(async function testColorwayNoActiveCollection() {
  * is a colorway enabled.
  */
 add_task(async function testColorwayButtonTextWithColorwayEnabled() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  // Mock BuiltInThemeConfig.findActiveColorwaysCollection with test colorways.
-  const originalFindActiveCollection =
-    BuiltInThemeConfig.findActiveColorwayCollection;
-  registerCleanupFunction(() => {
-    clearBuiltInThemeConfigMock(originalFindActiveCollection);
-  });
-
-  // Mock expiry date string and BuiltInThemeConfig.findActiveColorwayCollection()
-  const mockExpiry = getMockExpiry();
-
-  setBuiltInThemeConfigMock({ mockExpiry, mockL10nId });
-
-  const themeXpi = getMockThemeXpi(kTestThemeId);
-  const { addon } = await AddonTestUtils.promiseInstallFile(themeXpi);
+  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
 
-  // Add mocked fluent resources for the mocked active colorway collection.
+  // Add mocked fluent resources
   doc.l10n.addResourceIds(["mock-colorways.ftl"]);
 
   await addon.disable();
@@ -585,5 +379,5 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
   await closeView(win);
   await addon.uninstall(true);
   await SpecialPowers.popPrefEnv();
-  clearBuiltInThemeConfigMock(originalFindActiveCollection);
+  clearBuiltInThemesStubs();
 });
