@@ -285,3 +285,5 @@ appmenu-developer-tools-extensions =
 ## Floorp panel
 open-profile-dir = 
     .label = Open Profile Directory
+appmenuitem-reboot =
+    .label = Reboot
