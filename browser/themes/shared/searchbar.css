@@ -10,7 +10,7 @@
   fill: currentColor;
 }
 
-.search-one-offs {
+.search-one-offs:not([hidden]) {
   display: block;
   width: 100%;
 }
