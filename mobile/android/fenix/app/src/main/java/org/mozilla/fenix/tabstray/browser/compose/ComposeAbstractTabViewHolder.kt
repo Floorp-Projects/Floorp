@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * [RecyclerView.ViewHolder] used for Jetpack Compose UI content .
@@ -24,7 +25,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 abstract class ComposeAbstractTabViewHolder(
     private val composeView: ComposeView,
-    private val viewLifecycleOwner: LifecycleOwner
+    private val viewLifecycleOwner: LifecycleOwner,
 ) : SelectableTabViewHolder(composeView) {
 
     /**
@@ -38,7 +39,7 @@ abstract class ComposeAbstractTabViewHolder(
      */
     fun bind(tab: TabSessionState) {
         composeView.setContent {
-            FirefoxTheme {
+            FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = tab.content.private)) {
                 Content(tab)
             }
         }

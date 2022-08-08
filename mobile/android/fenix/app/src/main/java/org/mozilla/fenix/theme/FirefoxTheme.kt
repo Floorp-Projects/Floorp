@@ -34,11 +34,17 @@ enum class Theme {
         /**
          * Returns the current [Theme] that is displayed.
          *
+         * @param allowPrivateTheme Boolean used to control whether [Theme.Private] is an option
+         * for [FirefoxTheme] colors.
+         *
          * @return the current [Theme] that is displayed.
          */
         @Composable
-        fun getTheme() =
-            if (!inComposePreview && LocalContext.current.settings().lastKnownMode.isPrivate) {
+        fun getTheme(allowPrivateTheme: Boolean = true) =
+            if (allowPrivateTheme &&
+                !inComposePreview &&
+                LocalContext.current.settings().lastKnownMode.isPrivate
+            ) {
                 Private
             } else if (isSystemInDarkTheme()) {
                 Dark
