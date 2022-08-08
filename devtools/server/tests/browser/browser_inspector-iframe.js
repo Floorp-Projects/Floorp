@@ -19,7 +19,7 @@ add_task(async function testIframe() {
 
   is(
     iframeNodeFront.useChildTargetToFetchChildren,
-    isEveryFrameTargetEnabled() ? true : undefined,
+    isEveryFrameTargetEnabled(),
     "useChildTargetToFetchChildren has expected value"
   );
   is(
@@ -66,8 +66,8 @@ add_task(async function testIframeBlockedByCSP() {
 
   is(
     iframeNodeFront.useChildTargetToFetchChildren,
-    undefined,
-    "useChildTargetToFetchChildren is not defined"
+    false,
+    "useChildTargetToFetchChildren is false"
   );
   is(iframeNodeFront.numChildren, 0, "numChildren is set to 0");
 
