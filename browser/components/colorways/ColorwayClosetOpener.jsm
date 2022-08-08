@@ -18,7 +18,6 @@ let ColorwayClosetOpener = {
       "chrome://browser/content/colorways/colorwaycloset.html",
       {
         features: "resizable=no",
-        sizeTo: "available",
       }
     );
   },
