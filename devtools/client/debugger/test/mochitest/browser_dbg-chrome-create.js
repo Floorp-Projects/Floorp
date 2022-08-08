@@ -13,82 +13,49 @@
 PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/NS_ERROR_FAILURE/);
 
+// This test can be slow to run
 requestLongerTimeout(5);
 
 const { BrowserToolboxLauncher } = ChromeUtils.import(
   "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
-let gProcess = undefined;
 
 add_task(async function() {
-  // Windows XP and 8.1 test machines are terribly slow at this test.
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
 
-  gProcess = await initChromeDebugger();
+  info("Call BrowserToolboxLauncher.init");
+  const [browserToolboxLauncher, process, profilePath] = await new Promise(
+    resolve => {
+      BrowserToolboxLauncher.init({
+        onRun: (btl, dbgProcess, dbgProfilePath) => {
+          info("Browser toolbox process started successfully.");
+          resolve([btl, dbgProcess, dbgProfilePath]);
+        },
+      });
+    }
+  );
 
-  ok(
-    gProcess._dbgProcess,
-    "The remote debugger process wasn't created properly!"
-  );
-  ok(
-    gProcess._dbgProcess.exitCode == null,
-    "The remote debugger process isn't running!"
-  );
+  ok(process, "The remote debugger process was created");
+  ok(process.exitCode == null, "The remote debugger process is running");
   is(
-    typeof gProcess._dbgProcess.pid,
+    typeof process.pid,
     "number",
-    "The remote debugger process doesn't have a pid (?!)"
-  );
-
-  info(`process location: ${gProcess._dbgProcess.location}`);
-  info(`process pid: ${gProcess._dbgProcess.pid}`);
-  info(`process name: ${gProcess._dbgProcess.processName}`);
-  info(`process sig: ${gProcess._dbgProcess.processSignature}`);
-
-  ok(
-    gProcess._dbgProfilePath,
-    "The remote debugger profile wasn't created properly!"
+    `The remote debugger process has a proper pid (${process.pid})`
   );
 
   is(
-    gProcess._dbgProfilePath,
+    profilePath,
     PathUtils.join(PathUtils.profileDir, "chrome_debugger_profile"),
-    "The remote debugger profile isn't where we expect it!"
+    `The remote debugger profile has the expected path`
   );
 
-  info(`profile path: ${gProcess._dbgProfilePath}`);
+  info("Close the browser toolbox");
+  await browserToolboxLauncher.close();
 
-  await gProcess.close();
-});
-
-function initChromeDebugger() {
-  info("Initializing a chrome debugger process.");
-  return new Promise(resolve => {
-    BrowserToolboxLauncher.init({
-      onClose,
-      onRun: _process => {
-        info("Browser toolbox process started successfully.");
-        resolve(_process);
-      },
-    });
-  });
-}
-
-function onClose() {
   is(
-    gProcess._dbgProcess.exitCode,
+    process.exitCode,
     Services.appinfo.OS == "WINNT" ? -9 : -15,
-    "The remote debugger process didn't die cleanly."
+    "The remote debugger process died cleanly"
   );
-
-  info(`process exit value: ${gProcess._dbgProcess.exitCode}`);
-
-  info(`profile path: ${gProcess._dbgProfilePath}`);
-
-  finish();
-}
-
-registerCleanupFunction(function() {
-  gProcess = null;
 });
