@@ -97,7 +97,7 @@ AuthPrompt2.prototype = {
     executeSoon(function() {
       try {
         if (allOverAndDead) {
-          throw "already canceled";
+          throw new Error("already canceled");
         }
         var ret = me.promptAuth(channel, encryptionLevel, authInfo);
         if (!ret) {
@@ -112,7 +112,7 @@ AuthPrompt2.prototype = {
     });
     return new Cancelable(function() {
       if (allOverAndDead) {
-        throw "can't cancel, already ran";
+        throw new Error("can't cancel, already ran");
       }
       callback.onAuthAvailable(context, authInfo);
       allOverAndDead = true;
