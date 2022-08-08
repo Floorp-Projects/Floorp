@@ -32,7 +32,6 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "GLXLibrary.h"
-#include "gfxXlibSurface.h"
 #include "gfxContext.h"
 #include "gfxEnv.h"
 #include "gfxPlatform.h"
@@ -318,8 +317,7 @@ std::shared_ptr<XlibDisplay> GLXLibrary::GetDisplay() {
 
 already_AddRefed<GLContextGLX> GLContextGLX::CreateGLContext(
     const GLContextDesc& desc, std::shared_ptr<XlibDisplay> display,
-    GLXDrawable drawable, GLXFBConfig cfg, bool deleteDrawable,
-    gfxXlibSurface* pixmap) {
+    GLXDrawable drawable, GLXFBConfig cfg, Drawable ownedPixmap) {
   GLXLibrary& glx = sGLXLibrary;
 
   int isDoubleBuffered = 0;
@@ -347,9 +345,8 @@ already_AddRefed<GLContextGLX> GLContextGLX::CreateGLContext(
     const auto glxContext = glx.fCreateContextAttribs(
         *display, cfg, nullptr, X11True, terminated.data());
     if (!glxContext) return nullptr;
-    const RefPtr<GLContextGLX> ret =
-        new GLContextGLX(desc, display, drawable, glxContext, deleteDrawable,
-                         isDoubleBuffered, pixmap);
+    const RefPtr<GLContextGLX> ret = new GLContextGLX(
+        desc, display, drawable, glxContext, isDoubleBuffered, ownedPixmap);
 
     if (!ret->Init()) return nullptr;
 
@@ -444,8 +441,11 @@ GLContextGLX::~GLContextGLX() {
 
   mGLX->fDestroyContext(*mDisplay, mContext);
 
-  if (mDeleteDrawable) {
+  // If we own the enclosed X pixmap, then free it after we free the enclosing
+  // GLX pixmap.
+  if (mOwnedPixmap) {
     mGLX->fDestroyPixmap(*mDisplay, mDrawable);
+    XFreePixmap(*mDisplay, mOwnedPixmap);
   }
 }
 
@@ -549,16 +549,14 @@ bool GLContextGLX::RestoreDrawable() {
 GLContextGLX::GLContextGLX(const GLContextDesc& desc,
                            std::shared_ptr<XlibDisplay> aDisplay,
                            GLXDrawable aDrawable, GLXContext aContext,
-                           bool aDeleteDrawable, bool aDoubleBuffered,
-                           gfxXlibSurface* aPixmap)
+                           bool aDoubleBuffered, Drawable aOwnedPixmap)
     : GLContext(desc, nullptr),
       mContext(aContext),
       mDisplay(aDisplay),
       mDrawable(aDrawable),
-      mDeleteDrawable(aDeleteDrawable),
+      mOwnedPixmap(aOwnedPixmap),
       mDoubleBuffered(aDoubleBuffered),
-      mGLX(&sGLXLibrary),
-      mPixmap(aPixmap) {}
+      mGLX(&sGLXLibrary) {}
 
 static bool AreCompatibleVisuals(Visual* one, Visual* two) {
   if (one->c_class != two->c_class) {
@@ -618,9 +616,8 @@ already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
   } else {
     flags = CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
-  return GLContextGLX::CreateGLContext({{flags}, false},
-                                       XlibDisplay::Borrow(aXDisplay), aXWindow,
-                                       config, false, nullptr);
+  return GLContextGLX::CreateGLContext(
+      {{flags}, false}, XlibDisplay::Borrow(aXDisplay), aXWindow, config);
 }
 
 already_AddRefed<GLContext> GLContextProviderGLX::CreateForCompositorWidget(
@@ -865,30 +862,27 @@ static already_AddRefed<GLContextGLX> CreateOffscreenPixmapContext(
   int depth;
   FindVisualAndDepth(*display, visid, &visual, &depth);
 
-  bool error = false;
-
   gfx::IntSize dummySize(16, 16);
-  RefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(
-      display, DefaultScreenOfDisplay(display->get()), visual, dummySize);
-  if (surface->CairoStatus() != 0) {
+  const auto drawable =
+      XCreatePixmap(*display, DefaultRootWindow(display->get()),
+                    dummySize.width, dummySize.height, depth);
+  if (!drawable) {
     return nullptr;
   }
 
   // Handle slightly different signature between glXCreatePixmap and
   // its pre-GLX-1.3 extension equivalent (though given the ABI, we
   // might not need to).
-  const auto drawable = surface->XDrawable();
   const auto pixmap = glx->fCreatePixmap(*display, config, drawable, nullptr);
   if (pixmap == 0) {
-    error = true;
+    XFreePixmap(*display, drawable);
+    return nullptr;
   }
-
-  if (error) return nullptr;
 
   auto fullDesc = GLContextDesc{desc};
   fullDesc.isOffscreen = true;
-  return GLContextGLX::CreateGLContext(fullDesc, display, pixmap, config, true,
-                                       surface);
+  return GLContextGLX::CreateGLContext(fullDesc, display, pixmap, config,
+                                       drawable);
 }
 
 /*static*/
