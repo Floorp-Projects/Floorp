@@ -68,8 +68,8 @@ add_task(async function enter_search_mode_button() {
     window,
     value: "",
   });
-  let oneOffButton = window.document.getElementById(
-    "urlbar-engine-one-off-item-actions"
+  let oneOffButton = await TestUtils.waitForCondition(() =>
+    window.document.getElementById("urlbar-engine-one-off-item-actions")
   );
   Assert.ok(oneOffButton, "One off button is available when preffed on");
   EventUtils.synthesizeMouseAtCenter(oneOffButton, {}, window);
