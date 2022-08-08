@@ -11,25 +11,16 @@
           src="../text.js"></script>
   <script type="application/javascript">
     function doTest() {
-      const isCacheEnabled = Services.prefs.getBoolPref(
-        "accessibility.cache.enabled",
-        false
-      );
-      // Flag to pass to testTextAtOffset for tests fixed by TextLeafPoint.
-      // if TextLeafPoint is enabled, those tests should pass. If not, they
-      // should be expected failures.
-      const okIfCache = isCacheEnabled ? kOk : kTodo;
-
       testTextAtOffset("line_test_1", BOUNDARY_LINE_START,
                        [[0, 6, "Line 1 ", 0, 7],
-                        // See the okIfCache test below.
+                        // See the kOkIfCache test below.
                         // [7, 7, kEmbedChar, 7, 8],
                         [8, 15, "Line 3 ", 8, 15]]);
       testTextAtOffset(/* aOffset */ 7, BOUNDARY_LINE_START,
         kEmbedChar, /* aStartOffset */ 7, /* aEndOffset */ 8,
         "line_test_1",
-        /* returned text */ okIfCache,
-        /* returned start offset */ kOk, /* returned end offset */ okIfCache);
+        /* returned text */ kOkIfCache,
+        /* returned start offset */ kOk, /* returned end offset */ kOkIfCache);
 
       // ////////////////////////////////////////////////////////////////////////
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
@@ -237,16 +228,16 @@
 
       // A line with an empty display: contents leaf in the middle.
       testTextAtOffset([ "displayContents" ], BOUNDARY_LINE_START,
-                       // See the okIfCache test below.
+                       // See the kOkIfCache test below.
                        // [ [0, 3, `a${kEmbedChar}b`, 0, 3] ]);
                        [ [0, 0, `a${kEmbedChar}b`, 0, 3],
                          [2, 3, `a${kEmbedChar}b`, 0, 3] ]);
       testTextAtOffset(/* aOffset */ 1, BOUNDARY_LINE_START,
         `a${kEmbedChar}b`, /* aStartOffset */ 0, /* aEndOffset */ 3,
         "displayContents",
-        /* returned text */ okIfCache,
-        /* returned start offset */ okIfCache,
-        /* returned end offset */ okIfCache);
+        /* returned text */ kOkIfCache,
+        /* returned start offset */ kOkIfCache,
+        /* returned end offset */ kOkIfCache);
 
       // A line which wraps, followed by a br, followed by another line.
       testTextAtOffset([ "brAfterWrapped" ], BOUNDARY_LINE_START,

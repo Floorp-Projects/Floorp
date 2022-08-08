@@ -379,8 +379,10 @@
                           ] );
 
       var line4 = [ // "riend "
-        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
-        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextBeforeOffset", BOUNDARY_WORD_END,
+          kOkIfCache, kOkIfCache, kOkIfCache],
+        [ "TextAfterOffset", BOUNDARY_WORD_END,
+          kOkIfCache, kOkIfCache, kOkIfCache ],
       ];
       traverseTextByLines(gQueue, "ta_wrapped",
                           [ [ "hi ", "", 0, 3, { words: [ 0, 2 ] } ],
