@@ -724,7 +724,7 @@ var altsvcClientListener = {
     );
     if (!isHttp2Connection) {
       dump("/altsvc1 not over h2 yet - retry\n");
-      var chan = makeChan(
+      let chan = makeChan(
         "http://foo.example.com:" + httpserv.identity.primaryPort + "/altsvc1"
       ).QueryInterface(Ci.nsIHttpChannel);
       // we use this header to tell the server to issue a altsvc frame for the
@@ -738,7 +738,7 @@ var altsvcClientListener = {
       chan.asyncOpen(altsvcClientListener);
     } else {
       Assert.ok(isHttp2Connection);
-      var chan = makeChan(
+      let chan = makeChan(
         "http://foo.example.com:" + httpserv2.identity.primaryPort + "/altsvc2"
       ).QueryInterface(Ci.nsIHttpChannel);
       chan.loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
