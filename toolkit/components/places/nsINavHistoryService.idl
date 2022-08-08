@@ -1038,6 +1038,11 @@ interface nsINavHistoryService : nsISupports
   const unsigned short VISIT_SOURCE_BOOKMARKED = 2;
 
   /**
+   * Insert this value into moz_historyvisits if the visit source is searched.
+   */
+  const unsigned short VISIT_SOURCE_SEARCHED = 3;
+
+  /**
    * Returns the current database status
    */
   readonly attribute unsigned short databaseStatus;
