@@ -296,6 +296,9 @@
       <menuitem id="context-paste"
                 data-l10n-id="text-action-paste"
                 command="cmd_paste"/>
+      <menuitem id="context-paste-no-formatting"
+                data-l10n-id="text-action-paste-no-formatting"
+                command="cmd_pasteNoFormatting"/>
       <menuitem id="context-delete"
                 data-l10n-id="text-action-delete"
                 command="cmd_delete"/>

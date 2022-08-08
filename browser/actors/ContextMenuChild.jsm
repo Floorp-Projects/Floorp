@@ -1097,6 +1097,8 @@ class ContextMenuChild extends JSWindowActorChild {
       context.onNumeric = (editFlags & lazy.SpellCheckHelper.NUMERIC) !== 0;
       context.onEditable = (editFlags & lazy.SpellCheckHelper.EDITABLE) !== 0;
       context.onPassword = (editFlags & lazy.SpellCheckHelper.PASSWORD) !== 0;
+      context.isDesignMode =
+        (editFlags & lazy.SpellCheckHelper.CONTENTEDITABLE) !== 0;
       context.passwordRevealed =
         context.onPassword && context.target.revealPassword;
       context.onSpellcheckable =
