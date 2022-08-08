@@ -18,6 +18,15 @@ const EndPoint_End = nsIAccessibleTextRange.EndPoint_End;
 
 const kTodo = 1; // a test is expected to fail
 const kOk = 2; // a test doesn't fail
+// Flag to pass to testTextAtOffset for tests fixed by TextLeafPoint.
+// if TextLeafPoint is enabled, those tests should pass. If not, they
+// should be expected failures.
+const kOkIfCache = Services.prefs.getBoolPref(
+  "accessibility.cache.enabled",
+  false
+)
+  ? kOk
+  : kTodo;
 
 /**
  * Test characterCount for the given array of accessibles.

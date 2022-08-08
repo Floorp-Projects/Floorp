@@ -197,14 +197,14 @@
       testTextBeforeOffset(ids, BOUNDARY_WORD_END,
                            [ [ 0, 7, "", 0, 0 ],
                              [ 8, 12, "oneword", 0, 7,
-                               [ [ 8, "ml_divbr1", kTodo, kOk, kTodo ],
-                                 [ 8, "ml_edivbr1", kTodo, kOk, kTodo ],
-                                 [ 9, "ml_divbr1", kTodo, kOk, kTodo ],
-                                 [ 9, "ml_edivbr1", kTodo, kOk, kTodo ] ] ],
+                               [ [ 8, "ml_divbr1", kOkIfCache, kOk, kOkIfCache ],
+                                 [ 8, "ml_edivbr1", kOkIfCache, kOk, kOkIfCache ],
+                                 [ 9, "ml_divbr1", kOkIfCache, kOk, kOkIfCache ],
+                                 [ 9, "ml_edivbr1", kOkIfCache, kOk, kOkIfCache ] ] ],
                              [ 13, 18, "\n\ntwo", 7, 12 ],
                              [ 19, 19, " words", 12, 18,
-                               [ [ 19, "ml_divbr1", kTodo, kTodo, kTodo ],
-                                 [ 19, "ml_edivbr1", kTodo, kTodo, kTodo ] ] ],
+                               [ [ 19, "ml_divbr1", kOkIfCache, kOkIfCache, kOkIfCache ],
+                                 [ 19, "ml_edivbr1", kOkIfCache, kOkIfCache, kOkIfCache ] ] ],
                            ] );
 
       testTextAtOffset(ids, BOUNDARY_WORD_START,
@@ -216,10 +216,10 @@
                          [ 7, 11, "\n\ntwo", 7, 12 ],
                          [ 12, 17, " words", 12, 18 ],
                          [ 18, 19, "\n", 18, 19,
-                           [ [ 18, "ml_divbr1", kTodo, kTodo, kOk ],
-                             [ 18, "ml_edivbr1", kTodo, kTodo, kOk ],
-                             [ 19, "ml_divbr1", kTodo, kTodo, kOk ],
-                             [ 19, "ml_edivbr1", kTodo, kTodo, kOk ] ] ] ]);
+                           [ [ 18, "ml_divbr1", kOkIfCache, kOkIfCache, kOk ],
+                             [ 18, "ml_edivbr1", kOkIfCache, kOkIfCache, kOk ],
+                             [ 19, "ml_divbr1", kOkIfCache, kOkIfCache, kOk ],
+                             [ 19, "ml_edivbr1", kOkIfCache, kOkIfCache, kOk ] ] ] ]);
 
       testTextAfterOffset(ids, BOUNDARY_WORD_START,
                            [ [ 0, 8, "two ", 9, 13 ],
@@ -229,8 +229,8 @@
                            [ [ 0, 7, "\n\ntwo", 7, 12 ],
                              [ 8, 12, " words", 12, 18 ],
                              [ 13, 18, "\n", 18, 19,
-                               [ [ 18, "ml_divbr1", kTodo, kTodo, kOk ],
-                                 [ 18, "ml_edivbr1", kTodo, kTodo, kOk ] ] ],
+                               [ [ 18, "ml_divbr1", kOkIfCache, kOkIfCache, kOk ],
+                                 [ 18, "ml_edivbr1", kOkIfCache, kOkIfCache, kOk ] ] ],
                              [ 19, 19, "", 19, 19 ] ]);
 
       // a <a href="#">b</a>
@@ -280,7 +280,7 @@
         [ 0, 1, "a ", 0, 2 ],
         [ 2, 3, `${kEmbedChar} `, 2, 4, [
           // Word at offset 2 returns end offset 3, should be 4.
-          [ 2, "multiword_embed", kTodo, kOk, kTodo ]
+          [ 2, "multiword_embed", kOkIfCache, kOk, kOkIfCache ]
         ] ],
         [ 4, 5, "b", 4, 5 ]
       ]);
