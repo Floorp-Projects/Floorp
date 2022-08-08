@@ -6,6 +6,7 @@ policy:
 tasks:
     - $let:
           trustDomain: mobile
+          canonicalRepo: git@github.com:mozilla-mobile/firefox-android.git
           # Github events have this stuff in different places...
           ownerEmail:
               $if: 'tasks_for in ["cron", "action"]'
@@ -21,21 +22,32 @@ tasks:
                           $if: 'tasks_for == "github-pull-request"'
                           then: '${event.pull_request.user.login}@users.noreply.github.com'
 
-          baseRepoUrl:
-              $if: 'tasks_for == "github-push"'
-              then: '${event.repository.html_url}'
+          repoFullName:
+              $if: 'tasks_for in "github-push"'
+              then: '${event.repository.full_name}'
               else:
                   $if: 'tasks_for == "github-pull-request"'
-                  then: '${event.pull_request.base.repo.html_url}'
+                  then: '${event.pull_request.base.repo.full_name}'
+                  else:
+                      $if: 'tasks_for in ["cron", "action"]'
+                      # Trim git@github.com:
+                      then: '${repository.url[15:-4]}'
+
+          baseRepoUrl:
+              $if: 'tasks_for == "github-push"'
+              then: '${event.repository.ssh_url}'
+              else:
+                  $if: 'tasks_for == "github-pull-request"'
+                  then: '${event.pull_request.base.repo.ssh_url}'
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
                       then: '${repository.url}'
           repoUrl:
               $if: 'tasks_for == "github-push"'
-              then: '${event.repository.html_url}'
+              then: '${event.repository.ssh_url}'
               else:
                   $if: 'tasks_for == "github-pull-request"'
-                  then: '${event.pull_request.head.repo.html_url}'
+                  then: '${event.pull_request.head.repo.ssh_url}'
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
                       then: '${repository.url}'
@@ -92,7 +104,7 @@ tasks:
           then:
               $let:
                   level:
-                      $if: 'tasks_for in ["github-push", "action", "cron"] && repoUrl == "https://github.com/mozilla-mobile/firefox-android"'
+                      $if: 'tasks_for in ["github-push", "action", "cron"] && repoUrl == canonicalRepo'
                       then: '3'
                       else: '1'
 
@@ -117,7 +129,7 @@ tasks:
                         metadata:
                             $merge:
                                 - owner: "${ownerEmail}"
-                                  source: '${repoUrl}/raw/${head_sha}/.taskcluster.yml'
+                                  source: 'https://github.com/${repoFullName}/raw/${head_sha}/.taskcluster.yml'
                                 - $if: 'tasks_for in ["github-push", "github-pull-request"]'
                                   then:
                                       name: "Decision Task"
@@ -168,7 +180,7 @@ tasks:
                             # `https://` is 8 characters so, ${repoUrl[8:]} is the repository without the protocol.
                             $if: 'tasks_for == "github-push"'
                             then:
-                                - 'assume:repo:${repoUrl[8:]}:branch:${short_head_branch}'
+                                - 'assume:repo:github.com/${repoFullName}:branch:${short_head_branch}'
                             else:
                                 $if: 'tasks_for == "github-pull-request"'
                                 then:
@@ -197,6 +209,7 @@ tasks:
                                       MOBILE_HEAD_REV: '${head_sha}'
                                       MOBILE_PIP_REQUIREMENTS: taskcluster/requirements.txt
                                       MOBILE_REPOSITORY_TYPE: git
+                                      MOBILE_SSH_SECRET_NAME: project/mobile/firefox-android/github-clone-ssh
                                       MOZ_AUTOMATION: "1"
                                       REPOSITORIES: {$json: {mobile: "firefox-android"}}
                                       ANDROID_SDK_ROOT: /builds/worker/android-sdk
