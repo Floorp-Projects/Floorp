@@ -196,19 +196,30 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     };
   },
 
-  async reloadDescriptor({ bypassCache }) {
+  async reloadDescriptor() {
     if (!this.isParent || this.isWindowlessParent) {
       throw new Error(
-        "reloadDescriptor is only available for parent process descriptors linked to a window"
+        "reloadDescriptor is only available for parent process descriptors"
       );
     }
 
-    // For parent process debugging, we only reload the current top level
-    // browser window.
-    this._windowGlobalTargetActor.browsingContext.reload(
-      bypassCache
-        ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
-        : Ci.nsIWebNavigation.LOAD_FLAGS_NONE
+    // Reload for the parent process will restart the whole browser
+    //
+    // This aims at replicate `DevelopmentHelpers.quickRestart`
+    // This allows a user to do a full firefox restart + session restore
+    // Via Ctrl+Alt+R on the Browser Console/Toolbox
+
+    // Maximize the chance of fetching new source content by clearing the cache
+    Services.obs.notifyObservers(null, "startupcache-invalidate");
+
+    // Avoid safemode popup from appearing on restart
+    const env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
+
+    Services.startup.quit(
+      Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
     );
   },
 

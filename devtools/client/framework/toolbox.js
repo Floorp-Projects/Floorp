@@ -1179,21 +1179,23 @@ Toolbox.prototype = {
     // List for Help/Settings key.
     this.shortcuts.on(L10N.getStr("toolbox.help.key"), this.toggleOptions);
 
-    // Listen for Reload shortcuts
-    [
-      ["reload", false],
-      ["reload2", false],
-      ["forceReload", true],
-      ["forceReload2", true],
-    ].forEach(([id, force]) => {
-      const key = L10N.getStr("toolbox." + id + ".key");
-      this.shortcuts.on(key, event => {
-        this.commands.targetCommand.reloadTopLevelTarget(force);
+    if (!this.isBrowserToolbox) {
+      // Listen for Reload shortcuts
+      [
+        ["reload", false],
+        ["reload2", false],
+        ["forceReload", true],
+        ["forceReload2", true],
+      ].forEach(([id, force]) => {
+        const key = L10N.getStr("toolbox." + id + ".key");
+        this.shortcuts.on(key, event => {
+          this.commands.targetCommand.reloadTopLevelTarget(force);
 
-        // Prevent Firefox shortcuts from reloading the page
-        event.preventDefault();
+          // Prevent Firefox shortcuts from reloading the page
+          event.preventDefault();
+        });
       });
-    });
+    }
 
     // Add zoom-related shortcuts.
     if (!this._hostOptions || this._hostOptions.zoom === true) {
