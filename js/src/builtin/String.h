@@ -82,6 +82,9 @@ JSString* str_replaceAll_string_raw(JSContext* cx, HandleString string,
                                     HandleString pattern,
                                     HandleString replacement);
 
+extern bool StringStartsWith(JSContext* cx, HandleString string,
+                             HandleString searchString, bool* result);
+
 extern JSString* StringToLowerCase(JSContext* cx, HandleString string);
 
 extern JSString* StringToUpperCase(JSContext* cx, HandleString string);

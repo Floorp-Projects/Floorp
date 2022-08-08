@@ -251,6 +251,7 @@ namespace jit {
   _(StringFromCodePoint, js::jit::StringFromCodePoint)                         \
   _(StringReplace, js::jit::StringReplace)                                     \
   _(StringSplitString, js::StringSplitString)                                  \
+  _(StringStartsWith, js::StringStartsWith)                                    \
   _(StringToLowerCase, js::StringToLowerCase)                                  \
   _(StringToNumber, js::StringToNumber)                                        \
   _(StringToUpperCase, js::StringToUpperCase)                                  \

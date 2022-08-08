@@ -2068,6 +2068,18 @@ bool WarpCacheIRTranspiler::emitStringFromCodePointResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStringStartsWithResult(
+    StringOperandId strId, StringOperandId searchStrId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* searchStr = getOperand(searchStrId);
+
+  auto* startsWith = MStringStartsWith::New(alloc(), str, searchStr);
+  add(startsWith);
+
+  pushResult(startsWith);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitStringToLowerCaseResult(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
 
