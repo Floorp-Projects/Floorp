@@ -95,6 +95,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
         return !LookAndFeel::WindowsNonNativeMenusEnabled();
       case ColorID::Highlight:
       case ColorID::Selecteditem:
+        // We prefer the generic dark selection color if we don't have an
+        // explicit one.
+        return aScheme != ColorScheme::Dark || mDarkHighlight;
       case ColorID::IMESelectedRawTextBackground:
       case ColorID::IMESelectedConvertedTextBackground:
         return true;
@@ -118,9 +121,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
           return false;
         }
         return !mColorMenuHoverText;
-      case ColorID::Highlight:
       case ColorID::Highlighttext:
       case ColorID::Selecteditemtext:
+        // We prefer the generic dark selection color if we don't have an
+        // explicit one.
+        return aScheme != ColorScheme::Dark || mDarkHighlightText;
       case ColorID::IMESelectedRawTextForeground:
       case ColorID::IMESelectedConvertedTextForeground:
       case ColorID::MozDragtargetzone:
