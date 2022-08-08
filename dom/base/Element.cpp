@@ -4751,20 +4751,28 @@ void Element::SetHTML(const nsAString& aInnerHTML,
 
     int32_t oldChildCount = static_cast<int32_t>(target->GetChildCount());
 
-    if (!aOptions.IsAnyMemberPresent() || !aOptions.mSanitizer.WasPassed()) {
-      SanitizerConfig options;
-      nsCOMPtr<nsIGlobalObject> ownerGlobal = GetOwnerGlobal();
-      if (!ownerGlobal) {
-        aError.Throw(NS_ERROR_FAILURE);
+    RefPtr<Sanitizer> sanitizer;
+    if (!aOptions.mSanitizer.WasPassed()) {
+      nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+      if (!global) {
+        aError.ThrowInvalidStateError("Missing owner global.");
         return;
       }
-      RefPtr<Sanitizer> sanitizer = new Sanitizer(ownerGlobal, options);
-      sanitizer->SanitizeFragment(fragment, aError);
+      sanitizer = new Sanitizer(global, {});
     } else {
-      aOptions.mSanitizer.Value().SanitizeFragment(fragment, aError);
+      sanitizer = &aOptions.mSanitizer.Value();
+    }
+
+    sanitizer->SanitizeFragment(fragment, aError);
+    if (aError.Failed()) {
+      return;
     }
 
     target->AppendChild(*fragment, aError);
+    if (aError.Failed()) {
+      return;
+    }
+
     mb.NodesAdded();
     nsContentUtils::FireMutationEventsForDirectParsing(doc, target,
                                                        oldChildCount);
