@@ -42,7 +42,7 @@ add_task(async function test_profile_feature_preferencereads() {
     "The profiler is not currently active"
   );
 
-  await startProfiler({ features: ["leaf", "preferencereads"] });
+  await startProfiler({ features: ["js", "preferencereads"] });
 
   const url = BASE_URL + "single_frame.html";
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
@@ -72,7 +72,7 @@ add_task(async function test_profile_feature_preferencereads() {
       );
     }
 
-    await startProfiler({ features: ["leaf"] });
+    await startProfiler({ features: ["js"] });
     // Now reload the tab with a clean run.
     await ContentTask.spawn(contentBrowser, null, () => {
       return new Promise(resolve => {
