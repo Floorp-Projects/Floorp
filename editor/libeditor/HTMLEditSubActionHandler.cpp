@@ -2022,9 +2022,10 @@ CreateElementResult HTMLEditor::HandleInsertBRElement(
     // XXX brElementIsAfterBlock and brElementIsBeforeBlock were set before
     //     modifying the DOM tree.  So, now, the <br> element may not be
     //     between blocks.
-    return CreateElementResult(
-        std::move(brElement),
-        EditorDOMPoint(brElement, InterlinePosition::StartOfNextLine));
+    EditorDOMPoint pointToPutCaret(brElement,
+                                   InterlinePosition::StartOfNextLine);
+    return CreateElementResult(std::move(brElement),
+                               std::move(pointToPutCaret));
   }
 
   auto afterBRElement = EditorDOMPoint::After(brElement);
