@@ -23,7 +23,7 @@ Test for Popup Direction
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-add_task(async function setup() {
+add_setup(async () => {
   await updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },

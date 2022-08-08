@@ -26,7 +26,7 @@ var input = getFormElementByName(1, "field1");
 var expectedValue = "value1";
 var beforeInputFired = false;
 
-add_task(async function setup() {
+add_setup(async () => {
    await updateFormHistory([
       { op: "remove" },
       { op: "add", fieldname: "field1", value: "value1" },

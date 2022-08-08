@@ -34,8 +34,7 @@ function waitForNextPopup() {
   return new Promise(resolve => { resolvePopupShownListener = resolve; });
 }
 
-
-add_task(async function setup() {
+add_setup(async () => {
   await new Promise(resolve => updateFormHistory([
     { op: "add", fieldname: "field1", value: "Mozilla" },
     { op: "add", fieldname: "field1", value: "Firefox" },
