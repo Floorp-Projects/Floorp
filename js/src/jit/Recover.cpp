@@ -1968,6 +1968,28 @@ bool RStringReplace::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
+bool MSubstr::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_Substr));
+  return true;
+}
+
+RSubstr::RSubstr(CompactBufferReader& reader) {}
+
+bool RSubstr::recover(JSContext* cx, SnapshotIterator& iter) const {
+  RootedString str(cx, iter.read().toString());
+  int32_t begin = iter.read().toInt32();
+  int32_t length = iter.read().toInt32();
+
+  JSString* result = SubstringKernel(cx, str, begin, length);
+  if (!result) {
+    return false;
+  }
+
+  iter.storeInstructionResult(StringValue(result));
+  return true;
+}
+
 bool MAtomicIsLockFree::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_AtomicIsLockFree));

@@ -991,6 +991,7 @@
   result_type: String
   congruent_to: if_operands_equal
   alias_set: none
+  can_recover: true
 
 - name: ModuleMetadata
   arguments:

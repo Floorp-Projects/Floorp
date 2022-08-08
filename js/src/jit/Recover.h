@@ -112,6 +112,7 @@ namespace jit {
   _(RegExpSearcher)               \
   _(RegExpTester)                 \
   _(StringReplace)                \
+  _(Substr)                       \
   _(TypeOf)                       \
   _(TypeOfName)                   \
   _(ToDouble)                     \
@@ -707,6 +708,14 @@ class RStringReplace final : public RInstruction {
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(StringReplace, 3)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RSubstr final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(Substr, 3)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

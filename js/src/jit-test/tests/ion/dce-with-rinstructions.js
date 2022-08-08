@@ -1379,6 +1379,24 @@ function rstring_replace_g(i) {
     return i;
 }
 
+var uceFault_string_slice = eval(`(${uceFault})`.replace('uceFault', 'uceFault_string_slice'))
+function rstring_slice(i) {
+    var res = "str00123456789".slice(0, 3);
+    if (uceFault_string_slice(i) || uceFault_string_slice(i))
+        assertEq(res, "str");
+    assertRecoveredOnBailout(res, false);
+    return i;
+}
+
+var uceFault_string_substring = eval(`(${uceFault})`.replace('uceFault', 'uceFault_string_substring'))
+function rstring_substring(i) {
+    var res = "str00123456789".substring(0, 3);
+    if (uceFault_string_substring(i) || uceFault_string_substring(i))
+        assertEq(res, "str");
+    assertRecoveredOnBailout(res, false);
+    return i;
+}
+
 var uceFault_typeof = eval(`(${uceFault})`.replace('uceFault', 'uceFault_typeof'))
 function rtypeof(i) {
     var inputs = [ {}, [], 1, true, undefined, function(){}, null, Symbol() ];
@@ -1918,6 +1936,8 @@ for (j = 100 - max; j < 100; j++) {
     rstring_replace(i);
     rstring_replace_y(i);
     rstring_replace_g(i);
+    rstring_slice(i);
+    rstring_substring(i);
     rtypeof(i);
     rtodouble_value(i);
     rtodouble_number(i);
