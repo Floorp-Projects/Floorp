@@ -23,15 +23,18 @@
 #include "nsIAsyncInputStream.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DataMutex.h"
 
 namespace mozilla {
 namespace net {
 
-class nsPreloadedStream final : public nsIAsyncInputStream {
+class nsPreloadedStream final : public nsIAsyncInputStream,
+                                public nsIInputStreamCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 
   nsPreloadedStream(nsIAsyncInputStream* aStream, const char* data,
                     uint32_t datalen);
@@ -44,6 +47,8 @@ class nsPreloadedStream final : public nsIAsyncInputStream {
   char* mBuf;
   uint32_t mOffset;
   uint32_t mLen;
+
+  DataMutex<nsCOMPtr<nsIInputStreamCallback>> mCallback;
 };
 
 }  // namespace net
