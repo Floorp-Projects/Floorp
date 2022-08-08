@@ -11,8 +11,12 @@
 }
 
 .search-one-offs {
-  -moz-box-orient: vertical;
+  display: block;
   width: 100%;
+}
+
+.search-panel-one-offs-header {
+  display: block;
 }
 
 .search-panel-header {

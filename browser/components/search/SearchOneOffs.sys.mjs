@@ -465,29 +465,6 @@ export class SearchOneOffs {
     let origin = this.telemetryOrigin;
     this.settingsButton.id = origin + "-anon-search-settings";
 
-    if (this.popup) {
-      let buttonsWidth = this.popup.clientWidth;
-
-      // There's one weird thing to guard against: when layout pixels
-      // aren't an integral multiple of device pixels, the last button
-      // of each row sometimes gets pushed to the next row, depending on the
-      // panel and button widths.
-      // This is likely because the clientWidth getter rounds the value, but
-      // the panel's border width is not an integer.
-      // As a workaround, decrement the width if the scale is not an integer.
-      let scale = this.window.devicePixelRatio;
-      if (Math.floor(scale) != scale) {
-        --buttonsWidth;
-      }
-
-      // 8 is for the margin-inline of the setting button.
-      buttonsWidth -= this.settingsButton.clientWidth + 8;
-
-      // If the header string is very long, then the searchbar buttons will
-      // overflow their container unless max-width is set.
-      this.buttons.style.setProperty("max-width", `${buttonsWidth}px`);
-    }
-
     let engines = (await this.getEngineInfo()).engines;
     this._rebuildEngineList(engines, addEngines);
 
