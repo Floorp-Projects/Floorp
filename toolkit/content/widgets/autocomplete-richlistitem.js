@@ -749,6 +749,14 @@
       MozXULElement.insertFTLIfNeeded("toolkit/main-window/autocomplete.ftl");
     }
 
+    static get inheritedAttributes() {
+      return {
+        // getLabelAt:
+        ".line1-label": "text=ac-value",
+        // Don't inherit ac-label with getCommentAt since the label is JSON.
+      };
+    }
+
     static get markup() {
       return `
       <div xmlns="http://www.w3.org/1999/xhtml"
@@ -764,6 +772,7 @@
     }
 
     _adjustAcItem() {
+      super._adjustAcItem();
       document.l10n.setAttributes(
         this.querySelector(".labels-wrapper"),
         `autocomplete-import-logins-${this.getAttribute("ac-value")}`,
@@ -774,7 +783,6 @@
           ),
         }
       );
-      super._adjustAcItem();
     }
   }
 
