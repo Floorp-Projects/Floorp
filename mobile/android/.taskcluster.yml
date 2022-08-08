@@ -212,7 +212,6 @@ tasks:
                                       MOBILE_SSH_SECRET_NAME: project/mobile/firefox-android/github-clone-ssh
                                       MOZ_AUTOMATION: "1"
                                       REPOSITORIES: {$json: {mobile: "firefox-android"}}
-                                      ANDROID_SDK_ROOT: /builds/worker/android-sdk
                                     - $if: 'tasks_for in ["github-pull-request"]'
                                       then:
                                           MOBILE_PULL_REQUEST_NUMBER: '${event.pull_request.number}'
@@ -245,11 +244,9 @@ tasks:
                                       $if: 'tasks_for == "action"'
                                       then: >
                                           cd /builds/worker/checkouts/vcs &&
-                                          taskcluster/scripts/decision-install-sdk.sh &&
                                           ln -s /builds/worker/artifacts artifacts &&
                                           ~/.local/bin/taskgraph action-callback
                                       else: >
-                                          taskcluster/scripts/decision-install-sdk.sh &&
                                           ln -s /builds/worker/artifacts artifacts &&
                                           ~/.local/bin/taskgraph decision
                                           --pushlog-id='0'
