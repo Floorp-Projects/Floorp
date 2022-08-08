@@ -81,6 +81,7 @@ async function test_0RTT(enable_ssl_tokens_cache, enable_0rtt, resumed) {
 
   // Make sure the h3 connection created by the previous test is cleared.
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   // This connecion should be resumed.
