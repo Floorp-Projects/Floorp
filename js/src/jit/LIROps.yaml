@@ -1111,6 +1111,15 @@
     searchString: WordSized
   call_instruction: true
 
+# Test if a string starts with the constant search string
+- name: StringStartsWithInline
+  result_type: WordSized
+  operands:
+    string: WordSized
+  arguments:
+    searchString: JSLinearString*
+  num_temps: 1
+
 # Calls the ToLowerCase or ToUpperCase case conversion function.
 - name: StringConvertCase
   result_type: WordSized
