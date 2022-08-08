@@ -424,15 +424,6 @@ static bool intrinsic_ThrowTypeError(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
-static bool intrinsic_ThrowSyntaxError(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() >= 1);
-
-  ThrowErrorWithType(cx, JSEXN_SYNTAXERR, args);
-  return false;
-}
-
 static bool intrinsic_ThrowAggregateError(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -449,25 +440,6 @@ static bool intrinsic_ThrowInternalError(JSContext* cx, unsigned argc,
 
   ThrowErrorWithType(cx, JSEXN_INTERNALERR, args);
   return false;
-}
-
-static bool intrinsic_GetErrorMessage(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_RELEASE_ASSERT(args[0].isInt32());
-
-  const JSErrorFormatString* errorString =
-      GetErrorMessage(nullptr, args[0].toInt32());
-  MOZ_ASSERT(errorString);
-
-  MOZ_ASSERT(errorString->argCount == 0);
-  RootedString message(cx, JS_NewStringCopyZ(cx, errorString->format));
-  if (!message) {
-    return false;
-  }
-
-  args.rval().setString(message);
-  return true;
 }
 
 /**
@@ -1967,7 +1939,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorObjectIsClosed", intrinsic_GeneratorObjectIsClosed, 1, 0),
     JS_FN("GeneratorSetClosed", intrinsic_GeneratorSetClosed, 1, 0),
     JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1, 0),
-    JS_FN("GetErrorMessage", intrinsic_GetErrorMessage, 1, 0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1, 0,
                     GetFirstDollarIndex),
     JS_INLINABLE_FN("GetNextMapEntryForIterator",
@@ -2128,7 +2099,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowArgTypeNotObject", intrinsic_ThrowArgTypeNotObject, 2, 0),
     JS_FN("ThrowInternalError", intrinsic_ThrowInternalError, 4, 0),
     JS_FN("ThrowRangeError", intrinsic_ThrowRangeError, 4, 0),
-    JS_FN("ThrowSyntaxError", intrinsic_ThrowSyntaxError, 4, 0),
     JS_FN("ThrowTypeError", intrinsic_ThrowTypeError, 4, 0),
     JS_FN("ToBigInt", intrinsic_ToBigInt, 1, 0),
     JS_INLINABLE_FN("ToInteger", intrinsic_ToInteger, 1, 0, IntrinsicToInteger),
@@ -2263,7 +2233,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Array_indexOf", array_indexOf, 1, 0),
     JS_FN("std_Array_lastIndexOf", array_lastIndexOf, 1, 0),
     JS_INLINABLE_FN("std_Array_pop", array_pop, 0, 0, ArrayPop),
-    JS_INLINABLE_FN("std_Array_push", array_push, 1, 0, ArrayPush),
     JS_FN("std_BigInt_valueOf", BigIntObject::valueOf, 0, 0),
     JS_FN("std_Date_now", date_now, 0, 0),
     JS_FN("std_Function_apply", fun_apply, 2, 0),
