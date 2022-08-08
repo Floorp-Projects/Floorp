@@ -12,7 +12,6 @@ const Notify = (url) =>{
         window.location.href = url
     });
 };
-Notify()
 const CheckUpdate = async () =>{
     const APP_ID = await browser.aboutConfigPrefs.getPref("update.id.floorp");
     console.log(APP_ID)
