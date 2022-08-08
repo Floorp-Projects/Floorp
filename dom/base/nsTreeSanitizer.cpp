@@ -18,6 +18,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsAtom.h"
@@ -1241,28 +1242,77 @@ bool nsTreeSanitizer::MustPrune(int32_t aNamespace, nsAtom* aLocal,
   return false;
 }
 
-bool nsTreeSanitizer::MustPruneForSanitizerAPI(
-    int32_t aNamespace, nsAtom* aLocal, mozilla::dom::Element* aElement) {
+enum class ElementKind {
+  Regular,
+  Custom,
+  Unknown,
+};
+
+// https://wicg.github.io/sanitizer-api/#element-kind
+static ElementKind GetElementKind(int32_t aNamespace, nsAtom* aLocal,
+                                  Element* aElement) {
+  // XXX(bug 1782926) The spec for this is known to be wrong.
+  // https://github.com/WICG/sanitizer-api/issues/147
+
+  // custom, if element’s local name is a valid custom element name,
+  // XXX shouldn't this happen after unknown.
+  if (nsContentUtils::IsCustomElementName(aLocal, kNameSpaceID_XHTML)) {
+    return ElementKind::Custom;
+  }
+
+  // unknown, if element is not in the [HTML] namespace
+  // XXX this doesn't really make sense to me
+  // https://github.com/WICG/sanitizer-api/issues/167
+  if (aNamespace != kNameSpaceID_XHTML) {
+    return ElementKind::Unknown;
+  }
+
+  // or if element’s local name denotes an unknown element
+  // — that is, if the element interface the [HTML] specification assigns to it
+  // would be HTMLUnknownElement,
+  if (nsCOMPtr<HTMLUnknownElement> el = do_QueryInterface(aElement)) {
+    return ElementKind::Unknown;
+  }
+
+  // regular, otherwise.
+  return ElementKind::Regular;
+}
+
+bool nsTreeSanitizer::MustPruneForSanitizerAPI(int32_t aNamespace,
+                                               nsAtom* aLocal,
+                                               Element* aElement) {
   // This implements everything in
   // https://wicg.github.io/sanitizer-api/#sanitize-action-for-an-element that
   // is supposed to be dropped.
 
   // Step 1. Let kind be element’s element kind.
-  //
-  // TODO
+  ElementKind kind = GetElementKind(aNamespace, aLocal, aElement);
 
-  // Step 2. If kind is regular and element does not match any name in the
-  // baseline element allow list: Return drop.
-  if (!sBaselineElementAllowlist->Contains(aLocal)) {
-    return true;
+  switch (kind) {
+    case ElementKind::Regular:
+      // Step 2. If kind is regular and element does not match any name in the
+      // baseline element allow list: Return drop.
+      if (!sBaselineElementAllowlist->Contains(aLocal)) {
+        return true;
+      }
+      break;
+
+    case ElementKind::Custom:
+      // Step 3. If kind is custom and if config["allowCustomElements"] does not
+      // exist or if config["allowCustomElements"] is false: Return drop.
+      if (!mAllowCustomElements) {
+        return true;
+      }
+      break;
+
+    case ElementKind::Unknown:
+      // Step 4. If kind is unknown and if config["allowUnknownMarkup"] does not
+      // exist or it config["allowUnknownMarkup"] is false: Return drop.
+      if (!mAllowUnknownMarkup) {
+        return true;
+      }
+      break;
   }
-
-  // Step 3. If kind is custom and if config["allowCustomElements"] does not
-  // exist or if config["allowCustomElements"] is false: Return drop. Step 4. If
-  // kind is unknown and if config["allowUnknownMarkup"] does not exist or it
-  // config["allowUnknownMarkup"] is false: Return drop.
-  //
-  // TODO
 
   // Step 5. If element matches any name in config["dropElements"]: Return drop.
   // TODO(bug 1782910): "matches" is not really contains!
@@ -1826,6 +1876,12 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
 
   if (aOptions.mAllowComments.WasPassed()) {
     mAllowComments = aOptions.mAllowComments.Value();
+  }
+  if (aOptions.mAllowCustomElements.WasPassed()) {
+    mAllowCustomElements = aOptions.mAllowCustomElements.Value();
+  }
+  if (aOptions.mAllowUnknownMarkup.WasPassed()) {
+    mAllowUnknownMarkup = aOptions.mAllowUnknownMarkup.Value();
   }
 
   if (aOptions.mAllowElements.WasPassed()) {
