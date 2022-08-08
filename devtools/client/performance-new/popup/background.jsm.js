@@ -130,7 +130,15 @@ const presets = {
   "firefox-platform": {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["screenshots", "js", "stackwalk", "cpu", "java", "processcpu"],
+    features: [
+      "screenshots",
+      "js",
+      "leaf",
+      "stackwalk",
+      "cpu",
+      "java",
+      "processcpu",
+    ],
     threads: [
       "GeckoMain",
       "Compositor",
@@ -153,7 +161,7 @@ const presets = {
   graphics: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["stackwalk", "js", "cpu", "java", "processcpu"],
+    features: ["leaf", "stackwalk", "js", "cpu", "java", "processcpu"],
     threads: [
       "GeckoMain",
       "Compositor",
@@ -181,6 +189,7 @@ const presets = {
     interval: 1,
     features: [
       "js",
+      "leaf",
       "stackwalk",
       "cpu",
       "audiocallbacktracing",
@@ -224,7 +233,15 @@ const presets = {
   networking: {
     entries: 128 * 1024 * 1024,
     interval: 1,
-    features: ["screenshots", "js", "stackwalk", "cpu", "java", "processcpu"],
+    features: [
+      "screenshots",
+      "js",
+      "leaf",
+      "stackwalk",
+      "cpu",
+      "java",
+      "processcpu",
+    ],
     threads: [
       "Compositor",
       "DNS Resolver",
@@ -254,6 +271,7 @@ const presets = {
     features: [
       "screenshots",
       "js",
+      "leaf",
       "stackwalk",
       "cpu",
       "processcpu",

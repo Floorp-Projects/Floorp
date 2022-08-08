@@ -19,7 +19,7 @@ add_task(async () => {
     const entries = 10000;
     const interval = 1;
     const threads = ["GeckoMain"];
-    const features = ["js"];
+    const features = ["js", "leaf"];
     const activeTabID = 123;
     await Services.profiler.StartProfiler(
       entries,
