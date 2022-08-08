@@ -49,7 +49,6 @@
 #include "mozilla/dom/HTMLMediaElementBinding.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/InspectorFontFace.h"
-#include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "mozilla/dom/UIEvent.h"
@@ -7108,35 +7107,6 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromOffscreenCanvas(
   result.mIsWriteOnly = aOffscreenCanvas->IsWriteOnly();
 
   nsIGlobalObject* global = aOffscreenCanvas->GetParentObject();
-  if (global) {
-    result.mPrincipal = global->PrincipalOrNull();
-  }
-
-  return result;
-}
-
-SurfaceFromElementResult nsLayoutUtils::SurfaceFromImageBitmap(
-    mozilla::dom::ImageBitmap* aImageBitmap, uint32_t aSurfaceFlags) {
-  SurfaceFromElementResult result;
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(
-      BackendType::SKIA, IntSize(1, 1), SurfaceFormat::B8G8R8A8);
-
-  // An ImageBitmap, not being a DOM element, only has `origin-clean`
-  // (via our `IsWriteOnly`), and does not participate in CORS.
-  // Right now we mark this by setting mCORSUsed to true.
-  result.mCORSUsed = true;
-  result.mIsWriteOnly = aImageBitmap->IsWriteOnly();
-  result.mSourceSurface = aImageBitmap->PrepareForDrawTarget(dt);
-
-  if (result.mSourceSurface) {
-    result.mSize = result.mIntrinsicSize = result.mSourceSurface->GetSize();
-    result.mHasSize = true;
-    result.mAlphaType = IsOpaque(result.mSourceSurface->GetFormat())
-                            ? gfxAlphaType::Opaque
-                            : gfxAlphaType::Premult;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = aImageBitmap->GetParentObject();
   if (global) {
     result.mPrincipal = global->PrincipalOrNull();
   }
