@@ -3398,10 +3398,15 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
        !aEnt->IdleConnectionsLength()) &&
       !(keepAlive && aEnt->RestrictConnections()) &&
       !AtActiveConnectionLimit(aEnt, aTrans->Caps())) {
-    DebugOnly<nsresult> rv = aEnt->CreateDnsAndConnectSocket(
-        aTrans, aTrans->Caps(), true, isFromPredictor, false, allow1918,
-        nullptr);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsresult rv = aEnt->CreateDnsAndConnectSocket(aTrans, aTrans->Caps(), true,
+                                                  isFromPredictor, false,
+                                                  allow1918, nullptr);
+    if (NS_FAILED(rv)) {
+      LOG(
+          ("DoSpeculativeConnectionInternal Transport socket creation "
+           "failure: %" PRIx32 "\n",
+           static_cast<uint32_t>(rv)));
+    }
   } else {
     LOG(
         ("DoSpeculativeConnectionInternal Transport "
