@@ -2001,7 +2001,22 @@ StickyTimeDuration Animation::IntervalEndTime(
              "Should be called for CSS animations or transitions");
 
   static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
-  return std::max(std::min((EffectEnd() - mEffect->NormalizedTiming().Delay()),
+  const StickyTimeDuration& effectEnd = EffectEnd();
+
+  // If both "associated effect end" and "start delay" are Infinity, we skip it
+  // because we will get NaN when computing "Infinity - Infinity", and
+  // using NaN in std::min or std::max is undefined.
+  if (MOZ_UNLIKELY(effectEnd == TimeDuration::Forever() &&
+                   effectEnd == mEffect->NormalizedTiming().Delay())) {
+    // Note: If we use TimeDuration::Forever(), within our animation event
+    // handling, we'd end up turning that into a null TimeStamp which can causes
+    // errors if we try to do any arithmetic with it. Given that we should never
+    // end up _using_ the interval end time. So returning zeroDuration here is
+    // probably fine.
+    return zeroDuration;
+  }
+
+  return std::max(std::min(effectEnd - mEffect->NormalizedTiming().Delay(),
                            aActiveDuration),
                   zeroDuration);
 }
