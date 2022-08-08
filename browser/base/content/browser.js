@@ -1511,6 +1511,17 @@ function _loadURI(browser, uri, params = {}) {
   // XXX(nika): Is `browser.isNavigating` necessary anymore?
   browser.isNavigating = true;
 
+  if (globalHistoryOptions?.triggeringSearchEngine) {
+    browser.setAttribute(
+      "triggeringSearchEngine",
+      globalHistoryOptions.triggeringSearchEngine
+    );
+    browser.setAttribute("triggeringSearchEngineURL", uri);
+  } else {
+    browser.removeAttribute("triggeringSearchEngine");
+    browser.removeAttribute("triggeringSearchEngineURL");
+  }
+
   if (globalHistoryOptions?.triggeringSponsoredURL) {
     browser.setAttribute(
       "triggeringSponsoredURL",

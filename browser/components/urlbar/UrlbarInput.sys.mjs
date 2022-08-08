@@ -803,6 +803,7 @@ export class UrlbarInput {
     let openParams = {
       allowInheritPrincipal: false,
       globalHistoryOptions: {
+        triggeringSearchEngine: result.payload?.engine,
         triggeringSponsoredURL: result.payload?.isSponsored
           ? result.payload.url
           : undefined,
