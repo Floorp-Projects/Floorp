@@ -10,6 +10,7 @@
 #include "mozilla/Bootstrap.h"
 #include "mozilla/ProcessType.h"
 #include "mozilla/RuntimeExceptionModule.h"
+#include "mozilla/ScopeExit.h"
 #include "BrowserDefines.h"
 #if defined(XP_WIN)
 #  include <windows.h>
@@ -291,6 +292,11 @@ int main(int argc, char* argv[], char* envp[]) {
 
   AUTO_BASE_PROFILER_INIT;
   AUTO_BASE_PROFILER_LABEL("nsBrowserApp main", OTHER);
+
+  // Make sure we unregister the runtime exception module before returning.
+  // We do this here to cover both registers for child and main processes.
+  auto unregisterRuntimeExceptionModule =
+      MakeScopeExit([] { CrashReporter::UnregisterRuntimeExceptionModule(); });
 
 #ifdef MOZ_BROWSER_CAN_BE_CONTENTPROC
   // We are launching as a content process, delegate to the appropriate
