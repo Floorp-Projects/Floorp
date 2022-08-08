@@ -353,8 +353,8 @@ class VirtualenvMixin(object):
                 command.extend(["--find-links", link])
             else:
                 self.warning(
-                    "find_links: connection checks failed for %s" % link,
-                    ", but max retries reached. continuing...",
+                    "find_links: connection checks failed for %s"
+                    ", but max retries reached. continuing..." % link
                 )
 
         # TODO: make this fatal if we always see failures after this
