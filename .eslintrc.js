@@ -238,7 +238,6 @@ module.exports = {
       ],
       rules: {
         "no-global-assign": "off",
-        "no-redeclare": "off",
         "no-shadow": "off",
       },
     },

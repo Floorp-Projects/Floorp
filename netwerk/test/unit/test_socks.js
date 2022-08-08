@@ -41,11 +41,11 @@ function runScriptSubprocess(script, args) {
     do_throw("Can't find xpcshell binary");
   }
 
-  var script = do_get_file(script);
+  var file = do_get_file(script);
   var proc = new Process(bin);
-  var args = [script.path].concat(args);
+  var procArgs = [file.path].concat(args);
 
-  proc.run(false, args, args.length);
+  proc.run(false, procArgs, procArgs.length);
 
   return proc;
 }

@@ -42,7 +42,7 @@ function run_test() {
 
   // Make sure our prefs are set such that this test actually means something
   var prefs = Services.prefs;
-  for (var pref of prefData) {
+  for (let pref of prefData) {
     prefs.setBoolPref(pref.name, pref.newVal);
   }
 
@@ -58,7 +58,7 @@ function run_test() {
     Assert.equal(uri4.displayHost, uri5.displayHost);
     Assert.equal(uri4.asciiHost, uri5.asciiHost);
   } finally {
-    for (var pref of prefData) {
+    for (let pref of prefData) {
       if (prefs.prefHasUserValue(pref.name)) {
         prefs.clearUserPref(pref.name);
       }

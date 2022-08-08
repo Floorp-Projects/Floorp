@@ -492,35 +492,35 @@ function run_test() {
   evict_cache_entries();
 
   // Case 2: zero-length partial entry must not trigger range-request
-  var chan = make_channel("http://localhost:" + port + "/test_2");
+  let chan = make_channel("http://localhost:" + port + "/test_2");
   chan.asyncOpen(new Canceler(received_partial_2));
 
   // Case 3: no-store response must not trigger range-request
-  var chan = make_channel("http://localhost:" + port + "/test_3");
+  chan = make_channel("http://localhost:" + port + "/test_3");
   chan.asyncOpen(new MyListener(received_partial_3));
 
   // Case 4: response with content-encoding must not trigger range-request
-  var chan = make_channel("http://localhost:" + port + "/test_4");
+  chan = make_channel("http://localhost:" + port + "/test_4");
   chan.asyncOpen(new MyListener(received_partial_4));
 
   // Case 5: conditional request-header set by client
-  var chan = make_channel("http://localhost:" + port + "/test_5");
+  chan = make_channel("http://localhost:" + port + "/test_5");
   chan.asyncOpen(new MyListener(received_partial_5));
 
   // Case 6: response is not resumable (drop the Accept-Ranges header)
-  var chan = make_channel("http://localhost:" + port + "/test_6");
+  chan = make_channel("http://localhost:" + port + "/test_6");
   chan.asyncOpen(new MyListener(received_partial_6));
 
   // Case 7: a basic positive test
-  var chan = make_channel("http://localhost:" + port + "/test_7");
+  chan = make_channel("http://localhost:" + port + "/test_7");
   chan.asyncOpen(new MyListener(received_partial_7));
 
   // Case 8: check that mismatched 206 and 200 sizes throw error
-  var chan = make_channel("http://localhost:" + port + "/test_8");
+  chan = make_channel("http://localhost:" + port + "/test_8");
   chan.asyncOpen(new MyListener(received_partial_8));
 
   // Case 9: check that weak etag is not used for a range request
-  var chan = make_channel("http://localhost:" + port + "/test_9");
+  chan = make_channel("http://localhost:" + port + "/test_9");
   chan.asyncOpen(new MyListener(received_partial_9));
 
   do_test_pending();
