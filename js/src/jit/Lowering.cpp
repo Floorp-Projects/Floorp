@@ -2307,6 +2307,18 @@ void LIRGenerator::visitStringStartsWith(MStringStartsWith* ins) {
   auto* searchStr = ins->searchString();
   MOZ_ASSERT(searchStr->type() == MIRType::String);
 
+  if (searchStr->isConstant()) {
+    JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
+
+    if (CanCompareCharactersInline(linear)) {
+      auto* lir = new (alloc())
+          LStringStartsWithInline(useRegister(string), temp(), linear);
+      define(lir, ins);
+      assignSafepoint(lir, ins);
+      return;
+    }
+  }
+
   auto* lir = new (alloc()) LStringStartsWith(useRegisterAtStart(string),
                                               useRegisterAtStart(searchStr));
   defineReturn(lir, ins);
