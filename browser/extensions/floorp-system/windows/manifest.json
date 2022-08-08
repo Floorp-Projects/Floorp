@@ -15,7 +15,6 @@
     "search",
     "activeTab",
     "browserSettings",
-    "mozillaAddons",
     "about:*",
     "about:reader*",
     "downloads"
@@ -53,5 +52,11 @@
      "gecko": {
       "id": "floorp-system@floorp.ablaze.one"
     }
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "css": ["webcompat/fix-youtube-comment.css"], "js":["webcompat/fix-youtube-comment.js"]
+    }
+  ]
 }

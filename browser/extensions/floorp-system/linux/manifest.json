@@ -1,5 +1,4 @@
 {
-
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
   "description": "Floorp のシステムが含まれています。このアドオンは削除・停止ができません。",
@@ -16,12 +15,10 @@
     "search",
     "activeTab",
     "browserSettings",
-    "mozillaAddons",
     "about:*",
     "about:reader*",
     "downloads"
   ],
-
   "experiment_apis": {
     "aboutConfigPrefs": {
         "schema": "API/aboutConfigPrefs.json",
@@ -30,9 +27,16 @@
             "script": "API/aboutConfigPrefs.js",
             "paths": [["aboutConfigPrefs"]]
         }
-    }
+    },
+    "BrowserInfo": {
+      "schema": "API/BrowserInfo.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "API/BrowserInfo.js",
+        "paths": [["BrowserInfo"]]
+      }
+   }
   },
-
   "page_action": {
     "browser_style": true,
     "default_icon": "icons/icon.png",
@@ -41,9 +45,8 @@
       "<all_urls>"
     ]
   },
-
   "background": {
-    "scripts": ["background-script.js"]
+    "scripts": ["background-script.js", "update.js"]
   },
    "applications": {
      "gecko": {

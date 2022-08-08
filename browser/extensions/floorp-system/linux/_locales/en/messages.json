@@ -10,5 +10,24 @@
   "finish": {
     "message": "Download Finish !",
     "description": "ダウンロード完了"
+  },
+  "notificationTitle": {
+    "message": "Notification from Floorp",
+    "description": "タイトル"
+  },
+
+  "notificationContent": {
+    "message": "Notice from Floorp Projects !",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
   }
 }
