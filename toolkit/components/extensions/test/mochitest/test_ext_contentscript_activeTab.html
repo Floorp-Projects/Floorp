@@ -12,11 +12,17 @@
 <script type="text/javascript">
 "use strict";
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
 // Create a test extension with the provided function as the background
 // script.  The background script will have a few helpful functions
 // available.
 /* global awaitLoad, gatherFrameSources */
-function makeExtension(background, useScriptingAPI) {
+function makeExtension(background, useScriptingAPI, manifest_version = 2) {
   // Wait for a webNavigation.onCompleted event where the details for the
   // loaded page match the attributes of `filter`.
   function awaitLoad(filter) {
@@ -64,10 +70,12 @@ function makeExtension(background, useScriptingAPI) {
 
   return ExtensionTestUtils.loadExtension({
     manifest: {
+      manifest_version,
       permissions,
     },
     background: [
       `const useScriptingAPI = ${useScriptingAPI};`,
+      `const manifest_version = ${manifest_version};`,
       `${awaitLoad}`,
       `${gatherFrameSources}`,
       `${ExtensionTestCommon.serializeScript(background)}`,
@@ -77,7 +85,7 @@ function makeExtension(background, useScriptingAPI) {
 
 // Helper function to verify that executeScript() fails without the activeTab
 // permission (or any specific origin permissions).
-const verifyNoActiveTab = async ({ useScriptingAPI }) => {
+const verifyNoActiveTab = async ({ useScriptingAPI, manifest_version = 2 }) => {
   let extension = makeExtension(
     async function background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
@@ -98,6 +106,7 @@ const verifyNoActiveTab = async ({ useScriptingAPI }) => {
       browser.test.notifyPass("no-active-tab");
     },
     useScriptingAPI,
+    manifest_version,
   );
 
   await extension.startup();
@@ -113,9 +122,13 @@ add_task(async function test_no_activeTab_scripting() {
   await verifyNoActiveTab({ useScriptingAPI: true });
 });
 
+add_task(async function test_no_activeTab_scripting_mv3() {
+  await verifyNoActiveTab({ useScriptingAPI: true, manifest_version: 3 });
+});
+
 // Test helper to verify that dynamically created iframes do not get the
 // activeTab permission.
-const verifyDynamicFrames = async ({ useScriptingAPI }) => {
+const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version = 2 }) => {
   let extension = makeExtension(
     async function background() {
       const BASE_HOST = "www.example.com";
@@ -212,11 +225,20 @@ const verifyDynamicFrames = async ({ useScriptingAPI }) => {
         await loadedPromise;
 
         let result = await gatherFrameSources(tab.id);
-        browser.test.assertEq(
-          String([BASE_HOST]),
-          result,
-          "Script is not injected into dynamically created frames"
-        );
+
+        if (manifest_version < 3) {
+          browser.test.assertEq(
+            String([BASE_HOST]),
+            result,
+            "Script is not injected into dynamically created frames"
+          );
+        } else {
+          browser.test.assertEq(
+            String(["about:blank", "about:srcdoc", BASE_HOST]),
+            result,
+            `Script injected only into (same origin) about:blank-ish dynamically created frames`
+          );
+        }
 
         await browser.tabs.remove(tab.id);
 
@@ -225,7 +247,8 @@ const verifyDynamicFrames = async ({ useScriptingAPI }) => {
 
       browser.test.sendMessage("ready", tab.id);
     },
-    useScriptingAPI
+    useScriptingAPI,
+    manifest_version,
   );
 
   await extension.startup();
@@ -247,9 +270,13 @@ add_task(async function test_dynamic_frames_scripting() {
   await verifyDynamicFrames({ useScriptingAPI: true });
 });
 
+add_task(async function test_dynamic_frames_scripting_mv3() {
+  await verifyDynamicFrames({ useScriptingAPI: true, manifest_version: 3 });
+});
+
 // Test helper to verify that an iframe created from an <iframe srcdoc> gets
 // the activeTab permission.
-const verifySrcdoc = async ({ useScriptingAPI }) => {
+const verifySrcdoc = async ({ useScriptingAPI, manifest_version = 2 }) => {
   let extension = makeExtension(
     async function background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab2.html";
@@ -269,11 +296,20 @@ const verifySrcdoc = async ({ useScriptingAPI }) => {
         }
 
         let result = await gatherFrameSources(tab.id);
-        browser.test.assertEq(
-          String([OUTER_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
-          result,
-          "Script is injected into frame created from <iframe srcdoc>"
-        );
+
+        if (manifest_version < 3) {
+          browser.test.assertEq(
+            String([OUTER_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
+            result,
+            "Script is injected into frame created from <iframe srcdoc>"
+          );
+        } else {
+          browser.test.assertEq(
+            String([OUTER_SOURCE, PAGE_SOURCE]),
+            result,
+            "Script is not injected into cross-origin frame created from <iframe srcdoc>"
+          );
+        }
 
         await browser.tabs.remove(tab.id);
 
@@ -282,7 +318,8 @@ const verifySrcdoc = async ({ useScriptingAPI }) => {
 
       browser.test.sendMessage("ready", tab.id);
     },
-    useScriptingAPI
+    useScriptingAPI,
+    manifest_version,
   );
 
   await extension.startup();
@@ -304,9 +341,13 @@ add_task(async function test_srcdoc_scripting() {
   await verifySrcdoc({ useScriptingAPI: true });
 });
 
+add_task(async function test_srcdoc_scripting_mv3() {
+  await verifySrcdoc({ useScriptingAPI: true, manifest_version: 3 });
+});
+
 // Test helper to verify that navigating frames by setting the src attribute
 // from the parent page revokes the activeTab permission.
-const verifyNavigateBySrc = async ({ useScriptingAPI }) => {
+const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version = 2 }) => {
   let extension = makeExtension(
     async function background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
@@ -326,11 +367,19 @@ const verifyNavigateBySrc = async ({ useScriptingAPI }) => {
         }
 
         let result = await gatherFrameSources(tab.id);
-        browser.test.assertEq(
-          String([EMPTY_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
-          result,
-          "In original page, script is injected into base page and original frames"
-        );
+        if (manifest_version < 3) {
+          browser.test.assertEq(
+            String([EMPTY_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
+            result,
+            "In original page, script is injected into base page and original frames"
+          );
+        } else {
+          browser.test.assertEq(
+            String([EMPTY_SOURCE, PAGE_SOURCE]),
+            result,
+            "In original page, script is injected into same-origin frames"
+          );
+        }
 
         let loadedPromise = awaitLoad({tabId: tab.id});
 
@@ -351,16 +400,24 @@ const verifyNavigateBySrc = async ({ useScriptingAPI }) => {
 
 
         result = await gatherFrameSources(tab.id);
-        browser.test.assertEq(
-          String([PAGE_SOURCE, FRAME_SOURCE]),
-          result,
-          "Script is not injected into initially empty frame after navigation"
-        );
+        if (manifest_version < 3) {
+          browser.test.assertEq(
+            String([PAGE_SOURCE, FRAME_SOURCE]),
+            result,
+            "Script is not injected into initially empty frame after navigation"
+          );
+        } else {
+          browser.test.assertEq(
+            String([PAGE_SOURCE]),
+            result,
+            "Script is not injected into initially empty frame after navigation"
+          );
+        }
 
         loadedPromise = awaitLoad({tabId: tab.id});
 
         func = () => {
-          document.getElementById('regularframe').src = 'http://test2.example.com/';
+          document.getElementById('regularframe').src = 'http://mochi.test:8888/';
         };
 
         if (useScriptingAPI) {
@@ -375,11 +432,20 @@ const verifyNavigateBySrc = async ({ useScriptingAPI }) => {
         await loadedPromise;
 
         result = await gatherFrameSources(tab.id);
-        browser.test.assertEq(
-          String([PAGE_SOURCE]),
-          result,
-          "Script is not injected into regular frame after navigation"
-        );
+
+        if (manifest_version < 3) {
+          browser.test.assertEq(
+            String([PAGE_SOURCE]),
+            result,
+            "Script is not injected into regular frame after navigation"
+          );
+        } else {
+          browser.test.assertEq(
+            String([PAGE_SOURCE, PAGE_SOURCE]),
+            result,
+            "Script injected into frame after navigating to same-origin"
+          );
+        }
 
         await browser.tabs.remove(tab.id);
         browser.test.notifyPass("test-scripts");
@@ -387,7 +453,8 @@ const verifyNavigateBySrc = async ({ useScriptingAPI }) => {
 
       browser.test.sendMessage("ready", tab.id);
     },
-    useScriptingAPI
+    useScriptingAPI,
+    manifest_version,
   );
 
   await extension.startup();
@@ -409,9 +476,13 @@ add_task(async function test_navigate_by_src_scripting() {
   await verifyNavigateBySrc({ useScriptingAPI: true });
 });
 
+add_task(async function test_navigate_by_src_scripting_mv3() {
+  await verifyNavigateBySrc({ useScriptingAPI: true, manifest_version: 3 });
+});
+
 // Test helper to verify that navigating frames by setting window.location from
 // inside the frame revokes the activeTab permission.
-const verifyNavigateByWindowLocation = async ({ useScriptingAPI }) => {
+const verifyNavigateByWindowLocation = async ({ useScriptingAPI, manifest_version = 2 }) => {
   let extension = makeExtension(
     async function background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
@@ -431,16 +502,41 @@ const verifyNavigateByWindowLocation = async ({ useScriptingAPI }) => {
         }
 
         let result = await gatherFrameSources(tab.id);
-        browser.test.assertEq(
-          String([EMPTY_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
-          result,
-          "Script initially injected into all frames"
-        );
+
+        if (manifest_version < 3) {
+          browser.test.assertEq(
+            String([EMPTY_SOURCE, PAGE_SOURCE, FRAME_SOURCE]),
+            result,
+            "Script initially injected into all frames"
+          );
+        } else {
+          browser.test.assertEq(
+            String([EMPTY_SOURCE, PAGE_SOURCE]),
+            result,
+            "Script initially injected into all same-origin frames"
+          );
+        }
 
         let nframes = 0;
         let frames = await browser.webNavigation.getAllFrames({tabId: tab.id});
         for (let frame of frames) {
           if (frame.parentFrameId == -1) {
+            continue;
+          }
+
+          if (manifest_version >= 3 && frame.url.includes(FRAME_SOURCE)) {
+            // In MV3, can't access cross-origin iframes from the start.
+
+            let invalidPromise = browser.scripting.executeScript({
+              target: { tabId: tab.id, frameIds: [frame.frameId] },
+              func: () => window.location.hostname,
+            });
+            await browser.test.assertRejects(
+              invalidPromise,
+              /^Missing host permission for the tab or frames/,
+              "executeScript should fail on cross-origin frame"
+            );
+
             continue;
           }
 
@@ -474,7 +570,7 @@ const verifyNavigateByWindowLocation = async ({ useScriptingAPI }) => {
           if (useScriptingAPI) {
             executePromise = browser.scripting.executeScript({
               target: { tabId: tab.id, frameIds: [frame.frameId] },
-              func: () => window.location.hostname,
+              func,
             });
           } else {
             executePromise = browser.tabs.executeScript(tab.id, {
@@ -492,7 +588,12 @@ const verifyNavigateByWindowLocation = async ({ useScriptingAPI }) => {
 
           nframes++;
         }
-        browser.test.assertEq(2, nframes, "Found 2 frames");
+
+        if (manifest_version < 3) {
+          browser.test.assertEq(2, nframes, "Found 2 frames");
+        } else {
+          browser.test.assertEq(1, nframes, "Found 1 frame");
+        }
 
         await browser.tabs.remove(tab.id);
         browser.test.notifyPass("scripted-navigation");
@@ -500,7 +601,8 @@ const verifyNavigateByWindowLocation = async ({ useScriptingAPI }) => {
 
       browser.test.sendMessage("ready", tab.id);
     },
-    useScriptingAPI
+    useScriptingAPI,
+    manifest_version,
   );
 
   await extension.startup();
@@ -520,6 +622,10 @@ add_task(async function test_navigate_by_window_location_tabs() {
 
 add_task(async function test_navigate_by_window_location_scripting() {
   await verifyNavigateByWindowLocation({ useScriptingAPI: true });
+});
+
+add_task(async function test_navigate_by_window_location_scripting_mv3() {
+  await verifyNavigateByWindowLocation({ useScriptingAPI: true, manifest_version: 3 });
 });
 
 </script>

@@ -770,9 +770,17 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
   }
 
   auto& urlinfo = aDoc.PrincipalURL();
-  if (mHasActiveTabPermission && aDoc.ShouldMatchActiveTabPermission() &&
-      MatchPattern::MatchesAllURLs(urlinfo)) {
-    return true;
+  if (mExtension && mExtension->ManifestVersion() >= 3) {
+    // In MV3, activeTab only allows access to same-origin iframes.
+    if (mHasActiveTabPermission && aDoc.IsSameOriginWithTop() &&
+        MatchPattern::MatchesAllURLs(urlinfo)) {
+      return true;
+    }
+  } else {
+    if (mHasActiveTabPermission && aDoc.ShouldMatchActiveTabPermission() &&
+        MatchPattern::MatchesAllURLs(urlinfo)) {
+      return true;
+    }
   }
 
   return MatchesURI(urlinfo, aIgnorePermissions);
@@ -957,6 +965,17 @@ bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
 bool DocInfo::ShouldMatchActiveTabPermission() const {
   struct Matcher {
     bool operator()(Window aWin) { return WindowShouldMatchActiveTab(aWin); }
+    bool operator()(LoadInfo aLoadInfo) { return false; }
+  };
+  return mObj.match(Matcher());
+}
+
+bool DocInfo::IsSameOriginWithTop() const {
+  struct Matcher {
+    bool operator()(Window aWin) {
+      WindowContext* wc = aWin->GetCurrentInnerWindow()->GetWindowContext();
+      return wc && wc->SameOriginWithTop();
+    }
     bool operator()(LoadInfo aLoadInfo) { return false; }
   };
   return mObj.match(Matcher());
