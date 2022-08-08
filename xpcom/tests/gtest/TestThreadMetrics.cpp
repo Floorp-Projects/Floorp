@@ -159,14 +159,12 @@ class ThreadMetrics : public ::testing::Test {
   uint32_t mDispatchCount;
 };
 
-// Disabled on Windows x64 due to high failure rate in bug 1745116
-#if !defined(_WIN64)
 TEST_F(ThreadMetrics, CollectMetrics) {
   nsresult rv;
   initScheduler();
 
   // Dispatching a runnable that will last for +50ms
-  nsCOMPtr<nsIRunnable> runnable = new TimedRunnable(25, 25);
+  RefPtr<TimedRunnable> runnable = new TimedRunnable(25, 25);
   rv = Dispatch(runnable);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
@@ -185,9 +183,8 @@ TEST_F(ThreadMetrics, CollectMetrics) {
 
   // Did we get incremented in the docgroup ?
   uint64_t duration = mCounter->GetExecutionDuration();
-  ASSERT_GE(duration, 50000u);
+  ASSERT_GE(duration, runnable->TotalSlept());
 }
-#endif
 
 TEST_F(ThreadMetrics, CollectRecursiveMetrics) {
   nsresult rv;
