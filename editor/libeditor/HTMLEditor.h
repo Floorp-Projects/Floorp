@@ -2601,7 +2601,8 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aRange      Must be positioned.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveEmptyNodesIn(nsRange& aRange);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  RemoveEmptyNodesIn(const EditorDOMRange& aRange);
 
   /**
    * SetSelectionInterlinePosition() may set interline position if caret is

@@ -37,7 +37,7 @@ const entry1 = ["entry1", "value1"];
 const entry2 = ["entry2", "value2"];
 const entry3 = ["entry3", "value3"];
 
-add_task(async function setup() {
+add_setup(async () => {
   await promiseUpdateEntry("remove", null, null);
   const count = await promiseCountEntries(null, null);
   Assert.ok(!count, "Checking initial DB is empty");

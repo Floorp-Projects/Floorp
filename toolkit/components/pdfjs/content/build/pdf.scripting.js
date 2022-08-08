@@ -1785,6 +1785,10 @@ class AForm {
     for (const cField of cFields) {
       const field = this._document.getField(cField);
 
+      if (!field) {
+        continue;
+      }
+
       const number = this.AFMakeNumber(field.value);
 
       if (number !== null) {
@@ -5068,8 +5072,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.15.322';
-const pdfjsBuild = 'b06d19045';
+const pdfjsVersion = '2.16.33';
+const pdfjsBuild = '40f9f7e90';
 })();
 
 /******/ 	return __webpack_exports__;

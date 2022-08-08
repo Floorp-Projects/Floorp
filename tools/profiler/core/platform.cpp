@@ -357,7 +357,7 @@ static uint32_t AvailableFeatures() {
 
 // Default features common to all contexts (even if not available).
 static constexpr uint32_t DefaultFeatures() {
-  return ProfilerFeature::Java | ProfilerFeature::JS | ProfilerFeature::Leaf |
+  return ProfilerFeature::Java | ProfilerFeature::JS |
          ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization |
          ProfilerFeature::Screenshots | ProfilerFeature::ProcessCPU;
 }
@@ -2509,8 +2509,7 @@ static inline void DoSharedSample(
                 collector, aJsFrames, jsFramesCount);
 
     // We can't walk the whole native stack, but we can record the top frame.
-    if (ProfilerFeature::HasLeaf(aFeatures) &&
-        aCaptureOptions == StackCaptureOptions::Full) {
+    if (aCaptureOptions == StackCaptureOptions::Full) {
       aBuffer.AddEntry(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
     }
   }
@@ -6899,9 +6898,7 @@ static void profiler_suspend_and_sample_thread(
       MergeStacks(aFeatures, !aLockIfAsynchronousSampling, aThreadData, aRegs,
                   nativeStack, aCollector, aJsFrames, jsFramesCount);
 
-      if (ProfilerFeature::HasLeaf(aFeatures)) {
-        aCollector.CollectNativeLeafAddr((void*)aRegs.mPC);
-      }
+      aCollector.CollectNativeLeafAddr((void*)aRegs.mPC);
     }
   };
 

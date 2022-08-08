@@ -10,9 +10,13 @@
   fill: currentColor;
 }
 
-.search-one-offs {
-  -moz-box-orient: vertical;
+.search-one-offs:not([hidden]) {
+  display: block;
   width: 100%;
+}
+
+.search-panel-one-offs-header {
+  display: block;
 }
 
 .search-panel-header {

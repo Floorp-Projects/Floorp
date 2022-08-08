@@ -143,6 +143,7 @@ class nsTreeSanitizer {
    *         false if the element is to be kept
    */
   bool MustFlatten(int32_t aNamespace, nsAtom* aLocal);
+  bool MustFlattenForSanitizerAPI(int32_t aNamespace, nsAtom* aLocal);
 
   /**
    * Queries if an element including its children must be removed.
@@ -154,6 +155,8 @@ class nsTreeSanitizer {
    */
   bool MustPrune(int32_t aNamespace, nsAtom* aLocal,
                  mozilla::dom::Element* aElement);
+  bool MustPruneForSanitizerAPI(int32_t aNamespace, nsAtom* aLocal,
+                                mozilla::dom::Element* aElement);
 
   /**
    * Checks if a given local name (for an attribute) is on the given list
@@ -284,28 +287,45 @@ class nsTreeSanitizer {
   static AtomsTable* sAttributesMathML;
 
   /**
+   * The built-in baseline element allow list used by the Sanitizer API.
+   */
+  static AtomsTable* sBaselineElementAllowlist;
+
+  /**
+   * The default configuration's element allow list used by the Sanitizer API.
+   */
+  static AtomsTable* sDefaultConfigurationElementAllowlist;
+
+  /**
    * Reusable null principal for URL checks.
    */
   static nsIPrincipal* sNullPrincipal;
 
-  // Short-hand to determine whether this is a customized Sanitizer.
-  bool mIsCustomized = false;
+  // === Variables used to implement HTML Sanitizer API. ==
+
+  // This nsTreeSanitizer instance should behave like the Sanitizer API.
+  bool mIsForSanitizerAPI = false;
+
+  bool mAllowCustomElements = false;
+  bool mAllowUnknownMarkup = false;
 
   // An allow-list of elements to keep.
-  mozilla::UniquePtr<DynamicAtomsTable> mAllowedElements;
+  mozilla::UniquePtr<DynamicAtomsTable> mAllowElements;
 
-  // A deny-list of elements to block.
-  mozilla::UniquePtr<DynamicAtomsTable> mBlockedElements;
+  // A deny-list of elements to block. (aka flatten)
+  mozilla::UniquePtr<DynamicAtomsTable> mBlockElements;
+
+  // A deny-list of elements to drop. (aka prune)
+  mozilla::UniquePtr<DynamicAtomsTable> mDropElements;
+
+  using ElementToAttributeSetTable =
+      nsTHashMap<RefPtr<nsAtom>, mozilla::UniquePtr<DynamicAtomsTable>>;
 
   // An allow-list of attributes to keep.
-  mozilla::UniquePtr<
-      nsTHashMap<RefPtr<nsAtom>, mozilla::UniquePtr<DynamicAtomsTable>>>
-      mAllowedAttributes;
+  mozilla::UniquePtr<ElementToAttributeSetTable> mAllowedAttributes;
 
   // A deny-list of attributes to drop.
-  mozilla::UniquePtr<
-      nsTHashMap<RefPtr<nsAtom>, mozilla::UniquePtr<DynamicAtomsTable>>>
-      mDroppedAttributes;
+  mozilla::UniquePtr<ElementToAttributeSetTable> mDroppedAttributes;
 };
 
 #endif  // nsTreeSanitizer_h_

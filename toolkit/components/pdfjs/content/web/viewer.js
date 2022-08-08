@@ -1134,6 +1134,15 @@ const PDFViewerApplication = {
       await this.pdfScriptingManager.dispatchDidSave();
       this._saveInProgress = false;
     }
+
+    if (this.pdfDocument?.annotationStorage.hasAnnotationEditors) {
+      this.externalServices.reportTelemetry({
+        type: "editing",
+        data: {
+          type: "save"
+        }
+      });
+    }
   },
 
   downloadOrSave() {
@@ -1688,6 +1697,15 @@ const PDFViewerApplication = {
     annotationStorage.onResetModified = () => {
       window.removeEventListener("beforeunload", beforeUnload);
     };
+
+    annotationStorage.onAnnotationEditor = typeStr => {
+      this.externalServices.reportTelemetry({
+        type: "editing",
+        data: {
+          type: typeStr
+        }
+      });
+    };
   },
 
   setInitialView(storedHash, {
@@ -1786,6 +1804,15 @@ const PDFViewerApplication = {
     this.externalServices.reportTelemetry({
       type: "print"
     });
+
+    if (this.pdfDocument?.annotationStorage.hasAnnotationEditors) {
+      this.externalServices.reportTelemetry({
+        type: "editing",
+        data: {
+          type: "print"
+        }
+      });
+    }
   },
 
   afterPrint() {
@@ -8919,10 +8946,6 @@ class PDFThumbnailViewer {
     this.scroll = (0, _ui_utils.watchScroll)(this.container, this._scrollUpdated.bind(this));
 
     this._resetView();
-
-    eventBus._on("optionalcontentconfigchanged", () => {
-      this._setImageDisabled = true;
-    });
   }
 
   _scrollUpdated() {
@@ -9035,8 +9058,6 @@ class PDFThumbnailViewer {
     this._currentPageNumber = 1;
     this._pageLabels = null;
     this._pagesRotation = 0;
-    this._optionalContentConfigPromise = null;
-    this._setImageDisabled = false;
     this.container.textContent = "";
   }
 
@@ -9056,15 +9077,10 @@ class PDFThumbnailViewer {
     const firstPagePromise = pdfDocument.getPage(1);
     const optionalContentConfigPromise = pdfDocument.getOptionalContentConfig();
     firstPagePromise.then(firstPdfPage => {
-      this._optionalContentConfigPromise = optionalContentConfigPromise;
       const pagesCount = pdfDocument.numPages;
       const viewport = firstPdfPage.getViewport({
         scale: 1
       });
-
-      const checkSetImageDisabled = () => {
-        return this._setImageDisabled;
-      };
 
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         const thumbnail = new _pdf_thumbnail_view.PDFThumbnailView({
@@ -9074,7 +9090,6 @@ class PDFThumbnailViewer {
           optionalContentConfigPromise,
           linkService: this.linkService,
           renderingQueue: this.renderingQueue,
-          checkSetImageDisabled,
           l10n: this.l10n,
           pageColors: this.pageColors
         });
@@ -9229,7 +9244,6 @@ class PDFThumbnailView {
     optionalContentConfigPromise,
     linkService,
     renderingQueue,
-    checkSetImageDisabled,
     l10n,
     pageColors
   }) {
@@ -9247,11 +9261,6 @@ class PDFThumbnailView {
     this.renderTask = null;
     this.renderingState = _ui_utils.RenderingStates.INITIAL;
     this.resume = null;
-
-    this._checkSetImageDisabled = checkSetImageDisabled || function () {
-      return false;
-    };
-
     const pageWidth = this.viewport.width,
           pageHeight = this.viewport.height,
           pageRatio = pageWidth / pageHeight;
@@ -9476,17 +9485,14 @@ class PDFThumbnailView {
   }
 
   setImage(pageView) {
-    if (this._checkSetImageDisabled()) {
-      return;
-    }
-
     if (this.renderingState !== _ui_utils.RenderingStates.INITIAL) {
       return;
     }
 
     const {
-      canvas,
-      pdfPage
+      thumbnailCanvas: canvas,
+      pdfPage,
+      scale
     } = pageView;
 
     if (!canvas) {
@@ -9495,6 +9501,10 @@ class PDFThumbnailView {
 
     if (!this.pdfPage) {
       this.setPdfPage(pdfPage);
+    }
+
+    if (scale < this.scale) {
+      return;
     }
 
     this.renderingState = _ui_utils.RenderingStates.FINISHED;
@@ -9624,8 +9634,6 @@ var _annotation_editor_layer_builder = __webpack_require__(30);
 
 var _annotation_layer_builder = __webpack_require__(32);
 
-var _app_options = __webpack_require__(1);
-
 var _l10n_utils = __webpack_require__(31);
 
 var _pdf_page_view = __webpack_require__(33);
@@ -9650,7 +9658,6 @@ const PagesCountLimit = {
   PAUSE_EAGER_PAGE_INIT: 250
 };
 exports.PagesCountLimit = PagesCountLimit;
-const ANNOTATION_EDITOR_MODE = _app_options.compatibilityParams.annotationEditorMode ?? _pdfjsLib.AnnotationEditorType.DISABLE;
 
 function isValidAnnotationEditorMode(mode) {
   return Object.values(_pdfjsLib.AnnotationEditorType).includes(mode) && mode !== _pdfjsLib.AnnotationEditorType.DISABLE;
@@ -9736,7 +9743,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.15.322';
+    const viewerVersion = '2.16.33';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9752,7 +9759,7 @@ class BaseViewer {
     this.removePageBorders = options.removePageBorders || false;
     this.textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
     this.#annotationMode = options.annotationMode ?? _pdfjsLib.AnnotationMode.ENABLE_FORMS;
-    this.#annotationEditorMode = options.annotationEditorMode ?? ANNOTATION_EDITOR_MODE;
+    this.#annotationEditorMode = options.annotationEditorMode ?? _pdfjsLib.AnnotationEditorType.DISABLE;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
@@ -10906,7 +10913,14 @@ class BaseViewer {
     return false;
   }
 
-  createTextLayerBuilder(textLayerDiv, pageIndex, viewport, enhanceTextSelection = false, eventBus, highlighter) {
+  createTextLayerBuilder({
+    textLayerDiv,
+    pageIndex,
+    viewport,
+    enhanceTextSelection = false,
+    eventBus,
+    highlighter
+  }) {
     return new _text_layer_builder.TextLayerBuilder({
       textLayerDiv,
       eventBus,
@@ -10917,7 +10931,10 @@ class BaseViewer {
     });
   }
 
-  createTextHighlighter(pageIndex, eventBus) {
+  createTextHighlighter({
+    pageIndex,
+    eventBus
+  }) {
     return new _text_highlighter.TextHighlighter({
       eventBus,
       pageIndex,
@@ -10925,44 +10942,68 @@ class BaseViewer {
     });
   }
 
-  createAnnotationLayerBuilder(pageDiv, pdfPage, annotationStorage = null, imageResourcesPath = "", renderForms = true, l10n = _l10n_utils.NullL10n, enableScripting = null, hasJSActionsPromise = null, mouseState = null, fieldObjectsPromise = null, annotationCanvasMap = null) {
+  createAnnotationLayerBuilder({
+    pageDiv,
+    pdfPage,
+    annotationStorage = this.pdfDocument?.annotationStorage,
+    imageResourcesPath = "",
+    renderForms = true,
+    l10n = _l10n_utils.NullL10n,
+    enableScripting = this.enableScripting,
+    hasJSActionsPromise = this.pdfDocument?.hasJSActions(),
+    mouseState = this._scriptingManager?.mouseState,
+    fieldObjectsPromise = this.pdfDocument?.getFieldObjects(),
+    annotationCanvasMap = null
+  }) {
     return new _annotation_layer_builder.AnnotationLayerBuilder({
       pageDiv,
       pdfPage,
-      annotationStorage: annotationStorage || this.pdfDocument?.annotationStorage,
+      annotationStorage,
       imageResourcesPath,
       renderForms,
       linkService: this.linkService,
       downloadManager: this.downloadManager,
       l10n,
-      enableScripting: enableScripting ?? this.enableScripting,
-      hasJSActionsPromise: hasJSActionsPromise || this.pdfDocument?.hasJSActions(),
-      fieldObjectsPromise: fieldObjectsPromise || this.pdfDocument?.getFieldObjects(),
-      mouseState: mouseState || this._scriptingManager?.mouseState,
+      enableScripting,
+      hasJSActionsPromise,
+      mouseState,
+      fieldObjectsPromise,
       annotationCanvasMap
     });
   }
 
-  createAnnotationEditorLayerBuilder(pageDiv, pdfPage, l10n, annotationStorage = null) {
+  createAnnotationEditorLayerBuilder({
+    uiManager = this.#annotationEditorUIManager,
+    pageDiv,
+    pdfPage,
+    l10n,
+    annotationStorage = this.pdfDocument?.annotationStorage
+  }) {
     return new _annotation_editor_layer_builder.AnnotationEditorLayerBuilder({
-      uiManager: this.#annotationEditorUIManager,
+      uiManager,
       pageDiv,
       pdfPage,
-      annotationStorage: annotationStorage || this.pdfDocument?.annotationStorage,
+      annotationStorage,
       l10n
     });
   }
 
-  createXfaLayerBuilder(pageDiv, pdfPage, annotationStorage = null) {
+  createXfaLayerBuilder({
+    pageDiv,
+    pdfPage,
+    annotationStorage = this.pdfDocument?.annotationStorage
+  }) {
     return new _xfa_layer_builder.XfaLayerBuilder({
       pageDiv,
       pdfPage,
-      annotationStorage: annotationStorage || this.pdfDocument?.annotationStorage,
+      annotationStorage,
       linkService: this.linkService
     });
   }
 
-  createStructTreeLayerBuilder(pdfPage) {
+  createStructTreeLayerBuilder({
+    pdfPage
+  }) {
     return new _struct_tree_layer_builder.StructTreeLayerBuilder({
       pdfPage
     });
@@ -11010,6 +11051,7 @@ class BaseViewer {
     }
 
     if (!this._optionalContentConfigPromise) {
+      console.error("optionalContentConfigPromise: Not initialized yet.");
       return this.pdfDocument.getOptionalContentConfig();
     }
 
@@ -11767,6 +11809,10 @@ const MAX_CANVAS_PIXELS = _app_options.compatibilityParams.maxCanvasPixels || 16
 
 class PDFPageView {
   #annotationMode = _pdfjsLib.AnnotationMode.ENABLE_FORMS;
+  #useThumbnailCanvas = {
+    initialOptionalContent: true,
+    regularAnnotations: true
+  };
 
   constructor(options) {
     const container = options.container;
@@ -11793,7 +11839,10 @@ class PDFPageView {
     this.annotationLayerFactory = options.annotationLayerFactory;
     this.annotationEditorLayerFactory = options.annotationEditorLayerFactory;
     this.xfaLayerFactory = options.xfaLayerFactory;
-    this.textHighlighter = options.textHighlighterFactory?.createTextHighlighter(this.id - 1, this.eventBus);
+    this.textHighlighter = options.textHighlighterFactory?.createTextHighlighter({
+      pageIndex: this.id - 1,
+      eventBus: this.eventBus
+    });
     this.structTreeLayerFactory = options.structTreeLayerFactory;
     this.l10n = options.l10n || _l10n_utils.NullL10n;
     this.paintTask = null;
@@ -11801,7 +11850,6 @@ class PDFPageView {
     this.renderingState = _ui_utils.RenderingStates.INITIAL;
     this.resume = null;
     this._renderError = null;
-    this._isStandalone = !this.renderingQueue?.hasViewer();
     this._annotationCanvasMap = null;
     this.annotationLayer = null;
     this.annotationEditorLayer = null;
@@ -11988,11 +12036,6 @@ class PDFPageView {
 
     this.loadingIconDiv = document.createElement("div");
     this.loadingIconDiv.className = "loadingIcon notVisible";
-
-    if (this._isStandalone) {
-      this.toggleLoadingIconSpinner(true);
-    }
-
     this.loadingIconDiv.setAttribute("role", "img");
     this.l10n.get("loading").then(msg => {
       this.loadingIconDiv?.setAttribute("aria-label", msg);
@@ -12013,6 +12056,13 @@ class PDFPageView {
 
     if (optionalContentConfigPromise instanceof Promise) {
       this._optionalContentConfigPromise = optionalContentConfigPromise;
+      optionalContentConfigPromise.then(optionalContentConfig => {
+        if (optionalContentConfigPromise !== this._optionalContentConfigPromise) {
+          return;
+        }
+
+        this.#useThumbnailCanvas.initialOptionalContent = optionalContentConfig.hasInitialVisibility;
+      });
     }
 
     const totalRotation = (this.rotation + this.pdfPageRotate) % 360;
@@ -12020,11 +12070,6 @@ class PDFPageView {
       scale: this.scale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS,
       rotation: totalRotation
     });
-
-    if (this._isStandalone) {
-      _ui_utils.docStyle.setProperty("--scale-factor", this.viewport.scale);
-    }
-
     let isScalingRestricted = false;
 
     if (this.canvas && this.maxCanvasPixels > 0) {
@@ -12257,14 +12302,28 @@ class PDFPageView {
         div.append(textLayerDiv);
       }
 
-      textLayer = this.textLayerFactory.createTextLayerBuilder(textLayerDiv, this.id - 1, this.viewport, this.textLayerMode === _ui_utils.TextLayerMode.ENABLE_ENHANCE, this.eventBus, this.textHighlighter);
+      textLayer = this.textLayerFactory.createTextLayerBuilder({
+        textLayerDiv,
+        pageIndex: this.id - 1,
+        viewport: this.viewport,
+        enhanceTextSelection: this.textLayerMode === _ui_utils.TextLayerMode.ENABLE_ENHANCE,
+        eventBus: this.eventBus,
+        highlighter: this.textHighlighter
+      });
     }
 
     this.textLayer = textLayer;
 
     if (this.#annotationMode !== _pdfjsLib.AnnotationMode.DISABLE && this.annotationLayerFactory) {
       this._annotationCanvasMap ||= new Map();
-      this.annotationLayer ||= this.annotationLayerFactory.createAnnotationLayerBuilder(div, pdfPage, null, this.imageResourcesPath, this.#annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS, this.l10n, null, null, null, null, this._annotationCanvasMap);
+      this.annotationLayer ||= this.annotationLayerFactory.createAnnotationLayerBuilder({
+        pageDiv: div,
+        pdfPage,
+        imageResourcesPath: this.imageResourcesPath,
+        renderForms: this.#annotationMode === _pdfjsLib.AnnotationMode.ENABLE_FORMS,
+        l10n: this.l10n,
+        annotationCanvasMap: this._annotationCanvasMap
+      });
     }
 
     if (this.xfaLayer?.div) {
@@ -12310,6 +12369,7 @@ class PDFPageView {
 
       this._resetZoomLayer(true);
 
+      this.#useThumbnailCanvas.regularAnnotations = !paintTask.separateAnnots;
       this.eventBus.dispatch("pagerendered", {
         source: this,
         pageNumber: this.id,
@@ -12339,7 +12399,11 @@ class PDFPageView {
         if (this.annotationLayer) {
           this._renderAnnotationLayer().then(() => {
             if (this.annotationEditorLayerFactory) {
-              this.annotationEditorLayer ||= this.annotationEditorLayerFactory.createAnnotationEditorLayerBuilder(div, pdfPage, this.l10n, null);
+              this.annotationEditorLayer ||= this.annotationEditorLayerFactory.createAnnotationEditorLayerBuilder({
+                pageDiv: div,
+                pdfPage,
+                l10n: this.l10n
+              });
 
               this._renderAnnotationEditorLayer();
             }
@@ -12352,7 +12416,10 @@ class PDFPageView {
 
     if (this.xfaLayerFactory) {
       if (!this.xfaLayer) {
-        this.xfaLayer = this.xfaLayerFactory.createXfaLayerBuilder(div, pdfPage, null);
+        this.xfaLayer = this.xfaLayerFactory.createXfaLayerBuilder({
+          pageDiv: div,
+          pdfPage
+        });
       }
 
       this._renderXfaLayer();
@@ -12389,7 +12456,9 @@ class PDFPageView {
 
       this.eventBus._on("textlayerrendered", this._onTextLayerRendered);
 
-      this.structTreeLayer = this.structTreeLayerFactory.createStructTreeLayerBuilder(pdfPage);
+      this.structTreeLayer = this.structTreeLayerFactory.createStructTreeLayerBuilder({
+        pdfPage
+      });
     }
 
     div.setAttribute("data-loaded", true);
@@ -12411,6 +12480,10 @@ class PDFPageView {
 
       cancel() {
         renderTask.cancel();
+      },
+
+      get separateAnnots() {
+        return renderTask.separateAnnots;
       }
 
     };
@@ -12506,6 +12579,14 @@ class PDFPageView {
     } else {
       this.div.removeAttribute("data-page-label");
     }
+  }
+
+  get thumbnailCanvas() {
+    const {
+      initialOptionalContent,
+      regularAnnotations
+    } = this.#useThumbnailCanvas;
+    return initialOptionalContent && regularAnnotations ? this.canvas : null;
   }
 
 }
@@ -14693,7 +14774,7 @@ function FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printRe
   this.printContainer = printContainer;
   this._printResolution = printResolution || 150;
   this._optionalContentConfigPromise = optionalContentConfigPromise || pdfDocument.getOptionalContentConfig();
-  this._optionalContentConfigPromise = printAnnotationStoragePromise || Promise.resolve();
+  this._printAnnotationStoragePromise = printAnnotationStoragePromise || Promise.resolve();
 }
 
 FirefoxPrintService.prototype = {
@@ -14833,8 +14914,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.15.322';
-const pdfjsBuild = 'b06d19045';
+const pdfjsVersion = '2.16.33';
+const pdfjsBuild = '40f9f7e90';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;

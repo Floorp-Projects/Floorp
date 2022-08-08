@@ -36,10 +36,6 @@ already_AddRefed<Sanitizer> Sanitizer::Constructor(
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<Sanitizer> sanitizer = new Sanitizer(global, aOptions);
-  AutoTArray<nsString, 1> params = {};
-  sanitizer->LogLocalizedString("SanitizerOptionsDiscarded", params,
-                                nsIScriptError::infoFlag);
-
   return sanitizer.forget();
 }
 

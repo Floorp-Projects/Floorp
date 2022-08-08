@@ -919,7 +919,15 @@ DevToolsStartup.prototype = {
     // See comment within BrowserToolboxLauncher.
     // Setting it as an environment variable helps it being reused if we restart the browser via CmdOrCtrl+R
     env.set("MOZ_BROWSER_TOOLBOX_BINARY", binaryPath);
-    BrowserToolboxLauncher.init();
+
+    const browserToolboxLauncherConfig = {};
+
+    // If user passed the --jsdebugger in mochitests, we want to enable the
+    // multiprocess Browser Toolbox (by default it's parent process only)
+    if (Services.prefs.getBoolPref("devtools.testing", false)) {
+      browserToolboxLauncherConfig.forceMultiprocess = true;
+    }
+    BrowserToolboxLauncher.init(browserToolboxLauncherConfig);
 
     if (pauseOnStartup) {
       // Spin the event loop until the debugger connects.

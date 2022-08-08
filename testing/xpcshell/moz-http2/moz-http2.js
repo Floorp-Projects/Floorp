@@ -719,11 +719,13 @@ function handleRequest(req, res) {
     }
 
     var post_hash = crypto.createHash("md5");
+    var received_data = false;
     req.on("data", function receivePostData(chunk) {
+      received_data = true;
       post_hash.update(chunk.toString());
     });
     req.on("end", function finishPost() {
-      let md5 = post_hash.digest("hex");
+      let md5 = received_data ? post_hash.digest("hex") : "0";
       res.setHeader("X-Calculated-MD5", md5);
       res.writeHead(200);
       res.end(content);

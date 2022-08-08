@@ -138,7 +138,7 @@ function doClickWithMouseEventUnprivileged() {
   input.dispatchEvent(ckEvent);
 }
 
-add_task(async function test_initialize() {
+add_setup(async () => {
   await new Promise(resolve => updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },

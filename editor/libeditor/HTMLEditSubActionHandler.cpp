@@ -79,6 +79,7 @@ namespace mozilla {
 
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
+using EmptyCheckOptions = HTMLEditUtils::EmptyCheckOptions;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 using StyleDifference = HTMLEditUtils::StyleDifference;
@@ -455,7 +456,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     // intentionally.
     if (TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements) {
       nsresult rv = RemoveEmptyNodesIn(
-          MOZ_KnownLive(*TopLevelEditSubActionDataRef().mChangedRange));
+          EditorDOMRange(*TopLevelEditSubActionDataRef().mChangedRange));
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::RemoveEmptyNodesIn() failed");
         return rv;
@@ -5563,6 +5564,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   MOZ_ASSERT(EditorUtils::IsDescendantOf(aStartOfMiddleElement, aBlockElement));
   MOZ_ASSERT(EditorUtils::IsDescendantOf(aEndOfMiddleElement, aBlockElement));
 
+  EditorDOMPoint pointToPutCaret;
   // Split at the start.
   SplitNodeResult splitAtStartResult = SplitNodeDeepWithTransaction(
       aBlockElement, EditorDOMPoint(&aStartOfMiddleElement),
@@ -5575,6 +5577,8 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
       splitAtStartResult.isOk(),
       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
       "eDoNotCreateEmptyContainer) at start of middle element failed");
+  splitAtStartResult.MoveCaretPointTo(pointToPutCaret,
+                                      {SuggestCaret::OnlyIfHasSuggestion});
 
   // Split at after the end
   auto atAfterEnd = EditorDOMPoint::After(aEndOfMiddleElement);
@@ -5588,9 +5592,29 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
       splitAtEndResult.isOk(),
       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
       "eDoNotCreateEmptyContainer) after end of middle element failed");
+  splitAtEndResult.MoveCaretPointTo(pointToPutCaret,
+                                    {SuggestCaret::OnlyIfHasSuggestion});
 
-  return SplitRangeOffFromNodeResult(std::move(splitAtStartResult),
-                                     std::move(splitAtEndResult));
+  if (splitAtStartResult.DidSplit() && splitAtEndResult.DidSplit()) {
+    // Note that the middle node can be computed only with the latter split
+    // result.
+    return SplitRangeOffFromNodeResult(splitAtStartResult.GetPreviousContent(),
+                                       splitAtEndResult.GetPreviousContent(),
+                                       splitAtEndResult.GetNextContent(),
+                                       std::move(pointToPutCaret));
+  }
+  if (splitAtStartResult.DidSplit()) {
+    return SplitRangeOffFromNodeResult(splitAtStartResult.GetPreviousContent(),
+                                       splitAtStartResult.GetNextContent(),
+                                       nullptr, std::move(pointToPutCaret));
+  }
+  if (splitAtEndResult.DidSplit()) {
+    return SplitRangeOffFromNodeResult(
+        nullptr, splitAtEndResult.GetPreviousContent(),
+        splitAtEndResult.GetNextContent(), std::move(pointToPutCaret));
+  }
+  return SplitRangeOffFromNodeResult(nullptr, &aBlockElement, nullptr,
+                                     std::move(pointToPutCaret));
 }
 
 SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
@@ -9087,7 +9111,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   return rv;
 }
 
-nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
+nsresult HTMLEditor::RemoveEmptyNodesIn(const EditorDOMRange& aRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aRange.IsPositioned());
 
@@ -9118,98 +9142,158 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
   // find all the _examined_ children empty, but still not have an empty
   // parent.
 
+  const RawRangeBoundary endOfRange = [&]() {
+    // If the range is not collapsed and end of the range is start of a
+    // container, it means that the inclusive ancestor empty element may be
+    // created by splitting the left nodes.
+    if (aRange.Collapsed() || !aRange.IsInContentNodes() ||
+        !aRange.EndRef().IsStartOfContainer()) {
+      return aRange.EndRef().ToRawRangeBoundary();
+    }
+    nsINode* const commonAncestor =
+        nsContentUtils::GetClosestCommonInclusiveAncestor(
+            aRange.StartRef().ContainerAsContent(),
+            aRange.EndRef().ContainerAsContent());
+    if (!commonAncestor) {
+      return aRange.EndRef().ToRawRangeBoundary();
+    }
+    nsIContent* maybeRightContent = nullptr;
+    for (nsIContent* content : aRange.EndRef()
+                                   .ContainerAsContent()
+                                   ->InclusiveAncestorsOfType<nsIContent>()) {
+      if (!HTMLEditUtils::IsSimplyEditableNode(*content) ||
+          content == commonAncestor) {
+        break;
+      }
+      if (aRange.StartRef().ContainerAsContent() == content) {
+        break;
+      }
+      EmptyCheckOptions options = {EmptyCheckOption::TreatListItemAsVisible,
+                                   EmptyCheckOption::TreatTableCellAsVisible};
+      if (!HTMLEditUtils::IsBlockElement(*content)) {
+        options += EmptyCheckOption::TreatSingleBRElementAsVisible;
+      }
+      if (!HTMLEditUtils::IsEmptyNode(*content, options)) {
+        break;
+      }
+      maybeRightContent = content;
+    }
+    if (!maybeRightContent) {
+      return aRange.EndRef().ToRawRangeBoundary();
+    }
+    return EditorRawDOMPoint::After(*maybeRightContent).ToRawRangeBoundary();
+  }();
+
   PostContentIterator postOrderIter;
-  nsresult rv = postOrderIter.Init(&aRange);
+  nsresult rv =
+      postOrderIter.Init(aRange.StartRef().ToRawRangeBoundary(), endOfRange);
   if (NS_FAILED(rv)) {
     NS_WARNING("PostContentIterator::Init() failed");
     return rv;
   }
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfEmptyContents,
-      arrayOfEmptyCites, skipList;
+      arrayOfEmptyCites;
 
-  // Check for empty nodes
-  for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
-    MOZ_ASSERT(postOrderIter.GetCurrentNode()->IsContent());
+  // Collect empty nodes first.
+  {
+    const bool isMailEditor = IsMailEditor();
+    AutoTArray<OwningNonNull<nsIContent>, 64> knownNonEmptyContents;
+    Maybe<AutoRangeArray> maybeSelectionRanges;
+    for (; !postOrderIter.IsDone(); postOrderIter.Next()) {
+      MOZ_ASSERT(postOrderIter.GetCurrentNode()->IsContent());
 
-    nsIContent* content = postOrderIter.GetCurrentNode()->AsContent();
-    nsIContent* parentContent = content->GetParent();
+      nsIContent* content = postOrderIter.GetCurrentNode()->AsContent();
+      nsIContent* parentContent = content->GetParent();
 
-    size_t idx = skipList.IndexOf(content);
-    if (idx != skipList.NoIndex) {
-      // This node is on our skip list.  Skip processing for this node, and
-      // replace its value in the skip list with the value of its parent
-      if (parentContent) {
-        skipList[idx] = parentContent;
+      size_t idx = knownNonEmptyContents.IndexOf(content);
+      if (idx != decltype(knownNonEmptyContents)::NoIndex) {
+        // This node is on our skip list.  Skip processing for this node, and
+        // replace its value in the skip list with the value of its parent
+        if (parentContent) {
+          knownNonEmptyContents[idx] = parentContent;
+        }
+        continue;
       }
-      continue;
-    }
 
-    bool isCandidate = false;
-    bool isMailCite = false;
-    if (content->IsElement()) {
-      if (content->IsHTMLElement(nsGkAtoms::body)) {
-        // Don't delete the body
-      } else if ((isMailCite =
-                      HTMLEditUtils::IsMailCite(*content->AsElement())) ||
-                 content->IsHTMLElement(nsGkAtoms::a) ||
-                 HTMLEditUtils::IsInlineStyle(content) ||
-                 HTMLEditUtils::IsAnyListElement(content) ||
-                 content->IsHTMLElement(nsGkAtoms::div)) {
-        // Only consider certain nodes to be empty for purposes of removal
-        isCandidate = true;
-      } else if (HTMLEditUtils::IsFormatNode(content) ||
-                 HTMLEditUtils::IsListItem(content) ||
-                 content->IsHTMLElement(nsGkAtoms::blockquote)) {
-        // These node types are candidates if selection is not in them.  If
-        // it is one of these, don't delete if selection inside.  This is so
-        // we can create empty headings, etc., for the user to type into.
-        AutoRangeArray selectionRanges(SelectionRef());
-        isCandidate =
-            !selectionRanges
-                 .IsAtLeastOneContainerOfRangeBoundariesInclusiveDescendantOf(
-                     *content);
-      }
-    }
+      const bool isEmptyNode = [&]() {
+        if (!content->IsElement()) {
+          return false;
+        }
+        const bool isMailCite =
+            isMailEditor && HTMLEditUtils::IsMailCite(*content->AsElement());
+        const bool isCandidate = [&]() {
+          if (content->IsHTMLElement(nsGkAtoms::body)) {
+            // Don't delete the body
+            return false;
+          }
+          if (isMailCite || content->IsHTMLElement(nsGkAtoms::a) ||
+              HTMLEditUtils::IsInlineStyle(content) ||
+              HTMLEditUtils::IsAnyListElement(content) ||
+              content->IsHTMLElement(nsGkAtoms::div)) {
+            // Only consider certain nodes to be empty for purposes of removal
+            return true;
+          }
+          if (HTMLEditUtils::IsFormatNode(content) ||
+              HTMLEditUtils::IsListItem(content) ||
+              content->IsHTMLElement(nsGkAtoms::blockquote)) {
+            // These node types are candidates if selection is not in them.  If
+            // it is one of these, don't delete if selection inside.  This is so
+            // we can create empty headings, etc., for the user to type into.
+            if (maybeSelectionRanges.isNothing()) {
+              maybeSelectionRanges.emplace(SelectionRef());
+            }
+            return !maybeSelectionRanges
+                        ->IsAtLeastOneContainerOfRangeBoundariesInclusiveDescendantOf(
+                            *content);
+          }
+          return false;
+        }();
 
-    bool isEmptyNode = false;
-    if (isCandidate) {
-      // We delete mailcites even if they have a solo br in them.  Other
-      // nodes we require to be empty.
-      HTMLEditUtils::EmptyCheckOptions options{
-          EmptyCheckOption::TreatListItemAsVisible,
-          EmptyCheckOption::TreatTableCellAsVisible};
-      if (!isMailCite) {
-        options += EmptyCheckOption::TreatSingleBRElementAsVisible;
-      }
-      isEmptyNode = HTMLEditUtils::IsEmptyNode(*content, options);
-      if (isEmptyNode) {
+        if (!isCandidate) {
+          return false;
+        }
+
+        // We delete mailcites even if they have a solo br in them.  Other
+        // nodes we require to be empty.
+        HTMLEditUtils::EmptyCheckOptions options{
+            EmptyCheckOption::TreatListItemAsVisible,
+            EmptyCheckOption::TreatTableCellAsVisible};
+        if (!isMailCite) {
+          options += EmptyCheckOption::TreatSingleBRElementAsVisible;
+        }
+        if (!HTMLEditUtils::IsEmptyNode(*content, options)) {
+          return false;
+        }
+
         if (isMailCite) {
           // mailcites go on a separate list from other empty nodes
           arrayOfEmptyCites.AppendElement(*content);
-        } else {
+        }
+        // Don't delete non-editable nodes in this method because this is a
+        // clean up method to remove unnecessary nodes of the result of
+        // editing.  So, we shouldn't delete non-editable nodes which were
+        // there before editing.  Additionally, if the element is some special
+        // elements such as <body>, we shouldn't delete it.
+        else if (HTMLEditUtils::IsSimplyEditableNode(*content) &&
+                 HTMLEditUtils::IsRemovableNode(*content)) {
           arrayOfEmptyContents.AppendElement(*content);
         }
+        return true;
+      }();
+      if (!isEmptyNode && parentContent) {
+        knownNonEmptyContents.AppendElement(*parentContent);
       }
-    }
-
-    if (!isEmptyNode && parentContent) {
-      // put parent on skip list
-      skipList.AppendElement(*parentContent);
-    }
+    }  // end of the for-loop iterating with postOrderIter
   }
 
   // now delete the empty nodes
   for (OwningNonNull<nsIContent>& emptyContent : arrayOfEmptyContents) {
-    // XXX Shouldn't we check whether it's removable from its parent??
-    if (HTMLEditUtils::IsSimplyEditableNode(emptyContent)) {
-      // MOZ_KnownLive because 'arrayOfEmptyContents' is guaranteed to keep it
-      // alive.
-      nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyContent));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-        return rv;
-      }
+    // MOZ_KnownLive due to bug 1622253
+    nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyContent));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+      return rv;
     }
   }
 
