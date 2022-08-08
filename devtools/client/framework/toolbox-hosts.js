@@ -220,9 +220,10 @@ class RightHost extends SidebarHost {
 /**
  * Host object for the toolbox in a separate window
  */
-function WindowHost(hostTab) {
+function WindowHost(hostTab, options) {
   this._boundUnload = this._boundUnload.bind(this);
   this.hostTab = hostTab;
+  this.options = options;
   EventEmitter.decorate(this);
 }
 
@@ -242,10 +243,11 @@ WindowHost.prototype = {
       // set the private flag on the DevTools host window. Otherwise switching
       // hosts between docked and window modes can fail due to incompatible
       // docshell origin attributes. See 1581093.
-      if (
-        this.hostTab &&
-        PrivateBrowsingUtils.isWindowPrivate(this.hostTab.ownerGlobal)
-      ) {
+      // This host is also used by the Browser Content Toolbox, in which case
+      // the owner window was passed in the host options.
+      const owner =
+        this.hostTab?.ownerGlobal || this.options?.browserContentToolboxOpener;
+      if (owner && PrivateBrowsingUtils.isWindowPrivate(owner)) {
         flags += ",private";
       }
 
