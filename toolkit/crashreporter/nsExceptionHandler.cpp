@@ -1204,10 +1204,14 @@ static bool LaunchProgram(const XP_CHAR* aProgramPath,
   STARTUPINFO si = {};
   si.cb = sizeof(si);
 
-  // If CreateProcess() fails don't do anything
-  if (CreateProcess(nullptr, (LPWSTR)cmdLine, nullptr, nullptr, FALSE,
-                    NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW, nullptr, nullptr,
-                    &si, &pi)) {
+  // If CreateProcess() fails don't do anything.
+  if (CreateProcess(
+          /* lpApplicationName */ nullptr, (LPWSTR)cmdLine,
+          /* lpProcessAttributes */ nullptr, /* lpThreadAttributes */ nullptr,
+          /* bInheritHandles */ FALSE,
+          NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW | CREATE_BREAKAWAY_FROM_JOB,
+          /* lpEnvironment */ nullptr, /* lpCurrentDirectory */ nullptr, &si,
+          &pi)) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
