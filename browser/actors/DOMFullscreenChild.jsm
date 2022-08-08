@@ -25,6 +25,13 @@ class DOMFullscreenChild extends JSWindowActorChild {
         let remoteFrameBC = aMessage.data.remoteFrameBC;
         if (remoteFrameBC) {
           let remoteFrame = remoteFrameBC.embedderElement;
+          if (!remoteFrame) {
+            // This could happen when the page navigate away and trigger a
+            // process switching during fullscreen transition, tell the parent
+            // to just exit.
+            this.sendAsyncMessage("DOMFullscreen:Exit", {});
+            break;
+          }
           this._isNotTheRequestSource = true;
           windowUtils.remoteFrameFullscreenChanged(remoteFrame);
         } else {
