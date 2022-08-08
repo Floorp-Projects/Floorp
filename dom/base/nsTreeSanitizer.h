@@ -306,6 +306,9 @@ class nsTreeSanitizer {
   // This nsTreeSanitizer instance should behave like the Sanitizer API.
   bool mIsForSanitizerAPI = false;
 
+  bool mAllowCustomElements = false;
+  bool mAllowUnknownMarkup = false;
+
   // An allow-list of elements to keep.
   mozilla::UniquePtr<DynamicAtomsTable> mAllowElements;
 
