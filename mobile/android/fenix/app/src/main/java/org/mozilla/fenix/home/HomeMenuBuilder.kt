@@ -16,6 +16,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.HomeActivity
@@ -77,7 +78,7 @@ class HomeMenuBuilder(
     /**
      * Callback invoked when a menu item is tapped on.
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onItemTapped(item: HomeMenu.Item) {
         if (item !is HomeMenu.Item.DesktopMode) {
@@ -112,6 +113,18 @@ class HomeMenuBuilder(
                         AccountState.NO_ACCOUNT ->
                             HomeFragmentDirections.actionGlobalTurnOnSync()
                     }
+                )
+            }
+            HomeMenu.Item.ManageAccountAndDevices -> {
+                homeActivity.openToBrowserAndLoad(
+                    searchTermOrURL =
+                    if (context.settings().allowDomesticChinaFxaServer) {
+                        mozilla.appservices.fxaclient.Config.Server.CHINA.contentUrl + "/settings"
+                    } else {
+                        mozilla.appservices.fxaclient.Config.Server.RELEASE.contentUrl + "/settings"
+                    },
+                    newTab = true,
+                    from = BrowserDirection.FromHome
                 )
             }
             HomeMenu.Item.Bookmarks -> {

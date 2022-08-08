@@ -19,10 +19,12 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.accounts.FenixAccountManager
@@ -46,6 +48,10 @@ class HomeMenu(
         object Downloads : Item()
         object Extensions : Item()
         data class SyncAccount(val accountState: AccountState) : Item()
+        /**
+         * A button item to open up the settings page of FxA, shown up in mozilla online builds.
+         */
+        object ManageAccountAndDevices : Item()
         object WhatsNew : Item()
         object Help : Item()
         object CustomizeHome : Item()
@@ -145,6 +151,13 @@ class HomeMenu(
             onItemTapped.invoke(Item.Extensions)
         }
 
+        val manageAccountAndDevicesItem = SimpleBrowserMenuItem(
+            context.getString(R.string.browser_menu_manage_account_and_devices),
+            textColorResource = primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.ManageAccountAndDevices)
+        }
+
         val whatsNewItem = BrowserMenuHighlightableItem(
             context.getString(R.string.browser_menu_whats_new),
             R.drawable.ic_whats_new,
@@ -201,6 +214,7 @@ class HomeMenu(
             extensionsItem,
             syncSignInMenuItem,
             accountAuthItem,
+            if (Config.channel.isMozillaOnline) manageAccountAndDevicesItem else null,
             BrowserMenuDivider(),
             desktopItem,
             BrowserMenuDivider(),

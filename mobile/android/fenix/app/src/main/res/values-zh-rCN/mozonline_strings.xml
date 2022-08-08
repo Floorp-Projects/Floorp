@@ -40,5 +40,9 @@
     <string name="pair_instructions_2_cn"><![CDATA[打开 <b>firefox.com.cn/pair</b> 并扫描网站上的二维码]]></string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions_cn"><![CDATA[在计算机上使用 Firefox 打开 <b>https://firefox.com.cn/pair</b>]]></string>
+
+    <!-- Homescreen menu button -->
+    <!-- Browser menu button that opens the account setting page -->
+    <string name="browser_menu_manage_account_and_devices">管理账户和设备</string>
 </resources>
 

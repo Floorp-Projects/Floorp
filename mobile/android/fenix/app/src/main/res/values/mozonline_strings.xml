@@ -39,4 +39,8 @@
     <string name="pair_instructions_2_cn"><![CDATA[Scan the QR code shown at <b>firefox.com.cn/pair</b>]]></string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions_cn"><![CDATA[On your computer open Firefox and go to <b>https://firefox.com.cn/pair</b>]]></string>
+
+    <!-- Homescreen menu button -->
+    <!-- Browser menu button that opens the account setting page -->
+    <string name="browser_menu_manage_account_and_devices">Manage Account and Devices</string>
 </resources>
