@@ -130,11 +130,6 @@ class LCovRuntime {
   void writeLCovResult(LCovRealm& realm);
 
  private:
-  // When a process forks, the file will remain open, but 2 processes will
-  // have the same file. To avoid conflicting writes, we open a new file for
-  // the child process.
-  void maybeReopenAfterFork();
-
   // Fill an array with the name of the file. Return false if we are unable to
   // serialize the filename in this array.
   bool fillWithFilename(char* name, size_t length);
