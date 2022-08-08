@@ -15,11 +15,10 @@ function goUpdateGlobalEditMenuItems(force) {
     return;
   }
 
-  goUpdateCommand("cmd_undo");
-  goUpdateCommand("cmd_redo");
+  goUpdateUndoEditMenuItems();
   goUpdateCommand("cmd_cut");
   goUpdateCommand("cmd_copy");
-  goUpdateCommand("cmd_paste");
+  goUpdatePasteMenuItems();
   goUpdateCommand("cmd_selectAll");
   goUpdateCommand("cmd_delete");
   goUpdateCommand("cmd_switchTextDirection");
@@ -34,6 +33,7 @@ function goUpdateUndoEditMenuItems() {
 // update menu items that depend on clipboard contents
 function goUpdatePasteMenuItems() {
   goUpdateCommand("cmd_paste");
+  goUpdateCommand("cmd_pasteNoFormatting");
 }
 
 // Inject the commandset here instead of relying on preprocessor to share this across documents.
@@ -52,6 +52,7 @@ window.addEventListener(
         <command id="cmd_cut" internal="true" />
         <command id="cmd_copy" internal="true" />
         <command id="cmd_paste" internal="true" />
+        <command id="cmd_pasteNoFormatting" internal="true" />
         <command id="cmd_delete" />
         <command id="cmd_selectAll" internal="true" />
         <command id="cmd_switchTextDirection" />

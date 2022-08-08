@@ -934,6 +934,7 @@ class nsContextMenu {
     this.showItem("context-cut", this.onTextInput);
     this.showItem("context-copy", this.isContentSelected || this.onTextInput);
     this.showItem("context-paste", this.onTextInput);
+    this.showItem("context-paste-no-formatting", this.isDesignMode);
     this.showItem("context-delete", this.onTextInput);
     this.showItem(
       "context-selectall",
