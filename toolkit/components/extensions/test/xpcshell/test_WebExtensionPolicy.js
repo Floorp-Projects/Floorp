@@ -257,13 +257,56 @@ add_task(async function test_WebExtensionPolicy() {
   }
 });
 
+// mozExtensionHostname is normalized to lower case when using
+// policy.getURL whereas using policy.getByHostname does
+// not.  Tests below will fail without case insensitive
+// comparisons in ExtensionPolicyService
+add_task(async function test_WebExtensionPolicy_case_sensitivity() {
+  const id = "policy-case@mochitest";
+  const uuid = "BAD93A23-125C-4B24-ABFC-1CA2692B0610";
+
+  const baseURL = "file:///foo/";
+  const mozExtURL = `moz-extension://${uuid}/`;
+  const mozExtURI = newURI(mozExtURL);
+
+  let policy = new WebExtensionPolicy({
+    id: id,
+    mozExtensionHostname: uuid,
+    baseURL,
+    localizeCallback() {},
+    allowedOrigins: new MatchPatternSet([]),
+    permissions: ["<all_urls>"],
+  });
+  policy.active = true;
+
+  equal(
+    WebExtensionPolicy.getByHostname(uuid)?.mozExtensionHostname,
+    policy.mozExtensionHostname,
+    "Hostname lookup should match policy"
+  );
+
+  equal(
+    WebExtensionPolicy.getByHostname(uuid.toLowerCase())?.mozExtensionHostname,
+    policy.mozExtensionHostname,
+    "Hostname lookup should match policy"
+  );
+
+  equal(policy.getURL(), mozExtURI.spec, "Urls should match policy");
+  ok(
+    policy.sourceMayAccessPath(mozExtURI, "/bar.baz"),
+    "Extension path should be accessible to self"
+  );
+
+  policy.active = false;
+});
+
 add_task(async function test_WebExtensionPolicy_V3() {
   const id = "foo@bar.baz";
   const uuid = "ca9d3f23-125c-4b24-abfc-1ca2692b0610";
   const id2 = "foo-2@bar.baz";
   const uuid2 = "89383c45-7db4-4999-83f7-f4cc246372cd";
   const id3 = "foo-3@bar.baz";
-  const uuid3 = "56652231-d7e2-45d1-bdbd-bd3bff80927e";
+  const uuid3 = "56652231-D7E2-45D1-BDBD-BD3BFF80927E";
 
   const baseURL = "file:///foo/";
   const mozExtURL = `moz-extension://${uuid}/`;
