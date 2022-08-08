@@ -11,8 +11,6 @@
 #include "GLXLibrary.h"
 #include "mozilla/X11Util.h"
 
-class gfxXlibSurface;
-
 namespace mozilla {
 namespace gl {
 
@@ -21,8 +19,7 @@ class GLContextGLX : public GLContext {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX, override)
   static already_AddRefed<GLContextGLX> CreateGLContext(
       const GLContextDesc&, std::shared_ptr<gfx::XlibDisplay> display,
-      GLXDrawable drawable, GLXFBConfig cfg, bool deleteDrawable,
-      gfxXlibSurface* pixmap);
+      GLXDrawable drawable, GLXFBConfig cfg, Drawable ownedPixmap = X11None);
 
   static bool FindVisual(Display* display, int screen, int* const out_visualId);
 
@@ -68,18 +65,20 @@ class GLContextGLX : public GLContext {
   friend class GLContextProviderGLX;
 
   GLContextGLX(const GLContextDesc&, std::shared_ptr<gfx::XlibDisplay> aDisplay,
-               GLXDrawable aDrawable, GLXContext aContext, bool aDeleteDrawable,
-               bool aDoubleBuffered, gfxXlibSurface* aPixmap);
+               GLXDrawable aDrawable, GLXContext aContext, bool aDoubleBuffered,
+               Drawable aOwnedPixmap = X11None);
 
   const GLXContext mContext;
   const std::shared_ptr<gfx::XlibDisplay> mDisplay;
   const GLXDrawable mDrawable;
-  const bool mDeleteDrawable;
+  // The X pixmap associated with the GLX pixmap. If this is provided, then this
+  // class assumes responsibility for freeing both. Otherwise, the user of this
+  // class is responsibility for freeing the drawables.
+  const Drawable mOwnedPixmap;
   const bool mDoubleBuffered;
 
   GLXLibrary* const mGLX;
 
-  const RefPtr<gfxXlibSurface> mPixmap;
   const bool mOwnsContext = true;
 };
 
