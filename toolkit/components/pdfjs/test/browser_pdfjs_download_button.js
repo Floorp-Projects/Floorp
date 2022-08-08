@@ -109,6 +109,20 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
         tabCount,
         "No new tab was opened to view the downloaded PDF"
       );
+
+      SpecialPowers.clipboardCopyString("");
+      const downloadsLoaded = BrowserTestUtils.waitForEvent(
+        browser,
+        "InitialDownloadsLoaded",
+        true
+      );
+      BrowserTestUtils.loadURI(browser, "about:downloads");
+      await downloadsLoaded;
+
+      info("Wait for the clipboard to contain the url of the pdf");
+      await SimpleTest.promiseClipboardChange(pdfUrl, () => {
+        goDoCommand("cmd_copy");
+      });
     }
   );
 });
