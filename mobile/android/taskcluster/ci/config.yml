@@ -138,11 +138,11 @@ treeherder:
 
 task-priority:
     by-project:
-        "android-components": highest
-        "staging-android-components": low
+        "firefox-android": highest
+        "staging-firefox-android": low
         # This handles cases where a fork may end up not being named
         # as one of the explicit names above. Ideally anything forked
-        # from "android-components" would inherit its setting, but
+        # from "firefox-android" would inherit its setting, but
         # "low" is the safer default
         default: low
 
@@ -150,8 +150,8 @@ taskgraph:
     register: ac_taskgraph:register
     repositories:
         mobile:
-            name: android-components
-    cached-task-prefix: mobile.v2.android-components
+            name: firefox-android
+    cached-task-prefix: mobile.v2.firefox-android
     decision-parameters: 'ac_taskgraph:get_decision_parameters'
 
 workers:
@@ -201,7 +201,7 @@ workers:
             worker-type: 'mobile-{level}-tree'
 
 scriptworker:
-    scope-prefix: project:mobile:android-components:releng
+    scope-prefix: project:mobile:firefox-android:releng
 
 release-promotion:
     flavors:
