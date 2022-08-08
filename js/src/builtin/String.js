@@ -581,15 +581,11 @@ function String_substring(start, end) {
   // Step 7.
   var finalEnd = std_Math_min(std_Math_max(intEnd, 0), len);
 
-  // Steps 8-9.
-  var from, to;
-  if (finalStart < finalEnd) {
-    from = finalStart;
-    to = finalEnd;
-  } else {
-    from = finalEnd;
-    to = finalStart;
-  }
+  // Step 8.
+  var from = std_Math_min(finalStart, finalEnd);
+
+  // Step 9.
+  var to = std_Math_max(finalStart, finalEnd);
 
   // Step 10.
   // While |from| and |to - from| are bounded to the length of |str| and this
