@@ -112,7 +112,7 @@ tasks:
           then:
               $let:
                   level:
-                      $if: 'tasks_for in ["github-push", "github-release", "action", "cron"] && repoUrl == "https://github.com/mozilla-mobile/android-components"'
+                      $if: 'tasks_for in ["github-push", "github-release", "action", "cron"] && repoUrl == "https://github.com/mozilla-mobile/firefox-android"'
                       then: '3'
                       else: '1'
 
@@ -170,7 +170,7 @@ tasks:
                         routes:
                             $flattenDeep:
                                 - checks
-                                - $if: 'level == "3" || repoUrl == "https://github.com/mozilla-releng/staging-android-components"'
+                                - $if: 'level == "3" || repoUrl == "https://github.com/mozilla-releng/staging-firefox-android"'
                                   then:
                                       - tc-treeherder.v2.${project}.${head_sha}
                                       - $if: 'tasks_for == "github-push"'
@@ -223,7 +223,7 @@ tasks:
                                       MOBILE_PIP_REQUIREMENTS: taskcluster/requirements.txt
                                       MOBILE_REPOSITORY_TYPE: git
                                       MOZ_AUTOMATION: "1"
-                                      REPOSITORIES: {$json: {mobile: "android-components"}}
+                                      REPOSITORIES: {$json: {mobile: "firefox-android"}}
                                       ANDROID_SDK_ROOT: /builds/worker/android-sdk
                                     - $if: 'tasks_for in ["github-pull-request"]'
                                       then:
