@@ -55,6 +55,7 @@ class MOZ_STACK_CLASS DocInfo final {
   const URLInfo& PrincipalURL() const;
 
   bool IsTopLevel() const;
+  bool IsSameOriginWithTop() const;
   bool ShouldMatchActiveTabPermission() const;
 
   uint64_t FrameID() const;
