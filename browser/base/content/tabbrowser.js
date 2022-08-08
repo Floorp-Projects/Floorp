@@ -28,6 +28,16 @@
         UrlbarProviderOpenTabs:
           "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
       });
+      XPCOMUtils.defineLazyModuleGetters(this, {
+        E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+        PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
+      });
+      XPCOMUtils.defineLazyServiceGetters(this, {
+        MacSharingService: [
+          "@mozilla.org/widget/macsharingservice;1",
+          "nsIMacSharingService",
+        ],
+      });
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         ChromeUtils.defineModuleGetter(
@@ -58,17 +68,6 @@
       }
 
       this._setFindbarData();
-
-      XPCOMUtils.defineLazyModuleGetters(this, {
-        E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-        PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
-      });
-      XPCOMUtils.defineLazyServiceGetters(this, {
-        MacSharingService: [
-          "@mozilla.org/widget/macsharingservice;1",
-          "nsIMacSharingService",
-        ],
-      });
 
       // We take over setting the document title, so remove the l10n id to
       // avoid it being re-translated and overwriting document content if
