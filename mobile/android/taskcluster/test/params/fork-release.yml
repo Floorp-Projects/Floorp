@@ -1,0 +1,24 @@
+base_repository: https://github.com/JohanLorenzo/android-components
+base_rev: UNDEFINED
+build_date: 1569932069
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: master
+head_repository: https://github.com/JohanLorenzo/android-components
+head_rev: 5ce0cc79c8cb2d6479d8b297d6e09238ec730fbf
+head_tag: v15.0.0
+level: '1'
+moz_build_date: '20191001121429'
+optimize_target_tasks: true
+owner: JohanLorenzo@users.noreply.github.com
+project: android-components
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+repository_type: git
+target_tasks_method: release
+tasks_for: github-release
+version: '90.0.0'
+next_version: '90.0.1'

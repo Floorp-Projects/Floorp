@@ -1,0 +1,24 @@
+base_repository: https://github.com/mozilla-mobile/android-components
+base_rev: UNDEFINED
+build_date: 1570280464
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: master
+head_repository: https://github.com/mozilla-mobile/android-components
+head_rev: 79636afc6ae17f83f634e8a890ba73097954dd0e
+head_tag: ''
+level: '3'
+moz_build_date: '20191005130104'
+optimize_target_tasks: true
+owner: cron@noreply.mozilla.org
+project: android-components
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+repository_type: git
+target_tasks_method: nightly
+tasks_for: cron
+version: '90.0.0'
+next_version: '90.0.1'

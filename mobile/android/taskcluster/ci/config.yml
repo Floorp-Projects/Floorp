@@ -147,10 +147,12 @@ task-priority:
         default: low
 
 taskgraph:
+    register: ac_taskgraph:register
     repositories:
         mobile:
             name: firefox-android
     cached-task-prefix: mobile.v2.firefox-android
+    decision-parameters: 'ac_taskgraph:get_decision_parameters'
 
 workers:
     aliases:
