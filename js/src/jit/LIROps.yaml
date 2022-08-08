@@ -1103,6 +1103,14 @@
     codePoint: WordSized
   num_temps: 2
 
+# Test if a string starts with the search string
+- name: StringStartsWith
+  result_type: WordSized
+  operands:
+    string: WordSized
+    searchString: WordSized
+  call_instruction: true
+
 # Calls the ToLowerCase or ToUpperCase case conversion function.
 - name: StringConvertCase
   result_type: WordSized

@@ -2404,6 +2404,27 @@ bool js::str_startsWith(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::StringStartsWith(JSContext* cx, HandleString string,
+                          HandleString searchString, bool* result) {
+  if (searchString->length() > string->length()) {
+    *result = false;
+    return true;
+  }
+
+  JSLinearString* str = string->ensureLinear(cx);
+  if (!str) {
+    return false;
+  }
+
+  JSLinearString* searchStr = searchString->ensureLinear(cx);
+  if (!searchStr) {
+    return false;
+  }
+
+  *result = HasSubstringAt(str, searchStr, 0);
+  return true;
+}
+
 // ES2018 draft rev de77aaeffce115deaf948ed30c7dbe4c60983c0c
 // 21.1.3.6 String.prototype.endsWith ( searchString [ , endPosition ] )
 bool js::str_endsWith(JSContext* cx, unsigned argc, Value* vp) {
@@ -3492,7 +3513,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1, 0),
     JS_FN("includes", str_includes, 1, 0), JS_FN("indexOf", str_indexOf, 1, 0),
     JS_FN("lastIndexOf", str_lastIndexOf, 1, 0),
-    JS_FN("startsWith", str_startsWith, 1, 0),
+    JS_INLINABLE_FN("startsWith", str_startsWith, 1, 0, StringStartsWith),
     JS_FN("endsWith", str_endsWith, 1, 0), JS_FN("trim", str_trim, 0, 0),
     JS_FN("trimStart", str_trimStart, 0, 0),
     JS_FN("trimEnd", str_trimEnd, 0, 0),
