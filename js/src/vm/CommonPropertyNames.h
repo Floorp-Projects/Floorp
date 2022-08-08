@@ -517,8 +517,6 @@
   MACRO_(unitDisplay, unitDisplay, "unitDisplay")                              \
   MACRO_(unknown, unknown, "unknown")                                          \
   MACRO_(unregister, unregister, "unregister")                                 \
-  MACRO_(UnsafeGetBooleanFromReservedSlot, UnsafeGetBooleanFromReservedSlot,   \
-         "UnsafeGetBooleanFromReservedSlot")                                   \
   MACRO_(UnsafeGetInt32FromReservedSlot, UnsafeGetInt32FromReservedSlot,       \
          "UnsafeGetInt32FromReservedSlot")                                     \
   MACRO_(UnsafeGetObjectFromReservedSlot, UnsafeGetObjectFromReservedSlot,     \

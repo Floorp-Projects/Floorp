@@ -728,16 +728,6 @@ static bool intrinsic_UnsafeGetStringFromReservedSlot(JSContext* cx,
   return true;
 }
 
-static bool intrinsic_UnsafeGetBooleanFromReservedSlot(JSContext* cx,
-                                                       unsigned argc,
-                                                       Value* vp) {
-  if (!intrinsic_UnsafeGetReservedSlot(cx, argc, vp)) {
-    return false;
-  }
-  MOZ_ASSERT(vp->isBoolean());
-  return true;
-}
-
 static bool intrinsic_ThisTimeValue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -2120,9 +2110,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
     JS_FN("TypedArrayNativeSort", intrinsic_TypedArrayNativeSort, 1, 0),
-    JS_INLINABLE_FN("UnsafeGetBooleanFromReservedSlot",
-                    intrinsic_UnsafeGetBooleanFromReservedSlot, 2, 0,
-                    IntrinsicUnsafeGetBooleanFromReservedSlot),
     JS_INLINABLE_FN("UnsafeGetInt32FromReservedSlot",
                     intrinsic_UnsafeGetInt32FromReservedSlot, 2, 0,
                     IntrinsicUnsafeGetInt32FromReservedSlot),
