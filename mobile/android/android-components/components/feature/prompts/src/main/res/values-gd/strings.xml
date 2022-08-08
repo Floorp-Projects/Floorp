@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">Ceart ma-thà</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
@@ -107,4 +107,22 @@
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Co-theannaich na cairtean-creideis a mholamaid</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Stiùirich na cairtean-creideis</string>
-    </resources>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">A bheil thu airson a’ chairt seo a shàbhaladh air dòigh thèarainte?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">A bheil thu airson an latha a dh’fhalbhas an ùine air a’ chairt ùrachadh?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Thèid àireamh na cairte a chrioptachadh. Cha tèid an còd tèarainteachd a shàbhaladh.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">Tagh na seòlaidhean</string>
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">Tagh seòladh</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Leudaich na seòlaidhean a tha gam moladh</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Co-theannaich na seòlaidhean a tha gam moladh</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Stiùirich na seòlaidhean</string>
+</resources>

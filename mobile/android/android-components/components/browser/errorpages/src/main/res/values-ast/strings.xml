@@ -39,6 +39,8 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Aceutar el riesgu y siguir</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Esti sitiu web rique una conexón segura.</string>
     <!-- The error message shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
       <ul>
@@ -250,6 +252,8 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">El sitiu seguru nun ta disponible</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Activesti\'l mou de namás HTTPS p\'ameyorar la seguranza, y la versión HTTPS de <em>%1$s</em> nun ta disponible.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Siguir col sitiu HTTP</string>
 </resources>

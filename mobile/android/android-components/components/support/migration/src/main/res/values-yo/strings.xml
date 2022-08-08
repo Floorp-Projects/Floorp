@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_title">Ìsọdọ̀tun ń lọ lọ́wọ́</string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">Firefox yóò ṣetán láìpẹ́…</string>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">Ìsọdọ̀tun ti parí</string>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">Wọ́n ti sọ Firefox dọ̀tun - àti ó ti ní ìlọsíwájú!</string>
+</resources>

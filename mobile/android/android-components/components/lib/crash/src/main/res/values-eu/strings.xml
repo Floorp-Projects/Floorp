@@ -24,6 +24,9 @@
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">Hutsegite-txostena %1$s(e)ra bidaltzen</string>
 
+    <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_data_in_progress">Hutsegitearen datuak biltzen</string>
+
     <!-- Label of notification showing that the telemetry service is gathering the crash data. -->
     <string name="mozac_lib_gathering_crash_telemetry_in_progress">Hutsegitearen datu telemetrikoak biltzen</string>
 

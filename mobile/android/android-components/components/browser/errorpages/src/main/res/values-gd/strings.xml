@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Feuch ris a-rithist</string>
@@ -35,6 +35,32 @@
     <string name="mozac_browser_errorpages_security_bad_cert_back">Air ais (Mholamaid seo)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Tuigidh mi an cunnart, air adhart leam</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Feumaidh an làrach-lìn seo ceangal tèarainte.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Chan urrainn dhuinn an duilleag seo a shealltainn dhut a chionn ’s gum feum an làrach-lìn seo ceangal tèarainte.</li>
+         <li>Mar is trice, ’s ann aig an làrach-lìn a bhios an duilgheadas agus chan eil dad ann as urrainn dhut-sa a dhèanamh airson a chur ceart.</li>
+         <li>Ach is urrainn dhut innse do rianaire na làraich-lìn gu bheil an duilgheadas seo ann.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Adhartach…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> Tha poileasaidh tèarainteachd aig <b>%1$s</b> air a bheil HTTP Strict Transport Security (HSTS), agus is ciall dha sin nach urrainn dha <b>%2$s</b> ach ceangal tèarainte a dhèanamh. Chan urrainn dhut eisgeachd a chur ris a thadhal air an làrach seo.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> Tha poileasaidh tèarainteachd aig <b>%1$s</b> air a bheil HTTP Strict Transport Security (HSTS), agus is ciall dha sin nach urrainn dha <b>%2$s</b> ach ceangal tèarainte a dhèanamh. Chan urrainn dhut eisgeachd a chur ris a thadhal air an làrach seo.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Air ais</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Bhris rudeigin a-steach air a’ cheangal</string>
