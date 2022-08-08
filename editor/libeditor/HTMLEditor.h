@@ -1124,18 +1124,18 @@ class HTMLEditor final : public EditorBase,
                                          const Element& aEditingHost);
 
   /**
-   * HandleInsertBRElement() inserts a <br> element into aInsertToBreak.
+   * HandleInsertBRElement() inserts a <br> element into aPointToBreak.
    * This may split container elements at the point and/or may move following
    * <br> element to immediately after the new <br> element if necessary.
    *
-   * @param aInsertToBreak      The point where new <br> element will be
+   * @param aPointToBreak       The point where new <br> element will be
    *                            inserted before.
    * @param aEditingHost        Current active editing host.
    * @return                    If succeeded, returns new <br> element and
    *                            candidate caret point.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult HandleInsertBRElement(
-      const EditorDOMPoint& aInsertToBreak, const Element& aEditingHost);
+      const EditorDOMPoint& aPointToBreak, const Element& aEditingHost);
 
   /**
    * HandleInsertLinefeed() inserts a linefeed character into aInsertToBreak.
