@@ -425,6 +425,9 @@
       // null parameter below specifies HTML response for search
       let params = {
         postData: submission.postData,
+        globalHistoryOptions: {
+          triggeringSearchEngine: engine.name,
+        },
       };
       if (aParams) {
         for (let key in aParams) {
