@@ -159,7 +159,6 @@ add_task(async function test_http2() {
         0x3e,
       ])
     );
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function() {
       resp.write(
         Buffer.from([
@@ -303,7 +302,6 @@ add_task(async function test_http2() {
       );
     }, 100);
 
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(function() {
       resp.end(
         Buffer.from([

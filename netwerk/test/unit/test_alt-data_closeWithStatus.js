@@ -53,11 +53,10 @@ function contentHandler(metadata, response) {
   response.setHeader("Cache-Control", "no-cache");
   response.setHeader("ETag", "test-etag1");
 
-  let etag;
   try {
-    etag = metadata.getHeader("If-None-Match");
+    var etag = metadata.getHeader("If-None-Match");
   } catch (ex) {
-    etag = "";
+    var etag = "";
   }
 
   if (etag == "test-etag1" && shouldPassRevalidation) {

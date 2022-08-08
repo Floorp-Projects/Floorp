@@ -25,11 +25,11 @@ function run_test() {
   chan.setRequestHeader("foopy", "baz", true);
   check_request_header(chan, "foopy", "bar, baz");
 
-  for (let i = 0; i < 100; ++i) {
+  for (var i = 0; i < 100; ++i) {
     chan.setRequestHeader("foopy" + i, i, false);
   }
 
-  for (let i = 0; i < 100; ++i) {
+  for (var i = 0; i < 100; ++i) {
     check_request_header(chan, "foopy" + i, i);
   }
 

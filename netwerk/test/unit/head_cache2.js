@@ -69,7 +69,7 @@ function pumpReadStream(inputStream, goon) {
       Ci.nsIInputStreamPump
     );
     pump.init(inputStream, 0, 0, true);
-    let data = "";
+    var data = "";
     pump.asyncRead({
       onStartRequest(aRequest) {},
       onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
@@ -89,7 +89,7 @@ function pumpReadStream(inputStream, goon) {
     });
   } else {
     // blocking stream
-    let data = read_stream(inputStream, inputStream.available());
+    var data = read_stream(inputStream, inputStream.available());
     goon(data);
   }
 }
@@ -187,7 +187,7 @@ OpenCallback.prototype = {
         return;
       }
 
-      let self = this;
+      var self = this;
       executeSoon(function() {
         // emulate network latency
         entry.setMetaDataElement("meto", self.workingMetadata);
@@ -210,7 +210,7 @@ OpenCallback.prototype = {
           if (self.behavior & DOOMED) {
             LOG_C2(self, "checking doom state");
             try {
-              let os = entry.openOutputStream(0, -1);
+              var os = entry.openOutputStream(0, -1);
               // Unfortunately, in the undetermined state we cannot even check whether the entry
               // is actually doomed or not.
               os.close();
@@ -226,7 +226,7 @@ OpenCallback.prototype = {
 
           var offset = self.behavior & PARTIAL ? entry.dataSize : 0;
           LOG_C2(self, "openOutputStream @ " + offset);
-          let os = entry.openOutputStream(offset, -1);
+          var os = entry.openOutputStream(offset, -1);
           LOG_C2(self, "writing data");
           var wrt = os.write(self.workingData, self.workingData.length);
           Assert.equal(wrt, self.workingData.length);
@@ -249,7 +249,7 @@ OpenCallback.prototype = {
         this.goon(entry, true);
       }
 
-      let self = this;
+      var self = this;
       pumpReadStream(entry.openInputStream(0), function(data) {
         Assert.equal(data, self.workingData);
         self.onDataCheckPassed = true;

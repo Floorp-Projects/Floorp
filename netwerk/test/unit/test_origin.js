@@ -51,8 +51,7 @@ function makeChan(origin) {
   }).QueryInterface(Ci.nsIHttpChannel);
 }
 
-// Avoid ESLint no-global-assign rules.
-/* global origin:true */
+let origin;
 var nextTest;
 var nextPortExpectedToBeSame = false;
 var currentPort = 0;

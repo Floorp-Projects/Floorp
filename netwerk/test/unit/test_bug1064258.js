@@ -50,7 +50,7 @@ function contentHandler2(metadata, response) {
       response.bodyOutputStream.write(responseBody2b, responseBody2b.length);
       break;
     default:
-      throw new Error("Unexpected request in the test");
+      throw "Unexpected request in the test";
   }
 }
 

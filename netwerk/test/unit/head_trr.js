@@ -271,8 +271,7 @@ class TRRServerCode {
       let u = url.parse(req.url, true);
       let handler = global.path_handlers[u.pathname];
       if (handler) {
-        handler(req, resp, u);
-        return;
+        return handler(req, resp, u);
       }
 
       // Didn't find a handler for this path.
@@ -351,7 +350,7 @@ function trrQueryHandler(req, resp, url) {
     req.on("data", chunk => {
       requestBody = Buffer.concat([requestBody, chunk]);
       if (requestBody.length == contentLength) {
-        processRequest(req, resp, requestBody);
+        return processRequest(req, resp, requestBody);
       }
     });
   } else if (method == "GET") {
@@ -362,7 +361,7 @@ function trrQueryHandler(req, resp, url) {
     }
 
     requestBody = Buffer.from(url.query.dns, "base64");
-    processRequest(req, resp, requestBody);
+    return processRequest(req, resp, requestBody);
   } else {
     // unexpected method.
     resp.writeHead(405);
@@ -575,9 +574,7 @@ class TRRProxyCode {
         }
       });
       socket.on("error", error => {
-        throw new Error(
-          `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`
-        );
+        throw `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`;
       });
     });
   }

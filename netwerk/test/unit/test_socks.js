@@ -41,11 +41,11 @@ function runScriptSubprocess(script, args) {
     do_throw("Can't find xpcshell binary");
   }
 
-  var file = do_get_file(script);
+  var script = do_get_file(script);
   var proc = new Process(bin);
-  var procArgs = [file.path].concat(args);
+  var args = [script.path].concat(args);
 
-  proc.run(false, procArgs, procArgs.length);
+  proc.run(false, args, args.length);
 
   return proc;
 }
@@ -399,7 +399,6 @@ SocksTestServer.prototype = {
       }
     }
     do_throw("No test case with id " + id);
-    return null;
   },
 
   testCompleted(client) {

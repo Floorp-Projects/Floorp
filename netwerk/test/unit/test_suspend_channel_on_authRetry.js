@@ -74,7 +74,7 @@ requestListenerObserver.prototype = {
       subject instanceof Ci.nsIHttpChannel
     ) {
       if (this.suspendOnBeforeConnect) {
-        let chan = subject.QueryInterface(Ci.nsIHttpChannel);
+        var chan = subject.QueryInterface(Ci.nsIHttpChannel);
         executeSoon(() => {
           this.resumeOnBeforeConnect = true;
           chan.resume();
@@ -87,7 +87,7 @@ requestListenerObserver.prototype = {
       subject instanceof Ci.nsIHttpChannel
     ) {
       if (this.suspendOnModifyRequest) {
-        let chan = subject.QueryInterface(Ci.nsIHttpChannel);
+        var chan = subject.QueryInterface(Ci.nsIHttpChannel);
         executeSoon(() => {
           this.resumeOnModifyRequest = true;
           chan.resume();

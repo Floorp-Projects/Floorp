@@ -58,8 +58,7 @@ function makeChan(origin) {
 }
 
 var nextTest;
-// Avoid ESLint no-global-assign rules.
-/* global origin:true */
+var origin;
 var nextPortExpectedToBeSame = false;
 var currentPort = 0;
 var forceReload = false;

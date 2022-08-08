@@ -145,7 +145,6 @@ AuthPrompt2.prototype = {
     const kAllKnownFlags = 127; // Don't fail test for newly added flags
     Assert.equal(expectedFlags, authInfo.flags & kAllKnownFlags);
 
-    // eslint-disable-next-line no-nested-ternary
     var expectedScheme = isNTLM ? "ntlm" : isDigest ? "digest" : "basic";
     Assert.equal(expectedScheme, authInfo.authenticationScheme);
 
