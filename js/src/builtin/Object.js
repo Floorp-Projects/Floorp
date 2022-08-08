@@ -241,7 +241,10 @@ function ObjectOrReflectDefineProperty(obj, propertyKey, attributes, strict) {
 
   // 6.2.4.5 ToPropertyDescriptor, step 1.
   if (!IsObject(attributes)) {
-    ThrowArgTypeNotObject(NOT_OBJECT_KIND_DESCRIPTOR, attributes);
+    ThrowTypeError(
+      JSMSG_OBJECT_REQUIRED_PROP_DESC,
+      DecompileArg(2, attributes)
+    );
   }
 
   // 6.2.4.5 ToPropertyDescriptor, step 2.
