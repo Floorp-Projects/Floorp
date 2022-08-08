@@ -121,8 +121,18 @@ public class SurfaceViewWrapper {
    * render in to such a Surface will fail. This function checks whether a Surface is in such state,
    * allowing us to request a new Surface if so.
    */
-  @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-  public static native boolean isSurfaceAbandoned(final Surface surface);
+  public static boolean isSurfaceAbandoned(final Surface surface) {
+    // If JNI hasn't been loaded yet we cannot check whether the Surface has been abandoned.
+    // Just assume the Surface is okay.
+    if (!GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+      return false;
+    }
+
+    return isSurfaceAbandonedNative(surface);
+  }
+
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "current", stubName = "IsSurfaceAbandoned")
+  private static native boolean isSurfaceAbandonedNative(final Surface surface);
 
   /**
    * Translates SurfaceTextureListener and SurfaceHolder.Callback into a common interface
