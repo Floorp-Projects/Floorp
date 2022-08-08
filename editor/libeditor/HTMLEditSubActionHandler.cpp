@@ -5564,6 +5564,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   MOZ_ASSERT(EditorUtils::IsDescendantOf(aStartOfMiddleElement, aBlockElement));
   MOZ_ASSERT(EditorUtils::IsDescendantOf(aEndOfMiddleElement, aBlockElement));
 
+  EditorDOMPoint pointToPutCaret;
   // Split at the start.
   SplitNodeResult splitAtStartResult = SplitNodeDeepWithTransaction(
       aBlockElement, EditorDOMPoint(&aStartOfMiddleElement),
@@ -5576,6 +5577,8 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
       splitAtStartResult.isOk(),
       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
       "eDoNotCreateEmptyContainer) at start of middle element failed");
+  splitAtStartResult.MoveCaretPointTo(pointToPutCaret,
+                                      {SuggestCaret::OnlyIfHasSuggestion});
 
   // Split at after the end
   auto atAfterEnd = EditorDOMPoint::After(aEndOfMiddleElement);
@@ -5589,9 +5592,29 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
       splitAtEndResult.isOk(),
       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
       "eDoNotCreateEmptyContainer) after end of middle element failed");
+  splitAtEndResult.MoveCaretPointTo(pointToPutCaret,
+                                    {SuggestCaret::OnlyIfHasSuggestion});
 
-  return SplitRangeOffFromNodeResult(std::move(splitAtStartResult),
-                                     std::move(splitAtEndResult));
+  if (splitAtStartResult.DidSplit() && splitAtEndResult.DidSplit()) {
+    // Note that the middle node can be computed only with the latter split
+    // result.
+    return SplitRangeOffFromNodeResult(splitAtStartResult.GetPreviousContent(),
+                                       splitAtEndResult.GetPreviousContent(),
+                                       splitAtEndResult.GetNextContent(),
+                                       std::move(pointToPutCaret));
+  }
+  if (splitAtStartResult.DidSplit()) {
+    return SplitRangeOffFromNodeResult(splitAtStartResult.GetPreviousContent(),
+                                       splitAtStartResult.GetNextContent(),
+                                       nullptr, std::move(pointToPutCaret));
+  }
+  if (splitAtEndResult.DidSplit()) {
+    return SplitRangeOffFromNodeResult(
+        nullptr, splitAtEndResult.GetPreviousContent(),
+        splitAtEndResult.GetNextContent(), std::move(pointToPutCaret));
+  }
+  return SplitRangeOffFromNodeResult(nullptr, &aBlockElement, nullptr,
+                                     std::move(pointToPutCaret));
 }
 
 SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
