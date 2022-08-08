@@ -994,13 +994,11 @@ DownloadsDataCtor.prototype = {
     }
 
     let shouldOpenDownloadsPanel =
-      openDownloadsListOnStart &&
       aType == "start" &&
       Services.prefs.getBoolPref(
         "browser.download.improvements_to_download_panel"
       ) &&
       DownloadsCommon.summarizeDownloads(this._downloads).numDownloading <= 1 &&
-      browserWin == Services.focus.activeWindow &&
       gAlwaysOpenPanel;
 
     // For new downloads after the first one, don't show the panel
@@ -1013,7 +1011,8 @@ DownloadsDataCtor.prototype = {
     if (
       aType != "error" &&
       ((this.panelHasShownBefore && !shouldOpenDownloadsPanel) ||
-        !openDownloadsListOnStart)
+        !openDownloadsListOnStart ||
+        browserWin != Services.focus.activeWindow)
     ) {
       DownloadsCommon.log("Showing new download notification.");
       browserWin.DownloadsIndicatorView.showEventNotification(aType);
