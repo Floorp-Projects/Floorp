@@ -185,6 +185,7 @@ data class Addon(
             "browsingData" to R.string.mozac_feature_addons_permissions_browser_data_description,
             "clipboardRead" to R.string.mozac_feature_addons_permissions_clipboard_read_description,
             "clipboardWrite" to R.string.mozac_feature_addons_permissions_clipboard_write_description,
+            "declarativeNetRequest" to R.string.mozac_feature_addons_permissions_declarative_net_request_description,
             "downloads" to R.string.mozac_feature_addons_permissions_downloads_description,
             "downloads.open" to R.string.mozac_feature_addons_permissions_downloads_open_description,
             "find" to R.string.mozac_feature_addons_permissions_find_description,
