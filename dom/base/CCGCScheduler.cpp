@@ -249,10 +249,13 @@ void CCGCScheduler::NoteGCSliceEnd(TimeStamp aStart, TimeStamp aEnd) {
   TimeDuration sliceDuration = aEnd - aStart;
   PerfStats::RecordMeasurement(PerfStats::Metric::MajorGC, sliceDuration);
 
-  // Compute how much GC time was spent in predicted-to-be-idle time.
+  // Compute how much GC time was spent in predicted-to-be-idle time. In the
+  // unlikely event that the slice started after the deadline had already
+  // passed, treat the entire slice as non-idle.
   TimeDuration nonIdleDuration;
-  bool startedIdle =
-      mTriggeredGCDeadline.isSome() && !mTriggeredGCDeadline->IsNull();
+  bool startedIdle = mTriggeredGCDeadline.isSome() &&
+                     !mTriggeredGCDeadline->IsNull() &&
+                     *mTriggeredGCDeadline > aStart;
   if (!startedIdle) {
     nonIdleDuration = sliceDuration;
   } else {
