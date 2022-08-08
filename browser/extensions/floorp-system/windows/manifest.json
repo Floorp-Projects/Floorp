@@ -38,11 +38,6 @@
       }
    }
   },
-  "browser_action": {
-		"default_icon":  "icons/floorp.png",
-		"default_title": "check for Update",
-		"browser_style":  true
-	},
   "page_action": {
     "browser_style": true,
     "default_icon": "icons/icon.png",

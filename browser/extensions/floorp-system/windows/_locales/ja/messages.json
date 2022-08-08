@@ -10,5 +10,25 @@
   "finish": {
     "message": "ダウンロード完了です！",
     "description": "ダウンロード完了"
+  }, 
+
+  "notificationTitle": {
+    "message": "Floorp からの通知",
+    "description": "タイトル"
+  },
+
+  "notificationContent": {
+    "message": "Floorp プロジェクトからのお知らせ！",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
   }
 }
