@@ -15,7 +15,6 @@ namespace mozilla {
 namespace dom {
 struct GPUTextureDescriptor;
 struct GPUTextureViewDescriptor;
-enum class GPUTextureFormat : uint8_t;
 }  // namespace dom
 
 namespace webgpu {
@@ -36,7 +35,6 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
           const dom::GPUTextureDescriptor& aDesc);
   Device* GetParentDevice() { return mParent; }
   const RawId mId;
-  const dom::GPUTextureFormat mFormat;
   const Maybe<uint8_t> mBytesPerBlock;
 
   WeakPtr<CanvasContext> mTargetContext;

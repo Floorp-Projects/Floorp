@@ -88,7 +88,6 @@ Texture::Texture(Device* const aParent, RawId aId,
                  const dom::GPUTextureDescriptor& aDesc)
     : ChildOf(aParent),
       mId(aId),
-      mFormat(aDesc.mFormat),
       mBytesPerBlock(GetBytesPerBlock(aDesc.mFormat)) {}
 
 Texture::~Texture() { Cleanup(); }
