@@ -320,7 +320,15 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   // parent-process only Browser Toolbox).
   get childrenUnavailable() {
     return (
-      this._form.useChildTargetToFetchChildren &&
+      // If form.useChildTargetToFetchChildren is true, it means the node HAS
+      // children in another target.
+      // Note: useChildTargetToFetchChildren might be undefined, force
+      // conversion to boolean. See Bug 1783613 to try and improve this.
+      !!this._form.useChildTargetToFetchChildren &&
+      // But if useChildTargetToFetchChildren is false, it means the client
+      // configuration prevents from displaying such children.
+      // This is the only case where children are considered as unavailable:
+      // they exist, but can't be retrieved by configuration.
       !this.useChildTargetToFetchChildren
     );
   }
@@ -343,7 +351,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       return false;
     }
 
-    return this._form.useChildTargetToFetchChildren;
+    return !!this._form.useChildTargetToFetchChildren;
   }
   get hasEventListeners() {
     return this._form.hasEventListeners;
