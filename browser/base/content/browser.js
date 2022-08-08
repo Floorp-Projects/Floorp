@@ -4201,6 +4201,9 @@ const BrowserSearch = {
       triggeringPrincipal,
       csp,
       targetBrowser: tab?.linkedBrowser,
+      globalHistoryOptions: {
+        triggeringSearchEngine: engine.name,
+      },
     });
 
     return { engine, url: submission.uri };

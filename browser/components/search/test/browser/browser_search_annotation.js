@@ -103,3 +103,51 @@ add_task(async function basic() {
     await PlacesUtils.bookmarks.eraseEverything();
   }
 });
+
+add_task(async function contextmenu() {
+  await BrowserTestUtils.withNewTab(
+    "https://example.com/browser/browser/components/search/test/browser/test_search.html",
+    async () => {
+      // Select html content.
+      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+        await new Promise(resolve => {
+          content.document.addEventListener("selectionchange", resolve, {
+            once: true,
+          });
+          content.document
+            .getSelection()
+            .selectAllChildren(content.document.body);
+        });
+      });
+
+      const onPopup = BrowserTestUtils.waitForEvent(document, "popupshown");
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#id",
+        { type: "contextmenu" },
+        gBrowser.selectedBrowser
+      );
+      await onPopup;
+
+      const targetURL = "https://example.com/?q=test%2520search";
+      const onLoad = BrowserTestUtils.waitForNewTab(gBrowser, targetURL, true);
+      const contextMenu = document.getElementById("contentAreaContextMenu");
+      const openLinkMenuItem = contextMenu.querySelector(
+        "#context-searchselect"
+      );
+      openLinkMenuItem.click();
+      contextMenu.hidePopup();
+      const tab = await onLoad;
+
+      await assertDatabase({
+        targetURL,
+        expected: {
+          source: VISIT_SOURCE_SEARCHED,
+        },
+      });
+
+      BrowserTestUtils.removeTab(tab);
+      await PlacesUtils.history.clear();
+      await PlacesUtils.bookmarks.eraseEverything();
+    }
+  );
+});
