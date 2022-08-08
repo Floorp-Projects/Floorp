@@ -79,10 +79,10 @@ AuthPrompt2.prototype = {
         authInfo.password = cred.pass;
         cred.flags &= ~FLAG_PREVIOUS_FAILED;
       }
-      return true;
     } catch (e) {
       do_throw(e);
     }
+    return true;
   },
 
   asyncPromptAuth: function ap2_async(
@@ -92,35 +92,31 @@ AuthPrompt2.prototype = {
     encryptionLevel,
     authInfo
   ) {
-    try {
-      var me = this;
-      var allOverAndDead = false;
-      executeSoon(function() {
-        try {
-          if (allOverAndDead) {
-            throw "already canceled";
-          }
-          var ret = me.promptAuth(channel, encryptionLevel, authInfo);
-          if (!ret) {
-            callback.onAuthCancelled(context, true);
-          } else {
-            callback.onAuthAvailable(context, authInfo);
-          }
-          allOverAndDead = true;
-        } catch (e) {
-          do_throw(e);
-        }
-      });
-      return new Cancelable(function() {
+    var me = this;
+    var allOverAndDead = false;
+    executeSoon(function() {
+      try {
         if (allOverAndDead) {
-          throw "can't cancel, already ran";
+          throw "already canceled";
         }
-        callback.onAuthAvailable(context, authInfo);
+        var ret = me.promptAuth(channel, encryptionLevel, authInfo);
+        if (!ret) {
+          callback.onAuthCancelled(context, true);
+        } else {
+          callback.onAuthAvailable(context, authInfo);
+        }
         allOverAndDead = true;
-      });
-    } catch (e) {
-      do_throw(e);
-    }
+      } catch (e) {
+        do_throw(e);
+      }
+    });
+    return new Cancelable(function() {
+      if (allOverAndDead) {
+        throw "can't cancel, already ran";
+      }
+      callback.onAuthAvailable(context, authInfo);
+      allOverAndDead = true;
+    });
   },
 };
 
