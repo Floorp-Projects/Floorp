@@ -7,10 +7,19 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "Queue.h"
 
+#include <algorithm>
+
 #include "CommandBuffer.h"
 #include "CommandEncoder.h"
 #include "ipc/WebGPUChild.h"
+#include "mozilla/Casting.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/dom/OffscreenCanvas.h"
+#include "mozilla/dom/WebGLTexelConversions.h"
+#include "mozilla/dom/WebGLTypes.h"
+#include "nsLayoutUtils.h"
 
 namespace mozilla::webgpu {
 
@@ -135,6 +144,253 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
   }
 
   memcpy(shmem.get<uint8_t>(), data + aDataLayout.mOffset, size);
+  ipc::ByteBuf bb;
+  ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
+  if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                     std::move(shmem))) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+
+static WebGLTexelFormat ToWebGLTexelFormat(gfx::SurfaceFormat aFormat) {
+  switch (aFormat) {
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8:
+      return WebGLTexelFormat::BGRA8;
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::R8G8B8X8:
+      return WebGLTexelFormat::RGBA8;
+    default:
+      return WebGLTexelFormat::FormatNotSupportingAnyConversion;
+  }
+}
+
+static WebGLTexelFormat ToWebGLTexelFormat(dom::GPUTextureFormat aFormat) {
+  // TODO: We need support for Rbg10a2unorm as well.
+  switch (aFormat) {
+    case dom::GPUTextureFormat::R8unorm:
+      return WebGLTexelFormat::R8;
+    case dom::GPUTextureFormat::R16float:
+      return WebGLTexelFormat::R16F;
+    case dom::GPUTextureFormat::R32float:
+      return WebGLTexelFormat::R32F;
+    case dom::GPUTextureFormat::Rg8unorm:
+      return WebGLTexelFormat::RG8;
+    case dom::GPUTextureFormat::Rg16float:
+      return WebGLTexelFormat::RG16F;
+    case dom::GPUTextureFormat::Rg32float:
+      return WebGLTexelFormat::RG32F;
+    case dom::GPUTextureFormat::Rgba8unorm:
+    case dom::GPUTextureFormat::Rgba8unorm_srgb:
+      return WebGLTexelFormat::RGBA8;
+    case dom::GPUTextureFormat::Bgra8unorm:
+    case dom::GPUTextureFormat::Bgra8unorm_srgb:
+      return WebGLTexelFormat::BGRA8;
+    case dom::GPUTextureFormat::Rgba16float:
+      return WebGLTexelFormat::RGBA16F;
+    case dom::GPUTextureFormat::Rgba32float:
+      return WebGLTexelFormat::RGBA32F;
+    default:
+      return WebGLTexelFormat::FormatNotSupportingAnyConversion;
+  }
+}
+
+void Queue::CopyExternalImageToTexture(
+    const dom::GPUImageCopyExternalImage& aSource,
+    const dom::GPUImageCopyTextureTagged& aDestination,
+    const dom::GPUExtent3D& aCopySize, ErrorResult& aRv) {
+  const auto dstFormat = ToWebGLTexelFormat(aDestination.mTexture->mFormat);
+  if (dstFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion) {
+    aRv.ThrowInvalidStateError("Unsupported destination format");
+    return;
+  }
+
+  const uint32_t surfaceFlags = nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
+  SurfaceFromElementResult sfeResult;
+  if (aSource.mSource.IsImageBitmap()) {
+    const auto& bitmap = aSource.mSource.GetAsImageBitmap();
+    if (bitmap->IsClosed()) {
+      aRv.ThrowInvalidStateError("Detached ImageBitmap");
+      return;
+    }
+
+    sfeResult = nsLayoutUtils::SurfaceFromImageBitmap(bitmap, surfaceFlags);
+  } else if (aSource.mSource.IsHTMLCanvasElement()) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    const auto& canvas = aSource.mSource.GetAsHTMLCanvasElement();
+    if (canvas->Width() == 0 || canvas->Height() == 0) {
+      aRv.ThrowInvalidStateError("Zero-sized HTMLCanvasElement");
+      return;
+    }
+
+    sfeResult = nsLayoutUtils::SurfaceFromElement(canvas, surfaceFlags);
+  } else if (aSource.mSource.IsOffscreenCanvas()) {
+    const auto& canvas = aSource.mSource.GetAsOffscreenCanvas();
+    if (canvas->Width() == 0 || canvas->Height() == 0) {
+      aRv.ThrowInvalidStateError("Zero-sized OffscreenCanvas");
+      return;
+    }
+
+    sfeResult = nsLayoutUtils::SurfaceFromOffscreenCanvas(canvas, surfaceFlags);
+  }
+
+  if (!sfeResult.mCORSUsed) {
+    nsIGlobalObject* global = mParent->GetOwnerGlobal();
+    nsIPrincipal* dstPrincipal = global ? global->PrincipalOrNull() : nullptr;
+    if (!sfeResult.mPrincipal || !dstPrincipal ||
+        !dstPrincipal->Subsumes(sfeResult.mPrincipal)) {
+      aRv.ThrowSecurityError("Cross-origin elements require CORS!");
+      return;
+    }
+  }
+
+  if (sfeResult.mIsWriteOnly) {
+    aRv.ThrowSecurityError("Write only source data not supported!");
+    return;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = sfeResult.GetSourceSurface();
+  if (!surface) {
+    aRv.ThrowInvalidStateError("No surface available from source");
+    return;
+  }
+
+  RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
+  if (!dataSurface) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  bool srcPremultiplied;
+  switch (sfeResult.mAlphaType) {
+    case gfxAlphaType::Premult:
+      srcPremultiplied = true;
+      break;
+    case gfxAlphaType::NonPremult:
+      srcPremultiplied = false;
+      break;
+    case gfxAlphaType::Opaque:
+      // No (un)premultiplication necessary so match the output.
+      srcPremultiplied = aDestination.mPremultipliedAlpha;
+      break;
+  }
+
+  const auto surfaceFormat = dataSurface->GetFormat();
+  const auto srcFormat = ToWebGLTexelFormat(surfaceFormat);
+  if (srcFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion) {
+    gfxCriticalError() << "Unsupported surface format from source "
+                       << surfaceFormat;
+    MOZ_CRASH();
+  }
+
+  gfx::DataSourceSurface::ScopedMap map(dataSurface,
+                                        gfx::DataSourceSurface::READ);
+  if (!map.IsMapped()) {
+    aRv.ThrowInvalidStateError("Cannot map surface from source");
+    return;
+  }
+
+  if (!aSource.mOrigin.IsGPUOrigin2DDict()) {
+    aRv.ThrowInvalidStateError("Cannot get origin from source");
+    return;
+  }
+
+  ffi::WGPUExtent3d extent = {};
+  CommandEncoder::ConvertExtent3DToFFI(aCopySize, &extent);
+  if (extent.depth_or_array_layers > 1) {
+    aRv.ThrowOperationError("Depth is greater than 1");
+    return;
+  }
+
+  uint32_t srcOriginX;
+  uint32_t srcOriginY;
+  if (aSource.mOrigin.IsRangeEnforcedUnsignedLongSequence()) {
+    const auto& seq = aSource.mOrigin.GetAsRangeEnforcedUnsignedLongSequence();
+    srcOriginX = seq.Length() > 0 ? seq[0] : 0;
+    srcOriginY = seq.Length() > 1 ? seq[1] : 0;
+  } else if (aSource.mOrigin.IsGPUOrigin2DDict()) {
+    const auto& dict = aSource.mOrigin.GetAsGPUOrigin2DDict();
+    srcOriginX = dict.mX;
+    srcOriginY = dict.mY;
+  } else {
+    MOZ_CRASH("Unexpected origin type!");
+  }
+
+  const auto checkedMaxWidth = CheckedInt<uint32_t>(srcOriginX) + extent.width;
+  const auto checkedMaxHeight =
+      CheckedInt<uint32_t>(srcOriginY) + extent.height;
+  if (!checkedMaxWidth.isValid() || !checkedMaxHeight.isValid()) {
+    aRv.ThrowOperationError("Offset and copy size exceed integer bounds");
+    return;
+  }
+
+  const gfx::IntSize surfaceSize = dataSurface->GetSize();
+  const auto surfaceWidth = AssertedCast<uint32_t>(surfaceSize.width);
+  const auto surfaceHeight = AssertedCast<uint32_t>(surfaceSize.height);
+  if (surfaceWidth < checkedMaxWidth.value() ||
+      surfaceHeight < checkedMaxHeight.value()) {
+    aRv.ThrowOperationError("Offset and copy size exceed surface bounds");
+    return;
+  }
+
+  const auto dstWidth = extent.width;
+  const auto dstHeight = extent.height;
+  if (dstWidth == 0 || dstHeight == 0) {
+    aRv.ThrowOperationError("Destination size is empty");
+    return;
+  }
+
+  if (!aDestination.mTexture->mBytesPerBlock) {
+    // TODO(bug 1781071) This should emmit a GPUValidationError on the device
+    // timeline.
+    aRv.ThrowInvalidStateError("Invalid destination format");
+    return;
+  }
+
+  // Note: This assumes bytes per block == bytes per pixel which is the case
+  // here because the spec only allows non-compressed texture formats for the
+  // destination.
+  const auto dstStride = CheckedInt<uint32_t>(extent.width) *
+                         aDestination.mTexture->mBytesPerBlock.value();
+  const auto dstByteLength = dstStride * extent.height;
+  if (!dstStride.isValid() || !dstByteLength.isValid()) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  ipc::Shmem shmem;
+  if (!mBridge->AllocShmem(dstByteLength.value(), &shmem)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  const int32_t pixelSize = gfx::BytesPerPixel(surfaceFormat);
+  auto* dstBegin = shmem.get<uint8_t>();
+  const auto* srcBegin =
+      map.GetData() + srcOriginX * pixelSize + srcOriginY * map.GetStride();
+  const auto srcOriginPos = gl::OriginPos::TopLeft;
+  const auto srcStride = AssertedCast<uint32_t>(map.GetStride());
+  const auto dstOriginPos =
+      aSource.mFlipY ? gl::OriginPos::BottomLeft : gl::OriginPos::TopLeft;
+  bool wasTrivial;
+
+  if (!ConvertImage(dstWidth, dstHeight, srcBegin, srcStride, srcOriginPos,
+                    srcFormat, srcPremultiplied, dstBegin, dstStride.value(),
+                    dstOriginPos, dstFormat, aDestination.mPremultipliedAlpha,
+                    &wasTrivial)) {
+    MOZ_ASSERT_UNREACHABLE("ConvertImage failed!");
+    mBridge->DeallocShmem(shmem);
+    aRv.ThrowInvalidStateError(
+        nsPrintfCString("Failed to convert source to destination format "
+                        "(%i/%i), please file a bug!",
+                        (int)srcFormat, (int)dstFormat));
+    return;
+  }
+
+  ffi::WGPUImageDataLayout dataLayout = {0, dstStride.value(), dstHeight};
+  ffi::WGPUImageCopyTexture copyView = {};
+  CommandEncoder::ConvertTextureCopyViewToFFI(aDestination, &copyView);
   ipc::ByteBuf bb;
   ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
   if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
