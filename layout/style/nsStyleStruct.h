@@ -1683,8 +1683,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
-  void GenerateCombinedIndividualTransform();
-
  private:
   StyleContain EffectiveContainment() const {
     // content-visibility and container-type values implicitly enable some
