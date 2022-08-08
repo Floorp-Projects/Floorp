@@ -1233,6 +1233,45 @@ pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Unpremultiply,
 
 template <>
 MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::BGRA8, WebGLTexelPremultiplicationOp::None, uint8_t,
+     uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst) {
+  dst[0] = src[2];
+  dst[1] = src[1];
+  dst[2] = src[0];
+  dst[3] = src[3];
+}
+
+template <>
+MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::BGRA8, WebGLTexelPremultiplicationOp::Premultiply,
+     uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst) {
+  float scaleFactor = src[3] / 255.0f;
+  uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
+  uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
+  uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
+  dst[0] = srcB;
+  dst[1] = srcG;
+  dst[2] = srcR;
+  dst[3] = src[3];
+}
+
+// FIXME: this routine is lossy and must be removed.
+template <>
+MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::BGRA8, WebGLTexelPremultiplicationOp::Unpremultiply,
+     uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst) {
+  float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
+  uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
+  uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
+  uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
+  dst[0] = srcB;
+  dst[1] = srcG;
+  dst[2] = srcR;
+  dst[3] = src[3];
+}
+
+template <>
+MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA16F, WebGLTexelPremultiplicationOp::None, uint16_t,
      uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst) {
   dst[0] = src[0];

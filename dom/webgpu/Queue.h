@@ -53,6 +53,11 @@ class Queue final : public ObjectBase, public ChildOf<Device> {
                     const dom::GPUImageDataLayout& aDataLayout,
                     const dom::GPUExtent3D& aSize, ErrorResult& aRv);
 
+  void CopyExternalImageToTexture(
+      const dom::GPUImageCopyExternalImage& aSource,
+      const dom::GPUImageCopyTextureTagged& aDestination,
+      const dom::GPUExtent3D& aCopySize, ErrorResult& aRv);
+
  private:
   virtual ~Queue();
   void Cleanup() {}
