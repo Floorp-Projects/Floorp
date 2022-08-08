@@ -112,7 +112,11 @@ bool WebTask::Run() {
 #endif
 
   if (error.Failed()) {
-    mPromise->MaybeReject(std::move(error));
+    if (!error.IsUncatchableException()) {
+      mPromise->MaybeReject(std::move(error));
+    } else {
+      error.SuppressException();
+    }
   } else {
     mPromise->MaybeResolve(returnVal);
   }
