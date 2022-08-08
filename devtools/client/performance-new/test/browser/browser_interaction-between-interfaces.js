@@ -300,6 +300,7 @@ add_task(async function test_change_in_about_profiling() {
           Interval: 2 ms
           Threads: GeckoMain, Dummy
           JavaScript
+          Native Leaf Stack
           Native Stacks
           CPU Utilization
           Audio Callback Tracing

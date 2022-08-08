@@ -26,7 +26,7 @@ add_task(async () => {
     await startProfiler({
       // Only instrument the main thread.
       threads: ["GeckoMain"],
-      features: ["js", "nativeallocations"],
+      features: ["leaf", "nativeallocations"],
     });
 
     info(
@@ -71,7 +71,7 @@ add_task(async () => {
 
   info("Restart the profiler, to ensure that we get no more allocations.");
   {
-    await startProfiler({ features: ["js"] });
+    await startProfiler({ features: ["leaf"] });
     info("Do some work again.");
     doWork();
     info("Wait for the periodic sampling.");
