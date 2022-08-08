@@ -2,7 +2,8 @@
 
 var prefs;
 var http2pref;
-var origin;
+// Avoid ESLint no-global-assign rules.
+/* global origin:true */
 var rcwnpref;
 
 function run_test() {

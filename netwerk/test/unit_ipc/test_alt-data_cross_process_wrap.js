@@ -7,7 +7,7 @@ var cacheFlushObserver = {
 };
 
 // We get this from the child a bit later
-var URL = null;
+var url = null;
 
 // needs to be rooted
 var cacheFlushObserver2 = {
@@ -32,17 +32,20 @@ function run_test() {
   run_test_in_child("../unit/test_alt-data_cross_process.js");
 }
 
-function load_channel(url) {
-  ok(url);
-  URL = url; // save this to open the alt data channel later
-  var chan = make_channel(url);
+function load_channel(channelUrl) {
+  ok(channelUrl);
+  url = channelUrl; // save this to open the alt data channel later
+  var chan = make_channel(channelUrl);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
   cc.preferAlternativeDataType("text/binary", "", Ci.nsICacheInfoChannel.ASYNC);
   chan.asyncOpen(new ChannelListener(readTextData, null));
 }
 
-function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
+function make_channel(channelUrl, callback, ctx) {
+  return NetUtil.newChannel({
+    uri: channelUrl,
+    loadUsingSystemPrincipal: true,
+  });
 }
 
 function readTextData(request, buffer) {
@@ -71,7 +74,7 @@ function readTextData(request, buffer) {
 }
 
 function openAltChannel() {
-  var chan = make_channel(URL);
+  var chan = make_channel(url);
   var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
   cc.preferAlternativeDataType(
     "text/parent-binary",
