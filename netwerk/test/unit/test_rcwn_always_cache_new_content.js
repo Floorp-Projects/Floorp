@@ -87,14 +87,14 @@ function run_test() {
 let testGenerator = testSteps();
 function* testSteps() {
   // Store first version of the content in the cache.
-  let channel = make_channel("http://localhost:" + PORT + "/rcwn");
+  var channel = make_channel("http://localhost:" + PORT + "/rcwn");
   channel.asyncOpen(new ChannelListener(checkContent, null));
   yield undefined;
   equal(gRequestCounter, 1);
 
   // Simulate the network victory by setting high delay for the cache fetch and
   // triggering the network.
-  channel = make_channel("http://localhost:" + PORT + "/rcwn");
+  var channel = make_channel("http://localhost:" + PORT + "/rcwn");
   channel
     .QueryInterface(Ci.nsIRaceCacheWithNetwork)
     .test_delayCacheEntryOpeningBy(100000);
@@ -105,7 +105,7 @@ function* testSteps() {
   equal(gRequestCounter, 2);
 
   // Simulate navigation back by specifying VALIDATE_NEVER flag.
-  channel = make_channel("http://localhost:" + PORT + "/rcwn");
+  var channel = make_channel("http://localhost:" + PORT + "/rcwn");
   channel.loadFlags = Ci.nsIRequest.VALIDATE_NEVER;
   channel.asyncOpen(new ChannelListener(checkContent, null));
   yield undefined;

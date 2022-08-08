@@ -68,8 +68,7 @@ function redirect(metadata, response) {
   // If called second time, just return the PAC but set failed-flag
   if (called) {
     failed = true;
-    pac(metadata, response);
-    return;
+    return pac(metadata, response);
   }
 
   called = true;

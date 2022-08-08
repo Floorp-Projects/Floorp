@@ -110,7 +110,7 @@ function run_test() {
   let baseRoot = resProto.resolveURI(Services.io.newURI("resource:///"));
   let greRoot = resProto.resolveURI(Services.io.newURI("resource://gre/"));
 
-  for (let spec of specs) {
+  for (var spec of specs) {
     check_safe_resolution(spec, rootURI.spec);
     check_safe_resolution(
       spec.replace("res-test", "res-inexistent"),
@@ -120,7 +120,7 @@ function run_test() {
     check_safe_resolution(spec.replace("res-test", "gre"), greRoot);
   }
 
-  for (let spec of error_specs) {
+  for (var spec of error_specs) {
     check_resolution_error(spec);
   }
 }

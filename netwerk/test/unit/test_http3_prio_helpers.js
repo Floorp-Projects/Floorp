@@ -5,7 +5,7 @@
 // uses head_http3.js, which uses http2-ca.pem
 "use strict";
 
-/* exported inChildProcess, test_flag_priority */
+/*global inChildProcess, test_flag_priority */
 function inChildProcess() {
   return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
@@ -28,10 +28,18 @@ function parse_priority_response_header(priority) {
   const priority_array = priority.split(",");
 
   // parse for urgency string
-  const urgency = priority_array.find(element => element.includes("u="));
+  const urgency = priority_array.find(element => {
+    if (element.includes("u=")) {
+      return true;
+    }
+  });
 
   // parse for incremental bool
-  const incremental = !!priority_array.find(element => element == "i");
+  const incremental = !!priority_array.find(element => {
+    if (element == "i") {
+      return true;
+    }
+  });
 
   return [urgency ? urgency : null, incremental];
 }

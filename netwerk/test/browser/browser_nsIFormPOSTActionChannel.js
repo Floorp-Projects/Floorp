@@ -197,7 +197,6 @@ document.getElementById('form').submit();
 
 function frameScript() {
   /* eslint-env mozilla/frame-script */
-  /* eslint-disable mozilla/no-arbitrary-setTimeout */
   addMessageListener("Test:WaitForIFrame", function() {
     var check = function() {
       if (content) {
@@ -224,7 +223,6 @@ function frameScript() {
 
     check();
   });
-  /* eslint-enable mozilla/no-arbitrary-setTimeout */
 }
 
 function loadTestTab(uri) {

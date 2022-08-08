@@ -370,11 +370,10 @@ function run_next_test() {
 
 function handler(httpStatus, metadata, response) {
   gHitServer = true;
-  let etag;
   try {
-    etag = metadata.getHeader("If-None-Match");
+    var etag = metadata.getHeader("If-None-Match");
   } catch (ex) {
-    etag = "";
+    var etag = "";
   }
   if (etag == "testtag") {
     // Allow using the cached data

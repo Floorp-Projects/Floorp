@@ -90,11 +90,10 @@ function serverHandler(metadata, response) {
     print("============== serverHandler: in");
   }
 
-  let etag;
   try {
-    etag = metadata.getHeader("If-None-Match");
+    var etag = metadata.getHeader("If-None-Match");
   } catch (ex) {
-    etag = "";
+    var etag = "";
   }
   if (etag == "testtag") {
     if (dbg) {
