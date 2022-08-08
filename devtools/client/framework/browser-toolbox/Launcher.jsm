@@ -61,6 +61,8 @@ const processes = new Set();
  * @property {function} onRun - A function called when the process starts running.
  * @property {boolean} overwritePreferences - Set to force overwriting the toolbox
  *                     profile's preferences with the current set of preferences.
+ * @property {boolean} forceMultiprocess - Set to force the Browser Toolbox to be in
+ *                     multiprocess mode.
  */
 
 class BrowserToolboxLauncher extends EventEmitter {
@@ -104,7 +106,7 @@ class BrowserToolboxLauncher extends EventEmitter {
    *
    * @param {...BrowserToolboxLauncherArgs} args
    */
-  constructor({ onRun, overwritePreferences } = {}) {
+  constructor({ forceMultiprocess, onRun, overwritePreferences } = {}) {
     super();
 
     if (onRun) {
@@ -115,7 +117,7 @@ class BrowserToolboxLauncher extends EventEmitter {
     Services.obs.addObserver(this.close, "quit-application");
     this.#initServer();
     this.#initProfile(overwritePreferences);
-    this.#create();
+    this.#create({ forceMultiprocess });
 
     processes.add(this);
   }
@@ -287,8 +289,12 @@ class BrowserToolboxLauncher extends EventEmitter {
 
   /**
    * Creates and initializes the profile & process for the remote debugger.
+   *
+   * @param {Object} options
+   * @param {boolean} options.forceMultiprocess: Set to true to force the Browser Toolbox to be in
+   *                    multiprocess mode.
    */
-  #create() {
+  #create({ forceMultiprocess } = {}) {
     dumpn("Initializing chrome debugging process.");
 
     let command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
@@ -337,6 +343,7 @@ class BrowserToolboxLauncher extends EventEmitter {
       // Will be read by the Browser Toolbox Firefox instance to update the
       // devtools.browsertoolbox.fission pref on the Browser Toolbox profile.
       MOZ_BROWSER_TOOLBOX_FISSION_PREF: isBrowserToolboxFission ? "1" : "0",
+      MOZ_BROWSER_TOOLBOX_FORCE_MULTIPROCESS: forceMultiprocess ? "1" : "0",
       // Similar, but for the WebConsole input context dropdown.
       MOZ_BROWSER_TOOLBOX_INPUT_CONTEXT: isInputContextEnabled ? "1" : "0",
       // Disable safe mode for the new process in case this was opened via the
