@@ -2078,6 +2078,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-profiler-learn-more {
   margin: 4px 15px 13px;
   color: #fff;
+  text-decoration: underline;
 }
 
 #PanelUI-profiler-learn-more:hover:active {
