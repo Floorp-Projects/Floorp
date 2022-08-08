@@ -1244,6 +1244,14 @@ class ExtensionData {
       this.logWarning("Event pages are not currently supported.");
     }
 
+    if (
+      this.isPrivileged &&
+      manifest.hidden &&
+      (manifest.browser_action || manifest.action)
+    ) {
+      this.manifestError("Cannot use browser actions in hidden add-ons");
+    }
+
     let apiNames = new Set();
     let dependencies = new Set();
     let originPermissions = new Set();

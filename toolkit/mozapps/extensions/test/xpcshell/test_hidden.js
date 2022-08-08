@@ -3,12 +3,14 @@
 
 "use strict";
 
+AddonTestUtils.init(this);
+AddonTestUtils.usePrivilegedSignatures = id => id.startsWith("privileged");
+
+add_task(async function setup() {
+  await ExtensionTestUtils.startAddonManager();
+});
+
 add_task(async function test_hidden() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
-  AddonTestUtils.usePrivilegedSignatures = id => id.startsWith("privileged");
-
-  await promiseStartupManager();
-
   let xpi1 = createTempWebExtensionFile({
     manifest: {
       applications: {
@@ -69,8 +71,125 @@ add_task(async function test_hidden() {
   await extension.startup();
   let tempAddon = extension.addon;
   ok(tempAddon.isPrivileged, "Temporary add-on is privileged");
-  ok(!tempAddon.hidden, "Temporary add-on is not hidden despite privilige");
+  ok(
+    !tempAddon.hidden,
+    "Temporary add-on is not hidden despite being privileged"
+  );
   await extension.unload();
-
-  await promiseShutdownManager();
 });
+
+add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
+  async function test_hidden_and_browser_action_props_are_mutually_exclusive() {
+    const TEST_CASES = [
+      {
+        title: "hidden and browser_action",
+        manifest: {
+          hidden: true,
+          browser_action: {},
+        },
+        expectError: true,
+      },
+      {
+        title: "hidden and no browser_action",
+        manifest: {
+          hidden: true,
+        },
+        expectError: false,
+      },
+      {
+        title: "not hidden and browser_action",
+        manifest: {
+          hidden: false,
+          browser_action: {},
+        },
+        expectError: false,
+      },
+      {
+        title: "no hidden prop and browser_action",
+        manifest: {
+          browser_action: {},
+        },
+        expectError: false,
+      },
+      {
+        title: "hidden and action",
+        manifest: {
+          manifest_version: 3,
+          hidden: true,
+          action: {},
+        },
+        expectError: true,
+      },
+      {
+        title: "no hidden prop and action",
+        manifest: {
+          manifest_version: 3,
+          action: {},
+        },
+        expectError: false,
+      },
+      {
+        title: "hidden and action but not privileged",
+        manifest: {
+          manifest_version: 3,
+          hidden: true,
+          action: {},
+        },
+        expectError: false,
+        isPrivileged: false,
+      },
+      {
+        title: "hidden and browser_action but not privileged",
+        manifest: {
+          hidden: true,
+          browser_action: {},
+        },
+        expectError: false,
+        isPrivileged: false,
+      },
+    ];
+
+    let count = 0;
+
+    for (const {
+      title,
+      manifest,
+      expectError,
+      isPrivileged = true,
+    } of TEST_CASES) {
+      info(`== ${title} ==`);
+
+      const extension = ExtensionTestUtils.loadExtension({
+        manifest: {
+          browser_specific_settings: {
+            gecko: {
+              id: `${isPrivileged ? "" : "not-"}privileged@ext-${count++}`,
+            },
+          },
+          permissions: ["mozillaAddons"],
+          ...manifest,
+        },
+        background() {
+          /* globals browser */
+          browser.test.sendMessage("ok");
+        },
+        isPrivileged,
+      });
+
+      if (expectError) {
+        await Assert.rejects(
+          extension.startup(),
+          /Cannot use browser actions in hidden add-ons/,
+          "expected extension not started"
+        );
+      } else {
+        await extension.startup();
+        await extension.awaitMessage("ok");
+        await extension.unload();
+      }
+    }
+  }
+);
