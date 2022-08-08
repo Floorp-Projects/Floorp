@@ -108,10 +108,9 @@ inline size_t GrowEltsByDoubling(size_t aOldElts, size_t aIncr) {
   /* This case occurs in ~2% of the calls to Vector::growStorageBy. */
   size_t newMinCap = aOldElts + aIncr;
 
-  /* Did aOldElts + aIncr overflow?  Will newMinCap * EltSize rounded up to the
-   * next power of two overflow PTRDIFF_MAX? */
+  /* Did aOldSize + aIncr overflow?  Will newCap * sizeof(T) overflow? */
   if (MOZ_UNLIKELY(newMinCap < aOldElts ||
-                   newMinCap & tl::MulOverflowMask<4 * EltSize>::value)) {
+                   newMinCap & tl::MulOverflowMask<2 * EltSize>::value)) {
     return 0;
   }
 
