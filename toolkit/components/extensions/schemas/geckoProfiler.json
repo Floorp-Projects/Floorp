@@ -25,7 +25,6 @@
         "enum": [
           "java",
           "js",
-          "leaf",
           "mainthreadio",
           "fileio",
           "fileioall",

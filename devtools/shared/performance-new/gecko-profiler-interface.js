@@ -64,7 +64,6 @@ class ActorReadyGeckoProfilerInterface {
         "stackwalk",
         "cpu",
         "responsiveness",
-        "leaf",
       ],
       threads: options.threads || ["GeckoMain", "Compositor"],
       activeTabID: RecordingUtils.getActiveBrowserID(),
