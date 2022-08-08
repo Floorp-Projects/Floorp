@@ -22,7 +22,7 @@ linux64-android-sdk-linux-repack:
     run:
         script: repack-android-sdk-linux.sh
         resources:
-            - .config.yml
+            - android-components/.config.yml
         toolchain-artifact: mobile/android-sdk/android-sdk-linux.tar.xz
         toolchain-alias: android-sdk-linux
     treeherder:
@@ -44,9 +44,9 @@ linux64-android-gradle-dependencies:
         resources:
             - taskcluster/scripts/toolchain/android-gradle-dependencies.sh
             - taskcluster/scripts/toolchain/android-gradle-dependencies/**
-            - buildSrc/src/main/java/Dependencies.kt
-            - build.gradle
-            - gradle/wrapper/gradle-wrapper.properties
+            - android-components/buildSrc/src/main/java/Dependencies.kt
+            - android-components/build.gradle
+            - android-components/gradle/wrapper/gradle-wrapper.properties
         toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
         toolchain-alias: android-gradle-dependencies
     treeherder:

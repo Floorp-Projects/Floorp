@@ -16,6 +16,7 @@ EXTENSIONS = {
 CHECKSUMS_EXTENSIONS = ('.sha1', '.md5')
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 PROJECT_DIR = os.path.realpath(os.path.join(CURRENT_DIR, '..', '..'))
+ANDROID_COMPONENTS_DIR = os.path.join(PROJECT_DIR, "android-components")
 
 
 def get_components():
@@ -54,5 +55,5 @@ def get_extensions(component):
 
 @memoize
 def _read_build_config():
-    with open(os.path.join(PROJECT_DIR, '.buildconfig.yml'), 'rb') as f:
+    with open(os.path.join(ANDROID_COMPONENTS_DIR, '.buildconfig.yml'), 'rb') as f:
         return yaml.safe_load(f)

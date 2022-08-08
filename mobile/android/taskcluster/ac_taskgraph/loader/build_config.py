@@ -15,7 +15,7 @@ from taskgraph.util.taskcluster import get_session
 from taskgraph.util.templates import merge
 
 from ..files_changes import get_files_changed_pr, get_files_changed_push
-from ..build_config import get_components
+from ..build_config import get_components, ANDROID_COMPONENTS_DIR
 
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def get_upstream_deps_for_components(components):
         # gradle to spit out JSON that would be much better.
         # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
         current_component = None
-        for line in subprocess.check_output(cmd, universal_newlines=True).splitlines():
+        for line in subprocess.check_output(cmd, universal_newlines=True, cwd=ANDROID_COMPONENTS_DIR).splitlines():
             # If we find the start of a new component section, update our tracking variable
             if line.startswith("Project"):
                 current_component = line.split(":")[1].strip("'")
