@@ -19,6 +19,7 @@ toolkit.jar:
     content/extensions/parent/ext-contextualIdentities.js (parent/ext-contextualIdentities.js)
     content/extensions/parent/ext-clipboard.js (parent/ext-clipboard.js)
     content/extensions/parent/ext-cookies.js (parent/ext-cookies.js)
+    content/extensions/parent/ext-declarativeNetRequest.js (parent/ext-declarativeNetRequest.js)
     content/extensions/parent/ext-dns.js (parent/ext-dns.js)
     content/extensions/parent/ext-downloads.js (parent/ext-downloads.js)
     content/extensions/parent/ext-extension.js (parent/ext-extension.js)
