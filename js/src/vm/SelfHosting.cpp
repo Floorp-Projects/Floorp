@@ -1645,21 +1645,6 @@ static bool intrinsic_IsRuntimeDefaultLocale(JSContext* cx, unsigned argc,
 }
 #endif  // JS_HAS_INTL_API
 
-static bool intrinsic_ThrowArgTypeNotObject(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isNumber());
-  MOZ_ASSERT(!args[1].isObject());
-  if (args[0].toNumber() == NOT_OBJECT_KIND_DESCRIPTOR) {
-    ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_PROP_DESC, args[1]);
-  } else {
-    MOZ_CRASH("unexpected kind");
-  }
-
-  return false;
-}
-
 static bool intrinsic_ConstructFunction(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2066,7 +2051,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThisTupleValue", intrinsic_ThisTupleValue, 1, 0),
 #endif
     JS_FN("ThrowAggregateError", intrinsic_ThrowAggregateError, 4, 0),
-    JS_FN("ThrowArgTypeNotObject", intrinsic_ThrowArgTypeNotObject, 2, 0),
     JS_FN("ThrowInternalError", intrinsic_ThrowInternalError, 4, 0),
     JS_FN("ThrowRangeError", intrinsic_ThrowRangeError, 4, 0),
     JS_FN("ThrowTypeError", intrinsic_ThrowTypeError, 4, 0),
