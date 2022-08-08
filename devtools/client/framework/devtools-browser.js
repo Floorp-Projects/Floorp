@@ -384,6 +384,11 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         // Display a new toolbox in a new window
         const toolbox = await gDevTools.showToolbox(descriptor, {
           hostType: Toolbox.HostType.WINDOW,
+          hostOptions: {
+            // Will be used by the WINDOW host to decide whether to create a
+            // private window or not.
+            browserContentToolboxOpener: gBrowser.ownerGlobal,
+          },
         });
 
         // Ensure closing the connection in order to cleanup
