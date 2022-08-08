@@ -103,7 +103,7 @@
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d sitios</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sitios</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -270,9 +270,9 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accesibilidá</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Sirvidor personalizáu de Firefox Accounts</string>
+    <string name="preferences_override_fxa_server">Sirvidor personalizáu de Cuentes de Firefox</string>
     <!-- Preference to override the Sync token server -->
-    <string name="preferences_override_sync_tokenserver">Sirvidor personalizáu de Sync</string>
+    <string name="preferences_override_sync_tokenserver">Sirvidor personalizáu de sincronización</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done">Modificóse\'l sirvidor de cuentes/sincronización de Firefox. Colando de l\'aplicación p\'aplicar los cambeos…</string>
     <!-- Preference category for account information -->
@@ -317,7 +317,7 @@
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Buscar nos marcadores</string>
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
-    <string name="preferences_search_synced_tabs">Buscar llingüetes sincronizaes</string>
+    <string name="preferences_search_synced_tabs">Buscar nes llingüetes sincronizaes</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Axustes de la cuenta</string>
     <!-- Preference for enabling url autocomplete-->
@@ -557,7 +557,7 @@
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">La páxina d\'aniciu dempués d\'hores d\'inactividá</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
-    <string name="close_tabs_manually_summary">Zarrales a mano</string>
+    <string name="close_tabs_manually_summary">Zarrales manualmente</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
     <string name="close_tabs_after_one_day_summary">Zarrales dempués d\'un día</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
@@ -567,7 +567,7 @@
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
-    <string name="preferences_inactive_tabs">Mover les llingüetes antigües a la sesión d\'inactividá</string>
+    <string name="preferences_inactive_tabs">Mover les llingüetes antigües a la seición d\'inactividá</string>
     <!-- Title of inactive tabs preference -->
     <string name="preferences_inactive_tabs_title">Les llingüetes que nun visites en dos selmanes van a la seición d\'inactividá.</string>
 
@@ -701,7 +701,7 @@
     <string name="download_empty_message_1">Nun hai ficheros baxaos</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
-    <string name="download_multi_select_title">Descargues esbillaes: %1$d</string>
+    <string name="download_multi_select_title">Descargues na seleición: %1$d</string>
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">Quitar</string>
 
@@ -721,7 +721,7 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">¿De xuru que quies desaniciar esta carpeta?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
-    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s va desaniciar los elementos esbillaos.</string>
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s va desaniciar los elementos seleicionaos.</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Amestar una carpeta</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -744,7 +744,7 @@
     <string name="bookmark_menu_save_button">Guardar</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">Marcadores esbillaos: %1$d</string>
+    <string name="bookmarks_multi_select_title">Marcadores na seleición: %1$d</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Edición d\'un marcador</string>
     <!-- Bookmark folder editing screen title -->
@@ -760,7 +760,7 @@
     <!-- Bookmark add folder screen title -->
     <string name="bookmark_add_folder_fragment_label">Amiestu d\'una carpeta</string>
     <!-- Bookmark select folder screen title -->
-    <string name="bookmark_select_folder_fragment_label">Esbilla d\'una carpeta</string>
+    <string name="bookmark_select_folder_fragment_label">Seleición d\'una carpeta</string>
     <!-- Bookmark editing error missing title -->
     <string name="bookmark_empty_title_error">Ha tener un títulu</string>
     <!-- Bookmark editing error missing or improper URL -->
@@ -773,7 +773,7 @@
     <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_2">Desaniciáronse los marcadores</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
-    <string name="bookmark_deletion_multiple_snackbar_message_3">Desaniciando les carpetes esbillaes</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Desaniciando les carpetes seleicionaes</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DESFACER</string>
 
@@ -851,19 +851,19 @@
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description2">Coleiciona les coses que t\'importen.\nAgrupa busques, sitios y llingüetes asemeyaes p\'acceder aína a ellos dempués.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_tabs">Esbilla de llingüetes</string>
+    <string name="create_collection_select_tabs">Seleición de llingüetes</string>
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">Esbilla d\'una coleición</string>
+    <string name="create_collection_select_collection">Seleición d\'una coleición</string>
     <!-- Title for the "name collection" step of the collection creator -->
     <string name="create_collection_name_collection">Nome d\'una coleición</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">Crear una coleición</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_all">Esbillar toes</string>
+    <string name="create_collection_select_all">Seleicionar toes</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Deseleicionar toes</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
-    <string name="create_collection_save_to_collection_empty">Esbilla les llingüetes a guardar</string>
+    <string name="create_collection_save_to_collection_empty">Seleiciona les llingüetes a guardar</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tabs_selected">Esbilláronse %d llingüetes</string>
@@ -1025,7 +1025,7 @@
     <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Esto va desaniciar tolos datos de restolar.</string>
 
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
-    <string name="delete_browsing_data_prompt_message_3">%s va desaniciar los datos de restolar esbillaos.</string>
+    <string name="delete_browsing_data_prompt_message_3">%s va desaniciar los datos de restolar seleicionaos.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Encaboxar</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -1259,9 +1259,9 @@ en llinia y con nós.</string>
     <string name="add_to_homescreen_description_2">Pues amestar fácilmente esti sitiu web a la pantalla d\'Aniciu del preséu p\'acceder aína a elli como si fore una aplicación nativa.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Anicios de sesión y contraseñes</string>
+    <string name="preferences_passwords_logins_and_passwords">Cuentes y contraseñes</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Guardáu d\'anicios de sesión y contraseñes</string>
+    <string name="preferences_passwords_save_logins">Guardáu de cuentes y contraseñes</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Entrugar</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1273,23 +1273,23 @@ en llinia y con nós.</string>
     <string name="preferences_android_autofill">Autorrellenu n\'otres aplicaciones</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincronización d\'anicios de sesión</string>
+    <string name="preferences_passwords_sync_logins">Sincronización de cuentes</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Anicios de sesión guardaos</string>
+    <string name="preferences_passwords_saved_logins">Cuentes guardaes</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Equí van amosase los anicios de sesión que guardes y sincronices con %s.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">Equí apaecen les cuentes que guardes o sincronices con %s.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Deprender más tocante a Sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Esceiciones</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Equí van amosase los anicios de sesión y contraseñes que nun se guarden</string>
+    <string name="preferences_passwords_exceptions_description_empty">Equí apaecen les cuentes y les contraseñes que nun se guarden.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Los anicios de sesión y contraseñes d\'estos sitios nun van guardase.</string>
+    <string name="preferences_passwords_exceptions_description">Nun van guardase les cuentes y les contraseñes d\'estos sitios.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Quitar toles esceiciones</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Buscar anicios de sesión</string>
+    <string name="preferences_passwords_saved_logins_search">Buscar cuentes</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sitiu</string>
     <!-- The header for the username for a login -->
@@ -1318,11 +1318,11 @@ en llinia y con nós.</string>
     <string name="saved_login_hide_password">Anubrir la contraseña</string>
 
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Desbloquia pa ver los anicios de sesión guardaos</string>
+    <string name="logins_biometric_prompt_message">Desbloquia pa ver les cuentes guardaes</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Anicios de sesión y contraseñes seguros</string>
+    <string name="logins_warning_dialog_title">Cuentes y contraseñes protexíes</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Configura un patrón de bloquéu, PIN o una contraseña pa protexer los anicios de sesión guardaos y contraseñes, y evitar qu\'otros usuarios accedan a ellos.</string>
+    <string name="logins_warning_dialog_message">Configura un patrón de bloquéu, una contraseña o un PIN pa protexer les cuentes guardaes y les contraseñes, y evitar qu\'otros usuarios accedan a elles.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Dempués</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1458,16 +1458,16 @@ en llinia y con nós.</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Editar</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">¿De xuru que quies desaniciar esti aniciu de sesión?</string>
+    <string name="login_deletion_confirmation">¿De xuru que quies desaniciar esta cuenta?</string>
 
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Desaniciar</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">El campu de testu editable pa la direición web del aniciu de sesión.</string>
+    <string name="saved_login_hostname_description">El campu de testu editable pa la direición web de la cuenta.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">El campu de testu editable pal nome d\'usuariu del aniciu de sesión.</string>
+    <string name="saved_login_username_description">El campu de testu editable pal nome d\'usuariu de la cuenta.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">El campu de testu editable pa la contraseña del aniciu de sesión.</string>
+    <string name="saved_login_password_description">El campu de testu editable pa la contraseña de la cuenta.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edición</string>
     <!--  The error message in add/edit login view when password field is blank. -->
@@ -1478,7 +1478,7 @@ en llinia y con nós.</string>
     <string name="voice_search_explainer">Fala agora</string>
 
     <!--  The error message in edit login view when a duplicate username exists. -->
-    <string name="saved_login_duplicate">Yá esiste un aniciu de sesión con esi nome d\'usuariu</string>
+    <string name="saved_login_duplicate">Yá esiste una cuenta con esi nome d\'usuariu</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
