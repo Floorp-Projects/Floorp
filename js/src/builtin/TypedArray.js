@@ -2048,14 +2048,13 @@ function SharedArrayBufferSlice(start, end) {
 // https://github.com/tc39/proposal-change-array-by-copy
 function TypedArrayCreateSameType(exemplar, length) {
   // Step 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
-  let contentType = GetTypedArrayKind(exemplar);
   assert(
-    contentType !== undefined,
+    IsPossiblyWrappedTypedArray(exemplar),
     "in TypedArrayCreateSameType, exemplar does not have a [[ContentType]] internal slot"
   );
 
   // Step 2. Let constructor be the intrinsic object listed in column one of Table 63 for exemplar.[[TypedArrayName]].
-  let constructor = GetTypedArrayConstructorFromKind(contentType);
+  let constructor = ConstructorForTypedArray(exemplar);
 
   // Step 4 omitted. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots. - guaranteed by the TypedArray implementation
   // Step 5 omitted. Assert: result.[[ContentType]] is exemplar.[[ContentType]]. - guaranteed by the typed array implementation

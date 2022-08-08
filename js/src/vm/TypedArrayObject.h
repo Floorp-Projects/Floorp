@@ -166,11 +166,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool copyWithin_impl(JSContext* cx, const CallArgs& args);
 };
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-extern JSObject* GetTypedArrayConstructorFromKind(JSContext* cx,
-                                                  Scalar::Type type);
-#endif
-
 extern TypedArrayObject* NewTypedArrayWithTemplateAndLength(
     JSContext* cx, HandleObject templateObj, int32_t len);
 
