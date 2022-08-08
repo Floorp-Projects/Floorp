@@ -127,7 +127,9 @@ HistoryDownloadElementShell.prototype = {
     let displayName = DownloadsViewUI.getDisplayName(this.download);
     return (
       displayName.toLowerCase().includes(aTerm) ||
-      this.download.source.url.toLowerCase().includes(aTerm)
+      (this.download.source.originalUrl || this.download.source.url)
+        .toLowerCase()
+        .includes(aTerm)
     );
   },
 
@@ -598,7 +600,10 @@ DownloadsPlacesView.prototype = {
       case "cmd_copy":
         return Array.prototype.some.call(
           this._richlistbox.selectedItems,
-          element => !!element._shell.download.source?.url
+          element => {
+            const { source } = element._shell.download;
+            return !!(source?.originalUrl || source?.url);
+          }
         );
       case "downloadsCmd_openReferrer":
       case "downloadShowMenuItem":
@@ -618,10 +623,10 @@ DownloadsPlacesView.prototype = {
   },
 
   _copySelectedDownloadsToClipboard() {
-    let urls = Array.from(
-      this._richlistbox.selectedItems,
-      element => element._shell.download.source?.url
-    ).filter(Boolean);
+    let urls = Array.from(this._richlistbox.selectedItems, element => {
+      const { source } = element._shell.download;
+      return source?.originalUrl || source?.url;
+    }).filter(Boolean);
 
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)
