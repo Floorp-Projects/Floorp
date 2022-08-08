@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1782142
+-->
+<title>Test :active pseudo-class in shadow DOM</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1062578">Bug 1782142</a>
+<div id="host"></div>
+<script>
+let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
+
+// Setup shadow DOM
+const host = document.querySelector("#host");
+const sr = host.attachShadow({mode: "closed"});
+const button = document.createElement("button");
+button.innerText = "button";
+sr.appendChild(button);
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
+  await waitUntilApzStable();
+});
+
+add_task(async function mouse_input() {
+  ok(!button.matches(":active"), "Button should not be active initially");
+
+  synthesizeMouseAtCenter(button, { type: "mousedown" });
+  await ContentTaskUtils.waitForCondition(() => {
+    return button.matches(":active");
+  }, "Button should be active");
+
+  synthesizeMouseAtCenter(button, { type: "mouseup" });
+  await ContentTaskUtils.waitForCondition(() => {
+    return !button.matches(":active");
+  }, "Button should not be active");
+});
+
+add_task(async function touch_input() {
+  // To avoid contextmenu showing up during test.
+  document.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  }, { once: true });
+
+  ok(!button.matches(":active"), "Button should not be active initially");
+
+  synthesizeTouchAtCenter(button, { type: "touchstart" });
+  await ContentTaskUtils.waitForCondition(() => {
+    return button.matches(":active");
+  }, "Button should be active");
+
+  synthesizeTouchAtCenter(button, { type: "touchend" });
+  await ContentTaskUtils.waitForCondition(() => {
+    return !button.matches(":active");
+  }, "Button should not be active");
+});
+</script>

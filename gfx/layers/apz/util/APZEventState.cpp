@@ -338,7 +338,8 @@ void APZEventState::ProcessTouchEvent(
     nsEventStatus aContentResponse,
     nsTArray<TouchBehaviorFlags>&& aAllowedTouchBehaviors) {
   if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() > 0) {
-    mActiveElementManager->SetTargetElement(aEvent.mTouches[0]->GetTarget());
+    mActiveElementManager->SetTargetElement(
+        aEvent.mTouches[0]->GetOriginalTarget());
     mLastTouchIdentifier = aEvent.mTouches[0]->Identifier();
   }
   if (aEvent.mMessage == eTouchStart) {
