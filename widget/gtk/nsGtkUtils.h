@@ -48,4 +48,12 @@ static inline void MozClearPointer(T*& pointer, void (*destroy)(T*)) {
   }
 }
 
+template <class T>
+static inline void MozClearHandleID(T& handle, gboolean (*destroy)(T)) {
+  if (handle) {
+    destroy(handle);
+    handle = 0;
+  }
+}
+
 #endif  // nsGtkUtils_h__

@@ -562,10 +562,7 @@ void nsWindow::Destroy() {
   mIsDestroyed = true;
   mCreated = false;
 
-  if (mCompositorPauseTimeoutID) {
-    g_source_remove(mCompositorPauseTimeoutID);
-    mCompositorPauseTimeoutID = 0;
-  }
+  MozClearHandleID(mCompositorPauseTimeoutID, g_source_remove);
 
 #ifdef MOZ_WAYLAND
   // Shut down our local vsync source
@@ -6113,10 +6110,7 @@ void nsWindow::PauseCompositorFlickering() {
 
   LOG("nsWindow::PauseCompositorFlickering()");
 
-  if (mCompositorPauseTimeoutID) {
-    g_source_remove(mCompositorPauseTimeoutID);
-    mCompositorPauseTimeoutID = 0;
-  }
+  MozClearHandleID(mCompositorPauseTimeoutID, g_source_remove);
 
   CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
   if (remoteRenderer) {
@@ -6149,10 +6143,7 @@ void nsWindow::ResumeCompositorFlickering() {
     return;
   }
 
-  if (mCompositorPauseTimeoutID) {
-    g_source_remove(mCompositorPauseTimeoutID);
-    mCompositorPauseTimeoutID = 0;
-  }
+  MozClearHandleID(mCompositorPauseTimeoutID, g_source_remove);
 
   ResumeCompositorImpl();
 }
