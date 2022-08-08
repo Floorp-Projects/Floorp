@@ -491,7 +491,9 @@ class MOZ_STACK_CLASS SplitNodeResult final {
   MOZ_KNOWN_LIVE nsIContent* GetOriginalContent() const {
     MOZ_ASSERT(isOk());
     if (mGivenSplitPoint.IsSet()) {
-      return mGivenSplitPoint.GetChild();
+      // Different from previous/next content, if the creator didn't split a
+      // node, the container of the split point is the original node.
+      return mGivenSplitPoint.GetContainerAsContent();
     }
     if (mDirection == SplitNodeDirection::LeftNodeIsNewOne) {
       return mNextNode ? mNextNode : mPreviousNode;
@@ -928,39 +930,6 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
         mRightContent(aRightContent),
         mCaretPoint(std::move(aPointToPutCaret)),
         mRv(NS_OK) {}
-
-  SplitRangeOffFromNodeResult(SplitNodeResult&& aSplitResultAtLeftOfMiddleNode,
-                              SplitNodeResult&& aSplitResultAtRightOfMiddleNode)
-      : mRv(NS_OK) {
-    // The given results are created for creating this instance so that the
-    // caller may not need to handle with them.  For making who taking the
-    // responsible clearer, we should move them into this constructor.
-    SplitNodeResult splitResultAtLeftOfMiddleNode(
-        std::move(aSplitResultAtLeftOfMiddleNode));
-    SplitNodeResult splitResultARightOfMiddleNode(
-        std::move(aSplitResultAtRightOfMiddleNode));
-    splitResultAtLeftOfMiddleNode.IgnoreCaretPointSuggestion();
-    splitResultARightOfMiddleNode.IgnoreCaretPointSuggestion();
-    if (splitResultAtLeftOfMiddleNode.isOk()) {
-      mLeftContent = splitResultAtLeftOfMiddleNode.GetPreviousContent();
-    }
-    if (splitResultARightOfMiddleNode.isOk()) {
-      mRightContent = splitResultARightOfMiddleNode.GetNextContent();
-      mMiddleContent = splitResultARightOfMiddleNode.GetPreviousContent();
-    }
-    if (!mMiddleContent && splitResultAtLeftOfMiddleNode.isOk()) {
-      mMiddleContent = splitResultAtLeftOfMiddleNode.GetNextContent();
-    }
-    // Prefer the right split result if available.
-    if (splitResultARightOfMiddleNode.HasCaretPointSuggestion()) {
-      splitResultAtLeftOfMiddleNode.IgnoreCaretPointSuggestion();
-      mCaretPoint = splitResultARightOfMiddleNode.UnwrapCaretPoint();
-    }
-    // Otherwise, if the left split result has a suggestion, take it.
-    else if (splitResultAtLeftOfMiddleNode.HasCaretPointSuggestion()) {
-      mCaretPoint = splitResultAtLeftOfMiddleNode.UnwrapCaretPoint();
-    }
-  }
 
   explicit SplitRangeOffFromNodeResult(nsresult aRv) : mRv(aRv) {
     MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));

@@ -3551,7 +3551,16 @@
   mirror: always
 
 # pref controls `Sanitizer` API being exposed
+# https://wicg.github.io/sanitizer-api/
 - name: dom.security.sanitizer.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# The Sanitizer implementation is currently being rewritten and
+# is known to be incomplete. Fuzzing and testing and this point
+# would be premature.
+- name: dom.security.sanitizer.rewrite_no_bounty
   type: bool
   value: false
   mirror: always
@@ -5779,7 +5788,7 @@
 # Enable OffscreenCanvas everywhere.
 - name: gfx.offscreencanvas.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Enable OffscreenCanvas based on the domain allowlist.
@@ -7794,7 +7803,7 @@
 # Is support for workerGlobalScope.fonts enabled?
 - name: layout.css.font-loading-api.workers.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Is support for the @font-face metrics override descriptors enabled?

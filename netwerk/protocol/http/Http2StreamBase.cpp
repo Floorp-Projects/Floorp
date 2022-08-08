@@ -402,7 +402,7 @@ nsresult Http2StreamBase::GenerateOpen() {
     return rv;
   }
 
-  if (firstFrameFlags | Http2Session::kFlag_END_STREAM) {
+  if (firstFrameFlags & Http2Session::kFlag_END_STREAM) {
     SetSentFin(true);
   }
 

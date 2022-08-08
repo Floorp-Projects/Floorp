@@ -684,6 +684,12 @@ function test_http2_post() {
   do_post(posts[0], chan, listener, "POST");
 }
 
+function test_http2_empty_post() {
+  var chan = makeChan("https://localhost:" + serverPort + "/post");
+  var listener = new Http2PostListener("0");
+  do_post("", chan, listener, "POST");
+}
+
 // Make sure we can do a simple PATCH
 function test_http2_patch() {
   var chan = makeChan("https://localhost:" + serverPort + "/patch");
@@ -1319,6 +1325,7 @@ var tests = [
   test_http2_big,
   test_http2_huge_suspended,
   test_http2_post,
+  test_http2_empty_post,
   test_http2_patch,
   test_http2_pushapi_1,
   test_http2_continuations,

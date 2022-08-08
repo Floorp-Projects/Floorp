@@ -25,7 +25,7 @@ var form = document.getElementById("form1");
 var input = getFormElementByName(1, "field1");
 var expectedValue = "value1";
 
-add_task(async function setup() {
+add_setup(async () => {
   await updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "value1" },

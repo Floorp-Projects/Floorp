@@ -16,7 +16,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-add_task(async function setup() {
+add_setup(async () => {
   const count = await countEntries(null, null);
   ok(!count, "initial storage is empty");
 });

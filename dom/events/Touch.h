@@ -70,6 +70,8 @@ class Touch final : public nsISupports,
   float RotationAngle(CallerType aCallerType) const;
   float Force(CallerType aCallerType) const;
 
+  EventTarget* GetOriginalTarget() const;
+
   nsCOMPtr<EventTarget> mOriginalTarget;
   nsCOMPtr<EventTarget> mTarget;
   LayoutDeviceIntPoint mRefPoint;

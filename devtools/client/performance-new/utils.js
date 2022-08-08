@@ -417,13 +417,6 @@ const featureDescriptions = [
     disabledReason: "This feature is only available on Android.",
   },
   {
-    name: "Native Leaf Stack",
-    value: "leaf",
-    title:
-      "Record the native memory address of the leaf-most stack. This could be " +
-      "useful on platforms that do not support stack walking.",
-  },
-  {
     name: "No Periodic Sampling",
     value: "nostacksampling",
     title: "Disable interval-based stack sampling",

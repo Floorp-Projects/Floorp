@@ -96,7 +96,6 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
                          uint64_t aInnerWindowID, bool aFromPrivateWindow);
 
   RefPtr<nsIGlobalObject> mGlobal;
-  SanitizerConfig mOptions;
   nsTreeSanitizer mTreeSanitizer;
 };
 }  // namespace dom

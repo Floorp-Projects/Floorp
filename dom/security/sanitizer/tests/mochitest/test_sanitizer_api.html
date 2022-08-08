@@ -82,12 +82,13 @@ SimpleTest.waitForExplicitFinish();
       testExpected: `<p>hello</p>`,
       sanitizerOptions: { dropAttributes: { 'title': ['p'] } },
     },
-    {
-      // confirming the inverse
-      testString: `<p title="dontdropme">hello</p>`,
-      testExpected: `<p title="dontdropme">hello</p>`,
-      sanitizerOptions: {},
-    },
+    // TODO: default configuration allowAttributes not yet (re-)implemented
+    // {
+    //   // confirming the inverse
+    //   testString: `<p title="dontdropme">hello</p>`,
+    //   testExpected: `<p title="dontdropme">hello</p>`,
+    //   sanitizerOptions: {},
+    // },
     {
       // if an attribute is allowed and dropped, the drop will take preference
       testString: `<p title="lol">hello</p>`,

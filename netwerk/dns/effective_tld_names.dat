@@ -1344,18 +1344,47 @@ tv.im
 // Please note, that nic.in is not an official eTLD, but used by most
 // government institutions.
 in
-co.in
-firm.in
-net.in
-org.in
-gen.in
-ind.in
-nic.in
+5g.in
+6g.in
 ac.in
+ai.in
+am.in
+bihar.in
+biz.in
+business.in
+ca.in
+cn.in
+co.in
+com.in
+coop.in
+cs.in
+delhi.in
+dr.in
 edu.in
-res.in
+er.in
+firm.in
+gen.in
 gov.in
+gujarat.in
+ind.in
+info.in
+int.in
+internet.in
+io.in
+me.in
 mil.in
+net.in
+nic.in
+org.in
+pg.in
+post.in
+pro.in
+res.in
+travel.in
+tv.in
+uk.in
+up.in
+us.in
 
 // info : https://en.wikipedia.org/wiki/.info
 info

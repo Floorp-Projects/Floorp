@@ -352,7 +352,7 @@ for (const form of document.forms) {
   form.addEventListener("submit", e => e.preventDefault());
 }
 
-add_task(async function checkInitialState() {
+add_setup(async () => {
   await updateFormHistory([
     { op: "remove" },
   ]);

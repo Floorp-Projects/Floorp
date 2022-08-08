@@ -61,9 +61,13 @@ async function initBrowserToolboxTask({
   ).PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 
   let process;
+  let dbgProcess;
   if (!existingProcessClose) {
-    process = await new Promise(onRun => {
-      BrowserToolboxLauncher.init({ onRun, overwritePreferences: true });
+    [process, dbgProcess] = await new Promise(resolve => {
+      BrowserToolboxLauncher.init({
+        onRun: (_process, _dbgProcess) => resolve([_process, _dbgProcess]),
+        overwritePreferences: true,
+      });
     });
     ok(true, "Browser toolbox started");
     is(
@@ -210,7 +214,7 @@ async function initBrowserToolboxTask({
 
     const closePromise = existingProcessClose
       ? existingProcessClose()
-      : process._dbgProcess.wait();
+      : dbgProcess.wait();
     evaluateExpression("gToolbox.destroy()").catch(e => {
       // Ignore connection close as the toolbox destroy may destroy
       // everything quickly enough so that evaluate request is still pending
