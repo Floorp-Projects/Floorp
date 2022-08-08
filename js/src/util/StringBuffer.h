@@ -33,7 +33,7 @@ template <size_t EltSize>
 inline size_t GrowEltsAggressively(size_t aOldElts, size_t aIncr) {
   mozilla::CheckedInt<size_t> required =
       mozilla::CheckedInt<size_t>(aOldElts) + aIncr;
-  if (!(required * 2).isValid()) {
+  if (!required.isValid()) {
     return 0;
   }
   required = mozilla::RoundUpPow2(required.value());
