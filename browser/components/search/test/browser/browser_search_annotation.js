@@ -9,9 +9,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
 });
 
+const FRECENCY = {
+  TYPED: 100,
+  BOOKMARKED: 175,
+};
+
 const { VISIT_SOURCE_BOOKMARKED, VISIT_SOURCE_SEARCHED } = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
+  const frecency = await PlacesTestUtils.fieldInDB(targetURL, "frecency");
+  Assert.equal(frecency, expected.frecency, "Frecency is correct");
+
   const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
   const db = await PlacesUtils.promiseDBConnection();
   const rows = await db.execute(
@@ -56,6 +64,7 @@ add_task(async function basic() {
       resultURL: "https://example.com/?q=abc",
       expected: {
         source: VISIT_SOURCE_SEARCHED,
+        frecency: FRECENCY.TYPED,
       },
     },
     {
@@ -71,6 +80,7 @@ add_task(async function basic() {
       ],
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
   ];
@@ -142,6 +152,7 @@ add_task(async function contextmenu() {
         targetURL,
         expected: {
           source: VISIT_SOURCE_SEARCHED,
+          frecency: FRECENCY.TYPED,
         },
       });
 

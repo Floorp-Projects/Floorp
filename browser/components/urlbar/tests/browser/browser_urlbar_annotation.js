@@ -5,6 +5,16 @@
 
 // Test whether a visit information is annotated correctly when picking a result.
 
+if (AppConstants.platform === "macosx") {
+  requestLongerTimeout(2);
+}
+
+const FRECENCY = {
+  ORGANIC: 2000,
+  SPONSORED: -1,
+  BOOKMARKED: 2075,
+};
+
 const {
   VISIT_SOURCE_ORGANIC,
   VISIT_SOURCE_SPONSORED,
@@ -13,6 +23,9 @@ const {
 } = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
+  const frecency = await PlacesTestUtils.fieldInDB(targetURL, "frecency");
+  Assert.equal(frecency, expected.frecency, "Frecency is correct");
+
   const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
   const expectedTriggeringPlaceId = expected.triggerURL
     ? await PlacesTestUtils.fieldInDB(expected.triggerURL, "id")
@@ -92,6 +105,7 @@ add_task(async function basic() {
       },
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     },
     {
@@ -109,6 +123,7 @@ add_task(async function basic() {
       ],
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
     {
@@ -127,6 +142,7 @@ add_task(async function basic() {
       ],
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
     {
@@ -137,6 +153,7 @@ add_task(async function basic() {
       },
       expected: {
         source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.ORGANIC,
       },
     },
   ];
@@ -182,6 +199,7 @@ add_task(async function redirection() {
       targetURL: payload.url,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     });
     await assertDatabase({
@@ -189,6 +207,7 @@ add_task(async function redirection() {
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         triggerURL: payload.url,
+        frecency: FRECENCY.SPONSORED,
       },
     });
   });
@@ -212,6 +231,7 @@ add_task(async function search() {
       resultURL: "https://example.com/?q=abc",
       expected: {
         source: VISIT_SOURCE_SEARCHED,
+        frecency: FRECENCY.ORGANIC,
       },
     },
     {
@@ -227,6 +247,7 @@ add_task(async function search() {
       ],
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
   ];
@@ -265,6 +286,7 @@ add_task(async function search() {
         targetURL: payload.url,
         expected: {
           source: VISIT_SOURCE_ORGANIC,
+          frecency: FRECENCY.ORGANIC,
         },
       });
       UrlbarProvidersManager.unregisterProvider(provider);

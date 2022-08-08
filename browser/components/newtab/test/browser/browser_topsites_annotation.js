@@ -24,6 +24,13 @@ const OPEN_TYPE = {
   NEWTAB_BY_CONTEXTMENU: 2,
 };
 
+const FRECENCY = {
+  TYPED: 2000,
+  VISITED: 100,
+  SPONSORED: -1,
+  BOOKMARKED: 2075,
+};
+
 const {
   VISIT_SOURCE_ORGANIC,
   VISIT_SOURCE_SPONSORED,
@@ -31,6 +38,9 @@ const {
 } = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
+  const frecency = await PlacesTestUtils.fieldInDB(targetURL, "frecency");
+  Assert.equal(frecency, expected.frecency, "Frecency is correct");
+
   const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
   const expectedTriggeringPlaceId = expected.triggerURL
     ? await PlacesTestUtils.fieldInDB(expected.triggerURL, "id")
@@ -177,6 +187,7 @@ add_task(async function basic() {
       },
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     },
     {
@@ -194,6 +205,7 @@ add_task(async function basic() {
       ],
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
     {
@@ -215,6 +227,7 @@ add_task(async function basic() {
       ],
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
     {
@@ -225,6 +238,7 @@ add_task(async function basic() {
       },
       expected: {
         source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.TYPED,
       },
     },
   ];
@@ -289,6 +303,7 @@ add_task(async function redirection() {
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -298,6 +313,7 @@ add_task(async function redirection() {
       targetURL: link.url,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     });
     await clearHistoryAndBookmarks();
@@ -310,6 +326,7 @@ add_task(async function redirection() {
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -318,6 +335,7 @@ add_task(async function redirection() {
       targetURL: link.url,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     });
     await clearHistoryAndBookmarks();
@@ -353,6 +371,7 @@ add_task(async function inherit() {
       linkURL: link.url,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     });
 
@@ -363,6 +382,7 @@ add_task(async function inherit() {
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -374,6 +394,7 @@ add_task(async function inherit() {
       linkURL: secondURL,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -387,6 +408,7 @@ add_task(async function inherit() {
       openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -398,6 +420,7 @@ add_task(async function inherit() {
       linkURL: thirdURL,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -408,6 +431,7 @@ add_task(async function inherit() {
       linkURL: outsideURL,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.VISITED,
       },
     });
 
@@ -428,6 +452,7 @@ add_task(async function inherit() {
       targetURL: host,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
         triggerURL: link.url,
       },
     });
@@ -462,6 +487,7 @@ add_task(async function timeout() {
       linkURL: link.url,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
       },
     });
 
@@ -481,6 +507,7 @@ add_task(async function timeout() {
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.VISITED,
       },
     });
     await PlacesTestUtils.clearHistoryVisits();
@@ -491,6 +518,7 @@ add_task(async function timeout() {
       linkURL: secondURL,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.VISITED,
       },
     });
 
