@@ -10433,7 +10433,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
 
   Address stringFlags(string, JSString::offsetOfFlags());
 
-  Label isLatin1, notInline, nonZero, isInlinedLatin1;
+  Label isLatin1, notInline, nonZero, nonInput, isInlinedLatin1;
 
   // For every edge case use the C++ variant.
   // Note: we also use this upon allocation failure in newGCString and
@@ -10453,8 +10453,23 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   masm.movePtr(ImmGCPtr(names.empty), output);
   masm.jump(done);
 
-  // Use slow path for ropes.
+  // Substring from 0..|str.length|, return str.
   masm.bind(&nonZero);
+  masm.branch32(Assembler::NotEqual,
+                Address(string, JSString::offsetOfLength()), length, &nonInput);
+#ifdef DEBUG
+  {
+    Label ok;
+    masm.branchTest32(Assembler::Zero, begin, begin, &ok);
+    masm.assumeUnreachable("length == str.length implies begin == 0");
+    masm.bind(&ok);
+  }
+#endif
+  masm.movePtr(string, output);
+  masm.jump(done);
+
+  // Use slow path for ropes.
+  masm.bind(&nonInput);
   masm.branchIfRope(string, slowPath);
 
   // Handle inlined strings by creating a FatInlineString.
@@ -10485,9 +10500,10 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   };
 
   masm.branchLatin1String(string, &isInlinedLatin1);
-  { initializeFatInlineString(CharEncoding::TwoByte); }
+  initializeFatInlineString(CharEncoding::TwoByte);
+
   masm.bind(&isInlinedLatin1);
-  { initializeFatInlineString(CharEncoding::Latin1); }
+  initializeFatInlineString(CharEncoding::Latin1);
 
   // Handle other cases with a DependentString.
   masm.bind(&notInline);
@@ -10509,9 +10525,10 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   };
 
   masm.branchLatin1String(string, &isLatin1);
-  { initializeDependentString(CharEncoding::TwoByte); }
+  initializeDependentString(CharEncoding::TwoByte);
+
   masm.bind(&isLatin1);
-  { initializeDependentString(CharEncoding::Latin1); }
+  initializeDependentString(CharEncoding::Latin1);
 
   masm.bind(done);
 }
