@@ -618,15 +618,19 @@ function String_substr(start, length) {
   // Step 6.
   if (intStart < 0) {
     intStart = std_Math_max(intStart + size, 0);
+  } else {
+    // Restrict the input range to allow better Ion optimizations.
+    intStart = std_Math_min(intStart, size);
   }
 
   // Step 7.
   var resultLength = std_Math_min(std_Math_max(end, 0), size - intStart);
 
   // Step 8.
-  if (resultLength <= 0) {
-    return "";
-  }
+  assert(
+    0 <= resultLength && resultLength <= size - intStart,
+    "resultLength is a valid substring length value"
+  );
 
   // Step 9.
   // While |intStart| and |resultLength| are bounded to the length of |str|
