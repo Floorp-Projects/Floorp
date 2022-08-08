@@ -237,7 +237,6 @@ module.exports = {
         "netwerk/test/unit*/**",
       ],
       rules: {
-        "no-global-assign": "off",
         "no-shadow": "off",
       },
     },

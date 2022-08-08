@@ -139,7 +139,8 @@ function makeChan(origin) {
   }).QueryInterface(Ci.nsIHttpChannel);
 }
 
-var origin;
+// Avoid ESLint no-global-assign rules.
+/* global origin:true */
 var xaltsvc;
 var retryCounter = 0;
 var loadWithoutClearingMappings = false;
