@@ -105,9 +105,13 @@ void WMFDecoderModule::Init() {
     // Always allow DXVA in the GPU process.
     sDXVAEnabled = true;
   } else if (XRE_IsRDDProcess()) {
-    // Only allows DXVA if we have an image device. We may have explicitly
-    // disabled its creation following an earlier RDD process crash.
-    sDXVAEnabled = !!DeviceManagerDx::Get()->GetImageDevice();
+    // Hardware accelerated decoding is explicitly only done in the GPU process
+    // to avoid copying textures whenever possible. Previously, detecting
+    // whether the video bridge was set up could be done with the following:
+    // sDXVAEnabled = !!DeviceManagerDx::Get()->GetImageDevice();
+    // The video bridge was previously broken due to initialization order
+    // issues. For more information see Bug 1763880.
+    sDXVAEnabled = false;
   } else {
     // Only allow DXVA in the UI process if we aren't in e10s Firefox
     sDXVAEnabled = !mozilla::BrowserTabsRemoteAutostart();
