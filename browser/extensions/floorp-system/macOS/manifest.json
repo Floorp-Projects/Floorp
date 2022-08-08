@@ -40,7 +40,7 @@
   },
   "browser_action": {
 		"default_icon":  "icons/floorp.png",
-		"default_title": "check for Update",
+		"default_title": "Check for Updates",
 		"browser_style":  true
 	},
   "page_action": {
