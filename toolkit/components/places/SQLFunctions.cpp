@@ -632,7 +632,8 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
             "IFNULL(origin.visit_type, v.visit_type) AS visit_type, "
             "target.visit_type AS target_visit_type, "
             "ROUND((strftime('%s','now','localtime','utc') - "
-            "v.visit_date/1000000)/86400) AS age_in_days "
+            "v.visit_date/1000000)/86400) AS age_in_days, "
+            "v.source AS visit_source "
             "FROM moz_historyvisits v "
             "LEFT JOIN moz_historyvisits origin ON origin.id = v.from_visit "
             "AND v.visit_type BETWEEN ") +
@@ -674,13 +675,17 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
              visitType != nsINavHistoryService::TRANSITION_TYPED);
       }
 
-      bonus = history->GetFrecencyTransitionBonus(visitType, true,
-                                                  useRedirectBonus);
-
-      // Add the bookmark visit bonus.
       if (hasBookmark) {
+        // For bookmarked visit, add full bonus.
+        bonus = history->GetFrecencyTransitionBonus(visitType, true,
+                                                    useRedirectBonus);
         bonus += history->GetFrecencyTransitionBonus(
             nsINavHistoryService::TRANSITION_BOOKMARK, true);
+      } else if (getVisits->AsInt32(3) !=
+                 nsINavHistoryService::VISIT_SOURCE_SPONSORED) {
+        // For not sponsored visit, add only transition bonus by visit type.
+        bonus = history->GetFrecencyTransitionBonus(visitType, true,
+                                                    useRedirectBonus);
       }
 
       // If bonus was zero, we can skip the work to determine the weight.
