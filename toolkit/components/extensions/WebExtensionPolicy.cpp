@@ -159,11 +159,9 @@ bool WebAccessibleResource::IsExtensionMatch(const URLInfo& aURI) {
   if (!mExtensionIDs) {
     return false;
   }
-  if (mExtensionIDs->Contains(nsGkAtoms::_asterisk)) {
-    return true;
-  }
   WebExtensionPolicy* policy = EPS().GetByHost(aURI.Host());
-  return policy && mExtensionIDs->Contains(policy->Id());
+  return policy && (mExtensionIDs->Contains(nsGkAtoms::_asterisk) ||
+                    mExtensionIDs->Contains(policy->Id()));
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebAccessibleResource)

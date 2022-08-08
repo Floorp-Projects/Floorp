@@ -263,11 +263,13 @@ add_task(async function test_WebExtensionPolicy_V3() {
   const id2 = "foo-2@bar.baz";
   const uuid2 = "89383c45-7db4-4999-83f7-f4cc246372cd";
   const id3 = "foo-3@bar.baz";
-  const uuid3 = "56652231-D7E2-45D1-BDBD-BD3BFF80927E";
+  const uuid3 = "56652231-d7e2-45d1-bdbd-bd3bff80927e";
 
   const baseURL = "file:///foo/";
   const mozExtURL = `moz-extension://${uuid}/`;
   const mozExtURI = newURI(mozExtURL);
+  const fooSite = newURI("http://foo.bar/");
+  const exampleSite = newURI("https://example.com/");
 
   let policy = new WebExtensionPolicy({
     id,
@@ -296,6 +298,11 @@ add_task(async function test_WebExtensionPolicy_V3() {
     ],
   });
   policy.active = true;
+  equal(
+    WebExtensionPolicy.getByHostname(uuid),
+    policy,
+    "Hostname lookup should match policy"
+  );
 
   let policy2 = new WebExtensionPolicy({
     id: id2,
@@ -306,6 +313,11 @@ add_task(async function test_WebExtensionPolicy_V3() {
     permissions: ["<all_urls>"],
   });
   policy2.active = true;
+  equal(
+    WebExtensionPolicy.getByHostname(uuid2),
+    policy2,
+    "Hostname lookup should match policy"
+  );
 
   let policy3 = new WebExtensionPolicy({
     id: id3,
@@ -316,6 +328,11 @@ add_task(async function test_WebExtensionPolicy_V3() {
     permissions: ["<all_urls>"],
   });
   policy3.active = true;
+  equal(
+    WebExtensionPolicy.getByHostname(uuid3),
+    policy3,
+    "Hostname lookup should match policy"
+  );
 
   ok(
     policy.isWebAccessiblePath("/bar.baz"),
@@ -340,6 +357,26 @@ add_task(async function test_WebExtensionPolicy_V3() {
     "Web-accessible path should not be accessible due to scheme mismatch"
   );
 
+  // non-matching site cannot access url
+  ok(
+    policy.sourceMayAccessPath(fooSite, "/bar.baz"),
+    "Web-accessible path should be accessible to foo.bar site"
+  );
+  ok(
+    !policy.sourceMayAccessPath(fooSite, "/foo.bar.baz"),
+    "Web-accessible path should not be accessible to foo.bar site"
+  );
+
+  // non-matching site cannot access url
+  ok(
+    !policy.sourceMayAccessPath(exampleSite, "/bar.baz"),
+    "Web-accessible path should not be accessible to example.com"
+  );
+  ok(
+    !policy.sourceMayAccessPath(exampleSite, "/foo.bar.baz"),
+    "Web-accessible path should not be accessible to example.com"
+  );
+
   let extURI = newURI(policy2.getURL(""));
   ok(
     !policy.sourceMayAccessPath(extURI, "/bar.baz"),
@@ -352,7 +389,7 @@ add_task(async function test_WebExtensionPolicy_V3() {
 
   extURI = newURI(policy3.getURL(""));
   ok(
-    !policy.sourceMayAccessPath(extURI, "/bar.baz"),
+    policy.sourceMayAccessPath(extURI, "/bar.baz"),
     "Web-accessible path should be accessible to other extension"
   );
   ok(
