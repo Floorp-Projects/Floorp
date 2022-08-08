@@ -21,28 +21,6 @@
 
     <issue
         id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="                android:lineHeight=&quot;24sp&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_migration.xml"
-            line="51"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="                android:lineHeight=&quot;24sp&quot;"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_migration.xml"
-            line="69"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
         message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
         errorLine1="    android:foreground=&quot;?android:attr/selectableItemBackground&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
@@ -61,105 +39,6 @@
             file="src/main/res/layout/component_collection_creation.xml"
             line="144"
             column="9"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="        android:lineHeight=&quot;18sp&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/custom_search_engine.xml"
-            line="59"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;24sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="39"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;24sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="53"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;20sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="80"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;20sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="103"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;20sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="129"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;20sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="152"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;20sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="178"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `lineHeight` is only used in API level 28 and higher (current min is 21)"
-        errorLine1="            android:lineHeight=&quot;20sp&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/fragment_onboarding_home_dialog.xml"
-            line="201"
-            column="13"/>
     </issue>
 
     <issue
