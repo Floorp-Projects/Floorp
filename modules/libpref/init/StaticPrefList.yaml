@@ -8624,6 +8624,13 @@
   value: true
   mirror: always
 
+# Whether to disable legacy names "small", "normal" and "big" for the
+# mathsize attribute.
+- name: mathml.mathsize_names.disabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to disable legacy names "thickmathspace", "mediummathspace",
 # "thickmathspace" etc for length attributes.
 - name: mathml.mathspace_names.disabled
