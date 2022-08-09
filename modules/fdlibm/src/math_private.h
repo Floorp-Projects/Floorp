@@ -21,9 +21,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "fdlibm.h"
-
 #include "mozilla/EndianUtils.h"
+
+#include "fdlibm.h"
 
 /*
  * Emulate FreeBSD internal double types.
@@ -93,11 +93,6 @@ typedef union
 } ieee_quad_shape_type;
 
 #endif
-
-/*
- * A union which permits us to convert between a double and two 32 bit
- * ints.
- */
 
 #if MOZ_BIG_ENDIAN()
 
@@ -481,7 +476,7 @@ do {								\
  * or by having |c| a few percent smaller than |a|.  Pre-normalization of
  * (a, b) may help.
  *
- * This is is a variant of an algorithm of Kahan (see Knuth (1981) 4.2.2
+ * This is a variant of an algorithm of Kahan (see Knuth (1981) 4.2.2
  * exercise 19).  We gain considerable efficiency by requiring the terms to
  * be sufficiently normalized and sufficiently increasing.
  */
@@ -635,7 +630,7 @@ rnint(__double_t x)
  * return type provided their arg is a floating point integer.  They can
  * sometimes be more efficient because no rounding is required.
  */
-#if (defined(amd64) || defined(__i386__)) && defined(__GNUCLIKE_ASM)
+#if defined(amd64) || defined(__i386__)
 #define	irint(x)						\
     (sizeof(x) == sizeof(float) &&				\
     sizeof(__float_t) == sizeof(long double) ? irintf(x) :	\

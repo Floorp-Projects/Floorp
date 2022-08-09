@@ -13,7 +13,7 @@ or
   sh update.sh <sha-commit>
 from within the modules/fdlibm directory.
 
-Current version: [commit cf4707bb2f78ecf56ba350bdc24e3135b4339622 (2019-09-25T18:50:57Z)].
+Current version: [commit 369ea0520a3061c07400d7cd32172efb6af39815 (2022-08-04T17:33:34Z)].
 
 patches 01-18 fixes files to be usable within mozilla-central tree.
 See https://bugzilla.mozilla.org/show_bug.cgi?id=933257
