@@ -63,8 +63,7 @@ extern double math_random_impl(JSContext* cx);
 
 extern bool math_random(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool math_abs_handle(JSContext* cx, js::HandleValue v,
-                            js::MutableHandleValue r);
+extern double math_abs_impl(double x);
 
 extern bool math_abs(JSContext* cx, unsigned argc, js::Value* vp);
 
@@ -78,15 +77,9 @@ extern bool math_min(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern double math_sqrt_impl(double x);
 
-extern bool math_sqrt_handle(JSContext* cx, js::HandleValue number,
-                             js::MutableHandleValue result);
-
 extern bool math_sqrt(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern bool math_pow(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool minmax_impl(JSContext* cx, bool max, js::HandleValue a,
-                        js::HandleValue b, js::MutableHandleValue res);
 
 extern bool math_imul_handle(JSContext* cx, HandleValue lhs, HandleValue rhs,
                              MutableHandleValue res);
@@ -97,6 +90,8 @@ extern bool RoundFloat32(JSContext* cx, HandleValue v, float* out);
 
 extern bool RoundFloat32(JSContext* cx, HandleValue arg,
                          MutableHandleValue res);
+
+extern double RoundFloat32(double d);
 
 extern bool math_fround(JSContext* cx, unsigned argc, js::Value* vp);
 
@@ -171,9 +166,6 @@ extern bool math_acos(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool math_atan(JSContext* cx, unsigned argc, Value* vp);
 
-extern bool math_atan2_handle(JSContext* cx, HandleValue y, HandleValue x,
-                              MutableHandleValue res);
-
 extern bool math_atan2(JSContext* cx, unsigned argc, Value* vp);
 
 extern double ecmaAtan2(double x, double y);
@@ -190,17 +182,11 @@ extern double math_acos_impl(double x);
 
 extern bool math_acos(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern bool math_ceil_handle(JSContext* cx, HandleValue value,
-                             MutableHandleValue res);
-
 extern bool math_ceil(JSContext* cx, unsigned argc, Value* vp);
 
 extern double math_ceil_impl(double x);
 
 extern bool math_clz32(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool math_floor_handle(JSContext* cx, HandleValue v,
-                              MutableHandleValue r);
 
 extern bool math_floor(JSContext* cx, unsigned argc, Value* vp);
 
@@ -208,9 +194,6 @@ extern double math_floor_impl(double x);
 
 template <typename T>
 extern T GetBiggestNumberLessThan(T x);
-
-extern bool math_round_handle(JSContext* cx, HandleValue arg,
-                              MutableHandleValue res);
 
 extern bool math_round(JSContext* cx, unsigned argc, Value* vp);
 
@@ -246,13 +229,7 @@ extern double math_trunc_impl(double x);
 
 extern float math_truncf_impl(float x);
 
-extern bool math_trunc_handle(JSContext* cx, HandleValue v,
-                              MutableHandleValue r);
-
 extern double math_sign_impl(double x);
-
-extern bool math_sign_handle(JSContext* cx, HandleValue v,
-                             MutableHandleValue r);
 
 extern double math_cbrt_impl(double x);
 
