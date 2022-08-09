@@ -493,7 +493,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
     if (mGivenSplitPoint.IsSet()) {
       // Different from previous/next content, if the creator didn't split a
       // node, the container of the split point is the original node.
-      return mGivenSplitPoint.GetContainerAsContent();
+      return mGivenSplitPoint.GetContainerAs<nsIContent>();
     }
     if (mDirection == SplitNodeDirection::LeftNodeIsNewOne) {
       return mNextNode ? mNextNode : mPreviousNode;

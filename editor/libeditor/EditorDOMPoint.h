@@ -195,12 +195,12 @@ class EditorDOMPointBase final {
 
   /**
    * GetContainer() returns the container node at the point.
-   * GetContainerAs*() returns the container node as specific type.
+   * GetContainerAs() returns the container node as specific type.
    */
   nsINode* GetContainer() const { return mParent; }
-
-  nsIContent* GetContainerAsContent() const {
-    return nsIContent::FromNodeOrNull(mParent);
+  template <typename ContentNodeType>
+  ContentNodeType* GetContainerAs() const {
+    return ContentNodeType::FromNodeOrNull(mParent);
   }
 
   MOZ_NEVER_INLINE_DEBUG nsIContent* ContainerAsContent() const {
@@ -209,22 +209,10 @@ class EditorDOMPointBase final {
     return mParent->AsContent();
   }
 
-  dom::Element* GetContainerAsElement() const {
-    return dom::Element::FromNodeOrNull(mParent);
-  }
-
   MOZ_NEVER_INLINE_DEBUG dom::Element* ContainerAsElement() const {
     MOZ_ASSERT(mParent);
     MOZ_ASSERT(mParent->IsElement());
     return mParent->AsElement();
-  }
-
-  nsStyledElement* GetContainerAsStyledElement() const {
-    return nsStyledElement::FromNodeOrNull(mParent);
-  }
-
-  dom::Text* GetContainerAsText() const {
-    return dom::Text::FromNodeOrNull(mParent);
   }
 
   MOZ_NEVER_INLINE_DEBUG dom::Text* ContainerAsText() const {
@@ -239,13 +227,9 @@ class EditorDOMPointBase final {
   nsINode* GetContainerParent() const {
     return mParent ? mParent->GetParent() : nullptr;
   }
-
-  nsIContent* GetContainerParentAsContent() const {
-    return nsIContent::FromNodeOrNull(GetContainerParent());
-  }
-
-  dom::Element* GetContainerParentAsElement() const {
-    return dom::Element::FromNodeOrNull(GetContainerParent());
+  template <typename ContentNodeType>
+  ContentNodeType* GetContainerParentAs() const {
+    return ContentNodeType::FromNodeOrNull(GetContainerParent());
   }
 
   dom::Element* GetContainerOrContainerParentElement() const {
@@ -253,7 +237,7 @@ class EditorDOMPointBase final {
       return nullptr;
     }
     return mParent->IsElement() ? ContainerAsElement()
-                                : GetContainerParentAsElement();
+                                : GetContainerParentAs<dom::Element>();
   }
 
   /**

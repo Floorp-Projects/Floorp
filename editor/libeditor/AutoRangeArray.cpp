@@ -295,7 +295,7 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
       }
 
       const nsTextFragment* data =
-          &insertionPoint.GetContainerAsText()->TextFragment();
+          &insertionPoint.ContainerAsText()->TextFragment();
       uint32_t offset = insertionPoint.Offset();
       if (!(offset > 1 &&
             data->IsLowSurrogateFollowingHighSurrogateAt(offset - 1)) &&
