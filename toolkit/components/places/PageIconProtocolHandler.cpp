@@ -132,13 +132,17 @@ class FaviconDataCallback final : public nsIFaviconDataCallback {
   }
 
  private:
-  ~FaviconDataCallback() = default;
+  ~FaviconDataCallback();
   nsCOMPtr<nsIURI> mURI;
   MozPromiseHolder<FaviconMetadataPromise> mPromiseHolder;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
 };
 
 NS_IMPL_ISUPPORTS(FaviconDataCallback, nsIFaviconDataCallback);
+
+FaviconDataCallback::~FaviconDataCallback() {
+  mPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+}
 
 NS_IMETHODIMP FaviconDataCallback::OnComplete(nsIURI* aURI, uint32_t aDataLen,
                                               const uint8_t* aData,
