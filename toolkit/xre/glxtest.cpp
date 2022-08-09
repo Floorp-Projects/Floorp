@@ -417,11 +417,33 @@ static bool get_render_name(const char* name) {
     }
   }
 
+  // Fallback path for split kms/render devices - if only one drm render node
+  // exists it's most likely the one we're looking for.
+  if (match && !(match->available_nodes & (1 << DRM_NODE_RENDER))) {
+    match = nullptr;
+    for (int i = 0; i < devices_len; i++) {
+      if (devices[i]->available_nodes & (1 << DRM_NODE_RENDER)) {
+        if (!match) {
+          match = devices[i];
+        } else {
+          // more than one candidate found, stop trying.
+          match = nullptr;
+          break;
+        }
+      }
+    }
+    if (match) {
+      record_warning(
+          "DRM render node not clearly detectable. Falling back to using the "
+          "only one that was found.");
+    } else {
+      record_warning("DRM device has no render node");
+    }
+  }
+
   bool result = false;
   if (!match) {
     record_warning("Cannot find DRM device");
-  } else if (!(match->available_nodes & (1 << DRM_NODE_RENDER))) {
-    record_warning("DRM device has no render node");
   } else {
     set_render_device_path(match->nodes[DRM_NODE_RENDER]);
     record_value(
