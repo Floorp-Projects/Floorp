@@ -244,9 +244,14 @@ tasks:
                                       $if: 'tasks_for == "action"'
                                       then: >
                                           cd /builds/worker/checkouts/vcs &&
+                                          git submodule init &&
+                                          git submodule update &&
                                           ln -s /builds/worker/artifacts artifacts &&
                                           ~/.local/bin/taskgraph action-callback
                                       else: >
+                                          cd /builds/worker/checkouts/vcs &&
+                                          git submodule init &&
+                                          git submodule update &&
                                           ln -s /builds/worker/artifacts artifacts &&
                                           ~/.local/bin/taskgraph decision
                                           --pushlog-id='0'
