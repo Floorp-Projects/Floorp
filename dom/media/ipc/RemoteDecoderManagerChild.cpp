@@ -58,12 +58,12 @@ static StaticRefPtr<RemoteDecoderManagerChild>
     sRemoteDecoderManagerChildForGPUProcess;
 static UniquePtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
 
-static StaticDataMutex<Maybe<media::MediaCodecsSupported>> sGPUSupported(
+static StaticDataMutex<Maybe<PDMFactory::MediaCodecsSupported>> sGPUSupported(
     "RDMC::sGPUSupported");
-static StaticDataMutex<Maybe<media::MediaCodecsSupported>> sRDDSupported(
+static StaticDataMutex<Maybe<PDMFactory::MediaCodecsSupported>> sRDDSupported(
     "RDMC::sRDDSupported");
-static StaticDataMutex<Maybe<media::MediaCodecsSupported>> sUtilitySupported(
-    "RDMC::sUtilitySupported");
+static StaticDataMutex<Maybe<PDMFactory::MediaCodecsSupported>>
+    sUtilitySupported("RDMC::sUtilitySupported");
 
 class ShutdownObserver final : public nsIObserver {
  public:
@@ -226,7 +226,7 @@ nsISerialEventTarget* RemoteDecoderManagerChild::GetManagerThread() {
 bool RemoteDecoderManagerChild::Supports(
     RemoteDecodeIn aLocation, const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) {
-  Maybe<media::MediaCodecsSupported> supported;
+  Maybe<PDMFactory::MediaCodecsSupported> supported;
   switch (aLocation) {
     case RemoteDecodeIn::RddProcess: {
       auto supportedRDD = sRDDSupported.Lock();
@@ -264,8 +264,7 @@ bool RemoteDecoderManagerChild::Supports(
   // We can ignore the SupportDecoderParams argument for now as creation of the
   // decoder will actually fail later and fallback PDMs will be tested on later.
   return PDMFactory::SupportsMimeType(aParams.MimeType(), *supported,
-                                      aLocation) !=
-         media::DecodeSupport::Unsupported;
+                                      aLocation);
 }
 
 /* static */
@@ -798,7 +797,8 @@ void RemoteDecoderManagerChild::HandleFatalError(const char* aMsg) const {
 }
 
 void RemoteDecoderManagerChild::SetSupported(
-    RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported) {
+    RemoteDecodeIn aLocation,
+    const PDMFactory::MediaCodecsSupported& aSupported) {
   switch (aLocation) {
     case RemoteDecodeIn::GpuProcess: {
       auto supported = sGPUSupported.Lock();

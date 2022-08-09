@@ -38,7 +38,6 @@ UNIFIED_SOURCES += [
     "agnostic/VPXDecoder.cpp",
     "agnostic/WAVDecoder.cpp",
     "AllocationPolicy.cpp",
-    "MediaCodecsSupport.cpp",
     "PDMFactory.cpp",
     "PEMFactory.cpp",
     "PlatformDecoderModule.cpp",
