@@ -474,6 +474,7 @@ add_task(async function nativeMessaging_permission() {
 add_task(async function declarativeNetRequest_unavailable_by_default() {
   let manifestPermissions = await getManifestPermissions({
     manifest: {
+      manifest_version: 3,
       permissions: ["declarativeNetRequest"],
     },
   });
@@ -489,6 +490,7 @@ add_task(
   async function declarativeNetRequest_permission_with_warning() {
     let manifestPermissions = await getManifestPermissions({
       manifest: {
+        manifest_version: 3,
         permissions: ["declarativeNetRequest"],
       },
     });
@@ -516,6 +518,7 @@ add_task(
   async function declarativeNetRequest_permission_without_warning() {
     let manifestPermissions = await getManifestPermissions({
       manifest: {
+        manifest_version: 3,
         permissions: ["declarativeNetRequestWithHostAccess"],
       },
     });
