@@ -305,13 +305,8 @@ already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
   // Step 7. If state is "errored", return a promise rejected with
   // stream.[[storedError]].
   if (state == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise = Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
     JS::Rooted<JS::Value> error(aCx, stream->StoredError());
-    promise->MaybeReject(error);
-    return promise.forget();
+    return Promise::CreateRejected(aWriter->GetParentObject(), error, aRv);
   }
 
   // Step 8. If ! WritableStreamCloseQueuedOrInFlight(stream) is true or state
@@ -319,24 +314,15 @@ already_AddRefed<Promise> WritableStreamDefaultWriterWrite(
   // indicating that the stream is closing or closed.
   if (stream->CloseQueuedOrInFlight() ||
       state == WritableStream::WriterState::Closed) {
-    RefPtr<Promise> promise = Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError("Stream is closed or closing");
-    return promise.forget();
+    return Promise::CreateRejectedWithTypeError(
+        aWriter->GetParentObject(), "Stream is closed or closing"_ns, aRv);
   }
 
   // Step 9. If state is "erroring", return a promise rejected with
   // stream.[[storedError]].
   if (state == WritableStream::WriterState::Erroring) {
-    RefPtr<Promise> promise = Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
     JS::Rooted<JS::Value> error(aCx, stream->StoredError());
-    promise->MaybeReject(error);
-    return promise.forget();
+    return Promise::CreateRejected(aWriter->GetParentObject(), error, aRv);
   }
 
   // Step 10. Assert: state is "writable".
@@ -570,13 +556,8 @@ already_AddRefed<Promise> WritableStreamDefaultWriterCloseWithErrorPropagation(
   // Step 5. If state is "errored",
   // return a promise rejected with stream.[[storedError]].
   if (state == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise = Promise::Create(aWriter->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
     JS::Rooted<JS::Value> error(aCx, stream->StoredError());
-    promise->MaybeReject(error);
-    return promise.forget();
+    return Promise::CreateRejected(aWriter->GetParentObject(), error, aRv);
   }
 
   // Step 6. Assert: state is "writable" or "erroring".

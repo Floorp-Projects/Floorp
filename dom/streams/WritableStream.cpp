@@ -580,12 +580,8 @@ already_AddRefed<Promise> WritableStream::Abort(JSContext* aCx,
   // Step 1. If ! IsWritableStreamLocked(this) is true, return a promise
   // rejected with a TypeError exception.
   if (Locked()) {
-    RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError("Canceled Locked Stream");
-    return promise.forget();
+    return Promise::CreateRejectedWithTypeError(
+        GetParentObject(), "Canceled Locked Stream"_ns, aRv);
   }
 
   // Step 2. Return ! WritableStreamAbort(this, reason).
@@ -604,13 +600,9 @@ already_AddRefed<Promise> WritableStreamClose(JSContext* aCx,
   // TypeError exception.
   if (state == WritableStream::WriterState::Closed ||
       state == WritableStream::WriterState::Errored) {
-    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError(
-        "Can not close stream after closing or error");
-    return promise.forget();
+    return Promise::CreateRejectedWithTypeError(
+        aStream->GetParentObject(),
+        "Can not close stream after closing or error"_ns, aRv);
   }
 
   // Step 3. Assert: state is "writable" or "erroring".
@@ -657,23 +649,15 @@ already_AddRefed<Promise> WritableStream::Close(JSContext* aCx,
   // Step 1. If ! IsWritableStreamLocked(this) is true, return a promise
   // rejected with a TypeError exception.
   if (Locked()) {
-    RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError("Can not close locked stream");
-    return promise.forget();
+    return Promise::CreateRejectedWithTypeError(
+        GetParentObject(), "Can not close locked stream"_ns, aRv);
   }
 
   // Step 2. If ! WritableStreamCloseQueuedOrInFlight(this) is true, return a
   // promise rejected with a TypeError exception.
   if (CloseQueuedOrInFlight()) {
-    RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeRejectWithTypeError("Stream is already closing");
-    return promise.forget();
+    return Promise::CreateRejectedWithTypeError(
+        GetParentObject(), "Stream is already closing"_ns, aRv);
   }
 
   // Step 3. Return ! WritableStreamClose(this).

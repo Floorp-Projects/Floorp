@@ -958,6 +958,37 @@ already_AddRefed<Promise> Promise::CreateResolvedWithUndefined(
   return returnPromise.forget();
 }
 
+already_AddRefed<Promise> Promise::CreateRejected(
+    nsIGlobalObject* aGlobal, JS::Handle<JS::Value> aRejectionError,
+    ErrorResult& aRv) {
+  RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  promise->MaybeReject(aRejectionError);
+  return promise.forget();
+}
+
+already_AddRefed<Promise> Promise::CreateRejectedWithTypeError(
+    nsIGlobalObject* aGlobal, const nsACString& aMessage, ErrorResult& aRv) {
+  RefPtr<Promise> returnPromise = Promise::Create(aGlobal, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  returnPromise->MaybeRejectWithTypeError(aMessage);
+  return returnPromise.forget();
+}
+
+already_AddRefed<Promise> Promise::CreateRejectedWithErrorResult(
+    nsIGlobalObject* aGlobal, ErrorResult& aRejectionError) {
+  RefPtr<Promise> returnPromise = Promise::Create(aGlobal, IgnoreErrors());
+  if (!returnPromise) {
+    return nullptr;
+  }
+  returnPromise->MaybeReject(std::move(aRejectionError));
+  return returnPromise.forget();
+}
+
 }  // namespace mozilla::dom
 
 extern "C" {

@@ -282,11 +282,8 @@ void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
   } else {
     // Step 5. Otherwise, set reader.[[closedPromise]] to a promise rejected
     // with a TypeError exception.
-    RefPtr<Promise> promise = Promise::Create(aReader->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-    promise->MaybeRejectWithTypeError("Lock Released");
+    RefPtr<Promise> promise = Promise::CreateRejectedWithTypeError(
+        aReader->GetParentObject(), "Lock Released"_ns, aRv);
     aReader->SetClosedPromise(promise.forget());
   }
 

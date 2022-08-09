@@ -368,13 +368,9 @@ already_AddRefed<Promise> ReadableStreamCancel(JSContext* aCx,
 
   // Step 3.
   if (aStream->State() == ReadableStream::ReaderState::Errored) {
-    RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
     JS::Rooted<JS::Value> storedError(aCx, aStream->StoredError());
-    promise->MaybeReject(storedError);
-    return promise.forget();
+    return Promise::CreateRejected(aStream->GetParentObject(), storedError,
+                                   aRv);
   }
 
   // Step 4.

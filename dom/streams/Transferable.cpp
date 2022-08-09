@@ -351,13 +351,8 @@ class CrossRealmWritableUnderlyingSinkAlgorithms final
                 aPort->Close();
 
                 // Step 2.3.2: Return a promise rejected with result.[[Value]].
-                RefPtr<Promise> promise =
-                    Promise::Create(aPort->GetParentObject(), aRv);
-                if (aRv.Failed()) {
-                  return nullptr;
-                }
-                promise->MaybeReject(error);
-                return promise.forget();
+                return Promise::CreateRejected(aPort->GetParentObject(), error,
+                                               aRv);
               }
 
               // Step 2.4: Otherwise, return a promise resolved with undefined.
@@ -408,12 +403,7 @@ class CrossRealmWritableUnderlyingSinkAlgorithms final
     // Step 3: If result is an abrupt completion, return a promise rejected with
     // result.[[Value]].
     if (!result) {
-      RefPtr<Promise> promise = Promise::Create(mPort->GetParentObject(), aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-      promise->MaybeReject(error);
-      return promise.forget();
+      return Promise::CreateRejected(mPort->GetParentObject(), error, aRv);
     }
 
     // Step 4: Otherwise, return a promise resolved with undefined.
@@ -751,12 +741,7 @@ class CrossRealmReadableUnderlyingSourceAlgorithms final
     // Step 8.3: If result is an abrupt completion, return a promise rejected
     // with result.[[Value]].
     if (!result) {
-      RefPtr<Promise> promise = Promise::Create(mPort->GetParentObject(), aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-      promise->MaybeReject(error);
-      return promise.forget();
+      return Promise::CreateRejected(mPort->GetParentObject(), error, aRv);
     }
 
     // Step 8.4: Otherwise, return a promise resolved with undefined.
