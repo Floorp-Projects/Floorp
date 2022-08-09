@@ -47,9 +47,6 @@ class JS_PUBLIC_API ContextOptions {
         trySmoosh_(false),
 #endif
         fuzzing_(false),
-#ifdef NIGHTLY_BUILD
-        arrayGrouping_(true),
-#endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
         changeArrayByCopy_(false),
 #endif
@@ -136,14 +133,6 @@ class JS_PUBLIC_API ContextOptions {
     disableIon_ = true;
     return *this;
   }
-
-#ifdef NIGHTLY_BUILD
-  bool arrayGrouping() const { return arrayGrouping_; }
-  ContextOptions& setArrayGrouping(bool enabled) {
-    arrayGrouping_ = enabled;
-    return *this;
-  }
-#endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy() const { return changeArrayByCopy_; }
@@ -264,9 +253,6 @@ class JS_PUBLIC_API ContextOptions {
   bool trySmoosh_ : 1;
 #endif
   bool fuzzing_ : 1;
-#ifdef NIGHTLY_BUILD
-  bool arrayGrouping_ : 1;
-#endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ : 1;
 #endif
