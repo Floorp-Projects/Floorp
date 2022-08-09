@@ -96,6 +96,12 @@ class TabPickupList extends HTMLElement {
     event.preventDefault();
     const item = event.target.closest(".synced-tab-li");
     window.open(item.dataset.targetURI, "_blank");
+
+    let index = [...this.tabsList.children].indexOf(item);
+
+    Services.telemetry.recordEvent("firefoxview", "tab_pickup", "tabs", null, {
+      position: (++index).toString(),
+    });
   }
 
   togglePlaceholderVisibility(visible) {
@@ -104,7 +110,7 @@ class TabPickupList extends HTMLElement {
   }
 
   async getSyncedTabData() {
-    let tabs = await lazy.SyncedTabs.getRecentTabs(this.maxTabsLength);
+    let tabs = await lazy.SyncedTabs.getRecentTabs(50);
 
     this.updateTabsList(tabs);
   }
@@ -143,6 +149,8 @@ class TabPickupList extends HTMLElement {
         this.intervalID = setInterval(() => this.updateTime(), lazy.timeMsPref);
       }
     }
+
+    this.sendTabTelemetry(syncedTabs.length);
   }
 
   generatePlaceholder() {
@@ -225,6 +233,12 @@ class TabPickupList extends HTMLElement {
     dot.classList.add("dot");
     badge.append(dot, badgeText);
     return badge;
+  }
+
+  sendTabTelemetry(numTabs) {
+    Services.telemetry.recordEvent("firefoxview", "synced_tabs", "tabs", null, {
+      count: numTabs.toString(),
+    });
   }
 }
 

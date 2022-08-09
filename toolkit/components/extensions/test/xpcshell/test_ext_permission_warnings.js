@@ -471,6 +471,68 @@ add_task(async function nativeMessaging_permission() {
   }
 });
 
+add_task(async function declarativeNetRequest_unavailable_by_default() {
+  let manifestPermissions = await getManifestPermissions({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["declarativeNetRequest"],
+    },
+  });
+  deepEqual(
+    manifestPermissions,
+    { origins: [], permissions: [] },
+    "Expected declarativeNetRequest permission to be ignored/stripped"
+  );
+});
+
+add_task(
+  { pref_set: [["extensions.dnr.enabled", true]] },
+  async function declarativeNetRequest_permission_with_warning() {
+    let manifestPermissions = await getManifestPermissions({
+      manifest: {
+        manifest_version: 3,
+        permissions: ["declarativeNetRequest"],
+      },
+    });
+
+    deepEqual(
+      manifestPermissions,
+      { origins: [], permissions: ["declarativeNetRequest"] },
+      "Expected origins and permissions"
+    );
+
+    deepEqual(
+      getPermissionWarnings(manifestPermissions),
+      [
+        bundle.GetStringFromName(
+          "webextPerms.description.declarativeNetRequest"
+        ),
+      ],
+      "Expected warnings"
+    );
+  }
+);
+
+add_task(
+  { pref_set: [["extensions.dnr.enabled", true]] },
+  async function declarativeNetRequest_permission_without_warning() {
+    let manifestPermissions = await getManifestPermissions({
+      manifest: {
+        manifest_version: 3,
+        permissions: ["declarativeNetRequestWithHostAccess"],
+      },
+    });
+
+    deepEqual(
+      manifestPermissions,
+      { origins: [], permissions: ["declarativeNetRequestWithHostAccess"] },
+      "Expected origins and permissions"
+    );
+
+    deepEqual(getPermissionWarnings(manifestPermissions), [], "No warnings");
+  }
+);
+
 // Tests that the expected permission warnings are generated for a mix of host
 // permissions and API permissions, for a privileged extension that uses the
 // mozillaAddons permission.

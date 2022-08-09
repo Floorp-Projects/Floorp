@@ -22,6 +22,7 @@ module.exports = async function() {
     true
   );
   Services.prefs.setBoolPref("devtools.browsertoolbox.fission", true);
+  Services.prefs.setCharPref("devtools.browsertoolbox.scope", "everything");
   // Ensure that the test page message will be visible
   Services.prefs.setBoolPref("devtools.browserconsole.contentMessages", true);
 
@@ -53,9 +54,7 @@ module.exports = async function() {
   test.done();
 
   test = runTest(`browser-toolbox.debugger-ready.DAMP`, true);
-  await evaluateInBrowserToolbox(consoleFront, [TEST_URL], async function(
-    testUrl
-  ) {
+  await evaluateInBrowserToolbox(consoleFront, [], function() {
     /* global waitFor, findSource */
     this.findSource = (dbg, url) => {
       const sources = dbg.selectors.getSourceList(dbg.store.getState());
@@ -88,32 +87,28 @@ module.exports = async function() {
   await evaluateInBrowserToolbox(consoleFront, [TEST_URL], async function(
     testUrl
   ) {
-    try {
-      dump("Wait for debugger to initialize");
-      const panel = await gToolbox.selectTool("jsdebugger");
-      const { dbg } = panel.panelWin;
-      dump("Wait for tab source in the content process");
-      const source = await waitFor(() => findSource(dbg, testUrl));
+    dump("Wait for debugger to initialize\n");
+    const panel = await gToolbox.selectTool("jsdebugger");
+    const { dbg } = panel.panelWin;
+    dump("Wait for tab source in the content process\n");
+    const source = await waitFor(() => findSource(dbg, testUrl));
 
-      dump("Select this source");
-      const cx = dbg.selectors.getContext(dbg.store.getState());
-      dbg.actions.selectLocation(cx, { sourceId: source.id, line: 1 });
-      await waitFor(() => {
-        const source = dbg.selectors.getSelectedSource(dbg.store.getState());
-        if (!source) {
-          return false;
-        }
-        const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
-          dbg.store.getState()
-        );
-        if (!sourceTextContent) {
-          return false;
-        }
-        return true;
-      });
-    } catch (e) {
-      dump("Exception while running code in the browser toolbox:" + e + "\n");
-    }
+    dump("Select this source\n");
+    const cx = dbg.selectors.getContext(dbg.store.getState());
+    dbg.actions.selectLocation(cx, { sourceId: source.id, line: 1 });
+    await waitFor(() => {
+      const source = dbg.selectors.getSelectedSource(dbg.store.getState());
+      if (!source) {
+        return false;
+      }
+      const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
+        dbg.store.getState()
+      );
+      if (!sourceTextContent) {
+        return false;
+      }
+      return true;
+    });
   });
   test.done();
 
@@ -125,28 +120,6 @@ module.exports = async function() {
 
   test = runTest(`browser-toolbox.webconsole-ready.DAMP`, true);
   await evaluateInBrowserToolbox(consoleFront, [], async function() {
-    async function waitFor(fn) {
-      let rv;
-      let count = 0;
-      while (true) {
-        try {
-          rv = await fn();
-          if (rv) {
-            return rv;
-          }
-        } catch (e) {
-          if (count > 100) {
-            throw new Error("timeout on " + fn + " -- " + e + "\n");
-          }
-        }
-        if (count > 100) {
-          throw new Error("timeout on " + fn + "\n");
-        }
-        count++;
-
-        await new Promise(r => setTimeout(r, 25));
-      }
-    }
     const { hud } = await gToolbox.selectTool("webconsole");
     dump("Wait for test page console message to appear\n");
     await waitFor(() =>
@@ -174,6 +147,7 @@ module.exports = async function() {
   Services.prefs.clearUserPref("devtools.browsertoolbox.fission");
   Services.prefs.clearUserPref("devtools.browsertoolbox.panel");
   Services.prefs.clearUserPref("devtools.browserconsole.contentMessages");
+  Services.prefs.clearUserPref("devtools.browsertoolbox.scope");
 
   await testTeardown();
 };
@@ -208,5 +182,14 @@ async function evaluateInBrowserToolbox(consoleFront, arg, fn) {
     text: `(${fn}).apply(null,${argString})`,
     mapped: { await: true },
   });
-  return onEvaluationResult;
+  const result = await onEvaluationResult;
+  if (result.topLevelAwaitRejected) {
+    throw new Error("evaluation failed");
+  }
+
+  if (result.exceptionMessage) {
+    throw new Error(result.exceptionMessage);
+  }
+
+  return result;
 }

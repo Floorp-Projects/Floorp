@@ -379,72 +379,78 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       },
     },
     {
-      id: "AW_CHOOSE_THEME",
+      id: "AW_CHOOSE_COLORWAY",
       content: {
         position: "split",
         background:
           "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
         progress_bar: true,
         logo: {},
-        title: "Independent voices can change culture",
+        title: "Choose the color that inspires you",
+        subtitle: "Independent voices can change culture.",
         tiles: {
-          type: "theme",
+          type: "colorway",
           action: {
             theme: "<event>",
           },
-          data: [
+          defaultVariationIndex: 1,
+          systemVariations: ["light", "automatic", "dark"],
+          variations: ["soft", "balanced", "bold"],
+          colorways: [
             {
-              theme: "automatic",
+              id: "default",
               label: {
-                string_id: "mr1-onboarding-theme-label-system",
+                string_id: "mr2-onboarding-theme-label-default",
               },
               tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-system",
+                string_id: "mr2-onboarding-default-theme-tooltip",
               },
-              description: {
-                string_id: "mr1-onboarding-theme-description-system",
-              },
+              description: "Use my current Firefox colors",
             },
             {
-              theme: "light",
-              label: {
-                string_id: "mr1-onboarding-theme-label-light",
-              },
-              tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-light",
-              },
-              description: {
-                string_id: "mr1-onboarding-theme-description-light",
-              },
+              id: "playmaker",
+              label: "Playmaker",
+              tooltip: "Playmaker",
+              description:
+                "You are Playmaker. You create opportunities to win and help everyone around you elevate their game.",
             },
             {
-              theme: "dark",
-              label: {
-                string_id: "mr1-onboarding-theme-label-dark",
-              },
-              tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-dark",
-              },
-              description: {
-                string_id: "mr1-onboarding-theme-description-dark",
-              },
+              id: "expressionist",
+              label: "Expressionist",
+              tooltip: "Expressionist",
+              description:
+                "You are Expressionist. You see the world differently and your creations stir the emotions of others.",
             },
             {
-              theme: "alpenglow",
-              label: {
-                string_id: "mr1-onboarding-theme-label-alpenglow",
-              },
-              tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-alpenglow",
-              },
-              description: {
-                string_id: "mr1-onboarding-theme-description-alpenglow",
-              },
+              id: "visionary",
+              label: "Visionary",
+              tooltip: "Visionary",
+              description:
+                "You are Visionary. You question the status quo and move others to imagine a better future.",
+            },
+            {
+              id: "activist",
+              label: "Activist",
+              tooltip: "Activist",
+              description:
+                "You are Activist. You leave the world a better place than you found it and lead others to believe.",
+            },
+            {
+              id: "dreamer",
+              label: "Dreamer",
+              tooltip: "Dreamer",
+              description:
+                "You are Dreamer. You believe that fortune favors the bold and inspire others to be brave.",
+            },
+            {
+              id: "innovator",
+              label: "Innovator",
+              tooltip: "Innovator",
+              description:
+                "You are Innovator. You see opportunities everywhere and make an impact on the lives of everyone around you.",
             },
           ],
         },
-        subtitle:
-          "You are an Expressionist. You see the world differently and your creations stir the emotions of others.",
         primary_button: {
           label: "Set colorway",
           action: {

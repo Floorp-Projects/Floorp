@@ -1086,6 +1086,16 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     mHasWarnedAboutTooLargeDashedOrDottedRadius = true;
   }
 
+  void RegisterContainerQueryFrame(nsIFrame* aFrame);
+  void UnregisterContainerQueryFrame(nsIFrame* aFrame);
+  bool HasContainerQueryFrames() const {
+    return !mContainerQueryFrames.IsEmpty();
+  }
+
+  void FinishedContainerQueryUpdate();
+
+  bool UpdateContainerQueryStyles();
+
   mozilla::intl::Bidi& GetBidiEngine();
 
   gfxFontFeatureValueSet* GetFontFeatureValuesLookup() const {
@@ -1289,6 +1299,13 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // this hash-set keeps track of names we've logged for this context, so
   // that we can avoid repeatedly reporting the same font.
   nsTHashSet<nsCString> mBlockedFonts;
+
+  // The set of container query boxes currently in the document.
+  nsTHashSet<nsIFrame*> mContainerQueryFrames;
+  // The set of container query elements currently in the document that have
+  // been updated so far. This is necessary to avoid reentering on container
+  // query style changes which cause us to do frame reconstruction.
+  nsTHashSet<nsIContent*> mUpdatedContainerQueryContents;
 
   ScrollStyles mViewportScrollStyles;
 

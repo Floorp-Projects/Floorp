@@ -55,5 +55,15 @@ export function createFaviconElement(image) {
 export function toggleContainer(collapsibleButton, collapsibleContainer) {
   const arrowDown = "arrow-down";
   collapsibleButton.classList.toggle(arrowDown);
-  collapsibleContainer.hidden = collapsibleButton.classList.contains(arrowDown);
+  let isHidden = collapsibleButton.classList.contains(arrowDown);
+  collapsibleContainer.hidden = isHidden;
+
+  Services.telemetry.recordEvent(
+    "firefoxview",
+    collapsibleButton.id === "collapsible-synced-tabs-button"
+      ? "tab_pickup_open"
+      : "closed_tabs_open",
+    "tabs",
+    (!isHidden).toString()
+  );
 }

@@ -32,6 +32,10 @@ ifdef BUILD_VERBOSE_LOG
 cargo_build_flags += -vv
 endif
 
+ifneq (,$(USE_CARGO_JSON_MESSAGE_FORMAT))
+cargo_build_flags += --message-format=json
+endif
+
 # Enable color output if original stdout was a TTY and color settings
 # aren't already present. This essentially restores the default behavior
 # of cargo when running via `mach`.
@@ -219,7 +223,6 @@ export RUSTFLAGS
 export RUSTC
 export RUSTDOC
 export RUSTFMT
-export MOZ_SRC=$(topsrcdir)
 export LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH)
 export CLANG_PATH=$(MOZ_CLANG_PATH)
 export PKG_CONFIG

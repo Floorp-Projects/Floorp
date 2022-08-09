@@ -318,6 +318,16 @@
   value: true
   mirror: always
 
+- name: apz.max_zoom
+  type: AtomicFloat
+  value: 10.0f
+  mirror: always
+
+- name: apz.min_zoom
+  type: AtomicFloat
+  value: 0.25f
+  mirror: always
+
 - name: apz.allow_zooming_out
   type: RelaxedAtomicBool
   value: false

@@ -16,6 +16,7 @@ toolkit.jar:
     content/extensions/schemas/content_scripts.json
     content/extensions/schemas/contextual_identities.json
     content/extensions/schemas/cookies.json
+    content/extensions/schemas/declarative_net_request.json
     content/extensions/schemas/dns.json
     content/extensions/schemas/downloads.json
     content/extensions/schemas/events.json

@@ -158,16 +158,6 @@ NullHttpChannel::VisitNonDefaultRequestHeaders(nsIHttpHeaderVisitor* aVisitor) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetAllowPipelining(bool* aAllowPipelining) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetAllowPipelining(bool aAllowPipelining) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 NullHttpChannel::GetAllowSTS(bool* aAllowSTS) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

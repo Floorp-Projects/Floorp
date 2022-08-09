@@ -147,6 +147,17 @@ def before_runs(env):
         inject_deterministic = test_site.get("inject_deterministic", True)
         env.set_arg("proxy-deterministic", inject_deterministic)
 
+        dismiss_cookie_prompt = test_site.get("dismiss_cookie_prompt", [])
+        if dismiss_cookie_prompt:
+            parsed_cmds = [
+                ":::".join([str(i) for i in item])
+                for item in dismiss_cookie_prompt
+                if item
+            ]
+            add_option(
+                env, "browsertime.dismiss_cookie_prompt", ";;;".join(parsed_cmds)
+            )
+
         cmds = test_site.get("test_cmds", [])
         if cmds:
             parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]

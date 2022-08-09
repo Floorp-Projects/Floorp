@@ -37,7 +37,7 @@ namespace jni {
   auto name =                                                               \
       mozilla::java::GeckoBundle::New(_##name##_jkeys, _##name##_jvalues);
 
-nsresult BoxData(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxData(JSContext* aCx, JS::Handle<JS::Value> aData,
                  jni::Object::LocalRef& aOut, bool aObjectOnly);
 
 }  // namespace jni

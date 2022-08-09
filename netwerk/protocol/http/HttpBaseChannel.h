@@ -205,8 +205,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
                                        nsIHttpHeaderVisitor* aVisitor) override;
   NS_IMETHOD VisitOriginalResponseHeaders(
       nsIHttpHeaderVisitor* aVisitor) override;
-  NS_IMETHOD GetAllowPipelining(bool* value) override;  // deprecated
-  NS_IMETHOD SetAllowPipelining(bool value) override;   // deprecated
   NS_IMETHOD GetAllowSTS(bool* value) override;
   NS_IMETHOD SetAllowSTS(bool value) override;
   NS_IMETHOD GetRedirectionLimit(uint32_t* value) override;

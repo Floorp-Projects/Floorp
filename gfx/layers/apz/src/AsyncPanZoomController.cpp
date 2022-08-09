@@ -82,7 +82,7 @@
 #include "nsStyleConsts.h"
 #include "nsTArray.h"        // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"   // for NS_IsMainThread
-#include "nsViewportInfo.h"  // for kViewportMinScale, kViewportMaxScale
+#include "nsViewportInfo.h"  // for ViewportMinScale(), ViewportMaxScale()
 #include "prsystem.h"        // for PR_GetPhysicalMemorySize
 #include "mozilla/ipc/SharedMemoryBasic.h"  // for SharedMemoryBasic
 #include "ScrollSnap.h"                     // for ScrollSnapUtils
@@ -733,9 +733,9 @@ AsyncPanZoomController::AsyncPanZoomController(
           StaticPrefs::apz_pinch_lock_buffer_max_age_AtStartup())),
       mZoomConstraints(false, false,
                        mScrollMetadata.GetMetrics().GetDevPixelsPerCSSPixel() *
-                           kViewportMinScale / ParentLayerToScreenScale(1),
+                           ViewportMinScale() / ParentLayerToScreenScale(1),
                        mScrollMetadata.GetMetrics().GetDevPixelsPerCSSPixel() *
-                           kViewportMaxScale / ParentLayerToScreenScale(1)),
+                           ViewportMaxScale() / ParentLayerToScreenScale(1)),
       mLastSampleTime(GetFrameTime()),
       mLastCheckerboardReport(GetFrameTime()),
       mLastNotifiedZoom(),
@@ -6080,9 +6080,9 @@ void AsyncPanZoomController::UpdateZoomConstraints(
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   CSSToParentLayerScale min = Metrics().GetDevPixelsPerCSSPixel() *
-                              kViewportMinScale / ParentLayerToScreenScale(1);
+                              ViewportMinScale() / ParentLayerToScreenScale(1);
   CSSToParentLayerScale max = Metrics().GetDevPixelsPerCSSPixel() *
-                              kViewportMaxScale / ParentLayerToScreenScale(1);
+                              ViewportMaxScale() / ParentLayerToScreenScale(1);
 
   // inf float values and other bad cases should be sanitized by the code below.
   mZoomConstraints.mAllowZoom = aConstraints.mAllowZoom;

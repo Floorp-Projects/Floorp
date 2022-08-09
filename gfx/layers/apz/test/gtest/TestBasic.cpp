@@ -35,6 +35,33 @@ TEST_F(APZCBasicTester, Overzoom) {
   EXPECT_LT(std::abs(fm.GetVisualScrollOffset().y), 1e-5);
 }
 
+TEST_F(APZCBasicTester, ZoomLimits) {
+  SCOPED_GFX_PREF_FLOAT("apz.min_zoom", 0.9f);
+  SCOPED_GFX_PREF_FLOAT("apz.max_zoom", 2.0f);
+
+  // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
+  FrameMetrics fm;
+  fm.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  fm.SetScrollableRect(CSSRect(0, 0, 125, 150));
+  fm.SetZoom(CSSToParentLayerScale(1.0));
+  fm.SetIsRootContent(true);
+  apzc->SetFrameMetrics(fm);
+
+  MakeApzcZoomable();
+
+  // This should take the zoom scale to 0.8, but we've capped it at 0.9.
+  PinchWithPinchInputAndCheckStatus(apzc, ScreenIntPoint(50, 50), 0.5, true);
+
+  fm = apzc->GetFrameMetrics();
+  EXPECT_EQ(0.9f, fm.GetZoom().scale);
+
+  // This should take the zoom scale to 2.7, but we've capped it at 2.
+  PinchWithPinchInputAndCheckStatus(apzc, ScreenIntPoint(50, 50), 3, true);
+
+  fm = apzc->GetFrameMetrics();
+  EXPECT_EQ(2.0f, fm.GetZoom().scale);
+}
+
 TEST_F(APZCBasicTester, SimpleTransform) {
   ParentLayerPoint pointOut;
   AsyncTransform viewTransformOut;

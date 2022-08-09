@@ -1220,7 +1220,7 @@ nsresult ContentChild::ProvideWindowCommon(
   SendCreateWindow(aTabOpener, parent, newChild, aChromeFlags, aCalledFromJS,
                    aOpenWindowInfo->GetIsForPrinting(),
                    aOpenWindowInfo->GetIsForWindowDotPrint(), aURI, features,
-                   Principal(triggeringPrincipal), csp, referrerInfo,
+                   triggeringPrincipal, csp, referrerInfo,
                    aOpenWindowInfo->GetOriginAttributes(), std::move(resolve),
                    std::move(reject));
 
@@ -3088,9 +3088,8 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(
 
 PContentPermissionRequestChild*
 ContentChild::AllocPContentPermissionRequestChild(
-    const nsTArray<PermissionRequest>& aRequests,
-    const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
-    const bool& aIsHandlingUserInput,
+    const nsTArray<PermissionRequest>& aRequests, nsIPrincipal* aPrincipal,
+    nsIPrincipal* aTopLevelPrincipal, const bool& aIsHandlingUserInput,
     const bool& aMaybeUnsafePermissionDelegate, const TabId& aTabId) {
   MOZ_CRASH("unused");
   return nullptr;
@@ -3211,7 +3210,7 @@ mozilla::ipc::IPCResult ContentChild::RecvEndDragSession(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPush(const nsCString& aScope,
-                                               const IPC::Principal& aPrincipal,
+                                               nsIPrincipal* aPrincipal,
                                                const nsString& aMessageId) {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
@@ -3219,7 +3218,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPush(const nsCString& aScope,
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPushWithData(
-    const nsCString& aScope, const IPC::Principal& aPrincipal,
+    const nsCString& aScope, nsIPrincipal* aPrincipal,
     const nsString& aMessageId, nsTArray<uint8_t>&& aData) {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId,
                                    Some(std::move(aData)));
@@ -3228,15 +3227,16 @@ mozilla::ipc::IPCResult ContentChild::RecvPushWithData(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPushSubscriptionChange(
-    const nsCString& aScope, const IPC::Principal& aPrincipal) {
+    const nsCString& aScope, nsIPrincipal* aPrincipal) {
   PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvPushError(
-    const nsCString& aScope, const IPC::Principal& aPrincipal,
-    const nsString& aMessage, const uint32_t& aFlags) {
+mozilla::ipc::IPCResult ContentChild::RecvPushError(const nsCString& aScope,
+                                                    nsIPrincipal* aPrincipal,
+                                                    const nsString& aMessage,
+                                                    const uint32_t& aFlags) {
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
   return IPC_OK();
@@ -3244,15 +3244,15 @@ mozilla::ipc::IPCResult ContentChild::RecvPushError(
 
 mozilla::ipc::IPCResult
 ContentChild::RecvNotifyPushSubscriptionModifiedObservers(
-    const nsCString& aScope, const IPC::Principal& aPrincipal) {
+    const nsCString& aScope, nsIPrincipal* aPrincipal) {
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvBlobURLRegistration(
-    const nsCString& aURI, const IPCBlob& aBlob,
-    const IPC::Principal& aPrincipal, const Maybe<nsID>& aAgentClusterId) {
+    const nsCString& aURI, const IPCBlob& aBlob, nsIPrincipal* aPrincipal,
+    const Maybe<nsID>& aAgentClusterId) {
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   MOZ_ASSERT(blobImpl);
 
@@ -3342,7 +3342,7 @@ void ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aErrorMsg,
 }
 
 PURLClassifierChild* ContentChild::AllocPURLClassifierChild(
-    const Principal& aPrincipal, bool* aSuccess) {
+    nsIPrincipal* aPrincipal, bool* aSuccess) {
   *aSuccess = true;
   return new URLClassifierChild();
 }

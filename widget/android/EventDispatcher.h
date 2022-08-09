@@ -51,7 +51,7 @@ class EventDispatcher final
                        jni::Object::Param aCallback);
 
   static nsresult UnboxBundle(JSContext* aCx, jni::Object::Param aData,
-                              JS::MutableHandleValue aOut);
+                              JS::MutableHandle<JS::Value> aOut);
 
   nsIGlobalObject* GetGlobalObject();
 
@@ -83,14 +83,14 @@ class EventDispatcher final
   using IterateEventsCallback =
       nsresult (EventDispatcher::*)(const nsAString&, nsIAndroidEventListener*);
 
-  nsresult IterateEvents(JSContext* aCx, JS::HandleValue aEvents,
+  nsresult IterateEvents(JSContext* aCx, JS::Handle<JS::Value> aEvents,
                          IterateEventsCallback aCallback,
                          nsIAndroidEventListener* aListener);
   nsresult RegisterEventLocked(const nsAString&, nsIAndroidEventListener*);
   nsresult UnregisterEventLocked(const nsAString&, nsIAndroidEventListener*);
 
   nsresult DispatchOnGecko(ListenersList* list, const nsAString& aEvent,
-                           JS::HandleValue aData,
+                           JS::Handle<JS::Value> aData,
                            nsIAndroidEventCallback* aCallback);
 
   java::EventDispatcher::NativeCallbackDelegate::LocalRef WrapCallback(

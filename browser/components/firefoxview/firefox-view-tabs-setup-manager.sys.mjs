@@ -395,11 +395,15 @@ export const TabsSetupFlowManager = new (class {
       "firefoxview"
     );
     openTabInWindow(window, url, true);
+    Services.telemetry.recordEvent("firefoxview", "fxa_continue", "sync", null);
   }
 
   openSyncPreferences(window) {
     const url = "about:preferences?action=pair#sync";
     openTabInWindow(window, url, true);
+    Services.telemetry.recordEvent("firefoxview", "fxa_mobile", "sync", null, {
+      has_devices: this.mobileDeviceConnected.toString(),
+    });
   }
 
   syncOpenTabs(containerElem) {
