@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 6.1.1
+Version: 6.1.2
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -85,6 +85,10 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 6.1.2
+
+- Swift: Add a conditional `import Foundation` to support generating metrics when Glean is delivered via the AppServices iOS megazord
 
 ## 6.1.1
 
