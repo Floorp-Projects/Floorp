@@ -386,6 +386,13 @@ class PresShell final : public nsStubDocumentObserver,
 
  public:
   /**
+   * Updates pending layout, assuming reasonable (up-to-date, or mid-update for
+   * container queries) styling of the page. Returns whether a reflow did not
+   * get interrupted (and thus layout should be considered fully up-to-date).
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DoFlushLayout(bool aInterruptible);
+
+  /**
    * Note that the assumptions that determine whether we need a mobile viewport
    * manager may have changed.
    */
