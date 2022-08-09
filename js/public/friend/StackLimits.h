@@ -163,6 +163,8 @@ class MOZ_RAII AutoCheckRecursionLimit {
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkConservative(JSContext* cx) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkConservativeDontReport(
       JSContext* cx) const;
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool checkConservativeDontReport(
+      JS::NativeStackLimit limit) const;
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkSystem(JSContext* cx) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkSystemDontReport(
@@ -302,6 +304,12 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkConservativeDontReport(
     JSContext* cx) const {
   JS::NativeStackLimit limit = getStackLimitHelper(
       cx, JS::StackForUntrustedScript, -1024 * int(sizeof(size_t)));
+  int stackDummy;
+  return checkLimitImpl(limit, &stackDummy);
+}
+
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkConservativeDontReport(
+    JS::NativeStackLimit limit) const {
   int stackDummy;
   return checkLimitImpl(limit, &stackDummy);
 }
