@@ -2267,8 +2267,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
       !cx->realm()->creationOptions().getChangeArrayByCopyEnabled() &&
       (id == NameToId(cx->names().with) ||
        id == NameToId(cx->names().toReversed) ||
-       id == NameToId(cx->names().toSorted) ||
-       id == NameToId(cx->names().toSpliced))) {
+       id == NameToId(cx->names().toSorted))) {
     return true;
   }
 #endif
