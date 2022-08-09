@@ -731,28 +731,93 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
   HideWindowChrome(aFullScreen);
 
   if (aFullScreen) {
-    if (!mOriginalBounds) {
-      mOriginalBounds = mozilla::MakeUnique<DesktopRect>();
+    if (!mSavedBounds) {
+      mSavedBounds = mozilla::MakeUnique<FullscreenSavedState>();
     }
-    *mOriginalBounds = GetScreenBounds() / GetDesktopToDeviceScale();
+    // save current position
+    mSavedBounds->windowRect = GetScreenBounds() / GetDesktopToDeviceScale();
 
     nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
     if (!screen) {
       return;
     }
 
-    // Move to top-left corner of screen and size to the screen dimensions
+    // move to fill the screen (and save that position, too)
     const auto screenRect = screen->GetRectDisplayPix();
+    mSavedBounds->screenRect = screenRect;
     doReposition(screenRect);
   } else {
-    if (!mOriginalBounds) {
+    if (!mSavedBounds) {
       // This should never happen, at present, since we don't make windows
       // fullscreen at their creation time; but it's not logically impossible.
       MOZ_ASSERT(false, "fullscreen window did not have saved position");
       return;
     }
 
-    doReposition(*mOriginalBounds);
+    // Figure out where to go from here.
+    //
+    // Fortunately, since we're currently fullscreen (and other code should be
+    // handling _keeping_ us fullscreen even after display-layout changes),
+    // there's an obvious choice for which display we should attach to; all we
+    // need to determine is where on that display we should go.
+
+    const DesktopRect currentWinRect =
+        GetScreenBounds() / GetDesktopToDeviceScale();
+
+    // Optimization: if where we are is where we were, then where we originally
+    // came from is where we're going to go.
+    if (currentWinRect == DesktopRect(mSavedBounds->screenRect)) {
+      doReposition(mSavedBounds->windowRect);
+      return;
+    }
+
+    /*
+      General case: figure out where we're going to go by dividing where we are
+      by where we were, and then multiplying by where we originally came from.
+
+      Less abstrusely: resize so that we occupy the same proportional position
+      on our current display after leaving fullscreen as we occupied on our
+      previous display before entering fullscreen.
+
+      (N.B.: We do not clamp. If we were only partially on the old display,
+      we'll be only partially on the new one, too.)
+    */
+
+    // splat: convert an arbitrary Rect into a tuple, for syntactic convenience.
+    const auto splat = [](auto rect) {
+      return std::tuple(rect.X(), rect.Y(), rect.Width(), rect.Height());
+    };
+
+    // remap: find the unique affine mapping which transforms `src` to `dst`,
+    // and apply it to `val`.
+    using Range = std::pair<double, double>;
+    const auto remap = [](Range dst, Range src, double val) {
+      // linear interpolation and its inverse
+      const auto lerp = [](double lo, double hi, double t) {
+        return lo + t * (hi - lo);
+      };
+      const auto colerp = [](double lo, double hi, double mid) {
+        return (mid - lo) / (hi - lo);
+      };
+
+      const auto [dst_a, dst_b] = dst;
+      const auto [src_a, src_b] = src;
+      return lerp(dst_a, dst_b, colerp(src_a, src_b, val));
+    };
+
+    // original position
+    const auto [px, py, pw, ph] = splat(mSavedBounds->windowRect);
+    // source desktop rect
+    const auto [sx, sy, sw, sh] = splat(mSavedBounds->screenRect);
+    // target desktop rect
+    const auto [tx, ty, tw, th] = splat(currentWinRect);
+
+    const double nx = remap({tx, tx + tw}, {sx, sx + sw}, px);
+    const double ny = remap({ty, ty + th}, {sy, sy + sh}, py);
+    const double nw = remap({0, tw}, {0, sw}, pw);
+    const double nh = remap({0, th}, {0, sh}, ph);
+
+    Resize(nx, ny, nw, nh, true);
   }
 }
 
