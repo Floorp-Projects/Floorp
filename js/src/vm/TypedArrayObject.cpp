@@ -1879,36 +1879,25 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("toString", "ArrayToString", 0, 0),
     JS_SELF_HOSTED_FN("toLocaleString", "TypedArrayToLocaleString", 2, 0),
     JS_SELF_HOSTED_FN("at", "TypedArrayAt", 1, 0),
-    JS_FS_END};
-
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
     JS_SELF_HOSTED_FN("toReversed", "TypedArrayToReversed", 0, 0),
     JS_SELF_HOSTED_FN("toSorted", "TypedArrayToSorted", 1, 0),
     JS_SELF_HOSTED_FN("with", "TypedArrayWith", 2, 0),
     JS_SELF_HOSTED_FN("toSpliced", "TypedArrayToSpliced", 3, 0),
-
-    JS_FS_END};
 #endif
-
-static bool TypedArrayProtoFinish(JSContext* cx, JS::HandleObject ctor,
-                                  JS::HandleObject proto) {
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  if (cx->realm()->creationOptions().getChangeArrayByCopyEnabled()) {
-    if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions)) {
-      return false;
-    }
-  }
-#endif
-  return true;
-}
+    JS_FS_END,
+};
 
 /* static */ const JSFunctionSpec TypedArrayObject::staticFunctions[] = {
     JS_SELF_HOSTED_FN("from", "TypedArrayStaticFrom", 3, 0),
-    JS_SELF_HOSTED_FN("of", "TypedArrayStaticOf", 0, 0), JS_FS_END};
+    JS_SELF_HOSTED_FN("of", "TypedArrayStaticOf", 0, 0),
+    JS_FS_END,
+};
 
 /* static */ const JSPropertySpec TypedArrayObject::staticProperties[] = {
-    JS_SELF_HOSTED_SYM_GET(species, "$TypedArraySpecies", 0), JS_PS_END};
+    JS_SELF_HOSTED_SYM_GET(species, "$TypedArraySpecies", 0),
+    JS_PS_END,
+};
 
 static JSObject* CreateSharedTypedArrayPrototype(JSContext* cx,
                                                  JSProtoKey key) {
@@ -1923,12 +1912,16 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
     TypedArrayObject::protoAccessors,
-    TypedArrayProtoFinish,
-    ClassSpec::DontDefineConstructor};
+    nullptr,
+    ClassSpec::DontDefineConstructor,
+};
 
 /* static */ const JSClass TypedArrayObject::sharedTypedArrayPrototypeClass = {
-    "TypedArrayPrototype", JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
-    JS_NULL_CLASS_OPS, &TypedArrayObjectSharedTypedArrayPrototypeClassSpec};
+    "TypedArrayPrototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
+    JS_NULL_CLASS_OPS,
+    &TypedArrayObjectSharedTypedArrayPrototypeClassSpec,
+};
 
 namespace {
 
