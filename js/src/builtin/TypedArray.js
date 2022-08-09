@@ -2104,18 +2104,6 @@ function TypedArrayToReversed() {
   return A;
 }
 
-// ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
-// 10.4.5.9 IsValidIntegerIndex ( O, index )
-function isValidIntegerIndex(a, index) {
-  return (
-    !IsDetachedBuffer(ViewedArrayBufferIfReified(a)) &&
-    Number_isInteger(index) &&
-    !SameValue(index, -0) &&
-    index >= 0 &&
-    index < TypedArrayLength(a)
-  );
-}
-
 // https://github.com/tc39/proposal-change-array-by-copy
 // TypedArray.prototype.with()
 function TypedArrayWith(index, value) {
@@ -2130,47 +2118,66 @@ function TypedArrayWith(index, value) {
     );
   }
 
+  GetAttachedArrayBuffer(this);
+
   // Step 1. Let O be the this value.
-  let O = this;
+  var O = this;
 
   // Step 3. Let len be O.[[ArrayLength]].
-  let len = TypedArrayLength(O);
+  var len = TypedArrayLength(O);
 
   // Step 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
-  let relativeIndex = ToInteger(index);
+  var relativeIndex = ToInteger(index);
 
-  // Step 5. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
   var actualIndex;
   if (relativeIndex >= 0) {
+    // Step 5. If relativeIndex ≥ 0, let actualIndex be relativeIndex.
     actualIndex = relativeIndex;
   } else {
     // Step 6. Else, let actualIndex be len + relativeIndex.
     actualIndex = len + relativeIndex;
   }
 
-  // Step 7. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
-  /* This check is an inlined version of the IsValidIntegerIndex abstract operation. */
-  if (actualIndex >= len || actualIndex < 0) {
+  var kind = GetTypedArrayKind(O);
+  if (kind === TYPEDARRAY_KIND_BIGINT64 || kind === TYPEDARRAY_KIND_BIGUINT64) {
+    // Step 7. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
+    value = ToBigInt(value);
+  } else {
+    // Step 8. Else, set value to ? ToNumber(value).
+    value = ToNumber(value);
+  }
+
+  // Reload the array length in case the underlying buffer has been detached.
+  len = TypedArrayLength(O);
+  assert(
+    !IsDetachedBuffer(ViewedArrayBufferIfReified(O)) || len === 0,
+    "length is set to zero when the buffer has been detached"
+  );
+
+  // Step 9. If ! IsValidIntegerIndex(O, 𝔽(actualIndex)) is false, throw a RangeError exception.
+  // This check is an inlined version of the IsValidIntegerIndex abstract operation.
+  if (actualIndex < 0 || actualIndex >= len) {
     ThrowRangeError(JSMSG_BAD_INDEX);
   }
 
-  // Step 8. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
+  // Step 10. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
   var A = TypedArrayCreateSameType(O, len);
 
-  // Step 9. Let k be 0.
-  // Step 10. Repeat, while k < len,
+  // Step 11. Let k be 0.
+  // Step 12. Repeat, while k < len,
   for (var k = 0; k < len; k++) {
-    // Step 10.a. omitted - Let Pk be ! ToString(𝔽(k)).
+    // Step 12.a. omitted - Let Pk be ! ToString(𝔽(k)).
     // k coerced to String by property access
-    // Step 10.b. If k is actualIndex, then i. Perform ? Set(A, k, value, true).
-    /* Step 10.c. Else, i. Let fromValue be ! Get(O, k).
-     *                  ii. Perform ! Set(A, k, fromValue, true).
-     */
+
+    // Step 12.b. If k is actualIndex, let fromValue be value.
+    // Step 12.c. Else, let fromValue be ! Get(O, Pk).
     var fromValue = k == actualIndex ? value : O[k];
-    DefineDataProperty(A, k, fromValue);
+
+    // Step 12.d. Perform ! Set(A, Pk, fromValue, true).
+    A[k] = fromValue;
   }
 
-  /* Step 11. */
+  // Step 13.
   return A;
 }
 
