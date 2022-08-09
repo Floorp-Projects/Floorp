@@ -10,7 +10,6 @@
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsWeakReference.h"
 #include "prio.h"
 
 namespace mozilla::net {
@@ -47,8 +46,7 @@ namespace mozilla::net {
 
 class TLSTransportLayer final : public nsISocketTransport,
                                 public nsIInputStreamCallback,
-                                public nsIOutputStreamCallback,
-                                public nsSupportsWeakReference {
+                                public nsIOutputStreamCallback {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TLSTRANSPORTLAYER_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -62,14 +60,18 @@ class TLSTransportLayer final : public nsISocketTransport,
                              nsIAsyncOutputStream* aOutputStream,
                              nsIInputStreamCallback* aOwner);
   bool Init(const char* aTLSHost, int32_t aTLSPort);
-  nsIAsyncInputStream* GetInputStreamWrapper() {
-    return mSocketInWrapper.get();
+  already_AddRefed<nsIAsyncInputStream> GetInputStreamWrapper() {
+    nsCOMPtr<nsIAsyncInputStream> stream = &mSocketInWrapper;
+    return stream.forget();
   }
-  nsIAsyncOutputStream* GetOutputStreamWrapper() {
-    return mSocketOutWrapper.get();
+  already_AddRefed<nsIAsyncOutputStream> GetOutputStreamWrapper() {
+    nsCOMPtr<nsIAsyncOutputStream> stream = &mSocketOutWrapper;
+    return stream.forget();
   }
 
   bool HasDataToRecv();
+
+  void ReleaseOwner() { mOwner = nullptr; }
 
  private:
   class InputStreamWrapper : public nsIAsyncInputStream {
@@ -94,7 +96,9 @@ class TLSTransportLayer final : public nsISocketTransport,
     nsCOMPtr<nsIAsyncInputStream> mSocketIn;
 
     nsresult mStatus{NS_OK};
-    nsWeakPtr mWeakTransport;
+    // The lifetime of InputStreamWrapper and OutputStreamWrapper are bound to
+    // TLSTransportLayer, so using |mTransport| as a raw pointer should be safe.
+    TLSTransportLayer* MOZ_OWNING_REF mTransport;
   };
 
   class OutputStreamWrapper : public nsIAsyncOutputStream {
@@ -121,7 +125,7 @@ class TLSTransportLayer final : public nsISocketTransport,
     nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
 
     nsresult mStatus{NS_OK};
-    nsWeakPtr mWeakTransport;
+    TLSTransportLayer* MOZ_OWNING_REF mTransport;
   };
 
   virtual ~TLSTransportLayer();
@@ -145,8 +149,8 @@ class TLSTransportLayer final : public nsISocketTransport,
   static int16_t Poll(PRFileDesc* fd, int16_t in_flags, int16_t* out_flags);
 
   nsCOMPtr<nsISocketTransport> mSocketTransport;
-  RefPtr<InputStreamWrapper> mSocketInWrapper;
-  RefPtr<OutputStreamWrapper> mSocketOutWrapper;
+  InputStreamWrapper mSocketInWrapper;
+  OutputStreamWrapper mSocketOutWrapper;
   nsCOMPtr<nsISupports> mSecInfo;
   nsCOMPtr<nsIInputStreamCallback> mInputCallback;
   nsCOMPtr<nsIOutputStreamCallback> mOutputCallback;
