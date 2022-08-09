@@ -291,7 +291,6 @@ static bool CheckPatternSyntaxImpl(JSContext* cx, const CharT* input,
 
   uintptr_t stackLimit = cx->stackLimit(JS::StackForSystemCode);
 
-  HandleScope handleScope(cx->isolate);
   return RegExpParser::VerifyRegExpSyntax(&zone, stackLimit, input, inputLength,
                                           flags, result, nogc);
 }
