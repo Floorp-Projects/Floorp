@@ -468,6 +468,9 @@ class ChromeActions {
       case "tagged":
         lazy.PdfJsTelemetry.onTagged(probeInfo.tagged);
         break;
+      case "editing":
+        lazy.PdfJsTelemetry.onEditing(probeInfo.data.type);
+        break;
     }
   }
 

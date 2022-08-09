@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public↩
+# License, v. 2.0. If a copy of the MPL was not distributed with this↩
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.↩
+
+# Adding a new metric? We have docs for that!↩
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html↩
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: PDF Viewer'
+
+
+pdfjs:
+  editing:
+    type: labeled_counter
+    labels:
+      - ink
+      - freetext
+      - save
+      - print
+    description: >
+      Counts the number of times some PDF editing features are used.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1782254
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1782254#c4
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - cdenizet@mozilla.com
+      - mcastelluccio@mozilla.com
+    expires: 113
