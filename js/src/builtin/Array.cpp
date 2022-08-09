@@ -2893,20 +2893,13 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
     return false;
   }
 
-  /* The following check can't be done by GetActualDeleteCount(), since
-   * it's also called by the implementation of toSpliced(), which
-   * doesn't create an array of deleted items and thus doesn't need
-   * this check. */
+  RootedObject arr(cx);
   if (IsArraySpecies(cx, obj)) {
     if (actualDeleteCount > UINT32_MAX) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return false;
     }
-  }
-
-  RootedObject arr(cx);
-  if (IsArraySpecies(cx, obj)) {
     uint32_t count = uint32_t(actualDeleteCount);
 
     if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj,

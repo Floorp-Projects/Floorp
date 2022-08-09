@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-change-array-by-copy) skip-if(release_or_beta)
+// |reftest| shell-option(--enable-change-array-by-copy) skip-if(!Array.prototype.toSpliced)
 
 const startIndices = [
   -10, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 10,
