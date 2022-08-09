@@ -164,6 +164,7 @@ media-device-channels = Channels
 media-device-rate = Rate
 media-device-latency = Latency
 media-capabilities-title = Media Capabilities
+media-codec-support-info = Codec Support Information
 # List all the entries of the database.
 media-capabilities-enumerate = Enumerate database
 
