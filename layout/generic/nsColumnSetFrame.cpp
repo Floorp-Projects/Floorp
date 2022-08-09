@@ -647,7 +647,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       LogicalSize kidCBSize(wm, availSize.ISize(wm), computedBSize);
       ReflowInput kidReflowInput(PresContext(), aReflowInput, child, availSize,
                                  Some(kidCBSize));
-      kidReflowInput.mFlags.mIsTopOfPage = true;
+      kidReflowInput.mFlags.mIsTopOfPage = !aConfig.mIsBalancing;
       kidReflowInput.mFlags.mTableIsSplittable = false;
       kidReflowInput.mFlags.mIsColumnBalancing = aConfig.mIsBalancing;
       kidReflowInput.mBreakType = ReflowInput::BreakType::Column;
@@ -684,6 +684,13 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       ReflowChild(child, PresContext(), kidDesiredSize, kidReflowInput, wm,
                   childOrigin, containerSize, ReflowChildFlags::Default,
                   aStatus);
+
+      if (colData.mColCount == 1 && aStatus.IsInlineBreakBefore()) {
+        COLUMN_SET_LOG("%s: Content in the first column reports break-before!",
+                       __func__);
+        allFit = false;
+        break;
+      }
 
       reflowNext = aStatus.NextInFlowNeedsReflow();
 
