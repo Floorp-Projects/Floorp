@@ -34,6 +34,7 @@
 #include "js/HeapAPI.h"               // JS::GCCellPtr
 #include "js/RegExpFlags.h"           // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"            // JS::MutableHandle
+#include "js/Stack.h"                 // JS::NativeStackLimit
 #include "js/UniquePtr.h"             // js::UniquePtr
 #include "js/Utility.h"    // JS::UniqueTwoByteChars, StringBufferArena
 #include "vm/JSScript.h"   // JSScript
@@ -261,6 +262,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 // Given the result of SmooshMonkey's parser, convert a list of RegExp data
 // into a list of RegExpStencil.
 bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
+                       JS::NativeStackLimit stackLimit,
                        const SmooshResult& result,
                        CompilationState& compilationState) {
   auto len = result.regexps.len;
@@ -554,8 +556,8 @@ void ReportSmooshCompileError(JSContext* cx, ErrorContext* ec,
 
 /* static */
 bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, ErrorContext* ec, CompilationInput& input,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
+    CompilationInput& input, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     UniquePtr<ExtensibleCompilationStencil>& stencilOut) {
   // FIXME: check info members and return with *unimplemented = true
   //        if any field doesn't match to smoosh_run.
@@ -602,7 +604,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return false;
   }
 
-  if (!ConvertRegExpData(cx, ec, result, compilationState)) {
+  if (!ConvertRegExpData(cx, ec, stackLimit, result, compilationState)) {
     return false;
   }
 
