@@ -4,7 +4,7 @@
 
 import React, { useEffect } from "react";
 import { Localized } from "./MSLocalized";
-import { Colorways } from "./Colorways";
+import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";

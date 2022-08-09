@@ -130,6 +130,7 @@ function renderMultistage(ready) {
   window.AWGetImportableSites = () => "[]";
   window.AWGetRegion = receive("GET_REGION");
   window.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
+  window.AWSelectTheme = data => receive("SELECT_THEME")(data?.toUpperCase());
   // Do not send telemetry if message (e.g. spotlight in PBM) config sets metrics as 'block'.
   window.AWSendEventTelemetry =
     CONFIG?.metrics === "block" ? () => {} : receive("TELEMETRY_EVENT");

@@ -361,13 +361,16 @@ body[lwt-newtab-brighttext] {
   align-items: initial;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h1 {
-  font-size: 29px;
+  font-size: 24px;
+  line-height: 1.2;
+  width: 300px;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h2 {
   color: #5B5B66;
   margin: 10px 0 0;
   min-height: 1em;
   font-size: 15px;
+  line-height: 1.5;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h1,
 .onboardingContainer .screen[pos=split] .section-main .main-content .primary {
@@ -406,12 +409,31 @@ body[lwt-newtab-brighttext] {
   text-shadow: none;
   margin-inline: 40px 0;
 }
+.onboardingContainer .screen[pos=split] .tiles-theme-container {
+  margin-block: -20px auto;
+  align-items: initial;
+}
+.onboardingContainer .screen[pos=split] .tiles-theme-container .colorway-text {
+  text-align: initial;
+  transition: var(--transition);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-block: 10px 20px;
+}
+.onboardingContainer .screen[pos=split] .tiles-theme-container .theme {
+  min-width: 38px;
+}
 @media (prefers-color-scheme: dark) {
   .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h2 {
     color: #CFCFD8;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary {
     background-color: #2B2A33;
+  }
+}
+@media only screen and (min-width: 800px) {
+  .onboardingContainer .screen[pos=split] .tiles-theme-section {
+    margin-inline-start: -10px;
   }
 }
 @media only screen and (max-width: 800px) {
@@ -471,6 +493,10 @@ body[lwt-newtab-brighttext] {
   .onboardingContainer .screen[pos=split] .section-main .main-content .primary,
 .onboardingContainer .screen[pos=split] .section-main .main-content .secondary {
     min-width: 240px;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .colorway-text {
+    text-align: center;
+    margin-inline: 30px;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps {
     padding-block: 0;
@@ -885,6 +911,24 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .tiles-theme-section .theme .icon.lush {
   background-image: url("resource://builtin-themes/colorways/2021lush/balanced/icon.svg");
 }
+.onboardingContainer .tiles-theme-section .theme .icon.playmaker {
+  background-image: url("resource://builtin-themes/colorways/2022playmaker/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.expressionist {
+  background-image: url("resource://builtin-themes/colorways/2022expressionist/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.visionary {
+  background-image: url("resource://builtin-themes/colorways/2022visionary/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.dreamer {
+  background-image: url("resource://builtin-themes/colorways/2022dreamer/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.innovator {
+  background-image: url("resource://builtin-themes/colorways/2022innovator/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.activist {
+  background-image: url("resource://builtin-themes/colorways/2022activist/balanced/icon.svg");
+}
 .onboardingContainer .tiles-theme-section .theme .text {
   display: flex;
   color: var(--in-content-page-color);
@@ -1271,7 +1315,8 @@ body[lwt-newtab-brighttext] {
   transition-delay: 1s;
 }
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .colorway-variations,
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .tiles-theme-section {
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .tiles-theme-section,
+.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .colorway-text {
   transition-delay: 0.2s;
 }
 .onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .primary,
@@ -1342,6 +1387,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-variations,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .primary,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .secondary,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .secondary-cta:not(.top) {
@@ -1380,7 +1426,8 @@ body[lwt-newtab-brighttext] {
   transition-delay: 0.1s;
 }
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .colorway-variations,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .tiles-theme-section {
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .tiles-theme-section,
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .colorway-text {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
