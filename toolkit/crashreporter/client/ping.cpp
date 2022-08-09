@@ -53,7 +53,7 @@ static string GenerateUUID() {
 
   CFRelease(uuid);
 #elif defined(HAVE_ARC4RANDOM_BUF)  // Android, BSD, ...
-  arc4random_buf(id, sizeof(UUID));
+  arc4random_buf(&id, sizeof(UUID));
 #else                               // Linux
   int fd = open("/dev/urandom", O_RDONLY);
 
