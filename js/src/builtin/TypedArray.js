@@ -2175,16 +2175,6 @@ function TypedArrayWith(index, value) {
 // https://github.com/tc39/proposal-change-array-by-copy
 // TypedArray.prototype.toSorted()
 function TypedArrayToSorted(comparefn) {
-  // Step 3. Perform ? ValidateTypedArray(this)
-  if (!IsObject(this) || !IsTypedArray(this)) {
-    return callFunction(
-      CallTypedArrayMethodIfWrapped,
-      this,
-      "TypedArrayToSorted",
-      comparefn
-    );
-  }
-
   // Step 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
   if (comparefn !== undefined) {
     if (!IsCallable(comparefn)) {
@@ -2195,29 +2185,37 @@ function TypedArrayToSorted(comparefn) {
   // Step 2. Let O be the this value.
   var O = this;
 
+  // Step 3. Perform ? ValidateTypedArray(this).
+  var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
+
   // Step 4. omitted.  Let buffer be obj.[[ViewedArrayBuffer]].
+  // FIXME: Draft spec not synched with https://github.com/tc39/ecma262/pull/2723
 
   // Step 5. Let len be O.[[ArrayLength]].
-  var len = TypedArrayLength(O);
+  var len;
+  if (isTypedArray) {
+    len = TypedArrayLength(O);
+  } else {
+    len = callFunction(
+      CallTypedArrayMethodIfWrapped,
+      O,
+      "TypedArrayLengthMethod"
+    );
+  }
 
   // Step 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
   var A = TypedArrayCreateSameType(O, len);
 
-  /* Steps 7-11 not followed exactly; this implementation copies the list and then
-   * sorts the copy, rather than calling a sort method that copies the list and then
-   * copying the result again */
-  // Equivalent to steps 10-11
+  // Steps 7-11 not followed exactly; this implementation copies the list and then
+  // sorts the copy, rather than calling a sort method that copies the list and then
+  // copying the result again.
+  // Equivalent to steps 10-11.
   for (var k = 0; k < len; k++) {
     A[k] = O[k];
   }
 
-  // Equivalent to steps 8-9 and 12
-  return callFunction(
-    CallTypedArrayMethodIfWrapped,
-    A,
-    comparefn,
-    "TypedArraySort"
-  );
+  // Equivalent to steps 8-9 and 12.
+  return callFunction(TypedArraySort, A, comparefn);
 }
 
 #endif
