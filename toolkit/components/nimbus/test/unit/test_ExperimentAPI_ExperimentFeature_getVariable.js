@@ -110,9 +110,7 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
   );
 
   // Default pref values
-  Services.prefs
-    .getDefaultBranch("")
-    .setStringPref(prefName, JSON.stringify([1, 2, 3]));
+  Services.prefs.setStringPref(prefName, JSON.stringify([1, 2, 3]));
 
   Assert.deepEqual(
     instance.getVariable("items"),
@@ -146,16 +144,7 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
     "should return the experiment value over the remote value"
   );
 
-  // User pref values
-  Services.prefs.setStringPref(prefName, JSON.stringify([10, 11, 12]));
-  Assert.deepEqual(
-    instance.getVariable("items"),
-    [10, 11, 12],
-    "should return the user branch pref value over any other value"
-  );
-
   // Cleanup
-  Services.prefs.getDefaultBranch("").deleteBranch(TEST_PREF_BRANCH);
   Services.prefs.deleteBranch(TEST_PREF_BRANCH);
   await doExperimentCleanup();
   sandbox.restore();

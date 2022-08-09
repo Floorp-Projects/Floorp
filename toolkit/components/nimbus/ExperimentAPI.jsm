@@ -377,22 +377,6 @@ class _ExperimentFeature {
     return this.manifest?.variables?.[variable]?.fallbackPref;
   }
 
-  _getUserPrefsValues() {
-    let userPrefs = {};
-    Object.keys(this.manifest?.variables || {}).forEach(variable => {
-      if (
-        this.manifest.variables[variable].fallbackPref &&
-        Services.prefs.prefHasUserValue(
-          this.manifest.variables[variable].fallbackPref
-        )
-      ) {
-        userPrefs[variable] = this.prefGetters[variable];
-      }
-    });
-
-    return userPrefs;
-  }
-
   /**
    * Wait for ExperimentStore to load giving access to experiment features that
    * do not have a pref cache
@@ -407,8 +391,6 @@ class _ExperimentFeature {
    * @returns {{[variableName: string]: any}} The feature value
    */
   getAllVariables({ defaultValues = null } = {}) {
-    // Any user pref will override any other configuration
-    let userPrefs = this._getUserPrefsValues();
     const branch = ExperimentAPI.getActiveBranch({ featureId: this.featureId });
     const featureValue = featuresCompat(branch).find(
       ({ featureId }) => featureId === this.featureId
@@ -418,14 +400,10 @@ class _ExperimentFeature {
       ...this.prefGetters,
       ...defaultValues,
       ...(featureValue ? featureValue : this.getRollout()?.value),
-      ...userPrefs,
     };
   }
 
   getVariable(variable) {
-    const prefName = this.getPreferenceName(variable);
-    const prefValue = prefName ? this.prefGetters[variable] : undefined;
-
     if (!this.manifest?.variables?.[variable]) {
       // Only throw in nightly/tests
       if (Cu.isInAutomation || AppConstants.NIGHTLY_BUILD) {
@@ -433,11 +411,6 @@ class _ExperimentFeature {
           `Nimbus: Warning - variable "${variable}" is not defined in FeatureManifest.js`
         );
       }
-    }
-
-    // If a user value is set for the defined preference, always return that first
-    if (prefName && Services.prefs.prefHasUserValue(prefName)) {
-      return prefValue;
     }
 
     // Next, check if an experiment is defined
@@ -457,8 +430,10 @@ class _ExperimentFeature {
     if (typeof remoteValue !== "undefined") {
       return remoteValue;
     }
+
     // Return the default preference value
-    return prefValue;
+    const prefName = this.getPreferenceName(variable);
+    return prefName ? this.prefGetters[variable] : undefined;
   }
 
   getRollout() {
@@ -530,13 +505,10 @@ class _ExperimentFeature {
       experiment: ExperimentAPI.getExperimentMetaData({
         featureId: this.featureId,
       }),
-      fallbackPrefs:
-        this.prefGetters &&
-        Object.keys(this.prefGetters).map(prefName => [
-          prefName,
-          this.prefGetters[prefName],
-        ]),
-      userPrefs: this._getUserPrefsValues(),
+      fallbackPrefs: Object.keys(this.prefGetters).map(prefName => [
+        prefName,
+        this.prefGetters[prefName],
+      ]),
       rollouts: this.getRollout(),
     };
   }

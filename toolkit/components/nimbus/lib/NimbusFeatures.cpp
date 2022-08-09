@@ -38,11 +38,6 @@ void NimbusFeatures::GetPrefName(const nsACString& branchPrefix,
  */
 bool NimbusFeatures::GetBool(const nsACString& aFeatureId,
                              const nsACString& aVariable, bool aDefault) {
-  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
-  if (prefName.isSome() && Preferences::HasUserValue(prefName->get())) {
-    return Preferences::GetBool(prefName->get(), aDefault);
-  }
-
   nsAutoCString experimentPref;
   GetPrefName(kSyncDataPrefBranch, aFeatureId, aVariable, experimentPref);
   if (Preferences::HasUserValue(experimentPref.get())) {
@@ -55,6 +50,7 @@ bool NimbusFeatures::GetBool(const nsACString& aFeatureId,
     return Preferences::GetBool(rolloutPref.get(), aDefault);
   }
 
+  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
   if (prefName.isSome()) {
     return Preferences::GetBool(prefName->get(), aDefault);
   }
@@ -68,11 +64,6 @@ bool NimbusFeatures::GetBool(const nsACString& aFeatureId,
  */
 int NimbusFeatures::GetInt(const nsACString& aFeatureId,
                            const nsACString& aVariable, int aDefault) {
-  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
-  if (prefName.isSome() && Preferences::HasUserValue(prefName->get())) {
-    return Preferences::GetInt(prefName->get(), aDefault);
-  }
-
   nsAutoCString experimentPref;
   GetPrefName(kSyncDataPrefBranch, aFeatureId, aVariable, experimentPref);
   if (Preferences::HasUserValue(experimentPref.get())) {
@@ -85,6 +76,7 @@ int NimbusFeatures::GetInt(const nsACString& aFeatureId,
     return Preferences::GetInt(rolloutPref.get(), aDefault);
   }
 
+  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
   if (prefName.isSome()) {
     return Preferences::GetInt(prefName->get(), aDefault);
   }
