@@ -177,7 +177,7 @@ In this document, we try to list these all tools.
      - :ref:`Fluent Lint`
      -
    * - YAML linter
+     - No
      -
-     -
-     -
+     - :ref:`yamllint`
      - https://github.com/adrienverge/yamllint
