@@ -31,6 +31,10 @@ async function testAvailability({
   }
   let extension = ExtensionTestUtils.loadExtension({
     ...extensionData,
+    manifest: {
+      manifest_version: 3,
+      ...extensionData.manifest,
+    },
     background: `(${background})(${JSON.stringify(testExpectations)});`,
   });
   Services.prefs.setBoolPref("extensions.dnr.feedback", allowDNRFeedback);
@@ -51,6 +55,7 @@ add_setup(async () => {
     "DNR is disabled by default"
   );
   Services.prefs.setBoolPref("extensions.dnr.enabled", true);
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 });
 
 // Verifies that DNR is disabled by default (until true in bug 1782685).
@@ -120,6 +125,45 @@ add_task(async function dnr_feedback_apis_disabled_by_default() {
       },
       {
         message: /Reading manifest: Invalid extension permission: declarativeNetRequestWithHostAccess/,
+      },
+    ],
+  });
+});
+
+// TODO bug 1782685: Remove "min_manifest_version":3 from DNR permissions.
+add_task(async function dnr_restricted_to_mv3() {
+  let { messages } = await promiseConsoleOutput(async () => {
+    // Manifest version-restricted permissions result in schema-generated
+    // warnings. Don't fail when the "unrecognized" permission appear, to allow
+    // us to check for warning log messages below.
+    ExtensionTestUtils.failOnSchemaWarnings(false);
+    await testAvailability({
+      allowDNRFeedback: true,
+      testExpectations: {
+        declarativeNetRequest_available: false,
+      },
+      manifest: {
+        manifest_version: 2,
+        permissions: [
+          "declarativeNetRequest",
+          "declarativeNetRequestFeedback",
+          "declarativeNetRequestWithHostAccess",
+        ],
+      },
+    });
+    ExtensionTestUtils.failOnSchemaWarnings(true);
+  });
+
+  AddonTestUtils.checkMessages(messages, {
+    expected: [
+      {
+        message: /Warning processing permissions: Error processing permissions.0: Value "declarativeNetRequest"/,
+      },
+      {
+        message: /Warning processing permissions: Error processing permissions.1: Value "declarativeNetRequestFeedback"/,
+      },
+      {
+        message: /Warning processing permissions: Error processing permissions.2: Value "declarativeNetRequestWithHostAccess"/,
       },
     ],
   });
