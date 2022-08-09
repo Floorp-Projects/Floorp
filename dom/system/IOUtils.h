@@ -200,6 +200,14 @@ class IOUtils final {
                                                ErrorResult& aError);
 #endif
 
+#ifdef XP_UNIX
+  using UnixString = OwningUTF8StringOrUint8Array;
+  static uint32_t LaunchProcess(GlobalObject& aGlobal,
+                                const Sequence<UnixString>& aArgv,
+                                const LaunchOptions& aOptions,
+                                ErrorResult& aRv);
+#endif
+
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);

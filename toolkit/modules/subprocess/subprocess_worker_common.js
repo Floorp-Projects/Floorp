@@ -59,8 +59,6 @@ class BaseProcess {
     this.pid = null;
     this.pipes = [];
 
-    this.stringArrays = [];
-
     this.spawn(options);
   }
 
@@ -75,31 +73,6 @@ class BaseProcess {
       this.exitPromise,
       ...this.pipes.map(pipe => pipe.closedPromise),
     ]);
-  }
-
-  /**
-   * Creates a null-terminated array of pointers to null-terminated C-strings,
-   * and returns it.
-   *
-   * @param {string[]} strings
-   *        The strings to convert into a C string array.
-   *
-   * @returns {ctypes.char.ptr.array}
-   */
-  stringArray(strings) {
-    let result = ctypes.char.ptr.array(strings.length + 1)();
-
-    let cstrings = strings.map(str => ctypes.char.array()(str));
-    for (let [i, cstring] of cstrings.entries()) {
-      result[i] = cstring;
-    }
-
-    // Char arrays used in char arg and environment vectors must be
-    // explicitly kept alive in a JS object, or they will be reaped
-    // by the GC if it runs before our process is started.
-    this.stringArrays.push(cstrings);
-
-    return result;
   }
 }
 

@@ -106,6 +106,13 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int));
 
 typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
 typedef std::map<std::string, std::string> environment_map;
+
+// Deleter for the array of strings allocated within BuildEnvironmentArray.
+struct FreeEnvVarsArray {
+  void operator()(char** array);
+};
+
+typedef mozilla::UniquePtr<char*[], FreeEnvVarsArray> EnvironmentArray;
 #endif
 
 struct LaunchOptions {
@@ -124,6 +131,16 @@ struct LaunchOptions {
 #endif
 #if defined(OS_POSIX)
   environment_map env_map;
+
+  // If non-null, specifies the entire environment to use for the
+  // child process, instead of inheriting from the parent; env_map is
+  // ignored in that case.  Note that the strings are allocated using
+  // malloc (e.g., with strdup), but the array of pointers is
+  // allocated with new[] and is terminated with a null pointer.
+  EnvironmentArray full_env;
+
+  // If non-empty, set the child process's current working directory.
+  std::string workdir;
 
   // A mapping of (src fd -> dest fd) to propagate into the child
   // process.  All other fds will be closed, except std{in,out,err}.
@@ -145,12 +162,18 @@ struct LaunchOptions {
   mozilla::UniquePtr<ForkDelegate> fork_delegate = nullptr;
 #endif
 
-#if defined(OS_MACOSX) && defined(__aarch64__)
+#ifdef OS_MACOSX
+  // On macOS 10.14+, disclaims responsibility for the child process
+  // with respect to privacy/security permission prompts and
+  // decisions.  Ignored if not supported by the OS.
+  bool disclaim = false;
+#  ifdef __aarch64__
   // The architecture to launch when launching a "universal" binary.
   // Note: the implementation only supports launching x64 child
   // processes from arm64 parent processes.
   uint32_t arch = PROCESS_ARCH_INVALID;
-#endif
+#  endif  // __aarch64__
+#endif    // OS_MACOSX
 };
 
 #if defined(OS_WIN)
@@ -178,13 +201,6 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
 // and must be fully specified (i.e., this will not search $PATH).
 bool LaunchApp(const std::vector<std::string>& argv,
                const LaunchOptions& options, ProcessHandle* process_handle);
-
-// Deleter for the array of strings allocated within BuildEnvironmentArray.
-struct FreeEnvVarsArray {
-  void operator()(char** array);
-};
-
-typedef mozilla::UniquePtr<char*[], FreeEnvVarsArray> EnvironmentArray;
 
 // Merge an environment map with the current environment.
 // Existing variables are overwritten by env_vars_to_set.
