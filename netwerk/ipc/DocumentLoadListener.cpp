@@ -2843,9 +2843,8 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
 NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
   if (GetLoadingBrowsingContext()) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     GetLoadingBrowsingContext()->mEarlyHintsService.EarlyHint(
-        linkHeader, GetChannelCreationURI(), loadInfo);
+        linkHeader, GetChannelCreationURI(), mChannel);
   }
   return NS_OK;
 }

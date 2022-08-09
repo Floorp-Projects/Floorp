@@ -148,7 +148,7 @@ nsSecurityFlags EarlyHintPreloader::ComputeSecurityFlags(CORSMode aCORSMode,
 // static
 void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     OngoingEarlyHints* aOngoingEarlyHints, const LinkHeader& aHeader,
-    nsIURI* aBaseURI, nsIPrincipal* aTriggeringPrincipal,
+    nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
     nsICookieJarSettings* aCookieJarSettings) {
   if (!aHeader.mRel.LowerCaseEqualsASCII("preload")) {
     return;
@@ -183,7 +183,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   Maybe<PreloadHashKey> hashKey =
       GenerateHashKey(static_cast<ASDestination>(as.GetEnumValue()), uri,
-                      aTriggeringPrincipal, corsMode, aHeader.mType);
+                      aPrincipal, corsMode, aHeader.mType);
   if (!hashKey) {
     return;
   }
@@ -212,7 +212,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
       aHeader.mType.LowerCaseEqualsASCII("module"));
 
   NS_ENSURE_SUCCESS_VOID(earlyHintPreloader->OpenChannel(
-      aTriggeringPrincipal, securityFlags, contentPolicyType, referrerInfo,
+      aPrincipal, securityFlags, contentPolicyType, referrerInfo,
       aCookieJarSettings));
 
   DebugOnly<bool> result =
@@ -221,7 +221,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 }
 
 nsresult EarlyHintPreloader::OpenChannel(
-    nsIPrincipal* aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
+    nsIPrincipal* aPrincipal, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType, nsIReferrerInfo* aReferrerInfo,
     nsICookieJarSettings* aCookieJarSettings) {
   MOZ_ASSERT(aContentPolicyType == nsContentPolicyType::TYPE_IMAGE ||
@@ -231,8 +231,8 @@ nsresult EarlyHintPreloader::OpenChannel(
              aContentPolicyType == nsContentPolicyType::TYPE_STYLESHEET ||
              aContentPolicyType == nsContentPolicyType::TYPE_FONT);
   nsresult rv =
-      NS_NewChannel(getter_AddRefs(mChannel), mURI, aTriggeringPrincipal,
-                    aSecurityFlags, aContentPolicyType, aCookieJarSettings,
+      NS_NewChannel(getter_AddRefs(mChannel), mURI, aPrincipal, aSecurityFlags,
+                    aContentPolicyType, aCookieJarSettings,
                     /* aPerformanceStorage */ nullptr,
                     /* aLoadGroup */ nullptr,
                     /* aCallbacks */ this, nsIRequest::LOAD_NORMAL);

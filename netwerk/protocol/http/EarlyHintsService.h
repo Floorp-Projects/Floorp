@@ -13,7 +13,7 @@
 #include "nsStringFwd.h"
 #include "mozilla/RefPtr.h"
 
-class nsILoadInfo;
+class nsIChannel;
 class nsIURI;
 
 namespace mozilla::net {
@@ -25,7 +25,7 @@ class EarlyHintsService {
   EarlyHintsService();
   ~EarlyHintsService();
   void EarlyHint(const nsACString& aLinkHeader, nsIURI* aBaseURI,
-                 nsILoadInfo* aLoadInfo);
+                 nsIChannel* aChannel);
   void FinalResponse(uint32_t aResponseStatus);
   void Cancel();
 
