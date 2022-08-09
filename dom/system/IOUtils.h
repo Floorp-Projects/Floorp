@@ -62,6 +62,7 @@ class IOUtils final {
 
   enum class ShutdownPhase : uint8_t {
     ProfileBeforeChange,
+    SendTelemetry,
     XpcomWillShutdown,
     Count,
   };
@@ -202,6 +203,9 @@ class IOUtils final {
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
+
+  static void GetSendTelemetry(GlobalObject& aGlobal,
+                               JS::MutableHandle<JS::Value>, ErrorResult& aRv);
 
   static RefPtr<SyncReadFile> OpenFileForSyncReading(GlobalObject& aGlobal,
                                                      const nsAString& aPath,
@@ -724,10 +728,19 @@ class IOUtilsShutdownBlocker : public nsIAsyncShutdownBlocker,
  private:
   virtual ~IOUtilsShutdownBlocker() = default;
 
+  /**
+   * Called on the main thread after the event queue has been flushed.
+   */
+  void OnFlush();
+
   static constexpr IOUtils::PhaseArray<const char16_t*> PHASE_NAMES{
       u"profile-before-change",
+      u"profile-before-change-telemetry",
       u"xpcom-will-shutdown",
   };
+
+  // The last shutdown phase before we should shut down the event loop.
+  static constexpr auto LAST_IO_PHASE = IOUtils::ShutdownPhase::SendTelemetry;
 
   IOUtils::ShutdownPhase mPhase;
   nsCOMPtr<nsIAsyncShutdownClient> mParentClient;
