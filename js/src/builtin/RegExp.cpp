@@ -345,7 +345,8 @@ static bool CheckPatternSyntaxSlow(JSContext* cx, Handle<JSAtom*> pattern,
   MainThreadErrorContext ec(cx);
   CompileOptions options(cx);
   frontend::DummyTokenStream dummyTokenStream(cx, &ec, options);
-  return irregexp::CheckPatternSyntax(cx, dummyTokenStream, pattern, flags);
+  return irregexp::CheckPatternSyntax(cx, cx->stackLimitForCurrentPrincipal(),
+                                      dummyTokenStream, pattern, flags);
 }
 
 static RegExpShared* CheckPatternSyntax(JSContext* cx, Handle<JSAtom*> pattern,

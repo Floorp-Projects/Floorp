@@ -36,7 +36,6 @@ using namespace js;
 
 using JS::GenericNaN;
 using JS::ToNumber;
-using mozilla::Abs;
 using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
 using mozilla::IsFinite;
@@ -58,22 +57,6 @@ JS_PUBLIC_API void JS::SetUseFdlibmForSinCosTan(bool value) {
 }
 
 template <UnaryMathFunctionType F>
-static bool math_function(JSContext* cx, HandleValue val,
-                          MutableHandleValue res) {
-  double x;
-  if (!ToNumber(cx, val, &x)) {
-    return false;
-  }
-
-  // NB: Always stored as a double so the math function can be inlined
-  // through MMathFunction. We also rely on this to avoid type monitoring
-  // in CallIRGenerator::tryAttachMathSqrt.
-  double z = F(x);
-  res.setDouble(z);
-  return true;
-}
-
-template <UnaryMathFunctionType F>
 static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
@@ -81,21 +64,22 @@ static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  return math_function<F>(cx, args[0], args.rval());
-}
-
-bool js::math_abs_handle(JSContext* cx, js::HandleValue v,
-                         js::MutableHandleValue r) {
   double x;
-  if (!ToNumber(cx, v, &x)) {
+  if (!ToNumber(cx, args[0], &x)) {
     return false;
   }
 
-  double z = Abs(x);
-  r.setNumber(z);
+  // TODO(post-Warp): Re-evaluate if it's still necessary resp. useful to always
+  // type the value as a double.
 
+  // NB: Always stored as a double so the math function can be inlined
+  // through MMathFunction.
+  double z = F(x);
+  args.rval().setDouble(z);
   return true;
 }
+
+double js::math_abs_impl(double x) { return mozilla::Abs(x); }
 
 bool js::math_abs(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -105,7 +89,13 @@ bool js::math_abs(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  return math_abs_handle(cx, args[0], args.rval());
+  double x;
+  if (!ToNumber(cx, args[0], &x)) {
+    return false;
+  }
+
+  args.rval().setNumber(math_abs_impl(x));
+  return true;
 }
 
 double js::math_acos_impl(double x) {
@@ -113,7 +103,7 @@ double js::math_acos_impl(double x) {
   return fdlibm::acos(x);
 }
 
-bool js::math_acos(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_acos(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_acos_impl>(cx, argc, vp);
 }
 
@@ -122,7 +112,7 @@ double js::math_asin_impl(double x) {
   return fdlibm::asin(x);
 }
 
-bool js::math_asin(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_asin(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_asin_impl>(cx, argc, vp);
 }
 
@@ -131,7 +121,7 @@ double js::math_atan_impl(double x) {
   return fdlibm::atan(x);
 }
 
-bool js::math_atan(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_atan(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_atan_impl>(cx, argc, vp);
 }
 
@@ -140,27 +130,22 @@ double js::ecmaAtan2(double y, double x) {
   return fdlibm::atan2(y, x);
 }
 
-bool js::math_atan2_handle(JSContext* cx, HandleValue y, HandleValue x,
-                           MutableHandleValue res) {
-  double dy;
-  if (!ToNumber(cx, y, &dy)) {
-    return false;
-  }
-
-  double dx;
-  if (!ToNumber(cx, x, &dx)) {
-    return false;
-  }
-
-  double z = ecmaAtan2(dy, dx);
-  res.setDouble(z);
-  return true;
-}
-
-bool js::math_atan2(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_atan2(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  return math_atan2_handle(cx, args.get(0), args.get(1), args.rval());
+  double y;
+  if (!ToNumber(cx, args.get(0), &y)) {
+    return false;
+  }
+
+  double x;
+  if (!ToNumber(cx, args.get(1), &x)) {
+    return false;
+  }
+
+  double z = ecmaAtan2(y, x);
+  args.rval().setDouble(z);
+  return true;
 }
 
 double js::math_ceil_impl(double x) {
@@ -168,17 +153,7 @@ double js::math_ceil_impl(double x) {
   return fdlibm::ceil(x);
 }
 
-bool js::math_ceil_handle(JSContext* cx, HandleValue v,
-                          MutableHandleValue res) {
-  double d;
-  if (!ToNumber(cx, v, &d)) return false;
-
-  double result = math_ceil_impl(d);
-  res.setNumber(result);
-  return true;
-}
-
-bool js::math_ceil(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_ceil(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {
@@ -186,10 +161,16 @@ bool js::math_ceil(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  return math_ceil_handle(cx, args[0], args.rval());
+  double x;
+  if (!ToNumber(cx, args[0], &x)) {
+    return false;
+  }
+
+  args.rval().setNumber(math_ceil_impl(x));
+  return true;
 }
 
-bool js::math_clz32(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_clz32(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {
@@ -225,7 +206,14 @@ double js::math_cos_native_impl(double x) {
   return std::cos(x);
 }
 
-bool js::math_cos(JSContext* cx, unsigned argc, Value* vp) {
+double js::math_cos_impl(double x) {
+  if (sUseFdlibmForSinCosTan) {
+    return math_cos_fdlibm_impl(x);
+  }
+  return math_cos_native_impl(x);
+}
+
+static bool math_cos(JSContext* cx, unsigned argc, Value* vp) {
   if (sUseFdlibmForSinCosTan) {
     return math_function<math_cos_fdlibm_impl>(cx, argc, vp);
   }
@@ -237,25 +225,13 @@ double js::math_exp_impl(double x) {
   return fdlibm::exp(x);
 }
 
-bool js::math_exp(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_exp(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_exp_impl>(cx, argc, vp);
 }
 
 double js::math_floor_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
   return fdlibm::floor(x);
-}
-
-bool js::math_floor_handle(JSContext* cx, HandleValue v, MutableHandleValue r) {
-  double d;
-  if (!ToNumber(cx, v, &d)) {
-    return false;
-  }
-
-  double z = math_floor_impl(d);
-  r.setNumber(z);
-
-  return true;
 }
 
 bool js::math_floor(JSContext* cx, unsigned argc, Value* vp) {
@@ -266,7 +242,13 @@ bool js::math_floor(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  return math_floor_handle(cx, args[0], args.rval());
+  double x;
+  if (!ToNumber(cx, args[0], &x)) {
+    return false;
+  }
+
+  args.rval().setNumber(math_floor_impl(x));
+  return true;
 }
 
 bool js::math_imul_handle(JSContext* cx, HandleValue lhs, HandleValue rhs,
@@ -283,7 +265,7 @@ bool js::math_imul_handle(JSContext* cx, HandleValue lhs, HandleValue rhs,
   return true;
 }
 
-bool js::math_imul(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_imul(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   return math_imul_handle(cx, args.get(0), args.get(1), args.rval());
@@ -307,7 +289,11 @@ bool js::RoundFloat32(JSContext* cx, HandleValue arg, MutableHandleValue res) {
   return true;
 }
 
-bool js::math_fround(JSContext* cx, unsigned argc, Value* vp) {
+double js::RoundFloat32(double d) {
+  return static_cast<double>(static_cast<float>(d));
+}
+
+static bool math_fround(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {
@@ -323,12 +309,7 @@ double js::math_log_impl(double x) {
   return fdlibm::log(x);
 }
 
-bool js::math_log_handle(JSContext* cx, HandleValue val,
-                         MutableHandleValue res) {
-  return math_function<math_log_impl>(cx, val, res);
-}
-
-bool js::math_log(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log_impl>(cx, argc, vp);
 }
 
@@ -379,26 +360,6 @@ bool js::math_min(JSContext* cx, unsigned argc, Value* vp) {
     minval = math_min_impl(x, minval);
   }
   args.rval().setNumber(minval);
-  return true;
-}
-
-bool js::minmax_impl(JSContext* cx, bool max, HandleValue a, HandleValue b,
-                     MutableHandleValue res) {
-  double x, y;
-
-  if (!ToNumber(cx, a, &x)) {
-    return false;
-  }
-  if (!ToNumber(cx, b, &y)) {
-    return false;
-  }
-
-  if (max) {
-    res.setNumber(math_max_impl(x, y));
-  } else {
-    res.setNumber(math_min_impl(x, y));
-  }
-
   return true;
 }
 
@@ -505,7 +466,7 @@ double js::ecmaPow(double x, double y) {
   return std::pow(x, y);
 }
 
-bool js::math_pow(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_pow(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   double x;
@@ -556,21 +517,9 @@ double js::math_random_impl(JSContext* cx) {
   return cx->realm()->getOrCreateRandomNumberGenerator().nextDouble();
 }
 
-bool js::math_random(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_random(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setDouble(math_random_impl(cx));
-  return true;
-}
-
-bool js::math_round_handle(JSContext* cx, HandleValue arg,
-                           MutableHandleValue res) {
-  double d;
-  if (!ToNumber(cx, arg, &d)) {
-    return false;
-  }
-
-  d = math_round_impl(d);
-  res.setNumber(d);
   return true;
 }
 
@@ -623,8 +572,8 @@ float js::math_roundf_impl(float x) {
   return std::copysign(fdlibm::floorf(x + add), x);
 }
 
-bool /* ES5 15.8.2.15. */
-js::math_round(JSContext* cx, unsigned argc, Value* vp) {
+/* ES5 15.8.2.15. */
+static bool math_round(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {
@@ -632,7 +581,13 @@ js::math_round(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  return math_round_handle(cx, args[0], args.rval());
+  double x;
+  if (!ToNumber(cx, args[0], &x)) {
+    return false;
+  }
+
+  args.rval().setNumber(math_round_impl(x));
+  return true;
 }
 
 double js::math_sin_fdlibm_impl(double x) {
@@ -647,15 +602,14 @@ double js::math_sin_native_impl(double x) {
   return std::sin(x);
 }
 
-bool js::math_sin_handle(JSContext* cx, HandleValue val,
-                         MutableHandleValue res) {
+double js::math_sin_impl(double x) {
   if (sUseFdlibmForSinCosTan) {
-    return math_function<math_sin_fdlibm_impl>(cx, val, res);
+    return math_sin_fdlibm_impl(x);
   }
-  return math_function<math_sin_native_impl>(cx, val, res);
+  return math_sin_native_impl(x);
 }
 
-bool js::math_sin(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_sin(JSContext* cx, unsigned argc, Value* vp) {
   if (sUseFdlibmForSinCosTan) {
     return math_function<math_sin_fdlibm_impl>(cx, argc, vp);
   }
@@ -667,12 +621,7 @@ double js::math_sqrt_impl(double x) {
   return std::sqrt(x);
 }
 
-bool js::math_sqrt_handle(JSContext* cx, HandleValue number,
-                          MutableHandleValue result) {
-  return math_function<math_sqrt_impl>(cx, number, result);
-}
-
-bool js::math_sqrt(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_sqrt(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_sqrt_impl>(cx, argc, vp);
 }
 
@@ -688,7 +637,14 @@ double js::math_tan_native_impl(double x) {
   return std::tan(x);
 }
 
-bool js::math_tan(JSContext* cx, unsigned argc, Value* vp) {
+double js::math_tan_impl(double x) {
+  if (sUseFdlibmForSinCosTan) {
+    return math_tan_fdlibm_impl(x);
+  }
+  return math_tan_native_impl(x);
+}
+
+static bool math_tan(JSContext* cx, unsigned argc, Value* vp) {
   if (sUseFdlibmForSinCosTan) {
     return math_function<math_tan_fdlibm_impl>(cx, argc, vp);
   }
@@ -700,7 +656,7 @@ double js::math_log10_impl(double x) {
   return fdlibm::log10(x);
 }
 
-bool js::math_log10(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log10(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log10_impl>(cx, argc, vp);
 }
 
@@ -709,7 +665,7 @@ double js::math_log2_impl(double x) {
   return fdlibm::log2(x);
 }
 
-bool js::math_log2(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log2(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log2_impl>(cx, argc, vp);
 }
 
@@ -718,7 +674,7 @@ double js::math_log1p_impl(double x) {
   return fdlibm::log1p(x);
 }
 
-bool js::math_log1p(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log1p(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log1p_impl>(cx, argc, vp);
 }
 
@@ -727,7 +683,7 @@ double js::math_expm1_impl(double x) {
   return fdlibm::expm1(x);
 }
 
-bool js::math_expm1(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_expm1(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_expm1_impl>(cx, argc, vp);
 }
 
@@ -736,7 +692,7 @@ double js::math_cosh_impl(double x) {
   return fdlibm::cosh(x);
 }
 
-bool js::math_cosh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_cosh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_cosh_impl>(cx, argc, vp);
 }
 
@@ -745,7 +701,7 @@ double js::math_sinh_impl(double x) {
   return fdlibm::sinh(x);
 }
 
-bool js::math_sinh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_sinh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_sinh_impl>(cx, argc, vp);
 }
 
@@ -754,7 +710,7 @@ double js::math_tanh_impl(double x) {
   return fdlibm::tanh(x);
 }
 
-bool js::math_tanh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_tanh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_tanh_impl>(cx, argc, vp);
 }
 
@@ -763,7 +719,7 @@ double js::math_acosh_impl(double x) {
   return fdlibm::acosh(x);
 }
 
-bool js::math_acosh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_acosh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_acosh_impl>(cx, argc, vp);
 }
 
@@ -772,7 +728,7 @@ double js::math_asinh_impl(double x) {
   return fdlibm::asinh(x);
 }
 
-bool js::math_asinh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_asinh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_asinh_impl>(cx, argc, vp);
 }
 
@@ -781,7 +737,7 @@ double js::math_atanh_impl(double x) {
   return fdlibm::atanh(x);
 }
 
-bool js::math_atanh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_atanh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
@@ -830,7 +786,7 @@ double js::hypot3(double x, double y, double z) {
   return hypot4(x, y, z, 0.0);
 }
 
-bool js::math_hypot(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_hypot(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return math_hypot_handle(cx, args, args.rval());
 }
@@ -891,16 +847,6 @@ float js::math_truncf_impl(float x) {
   return fdlibm::truncf(x);
 }
 
-bool js::math_trunc_handle(JSContext* cx, HandleValue v, MutableHandleValue r) {
-  double x;
-  if (!ToNumber(cx, v, &x)) {
-    return false;
-  }
-
-  r.setNumber(math_trunc_impl(x));
-  return true;
-}
-
 bool js::math_trunc(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
@@ -908,7 +854,13 @@ bool js::math_trunc(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  return math_trunc_handle(cx, args[0], args.rval());
+  double x;
+  if (!ToNumber(cx, args[0], &x)) {
+    return false;
+  }
+
+  args.rval().setNumber(math_trunc_impl(x));
+  return true;
 }
 
 double js::math_sign_impl(double x) {
@@ -921,24 +873,20 @@ double js::math_sign_impl(double x) {
   return x == 0 ? x : x < 0 ? -1 : 1;
 }
 
-bool js::math_sign_handle(JSContext* cx, HandleValue v, MutableHandleValue r) {
-  double x;
-  if (!ToNumber(cx, v, &x)) {
-    return false;
-  }
-
-  r.setNumber(math_sign_impl(x));
-  return true;
-}
-
-bool js::math_sign(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_sign(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
     args.rval().setNaN();
     return true;
   }
 
-  return math_sign_handle(cx, args[0], args.rval());
+  double x;
+  if (!ToNumber(cx, args[0], &x)) {
+    return false;
+  }
+
+  args.rval().setNumber(math_sign_impl(x));
+  return true;
 }
 
 double js::math_cbrt_impl(double x) {
@@ -946,7 +894,7 @@ double js::math_cbrt_impl(double x) {
   return fdlibm::cbrt(x);
 }
 
-bool js::math_cbrt(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_cbrt(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_cbrt_impl>(cx, argc, vp);
 }
 

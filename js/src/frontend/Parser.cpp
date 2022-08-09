@@ -11083,8 +11083,8 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
     LifoAllocScope parserAllocScope(&cx_->tempLifoAlloc());
-    if (!irregexp::CheckPatternSyntax(cx_, anyChars, range, flags, Some(line),
-                                      Some(column))) {
+    if (!irregexp::CheckPatternSyntax(cx_, this->stackLimit_, anyChars, range,
+                                      flags, Some(line), Some(column))) {
       return nullptr;
     }
   }
@@ -11126,8 +11126,8 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   {
     LifoAllocScope regExpAllocScope(&alloc_);
-    if (!irregexp::CheckPatternSyntax(cx_, anyChars, source, flags, Some(line),
-                                      Some(column))) {
+    if (!irregexp::CheckPatternSyntax(cx_, this->stackLimit_, anyChars, source,
+                                      flags, Some(line), Some(column))) {
       return null();
     }
   }

@@ -38,7 +38,7 @@ already_AddRefed<CompositionTransaction> CompositionTransaction::Create(
   if (Text* textNode = composition->GetContainerTextNode()) {
     pointToInsert.Set(textNode, composition->XPOffsetInTextNode());
     NS_WARNING_ASSERTION(
-        pointToInsert.GetContainerAsText() ==
+        pointToInsert.GetContainerAs<Text>() ==
             composition->GetContainerTextNode(),
         "The editor tries to insert composition string into different node");
     NS_WARNING_ASSERTION(
@@ -55,7 +55,7 @@ already_AddRefed<CompositionTransaction> CompositionTransaction::Create(
 CompositionTransaction::CompositionTransaction(
     EditorBase& aEditorBase, const nsAString& aStringToInsert,
     const EditorDOMPointInText& aPointToInsert)
-    : mTextNode(aPointToInsert.ContainerAsText()),
+    : mTextNode(aPointToInsert.ContainerAs<Text>()),
       mOffset(aPointToInsert.Offset()),
       mReplaceLength(aEditorBase.GetComposition()->XPLengthInTextNode()),
       mRanges(aEditorBase.GetComposition()->GetRanges()),

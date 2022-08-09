@@ -19,9 +19,11 @@
 #include "jstypes.h"
 
 #include "irregexp/RegExpTypes.h"
+#include "js/Stack.h"  // JS::NativeStackLimit
 #include "vm/RegExpShared.h"
 
 struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSTracer;
 
 namespace JS {
 class RegExpFlags;
@@ -42,17 +44,20 @@ class TokenStreamAnyChars;
 namespace irregexp {
 
 Isolate* CreateIsolate(JSContext* cx);
+void TraceIsolate(JSTracer* trc, Isolate* isolate);
 void DestroyIsolate(Isolate* isolate);
 
 size_t IsolateSizeOfIncludingThis(Isolate* isolate,
                                   mozilla::MallocSizeOf mallocSizeOf);
 
-bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
+bool CheckPatternSyntax(JSContext* cx, JS::NativeStackLimit stackLimit,
+                        frontend::TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
                         JS::RegExpFlags flags,
                         mozilla::Maybe<uint32_t> line = mozilla::Nothing(),
                         mozilla::Maybe<uint32_t> column = mozilla::Nothing());
-bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
+bool CheckPatternSyntax(JSContext* cx, JS::NativeStackLimit stackLimit,
+                        frontend::TokenStreamAnyChars& ts,
                         Handle<JSAtom*> pattern, JS::RegExpFlags flags);
 
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,

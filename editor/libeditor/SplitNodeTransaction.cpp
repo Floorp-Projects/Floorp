@@ -42,7 +42,7 @@ SplitNodeTransaction::SplitNodeTransaction(
     HTMLEditor& aHTMLEditor,
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent)
     : mHTMLEditor(&aHTMLEditor),
-      mSplitContent(aStartOfRightContent.GetContainerAsContent()),
+      mSplitContent(aStartOfRightContent.template GetContainerAs<nsIContent>()),
       mSplitOffset(aStartOfRightContent.Offset()) {
   // printf("SplitNodeTransaction size: %zu\n", sizeof(SplitNodeTransaction));
   static_assert(sizeof(SplitNodeTransaction) <= 64,
@@ -50,7 +50,7 @@ SplitNodeTransaction::SplitNodeTransaction(
                 "long so that keep the foot print smaller as far as possible");
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
   MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsSplittableNode(
-      *aStartOfRightContent.ContainerAsContent()));
+      *aStartOfRightContent.template ContainerAs<nsIContent>()));
 }
 
 std::ostream& operator<<(std::ostream& aStream,

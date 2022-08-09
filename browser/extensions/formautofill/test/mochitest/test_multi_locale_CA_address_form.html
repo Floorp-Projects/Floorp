@@ -166,7 +166,7 @@ async function setupAddressStorage() {
 
 initPopupListener();
 
-add_task(async function setup() {
+add_setup(async () => {
   // This test relies on being able to fill a Canadian address which isn't possible
   // without `supportedCountries` allowing Canada
   await SpecialPowers.pushPrefEnv({"set": [["extensions.formautofill.supportedCountries", "US,CA"]]});

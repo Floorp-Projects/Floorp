@@ -127,7 +127,7 @@ const KNOWN_NAMES = {
   ],
 };
 
-add_task(async function setup() {
+add_setup(async () => {
   ({ FormAutofillHeuristics } = ChromeUtils.import(
     "resource://autofill/FormAutofillHeuristics.jsm"
   ));

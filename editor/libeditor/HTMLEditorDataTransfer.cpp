@@ -742,7 +742,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   if (pointToInsert.IsInTextNode()) {
     const SplitNodeResult splitNodeResult =
         mHTMLEditor.SplitNodeDeepWithTransaction(
-            MOZ_KnownLive(*pointToInsert.GetContainerAsContent()),
+            MOZ_KnownLive(*pointToInsert.ContainerAs<nsIContent>()),
             pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
     if (splitNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
@@ -835,7 +835,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
   const RefPtr<const Element> maybeNonEditableBlockElement =
       pointToInsert.IsInContentNode()
           ? HTMLEditUtils::GetInclusiveAncestorElement(
-                *pointToInsert.ContainerAsContent(),
+                *pointToInsert.ContainerAs<nsIContent>(),
                 HTMLEditUtils::ClosestBlockElement)
           : nullptr;
 

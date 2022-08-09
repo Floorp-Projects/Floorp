@@ -314,7 +314,7 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
       EditorRawDOMRange firstRange(*aHTMLEditor.SelectionRef().GetRangeAt(0));
       if (firstRange.StartRef().IsInContentNode() &&
           HTMLEditUtils::IsContentInclusiveDescendantOfLink(
-              *firstRange.StartRef().ContainerAsContent())) {
+              *firstRange.StartRef().ContainerAs<nsIContent>())) {
         unlink = !HTMLEditUtils::IsRangeEntirelyInLink(firstRange);
       }
     }

@@ -702,7 +702,7 @@ bool HTMLEditUtils::ShouldInsertLinefeedCharacter(
   // element.
   Element* closestEditableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
-          *aPointToInsert.ContainerAsContent(),
+          *aPointToInsert.ContainerAs<nsIContent>(),
           HTMLEditUtils::ClosestEditableBlockElement);
 
   // If and only if the nearest block is the editing host or its parent,
@@ -712,7 +712,7 @@ bool HTMLEditUtils::ShouldInsertLinefeedCharacter(
           closestEditableBlockElement == &aEditingHost) &&
          HTMLEditUtils::IsDisplayOutsideInline(aEditingHost) &&
          EditorUtils::IsNewLinePreformatted(
-             *aPointToInsert.ContainerAsContent());
+             *aPointToInsert.ContainerAs<nsIContent>());
 }
 
 // We use bitmasks to test containment of elements. Elements are marked to be
@@ -1085,7 +1085,8 @@ nsIContent* HTMLEditUtils::GetPreviousContent(
   if (aPoint.IsStartOfContainer() || aPoint.IsInTextNode()) {
     if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
         aPoint.IsInContentNode() &&
-        HTMLEditUtils::IsBlockElement(*aPoint.ContainerAsContent())) {
+        HTMLEditUtils::IsBlockElement(
+            *aPoint.template ContainerAs<nsIContent>())) {
       // If we aren't allowed to cross blocks, don't look before this block.
       return nullptr;
     }
@@ -1176,7 +1177,8 @@ nsIContent* HTMLEditUtils::GetNextContent(
   // and want the next one.
   if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
       point.IsInContentNode() &&
-      HTMLEditUtils::IsBlockElement(*point.ContainerAsContent())) {
+      HTMLEditUtils::IsBlockElement(
+          *point.template ContainerAs<nsIContent>())) {
     // don't cross out of parent block
     return nullptr;
   }

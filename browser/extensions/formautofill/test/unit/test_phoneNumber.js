@@ -5,7 +5,7 @@
 "use strict";
 
 var PhoneNumber, PhoneNumberNormalizer;
-add_task(async function setup() {
+add_setup(async () => {
   ({ PhoneNumber } = ChromeUtils.import(
     "resource://autofill/phonenumberutils/PhoneNumber.jsm"
   ));

@@ -5,7 +5,7 @@
 "use strict";
 
 let FormAutofillStorage;
-add_task(async function setup() {
+add_setup(async () => {
   ({ FormAutofillStorage } = ChromeUtils.import(
     "resource://autofill/FormAutofillStorage.jsm"
   ));
