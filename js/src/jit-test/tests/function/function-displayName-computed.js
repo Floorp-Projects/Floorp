@@ -1,3 +1,4 @@
+// |jit-test| skip-if: isLcovEnabled()
 // Guessed Atoms tests.
 // Test String literals
 var obj = {
