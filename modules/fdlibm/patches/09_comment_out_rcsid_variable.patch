@@ -301,6 +301,30 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
   *	1. Compute and return log2(x) in two pieces:
   *		log2(x) = w1 + w2,
   *	   where w1 has 53-24 = 29 bit trailing zeros.
+diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.cpp
+--- a/modules/fdlibm/src/e_rem_pio2.cpp
++++ b/modules/fdlibm/src/e_rem_pio2.cpp
+@@ -8,18 +8,18 @@
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice 
+  * is preserved.
+  * ====================================================
+  *
+  * Optimized by Bruce D. Evans.
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /* __ieee754_rem_pio2(x,y)
+  * 
+  * return the remainder of x rem pi/2 in y[0]+y[1] 
+  * use __kernel_rem_pio2()
+  */
+ 
+ #include <float.h>
 diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
 --- a/modules/fdlibm/src/e_sinh.cpp
 +++ b/modules/fdlibm/src/e_sinh.cpp
@@ -325,6 +349,30 @@ diff --git a/modules/fdlibm/src/e_sinh.cpp b/modules/fdlibm/src/e_sinh.cpp
   *	2. 
   *		                                    E + E/(E+1)
   *	    0        <= x <= 22     :  sinh(x) := --------------, E=expm1(x)
+diff --git a/modules/fdlibm/src/k_cos.cpp b/modules/fdlibm/src/k_cos.cpp
+--- a/modules/fdlibm/src/k_cos.cpp
++++ b/modules/fdlibm/src/k_cos.cpp
+@@ -6,18 +6,18 @@
+  *
+  * Developed at SunSoft, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice 
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /*
+  * __kernel_cos( x,  y )
+  * kernel cos function on [-pi/4, pi/4], pi/4 ~ 0.785398164
+  * Input x is assumed to be bounded by ~pi/4 in magnitude.
+  * Input y is the tail of x. 
+  *
+  * Algorithm
 diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 --- a/modules/fdlibm/src/k_exp.cpp
 +++ b/modules/fdlibm/src/k_exp.cpp
@@ -378,6 +426,78 @@ diff --git a/modules/fdlibm/src/k_log.h b/modules/fdlibm/src/k_log.h
   * The following describes the overall strategy for computing
   * logarithms in base e.  The argument reduction and adding the final
   * term of the polynomial are done by the caller for increased accuracy
+diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.cpp
+--- a/modules/fdlibm/src/k_rem_pio2.cpp
++++ b/modules/fdlibm/src/k_rem_pio2.cpp
+@@ -6,18 +6,18 @@
+  *
+  * Developed at SunSoft, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice 
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /*
+  * __kernel_rem_pio2(x,y,e0,nx,prec)
+  * double x[],y[]; int e0,nx,prec;
+  * 
+  * __kernel_rem_pio2 return the last three digits of N with 
+  *		y = x - N*pi/2
+  * so that |y| < pi/2.
+diff --git a/modules/fdlibm/src/k_sin.cpp b/modules/fdlibm/src/k_sin.cpp
+--- a/modules/fdlibm/src/k_sin.cpp
++++ b/modules/fdlibm/src/k_sin.cpp
+@@ -6,18 +6,18 @@
+  *
+  * Developed at SunSoft, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice 
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /* __kernel_sin( x, y, iy)
+  * kernel sin function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854
+  * Input x is assumed to be bounded by ~pi/4 in magnitude.
+  * Input y is the tail of x.
+  * Input iy indicates whether y is 0. (if iy=0, y assume to be 0). 
+  *
+  * Algorithm
+diff --git a/modules/fdlibm/src/k_tan.cpp b/modules/fdlibm/src/k_tan.cpp
+--- a/modules/fdlibm/src/k_tan.cpp
++++ b/modules/fdlibm/src/k_tan.cpp
+@@ -6,18 +6,18 @@
+  *
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+ /* INDENT OFF */
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /* __kernel_tan( x, y, k )
+  * kernel tan function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854
+  * Input x is assumed to be bounded by ~pi/4 in magnitude.
+  * Input y is the tail of x.
+  * Input k indicates whether tan (if k = 1) or -1/tan (if k = -1) is returned.
+  *
+  * Algorithm
 diff --git a/modules/fdlibm/src/s_asinh.cpp b/modules/fdlibm/src/s_asinh.cpp
 --- a/modules/fdlibm/src/s_asinh.cpp
 +++ b/modules/fdlibm/src/s_asinh.cpp
@@ -522,6 +642,30 @@ diff --git a/modules/fdlibm/src/s_copysign.cpp b/modules/fdlibm/src/s_copysign.c
   */
  
  #include "math_private.h"
+diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
+--- a/modules/fdlibm/src/s_cos.cpp
++++ b/modules/fdlibm/src/s_cos.cpp
+@@ -5,18 +5,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /* cos(x)
+  * Return cosine function of x.
+  *
+  * kernel function:
+  *	__kernel_sin		... sine function on [-pi/4,pi/4]
+  *	__kernel_cos		... cosine function on [-pi/4,pi/4]
+  *	__ieee754_rem_pio2	... argument reduction routine
 diff --git a/modules/fdlibm/src/s_expm1.cpp b/modules/fdlibm/src/s_expm1.cpp
 --- a/modules/fdlibm/src/s_expm1.cpp
 +++ b/modules/fdlibm/src/s_expm1.cpp
@@ -660,12 +804,12 @@ diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint
 +//__FBSDID("$FreeBSD$");
  
  #include <fenv.h>
+ 
  #include "math_private.h"
  
  /*
   * We save and restore the floating-point environment to avoid raising
   * an inexact exception.  We can get away with using fesetenv()
-  * instead of feclearexcept()/feupdateenv() to restore the environment
 diff --git a/modules/fdlibm/src/s_rint.cpp b/modules/fdlibm/src/s_rint.cpp
 --- a/modules/fdlibm/src/s_rint.cpp
 +++ b/modules/fdlibm/src/s_rint.cpp
@@ -714,9 +858,9 @@ diff --git a/modules/fdlibm/src/s_rintf.cpp b/modules/fdlibm/src/s_rintf.cpp
  
  static const float
  TWO23[2]={
-diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
---- a/modules/fdlibm/src/s_scalbn.cpp
-+++ b/modules/fdlibm/src/s_scalbn.cpp
+diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
+--- a/modules/fdlibm/src/s_sin.cpp
++++ b/modules/fdlibm/src/s_sin.cpp
 @@ -5,18 +5,18 @@
   *
   * Developed at SunPro, a Sun Microsystems, Inc. business.
@@ -731,13 +875,37 @@ diff --git a/modules/fdlibm/src/s_scalbn.cpp b/modules/fdlibm/src/s_scalbn.cpp
 +//#include <sys/cdefs.h>
 +//__FBSDID("$FreeBSD$");
  
- /*
-  * scalbn (double x, int n)
-  * scalbn(x,n) returns x* 2**n  computed by  exponent
-  * manipulation rather than by actually performing an
-  * exponentiation or a multiplication.
+ /* sin(x)
+  * Return sine function of x.
+  *
+  * kernel function:
+  *	__kernel_sin		... sine function on [-pi/4,pi/4]
+  *	__kernel_cos		... cose function on [-pi/4,pi/4]
+  *	__ieee754_rem_pio2	... argument reduction routine
+diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
+--- a/modules/fdlibm/src/s_tan.cpp
++++ b/modules/fdlibm/src/s_tan.cpp
+@@ -5,18 +5,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
   */
  
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /* tan(x)
+  * Return tangent function of x.
+  *
+  * kernel function:
+  *	__kernel_tan		... tangent function on [-pi/4,pi/4]
+  *	__ieee754_rem_pio2	... argument reduction routine
+  *
 diff --git a/modules/fdlibm/src/s_tanh.cpp b/modules/fdlibm/src/s_tanh.cpp
 --- a/modules/fdlibm/src/s_tanh.cpp
 +++ b/modules/fdlibm/src/s_tanh.cpp
@@ -810,196 +978,3 @@ diff --git a/modules/fdlibm/src/s_truncf.cpp b/modules/fdlibm/src/s_truncf.cpp
   *	Bit twiddling.
   * Exception:
   *	Inexact flag raised if x not equal to truncf(x).
-diff --git a/modules/fdlibm/src/e_rem_pio2.cpp b/modules/fdlibm/src/e_rem_pio2.cpp
---- a/modules/fdlibm/src/e_rem_pio2.cpp
-+++ b/modules/fdlibm/src/e_rem_pio2.cpp
-@@ -8,18 +8,18 @@
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
-  * is preserved.
-  * ====================================================
-  *
-  * Optimized by Bruce D. Evans.
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* __ieee754_rem_pio2(x,y)
-  * 
-  * return the remainder of x rem pi/2 in y[0]+y[1] 
-  * use __kernel_rem_pio2()
-  */
- 
- #include <float.h>
-
-diff --git a/modules/fdlibm/src/k_cos.cpp b/modules/fdlibm/src/k_cos.cpp
---- a/modules/fdlibm/src/k_cos.cpp
-+++ b/modules/fdlibm/src/k_cos.cpp
-@@ -6,18 +6,18 @@
-  *
-  * Developed at SunSoft, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /*
-  * __kernel_cos( x,  y )
-  * kernel cos function on [-pi/4, pi/4], pi/4 ~ 0.785398164
-  * Input x is assumed to be bounded by ~pi/4 in magnitude.
-  * Input y is the tail of x. 
-  *
-  * Algorithm
-diff --git a/modules/fdlibm/src/k_rem_pio2.cpp b/modules/fdlibm/src/k_rem_pio2.cpp
---- a/modules/fdlibm/src/k_rem_pio2.cpp
-+++ b/modules/fdlibm/src/k_rem_pio2.cpp
-@@ -6,18 +6,18 @@
-  *
-  * Developed at SunSoft, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /*
-  * __kernel_rem_pio2(x,y,e0,nx,prec)
-  * double x[],y[]; int e0,nx,prec;
-  * 
-  * __kernel_rem_pio2 return the last three digits of N with 
-  *		y = x - N*pi/2
-  * so that |y| < pi/2.
-diff --git a/modules/fdlibm/src/k_sin.cpp b/modules/fdlibm/src/k_sin.cpp
---- a/modules/fdlibm/src/k_sin.cpp
-+++ b/modules/fdlibm/src/k_sin.cpp
-@@ -6,18 +6,18 @@
-  *
-  * Developed at SunSoft, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice 
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* __kernel_sin( x, y, iy)
-  * kernel sin function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854
-  * Input x is assumed to be bounded by ~pi/4 in magnitude.
-  * Input y is the tail of x.
-  * Input iy indicates whether y is 0. (if iy=0, y assume to be 0). 
-  *
-  * Algorithm
-diff --git a/modules/fdlibm/src/k_tan.cpp b/modules/fdlibm/src/k_tan.cpp
---- a/modules/fdlibm/src/k_tan.cpp
-+++ b/modules/fdlibm/src/k_tan.cpp
-@@ -6,18 +6,18 @@
-  *
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice
-  * is preserved.
-  * ====================================================
-  */
- 
- /* INDENT OFF */
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* __kernel_tan( x, y, k )
-  * kernel tan function on ~[-pi/4, pi/4] (except on -0), pi/4 ~ 0.7854
-  * Input x is assumed to be bounded by ~pi/4 in magnitude.
-  * Input y is the tail of x.
-  * Input k indicates whether tan (if k = 1) or -1/tan (if k = -1) is returned.
-  *
-  * Algorithm
-diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
---- a/modules/fdlibm/src/s_cos.cpp
-+++ b/modules/fdlibm/src/s_cos.cpp
-@@ -5,18 +5,18 @@
-  *
-  * Developed at SunPro, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* cos(x)
-  * Return cosine function of x.
-  *
-  * kernel function:
-  *	__kernel_sin		... sine function on [-pi/4,pi/4]
-  *	__kernel_cos		... cosine function on [-pi/4,pi/4]
-  *	__ieee754_rem_pio2	... argument reduction routine
-diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
---- a/modules/fdlibm/src/s_sin.cpp
-+++ b/modules/fdlibm/src/s_sin.cpp
-@@ -5,18 +5,18 @@
-  *
-  * Developed at SunPro, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* sin(x)
-  * Return sine function of x.
-  *
-  * kernel function:
-  *	__kernel_sin		... sine function on [-pi/4,pi/4]
-  *	__kernel_cos		... cose function on [-pi/4,pi/4]
-  *	__ieee754_rem_pio2	... argument reduction routine
-diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
---- a/modules/fdlibm/src/s_tan.cpp
-+++ b/modules/fdlibm/src/s_tan.cpp
-@@ -5,18 +5,18 @@
-  *
-  * Developed at SunPro, a Sun Microsystems, Inc. business.
-  * Permission to use, copy, modify, and distribute this
-  * software is freely granted, provided that this notice
-  * is preserved.
-  * ====================================================
-  */
- 
--#include <sys/cdefs.h>
--__FBSDID("$FreeBSD$");
-+//#include <sys/cdefs.h>
-+//__FBSDID("$FreeBSD$");
- 
- /* tan(x)
-  * Return tangent function of x.
-  *
-  * kernel function:
-  *	__kernel_tan		... tangent function on [-pi/4,pi/4]
-  *	__ieee754_rem_pio2	... argument reduction routine
-  *

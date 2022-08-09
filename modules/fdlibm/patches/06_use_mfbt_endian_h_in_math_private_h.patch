@@ -11,11 +11,11 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  #include <stdint.h>
  #include <sys/types.h>
 -#include <machine/endian.h>
++
++#include "mozilla/EndianUtils.h"
  
  #include "fdlibm.h"
  
-+#include "mozilla/EndianUtils.h"
-+
  /*
   * The original fdlibm code used statements like:
   *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
@@ -76,7 +76,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
      u_int32_t lswlo;
      u_int32_t lswhi;
      u_int32_t mswlo;
-@@ -87,17 +73,22 @@ typedef union
+@@ -87,17 +73,17 @@ typedef union
    struct {
      u_int64_t lsw;
      u_int64_t msw;
@@ -86,11 +86,6 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  #endif
  
 -#if IEEE_WORD_ORDER == BIG_ENDIAN
-+/*
-+ * A union which permits us to convert between a double and two 32 bit
-+ * ints.
-+ */
-+
 +#if MOZ_BIG_ENDIAN()
  
  typedef union
@@ -100,7 +95,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
    {
      u_int32_t msw;
      u_int32_t lsw;
-@@ -105,17 +96,17 @@ typedef union
+@@ -105,17 +91,17 @@ typedef union
    struct
    {
      u_int64_t w;
