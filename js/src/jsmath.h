@@ -61,8 +61,6 @@ extern void GenerateXorShift128PlusSeed(mozilla::Array<uint64_t, 2>& seed);
 
 extern double math_random_impl(JSContext* cx);
 
-extern bool math_random(JSContext* cx, unsigned argc, js::Value* vp);
-
 extern double math_abs_impl(double x);
 
 extern bool math_abs(JSContext* cx, unsigned argc, js::Value* vp);
@@ -123,48 +121,16 @@ extern double math_tan_fdlibm_impl(double x);
 extern double math_tan_native_impl(double x);
 extern double math_tan_impl(double x);
 
-extern bool math_log10(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_log2(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_log1p(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_expm1(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_cosh(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_sinh(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_tanh(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_acosh(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_asinh(JSContext* cx, unsigned argc, js::Value* vp);
-
-extern bool math_atanh(JSContext* cx, unsigned argc, js::Value* vp);
-
 extern double ecmaHypot(double x, double y);
 
 extern double hypot3(double x, double y, double z);
 
 extern double hypot4(double x, double y, double z, double w);
 
-extern bool math_hypot(JSContext* cx, unsigned argc, Value* vp);
-
 extern bool math_hypot_handle(JSContext* cx, HandleValueArray args,
                               MutableHandleValue res);
 
 extern bool math_trunc(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool math_sign(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool math_cbrt(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool math_asin(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool math_acos(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool math_atan(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool math_atan2(JSContext* cx, unsigned argc, Value* vp);
 
@@ -194,8 +160,6 @@ extern double math_floor_impl(double x);
 
 template <typename T>
 extern T GetBiggestNumberLessThan(T x);
-
-extern bool math_round(JSContext* cx, unsigned argc, Value* vp);
 
 extern double math_round_impl(double x);
 
