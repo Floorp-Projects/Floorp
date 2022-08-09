@@ -2775,32 +2775,31 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
   return true;
 }
 
-/* Helpers for array_splice_impl() and array_to_spliced()
- *
- * Initialize variables common to splice() and toSpliced()
- * GetActualStart() returns the index at which to start deleting elements.
- * GetItemCount() returns the number of new elements being added.
- * GetActualDeleteCount:() returns the number of elements being deleted.
- *
- */
-static bool GetActualStart(JSContext* cx, const CallArgs& args, uint64_t len,
+// Helpers for array_splice_impl() and array_to_spliced()
+//
+// Initialize variables common to splice() and toSpliced():
+// - GetActualStart() returns the index at which to start deleting elements.
+// - GetItemCount() returns the number of new elements being added.
+// - GetActualDeleteCount() returns the number of elements being deleted.
+static bool GetActualStart(JSContext* cx, HandleValue start, uint64_t len,
                            uint64_t* result) {
-  double relativeStart;
-  /* Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
-   * Array.prototype.toSpliced()
-   */
+  MOZ_ASSERT(len < DOUBLE_INTEGRAL_PRECISION_LIMIT);
 
-  /* Step 3. Let relativeStart be ? ToIntegerOrInfinity(start). */
-  if (!ToInteger(cx, args.get(0), &relativeStart)) {
+  // Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
+  // Array.prototype.toSpliced()
+
+  // Step 3. Let relativeStart be ? ToIntegerOrInfinity(start).
+  double relativeStart;
+  if (!ToInteger(cx, start, &relativeStart)) {
     return false;
   }
-  /* Steps 4-5. If relativeStart is -∞, let actualStart be 0.
-   * Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
-   */
+
+  // Steps 4-5. If relativeStart is -∞, let actualStart be 0.
+  // Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
   if (relativeStart < 0) {
     *result = uint64_t(std::max(double(len) + relativeStart, 0.0));
   } else {
-    /* Step 6. Else, let actualStart be min(relativeStart, len). */
+    // Step 6. Else, let actualStart be min(relativeStart, len).
     *result = uint64_t(std::min(relativeStart, double(len)));
   }
   return true;
@@ -2815,34 +2814,39 @@ static uint32_t GetItemCount(const CallArgs& args) {
 
 static bool GetActualDeleteCount(JSContext* cx, const CallArgs& args,
                                  HandleObject obj, uint64_t len,
-                                 uint64_t actualStart, uint64_t insertCount,
+                                 uint64_t actualStart, uint32_t insertCount,
                                  uint64_t* actualDeleteCount) {
-  /* Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
-   * Array.prototype.toSpliced()
-   */
+  MOZ_ASSERT(len < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(actualStart <= len);
+  MOZ_ASSERT(insertCount == GetItemCount(args));
 
-  /* Step 8. If start is not present, then let actualDeleteCount be 0. */
+  // Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
+  // Array.prototype.toSpliced()
+
   if (args.length() < 1) {
+    // Step 8. If start is not present, then let actualDeleteCount be 0.
     *actualDeleteCount = 0;
-    /* Step 9. Else if deleteCount is not present, then let actualDeleteCount be
-     * len - actualStart. */
   } else if (args.length() < 2) {
+    // Step 9. Else if deleteCount is not present, then let actualDeleteCount be
+    // len - actualStart.
     *actualDeleteCount = len - actualStart;
   } else {
+    // Step 10.a. Else, let dc be toIntegerOrInfinity(deleteCount).
     double deleteCount;
-    /* Step 10.a. Else, let dc be toIntegerOrInfinity(deleteCount). */
     if (!ToInteger(cx, args.get(1), &deleteCount)) {
       return false;
     }
-    /* Step 10.b. Let actualDeleteCount be the result of clamping dc between 0
-     * and len - actualStart. */
-    *actualDeleteCount = uint64_t(std::min(std::max(0.0, deleteCount),
-                                           double(len) - double(actualStart)));
 
-    /* Step 11. Let newLen be len + insertCount - actualDeleteCount. */
-    /* Step 12. If newLen > 2^53 - 1, throw a TypeError exception. */
-    if (double(len + insertCount - *actualDeleteCount) >=
-        DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+    // Step 10.b. Let actualDeleteCount be the result of clamping dc between 0
+    // and len - actualStart.
+    *actualDeleteCount = uint64_t(
+        std::min(std::max(0.0, deleteCount), double(len - actualStart)));
+    MOZ_ASSERT(*actualDeleteCount <= len);
+
+    // Step 11. Let newLen be len + insertCount - actualDeleteCount.
+    // Step 12. If newLen > 2^53 - 1, throw a TypeError exception.
+    if (len + uint64_t(insertCount) - *actualDeleteCount >=
+        uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TOO_LONG_ARRAY);
       return false;
@@ -2874,7 +2878,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
   /* actualStart is the index after which elements will be
      deleted and/or new elements will be added */
   uint64_t actualStart;
-  if (!GetActualStart(cx, args, len, &actualStart)) {
+  if (!GetActualStart(cx, args.get(0), len, &actualStart)) {
     return false;
   }
 
@@ -3197,7 +3201,7 @@ static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
    * deleted and/or new elements will be added
    */
   uint64_t actualStart;
-  if (!GetActualStart(cx, args, len, &actualStart)) {
+  if (!GetActualStart(cx, args.get(0), len, &actualStart)) {
     return false;
   }
 
