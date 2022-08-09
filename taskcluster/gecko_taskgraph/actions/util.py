@@ -14,6 +14,7 @@ import jsone
 import requests
 from requests.exceptions import HTTPError
 from slugid import nice as slugid
+from taskgraph.optimize.base import optimize_task_graph
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util.taskcluster import (
     find_task_id,
@@ -27,7 +28,6 @@ from taskgraph.util.taskcluster import (
 
 from gecko_taskgraph import create
 from gecko_taskgraph.decision import read_artifact, write_artifact, rename_artifact
-from gecko_taskgraph.optimize import optimize_task_graph
 from gecko_taskgraph.util.taskcluster import trigger_hook
 from gecko_taskgraph.util.taskgraph import find_decision_task
 
@@ -283,6 +283,8 @@ def create_tasks(
     If you wish to create the tasks in a new group, leave out decision_task_id.
 
     Returns an updated label_to_taskid containing the new tasks"""
+    import gecko_taskgraph.optimize  # noqa: triggers registration of strategies
+
     if suffix != "":
         suffix = f"-{suffix}"
     to_run = set(to_run)

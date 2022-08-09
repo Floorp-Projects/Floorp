@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from gecko_taskgraph.optimize import All, OptimizationStrategy, register_strategy
+from taskgraph.optimize.base import All, OptimizationStrategy, register_strategy
+
 from gecko_taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
 
 
