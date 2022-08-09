@@ -47,10 +47,10 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
 elif CONFIG["OS_TARGET"] == "Linux":
 
     UNIFIED_SOURCES += [
-        "fallback/FallbackProcessPriority.cpp",
         "fallback/FallbackScreenConfiguration.cpp",
         "fallback/FallbackSensor.cpp",
         "fallback/FallbackVibration.cpp",
+        "linux/LinuxProcessPriority.cpp",
     ]
     if CONFIG["MOZ_ENABLE_DBUS"]:
         UNIFIED_SOURCES += [
