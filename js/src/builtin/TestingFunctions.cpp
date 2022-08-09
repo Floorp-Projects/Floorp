@@ -199,7 +199,7 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 
 #ifdef NIGHTLY_BUILD
-  bool arrayGrouping = cx->options().arrayGrouping();
+  bool arrayGrouping = cx->realm()->creationOptions().getArrayGroupingEnabled();
   if (!JS_SetProperty(cx, info, "enableArrayGrouping",
                       arrayGrouping ? TrueHandleValue : FalseHandleValue)) {
     return false;
