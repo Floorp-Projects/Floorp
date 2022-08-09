@@ -101,7 +101,8 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
                 globalUserParticipation = enabled
             }
 
-            if (url.isNullOrBlank()) {
+            if (context.settings().isFirstRun || url.isNullOrBlank()) {
+                context.settings().isFirstRun = false
                 setExperimentsLocally(R.raw.initial_experiments)
             }
 
