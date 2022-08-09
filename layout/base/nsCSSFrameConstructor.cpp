@@ -5491,7 +5491,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   bool pageNameBreak = false;
   // TODO: We should document why the TextIsOnlyWhitespace() check is needed.
   // This will be documented as part of fixing Bug 1782324
-  if (aState.mPresContext->IsPaginated() &&
+  if (aParentFrame && aState.mPresContext->IsPaginated() &&
       StaticPrefs::layout_css_named_pages_enabled() &&
       !aContent->TextIsOnlyWhitespace()) {
     // TODO: This is slightly incorrect! See Bug 1764437
