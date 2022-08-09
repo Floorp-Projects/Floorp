@@ -104,10 +104,28 @@ class RecentlyClosedTabsList extends HTMLElement {
   openTabAndUpdate(event) {
     event.preventDefault();
     const item = event.target.closest(".closed-tab-li");
-    const index = [...this.tabsList.children].indexOf(item);
+    let index = [...this.tabsList.children].indexOf(item);
 
     lazy.SessionStore.undoCloseTab(getWindow(), index);
     this.tabsList.removeChild(item);
+
+    // record telemetry
+    let tabClosedAt = parseInt(
+      item.querySelector(".closed-tab-li-time").getAttribute("data-timestamp")
+    );
+
+    let now = Date.now();
+    let deltaSeconds = (now - tabClosedAt) / 1000;
+    Services.telemetry.recordEvent(
+      "firefoxview",
+      "recently_closed",
+      "tabs",
+      null,
+      {
+        position: (++index).toString(),
+        delta: deltaSeconds.toString(),
+      }
+    );
   }
 
   initiateTabsList() {
