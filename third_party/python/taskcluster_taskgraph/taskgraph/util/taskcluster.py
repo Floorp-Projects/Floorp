@@ -259,13 +259,44 @@ def cancel_task(task_id, use_proxy=False):
 
 
 def status_task(task_id, use_proxy=False):
-    """Gets the status of a task given a task_id. In testing mode, just logs that it would
-    have retrieved status."""
+    """Gets the status of a task given a task_id.
+
+    In testing mode, just logs that it would have retrieved status.
+
+    Args:
+        task_id (str): A task id.
+        use_proxy (bool): Whether to use taskcluster-proxy (default: False)
+
+    Returns:
+        dict: A dictionary object as defined here:
+          https://docs.taskcluster.net/docs/reference/platform/queue/api#status
+    """
     if testing:
         logger.info(f"Would have gotten status for {task_id}.")
     else:
         resp = _do_request(get_task_url(task_id, use_proxy) + "/status")
-        status = resp.json().get("status", {}).get("state") or "unknown"
+        status = resp.json().get("status", {})
+        return status
+
+
+def state_task(task_id, use_proxy=False):
+    """Gets the state of a task given a task_id.
+
+    In testing mode, just logs that it would have retrieved state. This is a subset of the
+    data returned by :func:`status_task`.
+
+    Args:
+        task_id (str): A task id.
+        use_proxy (bool): Whether to use taskcluster-proxy (default: False)
+
+    Returns:
+        str: The state of the task, one of
+          ``pending, running, completed, failed, exception, unknown``.
+    """
+    if testing:
+        logger.info(f"Would have gotten state for {task_id}.")
+    else:
+        status = status_task(task_id, use_proxy=use_proxy).get("state") or "unknown"
         return status
 
 

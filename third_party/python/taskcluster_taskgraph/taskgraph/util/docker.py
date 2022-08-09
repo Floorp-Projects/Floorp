@@ -13,8 +13,8 @@ import urllib.parse
 
 import requests_unixsocket
 
-from .archive import create_tar_gz_from_files
-from .memoize import memoize
+from taskgraph.util.archive import create_tar_gz_from_files
+from taskgraph.util.memoize import memoize
 
 IMAGE_DIR = os.path.join(".", "taskcluster", "docker")
 
@@ -305,7 +305,7 @@ def image_paths():
     config = load_yaml("taskcluster", "ci", "docker-image", "kind.yml")
     return {
         k: os.path.join(IMAGE_DIR, v.get("definition", k))
-        for k, v in config["jobs"].items()
+        for k, v in config["tasks"].items()
     }
 
 
