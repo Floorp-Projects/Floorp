@@ -316,6 +316,21 @@ class Promise : public SupportsWeakPtr {
   static already_AddRefed<Promise> CreateResolvedWithUndefined(
       nsIGlobalObject* aGlobal, ErrorResult& aRv);
 
+  static already_AddRefed<Promise> CreateRejected(
+      nsIGlobalObject* aGlobal, JS::Handle<JS::Value> aRejectionError,
+      ErrorResult& aRv);
+
+  static already_AddRefed<Promise> CreateRejectedWithTypeError(
+      nsIGlobalObject* aGlobal, const nsACString& aMessage, ErrorResult& aRv);
+
+  // The rejection error will be consumed if the promise is successfully
+  // created, else the error will remain and rv.Failed() will keep being true.
+  // This intentionally is not an overload of CreateRejected to prevent
+  // accidental omission of the second argument. (See also bug 1762233 about
+  // removing its third argument.)
+  static already_AddRefed<Promise> CreateRejectedWithErrorResult(
+      nsIGlobalObject* aGlobal, ErrorResult& aRejectionError);
+
  protected:
   template <typename ResolveCallback, typename RejectCallback, typename... Args>
   ThenResult<ResolveCallback, Args...> ThenCatchWithCycleCollectedArgsImpl(

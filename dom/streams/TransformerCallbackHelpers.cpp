@@ -38,13 +38,7 @@ already_AddRefed<Promise> TransformerAlgorithms::TransformCallback(
       }
       JS_ClearPendingException(aCx);
 
-      RefPtr<Promise> promise =
-          Promise::Create(aController.GetParentObject(), aRv);
-      if (aRv.Failed()) {
-        return nullptr;
-      }
-      promise->MaybeReject(error);
-      return promise.forget();
+      return Promise::CreateRejected(aController.GetParentObject(), error, aRv);
     }
 
     // Step 2.3. Otherwise, return a promise resolved with undefined.
