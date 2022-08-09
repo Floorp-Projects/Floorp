@@ -113,12 +113,9 @@ class RemoteDecoderManagerChild final
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> Construct(
       RefPtr<RemoteDecoderChild>&& aChild, RemoteDecodeIn aLocation);
 
-  static void OpenForRDDProcess(
-      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
-  static void OpenForGPUProcess(
-      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
-  static void OpenForUtilityProcess(
-      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
+  static void OpenRemoteDecoderManagerChildForProcess(
+      Endpoint<PRemoteDecoderManagerChild>&& aEndpoint,
+      RemoteDecodeIn aLocation);
   static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded();
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
