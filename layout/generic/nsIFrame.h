@@ -4263,12 +4263,6 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
 
-  /**
-   * This returns the minimum size for the scroll area if this frame is
-   * being scrolled. Usually it's (0,0).
-   */
-  virtual nsSize GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
-
   virtual nscoord GetXULFlex();
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState);
   virtual bool IsXULCollapsed();
