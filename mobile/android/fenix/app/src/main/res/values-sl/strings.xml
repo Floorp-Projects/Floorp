@@ -76,6 +76,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Zapri</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Zapri</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Potreben je dostop do kamere. Odprite nastavitve sistema Android in v dovoljenjih tapnite Dovoli.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -123,11 +126,11 @@
     <string name="recent_tabs_show_all_content_description_2">Gumb za prikaz vseh nedavnih zavihkov</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Vaše iskanje \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Vaše iskanje \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d spletnih mest</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d spletnih mest</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Prikaži vse sinhronizirane zavihke</string>
@@ -1172,7 +1175,18 @@
     <string name="delete_browsing_data_on_quit_action">Izhod</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">S tem boste izbrisali vse podatke brskanja.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">S tem boste izbrisali vse podatke brskanja.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Časovni obseg brisanja</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Odstrani zgodovino (tudi sinhronizirano zgodovino z drugih naprav), piškotke in druge podatke brskanja.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">zadnja ura</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">danes in včeraj</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">vse</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s bo izbrisal izbrane podatke brskanja.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1185,8 +1199,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Brisanje podatkov brskanja …</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">S tem boste izbrisali vse predmete.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Izbriši vsa spletna mesta skupine &quot;%s&quot;</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Prekliči</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1608,8 +1622,6 @@
     <string name="addresses_edit_address">Uredi naslov</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Upravljanje naslovov</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Polno ime</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Ime</string>
     <!-- The header for the middle name of an address -->
