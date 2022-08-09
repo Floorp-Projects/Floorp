@@ -9,11 +9,13 @@
 #include "EarlyHintPreloader.h"
 #include "mozilla/PreloadHashKey.h"
 #include "mozilla/Telemetry.h"
+#include "nsContentUtils.h"
+#include "nsIChannel.h"
 #include "nsICookieJarSettings.h"
+#include "nsILoadInfo.h"
+#include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsIPrincipal.h"
-#include "nsILoadInfo.h"
 
 namespace mozilla::net {
 
@@ -26,17 +28,45 @@ EarlyHintsService::EarlyHintsService()
 EarlyHintsService::~EarlyHintsService() = default;
 
 void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
-                                  nsIURI* aBaseURI, nsILoadInfo* aLoadInfo) {
+                                  nsIURI* aBaseURI, nsIChannel* aChannel) {
   mEarlyHintsCount++;
   if (!mFirstEarlyHint) {
     mFirstEarlyHint.emplace(TimeStamp::NowLoRes());
   }
 
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  // We only follow Early Hints sent on the main document. Make sure that we got
+  // the main document channel here.
+  if (loadInfo->GetExternalContentPolicyType() !=
+      ExtContentPolicy::TYPE_DOCUMENT) {
+    MOZ_ASSERT(false, "Early Hint on non-document channel");
+    return;
+  }
+  nsCOMPtr<nsIPrincipal> principal;
+  // We want to set the top-level document as the triggeringPrincipal for the
+  // load of the sub-resources (image, font, fetch, script, style, fetch and in
+  // the future maybe more). We can't use the `triggeringPrincipal` of the main
+  // document channel, because it is the `systemPrincipal` for user initiated
+  // loads. Same for the `LoadInfo::FindPrincipalToInherit(aChannel)`.
+  //
+  // On 3xx redirects of the main document to cross site locations, all Early
+  // Hint preloads get cancelled as specified in the whatwg spec:
+  //
+  //   Note: Only the first early hint response served during the navigation is
+  //   handled, and it is discarded if it is succeeded by a cross-origin
+  //   redirect. [1]
+  //
+  // Therefore the channel doesn't need to change the principal for any reason
+  // and has the correct principal for the whole lifetime.
+  //
+  // [1]: https://html.spec.whatwg.org/multipage/semantics.html#early-hints
+  nsresult rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      aChannel, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   if (NS_FAILED(
-          aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings)))) {
+          loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings)))) {
     return;
   }
 
@@ -46,8 +76,7 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
 
   for (auto& linkHeader : linkHeaders) {
     EarlyHintPreloader::MaybeCreateAndInsertPreload(
-        mOngoingEarlyHints, linkHeader, aBaseURI, triggeringPrincipal,
-        cookieJarSettings);
+        mOngoingEarlyHints, linkHeader, aBaseURI, principal, cookieJarSettings);
   }
 }
 
