@@ -2801,7 +2801,7 @@ EditorDOMPointType EditorBase::FindBetterInsertionPoint(
   // adjust the insertion point to the previous text node, if one exists, or
   // to the parent anonymous DIV.
   if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
-          *aPoint.ContainerAsContent()) &&
+          *aPoint.template ContainerAs<nsIContent>()) &&
       aPoint.IsStartOfContainer()) {
     nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
     if (previousSibling && previousSibling->IsText()) {
@@ -2810,8 +2810,8 @@ EditorDOMPointType EditorBase::FindBetterInsertionPoint(
 
     nsINode* parentOfContainer = aPoint.GetContainerParent();
     if (parentOfContainer && parentOfContainer == rootElement) {
-      return EditorDOMPointType(parentOfContainer, aPoint.ContainerAsContent(),
-                                0u);
+      return EditorDOMPointType(parentOfContainer,
+                                aPoint.template ContainerAs<nsIContent>(), 0u);
     }
   }
 
@@ -2912,7 +2912,7 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
     }
     // we are inserting text into an existing text node.
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAsText(),
+        aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAs<Text>(),
                                               pointToInsert.Offset()));
     if (MOZ_UNLIKELY(Destroyed())) {
       NS_WARNING(
@@ -2975,16 +2975,16 @@ static std::tuple<EditorDOMPointInText, EditorDOMPointInText>
 AdjustTextInsertionRange(const EditorDOMPointInText& aInsertedPoint,
                          const nsAString& aInsertedString) {
   if (TextFragmentBeginsWithStringAtOffset(
-          aInsertedPoint.ContainerAsText()->TextFragment(),
+          aInsertedPoint.ContainerAs<Text>()->TextFragment(),
           aInsertedPoint.Offset(), aInsertedString)) {
     return {aInsertedPoint,
             EditorDOMPointInText(
-                aInsertedPoint.ContainerAsText(),
+                aInsertedPoint.ContainerAs<Text>(),
                 aInsertedPoint.Offset() + aInsertedString.Length())};
   }
 
-  return {EditorDOMPointInText(aInsertedPoint.ContainerAsText(), 0),
-          EditorDOMPointInText::AtEndOf(*aInsertedPoint.ContainerAsText())};
+  return {EditorDOMPointInText(aInsertedPoint.ContainerAs<Text>(), 0),
+          EditorDOMPointInText::AtEndOf(*aInsertedPoint.ContainerAs<Text>())};
 }
 
 std::tuple<EditorDOMPointInText, EditorDOMPointInText>
@@ -2998,11 +2998,11 @@ EditorBase::ComputeInsertedRange(const EditorDOMPointInText& aInsertedPoint,
   if (!MayHaveMutationEventListeners(
           NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     EditorDOMPointInText endOfInsertion(
-        aInsertedPoint.ContainerAsText(),
+        aInsertedPoint.ContainerAs<Text>(),
         aInsertedPoint.Offset() + aInsertedString.Length());
     return {aInsertedPoint, endOfInsertion};
   }
-  if (aInsertedPoint.ContainerAsText()->IsInComposedDoc()) {
+  if (aInsertedPoint.ContainerAs<Text>()->IsInComposedDoc()) {
     EditorDOMPointInText begin, end;
     return AdjustTextInsertionRange(aInsertedPoint, aInsertedString);
   }
@@ -3054,7 +3054,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
     if (isIMETransaction) {
       // Let's mark the text node as "modified frequently" if it interact with
       // IME since non-ASCII character may be inserted into it in most cases.
-      aPointToInsert.ContainerAsText()->MarkAsMaybeModifiedFrequently();
+      aPointToInsert.ContainerAs<Text>()->MarkAsMaybeModifiedFrequently();
     }
   }
 
@@ -3064,7 +3064,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
       // TODO: might need adaptation because of mutation event listeners called
       // during `DoTransactionInternal`.
       DebugOnly<nsresult> rvIgnored =
-          listener->DidInsertText(pointToInsert.ContainerAsText(),
+          listener->DidInsertText(pointToInsert.ContainerAs<Text>(),
                                   pointToInsert.Offset(), aStringToInsert, rv);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
@@ -3895,9 +3895,9 @@ EditorBase::CreateTransactionForCollapsedRange(
         point.SetToEndOf(anonymousDiv->GetFirstChild());
       }
     }
-    MOZ_ASSERT(!point.ContainerAsText()->GetPreviousSibling());
-    MOZ_ASSERT(!point.ContainerAsText()->GetNextSibling() ||
-               !point.ContainerAsText()->GetNextSibling()->IsText());
+    MOZ_ASSERT(!point.ContainerAs<Text>()->GetPreviousSibling());
+    MOZ_ASSERT(!point.ContainerAs<Text>()->GetNextSibling() ||
+               !point.ContainerAs<Text>()->GetNextSibling()->IsText());
     if (aHowToHandleCollapsedRange ==
             HowToHandleCollapsedRange::ExtendBackward &&
         point.IsStartOfContainer()) {
@@ -4018,7 +4018,7 @@ EditorBase::CreateTransactionForCollapsedRange(
         HowToHandleCollapsedRange::ExtendBackward) {
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
           DeleteTextTransaction::MaybeCreateForPreviousCharacter(
-              *this, *point.ContainerAsText(), point.Offset());
+              *this, *point.ContainerAs<Text>(), point.Offset());
       NS_WARNING_ASSERTION(
           deleteTextTransaction,
           "DeleteTextTransaction::MaybeCreateForPreviousCharacter() failed");
@@ -4026,7 +4026,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     }
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
         DeleteTextTransaction::MaybeCreateForNextCharacter(
-            *this, *point.ContainerAsText(), point.Offset());
+            *this, *point.ContainerAs<Text>(), point.Offset());
     NS_WARNING_ASSERTION(
         deleteTextTransaction,
         "DeleteTextTransaction::MaybeCreateForNextCharacter() failed");
@@ -4307,7 +4307,7 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   if (IsHTMLEditor() && atNewStartOfSelection.IsInTextNode() &&
       !atNewStartOfSelection.GetContainer()->Length()) {
     nsresult rv = DeleteNodeWithTransaction(
-        MOZ_KnownLive(*atNewStartOfSelection.ContainerAsText()));
+        MOZ_KnownLive(*atNewStartOfSelection.ContainerAs<Text>()));
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
       return rv;
@@ -4469,7 +4469,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   }
 
   if (IsInPlaintextMode()) {
-    for (nsIContent* content = droppedAt.ContainerAsContent(); content;
+    for (nsIContent* content = droppedAt.ContainerAs<nsIContent>(); content;
          content = content->GetParent()) {
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
       if (formControl && !formControl->AllowDrop()) {
@@ -4546,11 +4546,11 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   else if (!AsHTMLEditor()->IsInDesignMode()) {
     focusedElement = AsHTMLEditor()->ComputeEditingHost();
     if (focusedElement &&
-        droppedAt.ContainerAsContent()->IsInclusiveDescendantOf(
+        droppedAt.ContainerAs<nsIContent>()->IsInclusiveDescendantOf(
             focusedElement)) {
       newFocusedElement = focusedElement;
     } else {
-      newFocusedElement = droppedAt.ContainerAsContent()->GetEditingHost();
+      newFocusedElement = droppedAt.ContainerAs<nsIContent>()->GetEditingHost();
     }
   }
   // Move selection right now.  Note that this does not move focus because
@@ -5822,7 +5822,8 @@ EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
   }
 
   nsPrevNextBidiLevels levels = frameSelection->GetPrevNextBidiLevels(
-      aPointAtCaret.ContainerAsContent(), aPointAtCaret.Offset(), true);
+      aPointAtCaret.template ContainerAs<nsIContent>(), aPointAtCaret.Offset(),
+      true);
 
   mozilla::intl::BidiEmbeddingLevel levelBefore = levels.mLevelBefore;
   mozilla::intl::BidiEmbeddingLevel levelAfter = levels.mLevelAfter;

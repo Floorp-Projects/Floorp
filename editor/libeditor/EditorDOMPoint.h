@@ -203,22 +203,16 @@ class EditorDOMPointBase final {
     return ContentNodeType::FromNodeOrNull(mParent);
   }
 
-  MOZ_NEVER_INLINE_DEBUG nsIContent* ContainerAsContent() const {
+  /**
+   * ContainerAs() returns the container node with just casting to the specific
+   * type.  Therefore, callers need to guarantee that the result is not nullptr
+   * nor wrong cast.
+   */
+  template <typename ContentNodeType>
+  ContentNodeType* ContainerAs() const {
     MOZ_ASSERT(mParent);
-    MOZ_ASSERT(mParent->IsContent());
-    return mParent->AsContent();
-  }
-
-  MOZ_NEVER_INLINE_DEBUG dom::Element* ContainerAsElement() const {
-    MOZ_ASSERT(mParent);
-    MOZ_ASSERT(mParent->IsElement());
-    return mParent->AsElement();
-  }
-
-  MOZ_NEVER_INLINE_DEBUG dom::Text* ContainerAsText() const {
-    MOZ_ASSERT(mParent);
-    MOZ_ASSERT(IsInTextNode());
-    return mParent->AsText();
+    MOZ_DIAGNOSTIC_ASSERT(ContentNodeType::FromNode(mParent));
+    return static_cast<ContentNodeType*>(GetContainer());
   }
 
   /**
@@ -236,7 +230,7 @@ class EditorDOMPointBase final {
     if (MOZ_UNLIKELY(!mParent)) {
       return nullptr;
     }
-    return mParent->IsElement() ? ContainerAsElement()
+    return mParent->IsElement() ? ContainerAs<dom::Element>()
                                 : GetContainerParentAs<dom::Element>();
   }
 
@@ -331,7 +325,7 @@ class EditorDOMPointBase final {
    */
   nsIContent* GetChildOrContainerIfDataNode() const {
     if (IsInDataNode()) {
-      return ContainerAsContent();
+      return ContainerAs<nsIContent>();
     }
     return GetChild();
   }
@@ -393,7 +387,7 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG char16_t Char() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsEndOfContainer());
-    return ContainerAsText()->TextFragment().CharAt(mOffset.value());
+    return ContainerAs<dom::Text>()->TextFragment().CharAt(mOffset.value());
   }
   MOZ_NEVER_INLINE_DEBUG bool IsCharASCIISpace() const {
     return nsCRT::IsAsciiSpace(Char());
@@ -421,14 +415,14 @@ class EditorDOMPointBase final {
       const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsEndOfContainer());
-    return ContainerAsText()
+    return ContainerAs<dom::Text>()
         ->TextFragment()
         .IsHighSurrogateFollowedByLowSurrogateAt(mOffset.value());
   }
   MOZ_NEVER_INLINE_DEBUG bool IsCharLowSurrogateFollowingHighSurrogate() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsEndOfContainer());
-    return ContainerAsText()
+    return ContainerAs<dom::Text>()
         ->TextFragment()
         .IsLowSurrogateFollowingHighSurrogateAt(mOffset.value());
   }
@@ -436,7 +430,7 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG char16_t PreviousChar() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsStartOfContainer());
-    return ContainerAsText()->TextFragment().CharAt(mOffset.value() - 1);
+    return ContainerAs<dom::Text>()->TextFragment().CharAt(mOffset.value() - 1);
   }
   MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharASCIISpace() const {
     return nsCRT::IsAsciiSpace(PreviousChar());
@@ -467,7 +461,7 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG char16_t NextChar() const {
     MOZ_ASSERT(IsSetAndValid());
     MOZ_ASSERT(!IsAtLastContent() && !IsEndOfContainer());
-    return ContainerAsText()->TextFragment().CharAt(mOffset.value() + 1);
+    return ContainerAs<dom::Text>()->TextFragment().CharAt(mOffset.value() + 1);
   }
   MOZ_NEVER_INLINE_DEBUG bool IsNextCharASCIISpace() const {
     return nsCRT::IsAsciiSpace(NextChar());
@@ -648,7 +642,7 @@ class EditorDOMPointBase final {
     if (MOZ_UNLIKELY(!mParent) || !mParent->IsContent()) {
       return EditorDOMPointType();
     }
-    return EditorDOMPointType(ContainerAsContent());
+    return EditorDOMPointType(ContainerAs<nsIContent>());
   }
 
   /**
@@ -1083,13 +1077,13 @@ class EditorDOMPointBase final {
   }
 
   EditorDOMPointInText GetAsInText() const {
-    return IsInTextNode() ? EditorDOMPointInText(ContainerAsText(), Offset(),
-                                                 mInterlinePosition)
+    return IsInTextNode() ? EditorDOMPointInText(ContainerAs<dom::Text>(),
+                                                 Offset(), mInterlinePosition)
                           : EditorDOMPointInText();
   }
   MOZ_NEVER_INLINE_DEBUG EditorDOMPointInText AsInText() const {
     MOZ_ASSERT(IsInTextNode());
-    return EditorDOMPointInText(ContainerAsText(), Offset(),
+    return EditorDOMPointInText(ContainerAs<dom::Text>(), Offset(),
                                 mInterlinePosition);
   }
 
@@ -1285,7 +1279,7 @@ class EditorDOMRangeBase final {
   bool EnsureNotInNativeAnonymousSubtree() {
     if (mStart.IsInNativeAnonymousSubtree()) {
       nsIContent* parent = nullptr;
-      for (parent = mStart.ContainerAsContent()
+      for (parent = mStart.template ContainerAs<nsIContent>()
                         ->GetClosestNativeAnonymousSubtreeRootParent();
            parent && parent->IsInNativeAnonymousSubtree();
            parent = parent->GetClosestNativeAnonymousSubtreeRootParent()) {
@@ -1297,7 +1291,7 @@ class EditorDOMRangeBase final {
     }
     if (mEnd.IsInNativeAnonymousSubtree()) {
       nsIContent* parent = nullptr;
-      for (parent = mEnd.ContainerAsContent()
+      for (parent = mEnd.template ContainerAs<nsIContent>()
                         ->GetClosestNativeAnonymousSubtreeRootParent();
            parent && parent->IsInNativeAnonymousSubtree();
            parent = parent->GetClosestNativeAnonymousSubtreeRootParent()) {

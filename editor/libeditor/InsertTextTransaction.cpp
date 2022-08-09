@@ -33,7 +33,7 @@ already_AddRefed<InsertTextTransaction> InsertTextTransaction::Create(
 InsertTextTransaction::InsertTextTransaction(
     EditorBase& aEditorBase, const nsAString& aStringToInsert,
     const EditorDOMPointInText& aPointToInsert)
-    : mTextNode(aPointToInsert.ContainerAsText()),
+    : mTextNode(aPointToInsert.ContainerAs<Text>()),
       mOffset(aPointToInsert.Offset()),
       mStringToInsert(aStringToInsert),
       mEditorBase(&aEditorBase) {}

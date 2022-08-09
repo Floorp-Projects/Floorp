@@ -50,7 +50,7 @@ SplitNodeTransaction::SplitNodeTransaction(
                 "long so that keep the foot print smaller as far as possible");
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
   MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsSplittableNode(
-      *aStartOfRightContent.ContainerAsContent()));
+      *aStartOfRightContent.template ContainerAs<nsIContent>()));
 }
 
 std::ostream& operator<<(std::ostream& aStream,

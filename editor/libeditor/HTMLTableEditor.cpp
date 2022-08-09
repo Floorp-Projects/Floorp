@@ -423,10 +423,10 @@ CreateElementResult HTMLEditor::InsertTableCellsWithTransaction(
         return NS_ERROR_FAILURE;
       }
       CreateElementResult insertNewCellResult = InsertNodeWithTransaction(
-          *newCell,
-          referenceContent
-              ? EditorDOMPoint(referenceContent)
-              : EditorDOMPoint::AtEndOf(*aPointToInsert.ContainerAsElement()));
+          *newCell, referenceContent
+                        ? EditorDOMPoint(referenceContent)
+                        : EditorDOMPoint::AtEndOf(
+                              *aPointToInsert.ContainerAs<Element>()));
       if (insertNewCellResult.isErr()) {
         NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
         return insertNewCellResult.unwrapErr();
@@ -642,7 +642,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
 
   const RefPtr<Element> tableElement =
       HTMLEditUtils::GetClosestAncestorTableElement(
-          *aPointToInsert.ContainerAsElement());
+          *aPointToInsert.ContainerAs<Element>());
   if (!tableElement) {
     NS_WARNING("There was no ancestor <table> element");
     return NS_ERROR_FAILURE;
@@ -670,7 +670,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
     Element* previousCellElement =
         aPointToInsert.IsEndOfContainer()
             ? HTMLEditUtils::GetLastTableCellElementChild(
-                  *aPointToInsert.ContainerAsElement())
+                  *aPointToInsert.ContainerAs<Element>())
             : HTMLEditUtils::GetPreviousTableCellElementSibling(
                   *aPointToInsert.GetChild());
     return previousCellElement != nullptr;
@@ -698,7 +698,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
     Element* previousCellElement =
         aPointToInsert.IsEndOfContainer()
             ? HTMLEditUtils::GetLastTableCellElementChild(
-                  *aPointToInsert.ContainerAsElement())
+                  *aPointToInsert.ContainerAs<Element>())
             : HTMLEditUtils::GetPreviousTableCellElementSibling(
                   *aPointToInsert.GetChild());
     MOZ_ASSERT(previousCellElement);
@@ -822,8 +822,8 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
       // We'll update selection later into the first inserted cell element in
       // the current row.
       insertCellElementsResult.IgnoreCaretPointSuggestion();
-      if (pointToInsert.ContainerAsElement() ==
-          aPointToInsert.ContainerAsElement()) {
+      if (pointToInsert.ContainerAs<Element>() ==
+          aPointToInsert.ContainerAs<Element>()) {
         cellElementToPutCaret = insertCellElementsResult.UnwrapNewNode();
         MOZ_ASSERT(cellElementToPutCaret);
         MOZ_ASSERT(HTMLEditUtils::IsTableCell(cellElementToPutCaret));

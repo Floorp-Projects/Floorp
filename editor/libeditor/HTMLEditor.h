@@ -2112,7 +2112,8 @@ class HTMLEditor final : public EditorBase,
     if (aPoint.IsPreviousCharPreformattedNewLine()) {
       return CharPointType::PreformattedLineBreak;
     }
-    if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
+    if (EditorUtils::IsWhiteSpacePreformatted(
+            *aPoint.template ContainerAs<Text>())) {
       return CharPointType::PreformattedChar;
     }
     if (aPoint.IsPreviousCharASCIISpace()) {
@@ -2130,7 +2131,8 @@ class HTMLEditor final : public EditorBase,
     if (aPoint.IsCharPreformattedNewLine()) {
       return CharPointType::PreformattedLineBreak;
     }
-    if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
+    if (EditorUtils::IsWhiteSpacePreformatted(
+            *aPoint.template ContainerAs<Text>())) {
       return CharPointType::PreformattedChar;
     }
     if (aPoint.IsCharASCIISpace()) {
