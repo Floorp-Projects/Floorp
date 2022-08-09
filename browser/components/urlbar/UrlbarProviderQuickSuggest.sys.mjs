@@ -108,7 +108,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   constructor(...args) {
     super(...args);
 
-    lazy.UrlbarQuickSuggest.init();
     lazy.UrlbarQuickSuggest.on("config-set", () =>
       this._validateImpressionStats()
     );
