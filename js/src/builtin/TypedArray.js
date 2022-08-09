@@ -2076,6 +2076,8 @@ function TypedArrayToReversed() {
     );
   }
 
+  GetAttachedArrayBuffer(this);
+
   // Step 1. Let O be the this value.
   var O = this;
 
@@ -2095,7 +2097,7 @@ function TypedArrayToReversed() {
     // Step 5.c. Let fromValue be ! Get(O, from).
     var fromValue = O[from];
     // Step 5.d. Perform ! Set(A, k, kValue, true).
-    DefineDataProperty(A, k, fromValue);
+    A[k] = fromValue;
   }
 
   // Step 7. Return A.
