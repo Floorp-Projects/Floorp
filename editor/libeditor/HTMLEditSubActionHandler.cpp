@@ -5630,7 +5630,7 @@ SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
-  if (!splitResult.GetMiddleContentAsElement()) {
+  if (!splitResult.GetMiddleContentAs<Element>()) {
     NS_WARNING(
         "HTMLEditor::SplitRangeOffFromBlock() didn't return middle content");
     splitResult.IgnoreCaretPointSuggestion();
@@ -5655,9 +5655,10 @@ SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
   }
 
   if (aBlockIndentedWith == BlockIndentedWith::HTML) {
+    // MOZ_KnownLive: perhaps, it does not work with template methods.
     Result<EditorDOMPoint, nsresult> unwrapBlockElementResult =
         RemoveBlockContainerWithTransaction(
-            MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()));
+            MOZ_KnownLive(*splitResult.GetMiddleContentAs<Element>()));
     if (MOZ_UNLIKELY(unwrapBlockElementResult.isErr())) {
       NS_WARNING("HTMLEditor::RemoveBlockContainerWithTransaction() failed");
       return SplitRangeOffFromNodeResult(unwrapBlockElementResult.inspectErr());
@@ -5674,13 +5675,15 @@ SplitRangeOffFromNodeResult HTMLEditor::OutdentPartOfBlock(
                                        splitResult.GetRightContent());
   }
 
-  if (!splitResult.GetMiddleContentAsElement()) {
+  if (!splitResult.GetMiddleContentAs<Element>()) {
     return splitResult;
   }
 
+  // MOZ_KnownLive: perhaps, it does not work with template methods.
   const Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-      ChangeMarginStart(MOZ_KnownLive(*splitResult.GetMiddleContentAsElement()),
-                        ChangeMargin::Decrease, aEditingHost);
+      ChangeMarginStart(
+          MOZ_KnownLive(*splitResult.GetMiddleContentAs<Element>()),
+          ChangeMargin::Decrease, aEditingHost);
   if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
     NS_WARNING("HTMLEditor::ChangeMarginStart(ChangeMargin::Decrease) failed");
     return SplitRangeOffFromNodeResult(pointToPutCaretOrError.inspectErr());
