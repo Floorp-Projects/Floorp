@@ -1,7 +1,7 @@
 "use strict";
 
 var AddressResult, CreditCardResult;
-add_task(async function setup() {
+add_setup(async () => {
   ({ AddressResult, CreditCardResult } = ChromeUtils.import(
     "resource://autofill/ProfileAutoCompleteResult.jsm"
   ));

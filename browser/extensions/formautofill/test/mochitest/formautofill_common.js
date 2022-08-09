@@ -435,7 +435,7 @@ function formAutoFillCommonSetup() {
     }
   });
 
-  add_task(async function setup() {
+  add_setup(async () => {
     info(`expecting the storage setup`);
     await formFillChromeScript.sendQuery("setup");
   });
