@@ -188,6 +188,7 @@ add_task(async function test_shouldShowFocusPromo() {
 });
 
 add_task(async function test_shouldShowPinPromo() {
+  Preferences.set("browser.promo.pin.enabled", true);
   // Show pin promo type by default when promo is enabled
   Assert.ok(BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.PIN));
 
