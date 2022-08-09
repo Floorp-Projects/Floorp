@@ -2825,20 +2825,19 @@ Element* HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(
 
   // If no node supplied, get it from anchor node of current selection
   const EditorRawDOMPoint atAnchor(SelectionRef().AnchorRef());
-  if (NS_WARN_IF(!atAnchor.IsSet()) ||
-      NS_WARN_IF(!atAnchor.GetContainerAsContent())) {
+  if (NS_WARN_IF(!atAnchor.IsInContentNode())) {
     return nullptr;
   }
 
   // Try to get the actual selected node
   nsIContent* content = nullptr;
   if (atAnchor.GetContainer()->HasChildNodes() &&
-      atAnchor.GetContainerAsContent()) {
+      atAnchor.ContainerAsContent()) {
     content = atAnchor.GetChild();
   }
   // Anchor node is probably a text node - just use that
   if (!content) {
-    content = atAnchor.GetContainerAsContent();
+    content = atAnchor.ContainerAsContent();
     if (NS_WARN_IF(!content)) {
       return nullptr;
     }
@@ -4625,7 +4624,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     // if you are after the last <li> or before the first, etc.  For now we
     // just have some smarts about unnecessarily splitting text nodes, which
     // should be universal enough to put straight in this EditorBase routine.
-    nsIContent* splittingContent = atStartOfRightNode.GetContainerAsContent();
+    auto* splittingContent = atStartOfRightNode.GetContainerAs<nsIContent>();
     if (NS_WARN_IF(!splittingContent)) {
       lastResult.IgnoreCaretPointSuggestion();
       return SplitNodeResult(NS_ERROR_FAILURE);
@@ -4633,7 +4632,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     // If we meet an orphan node before meeting aMostAncestorToSplit, we need
     // to stop splitting.  This is a bug of the caller.
     if (NS_WARN_IF(splittingContent != &aMostAncestorToSplit &&
-                   !atStartOfRightNode.GetContainerParentAsContent())) {
+                   !atStartOfRightNode.GetContainerParentAs<nsIContent>())) {
       lastResult.IgnoreCaretPointSuggestion();
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
@@ -4650,7 +4649,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     // If the split point is middle of the node or the node is not a text node
     // and we're allowed to create empty element node, split it.
     if ((aSplitAtEdges == SplitAtEdges::eAllowToCreateEmptyContainer &&
-         !atStartOfRightNode.GetContainerAsText()) ||
+         !atStartOfRightNode.IsInTextNode()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
       lastResult = SplitNodeResult::MergeWithDeeperSplitNodeResult(
@@ -4761,7 +4760,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   // the children which are before aStartOfRightNode.
   if (!aStartOfRightNode.IsStartOfContainer()) {
     // If it's a text node, just shuffle around some text
-    Text* rightAsText = aStartOfRightNode.GetContainerAsText();
+    Text* rightAsText = aStartOfRightNode.GetContainerAs<Text>();
     Text* leftAsText = aNewNode.GetAsText();
     if (rightAsText && leftAsText) {
       // Fix right node
@@ -5719,7 +5718,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
         if (startOfRange.GetContainer()->IsHTMLElement(nsGkAtoms::body) &&
             selectionIsCollapsed) {
           if (RefPtr<nsStyledElement> styledElement =
-                  startOfRange.GetContainerAsStyledElement()) {
+                  startOfRange.GetContainerAs<nsStyledElement>()) {
             Result<int32_t, nsresult> result =
                 mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
                     *styledElement, nullptr, nsGkAtoms::bgcolor, &aColor);

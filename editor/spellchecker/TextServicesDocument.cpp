@@ -344,7 +344,7 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(
         "TextServicesDocument::OffsetEntryArray::FindWordRange() failed");
     return maybeWordRange.unwrapErr();
   }
-  rngStartNode = maybeWordRange.inspect().StartRef().GetContainerAsText();
+  rngStartNode = maybeWordRange.inspect().StartRef().GetContainerAs<Text>();
   rngStartOffset = maybeWordRange.inspect().StartRef().Offset();
 
   // Grab all the text in the block containing our
@@ -374,10 +374,11 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(
   // rngEndNode and rngEndOffset if it isn't already at the start of the
   // word and isn't equivalent to rngStartNode and rngStartOffset.
 
-  if (rngEndNode != maybeWordRange.inspect().StartRef().GetContainerAsText() ||
+  if (rngEndNode !=
+          maybeWordRange.inspect().StartRef().GetContainerAs<Text>() ||
       rngEndOffset != maybeWordRange.inspect().StartRef().Offset() ||
       (rngEndNode == rngStartNode && rngEndOffset == rngStartOffset)) {
-    rngEndNode = maybeWordRange.inspect().EndRef().GetContainerAsText();
+    rngEndNode = maybeWordRange.inspect().EndRef().GetContainerAs<Text>();
     rngEndOffset = maybeWordRange.inspect().EndRef().Offset();
   }
 

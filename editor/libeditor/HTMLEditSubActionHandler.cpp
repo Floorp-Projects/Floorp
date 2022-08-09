@@ -1057,7 +1057,7 @@ EditActionResult HTMLEditor::HandleInsertText(
     while (!HTMLEditUtils::CanNodeContain(*pointToInsert.GetContainer(),
                                           *nsGkAtoms::textTagName)) {
       if (NS_WARN_IF(pointToInsert.GetContainer() == editingHost) ||
-          NS_WARN_IF(!pointToInsert.GetContainerParentAsContent())) {
+          NS_WARN_IF(!pointToInsert.GetContainerParentAs<nsIContent>())) {
         NS_WARNING("Selection start point couldn't have text nodes");
         return EditActionHandled(NS_ERROR_FAILURE);
       }
@@ -2253,7 +2253,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
           forwardScanFromPointToSplitResult.PointAfterContent<EditorDOMPoint>();
     }
 
-    if (NS_WARN_IF(!pointToSplit.GetContainerAsContent())) {
+    if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
@@ -2905,7 +2905,7 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSet());
 
-  if (!aPointToInsert.GetContainerAsContent()) {
+  if (!aPointToInsert.IsInContentNode()) {
     return NS_OK;
   }
 
@@ -3438,7 +3438,7 @@ EditActionResult HTMLEditor::ConvertContentAroundRangesToList(
         // If we've not met a list element, set current list element to the
         // parent of current list item element.
         if (!curList) {
-          curList = atContent.GetContainerAsElement();
+          curList = atContent.GetContainerAs<Element>();
           NS_WARNING_ASSERTION(
               HTMLEditUtils::IsAnyListElement(curList),
               "Current list item parent is not a list element");
@@ -5811,7 +5811,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     if (pointToInsertTextNode.IsInTextNode()) {
       // if we are in a text node, split it
       SplitNodeResult splitTextNodeResult = SplitNodeDeepWithTransaction(
-          MOZ_KnownLive(*pointToInsertTextNode.GetContainerAsText()),
+          MOZ_KnownLive(*pointToInsertTextNode.ContainerAsText()),
           pointToInsertTextNode, SplitAtEdges::eAllowToCreateEmptyContainer);
       if (splitTextNodeResult.isErr()) {
         NS_WARNING(
@@ -5865,7 +5865,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
 
     while (item) {
       Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
-          MOZ_KnownLive(*pointToPutCaret.GetContainerAsContent()),
+          MOZ_KnownLive(*pointToPutCaret.ContainerAsContent()),
           MOZ_KnownLive(*item->tag), MOZ_KnownLive(item->attr), item->value);
       if (MOZ_UNLIKELY(setStyleResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
@@ -6838,7 +6838,7 @@ HTMLEditor::SplitParentInlineElementsAtRangeEdges(RangeItem& aRangeItem) {
       if (pointToPutCaret.IsInContentNode() &&
           MOZ_UNLIKELY(
               editingHost !=
-              ComputeEditingHost(*pointToPutCaret.GetContainerAsContent()))) {
+              ComputeEditingHost(*pointToPutCaret.ContainerAsContent()))) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) caused changing editing host");
@@ -7167,7 +7167,7 @@ SplitNodeResult HTMLEditor::HandleInsertParagraphInParagraph(
     if (aCandidatePointToSplit.IsStartOfContainer()) {
       EditorDOMPoint candidatePoint(aCandidatePointToSplit);
       for (nsIContent* container =
-               aCandidatePointToSplit.GetContainerAsContent();
+               aCandidatePointToSplit.GetContainerAs<nsIContent>();
            container && container != &aParentDivOrP;
            container = container->GetParent()) {
         if (HTMLEditUtils::IsLink(container)) {
@@ -7203,7 +7203,7 @@ SplitNodeResult HTMLEditor::HandleInsertParagraphInParagraph(
           aCandidatePointToSplit.IsBRElementAtEndOfContainer();
       EditorDOMPoint candidatePoint(aCandidatePointToSplit);
       for (nsIContent* container =
-               aCandidatePointToSplit.GetContainerAsContent();
+               aCandidatePointToSplit.GetContainerAs<nsIContent>();
            container && container != &aParentDivOrP;
            container = container->GetParent()) {
         if (HTMLEditUtils::IsLink(container)) {

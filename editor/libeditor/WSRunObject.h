@@ -70,7 +70,7 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
   MOZ_NEVER_INLINE_DEBUG WSScanResult(const EditorDOMPoint& aPoint,
                                       WSType aReason)
-      : mContent(aPoint.GetContainerAsContent()),
+      : mContent(aPoint.GetContainerAs<nsIContent>()),
         mOffset(Some(aPoint.Offset())),
         mReason(aReason) {
     AssertIfInvalidData();

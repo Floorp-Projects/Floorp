@@ -42,7 +42,7 @@ SplitNodeTransaction::SplitNodeTransaction(
     HTMLEditor& aHTMLEditor,
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent)
     : mHTMLEditor(&aHTMLEditor),
-      mSplitContent(aStartOfRightContent.GetContainerAsContent()),
+      mSplitContent(aStartOfRightContent.template GetContainerAs<nsIContent>()),
       mSplitOffset(aStartOfRightContent.Offset()) {
   // printf("SplitNodeTransaction size: %zu\n", sizeof(SplitNodeTransaction));
   static_assert(sizeof(SplitNodeTransaction) <= 64,

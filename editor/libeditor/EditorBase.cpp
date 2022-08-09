@@ -4068,7 +4068,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     }
   } else {
     MOZ_ASSERT(point.IsInTextNode());
-    editableContent = point.GetContainerAsContent();
+    editableContent = point.GetContainerAs<nsIContent>();
     if (!editableContent) {
       NS_WARNING("If there was no text node, should've been handled first");
       return nullptr;
@@ -4405,8 +4405,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   }
   EditorDOMPoint droppedAt(dropParentContent,
                            AssertedCast<uint32_t>(dropOffset));
-  if (NS_WARN_IF(!droppedAt.IsSet()) ||
-      NS_WARN_IF(!droppedAt.GetContainerAsContent())) {
+  if (NS_WARN_IF(!droppedAt.IsInContentNode())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -4470,7 +4469,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   }
 
   if (IsInPlaintextMode()) {
-    for (nsIContent* content = droppedAt.GetContainerAsContent(); content;
+    for (nsIContent* content = droppedAt.ContainerAsContent(); content;
          content = content->GetParent()) {
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
       if (formControl && !formControl->AllowDrop()) {
@@ -4531,6 +4530,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
     }
     droppedAt = rangeAtDropPoint->StartRef();
     MOZ_ASSERT(droppedAt.IsSetAndValid());
+    MOZ_ASSERT(droppedAt.IsInContentNode());
   }
 
   // Before inserting dropping content, we need to move focus for compatibility
@@ -4546,11 +4546,11 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   else if (!AsHTMLEditor()->IsInDesignMode()) {
     focusedElement = AsHTMLEditor()->ComputeEditingHost();
     if (focusedElement &&
-        droppedAt.GetContainerAsContent()->IsInclusiveDescendantOf(
+        droppedAt.ContainerAsContent()->IsInclusiveDescendantOf(
             focusedElement)) {
       newFocusedElement = focusedElement;
     } else {
-      newFocusedElement = droppedAt.GetContainerAsContent()->GetEditingHost();
+      newFocusedElement = droppedAt.ContainerAsContent()->GetEditingHost();
     }
   }
   // Move selection right now.  Note that this does not move focus because
@@ -5285,7 +5285,7 @@ nsresult EditorBase::InitializeSelection(
     EditorRawDOMPoint atStartOfFirstRange(firstRange->StartRef());
     EditorRawDOMPoint betterInsertionPoint =
         FindBetterInsertionPoint(atStartOfFirstRange);
-    RefPtr<Text> textNode = betterInsertionPoint.GetContainerAsText();
+    RefPtr<Text> textNode = betterInsertionPoint.GetContainerAs<Text>();
     MOZ_ASSERT(textNode,
                "There must be text node if composition string is not empty");
     if (textNode) {
@@ -5808,7 +5808,7 @@ EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     return;  // Perform the deletion
   }
 
-  if (!aPointAtCaret.GetContainerAsContent()) {
+  if (!aPointAtCaret.IsInContentNode()) {
     mFailed = true;
     return;
   }
@@ -5822,7 +5822,7 @@ EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
   }
 
   nsPrevNextBidiLevels levels = frameSelection->GetPrevNextBidiLevels(
-      aPointAtCaret.GetContainerAsContent(), aPointAtCaret.Offset(), true);
+      aPointAtCaret.ContainerAsContent(), aPointAtCaret.Offset(), true);
 
   mozilla::intl::BidiEmbeddingLevel levelBefore = levels.mLevelBefore;
   mozilla::intl::BidiEmbeddingLevel levelAfter = levels.mLevelAfter;

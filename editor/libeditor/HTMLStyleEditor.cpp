@@ -274,7 +274,7 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
       if (startOfRange.GetContainer() == endOfRange.GetContainer() &&
           startOfRange.IsInTextNode()) {
         nsresult rv = SetInlinePropertyOnTextNode(
-            MOZ_KnownLive(*startOfRange.GetContainerAsText()),
+            MOZ_KnownLive(*startOfRange.ContainerAsText()),
             startOfRange.Offset(), endOfRange.Offset(), aProperty, aAttribute,
             aAttributeValue);
         if (NS_FAILED(rv)) {
@@ -308,7 +308,7 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
           EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
                                          EditorType::HTML)) {
         nsresult rv = SetInlinePropertyOnTextNode(
-            MOZ_KnownLive(*startOfRange.GetContainerAsText()),
+            MOZ_KnownLive(*startOfRange.ContainerAsText()),
             startOfRange.Offset(), startOfRange.GetContainer()->Length(),
             aProperty, aAttribute, aAttributeValue);
         if (NS_FAILED(rv)) {
@@ -334,10 +334,10 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
 
       // Finally, if end node is a text node, apply new style to a part of it.
       if (endOfRange.IsInTextNode() &&
-          EditorUtils::IsEditableContent(*endOfRange.GetContainerAsText(),
+          EditorUtils::IsEditableContent(*endOfRange.ContainerAsText(),
                                          EditorType::HTML)) {
         nsresult rv = SetInlinePropertyOnTextNode(
-            MOZ_KnownLive(*endOfRange.GetContainerAsText()), 0,
+            MOZ_KnownLive(*endOfRange.ContainerAsText()), 0,
             endOfRange.Offset(), aProperty, aAttribute, aAttributeValue);
         if (NS_FAILED(rv)) {
           NS_WARNING("HTMLEditor::SetInlinePropertyOnTextNode() failed");
@@ -979,8 +979,7 @@ SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
 SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
     const EditorDOMPoint& aPointToSplit, nsAtom* aProperty,
     nsAtom* aAttribute) {
-  if (NS_WARN_IF(!aPointToSplit.IsSet()) ||
-      NS_WARN_IF(!aPointToSplit.GetContainerAsContent())) {
+  if (NS_WARN_IF(!aPointToSplit.IsInContentNode())) {
     return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
 
@@ -1175,7 +1174,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
           *atStartOfNextNode.ContainerAsContent())) {
     // If it's a `<br>` element, let's move it into new node later.
     brElement = HTMLBRElement::FromNode(atStartOfNextNode.GetContainer());
-    if (!atStartOfNextNode.GetContainerParentAsContent()) {
+    if (!atStartOfNextNode.GetContainerParentAs<nsIContent>()) {
       NS_WARNING("atStartOfNextNode was in an orphan node");
       return EditResult(NS_ERROR_FAILURE);
     }
@@ -1600,7 +1599,7 @@ nsresult HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange) {
     break;
   }
 
-  if (!newRangeStart.GetContainerAsContent()) {
+  if (!newRangeStart.IsInContentNode()) {
     NS_WARNING(
         "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() reached root "
         "element from start container");
@@ -1620,7 +1619,7 @@ nsresult HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange) {
     break;
   }
 
-  if (!newRangeEnd.GetContainerAsContent()) {
+  if (!newRangeEnd.IsInContentNode()) {
     NS_WARNING(
         "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() reached root "
         "element from end container");
@@ -1653,7 +1652,7 @@ nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
     }
     newRangeStart.Set(content);
   }
-  if (!newRangeStart.GetContainerAsContent()) {
+  if (!newRangeStart.IsInContentNode()) {
     NS_WARNING(
         "HTMLEditor::PromoteInlineRange() reached root element from start "
         "container");
@@ -1671,7 +1670,7 @@ nsresult HTMLEditor::PromoteInlineRange(nsRange& aRange) {
     }
     newRangeEnd.SetAfter(content);
   }
-  if (!newRangeEnd.GetContainerAsContent()) {
+  if (!newRangeEnd.IsInContentNode()) {
     NS_WARNING(
         "HTMLEditor::PromoteInlineRange() reached root element from end "
         "container");

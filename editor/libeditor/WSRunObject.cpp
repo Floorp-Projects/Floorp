@@ -238,13 +238,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     // XXX And afterRightBlockChild.GetContainerAsElement() always returns
     //     an element pointer so that probably here should not use
     //     accessors of EditorDOMPoint, should use DOM API directly instead.
-    if (afterRightBlockChild.GetContainerAsElement()) {
-      rightBlockElement = *afterRightBlockChild.GetContainerAsElement();
+    if (afterRightBlockChild.GetContainerAs<Element>()) {
+      rightBlockElement = *afterRightBlockChild.ContainerAsElement();
     } else if (NS_WARN_IF(
-                   !afterRightBlockChild.GetContainerParentAsElement())) {
+                   !afterRightBlockChild.GetContainerParentAs<Element>())) {
       return EditActionResult(NS_ERROR_UNEXPECTED);
     } else {
-      rightBlockElement = *afterRightBlockChild.GetContainerParentAsElement();
+      rightBlockElement = *afterRightBlockChild.GetContainerParentAs<Element>();
     }
   }
 
@@ -1466,8 +1466,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
   }
   EditorDOMPoint atFirstChildOfRightNode;
   rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
-      *previousEditableSibling,
-      MOZ_KnownLive(*aCaretPoint.GetContainerAsText()),
+      *previousEditableSibling, MOZ_KnownLive(*aCaretPoint.ContainerAsText()),
       &atFirstChildOfRightNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
@@ -3210,7 +3209,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         !(followedByVisibleContent || followedByBRElement) ||
         EditorUtils::IsWhiteSpacePreformatted(
             *atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
-                 .GetContainerAsText())) {
+                 .ContainerAsText())) {
       return NS_OK;
     }
 
