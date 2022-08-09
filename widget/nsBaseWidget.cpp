@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
@@ -84,6 +85,8 @@
 #include "gfxConfig.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+
+static mozilla::LazyLogModule sBaseWidgetLog("BaseWidget");
 
 #ifdef DEBUG
 #  include "nsIObserver.h"
@@ -716,6 +719,10 @@ void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
+#define MOZ_FORMAT_RECT(fmtstr) "[" fmtstr "," fmtstr " " fmtstr "x" fmtstr "]"
+#define MOZ_SPLAT_RECT(rect) \
+  (rect).X(), (rect).Y(), (rect).Width(), (rect).Height()
+
   // Windows which can be made fullscreen are exactly those which are located on
   // the desktop, rather than being a child of some other window.
   MOZ_DIAGNOSTIC_ASSERT(BoundsUseDesktopPixels(),
@@ -746,6 +753,14 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
     const auto screenRect = screen->GetRectDisplayPix();
     mSavedBounds->screenRect = screenRect;
     doReposition(screenRect);
+
+    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+            ("window: " MOZ_FORMAT_RECT("%f"),
+             MOZ_SPLAT_RECT(mSavedBounds->windowRect)));
+    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+            ("screen: " MOZ_FORMAT_RECT("%d"),
+             MOZ_SPLAT_RECT(mSavedBounds->screenRect)));
+
   } else {
     if (!mSavedBounds) {
       // This should never happen, at present, since we don't make windows
@@ -763,6 +778,10 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
 
     const DesktopRect currentWinRect =
         GetScreenBounds() / GetDesktopToDeviceScale();
+
+    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+            ("currentWinRect: " MOZ_FORMAT_RECT("%f"),
+             MOZ_SPLAT_RECT(currentWinRect)));
 
     // Optimization: if where we are is where we were, then where we originally
     // came from is where we're going to go.
@@ -817,8 +836,14 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
     const double nw = remap({0, tw}, {0, sw}, pw);
     const double nh = remap({0, th}, {0, sh}, ph);
 
+    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+            ("final size: " MOZ_FORMAT_RECT("%lf"), nx, ny, nw, nh));
+
     Resize(nx, ny, nw, nh, true);
   }
+
+#undef MOZ_SPLAT_RECT
+#undef MOZ_FORMAT_RECT
 }
 
 nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen) {
