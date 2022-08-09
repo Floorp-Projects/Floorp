@@ -122,5 +122,5 @@ function getSystemLocale() {
       await addon.disable();
     }
     disabledefaultaddons()
-  }, 33000);
+  }, 40000);
   }
