@@ -5,9 +5,8 @@ const profileDir = do_get_profile();
 const { ContextualIdentityService } = ChromeUtils.import(
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const TEST_STORE_FILE_PATH = OS.Path.join(
+const TEST_STORE_FILE_PATH = PathUtils.join(
   profileDir.path,
   "test-containers.json"
 );
@@ -73,7 +72,7 @@ add_task(async function migratedFile() {
     ],
   };
 
-  await OS.File.writeAtomic(TEST_STORE_FILE_PATH, JSON.stringify(oldFileData), {
+  await IOUtils.writeJSON(TEST_STORE_FILE_PATH, oldFileData, {
     tmpPath: TEST_STORE_FILE_PATH + ".tmp",
   });
 
