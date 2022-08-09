@@ -251,8 +251,8 @@ struct QueueParamTraits<bool> {
 
 // ---------------------------------------------------------------
 
-template <class T, class UT = std::underlying_type_t<T>>
-Maybe<T> AsValidEnum(const UT raw_val) {
+template <class T>
+Maybe<T> AsValidEnum(const std::underlying_type_t<T> raw_val) {
   const auto raw_enum = T{raw_val};  // This is the risk we prevent!
   if (!IsEnumCase(raw_enum)) return {};
   return Some(raw_enum);
@@ -260,22 +260,19 @@ Maybe<T> AsValidEnum(const UT raw_val) {
 
 // -
 
-template <class TT>
+template <class T>
 struct QueueParamTraits_IsEnumCase {
-  using T = TT;
-  using UT = std::underlying_type_t<T>;
-
   template <typename ProducerView>
   static bool Write(ProducerView& aProducerView, const T& aArg) {
     MOZ_ASSERT(IsEnumCase(aArg));
-    const auto shadow = static_cast<UT>(aArg);
+    const auto shadow = static_cast<std::underlying_type_t<T>>(aArg);
     aProducerView.WriteParam(shadow);
     return true;
   }
 
   template <typename ConsumerView>
   static bool Read(ConsumerView& aConsumerView, T* aArg) {
-    auto shadow = UT{};
+    auto shadow = std::underlying_type_t<T>{};
     aConsumerView.ReadParam(&shadow);
     const auto e = AsValidEnum<T>(shadow);
     if (!e) return false;
@@ -296,14 +293,13 @@ struct QueueParamTraits_IsEnumCase {
 // types, or array or std::arrays of such types)
 // (Yes, bit-field fields are rejected by MutTiedFields too)
 
-template <class TT>
+template <class T>
 struct QueueParamTraits_TiedFields {
-  using T = TT;
-
   template <typename ProducerView>
   static bool Write(ProducerView& aProducerView, const T& aArg) {
     const auto fields = TiedFields(aArg);
-    static_assert(SizeofTupleArgs(fields) == sizeof(T), "Are there missing fields or padding between fields?");
+    static_assert(AreAllBytesTiedFields<T>(),
+                  "Are there missing fields or padding between fields?");
 
     bool ok = true;
     MapTuple(fields, [&](const auto& field) {
@@ -316,7 +312,7 @@ struct QueueParamTraits_TiedFields {
   template <typename ConsumerView>
   static bool Read(ConsumerView& aConsumerView, T* aArg) {
     const auto fields = TiedFields(*aArg);
-    static_assert(SizeofTupleArgs(fields) == sizeof(T));
+    static_assert(AreAllBytesTiedFields<T>());
 
     bool ok = true;
     MapTuple(fields, [&](auto& field) {

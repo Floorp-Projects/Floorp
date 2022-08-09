@@ -723,11 +723,14 @@ struct SwapChainOptions final {
   layers::RemoteTextureOwnerId remoteTextureOwnerId;
   bool bgra = false;
   bool forceAsyncPresent = false;
-  uint16_t padding1;
-  uint32_t padding2; // Pad to sizeof(u64)
+  // Pad to sizeof(u64):
+  uint16_t padding1 = 0;
+  uint32_t padding2 = 0;
 
-  auto MutTiedFields() { return std::tie(
-    remoteTextureId, remoteTextureOwnerId, bgra, forceAsyncPresent, padding1, padding2); }
+  auto MutTiedFields() {
+    return std::tie(remoteTextureId, remoteTextureOwnerId, bgra,
+                    forceAsyncPresent, padding1, padding2);
+  }
 };
 
 // -

@@ -29,6 +29,7 @@ constexpr auto TiedFields(T& t) {
 template <class T, class... Args, class Tup = std::tuple<Args&...>>
 constexpr auto TiedFields(const T& t) {
   // Uncast const to get mutable-fields tuple, but reapply const to tuple args.
+  // We should do better than this when C++ gets a solution other than macros.
   const auto mutFields = TiedFields(const_cast<T&>(t));
   return ToTupleOfConstRefs(mutFields);
 }
@@ -49,12 +50,15 @@ constexpr auto TiedFields(const T& t) {
  * See TiedFieldsExamples.
  */
 template <class T>
-constexpr bool AreAllBytesTiedFields(const T& t) {
-  const auto fields = TiedFields(t);
-  const auto fields_size_sum = SizeofTupleArgs(fields);
+constexpr bool AreAllBytesTiedFields() {
+  using fieldsT = decltype(TiedFields(std::declval<T>()));
+  const auto fields_size_sum = SizeofTupleArgs<fieldsT>::value;
   const auto t_size = sizeof(T);
   return fields_size_sum == t_size;
 }
+
+// It's also possible to determine AreAllBytesRecursiveTiedFields:
+// https://hackmd.io/@jgilbert/B16qa0Fa9
 
 // -
 
@@ -98,70 +102,6 @@ static_assert(sizeof(Padding<int>) == 4);
 
 // -
 
-template <size_t I>
-struct DecayDownT : public DecayDownT<I - 1> {};
-
-template <>
-struct DecayDownT<0> {};
-
-// -
-
-/// Warning, IsDenseNestedScalars should not be used to indicate the safety of
-/// a memcpy.
-/// If you trust both the source and destination, you should use
-/// std::is_trivially_copyable.
-template <class T>
-constexpr bool IsDenseNestedScalars(const T& t);
-
-// -
-
-namespace IsDenseNestedScalarsDetails {
-
-template <class T, std::enable_if_t<std::is_scalar<T>::value, bool> = true>
-constexpr bool Impl(const T&, DecayDownT<3>) {
-  return true;
-}
-
-template <class T, size_t N>
-constexpr bool Impl(const T (&t)[N], DecayDownT<3>) {
-  return IsDenseNestedScalars(t[0]);
-}
-
-template <class T, size_t N>
-constexpr bool Impl(const std::array<T, N>& t, DecayDownT<3>) {
-  return IsDenseNestedScalars(t[0]);
-}
-
-template <class T>
-constexpr bool Impl(const Padding<T>& t, DecayDownT<3>) {
-  return IsDenseNestedScalars(t.ignored);
-}
-
-// -
-
-template <class T>
-constexpr bool Impl(const T& t, DecayDownT<1>) {
-  const auto tup = TiedFields(t);
-  bool ok = AreAllBytesTiedFields(t);
-  MapTuple(tup, [&](const auto& field) {
-    ok &= IsDenseNestedScalars(field);
-    return true;
-  });
-  return ok;
-}
-
-}  // namespace IsDenseNestedScalarsDetails
-
-// -
-
-template <class T>
-constexpr bool IsDenseNestedScalars(const T& t) {
-  return IsDenseNestedScalarsDetails::Impl(t, DecayDownT<5>{});
-}
-static_assert(IsDenseNestedScalars(1));
-// Compile error: Missing TiedFields:
-// static_assert(IsDenseNestedScalars(std::pair<int,int>{}));
-
 namespace TiedFieldsExamples {
 
 struct Cat {
@@ -171,8 +111,7 @@ struct Cat {
   constexpr auto MutTiedFields() { return std::tie(i, b); }
 };
 static_assert(sizeof(Cat) == 8);
-static_assert(!AreAllBytesTiedFields(Cat{}));
-static_assert(!IsDenseNestedScalars(Cat{}));
+static_assert(!AreAllBytesTiedFields<Cat>());
 
 struct Dog {
   bool b;
@@ -181,8 +120,7 @@ struct Dog {
   constexpr auto MutTiedFields() { return std::tie(i, b); }
 };
 static_assert(sizeof(Dog) == 8);
-static_assert(!AreAllBytesTiedFields(Dog{}));
-static_assert(!IsDenseNestedScalars(Dog{}));
+static_assert(!AreAllBytesTiedFields<Dog>());
 
 struct Fish {
   bool b;
@@ -192,8 +130,7 @@ struct Fish {
   constexpr auto MutTiedFields() { return std::tie(i, b, padding); }
 };
 static_assert(sizeof(Fish) == 8);
-static_assert(AreAllBytesTiedFields(Fish{}));
-static_assert(IsDenseNestedScalars(Fish{}));
+static_assert(AreAllBytesTiedFields<Fish>());
 
 struct Eel {  // Like a Fish, but you can skip serializing the padding.
   bool b;
@@ -203,8 +140,7 @@ struct Eel {  // Like a Fish, but you can skip serializing the padding.
   constexpr auto MutTiedFields() { return std::tie(i, b, padding); }
 };
 static_assert(sizeof(Eel) == 8);
-static_assert(AreAllBytesTiedFields(Eel{}));
-static_assert(IsDenseNestedScalars(Eel{}));
+static_assert(AreAllBytesTiedFields<Eel>());
 
 // -
 
@@ -233,8 +169,7 @@ struct FishTank {
   constexpr auto MutTiedFields() { return std::tie(f, i2); }
 };
 static_assert(sizeof(FishTank) == 12);
-static_assert(AreAllBytesTiedFields(FishTank{}));
-static_assert(IsDenseNestedScalars(FishTank{}));
+static_assert(AreAllBytesTiedFields<FishTank>());
 
 struct CatCarrier {
   Cat c;
@@ -243,9 +178,11 @@ struct CatCarrier {
   constexpr auto MutTiedFields() { return std::tie(c, i2); }
 };
 static_assert(sizeof(CatCarrier) == 12);
-static_assert(AreAllBytesTiedFields(CatCarrier{}));
-static_assert(!IsDenseNestedScalars(CatCarrier{}));  // Because:
-static_assert(!AreAllBytesTiedFields(CatCarrier{}.c));
+static_assert(AreAllBytesTiedFields<CatCarrier>());
+static_assert(
+    !AreAllBytesTiedFields<decltype(CatCarrier::c)>());  // BUT BEWARE THIS!
+// For example, if we had AreAllBytesRecursiveTiedFields:
+// static_assert(!AreAllBytesRecursiveTiedFields<CatCarrier>());
 
 }  // namespace TiedFieldsExamples
 }  // namespace mozilla
