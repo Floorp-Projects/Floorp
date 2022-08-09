@@ -132,7 +132,9 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
 IDBTransaction::~IDBTransaction() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mPendingRequestCount);
-  MOZ_ASSERT(mReadyState == ReadyState::Finished);
+  MOZ_ASSERT(mReadyState != ReadyState::Active);
+  MOZ_ASSERT(mReadyState != ReadyState::Inactive);
+  MOZ_ASSERT(mReadyState != ReadyState::Committing);
   MOZ_ASSERT(!mNotedActiveTransaction);
   MOZ_ASSERT(mSentCommitOrAbort);
   MOZ_ASSERT_IF(HasTransactionChild(), mFiredCompleteOrAbort);
