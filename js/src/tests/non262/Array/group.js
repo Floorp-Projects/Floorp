@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-array-grouping) skip-if(release_or_beta)
+// |reftest| shell-option(--enable-array-grouping) skip-if(!Array.prototype.group)
 
 var BUGNUMBER = 1739648;
 var summary = "Implement Array.prototype.groupToMap || group";
