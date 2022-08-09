@@ -380,11 +380,11 @@ internal class CFRPopupFullscreenLayout(
  * [View.OnAttachStateChangeListener.onViewDetachedFromWindow].
  */
 private class OnViewDetachedListener(val onDismiss: () -> Unit) : View.OnAttachStateChangeListener {
-    override fun onViewAttachedToWindow(v: View?) {
+    override fun onViewAttachedToWindow(v: View) {
         // no-op
     }
 
-    override fun onViewDetachedFromWindow(v: View?) {
+    override fun onViewDetachedFromWindow(v: View) {
         onDismiss()
     }
 }
