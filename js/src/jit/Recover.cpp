@@ -306,8 +306,7 @@ bool RSignExtendInt32::recover(JSContext* cx, SnapshotIterator& iter) const {
       break;
   }
 
-  RootedValue rootedResult(cx, js::Int32Value(result));
-  iter.storeInstructionResult(rootedResult);
+  iter.storeInstructionResult(JS::Int32Value(result));
   return true;
 }
 
@@ -907,15 +906,12 @@ bool RConcat::recover(JSContext* cx, SnapshotIterator& iter) const {
 RStringLength::RStringLength(CompactBufferReader& reader) {}
 
 bool RStringLength::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  JSString* string = iter.read().toString();
 
-  MOZ_ASSERT(!operand.isObject());
-  if (!js::GetLengthProperty(operand, &result)) {
-    return false;
-  }
+  static_assert(JSString::MAX_LENGTH <= INT32_MAX,
+                "Can cast string length to int32_t");
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(Int32Value(int32_t(string->length())));
   return true;
 }
 
@@ -934,11 +930,13 @@ bool MArgumentsLength::writeRecoverData(CompactBufferWriter& writer) const {
 RArgumentsLength::RArgumentsLength(CompactBufferReader& reader) {}
 
 bool RArgumentsLength::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue result(cx);
+  uintptr_t numActualArgs = iter.frame()->numActualArgs();
 
-  result.setInt32(iter.frame()->numActualArgs());
+  static_assert(ARGS_LENGTH_MAX <= INT32_MAX,
+                "Can cast arguments count to int32_t");
+  MOZ_ASSERT(numActualArgs <= ARGS_LENGTH_MAX);
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(JS::Int32Value(int32_t(numActualArgs)));
   return true;
 }
 
@@ -1057,16 +1055,11 @@ bool MPow::writeRecoverData(CompactBufferWriter& writer) const {
 RPow::RPow(CompactBufferReader& reader) {}
 
 bool RPow::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue base(cx, iter.read());
-  RootedValue power(cx, iter.read());
-  RootedValue result(cx);
+  double base = iter.read().toNumber();
+  double power = iter.read().toNumber();
+  double result = ecmaPow(base, power);
 
-  MOZ_ASSERT(base.isNumber() && power.isNumber());
-  if (!js::PowValues(cx, &base, &power, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1079,17 +1072,11 @@ bool MPowHalf::writeRecoverData(CompactBufferWriter& writer) const {
 RPowHalf::RPowHalf(CompactBufferReader& reader) {}
 
 bool RPowHalf::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue base(cx, iter.read());
-  RootedValue power(cx);
-  RootedValue result(cx);
-  power.setNumber(0.5);
+  double base = iter.read().toNumber();
+  double power = 0.5;
+  double result = ecmaPow(base, power);
 
-  MOZ_ASSERT(base.isNumber());
-  if (!js::PowValues(cx, &base, &power, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1198,7 +1185,9 @@ bool RHypot::recover(JSContext* cx, SnapshotIterator& iter) const {
 
   RootedValue result(cx);
 
-  if (!js::math_hypot_handle(cx, vec, &result)) return false;
+  if (!js::math_hypot_handle(cx, vec, &result)) {
+    return false;
+  }
 
   iter.storeInstructionResult(result);
   return true;
@@ -1413,18 +1402,12 @@ bool MNaNToZero::writeRecoverData(CompactBufferWriter& writer) const {
 RNaNToZero::RNaNToZero(CompactBufferReader& reader) {}
 
 bool RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue v(cx, iter.read());
-  RootedValue result(cx);
-  MOZ_ASSERT(v.isDouble() || v.isInt32());
-
-  // x ? x : 0.0
-  if (ToBoolean(v)) {
-    result = v;
-  } else {
-    result.setDouble(0.0);
+  double v = iter.read().toNumber();
+  if (mozilla::IsNaN(v)) {
+    v = 0.0;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(DoubleValue(v));
   return true;
 }
 
@@ -1468,9 +1451,7 @@ bool RRegExpSearcher::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue resultVal(cx);
-  resultVal.setInt32(result);
-  iter.storeInstructionResult(resultVal);
+  iter.storeInstructionResult(Int32Value(result));
   return true;
 }
 
@@ -1492,9 +1473,7 @@ bool RRegExpTester::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue result(cx);
-  result.setInt32(endIndex);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(Int32Value(endIndex));
   return true;
 }
 
@@ -1540,18 +1519,17 @@ RToDouble::RToDouble(CompactBufferReader& reader) {}
 
 bool RToDouble::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue v(cx, iter.read());
-  RootedValue result(cx);
 
   MOZ_ASSERT(!v.isObject());
   MOZ_ASSERT(!v.isSymbol());
+  MOZ_ASSERT(!v.isBigInt());
 
   double dbl;
   if (!ToNumber(cx, v, &dbl)) {
     return false;
   }
 
-  result.setDouble(dbl);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(DoubleValue(dbl));
   return true;
 }
 
@@ -1581,15 +1559,13 @@ RTruncateToInt32::RTruncateToInt32(CompactBufferReader& reader) {}
 
 bool RTruncateToInt32::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue value(cx, iter.read());
-  RootedValue result(cx);
 
   int32_t trunc;
   if (!JS::ToInt32(cx, value, &trunc)) {
     return false;
   }
 
-  result.setInt32(trunc);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(Int32Value(trunc));
   return true;
 }
 
@@ -1607,7 +1583,6 @@ RNewObject::RNewObject(CompactBufferReader& reader) {}
 
 bool RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
-  RootedValue result(cx);
 
   // See CodeGenerator::visitNewObjectVMCall.
   // Note that recover instructions are only used if mode == ObjectCreate.
@@ -1617,8 +1592,7 @@ bool RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1651,9 +1625,7 @@ bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue result(cx);
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1684,9 +1656,7 @@ bool RNewArrayObject::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue result(cx);
-  result.setObject(*array);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*array));
   return true;
 }
 
@@ -1700,7 +1670,6 @@ RNewTypedArray::RNewTypedArray(CompactBufferReader& reader) {}
 
 bool RNewTypedArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
-  RootedValue result(cx);
 
   size_t length = templateObject.as<TypedArrayObject>()->length();
   MOZ_ASSERT(length <= INT32_MAX,
@@ -1712,8 +1681,7 @@ bool RNewTypedArray::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1730,7 +1698,6 @@ RNewArray::RNewArray(CompactBufferReader& reader) {
 
 bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
-  RootedValue result(cx);
   Rooted<Shape*> shape(cx, templateObject->shape());
 
   ArrayObject* resultObject = NewArrayWithShape(cx, count_, shape);
@@ -1738,8 +1705,7 @@ bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1756,7 +1722,6 @@ RNewIterator::RNewIterator(CompactBufferReader& reader) {
 
 bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
-  RootedValue result(cx);
 
   JSObject* resultObject = nullptr;
   switch (MNewIterator::Type(type_)) {
@@ -1775,8 +1740,7 @@ bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1797,9 +1761,7 @@ bool RLambda::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue result(cx);
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1822,9 +1784,7 @@ bool RFunctionWithProto::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue result(cx);
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1846,9 +1806,7 @@ bool RNewCallObject::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue result(cx);
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*resultObject));
   return true;
 }
 
@@ -1865,17 +1823,15 @@ RObjectState::RObjectState(CompactBufferReader& reader) {
 
 bool RObjectState::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject object(cx, &iter.read().toObject());
-  RootedValue val(cx);
-  Rooted<NativeObject*> nativeObject(cx, &object->as<NativeObject>());
+  Handle<NativeObject*> nativeObject = object.as<NativeObject>();
   MOZ_ASSERT(nativeObject->slotSpan() == numSlots());
 
   for (size_t i = 0; i < numSlots(); i++) {
-    val = iter.read();
+    Value val = iter.read();
     nativeObject->setSlot(i, val);
   }
 
-  val.setObject(*object);
-  iter.storeInstructionResult(val);
+  iter.storeInstructionResult(ObjectValue(*object));
   return true;
 }
 
@@ -1891,7 +1847,6 @@ RArrayState::RArrayState(CompactBufferReader& reader) {
 }
 
 bool RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue result(cx);
   ArrayObject* object = &iter.read().toObject().as<ArrayObject>();
   uint32_t initLength = iter.read().toInt32();
 
@@ -1910,8 +1865,7 @@ bool RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const {
     object->initDenseElement(index, val);
   }
 
-  result.setObject(*object);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*object));
   return true;
 }
 
@@ -1931,7 +1885,6 @@ bool MSetArrayLength::canRecoverOnBailout() const {
 RSetArrayLength::RSetArrayLength(CompactBufferReader& reader) {}
 
 bool RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue result(cx);
   Rooted<ArrayObject*> obj(cx, &iter.read().toObject().as<ArrayObject>());
   RootedValue len(cx, iter.read());
 
@@ -1943,8 +1896,7 @@ bool RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  result.setObject(*obj);
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(ObjectValue(*obj));
   return true;
 }
 
@@ -1963,10 +1915,8 @@ RAssertRecoveredOnBailout::RAssertRecoveredOnBailout(
 
 bool RAssertRecoveredOnBailout::recover(JSContext* cx,
                                         SnapshotIterator& iter) const {
-  RootedValue result(cx);
   iter.read();  // skip the unused operand.
-  result.setUndefined();
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(UndefinedValue());
   return true;
 }
 
@@ -2038,8 +1988,7 @@ bool RAtomicIsLockFree::recover(JSContext* cx, SnapshotIterator& iter) const {
     return false;
   }
 
-  RootedValue rootedResult(cx, js::Int32Value(result));
-  iter.storeInstructionResult(rootedResult);
+  iter.storeInstructionResult(Int32Value(result));
   return true;
 }
 
@@ -2133,8 +2082,8 @@ bool RCreateInlinedArgumentsObject::recover(JSContext* cx,
     argsArray[i].set(iter.read());
   }
 
-  RootedObject result(cx, ArgumentsObject::createFromValueArray(
-                              cx, argsArray, callee, callObject, numActuals_));
+  ArgumentsObject* result = ArgumentsObject::createFromValueArray(
+      cx, argsArray, callee, callObject, numActuals_);
   if (!result) {
     return false;
   }
