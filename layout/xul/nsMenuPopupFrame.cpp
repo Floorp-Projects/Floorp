@@ -1451,6 +1451,9 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   // size will be 0.
   nsRect anchorRect;
 
+  // Width of the parent, used when aSizedToPopup is true.
+  int32_t parentWidth = 0;
+
   bool anchored = IsAnchored();
   if (anchored || aSizedToPopup) {
     // In order to deal with transforms, we need the root prescontext:
@@ -1483,6 +1486,9 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 
       anchorRect = ComputeAnchorRect(rootPresContext, aAnchorFrame);
     }
+
+    // The width is needed when aSizedToPopup is true
+    parentWidth = anchorRect.width;
   }
 
   // Set the popup's size to the preferred size. Below, this size will be
@@ -1494,18 +1500,12 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
                  "preferred size of popup not set");
     nsSize newSize = mPrefSize;
     if (aSizedToPopup) {
-      nsMargin rawMargin;
-      if (StyleMargin()->GetMargin(rawMargin)) {
-        rawMargin.EnsureAtMost(nsMargin());
-      }
-
-      newSize.width = anchorRect.width - rawMargin.LeftRight();
+      newSize.width = parentWidth;
       // If we're anchoring to a rect, and the rect is smaller than the
       // preferred size of the popup, change its width accordingly.
       if (mAnchorType == MenuPopupAnchorType_Rect) {
-        newSize.width = std::max(newSize.width, mPrefSize.width);
+        newSize.width = std::max(parentWidth, mPrefSize.width);
       }
-
       // Pref size is already constrained by LayoutPopup().
       ConstrainSizeForWayland(newSize);
     }
