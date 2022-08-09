@@ -3823,7 +3823,8 @@ void ScrollFrameHelper::MaybeCreateTopLayerAndWrapRootItems(
         rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
         rootStyleFrame->IsVisibleForPainting();
 
-    if (rootStyleFrame->StyleEffects()->HasFilters()) {
+    if (rootStyleFrame->StyleEffects()->HasFilters() &&
+        !aBuilder->IsForGenerateGlyphMask()) {
       SerializeList();
       rootResultList.AppendNewToTop<nsDisplayFilters>(
           aBuilder, mOuter, &rootResultList, rootStyleFrame,
