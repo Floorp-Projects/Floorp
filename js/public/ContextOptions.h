@@ -47,9 +47,6 @@ class JS_PUBLIC_API ContextOptions {
         trySmoosh_(false),
 #endif
         fuzzing_(false),
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-        changeArrayByCopy_(false),
-#endif
         importAssertions_(false) {
   }
   // clang-format on
@@ -133,14 +130,6 @@ class JS_PUBLIC_API ContextOptions {
     disableIon_ = true;
     return *this;
   }
-
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  bool changeArrayByCopy() const { return changeArrayByCopy_; }
-  ContextOptions& setChangeArrayByCopy(bool enabled) {
-    changeArrayByCopy_ = enabled;
-    return *this;
-  }
-#endif
 
   bool importAssertions() const { return importAssertions_; }
   ContextOptions& setImportAssertions(bool enabled) {
@@ -253,9 +242,6 @@ class JS_PUBLIC_API ContextOptions {
   bool trySmoosh_ : 1;
 #endif
   bool fuzzing_ : 1;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  bool changeArrayByCopy_ : 1;
-#endif
   bool importAssertions_ : 1;
 };
 

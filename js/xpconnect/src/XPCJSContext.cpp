@@ -780,6 +780,12 @@ static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayGroupingEnabled(true);
 #endif
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+static mozilla::Atomic<bool> sChangeArrayByCopyEnabled(false);
+#endif
+#ifdef ENABLE_NEW_SET_METHODS
+static mozilla::Atomic<bool> sEnableNewSetMethods(false);
+#endif
 
 static JS::WeakRefSpecifier GetWeakRefsEnabled() {
   if (!sWeakRefsEnabled) {
@@ -806,8 +812,11 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(sArrayGroupingEnabled)
 #endif
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+      .setChangeArrayByCopyEnabled(sChangeArrayByCopyEnabled)
+#endif
 #ifdef ENABLE_NEW_SET_METHODS
-      .setNewSetMethodsEnabled(enableNewSetMethods)
+      .setNewSetMethodsEnabled(sEnableNewSetMethods)
 #endif
       ;
 }
@@ -837,10 +846,6 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
       .setAsyncStack(Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack"))
       .setAsyncStackCaptureDebuggeeOnly(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"))
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-      .setChangeArrayByCopy(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy"))
-#endif
 #ifdef NIGHTLY_BUILD
       .setImportAssertions(Preferences::GetBool(
           JS_OPTIONS_DOT_STR "experimental.import_assertions"))
@@ -997,8 +1002,13 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_grouping");
 #endif
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  sChangeArrayByCopyEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy");
+#endif
+
 #ifdef ENABLE_NEW_SET_METHODS
-  bool enableNewSetMethods =
+  sEnableNewSetMethods =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.new_set_methods");
 #endif
 

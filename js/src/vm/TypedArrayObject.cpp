@@ -1894,7 +1894,7 @@ const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
 static bool TypedArrayProtoFinish(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto) {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  if (cx->options().changeArrayByCopy()) {
+  if (cx->realm()->creationOptions().getChangeArrayByCopyEnabled()) {
     if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions)) {
       return false;
     }
