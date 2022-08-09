@@ -716,6 +716,11 @@ void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
+  // Windows which can be made fullscreen are exactly those which are located on
+  // the desktop, rather than being a child of some other window.
+  MOZ_DIAGNOSTIC_ASSERT(BoundsUseDesktopPixels(),
+                        "non-desktop windows cannot be made fullscreen");
+
   HideWindowChrome(aFullScreen);
 
   if (aFullScreen) {
@@ -733,15 +738,16 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
         Resize(left, top, width, height, true);
       }
     }
-  } else if (mOriginalBounds) {
-    if (BoundsUseDesktopPixels()) {
-      DesktopRect deskRect = *mOriginalBounds / GetDesktopToDeviceScale();
-      Resize(deskRect.X(), deskRect.Y(), deskRect.Width(), deskRect.Height(),
-             true);
-    } else {
-      Resize(mOriginalBounds->X(), mOriginalBounds->Y(),
-             mOriginalBounds->Width(), mOriginalBounds->Height(), true);
+  } else {
+    if (!mOriginalBounds) {
+      // This should never happen, at present, since we don't make windows
+      // fullscreen at their creation time; but it's not logically impossible.
+      MOZ_ASSERT(false, "fullscreen window did not have saved position");
+      return;
     }
+    DesktopRect deskRect = *mOriginalBounds / GetDesktopToDeviceScale();
+    Resize(deskRect.X(), deskRect.Y(), deskRect.Width(), deskRect.Height(),
+           true);
   }
 }
 
