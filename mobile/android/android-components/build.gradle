@@ -158,22 +158,6 @@ subprojects {
 
     afterEvaluate {
         if (it.hasProperty('android')) {
-
-            // Glean currently expects every module to have a BuildConfig with VERSION_CODE and
-            // VERSION_NAME fields. Since Android Gradle Plugin 4.1+ those fields do not get
-            // generated for Android libraries anymore. As a workaround we generate them here
-            // explicitly.
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1713084
-            // https://issuetracker.google.com/issues/158695880
-            plugins.withId('com.android.library') {
-                android {
-                    defaultConfig {
-                        buildConfigField 'int', 'VERSION_CODE', "1"
-                        buildConfigField 'String', 'VERSION_NAME', "\"1.0\""
-                    }
-                }
-            }
-
             jacoco {
                 toolVersion = "0.8.8"
             }
