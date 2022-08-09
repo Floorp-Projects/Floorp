@@ -3055,12 +3055,6 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   // mActiveTimer and mMostRecentRefresh time.
   presContext->RefreshDriver()->MostRecentRefresh();
 
-  // This might post new restyles, so need to do it here.
-  {
-    presContext->UpdateContainerQueryStyles();
-    presContext->FinishedContainerQueryUpdate();
-  }
-
   // Perform the Servo traversal, and the post-traversal if required. We do this
   // in a loop because certain rare paths in the frame constructor can trigger
   // additional style invalidations.
@@ -3114,7 +3108,6 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     }
 
     doc->ClearServoRestyleRoot();
-    ClearSnapshots();
 
     // Process the change hints.
     //
@@ -3167,17 +3160,12 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
       // case.
       IncrementRestyleGeneration();
     }
-
-    mInStyleRefresh = false;
-    presContext->UpdateContainerQueryStyles();
-    mInStyleRefresh = true;
   }
 
   doc->ClearServoRestyleRoot();
-  presContext->FinishedContainerQueryUpdate();
+
   ClearSnapshots();
   styleSet->AssertTreeIsClean();
-
   mHaveNonAnimationRestyles = false;
   mRestyleForCSSRuleChanges = false;
   mInStyleRefresh = false;

@@ -4161,10 +4161,7 @@ void PresShell::HandlePostedReflowCallbacks(bool aInterruptible) {
 
   FlushType flushType =
       aInterruptible ? FlushType::InterruptibleLayout : FlushType::Layout;
-  if (shouldFlush && !mIsDestroying && nsContentUtils::IsSafeToRunScript()) {
-    // We don't want to flush when not allowed to run script (e.g., like when
-    // running container query updates), since that trivially executes script.
-    // We'll flush layout again at the end of that process if necessary.
+  if (shouldFlush && !mIsDestroying) {
     FlushPendingNotifications(flushType);
   }
 }
@@ -4379,7 +4376,8 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
                           : FlushType::InterruptibleLayout) &&
         !mIsDestroying) {
       didLayoutFlush = true;
-      if (DoFlushLayout(/* aInterruptible = */ flushType < FlushType::Layout)) {
+      mFrameConstructor->RecalcQuotesAndCounters();
+      if (ProcessReflowCommands(flushType < FlushType::Layout)) {
         if (mContentToScrollTo) {
           DoScrollContentIntoView();
           if (mContentToScrollTo) {
@@ -9846,11 +9844,6 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
   }
 
   return !interrupted;
-}
-
-bool PresShell::DoFlushLayout(bool aInterruptible) {
-  mFrameConstructor->RecalcQuotesAndCounters();
-  return ProcessReflowCommands(aInterruptible);
 }
 
 void PresShell::WindowSizeMoveDone() {
