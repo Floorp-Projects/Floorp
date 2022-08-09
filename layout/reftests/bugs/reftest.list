@@ -428,7 +428,7 @@ fuzzy(0-1,0-1) == 315920-20.svg 315920-20-ref.svg
 == chrome://reftest/content/bugs/321402-5.xhtml chrome://reftest/content/bugs/321402-5-ref.xhtml
 == chrome://reftest/content/bugs/321402-6.xhtml chrome://reftest/content/bugs/321402-6-ref.xhtml
 == 321738-1.html 321738-1-ref.html
-pref(layout.css.xul-box-display-values.content.enabled,true) == 322436-1.html 322436-1-ref.html
+== chrome://reftest/content/bugs/322436-1.html chrome://reftest/content/bugs/322436-1-ref.html
 == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
 == 323656-2.html 323656-2-ref.html
@@ -938,7 +938,7 @@ fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
 fuzzy(0-1,0-17) == 412679-2.html 412679-2-ref.html
-pref(layout.css.xul-box-display-values.content.enabled,true) == 413027-1.html 413027-1-ref.html
+== chrome://reftest/content/bugs/413027-1.html chrome://reftest/content/bugs/413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
 == 413286-1a.html 413286-1-ref.html
@@ -1271,7 +1271,7 @@ pref(layout.css.caption-side-non-standard.enabled,true) == 478614-7.html 478614-
 == 478811-4.html 478811-4-ref.html
 == 478956-1a.html 478956-1-ref.html
 == 478956-1b.html 478956-1-ref.html
-pref(layout.css.xul-display-values.content.enabled,true) == 480017-1.html 480017-1-ref.html
+== chrome://reftest/content/bugs/480017-1.html chrome://reftest/content/bugs/480017-1-ref.html
 == 480880-1a.html 480880-1-ref.html
 == 480880-1b.html 480880-1-ref.html
 == 480880-1c.html 480880-1-ref.html
@@ -1372,7 +1372,7 @@ fuzzy-if(Android,0-5,0-2800) == 506481-1.html 506481-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-pref(layout.css.xul-box-display-values.content.enabled,true) == 508816-2.html 508816-2-ref.html
+== chrome://reftest/content/bugs/508816-2.html chrome://reftest/content/bugs/508816-2-ref.html
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
 fuzzy(0-1,0-1200) == 512410.html 512410-ref.html
@@ -1411,7 +1411,7 @@ fuzzy(0-5,0-50) == 526463-1.html 526463-1-ref.html
 == 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
-pref(layout.css.xul-box-display-values.content.enabled,true) == 531098-1.html 531098-1-ref.html
+== chrome://reftest/content/bugs/531098-1.html chrome://reftest/content/bugs/531098-1-ref.html
 fuzzy-if(Android,0-2,0-48) fuzzy-if(cocoaWidget&&swgl,0-1,0-3) == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
 == 534526-1a.html 534526-1-ref.html
@@ -1521,7 +1521,7 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-pref(layout.css.xul-box-display-values.content.enabled,true) == 579323-1.html 579323-1-ref.html
+== chrome://reftest/content/bugs/579323-1.html chrome://reftest/content/bugs/579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy(0-1,0-10000) == 579985-1.html 579985-1-ref.html # this bug was only for a regression in BasicLayers anyway
@@ -2085,7 +2085,7 @@ asserts(1-2) == 1588954.html 1588954-ref.html # Bug 1588954
 == 1595199-1.html 1595199-1-ref.html
 == 1599841-1.html 1599841-1-ref.html
 != 1599841-2.html 1599841-2-notref.html
-pref(layout.css.xul-box-display-values.content.enabled,true) == 1606130.html 1606130-ref.html
+== chrome://reftest/content/bugs/1606130.html chrome://reftest/content/bugs/1606130-ref.html
 == 1608124-1.html 1608124-1-ref.html
 skip-if(!OSX) != 1608124-2.html 1608124-2-notref.html
 == 1613380.html 1613380-ref.html

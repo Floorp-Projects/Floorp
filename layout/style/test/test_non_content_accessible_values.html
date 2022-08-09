@@ -21,6 +21,8 @@ const NON_CONTENT_ACCESSIBLE_VALUES = {
   "display": [
     "-moz-deck",
     "-moz-popup",
+    "-moz-box",
+    "-moz-inline-box",
   ],
   "-moz-appearance": [
     "button-arrow-down",
@@ -126,10 +128,6 @@ const NON_CONTENT_ACCESSIBLE_VALUES = {
     "-moz-center-or-inherit",
   ],
 };
-
-if (!SpecialPowers.getBoolPref("layout.css.xul-box-display-values.content.enabled")) {
-  NON_CONTENT_ACCESSIBLE_VALUES.display.push("-moz-box", "-moz-inline-box");
-}
 
 const sheet = document.getElementById("sheet");
 const div = document.querySelector("div");
