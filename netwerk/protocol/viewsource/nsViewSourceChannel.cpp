@@ -848,18 +848,6 @@ nsViewSourceChannel::ShouldStripRequestBodyHeader(const nsACString& aMethod,
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetAllowPipelining(bool* aAllowPipelining) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetAllowPipelining(aAllowPipelining);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::SetAllowPipelining(bool aAllowPipelining) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->SetAllowPipelining(aAllowPipelining);
-}
-
-NS_IMETHODIMP
 nsViewSourceChannel::GetAllowSTS(bool* aAllowSTS) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetAllowSTS(aAllowSTS);
