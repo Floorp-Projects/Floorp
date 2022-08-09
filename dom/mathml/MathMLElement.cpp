@@ -132,25 +132,12 @@ static Element::MappedAttributeEntry sGlobalAttributes[] = {
     {nsGkAtoms::mathvariant_},  {nsGkAtoms::scriptlevel_},
     {nsGkAtoms::displaystyle_}, {nullptr}};
 
-static Element::MappedAttributeEntry sDeprecatedStyleAttributes[] = {
-    {nsGkAtoms::background},
-    {nsGkAtoms::color},
-    {nsGkAtoms::fontfamily_},
-    {nsGkAtoms::fontsize_},
-    {nsGkAtoms::fontstyle_},
-    {nsGkAtoms::fontweight_},
-    {nullptr}};
-
 bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   MOZ_ASSERT(IsMathMLElement());
 
   static const MappedAttributeEntry* const globalMap[] = {sGlobalAttributes};
-  static const MappedAttributeEntry* const styleMap[] = {
-      sDeprecatedStyleAttributes};
 
   return FindAttributeDependence(aAttribute, globalMap) ||
-         (!StaticPrefs::mathml_deprecated_style_attributes_disabled() &&
-          FindAttributeDependence(aAttribute, styleMap)) ||
          (!StaticPrefs::mathml_scriptminsize_attribute_disabled() &&
           aAttribute == nsGkAtoms::scriptminsize_) ||
          (!StaticPrefs::mathml_scriptsizemultiplier_attribute_disabled() &&
@@ -463,139 +450,19 @@ void MathMLElement::MapMathMLAttributesInto(
   }
 
   // mathsize
-  //
-  // "Specifies the size to display the token content. The values 'small' and
-  // 'big' choose a size smaller or larger than the current font size, but
-  // leave the exact proportions unspecified; 'normal' is allowed for
-  // completeness, but since it is equivalent to '100%' or '1em', it has no
-  // effect."
-  //
-  // values: "small" | "normal" | "big" | length
-  // default: inherited
-  //
-  // fontsize
-  //
-  // "Specified the size for the token. Deprecated in favor of mathsize."
-  //
-  // values: length
-  // default: inherited
-  //
-  // In both cases, we don't allow negative values.
-  // Unitless values give a multiple of the default value.
-  //
-  bool parseSizeKeywords = !StaticPrefs::mathml_mathsize_names_disabled();
+  // https://w3c.github.io/mathml-core/#dfn-mathsize
   value = aAttributes->GetAttr(nsGkAtoms::mathsize_);
-  if (!value) {
-    parseSizeKeywords = false;
-    value = aAttributes->GetAttr(nsGkAtoms::fontsize_);
-    if (value) {
-      aDecls.Document()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
-    }
-  }
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty_font_size)) {
     auto str = value->GetStringValue();
     nsCSSValue fontSize;
     uint32_t flags = PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT;
-    if (parseSizeKeywords) {
-      // Do not warn for invalid value if mathsize keywords are accepted.
-      flags |= PARSE_SUPPRESS_WARNINGS;
-    }
-    if (!ParseNumericValue(str, fontSize, flags, nullptr) &&
-        parseSizeKeywords) {
-      static const char sizes[3][7] = {"small", "normal", "big"};
-      static const StyleFontSizeKeyword values[MOZ_ARRAY_LENGTH(sizes)] = {
-          StyleFontSizeKeyword::Small, StyleFontSizeKeyword::Medium,
-          StyleFontSizeKeyword::Large};
-      str.CompressWhitespace();
-      for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
-        if (str.EqualsASCII(sizes[i])) {
-          aDecls.Document()->WarnOnceAbout(
-              dom::DeprecatedOperations::eMathML_DeprecatedMathSizeValue);
-          aDecls.SetKeywordValue(eCSSProperty_font_size, values[i]);
-          break;
-        }
-      }
-    } else if (fontSize.GetUnit() == eCSSUnit_Percent) {
+    ParseNumericValue(str, fontSize, flags, nullptr);
+    if (fontSize.GetUnit() == eCSSUnit_Percent) {
       aDecls.SetPercentValue(eCSSProperty_font_size,
                              fontSize.GetPercentValue());
     } else if (fontSize.GetUnit() != eCSSUnit_Null) {
       aDecls.SetLengthValue(eCSSProperty_font_size, fontSize);
-    }
-  }
-
-  // fontfamily
-  //
-  // "Should be the name of a font that may be available to a MathML renderer,
-  // or a CSS font specification; See Section 6.5 Using CSS with MathML and
-  // CSS for more information. Deprecated in favor of mathvariant."
-  //
-  // values: string
-  //
-  value = aAttributes->GetAttr(nsGkAtoms::fontfamily_);
-  if (value) {
-    aDecls.Document()->WarnOnceAbout(
-        dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
-  }
-  if (value && value->Type() == nsAttrValue::eString &&
-      !aDecls.PropertyIsSet(eCSSProperty_font_family)) {
-    aDecls.SetFontFamily(NS_ConvertUTF16toUTF8(value->GetStringValue()));
-  }
-
-  // fontstyle
-  //
-  // "Specified the font style to use for the token. Deprecated in favor of
-  //  mathvariant."
-  //
-  // values: "normal" | "italic"
-  // default:	normal (except on <mi>)
-  //
-  // Note that the font-style property is reset in layout/style/ when
-  // -moz-math-variant is specified.
-  value = aAttributes->GetAttr(nsGkAtoms::fontstyle_);
-  if (value) {
-    aDecls.Document()->WarnOnceAbout(
-        dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
-    if (value->Type() == nsAttrValue::eString &&
-        !aDecls.PropertyIsSet(eCSSProperty_font_style)) {
-      auto str = value->GetStringValue();
-      str.CompressWhitespace();
-      // FIXME(emilio): This should use FontSlantStyle or what not. Or even
-      // better, it looks deprecated since forever, we should just kill it.
-      if (str.EqualsASCII("normal")) {
-        aDecls.SetKeywordValue(eCSSProperty_font_style, NS_FONT_STYLE_NORMAL);
-      } else if (str.EqualsASCII("italic")) {
-        aDecls.SetKeywordValue(eCSSProperty_font_style, NS_FONT_STYLE_ITALIC);
-      }
-    }
-  }
-
-  // fontweight
-  //
-  // "Specified the font weight for the token. Deprecated in favor of
-  // mathvariant."
-  //
-  // values: "normal" | "bold"
-  // default: normal
-  //
-  // Note that the font-weight property is reset in layout/style/ when
-  // -moz-math-variant is specified.
-  value = aAttributes->GetAttr(nsGkAtoms::fontweight_);
-  if (value) {
-    aDecls.Document()->WarnOnceAbout(
-        dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
-    if (value->Type() == nsAttrValue::eString &&
-        !aDecls.PropertyIsSet(eCSSProperty_font_weight)) {
-      auto str = value->GetStringValue();
-      str.CompressWhitespace();
-      if (str.EqualsASCII("normal")) {
-        aDecls.SetKeywordValue(eCSSProperty_font_weight,
-                               FontWeight::NORMAL.ToFloat());
-      } else if (str.EqualsASCII("bold")) {
-        aDecls.SetKeywordValue(eCSSProperty_font_weight,
-                               FontWeight::BOLD.ToFloat());
-      }
     }
   }
 
@@ -661,31 +528,8 @@ void MathMLElement::MapMathMLAttributesInto(
   }
 
   // mathbackground
-  //
-  // "Specifies the background color to be used to fill in the bounding box of
-  // the element and its children. The default, 'transparent', lets the
-  // background color, if any, used in the current rendering context to show
-  // through."
-  //
-  // values: color | "transparent"
-  // default: "transparent"
-  //
-  // background
-  //
-  // "Specified the background color to be used to fill in the bounding box of
-  // the element and its children. Deprecated in favor of mathbackground."
-  //
-  // values: color | "transparent"
-  // default: "transparent"
-  //
+  // https://w3c.github.io/mathml-core/#dfn-mathbackground
   value = aAttributes->GetAttr(nsGkAtoms::mathbackground_);
-  if (!value) {
-    value = aAttributes->GetAttr(nsGkAtoms::background);
-    if (value) {
-      aDecls.Document()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
-    }
-  }
   if (value) {
     nscolor color;
     if (value->GetColorValue(color)) {
@@ -694,30 +538,8 @@ void MathMLElement::MapMathMLAttributesInto(
   }
 
   // mathcolor
-  //
-  // "Specifies the foreground color to use when drawing the components of this
-  // element, such as the content for token elements or any lines, surds, or
-  // other decorations. It also establishes the default mathcolor used for
-  // child elements when used on a layout element."
-  //
-  // values: color
-  // default: inherited
-  //
-  // color
-  //
-  // "Specified the color for the token. Deprecated in favor of mathcolor."
-  //
-  // values: color
-  // default: inherited
-  //
+  // https://w3c.github.io/mathml-core/#dfn-mathcolor
   value = aAttributes->GetAttr(nsGkAtoms::mathcolor_);
-  if (!value) {
-    value = aAttributes->GetAttr(nsGkAtoms::color);
-    if (value) {
-      aDecls.Document()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedStyleAttribute);
-    }
-  }
   nscolor color;
   if (value && value->GetColorValue(color)) {
     aDecls.SetColorValueIfUnset(eCSSProperty_color, color);
@@ -750,25 +572,7 @@ void MathMLElement::MapMathMLAttributesInto(
   }
 
   // dir
-  //
-  // Overall Directionality of Mathematics Formulas:
-  // "The overall directionality for a formula, basically the direction of the
-  // Layout Schemata, is specified by the dir attribute on the containing math
-  // element (see Section 2.2 The Top-Level math Element). The default is ltr.
-  // [...] The overall directionality is usually set on the math, but may also
-  // be switched for individual subformula by using the dir attribute on mrow
-  // or mstyle elements."
-  //
-  // Bidirectional Layout in Token Elements:
-  // "Specifies the initial directionality for text within the token:
-  // ltr (Left To Right) or rtl (Right To Left). This attribute should only be
-  // needed in rare cases involving weak or neutral characters;
-  // see Section 3.1.5.1 Overall Directionality of Mathematics Formulas for
-  // further discussion. It has no effect on mspace."
-  //
-  // values: "ltr" | "rtl"
-  // default: inherited
-  //
+  // https://w3c.github.io/mathml-core/#dfn-dir
   value = aAttributes->GetAttr(nsGkAtoms::dir);
   if (value && value->Type() == nsAttrValue::eString &&
       !aDecls.PropertyIsSet(eCSSProperty_direction)) {
