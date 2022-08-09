@@ -881,7 +881,8 @@ class NPZCSupport final
 
 NS_IMPL_ISUPPORTS(AndroidView, nsIAndroidEventDispatcher, nsIAndroidView)
 
-nsresult AndroidView::GetInitData(JSContext* aCx, JS::MutableHandleValue aOut) {
+nsresult AndroidView::GetInitData(JSContext* aCx,
+                                  JS::MutableHandle<JS::Value> aOut) {
   if (!mInitData) {
     aOut.setNull();
     return NS_OK;

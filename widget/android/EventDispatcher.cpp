@@ -39,8 +39,9 @@ bool CheckJS(JSContext* aCx, bool aResult) {
   return aResult;
 }
 
-nsresult BoxData(const nsAString& aEvent, JSContext* aCx, JS::HandleValue aData,
-                 jni::Object::LocalRef& aOut, bool aObjectOnly) {
+nsresult BoxData(const nsAString& aEvent, JSContext* aCx,
+                 JS::Handle<JS::Value> aData, jni::Object::LocalRef& aOut,
+                 bool aObjectOnly) {
   nsresult rv = jni::BoxData(aCx, aData, aOut, aObjectOnly);
   if (rv != NS_ERROR_INVALID_ARG) {
     return rv;
@@ -56,7 +57,7 @@ nsresult BoxData(const nsAString& aEvent, JSContext* aCx, JS::HandleValue aData,
 }
 
 nsresult UnboxString(JSContext* aCx, const jni::Object::LocalRef& aData,
-                     JS::MutableHandleValue aOut) {
+                     JS::MutableHandle<JS::Value> aOut) {
   if (!aData) {
     aOut.setNull();
     return NS_OK;
@@ -79,7 +80,7 @@ nsresult UnboxString(JSContext* aCx, const jni::Object::LocalRef& aData,
     env->ExceptionClear();
   });
 
-  JS::RootedString str(
+  JS::Rooted<JSString*> str(
       aCx,
       JS_NewUCStringCopyN(aCx, reinterpret_cast<const char16_t*>(jchars), len));
   NS_ENSURE_TRUE(CheckJS(aCx, !!str), NS_ERROR_FAILURE);
@@ -89,10 +90,10 @@ nsresult UnboxString(JSContext* aCx, const jni::Object::LocalRef& aData,
 }
 
 nsresult UnboxValue(JSContext* aCx, const jni::Object::LocalRef& aData,
-                    JS::MutableHandleValue aOut);
+                    JS::MutableHandle<JS::Value> aOut);
 
 nsresult UnboxBundle(JSContext* aCx, const jni::Object::LocalRef& aData,
-                     JS::MutableHandleValue aOut) {
+                     JS::MutableHandle<JS::Value> aOut) {
   if (!aData) {
     aOut.setNull();
     return NS_OK;
@@ -105,7 +106,7 @@ nsresult UnboxBundle(JSContext* aCx, const jni::Object::LocalRef& aData,
   jni::ObjectArray::LocalRef keys = bundle->Keys();
   jni::ObjectArray::LocalRef values = bundle->Values();
   const size_t len = keys->Length();
-  JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
   NS_ENSURE_TRUE(CheckJS(aCx, !!obj), NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(values->Length() == len, NS_ERROR_FAILURE);
@@ -124,7 +125,7 @@ nsresult UnboxBundle(JSContext* aCx, const jni::Object::LocalRef& aData,
       env->ExceptionClear();
     });
 
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     nsresult rv = UnboxValue(aCx, values->GetElement(i), &value);
     if (rv == NS_ERROR_INVALID_ARG && !JS_IsExceptionPending(aCx)) {
       JS_ReportErrorUTF8(
@@ -151,7 +152,7 @@ template <typename Type, typename JNIType, typename ArrayType,
           void (JNIEnv::*ReleaseElements)(ArrayType, JNIType*, jint),
           JS::Value (*ToValue)(Type)>
 nsresult UnboxArrayPrimitive(JSContext* aCx, const jni::Object::LocalRef& aData,
-                             JS::MutableHandleValue aOut) {
+                             JS::MutableHandle<JS::Value> aOut) {
   JNIEnv* const env = aData.Env();
   const ArrayType jarray = ArrayType(aData.Get());
   JNIType* const array = (env->*GetElements)(jarray, nullptr);
@@ -175,8 +176,8 @@ nsresult UnboxArrayPrimitive(JSContext* aCx, const jni::Object::LocalRef& aData,
                    NS_ERROR_FAILURE);
   }
 
-  JS::RootedObject obj(aCx,
-                       JS::NewArrayObject(aCx, JS::HandleValueArray(elements)));
+  JS::Rooted<JSObject*> obj(
+      aCx, JS::NewArrayObject(aCx, JS::HandleValueArray(elements)));
   NS_ENSURE_TRUE(CheckJS(aCx, !!obj), NS_ERROR_FAILURE);
 
   aOut.setObject(*obj);
@@ -195,18 +196,18 @@ const char StringArray::name[] = "[Ljava/lang/String;";
 const char GeckoBundleArray::name[] = "[Lorg/mozilla/gecko/util/GeckoBundle;";
 
 template <nsresult (*Unbox)(JSContext*, const jni::Object::LocalRef&,
-                            JS::MutableHandleValue)>
+                            JS::MutableHandle<JS::Value>)>
 nsresult UnboxArrayObject(JSContext* aCx, const jni::Object::LocalRef& aData,
-                          JS::MutableHandleValue aOut) {
+                          JS::MutableHandle<JS::Value> aOut) {
   jni::ObjectArray::LocalRef array(aData.Env(),
                                    jni::ObjectArray::Ref::From(aData));
   const size_t len = array->Length();
-  JS::RootedObject obj(aCx, JS::NewArrayObject(aCx, len));
+  JS::Rooted<JSObject*> obj(aCx, JS::NewArrayObject(aCx, len));
   NS_ENSURE_TRUE(CheckJS(aCx, !!obj), NS_ERROR_FAILURE);
 
   for (size_t i = 0; i < len; i++) {
     jni::Object::LocalRef element = array->GetElement(i);
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     nsresult rv = (*Unbox)(aCx, element, &value);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -219,7 +220,7 @@ nsresult UnboxArrayObject(JSContext* aCx, const jni::Object::LocalRef& aData,
 }
 
 nsresult UnboxValue(JSContext* aCx, const jni::Object::LocalRef& aData,
-                    JS::MutableHandleValue aOut) {
+                    JS::MutableHandle<JS::Value> aOut) {
   using jni::Java2Native;
 
   if (!aData) {
@@ -272,7 +273,7 @@ nsresult UnboxValue(JSContext* aCx, const jni::Object::LocalRef& aData,
 }
 
 nsresult UnboxData(jni::String::Param aEvent, JSContext* aCx,
-                   jni::Object::Param aData, JS::MutableHandleValue aOut,
+                   jni::Object::Param aData, JS::MutableHandle<JS::Value> aOut,
                    bool aBundleOnly) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -302,7 +303,7 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback {
 
   virtual ~JavaCallbackDelegate() {}
 
-  NS_IMETHOD Call(JSContext* aCx, JS::HandleValue aData,
+  NS_IMETHOD Call(JSContext* aCx, JS::Handle<JS::Value> aData,
                   void (java::EventCallback::*aCall)(jni::Object::Param)
                       const) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -324,11 +325,11 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
+  NS_IMETHOD OnSuccess(JS::Handle<JS::Value> aData, JSContext* aCx) override {
     return Call(aCx, aData, &java::EventCallback::SendSuccess);
   }
 
-  NS_IMETHOD OnError(JS::HandleValue aData, JSContext* aCx) override {
+  NS_IMETHOD OnError(JS::Handle<JS::Value> aData, JSContext* aCx) override {
     return Call(aCx, aData, &java::EventCallback::SendError);
   }
 };
@@ -346,7 +347,7 @@ class NativeCallbackDelegateSupport final
   const nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
   void Call(jni::Object::Param aData,
-            nsresult (nsIAndroidEventCallback::*aCall)(JS::HandleValue,
+            nsresult (nsIAndroidEventCallback::*aCall)(JS::Handle<JS::Value>,
                                                        JSContext*)) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -355,7 +356,7 @@ class NativeCallbackDelegateSupport final
     dom::AutoJSAPI jsapi;
     NS_ENSURE_TRUE_VOID(jsapi.Init(mGlobalObject));
 
-    JS::RootedValue data(jsapi.cx());
+    JS::Rooted<JS::Value> data(jsapi.cx());
     nsresult rv = UnboxData(u"callback"_ns, jsapi.cx(), aData, &data,
                             /* BundleOnly */ false);
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -439,7 +440,7 @@ nsIGlobalObject* EventDispatcher::GetGlobalObject() {
 
 nsresult EventDispatcher::DispatchOnGecko(ListenersList* list,
                                           const nsAString& aEvent,
-                                          JS::HandleValue aData,
+                                          JS::Handle<JS::Value> aData,
                                           nsIAndroidEventCallback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   dom::AutoNoJSAPI nojsapi;
@@ -500,7 +501,8 @@ bool EventDispatcher::HasListener(const char16_t* aEvent) {
 }
 
 NS_IMETHODIMP
-EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
+EventDispatcher::Dispatch(JS::Handle<JS::Value> aEvent,
+                          JS::Handle<JS::Value> aData,
                           nsIAndroidEventCallback* aCallback,
                           nsIAndroidEventFinalizer* aFinalizer,
                           JSContext* aCx) {
@@ -556,7 +558,7 @@ nsresult EventDispatcher::Dispatch(const char16_t* aEvent,
   if (list) {
     dom::AutoJSAPI jsapi;
     NS_ENSURE_TRUE(jsapi.Init(GetGlobalObject()), NS_ERROR_FAILURE);
-    JS::RootedValue data(jsapi.cx());
+    JS::Rooted<JS::Value> data(jsapi.cx());
     nsresult rv = UnboxData(/* Event */ nullptr, jsapi.cx(), aData, &data,
                             /* BundleOnly */ true);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -572,7 +574,8 @@ nsresult EventDispatcher::Dispatch(const char16_t* aEvent,
   return NS_OK;
 }
 
-nsresult EventDispatcher::IterateEvents(JSContext* aCx, JS::HandleValue aEvents,
+nsresult EventDispatcher::IterateEvents(JSContext* aCx,
+                                        JS::Handle<JS::Value> aEvents,
                                         IterateEventsCallback aCallback,
                                         nsIAndroidEventListener* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -580,7 +583,7 @@ nsresult EventDispatcher::IterateEvents(JSContext* aCx, JS::HandleValue aEvents,
   MutexAutoLock lock(mLock);
 
   auto processEvent = [this, aCx, aCallback,
-                       aListener](JS::HandleValue event) -> nsresult {
+                       aListener](JS::Handle<JS::Value> event) -> nsresult {
     nsAutoJSString str;
     NS_ENSURE_TRUE(CheckJS(aCx, str.init(aCx, event.toString())),
                    NS_ERROR_OUT_OF_MEMORY);
@@ -597,14 +600,14 @@ nsresult EventDispatcher::IterateEvents(JSContext* aCx, JS::HandleValue aEvents,
                  NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(isArray, NS_ERROR_INVALID_ARG);
 
-  JS::RootedObject events(aCx, &aEvents.toObject());
+  JS::Rooted<JSObject*> events(aCx, &aEvents.toObject());
   uint32_t length = 0;
   NS_ENSURE_TRUE(CheckJS(aCx, JS::GetArrayLength(aCx, events, &length)),
                  NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(length, NS_ERROR_INVALID_ARG);
 
   for (size_t i = 0; i < length; i++) {
-    JS::RootedValue event(aCx);
+    JS::Rooted<JS::Value> event(aCx);
     NS_ENSURE_TRUE(CheckJS(aCx, JS_GetElement(aCx, events, i, &event)),
                    NS_ERROR_INVALID_ARG);
     NS_ENSURE_TRUE(event.isString(), NS_ERROR_INVALID_ARG);
@@ -632,7 +635,8 @@ nsresult EventDispatcher::RegisterEventLocked(
 
 NS_IMETHODIMP
 EventDispatcher::RegisterListener(nsIAndroidEventListener* aListener,
-                                  JS::HandleValue aEvents, JSContext* aCx) {
+                                  JS::Handle<JS::Value> aEvents,
+                                  JSContext* aCx) {
   return IterateEvents(aCx, aEvents, &EventDispatcher::RegisterEventLocked,
                        aListener);
 }
@@ -669,7 +673,8 @@ nsresult EventDispatcher::UnregisterEventLocked(
 
 NS_IMETHODIMP
 EventDispatcher::UnregisterListener(nsIAndroidEventListener* aListener,
-                                    JS::HandleValue aEvents, JSContext* aCx) {
+                                    JS::Handle<JS::Value> aEvents,
+                                    JSContext* aCx) {
   return IterateEvents(aCx, aEvents, &EventDispatcher::UnregisterEventLocked,
                        aListener);
 }
@@ -743,7 +748,7 @@ void EventDispatcher::DispatchToGecko(jni::String::Param aEvent,
   dom::AutoJSAPI jsapi;
   NS_ENSURE_TRUE_VOID(jsapi.Init(GetGlobalObject()));
 
-  JS::RootedValue data(jsapi.cx());
+  JS::Rooted<JS::Value> data(jsapi.cx());
   nsresult rv = UnboxData(aEvent, jsapi.cx(), aData, &data,
                           /* BundleOnly */ true);
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -759,7 +764,7 @@ void EventDispatcher::DispatchToGecko(jni::String::Param aEvent,
 
 /* static */
 nsresult EventDispatcher::UnboxBundle(JSContext* aCx, jni::Object::Param aData,
-                                      JS::MutableHandleValue aOut) {
+                                      JS::MutableHandle<JS::Value> aOut) {
   return detail::UnboxBundle(aCx, aData, aOut);
 }
 

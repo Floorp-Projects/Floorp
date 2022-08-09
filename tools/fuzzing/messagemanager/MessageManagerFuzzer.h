@@ -46,10 +46,10 @@ class MessageManagerFuzzer {
                      ipc::StructuredCloneData* aData,
                      const JS::Value& aTransfer);
   static void Mutate(JSContext* aCx, JS::Rooted<JS::Value>& aMutation);
-  static void MutateObject(JSContext* aCx, JS::HandleValue aValue,
+  static void MutateObject(JSContext* aCx, JS::Handle<JS::Value> aValue,
                            unsigned short int aRecursionCounter);
-  static bool MutateValue(JSContext* aCx, JS::HandleValue aValue,
-                          JS::MutableHandleValue aOutMutationValue,
+  static bool MutateValue(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                          JS::MutableHandle<JS::Value> aOutMutationValue,
                           unsigned short int aRecursionCounter);
   static unsigned int DefaultMutationProbability();
   static nsAutoString ReadJSON(JSContext* aCx, const JS::Value& aJSON);
