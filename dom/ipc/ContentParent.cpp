@@ -1632,14 +1632,9 @@ void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
 /*static */
 void ContentParent::BroadcastMediaCodecsSupportedUpdate(
     RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported) {
-  // Merge incoming codec support with existing support list
-  media::MCSInfo::AddSupport(aSupported);
-  auto support = media::MCSInfo::GetSupport();
-
-  // Update processes
-  sCodecsSupported[aLocation] = support;
+  sCodecsSupported[aLocation] = aSupported;
   for (auto* cp : AllProcesses(eAll)) {
-    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, support);
+    Unused << cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
   }
 
   // Generate + save support string for display in about:support
