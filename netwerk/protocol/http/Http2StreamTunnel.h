@@ -62,6 +62,7 @@ class Http2StreamTunnel : public Http2StreamBase,
 
  private:
   void ClearTransactionsBlockedOnTunnel();
+  bool DispatchRelease();
 
   RefPtr<OutputStreamTunnel> mOutput;
   RefPtr<InputStreamTunnel> mInput;
@@ -99,7 +100,6 @@ class OutputStreamTunnel : public nsIAsyncOutputStream {
 
   nsWeakPtr mWeakStream;
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
-  nsCOMPtr<nsIEventTarget> mSocketThread;
   nsresult mCondition{NS_OK};
 };
 
@@ -122,7 +122,6 @@ class InputStreamTunnel : public nsIAsyncInputStream {
 
   nsWeakPtr mWeakStream;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
-  nsCOMPtr<nsIEventTarget> mSocketThread;
   nsresult mCondition{NS_OK};
 };
 

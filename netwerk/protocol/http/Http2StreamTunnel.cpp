@@ -22,8 +22,41 @@
 
 namespace mozilla::net {
 
+bool Http2StreamTunnel::DispatchRelease() {
+  if (OnSocketThread()) {
+    return false;
+  }
+
+  gSocketTransportService->Dispatch(
+      NewNonOwningRunnableMethod("net::Http2StreamTunnel::Release", this,
+                                 &Http2StreamTunnel::Release),
+      NS_DISPATCH_NORMAL);
+
+  return true;
+}
+
 NS_IMPL_ADDREF_INHERITED(Http2StreamTunnel, Http2StreamBase)
-NS_IMPL_RELEASE_INHERITED(Http2StreamTunnel, Http2StreamBase)
+NS_IMETHODIMP_(MozExternalRefCountType)
+Http2StreamTunnel::Release() {
+  nsrefcnt count = mRefCnt - 1;
+  if (DispatchRelease()) {
+    // Redispatched to the socket thread.
+    return count;
+  }
+
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
+  count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "Http2StreamTunnel");
+
+  if (0 == count) {
+    mRefCnt = 1;
+    delete (this);
+    return 0;
+  }
+
+  return count;
+}
+
 NS_INTERFACE_MAP_BEGIN(Http2StreamTunnel)
   NS_INTERFACE_MAP_ENTRY(nsITransport)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(Http2StreamTunnel)
@@ -315,13 +348,9 @@ nsresult Http2StreamTunnel::GenerateHeaders(nsCString& aCompressedData,
 
 OutputStreamTunnel::OutputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
-  mSocketThread = NS_GetCurrentThread();
 }
 
-OutputStreamTunnel::~OutputStreamTunnel() {
-  NS_ProxyRelease("OutputStreamTunnel::~OutputStreamTunnel", mSocketThread,
-                  mWeakStream.forget());
-}
+OutputStreamTunnel::~OutputStreamTunnel() = default;
 
 nsresult OutputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("OutputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32
@@ -468,13 +497,9 @@ OutputStreamTunnel::AsyncWait(nsIOutputStreamCallback* callback, uint32_t flags,
 
 InputStreamTunnel::InputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
-  mSocketThread = NS_GetCurrentThread();
 }
 
-InputStreamTunnel::~InputStreamTunnel() {
-  NS_ProxyRelease("InputStreamTunnel::~InputStreamTunnel", mSocketThread,
-                  mWeakStream.forget());
-}
+InputStreamTunnel::~InputStreamTunnel() = default;
 
 nsresult InputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("InputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32 "]\n", this,
