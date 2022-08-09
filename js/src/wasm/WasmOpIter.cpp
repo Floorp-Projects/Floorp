@@ -290,6 +290,8 @@ OpKind wasm::Classify(OpBytes op) {
       WASM_FUNCTION_REFERENCES_OP(OpKind::RefAsNonNull);
     case Op::BrOnNull:
       WASM_FUNCTION_REFERENCES_OP(OpKind::BrOnNull);
+    case Op::BrOnNonNull:
+      WASM_FUNCTION_REFERENCES_OP(OpKind::BrOnNonNull);
     case Op::RefEq:
       WASM_GC_OP(OpKind::Comparison);
     case Op::GcPrefix: {
