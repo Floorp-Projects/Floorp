@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
 --- a/modules/fdlibm/src/e_exp.cpp
 +++ b/modules/fdlibm/src/e_exp.cpp
-@@ -91,16 +91,18 @@ ln2LO[2]   ={ 1.90821492927058770002e-10
+@@ -91,16 +91,18 @@ ln2LO[2]   ={ 1.90821492927058770002e-10,  /* 0x3dea39ef, 0x35793c76 */
  	     -1.90821492927058770002e-10,},/* 0xbdea39ef, 0x35793c76 */
  invln2 =  1.44269504088896338700e+00, /* 0x3ff71547, 0x652b82fe */
  P1   =  1.66666666666666019037e-01, /* 0x3FC55555, 0x5555553E */
@@ -20,7 +20,7 @@ diff --git a/modules/fdlibm/src/e_exp.cpp b/modules/fdlibm/src/e_exp.cpp
  __ieee754_exp(double x)	/* default IEEE double exp */
  {
  	double y,hi=0.0,lo=0.0,c,t,twopk;
-@@ -122,16 +124,17 @@ double
+@@ -122,16 +124,17 @@ __ieee754_exp(double x)	/* default IEEE double exp */
  	    }
  	    if(x > o_threshold) return huge*huge; /* overflow */
  	    if(x < u_threshold) return twom1000*twom1000; /* underflow */

@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -617,95 +617,32 @@ rnint(double x)
+@@ -612,95 +612,32 @@ rnint(__double_t x)
  	 * magic number would need to be variable.  Assuming that the
  	 * rounding precision is always the default is too fragile.  This
  	 * and many other complications will move when the default is
@@ -45,7 +45,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
   * return type provided their arg is a floating point integer.  They can
   * sometimes be more efficient because no rounding is required.
   */
- #if (defined(amd64) || defined(__i386__)) && defined(__GNUCLIKE_ASM)
+ #if defined(amd64) || defined(__i386__)
  #define	irint(x)						\
      (sizeof(x) == sizeof(float) &&				\
      sizeof(__float_t) == sizeof(long double) ? irintf(x) :	\
@@ -58,7 +58,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  
 -#define	i64rint(x)	((int64_t)(x))	/* only needed for ld128 so not opt. */
 -
--#if defined(__i386__) && defined(__GNUCLIKE_ASM)
+-#if defined(__i386__)
 -static __inline int
 -irintf(float x)
 -{
@@ -78,7 +78,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
 -}
 -#endif
 -
--#if (defined(__amd64__) || defined(__i386__)) && defined(__GNUCLIKE_ASM)
+-#if defined(__amd64__) || defined(__i386__)
 -static __inline int
 -irintl(long double x)
 -{

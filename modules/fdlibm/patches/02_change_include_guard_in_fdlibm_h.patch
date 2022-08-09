@@ -19,14 +19,14 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
  double	asin(double);
  double	atan(double);
  double	atan2(double, double);
- 
- double	cosh(double);
- double	sinh(double);
-@@ -52,9 +52,9 @@ double	scalbn(double, int);
+ double	cos(double);
+ double	sin(double);
+ double	tan(double);
+@@ -54,9 +54,9 @@ double	scalbn(double, int);
+ double	trunc(double);
  
  float	ceilf(float);
  float	floorf(float);
- 
  float	nearbyintf(float);
  float	rintf(float);
  float	truncf(float);
