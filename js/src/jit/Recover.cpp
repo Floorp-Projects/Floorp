@@ -951,14 +951,10 @@ bool MFloor::writeRecoverData(CompactBufferWriter& writer) const {
 RFloor::RFloor(CompactBufferReader& reader) {}
 
 bool RFloor::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue v(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::math_floor_impl(num);
 
-  if (!js::math_floor_handle(cx, v, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -971,14 +967,10 @@ bool MCeil::writeRecoverData(CompactBufferWriter& writer) const {
 RCeil::RCeil(CompactBufferReader& reader) {}
 
 bool RCeil::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue v(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::math_ceil_impl(num);
 
-  if (!js::math_ceil_handle(cx, v, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -991,13 +983,10 @@ bool MRound::writeRecoverData(CompactBufferWriter& writer) const {
 RRound::RRound(CompactBufferReader& reader) {}
 
 bool RRound::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue arg(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::math_round_impl(num);
 
-  MOZ_ASSERT(!arg.isObject());
-  if (!js::math_round_handle(cx, arg, &result)) return false;
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1010,13 +999,10 @@ bool MTrunc::writeRecoverData(CompactBufferWriter& writer) const {
 RTrunc::RTrunc(CompactBufferReader& reader) {}
 
 bool RTrunc::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue arg(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::math_trunc_impl(num);
 
-  MOZ_ASSERT(!arg.isObject());
-  if (!js::math_trunc_handle(cx, arg, &result)) return false;
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1117,15 +1103,17 @@ bool MMinMax::writeRecoverData(CompactBufferWriter& writer) const {
 RMinMax::RMinMax(CompactBufferReader& reader) { isMax_ = reader.readByte(); }
 
 bool RMinMax::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue a(cx, iter.read());
-  RootedValue b(cx, iter.read());
-  RootedValue result(cx);
+  double x = iter.read().toNumber();
+  double y = iter.read().toNumber();
 
-  if (!js::minmax_impl(cx, isMax_, a, b, &result)) {
-    return false;
+  double result;
+  if (isMax_) {
+    result = js::math_max_impl(x, y);
+  } else {
+    result = js::math_min_impl(x, y);
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1138,14 +1126,10 @@ bool MAbs::writeRecoverData(CompactBufferWriter& writer) const {
 RAbs::RAbs(CompactBufferReader& reader) {}
 
 bool RAbs::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue v(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::math_abs_impl(num);
 
-  if (!js::math_abs_handle(cx, v, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1161,21 +1145,16 @@ RSqrt::RSqrt(CompactBufferReader& reader) {
 }
 
 bool RSqrt::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue num(cx, iter.read());
-  RootedValue result(cx);
-
-  MOZ_ASSERT(num.isNumber());
-  if (!math_sqrt_handle(cx, num, &result)) {
-    return false;
-  }
+  double num = iter.read().toNumber();
+  double result = js::math_sqrt_impl(num);
 
   // MIRType::Float32 is a specialization embedding the fact that the result is
   // rounded to a Float32.
-  if (isFloatOperation_ && !RoundFloat32(cx, result, &result)) {
-    return false;
+  if (isFloatOperation_) {
+    result = js::RoundFloat32(result);
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(DoubleValue(result));
   return true;
 }
 
@@ -1188,13 +1167,11 @@ bool MAtan2::writeRecoverData(CompactBufferWriter& writer) const {
 RAtan2::RAtan2(CompactBufferReader& reader) {}
 
 bool RAtan2::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue y(cx, iter.read());
-  RootedValue x(cx, iter.read());
-  RootedValue result(cx);
+  double y = iter.read().toNumber();
+  double x = iter.read().toNumber();
+  double result = js::ecmaAtan2(y, x);
 
-  if (!math_atan2_handle(cx, y, x, &result)) return false;
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(DoubleValue(result));
   return true;
 }
 
@@ -1261,13 +1238,10 @@ bool MSign::writeRecoverData(CompactBufferWriter& writer) const {
 RSign::RSign(CompactBufferReader& reader) {}
 
 bool RSign::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue arg(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::math_sign_impl(num);
 
-  MOZ_ASSERT(!arg.isObject());
-  if (!js::math_sign_handle(cx, arg, &result)) return false;
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(NumberValue(result));
   return true;
 }
 
@@ -1590,15 +1564,10 @@ bool MToFloat32::writeRecoverData(CompactBufferWriter& writer) const {
 RToFloat32::RToFloat32(CompactBufferReader& reader) {}
 
 bool RToFloat32::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue v(cx, iter.read());
-  RootedValue result(cx);
+  double num = iter.read().toNumber();
+  double result = js::RoundFloat32(num);
 
-  MOZ_ASSERT(!v.isObject());
-  if (!RoundFloat32(cx, v, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(DoubleValue(result));
   return true;
 }
 
