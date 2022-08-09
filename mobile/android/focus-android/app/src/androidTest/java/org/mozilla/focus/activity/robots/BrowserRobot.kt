@@ -231,7 +231,20 @@ class BrowserRobot {
 
     fun verifyOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: String) = assertOpenLinksInAppsPrompt(openLinksInAppsEnabled, link)
 
-    fun clickOpenLinksInAppsCancelButton() = openLinksInAppsCancelButton.click()
+    fun clickOpenLinksInAppsCancelButton() {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                openLinksInAppsCancelButton.click()
+                assertTrue(openLinksInAppsMessage.waitUntilGone(waitingTime))
+
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                }
+            }
+        }
+    }
 
     fun clickOpenLinksInAppsOpenButton() = openLinksInAppsOpenButton.click()
 
