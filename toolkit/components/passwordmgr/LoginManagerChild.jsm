@@ -2793,13 +2793,6 @@ class LoginManagerChild extends JSWindowActorChild {
         return;
       }
 
-      // If the password field is disabled or read-only, there's nothing to do.
-      if (passwordField?.disabled || passwordField?.readOnly) {
-        lazy.log("Not filling form, password field disabled or read-only.");
-        autofillResult = AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY;
-        return;
-      }
-
       // Attach autocomplete stuff to the username field, if we have
       // one. This is normally used to select from multiple accounts,
       // but even with one account we should refill if the user edits.
@@ -2808,6 +2801,13 @@ class LoginManagerChild extends JSWindowActorChild {
       if (usernameField) {
         lazy.gFormFillService.markAsLoginManagerField(usernameField);
         usernameField.addEventListener("keydown", observer);
+      }
+
+      // If the password field is disabled or read-only, there's nothing to do.
+      if (passwordField?.disabled || passwordField?.readOnly) {
+        lazy.log("Not filling form, password field disabled or read-only.");
+        autofillResult = AUTOFILL_RESULT.PASSWORD_DISABLED_READONLY;
+        return;
       }
 
       if (

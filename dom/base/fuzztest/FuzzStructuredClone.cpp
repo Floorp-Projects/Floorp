@@ -22,7 +22,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
-JS::PersistentRootedObject global;
+JS::PersistentRooted<JSObject*> global;
 
 static int FuzzingInitDomSC(int* argc, char*** argv) {
   JSObject* simpleGlobal =
@@ -57,7 +57,7 @@ static int FuzzingRunDomSC(const uint8_t* data, size_t size) {
     return 0;
   }
 
-  JS::RootedValue result(cx);
+  JS::Rooted<JS::Value> result(cx);
   ErrorResult rv;
   scdata.Read(cx, &result, rv);
 

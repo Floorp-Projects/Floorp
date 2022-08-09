@@ -1,0 +1,138 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": ["declarativeNetRequest"],
+          "min_manifest_version": 3
+        }]
+      }, 
+      {
+        "$extend": "PermissionNoPrompt",
+        "choices": [{
+          "type": "string",
+          "enum": ["declarativeNetRequestFeedback", "declarativeNetRequestWithHostAccess"],
+          "min_manifest_version": 3
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "declarativeNetRequest",
+    "description": "Use the declarativeNetRequest API to block or modify network requests by specifying declarative rules.",
+    "permissions": ["declarativeNetRequest", "declarativeNetRequestWithHostAccess"],
+    "types": [
+      {
+        "id": "ResourceType",
+        "type": "string",
+        "description": "How the requested resource will be used. Comparable to the webRequest.ResourceType type.",
+        "enum": [
+          "main_frame",
+          "sub_frame",
+          "stylesheet",
+          "script",
+          "image",
+          "object",
+          "object_subrequest",
+          "xmlhttprequest",
+          "xslt",
+          "ping",
+          "beacon",
+          "xml_dtd",
+          "font",
+          "media",
+          "websocket",
+          "csp_report",
+          "imageset",
+          "web_manifest",
+          "speculative",
+          "other"
+        ]
+      },
+      {
+        "id": "MatchedRule",
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "integer",
+            "description": "A matching rule's ID."
+          },
+          "rulesetId": {
+            "type": "string",
+            "description": "ID of the Ruleset this rule belongs to."
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "testMatchOutcome",
+        "type": "function",
+        "description": "Checks if any of the extension's declarativeNetRequest rules would match a hypothetical request.",
+        "permissions": ["declarativeNetRequestFeedback"],
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "request",
+            "type": "object",
+            "description": "The details of the request to test.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL of the hypothetical request."
+              },
+              "initiator": {
+                "type": "string",
+                "description": "The initiator URL (if any) for the hypothetical request.",
+                "optional": true
+              },
+              "method": {
+                "type": "string",
+                "description": "Standard HTTP method of the hypothetical request.",
+                "optional": true,
+                "default": "get"
+              },
+              "type": {
+                "$ref": "ResourceType",
+                "description": "The resource type of the hypothetical request."
+              },
+              "tabId": {
+                "type": "integer",
+                "description": "The ID of the tab in which the hypothetical request takes place. Does not need to correspond to a real tab ID. Default is -1, meaning that the request isn't related to a tab.",
+                "optional": true,
+                "default": -1
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Called with the details of matched rules.",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "object",
+                "properties": {
+                  "matchedRules": {
+                    "type": "array",
+                    "description": "The rules (if any) that match the hypothetical request.",
+                    "items": {
+                      "$ref": "MatchedRule"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

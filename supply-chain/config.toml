@@ -132,6 +132,10 @@ notes = "We're not shipping this and have no plans to ship it."
 audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
 
+[policy.viaduct]
+audit-as-crates-io = false
+notes = "This is a first-party crate, maintained by the appservices team, which is entirely unrelated to the crates.io package of the same name."
+
 [policy.webdriver]
 audit-as-crates-io = false
 criteria = "safe-to-run"

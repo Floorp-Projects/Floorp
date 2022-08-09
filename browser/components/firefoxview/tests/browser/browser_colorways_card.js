@@ -35,6 +35,14 @@ const COLORWAY_DESCRIPTION_L10N_ID = "firefoxview-colorway-description";
 const MOCK_THEME_L10N_VALUE = "Mock Theme";
 const SOFT_L10N_VALUE = "Soft";
 
+const TRY_COLORWAYS_EVENT = [
+  ["colorways", "try_colorways", "firefoxview", undefined],
+];
+
+const CHANGE_COLORWAY_EVENT = [
+  ["colorways", "change_colorway", "firefoxview", undefined],
+];
+
 function getTestElements(document) {
   return {
     container: document.getElementById("colorways"),
@@ -122,6 +130,7 @@ add_task(async function no_collection_test() {
 });
 
 add_task(async function no_active_colorway_test() {
+  await clearAllParentTelemetryEvents();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -165,6 +174,34 @@ add_task(async function no_active_colorway_test() {
         EXPIRY_DATE_L10N_ID,
         "Correct expiry date format should be shown"
       );
+
+      document.querySelector("#colorways-button").click();
+
+      await TestUtils.waitForCondition(
+        () => {
+          let events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 1;
+        },
+        "Waiting for try_colorways colorways telemetry event.",
+        200,
+        100
+      );
+
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+
+      info(JSON.stringify(events));
+
+      TelemetryTestUtils.assertEvents(
+        TRY_COLORWAYS_EVENT,
+        { category: "colorways" },
+        { clear: true, process: "parent" }
+      );
     }
   );
 });
@@ -173,6 +210,7 @@ add_task(async function active_colorway_test() {
   const theme = await AddonManager.getAddonByID(SOFT_COLORWAY_THEME_ID);
   await theme.enable();
   try {
+    await clearAllParentTelemetryEvents();
     await BrowserTestUtils.withNewTab(
       {
         gBrowser,
@@ -228,6 +266,27 @@ add_task(async function active_colorway_test() {
           expiryL10nAttributes.id,
           EXPIRY_DATE_L10N_ID,
           "Correct expiry date format should be shown"
+        );
+
+        document.querySelector("#colorways-button").click();
+
+        await TestUtils.waitForCondition(
+          () => {
+            let events = Services.telemetry.snapshotEvents(
+              Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+              false
+            ).parent;
+            return events && events.length >= 1;
+          },
+          "Waiting for change_colorway colorways telemetry event.",
+          200,
+          100
+        );
+
+        TelemetryTestUtils.assertEvents(
+          CHANGE_COLORWAY_EVENT,
+          { category: "colorways" },
+          { clear: true, process: "parent" }
         );
       }
     );

@@ -2775,32 +2775,31 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
   return true;
 }
 
-/* Helpers for array_splice_impl() and array_to_spliced()
- *
- * Initialize variables common to splice() and toSpliced()
- * GetActualStart() returns the index at which to start deleting elements.
- * GetItemCount() returns the number of new elements being added.
- * GetActualDeleteCount:() returns the number of elements being deleted.
- *
- */
-static bool GetActualStart(JSContext* cx, const CallArgs& args, uint64_t len,
+// Helpers for array_splice_impl() and array_to_spliced()
+//
+// Initialize variables common to splice() and toSpliced():
+// - GetActualStart() returns the index at which to start deleting elements.
+// - GetItemCount() returns the number of new elements being added.
+// - GetActualDeleteCount() returns the number of elements being deleted.
+static bool GetActualStart(JSContext* cx, HandleValue start, uint64_t len,
                            uint64_t* result) {
-  double relativeStart;
-  /* Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
-   * Array.prototype.toSpliced()
-   */
+  MOZ_ASSERT(len < DOUBLE_INTEGRAL_PRECISION_LIMIT);
 
-  /* Step 3. Let relativeStart be ? ToIntegerOrInfinity(start). */
-  if (!ToInteger(cx, args.get(0), &relativeStart)) {
+  // Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
+  // Array.prototype.toSpliced()
+
+  // Step 3. Let relativeStart be ? ToIntegerOrInfinity(start).
+  double relativeStart;
+  if (!ToInteger(cx, start, &relativeStart)) {
     return false;
   }
-  /* Steps 4-5. If relativeStart is -∞, let actualStart be 0.
-   * Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
-   */
+
+  // Steps 4-5. If relativeStart is -∞, let actualStart be 0.
+  // Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
   if (relativeStart < 0) {
     *result = uint64_t(std::max(double(len) + relativeStart, 0.0));
   } else {
-    /* Step 6. Else, let actualStart be min(relativeStart, len). */
+    // Step 6. Else, let actualStart be min(relativeStart, len).
     *result = uint64_t(std::min(relativeStart, double(len)));
   }
   return true;
@@ -2815,34 +2814,39 @@ static uint32_t GetItemCount(const CallArgs& args) {
 
 static bool GetActualDeleteCount(JSContext* cx, const CallArgs& args,
                                  HandleObject obj, uint64_t len,
-                                 uint64_t actualStart, uint64_t insertCount,
+                                 uint64_t actualStart, uint32_t insertCount,
                                  uint64_t* actualDeleteCount) {
-  /* Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
-   * Array.prototype.toSpliced()
-   */
+  MOZ_ASSERT(len < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(actualStart <= len);
+  MOZ_ASSERT(insertCount == GetItemCount(args));
 
-  /* Step 8. If start is not present, then let actualDeleteCount be 0. */
+  // Steps from proposal: https://github.com/tc39/proposal-change-array-by-copy
+  // Array.prototype.toSpliced()
+
   if (args.length() < 1) {
+    // Step 8. If start is not present, then let actualDeleteCount be 0.
     *actualDeleteCount = 0;
-    /* Step 9. Else if deleteCount is not present, then let actualDeleteCount be
-     * len - actualStart. */
   } else if (args.length() < 2) {
+    // Step 9. Else if deleteCount is not present, then let actualDeleteCount be
+    // len - actualStart.
     *actualDeleteCount = len - actualStart;
   } else {
+    // Step 10.a. Else, let dc be toIntegerOrInfinity(deleteCount).
     double deleteCount;
-    /* Step 10.a. Else, let dc be toIntegerOrInfinity(deleteCount). */
     if (!ToInteger(cx, args.get(1), &deleteCount)) {
       return false;
     }
-    /* Step 10.b. Let actualDeleteCount be the result of clamping dc between 0
-     * and len - actualStart. */
-    *actualDeleteCount = uint64_t(std::min(std::max(0.0, deleteCount),
-                                           double(len) - double(actualStart)));
 
-    /* Step 11. Let newLen be len + insertCount - actualDeleteCount. */
-    /* Step 12. If newLen > 2^53 - 1, throw a TypeError exception. */
-    if (double(len + insertCount - *actualDeleteCount) >=
-        DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+    // Step 10.b. Let actualDeleteCount be the result of clamping dc between 0
+    // and len - actualStart.
+    *actualDeleteCount = uint64_t(
+        std::min(std::max(0.0, deleteCount), double(len - actualStart)));
+    MOZ_ASSERT(*actualDeleteCount <= len);
+
+    // Step 11. Let newLen be len + insertCount - actualDeleteCount.
+    // Step 12. If newLen > 2^53 - 1, throw a TypeError exception.
+    if (len + uint64_t(insertCount) - *actualDeleteCount >=
+        uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TOO_LONG_ARRAY);
       return false;
@@ -2874,7 +2878,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
   /* actualStart is the index after which elements will be
      deleted and/or new elements will be added */
   uint64_t actualStart;
-  if (!GetActualStart(cx, args, len, &actualStart)) {
+  if (!GetActualStart(cx, args.get(0), len, &actualStart)) {
     return false;
   }
 
@@ -2889,20 +2893,13 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
     return false;
   }
 
-  /* The following check can't be done by GetActualDeleteCount(), since
-   * it's also called by the implementation of toSpliced(), which
-   * doesn't create an array of deleted items and thus doesn't need
-   * this check. */
+  RootedObject arr(cx);
   if (IsArraySpecies(cx, obj)) {
     if (actualDeleteCount > UINT32_MAX) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return false;
     }
-  }
-
-  RootedObject arr(cx);
-  if (IsArraySpecies(cx, obj)) {
     uint32_t count = uint32_t(actualDeleteCount);
 
     if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj,
@@ -3158,231 +3155,415 @@ static bool array_splice_noRetVal(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
-static ArrayObject* NewDenseArray(JSContext* cx, const CallArgs& args,
-                                  uint64_t len) {
-  if (len > UINT32_MAX) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BAD_ARRAY_LENGTH);
-    return nullptr;
+static void CopyDenseElementsFillHoles(ArrayObject* arr, NativeObject* nobj,
+                                       uint32_t length) {
+  // Ensure |arr| is an empty array with sufficient capacity.
+  MOZ_ASSERT(arr->getDenseInitializedLength() == 0);
+  MOZ_ASSERT(arr->getDenseCapacity() >= length);
+  MOZ_ASSERT(length > 0);
+
+  uint32_t count = std::min(nobj->getDenseInitializedLength(), length);
+
+  if (count > 0) {
+    if (nobj->denseElementsArePacked()) {
+      // Copy all dense elements when no holes are present.
+      arr->initDenseElements(nobj, 0, count);
+    } else {
+      arr->setDenseInitializedLength(count);
+
+      // Handle each element separately to filter out holes.
+      for (uint32_t i = 0; i < count; i++) {
+        Value val = nobj->getDenseElement(i);
+        if (val.isMagic(JS_ELEMENTS_HOLE)) {
+          val = UndefinedValue();
+        }
+        arr->initDenseElement(i, val);
+      }
+    }
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Array, &proto)) {
-    return nullptr;
+  // Fill trailing holes with undefined.
+  if (count < length) {
+    arr->setDenseInitializedLength(length);
+
+    for (uint32_t i = count; i < length; i++) {
+      arr->initDenseElement(i, UndefinedValue());
+    }
   }
-  return NewDensePartlyAllocatedArrayWithProto(cx, len, proto);
+
+  // Ensure |length| elements have been copied and no holes are present.
+  MOZ_ASSERT(arr->getDenseInitializedLength() == length);
+  MOZ_ASSERT(arr->denseElementsArePacked());
 }
 
-/* Proposal
- * https://github.com/tc39/proposal-change-array-by-copy
- * Array.prototype.toSpliced()
- */
-static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
-  /* Currently doesn't use the optimizations array_splice() uses for
-   * dense arrays
-   */
-
+// https://github.com/tc39/proposal-change-array-by-copy
+// Array.prototype.toSpliced()
+static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "toSpliced");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  /* Step 1. Let O be ? ToObject(this value). */
+  // Step 1. Let O be ? ToObject(this value).
   RootedObject obj(cx, ToObject(cx, args.thisv()));
   if (!obj) {
     return false;
   }
 
-  /* Step 2. Let len be ? LengthOfArrayLike(O). */
+  // Step 2. Let len be ? LengthOfArrayLike(O).
   uint64_t len;
   if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
-  /* Steps 3-6. */
-  /* actualStart is the index after which elements will be
-   * deleted and/or new elements will be added
-   */
+  // Steps 3-6.
+  // |actualStart| is the index after which elements will be deleted and/or
+  // new elements will be added
   uint64_t actualStart;
-  if (!GetActualStart(cx, args, len, &actualStart)) {
+  if (!GetActualStart(cx, args.get(0), len, &actualStart)) {
     return false;
   }
+  MOZ_ASSERT(actualStart <= len);
 
-  /* Step 7. Let insertCount be the number of elements in items. */
+  // Step 7. Let insertCount be the number of elements in items.
   uint32_t insertCount = GetItemCount(args);
 
-  /* Steps 8-10. */
+  // Steps 8-10.
   // actualDeleteCount is the number of elements being deleted
   uint64_t actualDeleteCount;
   if (!GetActualDeleteCount(cx, args, obj, len, actualStart, insertCount,
                             &actualDeleteCount)) {
     return false;
   }
+  MOZ_ASSERT(actualStart + actualDeleteCount <= len);
 
-  /* Step 11. Let newLen be len + insertCount - actualDeleteCount. */
+  // Step 11. Let newLen be len + insertCount - actualDeleteCount.
   uint64_t newLen = len + insertCount - actualDeleteCount;
 
-  /* Step 12 handled by GetActualDeleteCount(). */
-  /* Step 13. Let A be ? ArrayCreate(𝔽(newLen)). */
-  RootedObject A(cx, NewDenseArray(cx, args, newLen));
-  if (!A) {
+  // Step 12 handled by GetActualDeleteCount().
+  MOZ_ASSERT(newLen < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(actualStart <= newLen,
+             "if |actualStart + actualDeleteCount <= len| and "
+             "|newLen = len + insertCount - actualDeleteCount|, then "
+             "|actualStart <= newLen|");
+
+  // ArrayCreate, step 1.
+  if (newLen > UINT32_MAX) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
     return false;
+  }
+
+  // Step 13. Let A be ? ArrayCreate(𝔽(newLen)).
+  Rooted<ArrayObject*> arr(cx,
+                           NewDensePartlyAllocatedArray(cx, uint32_t(newLen)));
+  if (!arr) {
+    return false;
+  }
+
+  // Steps 14-19 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
+    MOZ_ASSERT(len <= UINT32_MAX);
+    MOZ_ASSERT(actualDeleteCount <= UINT32_MAX,
+               "if |actualStart + actualDeleteCount <= len| and "
+               "|len <= UINT32_MAX|, then |actualDeleteCount <= UINT32_MAX|");
+
+    uint32_t length = uint32_t(len);
+    uint32_t newLength = uint32_t(newLen);
+    uint32_t start = uint32_t(actualStart);
+    uint32_t deleteCount = uint32_t(actualDeleteCount);
+
+    auto nobj = obj.as<NativeObject>();
+
+    ArrayObject* arr = NewDenseFullyAllocatedArray(cx, newLength);
+    if (!arr) {
+      return false;
+    }
+    arr->setLength(newLength);
+
+    // Below code doesn't handle the case when the storage has to grow,
+    // therefore the capacity must fit for at least |newLength| elements.
+    MOZ_ASSERT(arr->getDenseCapacity() >= newLength);
+
+    if (deleteCount == 0 && insertCount == 0) {
+      // Copy the array when we don't have to remove or insert any elements.
+      if (newLength > 0) {
+        CopyDenseElementsFillHoles(arr, nobj, newLength);
+      }
+    } else {
+      // Copy nobj[0..start] to arr[0..start].
+      if (start > 0) {
+        CopyDenseElementsFillHoles(arr, nobj, start);
+      }
+
+      // Insert |items| into arr[start..(start + insertCount)].
+      if (insertCount > 0) {
+        auto items = HandleValueArray::subarray(args, 2, insertCount);
+
+        // Prefer |initDenseElements| because it's faster.
+        if (arr->getDenseInitializedLength() == 0) {
+          arr->initDenseElements(items.begin(), items.length());
+        } else {
+          arr->setDenseInitializedLength(start + items.length());
+          arr->copyDenseElements(start, items.begin(), items.length());
+        }
+      }
+
+      uint32_t fromIndex = start + deleteCount;
+      uint32_t toIndex = start + insertCount;
+      MOZ_ASSERT((length - fromIndex) == (newLength - toIndex),
+                 "Copies all remaining elements to the end");
+
+      // Copy nobj[(start + deleteCount)..length] to
+      // arr[(start + insertCount)..newLength].
+      if (fromIndex < length) {
+        arr->setDenseInitializedLength(newLength);
+
+        uint32_t end = std::min(length, nobj->getDenseInitializedLength());
+        if (fromIndex < end) {
+          uint32_t count = end - fromIndex;
+          if (nobj->denseElementsArePacked()) {
+            // Copy all dense elements when no holes are present.
+            const Value* src = nobj->getDenseElements() + fromIndex;
+            arr->copyDenseElements(toIndex, src, count);
+            fromIndex += count;
+            toIndex += count;
+          } else {
+            // Handle each element separately to filter out holes.
+            for (uint32_t i = 0; i < count; i++) {
+              Value val = nobj->getDenseElement(fromIndex++);
+              if (val.isMagic(JS_ELEMENTS_HOLE)) {
+                val = UndefinedValue();
+              }
+              arr->initDenseElement(toIndex++, val);
+            }
+          }
+        }
+
+        // Fill trailing holes with undefined.
+        while (fromIndex < length) {
+          arr->initDenseElement(toIndex++, UndefinedValue());
+          fromIndex++;
+        }
+      }
+
+      MOZ_ASSERT(fromIndex == length);
+      MOZ_ASSERT(toIndex == newLength);
+    }
+
+    // Ensure the result array is packed and has the correct length.
+    MOZ_ASSERT(IsPackedArray(arr));
+    MOZ_ASSERT(arr->length() == newLength);
+
+    args.rval().setObject(*arr);
+    return true;
   }
 
   // Copy everything before start
 
-  /* Step 14. Let i be 0. */
-  uint64_t i = 0;
+  // Step 14. Let i be 0.
+  uint32_t i = 0;
 
-  /* Step 15. Let r be actualStart + actualDeleteCount. */
+  // Step 15. Let r be actualStart + actualDeleteCount.
   uint64_t r = actualStart + actualDeleteCount;
 
-  /* Step 16. Repeat while i < actualStart, */
-  while (i < actualStart) {
-    /* Skip Step 16.a. Let Pi be ! ToString(𝔽(i)). */
-    RootedValue iValue(cx);
+  // Step 16. Repeat while i < actualStart,
+  RootedValue iValue(cx);
+  while (i < uint32_t(actualStart)) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
 
-    /* Step 16.b. Let iValue be Get(O, 𝔽(i)). */
+    // Skip Step 16.a. Let Pi be ! ToString(𝔽(i)).
+
+    // Step 16.b. Let iValue be ? Get(O, Pi).
     if (!GetArrayElement(cx, obj, i, &iValue)) {
       return false;
     }
 
-    /* Step 16.c. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), iValue). */
-    if (!SetArrayElement(cx, A, i, iValue)) {
+    // Step 16.c. Perform ! CreateDataPropertyOrThrow(A, Pi, iValue).
+    if (!DefineArrayElement(cx, arr, i, iValue)) {
       return false;
     }
 
-    /* Step 16.d. Set i to i + 1. */
+    // Step 16.d. Set i to i + 1.
     i++;
   }
 
-  // result array now contains all elements before start
+  // Result array now contains all elements before start.
 
   // Copy new items
-  Value* items = args.array() + 2;
+  if (insertCount > 0) {
+    HandleValueArray items = HandleValueArray::subarray(args, 2, insertCount);
 
-  /* Step 17.  For each element E of items, do
-   * Skip Step 17.a. Let Pi be ! ToString(𝔽(i)).
-   * Step 17.b. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), E). */
-  if (!SetArrayElements(cx, A, actualStart, insertCount, items)) {
-    return false;
+    // Fast-path to copy all items in one go.
+    DenseElementResult result =
+        arr->setOrExtendDenseElements(cx, i, items.begin(), items.length());
+    if (result == DenseElementResult::Failure) {
+      return false;
+    }
+
+    if (result == DenseElementResult::Success) {
+      i += items.length();
+    } else {
+      MOZ_ASSERT(result == DenseElementResult::Incomplete);
+
+      // Step 17. For each element E of items, do
+      for (size_t j = 0; j < items.length(); j++) {
+        if (!CheckForInterrupt(cx)) {
+          return false;
+        }
+
+        // Skip Step 17.a. Let Pi be ! ToString(𝔽(i)).
+
+        // Step 17.b. Perform ! CreateDataPropertyOrThrow(A, Pi, E).
+        if (!DefineArrayElement(cx, arr, i, items[j])) {
+          return false;
+        }
+
+        // Step 17.c. Set i to i + 1.
+        i++;
+      }
+    }
   }
-  /* Step 17.c. Set i to i + 1. */
-  // (Equivalent)
-  i += insertCount;
 
   // Copy items after new items
-  /* Step 18. Repeat, while i < newLen, */
-  while (i < newLen) {
-    /* Skip Step 18.a. Let Pi be ! ToString(𝔽(i)). */
-    /* Skip Step 18.b. Let from be ! ToString(𝔽(r)). */
-    RootedValue fromValue(cx);
-    /* Step 18.c. Let fromValue be ? Get(O, 𝔽(r)). */
+  // Step 18. Repeat, while i < newLen,
+  RootedValue fromValue(cx);
+  while (i < uint32_t(newLen)) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    // Skip Step 18.a. Let Pi be ! ToString(𝔽(i)).
+    // Skip Step 18.b. Let from be ! ToString(𝔽(r)).
+
+    // Step 18.c. Let fromValue be ? Get(O, from). */
     if (!GetArrayElement(cx, obj, r, &fromValue)) {
       return false;
     }
-    /* Step 18.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), fromValue). */
-    if (!SetArrayElement(cx, A, i, fromValue)) {
+
+    // Step 18.d. Perform ! CreateDataPropertyOrThrow(A, Pi, fromValue).
+    if (!DefineArrayElement(cx, arr, i, fromValue)) {
       return false;
     }
-    /* Step 18.e. Set i to i + 1. */
+
+    // Step 18.e. Set i to i + 1.
     i++;
-    /* Step 18.f. Set r to r + 1. */
+
+    // Step 18.f. Set r to r + 1.
     r++;
   }
 
-  /* Step 19. Return A. */
-  args.rval().setObject(*A);
-
+  // Step 19. Return A.
+  args.rval().setObject(*arr);
   return true;
 }
 
-bool IsIntegralNumber(JSContext* cx, HandleValue v, bool* result) {
-  double d;
-  if (!ToNumber(cx, v, &d)) {
-    return false;
-  }
-
-  if (mozilla::IsNaN(d) || !mozilla::IsFinite(d)) {
-    *result = false;
-    return true;
-  }
-
-  double integer = trunc(d);
-  *result = d - integer == 0;
-  return true;
-}
-
-/* Proposal
- * https://github.com/tc39/proposal-change-array-by-copy
- * Array.prototype.with()
- */
+// https://github.com/tc39/proposal-change-array-by-copy
+// Array.prototype.with()
 static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "with");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  /* Step 1. Let O be ? ToObject(this value). */
+  // Step 1. Let O be ? ToObject(this value).
   RootedObject obj(cx, ToObject(cx, args.thisv()));
   if (!obj) {
     return false;
   }
 
-  /* Step 2. Let len be ? LengthOfArrayLike(O). */
+  // Step 2. Let len be ? LengthOfArrayLike(O).
   uint64_t len;
   if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
-  /* Step 3. Let relativeIndex be ? ToIntegerOrInfinity(index). */
+  // Step 3. Let relativeIndex be ? ToIntegerOrInfinity(index).
   double relativeIndex;
   if (!ToInteger(cx, args.get(0), &relativeIndex)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
-                              "Array.with");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
   }
 
-  /* Step 4. If relativeIndex >= 0, let actualIndex be relativeIndex. */
+  // Step 4. If relativeIndex >= 0, let actualIndex be relativeIndex.
   double actualIndex = relativeIndex;
   if (actualIndex < 0) {
-    /* Step 5. Else, let actualIndex be len + relativeIndex. */
-    actualIndex = int64_t(len + actualIndex);
+    // Step 5. Else, let actualIndex be len + relativeIndex.
+    actualIndex = double(len) + actualIndex;
   }
 
-  /* Step 6. If actualIndex >= len or actualIndex < 0, throw a RangeError
-   * exception. */
+  // Step 6. If actualIndex >= len or actualIndex < 0, throw a RangeError
+  // exception.
   if (actualIndex < 0 || actualIndex >= double(len)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
-                              "Array.with: index out of bounds");
-    return false;
-  }
-  // actualIndex must be a non-negative integer at this point
-
-  /* Step 7. Let A be ? ArrayCreate(𝔽(len)). */
-  RootedObject A(cx, NewDenseArray(cx, args, len));
-  if (!A) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
   }
 
-  /* Steps 8-9. Let k be 0; repeat, while k < len, */
-  for (uint64_t k = 0; k < len; k++) {
-    /* Skip Step 9.a. Let Pk be ! ToString(𝔽(k)). */
-    RootedValue fromValue(cx);
+  // ArrayCreate, step 1.
+  if (len > UINT32_MAX) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
+    return false;
+  }
+  uint32_t length = uint32_t(len);
 
-    /* Step 9.b. If k is actualIndex, let fromValue be value. */
-    if (k == uint64_t(actualIndex)) {
+  MOZ_ASSERT(length > 0);
+  MOZ_ASSERT(0 <= actualIndex && actualIndex < UINT32_MAX);
+
+  // Steps 7-10 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, length)) {
+    auto nobj = obj.as<NativeObject>();
+
+    ArrayObject* arr = NewDenseFullyAllocatedArray(cx, length);
+    if (!arr) {
+      return false;
+    }
+    arr->setLength(length);
+
+    CopyDenseElementsFillHoles(arr, nobj, length);
+
+    // Replace the value at |actualIndex|.
+    arr->setDenseElement(uint32_t(actualIndex), args.get(1));
+
+    // Ensure the result array is packed and has the correct length.
+    MOZ_ASSERT(IsPackedArray(arr));
+    MOZ_ASSERT(arr->length() == length);
+
+    args.rval().setObject(*arr);
+    return true;
+  }
+
+  // Step 7. Let A be ? ArrayCreate(𝔽(len)).
+  RootedObject arr(cx, NewDensePartlyAllocatedArray(cx, length));
+  if (!arr) {
+    return false;
+  }
+
+  // Steps 8-9. Let k be 0; Repeat, while k < len,
+  RootedValue fromValue(cx);
+  for (uint32_t k = 0; k < length; k++) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    // Skip Step 9.a. Let Pk be ! ToString(𝔽(k)).
+
+    // Step 9.b. If k is actualIndex, let fromValue be value.
+    if (k == uint32_t(actualIndex)) {
       fromValue = args.get(1);
     } else {
-      /* Step 9.c. Else, let fromValue be ? Get(O, 𝔽(k)). */
+      // Step 9.c. Else, let fromValue be ? Get(O, 𝔽(k)).
       if (!GetArrayElement(cx, obj, k, &fromValue)) {
         return false;
       }
     }
-    /* Step 9.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(k), fromValue). */
-    if (!SetArrayElement(cx, A, k, fromValue)) {
+
+    // Step 9.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(k), fromValue).
+    if (!DefineArrayElement(cx, arr, k, fromValue)) {
       return false;
     }
   }
 
-  /* Step 10. Return A. */
-  args.rval().setObject(*A);
+  // Step 10. Return A.
+  args.rval().setObject(*arr);
   return true;
 }
 #endif
@@ -4440,7 +4621,7 @@ static const JSFunctionSpec array_methods[] = {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
     JS_SELF_HOSTED_FN("toReversed", "ArrayToReversed", 0, 0),
     JS_SELF_HOSTED_FN("toSorted", "ArrayToSorted", 1, 0),
-    JS_FN("toSpliced", array_to_spliced, 2, 0), JS_FN("with", array_with, 2, 0),
+    JS_FN("toSpliced", array_toSpliced, 2, 0), JS_FN("with", array_with, 2, 0),
 #endif
 
     JS_FS_END};
@@ -4708,7 +4889,7 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
 #endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  if (cx->options().changeArrayByCopy()) {
+  if (cx->realm()->creationOptions().getChangeArrayByCopyEnabled()) {
     /* The reason that "with" is not included in the unscopableList is
      * because it is already a reserved word.
      */

@@ -8,6 +8,16 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
 
+const FXA_CONTINUE_EVENT = [
+  ["firefoxview", "entered", "firefoxview", undefined],
+  ["firefoxview", "fxa_continue", "sync", undefined],
+];
+
+const FXA_MOBILE_EVENT = [
+  ["firefoxview", "entered", "firefoxview", undefined],
+  ["firefoxview", "fxa_mobile", "sync", undefined, { has_devices: "false" }],
+];
+
 var gMockFxaDevices = null;
 
 function promiseSyncReady() {
@@ -219,6 +229,7 @@ add_task(async function test_sync_admin_disabled() {
 });
 
 add_task(async function test_unconfigured_initial_state() {
+  await clearAllParentTelemetryEvents();
   const sandbox = setupMocks({ state: UIState.STATUS_NOT_CONFIGURED });
   await withFirefoxView({}, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
@@ -229,11 +240,38 @@ add_task(async function test_unconfigured_initial_state() {
       mobilePromo: false,
       mobileConfirmation: false,
     });
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      'button[data-action="view1-primary-action"]',
+      {},
+      browser
+    );
+
+    await TestUtils.waitForCondition(
+      () => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 2;
+      },
+      "Waiting for entered and fxa_continue firefoxview telemetry events.",
+      200,
+      100
+    );
+
+    TelemetryTestUtils.assertEvents(
+      FXA_CONTINUE_EVENT,
+      { category: "firefoxview" },
+      { clear: true, process: "parent" }
+    );
   });
   await tearDown(sandbox);
+  gBrowser.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_signed_in() {
+  await clearAllParentTelemetryEvents();
   const sandbox = setupMocks({
     state: UIState.STATUS_SIGNED_IN,
     fxaDevices: [
@@ -261,8 +299,34 @@ add_task(async function test_signed_in() {
       mobilePromo: false,
       mobileConfirmation: false,
     });
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      'button[data-action="view2-primary-action"]',
+      {},
+      browser
+    );
+
+    await TestUtils.waitForCondition(
+      () => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 2;
+      },
+      "Waiting for entered and fxa_mobile firefoxview telemetry events.",
+      200,
+      100
+    );
+
+    TelemetryTestUtils.assertEvents(
+      FXA_MOBILE_EVENT,
+      { category: "firefoxview" },
+      { clear: true, process: "parent" }
+    );
   });
   await tearDown(sandbox);
+  gBrowser.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_2nd_desktop_connected() {

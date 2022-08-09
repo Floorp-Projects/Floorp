@@ -249,8 +249,8 @@ function ArrayFilter(callbackfn /*, thisArg*/) {
 #ifdef NIGHTLY_BUILD
 // Array Grouping proposal
 //
-// Array.prototype.groupBy
-// https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupby
+// Array.prototype.group
+// https://tc39.es/proposal-array-grouping/#sec-array.prototype.group
 function ArrayGroup(callbackfn /*, thisArg*/) {
   /* Step 1. Let O be ? ToObject(this value). */
   var O = ToObject(this);
@@ -264,9 +264,12 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
   }
 
   /* Step 5. Let groups be a new empty List. */
-  var groups = new_List();
+  // Not applicable in our implementation.
 
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  /* Step 7. Let obj be ! OrdinaryObjectCreate(null). */
+  var object = std_Object_create(null);
+
+  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
   /* Steps 4, 6. */
   for (var k = 0; k < len; k++) {
@@ -282,29 +285,23 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
      *   ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
      */
     var propertyKey = TO_PROPERTY_KEY(
-      callContentFunction(callbackfn, T, kValue, k, O)
+      callContentFunction(callbackfn, thisArg, kValue, k, O)
     );
 
     /* Step 6.d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue). */
-    if (!groups[propertyKey]) {
-      var elements = [kValue];
-      DefineDataProperty(groups, propertyKey, elements);
+    var elements = object[propertyKey];
+    if (elements === undefined) {
+      DefineDataProperty(object, propertyKey, [kValue]);
     } else {
-      var lenElements = groups[propertyKey].length;
-      DefineDataProperty(groups[propertyKey], lenElements, kValue);
+      DefineDataProperty(elements, elements.length, kValue);
     }
   }
-
-  /* Step 7. Let obj be ! OrdinaryObjectCreate(null). */
-  var object = std_Object_create(null);
 
   /* Step 8. For each Record { [[Key]], [[Elements]] } g of groups, do
    *  a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
    *  b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
    */
-  for (var propertyKey in groups) {
-    DefineDataProperty(object, propertyKey, groups[propertyKey]);
-  }
+  // Not applicable in our implementation.
 
   /* Step 9. Return obj. */
   return object;
@@ -313,7 +310,7 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
 // Array Grouping proposal
 //
 // Array.prototype.groupToMap
-// https://tc39.es/proposal-array-grouping/#sec-array.prototype.groupbymap
+// https://tc39.es/proposal-array-grouping/#sec-array.prototype.grouptomap
 function ArrayGroupToMap(callbackfn /*, thisArg*/) {
   /* Step 1. Let O be ? ToObject(this value). */
   var O = ToObject(this);
@@ -338,7 +335,7 @@ function ArrayGroupToMap(callbackfn /*, thisArg*/) {
   var C = GetBuiltinConstructor("Map");
   var map = new C();
 
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
 
   /* Combine Step 6. and Step 8.
    *
@@ -358,7 +355,7 @@ function ArrayGroupToMap(callbackfn /*, thisArg*/) {
     /* Step 6.c.
      * Let key be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
      */
-    var propertyKey = callContentFunction(callbackfn, T, kValue, k, O);
+    var key = callContentFunction(callbackfn, thisArg, kValue, k, O);
 
     /* Skipping Step 6.d. If key is -0𝔽, set key to +0𝔽.
      *
@@ -372,11 +369,10 @@ function ArrayGroupToMap(callbackfn /*, thisArg*/) {
      * 6.e (Perform ! AddValueToKeyedGroup(groups, key, kValue))
      * and 8.a-b as a result.
      */
-    if (!callFunction(std_Map_get, map, propertyKey)) {
-      var elements = [kValue];
-      callFunction(std_Map_set, map, propertyKey, elements);
+    var elements = callFunction(std_Map_get, map, key);
+    if (elements === undefined) {
+      callFunction(std_Map_set, map, key, [kValue]);
     } else {
-      var elements = callFunction(std_Map_get, map, propertyKey);
       DefineDataProperty(elements, elements.length, kValue);
     }
   }

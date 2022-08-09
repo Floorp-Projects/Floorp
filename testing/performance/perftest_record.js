@@ -332,11 +332,34 @@ async function perform_live_login(context, commands) {
   await login(context, commands, final_button);
 }
 
+async function dismissCookiePrompt(input_cmds, context, commands) {
+  context.log.info("Searching for cookie prompt elements...");
+  let cmds = input_cmds.split(";;;");
+  for (let cmdstr of cmds) {
+    let [cmd, ...args] = cmdstr.split(":::");
+    context.log.info(cmd, args);
+    let result = await commands.js.run(
+      `return document.evaluate("` +
+        args +
+        `", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;`
+    );
+    if (result) {
+      context.log.info("Element found, clicking on it.");
+      await run_command(cmdstr, context, commands);
+    } else {
+      context.log.info(
+        "Element not found! The cookie prompt may have not appeared, please check the screenshots."
+      );
+    }
+  }
+}
+
 async function pageload_test(context, commands) {
   let testUrl = context.options.browsertime.url;
   let secondaryUrl = context.options.browsertime.secondary_url;
   let testName = context.options.browsertime.testName;
-  let input_cmds = context.options.browsertime.commands || "";
+  let dismissPrompt = context.options.browsertime.dismiss_cookie_prompt || "";
+  context.log.info(context.options.browsertime);
 
   // If the user has RAPTOR_LOGINS configured correctly, a local login pageload
   // test can be attempted. Otherwise if attempting it in CI, only sites with the
@@ -362,26 +385,9 @@ async function pageload_test(context, commands) {
   await commands.wait.byTime(1000);
 
   await commands.measure.start(testUrl);
-  if (input_cmds) {
-    context.log.info("Searching for cookie prompt elements...");
-    let cmds = input_cmds.split(";;;");
-    for (let cmdstr of cmds) {
-      let [cmd, ...args] = cmdstr.split(":::");
-      context.log.info(cmd, args);
-      let result = await commands.js.run(
-        `return document.evaluate("` +
-          args +
-          `", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;`
-      );
-      if (result) {
-        context.log.info("Element found, clicking on it.");
-        await run_command(cmdstr, context, commands);
-      } else {
-        context.log.info(
-          "Element not found! The cookie prompt may have not appeared, please check the screenshots."
-        );
-      }
-    }
+  await commands.wait.byTime(40000);
+  if (dismissPrompt) {
+    await dismissCookiePrompt(dismissPrompt, context, commands);
   }
   commands.screenshot.take("test_url_" + testName);
 

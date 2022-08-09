@@ -165,6 +165,17 @@ def setup_vscode(command_context, vscode_cmd):
 
     clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
 
+    cargo_check_command = [
+        mozpath.join(command_context.topsrcdir, "mach"),
+        "--log-no-times",
+        "cargo",
+        "check",
+        "-j",
+        str(multiprocessing.cpu_count() // 2),
+        "--all-crates",
+        "--message-format-json",
+    ]
+
     clangd_json = {
         "clangd.path": clangd_path,
         "clangd.arguments": [
@@ -184,6 +195,14 @@ def setup_vscode(command_context, vscode_cmd):
             "memory",
             "--clang-tidy",
         ],
+        "rust-analyzer.server.extraEnv": {
+            # Point rust-analyzer at the real target directory used by our
+            # build, so it can discover the files created when we run `./mach
+            # cargo check`.
+            "CARGO_TARGET_DIR": command_context.topobjdir,
+        },
+        "rust-analyzer.cargo.buildScripts.overrideCommand": cargo_check_command,
+        "rust-analyzer.checkOnSave.overrideCommand": cargo_check_command,
     }
 
     clang_tidy = {}

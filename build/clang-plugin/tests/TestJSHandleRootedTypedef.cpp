@@ -4,29 +4,29 @@
 #include "js/Id.h"
 
 class Foo {
-  void HandleFunction(JS::HandleFunction){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleId(JS::HandleId){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleObject(JS::HandleObject){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleScript(JS::HandleScript){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleString(JS::HandleString){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleSymbol(JS::HandleSymbol){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleBigInt(JS::HandleBigInt){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleValue(JS::HandleValue){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleValueVector(JS::HandleValueVector){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleObjectVector(JS::HandleObjectVector){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void HandleIdVector(JS::HandleIdVector){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleFunction(JS::HandleFunction){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleId(JS::HandleId){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleObject(JS::HandleObject){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleScript(JS::HandleScript){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleString(JS::HandleString){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleSymbol(JS::HandleSymbol){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleBigInt(JS::HandleBigInt){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleValue(JS::HandleValue){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleValueVector(JS::HandleValueVector){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleObjectVector(JS::HandleObjectVector){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void HandleIdVector(JS::HandleIdVector){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
-  void MutableHandleFunction(JS::MutableHandleFunction){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleId(JS::MutableHandleId){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleObject(JS::MutableHandleObject){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleScript(JS::MutableHandleScript){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleString(JS::MutableHandleString){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleSymbol(JS::MutableHandleSymbol){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleBigInt(JS::MutableHandleBigInt){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleValue(JS::MutableHandleValue){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleValueVector(JS::MutableHandleValueVector){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleObjectVector(JS::MutableHandleObjectVector){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  void MutableHandleIdVector(JS::MutableHandleIdVector){}; // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleFunction(JS::MutableHandleFunction){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleId(JS::MutableHandleId){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleObject(JS::MutableHandleObject){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleScript(JS::MutableHandleScript){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleString(JS::MutableHandleString){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleSymbol(JS::MutableHandleSymbol){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleBigInt(JS::MutableHandleBigInt){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleValue(JS::MutableHandleValue){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleValueVector(JS::MutableHandleValueVector){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleObjectVector(JS::MutableHandleObjectVector){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  void MutableHandleIdVector(JS::MutableHandleIdVector){}; // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
   // Examples of preferred forms
   void FullHandleFunction(JS::Handle<JSFunction*>){};
@@ -61,54 +61,54 @@ class Foo {
 };
 
 static void Bar(JSContext *aCx) {
-  JS::RootedObject RootedObject(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedFunction RootedFunction(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedScript RootedScript(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedString RootedString(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedSymbol RootedSymbol(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedBigInt RootedBigInt(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedId RootedId(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedValue RootedValue(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedObject RootedObject(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedFunction RootedFunction(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedScript RootedScript(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedString RootedString(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedSymbol RootedSymbol(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedBigInt RootedBigInt(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedId RootedId(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedValue RootedValue(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
-  JS::RootedValueVector RootedValueVector(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedObjectVector RootedObjectVector(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::RootedIdVector RootedIdVector(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedValueVector RootedValueVector(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedObjectVector RootedObjectVector(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::RootedIdVector RootedIdVector(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
-  JS::PersistentRootedFunction PersistentRootedFunction(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedId PersistentRootedId(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedObject PersistentRootedObject(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedScript PersistentRootedScript(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedString PersistentRootedString(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedSymbol PersistentRootedSymbol(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedBigInt PersistentRootedBigInt(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedValue PersistentRootedValue(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedFunction PersistentRootedFunction(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedId PersistentRootedId(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedObject PersistentRootedObject(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedScript PersistentRootedScript(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedString PersistentRootedString(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedSymbol PersistentRootedSymbol(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedBigInt PersistentRootedBigInt(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedValue PersistentRootedValue(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
-  JS::PersistentRootedIdVector PersistentRootedIdVector(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::PersistentRootedObjectVector PersistentRootedObjectVector(aCx); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedIdVector PersistentRootedIdVector(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::PersistentRootedObjectVector PersistentRootedObjectVector(aCx); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
-  JS::HandleFunction HandleFunction(RootedFunction); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleId HandleId(RootedId); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleObject HandleObject(RootedObject); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleScript HandleScript(RootedScript); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleString HandleString(RootedString); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleSymbol HandleSymbol(RootedSymbol); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleBigInt HandleBigInt(RootedBigInt); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleValue HandleValue(RootedValue); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleValueVector HandleValueVector(RootedValueVector); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleObjectVector HandleObjectVector(RootedObjectVector); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::HandleIdVector HandleIdVector(RootedIdVector); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleFunction HandleFunction(RootedFunction); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleId HandleId(RootedId); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleObject HandleObject(RootedObject); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleScript HandleScript(RootedScript); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleString HandleString(RootedString); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleSymbol HandleSymbol(RootedSymbol); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleBigInt HandleBigInt(RootedBigInt); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleValue HandleValue(RootedValue); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleValueVector HandleValueVector(RootedValueVector); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleObjectVector HandleObjectVector(RootedObjectVector); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::HandleIdVector HandleIdVector(RootedIdVector); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
-  JS::MutableHandleFunction MutableHandleFunction(&RootedFunction); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleId MutableHandleId(&RootedId); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleObject MutableHandleObject(&RootedObject); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleScript MutableHandleScript(&RootedScript); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleString MutableHandleString(&RootedString); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleSymbol MutableHandleSymbol(&RootedSymbol); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleBigInt MutableHandleBigInt(&RootedBigInt); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleValue MutableHandleValue(&RootedValue); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleValueVector MutableHandleValueVector(&RootedValueVector); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleObjectVector MutableHandleObjectVector(&RootedObjectVector); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
-  JS::MutableHandleIdVector MutableHandleIdVector(&RootedIdVector); // expected-warning {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleFunction MutableHandleFunction(&RootedFunction); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleId MutableHandleId(&RootedId); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleObject MutableHandleObject(&RootedObject); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleScript MutableHandleScript(&RootedScript); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleString MutableHandleString(&RootedString); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleSymbol MutableHandleSymbol(&RootedSymbol); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleBigInt MutableHandleBigInt(&RootedBigInt); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleValue MutableHandleValue(&RootedValue); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleValueVector MutableHandleValueVector(&RootedValueVector); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleObjectVector MutableHandleObjectVector(&RootedObjectVector); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
+  JS::MutableHandleIdVector MutableHandleIdVector(&RootedIdVector); // expected-error {{The fully qualified types are preferred over the shorthand typedefs for JS::Handle/JS::Rooted types outside SpiderMonkey.}}
 
   // Examples of preferred forms
   JS::Rooted<JSObject*> FullRootedObject(aCx);

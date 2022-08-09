@@ -222,6 +222,14 @@ class JS_PUBLIC_API RealmCreationOptions {
   }
 #endif
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  bool getChangeArrayByCopyEnabled() const { return changeArrayByCopy_; }
+  RealmCreationOptions& setChangeArrayByCopyEnabled(bool flag) {
+    changeArrayByCopy_ = flag;
+    return *this;
+  }
+#endif
+
 #ifdef ENABLE_NEW_SET_METHODS
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
   RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
@@ -276,6 +284,9 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ = true;
+#endif
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  bool changeArrayByCopy_ = false;
 #endif
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods_ = false;

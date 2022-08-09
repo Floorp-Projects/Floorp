@@ -70,6 +70,16 @@ const syncedTabsData5 = [
   },
 ];
 
+const TAB_PICKUP_EVENT = [
+  ["firefoxview", "entered", "firefoxview", undefined],
+  ["firefoxview", "synced_tabs", "tabs", undefined, { count: "1" }],
+  ["firefoxview", "tab_pickup", "tabs", undefined],
+];
+
+const TAB_PICKUP_OPEN_EVENT = [
+  ["firefoxview", "tab_pickup_open", "tabs", "false"],
+];
+
 function cleanup() {
   Services.prefs.clearUserPref("services.sync.engine.tabs");
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
@@ -301,6 +311,7 @@ add_task(async function test_time_updates_correctly() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.firefox-view.updateTimeMs", 100]],
   });
+  await clearAllParentTelemetryEvents();
 
   await BrowserTestUtils.withNewTab(
     {
@@ -317,10 +328,9 @@ add_task(async function test_time_updates_correctly() {
 
       await setupListState(browser);
 
-      ok(
-        document
-          .querySelector("span.synced-tab-li-time")
-          .textContent.includes("Just now"),
+      Assert.stringContains(
+        document.querySelector("span.synced-tab-li-time").textContent,
+        "Just now",
         "synced-tab-li-time text is 'Just now'"
       );
 
@@ -338,6 +348,53 @@ add_task(async function test_time_updates_correctly() {
       ok(
         timeLabel.textContent.includes("minute"),
         "synced-tab-li-time text has updated"
+      );
+
+      document.querySelector("ol.synced-tabs-list > li").click();
+
+      await TestUtils.waitForCondition(
+        () => {
+          let events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 3;
+        },
+        "Waiting for entered, synced_tabs, and tab_pickup firefoxview telemetry events.",
+        200,
+        100
+      );
+
+      TelemetryTestUtils.assertEvents(
+        TAB_PICKUP_EVENT,
+        { category: "firefoxview" },
+        { clear: true, process: "parent" }
+      );
+
+      gBrowser.removeTab(gBrowser.selectedTab);
+
+      await clearAllParentTelemetryEvents();
+
+      await waitForElementVisible(browser, "#collapsible-synced-tabs-button");
+      document.getElementById("collapsible-synced-tabs-button").click();
+
+      await TestUtils.waitForCondition(
+        () => {
+          let events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 1;
+        },
+        "Waiting for tab_pickup_open firefoxview telemetry event.",
+        200,
+        100
+      );
+
+      TelemetryTestUtils.assertEvents(
+        TAB_PICKUP_OPEN_EVENT,
+        { category: "firefoxview" },
+        { clear: true, process: "parent" }
       );
 
       sandbox.restore();

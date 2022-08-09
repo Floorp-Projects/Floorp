@@ -4,6 +4,10 @@
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 const syncedTabsData1 = [
   {
     id: 1,
@@ -53,6 +57,18 @@ const syncedTabsData1 = [
     ],
   },
 ];
+
+async function clearAllParentTelemetryEvents() {
+  // Clear everything.
+  await TestUtils.waitForCondition(() => {
+    Services.telemetry.clearEvents();
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).parent;
+    return !events || !events.length;
+  });
+}
 
 /* eslint-disable no-unused-vars */
 function testVisibility(browser, expected) {
