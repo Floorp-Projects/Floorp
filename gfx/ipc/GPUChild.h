@@ -79,7 +79,7 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
                                            const nsCString& aMessage);
   mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aDetails);
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
-      const media::MediaCodecsSupported& aSupported);
+      const PDMFactory::MediaCodecsSupported& aSupported);
   mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& aBuf);
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,

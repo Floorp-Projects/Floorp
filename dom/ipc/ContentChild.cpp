@@ -4633,7 +4633,8 @@ IPCResult ContentChild::RecvFlushFOGData(FlushFOGDataResolver&& aResolver) {
 }
 
 IPCResult ContentChild::RecvUpdateMediaCodecsSupported(
-    RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported) {
+    RemoteDecodeIn aLocation,
+    const PDMFactory::MediaCodecsSupported& aSupported) {
   RemoteDecoderManagerChild::SetSupported(aLocation, aSupported);
 
   return IPC_OK();

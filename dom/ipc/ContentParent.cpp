@@ -363,7 +363,8 @@ namespace dom {
 
 LazyLogModule gProcessLog("Process");
 
-static std::map<RemoteDecodeIn, media::MediaCodecsSupported> sCodecsSupported;
+static std::map<RemoteDecodeIn, PDMFactory::MediaCodecsSupported>
+    sCodecsSupported;
 
 /* static */
 uint32_t ContentParent::sMaxContentProcesses = 0;
@@ -1631,7 +1632,8 @@ void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
 
 /*static */
 void ContentParent::BroadcastMediaCodecsSupportedUpdate(
-    RemoteDecodeIn aLocation, const media::MediaCodecsSupported& aSupported) {
+    RemoteDecodeIn aLocation,
+    const PDMFactory::MediaCodecsSupported& aSupported) {
   sCodecsSupported[aLocation] = aSupported;
   for (auto* cp : AllProcesses(eAll)) {
     Unused << cp->SendUpdateMediaCodecsSupported(aLocation, aSupported);
