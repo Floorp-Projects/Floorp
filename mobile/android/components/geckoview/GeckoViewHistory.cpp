@@ -203,7 +203,7 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
+  OnSuccess(JS::Handle<JS::Value> aData, JSContext* aCx) override {
     Maybe<bool> visitedState = GetVisitedValue(aCx, aData);
     JS_ClearPendingException(aCx);
     if (visitedState) {
@@ -215,12 +215,14 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
   }
 
   NS_IMETHOD
-  OnError(JS::HandleValue aData, JSContext* aCx) override { return NS_OK; }
+  OnError(JS::Handle<JS::Value> aData, JSContext* aCx) override {
+    return NS_OK;
+  }
 
  private:
   virtual ~OnVisitedCallback() {}
 
-  Maybe<bool> GetVisitedValue(JSContext* aCx, JS::HandleValue aData) {
+  Maybe<bool> GetVisitedValue(JSContext* aCx, JS::Handle<JS::Value> aData) {
     if (NS_WARN_IF(!aData.isBoolean())) {
       return Nothing();
     }
@@ -359,7 +361,7 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
+  OnSuccess(JS::Handle<JS::Value> aData, JSContext* aCx) override {
     nsTArray<VisitedURI> visitedURIs;
     if (!ExtractVisitedURIs(aCx, aData, visitedURIs)) {
       JS_ClearPendingException(aCx);
@@ -374,7 +376,9 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
   }
 
   NS_IMETHOD
-  OnError(JS::HandleValue aData, JSContext* aCx) override { return NS_OK; }
+  OnError(JS::Handle<JS::Value> aData, JSContext* aCx) override {
+    return NS_OK;
+  }
 
  private:
   virtual ~GetVisitedCallback() {}
@@ -389,7 +393,7 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
    *
    * TODO (bug 1503482): Remove this unboxing.
    */
-  bool ExtractVisitedURIs(JSContext* aCx, JS::HandleValue aData,
+  bool ExtractVisitedURIs(JSContext* aCx, JS::Handle<JS::Value> aData,
                           nsTArray<VisitedURI>& aVisitedURIs) {
     if (aData.isNull()) {
       return true;

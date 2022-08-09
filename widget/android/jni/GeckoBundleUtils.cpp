@@ -21,7 +21,7 @@ bool CheckJS(JSContext* aCx, bool aResult) {
   return aResult;
 }
 
-nsresult BoxString(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxString(JSContext* aCx, JS::Handle<JS::Value> aData,
                    jni::Object::LocalRef& aOut) {
   if (aData.isNullOrUndefined()) {
     aOut = nullptr;
@@ -30,7 +30,7 @@ nsresult BoxString(JSContext* aCx, JS::HandleValue aData,
 
   MOZ_ASSERT(aData.isString());
 
-  JS::RootedString str(aCx, aData.toString());
+  JS::Rooted<JSString*> str(aCx, aData.toString());
 
   if (JS::StringHasLatin1Chars(str)) {
     nsAutoJSString autoStr;
@@ -63,16 +63,16 @@ nsresult BoxString(JSContext* aCx, JS::HandleValue aData,
   return NS_OK;
 }
 
-nsresult BoxObject(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxObject(JSContext* aCx, JS::Handle<JS::Value> aData,
                    jni::Object::LocalRef& aOut);
 
 template <typename Type, bool (JS::Value::*IsType)() const,
           Type (JS::Value::*ToType)() const, class ArrayType,
           typename ArrayType::LocalRef (*NewArray)(const Type*, size_t)>
-nsresult BoxArrayPrimitive(JSContext* aCx, JS::HandleObject aData,
+nsresult BoxArrayPrimitive(JSContext* aCx, JS::Handle<JSObject*> aData,
                            jni::Object::LocalRef& aOut, size_t aLength,
-                           JS::HandleValue aElement) {
-  JS::RootedValue element(aCx);
+                           JS::Handle<JS::Value> aElement) {
+  JS::Rooted<JS::Value> element(aCx);
   auto data = MakeUnique<Type[]>(aLength);
   data[0] = (aElement.get().*ToType)();
 
@@ -88,13 +88,14 @@ nsresult BoxArrayPrimitive(JSContext* aCx, JS::HandleObject aData,
 }
 
 template <class Type,
-          nsresult (*Box)(JSContext*, JS::HandleValue, jni::Object::LocalRef&),
+          nsresult (*Box)(JSContext*, JS::Handle<JS::Value>,
+                          jni::Object::LocalRef&),
           typename IsType>
-nsresult BoxArrayObject(JSContext* aCx, JS::HandleObject aData,
+nsresult BoxArrayObject(JSContext* aCx, JS::Handle<JSObject*> aData,
                         jni::Object::LocalRef& aOut, size_t aLength,
-                        JS::HandleValue aElement, IsType&& aIsType) {
+                        JS::Handle<JS::Value> aElement, IsType&& aIsType) {
   auto out = jni::ObjectArray::New<Type>(aLength);
-  JS::RootedValue element(aCx);
+  JS::Rooted<JS::Value> element(aCx);
   jni::Object::LocalRef jniElement(aOut.Env());
 
   nsresult rv = (*Box)(aCx, aElement, jniElement);
@@ -115,7 +116,7 @@ nsresult BoxArrayObject(JSContext* aCx, JS::HandleObject aData,
   return NS_OK;
 }
 
-nsresult BoxArray(JSContext* aCx, JS::HandleObject aData,
+nsresult BoxArray(JSContext* aCx, JS::Handle<JSObject*> aData,
                   jni::Object::LocalRef& aOut) {
   uint32_t length = 0;
   NS_ENSURE_TRUE(CheckJS(aCx, JS::GetArrayLength(aCx, aData, &length)),
@@ -129,7 +130,7 @@ nsresult BoxArray(JSContext* aCx, JS::HandleObject aData,
 
   // We only check the first element's type. If the array has mixed types,
   // we'll throw an error during actual conversion.
-  JS::RootedValue element(aCx);
+  JS::Rooted<JS::Value> element(aCx);
   NS_ENSURE_TRUE(CheckJS(aCx, JS_GetElement(aCx, aData, 0, &element)),
                  NS_ERROR_FAILURE);
 
@@ -157,7 +158,7 @@ nsresult BoxArray(JSContext* aCx, JS::HandleObject aData,
   }
 
   if (element.isNullOrUndefined() || element.isString()) {
-    const auto isString = [](JS::HandleValue val) -> bool {
+    const auto isString = [](JS::Handle<JS::Value> val) -> bool {
       return val.isString();
     };
     nsresult rv = BoxArrayObject<jni::String, &BoxString>(
@@ -168,12 +169,12 @@ nsresult BoxArray(JSContext* aCx, JS::HandleObject aData,
     // First element was null/undefined, so it may still be an object array.
   }
 
-  const auto isObject = [aCx](JS::HandleValue val) -> bool {
+  const auto isObject = [aCx](JS::Handle<JS::Value> val) -> bool {
     if (!val.isObject()) {
       return false;
     }
     bool array = false;
-    JS::RootedObject obj(aCx, &val.toObject());
+    JS::Rooted<JSObject*> obj(aCx, &val.toObject());
     // We don't support array of arrays.
     return CheckJS(aCx, JS::IsArrayObject(aCx, obj, &array)) && !array;
   };
@@ -187,10 +188,10 @@ nsresult BoxArray(JSContext* aCx, JS::HandleObject aData,
   return NS_ERROR_INVALID_ARG;
 }
 
-nsresult BoxValue(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxValue(JSContext* aCx, JS::Handle<JS::Value> aData,
                   jni::Object::LocalRef& aOut);
 
-nsresult BoxObject(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxObject(JSContext* aCx, JS::Handle<JS::Value> aData,
                    jni::Object::LocalRef& aOut) {
   if (aData.isNullOrUndefined()) {
     aOut = nullptr;
@@ -200,7 +201,7 @@ nsresult BoxObject(JSContext* aCx, JS::HandleValue aData,
   MOZ_ASSERT(aData.isObject());
 
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
-  JS::RootedObject obj(aCx, &aData.toObject());
+  JS::Rooted<JSObject*> obj(aCx, &aData.toObject());
 
   bool isArray = false;
   if (CheckJS(aCx, JS::IsArrayObject(aCx, obj, &isArray)) && isArray) {
@@ -216,15 +217,15 @@ nsresult BoxObject(JSContext* aCx, JS::HandleValue aData,
   // Iterate through each property of the JS object.
   for (size_t i = 0; i < ids.length(); i++) {
     const JS::RootedId id(aCx, ids[i]);
-    JS::RootedValue idVal(aCx);
-    JS::RootedValue val(aCx);
+    JS::Rooted<JS::Value> idVal(aCx);
+    JS::Rooted<JS::Value> val(aCx);
     jni::Object::LocalRef key(aOut.Env());
     jni::Object::LocalRef value(aOut.Env());
 
     NS_ENSURE_TRUE(CheckJS(aCx, JS_IdToValue(aCx, id, &idVal)),
                    NS_ERROR_FAILURE);
 
-    JS::RootedString idStr(aCx, JS::ToString(aCx, idVal));
+    JS::Rooted<JSString*> idStr(aCx, JS::ToString(aCx, idVal));
     NS_ENSURE_TRUE(CheckJS(aCx, !!idStr), NS_ERROR_FAILURE);
 
     idVal.setString(idStr);
@@ -250,7 +251,7 @@ nsresult BoxObject(JSContext* aCx, JS::HandleValue aData,
   return NS_OK;
 }
 
-nsresult BoxValue(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxValue(JSContext* aCx, JS::Handle<JS::Value> aData,
                   jni::Object::LocalRef& aOut) {
   if (aData.isNullOrUndefined()) {
     aOut = nullptr;
@@ -274,7 +275,7 @@ nsresult BoxValue(JSContext* aCx, JS::HandleValue aData,
 
 }  // namespace detail
 
-nsresult BoxData(JSContext* aCx, JS::HandleValue aData,
+nsresult BoxData(JSContext* aCx, JS::Handle<JS::Value> aData,
                  jni::Object::LocalRef& aOut, bool aObjectOnly) {
   nsresult rv = NS_ERROR_INVALID_ARG;
 

@@ -98,7 +98,7 @@ static void SetStrAttribute(JSContext* aCx, JS::Rooted<JSObject*>& aObj, const c
 }
 
 nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSContext* aCx,
-                                                  JS::MutableHandleValue aResult) {
+                                                  JS::MutableHandle<JS::Value> aResult) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSURL* url = nsCocoaUtils::ToNSURL(aPageUrl);

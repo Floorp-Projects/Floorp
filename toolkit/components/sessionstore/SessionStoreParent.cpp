@@ -61,11 +61,11 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
     jni::Object::LocalRef scrollBundle(jni::GetGeckoThreadEnv());
 
     if (aFormData) {
-      JS::RootedObject object(jsapi.cx());
+      JS::Rooted<JSObject*> object(jsapi.cx());
       ErrorResult rv;
       aFormData->ToJSON(jsapi.cx(), &object);
 
-      JS::RootedValue value(jsapi.cx(), JS::ObjectValue(*object));
+      JS::Rooted<JS::Value> value(jsapi.cx(), JS::ObjectValue(*object));
 
       if (NS_FAILED(jni::BoxData(jsapi.cx(), value, formDataBundle, true))) {
         JS_ClearPendingException(jsapi.cx());
@@ -74,10 +74,10 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
     }
 
     if (aScroll) {
-      JS::RootedObject object(jsapi.cx());
+      JS::Rooted<JSObject*> object(jsapi.cx());
       ErrorResult rv;
       aScroll->ToJSON(jsapi.cx(), &object);
-      JS::RootedValue value(jsapi.cx(), JS::ObjectValue(*object));
+      JS::Rooted<JS::Value> value(jsapi.cx(), JS::ObjectValue(*object));
 
       if (NS_FAILED(jni::BoxData(jsapi.cx(), value, scrollBundle, true))) {
         JS_ClearPendingException(jsapi.cx());

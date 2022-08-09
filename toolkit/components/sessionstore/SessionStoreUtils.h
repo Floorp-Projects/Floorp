@@ -139,8 +139,8 @@ class SessionStoreUtils {
       const nsTArray<SSCacheCopy>& aValues,
       Record<nsCString, Record<nsString, nsString>>& aStorage);
 
-  static bool CopyProperty(JSContext* aCx, JS::HandleObject aDst,
-                           JS::HandleObject aSrc, const nsAString& aName);
+  static bool CopyProperty(JSContext* aCx, JS::Handle<JSObject*> aDst,
+                           JS::Handle<JSObject*> aSrc, const nsAString& aName);
 
   template <typename T>
   static bool CopyChildren(JSContext* aCx, JS::Handle<JSObject*> aDst,
