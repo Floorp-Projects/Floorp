@@ -523,7 +523,7 @@ double js::math_random_impl(JSContext* cx) {
   return cx->realm()->getOrCreateRandomNumberGenerator().nextDouble();
 }
 
-bool js::math_random(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_random(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setDouble(math_random_impl(cx));
   return true;
@@ -578,8 +578,8 @@ float js::math_roundf_impl(float x) {
   return std::copysign(fdlibm::floorf(x + add), x);
 }
 
-bool /* ES5 15.8.2.15. */
-js::math_round(JSContext* cx, unsigned argc, Value* vp) {
+/* ES5 15.8.2.15. */
+static bool math_round(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() == 0) {
@@ -662,7 +662,7 @@ double js::math_log10_impl(double x) {
   return fdlibm::log10(x);
 }
 
-bool js::math_log10(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log10(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log10_impl>(cx, argc, vp);
 }
 
@@ -671,7 +671,7 @@ double js::math_log2_impl(double x) {
   return fdlibm::log2(x);
 }
 
-bool js::math_log2(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log2(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log2_impl>(cx, argc, vp);
 }
 
@@ -680,7 +680,7 @@ double js::math_log1p_impl(double x) {
   return fdlibm::log1p(x);
 }
 
-bool js::math_log1p(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_log1p(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_log1p_impl>(cx, argc, vp);
 }
 
@@ -689,7 +689,7 @@ double js::math_expm1_impl(double x) {
   return fdlibm::expm1(x);
 }
 
-bool js::math_expm1(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_expm1(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_expm1_impl>(cx, argc, vp);
 }
 
@@ -698,7 +698,7 @@ double js::math_cosh_impl(double x) {
   return fdlibm::cosh(x);
 }
 
-bool js::math_cosh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_cosh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_cosh_impl>(cx, argc, vp);
 }
 
@@ -707,7 +707,7 @@ double js::math_sinh_impl(double x) {
   return fdlibm::sinh(x);
 }
 
-bool js::math_sinh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_sinh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_sinh_impl>(cx, argc, vp);
 }
 
@@ -716,7 +716,7 @@ double js::math_tanh_impl(double x) {
   return fdlibm::tanh(x);
 }
 
-bool js::math_tanh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_tanh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_tanh_impl>(cx, argc, vp);
 }
 
@@ -725,7 +725,7 @@ double js::math_acosh_impl(double x) {
   return fdlibm::acosh(x);
 }
 
-bool js::math_acosh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_acosh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_acosh_impl>(cx, argc, vp);
 }
 
@@ -734,7 +734,7 @@ double js::math_asinh_impl(double x) {
   return fdlibm::asinh(x);
 }
 
-bool js::math_asinh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_asinh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_asinh_impl>(cx, argc, vp);
 }
 
@@ -743,7 +743,7 @@ double js::math_atanh_impl(double x) {
   return fdlibm::atanh(x);
 }
 
-bool js::math_atanh(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_atanh(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
@@ -792,7 +792,7 @@ double js::hypot3(double x, double y, double z) {
   return hypot4(x, y, z, 0.0);
 }
 
-bool js::math_hypot(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_hypot(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return math_hypot_handle(cx, args, args.rval());
 }
@@ -879,7 +879,7 @@ double js::math_sign_impl(double x) {
   return x == 0 ? x : x < 0 ? -1 : 1;
 }
 
-bool js::math_sign(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_sign(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
     args.rval().setNaN();
@@ -900,7 +900,7 @@ double js::math_cbrt_impl(double x) {
   return fdlibm::cbrt(x);
 }
 
-bool js::math_cbrt(JSContext* cx, unsigned argc, Value* vp) {
+static bool math_cbrt(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<math_cbrt_impl>(cx, argc, vp);
 }
 
