@@ -3162,6 +3162,47 @@ static bool array_splice_noRetVal(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
+static void CopyDenseElementsFillHoles(ArrayObject* arr, NativeObject* nobj,
+                                       uint32_t length) {
+  // Ensure |arr| is an empty array with sufficient capacity.
+  MOZ_ASSERT(arr->getDenseInitializedLength() == 0);
+  MOZ_ASSERT(arr->getDenseCapacity() >= length);
+  MOZ_ASSERT(length > 0);
+
+  uint32_t count = std::min(nobj->getDenseInitializedLength(), length);
+
+  if (count > 0) {
+    if (nobj->denseElementsArePacked()) {
+      // Copy all dense elements when no holes are present.
+      arr->initDenseElements(nobj, 0, count);
+    } else {
+      arr->setDenseInitializedLength(count);
+
+      // Handle each element separately to filter out holes.
+      for (uint32_t i = 0; i < count; i++) {
+        Value val = nobj->getDenseElement(i);
+        if (val.isMagic(JS_ELEMENTS_HOLE)) {
+          val = UndefinedValue();
+        }
+        arr->initDenseElement(i, val);
+      }
+    }
+  }
+
+  // Fill trailing holes with undefined.
+  if (count < length) {
+    arr->setDenseInitializedLength(length);
+
+    for (uint32_t i = count; i < length; i++) {
+      arr->initDenseElement(i, UndefinedValue());
+    }
+  }
+
+  // Ensure |length| elements have been copied and no holes are present.
+  MOZ_ASSERT(arr->getDenseInitializedLength() == length);
+  MOZ_ASSERT(arr->denseElementsArePacked());
+}
+
 // https://github.com/tc39/proposal-change-array-by-copy
 // Array.prototype.toSpliced()
 static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
@@ -3378,6 +3419,29 @@ static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
 
   MOZ_ASSERT(length > 0);
   MOZ_ASSERT(0 <= actualIndex && actualIndex < UINT32_MAX);
+
+  // Steps 7-10 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, length)) {
+    auto nobj = obj.as<NativeObject>();
+
+    ArrayObject* arr = NewDenseFullyAllocatedArray(cx, length);
+    if (!arr) {
+      return false;
+    }
+    arr->setLength(length);
+
+    CopyDenseElementsFillHoles(arr, nobj, length);
+
+    // Replace the value at |actualIndex|.
+    arr->setDenseElement(uint32_t(actualIndex), args.get(1));
+
+    // Ensure the result array is packed and has the correct length.
+    MOZ_ASSERT(IsPackedArray(arr));
+    MOZ_ASSERT(arr->length() == length);
+
+    args.rval().setObject(*arr);
+    return true;
+  }
 
   // Step 7. Let A be ? ArrayCreate(𝔽(len)).
   RootedObject arr(cx, NewDensePartlyAllocatedArray(cx, length));
