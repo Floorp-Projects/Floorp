@@ -1241,6 +1241,9 @@ bool JSContext::inAtomsZone() const { return zone_->isAtomsZone(); }
 void JSContext::trace(JSTracer* trc) {
   cycleDetectorVector().trace(trc);
   geckoProfiler().trace(trc);
+  if (isolate) {
+    irregexp::TraceIsolate(trc, isolate.ref());
+  }
 }
 
 JS::NativeStackLimit JSContext::stackLimitForJitCode(JS::StackKind kind) {

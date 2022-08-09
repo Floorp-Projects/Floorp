@@ -105,7 +105,7 @@ WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
   if (NS_WARN_IF(!aPointToSplit.IsInContentNode()) ||
       NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(aSplittingBlockElement)) ||
       NS_WARN_IF(!EditorUtils::IsEditableContent(
-          *aPointToSplit.ContainerAsContent(), EditorType::HTML))) {
+          *aPointToSplit.ContainerAs<nsIContent>(), EditorType::HTML))) {
     return Err(NS_ERROR_FAILURE);
   }
 
@@ -113,7 +113,7 @@ WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
   // may be collapsed **in** a `<br>` element or a comment node.  So, look
   // for splittable point with climbing the tree up.
   EditorDOMPoint pointToSplit(aPointToSplit);
-  for (nsIContent* content : aPointToSplit.ContainerAsContent()
+  for (nsIContent* content : aPointToSplit.ContainerAs<nsIContent>()
                                  ->InclusiveAncestorsOfType<nsIContent>()) {
     if (content == &aSplittingBlockElement) {
       break;
@@ -142,11 +142,12 @@ WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
   }
 
   if (NS_WARN_IF(!pointToSplit.IsInContentNode()) ||
-      NS_WARN_IF(!pointToSplit.ContainerAsContent()->IsInclusiveDescendantOf(
-          &aSplittingBlockElement)) ||
+      NS_WARN_IF(
+          !pointToSplit.ContainerAs<nsIContent>()->IsInclusiveDescendantOf(
+              &aSplittingBlockElement)) ||
       NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(aSplittingBlockElement)) ||
       NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
-          *pointToSplit.ContainerAsContent()))) {
+          *pointToSplit.ContainerAs<nsIContent>()))) {
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
@@ -235,16 +236,16 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 
     // XXX AutoTrackDOMPoint instance, tracker, hasn't been destroyed here.
     //     Do we really need to do update rightBlockElement here??
-    // XXX And afterRightBlockChild.GetContainerAsElement() always returns
+    // XXX And afterRightBlockChild.GetContainerAs<Element>() always returns
     //     an element pointer so that probably here should not use
     //     accessors of EditorDOMPoint, should use DOM API directly instead.
-    if (afterRightBlockChild.GetContainerAsElement()) {
-      rightBlockElement = *afterRightBlockChild.GetContainerAsElement();
+    if (afterRightBlockChild.GetContainerAs<Element>()) {
+      rightBlockElement = *afterRightBlockChild.ContainerAs<Element>();
     } else if (NS_WARN_IF(
-                   !afterRightBlockChild.GetContainerParentAsElement())) {
+                   !afterRightBlockChild.GetContainerParentAs<Element>())) {
       return EditActionResult(NS_ERROR_UNEXPECTED);
     } else {
-      rightBlockElement = *afterRightBlockChild.GetContainerParentAsElement();
+      rightBlockElement = *afterRightBlockChild.GetContainerParentAs<Element>();
     }
   }
 
@@ -426,7 +427,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         "unexpected DOM tree");
     return EditActionResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  // XXX atLeftBlockChild.GetContainerAsElement() should always return
+  // XXX atLeftBlockChild.GetContainerAs<Element>() should always return
   //     an element pointer so that probably here should not use
   //     accessors of EditorDOMPoint, should use DOM API directly instead.
   if (Element* nearestAncestor =
@@ -875,7 +876,8 @@ CreateElementResult WhiteSpaceVisibilityKeeper::InsertBRElement(
                                              &pointToInsert);
         AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(*atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+            MOZ_KnownLive(
+                *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
             atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
         if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
@@ -1035,7 +1037,8 @@ Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
             &invisibleTrailingWhiteSpaceRangeAtEnd);
         AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(*atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+            MOZ_KnownLive(
+                *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
             atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
         if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
@@ -1087,7 +1090,8 @@ Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
             &invisibleTrailingWhiteSpaceRangeAtEnd);
         AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(*atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
+            MOZ_KnownLive(
+                *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
             atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
         if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
@@ -1109,10 +1113,11 @@ Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
   MOZ_DIAGNOSTIC_ASSERT(!theString.IsEmpty());
   if (NS_WARN_IF(!pointToInsert.IsInContentNode()) ||
       !EditorUtils::IsWhiteSpacePreformatted(
-          *pointToInsert.ContainerAsContent())) {
-    const bool isNewLineCollapsible = !pointToInsert.IsInContentNode() ||
-                                      !EditorUtils::IsNewLinePreformatted(
-                                          *pointToInsert.ContainerAsContent());
+          *pointToInsert.ContainerAs<nsIContent>())) {
+    const bool isNewLineCollapsible =
+        !pointToInsert.IsInContentNode() ||
+        !EditorUtils::IsNewLinePreformatted(
+            *pointToInsert.ContainerAs<nsIContent>());
     auto isCollapsibleChar = [&isNewLineCollapsible](char16_t aChar) -> bool {
       return nsCRT::IsAsciiSpace(aChar) &&
              (isNewLineCollapsible || aChar != HTMLEditUtils::kNewLine);
@@ -1466,8 +1471,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
   }
   EditorDOMPoint atFirstChildOfRightNode;
   rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
-      *previousEditableSibling,
-      MOZ_KnownLive(*aCaretPoint.GetContainerAsText()),
+      *previousEditableSibling, MOZ_KnownLive(*aCaretPoint.ContainerAs<Text>()),
       &atFirstChildOfRightNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
@@ -1593,19 +1597,20 @@ WSRunScanner::TextFragmentData::TextFragmentData(
   }
 
   mScanStartPoint = aPoint.template To<EditorDOMPoint>();
-  NS_ASSERTION(EditorUtils::IsEditableContent(
-                   *mScanStartPoint.ContainerAsContent(), EditorType::HTML),
-               "Given content is not editable");
   NS_ASSERTION(
-      mScanStartPoint.ContainerAsContent()->GetAsElementOrParentElement(),
+      EditorUtils::IsEditableContent(*mScanStartPoint.ContainerAs<nsIContent>(),
+                                     EditorType::HTML),
+      "Given content is not editable");
+  NS_ASSERTION(
+      mScanStartPoint.ContainerAs<nsIContent>()->GetAsElementOrParentElement(),
       "Given content is not an element and an orphan node");
   if (NS_WARN_IF(!EditorUtils::IsEditableContent(
-          *mScanStartPoint.ContainerAsContent(), EditorType::HTML))) {
+          *mScanStartPoint.ContainerAs<nsIContent>(), EditorType::HTML))) {
     return;
   }
   const Element* editableBlockElementOrInlineEditingHost =
       HTMLEditUtils::GetInclusiveAncestorElement(
-          *mScanStartPoint.ContainerAsContent(),
+          *mScanStartPoint.ContainerAs<nsIContent>(),
           HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost);
   if (!editableBlockElementOrInlineEditingHost) {
     NS_WARNING(
@@ -1639,11 +1644,12 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
 
-  const bool isWhiteSpaceCollapsible =
-      !EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText());
+  const bool isWhiteSpaceCollapsible = !EditorUtils::IsWhiteSpacePreformatted(
+      *aPoint.template ContainerAs<Text>());
   const bool isNewLineCollapsible =
-      !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText());
-  const nsTextFragment& textFragment = aPoint.ContainerAsText()->TextFragment();
+      !EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
+  const nsTextFragment& textFragment =
+      aPoint.template ContainerAs<Text>()->TextFragment();
   for (uint32_t i = std::min(aPoint.Offset(), textFragment.GetLength()); i;
        i--) {
     WSType wsTypeOfNonCollapsibleChar;
@@ -1668,7 +1674,8 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         if (isWhiteSpaceCollapsible) {
           if (aNBSPData) {
             aNBSPData->NotifyNBSP(
-                EditorDOMPointInText(aPoint.ContainerAsText(), i - 1),
+                EditorDOMPointInText(aPoint.template ContainerAs<Text>(),
+                                     i - 1),
                 NoBreakingSpaceData::Scanning::Backward);
           }
           continue;
@@ -1682,9 +1689,9 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         break;
     }
 
-    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                             *aPoint.ContainerAsText(),
-                             wsTypeOfNonCollapsibleChar));
+    return Some(BoundaryData(
+        EditorDOMPoint(aPoint.template ContainerAs<Text>(), i),
+        *aPoint.template ContainerAs<Text>(), wsTypeOfNonCollapsibleChar));
   }
 
   return Nothing();
@@ -1709,7 +1716,7 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     // The text node does not have visible character, let's keep scanning
     // preceding nodes.
     return BoundaryData::ScanCollapsibleWhiteSpaceStartFrom(
-        EditorDOMPoint(aPoint.ContainerAsText(), 0),
+        EditorDOMPoint(aPoint.template ContainerAs<Text>(), 0),
         aEditableBlockParentOrTopmostEditableInlineContent, aEditingHost,
         aNBSPData);
   }
@@ -1779,11 +1786,12 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
   MOZ_ASSERT(aPoint.IsSetAndValid());
   MOZ_DIAGNOSTIC_ASSERT(aPoint.IsInTextNode());
 
-  const bool isWhiteSpaceCollapsible =
-      !EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText());
+  const bool isWhiteSpaceCollapsible = !EditorUtils::IsWhiteSpacePreformatted(
+      *aPoint.template ContainerAs<Text>());
   const bool isNewLineCollapsible =
-      !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText());
-  const nsTextFragment& textFragment = aPoint.ContainerAsText()->TextFragment();
+      !EditorUtils::IsNewLinePreformatted(*aPoint.template ContainerAs<Text>());
+  const nsTextFragment& textFragment =
+      aPoint.template ContainerAs<Text>()->TextFragment();
   for (uint32_t i = aPoint.Offset(); i < textFragment.GetLength(); i++) {
     WSType wsTypeOfNonCollapsibleChar;
     switch (textFragment.CharAt(i)) {
@@ -1807,7 +1815,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         if (isWhiteSpaceCollapsible) {
           if (aNBSPData) {
             aNBSPData->NotifyNBSP(
-                EditorDOMPointInText(aPoint.ContainerAsText(), i),
+                EditorDOMPointInText(aPoint.template ContainerAs<Text>(), i),
                 NoBreakingSpaceData::Scanning::Forward);
           }
           continue;
@@ -1821,9 +1829,9 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
         break;
     }
 
-    return Some(BoundaryData(EditorDOMPoint(aPoint.ContainerAsText(), i),
-                             *aPoint.ContainerAsText(),
-                             wsTypeOfNonCollapsibleChar));
+    return Some(BoundaryData(
+        EditorDOMPoint(aPoint.template ContainerAs<Text>(), i),
+        *aPoint.template ContainerAs<Text>(), wsTypeOfNonCollapsibleChar));
   }
 
   return Nothing();
@@ -1847,7 +1855,7 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
     // The text node does not have visible character, let's keep scanning
     // following nodes.
     return BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
-        EditorDOMPointInText::AtEndOf(*aPoint.ContainerAsText()),
+        EditorDOMPointInText::AtEndOf(*aPoint.template ContainerAs<Text>()),
         aEditableBlockParentOrTopmostEditableInlineElement, aEditingHost,
         aNBSPData);
   }
@@ -2568,36 +2576,37 @@ WSRunScanner::TextFragmentData::GetInclusiveNextEditableCharPoint(
   //     is outside of our range.
   if (point.IsInTextNode() && point.GetContainer()->IsEditable() &&
       !point.IsEndOfContainer()) {
-    return EditorDOMPointType(point.ContainerAsText(), point.Offset());
+    return EditorDOMPointType(point.ContainerAs<Text>(), point.Offset());
   }
 
   if (point.GetContainer() == GetEndReasonContent()) {
     return EditorDOMPointType();
   }
 
-  NS_ASSERTION(EditorUtils::IsEditableContent(
-                   *mScanStartPoint.ContainerAsContent(), EditorType::HTML),
-               "Given content is not editable");
   NS_ASSERTION(
-      mScanStartPoint.ContainerAsContent()->GetAsElementOrParentElement(),
+      EditorUtils::IsEditableContent(*mScanStartPoint.ContainerAs<nsIContent>(),
+                                     EditorType::HTML),
+      "Given content is not editable");
+  NS_ASSERTION(
+      mScanStartPoint.ContainerAs<nsIContent>()->GetAsElementOrParentElement(),
       "Given content is not an element and an orphan node");
   nsIContent* editableBlockElementOrInlineEditingHost =
-      mScanStartPoint.ContainerAsContent() &&
+      mScanStartPoint.ContainerAs<nsIContent>() &&
               EditorUtils::IsEditableContent(
-                  *mScanStartPoint.ContainerAsContent(), EditorType::HTML)
+                  *mScanStartPoint.ContainerAs<nsIContent>(), EditorType::HTML)
           ? HTMLEditUtils::GetInclusiveAncestorElement(
-                *mScanStartPoint.ContainerAsContent(),
+                *mScanStartPoint.ContainerAs<nsIContent>(),
                 HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost)
           : nullptr;
   if (NS_WARN_IF(!editableBlockElementOrInlineEditingHost)) {
     // Meaning that the container of `mScanStartPoint` is not editable.
     editableBlockElementOrInlineEditingHost =
-        mScanStartPoint.ContainerAsContent();
+        mScanStartPoint.ContainerAs<nsIContent>();
   }
 
   for (nsIContent* nextContent =
            HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-               *point.ContainerAsContent(),
+               *point.ContainerAs<nsIContent>(),
                *editableBlockElementOrInlineEditingHost,
                {LeafNodeType::LeafNodeOrNonEditableNode}, mEditingHost);
        nextContent;
@@ -2648,36 +2657,37 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousEditableCharPoint(
   //     is outside of our range.
   if (point.IsInTextNode() && point.GetContainer()->IsEditable() &&
       !point.IsStartOfContainer()) {
-    return EditorDOMPointType(point.ContainerAsText(), point.Offset() - 1);
+    return EditorDOMPointType(point.ContainerAs<Text>(), point.Offset() - 1);
   }
 
   if (point.GetContainer() == GetStartReasonContent()) {
     return EditorDOMPointType();
   }
 
-  NS_ASSERTION(EditorUtils::IsEditableContent(
-                   *mScanStartPoint.ContainerAsContent(), EditorType::HTML),
-               "Given content is not editable");
   NS_ASSERTION(
-      mScanStartPoint.ContainerAsContent()->GetAsElementOrParentElement(),
+      EditorUtils::IsEditableContent(*mScanStartPoint.ContainerAs<nsIContent>(),
+                                     EditorType::HTML),
+      "Given content is not editable");
+  NS_ASSERTION(
+      mScanStartPoint.ContainerAs<nsIContent>()->GetAsElementOrParentElement(),
       "Given content is not an element and an orphan node");
   nsIContent* editableBlockElementOrInlineEditingHost =
-      mScanStartPoint.ContainerAsContent() &&
+      mScanStartPoint.ContainerAs<nsIContent>() &&
               EditorUtils::IsEditableContent(
-                  *mScanStartPoint.ContainerAsContent(), EditorType::HTML)
+                  *mScanStartPoint.ContainerAs<nsIContent>(), EditorType::HTML)
           ? HTMLEditUtils::GetInclusiveAncestorElement(
-                *mScanStartPoint.ContainerAsContent(),
+                *mScanStartPoint.ContainerAs<nsIContent>(),
                 HTMLEditUtils::ClosestEditableBlockElementOrInlineEditingHost)
           : nullptr;
   if (NS_WARN_IF(!editableBlockElementOrInlineEditingHost)) {
     // Meaning that the container of `mScanStartPoint` is not editable.
     editableBlockElementOrInlineEditingHost =
-        mScanStartPoint.ContainerAsContent();
+        mScanStartPoint.ContainerAs<nsIContent>();
   }
 
   for (nsIContent* previousContent =
            HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               *point.ContainerAsContent(),
+               *point.ContainerAs<nsIContent>(),
                *editableBlockElementOrInlineEditingHost,
                {LeafNodeType::LeafNodeOrNonEditableNode}, mEditingHost);
        previousContent;
@@ -2756,10 +2766,10 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhiteSpace.IsEndOfContainer());
   MOZ_ASSERT_IF(!EditorUtils::IsNewLinePreformatted(
-                    *aPointAtASCIIWhiteSpace.ContainerAsContent()),
+                    *aPointAtASCIIWhiteSpace.ContainerAs<Text>()),
                 aPointAtASCIIWhiteSpace.IsCharCollapsibleASCIISpace());
   MOZ_ASSERT_IF(EditorUtils::IsNewLinePreformatted(
-                    *aPointAtASCIIWhiteSpace.ContainerAsContent()),
+                    *aPointAtASCIIWhiteSpace.ContainerAs<Text>()),
                 aPointAtASCIIWhiteSpace.IsCharASCIISpace());
 
   // If we're deleting text forward and the next visible character is first
@@ -2784,7 +2794,7 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
     if (!nextVisibleCharOffset.isSome()) {
       return EditorDOMPointInText();  // Keep scanning following text nodes
     }
-    EditorDOMPointInText atNextVisibleChar(aPoint.ContainerAsText(),
+    EditorDOMPointInText atNextVisibleChar(aPoint.ContainerAs<Text>(),
                                            nextVisibleCharOffset.value());
     if (!NeedToScanFollowingWhiteSpaces(atNextVisibleChar)) {
       return atNextVisibleChar;
@@ -2793,9 +2803,9 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
     nextVisibleCharOffset =
         HTMLEditUtils::GetNextNonCollapsibleCharOffset(atNextVisibleChar);
     if (nextVisibleCharOffset.isSome()) {
-      MOZ_ASSERT(aPoint.ContainerAsText() ==
-                 atNextVisibleChar.ContainerAsText());
-      return EditorDOMPointInText(atNextVisibleChar.ContainerAsText(),
+      MOZ_ASSERT(aPoint.ContainerAs<Text>() ==
+                 atNextVisibleChar.ContainerAs<Text>());
+      return EditorDOMPointInText(atNextVisibleChar.ContainerAs<Text>(),
                                   nextVisibleCharOffset.value());
     }
     return EditorDOMPointInText();  // Keep scanning following text nodes
@@ -2815,8 +2825,8 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
   // the following text nodes.
   // XXX Perhaps, we should stop scanning if there is non-editable and visible
   //     content.
-  EditorDOMPointInText afterLastWhiteSpace =
-      EditorDOMPointInText::AtEndOf(*aPointAtASCIIWhiteSpace.ContainerAsText());
+  EditorDOMPointInText afterLastWhiteSpace = EditorDOMPointInText::AtEndOf(
+      *aPointAtASCIIWhiteSpace.ContainerAs<Text>());
   for (EditorDOMPointInText atEndOfPreviousTextNode = afterLastWhiteSpace;;) {
     const auto atStartOfNextTextNode =
         GetInclusiveNextEditableCharPoint<EditorDOMPointInText>(
@@ -2851,7 +2861,8 @@ WSRunScanner::TextFragmentData::GetEndOfCollapsibleASCIIWhiteSpaces(
 
     // The next text nodes ends with white-space too.  Try next one.
     afterLastWhiteSpace = atEndOfPreviousTextNode =
-        EditorDOMPointInText::AtEndOf(*atStartOfNextTextNode.ContainerAsText());
+        EditorDOMPointInText::AtEndOf(
+            *atStartOfNextTextNode.ContainerAs<Text>());
   }
 }
 
@@ -2866,10 +2877,10 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
   MOZ_ASSERT(aPointAtASCIIWhiteSpace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhiteSpace.IsEndOfContainer());
   MOZ_ASSERT_IF(!EditorUtils::IsNewLinePreformatted(
-                    *aPointAtASCIIWhiteSpace.ContainerAsContent()),
+                    *aPointAtASCIIWhiteSpace.ContainerAs<Text>()),
                 aPointAtASCIIWhiteSpace.IsCharCollapsibleASCIISpace());
   MOZ_ASSERT_IF(EditorUtils::IsNewLinePreformatted(
-                    *aPointAtASCIIWhiteSpace.ContainerAsContent()),
+                    *aPointAtASCIIWhiteSpace.ContainerAs<Text>()),
                 aPointAtASCIIWhiteSpace.IsCharASCIISpace());
 
   // If we're deleting text backward and the previous visible character is first
@@ -2895,7 +2906,7 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
       return EditorDOMPointInText();  // Keep scanning preceding text nodes
     }
     EditorDOMPointInText atPreviousVisibleCharacter(
-        aPoint.ContainerAsText(), previousVisibleCharOffset.value());
+        aPoint.ContainerAs<Text>(), previousVisibleCharOffset.value());
     if (!NeedToScanPrecedingWhiteSpaces(atPreviousVisibleCharacter)) {
       return atPreviousVisibleCharacter.NextPoint();
     }
@@ -2905,10 +2916,11 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
         HTMLEditUtils::GetPreviousNonCollapsibleCharOffset(
             atPreviousVisibleCharacter);
     if (previousVisibleCharOffset.isSome()) {
-      MOZ_ASSERT(aPoint.ContainerAsText() ==
-                 atPreviousVisibleCharacter.ContainerAsText());
-      return EditorDOMPointInText(atPreviousVisibleCharacter.ContainerAsText(),
-                                  previousVisibleCharOffset.value() + 1);
+      MOZ_ASSERT(aPoint.ContainerAs<Text>() ==
+                 atPreviousVisibleCharacter.ContainerAs<Text>());
+      return EditorDOMPointInText(
+          atPreviousVisibleCharacter.ContainerAs<Text>(),
+          previousVisibleCharOffset.value() + 1);
     }
     return EditorDOMPointInText();  // Keep scanning preceding text nodes
   };
@@ -2927,7 +2939,7 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
   // XXX Perhaps, we should stop scanning if there is non-editable and visible
   //     content.
   EditorDOMPointInText atLastWhiteSpace =
-      EditorDOMPointInText(aPointAtASCIIWhiteSpace.ContainerAsText(), 0u);
+      EditorDOMPointInText(aPointAtASCIIWhiteSpace.ContainerAs<Text>(), 0u);
   for (EditorDOMPointInText atStartOfPreviousTextNode = atLastWhiteSpace;;) {
     const EditorDOMPointInText atLastCharOfPreviousTextNode =
         GetPreviousEditableCharPoint(atStartOfPreviousTextNode);
@@ -2958,7 +2970,7 @@ WSRunScanner::TextFragmentData::GetFirstASCIIWhiteSpacePointCollapsedTo(
 
     // The next text nodes starts with white-space too.  Try next one.
     atLastWhiteSpace = atStartOfPreviousTextNode = EditorDOMPointInText(
-        atLastCharOfPreviousTextNode.ContainerAsText(), 0u);
+        atLastCharOfPreviousTextNode.ContainerAs<Text>(), 0u);
   }
 }
 
@@ -2973,12 +2985,12 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
 
   AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
   nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-      MOZ_KnownLive(*aRangeToReplace.StartRef().ContainerAsText()),
+      MOZ_KnownLive(*aRangeToReplace.StartRef().ContainerAs<Text>()),
       aRangeToReplace.StartRef().Offset(),
       aRangeToReplace.InSameContainer()
           ? aRangeToReplace.EndRef().Offset() -
                 aRangeToReplace.StartRef().Offset()
-          : aRangeToReplace.StartRef().ContainerAsText()->TextLength() -
+          : aRangeToReplace.StartRef().ContainerAs<Text>()->TextLength() -
                 aRangeToReplace.StartRef().Offset(),
       aReplaceString);
   if (NS_FAILED(rv)) {
@@ -2992,7 +3004,7 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
 
   rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
       EditorDOMPointInText::AtEndOf(
-          *aRangeToReplace.StartRef().ContainerAsText()),
+          *aRangeToReplace.StartRef().ContainerAs<Text>()),
       aRangeToReplace.EndRef(),
       HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
   NS_WARNING_ASSERTION(
@@ -3015,8 +3027,8 @@ template <typename EditorDOMPointType>
 nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPointType& aPoint) {
   MOZ_ASSERT(aPoint.IsInContentNode());
-  MOZ_ASSERT(EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
-                                            EditorType::HTML));
+  MOZ_ASSERT(EditorUtils::IsEditableContent(
+      *aPoint.template ContainerAs<nsIContent>(), EditorType::HTML));
   Element* editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentData(aPoint, editingHost);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
@@ -3086,20 +3098,21 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
       // XXX We should stop this if there is a visible content.
       if (visibleWhiteSpaces.EndsByBlockBoundary() &&
           aPoint.IsInContentNode()) {
-        bool insertBRElement =
-            HTMLEditUtils::IsBlockElement(*aPoint.ContainerAsContent());
+        bool insertBRElement = HTMLEditUtils::IsBlockElement(
+            *aPoint.template ContainerAs<nsIContent>());
         if (!insertBRElement) {
-          NS_ASSERTION(EditorUtils::IsEditableContent(
-                           *aPoint.ContainerAsContent(), EditorType::HTML),
-                       "Given content is not editable");
           NS_ASSERTION(
-              aPoint.ContainerAsContent()->GetAsElementOrParentElement(),
-              "Given content is not an element and an orphan node");
+              EditorUtils::IsEditableContent(
+                  *aPoint.template ContainerAs<nsIContent>(), EditorType::HTML),
+              "Given content is not editable");
+          NS_ASSERTION(aPoint.template ContainerAs<nsIContent>()
+                           ->GetAsElementOrParentElement(),
+                       "Given content is not an element and an orphan node");
           const Element* editableBlockElement =
-              EditorUtils::IsEditableContent(*aPoint.ContainerAsContent(),
-                                             EditorType::HTML)
+              EditorUtils::IsEditableContent(
+                  *aPoint.template ContainerAs<nsIContent>(), EditorType::HTML)
                   ? HTMLEditUtils::GetInclusiveAncestorElement(
-                        *aPoint.ContainerAsContent(),
+                        *aPoint.template ContainerAs<nsIContent>(),
                         HTMLEditUtils::ClosestEditableBlockElement)
                   : nullptr;
           insertBRElement = !!editableBlockElement;
@@ -3175,7 +3188,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
       // So, if the the text node's white-spaces are preformatted, we need
       // to do nothing anymore.
       if (EditorUtils::IsWhiteSpacePreformatted(
-              *atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText())) {
+              *atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>())) {
         return NS_OK;
       }
 
@@ -3191,7 +3204,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
             MOZ_KnownLive(
-                *atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText()),
+                *atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>()),
             atPreviousCharOfEndOfVisibleWhiteSpaces.Offset(), 1, u" "_ns);
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "HTMLEditor::ReplaceTextWithTransaction() failed");
@@ -3210,7 +3223,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         !(followedByVisibleContent || followedByBRElement) ||
         EditorUtils::IsWhiteSpacePreformatted(
             *atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces
-                 .GetContainerAsText())) {
+                 .ContainerAs<Text>())) {
       return NS_OK;
     }
 
@@ -3224,21 +3237,21 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
             nsIEditor::eNone);
     AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
     uint32_t numberOfASCIIWhiteSpacesInStartNode =
-        atFirstASCIIWhiteSpace.ContainerAsText() ==
-                atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText()
+        atFirstASCIIWhiteSpace.ContainerAs<Text>() ==
+                atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>()
             ? atPreviousCharOfEndOfVisibleWhiteSpaces.Offset() -
                   atFirstASCIIWhiteSpace.Offset()
-            : atFirstASCIIWhiteSpace.ContainerAsText()->Length() -
+            : atFirstASCIIWhiteSpace.ContainerAs<Text>()->Length() -
                   atFirstASCIIWhiteSpace.Offset();
     // Replace all preceding ASCII white-spaces **and** the NBSP.
     uint32_t replaceLengthInStartNode =
         numberOfASCIIWhiteSpacesInStartNode +
-        (atFirstASCIIWhiteSpace.ContainerAsText() ==
-                 atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAsText()
+        (atFirstASCIIWhiteSpace.ContainerAs<Text>() ==
+                 atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>()
              ? 1
              : 0);
     nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-        MOZ_KnownLive(*atFirstASCIIWhiteSpace.ContainerAsText()),
+        MOZ_KnownLive(*atFirstASCIIWhiteSpace.ContainerAs<Text>()),
         atFirstASCIIWhiteSpace.Offset(), replaceLengthInStartNode,
         textFragmentData.StartsFromPreformattedLineBreak() &&
                 textFragmentData.EndsByPreformattedLineBreak()
@@ -3260,7 +3273,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     // into the start node.
     rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         EditorDOMPointInText::AtEndOf(
-            *atFirstASCIIWhiteSpace.ContainerAsText()),
+            *atFirstASCIIWhiteSpace.ContainerAs<Text>()),
         atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint(),
         HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
     NS_WARNING_ASSERTION(
@@ -3352,7 +3365,7 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   if (!atPreviousChar.IsSet() || atPreviousChar.IsEndOfContainer() ||
       !atPreviousChar.IsCharNBSP() ||
       EditorUtils::IsWhiteSpacePreformatted(
-          *atPreviousChar.ContainerAsText())) {
+          *atPreviousChar.ContainerAs<Text>())) {
     return EditorDOMPointInText();
   }
 
@@ -3361,10 +3374,10 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   if (atPreviousCharOfPreviousChar.IsSet()) {
     // If the previous char is in different text node and it's preformatted,
     // we shouldn't touch it.
-    if (atPreviousChar.ContainerAsText() !=
-            atPreviousCharOfPreviousChar.ContainerAsText() &&
+    if (atPreviousChar.ContainerAs<Text>() !=
+            atPreviousCharOfPreviousChar.ContainerAs<Text>() &&
         EditorUtils::IsWhiteSpacePreformatted(
-            *atPreviousCharOfPreviousChar.ContainerAsText())) {
+            *atPreviousCharOfPreviousChar.ContainerAs<Text>())) {
       return EditorDOMPointInText();
     }
     // If the previous char of the NBSP at previous position of aPointToInsert
@@ -3407,7 +3420,7 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
       GetInclusiveNextEditableCharPoint<EditorDOMPointInText>(aPointToInsert);
   if (!atNextChar.IsSet() || NS_WARN_IF(atNextChar.IsEndOfContainer()) ||
       !atNextChar.IsCharNBSP() ||
-      EditorUtils::IsWhiteSpacePreformatted(*atNextChar.ContainerAsText())) {
+      EditorUtils::IsWhiteSpacePreformatted(*atNextChar.ContainerAs<Text>())) {
     return EditorDOMPointInText();
   }
 
@@ -3417,10 +3430,10 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   if (atNextCharOfNextCharOfNBSP.IsSet()) {
     // If the next char is in different text node and it's preformatted,
     // we shouldn't touch it.
-    if (atNextChar.ContainerAsText() !=
-            atNextCharOfNextCharOfNBSP.ContainerAsText() &&
+    if (atNextChar.ContainerAs<Text>() !=
+            atNextCharOfNextCharOfNBSP.ContainerAs<Text>() &&
         EditorUtils::IsWhiteSpacePreformatted(
-            *atNextCharOfNextCharOfNBSP.ContainerAsText())) {
+            *atNextCharOfNextCharOfNBSP.ContainerAs<Text>())) {
       return EditorDOMPointInText();
     }
     // If following character of an NBSP is an ASCII white-space, we don't
@@ -4006,7 +4019,7 @@ WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
              textFragmentDataAtEnd.EndsByBlockBoundary() &&
              textFragmentDataAtEnd.StartRef().IsInTextNode()) {
       result.SetEnd(EditorDOMPoint::AtEndOf(
-          *textFragmentDataAtEnd.StartRef().ContainerAsText()));
+          *textFragmentDataAtEnd.StartRef().ContainerAs<Text>()));
     }
   }
   if (!result.EndRef().IsSet()) {

@@ -10,7 +10,7 @@ const { CreditCard } = ChromeUtils.import(
 
 let FormAutofillParent, FormAutofillStatus;
 let OSKeyStore;
-add_task(async function setup() {
+add_setup(async () => {
   ({ FormAutofillParent, FormAutofillStatus } = ChromeUtils.import(
     "resource://autofill/FormAutofillParent.jsm"
   ));

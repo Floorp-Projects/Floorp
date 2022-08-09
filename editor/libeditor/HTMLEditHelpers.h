@@ -493,7 +493,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
     if (mGivenSplitPoint.IsSet()) {
       // Different from previous/next content, if the creator didn't split a
       // node, the container of the split point is the original node.
-      return mGivenSplitPoint.GetContainerAsContent();
+      return mGivenSplitPoint.GetContainerAs<nsIContent>();
     }
     if (mDirection == SplitNodeDirection::LeftNodeIsNewOne) {
       return mNextNode ? mNextNode : mPreviousNode;
@@ -767,12 +767,12 @@ class MOZ_STACK_CLASS JoinNodesResult final {
 
   MOZ_KNOWN_LIVE nsIContent* ExistingContent() const {
     MOZ_ASSERT(Succeeded());
-    return mJoinedPoint.ContainerAsContent();
+    return mJoinedPoint.ContainerAs<nsIContent>();
   }
   template <typename EditorDOMPointType>
   EditorDOMPointType AtExistingContent() const {
     MOZ_ASSERT(Succeeded());
-    return EditorDOMPointType(mJoinedPoint.ContainerAsContent());
+    return EditorDOMPointType(mJoinedPoint.ContainerAs<nsIContent>());
   }
 
   MOZ_KNOWN_LIVE nsIContent* RemovedContent() const {
@@ -853,9 +853,10 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
    * This may return nullptr if the method didn't split at start edge of
    * the node.
    */
-  nsIContent* GetLeftContent() const { return mLeftContent; }
-  dom::Element* GetLeftContentAsElement() const {
-    return dom::Element::FromNodeOrNull(mLeftContent);
+  MOZ_KNOWN_LIVE nsIContent* GetLeftContent() const { return mLeftContent; }
+  template <typename ContentNodeType>
+  MOZ_KNOWN_LIVE ContentNodeType* GetLeftContentAs() const {
+    return ContentNodeType::FromNodeOrNull(GetLeftContent());
   }
 
   /**
@@ -863,9 +864,10 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
    * node.  I.e., this is quarried out from the node.  This may return nullptr
    * if the method unwrapped the middle node.
    */
-  nsIContent* GetMiddleContent() const { return mMiddleContent; }
-  dom::Element* GetMiddleContentAsElement() const {
-    return dom::Element::FromNodeOrNull(mMiddleContent);
+  MOZ_KNOWN_LIVE nsIContent* GetMiddleContent() const { return mMiddleContent; }
+  template <typename ContentNodeType>
+  MOZ_KNOWN_LIVE ContentNodeType* GetMiddleContentAs() const {
+    return ContentNodeType::FromNodeOrNull(GetMiddleContent());
   }
 
   /**
@@ -873,9 +875,10 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
    * This may return nullptr it the method didn't split at end edge of the
    * node.
    */
-  nsIContent* GetRightContent() const { return mRightContent; }
-  dom::Element* GetRightContentAsElement() const {
-    return dom::Element::FromNodeOrNull(mRightContent);
+  MOZ_KNOWN_LIVE nsIContent* GetRightContent() const { return mRightContent; }
+  template <typename ContentNodeType>
+  MOZ_KNOWN_LIVE ContentNodeType* GetRightContentAs() const {
+    return ContentNodeType::FromNodeOrNull(GetRightContent());
   }
 
   /**
@@ -950,9 +953,9 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
 #endif
 
  private:
-  nsCOMPtr<nsIContent> mLeftContent;
-  nsCOMPtr<nsIContent> mMiddleContent;
-  nsCOMPtr<nsIContent> mRightContent;
+  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mLeftContent;
+  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mMiddleContent;
+  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mRightContent;
 
   // The point which is a good point to put caret from point of view the
   // splitter.

@@ -5,7 +5,7 @@
 "use strict";
 
 var FormAutofillNameUtils;
-add_task(async function setup() {
+add_setup(async () => {
   ({ FormAutofillNameUtils } = ChromeUtils.import(
     "resource://autofill/FormAutofillNameUtils.jsm"
   ));

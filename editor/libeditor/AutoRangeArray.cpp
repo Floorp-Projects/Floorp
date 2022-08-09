@@ -86,10 +86,10 @@ bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
   EditorRawDOMPoint atStart(aRange.StartRef());
   const bool isStartEditable =
       atStart.IsInContentNode() &&
-      EditorUtils::IsEditableContent(*atStart.ContainerAsContent(),
+      EditorUtils::IsEditableContent(*atStart.ContainerAs<nsIContent>(),
                                      EditorUtils::EditorType::HTML) &&
       !HTMLEditUtils::IsNonEditableReplacedContent(
-          *atStart.ContainerAsContent());
+          *atStart.ContainerAs<nsIContent>());
   if (!isStartEditable) {
     return false;
   }
@@ -98,19 +98,19 @@ bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
     EditorRawDOMPoint atEnd(aRange.EndRef());
     const bool isEndEditable =
         atEnd.IsInContentNode() &&
-        EditorUtils::IsEditableContent(*atEnd.ContainerAsContent(),
+        EditorUtils::IsEditableContent(*atEnd.ContainerAs<nsIContent>(),
                                        EditorUtils::EditorType::HTML) &&
         !HTMLEditUtils::IsNonEditableReplacedContent(
-            *atEnd.ContainerAsContent());
+            *atEnd.ContainerAs<nsIContent>());
     if (!isEndEditable) {
       return false;
     }
 
     // Now, both start and end points are editable, but if they are in
     // different editing host, we cannot edit the range.
-    if (atStart.ContainerAsContent() != atEnd.ContainerAsContent() &&
-        atStart.ContainerAsContent()->GetEditingHost() !=
-            atEnd.ContainerAsContent()->GetEditingHost()) {
+    if (atStart.ContainerAs<nsIContent>() != atEnd.ContainerAs<nsIContent>() &&
+        atStart.ContainerAs<nsIContent>()->GetEditingHost() !=
+            atEnd.ContainerAs<nsIContent>()->GetEditingHost()) {
       return false;
     }
   }
@@ -295,7 +295,7 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
       }
 
       const nsTextFragment* data =
-          &insertionPoint.GetContainerAsText()->TextFragment();
+          &insertionPoint.ContainerAs<Text>()->TextFragment();
       uint32_t offset = insertionPoint.Offset();
       if (!(offset > 1 &&
             data->IsLowSurrogateFollowingHighSurrogateAt(offset - 1)) &&
@@ -485,7 +485,7 @@ void AutoRangeArray::
   //     handle its job better.
   Element* const maybeNonEditableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
-          *aStartPoint.ContainerAsContent(),
+          *aStartPoint.ContainerAs<nsIContent>(),
           HTMLEditUtils::ClosestBlockElement);
   if (!maybeNonEditableBlockElement) {
     return;
@@ -662,7 +662,7 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
         // If it's invisible because of parent block boundary, return end
         // of the block.  Otherwise, i.e., it's followed by a child block,
         // returns the point of the child block.
-        if (atNextPreformattedNewLine.ContainerAsText()
+        if (atNextPreformattedNewLine.ContainerAs<Text>()
                 ->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
           return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
         }
@@ -722,7 +722,7 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingBlock(
         // If it's invisible because of parent block boundary, return end
         // of the block.  Otherwise, i.e., it's followed by a child block,
         // returns the point of the child block.
-        if (atFirstPreformattedNewLine.ContainerAsText()
+        if (atFirstPreformattedNewLine.ContainerAs<Text>()
                 ->IsInclusiveDescendantOf(maybeNonEditableBlockElement)) {
           return EditorDOMPoint::AtEndOf(*maybeNonEditableBlockElement);
         }

@@ -9,7 +9,7 @@ const { AppConstants } = ChromeUtils.import(
 );
 
 var FormAutofillHandler;
-add_task(async function setup() {
+add_setup(async () => {
   ({ FormAutofillHandler } = ChromeUtils.import(
     "resource://autofill/FormAutofillHandler.jsm"
   ));
