@@ -18,7 +18,6 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
 });
 
@@ -205,21 +204,21 @@ async function copyToProfile(
   aDestFilename,
   { overwriteExisting = false } = {}
 ) {
-  let curDir = await OS.File.getCurrentDirectory();
-  let srcPath = OS.Path.join(curDir, aFilename);
-  Assert.ok(await OS.File.exists(srcPath), "Database file found");
+  let curDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
+  let srcPath = PathUtils.join(curDir, aFilename);
+  Assert.ok(await IOUtils.exists(srcPath), "Database file found");
 
   // Ensure that our file doesn't exist already.
-  let destPath = OS.Path.join(OS.Constants.Path.profileDir, aDestFilename);
-  let exists = await OS.File.exists(destPath);
+  let destPath = PathUtils.join(PathUtils.profileDir, aDestFilename);
+  let exists = await IOUtils.exists(destPath);
   if (exists) {
     if (overwriteExisting) {
-      await OS.file.remove(destPath);
+      await IOUtils.remove(destPath);
     } else {
       throw new Error("The file should not exist");
     }
   }
-  await OS.File.copy(srcPath, destPath);
+  await IOUtils.copy(srcPath, destPath);
   info(`Copied ${aFilename} to ${destPath}`);
   return destPath;
 }
