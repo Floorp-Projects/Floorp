@@ -3158,19 +3158,14 @@ static bool array_splice_noRetVal(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
-static ArrayObject* NewDenseArray(JSContext* cx, const CallArgs& args,
-                                  uint64_t len) {
+static ArrayObject* NewDensePartlyAllocatedArray(JSContext* cx, uint64_t len) {
   if (len > UINT32_MAX) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return nullptr;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Array, &proto)) {
-    return nullptr;
-  }
-  return NewDensePartlyAllocatedArrayWithProto(cx, len, proto);
+  return NewDensePartlyAllocatedArray(cx, uint32_t(len));
 }
 
 /* Proposal
@@ -3222,7 +3217,7 @@ static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
 
   /* Step 12 handled by GetActualDeleteCount(). */
   /* Step 13. Let A be ? ArrayCreate(𝔽(newLen)). */
-  RootedObject A(cx, NewDenseArray(cx, args, newLen));
+  RootedObject A(cx, ::NewDensePartlyAllocatedArray(cx, newLen));
   if (!A) {
     return false;
   }
@@ -3295,94 +3290,81 @@ static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool IsIntegralNumber(JSContext* cx, HandleValue v, bool* result) {
-  double d;
-  if (!ToNumber(cx, v, &d)) {
-    return false;
-  }
-
-  if (mozilla::IsNaN(d) || !mozilla::IsFinite(d)) {
-    *result = false;
-    return true;
-  }
-
-  double integer = trunc(d);
-  *result = d - integer == 0;
-  return true;
-}
-
-/* Proposal
- * https://github.com/tc39/proposal-change-array-by-copy
- * Array.prototype.with()
- */
+// https://github.com/tc39/proposal-change-array-by-copy
+// Array.prototype.with()
 static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "with");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  /* Step 1. Let O be ? ToObject(this value). */
+  // Step 1. Let O be ? ToObject(this value).
   RootedObject obj(cx, ToObject(cx, args.thisv()));
   if (!obj) {
     return false;
   }
 
-  /* Step 2. Let len be ? LengthOfArrayLike(O). */
+  // Step 2. Let len be ? LengthOfArrayLike(O).
   uint64_t len;
   if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
-  /* Step 3. Let relativeIndex be ? ToIntegerOrInfinity(index). */
+  // Step 3. Let relativeIndex be ? ToIntegerOrInfinity(index).
   double relativeIndex;
   if (!ToInteger(cx, args.get(0), &relativeIndex)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
-                              "Array.with");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
   }
 
-  /* Step 4. If relativeIndex >= 0, let actualIndex be relativeIndex. */
+  // Step 4. If relativeIndex >= 0, let actualIndex be relativeIndex.
   double actualIndex = relativeIndex;
   if (actualIndex < 0) {
-    /* Step 5. Else, let actualIndex be len + relativeIndex. */
-    actualIndex = int64_t(len + actualIndex);
+    // Step 5. Else, let actualIndex be len + relativeIndex.
+    actualIndex = double(len) + actualIndex;
   }
 
-  /* Step 6. If actualIndex >= len or actualIndex < 0, throw a RangeError
-   * exception. */
+  // Step 6. If actualIndex >= len or actualIndex < 0, throw a RangeError
+  // exception.
   if (actualIndex < 0 || actualIndex >= double(len)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX,
-                              "Array.with: index out of bounds");
-    return false;
-  }
-  // actualIndex must be a non-negative integer at this point
-
-  /* Step 7. Let A be ? ArrayCreate(𝔽(len)). */
-  RootedObject A(cx, NewDenseArray(cx, args, len));
-  if (!A) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
   }
 
-  /* Steps 8-9. Let k be 0; repeat, while k < len, */
-  for (uint64_t k = 0; k < len; k++) {
-    /* Skip Step 9.a. Let Pk be ! ToString(𝔽(k)). */
-    RootedValue fromValue(cx);
+  // Step 7. Let A be ? ArrayCreate(𝔽(len)).
+  RootedObject arr(cx, ::NewDensePartlyAllocatedArray(cx, len));
+  if (!arr) {
+    return false;
+  }
 
-    /* Step 9.b. If k is actualIndex, let fromValue be value. */
-    if (k == uint64_t(actualIndex)) {
+  MOZ_ASSERT(len <= UINT32_MAX);
+  MOZ_ASSERT(actualIndex <= UINT32_MAX);
+
+  // Steps 8-9. Let k be 0; Repeat, while k < len,
+  RootedValue fromValue(cx);
+  for (uint32_t k = 0; k < uint32_t(len); k++) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    // Skip Step 9.a. Let Pk be ! ToString(𝔽(k)).
+
+    // Step 9.b. If k is actualIndex, let fromValue be value.
+    if (k == uint32_t(actualIndex)) {
       fromValue = args.get(1);
     } else {
-      /* Step 9.c. Else, let fromValue be ? Get(O, 𝔽(k)). */
+      // Step 9.c. Else, let fromValue be ? Get(O, 𝔽(k)).
       if (!GetArrayElement(cx, obj, k, &fromValue)) {
         return false;
       }
     }
-    /* Step 9.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(k), fromValue). */
-    if (!SetArrayElement(cx, A, k, fromValue)) {
+
+    // Step 9.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(k), fromValue).
+    if (!DefineArrayElement(cx, arr, k, fromValue)) {
       return false;
     }
   }
 
-  /* Step 10. Return A. */
-  args.rval().setObject(*A);
+  // Step 10. Return A.
+  args.rval().setObject(*arr);
   return true;
 }
 #endif
