@@ -14,69 +14,104 @@
 #include "WebGLContext.h"
 #include "WebGLTypes.h"
 
-namespace mozilla::webgl {
+namespace mozilla {
+namespace webgl {
 template <typename T>
 struct QueueParamTraits;
 
-template <>
-struct IsTriviallySerializable<FloatOrInt> : std::true_type {};
+// -
 
-template <>
-struct IsTriviallySerializable<webgl::ShaderPrecisionFormat> : std::true_type {
-};
+#define USE_TIED_FIELDS(T) \
+  template <>              \
+  struct QueueParamTraits<T> : QueueParamTraits_TiedFields<T> {};
 
-template <>
-struct IsTriviallySerializable<WebGLContextOptions> : std::true_type {};
+// -
 
-template <>
-struct IsTriviallySerializable<WebGLTexImageData> : std::true_type {};
+USE_TIED_FIELDS(layers::RemoteTextureId)
+USE_TIED_FIELDS(layers::RemoteTextureOwnerId)
+USE_TIED_FIELDS(WebGLContextOptions)
+USE_TIED_FIELDS(webgl::PixelUnpackStateWebgl)
+USE_TIED_FIELDS(webgl::SwapChainOptions)
+USE_TIED_FIELDS(webgl::ReadPixelsDesc)
+USE_TIED_FIELDS(webgl::VertAttribPointerDesc)
+USE_TIED_FIELDS(webgl::PackingInfo)
+USE_TIED_FIELDS(webgl::TypedQuad)
+USE_TIED_FIELDS(webgl::PixelPackingState)
+USE_TIED_FIELDS(FloatOrInt)
 
+}  // namespace webgl
 template <>
-struct IsTriviallySerializable<WebGLTexPboOffset> : std::true_type {};
+inline auto TiedFields<gfx::IntSize>(gfx::IntSize& a) {
+  return std::tie(a.width, a.height);
+}
+namespace webgl {
+USE_TIED_FIELDS(gfx::IntSize)
 
-template <>
-struct IsTriviallySerializable<webgl::ExtensionBits> : std::true_type {};
-template <>
-struct IsTriviallySerializable<webgl::GetUniformData> : std::true_type {};
+// -
 
-template <>
-struct IsTriviallySerializable<mozilla::webgl::PackingInfo> : std::true_type {};
-template <>
-struct IsTriviallySerializable<mozilla::webgl::PixelPackingState>
-    : std::true_type {};
-template <>
-struct IsTriviallySerializable<mozilla::webgl::PixelUnpackStateWebgl>
-    : std::true_type {};
+#undef USE_TIED_FIELDS
 
-template <>
-struct IsTriviallySerializable<gfx::IntSize> : std::true_type {};
+// -
 
-template <typename T>
-struct IsTriviallySerializable<avec2<T>> : std::true_type {};
-template <typename T>
-struct IsTriviallySerializable<avec3<T>> : std::true_type {};
+template <class T>
+struct QueueParamTraits<avec2<T>> : QueueParamTraits_TiedFields<avec2<T>> {};
 
-template <>
-struct IsTriviallySerializable<webgl::TexUnpackBlob> : std::true_type {};
+template <class T>
+struct QueueParamTraits<avec3<T>> : QueueParamTraits_TiedFields<avec3<T>> {};
 
-template <>
-struct IsTriviallySerializable<webgl::TypedQuad> : std::true_type {};
-template <>
-struct IsTriviallySerializable<webgl::VertAttribPointerDesc> : std::true_type {
-};
-template <>
-struct IsTriviallySerializable<webgl::ReadPixelsDesc> : std::true_type {};
-// template <>
-// struct IsTriviallySerializable<layers::SurfaceDescriptor> : std::true_type
-// {};
-//  SurfaceDescriptorBuffer is *not* trivial.
-template <>
-struct IsTriviallySerializable<layers::RemoteTextureId> : std::true_type {};
-template <>
-struct IsTriviallySerializable<layers::RemoteTextureOwnerId> : std::true_type {
-};
-template <>
-struct IsTriviallySerializable<webgl::SwapChainOptions> : std::true_type {};
+// ---------------------------------------------------------------------
+// Enums!
+
+inline constexpr bool IsEnumCase(const dom::WebGLPowerPreference raw) {
+  switch (raw) {
+    case dom::WebGLPowerPreference::Default:
+    case dom::WebGLPowerPreference::Low_power:
+    case dom::WebGLPowerPreference::High_performance:
+      return true;
+    case dom::WebGLPowerPreference::EndGuard_:
+      break;
+  }
+  return false;
+}
+
+inline constexpr bool IsEnumCase(const dom::PredefinedColorSpace raw) {
+  switch (raw) {
+    case dom::PredefinedColorSpace::Srgb:
+    case dom::PredefinedColorSpace::Display_p3:
+      return true;
+    case dom::PredefinedColorSpace::EndGuard_:
+      break;
+  }
+  return false;
+}
+
+inline constexpr bool IsEnumCase(const webgl::AttribBaseType raw) {
+  switch (raw) {
+    case webgl::AttribBaseType::Boolean:
+    case webgl::AttribBaseType::Float:
+    case webgl::AttribBaseType::Int:
+    case webgl::AttribBaseType::Uint:
+      return true;
+  }
+  return false;
+}
+
+static_assert(IsEnumCase(dom::WebGLPowerPreference(2)));
+static_assert(!IsEnumCase(dom::WebGLPowerPreference(3)));
+static_assert(!IsEnumCase(dom::WebGLPowerPreference(5)));
+
+#define USE_IS_ENUM_CASE(T) \
+  template <>               \
+  struct QueueParamTraits<T> : QueueParamTraits_IsEnumCase<T> {};
+
+USE_IS_ENUM_CASE(dom::WebGLPowerPreference)
+USE_IS_ENUM_CASE(dom::PredefinedColorSpace)
+USE_IS_ENUM_CASE(webgl::AttribBaseType)
+
+#undef USE_IS_ENUM_CASE
+
+// ---------------------------------------------------------------------
+// Custom QueueParamTraits
 
 template <typename T>
 struct QueueParamTraits<RawBuffer<T>> {
@@ -267,6 +302,7 @@ struct QueueParamTraits<gfxAlphaType>
     : public ContiguousEnumSerializerInclusive<
           gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
 
-}  // namespace mozilla::webgl
+}  // namespace webgl
+}  // namespace mozilla
 
 #endif  // WEBGLQUEUEPARAMTRAITS_H_

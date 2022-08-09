@@ -64,6 +64,8 @@ EXPORTS.mozilla.dom += [
     "OffscreenCanvasRenderingContext2D.h",
     "QueueParamTraits.h",
     "TextMetrics.h",
+    "TiedFields.h",
+    "TupleUtils.h",
     "WebGLChild.h",
     "WebGLCommandQueue.h",
     "WebGLIpdl.h",

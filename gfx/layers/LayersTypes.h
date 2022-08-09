@@ -10,6 +10,7 @@
 #include <iosfwd>    // for ostream
 #include <stdint.h>  // for uint32_t
 #include <stdio.h>   // FILE
+#include <tuple>
 
 #include "Units.h"
 #include "mozilla/DefineEnum.h"  // for MOZ_DEFINE_ENUM_CLASS_WITH_BASE
@@ -331,6 +332,10 @@ enum class CompositableHandleOwner : uint8_t {
 struct RemoteTextureId {
   uint64_t mId = 0;
 
+  auto MutTiedFields() {
+    return std::tie(mId);
+  }
+
   static RemoteTextureId GetNext();
 
   bool IsValid() const { return mId != 0; }
@@ -369,6 +374,10 @@ struct RemoteTextureId {
 
 struct RemoteTextureOwnerId {
   uint64_t mId = 0;
+
+  auto MutTiedFields() {
+    return std::tie(mId);
+  }
 
   static RemoteTextureOwnerId GetNext();
 
