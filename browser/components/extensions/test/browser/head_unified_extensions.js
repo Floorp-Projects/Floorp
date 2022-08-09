@@ -11,15 +11,7 @@
             promiseDisableUnifiedExtensions,
             promiseEnableUnifiedExtensions,
             promiseUnifiedExtensionsInitialized,
-            promiseUnifiedExtensionsWidgetExist
 */
-
-const promiseUnifiedExtensionsWidgetExists = async win => {
-  await BrowserTestUtils.waitForCondition(
-    () => !!win.CustomizableUI.getWidget("unified-extensions"),
-    "Wait unified-extensions widget"
-  );
-};
 
 const promiseUnifiedExtensionsInitialized = async win => {
   await new Promise(resolve => {
@@ -38,7 +30,6 @@ const promiseEnableUnifiedExtensions = async () => {
 
   const win = await BrowserTestUtils.openNewBrowserWindow();
   await promiseUnifiedExtensionsInitialized(win);
-  await promiseUnifiedExtensionsWidgetExists(win);
   return win;
 };
 
@@ -49,7 +40,6 @@ const promiseDisableUnifiedExtensions = async () => {
 
   const win = await BrowserTestUtils.openNewBrowserWindow();
   await promiseUnifiedExtensionsInitialized(win);
-  await promiseUnifiedExtensionsWidgetExists(win);
   return win;
 };
 
