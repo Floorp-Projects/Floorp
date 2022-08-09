@@ -180,6 +180,7 @@ enum class OpKind {
   RefFunc,
   RefAsNonNull,
   BrOnNull,
+  BrOnNonNull,
   StructNew,
   StructNewDefault,
   StructGet,
@@ -557,6 +558,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readRefAsNonNull(Value* input);
   [[nodiscard]] bool readBrOnNull(uint32_t* relativeDepth, ResultType* type,
                                   ValueVector* values, Value* condition);
+  [[nodiscard]] bool readBrOnNonNull(uint32_t* relativeDepth, ResultType* type,
+                                     ValueVector* values, Value* condition);
   [[nodiscard]] bool readCall(uint32_t* funcTypeIndex, ValueVector* argValues);
   [[nodiscard]] bool readCallIndirect(uint32_t* funcTypeIndex,
                                       uint32_t* tableIndex, Value* callee,
@@ -2277,6 +2280,52 @@ inline bool OpIter<Policy>::readBrOnNull(uint32_t* relativeDepth,
     return push(refType);
   }
   return push(refType.asNonNullable());
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readBrOnNonNull(uint32_t* relativeDepth,
+                                            ResultType* type,
+                                            ValueVector* values,
+                                            Value* condition) {
+  MOZ_ASSERT(Classify(op_) == OpKind::BrOnNonNull);
+
+  if (!readVarU32(relativeDepth)) {
+    return fail("unable to read br_on_non_null depth");
+  }
+
+  Control* block = nullptr;
+  if (!getControl(*relativeDepth, &block)) {
+    return false;
+  }
+
+  *type = block->branchTargetType();
+
+  // Check we at least have one type in the branch target type.
+  if (type->length() < 1) {
+    return fail("type mismatch: target block type expected to be [_, ref]");
+  }
+
+  // Pop the condition reference.
+  StackType refType;
+  if (!popWithRefType(condition, &refType)) {
+    return false;
+  }
+
+  // Push non-nullable version of condition reference on the stack, prior
+  // checking the target type below.
+  if (!(refType.isBottom() ? push(refType) : push(refType.asNonNullable()))) {
+    return false;
+  }
+
+  // Check if the type stack matches the branch target type.
+  if (!topWithTypeAndPush(*type, values)) {
+    return false;
+  }
+
+  // Pop the condition reference -- the null-branch does not receive the value.
+  StackType unusedType;
+  Value unusedValue;
+  return popStackType(&unusedType, &unusedValue);
 }
 
 template <typename Policy>

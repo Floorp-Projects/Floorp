@@ -1557,6 +1557,7 @@ struct BaseCompiler final {
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   [[nodiscard]] bool emitRefAsNonNull();
   [[nodiscard]] bool emitBrOnNull();
+  [[nodiscard]] bool emitBrOnNonNull();
   [[nodiscard]] bool emitCallRef();
 #endif
 

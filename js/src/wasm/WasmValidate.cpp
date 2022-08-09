@@ -1137,6 +1137,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(
             iter.readBrOnNull(&unusedDepth, &unusedType, &nothings, &nothing));
       }
+      case uint16_t(Op::BrOnNonNull): {
+        if (!env.functionReferencesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t unusedDepth;
+        CHECK(iter.readBrOnNonNull(&unusedDepth, &unusedType, &nothings,
+                                   &nothing));
+      }
 #endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq): {
