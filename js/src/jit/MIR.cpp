@@ -3060,20 +3060,6 @@ bool MMathFunction::isFloat32Commutative() const {
   }
 }
 
-bool MMathFunction::canRecoverOnBailout() const {
-  switch (function_) {
-    case UnaryMathFunction::Sin:
-    case UnaryMathFunction::Log:
-    case UnaryMathFunction::Ceil:
-    case UnaryMathFunction::Floor:
-    case UnaryMathFunction::Round:
-    case UnaryMathFunction::Trunc:
-      return true;
-    default:
-      return false;
-  }
-}
-
 MHypot* MHypot::New(TempAllocator& alloc, const MDefinitionVector& vector) {
   uint32_t length = vector.length();
   MHypot* hypot = new (alloc) MHypot;
