@@ -1,5 +1,5 @@
-commit bf1c94f675a2e5886e8877913881597c92bd499d
-Author: Florian Loitsch <florian@loitsch.com>
-Date:   Sat Dec 4 17:56:28 2021 +0100
+commit af09fd65fcf24eee95dc62813ba9123414635428
+Author: Sean McBride <sean@rogue-research.com>
+Date:   Thu Jul 7 13:58:23 2022 -0400
 
-    Add test action (#168)
+    Issue #184 : Fixed all -Wzero-as-null-pointer-constant warnings (#185)
