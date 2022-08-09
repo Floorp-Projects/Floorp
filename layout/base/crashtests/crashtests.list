@@ -316,7 +316,7 @@ load 543648-1.html
 load 560447-1.html
 load 564063-1.html
 load 569018-1.html
-load chrome://reftest/content/crashtests/layout/base/crashtests/570038-1.html
+pref(layout.css.xul-display-values.content.enabled,true) load 570038-1.html
 load chrome://reftest/content/crashtests/layout/base/crashtests/572003.xhtml
 load 572582-1.xhtml
 load 576649-1.html
