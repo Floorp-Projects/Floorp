@@ -5,8 +5,10 @@
 #ifndef nsViewportInfo_h___
 #define nsViewportInfo_h___
 
+#include <algorithm>
 #include <stdint.h>
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPrefs_apz.h"
 #include "Units.h"
 
 namespace mozilla::dom {
@@ -20,10 +22,18 @@ enum class ViewportFitType : uint8_t {
 /**
  * Default values for the nsViewportInfo class.
  */
-static const mozilla::LayoutDeviceToScreenScale kViewportMinScale(0.25f);
-static const mozilla::LayoutDeviceToScreenScale kViewportMaxScale(10.0f);
 static const mozilla::CSSIntSize kViewportMinSize(200, 40);
 static const mozilla::CSSIntSize kViewportMaxSize(10000, 10000);
+
+inline mozilla::LayoutDeviceToScreenScale ViewportMinScale() {
+  return mozilla::LayoutDeviceToScreenScale(
+      std::max(mozilla::StaticPrefs::apz_min_zoom(), 0.1f));
+}
+
+inline mozilla::LayoutDeviceToScreenScale ViewportMaxScale() {
+  return mozilla::LayoutDeviceToScreenScale(
+      std::min(mozilla::StaticPrefs::apz_max_zoom(), 100.0f));
+}
 
 /**
  * Information retrieved from the <meta name="viewport"> tag. See
@@ -60,9 +70,9 @@ class MOZ_STACK_CLASS nsViewportInfo {
     if (aBehaviour == ZoomBehaviour::Desktop) {
       mMinZoom = aDefaultZoom;
     } else {
-      mMinZoom = pixelRatio * kViewportMinScale;
+      mMinZoom = pixelRatio * ViewportMinScale();
     }
-    mMaxZoom = pixelRatio * kViewportMaxScale;
+    mMaxZoom = pixelRatio * ViewportMaxScale();
     ConstrainViewportValues();
   }
 
