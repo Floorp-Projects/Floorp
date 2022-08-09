@@ -275,7 +275,10 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
 
   // Abspos frames can't cause their parent to be incomplete,
   // only overflow incomplete.
-  if (reflowStatus.IsIncomplete()) reflowStatus.SetOverflowIncomplete();
+  if (reflowStatus.IsIncomplete()) {
+    reflowStatus.SetOverflowIncomplete();
+    reflowStatus.SetNextInFlowNeedsReflow();
+  }
 
   aReflowStatus.MergeCompletionStatusFrom(reflowStatus);
 }
