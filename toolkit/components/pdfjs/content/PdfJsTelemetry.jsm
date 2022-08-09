@@ -82,4 +82,9 @@ var PdfJsTelemetry = {
     let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_TAGGED");
     histogram.add(tagged);
   },
+  onEditing(type) {
+    if (["ink", "freetext", "print", "save"].includes(type)) {
+      Glean.pdfjs.editing[type].add(1);
+    }
+  },
 };
