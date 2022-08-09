@@ -307,7 +307,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
           // e.g, `{ ["foo"]: function(){} }`, and `{ [10]: function() {} }`.
           //
           // Note we only handle the names that are known at compile time,
-          // so if we have `var x = 5/"foo"; { [x]: function(){} }`, we don't
+          // so if we have `var x = "foo"; ({ [x]: function(){} })`, we don't
           // handle that here, it's handled at runtime by JSOp::SetFunName.
           // The accessor type of the property must be AccessorType::None,
           // given getters and setters need prefix and we cannot handle it here.
