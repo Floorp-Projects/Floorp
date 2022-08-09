@@ -806,3 +806,54 @@ add_task(async function originLooksLikePrefix() {
   }
   await cleanup();
 });
+
+// Checks an origin whose prefix is "about:".
+add_task(async function about() {
+  const testData = [
+    {
+      uri: "about:config",
+      input: "conf",
+      results: [
+        context =>
+          makeSearchResult(context, {
+            engineName: "Suggestions",
+            heuristic: true,
+          }),
+        context =>
+          makeBookmarkResult(context, {
+            uri: "about:config",
+            title: "A bookmark",
+          }),
+      ],
+    },
+    {
+      uri: "about:blank",
+      input: "about:blan",
+      results: [
+        context =>
+          makeVisitResult(context, {
+            uri: "about:blan",
+            title: "about:blan",
+            source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            heuristic: true,
+          }),
+        context =>
+          makeBookmarkResult(context, {
+            uri: "about:blank",
+            title: "A bookmark",
+          }),
+      ],
+    },
+  ];
+
+  for (const { uri, input, results } of testData) {
+    await PlacesTestUtils.addBookmarkWithDetails({ uri });
+
+    const context = createContext(input, { isPrivate: false });
+    await check_results({
+      context,
+      matches: results.map(f => f(context)),
+    });
+    await cleanup();
+  }
+});

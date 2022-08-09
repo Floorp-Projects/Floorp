@@ -100,8 +100,9 @@ function originQuery(where) {
       )) OVER (PARTITION BY fixup_url(host)),
       ${selectVisited}
       FROM moz_origins o
-      WHERE (host BETWEEN :searchString AND :searchString || X'FFFF')
-         OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF')
+      WHERE prefix != 'about:'
+        AND ((host BETWEEN :searchString AND :searchString || X'FFFF')
+          OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'))
     ),
     matched_origin(host_fixed, url) AS (
       SELECT iif(instr(host, :searchString) = 1, host, fixed) || '/',
