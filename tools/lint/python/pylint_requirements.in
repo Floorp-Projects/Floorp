@@ -1,6 +1,7 @@
-pylint==2.13.5
+pylint==2.14.5
 colorama==0.4.4 # Needed on Windows.
 dill==0.3.4
 mccabe==0.6.1 # To be removed when flake8 supports 0.7.0
 tomli==1.2.2
 typing-extensions==3.10.0.2
+tomlkit==0.10.1
