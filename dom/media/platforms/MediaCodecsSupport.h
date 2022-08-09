@@ -33,7 +33,7 @@ namespace mozilla::media {
 
 // Generate MediaCodec enum with the names of each codec we support.
 // Example: MediaCodec::H264
-enum class MediaCodec : int {
+enum class MediaCodec {
 #define X(name) name,
   CODEC_LIST
 #undef X
@@ -50,7 +50,7 @@ enum class MediaCodec : int {
 // don't support HW audio decode/encode, but they are included
 // for debug purposes / check for erroneous PDM return values.
 // Example: MediaCodecsSupport::AACSoftwareDecode
-enum class MediaCodecsSupport : int {
+enum class MediaCodecsSupport {
 #define X(name) SW_DECODE(name), HW_DECODE(name),
   CODEC_LIST
 #undef X
@@ -64,7 +64,7 @@ enum class MediaCodecsSupport : int {
 using MediaCodecsSupported = EnumSet<MediaCodecsSupport, uint64_t>;
 
 // Codec-agnostic SW/HW decode support information.
-enum class DecodeSupport : int {
+enum class DecodeSupport {
   Unsupported = 0,
   SoftwareDecode,
   HardwareDecode,

@@ -67,8 +67,7 @@ void MCSInfo::GetMediaCodecsSupportedString(
   for (const auto& it : aSupportedCodecs) {
     if (!GetInstance()->mHashTableMCS->Get(it, &supportInfo)) {
       CODEC_SUPPORT_LOG(
-          "Could not find string matching MediaCodecsSupported enum: %d",
-          static_cast<int>(it));
+          "Could not find string matching MediaCodecsSupported enum: %d", it);
       aSupportString.Append("Unknown codec entry found!\n"_ns);
       continue;
     }
@@ -125,7 +124,7 @@ CodecDefinition MCSInfo::GetCodecDefinition(const MediaCodec& aCodec) {
   CodecDefinition info;
   if (!GetInstance()->mHashTableCodec->Get(aCodec, &info)) {
     CODEC_SUPPORT_LOG("Could not find codec definition for codec enum: %d!",
-                      static_cast<int>(aCodec));
+                      aCodec);
   }
   return info;
 }
