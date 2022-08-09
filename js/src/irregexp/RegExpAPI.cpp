@@ -151,6 +151,8 @@ Isolate* CreateIsolate(JSContext* cx) {
   return isolate.release();
 }
 
+void TraceIsolate(JSTracer* trc, Isolate* isolate) { isolate->trace(trc); }
+
 void DestroyIsolate(Isolate* isolate) {
   MOZ_ASSERT(isolate->liveHandles() == 0);
   MOZ_ASSERT(isolate->livePseudoHandles() == 0);
