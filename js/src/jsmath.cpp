@@ -57,10 +57,15 @@ JS_PUBLIC_API void JS::SetUseFdlibmForSinCosTan(bool value) {
 }
 
 template <UnaryMathFunctionType F>
-static bool math_function(JSContext* cx, HandleValue val,
-                          MutableHandleValue res) {
+static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() == 0) {
+    args.rval().setNaN();
+    return true;
+  }
+
   double x;
-  if (!ToNumber(cx, val, &x)) {
+  if (!ToNumber(cx, args[0], &x)) {
     return false;
   }
 
@@ -70,19 +75,8 @@ static bool math_function(JSContext* cx, HandleValue val,
   // NB: Always stored as a double so the math function can be inlined
   // through MMathFunction.
   double z = F(x);
-  res.setDouble(z);
+  args.rval().setDouble(z);
   return true;
-}
-
-template <UnaryMathFunctionType F>
-static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() == 0) {
-    args.rval().setNaN();
-    return true;
-  }
-
-  return math_function<F>(cx, args[0], args.rval());
 }
 
 double js::math_abs_impl(double x) { return mozilla::Abs(x); }
