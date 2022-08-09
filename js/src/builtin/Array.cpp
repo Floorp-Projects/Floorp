@@ -3172,125 +3172,163 @@ static ArrayObject* NewDensePartlyAllocatedArray(JSContext* cx, uint64_t len) {
   return NewDensePartlyAllocatedArray(cx, uint32_t(len));
 }
 
-/* Proposal
- * https://github.com/tc39/proposal-change-array-by-copy
- * Array.prototype.toSpliced()
- */
-static bool array_to_spliced(JSContext* cx, unsigned argc, Value* vp) {
-  /* Currently doesn't use the optimizations array_splice() uses for
-   * dense arrays
-   */
+// https://github.com/tc39/proposal-change-array-by-copy
+// Array.prototype.toSpliced()
+static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
+  // Currently doesn't use the optimizations array_splice() uses for dense
+  // arrays.
 
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "toSpliced");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  /* Step 1. Let O be ? ToObject(this value). */
+  // Step 1. Let O be ? ToObject(this value).
   RootedObject obj(cx, ToObject(cx, args.thisv()));
   if (!obj) {
     return false;
   }
 
-  /* Step 2. Let len be ? LengthOfArrayLike(O). */
+  // Step 2. Let len be ? LengthOfArrayLike(O).
   uint64_t len;
   if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
-  /* Steps 3-6. */
-  /* actualStart is the index after which elements will be
-   * deleted and/or new elements will be added
-   */
+  // Steps 3-6.
+  // |actualStart| is the index after which elements will be deleted and/or
+  // new elements will be added
   uint64_t actualStart;
   if (!GetActualStart(cx, args.get(0), len, &actualStart)) {
     return false;
   }
+  MOZ_ASSERT(actualStart <= len);
 
-  /* Step 7. Let insertCount be the number of elements in items. */
+  // Step 7. Let insertCount be the number of elements in items.
   uint32_t insertCount = GetItemCount(args);
 
-  /* Steps 8-10. */
+  // Steps 8-10.
   // actualDeleteCount is the number of elements being deleted
   uint64_t actualDeleteCount;
   if (!GetActualDeleteCount(cx, args, obj, len, actualStart, insertCount,
                             &actualDeleteCount)) {
     return false;
   }
+  MOZ_ASSERT(actualStart + actualDeleteCount <= len);
 
-  /* Step 11. Let newLen be len + insertCount - actualDeleteCount. */
+  // Step 11. Let newLen be len + insertCount - actualDeleteCount.
   uint64_t newLen = len + insertCount - actualDeleteCount;
 
-  /* Step 12 handled by GetActualDeleteCount(). */
-  /* Step 13. Let A be ? ArrayCreate(𝔽(newLen)). */
-  RootedObject A(cx, ::NewDensePartlyAllocatedArray(cx, newLen));
-  if (!A) {
+  // Step 12 handled by GetActualDeleteCount().
+  MOZ_ASSERT(newLen < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(actualStart <= newLen,
+             "if |actualStart + actualDeleteCount <= len| and "
+             "|newLen = len + insertCount - actualDeleteCount|, then "
+             "|actualStart <= newLen|");
+
+  // Step 13. Let A be ? ArrayCreate(𝔽(newLen)).
+  Rooted<ArrayObject*> arr(cx, ::NewDensePartlyAllocatedArray(cx, newLen));
+  if (!arr) {
     return false;
   }
+  MOZ_ASSERT(newLen <= UINT32_MAX);
 
   // Copy everything before start
 
-  /* Step 14. Let i be 0. */
-  uint64_t i = 0;
+  // Step 14. Let i be 0.
+  uint32_t i = 0;
 
-  /* Step 15. Let r be actualStart + actualDeleteCount. */
+  // Step 15. Let r be actualStart + actualDeleteCount.
   uint64_t r = actualStart + actualDeleteCount;
 
-  /* Step 16. Repeat while i < actualStart, */
-  while (i < actualStart) {
-    /* Skip Step 16.a. Let Pi be ! ToString(𝔽(i)). */
-    RootedValue iValue(cx);
+  // Step 16. Repeat while i < actualStart,
+  RootedValue iValue(cx);
+  while (i < uint32_t(actualStart)) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
 
-    /* Step 16.b. Let iValue be Get(O, 𝔽(i)). */
+    // Skip Step 16.a. Let Pi be ! ToString(𝔽(i)).
+
+    // Step 16.b. Let iValue be ? Get(O, Pi).
     if (!GetArrayElement(cx, obj, i, &iValue)) {
       return false;
     }
 
-    /* Step 16.c. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), iValue). */
-    if (!SetArrayElement(cx, A, i, iValue)) {
+    // Step 16.c. Perform ! CreateDataPropertyOrThrow(A, Pi, iValue).
+    if (!DefineArrayElement(cx, arr, i, iValue)) {
       return false;
     }
 
-    /* Step 16.d. Set i to i + 1. */
+    // Step 16.d. Set i to i + 1.
     i++;
   }
 
-  // result array now contains all elements before start
+  // Result array now contains all elements before start.
 
   // Copy new items
-  Value* items = args.array() + 2;
+  if (insertCount > 0) {
+    HandleValueArray items = HandleValueArray::subarray(args, 2, insertCount);
 
-  /* Step 17.  For each element E of items, do
-   * Skip Step 17.a. Let Pi be ! ToString(𝔽(i)).
-   * Step 17.b. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), E). */
-  if (!SetArrayElements(cx, A, actualStart, insertCount, items)) {
-    return false;
+    // Fast-path to copy all items in one go.
+    DenseElementResult result =
+        arr->setOrExtendDenseElements(cx, i, items.begin(), items.length());
+    if (result == DenseElementResult::Failure) {
+      return false;
+    }
+
+    if (result == DenseElementResult::Success) {
+      i += items.length();
+    } else {
+      MOZ_ASSERT(result == DenseElementResult::Incomplete);
+
+      // Step 17. For each element E of items, do
+      for (size_t j = 0; j < items.length(); j++) {
+        if (!CheckForInterrupt(cx)) {
+          return false;
+        }
+
+        // Skip Step 17.a. Let Pi be ! ToString(𝔽(i)).
+
+        // Step 17.b. Perform ! CreateDataPropertyOrThrow(A, Pi, E).
+        if (!DefineArrayElement(cx, arr, i, items[j])) {
+          return false;
+        }
+
+        // Step 17.c. Set i to i + 1.
+        i++;
+      }
+    }
   }
-  /* Step 17.c. Set i to i + 1. */
-  // (Equivalent)
-  i += insertCount;
 
   // Copy items after new items
-  /* Step 18. Repeat, while i < newLen, */
-  while (i < newLen) {
-    /* Skip Step 18.a. Let Pi be ! ToString(𝔽(i)). */
-    /* Skip Step 18.b. Let from be ! ToString(𝔽(r)). */
-    RootedValue fromValue(cx);
-    /* Step 18.c. Let fromValue be ? Get(O, 𝔽(r)). */
+  // Step 18. Repeat, while i < newLen,
+  RootedValue fromValue(cx);
+  while (i < uint32_t(newLen)) {
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    // Skip Step 18.a. Let Pi be ! ToString(𝔽(i)).
+    // Skip Step 18.b. Let from be ! ToString(𝔽(r)).
+
+    // Step 18.c. Let fromValue be ? Get(O, from). */
     if (!GetArrayElement(cx, obj, r, &fromValue)) {
       return false;
     }
-    /* Step 18.d. Perform ! CreateDataPropertyOrThrow(A, 𝔽(i), fromValue). */
-    if (!SetArrayElement(cx, A, i, fromValue)) {
+
+    // Step 18.d. Perform ! CreateDataPropertyOrThrow(A, Pi, fromValue).
+    if (!DefineArrayElement(cx, arr, i, fromValue)) {
       return false;
     }
-    /* Step 18.e. Set i to i + 1. */
+
+    // Step 18.e. Set i to i + 1.
     i++;
-    /* Step 18.f. Set r to r + 1. */
+
+    // Step 18.f. Set r to r + 1.
     r++;
   }
 
-  /* Step 19. Return A. */
-  args.rval().setObject(*A);
-
+  // Step 19. Return A.
+  args.rval().setObject(*arr);
   return true;
 }
 
@@ -4426,7 +4464,7 @@ static const JSFunctionSpec array_methods[] = {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
     JS_SELF_HOSTED_FN("toReversed", "ArrayToReversed", 0, 0),
     JS_SELF_HOSTED_FN("toSorted", "ArrayToSorted", 1, 0),
-    JS_FN("toSpliced", array_to_spliced, 2, 0), JS_FN("with", array_with, 2, 0),
+    JS_FN("toSpliced", array_toSpliced, 2, 0), JS_FN("with", array_with, 2, 0),
 #endif
 
     JS_FS_END};
