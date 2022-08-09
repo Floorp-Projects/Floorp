@@ -207,7 +207,8 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
 #endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  bool changeArrayByCopy = cx->options().changeArrayByCopy();
+  bool changeArrayByCopy =
+      cx->realm()->creationOptions().getChangeArrayByCopyEnabled();
   if (!JS_SetProperty(cx, info, "enableChangeArrayByCopy",
                       changeArrayByCopy ? TrueHandleValue : FalseHandleValue)) {
     return false;

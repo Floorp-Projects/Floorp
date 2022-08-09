@@ -3864,6 +3864,9 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(enableArrayGrouping)
 #endif
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+      .setChangeArrayByCopyEnabled(enableChangeArrayByCopy)
+#endif
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(enableNewSetMethods)
 #endif
@@ -10753,9 +10756,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-      .setChangeArrayByCopy(enableChangeArrayByCopy)
-#endif
       .setImportAssertions(enableImportAssertions);
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
