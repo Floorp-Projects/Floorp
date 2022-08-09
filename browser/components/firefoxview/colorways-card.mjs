@@ -64,6 +64,7 @@ class ColorwaysCard extends HTMLElement {
           "resource:///modules/ColorwayClosetOpener.jsm"
         );
         ColorwayClosetOpener.openModal();
+        this.sendTelemetry();
       });
       this._initPromise.then(() => this._render());
       AddonManager.addAddonListener(this);
@@ -181,6 +182,16 @@ class ColorwaysCard extends HTMLElement {
       );
     }
     this.figure.src = figureUrl || "";
+  }
+
+  sendTelemetry() {
+    let { colorway } = this._getData();
+    Services.telemetry.recordEvent(
+      "colorways",
+      colorway ? "change_colorway" : "try_colorways",
+      "firefoxview",
+      null
+    );
   }
 }
 
