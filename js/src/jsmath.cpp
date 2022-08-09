@@ -65,9 +65,11 @@ static bool math_function(JSContext* cx, HandleValue val,
     return false;
   }
 
+  // TODO(post-Warp): Re-evaluate if it's still necessary resp. useful to always
+  // type the value as a double.
+
   // NB: Always stored as a double so the math function can be inlined
-  // through MMathFunction. We also rely on this to avoid type monitoring
-  // in CallIRGenerator::tryAttachMathSqrt.
+  // through MMathFunction.
   double z = F(x);
   res.setDouble(z);
   return true;
@@ -225,6 +227,13 @@ double js::math_cos_native_impl(double x) {
   return std::cos(x);
 }
 
+double js::math_cos_impl(double x) {
+  if (sUseFdlibmForSinCosTan) {
+    return math_cos_fdlibm_impl(x);
+  }
+  return math_cos_native_impl(x);
+}
+
 bool js::math_cos(JSContext* cx, unsigned argc, Value* vp) {
   if (sUseFdlibmForSinCosTan) {
     return math_function<math_cos_fdlibm_impl>(cx, argc, vp);
@@ -321,11 +330,6 @@ bool js::math_fround(JSContext* cx, unsigned argc, Value* vp) {
 double js::math_log_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
   return fdlibm::log(x);
-}
-
-bool js::math_log_handle(JSContext* cx, HandleValue val,
-                         MutableHandleValue res) {
-  return math_function<math_log_impl>(cx, val, res);
 }
 
 bool js::math_log(JSContext* cx, unsigned argc, Value* vp) {
@@ -647,12 +651,11 @@ double js::math_sin_native_impl(double x) {
   return std::sin(x);
 }
 
-bool js::math_sin_handle(JSContext* cx, HandleValue val,
-                         MutableHandleValue res) {
+double js::math_sin_impl(double x) {
   if (sUseFdlibmForSinCosTan) {
-    return math_function<math_sin_fdlibm_impl>(cx, val, res);
+    return math_sin_fdlibm_impl(x);
   }
-  return math_function<math_sin_native_impl>(cx, val, res);
+  return math_sin_native_impl(x);
 }
 
 bool js::math_sin(JSContext* cx, unsigned argc, Value* vp) {
@@ -686,6 +689,13 @@ double js::math_tan_native_impl(double x) {
   MOZ_ASSERT(!sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
   return std::tan(x);
+}
+
+double js::math_tan_impl(double x) {
+  if (sUseFdlibmForSinCosTan) {
+    return math_tan_fdlibm_impl(x);
+  }
+  return math_tan_native_impl(x);
 }
 
 bool js::math_tan(JSContext* cx, unsigned argc, Value* vp) {

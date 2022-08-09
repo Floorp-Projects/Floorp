@@ -1625,6 +1625,159 @@ function rlog_object(i) {
     return i;
 }
 
+var uceFault_cos_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_cos_number'));
+function rcos_number(i) {
+    var x = Math.cos(i);
+    if (uceFault_cos_number(i) || uceFault_cos_number(i))
+        assertEq(x, Math.cos(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_tan_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_tan_number'));
+function rtan_number(i) {
+    var x = Math.tan(i);
+    if (uceFault_tan_number(i) || uceFault_tan_number(i))
+        assertEq(x, Math.tan(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_exp_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_exp_number'));
+function rexp_number(i) {
+    var x = Math.exp(i);
+    if (uceFault_exp_number(i) || uceFault_exp_number(i))
+        assertEq(x, Math.exp(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_acos_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_acos_number'));
+function racos_number(i) {
+    var x = Math.acos(1 / i);
+    if (uceFault_acos_number(i) || uceFault_acos_number(i))
+        assertEq(x, Math.acos(1 / 99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_asin_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_asin_number'));
+function rasin_number(i) {
+    var x = Math.asin(1 / i);
+    if (uceFault_asin_number(i) || uceFault_asin_number(i))
+        assertEq(x, Math.asin(1 / 99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_atan_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_atan_number'));
+function ratan_number(i) {
+    var x = Math.atan(i);
+    if (uceFault_atan_number(i) || uceFault_atan_number(i))
+        assertEq(x, Math.atan(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_log10_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_log10_number'));
+function rlog10_number(i) {
+    var x = Math.log10(i);
+    if (uceFault_log10_number(i) || uceFault_log10_number(i))
+        assertEq(x, Math.log10(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_log2_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_log2_number'));
+function rlog2_number(i) {
+    var x = Math.log2(i);
+    if (uceFault_log2_number(i) || uceFault_log2_number(i))
+        assertEq(x, Math.log2(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_log1p_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_log1p_number'));
+function rlog1p_number(i) {
+    var x = Math.log1p(i);
+    if (uceFault_log1p_number(i) || uceFault_log1p_number(i))
+        assertEq(x, Math.log1p(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_expm1_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_expm1_number'));
+function rexpm1_number(i) {
+    var x = Math.expm1(i);
+    if (uceFault_expm1_number(i) || uceFault_expm1_number(i))
+        assertEq(x, Math.expm1(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_cosh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_cosh_number'));
+function rcosh_number(i) {
+    var x = Math.cosh(i);
+    if (uceFault_cosh_number(i) || uceFault_cosh_number(i))
+        assertEq(x, Math.cosh(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_sinh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sinh_number'));
+function rsinh_number(i) {
+    var x = Math.sinh(i);
+    if (uceFault_sinh_number(i) || uceFault_sinh_number(i))
+        assertEq(x, Math.sinh(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_tanh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_tanh_number'));
+function rtanh_number(i) {
+    var x = Math.tanh(1 / i);
+    if (uceFault_tanh_number(i) || uceFault_tanh_number(i))
+        assertEq(x, Math.tanh(1 / 99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_acosh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_acosh_number'));
+function racosh_number(i) {
+    var x = Math.acosh(i);
+    if (uceFault_acosh_number(i) || uceFault_acosh_number(i))
+        assertEq(x, Math.acosh(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_asinh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_asinh_number'));
+function rasinh_number(i) {
+    var x = Math.asinh(i);
+    if (uceFault_asinh_number(i) || uceFault_asinh_number(i))
+        assertEq(x, Math.asinh(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_atanh_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_atanh_number'));
+function ratanh_number(i) {
+    var x = Math.atanh(1 / i);
+    if (uceFault_atanh_number(i) || uceFault_atanh_number(i))
+        assertEq(x, Math.atanh(1 / 99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_cbrt_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_cbrt_number'));
+function rcbrt_number(i) {
+    var x = Math.cbrt(i);
+    if (uceFault_cbrt_number(i) || uceFault_cbrt_number(i))
+        assertEq(x, Math.cbrt(99));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 var uceFault_sign_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_sign_number'));
 function rsign_number(i) {
     var x = Math.sign(-i - 0.12010799100);
@@ -1960,6 +2113,23 @@ for (j = 100 - max; j < 100; j++) {
     rsin_object(i);
     rlog_number(i);
     rlog_object(i);
+    rcos_number(i);
+    rexp_number(i);
+    rtan_number(i);
+    racos_number(i);
+    rasin_number(i);
+    ratan_number(i);
+    rlog10_number(i);
+    rlog2_number(i);
+    rlog1p_number(i);
+    rexpm1_number(i);
+    rcosh_number(i);
+    rsinh_number(i);
+    rtanh_number(i);
+    racosh_number(i);
+    rasinh_number(i);
+    ratanh_number(i);
+    rcbrt_number(i);
     rsign_number(i);
     rsign_double(i);
     rbigintadd(BigInt(i));

@@ -1286,15 +1286,31 @@ bool MMathFunction::writeRecoverData(CompactBufferWriter& writer) const {
     case UnaryMathFunction::Trunc:
       writer.writeUnsigned(uint32_t(RInstruction::Recover_Trunc));
       return true;
-    case UnaryMathFunction::Sin:
     case UnaryMathFunction::Log:
+    case UnaryMathFunction::Sin:
+    case UnaryMathFunction::Cos:
+    case UnaryMathFunction::Exp:
+    case UnaryMathFunction::Tan:
+    case UnaryMathFunction::ACos:
+    case UnaryMathFunction::ASin:
+    case UnaryMathFunction::ATan:
+    case UnaryMathFunction::Log10:
+    case UnaryMathFunction::Log2:
+    case UnaryMathFunction::Log1P:
+    case UnaryMathFunction::ExpM1:
+    case UnaryMathFunction::CosH:
+    case UnaryMathFunction::SinH:
+    case UnaryMathFunction::TanH:
+    case UnaryMathFunction::ACosH:
+    case UnaryMathFunction::ASinH:
+    case UnaryMathFunction::ATanH:
+    case UnaryMathFunction::Cbrt:
       static_assert(sizeof(UnaryMathFunction) == sizeof(uint8_t));
       writer.writeUnsigned(uint32_t(RInstruction::Recover_MathFunction));
       writer.writeByte(uint8_t(function_));
       return true;
-    default:
-      MOZ_CRASH("Unknown math function.");
   }
+  MOZ_CRASH("Unknown math function.");
 }
 
 RMathFunction::RMathFunction(CompactBufferReader& reader) {
@@ -1302,32 +1318,78 @@ RMathFunction::RMathFunction(CompactBufferReader& reader) {
 }
 
 bool RMathFunction::recover(JSContext* cx, SnapshotIterator& iter) const {
+  double num = iter.read().toNumber();
+
+  double result;
   switch (function_) {
-    case UnaryMathFunction::Sin: {
-      RootedValue arg(cx, iter.read());
-      RootedValue result(cx);
+    case UnaryMathFunction::Log:
+      result = js::math_log_impl(num);
+      break;
+    case UnaryMathFunction::Sin:
+      result = js::math_sin_impl(num);
+      break;
+    case UnaryMathFunction::Cos:
+      result = js::math_cos_impl(num);
+      break;
+    case UnaryMathFunction::Exp:
+      result = js::math_exp_impl(num);
+      break;
+    case UnaryMathFunction::Tan:
+      result = js::math_tan_impl(num);
+      break;
+    case UnaryMathFunction::ACos:
+      result = js::math_acos_impl(num);
+      break;
+    case UnaryMathFunction::ASin:
+      result = js::math_asin_impl(num);
+      break;
+    case UnaryMathFunction::ATan:
+      result = js::math_atan_impl(num);
+      break;
+    case UnaryMathFunction::Log10:
+      result = js::math_log10_impl(num);
+      break;
+    case UnaryMathFunction::Log2:
+      result = js::math_log2_impl(num);
+      break;
+    case UnaryMathFunction::Log1P:
+      result = js::math_log1p_impl(num);
+      break;
+    case UnaryMathFunction::ExpM1:
+      result = js::math_expm1_impl(num);
+      break;
+    case UnaryMathFunction::CosH:
+      result = js::math_cosh_impl(num);
+      break;
+    case UnaryMathFunction::SinH:
+      result = js::math_sinh_impl(num);
+      break;
+    case UnaryMathFunction::TanH:
+      result = js::math_tanh_impl(num);
+      break;
+    case UnaryMathFunction::ACosH:
+      result = js::math_acosh_impl(num);
+      break;
+    case UnaryMathFunction::ASinH:
+      result = js::math_asinh_impl(num);
+      break;
+    case UnaryMathFunction::ATanH:
+      result = js::math_atanh_impl(num);
+      break;
+    case UnaryMathFunction::Cbrt:
+      result = js::math_cbrt_impl(num);
+      break;
 
-      if (!js::math_sin_handle(cx, arg, &result)) {
-        return false;
-      }
-
-      iter.storeInstructionResult(result);
-      return true;
-    }
-    case UnaryMathFunction::Log: {
-      RootedValue arg(cx, iter.read());
-      RootedValue result(cx);
-
-      if (!js::math_log_handle(cx, arg, &result)) {
-        return false;
-      }
-
-      iter.storeInstructionResult(result);
-      return true;
-    }
-    default:
-      MOZ_CRASH("Unknown math function.");
+    case UnaryMathFunction::Trunc:
+    case UnaryMathFunction::Floor:
+    case UnaryMathFunction::Ceil:
+    case UnaryMathFunction::Round:
+      // These have their own recover instructions.
+      MOZ_CRASH("Unexpected rounding math function.");
   }
+
+  iter.storeInstructionResult(DoubleValue(result));
+  return true;
 }
 
 bool MRandom::writeRecoverData(CompactBufferWriter& writer) const {

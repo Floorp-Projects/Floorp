@@ -4823,7 +4823,7 @@ class MMathFunction : public MUnaryInstruction,
 
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override;
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MMathFunction)
 };
