@@ -75,17 +75,14 @@ const ADD_RESULTS_CHUNK_SIZE = 1000;
  */
 class QuickSuggest extends EventEmitter {
   init() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
     lazy.UrlbarPrefs.addObserver(this);
     lazy.NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
-
-    this._settingsTaskQueue.queue(() => {
-      return new Promise(resolve => {
-        Services.tm.idleDispatchToMainThread(() => {
-          this._queueSettingsSetup();
-          resolve();
-        });
-      });
-    });
+    this._queueSettingsSetup();
   }
 
   /**
@@ -375,6 +372,8 @@ class QuickSuggest extends EventEmitter {
     }
   }
 
+  _initialized = false;
+
   // The RemoteSettings client.
   _rs = null;
 
@@ -415,6 +414,7 @@ class QuickSuggest extends EventEmitter {
         this._onSettingsSync = (...args) => this._queueSettingsSync(...args);
         this._rs = lazy.RemoteSettings(RS_COLLECTION);
         this._rs.on("sync", this._onSettingsSync);
+        this._queueSettingsSync();
       } else if (!enabled && this._rs) {
         this._rs.off("sync", this._onSettingsSync);
         this._rs = null;
