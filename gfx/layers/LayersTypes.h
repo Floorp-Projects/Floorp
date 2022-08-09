@@ -332,9 +332,7 @@ enum class CompositableHandleOwner : uint8_t {
 struct RemoteTextureId {
   uint64_t mId = 0;
 
-  auto MutTiedFields() {
-    return std::tie(mId);
-  }
+  auto MutTiedFields() { return std::tie(mId); }
 
   static RemoteTextureId GetNext();
 
@@ -375,9 +373,7 @@ struct RemoteTextureId {
 struct RemoteTextureOwnerId {
   uint64_t mId = 0;
 
-  auto MutTiedFields() {
-    return std::tie(mId);
-  }
+  auto MutTiedFields() { return std::tie(mId); }
 
   static RemoteTextureOwnerId GetNext();
 

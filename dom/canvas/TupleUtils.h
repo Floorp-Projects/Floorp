@@ -47,14 +47,17 @@ constexpr auto MapTuple(Tup&& t, Callable&& fn) {
 
 // -
 
+template <class Tup>
+struct SizeofTupleArgs;
+
+// c++17 fold expressions make this easy, once we pull out the Args parameter
+// pack by constraining the default template:
 template <class... Args>
-constexpr auto SizeofTupleArgs(const std::tuple<Args...>&) {
-  size_t total = 0;
-  for (const auto s : {sizeof(Args)...}) {
-    total += s;
-  }
-  return total;
-}
+struct SizeofTupleArgs<std::tuple<Args...>>
+    : std::integral_constant<size_t, (... + sizeof(Args))> {};
+
+static_assert(SizeofTupleArgs<std::tuple<size_t, char, char, char>>::value ==
+              sizeof(size_t) + 3);
 
 }  // namespace mozilla
 
