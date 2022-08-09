@@ -3206,9 +3206,6 @@ static void CopyDenseElementsFillHoles(ArrayObject* arr, NativeObject* nobj,
 // https://github.com/tc39/proposal-change-array-by-copy
 // Array.prototype.toSpliced()
 static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
-  // Currently doesn't use the optimizations array_splice() uses for dense
-  // arrays.
-
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "toSpliced");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -3267,6 +3264,104 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
                            NewDensePartlyAllocatedArray(cx, uint32_t(newLen)));
   if (!arr) {
     return false;
+  }
+
+  // Steps 14-19 optimized for dense elements.
+  if (CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len)) {
+    MOZ_ASSERT(len <= UINT32_MAX);
+    MOZ_ASSERT(actualDeleteCount <= UINT32_MAX,
+               "if |actualStart + actualDeleteCount <= len| and "
+               "|len <= UINT32_MAX|, then |actualDeleteCount <= UINT32_MAX|");
+
+    uint32_t length = uint32_t(len);
+    uint32_t newLength = uint32_t(newLen);
+    uint32_t start = uint32_t(actualStart);
+    uint32_t deleteCount = uint32_t(actualDeleteCount);
+
+    auto nobj = obj.as<NativeObject>();
+
+    ArrayObject* arr = NewDenseFullyAllocatedArray(cx, newLength);
+    if (!arr) {
+      return false;
+    }
+    arr->setLength(newLength);
+
+    // Below code doesn't handle the case when the storage has to grow,
+    // therefore the capacity must fit for at least |newLength| elements.
+    MOZ_ASSERT(arr->getDenseCapacity() >= newLength);
+
+    if (deleteCount == 0 && insertCount == 0) {
+      // Copy the array when we don't have to remove or insert any elements.
+      if (newLength > 0) {
+        CopyDenseElementsFillHoles(arr, nobj, newLength);
+      }
+    } else {
+      // Copy nobj[0..start] to arr[0..start].
+      if (start > 0) {
+        CopyDenseElementsFillHoles(arr, nobj, start);
+      }
+
+      // Insert |items| into arr[start..(start + insertCount)].
+      if (insertCount > 0) {
+        auto items = HandleValueArray::subarray(args, 2, insertCount);
+
+        // Prefer |initDenseElements| because it's faster.
+        if (arr->getDenseInitializedLength() == 0) {
+          arr->initDenseElements(items.begin(), items.length());
+        } else {
+          arr->setDenseInitializedLength(start + items.length());
+          arr->copyDenseElements(start, items.begin(), items.length());
+        }
+      }
+
+      uint32_t fromIndex = start + deleteCount;
+      uint32_t toIndex = start + insertCount;
+      MOZ_ASSERT((length - fromIndex) == (newLength - toIndex),
+                 "Copies all remaining elements to the end");
+
+      // Copy nobj[(start + deleteCount)..length] to
+      // arr[(start + insertCount)..newLength].
+      if (fromIndex < length) {
+        arr->setDenseInitializedLength(newLength);
+
+        uint32_t end = std::min(length, nobj->getDenseInitializedLength());
+        if (fromIndex < end) {
+          uint32_t count = end - fromIndex;
+          if (nobj->denseElementsArePacked()) {
+            // Copy all dense elements when no holes are present.
+            const Value* src = nobj->getDenseElements() + fromIndex;
+            arr->copyDenseElements(toIndex, src, count);
+            fromIndex += count;
+            toIndex += count;
+          } else {
+            // Handle each element separately to filter out holes.
+            for (uint32_t i = 0; i < count; i++) {
+              Value val = nobj->getDenseElement(fromIndex++);
+              if (val.isMagic(JS_ELEMENTS_HOLE)) {
+                val = UndefinedValue();
+              }
+              arr->initDenseElement(toIndex++, val);
+            }
+          }
+        }
+
+        // Fill trailing holes with undefined.
+        while (fromIndex < length) {
+          arr->initDenseElement(toIndex++, UndefinedValue());
+          fromIndex++;
+        }
+      }
+
+      MOZ_ASSERT(fromIndex == length);
+      MOZ_ASSERT(toIndex == newLength);
+    }
+
+    // Ensure the result array is packed and has the correct length.
+    MOZ_ASSERT(IsPackedArray(arr));
+    MOZ_ASSERT(arr->length() == newLength);
+
+    args.rval().setObject(*arr);
+    return true;
   }
 
   // Copy everything before start
