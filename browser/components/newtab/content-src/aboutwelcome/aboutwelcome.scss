@@ -330,7 +330,9 @@ body {
             align-items: initial;
 
             h1 {
-              font-size: 29px;
+              font-size: 24px;
+              line-height: 1.2;
+              width: 300px;
             }
 
             h2 {
@@ -338,6 +340,7 @@ body {
               margin: 10px 0 0;
               min-height: 1em;
               font-size: 15px;
+              line-height: 1.5;
             }
           }
 
@@ -387,6 +390,23 @@ body {
         }
       }
 
+      .tiles-theme-container {
+        margin-block: -20px auto;
+        align-items: initial;
+
+        .colorway-text {
+          text-align: initial;
+          transition: var(--transition);
+          font-size: 13px;
+          line-height: 1.5;
+          margin-block: 10px 20px;
+        }
+
+        .theme {
+          min-width: 38px;
+        }
+      }
+
       @media (prefers-color-scheme: dark) {
         .section-main .main-content {
           .welcome-text h2 {
@@ -396,6 +416,12 @@ body {
           .action-buttons .secondary {
             background-color: #2B2A33;
           }
+        }
+      }
+
+      @media only screen and (min-width: 800px) {
+        .tiles-theme-section {
+          margin-inline-start: -10px;
         }
       }
 
@@ -469,6 +495,11 @@ body {
               min-width: 240px;
             }
 
+            .colorway-text {
+              text-align: center;
+              margin-inline: 30px;
+            }
+
             .steps {
               padding-block: 0;
               margin: 0;
@@ -487,6 +518,7 @@ body {
             }
           }
         }
+
       }
     }
   }
@@ -985,6 +1017,30 @@ body {
         &.lush {
           background-image: url('resource://builtin-themes/colorways/2021lush/balanced/icon.svg');
         }
+
+        &.playmaker {
+          background-image: url('resource://builtin-themes/colorways/2022playmaker/balanced/icon.svg');
+        }
+
+        &.expressionist {
+          background-image: url('resource://builtin-themes/colorways/2022expressionist/balanced/icon.svg');
+        }
+
+        &.visionary {
+          background-image: url('resource://builtin-themes/colorways/2022visionary/balanced/icon.svg');
+        }
+
+        &.dreamer {
+          background-image: url('resource://builtin-themes/colorways/2022dreamer/balanced/icon.svg');
+        }
+
+        &.innovator {
+          background-image: url('resource://builtin-themes/colorways/2022innovator/balanced/icon.svg');
+        }
+
+        &.activist {
+          background-image: url('resource://builtin-themes/colorways/2022activist/balanced/icon.svg');
+        }
       }
 
       .text {
@@ -1468,7 +1524,8 @@ body {
   // Delays for transitioning-in of intermediate screens
   .screen:not(.dialog-initial):not([pos='corner']) {
     .colorway-variations,
-    .tiles-theme-section {
+    .tiles-theme-section,
+    .colorway-text {
       transition-delay: 0.2s;
     }
 
@@ -1564,6 +1621,7 @@ body {
       .welcome-text,
       .colorway-variations,
       .tiles-theme-section,
+      .colorway-text,
       .primary,
       .secondary,
       .secondary-cta:not(.top) {
@@ -1616,7 +1674,8 @@ body {
       }
 
       .colorway-variations,
-      .tiles-theme-section {
+      .tiles-theme-section,
+      .colorway-text {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.2s;
