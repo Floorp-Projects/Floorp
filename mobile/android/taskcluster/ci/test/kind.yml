@@ -24,7 +24,7 @@ job-defaults:
         # TODO Generate APKs in a build task instead
         gradlew: ['clean', 'assembleGecko', 'assembleAndroidTest', 'assembleDebug']
         secrets:
-            - name: project/mobile/android-components/firebase
+            - name: project/mobile/firefox-android/firebase
               key: firebaseToken
               path: .firebase_token.json
               json: true
