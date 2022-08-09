@@ -1923,7 +1923,7 @@ nsSize nsXULScrollFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
 }
 
 nsSize nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState) {
-  nsSize min = mHelper.mScrolledFrame->GetXULMinSizeForScrollArea(aState);
+  nsSize min(0, 0);
 
   ScrollStyles styles = GetScrollStyles();
 
@@ -1931,14 +1931,18 @@ nsSize nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState) {
     nsSize vSize = mHelper.mVScrollbarBox->GetXULMinSize(aState);
     AddXULMargin(mHelper.mVScrollbarBox, vSize);
     min.width += vSize.width;
-    if (min.height < vSize.height) min.height = vSize.height;
+    if (min.height < vSize.height) {
+      min.height = vSize.height;
+    }
   }
 
   if (mHelper.mHScrollbarBox && styles.mHorizontal == StyleOverflow::Scroll) {
     nsSize hSize = mHelper.mHScrollbarBox->GetXULMinSize(aState);
     AddXULMargin(mHelper.mHScrollbarBox, hSize);
     min.height += hSize.height;
-    if (min.width < hSize.width) min.width = hSize.width;
+    if (min.width < hSize.width) {
+      min.width = hSize.width;
+    }
   }
 
   AddXULBorderAndPadding(min);

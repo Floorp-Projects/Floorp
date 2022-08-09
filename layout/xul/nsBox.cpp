@@ -213,10 +213,6 @@ nsSize nsIFrame::GetUncachedXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
   return min;
 }
 
-nsSize nsIFrame::GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) {
-  return nsSize(0, 0);
-}
-
 nsSize nsIFrame::GetUncachedXULMaxSize(nsBoxLayoutState& aBoxLayoutState) {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
