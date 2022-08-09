@@ -31,3 +31,14 @@ if CONFIG["TARGET_ENDIANNESS"] == "big":
     HOST_DEFINES["U_COMMON_IMPLEMENTATION"] = True
     HOST_SOURCES += sources
     HOST_SOURCES += other_sources
+
+# Clang 16 added an error that can be downgraded, but won't be downgradable
+# in clang 17.
+# https://unicode-org.atlassian.net/browse/ICU-22113
+if (
+    CONFIG["CC_TYPE"] in ("clang", "clang-cl")
+    and int(CONFIG["CC_VERSION"].split(".")[0]) == 16
+):
+    SOURCES["/intl/icu/source/common/ubidi.cpp"].flags += [
+        "-Wno-error=enum-constexpr-conversion"
+    ]
