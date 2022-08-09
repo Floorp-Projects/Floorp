@@ -105,6 +105,8 @@ class TRR : public Runnable,
   nsresult On200Response(nsIChannel* aChannel);
   nsresult FollowCname(nsIChannel* aChannel);
 
+  bool HasUsableResponse();
+
   bool UseDefaultServer();
   void SaveAdditionalRecords(
       const nsClassHashtable<nsCStringHashKey, DOHresp>& aRecords);
