@@ -335,13 +335,9 @@ media::DecodeSupportSet WMFDecoderModule::Supports(
   }
 
   if (CanCreateMFTDecoder(type)) {
-    if (StreamTypeIsVideo(type)) {
-      return sDXVAEnabled ? media::DecodeSupport::HardwareDecode
-                          : media::DecodeSupport::SoftwareDecode;
-    } else {
-      // Audio only supports software decode
-      return media::DecodeSupport::SoftwareDecode;
-    }
+    // TODO: Note that we do not yet distinguish between SW/HW decode support.
+    //       Will be done in bug 1754239.
+    return media::DecodeSupport::SoftwareDecode;
   }
 
   return media::DecodeSupport::Unsupported;
@@ -434,13 +430,17 @@ media::DecodeSupportSet WMFDecoderModule::SupportsMimeType(
   if (!trackInfo) {
     return media::DecodeSupport::Unsupported;
   }
-  auto supports = Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
-  MOZ_LOG(
-      sPDMLog, LogLevel::Debug,
-      ("WMF decoder %s requested type '%s'",
-       supports != media::DecodeSupport::Unsupported ? "supports" : "rejects",
-       aMimeType.BeginReading()));
-  return supports;
+  bool supports = Supports(SupportDecoderParams(*trackInfo), aDiagnostics) !=
+                  media::DecodeSupport::Unsupported;
+  MOZ_LOG(sPDMLog, LogLevel::Debug,
+          ("WMF decoder %s requested type '%s'",
+           supports ? "supports" : "rejects", aMimeType.BeginReading()));
+  if (!supports) {
+    return media::DecodeSupport::Unsupported;
+  }
+  // TODO: Note that we do not yet distinguish between SW/HW decode support.
+  //       Will be done in bug 1754239.
+  return media::DecodeSupport::SoftwareDecode;
 }
 
 }  // namespace mozilla
