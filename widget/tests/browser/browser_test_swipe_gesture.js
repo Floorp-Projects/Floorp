@@ -135,6 +135,8 @@ async function panLeftToRightEnd(aElement, aX, aY, aMultiplier) {
   );
 }
 
+requestLongerTimeout(2);
+
 add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -825,4 +827,72 @@ add_task(async () => {
   });
 
   BrowserTestUtils.removeTab(tab);
+});
+
+// A simple test case on RTL.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-velocity-contribution", 0.5],
+      ["intl.l10n.pseudo", "bidi"],
+    ],
+  });
+
+  const newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+  const firstPage = "about:about";
+  const secondPage = "about:mozilla";
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    newWin.gBrowser,
+    firstPage,
+    true /* waitForLoad */
+  );
+
+  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
+
+  // Make sure we can go back to the previous page.
+  ok(newWin.gBrowser.webNavigation.canGoBack);
+  // and we cannot go forward to the next page.
+  ok(!newWin.gBrowser.webNavigation.canGoForward);
+
+  // Make sure that our gesture support stuff has been initialized in the new
+  // browser window.
+  await TestUtils.waitForCondition(() => {
+    return newWin.gHistorySwipeAnimation.active;
+  });
+
+  // Try to navigate backward.
+  let startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    firstPage
+  );
+  let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    firstPage
+  );
+  await panRightToLeft(tab.linkedBrowser, 100, 100, 1);
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(newWin.gBrowser.webNavigation.canGoForward);
+
+  // Now try to navigate forward again.
+  startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    secondPage
+  );
+  stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    secondPage
+  );
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(newWin.gBrowser.webNavigation.canGoBack);
+
+  await BrowserTestUtils.closeWindow(newWin);
 });
