@@ -22,6 +22,7 @@
 #include "vm/RegExpShared.h"
 
 struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSTracer;
 
 namespace JS {
 class RegExpFlags;
@@ -42,6 +43,7 @@ class TokenStreamAnyChars;
 namespace irregexp {
 
 Isolate* CreateIsolate(JSContext* cx);
+void TraceIsolate(JSTracer* trc, Isolate* isolate);
 void DestroyIsolate(Isolate* isolate);
 
 size_t IsolateSizeOfIncludingThis(Isolate* isolate,
