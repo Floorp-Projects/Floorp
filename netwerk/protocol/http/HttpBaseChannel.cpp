@@ -2033,20 +2033,6 @@ HttpBaseChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor* aVisitor) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetAllowPipelining(bool* value) {
-  NS_ENSURE_ARG_POINTER(value);
-  *value = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::SetAllowPipelining(bool value) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-  // nop
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::GetAllowSTS(bool* value) {
   NS_ENSURE_ARG_POINTER(value);
   *value = LoadAllowSTS();
