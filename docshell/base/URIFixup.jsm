@@ -55,13 +55,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIDNSService"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "handlerService",
-  "@mozilla.org/uriloader/handler-service;1",
-  "nsIHandlerService"
-);
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "fixupSchemeTypos",
@@ -266,15 +259,7 @@ XPCOMUtils.defineLazyGetter(lazy, "knownSuffixes", () => {
   return suffixes;
 });
 
-function URIFixup() {
-  // There are cases that nsIExternalProtocolService.externalProtocolHandlerExists() does
-  // not work well and returns always true due to flatpak. In this case, in order to
-  // fallback to nsIHandlerService.exits(), we test whether can trust
-  // nsIExternalProtocolService here.
-  this._trustExternalProtocolService = !lazy.externalProtocolService.externalProtocolHandlerExists(
-    `__dummy${Date.now()}__`
-  );
-}
+function URIFixup() {}
 
 URIFixup.prototype = {
   get FIXUP_FLAG_NONE() {
@@ -344,7 +329,7 @@ URIFixup.prototype = {
       scheme &&
       (isCommonProtocol ||
         Services.io.getProtocolHandler(scheme) != lazy.defaultProtocolHandler ||
-        this._isKnownExternalProtocol(scheme));
+        lazy.externalProtocolService.externalProtocolHandlerExists(scheme));
 
     if (
       canHandleProtocol ||
@@ -645,14 +630,6 @@ URIFixup.prototype = {
   },
 
   isDomainKnown,
-
-  _isKnownExternalProtocol(scheme) {
-    return this._trustExternalProtocolService
-      ? lazy.externalProtocolService.externalProtocolHandlerExists(scheme)
-      : lazy.handlerService.exists(
-          lazy.externalProtocolService.getProtocolHandlerInfo(scheme)
-        );
-  },
 
   classID: Components.ID("{c6cf88b7-452e-47eb-bdc9-86e3561648ef}"),
   QueryInterface: ChromeUtils.generateQI(["nsIURIFixup"]),
