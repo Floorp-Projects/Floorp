@@ -517,7 +517,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    arrayOfContents.AppendElement(*atCaret.ContainerAsContent());
+    arrayOfContents.AppendElement(*atCaret.ContainerAs<nsIContent>());
   }
 
   dom::Element* bodyOrDocumentElement = aHTMLEditor.GetRoot();

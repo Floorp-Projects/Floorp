@@ -380,11 +380,12 @@ class HTMLEditUtils final {
     // If there are some other characters in the text node, it's a visible
     // linefeed.
     if (!aPoint.IsAtLastContent()) {
-      if (EditorUtils::IsWhiteSpacePreformatted(*aPoint.ContainerAsText())) {
+      if (EditorUtils::IsWhiteSpacePreformatted(
+              *aPoint.template ContainerAs<Text>())) {
         return true;
       }
       const nsTextFragment& textFragment =
-          aPoint.ContainerAsText()->TextFragment();
+          aPoint.template ContainerAs<Text>()->TextFragment();
       for (uint32_t offset = aPoint.Offset() + 1;
            offset < textFragment.GetLength(); ++offset) {
         char16_t ch = textFragment.CharAt(AssertedCast<int32_t>(offset));
@@ -398,7 +399,7 @@ class HTMLEditUtils final {
     // linefeed.
     Element* followingBlockElement =
         HTMLEditUtils::GetElementOfImmediateBlockBoundary(
-            *aPoint.ContainerAsText(), WalkTreeDirection::Forward);
+            *aPoint.template ContainerAs<Text>(), WalkTreeDirection::Forward);
     if (aFollowingBlockElement) {
       *aFollowingBlockElement = followingBlockElement;
     }
@@ -528,14 +529,15 @@ class HTMLEditUtils final {
     // XXX Assuming it's not in an empty text node because it's unrealistic edge
     //     case.
     bool maybeStartOfAnchor = aPoint.IsStartOfContainer();
-    for (EditorRawDOMPoint point(aPoint.ContainerAsContent());
+    for (EditorRawDOMPoint point(aPoint.template ContainerAs<nsIContent>());
          point.IsSet() && (maybeStartOfAnchor ? point.IsStartOfContainer()
                                               : point.IsAtLastContent());
          point = point.ParentPoint()) {
       if (HTMLEditUtils::IsLink(point.GetContainer())) {
         // Now, we're at start or end of <a href>.
         if (aFoundLinkElement) {
-          *aFoundLinkElement = do_AddRef(point.ContainerAsElement()).take();
+          *aFoundLinkElement =
+              do_AddRef(point.template ContainerAs<Element>()).take();
         }
         return true;
       }
@@ -819,7 +821,7 @@ class HTMLEditUtils final {
              *editableContent)) ||
         (HTMLEditUtils::GetInclusiveAncestorAnyTableElement(*editableContent) !=
          HTMLEditUtils::GetInclusiveAncestorAnyTableElement(
-             *aPoint.ContainerAsContent()))) {
+             *aPoint.template ContainerAs<nsIContent>()))) {
       return nullptr;
     }
 
@@ -1021,13 +1023,14 @@ class HTMLEditUtils final {
     }
     if (aStartPoint.IsInTextNode()) {
       return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-          *aStartPoint.ContainerAsText(), aCurrentBlock, aLeafNodeTypes,
-          aAncestorLimiter);
+          *aStartPoint.template ContainerAs<Text>(), aCurrentBlock,
+          aLeafNodeTypes, aAncestorLimiter);
     }
-    if (!HTMLEditUtils::IsContainerNode(*aStartPoint.ContainerAsContent())) {
+    if (!HTMLEditUtils::IsContainerNode(
+            *aStartPoint.template ContainerAs<nsIContent>())) {
       return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-          *aStartPoint.ContainerAsContent(), aCurrentBlock, aLeafNodeTypes,
-          aAncestorLimiter);
+          *aStartPoint.template ContainerAs<nsIContent>(), aCurrentBlock,
+          aLeafNodeTypes, aAncestorLimiter);
     }
 
     nsCOMPtr<nsIContent> nextContent = aStartPoint.GetChild();
@@ -1039,8 +1042,8 @@ class HTMLEditUtils final {
 
       // We are at end of non-block container
       return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-          *aStartPoint.ContainerAsContent(), aCurrentBlock, aLeafNodeTypes,
-          aAncestorLimiter);
+          *aStartPoint.template ContainerAs<nsIContent>(), aCurrentBlock,
+          aLeafNodeTypes, aAncestorLimiter);
     }
 
     // We have a next node.  If it's a block, return it.
@@ -1159,13 +1162,14 @@ class HTMLEditUtils final {
     }
     if (aStartPoint.IsInTextNode()) {
       return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-          *aStartPoint.ContainerAsText(), aCurrentBlock, aLeafNodeTypes,
-          aAncestorLimiter);
+          *aStartPoint.template ContainerAs<Text>(), aCurrentBlock,
+          aLeafNodeTypes, aAncestorLimiter);
     }
-    if (!HTMLEditUtils::IsContainerNode(*aStartPoint.ContainerAsContent())) {
+    if (!HTMLEditUtils::IsContainerNode(
+            *aStartPoint.template ContainerAs<nsIContent>())) {
       return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-          *aStartPoint.ContainerAsContent(), aCurrentBlock, aLeafNodeTypes,
-          aAncestorLimiter);
+          *aStartPoint.template ContainerAs<nsIContent>(), aCurrentBlock,
+          aLeafNodeTypes, aAncestorLimiter);
     }
 
     if (aStartPoint.IsStartOfContainer()) {
@@ -1176,8 +1180,8 @@ class HTMLEditUtils final {
 
       // We are at start of non-block container
       return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-          *aStartPoint.ContainerAsContent(), aCurrentBlock, aLeafNodeTypes,
-          aAncestorLimiter);
+          *aStartPoint.template ContainerAs<nsIContent>(), aCurrentBlock,
+          aLeafNodeTypes, aAncestorLimiter);
     }
 
     nsCOMPtr<nsIContent> previousContent =
@@ -1674,7 +1678,7 @@ class HTMLEditUtils final {
       const WalkTextOptions& aWalkTextOptions = {}) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     return GetPreviousNonCollapsibleCharOffset(
-        *aPoint.ContainerAsText(), aPoint.Offset(), aWalkTextOptions);
+        *aPoint.ContainerAs<Text>(), aPoint.Offset(), aWalkTextOptions);
   }
   static Maybe<uint32_t> GetPreviousNonCollapsibleCharOffset(
       const Text& aTextNode, uint32_t aOffset,
@@ -1726,7 +1730,7 @@ class HTMLEditUtils final {
       const EditorDOMPointInText& aPoint,
       const WalkTextOptions& aWalkTextOptions = {}) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
-    return GetNextNonCollapsibleCharOffset(*aPoint.ContainerAsText(),
+    return GetNextNonCollapsibleCharOffset(*aPoint.ContainerAs<Text>(),
                                            aPoint.Offset(), aWalkTextOptions);
   }
   static Maybe<uint32_t> GetNextNonCollapsibleCharOffset(
@@ -1745,7 +1749,7 @@ class HTMLEditUtils final {
       const WalkTextOptions& aWalkTextOptions = {}) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     return GetInclusiveNextNonCollapsibleCharOffset(
-        *aPoint.ContainerAsText(), aPoint.Offset(), aWalkTextOptions);
+        *aPoint.ContainerAs<Text>(), aPoint.Offset(), aWalkTextOptions);
   }
   static Maybe<uint32_t> GetInclusiveNextNonCollapsibleCharOffset(
       const Text& aTextNode, uint32_t aOffset,
@@ -1807,7 +1811,7 @@ class HTMLEditUtils final {
         !aWalkTextOptions.contains(WalkTextOption::TreatNBSPsCollapsible),
         aPoint.IsCharCollapsibleASCIISpace());
     return GetFirstWhiteSpaceOffsetCollapsedWith(
-        *aPoint.ContainerAsText(), aPoint.Offset(), aWalkTextOptions);
+        *aPoint.ContainerAs<Text>(), aPoint.Offset(), aWalkTextOptions);
   }
   static uint32_t GetFirstWhiteSpaceOffsetCollapsedWith(
       const Text& aTextNode, uint32_t aOffset,
@@ -1841,10 +1845,11 @@ class HTMLEditUtils final {
   static EditorDOMPointType GetPreviousPreformattedNewLineInTextNode(
       const ArgEditorDOMPointType& aPoint) {
     if (!aPoint.IsInTextNode() || aPoint.IsStartOfContainer() ||
-        !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText())) {
+        !EditorUtils::IsNewLinePreformatted(
+            *aPoint.template ContainerAs<Text>())) {
       return EditorDOMPointType();
     }
-    Text* textNode = aPoint.ContainerAsText();
+    Text* textNode = aPoint.template ContainerAs<Text>();
     const nsTextFragment& textFragment = textNode->TextFragment();
     MOZ_ASSERT(aPoint.Offset() <= textFragment.GetLength());
     for (uint32_t offset = aPoint.Offset(); offset; --offset) {
@@ -1865,10 +1870,11 @@ class HTMLEditUtils final {
   static EditorDOMPointType GetInclusiveNextPreformattedNewLineInTextNode(
       const ArgEditorDOMPointType& aPoint) {
     if (!aPoint.IsInTextNode() || aPoint.IsEndOfContainer() ||
-        !EditorUtils::IsNewLinePreformatted(*aPoint.ContainerAsText())) {
+        !EditorUtils::IsNewLinePreformatted(
+            *aPoint.template ContainerAs<Text>())) {
       return EditorDOMPointType();
     }
-    Text* textNode = aPoint.ContainerAsText();
+    Text* textNode = aPoint.template ContainerAs<Text>();
     const nsTextFragment& textFragment = textNode->TextFragment();
     for (uint32_t offset = aPoint.Offset(); offset < textFragment.GetLength();
          ++offset) {

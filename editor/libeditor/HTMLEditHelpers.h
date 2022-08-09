@@ -767,12 +767,12 @@ class MOZ_STACK_CLASS JoinNodesResult final {
 
   MOZ_KNOWN_LIVE nsIContent* ExistingContent() const {
     MOZ_ASSERT(Succeeded());
-    return mJoinedPoint.ContainerAsContent();
+    return mJoinedPoint.ContainerAs<nsIContent>();
   }
   template <typename EditorDOMPointType>
   EditorDOMPointType AtExistingContent() const {
     MOZ_ASSERT(Succeeded());
-    return EditorDOMPointType(mJoinedPoint.ContainerAsContent());
+    return EditorDOMPointType(mJoinedPoint.ContainerAs<nsIContent>());
   }
 
   MOZ_KNOWN_LIVE nsIContent* RemovedContent() const {

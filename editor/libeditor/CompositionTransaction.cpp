@@ -55,7 +55,7 @@ already_AddRefed<CompositionTransaction> CompositionTransaction::Create(
 CompositionTransaction::CompositionTransaction(
     EditorBase& aEditorBase, const nsAString& aStringToInsert,
     const EditorDOMPointInText& aPointToInsert)
-    : mTextNode(aPointToInsert.ContainerAsText()),
+    : mTextNode(aPointToInsert.ContainerAs<Text>()),
       mOffset(aPointToInsert.Offset()),
       mReplaceLength(aEditorBase.GetComposition()->XPLengthInTextNode()),
       mRanges(aEditorBase.GetComposition()->GetRanges()),

@@ -2026,8 +2026,8 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
 
     if (MOZ_UNLIKELY(
             !pointToInsert.IsInContentNode() ||
-            !EditorUtils::IsEditableContent(*pointToInsert.ContainerAsContent(),
-                                            EditorType::HTML))) {
+            !EditorUtils::IsEditableContent(
+                *pointToInsert.ContainerAs<nsIContent>(), EditorType::HTML))) {
       NS_WARNING(
           "There was no proper container element to insert the content node in "
           "the editing host");
@@ -2832,12 +2832,12 @@ Element* HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(
   // Try to get the actual selected node
   nsIContent* content = nullptr;
   if (atAnchor.GetContainer()->HasChildNodes() &&
-      atAnchor.ContainerAsContent()) {
+      atAnchor.ContainerAs<nsIContent>()) {
     content = atAnchor.GetChild();
   }
   // Anchor node is probably a text node - just use that
   if (!content) {
-    content = atAnchor.ContainerAsContent();
+    content = atAnchor.ContainerAs<nsIContent>();
     if (NS_WARN_IF(!content)) {
       return nullptr;
     }
@@ -4558,7 +4558,7 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
   if (MOZ_UNLIKELY(NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
-          *aStartOfRightNode.ContainerAsContent())))) {
+          *aStartOfRightNode.ContainerAs<nsIContent>())))) {
     return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
@@ -4914,12 +4914,12 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   }
 
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
-      *aStartOfRightNode.ContainerAsContent(), aStartOfRightNode.Offset(),
+      *aStartOfRightNode.ContainerAs<nsIContent>(), aStartOfRightNode.Offset(),
       aNewNode, GetSplitNodeDirection());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
-  return SplitNodeResult(aNewNode, *aStartOfRightNode.ContainerAsContent(),
+  return SplitNodeResult(aNewNode, *aStartOfRightNode.ContainerAs<nsIContent>(),
                          GetSplitNodeDirection());
 }
 
@@ -5690,7 +5690,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
           if (const RefPtr<nsStyledElement> editableBlockStyledElement =
                   nsStyledElement::FromNodeOrNull(
                       HTMLEditUtils::GetAncestorElement(
-                          *startOfRange.ContainerAsText(),
+                          *startOfRange.ContainerAs<Text>(),
                           HTMLEditUtils::ClosestEditableBlockElement))) {
             Result<int32_t, nsresult> result =
                 mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
@@ -5798,10 +5798,10 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
       // If start node is a text node, set background color of its parent
       // block.
       if (startOfRange.IsInTextNode() &&
-          EditorUtils::IsEditableContent(*startOfRange.ContainerAsText(),
+          EditorUtils::IsEditableContent(*startOfRange.ContainerAs<Text>(),
                                          EditorType::HTML)) {
         Element* const editableBlockElement = HTMLEditUtils::GetAncestorElement(
-            *startOfRange.ContainerAsText(),
+            *startOfRange.ContainerAs<Text>(),
             HTMLEditUtils::ClosestEditableBlockElement);
         if (editableBlockElement &&
             handledBlockParent != editableBlockElement) {
@@ -5864,10 +5864,10 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
       // Finally, if end node is a text node, set background color of its
       // parent block.
       if (endOfRange.IsInTextNode() &&
-          EditorUtils::IsEditableContent(*endOfRange.ContainerAsText(),
+          EditorUtils::IsEditableContent(*endOfRange.ContainerAs<Text>(),
                                          EditorType::HTML)) {
         Element* const editableBlockElement = HTMLEditUtils::GetAncestorElement(
-            *endOfRange.ContainerAsText(),
+            *endOfRange.ContainerAs<Text>(),
             HTMLEditUtils::ClosestEditableBlockElement);
         if (editableBlockElement &&
             handledBlockParent != editableBlockElement) {
