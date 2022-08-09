@@ -145,6 +145,20 @@ function differentPressed()
   }
 }
 
+function margins(el) {
+  let cs = getComputedStyle(el);
+  let result = {};
+  for (let side of ["top", "right", "bottom", "left"]) {
+    result[side] = parseFloat(cs.getPropertyValue("margin-" + side));
+  }
+  return result;
+}
+
+function leftRightNegativeMarginSum(el) {
+  let m = margins(el);
+  return Math.min(0, m.left) + Math.min(0, m.right);
+}
+
 function tabAndScroll()
 {
   list = $("list");
@@ -162,7 +176,7 @@ function tabAndScroll()
     list.appendItem("Item" + i, "item" + i);
   }
   list.open = true;
-  is(list.getBoundingClientRect().width, list.menupopup.getBoundingClientRect().width,
+  is(list.getBoundingClientRect().width, list.menupopup.getBoundingClientRect().width + leftRightNegativeMarginSum(list.menupopup),
      "menu and popup width match");
   var minScrollbarWidth = window.matchMedia("(-moz-overlay-scrollbars)").matches ? 0 : 3;
   ok(list.getBoundingClientRect().width >= list.getItemAtIndex(0).getBoundingClientRect().width + minScrollbarWidth,
