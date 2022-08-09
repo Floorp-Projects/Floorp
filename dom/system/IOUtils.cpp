@@ -70,6 +70,10 @@
 #  include "nsILocalFileMac.h"
 #endif
 
+#ifdef XP_UNIX
+#  include "base/process_util.h"
+#endif
+
 #define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
   do {                                                                \
     if (nsresult _rv = PathUtils::InitFileWithPath((_file), (_path)); \
@@ -2698,6 +2702,80 @@ void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
 }
 
 void SyncReadFile::Close() { mStream = nullptr; }
+
+#ifdef XP_UNIX
+namespace {
+
+static nsCString FromUnixString(const IOUtils::UnixString& aString) {
+  if (aString.IsUTF8String()) {
+    return aString.GetAsUTF8String();
+  }
+  if (aString.IsUint8Array()) {
+    const auto& u8a = aString.GetAsUint8Array();
+    u8a.ComputeState();
+    // Cast to deal with char signedness
+    return nsCString(reinterpret_cast<const char*>(u8a.Data()), u8a.Length());
+  }
+  MOZ_CRASH("unreachable");
+}
+
+}  // namespace
+
+// static
+uint32_t IOUtils::LaunchProcess(GlobalObject& aGlobal,
+                                const Sequence<UnixString>& aArgv,
+                                const LaunchOptions& aOptions,
+                                ErrorResult& aRv) {
+  // The binding is worker-only, so should always be off-main-thread.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  // This generally won't work in child processes due to sandboxing.
+  AssertParentProcessWithCallerLocation(aGlobal);
+
+  std::vector<std::string> argv;
+  base::LaunchOptions options;
+
+  for (const auto& arg : aArgv) {
+    argv.push_back(FromUnixString(arg).get());
+  }
+
+  size_t envLen = aOptions.mEnvironment.Length();
+  base::EnvironmentArray envp(new char*[envLen + 1]);
+  for (size_t i = 0; i < envLen; ++i) {
+    // EnvironmentArray is a UniquePtr instance which will `free`
+    // these strings.
+    envp[i] = strdup(FromUnixString(aOptions.mEnvironment[i]).get());
+  }
+  envp[envLen] = nullptr;
+  options.full_env = std::move(envp);
+
+  if (aOptions.mWorkdir.WasPassed()) {
+    options.workdir = FromUnixString(aOptions.mWorkdir.Value()).get();
+  }
+
+  if (aOptions.mFdMap.WasPassed()) {
+    for (const auto& fdItem : aOptions.mFdMap.Value()) {
+      options.fds_to_remap.push_back({fdItem.mSrc, fdItem.mDst});
+    }
+  }
+
+#  ifdef XP_MACOSX
+  options.disclaim = aOptions.mDisclaim;
+#  endif
+
+  base::ProcessHandle pid;
+  static_assert(sizeof(pid) <= sizeof(uint32_t),
+                "WebIDL long should be large enough for a pid");
+  bool ok = base::LaunchApp(argv, options, &pid);
+  if (!ok) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return 0;
+  }
+
+  MOZ_ASSERT(pid >= 0);
+  return static_cast<uint32_t>(pid);
+}
+#endif  // XP_UNIX
 
 }  // namespace mozilla::dom
 

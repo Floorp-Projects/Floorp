@@ -235,7 +235,11 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
 
-  EnvironmentArray envp = BuildEnvironmentArray(options.env_map);
+  EnvironmentArray env_storage;
+  const EnvironmentArray& envp =
+      options.full_env ? options.full_env
+                       : (env_storage = BuildEnvironmentArray(options.env_map));
+
   mozilla::ipc::FileDescriptorShuffle shuffle;
   if (!shuffle.Init(options.fds_to_remap)) {
     CHROMIUM_LOG(WARNING) << "FileDescriptorShuffle::Init failed";
@@ -271,6 +275,14 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   if (pid == 0) {
     // In the child:
+    if (!options.workdir.empty()) {
+      if (chdir(options.workdir.c_str()) != 0) {
+        // See under execve about logging unsafety.
+        DLOG(ERROR) << "chdir failed " << options.workdir;
+        _exit(127);
+      }
+    }
+
     for (const auto& fds : shuffle.Dup2Sequence()) {
       if (HANDLE_EINTR(dup2(fds.first, fds.second)) != fds.second) {
         // This shouldn't happen, but check for it.  And see below
@@ -290,14 +302,17 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
 #ifdef MOZ_CODE_COVERAGE
     const char* gcov_child_prefix = PR_GetEnv("GCOV_CHILD_PREFIX");
-    if (gcov_child_prefix) {
+    if (gcov_child_prefix && !options.full_env) {
       const pid_t child_pid = getpid();
       nsAutoCString new_gcov_prefix(gcov_child_prefix);
       new_gcov_prefix.Append(std::to_string((size_t)child_pid));
       EnvironmentMap new_map = options.env_map;
       new_map[ENVIRONMENT_LITERAL("GCOV_PREFIX")] =
           ENVIRONMENT_STRING(new_gcov_prefix.get());
-      envp = BuildEnvironmentArray(new_map);
+      // FIXME(bug 1783305): this won't work if full_env is set, and
+      // in general this block of code is doing things it shouldn't
+      // be (async signal unsafety).
+      env_storage = BuildEnvironmentArray(new_map);
     }
 #endif
 
