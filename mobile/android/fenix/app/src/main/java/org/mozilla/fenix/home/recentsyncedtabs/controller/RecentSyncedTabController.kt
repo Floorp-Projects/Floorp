@@ -32,17 +32,17 @@ interface RecentSyncedTabController {
 /**
  * The default implementation of [RecentSyncedTabController].
  *
- * @property addNewTabUseCase Use case to open the synced tab when clicked.
+ * @property tabsUseCase Use cases to open the synced tab when clicked.
  * @property navController [NavController] to navigate to synced tabs tray.
  */
 class DefaultRecentSyncedTabController(
-    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
+    private val tabsUseCase: TabsUseCases,
     private val navController: NavController,
     private val accessPoint: TabsTrayAccessPoint,
 ) : RecentSyncedTabController {
     override fun handleRecentSyncedTabClick(tab: RecentSyncedTab) {
         RecentSyncedTabs.recentSyncedTabOpened[tab.deviceType.name.lowercase()].add()
-        addNewTabUseCase.invoke(tab.url)
+        tabsUseCase.selectOrAddTab(tab.url)
         navController.navigate(R.id.browserFragment)
     }
 

@@ -12,11 +12,17 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,7 +40,7 @@ class DefaultRecentSyncedTabControllerTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
-    private val addTabUseCase: TabsUseCases.AddNewTabUseCase = mockk()
+    private val tabsUseCases: TabsUseCases = mockk()
     private val navController: NavController = mockk()
     private val accessPoint = TabsTrayAccessPoint.HomeRecentSyncedTab
 
@@ -43,15 +49,16 @@ class DefaultRecentSyncedTabControllerTest {
     @Before
     fun setup() {
         controller = DefaultRecentSyncedTabController(
-            addNewTabUseCase = addTabUseCase,
+            tabsUseCase = tabsUseCases,
             navController = navController,
             accessPoint = accessPoint,
         )
     }
 
     @Test
-    fun `WHEN synced tab clicked THEN tab add and navigate to browser`() {
-        val url = "https://mozilla.org"
+    fun `WHEN synced tab clicked THEN new tab added and navigate to browser`() {
+        val url = "url"
+        val nonSyncId = "different id"
         val tab = RecentSyncedTab(
             deviceDisplayName = "display",
             deviceType = DeviceType.DESKTOP,
@@ -59,13 +66,67 @@ class DefaultRecentSyncedTabControllerTest {
             url = url,
             iconUrl = null
         )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    TabSessionState(
+                        id = nonSyncId,
+                        content = ContentState(url = "different url", private = false)
+                    ),
+                ),
+                selectedTabId = nonSyncId
+            )
+        )
+        val selectOrAddTabUseCase = TabsUseCases.SelectOrAddUseCase(store)
 
-        every { addTabUseCase.invoke(any()) } just runs
+        every { tabsUseCases.selectOrAddTab } returns selectOrAddTabUseCase
         every { navController.navigate(any<Int>()) } just runs
 
         controller.handleRecentSyncedTabClick(tab)
 
-        verify { addTabUseCase.invoke(url) }
+        store.waitUntilIdle()
+        assertNotEquals(nonSyncId, store.state.selectedTabId)
+        assertEquals(2, store.state.tabs.size)
+        verify { navController.navigate(R.id.browserFragment) }
+    }
+
+    @Test
+    fun `GIVEN synced tab is already open WHEN clicked THEN tab is re-opened and browser navigated`() {
+        val url = "url"
+        val syncId = "id"
+        val nonSyncId = "different id"
+        val tab = RecentSyncedTab(
+            deviceDisplayName = "display",
+            deviceType = DeviceType.DESKTOP,
+            title = "title",
+            url = url,
+            iconUrl = null
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    TabSessionState(
+                        id = syncId,
+                        content = ContentState(url = url, private = false)
+                    ),
+                    TabSessionState(
+                        id = nonSyncId,
+                        content = ContentState(url = "different url", private = false)
+                    ),
+                ),
+                selectedTabId = nonSyncId
+            )
+        )
+        val selectOrAddTabUseCase = TabsUseCases.SelectOrAddUseCase(store)
+
+        every { tabsUseCases.selectOrAddTab } returns selectOrAddTabUseCase
+        every { navController.navigate(any<Int>()) } just runs
+
+        controller.handleRecentSyncedTabClick(tab)
+
+        store.waitUntilIdle()
+        assertEquals(syncId, store.state.selectedTabId)
+        assertEquals(2, store.state.tabs.size)
         verify { navController.navigate(R.id.browserFragment) }
     }
 
@@ -97,7 +158,7 @@ class DefaultRecentSyncedTabControllerTest {
             iconUrl = null
         )
 
-        every { addTabUseCase.invoke(any()) } just runs
+        every { tabsUseCases.selectOrAddTab } returns mockk(relaxed = true)
         every { navController.navigate(any<Int>()) } just runs
 
         controller.handleRecentSyncedTabClick(tab)
