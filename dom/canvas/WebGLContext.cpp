@@ -106,22 +106,6 @@ WebGLContextOptions::WebGLContextOptions() {
   antialias = StaticPrefs::webgl_default_antialias();
 }
 
-bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
-  bool eq = true;
-  eq &= (alpha == r.alpha);
-  eq &= (depth == r.depth);
-  eq &= (stencil == r.stencil);
-  eq &= (premultipliedAlpha == r.premultipliedAlpha);
-  eq &= (antialias == r.antialias);
-  eq &= (preserveDrawingBuffer == r.preserveDrawingBuffer);
-  eq &= (failIfMajorPerformanceCaveat == r.failIfMajorPerformanceCaveat);
-  eq &= (xrCompatible == r.xrCompatible);
-  eq &= (powerPreference == r.powerPreference);
-  eq &= (colorSpace == r.colorSpace);
-  eq &= (ignoreColorSpace == r.ignoreColorSpace);
-  return eq;
-}
-
 StaticMutex WebGLContext::sLruMutex;
 std::list<WebGLContext*> WebGLContext::sLru;
 

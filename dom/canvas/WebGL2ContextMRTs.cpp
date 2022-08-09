@@ -119,17 +119,17 @@ void WebGL2Context::ClearBufferTv(GLenum buffer, GLint drawBuffer,
 
     case webgl::AttribBaseType::Float:
       gl->fClearBufferfv(buffer, drawBuffer,
-                         reinterpret_cast<const float*>(data.data));
+                         reinterpret_cast<const float*>(data.data.data()));
       break;
 
     case webgl::AttribBaseType::Int:
       gl->fClearBufferiv(buffer, drawBuffer,
-                         reinterpret_cast<const int32_t*>(data.data));
+                         reinterpret_cast<const int32_t*>(data.data.data()));
       break;
 
     case webgl::AttribBaseType::Uint:
       gl->fClearBufferuiv(buffer, drawBuffer,
-                          reinterpret_cast<const uint32_t*>(data.data));
+                          reinterpret_cast<const uint32_t*>(data.data.data()));
       break;
   }
 }

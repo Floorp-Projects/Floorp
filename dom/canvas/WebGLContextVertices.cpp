@@ -57,15 +57,16 @@ void WebGLContext::VertexAttrib4T(GLuint index, const webgl::TypedQuad& src) {
     switch (src.type) {
       case webgl::AttribBaseType::Boolean:
       case webgl::AttribBaseType::Float:
-        gl->fVertexAttrib4fv(index, reinterpret_cast<const float*>(src.data));
+        gl->fVertexAttrib4fv(index,
+                             reinterpret_cast<const float*>(src.data.data()));
         break;
       case webgl::AttribBaseType::Int:
-        gl->fVertexAttribI4iv(index,
-                              reinterpret_cast<const int32_t*>(src.data));
+        gl->fVertexAttribI4iv(
+            index, reinterpret_cast<const int32_t*>(src.data.data()));
         break;
       case webgl::AttribBaseType::Uint:
-        gl->fVertexAttribI4uiv(index,
-                               reinterpret_cast<const uint32_t*>(src.data));
+        gl->fVertexAttribI4uiv(
+            index, reinterpret_cast<const uint32_t*>(src.data.data()));
         break;
     }
   }
@@ -76,7 +77,7 @@ void WebGLContext::VertexAttrib4T(GLuint index, const webgl::TypedQuad& src) {
   mGenericVertexAttribTypeInvalidator.InvalidateCaches();
 
   if (!index) {
-    memcpy(mGenericVertexAttrib0Data, src.data,
+    memcpy(mGenericVertexAttrib0Data, src.data.data(),
            sizeof(mGenericVertexAttrib0Data));
   }
 }
