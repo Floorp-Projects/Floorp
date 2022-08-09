@@ -65,7 +65,7 @@ add_task(
 );
 
 add_task(
-  async function test_ExperimentFeature_getAllVariables_prefsOverExperiment() {
+  async function test_ExperimentFeature_getAllVariables_experimentOverPref() {
     const { sandbox, manager } = await setupForExperimentFeature();
     const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(
       undefined,
@@ -106,7 +106,13 @@ add_task(
     );
 
     Services.prefs.setStringPref(TEST_FALLBACK_PREF, "[]");
+    Assert.equal(
+      featureInstance.getAllVariables().screens[0],
+      "test-value",
+      "should return the AW experiment value"
+    );
 
+    await doExperimentCleanup();
     Assert.deepEqual(
       featureInstance.getAllVariables().screens.length,
       0,
@@ -114,7 +120,6 @@ add_task(
     );
 
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
-    await doExperimentCleanup();
     sandbox.restore();
   }
 );
@@ -185,7 +190,7 @@ add_task(
 );
 
 add_task(
-  async function test_ExperimentFeature_getAllVariables_remoteOverPrefDefaults() {
+  async function test_ExperimentFeature_getAllVariables_rolloutOverPrefDefaults() {
     const { manager } = await setupForExperimentFeature();
     const featureInstance = new ExperimentFeature(
       FEATURE_ID,
@@ -220,15 +225,15 @@ add_task(
     Assert.deepEqual(
       featureInstance.getAllVariables().screens?.length,
       0,
-      "Should return the remote value over the defaults"
+      "Should return the rollout value over the defaults"
     );
 
     Services.prefs.setStringPref(TEST_FALLBACK_PREF, "[1,2,3]");
 
     Assert.deepEqual(
       featureInstance.getAllVariables().screens.length,
-      3,
-      "should return the user pref value over the remote"
+      0,
+      "should return the rollout value over the user pref"
     );
 
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);

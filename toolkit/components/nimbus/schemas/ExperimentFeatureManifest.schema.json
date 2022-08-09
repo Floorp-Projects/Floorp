@@ -65,7 +65,8 @@
                   "enum": ["json", "boolean", "int", "string"]
                 },
                 "fallbackPref": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "A pref that provides the default value for a feature when none is present"
                 },
                 "enum": {
                   "description": "Validate feature value using a list of possible options (for string only values)."
