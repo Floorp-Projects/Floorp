@@ -1411,8 +1411,6 @@ function TypedArrayAt(index) {
   }
   GetAttachedArrayBuffer(obj);
 
-  // If we got here, `this` is either a typed array or a wrapper for one.
-
   // Step 3.
   var len = TypedArrayLength(obj);
 
