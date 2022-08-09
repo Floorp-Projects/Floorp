@@ -10,6 +10,10 @@ import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.focus.GleanMetrics.PerfStartup
 import org.mozilla.focus.activity.MainActivity
@@ -70,8 +74,11 @@ class StartupTypeTelemetry(
         val startupPath = startupPathProvider.startupPathForActivity
         val label = getTelemetryLabel(startupState, startupPath)
 
-        PerfStartup.startupType[label].add(1)
-        logger.info("Recorded start up: $label")
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch(Dispatchers.IO) {
+            PerfStartup.startupType[label].add(1)
+            logger.info("Recorded start up: $label")
+        }
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
