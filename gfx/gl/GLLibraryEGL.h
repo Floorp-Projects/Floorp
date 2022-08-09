@@ -9,10 +9,8 @@
 #  include "mozilla/X11Util.h"
 #endif
 
-#include "gfxEnv.h"
 #include "GLTypes.h"
 #include "mozilla/EnumTypeTraits.h"
-#include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticMutex.h"
@@ -250,51 +248,12 @@ class GLLibraryEGL final {
  private:
   EGLBoolean fTerminate(EGLDisplay display) const { WRAP(fTerminate(display)); }
 
-  // -
-
-  mutable Mutex mMutex = Mutex{"GLLibraryEGL::mMutex"};
-  mutable std::unordered_map<EGLContext, PlatformThreadId>
-      mOwningThreadByContext;
-
   EGLBoolean fMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read,
                           EGLContext ctx) const {
-    const bool CHECK_CONTEXT_OWNERSHIP = true;
-    if (CHECK_CONTEXT_OWNERSHIP) {
-      const auto lock = MutexAutoLock(mMutex);
-
-      const auto tid = PlatformThread::CurrentId();
-      const auto prevCtx = fGetCurrentContext();
-
-      if (prevCtx) {
-        mOwningThreadByContext[prevCtx] = 0;
-      }
-      if (ctx) {
-        auto& ctxOwnerThread = mOwningThreadByContext[ctx];
-        if (ctxOwnerThread && ctxOwnerThread != tid) {
-          gfxCriticalError()
-              << "EGLContext#" << ctx << " is owned by/Current on"
-              << " thread#" << ctxOwnerThread << " but MakeCurrent requested on"
-              << " thread#" << tid << "!";
-          if (gfxEnv::MOZ_EGL_RELEASE_ASSERT_CONTEXT_OWNERSHIP()) {
-            MOZ_CRASH("MOZ_EGL_RELEASE_ASSERT_CONTEXT_OWNERSHIP");
-          }
-          return false;
-        }
-        ctxOwnerThread = tid;
-      }
-    }
-
     WRAP(fMakeCurrent(dpy, draw, read, ctx));
   }
 
-  // -
-
   EGLBoolean fDestroyContext(EGLDisplay dpy, EGLContext ctx) const {
-    {
-      const auto lock = MutexAutoLock(mMutex);
-      mOwningThreadByContext.erase(ctx);
-    }
-
     WRAP(fDestroyContext(dpy, ctx));
   }
 
