@@ -42,13 +42,17 @@ def generate(output):
             /// Macro used to name a path in the objdir for use with macros like `include!`
             #[macro_export]
             macro_rules! objdir_path {{
-                ($path:literal) => {{ concat!({escape_rust_string(buildconfig.topobjdir + "/")}, $path) }}
+                ($path:literal) => {{
+                    concat!({escape_rust_string(buildconfig.topobjdir + "/")}, $path)
+                }}
             }}
 
             /// Macro used to name a path in the srcdir for use with macros like `include!`
             #[macro_export]
             macro_rules! srcdir_path {{
-                ($path:literal) => {{ concat!({escape_rust_string(buildconfig.topsrcdir + "/")}, $path) }}
+                ($path:literal) => {{
+                    concat!({escape_rust_string(buildconfig.topsrcdir + "/")}, $path)
+                }}
             }}
 
             /// The objdir path for use in build scripts
