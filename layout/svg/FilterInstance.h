@@ -89,7 +89,9 @@ class FilterInstance {
    *   frame space (i.e. relative to its origin, the top-left corner of its
    *   border box).
    */
-  static void PaintFilteredFrame(nsIFrame* aFilteredFrame, gfxContext* aCtx,
+  static void PaintFilteredFrame(nsIFrame* aFilteredFrame,
+                                 Span<const StyleFilter> aFilterChain,
+                                 gfxContext* aCtx,
                                  const SVGFilterPaintCallback& aPaintCallback,
                                  const nsRegion* aDirtyArea,
                                  imgDrawingParams& aImgParams,

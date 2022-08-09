@@ -3943,6 +3943,7 @@ struct SurfaceAllocInfo {
     task_size: DeviceIntSize,
     needs_scissor_rect: bool,
     clipped: DeviceRect,
+    unclipped: DeviceRect,
     clipped_local: PictureRect,
     uv_rect_kind: UvRectKind,
 }
@@ -5225,27 +5226,32 @@ impl PicturePrimitive {
                             height_std_deviation,
                         );
 
-                        let mut device_rect = surface_rects.clipped;
-                        let original_size = device_rect.size();
+                        let original_size = surface_rects.clipped.size();
 
                         // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
                         // what would be even better is to rasterize the picture at the down-scaled size
                         // directly.
                         let adjusted_size = BlurTask::adjusted_blur_source_size(
-                            device_rect.size(),
+                            original_size,
                             blur_std_deviation,
                         );
-                        device_rect.set_size(adjusted_size);
 
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
 
+                        // Since we (may have) adjusted the render task size for downscaling accuracy
+                        // above, recalculate the uv rect for tasks that may sample from this blur output
+                        let uv_rect_kind = calculate_uv_rect_kind(
+                            DeviceRect::from_origin_and_size(surface_rects.clipped.min, adjusted_size.to_f32()),
+                            surface_rects.unclipped,
+                        );
+
                         let picture_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
-                                surface_rects.task_size,
+                                adjusted_size,
                                 RenderTaskKind::new_picture(
-                                    surface_rects.task_size,
+                                    adjusted_size,
                                     surface_rects.needs_scissor_rect,
-                                    device_rect.min,
+                                    surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
                                     device_pixel_scale,
@@ -5255,7 +5261,7 @@ impl PicturePrimitive {
                                     cmd_buffer_index,
                                     can_use_shared_surface,
                                 )
-                            ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                            ).with_uv_rect_kind(uv_rect_kind)
                         );
 
                         let blur_render_task_id = RenderTask::new_blur(
@@ -7145,6 +7151,7 @@ fn get_surface_rects(
         task_size,
         needs_scissor_rect,
         clipped,
+        unclipped,
         clipped_local,
         uv_rect_kind,
     })

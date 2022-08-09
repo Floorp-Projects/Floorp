@@ -3720,6 +3720,124 @@ static int32_t MaxZIndexInListOfItemsContainedInFrame(nsDisplayList* aList,
   return maxZIndex;
 }
 
+void ScrollFrameHelper::MaybeCreateTopLayerAndWrapRootItems(
+    nsDisplayListBuilder* aBuilder, nsDisplayListCollection& aSet,
+    bool aCreateAsyncZoom,
+    AutoContainsBlendModeCapturer* aAsyncZoomBlendCapture,
+    const nsRect& aAsyncZoomClipRect, nscoord* aRadii) {
+  if (!mIsRoot) {
+    return;
+  }
+
+  // Create any required items for the 'top layer' and check if they'll be
+  // opaque over the entire area of the viewport. If they are, then we can
+  // skip building display items for the rest of the page.
+  if (ViewportFrame* viewport = do_QueryFrame(mOuter->GetParent())) {
+    bool topLayerIsOpaque = false;
+    if (nsDisplayWrapList* topLayerWrapList =
+            viewport->BuildDisplayListForTopLayer(aBuilder,
+                                                  &topLayerIsOpaque)) {
+      // If the top layer content is opaque, and we're the root content document
+      // in the process, we can drop the display items behind it. We only
+      // support doing this for the root content document in the process, since
+      // the top layer content might have fixed position items that have a
+      // scrolltarget referencing the APZ data for the document. APZ builds this
+      // data implicitly for the root content document in the process, but
+      // subdocuments etc need their display items to generate it, so we can't
+      // cull those.
+      if (topLayerIsOpaque &&
+          mOuter->PresContext()->IsRootContentDocumentInProcess()) {
+        aSet.DeleteAll(aBuilder);
+      }
+      aSet.PositionedDescendants()->AppendToTop(topLayerWrapList);
+    }
+  }
+
+  nsDisplayList rootResultList(aBuilder);
+
+  bool serializedList = false;
+  auto SerializeList = [&] {
+    if (!serializedList) {
+      serializedList = true;
+      aSet.SerializeWithCorrectZOrder(&rootResultList, mOuter->GetContent());
+    }
+  };
+
+  if (nsIFrame* rootStyleFrame = GetFrameForStyle()) {
+    bool usingBackdropFilter =
+        rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
+        rootStyleFrame->IsVisibleForPainting();
+
+    if (rootStyleFrame->StyleEffects()->HasFilters()) {
+      SerializeList();
+      rootResultList.AppendNewToTop<nsDisplayFilters>(
+          aBuilder, mOuter, &rootResultList, rootStyleFrame,
+          usingBackdropFilter);
+    }
+
+    if (usingBackdropFilter) {
+      SerializeList();
+      DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+      nsRect backdropRect =
+          mOuter->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mOuter);
+      rootResultList.AppendNewToTop<nsDisplayBackdropFilters>(
+          aBuilder, mOuter, &rootResultList, backdropRect, rootStyleFrame);
+    }
+  }
+
+  if (aCreateAsyncZoom) {
+    MOZ_ASSERT(mIsRoot);
+
+    // Wrap all our scrolled contents in an nsDisplayAsyncZoom. This will be
+    // the layer that gets scaled for APZ zooming. It does not have the
+    // scrolled ASR, but it does have the composition bounds clip applied to
+    // it. The children have the layout viewport clip applied to them (above).
+    // Effectively we are double clipping to the viewport, at potentially
+    // different async scales.
+    SerializeList();
+
+    if (aAsyncZoomBlendCapture->CaptureContainsBlendMode()) {
+      // The async zoom contents contain a mix-blend mode, so let's wrap all
+      // those contents into a blend container, and then wrap the blend
+      // container in the async zoom container. Otherwise the blend container
+      // ends up outside the zoom container which results in blend failure for
+      // WebRender.
+      nsDisplayItem* blendContainer =
+          nsDisplayBlendContainer::CreateForMixBlendMode(
+              aBuilder, mOuter, &rootResultList,
+              aBuilder->CurrentActiveScrolledRoot());
+      rootResultList.AppendToTop(blendContainer);
+
+      // Blend containers can be created or omitted during partial updates
+      // depending on the dirty rect. So we basically can't do partial updates
+      // if there's a blend container involved. There is equivalent code to this
+      // in the BuildDisplayListForStackingContext function as well, with a more
+      // detailed comment explaining things better.
+      if (aBuilder->IsRetainingDisplayList()) {
+        if (aBuilder->IsPartialUpdate()) {
+          aBuilder->SetPartialBuildFailed(true);
+        } else {
+          aBuilder->SetDisablePartialUpdates(true);
+        }
+      }
+    }
+
+    mozilla::layers::FrameMetrics::ViewID viewID =
+        nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
+
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    clipState.ClipContentDescendants(aAsyncZoomClipRect, aRadii);
+
+    rootResultList.AppendNewToTop<nsDisplayAsyncZoom>(
+        aBuilder, mOuter, &rootResultList,
+        aBuilder->CurrentActiveScrolledRoot(), viewID);
+  }
+
+  if (serializedList) {
+    aSet.Content()->AppendToTop(&rootResultList);
+  }
+}
+
 void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayListSet& aLists) {
   SetAndNullOnExit<const nsIFrame> tmpBuilder(
@@ -3730,7 +3848,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  bool isRootContent =
+  const bool isRootContent =
       mIsRoot && mOuter->PresContext()->IsRootContentDocumentCrossProcess();
 
   nsRect effectiveScrollPort = mScrollPort;
@@ -3749,7 +3867,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // It's safe to get this value before the DecideScrollableLayer call below
   // because that call cannot create a displayport for root scroll frames,
   // and hence it cannot create an ignore scroll frame.
-  bool ignoringThisScrollFrame = aBuilder->GetIgnoreScrollFrame() == mOuter;
+  const bool ignoringThisScrollFrame =
+      aBuilder->GetIgnoreScrollFrame() == mOuter;
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -3788,10 +3907,12 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // of the viewport, so most layer implementations would create a layer buffer
   // that's much larger than necessary. Creating independent layers for each
   // scrollbar works around the problem.
-  bool createLayersForScrollbars = isRootContent;
+  const bool createLayersForScrollbars = isRootContent;
 
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
+
+  nsDisplayListCollection set(aBuilder);
 
   if (ignoringThisScrollFrame) {
     // If we are a root scroll frame that has a display port we want to add
@@ -3799,8 +3920,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // adjusted by the APZC automatically.
     bool addScrollBars =
         mIsRoot && mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow();
-
-    nsDisplayListCollection set(aBuilder);
 
     if (addScrollBars) {
       // Add classic scrollbars.
@@ -3817,10 +3936,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, set);
     }
 
-    if (nsDisplayWrapList* topLayerWrapList =
-            MaybeCreateTopLayerItems(aBuilder, nullptr)) {
-      set.PositionedDescendants()->AppendToTop(topLayerWrapList);
-    }
+    MaybeCreateTopLayerAndWrapRootItems(aBuilder, set,
+                                        /* aCreateAsyncZoom = */ false, nullptr,
+                                        nsRect(), nullptr);
 
     if (addScrollBars) {
       // Add overlay scrollbars.
@@ -3836,16 +3954,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // to the layer tree (a scroll info layer if necessary, and add the right
   // area to the dispatch to content layer event regions) necessary to activate
   // a scroll frame so it creates a scrollable layer.
-  bool couldBuildLayer = false;
-  if (aBuilder->IsPaintingToWindow()) {
-    if (mWillBuildScrollableLayer) {
-      couldBuildLayer = true;
-    } else {
-      couldBuildLayer = mOuter->StyleVisibility()->IsVisible() &&
-                        nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
-                        WantAsyncScroll();
+  const bool couldBuildLayer = [&] {
+    if (!aBuilder->IsPaintingToWindow()) {
+      return false;
     }
-  }
+    if (mWillBuildScrollableLayer) {
+      return true;
+    }
+    return mOuter->StyleVisibility()->IsVisible() &&
+           nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll();
+  }();
 
   // Now display the scrollbars and scrollcorner. These parts are drawn
   // in the border-background layer, on top of our own background and
@@ -3918,10 +4036,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  nsDisplayListCollection set(aBuilder);
   AutoContainsBlendModeCapturer blendCapture(*aBuilder);
 
-  bool willBuildAsyncZoomContainer =
+  const bool willBuildAsyncZoomContainer =
       mWillBuildScrollableLayer && aBuilder->ShouldBuildAsyncZoomContainer() &&
       isRootContent;
 
@@ -3931,7 +4048,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // Our override of GetBorderRadii ensures we never have a radius at
   // the corners where we have a scrollbar.
   nscoord radii[8];
-  bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
+  const bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
     clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
     // The composition size is essentially in visual coordinates.
@@ -3957,7 +4074,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     // If we're building an async zoom container, clip the contents inside
     // to the layout viewport (scrollPortClip). The composition bounds clip
-    // (clipRect) will be applied to the zoom container itself below.
+    // (clipRect) will be applied to the zoom container itself in
+    // MaybeCreateTopLayerAndWrapRootItems.
     nsRect clipRectForContents =
         willBuildAsyncZoomContainer ? scrollPortClip : clipRect;
     if (mIsRoot) {
@@ -3969,7 +4087,6 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
 
     Maybe<DisplayListClipState::AutoSaveRestore> contentBoxClipState;
-    ;
     if (contentBoxClip) {
       contentBoxClipState.emplace(aBuilder);
       if (mIsRoot) {
@@ -4124,116 +4241,13 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  // Create any required items for the 'top layer' and check if they'll be
-  // opaque over the entire area of the viewport. If they are, then we can
-  // skip building display items for the rest of the page.
-  bool topLayerIsOpaque = false;
-  if (nsDisplayWrapList* topLayerWrapList =
-          MaybeCreateTopLayerItems(aBuilder, &topLayerIsOpaque)) {
-    // If the top layer content is opaque, and we're the root content document
-    // in the process, we can drop the display items behind it. We only support
-    // doing this for the root content document in the process, since the top
-    // layer content might have fixed position items that have a scrolltarget
-    // referencing the APZ data for the document. APZ builds this data
-    // implicitly for the root content document in the process, but subdocuments
-    // etc need their display items to generate it, so we can't cull those.
-    if (topLayerIsOpaque &&
-        mOuter->PresContext()->IsRootContentDocumentInProcess()) {
-      set.DeleteAll(aBuilder);
-    }
-    set.PositionedDescendants()->AppendToTop(topLayerWrapList);
-  }
-
-  nsDisplayList rootResultList(aBuilder);
-  bool serializedList = false;
-  auto SerializeList = [&] {
-    if (!serializedList) {
-      serializedList = true;
-      set.SerializeWithCorrectZOrder(&rootResultList, mOuter->GetContent());
-    }
-  };
-  if (mIsRoot) {
-    if (nsIFrame* rootStyleFrame = GetFrameForStyle()) {
-      bool usingBackdropFilter =
-          rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
-          rootStyleFrame->IsVisibleForPainting();
-
-      if (rootStyleFrame->StyleEffects()->HasFilters()) {
-        SerializeList();
-        rootResultList.AppendNewToTop<nsDisplayFilters>(
-            aBuilder, mOuter, &rootResultList, rootStyleFrame,
-            usingBackdropFilter);
-      }
-
-      if (usingBackdropFilter) {
-        SerializeList();
-        DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-        nsRect backdropRect = mOuter->GetRectRelativeToSelf() +
-                              aBuilder->ToReferenceFrame(mOuter);
-        rootResultList.AppendNewToTop<nsDisplayBackdropFilters>(
-            aBuilder, mOuter, &rootResultList, backdropRect, rootStyleFrame);
-      }
-    }
-  }
-
-  if (willBuildAsyncZoomContainer) {
-    MOZ_ASSERT(mIsRoot);
-
-    // Wrap all our scrolled contents in an nsDisplayAsyncZoom. This will be
-    // the layer that gets scaled for APZ zooming. It does not have the
-    // scrolled ASR, but it does have the composition bounds clip applied to
-    // it. The children have the layout viewport clip applied to them (above).
-    // Effectively we are double clipping to the viewport, at potentially
-    // different async scales.
-    SerializeList();
-
-    if (blendCapture.CaptureContainsBlendMode()) {
-      // The async zoom contents contain a mix-blend mode, so let's wrap all
-      // those contents into a blend container, and then wrap the blend
-      // container in the async zoom container. Otherwise the blend container
-      // ends up outside the zoom container which results in blend failure for
-      // WebRender.
-      nsDisplayItem* blendContainer =
-          nsDisplayBlendContainer::CreateForMixBlendMode(
-              aBuilder, mOuter, &rootResultList,
-              aBuilder->CurrentActiveScrolledRoot());
-      rootResultList.AppendToTop(blendContainer);
-
-      // Blend containers can be created or omitted during partial updates
-      // depending on the dirty rect. So we basically can't do partial updates
-      // if there's a blend container involved. There is equivalent code to this
-      // in the BuildDisplayListForStackingContext function as well, with a more
-      // detailed comment explaining things better.
-      if (aBuilder->IsRetainingDisplayList()) {
-        if (aBuilder->IsPartialUpdate()) {
-          aBuilder->SetPartialBuildFailed(true);
-        } else {
-          aBuilder->SetDisablePartialUpdates(true);
-        }
-      }
-    }
-
-    mozilla::layers::FrameMetrics::ViewID viewID =
-        nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
-
-    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-    clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
-
-    rootResultList.AppendNewToTop<nsDisplayAsyncZoom>(
-        aBuilder, mOuter, &rootResultList,
-        aBuilder->CurrentActiveScrolledRoot(), viewID);
-  }
-
-  if (serializedList) {
-    set.Content()->AppendToTop(&rootResultList);
-  }
-
-  nsDisplayListCollection scrolledContent(aBuilder);
-  set.MoveTo(scrolledContent);
-
   if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
     aBuilder->ForceLayerForScrollParent();
   }
+
+  MaybeCreateTopLayerAndWrapRootItems(
+      aBuilder, set, willBuildAsyncZoomContainer, &blendCapture, clipRect,
+      haveRadii ? radii : nullptr);
 
   // We want to call SetContainsNonMinimalDisplayPort if
   // mWillBuildScrollableLayer is true for any reason other than having a
@@ -4266,7 +4280,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // create a displayport for this frame. We'll add the item later on.
     if (!mWillBuildScrollableLayer && aBuilder->BuildCompositorHitTestInfo()) {
       int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
-          scrolledContent.PositionedDescendants(), mOuter);
+          set.PositionedDescendants(), mOuter);
       if (aBuilder->IsPartialUpdate()) {
         for (nsDisplayItem* item : mScrolledFrame->DisplayItems()) {
           if (item->GetType() ==
@@ -4289,7 +4303,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
               aBuilder, mScrolledFrame, 1, area, info);
       if (hitInfo) {
-        AppendInternalItemToTop(scrolledContent, hitInfo, Some(zIndex));
+        AppendInternalItemToTop(set, hitInfo, Some(zIndex));
         aBuilder->SetCompositorHitTestInfo(info);
       }
     }
@@ -4302,24 +4316,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   // Now display overlay scrollbars and the resizer, if we have one.
-  AppendScrollPartsTo(aBuilder, scrolledContent, createLayersForScrollbars,
-                      true);
+  AppendScrollPartsTo(aBuilder, set, createLayersForScrollbars, true);
 
-  scrolledContent.MoveTo(aLists);
-}
-
-nsDisplayWrapList* ScrollFrameHelper::MaybeCreateTopLayerItems(
-    nsDisplayListBuilder* aBuilder, bool* aIsOpaque) {
-  if (!mIsRoot) {
-    return nullptr;
-  }
-
-  ViewportFrame* viewport = do_QueryFrame(mOuter->GetParent());
-  if (!viewport) {
-    return nullptr;
-  }
-
-  return viewport->BuildDisplayListForTopLayer(aBuilder, aIsOpaque);
+  set.MoveTo(aLists);
 }
 
 nsRect ScrollFrameHelper::RestrictToRootDisplayPort(

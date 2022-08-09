@@ -487,6 +487,9 @@ bool ClientWebGLContext::InitializeCanvasRenderer(
 
   const auto& options = *mInitialOptions;
   const auto& size = DrawingBufferSize();
+
+  if (IsContextLost()) return false;
+
   data.mIsOpaque = !options.alpha;
   data.mIsAlphaPremult = !options.alpha || options.premultipliedAlpha;
   data.mSize = {size.x, size.y};
