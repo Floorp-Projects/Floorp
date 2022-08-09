@@ -3162,16 +3162,6 @@ static bool array_splice_noRetVal(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 
-static ArrayObject* NewDensePartlyAllocatedArray(JSContext* cx, uint64_t len) {
-  if (len > UINT32_MAX) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BAD_ARRAY_LENGTH);
-    return nullptr;
-  }
-
-  return NewDensePartlyAllocatedArray(cx, uint32_t(len));
-}
-
 // https://github.com/tc39/proposal-change-array-by-copy
 // Array.prototype.toSpliced()
 static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
@@ -3224,12 +3214,19 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
              "|newLen = len + insertCount - actualDeleteCount|, then "
              "|actualStart <= newLen|");
 
+  // ArrayCreate, step 1.
+  if (newLen > UINT32_MAX) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
+    return false;
+  }
+
   // Step 13. Let A be ? ArrayCreate(𝔽(newLen)).
-  Rooted<ArrayObject*> arr(cx, ::NewDensePartlyAllocatedArray(cx, newLen));
+  Rooted<ArrayObject*> arr(cx,
+                           NewDensePartlyAllocatedArray(cx, uint32_t(newLen)));
   if (!arr) {
     return false;
   }
-  MOZ_ASSERT(newLen <= UINT32_MAX);
 
   // Copy everything before start
 
@@ -3371,18 +3368,26 @@ static bool array_with(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // ArrayCreate, step 1.
+  if (len > UINT32_MAX) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_ARRAY_LENGTH);
+    return false;
+  }
+  uint32_t length = uint32_t(len);
+
+  MOZ_ASSERT(length > 0);
+  MOZ_ASSERT(0 <= actualIndex && actualIndex < UINT32_MAX);
+
   // Step 7. Let A be ? ArrayCreate(𝔽(len)).
-  RootedObject arr(cx, ::NewDensePartlyAllocatedArray(cx, len));
+  RootedObject arr(cx, NewDensePartlyAllocatedArray(cx, length));
   if (!arr) {
     return false;
   }
 
-  MOZ_ASSERT(len <= UINT32_MAX);
-  MOZ_ASSERT(actualIndex <= UINT32_MAX);
-
   // Steps 8-9. Let k be 0; Repeat, while k < len,
   RootedValue fromValue(cx);
-  for (uint32_t k = 0; k < uint32_t(len); k++) {
+  for (uint32_t k = 0; k < length; k++) {
     if (!CheckForInterrupt(cx)) {
       return false;
     }
