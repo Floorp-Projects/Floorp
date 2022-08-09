@@ -86,7 +86,6 @@ using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using struct OverrideMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using base::ProcessId from "base/process.h";
 using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
-using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::a11y::IHandlerControlHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
@@ -838,23 +837,23 @@ child:
     /**
      * Send a `push` event without data to a service worker in the child.
      */
-    async Push(nsCString scope, Principal principal, nsString messageId);
+    async Push(nsCString scope, nsIPrincipal principal, nsString messageId);
 
     /**
      * Send a `push` event with data to a service worker in the child.
      */
-    async PushWithData(nsCString scope, Principal principal,
+    async PushWithData(nsCString scope, nsIPrincipal principal,
                        nsString messageId, uint8_t[] data);
 
     /**
      * Send a `pushsubscriptionchange` event to a service worker in the child.
      */
-    async PushSubscriptionChange(nsCString scope, Principal principal);
+    async PushSubscriptionChange(nsCString scope, nsIPrincipal principal);
 
     async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
 
     async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
-                              Principal aPrincipal,
+                              nsIPrincipal aPrincipal,
                               nsID? aAgentClusterId);
 
     async BlobURLUnregistration(nsCString aURI);
@@ -1097,7 +1096,7 @@ parent:
 
     async CreateAudioIPCConnection() returns (FileDescOrError fd);
 
-    sync PURLClassifier(Principal principal)
+    sync PURLClassifier(nsIPrincipal principal)
         returns (bool success);
 
     async PURLClassifierLocal(nsIURI uri, IPCURLClassifierFeature[] features);
@@ -1131,9 +1130,9 @@ parent:
 
     async CloseAlert(nsString name);
 
-    async DisableNotifications(Principal principal);
+    async DisableNotifications(nsIPrincipal principal);
 
-    async OpenNotificationSettings(Principal principal);
+    async OpenNotificationSettings(nsIPrincipal principal);
 
     async AddSecurityState(MaybeDiscardedWindowContext aContext, uint32_t aStateFlags);
 
@@ -1199,7 +1198,7 @@ parent:
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,
                        bool aIsPrivateData,
-                       Principal aRequestingPrincipal,
+                       nsIPrincipal aRequestingPrincipal,
                        nsContentPolicyType aContentPolicyType,
                        int32_t aWhichClipboard);
 
@@ -1281,7 +1280,7 @@ parent:
      * Sets "offline-app" permission for the principal.  Called when we hit
      * a web app with the manifest attribute in <html>
      */
-    async SetOfflinePermission(Principal principal);
+    async SetOfflinePermission(nsIPrincipal principal);
 
     /**
      * Notifies the parent to continue shutting down after the child performs
@@ -1309,8 +1308,8 @@ parent:
      *       provided.
      */
     async PContentPermissionRequest(PermissionRequest[] aRequests,
-                                    Principal aPrincipal,
-                                    Principal aTopLevelPrincipal,
+                                    nsIPrincipal aPrincipal,
+                                    nsIPrincipal aTopLevelPrincipal,
                                     bool aIsHandlingUserInput,
                                     bool aMaybeUnsafePermissionDelegate,
                                     TabId tabId);
@@ -1541,7 +1540,7 @@ parent:
                        bool aForWindowDotPrint,
                        nsIURI aURIToLoad,
                        nsCString aFeatures,
-                       Principal aTriggeringPrincipal,
+                       nsIPrincipal aTriggeringPrincipal,
                        nsIContentSecurityPolicy aCsp,
                        nsIReferrerInfo aReferrerInfo,
                        OriginAttributes aOriginAttributes)
@@ -1568,7 +1567,7 @@ parent:
      */
     sync UngrabPointer(uint32_t time);
 
-    sync RemovePermission(Principal principal, nsCString permissionType) returns (nsresult rv);
+    sync RemovePermission(nsIPrincipal principal, nsCString permissionType) returns (nsresult rv);
 
     /**
      * Tell the parent that a decoder's' benchmark has been completed.
@@ -1579,29 +1578,29 @@ parent:
     /**
      * Notify `push-message` observers without data in the parent.
      */
-    async NotifyPushObservers(nsCString scope, Principal principal,
+    async NotifyPushObservers(nsCString scope, nsIPrincipal principal,
                               nsString messageId);
 
     /**
      * Notify `push-message` observers with data in the parent.
      */
-    async NotifyPushObserversWithData(nsCString scope, Principal principal,
+    async NotifyPushObserversWithData(nsCString scope, nsIPrincipal principal,
                                       nsString messageId, uint8_t[] data);
 
     /**
      * Notify `push-subscription-change` observers in the parent.
      */
     async NotifyPushSubscriptionChangeObservers(nsCString scope,
-                                                Principal principal);
+                                                nsIPrincipal principal);
 
      async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
      async DeleteGetFilesRequest(nsID aID);
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
-                                                Principal principal,
+                                                nsIPrincipal principal,
                                                 nsID? aAgentClusterId);
 
-     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, Principal principal);
+     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, nsIPrincipal principal);
 
     /**
      * Messages for communicating child Telemetry to the parent process
@@ -1635,7 +1634,7 @@ parent:
      * Determines whether storage access can be granted automatically by the
      * storage access API without showing a user prompt.
      */
-    async AutomaticStorageAccessPermissionCanBeGranted(Principal aPrincipal)
+    async AutomaticStorageAccessPermissionCanBeGranted(nsIPrincipal aPrincipal)
           returns (bool success);
 
     /*
@@ -1644,7 +1643,7 @@ parent:
      */
     async StorageAccessPermissionGrantedForOrigin(uint64_t aTopLevelWindowId,
                                                   MaybeDiscardedBrowsingContext aParentContext,
-                                                  Principal aTrackingPrincipal,
+                                                  nsIPrincipal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
                                                   int aAllowMode,
                                                   StorageAccessPermissionGrantedReason? aReason)
@@ -1652,7 +1651,7 @@ parent:
 
     async CompleteAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
                                  uint64_t aTopLevelWindowId,
-                                 Principal aTrackingPrincipal,
+                                 nsIPrincipal aTrackingPrincipal,
                                  nsCString aTrackingOrigin,
                                  uint32_t aCookieBehavior,
                                  StorageAccessPermissionGrantedReason aReason)
@@ -1668,10 +1667,10 @@ parent:
                                  nsIURI aEmbeddingOrigin)
           returns (bool success);
 
-    async StoreUserInteractionAsPermission(Principal aPrincipal);
+    async StoreUserInteractionAsPermission(nsIPrincipal aPrincipal);
 
     async TestCookiePermissionDecided(MaybeDiscardedBrowsingContext aContext,
-                         Principal aPrincipal)
+                         nsIPrincipal aPrincipal)
           returns (bool? allowed);
 
    /**
@@ -1842,13 +1841,13 @@ both:
      * Notify `push-subscription-modified` observers in the parent and child.
      */
     async NotifyPushSubscriptionModifiedObservers(nsCString scope,
-                                                  Principal principal);
+                                                  nsIPrincipal principal);
 
     /**
      * Send a Push error message to all service worker clients in the parent or
      * child.
      */
-    async PushError(nsCString scope, Principal principal, nsString message,
+    async PushError(nsCString scope, nsIPrincipal principal, nsString message,
                     uint32_t flags);
 
     /**
