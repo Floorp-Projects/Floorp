@@ -134,7 +134,19 @@ def cargo(command_context):
     help="Run the tests in parallel using multiple processes.",
 )
 @CommandArgument("-v", "--verbose", action="store_true", help="Verbose output.")
-def check(command_context, all_crates=None, crates=None, jobs=0, verbose=False):
+@CommandArgument(
+    "--message-format-json",
+    action="store_true",
+    help="Emit error messages as JSON.",
+)
+def check(
+    command_context,
+    all_crates=None,
+    crates=None,
+    jobs=0,
+    verbose=False,
+    message_format_json=False,
+):
     # XXX duplication with `mach vendor rust`
     crates_and_roots = {
         "gkrust": "toolkit/library/rust",
@@ -163,6 +175,10 @@ def check(command_context, all_crates=None, crates=None, jobs=0, verbose=False):
             "force-cargo-host-program-check",
         ]
 
+        append_env = {}
+        if message_format_json:
+            append_env["USE_CARGO_JSON_MESSAGE_FORMAT"] = "1"
+
         ret = command_context._run_make(
             srcdir=False,
             directory=root,
@@ -171,6 +187,7 @@ def check(command_context, all_crates=None, crates=None, jobs=0, verbose=False):
             print_directory=False,
             target=check_targets,
             num_jobs=jobs,
+            append_env=append_env,
         )
         if ret != 0:
             return ret
