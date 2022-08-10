@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Buffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Buffer, Release)
 NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Buffer)
-  tmp->Cleanup();
+  tmp->Drop();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -50,7 +50,7 @@ Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
 }
 
 Buffer::~Buffer() {
-  Cleanup();
+  Drop();
   mozilla::DropJSObjects(this);
 }
 
@@ -106,7 +106,7 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
   return buffer.forget();
 }
 
-void Buffer::Cleanup() {
+void Buffer::Drop() {
   AbortMapRequest();
 
   if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
@@ -121,7 +121,7 @@ void Buffer::Cleanup() {
   mMapped.reset();
 
   if (mValid && !GetDevice().IsLost()) {
-    GetDevice().GetBridge()->SendBufferDestroy(mId);
+    GetDevice().GetBridge()->SendBufferDrop(mId);
   }
   mValid = false;
 }

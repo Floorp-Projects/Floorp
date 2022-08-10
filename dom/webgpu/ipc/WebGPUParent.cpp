@@ -528,8 +528,17 @@ void WebGPUParent::DeallocBufferShmem(RawId aBufferId) {
   }
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
+ipc::IPCResult WebGPUParent::RecvBufferDrop(RawId aBufferId) {
   ffi::wgpu_server_buffer_drop(mContext.get(), aBufferId);
+  MOZ_LOG(sLogger, LogLevel::Info, ("RecvBufferDrop %" PRIu64 "\n", aBufferId));
+
+  DeallocBufferShmem(aBufferId);
+
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
+  ffi::wgpu_server_buffer_destroy(mContext.get(), aBufferId);
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferDestroy %" PRIu64 "\n", aBufferId));
 
