@@ -20,6 +20,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 include protocol PCanvasManager;
+include PWebGPUTypes;
 
 namespace mozilla {
 namespace webgpu {
@@ -48,7 +49,7 @@ parent:
   // TODO: We want to return an array of compilation messages.
   async DeviceCreateShaderModule(RawId selfId, RawId bufferId, nsString label, nsCString code) returns (WebGPUCompilationMessage[] messages);
   async BufferReturnShmem(RawId selfId, Shmem shmem);
-  async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);
+  async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (MaybeShmem sm);
   async BufferUnmap(RawId selfId, Shmem shmem, bool flush, bool keepShmem);
   async BufferDestroy(RawId selfId);
   async TextureDestroy(RawId selfId);
