@@ -106,57 +106,6 @@ input {
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta {
   float: inline-end;
 }
-.onboardingContainer.featureCallout.callout-arrow::before, .onboardingContainer.featureCallout.callout-arrow::after {
-  content: "";
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  transform: rotate(45deg);
-}
-.onboardingContainer.featureCallout.callout-arrow:dir(rtl)::before, .onboardingContainer.featureCallout.callout-arrow:dir(rtl)::after {
-  transform: rotate(315deg);
-}
-.onboardingContainer.featureCallout.callout-arrow::before {
-  background-color: var(--in-content-page-background);
-  z-index: 2147483647;
-}
-.onboardingContainer.featureCallout.callout-arrow::after {
-  background: transparent;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  z-index: -1;
-}
-.onboardingContainer.featureCallout.arrow-top::before, .onboardingContainer.featureCallout.arrow-top::after {
-  top: -12px;
-  inset-inline-start: calc(50% - 12px);
-}
-.onboardingContainer.featureCallout.arrow-top::before {
-  border-top: 1px solid #CFCFD8;
-  border-inline-start: 1px solid #CFCFD8;
-}
-.onboardingContainer.featureCallout.arrow-bottom::before, .onboardingContainer.featureCallout.arrow-bottom::after {
-  top: calc(100% - 12px);
-  inset-inline-start: calc(50% - 12px);
-}
-.onboardingContainer.featureCallout.arrow-bottom::before {
-  border-inline-end: 1px solid #CFCFD8;
-  border-bottom: 1px solid #CFCFD8;
-}
-.onboardingContainer.featureCallout.arrow-start::before, .onboardingContainer.featureCallout.arrow-start::after {
-  top: calc(50% - 12px);
-  inset-inline-start: calc(100% - 12px);
-}
-.onboardingContainer.featureCallout.arrow-start::before {
-  border-top: 1px solid #CFCFD8;
-  border-inline-end: 1px solid #CFCFD8;
-}
-.onboardingContainer.featureCallout.arrow-end::before, .onboardingContainer.featureCallout.arrow-end::after {
-  top: calc(50% - 12px);
-  inset-inline-start: -12px;
-}
-.onboardingContainer.featureCallout.arrow-end::before {
-  border-bottom: 1px solid #CFCFD8;
-  border-inline-start: 1px solid #CFCFD8;
-}
 
 html {
   height: 100%;
