@@ -1,3 +1,66 @@
+Overview of changes leading to 5.1.0
+Sunday, July 31, 2022
+====================================
+- More extensive buffer tracing messages. (Behdad Esfahbod)
+- Fix hb-ft regression in bitmap fonts rendering. (Behdad Esfahbod)
+- Support extension promotion of lookups in hb-subset-repacker. (Garret Rieger)
+- A new HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL for scripts that use elongation
+  (e.g. Arabic) to signify where it is safe to insert tatweel glyph without
+  interrupting shaping. (Behdad Esfahbod)
+- Add “--safe-to-insert-tatweel” to “hb-shape” tool. (Behdad Esfahbod)
+
+- New API
++HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL
++HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL
+
+
+Overview of changes leading to 5.0.1
+Saturday, July 23, 2022
+====================================
+- Fix version 2 “avar” table with hb-ft. (Behdad Esfahbod)
+
+
+Overview of changes leading to 5.0.0
+Saturday, July 23, 2022
+====================================
+- Support fonts with more than 65535 glyphs in “GDEF”, “GSUB”, and “GPOS”
+  tables. This is part of https://github.com/be-fonts/boring-expansion-spec to
+  extend OpenType in a backward-compatible way.
+  (Behdad Esfahbod, Garret Rieger)
+- Complete support for more than 65535 glyphs in “glyf” table that started in
+  4.0.0 release. Part of boring-expansion-spec. (Behdad Esfahbod)
+- Support version 2 of “avar” table. Part of boring-expansion-spec.
+  (Behdad Esfahbod)
+- Fix mark attachment on multiple substitutions in some cases.
+  (Behdad Esfahbod)
+- Fix application of “calt”, “rclt”, and “ccmp” features to better match
+  Uniscribe behaviour with some Arabic fonts. (Behdad Esfahbod)
+- Improvement to interaction between multiple cursive attachments.
+  (Behdad Esfahbod)
+- Improve multiple mark interactions in Hebrew. (Behdad Esfahbod)
+- Implement language-specific forms in AAT shaping. (Behdad Esfahbod)
+- Fix variation of “VORG” table. (Behdad Esfahbod)
+- Support for specific script tags to be retained in the subsetter, and add
+  “--layout-scripts” option to “hb-subset” tool. (Garret Rieger)
+- Accept space as delimiter for --features/--variations in command line tools.
+- Improve subsetting of “COLR” table. (Qunxin Liu)
+- Improved fuzzing coverage for ot-math API. (Frédéric Wang)
+- Fix “kern” table version 2 (AAT) sanitization on 32-bit systems.
+  (Behdad Esfahbod)
+- Allow negative glyph advances from “graphite2” shaper. (Stephan Bergmann)
+- Implement loading (color) bitmap fonts with hb-ft. (Behdad Esfahbod)
+- Fix regression in hb-ft when changing font size. (Behdad Esfahbod)
+- Fix build on GCC < 7. (Kleis Auke Wolthuizen)
+- Dynamically load dwrite.dll on windows if “directwrite” shaper is enabled.
+  (Luca Bacci)
+- Provide a single-file harfbuzz-subset.cc file for easier alternate building
+  of hb-subset library, similar to harfbuzz.cc. (Khaled Hosny)
+
+- New API
++HB_SUBSET_SETS_LAYOUT_SCRIPT_TAG
++hb_language_matches()
+
+
 Overview of changes leading to 4.4.1
 Wednesday, June 29, 2022
 ====================================
