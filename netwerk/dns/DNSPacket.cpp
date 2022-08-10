@@ -490,6 +490,15 @@ Result<uint8_t, nsresult> DNSPacket::GetRCode() const {
   return mResponse[3] & 0x0F;
 }
 
+Result<bool, nsresult> DNSPacket::RecursionAvailable() const {
+  if (mBodySize < 12) {
+    LOG(("DNSPacket::GetRCode - packet too small"));
+    return Err(NS_ERROR_ILLEGAL_VALUE);
+  }
+
+  return mResponse[3] & 0x80;
+}
+
 nsresult DNSPacket::DecodeInternal(
     nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
     DOHresp& aResp, TypeRecordResultType& aTypeResult,
