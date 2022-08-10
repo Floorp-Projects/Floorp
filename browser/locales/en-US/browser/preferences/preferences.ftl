@@ -1428,12 +1428,17 @@ notice-from-floorp-projects = Floorp Administration Notice
 floorp-preference = Experimet Preferences
 browser-design-settings = Tab Bar Settings
 
-auto-reboot =If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
-enable-multitab = Enable multi-level tabs 
-enable-tab-scroll-change = Switch Tabs by Scrolling
-enable-doble-click-block = Double-click to Close the Tab
-operation-settings = Browser Operation Settings
-Mouse-side-button = Browser optimized for mouse operation with side buttons
+auto-reboot = If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
+enable-multitab = 
+ .label = Enable multi-level tabs 
+enable-tab-scroll-change = 
+ .label = Switch Tabs by Scrolling
+enable-doble-click-block = 
+ .label = Double-click to Close the Tab
+operation-settings = 
+  .label = Browser Operation Settings
+Mouse-side-button = 
+  .label = Browser optimized for mouse operation with side buttons
 
 tabbar-preference = Tabbar
 
@@ -1453,26 +1458,33 @@ tabbar-on-bottom =
  .label = Display at the Bottom of the Window
 
 treestyletabSettings-l10 = Tree Style vertical tab settings
-treestyletab-Settings = Expand when mouse focus
+treestyletab-Settings = 
+ .label = Expand when mouse focus
 
 bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
-bookmarks-focus-mode = Show the bookmark bar when the mouse is focused on the toolbar
-bookmarks-bottom-mode = Bookmark bar at the bottom of the browser
+bookmarks-focus-mode =
+ .label = Show the bookmark bar when the mouse is focused on the toolbar
+bookmarks-bottom-mode =
+ .label = Bookmark bar at the bottom of the browser
 
 material-effect = Allow Mica for everyone to modify the browser design
 other-preference = Other Preferences
 
-enable-userscript = Enable legacy components
+enable-userscript = 
+ .label = Enable legacy components
 about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
 
-Search-positon-top = Display the search bar at the top of the page
-classic-menu-mode = Use classic style menus (May not be compatible)
-allow-auto-restart = Automatic restart when settings are changed that require a restart
+Search-positon-top =
+ .label = Display the search bar at the top of the page
+allow-auto-restart =
+ .label = Automatic restart when settings are changed that require a restart
 
 ## macOS version use legacy update system 
 floorp-updater = { -brand-short-name } Updater Settings
-enable-floorp-updater = Check for { -brand-short-name } updates at startup
-floorp-update-latest = Notification that { -brand-short-name } is up-to-date during automatic update checks
+enable-floorp-updater = 
+ .label = Check for { -brand-short-name } updates at startup
+floorp-update-latest = 
+ .label = Notification that { -brand-short-name } is up-to-date during automatic update checks
 
 ## system theme color
 

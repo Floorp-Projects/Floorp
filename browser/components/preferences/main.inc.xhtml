@@ -83,6 +83,14 @@
     <checkbox id="showTabsInTaskbar" data-l10n-id="show-tabs-in-taskbar"
               preference="browser.taskbar.previews.enable"/>
 #endif
+    <checkbox  data-l10n-id="enable-multitab" preference="floorp.enable.multitab"
+               id="multitabar" class="needeboot"/>
+
+    <checkbox  data-l10n-id="enable-tab-scroll-change"
+               id="tabscroll" preference="toolkit.tabbox.switchByScrolling"/>
+
+    <checkbox  data-l10n-id="enable-doble-click-block" 
+               id="dobleClockClose" preference="browser.tabs.closeTabByDblclick"/>
 
     <vbox id="browserContainersbox" hidden="true">
       <hbox id="browserContainersExtensionContent"
@@ -115,22 +123,10 @@
         </hbox>
       </hbox>
     </vbox>
-  <hbox>
-    <description data-l10n-id="enable-multitab"></description>
-    <checkbox preference="floorp.enable.multitab" class="needeboot"/>
-  </hbox>
-  <hbox>
-    <description data-l10n-id="enable-tab-scroll-change"></description>
-    <checkbox preference="toolkit.tabbox.switchByScrolling"/>
-  </hbox>
-  <hbox>
-    <description data-l10n-id="enable-doble-click-block"></description>
-    <checkbox preference="browser.tabs.closeTabByDblclick"/>
-  </hbox>
 </groupbox>
 
 <groupbox data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="tabbar-preference"/></label>
+   <html:h2 data-l10n-id="tabbar-preference"/>
    <radiogroup preference="floorp.browser.tabbar.settings">
      <radio value="1" class="tabbar"  data-l10n-id="None-mode"/>
      <radio value="2" class="tabbar"  data-l10n-id="hide-horizontality-tabs"/>
@@ -138,11 +134,10 @@
      <radio value="4" class="tabbar"  data-l10n-id="move-tabbar-position"/>
      <radio value="6" class="tabbar"  data-l10n-id="tabbar-on-bottom"/>
     </radiogroup>
-    <label><html:h2 id="treestyletab" data-l10n-id="treestyletabSettings-l10"/></label>
-    <hbox>
-    <description data-l10n-id="treestyletab-Settings"></description>
-    <checkbox id="treestyletabSettings"  preference="floorp.Tree-type.verticaltab.optimization"/>
-    </hbox>
+   <html:h2 id="treestyletab" data-l10n-id="treestyletabSettings-l10"/>
+
+    <checkbox preference="floorp.Tree-type.verticaltab.optimization" 
+              id="treestyletabSettings" data-l10n-id="treestyletab-Settings"/>
 </groupbox>
 
 <hbox id="languageAndAppearanceCategory"
@@ -271,20 +266,17 @@
 </groupbox>
 
 <groupbox id="browser-appearance" data-category="paneGeneral" hidden="true">
-<label><html:h2 data-l10n-id="bookmarks-bar-settings"/></label>
-  <hbox>
-    <description data-l10n-id="bookmarks-focus-mode"></description>
-    <checkbox      preference="floorp.bookmarks.bar.focus.mode"/>
-  </hbox>
-  <hbox>
-    <description data-l10n-id="bookmarks-bottom-mode"></description>
-    <checkbox      preference="floorp.bookmarks.fakestatus.mode"/>
-  </hbox>
-<html:h2 data-l10n-id="operation-settings"/>
-    <hbox>
-     <description data-l10n-id="Mouse-side-button"></description>
-     <checkbox id="MouseSideButton" preference="floorp.optimized.msbutton.ope"/>
-    </hbox>
+   <html:h2 data-l10n-id="bookmarks-bar-settings"/>
+
+    <checkbox preference="floorp.bookmarks.bar.focus.mode"
+              id="bookmarkfocusmode" data-l10n-id="bookmarks-focus-mode"/>
+              
+    <checkbox preference="floorp.bookmarks.fakestatus.mode"
+              id="bookmarkbottomofwindow" data-l10n-id="bookmarks-bottom-mode"/>
+        
+   <html:h2 data-l10n-id="operation-settings"/>
+     <checkbox preference="floorp.optimized.msbutton.ope"
+               id="MouseSideButton"  data-l10n-id="Mouse-side-button"/>
 </groupbox>
 
 <!-- Colors -->
@@ -770,15 +762,12 @@
 #endif
 #endif
 
-<label><html:h2 data-l10n-id="floorp-updater" class="floorp-updater"/></label>
-  <hbox class="floorp-updater">
-    <description data-l10n-id="enable-floorp-updater"/>
-    <checkbox preference="enable.floorp.update"/>
-  </hbox>
-  <hbox class="floorp-updater">
-    <description data-l10n-id="floorp-update-latest"/>
-    <checkbox  preference="enable.floorp.updater.latest"/>
-  </hbox>
+  <html:h2 data-l10n-id="floorp-updater" class="floorp-updater"/>
+    <checkbox preference="enable.floorp.update" class="floorp-updater"
+              id="floorpupdaterpref" data-l10n-id="enable-floorp-updater"/>
+
+    <checkbox preference="enable.floorp.updater.latest" class="floorp-updater"
+              id="latestnotify" data-l10n-id="floorp-update-latest"/>
 </groupbox>
 
 <hbox id="performanceCategory"
@@ -875,20 +864,20 @@
             preference="media.hardwaremediakeys.enabled"/>
     <label id="mediaControlLearnMore" class="learnMore" data-l10n-id="browsing-media-control-learn-more" is="text-link"/>
   </hbox>
-  <hbox>
-    <description data-l10n-id="Search-positon-top"></description>
-    <checkbox preference="floorp.search.top.mode"/>
-  </hbox>
-  <hbox>
-    <description data-l10n-id="allow-auto-restart"></description>
-    <checkbox preference="floorp.enable.auto.restart" />
-  </hbox>
-  <hbox>
-     <description data-l10n-id="enable-userscript"></description>
-     <checkbox preference="toolkit.legacyUserProfileCustomizations.script" class="needeboot"/>
-     <label class="learnMore" is="text-link" href="https://support.ablaze.one/floorp/530/" data-l10n-id="do-not-track-learn-more"></label>
-    </hbox>
-    <description class="indent tip-caption" data-l10n-id="about-legacy-components"/>
+    <checkbox preference="floorp.search.top.mode"
+              id="searchbartop" data-l10n-id="Search-positon-top"/>
+
+    <checkbox preference="floorp.enable.auto.restart"
+              id="autorestart" data-l10n-id="allow-auto-restart" />
+    <hbox>  
+     <checkbox preference="toolkit.legacyUserProfileCustomizations.script" 
+               id ="legacytoolkit" data-l10n-id="enable-userscript" class="needeboot"/>
+     <label class="learnMore" is="text-link" href="https://support.ablaze.one/floorp/530/" 
+            data-l10n-id="do-not-track-learn-more"/>
+    </hbox>  
+
+     <description class="indent tip-caption" data-l10n-id="about-legacy-components"/>
+
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"
             class="tail-with-learn-more"
