@@ -11,8 +11,8 @@ import mozversion
 import pytest
 import requests
 
-from tps import TPS
-from gradlewbuild import GradlewBuild
+from .tps import TPS
+from .gradlewbuild import GradlewBuild
 
 here = os.path.dirname(__file__)
 

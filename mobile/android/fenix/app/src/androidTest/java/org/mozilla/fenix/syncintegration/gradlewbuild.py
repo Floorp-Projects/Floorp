@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 
-from adbrun import ADBrun
+from .adbrun import ADBrun
 
 here = os.path.dirname(__file__)
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -40,4 +40,4 @@ class GradlewBuild(object):
             os.chdir(testsPath)
 
             with open(self.log, 'w') as f:
-                f.write(out)
+                f.write(str(out))
