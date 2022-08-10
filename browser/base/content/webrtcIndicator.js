@@ -592,7 +592,7 @@ const WebRTCIndicator = {
   },
 
   onCommand(event) {
-    webrtcUI.showSharingDoorhanger(event.target.stream);
+    webrtcUI.showSharingDoorhanger(event.target.stream, event);
   },
 
   /**
