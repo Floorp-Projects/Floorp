@@ -601,42 +601,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     outer.remove(); // clean up
   }
 
-  function runMozBoxTest() {
-    // We create a -moz-box, with a child that looks like a good candidate
-    // for being a reflow root, except that really its size depends on its
-    // child's size (due to the min-sizing behavior of children of -moz-box).
-    // We exercise this size dependency (& reveal the issue, if the candidate is
-    // mistakenly flagged as a reflow root) by growing the size of the
-    // content and seeing how the rendering changes.
-    let mozBox = createStyledDiv("display: -moz-box; \
-                                  width: 10px; \
-                                  border: 2px solid teal");
-    let cand = createStyledDiv(gReflowRootCandidateStyles +
-                               " border: 2px solid black;");
-    let inner = createStyledDiv("height: 20px; width: 20px; \
-                                 background: pink;");
-
-    cand.appendChild(inner);
-    mozBox.appendChild(cand);
-    gFBody.appendChild(mozBox);
-
-    // Note: This "is()" check is just validating that we're testing what we
-    // intend to be testing. Eventually, we'll remove support for -moz-box
-    // (as part of XUL), at which point this "is" check will start failing
-    // and we'll probably want to remove this test function, along with the
-    // IsXULBoxFrame() check that this test function is targeting in
-    // ReflowInput::InitDynamicReflowRoot.
-    is(gFWindow.getComputedStyle(mozBox).display, "-moz-box",
-       "'display:-moz-box' should be honored and show up in computed style");
-
-    let tweakFunc = function() {
-      inner.style.width = inner.style.height = "40px";
-    };
-    tweakAndCompareSnapshots(tweakFunc, "child-of-moz-box");
-
-    mozBox.remove(); // clean up
-  }
-
   function runFixedPosTest() {
     // We reset the 'will-change' value on the candidate (overriding
     // 'will-change:transform'), so that it won't be a fixed-pos CB. We also
@@ -778,18 +742,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     runMarginCollapseTest();
     runFloatTest();
 
-    // Turn on 'display:-moz-box' support, so that we can validate that
-    // children of XUL boxes are excluded from being tagged as dynamic
-    // reflow roots. We run this test last (and then call finish), since
-    // pref-setting is async and this lets the rest of this mochitest
-    // (everything up to this point) be straightforward & synchronous.
-    SpecialPowers.pushPrefEnv(
-      { set: [["layout.css.xul-box-display-values.content.enabled", true]]},
-      function() {
-        runMozBoxTest();
-        SimpleTest.finish();
-      }
-    );
+    SimpleTest.finish();
   }
 </script>
 </body>
