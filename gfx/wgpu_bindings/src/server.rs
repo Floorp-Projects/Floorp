@@ -410,6 +410,21 @@ pub extern "C" fn wgpu_server_buffer_unmap(global: &Global, buffer_id: id::Buffe
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_server_buffer_destroy(global: &Global, self_id: id::BufferId) {
+    use wgc::resource::DestroyError;
+    match gfx_select!(self_id => global.buffer_destroy(self_id)) {
+        Err(DestroyError::Invalid) => {
+            // This indicates an error on our side.
+            panic!("Buffer already dropped.");
+        }
+        _ => {
+            // Other error need to be reported but are not fatal, since users
+            // can, for example, ask for a buffer to be destroyed multiple times.
+        }
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId) {
     gfx_select!(self_id => global.buffer_drop(self_id, false));
 }
