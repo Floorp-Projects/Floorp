@@ -181,6 +181,9 @@ class QSTestUtils {
    *   otherwise.
    */
   async ensureQuickSuggestInit(results = null, config = DEFAULT_CONFIG) {
+    this.info?.("ensureQuickSuggestInit calling UrlbarQuickSuggest.init()");
+    lazy.UrlbarQuickSuggest.init();
+
     this.info?.(
       "ensureQuickSuggestInit awaiting UrlbarQuickSuggest.readyPromise"
     );
