@@ -61,7 +61,6 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
   void RejectMapRequest(dom::Promise* aPromise, nsACString& message);
   void AbortMapRequest();
-  bool Mappable() const;
 
   // Note: we can't map a buffer with the size that don't fit into `size_t`
   // (which may be smaller than `BufferAddress`), but general not all buffers
