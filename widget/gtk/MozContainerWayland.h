@@ -90,5 +90,6 @@ double moz_container_wayland_get_scale(MozContainer* container);
 void moz_container_wayland_set_commit_to_parent(MozContainer* container);
 bool moz_container_wayland_is_commiting_to_parent(MozContainer* container);
 bool moz_container_wayland_is_waiting_to_show(MozContainer* container);
+void moz_container_wayland_clear_waiting_to_show_flag(MozContainer* container);
 
 #endif /* __MOZ_CONTAINER_WAYLAND_H__ */

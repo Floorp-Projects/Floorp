@@ -354,7 +354,6 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
-  wl_container->waiting_to_show = false;
 }
 
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
@@ -379,7 +378,7 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
         LOGCONTAINER(
             "[%p] moz_container_wayland_add_initial_draw_callback set visible",
             moz_container_get_nsWindow(container));
-        wl_container->waiting_to_show = false;
+        moz_container_wayland_clear_waiting_to_show_flag(container);
       });
 
   MutexAutoLock lock(*wl_container->container_lock);
@@ -764,4 +763,8 @@ bool moz_container_wayland_is_commiting_to_parent(MozContainer* container) {
 
 bool moz_container_wayland_is_waiting_to_show(MozContainer* container) {
   return container->wl_container.waiting_to_show;
+}
+
+void moz_container_wayland_clear_waiting_to_show_flag(MozContainer* container) {
+  container->wl_container.waiting_to_show = false;
 }
