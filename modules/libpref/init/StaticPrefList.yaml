@@ -5446,7 +5446,7 @@
   # some issues remain on Intel hardware.
 -   name: gfx.core-animation.specialize-video
     type: RelaxedAtomicBool
-#if defined(_ARM64_)
+#if defined(MOZ_AARCH64)
     value: true
 #else
     value: false
