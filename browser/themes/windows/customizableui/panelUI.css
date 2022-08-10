@@ -21,14 +21,13 @@
 /* bookmark panel submenus */
 
 #PlacesToolbar menupopup {
-  margin-top: -2px;
+  margin-top: -4px;
 }
 
 #PlacesToolbar menupopup,
 #BMB_bookmarksPopup menupopup {
   appearance: none;
   border: none;
-  padding-inline-start: 3px;
 }
 
 #BMB_bookmarksPopup menupopup {
@@ -37,8 +36,6 @@
 
 #PlacesToolbar menupopup {
   background: transparent;
-  padding-top: 4px;
-  margin-inline-start: -3px;
 }
 
 #BMB_bookmarksPopup menupopup::part(content) {
@@ -52,8 +49,12 @@
   background: var(--arrowpanel-background);
   color: var(--arrowpanel-color);
   border: 1px solid var(--arrowpanel-border-color);
-  margin-block: -3px 4px;
-  margin-inline: 0 4px;
+  margin: 4px;
+}
+
+menupopup::part(drop-indicator) {
+  /* To account for the shadow margin + border of the panel */
+  margin-inline-start: 5px;
 }
 
 /* Add border-radius on Windows 7 */
