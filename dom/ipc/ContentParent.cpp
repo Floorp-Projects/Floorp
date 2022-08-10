@@ -5930,7 +5930,6 @@ void ContentParent::BroadcastBlobURLRegistration(
       BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(aPrincipal);
 
   nsCString uri(aURI);
-  IPC::Principal principal(aPrincipal);
 
   for (auto* cp : AllProcesses(eLive)) {
     if (cp != aIgnoreThisCP) {
@@ -5938,7 +5937,7 @@ void ContentParent::BroadcastBlobURLRegistration(
         continue;
       }
 
-      nsresult rv = cp->TransmitPermissionsForPrincipal(principal);
+      nsresult rv = cp->TransmitPermissionsForPrincipal(aPrincipal);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         break;
       }
@@ -5949,7 +5948,7 @@ void ContentParent::BroadcastBlobURLRegistration(
         break;
       }
 
-      Unused << cp->SendBlobURLRegistration(uri, ipcBlob, principal,
+      Unused << cp->SendBlobURLRegistration(uri, ipcBlob, aPrincipal,
                                             aAgentClusterId);
     }
   }
