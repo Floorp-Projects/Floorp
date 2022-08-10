@@ -7,11 +7,7 @@
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
-
-trr_test_setup();
-registerCleanupFunction(async () => {
-  trr_clear_prefs();
-});
+let trrServer;
 
 function makeChan(url) {
   let chan = NetUtil.newChannel({
@@ -30,8 +26,13 @@ function channelOpenPromise(chan) {
   });
 }
 
-add_task(async function test_follow_cnames_same_response() {
-  let trrServer = new TRRServer();
+add_setup(async function setup() {
+  trr_test_setup();
+  registerCleanupFunction(async () => {
+    trr_clear_prefs();
+  });
+
+  trrServer = new TRRServer();
   registerCleanupFunction(async () => {
     await trrServer.stop();
   });
@@ -47,7 +48,9 @@ add_task(async function test_follow_cnames_same_response() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
+});
 
+add_task(async function test_follow_cnames_same_response() {
   await trrServer.registerDoHAnswers("something.foo", "A", {
     answers: [
       {
@@ -109,6 +112,123 @@ add_task(async function test_follow_cnames_same_response() {
     ],
   });
   await new TRRDNSListener("a.foo", { expectedAnswer: "2.3.4.5" });
+});
 
-  await trrServer.stop();
+add_task(async function test_cname_nodata() {
+  // Test that we don't needlessly follow cname chains when the RA flag is set
+  // on the response.
+
+  await trrServer.registerDoHAnswers("first.foo", "A", {
+    flags: 0x80,
+    answers: [
+      {
+        name: "first.foo",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "second.foo",
+      },
+      {
+        name: "second.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+  });
+  await trrServer.registerDoHAnswers("first.foo", "AAAA", {
+    flags: 0x80,
+    answers: [
+      {
+        name: "first.foo",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "second.foo",
+      },
+    ],
+  });
+
+  await new TRRDNSListener("first.foo", { expectedAnswer: "1.2.3.4" });
+  equal(await trrServer.requestCount("first.foo", "A"), 1);
+  equal(await trrServer.requestCount("first.foo", "AAAA"), 1);
+  equal(await trrServer.requestCount("second.foo", "A"), 0);
+  equal(await trrServer.requestCount("second.foo", "AAAA"), 0);
+
+  await trrServer.registerDoHAnswers("first.bar", "A", {
+    answers: [
+      {
+        name: "first.bar",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "second.bar",
+      },
+      {
+        name: "second.bar",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+  });
+  await trrServer.registerDoHAnswers("first.bar", "AAAA", {
+    answers: [
+      {
+        name: "first.bar",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "second.bar",
+      },
+    ],
+  });
+
+  await new TRRDNSListener("first.bar", { expectedAnswer: "1.2.3.4" });
+  equal(await trrServer.requestCount("first.bar", "A"), 1);
+  equal(await trrServer.requestCount("first.bar", "AAAA"), 1);
+  equal(await trrServer.requestCount("second.bar", "A"), 0); // addr included in first response
+  equal(await trrServer.requestCount("second.bar", "AAAA"), 1); // will follow cname because no flag is set
+
+  // Check that it also works for HTTPS records
+
+  await trrServer.registerDoHAnswers("first.bar", "HTTPS", {
+    flags: 0x80,
+    answers: [
+      {
+        name: "second.bar",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "no-default-alpn" },
+            { key: "port", value: 8888 },
+            { key: "ipv4hint", value: "1.2.3.4" },
+            { key: "echconfig", value: "123..." },
+            { key: "ipv6hint", value: "::1" },
+          ],
+        },
+      },
+      {
+        name: "first.bar",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "second.bar",
+      },
+    ],
+  });
+
+  let { inStatus } = await new TRRDNSListener("first.bar", {
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
+  });
+  Assert.ok(Components.isSuccessCode(inStatus), `${inStatus} should work`);
+  equal(await trrServer.requestCount("first.bar", "HTTPS"), 1);
+  equal(await trrServer.requestCount("second.bar", "HTTPS"), 0);
 });
