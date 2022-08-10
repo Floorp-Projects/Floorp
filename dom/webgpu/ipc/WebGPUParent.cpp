@@ -378,15 +378,17 @@ struct MapRequest {
 static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
                         uint8_t* userdata) {
   auto* req = reinterpret_cast<MapRequest*>(userdata);
-  // TODO: better handle errors
-  MOZ_ASSERT(status == ffi::WGPUBufferMapAsyncStatus_Success);
-  if (req->mHostMap == ffi::WGPUHostMap_Read) {
+  if (status != ffi::WGPUBufferMapAsyncStatus_Success) {
+    req->mResolver(MaybeShmem(null_t()));
+  } else if (req->mHostMap == ffi::WGPUHostMap_Read) {
     const uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
         req->mContext, req->mBufferId, req->mOffset,
         req->mShmem.Size<uint8_t>());
     memcpy(req->mShmem.get<uint8_t>(), ptr, req->mShmem.Size<uint8_t>());
+
+    req->mResolver(MaybeShmem(std::move(req->mShmem)));
   }
-  req->mResolver(std::move(req->mShmem));
+
   delete req;
 }
 
@@ -399,6 +401,7 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
            aSelfId, aOffset, aSize));
   auto& shmem = mSharedMemoryMap[aSelfId];
   if (!shmem.IsReadable()) {
+    aResolver(MaybeShmem(mozilla::null_t()));
     MOZ_LOG(sLogger, LogLevel::Error, ("\tshmem is empty\n"));
     return IPC_OK();
   }
@@ -409,6 +412,7 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
                                           reinterpret_cast<uint8_t*>(request)};
   ffi::wgpu_server_buffer_map(mContext.get(), aSelfId, aOffset, aSize, aHostMap,
                               callback);
+
   return IPC_OK();
 }
 

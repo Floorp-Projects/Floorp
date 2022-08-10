@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/PWebGPUTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -79,7 +80,7 @@ class SupportedLimits;
 class Texture;
 class WebGPUChild;
 
-using MappingPromise = MozPromise<ipc::Shmem, ipc::ResponseRejectReason, true>;
+using MappingPromise = MozPromise<MaybeShmem, ipc::ResponseRejectReason, true>;
 
 class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
  public:

@@ -151,9 +151,29 @@ must be either GPUMapMode.READ or GPUMapMode.WRITE");
 
   mappingPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [promise, self](ipc::Shmem&& aShmem) {
-        self->mMapped->mShmem = std::move(aShmem);
-        promise->MaybeResolve(0);
+      [promise, self](MaybeShmem&& aShmem) {
+        switch (aShmem.type()) {
+          case MaybeShmem::TShmem: {
+            // TODO: This isn't quite aligned with the spec but it prevents from
+            // crashing when unmapping before the promise is resolved.
+            if (self->mMapped.isSome()) {
+              self->mMapped->mShmem = std::move(aShmem);
+              promise->MaybeResolve(0);
+            } else {
+              promise->MaybeRejectWithOperationError(
+                  "Unmapped or invalid buffer");
+            }
+
+            break;
+          }
+          default: {
+            if (self->mMapped.isSome()) {
+              self->mMapped->mShmem = ipc::Shmem();
+            }
+            promise->MaybeRejectWithOperationError(
+                "Attempted to map an invalid buffer");
+          }
+        }
       },
       [promise](const ipc::ResponseRejectReason&) {
         promise->MaybeRejectWithAbortError("Internal communication error!");
