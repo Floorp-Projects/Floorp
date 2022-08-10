@@ -646,6 +646,9 @@ pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source
 // Enables the new private browsing indicator.
 pref("browser.privatebrowsing.enable-new-indicator", false);
 
+// Enables the new about:privatebrowsing logo.
+pref("browser.privatebrowsing.enable-new-logo", false);
+
 // Whether the user is opted-in to privacy segmentation.
 pref("browser.privacySegmentation.enabled", false);
 
