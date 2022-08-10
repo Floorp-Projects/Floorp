@@ -2404,6 +2404,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     return nsChangeHint_ReconstructFrame;
   }
 
+  // Same issue as above for now.
+  if (mContainerType != aNewData.mContainerType) {
+    return nsChangeHint_ReconstructFrame;
+  }
+
   auto oldAppearance = EffectiveAppearance();
   auto newAppearance = aNewData.EffectiveAppearance();
   if (oldAppearance != newAppearance) {
@@ -2645,11 +2650,12 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // But we still need to return nsChangeHint_NeutralChange for these
   // properties, since some data did change in the style struct.
 
-  // TODO(emilio): Figure out change hints for container-type/name.
+  // TODO(emilio): Figure out change hints for container-name, maybe it needs to
+  // be handled by the style system as a special-case (since it changes
+  // container-query selection on descendants).
   if (!hint && (mWillChange != aNewData.mWillChange ||
                 mOverflowAnchor != aNewData.mOverflowAnchor ||
-                mContainerName != aNewData.mContainerName ||
-                mContainerType != aNewData.mContainerType)) {
+                mContainerName != aNewData.mContainerName)) {
     hint |= nsChangeHint_NeutralChange;
   }
 

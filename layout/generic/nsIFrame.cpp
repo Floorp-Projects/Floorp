@@ -721,6 +721,10 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
+  if (disp->mContainerType) {
+    PresContext()->RegisterContainerQueryFrame(this);
+  }
+
   if (disp->IsContainLayout() && disp->GetContainSizeAxes().IsBoth() &&
       // All frames that support contain:layout also support contain:size.
       IsFrameOfType(eSupportsContainLayoutAndPaint) && !IsTableWrapperFrame()) {
@@ -801,12 +805,16 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   SVGObserverUtils::InvalidateDirectRenderingObservers(this);
 
-  if (StyleDisplay()->mPosition == StylePositionProperty::Sticky) {
-    StickyScrollContainer* ssc =
-        StickyScrollContainer::GetStickyScrollContainerForFrame(this);
-    if (ssc) {
+  const auto* disp = StyleDisplay();
+  if (disp->mPosition == StylePositionProperty::Sticky) {
+    if (auto* ssc =
+            StickyScrollContainer::GetStickyScrollContainerForFrame(this)) {
       ssc->RemoveFrame(this);
     }
+  }
+
+  if (disp->mContainerType) {
+    PresContext()->UnregisterContainerQueryFrame(this);
   }
 
   nsPresContext* presContext = PresContext();
