@@ -1301,7 +1301,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     val showPocketSponsoredStories by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
-        default = { FxNimbus.features.pocketSponsoredStories.value(appContext).enabled },
+        default = { homescreenSections[HomeScreenSection.POCKET_SPONSORED_STORIES] == true },
         featureFlag = FeatureFlags.isPocketSponsoredStoriesFeatureEnabled(appContext)
     )
 

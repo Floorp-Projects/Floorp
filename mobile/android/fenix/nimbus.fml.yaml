@@ -19,6 +19,7 @@ features:
             "recently-saved": true,
             "recent-explorations": true,
             "pocket": true,
+            "pocket-sponsored-stories": false,
             "contile-top-sites": false,
           }
     defaults:
@@ -31,6 +32,12 @@ features:
             "recent-explorations": true,
             "pocket": true,
             "contile-top-sites": false,
+          }
+        }
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "pocket-sponsored-stories": true,
           }
         }
   onboarding:
@@ -210,18 +217,6 @@ features:
         value:
           enabled: false
 
-  pocket-sponsored-stories:
-    description: A feature showing sponsored stories in between the other Pocket recommended stories on homescreen.
-    variables:
-      enabled:
-        description:  If true, the Pocket stories shown on homescreen should contain sponsored stories also.
-        type: Boolean
-        default: false
-    defaults:
-      - channel: developer
-        value:
-          enabled: true
-
   engine-settings:
     description: Contains a set of settings for controlling the web engine configurations.
     variables:
@@ -320,6 +315,8 @@ types:
           description: The tab groups
         pocket:
           description: The pocket section. This should only be available in the US.
+        pocket-sponsored-stories:
+          description: Subsection of the Pocket homescreen section which shows sponsored stories.
         contile-top-sites:
           description: The sponsored shortcuts in the homescreen.
     MessageSurfaceId:
