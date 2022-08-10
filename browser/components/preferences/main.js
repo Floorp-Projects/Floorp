@@ -219,6 +219,8 @@ Preferences.addAll([
   { id: "toolkit.tabbox.switchByScrolling", type:"bool"},
   { id: "browser.tabs.closeTabByDblclick", type:"bool"},
   { id: "floorp.download.notification", type:"int"},
+  { id: "floorp.chrome.theme.mode", type:"int"},
+  { id: "floorp.browser.UserAgent", type:"int"},
 ]);
 
 // Floorp の設定項目終わり
@@ -552,12 +554,6 @@ var gMainPane = {
       let link = document.getElementById("mediaControlLearnMore");
       link.setAttribute("href", mediaControlLearnMoreUrl);
     }
-
-    // Floorp 固有の設定
-    this.SetSystemThemeColor();
-    setEventListener("SystemThemeGroup", "command", event => {
-      this.checkUpdateSystemThemeColor(event.target.value);
-    });
 
         const needreboot = document.getElementsByClassName("needeboot");
         for(let i = 0; i < needreboot.length; i++) {
@@ -2135,26 +2131,6 @@ var gMainPane = {
       um.cleanupReadyUpdate();
       um.cleanupDownloadingUpdate();
     }
-  },
-
-  async SetSystemThemeColor() {
-    let radiogroup = document.getElementById("SystemThemeColorGroup");
-    radiogroup.disabled = true;
-    radiogroup.value = Services.prefs.getIntPref("ui.systemUsesDarkTheme", -1);
-    radiogroup.disabled = false;
-  },
-  async checkUpdateSystemThemeColor(value) {
-    switch (value) {
-      case "1":
-        Services.prefs.setIntPref("ui.systemUsesDarkTheme", 1);
-        break;
-      case "0":
-        Services.prefs.setIntPref("ui.systemUsesDarkTheme", 0);
-        break;
-      case "-1":
-        Services.prefs.clearUserPref("ui.systemUsesDarkTheme");
-        break;
-      }
   },
 
   /**

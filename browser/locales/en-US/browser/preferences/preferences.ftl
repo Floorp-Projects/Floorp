@@ -1568,3 +1568,17 @@ profiles-button-label = Manage profiles
 
 appmenuitem-reboot =
  .label = Reboot
+
+## useagent
+
+UserAgent-preference = UserAgent
+default-useragent-mode =
+ .label = Use Firefox User Agent (Default)
+windows-chrome-useragent-mode =
+ .label = Spoof Chrome on Windows
+macOS-chrome-useragent-mode =
+ .label = Spoof Chrome on macOS
+linux-chrome-useragent-mode =
+ .label = Spoof Chrome on Linux
+mobile-chrome-useragent-mode =
+ .label = Impersonate Moblie

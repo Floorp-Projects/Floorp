@@ -214,7 +214,7 @@
     <label>
     <description data-l10n-id="system-color-settings"></description>
     </label>
-    <radiogroup id="SystemThemeColorGroup">
+    <radiogroup id="SystemThemeColorGroup"  preference="floorp.chrome.theme.mode">
       <radio value="1"  data-l10n-id="system-theme-dark"/>
       <radio value="0"  data-l10n-id="system-theme-light"/>
       <radio value="-1" data-l10n-id="system-theme-auto"/>
@@ -901,6 +901,14 @@
             preference="browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features"/>
     <label id="cfrFeaturesLearnMore" class="learnMore" data-l10n-id="browsing-cfr-recommendations-learn-more" is="text-link"/>
   </hbox>
+  <label><html:h2 data-l10n-id="UserAgent-preference"/></label>
+   <radiogroup preference="floorp.browser.UserAgent">
+     <radio value="0" data-l10n-id="default-useragent-mode"/>
+     <radio value="1" data-l10n-id="windows-chrome-useragent-mode"/>
+     <radio value="2" data-l10n-id="macOS-chrome-useragent-mode"/>
+     <radio value="3" data-l10n-id="linux-chrome-useragent-mode"/>
+     <radio value="4" data-l10n-id="mobile-chrome-useragent-mode"/>
+    </radiogroup>
 </groupbox>
 
 <hbox id="networkProxyCategory"
