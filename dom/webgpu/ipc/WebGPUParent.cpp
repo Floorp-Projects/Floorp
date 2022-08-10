@@ -436,13 +436,29 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
   delete req;
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId,
-                                           ffi::WGPUHostMap aHostMap,
+ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId, uint32_t aMode,
                                            uint64_t aOffset, uint64_t aSize,
                                            BufferMapResolver&& aResolver) {
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferMap %" PRIu64 " offset=%" PRIu64 " size=%" PRIu64 "\n",
            aBufferId, aOffset, aSize));
+
+  ffi::WGPUHostMap mode;
+  switch (aMode) {
+    case dom::GPUMapMode_Binding::READ:
+      mode = ffi::WGPUHostMap_Read;
+      break;
+    case dom::GPUMapMode_Binding::WRITE:
+      mode = ffi::WGPUHostMap_Write;
+      break;
+    default: {
+      nsCString errorString(
+          "GPUBuffer.mapAsync 'mode' argument must be either GPUMapMode.READ "
+          "or GPUMapMode.WRITE");
+      aResolver(BufferMapError(errorString));
+      return IPC_OK();
+    }
+  }
 
   auto* mapData = GetBufferMapData(aBufferId);
 
@@ -452,13 +468,13 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId,
     return IPC_OK();
   }
 
-  auto* request = new MapRequest(this, mContext.get(), aBufferId, aHostMap,
-                                 aOffset, aSize, std::move(aResolver));
+  auto* request = new MapRequest(this, mContext.get(), aBufferId, mode, aOffset,
+                                 aSize, std::move(aResolver));
 
   ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
                                           reinterpret_cast<uint8_t*>(request)};
-  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, aOffset, aSize,
-                              aHostMap, callback);
+  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, aOffset, aSize, mode,
+                              callback);
 
   return IPC_OK();
 }
