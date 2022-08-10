@@ -728,4 +728,9 @@ bool MessageLoopForIO::WatchFileDescriptor(int fd, bool persistent, Mode mode,
       controller, delegate);
 }
 
+bool MessageLoopForIO::CatchSignal(int sig, SignalEvent* sigevent,
+                                   SignalWatcher* delegate) {
+  return pump_libevent()->CatchSignal(sig, sigevent, delegate);
+}
+
 #endif
