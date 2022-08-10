@@ -818,6 +818,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupHideClosedPopups();
   void WaylandPopupMove();
   bool WaylandPopupRemoveNegativePosition(int* aX = nullptr, int* aY = nullptr);
+  bool WaylandPopupAnchorAnjustForParentPopup(GdkRectangle& aPopupAnchor);
   nsWindow* WaylandPopupGetTopmostWindow();
   bool IsPopupInLayoutPopupChain(nsTArray<nsIWidget*>* aLayoutWidgetHierarchy,
                                  bool aMustMatchParent);
