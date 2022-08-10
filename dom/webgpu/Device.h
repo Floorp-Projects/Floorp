@@ -114,6 +114,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
 
   void GenerateError(const nsCString& aMessage);
 
+  bool IsLost() const;
+
  private:
   ~Device();
   void Cleanup();

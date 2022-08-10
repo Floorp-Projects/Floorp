@@ -95,6 +95,8 @@ void Device::CleanupUnregisteredInParent() {
   mValid = false;
 }
 
+bool Device::IsLost() const { return !mBridge || !mBridge->CanSend(); }
+
 // Generate an error on the Device timeline for this device.
 //
 // aMessage is interpreted as UTF-8.
@@ -121,45 +123,7 @@ dom::Promise* Device::GetLost(ErrorResult& aRv) {
 
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
-  if (!mBridge->CanSend()) {
-    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, 0, ipc::Shmem());
-    return buffer.forget();
-  }
-
-  ipc::Shmem shmem;
-  bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
-                                     dom::GPUBufferUsage_Binding::MAP_READ);
-  if (hasMapFlags || aDesc.mMappedAtCreation) {
-    const auto checked = CheckedInt<size_t>(aDesc.mSize);
-    if (!checked.isValid()) {
-      aRv.ThrowRangeError("Mappable size is too large");
-      return nullptr;
-    }
-    const auto& size = checked.value();
-
-    if (!mBridge->AllocUnsafeShmem(size, &shmem)) {
-      aRv.ThrowAbortError(
-          nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
-      return nullptr;
-    }
-
-    // zero out memory
-    memset(shmem.get<uint8_t>(), 0, size);
-  }
-
-  MaybeShmem maybeShmem = mozilla::null_t();
-  if (shmem.IsReadable()) {
-    maybeShmem = shmem;
-  }
-  RawId id = mBridge->DeviceCreateBuffer(mId, aDesc, std::move(maybeShmem));
-
-  RefPtr<Buffer> buffer =
-      new Buffer(this, id, aDesc.mSize, aDesc.mUsage, std::move(shmem));
-  if (aDesc.mMappedAtCreation) {
-    buffer->SetMapped(!(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
-  }
-
-  return buffer.forget();
+  return Buffer::Create(this, mId, aDesc, aRv);
 }
 
 RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
