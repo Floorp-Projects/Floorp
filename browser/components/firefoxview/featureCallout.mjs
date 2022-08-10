@@ -16,9 +16,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "featureTourProgress",
   "browser.firefox-view.feature-tour",
   '{"message":"","screen":"","complete":true}',
-  null,
+  handlePrefChange,
   val => JSON.parse(val)
 );
+
+async function handlePrefChange(prefName, prevVal, newVal) {
+  if (newVal.complete) {
+    _endTour();
+  } else {
+    READY = false;
+    _loadConfig(lazy.featureTourProgress.message);
+    document.getElementById(CONTAINER_ID)?.remove();
+    await _renderCallout();
+  }
+}
 
 function _addCalloutLinkElements() {
   function addStylesheet(href) {
@@ -49,6 +60,8 @@ function _addCalloutLinkElements() {
 
 let CURRENT_SCREEN;
 let CONFIG;
+let RENDER_OBSERVER;
+let READY = false;
 
 const CONTAINER_ID = "root";
 const MESSAGES = [
@@ -75,7 +88,17 @@ const MESSAGES = [
           primary_button: {
             label: "Next",
             action: {
-              navigate: true,
+              type: "SET_PREF",
+              data: {
+                pref: {
+                  name: "browser.firefox-view.feature-tour",
+                  value: JSON.stringify({
+                    message: "FIREFOX_VIEW_FEATURE_TOUR",
+                    screen: "FEATURE_CALLOUT_2",
+                    complete: false,
+                  }),
+                },
+              },
             },
           },
           dismiss_button: {
@@ -97,7 +120,17 @@ const MESSAGES = [
           primary_button: {
             label: "Next",
             action: {
-              navigate: true,
+              type: "SET_PREF",
+              data: {
+                pref: {
+                  name: "browser.firefox-view.feature-tour",
+                  value: JSON.stringify({
+                    message: "FIREFOX_VIEW_FEATURE_TOUR",
+                    screen: "FEATURE_CALLOUT_3",
+                    complete: false,
+                  }),
+                },
+              },
             },
           },
           dismiss_button: {
@@ -123,7 +156,17 @@ const MESSAGES = [
           primary_button: {
             label: "Finish",
             action: {
-              navigate: true,
+              type: "SET_PREF",
+              data: {
+                pref: {
+                  name: "browser.firefox-view.feature-tour",
+                  value: JSON.stringify({
+                    message: "FIREFOX_VIEW_FEATURE_TOUR",
+                    screen: "",
+                    complete: true,
+                  }),
+                },
+              },
             },
           },
           dismiss_button: {
@@ -200,9 +243,8 @@ function _positionCallout() {
     },
     // Point to an element below the callout
     bottom() {
-      // Container wrapper doesn't have a height, so use height of screen element
-      let containerHeight = container.querySelector(".screen").clientHeight;
-      let containerTop = getOffset(parentEl).top - containerHeight + margin;
+      let containerTop =
+        getOffset(parentEl).top - container.clientHeight + margin;
       container.style.top = `${Math.max(containerTop, 0)}px`;
       centerHorizontally(container, parentEl);
     },
@@ -249,9 +291,8 @@ function _removePositionListeners() {
 
 function _setupWindowFunctions() {
   const AWParent = new lazy.AboutWelcomeParent();
-  const browser = document.chromeEventHandler;
   const receive = name => data =>
-    AWParent.onContentMessage(`AWPage:${name}`, data, browser);
+    AWParent.onContentMessage(`AWPage:${name}`, data, document);
   // Expose top level functions expected by the bundle.
   window.AWGetDefaultSites = () => {};
   window.AWGetFeatureConfig = () => CONFIG;
@@ -266,16 +307,13 @@ function _setupWindowFunctions() {
     "SEND_TO_DEVICE_EMAILS_SUPPORTED"
   );
   window.AWSendToParent = (name, data) => receive(name)(data);
-  window.AWNewScreen = screenIndex => {
-    CURRENT_SCREEN = CONFIG.screens?.[screenIndex];
-    if (CURRENT_SCREEN) {
-      _positionCallout();
-    }
-  };
-  window.AWFinish = () => {
-    document.getElementById(CONTAINER_ID).remove();
-    _removePositionListeners();
-  };
+  window.AWFinish = _endTour;
+}
+
+function _endTour() {
+  document.getElementById(CONTAINER_ID)?.remove();
+  _removePositionListeners();
+  RENDER_OBSERVER?.disconnect();
 }
 
 async function _addScriptsAndRender(container) {
@@ -307,6 +345,30 @@ async function _addScriptsAndRender(container) {
   container.appendChild(bundleScript);
 }
 
+function _observeRender(container) {
+  RENDER_OBSERVER.observe(container, { childList: true });
+}
+
+async function _loadConfig(messageId) {
+  let content = MESSAGES.find(m => m.id === messageId);
+  const screenId = lazy.featureTourProgress.screen;
+  if (content?.screens && screenId) {
+    // Remove screens the user has already seen
+    const screenIndex = content.screens.findIndex(s => s.id === screenId);
+    content.screens = content.screens.filter((s, i) => {
+      return i >= screenIndex;
+    });
+  }
+  CURRENT_SCREEN = content?.screens[0];
+  CONFIG = content;
+}
+
+async function _renderCallout() {
+  let container = _createContainer();
+  _observeRender(container);
+  // This results in rendering the Feature Callout
+  await _addScriptsAndRender(container);
+}
 /**
  * Render content based on about:welcome multistage template.
  */
@@ -316,17 +378,23 @@ export async function showFeatureCallout(messageId) {
     return;
   }
 
-  CONFIG = MESSAGES.find(m => m.id === messageId);
+  _loadConfig(messageId);
+
   if (!CONFIG) {
     return;
   }
 
+  RENDER_OBSERVER = new MutationObserver(function() {
+    // Check if the Feature Callout screen has loaded for the first time
+    if (!READY && document.querySelector("#root .screen")) {
+      READY = true;
+      _positionCallout();
+    }
+  });
+
   _addCalloutLinkElements();
-  let container = _createContainer();
-  _setupWindowFunctions();
-
-  // This results in rendering the Feature Callout
-  await _addScriptsAndRender(container);
-
+  // Add handlers for repositioning callout
   _addPositionListeners();
+  _setupWindowFunctions();
+  await _renderCallout();
 }
