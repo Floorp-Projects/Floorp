@@ -857,3 +857,33 @@ add_task(async function about() {
     await cleanup();
   }
 });
+
+// Checks an origin whose prefix is "place:".
+add_task(async function place() {
+  const testData = [
+    {
+      uri: "place:transition=7&sort=4",
+      input: "tran",
+    },
+    {
+      uri: "place:transition=7&sort=4",
+      input: "place:tran",
+    },
+  ];
+
+  for (const { uri, input } of testData) {
+    await PlacesTestUtils.addBookmarkWithDetails({ uri });
+
+    const context = createContext(input, { isPrivate: false });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, {
+          engineName: "Suggestions",
+          heuristic: true,
+        }),
+      ],
+    });
+    await cleanup();
+  }
+});

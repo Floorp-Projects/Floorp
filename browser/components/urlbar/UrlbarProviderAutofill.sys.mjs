@@ -100,7 +100,7 @@ function originQuery(where) {
       )) OVER (PARTITION BY fixup_url(host)),
       ${selectVisited}
       FROM moz_origins o
-      WHERE prefix != 'about:'
+      WHERE prefix NOT IN ('about:', 'place:')
         AND ((host BETWEEN :searchString AND :searchString || X'FFFF')
           OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'))
     ),
