@@ -372,6 +372,12 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
     .unwrap();
 }
 
+#[repr(C)]
+pub struct MappedBufferSlice {
+    pub ptr: *mut u8,
+    pub length: u64,
+}
+
 /// # Safety
 ///
 /// This function is unsafe as there is no guarantee that the given pointer is
@@ -382,14 +388,17 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
     buffer_id: id::BufferId,
     start: wgt::BufferAddress,
     size: wgt::BufferAddress,
-) -> *mut u8 {
-    gfx_select!(buffer_id => global.buffer_get_mapped_range(
+) -> MappedBufferSlice {
+    let result = gfx_select!(buffer_id => global.buffer_get_mapped_range(
         buffer_id,
         start,
         Some(size)
-    ))
-    .unwrap()
-    .0
+    ));
+
+    // TODO: error reporting.
+
+    result.map(|(ptr, length)| MappedBufferSlice { ptr, length })
+        .unwrap_or(MappedBufferSlice { ptr: std::ptr::null_mut(), length: 0 })
 }
 
 #[no_mangle]
