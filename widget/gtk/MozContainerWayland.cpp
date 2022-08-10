@@ -185,6 +185,7 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->initial_draw_cbs.clear();
   container->container_lock = new mozilla::Mutex("MozContainer lock");
   container->commit_to_parent = false;
+  container->waiting_to_show = false;
 }
 
 static void moz_container_wayland_destroy(GtkWidget* widget) {
@@ -353,12 +354,12 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
+  wl_container->waiting_to_show = false;
 }
 
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
                                                 GdkEventAny* event) {
   MozContainerWayland* wl_container = &MOZ_CONTAINER(widget)->wl_container;
-  MutexAutoLock lock(*wl_container->container_lock);
 
   LOGCONTAINER("%s [%p]\n", __FUNCTION__,
                (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
@@ -366,6 +367,22 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
   // We need to mark MozContainer as mapped to make sure
   // moz_container_wayland_unmap() is called on hide/withdraw.
   gtk_widget_set_mapped(widget, TRUE);
+
+  // Set waiting_to_show flag. It means the mozcontainer is cofigured/mapped
+  // and it's supposed to be visible. *But* it's really visible when we get
+  // moz_container_wayland_add_initial_draw_callback() which means
+  // wayland compositor makes it live.
+  wl_container->waiting_to_show = true;
+  MozContainer* container = MOZ_CONTAINER(widget);
+  moz_container_wayland_add_initial_draw_callback(
+      container, [container]() -> void {
+        LOGCONTAINER(
+            "[%p] moz_container_wayland_add_initial_draw_callback set visible",
+            moz_container_get_nsWindow(container));
+        wl_container->waiting_to_show = false;
+      });
+
+  MutexAutoLock lock(*wl_container->container_lock);
 
   // Don't create wl_subsurface in map_event when it's already created or
   // if we create it for the first time.
@@ -743,4 +760,8 @@ void moz_container_wayland_set_commit_to_parent(MozContainer* container) {
 bool moz_container_wayland_is_commiting_to_parent(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
   return wl_container->commit_to_parent;
+}
+
+bool moz_container_wayland_is_waiting_to_show(MozContainer* container) {
+  return container->wl_container.waiting_to_show;
 }
