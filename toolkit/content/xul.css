@@ -151,10 +151,6 @@ iframe {
 }
 
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
-  :root {
-    -moz-box-layout: flex;
-  }
-
   browser,
   editor,
   iframe {
