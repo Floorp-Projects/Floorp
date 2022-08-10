@@ -49,7 +49,14 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
                                          const dom::GPUBufferDescriptor& aDesc,
                                          ErrorResult& aRv);
 
-  void SetMapped(BufferAddress aOffset, BufferAddress aSize, bool aWritable);
+  already_AddRefed<dom::Promise> MapAsync(uint32_t aMode, uint64_t aOffset,
+                                          const dom::Optional<uint64_t>& aSize,
+                                          ErrorResult& aRv);
+  void GetMappedRange(JSContext* aCx, uint64_t aOffset,
+                      const dom::Optional<uint64_t>& aSize,
+                      JS::Rooted<JSObject*>* aObject, ErrorResult& aRv);
+  void Unmap(JSContext* aCx, ErrorResult& aRv);
+  void Destroy(JSContext* aCx, ErrorResult& aRv);
 
   const RawId mId;
 
@@ -62,6 +69,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
   void RejectMapRequest(dom::Promise* aPromise, nsACString& message);
   void AbortMapRequest();
+  void SetMapped(BufferAddress aOffset, BufferAddress aSize, bool aWritable);
 
   // Note: we can't map a buffer with the size that don't fit into `size_t`
   // (which may be smaller than `BufferAddress`), but general not all buffers
@@ -75,16 +83,6 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   // mShmem does not point to a shared memory segment if the buffer is not
   // mappable.
   ipc::Shmem mShmem;
-
- public:
-  already_AddRefed<dom::Promise> MapAsync(uint32_t aMode, uint64_t aOffset,
-                                          const dom::Optional<uint64_t>& aSize,
-                                          ErrorResult& aRv);
-  void GetMappedRange(JSContext* aCx, uint64_t aOffset,
-                      const dom::Optional<uint64_t>& aSize,
-                      JS::Rooted<JSObject*>* aObject, ErrorResult& aRv);
-  void Unmap(JSContext* aCx, ErrorResult& aRv);
-  void Destroy(JSContext* aCx, ErrorResult& aRv);
 };
 
 }  // namespace webgpu
