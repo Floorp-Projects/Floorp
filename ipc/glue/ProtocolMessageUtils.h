@@ -67,9 +67,9 @@ struct ParamTraits<mozilla::ipc::ActorHandle> {
   }
 };
 
-template <class PFooSide>
-struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
-  typedef mozilla::ipc::Endpoint<PFooSide> paramType;
+template <>
+struct ParamTraits<mozilla::ipc::UntypedEndpoint> {
+  using paramType = mozilla::ipc::UntypedEndpoint;
 
   static void Write(MessageWriter* aWriter, paramType&& aParam) {
     IPC::WriteParam(aWriter, std::move(aParam.mPort));
@@ -87,6 +87,10 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
     aLog->append(StringPrintf(L"Endpoint"));
   }
 };
+
+template <class PFooSide>
+struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>>
+    : ParamTraits<mozilla::ipc::UntypedEndpoint> {};
 
 }  // namespace IPC
 

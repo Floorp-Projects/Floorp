@@ -70,8 +70,7 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mSocketProcessChild.Init(ParentPid(), *parentBuildID,
-                                  IOThreadChild::TakeInitialPort());
+  return mSocketProcessChild.Init(TakeInitialEndpoint(), *parentBuildID);
 }
 
 void SocketProcessImpl::CleanUp() { mSocketProcessChild.CleanUp(); }

@@ -66,10 +66,9 @@ RefPtr<UtilityProcessChild> UtilityProcessChild::Get() {
   return sUtilityProcessChild;
 }
 
-bool UtilityProcessChild::Init(base::ProcessId aParentPid,
+bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
                                const nsCString& aParentBuildID,
-                               uint64_t aSandboxingKind,
-                               mozilla::ipc::ScopedPort aPort) {
+                               uint64_t aSandboxingKind) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Initialize the thread manager before starting IPC. Otherwise, messages
@@ -79,7 +78,7 @@ bool UtilityProcessChild::Init(base::ProcessId aParentPid,
   }
 
   // Now it's safe to start IPC.
-  if (NS_WARN_IF(!Open(std::move(aPort), aParentPid))) {
+  if (NS_WARN_IF(!aEndpoint.Bind(this))) {
     return false;
   }
 

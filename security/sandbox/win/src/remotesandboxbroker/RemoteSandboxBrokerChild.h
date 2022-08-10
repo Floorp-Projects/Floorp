@@ -18,7 +18,7 @@ class RemoteSandboxBrokerChild : public PRemoteSandboxBrokerChild {
  public:
   RemoteSandboxBrokerChild();
   virtual ~RemoteSandboxBrokerChild();
-  bool Init(base::ProcessId aParentPid, mozilla::ipc::ScopedPort aPort);
+  bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint);
 
  private:
   mozilla::ipc::IPCResult RecvLaunchApp(LaunchParameters&& aParams,

@@ -28,8 +28,8 @@ class GMPChild : public PGMPChild {
   GMPChild();
   virtual ~GMPChild();
 
-  bool Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
-            mozilla::ipc::ScopedPort aPort);
+  bool Init(const nsAString& aPluginPath,
+            mozilla::ipc::UntypedEndpoint&& aEndpoint);
   MessageLoop* GMPMessageLoop();
 
   // Main thread only.

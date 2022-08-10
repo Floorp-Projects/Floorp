@@ -45,6 +45,48 @@ constexpr bool ActorNeedsOtherPid =
 
 struct PrivateIPDLInterface {};
 
+class UntypedEndpoint {
+ public:
+  using ProcessId = base::ProcessId;
+
+  UntypedEndpoint() = default;
+
+  UntypedEndpoint(const PrivateIPDLInterface&, ScopedPort aPort,
+                  ProcessId aMyPid = base::kInvalidProcessId,
+                  ProcessId aOtherPid = base::kInvalidProcessId)
+      : mPort(std::move(aPort)), mMyPid(aMyPid), mOtherPid(aOtherPid) {}
+
+  UntypedEndpoint(const UntypedEndpoint&) = delete;
+  UntypedEndpoint(UntypedEndpoint&& aOther) = default;
+
+  UntypedEndpoint& operator=(const UntypedEndpoint&) = delete;
+  UntypedEndpoint& operator=(UntypedEndpoint&& aOther) = default;
+
+  // This method binds aActor to this endpoint. After this call, the actor can
+  // be used to send and receive messages. The endpoint becomes invalid.
+  //
+  // If specified, aEventTarget is the target the actor will be bound to, and
+  // must be on the current thread. Otherwise, GetCurrentSerialEventTarget() is
+  // used.
+  bool Bind(IToplevelProtocol* aActor,
+            nsISerialEventTarget* aEventTarget = nullptr) {
+    MOZ_RELEASE_ASSERT(IsValid());
+    MOZ_RELEASE_ASSERT(mMyPid == base::kInvalidProcessId ||
+                       mMyPid == base::GetCurrentProcId());
+    MOZ_RELEASE_ASSERT(!aEventTarget || aEventTarget->IsOnCurrentThread());
+    return aActor->Open(std::move(mPort), mOtherPid, aEventTarget);
+  }
+
+  bool IsValid() const { return mPort.IsValid(); }
+
+ protected:
+  friend struct IPC::ParamTraits<UntypedEndpoint>;
+
+  ScopedPort mPort;
+  ProcessId mMyPid = base::kInvalidProcessId;
+  ProcessId mOtherPid = base::kInvalidProcessId;
+};
+
 /**
  * An endpoint represents one end of a partially initialized IPDL channel. To
  * set up a new top-level protocol:
@@ -70,22 +112,10 @@ struct PrivateIPDLInterface {};
  * the parent and child endpoints will be used.
  */
 template <class PFooSide>
-class Endpoint {
+class Endpoint final : public UntypedEndpoint {
  public:
-  using ProcessId = base::ProcessId;
-
-  Endpoint() = default;
-
-  Endpoint(const PrivateIPDLInterface&, ScopedPort aPort,
-           ProcessId aMyPid = base::kInvalidProcessId,
-           ProcessId aOtherPid = base::kInvalidProcessId)
-      : mPort(std::move(aPort)), mMyPid(aMyPid), mOtherPid(aOtherPid) {}
-
-  Endpoint(const Endpoint&) = delete;
-  Endpoint(Endpoint&& aOther) = default;
-
-  Endpoint& operator=(const Endpoint&) = delete;
-  Endpoint& operator=(Endpoint&& aOther) = default;
+  using UntypedEndpoint::IsValid;
+  using UntypedEndpoint::UntypedEndpoint;
 
   base::ProcessId OtherPid() const {
     static_assert(
@@ -103,21 +133,8 @@ class Endpoint {
   // must be on the current thread. Otherwise, GetCurrentSerialEventTarget() is
   // used.
   bool Bind(PFooSide* aActor, nsISerialEventTarget* aEventTarget = nullptr) {
-    MOZ_RELEASE_ASSERT(IsValid());
-    MOZ_RELEASE_ASSERT(mMyPid == base::kInvalidProcessId ||
-                       mMyPid == base::GetCurrentProcId());
-    MOZ_RELEASE_ASSERT(!aEventTarget || aEventTarget->IsOnCurrentThread());
-    return aActor->Open(std::move(mPort), mOtherPid, aEventTarget);
+    return UntypedEndpoint::Bind(aActor, aEventTarget);
   }
-
-  bool IsValid() const { return mPort.IsValid(); }
-
- private:
-  friend struct IPC::ParamTraits<Endpoint<PFooSide>>;
-
-  ScopedPort mPort;
-  ProcessId mMyPid = base::kInvalidProcessId;
-  ProcessId mOtherPid = base::kInvalidProcessId;
 };
 
 #if defined(XP_MACOSX)

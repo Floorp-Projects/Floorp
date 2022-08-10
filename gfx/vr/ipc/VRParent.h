@@ -24,8 +24,8 @@ class VRParent final : public PVRParent {
  public:
   explicit VRParent();
 
-  bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
-            mozilla::ipc::ScopedPort aPort);
+  bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
+            const char* aParentBuildID);
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   bool GetOpenVRControllerActionPath(nsCString* aPath);
   bool GetOpenVRControllerManifestPath(VRControllerType aType,

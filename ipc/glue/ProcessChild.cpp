@@ -6,6 +6,7 @@
 
 #include "mozilla/ipc/ProcessChild.h"
 
+#include "Endpoint.h"
 #include "nsDebug.h"
 
 #ifdef XP_WIN
@@ -82,6 +83,12 @@ bool ProcessChild::ExpectingShutdown() { return sExpectingShutdown; }
 
 /* static */
 void ProcessChild::QuickExit() { AppShutdown::DoImmediateExit(); }
+
+UntypedEndpoint ProcessChild::TakeInitialEndpoint() {
+  return UntypedEndpoint{PrivateIPDLInterface{},
+                         child_thread()->TakeInitialPort(),
+                         base::GetCurrentProcId(), mParentPid};
+}
 
 }  // namespace ipc
 }  // namespace mozilla

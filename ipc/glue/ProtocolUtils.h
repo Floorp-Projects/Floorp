@@ -364,6 +364,8 @@ class IPCResult {
   bool mSuccess;
 };
 
+class UntypedEndpoint;
+
 template <class PFooSide>
 class Endpoint;
 

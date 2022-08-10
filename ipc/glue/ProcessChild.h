@@ -7,6 +7,7 @@
 #ifndef mozilla_ipc_ProcessChild_h
 #define mozilla_ipc_ProcessChild_h
 
+#include "Endpoint.h"
 #include "base/message_loop.h"
 #include "base/process.h"
 
@@ -53,6 +54,8 @@ class ProcessChild : public ChildProcess {
   static ProcessChild* current() { return gProcessChild; }
 
   ProcessId ParentPid() { return mParentPid; }
+
+  UntypedEndpoint TakeInitialEndpoint();
 
  private:
   static ProcessChild* gProcessChild;
