@@ -17,9 +17,10 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
+struct GPUBufferDescriptor;
 template <typename T>
 class Optional;
-}
+}  // namespace dom
 
 namespace ipc {
 class Shmem;
@@ -43,13 +44,17 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(Buffer)
   GPU_DECL_JS_WRAP(Buffer)
 
-  Buffer(Device* const aParent, RawId aId, BufferAddress aSize, uint32_t aUsage,
-         ipc::Shmem&& aShmem);
+  static already_AddRefed<Buffer> Create(Device* aDevice, RawId aDeviceId,
+                                         const dom::GPUBufferDescriptor& aDesc,
+                                         ErrorResult& aRv);
+
   void SetMapped(bool aWritable);
 
   const RawId mId;
 
  private:
+  Buffer(Device* const aParent, RawId aId, BufferAddress aSize, uint32_t aUsage,
+         ipc::Shmem&& aShmem);
   virtual ~Buffer();
   void Cleanup();
   void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
