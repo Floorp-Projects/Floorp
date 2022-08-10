@@ -1648,8 +1648,8 @@ bool nsWindow::WaylandPopupConfigure() {
     mPopupContextMenu = WaylandPopupIsContextMenu();
   }
 
-  LOG("nsWindow::WaylandPopupConfigure tracked %d anchored %d\n",
-      mPopupTrackInHierarchy, mPopupAnchored);
+  LOG("nsWindow::WaylandPopupConfigure tracked %d anchored %d hint %d\n",
+      mPopupTrackInHierarchy, mPopupAnchored, mPopupHint);
 
   // Permanent state changed and popup is mapped.
   // We need to switch popup type but that's done when popup is mapped
@@ -1669,6 +1669,7 @@ bool nsWindow::WaylandPopupConfigure() {
   GdkWindowTypeHint gtkTypeHint;
   switch (mPopupHint) {
     case ePopupTypeMenu:
+    case ePopupTypePanel:
       // GDK_WINDOW_TYPE_HINT_POPUP_MENU is mapped as xdg_popup by default.
       // We use this type for all menu popups.
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
@@ -1678,16 +1679,16 @@ bool nsWindow::WaylandPopupConfigure() {
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
       LOG("  popup type Tooltip");
       break;
-    default:  // popup panel type
-      // GDK_WINDOW_TYPE_HINT_UTILITY is mapped as wl_subsurface
-      // by default. It's used for panels attached to toplevel
-      // window.
+    default:
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
       LOG("  popup type Utility");
       break;
   }
 
   if (!mPopupTrackInHierarchy) {
+    // GDK_WINDOW_TYPE_HINT_UTILITY is mapped as wl_subsurface
+    // by default.
+    LOG("  not tracked in popup hierarchy, switch to Utility");
     gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
   }
   gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
