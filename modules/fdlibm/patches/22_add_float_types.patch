@@ -1,23 +1,18 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -20,16 +20,24 @@
- #include <cfloat>
- #include <stdint.h>
- #include <sys/types.h>
+@@ -27,16 +27,18 @@
  
- #include "mozilla/EndianUtils.h"
+ /*
+  * Emulate FreeBSD internal double types.
+  * Adapted from https://github.com/freebsd/freebsd-src/search?q=__double_t
+  */
  
- #include "fdlibm.h"
+ typedef double      __double_t;
+ typedef __double_t  double_t;
++typedef float       __float_t;
++typedef __float_t   float_t;
  
-+/*
-+ * Emulate FreeBSD internal double types.
-+ * Adapted from https://github.com/freebsd/freebsd-src/search?q=__double_t
-+ */
-+
-+typedef double      __double_t;
-+typedef __double_t  double_t;
-+
  /*
   * The original fdlibm code used statements like:
   *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
@@ -25,4 +20,3 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
   *	ix1 = *((1-n0)+(int*)&x);		* low word of x *
   * to dig two 32 bit words out of the 64 bit IEEE floating point
   * value.  That is non-ANSI, and, moreover, the gcc instruction
-  * scheduler gets it wrong.  We instead use the following macros.

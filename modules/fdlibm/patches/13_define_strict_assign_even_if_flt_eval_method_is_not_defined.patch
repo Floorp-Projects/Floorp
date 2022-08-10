@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -328,16 +328,27 @@ do {								\
+@@ -323,16 +323,27 @@ do {								\
  	if (sizeof(type) >= sizeof(long double))	\
  		(lval) = (rval);		\
  	else {					\
