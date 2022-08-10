@@ -1254,10 +1254,17 @@ already_AddRefed<Promise> nsImageLoadingContent::RecognizeCurrentImageText(
         }
         auto& textRecognitionResult = aValue.ResolveValue();
         Element* el = ilc->AsContent()->AsElement();
-        el->AttachAndSetUAShadowRoot(Element::NotifyUAWidgetSetup::Yes);
-        TextRecognition::FillShadow(*el->GetShadowRoot(),
-                                    textRecognitionResult);
-        el->NotifyUAWidgetSetupOrChange();
+
+        // When enabled, this feature will place the recognized text as spans
+        // inside of the shadow dom of the img element. These are then
+        // positioned so that the user can select the text.
+        if (Preferences::GetBool("dom.text-recognition.shadow-dom-enabled",
+                                 false)) {
+          el->AttachAndSetUAShadowRoot(Element::NotifyUAWidgetSetup::Yes);
+          TextRecognition::FillShadow(*el->GetShadowRoot(),
+                                      textRecognitionResult);
+          el->NotifyUAWidgetSetupOrChange();
+        }
 
         nsTArray<ImageText> imageTexts(textRecognitionResult.quads().Length());
         nsIGlobalObject* global = el->OwnerDoc()->GetOwnerGlobal();
