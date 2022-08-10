@@ -101,11 +101,6 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
   return buffer.forget();
 }
 
-bool Buffer::Mappable() const {
-  return (mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
-                    dom::GPUBufferUsage_Binding::MAP_READ)) != 0;
-}
-
 void Buffer::Cleanup() {
   AbortMapRequest();
 
