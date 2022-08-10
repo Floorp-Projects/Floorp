@@ -35,13 +35,13 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvAdapterDestroy(RawId aAdapterId);
   ipc::IPCResult RecvDeviceDestroy(RawId aDeviceId);
   ipc::IPCResult RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
-                                  dom::GPUBufferDescriptor&& aDesc);
+                                  dom::GPUBufferDescriptor&& aDesc,
+                                  MaybeShmem&& aShmem);
   ipc::IPCResult RecvBufferReturnShmem(RawId aBufferId, Shmem&& aShmem);
   ipc::IPCResult RecvBufferMap(RawId aBufferId, ffi::WGPUHostMap aHostMap,
                                uint64_t aOffset, uint64_t size,
                                BufferMapResolver&& aResolver);
-  ipc::IPCResult RecvBufferUnmap(RawId aBufferId, Shmem&& aShmem, bool aFlush,
-                                 bool aKeepShmem);
+  ipc::IPCResult RecvBufferUnmap(RawId aBufferId, bool aFlush);
   ipc::IPCResult RecvBufferDestroy(RawId aBufferId);
   ipc::IPCResult RecvTextureDestroy(RawId aTextureId);
   ipc::IPCResult RecvTextureViewDestroy(RawId aTextureViewId);
@@ -104,7 +104,17 @@ class WebGPUParent final : public PWebGPUParent {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  struct BufferMapData {
+    Shmem mShmem;
+    // True if buffer's usage has MAP_READ or MAP_WRITE set.
+    bool mHasMapFlags;
+  };
+
+  BufferMapData* GetBufferMapData(RawId aBufferId);
+
  private:
+  void DeallocBufferShmem(RawId aBufferId);
+
   virtual ~WebGPUParent();
   void MaintainDevices();
   bool ForwardError(RawId aDeviceId, ErrorBuffer& aError);
@@ -112,10 +122,11 @@ class WebGPUParent final : public PWebGPUParent {
 
   UniquePtr<ffi::WGPUGlobal> mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
-  /// Shmem associated with a mappable buffer has to be owned by one of the
-  /// processes. We keep it here for every mappable buffer while the buffer is
-  /// used by GPU.
-  std::unordered_map<uint64_t, Shmem> mSharedMemoryMap;
+
+  /// A map from wgpu buffer ids to data about their shared memory segments.
+  /// Includes entries about mappedAtCreation, MAP_READ and MAP_WRITE buffers,
+  /// regardless of their state.
+  std::unordered_map<uint64_t, BufferMapData> mSharedMemoryMap;
   /// Associated presentation data for each swapchain.
   std::unordered_map<uint64_t, RefPtr<PresentationData>> mCanvasMap;
   /// Associated stack of error scopes for each device.

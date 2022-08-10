@@ -122,7 +122,7 @@ dom::Promise* Device::GetLost(ErrorResult& aRv) {
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
   if (!mBridge->CanSend()) {
-    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, 0);
+    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, 0, ipc::Shmem());
     return buffer.forget();
   }
 
@@ -137,8 +137,7 @@ already_AddRefed<Buffer> Device::CreateBuffer(
     }
     const auto& size = checked.value();
 
-    // TODO: use `ShmemPool`?
-    if (!mBridge->AllocShmem(size, &shmem)) {
+    if (!mBridge->AllocUnsafeShmem(size, &shmem)) {
       aRv.ThrowAbortError(
           nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
       return nullptr;
@@ -148,15 +147,16 @@ already_AddRefed<Buffer> Device::CreateBuffer(
     memset(shmem.get<uint8_t>(), 0, size);
   }
 
-  // If the buffer is not mapped at creation, and it has Shmem, we send it
-  // to the GPU process. Otherwise, we keep it.
-  RawId id = mBridge->DeviceCreateBuffer(mId, aDesc);
-  RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize, aDesc.mUsage);
+  MaybeShmem maybeShmem = mozilla::null_t();
+  if (shmem.IsReadable()) {
+    maybeShmem = shmem;
+  }
+  RawId id = mBridge->DeviceCreateBuffer(mId, aDesc, std::move(maybeShmem));
+
+  RefPtr<Buffer> buffer =
+      new Buffer(this, id, aDesc.mSize, aDesc.mUsage, std::move(shmem));
   if (aDesc.mMappedAtCreation) {
-    buffer->SetMapped(std::move(shmem),
-                      !(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
-  } else if (hasMapFlags) {
-    mBridge->SendBufferReturnShmem(id, std::move(shmem));
+    buffer->SetMapped(!(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
   }
 
   return buffer.forget();
@@ -191,10 +191,9 @@ RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
   return mBridge->SendBufferMap(aId, mode, offset.value(), size.value());
 }
 
-void Device::UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
-                         bool aKeepShmem) {
+void Device::UnmapBuffer(RawId aId, bool aFlush) {
   if (mBridge->CanSend()) {
-    mBridge->SendBufferUnmap(aId, std::move(aShmem), aFlush, aKeepShmem);
+    mBridge->SendBufferUnmap(aId, aFlush);
   }
 }
 

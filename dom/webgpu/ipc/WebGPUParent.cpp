@@ -337,9 +337,25 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aDeviceId) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvCreateBuffer(
-    RawId aDeviceId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc) {
+WebGPUParent::BufferMapData* WebGPUParent::GetBufferMapData(RawId aBufferId) {
+  const auto iter = mSharedMemoryMap.find(aBufferId);
+  if (iter == mSharedMemoryMap.end()) {
+    return nullptr;
+  }
+
+  return &iter->second;
+}
+
+ipc::IPCResult WebGPUParent::RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
+                                              dom::GPUBufferDescriptor&& aDesc,
+                                              MaybeShmem&& aShmem) {
   webgpu::StringHelper label(aDesc.mLabel);
+
+  if (aShmem.type() == MaybeShmem::TShmem) {
+    bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                                       dom::GPUBufferUsage_Binding::MAP_READ);
+    mSharedMemoryMap[aBufferId] = {aShmem.get_Shmem(), hasMapFlags};
+  }
 
   ErrorBuffer error;
   ffi::wgpu_server_device_create_buffer(mContext.get(), aDeviceId, aBufferId,
@@ -349,49 +365,61 @@ ipc::IPCResult WebGPUParent::RecvCreateBuffer(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferReturnShmem(RawId aBufferId,
-                                                   Shmem&& aShmem) {
-  MOZ_LOG(sLogger, LogLevel::Info,
-          ("RecvBufferReturnShmem %" PRIu64 "\n", aBufferId));
-  mSharedMemoryMap[aBufferId] = aShmem;
-  return IPC_OK();
-}
-
+// TODO: maintain a list of the requests and disable them when the WebGPUParent
+// dies.
 struct MapRequest {
-  const ffi::WGPUGlobal* const mContext;
+  WebGPUParent* mParent;
+  ffi::WGPUGlobal* mContext;
   ffi::WGPUBufferId mBufferId;
   ffi::WGPUHostMap mHostMap;
   uint64_t mOffset;
-  ipc::Shmem mShmem;
+  uint64_t mSize;
   WebGPUParent::BufferMapResolver mResolver;
-  MapRequest(const ffi::WGPUGlobal* context, ffi::WGPUBufferId bufferId,
-             ffi::WGPUHostMap hostMap, uint64_t offset, ipc::Shmem&& shmem,
-             WebGPUParent::BufferMapResolver&& resolver)
-      : mContext(context),
-        mBufferId(bufferId),
-        mHostMap(hostMap),
-        mOffset(offset),
-        mShmem(shmem),
-        mResolver(resolver) {}
+  MapRequest(WebGPUParent* aParent, ffi::WGPUGlobal* aContext,
+             ffi::WGPUBufferId aBufferId, ffi::WGPUHostMap aHostMap,
+             uint64_t aOffset, uint64_t aSize,
+             WebGPUParent::BufferMapResolver&& aResolver)
+      : mParent(aParent),
+        mContext(aContext),
+        mBufferId(aBufferId),
+        mHostMap(aHostMap),
+        mOffset(aOffset),
+        mSize(aSize),
+        mResolver(aResolver) {}
 };
 
 static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
                         uint8_t* userdata) {
   auto* req = reinterpret_cast<MapRequest*>(userdata);
-  if (status != ffi::WGPUBufferMapAsyncStatus_Success) {
-    req->mResolver(MaybeShmem(null_t()));
-  } else if (req->mHostMap == ffi::WGPUHostMap_Read) {
-    auto size = req->mShmem.Size<uint8_t>();
-    const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
-        req->mContext, req->mBufferId, req->mOffset, size);
+  BufferMapResult result;
 
-    if (mapped.ptr != nullptr && mapped.length >= size) {
-      memcpy(req->mShmem.get<uint8_t>(), mapped.ptr, size);
+  // TODO: we'll need some logic here along the lines of:
+  // if (!req->mParent->IPCOpen()) { ... }
+
+  auto bufferId = req->mBufferId;
+  auto* mapData = req->mParent->GetBufferMapData(bufferId);
+  MOZ_RELEASE_ASSERT(mapData);
+
+  if (status != ffi::WGPUBufferMapAsyncStatus_Success) {
+    // TODO: construct a proper error message from the status code.
+    nsCString errorString("mapAsync: Failed to map the buffer");
+    result = BufferMapError(errorString);
+  } else {
+    if (req->mHostMap == ffi::WGPUHostMap_Read && req->mSize > 0) {
+      auto size = req->mSize;
+      const auto src = ffi::wgpu_server_buffer_get_mapped_range(
+          req->mContext, req->mBufferId, req->mOffset, size);
+
+      if (src.ptr != nullptr && src.length >= size) {
+        auto dstPtr = mapData->mShmem.get<uint8_t>();
+        memcpy(dstPtr, src.ptr, size);
+      }
     }
 
-    req->mResolver(MaybeShmem(std::move(req->mShmem)));
+    result = BufferMapSuccess(req->mOffset, req->mSize);
   }
 
+  req->mResolver(std::move(result));
   delete req;
 }
 
@@ -402,50 +430,67 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId,
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferMap %" PRIu64 " offset=%" PRIu64 " size=%" PRIu64 "\n",
            aBufferId, aOffset, aSize));
-  auto& shmem = mSharedMemoryMap[aBufferId];
-  if (!shmem.IsReadable()) {
-    aResolver(MaybeShmem(mozilla::null_t()));
-    MOZ_LOG(sLogger, LogLevel::Error, ("\tshmem is empty\n"));
+
+  auto* mapData = GetBufferMapData(aBufferId);
+
+  if (!mapData) {
+    nsCString errorString("Buffer is not mappable");
+    aResolver(BufferMapError(errorString));
     return IPC_OK();
   }
 
-  auto* request = new MapRequest(mContext.get(), aBufferId, aHostMap, aOffset,
-                                 std::move(shmem), std::move(aResolver));
+  // TODO: Actually only map the requested range instead of the whole buffer.
+  uint64_t offset = 0;
+  uint64_t size = mapData->mShmem.Size<uint8_t>();
+
+  auto* request = new MapRequest(this, mContext.get(), aBufferId, aHostMap,
+                                 offset, size, std::move(aResolver));
+
   ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
                                           reinterpret_cast<uint8_t*>(request)};
-  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, aOffset, aSize,
-                              aHostMap, callback);
+  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, offset, size, aHostMap,
+                              callback);
 
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, Shmem&& aShmem,
-                                             bool aFlush, bool aKeepShmem) {
-  if (aFlush) {
-    auto size = aShmem.Size<uint8_t>();
+ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, bool aFlush) {
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("RecvBufferUnmap %" PRIu64 " flush=%d\n", aBufferId, aFlush));
+
+  auto* mapData = GetBufferMapData(aBufferId);
+
+  if (mapData && aFlush) {
     // TODO: flush exact modified sub-range
+    uint64_t offset = 0;
+    uint64_t size = mapData->mShmem.Size<uint8_t>();
+    uint8_t* srcPtr = mapData->mShmem.get<uint8_t>() + offset;
+
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
-        mContext.get(), aBufferId, 0, size);
-    MOZ_ASSERT(mapped.ptr != nullptr);
-    MOZ_ASSERT(mapped.length >= size);
-    memcpy(mapped.ptr, aShmem.get<uint8_t>(), size);
+        mContext.get(), aBufferId, offset, size);
+
+    if (mapped.ptr != nullptr && mapped.length >= size) {
+      memcpy(mapped.ptr, srcPtr, size);
+    }
   }
 
   ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId);
 
-  MOZ_LOG(sLogger, LogLevel::Info,
-          ("RecvBufferUnmap %" PRIu64 " flush=%d\n", aBufferId, aFlush));
+  if (mapData && !mapData->mHasMapFlags) {
+    // We get here if the buffer was mapped at creation without map flags.
+    // We don't need the shared memory anymore.
+    DeallocBufferShmem(aBufferId);
+  }
+
+  return IPC_OK();
+}
+
+void WebGPUParent::DeallocBufferShmem(RawId aBufferId) {
   const auto iter = mSharedMemoryMap.find(aBufferId);
   if (iter != mSharedMemoryMap.end()) {
-    iter->second = aShmem;
-  } else if (aKeepShmem) {
-    mSharedMemoryMap[aBufferId] = aShmem;
-  } else {
-    // we are here if the buffer was mapped at creation, but doesn't have any
-    // mapping flags
-    DeallocShmem(aShmem);
+    DeallocShmem(iter->second.mShmem);
+    mSharedMemoryMap.erase(iter);
   }
-  return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
@@ -453,11 +498,8 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferDestroy %" PRIu64 "\n", aBufferId));
 
-  const auto iter = mSharedMemoryMap.find(aBufferId);
-  if (iter != mSharedMemoryMap.end()) {
-    DeallocShmem(iter->second);
-    mSharedMemoryMap.erase(iter);
-  }
+  DeallocBufferShmem(aBufferId);
+
   return IPC_OK();
 }
 
