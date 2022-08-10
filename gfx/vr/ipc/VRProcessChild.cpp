@@ -18,9 +18,6 @@ using mozilla::ipc::IOThreadChild;
 
 StaticRefPtr<VRParent> sVRParent;
 
-VRProcessChild::VRProcessChild(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 VRProcessChild::~VRProcessChild() { sVRParent = nullptr; }
 
 /*static*/

@@ -28,6 +28,10 @@ class ProcessChild : public ChildProcess {
 
  public:
   explicit ProcessChild(ProcessId aParentPid);
+
+  ProcessChild(const ProcessChild&) = delete;
+  ProcessChild& operator=(const ProcessChild&) = delete;
+
   virtual ~ProcessChild();
 
   virtual bool Init(int aArgc, char* aArgv[]) = 0;
@@ -62,8 +66,6 @@ class ProcessChild : public ChildProcess {
 
   MessageLoop* mUILoop;
   ProcessId mParentPid;
-
-  DISALLOW_EVIL_CONSTRUCTORS(ProcessChild);
 };
 
 }  // namespace ipc
