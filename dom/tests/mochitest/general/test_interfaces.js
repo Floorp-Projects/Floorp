@@ -1044,8 +1044,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SharedWorker", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "SimpleTest", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SourceBuffer", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SourceBufferList", insecureContext: true },
@@ -1518,7 +1516,16 @@ function runTest(parentName, parent, ...interfaceGroups) {
   );
 }
 
-runTest("window", window, ecmaGlobals, interfaceNamesInGlobalScope);
+// Use an iframe because the test harness pollutes the global object with a lot
+// of functions.
+let iframeWindow = document.getElementById("testframe").contentWindow;
+is(
+  window.isSecureContext,
+  iframeWindow.isSecureContext,
+  "iframe isSecureContext must match"
+);
+runTest("window", iframeWindow, ecmaGlobals, interfaceNamesInGlobalScope);
+
 if (window.WebAssembly && !entryDisabled(wasmGlobalEntry)) {
   runTest("WebAssembly", window.WebAssembly, wasmGlobalInterfaces);
 }
