@@ -468,8 +468,10 @@ function createInterfaceMap(data, ...interfaceGroups) {
   function addInterfaces(interfaces) {
     for (var entry of interfaces) {
       if (typeof entry === "string") {
+        ok(!(entry in interfaceMap), "duplicate entry for " + entry);
         interfaceMap[entry] = true;
       } else {
+        ok(!(entry.name in interfaceMap), "duplicate entry for " + entry.name);
         ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
         if (entryDisabled(entry, data)) {
           interfaceMap[entry.name] = false;

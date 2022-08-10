@@ -807,8 +807,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Notification", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "OffscreenCanvas", insecureContext: true, disabled: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OfflineAudioCompletionEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "OfflineAudioContext", insecureContext: true },
@@ -1883,8 +1881,10 @@ function createInterfaceMap(...interfaceGroups) {
   function addInterfaces(interfaces) {
     for (var entry of interfaces) {
       if (typeof entry === "string") {
+        ok(!(entry in interfaceMap), "duplicate entry for " + entry);
         interfaceMap[entry] = !isInsecureContext;
       } else {
+        ok(!(entry.name in interfaceMap), "duplicate entry for " + entry.name);
         ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
         interfaceMap[entry.name] = !entryDisabled(entry);
       }
