@@ -2828,11 +2828,6 @@ bool BytecodeEmitter::emitIteratorNext(
              ".next() iteration is prohibited in self-hosted code because it"
              "can run user-modifiable iteration code");
 
-  MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow ||
-                 emitterMode != BytecodeEmitter::SelfHosting,
-             ".next() iteration is prohibited in self-hosted code because it"
-             "can run user-modifiable iteration code");
-
   //                [stack] ... NEXT ITER
   MOZ_ASSERT(bytecodeSection().stackDepth() >= 2);
 
