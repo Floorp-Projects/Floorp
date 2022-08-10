@@ -4,22 +4,36 @@
 
 // Bug 570760 - Make ctrl-f and / focus the search box in the add-ons manager
 
-function testKeys(win, searchBox) {
+async function testKeys(win, searchBox) {
   let doc = win.document;
-  doc.firstElementChild.focus();
+  // If focus is on the search box move it away for the rest
+  // of the test.
+  if (doc.activeElement == searchBox) {
+    let focus = BrowserTestUtils.waitForEvent(doc.firstElementChild, "focus");
+    doc.firstElementChild.focus();
+    await focus;
+  }
   isnot(doc.activeElement, searchBox, "Search box is not focused");
+
+  let focus = BrowserTestUtils.waitForEvent(searchBox, "focus");
   EventUtils.synthesizeKey("f", { accelKey: true }, win);
+  await focus;
   is(
     searchBox.ownerDocument.activeElement,
     searchBox,
     "ctrl-f focuses search box"
   );
 
+  let blur = BrowserTestUtils.waitForEvent(searchBox, "blur");
   searchBox.blur();
 
   doc.firstElementChild.focus();
+  await blur;
   isnot(doc.activeElement, searchBox, "Search box is not focused");
+
+  focus = BrowserTestUtils.waitForEvent(searchBox, "focus");
   EventUtils.synthesizeKey("/", {}, win);
+  await focus;
   is(searchBox.ownerDocument.activeElement, searchBox, "/ focuses search box");
 
   searchBox.blur();
@@ -31,7 +45,7 @@ add_task(async function testSearchBarKeyboardAccess() {
   let doc = win.document;
   let searchBox = doc.querySelector("search-addons").input;
 
-  testKeys(win, searchBox);
+  await testKeys(win, searchBox);
 
   await closeView(win);
 });
