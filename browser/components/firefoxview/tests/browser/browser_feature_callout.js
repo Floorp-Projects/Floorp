@@ -5,6 +5,8 @@ const { calloutMessages } = ChromeUtils.importESModule(
 );
 
 const calloutSelector = "#root.featureCallout";
+const featureTourPref = "browser.firefox-view.feature-tour";
+
 const waitForCalloutRender = async doc => {
   // Wait for callout to be rendered
   await BrowserTestUtils.waitForMutationCondition(
@@ -34,13 +36,21 @@ const waitForCalloutScreen = async (doc, screenId) => {
   );
 };
 
+const waitForCalloutRemoved = async doc => {
+  await BrowserTestUtils.waitForMutationCondition(
+    doc.body,
+    { childList: true },
+    () => !doc.body.querySelector(calloutSelector)
+  );
+};
+
 const clickPrimaryButton = doc => {
   doc.querySelector(".action-buttons .primary").click();
 };
 
 add_task(async function feature_callout_renders_in_firefox_view() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.feature-tour", "{}"]],
+    set: [[featureTourPref, "{}"]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -60,7 +70,7 @@ add_task(async function feature_callout_renders_in_firefox_view() {
 
 add_task(async function feature_callout_moves_on_screen_change() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.firefox-view.feature-tour", "{}"]],
+    set: [[featureTourPref, "{}"]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -104,12 +114,7 @@ add_task(async function feature_callout_moves_on_screen_change() {
 add_task(async function feature_callout_is_not_shown_twice() {
   // Third comma-separated value of the pref is set to a string value once a user completes the tour
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.firefox-view.feature-tour",
-        '{"message":"","screen":"","complete":true}',
-      ],
-    ],
+    set: [[featureTourPref, '{"message":"","screen":"","complete":true}']],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -130,7 +135,7 @@ add_task(async function feature_callout_is_not_shown_twice() {
 add_task(
   async function feature_callout_first_screen_positioned_below_element() {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.firefox-view.feature-tour", "{}"]],
+      set: [[featureTourPref, "{}"]],
     });
 
     await BrowserTestUtils.withNewTab(
@@ -161,7 +166,7 @@ add_task(
 add_task(
   async function feature_callout_second_screen_positioned_above_element() {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.firefox-view.feature-tour", "{}"]],
+      set: [[featureTourPref, "{}"]],
     });
 
     await BrowserTestUtils.withNewTab(
@@ -196,7 +201,7 @@ add_task(
 add_task(
   async function feature_callout_third_screen_positioned_left_of_element() {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.firefox-view.feature-tour", "{}"]],
+      set: [[featureTourPref, "{}"]],
     });
 
     await BrowserTestUtils.withNewTab(
@@ -234,7 +239,7 @@ add_task(
   async function feature_callout_third_screen_position_respects_RTL_layouts() {
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["browser.firefox-view.feature-tour", "{}"],
+        [featureTourPref, "{}"],
         // Set layout direction to right to left
         ["intl.l10n.pseudo", "bidi"],
       ],
@@ -277,7 +282,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
-        "browser.firefox-view.feature-tour",
+        featureTourPref,
         '{"message":"FIREFOX_VIEW_FEATURE_TOUR","screen":"FEATURE_CALLOUT_2","complete":false}',
       ],
     ],
@@ -319,17 +324,8 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
 
   tab1Doc.querySelector(".action-buttons .primary").click();
 
-  await BrowserTestUtils.waitForMutationCondition(
-    tab1Doc.body,
-    { childList: true },
-    () => !tab1Doc.body.querySelector(calloutSelector)
-  );
-
-  await BrowserTestUtils.waitForMutationCondition(
-    tab2Doc.body,
-    { childList: true },
-    () => !tab2Doc.body.querySelector(calloutSelector)
-  );
+  await waitForCalloutRemoved(tab1Doc);
+  await waitForCalloutRemoved(tab2Doc);
 
   ok(
     !tab1Doc.body.querySelector(calloutSelector),
@@ -342,4 +338,38 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+});
+
+add_task(async function feature_callout_closes_on_dismiss() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, "{}"]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+      document.querySelector(".dismiss-button").click();
+      await waitForCalloutRemoved(document);
+
+      ok(
+        !document.querySelector(calloutSelector),
+        "Callout is removed from screen on dismiss"
+      );
+
+      let tourComplete = JSON.parse(
+        Services.prefs.getStringPref(featureTourPref)
+      ).complete;
+      ok(
+        tourComplete,
+        `Tour is recorded as complete in ${featureTourPref} preference value`
+      );
+    }
+  );
 });

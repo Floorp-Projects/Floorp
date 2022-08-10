@@ -19,6 +19,19 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AttributionCode: "resource:///modules/AttributionCode.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "usesFirefoxSync",
+  "services.sync.username"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "mobileDevices",
+  "services.sync.clients.devices.mobile",
+  0
+);
+
 const DEFAULT_WELCOME_CONTENT = {
   id: "DEFAULT_ABOUTWELCOME_PROTON",
   template: "multistage",
@@ -467,6 +480,41 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       },
     },
     {
+      id: "AW_MOBILE_DOWNLOAD",
+      content: {
+        position: "split",
+        background:
+          "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+        progress_bar: true,
+        logo: {},
+        title: "Hop from laptop to phone and back again",
+        subtitle:
+          "Grab tabs from one device and pick up where you left off on another. Plus sync your bookmarks and passwords anywhere you use Firefox.",
+        hero_image: {
+          url:
+            "chrome://activity-stream/content/data/content/assets/mobile-download-qr-new-user.svg",
+        },
+        cta_paragraph: {
+          text: "Scan the QR code to get Firefox for mobile or",
+          button_label: "send yourself a download link.",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args:
+                "https://www.mozilla.org/en-US/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=new-global",
+              where: "tabshifted",
+            },
+          },
+        },
+        secondary_button: {
+          label: "Skip this step",
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
       id: "AW_GRATITUDE",
       content: {
         position: "split",
@@ -598,13 +646,10 @@ function prepareMRContent(content) {
   // Expand with logic for finalized MR designs
   const { screens } = content;
 
-  //If Fx is set as default, skip Import settings screen and show colorways
-  let removeDefault = !content.needDefault;
-  if (removeDefault) {
-    removeScreens(
-      screen => screen.id?.startsWith("AW_IMPORT_SETTINGS"),
-      screens
-    );
+  // Do not show the screen to users who are already using firefox sync
+  // and syncing to a mobile device
+  if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
+    removeScreens(screen => screen.id === "AW_MOBILE_DOWNLOAD", screens);
   }
 
   return content;

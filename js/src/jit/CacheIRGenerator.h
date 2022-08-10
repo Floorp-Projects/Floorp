@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 
 #include <stdint.h>
+#include <utility>
 
 #include "jstypes.h"
 #include "NamespaceImports.h"
@@ -492,6 +493,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                              MutableHandle<Shape*> result);
 
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
+  std::pair<ObjOperandId, ObjOperandId> emitFunApplyGuard(
+      Int32OperandId argcId, CallFlags::ArgFormat format);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
@@ -531,9 +534,12 @@ class MOZ_RAII InlinableNativeIRGenerator {
 
   void emitNativeCalleeGuard();
 
+  ObjOperandId emitNativeCalleeGuardAndLoadArgsArray();
+
   void initializeInputOperand() {
-    // The input operand is already initialized for FunCall.
-    if (flags_.getArgFormat() == CallFlags::FunCall) {
+    // The input operand is already initialized for FunCall and FunApplyArray.
+    if (flags_.getArgFormat() == CallFlags::FunCall ||
+        flags_.getArgFormat() == CallFlags::FunApplyArray) {
       return;
     }
     (void)writer.setInputOperandId(0);

@@ -409,6 +409,17 @@ body[lwt-newtab-brighttext] {
   text-shadow: none;
   margin-inline: 40px 0;
 }
+.onboardingContainer .screen[pos=split] .section-secondary .hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-height: 100%;
+}
+.onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
+  width: 100%;
+  max-width: 150px;
+  margin: 25px 0;
+}
 .onboardingContainer .screen[pos=split] .tiles-theme-container {
   margin-block: -20px auto;
   align-items: initial;
@@ -592,6 +603,11 @@ body[lwt-newtab-brighttext] {
   to {
     background-position: 400%;
   }
+}
+.onboardingContainer .welcome-text .cta-paragraph button.text-link {
+  margin: 0;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .onboardingContainer .screen.light-text .welcome-text.fancy h1 {
   background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);

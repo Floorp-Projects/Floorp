@@ -285,7 +285,7 @@ interface GPUBuffer {
     ArrayBuffer getMappedRange(optional GPUSize64 offset = 0, optional GPUSize64 size);
     [Throws]
     void unmap();
-
+    [Throws]
     void destroy();
 };
 GPUBuffer includes GPUObjectBase;

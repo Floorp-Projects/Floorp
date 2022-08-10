@@ -95,6 +95,8 @@ void Device::CleanupUnregisteredInParent() {
   mValid = false;
 }
 
+bool Device::IsLost() const { return !mBridge || !mBridge->CanSend(); }
+
 // Generate an error on the Device timeline for this device.
 //
 // aMessage is interpreted as UTF-8.
@@ -121,81 +123,7 @@ dom::Promise* Device::GetLost(ErrorResult& aRv) {
 
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
-  if (!mBridge->CanSend()) {
-    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, 0);
-    return buffer.forget();
-  }
-
-  ipc::Shmem shmem;
-  bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
-                                     dom::GPUBufferUsage_Binding::MAP_READ);
-  if (hasMapFlags || aDesc.mMappedAtCreation) {
-    const auto checked = CheckedInt<size_t>(aDesc.mSize);
-    if (!checked.isValid()) {
-      aRv.ThrowRangeError("Mappable size is too large");
-      return nullptr;
-    }
-    const auto& size = checked.value();
-
-    // TODO: use `ShmemPool`?
-    if (!mBridge->AllocShmem(size, &shmem)) {
-      aRv.ThrowAbortError(
-          nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
-      return nullptr;
-    }
-
-    // zero out memory
-    memset(shmem.get<uint8_t>(), 0, size);
-  }
-
-  // If the buffer is not mapped at creation, and it has Shmem, we send it
-  // to the GPU process. Otherwise, we keep it.
-  RawId id = mBridge->DeviceCreateBuffer(mId, aDesc);
-  RefPtr<Buffer> buffer = new Buffer(this, id, aDesc.mSize, aDesc.mUsage);
-  if (aDesc.mMappedAtCreation) {
-    buffer->SetMapped(std::move(shmem),
-                      !(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
-  } else if (hasMapFlags) {
-    mBridge->SendBufferReturnShmem(id, std::move(shmem));
-  }
-
-  return buffer.forget();
-}
-
-RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
-                                              size_t aOffset, size_t aSize,
-                                              ErrorResult& aRv) {
-  ffi::WGPUHostMap mode;
-  switch (aMode) {
-    case dom::GPUMapMode_Binding::READ:
-      mode = ffi::WGPUHostMap_Read;
-      break;
-    case dom::GPUMapMode_Binding::WRITE:
-      mode = ffi::WGPUHostMap_Write;
-      break;
-    default:
-      MOZ_CRASH("should have checked aMode in Buffer::MapAsync");
-  }
-
-  const CheckedInt<uint64_t> offset(aOffset);
-  if (!offset.isValid()) {
-    aRv.ThrowRangeError("Mapped offset is too large");
-    return nullptr;
-  }
-  const CheckedInt<uint64_t> size(aSize);
-  if (!size.isValid()) {
-    aRv.ThrowRangeError("Mapped size is too large");
-    return nullptr;
-  }
-
-  return mBridge->SendBufferMap(aId, mode, offset.value(), size.value());
-}
-
-void Device::UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
-                         bool aKeepShmem) {
-  if (mBridge->CanSend()) {
-    mBridge->SendBufferUnmap(aId, std::move(aShmem), aFlush, aKeepShmem);
-  }
+  return Buffer::Create(this, mId, aDesc, aRv);
 }
 
 already_AddRefed<Texture> Device::CreateTexture(

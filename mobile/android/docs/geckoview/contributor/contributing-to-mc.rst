@@ -91,16 +91,9 @@ patch through phabricator, but you can test it on the try server first.
 Submitting a patch via Phabricator.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To commit anything to the repository, you will need to set up Arcanist
+To commit anything to the repository, you will need to set up moz-phab
 and Phabricator. If you are using ``git-cinnabar`` then you will need to
 use git enabled versions of these tools.
-
-Install Arcanist (Github version)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
--  Ensure PHP is installed
--  `Install
-   Arcanist <https://secure.phabricator.com/book/phabricator/article/arcanist_quick_start/>`_
 
 Set up Phabricator
 ^^^^^^^^^^^^^^^^^^
@@ -145,49 +138,6 @@ Set up Phabricator
 
 -  You now have a Phabricator account and can submit and review patches.
 
-Using Arcanist to submit a patch
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
--  Ensure you are on the branch where you have commits that you want to
-   submit.
-
-.. code:: bash
-
-   git checkout "your-branch-with-commits"
-
--  Create a differential patch containing your commits
-
-.. code:: bash
-
-   arc diff
-
--  If you have any uncommitted files, Arcanist will ask if you want to
-   commit them.
--  If you have any files in the path not added to git Arcanist will ask
-   if you want to ignore them.
--  After formatting your patch, Arcanist will open a nano/emacs file for
-   you to enter the commit details. If you have many individual git
-   commits in your arcanist diff then the first line of the first commit
-   message will become the patch title, and the rest of the commit, plus
-   the messages for the other commits in the patch will form the
-   summary.
--  Ensure you have entered the bug number against the ``Bug #`` field.
--  If you know who you want to review your patch, put their Phabricator
-   handle against the ``reviewers`` field. If in doubt, look to see who
-   filed, or is listed as a mentor on, the bug you are addressing and
-   choose them.
--  Close the editor (Ctrl X) to save the patch.
--  Arcanist now formats your patch and submits it to Phabricator. It
-   will display the Phabricator link in the output.
--  Copy that link and paste it into a browser window to view your patch.
-
-You may have noticed when using Arcanist that it wraps all of your
-carefully curated Github commits into a single patch. If you have made
-many commits that are self contained and pass all the tests then you may
-wish to submit a patch for each commit. This will make it easier to
-review. The way to do this is via ``moz-phab``. ``moz-phab`` required
-Arcanist so you do have to have that installed first.
-
 Installing ``moz-phab``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -230,9 +180,6 @@ Updating a patch
 -  Often you will need to make amendments to a patch after it has been
    submitted to address review comments. To do this, add your commits to
    the base branch of your fix as normal.
-
-To submit the update using Arcanist, run
-``arc diff --update <PhabricatorDifferentialNumber>``.
 
 For ``moz-phab`` run in the same way as the initial submission with the
 same arguments, that is, specifying the full original range of commits.

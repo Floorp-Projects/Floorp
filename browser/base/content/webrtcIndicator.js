@@ -553,7 +553,6 @@ const WebRTCIndicator = {
         bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem")
       );
       menuitem.stream = stream;
-      menuitem.addEventListener("command", this);
 
       menupopup.appendChild(menuitem);
       return;
@@ -577,7 +576,6 @@ const WebRTCIndicator = {
       label = stream.browser.contentTitle || stream.uri;
       item.setAttribute("label", bundle.formatStringFromName(labelId, [label]));
       item.stream = stream;
-      item.addEventListener("command", this);
       menupopup.appendChild(item);
     }
   },
@@ -594,7 +592,7 @@ const WebRTCIndicator = {
   },
 
   onCommand(event) {
-    webrtcUI.showSharingDoorhanger(event.target.stream);
+    webrtcUI.showSharingDoorhanger(event.target.stream, event);
   },
 
   /**

@@ -19,7 +19,8 @@ class IPDLUnitTestChild : public PIPDLUnitTestChild {
  private:
   friend class PIPDLUnitTestChild;
 
-  ipc::IPCResult RecvStart(const nsCString& aName, ipc::ScopedPort aPort);
+  ipc::IPCResult RecvStart(const nsCString& aName, ipc::ScopedPort aPort,
+                           const nsID& aChannelId);
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 

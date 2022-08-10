@@ -30,7 +30,26 @@ var gPermissionPanel = {
     }
   },
 
+  /**
+   * _popupAnchorNode will be set by setAnchor if an outside consumer
+   * of this object wants to override the default anchor for the panel.
+   * If there is no override, this remains null, and the _identityPermissionBox
+   * will be used as the anchor.
+   */
+  _popupAnchorNode: null,
+  _popupPosition: "bottomcenter topleft",
+  setAnchor(anchorNode, popupPosition) {
+    this._popupAnchorNode = anchorNode;
+    this._popupPosition = popupPosition;
+  },
+
   // smart getters
+  get _popupAnchor() {
+    if (this._popupAnchorNode) {
+      return this._popupAnchorNode;
+    }
+    return this._identityPermissionBox;
+  },
   get _identityPermissionBox() {
     delete this._identityPermissionBox;
     return (this._identityPermissionBox = document.getElementById(
@@ -187,7 +206,28 @@ var gPermissionPanel = {
    * Shows the permission popup.
    * @param {Event} event - Event which caused the popup to show.
    */
-  _openPopup(event) {
+  openPopup(event) {
+    // If we are in DOM fullscreen, exit it before showing the permission popup
+    // (see bug 1557041)
+    if (document.fullscreen) {
+      // Open the identity popup after DOM fullscreen exit
+      // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
+      // If we call openPopup before the fullscreen transition ends it can get cancelled
+      // Only waiting for painted is not sufficient because we could still be in the fullscreen enter transition.
+      this._exitedEventReceived = false;
+      this._event = event;
+      Services.obs.addObserver(this, "fullscreen-painted");
+      window.addEventListener(
+        "MozDOMFullscreen:Exited",
+        () => {
+          this._exitedEventReceived = true;
+        },
+        { once: true }
+      );
+      document.exitFullscreen();
+      return;
+    }
+
     // Make the popup available.
     this._initializePopup();
 
@@ -204,14 +244,10 @@ var gPermissionPanel = {
     }
 
     // Now open the popup, anchored off the primary chrome element
-    PanelMultiView.openPopup(
-      this._permissionPopup,
-      this._identityPermissionBox,
-      {
-        position: "bottomcenter topleft",
-        triggerEvent: event,
-      }
-    ).catch(Cu.reportError);
+    PanelMultiView.openPopup(this._permissionPopup, this._popupAnchor, {
+      position: this._popupPosition,
+      triggerEvent: event,
+    }).catch(Cu.reportError);
   },
 
   /**
@@ -308,28 +344,7 @@ var gPermissionPanel = {
       return;
     }
 
-    // If we are in DOM fullscreen, exit it before showing the permission popup
-    // (see bug 1557041)
-    if (document.fullscreen) {
-      // Open the identity popup after DOM fullscreen exit
-      // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
-      // If we call _openPopup before the fullscreen transition ends it can get cancelled
-      // Only waiting for painted is not sufficient because we could still be in the fullscreen enter transition.
-      this._exitedEventReceived = false;
-      this._event = event;
-      Services.obs.addObserver(this, "fullscreen-painted");
-      window.addEventListener(
-        "MozDOMFullscreen:Exited",
-        () => {
-          this._exitedEventReceived = true;
-        },
-        { once: true }
-      );
-      document.exitFullscreen();
-      return;
-    }
-
-    this._openPopup(event);
+    this.openPopup(event);
   },
 
   onPopupShown(event) {
@@ -369,7 +384,7 @@ var gPermissionPanel = {
           return;
         }
         Services.obs.removeObserver(this, "fullscreen-painted");
-        this._openPopup(this._event);
+        this.openPopup(this._event);
         delete this._event;
         break;
       }

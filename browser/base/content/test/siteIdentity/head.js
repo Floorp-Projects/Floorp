@@ -14,7 +14,7 @@ function openPermissionPopup() {
   gPermissionPanel._initializePopup();
   let mainView = document.getElementById("permission-popup-mainView");
   let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gPermissionPanel._openPopup();
+  gPermissionPanel.openPopup();
   return viewShown;
 }
 

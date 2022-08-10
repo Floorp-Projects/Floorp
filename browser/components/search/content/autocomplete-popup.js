@@ -108,11 +108,11 @@
     static get markup() {
       return `
       <hbox class="search-panel-header search-panel-current-engine">
-        <image class="searchbar-engine-image"></image>
-        <label class="searchbar-engine-name" flex="1" crop="end" role="presentation"></label>
+        <image class="searchbar-engine-image"/>
+        <label class="searchbar-engine-name" flex="1" crop="end" role="presentation"/>
       </hbox>
       <menuseparator class="searchbar-separator"/>
-      <richlistbox class="autocomplete-richlistbox search-panel-tree" flex="1"></richlistbox>
+      <richlistbox class="autocomplete-richlistbox search-panel-tree"/>
       <menuseparator class="searchbar-separator"/>
       <hbox class="search-one-offs" is_searchbar="true"/>
     `;

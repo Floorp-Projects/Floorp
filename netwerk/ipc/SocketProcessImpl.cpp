@@ -32,9 +32,6 @@ namespace net {
 
 LazyLogModule gSocketProcessLog("socketprocess");
 
-SocketProcessImpl::SocketProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 SocketProcessImpl::~SocketProcessImpl() = default;
 
 bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
@@ -70,8 +67,7 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mSocketProcessChild.Init(ParentPid(), *parentBuildID,
-                                  IOThreadChild::TakeInitialPort());
+  return mSocketProcessChild.Init(TakeInitialEndpoint(), *parentBuildID);
 }
 
 void SocketProcessImpl::CleanUp() { mSocketProcessChild.CleanUp(); }

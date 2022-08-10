@@ -46,20 +46,34 @@ add_task(async function() {
   );
 
   info(
-    "Check whether ResourceCommand catches CSS change after the property changed"
+    "Check whether ResourceCommand catches CSS changes after the property was renamed and updated"
   );
-  await setProperty(style.rule, 0, "background-color", "pink");
+
+  // RuleRewriter:apply will not support a simultaneous rename + setProperty.
+  // Doing so would send inconsistent arguments to StyleRuleActor:setRuleText,
+  // the CSS text for the rule will not match the list of modifications, which
+  // would desynchronize the Changes view. Thankfully this scenario should not
+  // happen when using the UI to update the rules.
+  await renameProperty(style.rule, 0, "color", "background-color");
   await waitUntil(() => availableResources.length === 2);
   assertResource(
     availableResources[1],
-    { index: 0, property: "background-color", value: "pink" },
+    { index: 0, property: "background-color", value: "black" },
     { index: 0, property: "color", value: "black" }
+  );
+
+  await setProperty(style.rule, 0, "background-color", "pink");
+  await waitUntil(() => availableResources.length === 3);
+  assertResource(
+    availableResources[2],
+    { index: 0, property: "background-color", value: "pink" },
+    { index: 0, property: "background-color", value: "black" }
   );
 
   info("Check whether ResourceCommand catches CSS change of disabling");
   await setPropertyEnabled(style.rule, 0, "background-color", false);
-  await waitUntil(() => availableResources.length === 3);
-  assertResource(availableResources[2], null, {
+  await waitUntil(() => availableResources.length === 4);
+  assertResource(availableResources[3], null, {
     index: 0,
     property: "background-color",
     value: "pink",
@@ -67,9 +81,9 @@ add_task(async function() {
 
   info("Check whether ResourceCommand catches CSS change of new property");
   await createProperty(style.rule, 1, "font-size", "100px");
-  await waitUntil(() => availableResources.length === 4);
+  await waitUntil(() => availableResources.length === 5);
   assertResource(
-    availableResources[3],
+    availableResources[4],
     { index: 1, property: "font-size", value: "100px" },
     null
   );
@@ -79,11 +93,12 @@ add_task(async function() {
   await resourceCommand.watchResources([resourceCommand.TYPES.CSS_CHANGE], {
     onAvailable: resources => existingResources.push(...resources),
   });
-  await waitUntil(() => existingResources.length === 4);
+  await waitUntil(() => existingResources.length === 5);
   is(availableResources[0], existingResources[0], "1st resource is correct");
   is(availableResources[1], existingResources[1], "2nd resource is correct");
   is(availableResources[2], existingResources[2], "3rd resource is correct");
   is(availableResources[3], existingResources[3], "4th resource is correct");
+  is(availableResources[4], existingResources[4], "4th resource is correct");
 
   targetCommand.destroy();
   await client.close();
@@ -114,6 +129,12 @@ function assertChange(change, expected) {
 async function setProperty(rule, index, property, value) {
   const modifications = rule.startModifyingProperties({ isKnown: true });
   modifications.setProperty(index, property, value, "");
+  await modifications.apply();
+}
+
+async function renameProperty(rule, index, oldName, newName, value) {
+  const modifications = rule.startModifyingProperties({ isKnown: true });
+  modifications.renameProperty(index, oldName, newName);
   await modifications.apply();
 }
 

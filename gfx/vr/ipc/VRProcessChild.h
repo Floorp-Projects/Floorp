@@ -22,7 +22,7 @@ class VRProcessChild final : public mozilla::ipc::ProcessChild {
   typedef mozilla::ipc::ProcessChild ProcessChild;
 
  public:
-  explicit VRProcessChild(ProcessId aParentPid);
+  using ProcessChild::ProcessChild;
   ~VRProcessChild();
 
   // IPC channel for VR process talk to the parent process.
@@ -31,9 +31,6 @@ class VRProcessChild final : public mozilla::ipc::ProcessChild {
   // ProcessChild functions.
   virtual bool Init(int aArgc, char* aArgv[]) override;
   virtual void CleanUp() override;
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(VRProcessChild);
 };
 
 }  // namespace gfx

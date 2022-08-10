@@ -6,6 +6,7 @@
 
 #include "mozilla/ipc/ProcessChild.h"
 
+#include "Endpoint.h"
 #include "nsDebug.h"
 
 #ifdef XP_WIN
@@ -27,10 +28,11 @@ ProcessChild* ProcessChild::gProcessChild;
 
 static Atomic<bool> sExpectingShutdown(false);
 
-ProcessChild::ProcessChild(ProcessId aParentPid)
+ProcessChild::ProcessChild(ProcessId aParentPid, const nsID& aMessageChannelId)
     : ChildProcess(new IOThreadChild()),
       mUILoop(MessageLoop::current()),
-      mParentPid(aParentPid) {
+      mParentPid(aParentPid),
+      mMessageChannelId(aMessageChannelId) {
   MOZ_ASSERT(mUILoop, "UILoop should be created by now");
   MOZ_ASSERT(!gProcessChild, "should only be one ProcessChild");
   gProcessChild = this;
@@ -82,6 +84,12 @@ bool ProcessChild::ExpectingShutdown() { return sExpectingShutdown; }
 
 /* static */
 void ProcessChild::QuickExit() { AppShutdown::DoImmediateExit(); }
+
+UntypedEndpoint ProcessChild::TakeInitialEndpoint() {
+  return UntypedEndpoint{PrivateIPDLInterface{},
+                         child_thread()->TakeInitialPort(), mMessageChannelId,
+                         base::GetCurrentProcId(), mParentPid};
+}
 
 }  // namespace ipc
 }  // namespace mozilla

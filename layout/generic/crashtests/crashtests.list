@@ -400,7 +400,7 @@ load 551635-1.html
 load 553504-1.xhtml
 load 564368-1.xhtml
 load 564968.xhtml
-load 569193-1.html
+asserts(5) load 569193-1.html # absurd sizes
 load 570160.html
 load 570289-1.html
 load 571618-1.svg
@@ -643,8 +643,8 @@ load 1234701-1.html
 load 1234701-2.html
 load 1248227.html
 load 1271765.html
-pref(layout.css.xul-box-display-values.content.enabled,true) load 1272983-1.html
-pref(layout.css.xul-box-display-values.content.enabled,true) load 1272983-2.html
+load chrome://reftest/content/crashtests/layout/generic/crashtests/1272983-1.html
+load chrome://reftest/content/crashtests/layout/generic/crashtests/1272983-2.html
 load 1275059.html
 load 1278007.html
 load 1278080.html

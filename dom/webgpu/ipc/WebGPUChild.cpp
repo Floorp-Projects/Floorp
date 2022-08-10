@@ -355,9 +355,10 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
 }
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
-                                      const dom::GPUBufferDescriptor& aDesc) {
+                                      const dom::GPUBufferDescriptor& aDesc,
+                                      MaybeShmem&& aShmem) {
   RawId bufferId = ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId);
-  if (!SendCreateBuffer(aSelfId, bufferId, aDesc)) {
+  if (!SendCreateBuffer(aSelfId, bufferId, aDesc, aShmem)) {
     MOZ_CRASH("IPC failure");
   }
   return bufferId;

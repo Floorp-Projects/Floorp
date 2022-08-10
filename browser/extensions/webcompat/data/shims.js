@@ -334,6 +334,7 @@ const AVAILABLE_SHIMS = [
       "*://*.imgur.com/js/vendor.*.bundle.js",
       "*://*.imgur.io/js/vendor.*.bundle.js",
       "*://www.rva311.com/static/js/main.*.chunk.js",
+      "*://web-assets.toggl.com/app/assets/scripts/*.js", // bug 1783919
     ],
     onlyIfPrivateBrowsing: true,
   },
@@ -600,6 +601,7 @@ const AVAILABLE_SHIMS = [
           "*://orangerie.eu/*", // bug 1758442
           "*://web.whatsapp.com/*", // bug 1767407
           "*://www.tripadvisor.com/*", // bug 1779536
+          "*://www.office.com/*", // bug 1783921
         ],
       },
     ],

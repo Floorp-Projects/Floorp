@@ -13,16 +13,11 @@ using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
 
-RemoteSandboxBrokerProcessChild::RemoteSandboxBrokerProcessChild(
-    ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 RemoteSandboxBrokerProcessChild::~RemoteSandboxBrokerProcessChild() {}
 
 bool RemoteSandboxBrokerProcessChild::Init(int aArgc, char* aArgv[]) {
   BackgroundHangMonitor::Startup();
-  return mSandboxBrokerChild.Init(ParentPid(),
-                                  IOThreadChild::TakeInitialPort());
+  return mSandboxBrokerChild.Init(TakeInitialEndpoint());
 }
 
 void RemoteSandboxBrokerProcessChild::CleanUp() {

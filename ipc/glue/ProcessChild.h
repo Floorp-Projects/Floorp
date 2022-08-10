@@ -7,6 +7,7 @@
 #ifndef mozilla_ipc_ProcessChild_h
 #define mozilla_ipc_ProcessChild_h
 
+#include "Endpoint.h"
 #include "base/message_loop.h"
 #include "base/process.h"
 
@@ -26,7 +27,11 @@ class ProcessChild : public ChildProcess {
   typedef base::ProcessId ProcessId;
 
  public:
-  explicit ProcessChild(ProcessId aParentPid);
+  explicit ProcessChild(ProcessId aParentPid, const nsID& aMessageChannelId);
+
+  ProcessChild(const ProcessChild&) = delete;
+  ProcessChild& operator=(const ProcessChild&) = delete;
+
   virtual ~ProcessChild();
 
   virtual bool Init(int aArgc, char* aArgv[]) = 0;
@@ -54,13 +59,14 @@ class ProcessChild : public ChildProcess {
 
   ProcessId ParentPid() { return mParentPid; }
 
+  UntypedEndpoint TakeInitialEndpoint();
+
  private:
   static ProcessChild* gProcessChild;
 
   MessageLoop* mUILoop;
   ProcessId mParentPid;
-
-  DISALLOW_EVIL_CONSTRUCTORS(ProcessChild);
+  nsID mMessageChannelId;
 };
 
 }  // namespace ipc

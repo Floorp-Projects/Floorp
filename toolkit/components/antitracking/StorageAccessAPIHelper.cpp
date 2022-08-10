@@ -300,8 +300,8 @@ StorageAccessAPIHelper::AllowAccessFor(
   RefPtr<BrowsingContext> bc = aParentContext;
   return cc
       ->SendCompleteAllowAccessFor(aParentContext, topLevelWindowId,
-                                   IPC::Principal(trackingPrincipal),
-                                   trackingOrigin, behavior, aReason)
+                                   trackingPrincipal, trackingOrigin, behavior,
+                                   aReason)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [bc, trackingOrigin, behavior,
               aReason](const ContentChild::CompleteAllowAccessForPromise::
@@ -509,9 +509,8 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
     // sending the request of storing a permission.
     return cc
         ->SendStorageAccessPermissionGrantedForOrigin(
-            aTopLevelWindowId, aParentContext,
-            IPC::Principal(trackingPrincipal), trackingOrigin, aAllowMode,
-            reportReason)
+            aTopLevelWindowId, aParentContext, trackingPrincipal,
+            trackingOrigin, aAllowMode, reportReason)
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [aReason, trackingPrincipal](
@@ -768,8 +767,7 @@ StorageAccessAPIHelper::AsyncCheckCookiesPermittedDecidesStorageAccessAPI(
   MOZ_ASSERT(cc);
 
   return cc
-      ->SendTestCookiePermissionDecided(aBrowsingContext,
-                                        IPC::Principal(aRequestingPrincipal))
+      ->SendTestCookiePermissionDecided(aBrowsingContext, aRequestingPrincipal)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [](const ContentChild::TestCookiePermissionDecidedPromise::

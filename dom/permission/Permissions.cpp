@@ -148,7 +148,7 @@ already_AddRefed<Promise> Permissions::Revoke(JSContext* aCx,
     // to the parent; `ContentParent::RecvRemovePermission` will call
     // `RemovePermission`.
     ContentChild::GetSingleton()->SendRemovePermission(
-        IPC::Principal(document->NodePrincipal()), permissionType, &rv);
+        document->NodePrincipal(), permissionType, &rv);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {

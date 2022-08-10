@@ -694,7 +694,14 @@ var webrtcUI = {
     browserWindowIds.forEach(id => this.activePerms.delete(id));
   },
 
-  showSharingDoorhanger(aActiveStream) {
+  /**
+   * Shows the Permission Panel for the tab associated with the provided
+   * active stream.
+   * @param aActiveStream - The stream that the user wants to see permissions for.
+   * @param aEvent - The user input event that is invoking the panel. This can be
+   *        undefined / null if no such event exists.
+   */
+  showSharingDoorhanger(aActiveStream, aEvent) {
     let browserWindow = aActiveStream.browser.ownerGlobal;
     if (aActiveStream.tab) {
       browserWindow.gBrowser.selectedTab = aActiveStream.tab;
@@ -702,15 +709,13 @@ var webrtcUI = {
       aActiveStream.browser.focus();
     }
     browserWindow.focus();
-    let permissionBox = browserWindow.document.getElementById(
-      "identity-permission-box"
-    );
+
     if (AppConstants.platform == "macosx" && !Services.focus.activeWindow) {
       browserWindow.addEventListener(
         "activate",
         function() {
           Services.tm.dispatchToMainThread(function() {
-            permissionBox.click();
+            browserWindow.gPermissionPanel.openPopup(aEvent);
           });
         },
         { once: true }
@@ -720,7 +725,7 @@ var webrtcUI = {
         .activateApplication(true);
       return;
     }
-    permissionBox.click();
+    browserWindow.gPermissionPanel.openPopup(aEvent);
   },
 
   updateWarningLabel(aMenuList) {
@@ -1033,7 +1038,7 @@ class MacOSWebRTCStatusbarIndicator {
    * @param {Event} aEvent - The command event for the <menuitem>.
    */
   _command(aEvent) {
-    webrtcUI.showSharingDoorhanger(aEvent.target.stream);
+    webrtcUI.showSharingDoorhanger(aEvent.target.stream, aEvent);
   }
 
   /**
@@ -1195,7 +1200,7 @@ function onTabSharingMenuPopupHiding(e) {
 }
 
 function onTabSharingMenuPopupCommand(e) {
-  webrtcUI.showSharingDoorhanger(e.target.stream);
+  webrtcUI.showSharingDoorhanger(e.target.stream, e);
 }
 
 function showOrCreateMenuForWindow(aWindow) {

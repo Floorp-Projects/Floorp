@@ -1277,12 +1277,6 @@ parent:
     async RequestAnonymousTemporaryFile(uint64_t aID);
 
     /**
-     * Sets "offline-app" permission for the principal.  Called when we hit
-     * a web app with the manifest attribute in <html>
-     */
-    async SetOfflinePermission(nsIPrincipal principal);
-
-    /**
      * Notifies the parent to continue shutting down after the child performs
      * its shutdown tasks.
      */

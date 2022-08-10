@@ -66,7 +66,7 @@ void ContentBlockingUserInteraction::Observe(nsIPrincipal* aPrincipal) {
   LOG_PRIN(("Asking the parent process to save the user-interaction for us: %s",
             _spec),
            aPrincipal);
-  cc->SendStoreUserInteractionAsPermission(IPC::Principal(aPrincipal));
+  cc->SendStoreUserInteractionAsPermission(aPrincipal);
 }
 
 /* static */

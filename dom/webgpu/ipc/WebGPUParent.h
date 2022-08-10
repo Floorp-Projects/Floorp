@@ -6,6 +6,7 @@
 #ifndef WEBGPU_PARENT_H_
 #define WEBGPU_PARENT_H_
 
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/PWebGPUParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "WebGPUTypes.h"
@@ -30,47 +31,48 @@ class WebGPUParent final : public PWebGPUParent {
       const nsTArray<RawId>& aTargetIds,
       InstanceRequestAdapterResolver&& resolver);
   ipc::IPCResult RecvAdapterRequestDevice(
-      RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
+      RawId aAdapterId, const ipc::ByteBuf& aByteBuf, RawId aDeviceId,
       AdapterRequestDeviceResolver&& resolver);
-  ipc::IPCResult RecvAdapterDestroy(RawId aSelfId);
-  ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);
-  ipc::IPCResult RecvCreateBuffer(RawId aSelfId, RawId aBufferId,
-                                  dom::GPUBufferDescriptor&& aDesc);
-  ipc::IPCResult RecvBufferReturnShmem(RawId aSelfId, Shmem&& aShmem);
-  ipc::IPCResult RecvBufferMap(RawId aSelfId, ffi::WGPUHostMap aHostMap,
+  ipc::IPCResult RecvAdapterDestroy(RawId aAdapterId);
+  ipc::IPCResult RecvDeviceDestroy(RawId aDeviceId);
+  ipc::IPCResult RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
+                                  dom::GPUBufferDescriptor&& aDesc,
+                                  MaybeShmem&& aShmem);
+  ipc::IPCResult RecvBufferReturnShmem(RawId aBufferId, Shmem&& aShmem);
+  ipc::IPCResult RecvBufferMap(RawId aBufferId, uint32_t aMode,
                                uint64_t aOffset, uint64_t size,
                                BufferMapResolver&& aResolver);
-  ipc::IPCResult RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem, bool aFlush,
-                                 bool aKeepShmem);
-  ipc::IPCResult RecvBufferDestroy(RawId aSelfId);
-  ipc::IPCResult RecvTextureDestroy(RawId aSelfId);
-  ipc::IPCResult RecvTextureViewDestroy(RawId aSelfId);
-  ipc::IPCResult RecvSamplerDestroy(RawId aSelfId);
+  ipc::IPCResult RecvBufferUnmap(RawId aDeviceId, RawId aBufferId, bool aFlush);
+  ipc::IPCResult RecvBufferDestroy(RawId aBufferId);
+  ipc::IPCResult RecvBufferDrop(RawId aBufferId);
+  ipc::IPCResult RecvTextureDestroy(RawId aTextureId);
+  ipc::IPCResult RecvTextureViewDestroy(RawId aTextureViewId);
+  ipc::IPCResult RecvSamplerDestroy(RawId aSamplerId);
   ipc::IPCResult RecvCommandEncoderFinish(
-      RawId aSelfId, RawId aDeviceId,
+      RawId aEncoderId, RawId aDeviceId,
       const dom::GPUCommandBufferDescriptor& aDesc);
-  ipc::IPCResult RecvCommandEncoderDestroy(RawId aSelfId);
-  ipc::IPCResult RecvCommandBufferDestroy(RawId aSelfId);
-  ipc::IPCResult RecvRenderBundleDestroy(RawId aSelfId);
-  ipc::IPCResult RecvQueueSubmit(RawId aSelfId, RawId aDeviceId,
+  ipc::IPCResult RecvCommandEncoderDestroy(RawId aEncoderId);
+  ipc::IPCResult RecvCommandBufferDestroy(RawId aCommandBufferId);
+  ipc::IPCResult RecvRenderBundleDestroy(RawId aBundleId);
+  ipc::IPCResult RecvQueueSubmit(RawId aQueueId, RawId aDeviceId,
                                  const nsTArray<RawId>& aCommandBuffers);
-  ipc::IPCResult RecvQueueWriteAction(RawId aSelfId, RawId aDeviceId,
+  ipc::IPCResult RecvQueueWriteAction(RawId aQueueId, RawId aDeviceId,
                                       const ipc::ByteBuf& aByteBuf,
                                       Shmem&& aShmem);
-  ipc::IPCResult RecvBindGroupLayoutDestroy(RawId aSelfId);
-  ipc::IPCResult RecvPipelineLayoutDestroy(RawId aSelfId);
-  ipc::IPCResult RecvBindGroupDestroy(RawId aSelfId);
-  ipc::IPCResult RecvShaderModuleDestroy(RawId aSelfId);
-  ipc::IPCResult RecvComputePipelineDestroy(RawId aSelfId);
-  ipc::IPCResult RecvRenderPipelineDestroy(RawId aSelfId);
+  ipc::IPCResult RecvBindGroupLayoutDestroy(RawId aBindGroupLayoutId);
+  ipc::IPCResult RecvPipelineLayoutDestroy(RawId aPipelineLayoutId);
+  ipc::IPCResult RecvBindGroupDestroy(RawId aBindGroupId);
+  ipc::IPCResult RecvShaderModuleDestroy(RawId aModuleId);
+  ipc::IPCResult RecvComputePipelineDestroy(RawId aPipelineId);
+  ipc::IPCResult RecvRenderPipelineDestroy(RawId aPipelineId);
   ipc::IPCResult RecvImplicitLayoutDestroy(
       RawId aImplicitPlId, const nsTArray<RawId>& aImplicitBglIds);
-  ipc::IPCResult RecvDeviceCreateSwapChain(RawId aSelfId, RawId aQueueId,
+  ipc::IPCResult RecvDeviceCreateSwapChain(RawId aDeviceId, RawId aQueueId,
                                            const layers::RGBDescriptor& aDesc,
                                            const nsTArray<RawId>& aBufferIds,
                                            const CompositableHandle& aHandle);
   ipc::IPCResult RecvDeviceCreateShaderModule(
-      RawId aSelfId, RawId aModuleId, const nsString& aLabel,
+      RawId aDeviceId, RawId aModuleId, const nsString& aLabel,
       const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage);
 
   ipc::IPCResult RecvSwapChainPresent(const CompositableHandle& aHandle,
@@ -78,22 +80,23 @@ class WebGPUParent final : public PWebGPUParent {
                                       RawId aCommandEncoderId);
   ipc::IPCResult RecvSwapChainDestroy(const CompositableHandle& aHandle);
 
-  ipc::IPCResult RecvDeviceAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);
+  ipc::IPCResult RecvDeviceAction(RawId aDeviceId,
+                                  const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvDeviceActionWithAck(
-      RawId aSelf, const ipc::ByteBuf& aByteBuf,
+      RawId aDeviceId, const ipc::ByteBuf& aByteBuf,
       DeviceActionWithAckResolver&& aResolver);
-  ipc::IPCResult RecvTextureAction(RawId aSelf, RawId aDevice,
+  ipc::IPCResult RecvTextureAction(RawId aTextureId, RawId aDevice,
                                    const ipc::ByteBuf& aByteBuf);
-  ipc::IPCResult RecvCommandEncoderAction(RawId aSelf, RawId aDevice,
+  ipc::IPCResult RecvCommandEncoderAction(RawId aEncoderId, RawId aDeviceId,
                                           const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
                                                  bool aIsCompute,
                                                  uint32_t aIndex,
                                                  RawId aAssignId);
 
-  ipc::IPCResult RecvDevicePushErrorScope(RawId aSelfId);
+  ipc::IPCResult RecvDevicePushErrorScope(RawId aDeviceId);
   ipc::IPCResult RecvDevicePopErrorScope(
-      RawId aSelfId, DevicePopErrorScopeResolver&& aResolver);
+      RawId aDeviceId, DevicePopErrorScopeResolver&& aResolver);
   ipc::IPCResult RecvGenerateError(RawId aDeviceId, const nsCString& message);
 
   ipc::IPCResult GetFrontBufferSnapshot(IProtocol* aProtocol,
@@ -103,18 +106,31 @@ class WebGPUParent final : public PWebGPUParent {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  struct BufferMapData {
+    Shmem mShmem;
+    // True if buffer's usage has MAP_READ or MAP_WRITE set.
+    bool mHasMapFlags;
+    uint64_t mMappedOffset;
+    uint64_t mMappedSize;
+  };
+
+  BufferMapData* GetBufferMapData(RawId aBufferId);
+
  private:
+  void DeallocBufferShmem(RawId aBufferId);
+
   virtual ~WebGPUParent();
   void MaintainDevices();
-  bool ForwardError(RawId aDeviceID, ErrorBuffer& aError);
+  bool ForwardError(RawId aDeviceId, ErrorBuffer& aError);
   void ReportError(RawId aDeviceId, const nsCString& message);
 
   UniquePtr<ffi::WGPUGlobal> mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
-  /// Shmem associated with a mappable buffer has to be owned by one of the
-  /// processes. We keep it here for every mappable buffer while the buffer is
-  /// used by GPU.
-  std::unordered_map<uint64_t, Shmem> mSharedMemoryMap;
+
+  /// A map from wgpu buffer ids to data about their shared memory segments.
+  /// Includes entries about mappedAtCreation, MAP_READ and MAP_WRITE buffers,
+  /// regardless of their state.
+  std::unordered_map<uint64_t, BufferMapData> mSharedMemoryMap;
   /// Associated presentation data for each swapchain.
   std::unordered_map<uint64_t, RefPtr<PresentationData>> mCanvasMap;
   /// Associated stack of error scopes for each device.

@@ -111,7 +111,7 @@ function onPopupMenuShowing(event) {
   }
   if (activeStreams.length) {
     let index = activeStreams.length - 1;
-    webrtcUI.showSharingDoorhanger(activeStreams[index]);
+    webrtcUI.showSharingDoorhanger(activeStreams[index], event);
     event.preventDefault();
     return;
   }
@@ -133,7 +133,7 @@ function onPopupMenuHiding(event) {
 }
 
 function onPopupMenuCommand(event) {
-  webrtcUI.showSharingDoorhanger(event.target.stream);
+  webrtcUI.showSharingDoorhanger(event.target.stream, event);
 }
 
 function onFirefoxButtonClick(event) {

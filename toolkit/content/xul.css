@@ -523,6 +523,7 @@ search-textbox {
 .autocomplete-richlistbox {
   -moz-user-focus: ignore;
   overflow-x: hidden !important;
+  -moz-box-flex: 1;
 }
 
 .autocomplete-richlistitem {

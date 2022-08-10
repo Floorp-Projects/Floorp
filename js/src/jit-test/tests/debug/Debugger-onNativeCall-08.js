@@ -17,8 +17,6 @@ Array.from([1, 2, 3]);
 `);
 assertEqArray(rv, [
   "from",
-  // FIXME: This is internal function (bug 1782677).
-  "IteratorMethod",
   "values",
   "next", "next", "next", "next",
 ]);

@@ -1523,7 +1523,7 @@
 # from parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-controlled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Testing-only pref which makes data: URIs be loaded in a "web" content process
@@ -8174,20 +8174,6 @@
   type: bool
   value: true
   mirror: always
-
-- name: layout.css.xul-display-values.content.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
-# Pref to control whether display: -moz-box and display: -moz-inline-box are
-# parsed in content pages.
-- name: layout.css.xul-box-display-values.content.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
 
 # Whether to block large cursors intersecting UI.
 - name: layout.cursor.block.enabled

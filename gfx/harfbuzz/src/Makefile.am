@@ -12,7 +12,7 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 TESTS =
 check_PROGRAMS =
 
-EXTRA_DIST += harfbuzz.cc
+EXTRA_DIST += harfbuzz.cc harfbuzz-subset.cc
 EXTRA_DIST += meson.build
 EXTRA_DIST += fix_get_types.py
 
@@ -160,6 +160,18 @@ pkginclude_HEADERS += $(HB_SUBSET_headers)
 pkgconfig_DATA += harfbuzz-subset.pc
 EXTRA_DIST += harfbuzz-subset.pc.in
 
+harfbuzz-subset.cc: Makefile.sources
+	$(AM_V_GEN) \
+	LANG=C; \
+	for f in \
+		$(HB_BASE_sources) \
+		$(HB_SUBSET_sources) \
+		; do echo '#include "'$$f'"'; done | \
+	sort -u | \
+	grep '[.]cc"' > $(srcdir)/harfbuzz-subset.cc \
+	|| ($(RM) $(srcdir)/harfbuzz-subset.cc; false)
+BUILT_SOURCES += harfbuzz-subset.cc
+
 if HAVE_ICU
 if HAVE_ICU_BUILTIN
 HBCFLAGS += $(ICU_CFLAGS)
@@ -284,6 +296,7 @@ $(srcdir)/%.hh: $(srcdir)/%.rl
 
 harfbuzz.cc: Makefile.sources
 	$(AM_V_GEN) \
+	LANG=C; \
 	for f in \
 		$(HB_BASE_sources) \
 		$(HB_GLIB_sources) \
@@ -294,6 +307,7 @@ harfbuzz.cc: Makefile.sources
 		$(HB_DIRECTWRITE_sources) \
 		$(HB_CORETEXT_sources) \
 		; do echo '#include "'$$f'"'; done | \
+	sort -u | \
 	grep '[.]cc"' > $(srcdir)/harfbuzz.cc \
 	|| ($(RM) $(srcdir)/harfbuzz.cc; false)
 BUILT_SOURCES += harfbuzz.cc
@@ -399,7 +413,7 @@ test_priority_queue_SOURCES = test-priority-queue.cc hb-static.cc
 test_priority_queue_CPPFLAGS = $(HBCFLAGS)
 test_priority_queue_LDADD = libharfbuzz.la $(HBLIBS)
 
-test_repacker_SOURCES = test-repacker.cc hb-static.cc
+test_repacker_SOURCES = test-repacker.cc hb-static.cc graph/gsubgpos-context.cc
 test_repacker_CPPFLAGS = $(HBCFLAGS)
 test_repacker_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
 

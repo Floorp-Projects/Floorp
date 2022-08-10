@@ -47,20 +47,6 @@ const ColorwayCloset = {
   init() {
     window.addEventListener("unload", this);
 
-    // We had set a width so `SubDialog` code can use it to determine the
-    // initial frame size. We're now going to remove that width because our
-    // layout is responsive and we don't want to scroll horizontally when
-    // resizing the browser window such that the frame becomes narrower than
-    // its initial width.
-    // We'll wait for the load event and l10n to be ready because `SubDialog`
-    // does the same before determining the frame size.
-    window.addEventListener("load", async () => {
-      await document.l10n.ready;
-      requestAnimationFrame(() => {
-        document.documentElement.style.removeProperty("width");
-      });
-    });
-
     this._displayCollectionData();
 
     AddonManager.addAddonListener(this);

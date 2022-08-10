@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
-  <style>
-  #container > div { position: absolute; top: 0; left: 0 }
-  </style>
   <body style="font: 14px serif">
-    <div id="container" style="height: 100px; width: 550px; border: 1px solid black; position: relative;">
-      <div style="top: 60px;">Spacer</div>
-      <div style="left: 275px">Lime float at right.</div>
-      <div style="right: 0; left: auto; background: lime;">FLOAT</div>
+    <div style="column-count:2; column-fill:auto; column-gap: 0; height: 100px; width: 550px; border: 1px solid black;">
+      <!-- First column -->
+      <div style="height: 100px;"></div>
+
+      <!-- Second column -->
+      <div>Spacer</div>
+      <div>
+        Lime float at right.
+        <span style="float:right; background: lime;">FLOAT</span>
+      </div>
     </div>
   </body>
 </html>

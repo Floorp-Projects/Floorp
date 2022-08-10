@@ -5,8 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1580012
 -->
 <head>
   <title>Test for Bug 1580012</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <style>
     /* Styling for parents that blockify their children: */
     .grid { display: grid; }
@@ -56,10 +55,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1580012
   -->
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 
 /** Test for Bug 1580012 **/
-SimpleTest.waitForExplicitFinish();
 
 function checkDisp(elemId, expectedDisplay) {
   var elem = document.getElementById(elemId);
@@ -68,58 +66,48 @@ function checkDisp(elemId, expectedDisplay) {
   is(getComputedStyle(elem).display, expectedDisplay,
      "Element with ID " + elemId + " should have expected display value");
 }
-function runTest() {
-  // Create CSS Style rules to add -moz-box / -moz-inline-box styling.
-  // Note that these style won't parse correctly until after we've flipped
-  // the prefs via pushPrefEnv(). That's why I'm creating these style rules
-  // here rather than just putting them inline in the <style> element.
-  var sheet = document.styleSheets[0];
-  sheet.insertRule(".moz-box { display: -moz-box; }");
-  sheet.insertRule(".moz-inline-box { display: -moz-inline-box; }");
 
-  // Check the computed 'display' of the various elements.
-  checkDisp("regularMozBox",             "-moz-box");
-  checkDisp("regularMozInlineBox",       "-moz-inline-box");
+// Create CSS Style rules to add -moz-box / -moz-inline-box styling.
+// Note that these style won't parse correctly until after we've flipped
+// the prefs via pushPrefEnv(). That's why I'm creating these style rules
+// here rather than just putting them inline in the <style> element.
+var sheet = document.styleSheets[0];
+sheet.insertRule(".moz-box { display: -moz-box; }");
+sheet.insertRule(".moz-inline-box { display: -moz-inline-box; }");
 
-  checkDisp("gridItemMozBox",             "-moz-box");
-  checkDisp("gridItemMozInlineBox",       "-moz-box");
-  checkDisp("gridGrandchildMozInlineBox", "-moz-inline-box");
+// Check the computed 'display' of the various elements.
+checkDisp("regularMozBox",             "-moz-box");
+checkDisp("regularMozInlineBox",       "-moz-inline-box");
 
-  checkDisp("flexItemMozBox",             "-moz-box");
-  checkDisp("flexItemMozInlineBox",       "-moz-box");
-  checkDisp("flexGrandchildMozInlineBox", "-moz-inline-box");
+checkDisp("gridItemMozBox",             "-moz-box");
+checkDisp("gridItemMozInlineBox",       "-moz-box");
+checkDisp("gridGrandchildMozInlineBox", "-moz-inline-box");
 
-  // XXXdholbert The floated boxes trigger assertion failures where
-  // nsLineLayout thinks it somehow ended up with an inline-level (really, just
-  // a non-'block') floated thing. In practice this isn't really a concern
-  // since -moz-box display values are disabled in content and since XUL
-  // doesn't use 'float' for layout.  So: I've added a fatal assertion in
-  // ReflowInput.cpp to validate that we never actually encounter a floated
-  // -moz-box/-moz-inline-box, and I'm commenting out these lines (which
-  // trigger that fatal assertion).
-  //
-  //  checkDisp("floatMozBox",                "-moz-box");
-  //  checkDisp("floatMozInlineBox",          "-moz-box");
+checkDisp("flexItemMozBox",             "-moz-box");
+checkDisp("flexItemMozInlineBox",       "-moz-box");
+checkDisp("flexGrandchildMozInlineBox", "-moz-inline-box");
+
+// XXXdholbert The floated boxes trigger assertion failures where
+// nsLineLayout thinks it somehow ended up with an inline-level (really, just
+// a non-'block') floated thing. In practice this isn't really a concern
+// since -moz-box display values are disabled in content and since XUL
+// doesn't use 'float' for layout.  So: I've added a fatal assertion in
+// ReflowInput.cpp to validate that we never actually encounter a floated
+// -moz-box/-moz-inline-box, and I'm commenting out these lines (which
+// trigger that fatal assertion).
+//
+//  checkDisp("floatMozBox",                "-moz-box");
+//  checkDisp("floatMozInlineBox",          "-moz-box");
 
 
-  // XXXdholbert These abspos boxes trigger a diagnostic assertion added in
-  // bug 1582819 which is intended to flush out XUL content that is positioned
-  // and hence was previously blockified to 'block' but will now be '-moz-box'.
-  // The diagnostic assertion doesn't need to stay around forever, but while
-  // it exists, we can't test this scenario without triggering it.
-  //
-  // checkDisp("absMozBox",                  "-moz-box");
-  // checkDisp("absMozInlineBox",            "-moz-box");
-
-  SimpleTest.finish();
-}
-
-SpecialPowers.pushPrefEnv({
-  "set": [
-    ["layout.css.xul-box-display-values.content.enabled", true],
-  ]
-}, runTest);
-
+// XXXdholbert These abspos boxes trigger a diagnostic assertion added in
+// bug 1582819 which is intended to flush out XUL content that is positioned
+// and hence was previously blockified to 'block' but will now be '-moz-box'.
+// The diagnostic assertion doesn't need to stay around forever, but while
+// it exists, we can't test this scenario without triggering it.
+//
+// checkDisp("absMozBox",                  "-moz-box");
+// checkDisp("absMozInlineBox",            "-moz-box");
 </script>
 </pre>
 </body>

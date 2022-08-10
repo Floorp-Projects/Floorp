@@ -642,6 +642,7 @@ void MessageChannel::Clear() {
 }
 
 bool MessageChannel::Open(ScopedPort aPort, Side aSide,
+                          const nsID& aMessageChannelId,
                           nsISerialEventTarget* aEventTarget) {
   nsCOMPtr<nsISerialEventTarget> eventTarget =
       aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
@@ -669,6 +670,7 @@ bool MessageChannel::Open(ScopedPort aPort, Side aSide,
     MOZ_RELEASE_ASSERT(ChannelClosed == mChannelState, "Not currently closed");
     MOZ_ASSERT(mSide == UnknownSide);
 
+    mMessageChannelId = aMessageChannelId;
     mWorkerThread = eventTarget;
     mShutdownTask = shutdownTask;
     mLink = MakeUnique<PortLink>(this, std::move(aPort));
@@ -706,6 +708,8 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
 
   MOZ_ASSERT(aTargetChan, "Need a target channel");
 
+  nsID channelId = nsID::GenerateUUID();
+
   std::pair<ScopedPort, ScopedPort> ports =
       NodeController::GetSingleton()->CreatePortPair();
 
@@ -717,7 +721,7 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
                             /* initially_signaled */ false);
   MOZ_ALWAYS_SUCCEEDS(aEventTarget->Dispatch(NS_NewCancelableRunnableFunction(
       "ipc::MessageChannel::OpenAsOtherThread", [&]() {
-        aTargetChan->Open(std::move(ports.second), GetOppSide(aSide),
+        aTargetChan->Open(std::move(ports.second), GetOppSide(aSide), channelId,
                           aEventTarget);
         event.Signal();
       })));
@@ -725,20 +729,22 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
   MOZ_RELEASE_ASSERT(ok);
 
   // Now that the other side has connected, open the port on our side.
-  return Open(std::move(ports.first), aSide);
+  return Open(std::move(ports.first), aSide, channelId);
 }
 
 bool MessageChannel::OpenOnSameThread(MessageChannel* aTargetChan,
                                       mozilla::ipc::Side aSide) {
   auto [porta, portb] = NodeController::GetSingleton()->CreatePortPair();
 
+  nsID channelId = nsID::GenerateUUID();
+
   aTargetChan->mIsSameThreadChannel = true;
   mIsSameThreadChannel = true;
 
   auto* currentThread = GetCurrentSerialEventTarget();
-  return aTargetChan->Open(std::move(portb), GetOppSide(aSide),
+  return aTargetChan->Open(std::move(portb), GetOppSide(aSide), channelId,
                            currentThread) &&
-         Open(std::move(porta), aSide, currentThread);
+         Open(std::move(porta), aSide, channelId, currentThread);
 }
 
 bool MessageChannel::Send(UniquePtr<Message> aMsg) {

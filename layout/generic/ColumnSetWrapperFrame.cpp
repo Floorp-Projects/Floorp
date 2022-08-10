@@ -154,11 +154,18 @@ nscoord ColumnSetWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = 0;
   DISPLAY_MIN_INLINE_SIZE(this, iSize);
 
-  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
-    // If we're size-contained in inline axis, we determine our minimum
-    // intrinsic size purely from our column styling, as if we had no
-    // descendants. This should match what happens in
-    // nsColumnSetFrame::GetMinISize in an actual no-descendants scenario.
+  if (Maybe<nscoord> containISize =
+          ContainIntrinsicISize(NS_UNCONSTRAINEDSIZE)) {
+    // If we're size-contained in inline axis and contain-intrinsic-block-size
+    // is not 'none', then use that size.
+    if (*containISize != NS_UNCONSTRAINEDSIZE) {
+      return *containISize;
+    }
+
+    // In the 'none' case, we determine our minimum intrinsic size purely from
+    // our column styling, as if we had no descendants. This should match what
+    // happens in nsColumnSetFrame::GetMinISize in an actual no-descendants
+    // scenario.
     const nsStyleColumn* colStyle = StyleColumn();
     if (colStyle->mColumnWidth.IsLength()) {
       // As available inline size reduces to zero, our number of columns reduces
@@ -189,7 +196,12 @@ nscoord ColumnSetWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord iSize = 0;
   DISPLAY_PREF_INLINE_SIZE(this, iSize);
 
-  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
+  if (Maybe<nscoord> containISize =
+          ContainIntrinsicISize(NS_UNCONSTRAINEDSIZE)) {
+    if (*containISize != NS_UNCONSTRAINEDSIZE) {
+      return *containISize;
+    }
+
     const nsStyleColumn* colStyle = StyleColumn();
     nscoord colISize;
     if (colStyle->mColumnWidth.IsLength()) {

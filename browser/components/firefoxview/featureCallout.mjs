@@ -103,7 +103,17 @@ const MESSAGES = [
           },
           dismiss_button: {
             action: {
-              navigate: true,
+              type: "SET_PREF",
+              data: {
+                pref: {
+                  name: "browser.firefox-view.feature-tour",
+                  value: JSON.stringify({
+                    message: "FIREFOX_VIEW_FEATURE_TOUR",
+                    screen: "FEATURE_CALLOUT_1",
+                    complete: true,
+                  }),
+                },
+              },
             },
           },
         },
@@ -135,7 +145,17 @@ const MESSAGES = [
           },
           dismiss_button: {
             action: {
-              navigate: true,
+              type: "SET_PREF",
+              data: {
+                pref: {
+                  name: "browser.firefox-view.feature-tour",
+                  value: JSON.stringify({
+                    message: "FIREFOX_VIEW_FEATURE_TOUR",
+                    screen: "FEATURE_CALLOUT_2",
+                    complete: true,
+                  }),
+                },
+              },
             },
           },
         },
@@ -171,7 +191,17 @@ const MESSAGES = [
           },
           dismiss_button: {
             action: {
-              navigate: true,
+              type: "SET_PREF",
+              data: {
+                pref: {
+                  name: "browser.firefox-view.feature-tour",
+                  value: JSON.stringify({
+                    message: "FIREFOX_VIEW_FEATURE_TOUR",
+                    screen: "FEATURE_CALLOUT_3",
+                    complete: true,
+                  }),
+                },
+              },
             },
           },
         },
