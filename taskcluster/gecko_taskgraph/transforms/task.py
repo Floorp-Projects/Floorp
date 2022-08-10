@@ -827,6 +827,7 @@ def build_generic_worker_payload(config, task, task_def):
             "mac_notarize_part_3",
             "mac_sign_and_pkg",
             "mac_geckodriver",
+            "mac_notarize_geckodriver",
             "mac_single_file",
             "mac_notarize_single_file",
         ),
