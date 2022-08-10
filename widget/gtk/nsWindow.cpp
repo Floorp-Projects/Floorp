@@ -1525,7 +1525,7 @@ GdkPoint nsWindow::WaylandGetParentPosition() {
   }
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(parentGtkWindow));
   if (!window) {
-    NS_WARNING("Popup parrent is not mapped!");
+    NS_WARNING("Popup parent is not mapped!");
     return {0, 0};
   }
   gint x = 0, y = 0;
@@ -2377,9 +2377,9 @@ nsWindow::WaylandPopupGetPositionFromLayout() {
       true};
 }
 
-bool nsWindow::WaylandPopupAnchorAnjustForParentPopup(
-    GdkRectangle& aPopupAnchor) {
-  LOG("nsWindow::WaylandPopupAnchorAnjustForParentPopup");
+bool nsWindow::WaylandPopupAnchorAdjustForParentPopup(
+    GdkRectangle* aPopupAnchor) {
+  LOG("nsWindow::WaylandPopupAnchorAdjustForParentPopup");
 
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   if (!parentGtkWindow || !GTK_IS_WIDGET(parentGtkWindow)) {
@@ -2394,73 +2394,82 @@ bool nsWindow::WaylandPopupAnchorAnjustForParentPopup(
 
   GdkRectangle parentWindowRect = {0, 0, gdk_window_get_width(window),
                                    gdk_window_get_height(window)};
+  LOG("  parent window size %d x %d", parentWindowRect.width,
+      parentWindowRect.height);
+
   GdkRectangle finalRect;
-  if (!gdk_rectangle_intersect(&aPopupAnchor, &parentWindowRect, &finalRect)) {
+  if (!gdk_rectangle_intersect(aPopupAnchor, &parentWindowRect, &finalRect)) {
     // Popup anchor is outside of parent window - we can't use move-to-rect
     LOG("  anchor is ourside of parent window!");
     return false;
   }
 
-  aPopupAnchor = finalRect;
+  *aPopupAnchor = finalRect;
   LOG("  anchor is correct %d,%d -> %d x %d", finalRect.x, finalRect.y,
       finalRect.width, finalRect.height);
   return true;
 }
 
-void nsWindow::WaylandPopupMove() {
-  LOG("nsWindow::WaylandPopupMove\n");
+bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor) {
+  LOG("nsWindow::WaylandPopupCheckAndGetAnchor");
 
+  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
+  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+  if (!gdkWindow || !popupFrame) {
+    LOG("  can't use move-to-rect due missing gdkWindow or popupFrame");
+    return false;
+  }
+  if (!mPopupMoveToRectParams.mAnchorSet) {
+    LOG("  can't use move-to-rect due missing anchor");
+    return false;
+  }
+  // Update popup layout coordinates from layout by recent popup hierarchy
+  // (calculate correct position according to parent window)
+  // and convert to Gtk coordinates.
+  LayoutDeviceIntRect anchorRect = mPopupMoveToRectParams.mAnchorRect;
+  if (mWaylandPopupPrev->mWaylandToplevel) {
+    GdkPoint parent = WaylandGetParentPosition();
+    LOG("  subtract parent position from anchor [%d, %d]\n", parent.x,
+        parent.y);
+    anchorRect.MoveBy(-GdkPointToDevicePixels(parent));
+  }
+
+  *aPopupAnchor = DevicePixelsToGdkRectRoundOut(anchorRect);
+  LOG("  move-to-rect call, anchored to rectangle [%d, %d] -> [%d x %d]",
+      aPopupAnchor->x, aPopupAnchor->y, aPopupAnchor->width,
+      aPopupAnchor->height);
+
+  if (!WaylandPopupAnchorAdjustForParentPopup(aPopupAnchor)) {
+    LOG("  can't use move-to-rect, anchor is not placed inside of parent "
+        "window");
+    return false;
+  }
+
+  return true;
+}
+
+void nsWindow::WaylandPopupMove() {
   // Available as of GTK 3.24+
   static auto sGdkWindowMoveToRect = (void (*)(
       GdkWindow*, const GdkRectangle*, GdkGravity, GdkGravity, GdkAnchorHints,
       gint, gint))dlsym(RTLD_DEFAULT, "gdk_window_move_to_rect");
 
+  if (mPopupUseMoveToRect && !sGdkWindowMoveToRect) {
+    LOG("can't use move-to-rect due missing gdk_window_move_to_rect()");
+    mPopupUseMoveToRect = false;
+  }
+
+  GdkRectangle gtkAnchorRect;
+  if (mPopupUseMoveToRect) {
+    mPopupUseMoveToRect = WaylandPopupCheckAndGetAnchor(&gtkAnchorRect);
+  }
+
+  LOG("nsWindow::WaylandPopupMove");
   LOG("  original widget popup position [%d, %d]\n", mPopupPosition.x,
       mPopupPosition.y);
   LOG("  relative widget popup position [%d, %d]\n", mRelativePopupPosition.x,
       mRelativePopupPosition.y);
-
-  if (mPopupUseMoveToRect && !sGdkWindowMoveToRect) {
-    LOG("  can't use move-to-rect due missing gdk_window_move_to_rect()");
-    mPopupUseMoveToRect = false;
-  }
-
-  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
-  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
-  if (mPopupUseMoveToRect && (!gdkWindow || !popupFrame)) {
-    LOG("  can't use move-to-rect due missing gdkWindow or popupFrame");
-    mPopupUseMoveToRect = false;
-  }
-  if (mPopupUseMoveToRect && !mPopupMoveToRectParams.mAnchorSet) {
-    LOG("  can't use move-to-rect due missing anchor");
-    mPopupUseMoveToRect = false;
-  }
-
-  GdkRectangle gtkAnchorRect = {};
-  if (mPopupUseMoveToRect) {
-    // Update popup layout coordinates from layout by recent popup hierarchy
-    // (calculate correct position according to parent window)
-    // and convert to Gtk coordinates.
-    LayoutDeviceIntRect anchorRect = mPopupMoveToRectParams.mAnchorRect;
-    if (mWaylandPopupPrev->mWaylandToplevel) {
-      GdkPoint parent = WaylandGetParentPosition();
-      LOG("  subtract parent position from anchor [%d, %d]\n", parent.x,
-          parent.y);
-      anchorRect.MoveBy(-GdkPointToDevicePixels(parent));
-    }
-
-    gtkAnchorRect = DevicePixelsToGdkRectRoundOut(anchorRect);
-    LOG("  move-to-rect call, anchor [%d,%d] -> [%d x %d]", gtkAnchorRect.x,
-        gtkAnchorRect.y, gtkAnchorRect.width, gtkAnchorRect.height);
-
-    if (!WaylandPopupAnchorAnjustForParentPopup(gtkAnchorRect)) {
-      LOG("  can't use move-to-rect, anchor is not placed inside of parent "
-          "window");
-      mPopupUseMoveToRect = false;
-    }
-  }
-
-  LOG("  popup use move to rect %d\n", mPopupUseMoveToRect);
+  LOG("  popup use move to rect %d", mPopupUseMoveToRect);
 
   if (!mPopupUseMoveToRect) {
     // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
@@ -2492,6 +2501,7 @@ void nsWindow::WaylandPopupMove() {
   // anyway but we need to set it now to avoid a race condition here.
   WaylandPopupRemoveNegativePosition();
 
+  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
   if (!g_signal_handler_find(gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
                              FuncToGpointer(NativeMoveResizeCallback), this)) {
     g_signal_connect(gdkWindow, "moved-to-rect",
