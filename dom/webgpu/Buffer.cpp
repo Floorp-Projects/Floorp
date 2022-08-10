@@ -74,7 +74,11 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
       aRv.ThrowRangeError("Mappable size is too large");
       return nullptr;
     }
-    const auto& size = checked.value();
+    size_t size = checked.value();
+    if (size == 0) {
+      // Can't send zero-sized shmems.
+      size = 1;
+    }
 
     if (!actor->AllocUnsafeShmem(size, &shmem)) {
       aRv.ThrowAbortError(
