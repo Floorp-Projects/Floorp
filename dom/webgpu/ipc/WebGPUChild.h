@@ -9,6 +9,7 @@
 #include "mozilla/webgpu/PWebGPUChild.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla {
 namespace dom {
