@@ -84,7 +84,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
                       const dom::Optional<uint64_t>& aSize,
                       JS::Rooted<JSObject*>* aObject, ErrorResult& aRv);
   void Unmap(JSContext* aCx, ErrorResult& aRv);
-  void Destroy();
+  void Destroy(JSContext* aCx, ErrorResult& aRv);
 };
 
 }  // namespace webgpu
