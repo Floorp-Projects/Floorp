@@ -334,6 +334,7 @@ const AVAILABLE_SHIMS = [
       "*://*.imgur.com/js/vendor.*.bundle.js",
       "*://*.imgur.io/js/vendor.*.bundle.js",
       "*://www.rva311.com/static/js/main.*.chunk.js",
+      "*://web-assets.toggl.com/app/assets/scripts/*.js", // bug 1783919
     ],
     onlyIfPrivateBrowsing: true,
   },
