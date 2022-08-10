@@ -30,15 +30,21 @@
 #include "hb-open-type.hh"
 #include "graph/serialize.hh"
 
+static void extend (const char* value,
+                    unsigned len,
+                    hb_serialize_context_t* c)
+{
+  char* obj = c->allocate_size<char> (len);
+  memcpy (obj, value, len);
+}
+
 static void start_object(const char* tag,
                          unsigned len,
                          hb_serialize_context_t* c)
 {
   c->push ();
-  char* obj = c->allocate_size<char> (len);
-  strncpy (obj, tag, len);
+  extend (tag, len, c);
 }
-
 
 static unsigned add_object(const char* tag,
                            unsigned len,
@@ -57,6 +63,14 @@ static void add_offset (unsigned id,
   c->add_link (*offset, id);
 }
 
+static void add_24_offset (unsigned id,
+                           hb_serialize_context_t* c)
+{
+  OT::Offset24* offset = c->start_embed<OT::Offset24> ();
+  c->extend_min (offset);
+  c->add_link (*offset, id);
+}
+
 static void add_wide_offset (unsigned id,
                              hb_serialize_context_t* c)
 {
@@ -65,10 +79,125 @@ static void add_wide_offset (unsigned id,
   c->add_link (*offset, id);
 }
 
+static void add_gsubgpos_header (unsigned lookup_list,
+                                 hb_serialize_context_t* c)
+{
+  char header[] = {
+    0, 1, // major
+    0, 0, // minor
+    0, 0, // script list
+    0, 0, // feature list
+  };
+
+  start_object (header, 8, c);
+  add_offset (lookup_list, c);
+  c->pop_pack (false);
+}
+
+static unsigned add_lookup_list (const unsigned* lookups,
+                                 char count,
+                                 hb_serialize_context_t* c)
+{
+  char lookup_count[] = {0, count};
+  start_object  ((char *) &lookup_count, 2, c);
+
+  for (int i = 0; i < count; i++)
+    add_offset (lookups[i], c);
+
+  return c->pop_pack (false);
+}
+
+static void start_lookup (int8_t type,
+                          int8_t num_subtables,
+                          hb_serialize_context_t* c)
+{
+  char lookup[] = {
+    0, type, // type
+    0, 0, // flag
+    0, num_subtables, // num subtables
+  };
+
+  start_object (lookup, 6, c);
+}
+
+static unsigned finish_lookup (hb_serialize_context_t* c)
+{
+  char filter[] = {0, 0};
+  extend (filter, 2, c);
+  return c->pop_pack (false);
+}
+
+static unsigned add_extension (unsigned child,
+                               uint8_t type,
+                               hb_serialize_context_t* c)
+{
+  char ext[] = {
+    0, 1,
+    0, (char) type,
+  };
+
+  start_object (ext, 4, c);
+  add_wide_offset (child, c);
+
+  return c->pop_pack (false);
+
+}
+
+static unsigned add_coverage (char start, char end,
+                              hb_serialize_context_t* c)
+{
+  if (end - start == 1)
+  {
+    char coverage[] = {
+      0, 1, // format
+      0, 2, // count
+      0, start, // glyph[0]
+      0, end,   // glyph[1]
+    };
+    return add_object (coverage, 8, c);
+  }
+
+  char coverage[] = {
+    0, 2, // format
+    0, 1, // range count
+    0, start, // start
+    0, end,   // end
+    0, 0,
+  };
+  return add_object (coverage, 10, c);
+}
+
+static unsigned add_pair_pos_1 (unsigned* pair_sets,
+                                char count,
+                                unsigned coverage,
+                                hb_serialize_context_t* c)
+{
+  char format[] = {
+    0, 1
+  };
+
+  start_object (format, 2, c);
+  add_offset (coverage, c);
+
+  char value_format[] = {
+    0, 0,
+    0, 0,
+    0, count,
+  };
+  extend (value_format, 6, c);
+
+  for (char i = 0; i < count; i++)
+    add_offset (pair_sets[(unsigned) i], c);
+
+  return c->pop_pack (false);
+}
+
 static void run_resolve_overflow_test (const char* name,
                                        hb_serialize_context_t& overflowing,
                                        hb_serialize_context_t& expected,
-                                       unsigned num_iterations = 0)
+                                       unsigned num_iterations = 0,
+                                       bool recalculate_extensions = false,
+                                       hb_tag_t tag = HB_TAG ('G', 'S', 'U', 'B'))
 {
   printf (">>> Testing overflowing resolution for %s\n",
           name);
@@ -78,7 +207,9 @@ static void run_resolve_overflow_test (const char* name,
 
   assert (overflowing.offset_overflow ());
   hb_blob_t* out = hb_resolve_overflows (overflowing.object_graph (),
-                                         HB_TAG ('G', 'S', 'U', 'B'), num_iterations);
+                                         tag,
+                                         num_iterations,
+                                         recalculate_extensions);
   assert (out);
 
   hb_bytes_t result = out->as_bytes ();
@@ -86,11 +217,27 @@ static void run_resolve_overflow_test (const char* name,
   assert (!expected.offset_overflow ());
   hb_bytes_t expected_result = expected.copy_bytes ();
 
+  if (result.length != expected_result.length)
+  {
+    printf("result.length (%u) != expected.length (%u).\n",
+           result.length,
+           expected_result.length);
+  }
   assert (result.length == expected_result.length);
+
+  bool equal = true;
   for (unsigned i = 0; i < expected_result.length; i++)
   {
-    assert (result[i] == expected_result[i]);
+    if (result[i] != expected_result[i])
+    {
+      equal = false;
+      uint8_t a = result[i];
+      uint8_t b = expected_result[i];
+      printf("%08u: %x != %x\n", i, a, b);
+    }
   }
+
+  assert (equal);
 
   expected_result.fini ();
   hb_blob_destroy (out);
@@ -812,6 +959,155 @@ populate_serializer_virtual_link (hb_serialize_context_t* c)
   c->end_serialize();
 }
 
+static void
+populate_serializer_with_24_and_32_bit_offsets (hb_serialize_context_t* c)
+{
+  std::string large_string(60000, 'a');
+  c->start_serialize<char> ();
+
+  unsigned obj_f = add_object ("f", 1, c);
+  unsigned obj_g = add_object ("g", 1, c);
+  unsigned obj_j = add_object ("j", 1, c);
+  unsigned obj_k = add_object ("k", 1, c);
+
+  start_object (large_string.c_str (), 40000, c);
+  add_offset (obj_f, c);
+  unsigned obj_c = c->pop_pack (false);
+
+  start_object (large_string.c_str (), 40000, c);
+  add_offset (obj_g, c);
+  unsigned obj_d = c->pop_pack (false);
+
+  start_object (large_string.c_str (), 40000, c);
+  add_offset (obj_j, c);
+  unsigned obj_h = c->pop_pack (false);
+
+  start_object (large_string.c_str (), 40000, c);
+  add_offset (obj_k, c);
+  unsigned obj_i = c->pop_pack (false);
+
+  start_object ("e", 1, c);
+  add_wide_offset (obj_h, c);
+  add_wide_offset (obj_i, c);
+  unsigned obj_e = c->pop_pack (false);
+
+  start_object ("b", 1, c);
+  add_24_offset (obj_c, c);
+  add_24_offset (obj_d, c);
+  add_24_offset (obj_e, c);
+  unsigned obj_b = c->pop_pack (false);
+
+  start_object ("a", 1, c);
+  add_24_offset (obj_b, c);
+  c->pop_pack (false);
+
+  c->end_serialize();
+}
+
+static void
+populate_serializer_with_extension_promotion (hb_serialize_context_t* c,
+                                              int num_extensions = 0)
+{
+  constexpr int num_lookups = 5;
+  constexpr int num_subtables = num_lookups * 2;
+  unsigned int lookups[num_lookups];
+  unsigned int subtables[num_subtables];
+  unsigned int extensions[num_subtables];
+
+  std::string large_string(60000, 'a');
+  c->start_serialize<char> ();
+
+
+  for (int i = num_subtables - 1; i >= 0; i--)
+    subtables[i] = add_object(large_string.c_str (), 15000, c);
+
+  for (int i = num_subtables - 1;
+       i >= (num_lookups - num_extensions) * 2;
+       i--)
+  {
+    unsigned ext_index = i - (num_lookups - num_extensions) * 2;
+    unsigned subtable_index = num_subtables - ext_index - 1;
+    extensions[i] = add_extension (subtables[subtable_index], 5, c);
+  }
+
+  for (int i = num_lookups - 1; i >= 0; i--)
+  {
+    bool is_ext = (i >= (num_lookups - num_extensions));
+
+    start_lookup (is_ext ? (char) 7 : (char) 5,
+                  2,
+                  c);
+
+    if (is_ext) {
+      add_offset (extensions[i * 2], c);
+      add_offset (extensions[i * 2 + 1], c);
+    } else {
+      add_offset (subtables[i * 2], c);
+      add_offset (subtables[i * 2 + 1], c);
+    }
+
+    lookups[i] = finish_lookup (c);
+  }
+
+  unsigned lookup_list = add_lookup_list (lookups, num_lookups, c);
+
+  add_gsubgpos_header (lookup_list, c);
+
+  c->end_serialize();
+}
+
+template<int num_pair_pos_1, int num_pair_set>
+static void
+populate_serializer_with_large_pair_pos_1 (hb_serialize_context_t* c,
+                                           bool as_extension = false)
+{
+  std::string large_string(60000, 'a');
+  c->start_serialize<char> ();
+
+  constexpr int total_pair_set = num_pair_pos_1 * num_pair_set;
+  unsigned pair_set[total_pair_set];
+  unsigned coverage[num_pair_pos_1];
+  unsigned pair_pos_1[num_pair_pos_1];
+
+  for (int i = num_pair_pos_1 - 1; i >= 0; i--)
+  {
+    for (int j = (i + 1) * num_pair_set - 1; j >= i * num_pair_set; j--)
+      pair_set[j] = add_object (large_string.c_str (), 30000 + j, c);
+
+    coverage[i] = add_coverage (i * num_pair_set,
+                                (i + 1) * num_pair_set - 1, c);
+
+    pair_pos_1[i] = add_pair_pos_1 (&pair_set[i * num_pair_set],
+                                    num_pair_set,
+                                    coverage[i],
+                                    c);
+  }
+
+  unsigned pair_pos_2 = add_object (large_string.c_str(), 200, c);
+
+  if (as_extension) {
+
+    for (int i = num_pair_pos_1 - 1; i >= 0; i--)
+      pair_pos_1[i] = add_extension (pair_pos_1[i], 2, c);
+    pair_pos_2 = add_extension (pair_pos_2, 2, c);
+  }
+
+  start_lookup (as_extension ? 9 : 2, 1 + num_pair_pos_1, c);
+
+  add_offset (pair_pos_2, c);
+  for (int i = 0; i < num_pair_pos_1; i++)
+    add_offset (pair_pos_1[i], c);
+
+
+  unsigned lookup = finish_lookup (c);
+
+  unsigned lookup_list = add_lookup_list (&lookup, 1, c);
+
+  add_gsubgpos_header (lookup_list, c);
+
+  c->end_serialize();
+}
+
 static void test_sort_shortest ()
 {
   size_t buffer_size = 100;
@@ -1129,6 +1425,105 @@ static void test_resolve_overflows_via_isolation_spaces ()
   hb_blob_destroy (out);
 }
 
+static void test_resolve_mixed_overflows_via_isolation_spaces ()
+{
+  size_t buffer_size = 200000;
+  void* buffer = malloc (buffer_size);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_24_and_32_bit_offsets (&c);
+  graph_t graph (c.object_graph ());
+
+  assert (c.offset_overflow ());
+  hb_blob_t* out = hb_resolve_overflows (c.object_graph (), HB_TAG ('G', 'S', 'U', 'B'), 0);
+  assert (out);
+  hb_bytes_t result = out->as_bytes ();
+
+  unsigned expected_length =
+      // Objects
+      7 +
+      4 * 40000;
+
+  expected_length +=
+      // Links
+      2 * 4 +  // 32
+      4 * 3 +  // 24
+      4 * 2;   // 16
+
+  assert (result.length == expected_length);
+
+  free (buffer);
+  hb_blob_destroy (out);
+}
+
+static void test_resolve_with_extension_promotion ()
+{
+  size_t buffer_size = 200000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_extension_promotion (&c);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_extension_promotion (&e, 3);
+
+  run_resolve_overflow_test ("test_resolve_with_extension_promotion",
+                             c,
+                             e,
+                             20,
+                             true);
+  free (buffer);
+  free (expected_buffer);
+}
+
+static void test_resolve_with_basic_pair_pos_1_split ()
+{
+  size_t buffer_size = 200000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_1 <1, 4>(&c);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_1 <2, 2>(&e, true);
+
+  run_resolve_overflow_test ("test_resolve_with_basic_pair_pos_1_split",
+                             c,
+                             e,
+                             20,
+                             true,
+                             HB_TAG('G', 'P', 'O', 'S'));
+  free (buffer);
+  free (expected_buffer);
+}
+
+static void test_resolve_with_extension_pair_pos_1_split ()
+{
+  size_t buffer_size = 200000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_1 <1, 4>(&c, true);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_1 <2, 2>(&e, true);
+
+  run_resolve_overflow_test ("test_resolve_with_extension_pair_pos_1_split",
+                             c,
+                             e,
+                             20,
+                             true,
+                             HB_TAG('G', 'P', 'O', 'S'));
+  free (buffer);
+  free (expected_buffer);
+}
+
+
 static void test_resolve_overflows_via_splitting_spaces ()
 {
   size_t buffer_size = 160000;
@@ -1270,8 +1665,16 @@ main (int argc, char **argv)
   test_resolve_overflows_via_isolating_16bit_space_2 ();
   test_resolve_overflows_via_splitting_spaces ();
   test_resolve_overflows_via_splitting_spaces_2 ();
+  test_resolve_mixed_overflows_via_isolation_spaces ();
   test_duplicate_leaf ();
   test_duplicate_interior ();
   test_virtual_link ();
   test_shared_node_with_virtual_links ();
+  test_resolve_with_extension_promotion ();
+  test_resolve_with_basic_pair_pos_1_split ();
+  test_resolve_with_extension_pair_pos_1_split ();
+
+  // TODO(grieger): test with extensions already mixed in as well.
+  // TODO(grieger): test two layer ext promotion setup.
+  // TODO(grieger): test sorting by subtables per byte in ext. promotion.
 }
