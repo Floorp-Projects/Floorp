@@ -38,7 +38,7 @@ class WebGPUParent final : public PWebGPUParent {
                                   dom::GPUBufferDescriptor&& aDesc,
                                   MaybeShmem&& aShmem);
   ipc::IPCResult RecvBufferReturnShmem(RawId aBufferId, Shmem&& aShmem);
-  ipc::IPCResult RecvBufferMap(RawId aBufferId, ffi::WGPUHostMap aHostMap,
+  ipc::IPCResult RecvBufferMap(RawId aBufferId, uint32_t aMode,
                                uint64_t aOffset, uint64_t size,
                                BufferMapResolver&& aResolver);
   ipc::IPCResult RecvBufferUnmap(RawId aBufferId, bool aFlush);
