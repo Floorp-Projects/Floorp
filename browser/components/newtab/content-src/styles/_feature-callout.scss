@@ -5,7 +5,6 @@ $max-z-index: 2147483647;
 
   &,
   & .outer-wrapper {
-    // auto height to allow for arrow positioning based on height
     height: auto;
   }
 
@@ -98,82 +97,5 @@ $max-z-index: 2147483647;
         }
       }
     }
-  }
-
-  $arrow-size: 24px;
-  $arrow-inset-size: math.div($arrow-size, 2);
-
-  // applied to all callout arrow foreground and background
-  &.callout-arrow::before, &.callout-arrow::after {
-    content: "";
-    position: absolute;
-    width: $arrow-size;
-    height: $arrow-size;
-    transform: rotate(45deg);
-  }
-
-  &.callout-arrow:dir(rtl)::before, &.callout-arrow:dir(rtl)::after {
-    transform: rotate(315deg);
-  }
-
-  // color for all arrow foreground
-  &.callout-arrow::before {
-    background-color: var(--in-content-page-background);
-    z-index: $max-z-index;
-  }
-
-  // styles for all arrow backgrounds
-  &.callout-arrow::after {
-    background: transparent;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    z-index: -1;
-  }
-
-  // up arrow positioning
-  &.arrow-top::before, &.arrow-top::after {
-    top: -$arrow-inset-size;
-    inset-inline-start: calc(50% - $arrow-inset-size);
-  }
-
-  // up arrow foreground
-  &.arrow-top::before {
-    border-top: 1px solid #CFCFD8;
-    border-inline-start: 1px solid #CFCFD8;
-  }
-
-  // down arrow positioning
-  &.arrow-bottom::before, &.arrow-bottom::after {
-    top: calc(100% - $arrow-inset-size);
-    inset-inline-start: calc(50% - $arrow-inset-size);
-  }
-
-  // down arrow foreground
-  &.arrow-bottom::before {
-    border-inline-end: 1px solid #CFCFD8;
-    border-bottom: 1px solid #CFCFD8
-  }
-
-  // start arrow positioning
-  &.arrow-start::before, &.arrow-start::after {
-    top: calc(50% - $arrow-inset-size);
-    inset-inline-start: calc(100% - $arrow-inset-size);
-  }
-
-  // start arrow foreground
-  &.arrow-start::before {
-    border-top: 1px solid #CFCFD8;
-    border-inline-end: 1px solid #CFCFD8;
-  }
-
-  // end arrow positioning
-  &.arrow-end::before, &.arrow-end::after {
-    top: calc(50% - $arrow-inset-size);
-    inset-inline-start: -$arrow-inset-size;
-  }
-
-  // end arrow foreground
-  &.arrow-end::before {
-    border-bottom: 1px solid #CFCFD8;
-    border-inline-start: 1px solid #CFCFD8;
   }
 }
