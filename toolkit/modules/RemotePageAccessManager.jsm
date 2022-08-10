@@ -143,6 +143,7 @@ let RemotePageAccessManager = {
         "browser.privatebrowsing.vpnpromourl",
       ],
       RPMIsWindowPrivate: ["*"],
+      RPMGetBoolPref: ["browser.privatebrowsing.enable-new-logo"],
     },
     "about:protections": {
       RPMSendAsyncMessage: [

@@ -277,6 +277,15 @@ document.addEventListener("DOMContentLoaded", function() {
     return;
   }
 
+  let newLogoEnabled = RPMGetBoolPref(
+    "browser.privatebrowsing.enable-new-logo",
+    false
+  );
+
+  document
+    .getElementById("about-private-browsing-logo")
+    .toggleAttribute("legacy", !newLogoEnabled);
+
   // We don't do this setup until now, because we don't want to record any impressions until we're
   // sure we're actually running a private window, not just about:privatebrowsing in a normal window.
   setupMessageConfig();

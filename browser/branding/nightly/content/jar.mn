@@ -8,6 +8,8 @@ browser.jar:
   content/branding/about-logo.png
   content/branding/about-logo.svg
   content/branding/about-logo@2x.png
+  content/branding/about-logo-private.png
+  content/branding/about-logo-private@2x.png
   content/branding/about-wordmark.svg
   content/branding/firefox-wordmark.svg
   content/branding/icon16.png                    (../default16.png)
