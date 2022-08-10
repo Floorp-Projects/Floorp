@@ -340,6 +340,98 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
   BrowserTestUtils.removeTab(tab2);
 });
 
+add_task(async function feature_callout_arrow_class_exists() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.firefox-view.feature-tour", "{}"],
+      ["intl.l10n.pseudo", ""],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+
+      const arrowParent = document.querySelector(".callout-arrow.arrow-top");
+      ok(arrowParent, "Arrow class exists on parent container");
+    }
+  );
+});
+
+add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.firefox-view.feature-tour", "{}"],
+      ["intl.l10n.pseudo", ""],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+      // Advance to third screen
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_3");
+      let arrowParent = document.querySelector(".callout-arrow.arrow-right");
+      console.log("Arrow Parent: ", arrowParent);
+      ok(
+        arrowParent,
+        "Feature Callout arrow parent has arrow-right class when set to 'end' in left-to-right layouts"
+      );
+    }
+  );
+});
+
+add_task(async function feature_callout_arrow_is_flipped_on_rtl() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.firefox-view.feature-tour", "{}"],
+      // Set layout direction to right to left
+      ["intl.l10n.pseudo", "bidi"],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+      // Advance to third screen
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_3");
+
+      let arrowParent = document.querySelector(".callout-arrow.arrow-left");
+      ok(
+        arrowParent,
+        "Feature Callout arrow has arrow-right class when set to 'end' in right-to-left layouts"
+      );
+    }
+  );
+});
+
 add_task(async function feature_callout_closes_on_dismiss() {
   await SpecialPowers.pushPrefEnv({
     set: [[featureTourPref, "{}"]],
