@@ -381,10 +381,13 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
   if (status != ffi::WGPUBufferMapAsyncStatus_Success) {
     req->mResolver(MaybeShmem(null_t()));
   } else if (req->mHostMap == ffi::WGPUHostMap_Read) {
-    const uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
-        req->mContext, req->mBufferId, req->mOffset,
-        req->mShmem.Size<uint8_t>());
-    memcpy(req->mShmem.get<uint8_t>(), ptr, req->mShmem.Size<uint8_t>());
+    auto size = req->mShmem.Size<uint8_t>();
+    const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
+        req->mContext, req->mBufferId, req->mOffset, size);
+
+    if (mapped.ptr != nullptr && mapped.length >= size) {
+      memcpy(req->mShmem.get<uint8_t>(), mapped.ptr, size);
+    }
 
     req->mResolver(MaybeShmem(std::move(req->mShmem)));
   }
@@ -419,11 +422,13 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId,
 ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, Shmem&& aShmem,
                                              bool aFlush, bool aKeepShmem) {
   if (aFlush) {
+    auto size = aShmem.Size<uint8_t>();
     // TODO: flush exact modified sub-range
-    uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
-        mContext.get(), aBufferId, 0, aShmem.Size<uint8_t>());
-    MOZ_ASSERT(ptr != nullptr);
-    memcpy(ptr, aShmem.get<uint8_t>(), aShmem.Size<uint8_t>());
+    const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
+        mContext.get(), aBufferId, 0, size);
+    MOZ_ASSERT(mapped.ptr != nullptr);
+    MOZ_ASSERT(mapped.length >= size);
+    memcpy(mapped.ptr, aShmem.get<uint8_t>(), size);
   }
 
   ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId);
@@ -698,14 +703,16 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
   // copy the data
   if (status == ffi::WGPUBufferMapAsyncStatus_Success) {
     const auto bufferSize = data->mRowCount * data->mSourcePitch;
-    const uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
+    const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
         req->mContext, bufferId, 0, bufferSize);
+    MOZ_ASSERT(mapped.length >= bufferSize);
     if (data->mTextureHost) {
+      uint8_t* src = mapped.ptr;
       uint8_t* dst = data->mTextureHost->GetBuffer();
       for (uint32_t row = 0; row < data->mRowCount; ++row) {
-        memcpy(dst, ptr, data->mTargetPitch);
+        memcpy(dst, src, data->mTargetPitch);
         dst += data->mTargetPitch;
-        ptr += data->mSourcePitch;
+        src += data->mSourcePitch;
       }
       layers::CompositorThread()->Dispatch(NS_NewRunnableFunction(
           "webgpu::WebGPUParent::PresentCallback",
