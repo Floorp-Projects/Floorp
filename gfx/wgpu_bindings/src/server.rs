@@ -364,19 +364,12 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
         host: map_mode,
         callback,
     };
-    // All errors are also exposed to the mapping callback, so we handle them there and ignore
-    // the the returned value of buffer_map_async.
-    let _ = gfx_select!(buffer_id => global.buffer_map_async(
+    gfx_select!(buffer_id => global.buffer_map_async(
         buffer_id,
         start .. start + size,
         operation
-    ));
-}
-
-#[repr(C)]
-pub struct MappedBufferSlice {
-    pub ptr: *mut u8,
-    pub length: u64,
+    ))
+    .unwrap();
 }
 
 /// # Safety
@@ -389,39 +382,19 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
     buffer_id: id::BufferId,
     start: wgt::BufferAddress,
     size: wgt::BufferAddress,
-) -> MappedBufferSlice {
-    let result = gfx_select!(buffer_id => global.buffer_get_mapped_range(
+) -> *mut u8 {
+    gfx_select!(buffer_id => global.buffer_get_mapped_range(
         buffer_id,
         start,
         Some(size)
-    ));
-
-    // TODO: error reporting.
-
-    result.map(|(ptr, length)| MappedBufferSlice { ptr, length })
-        .unwrap_or(MappedBufferSlice { ptr: std::ptr::null_mut(), length: 0 })
+    ))
+    .unwrap()
+    .0
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_buffer_unmap(global: &Global, buffer_id: id::BufferId, mut error_buf: ErrorBuffer) {
-    if let Err(e) = gfx_select!(buffer_id => global.buffer_unmap(buffer_id)) {
-        error_buf.init(e);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn wgpu_server_buffer_destroy(global: &Global, self_id: id::BufferId) {
-    use wgc::resource::DestroyError;
-    match gfx_select!(self_id => global.buffer_destroy(self_id)) {
-        Err(DestroyError::Invalid) => {
-            // This indicates an error on our side.
-            panic!("Buffer already dropped.");
-        }
-        _ => {
-            // Other error need to be reported but are not fatal, since users
-            // can, for example, ask for a buffer to be destroyed multiple times.
-        }
-    }
+pub extern "C" fn wgpu_server_buffer_unmap(global: &Global, buffer_id: id::BufferId) {
+    gfx_select!(buffer_id => global.buffer_unmap(buffer_id)).unwrap();
 }
 
 #[no_mangle]
