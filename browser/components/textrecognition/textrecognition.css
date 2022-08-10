@@ -1,3 +1,119 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+.textRecognitionText {
+  overflow-y: auto;
+  max-height: 300px;
+  flex: 1;
+  display: none;
+}
+
+.textRecognitionText p:first-child {
+  margin-top: 0;
+}
+
+.textRecognitionText p:last-child {
+  margin-bottom: 0;
+}
+
+.textRecognition {
+  --gap: 16px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--in-content-page-background);
+  width: 412px;
+  gap: var(--gap);
+  padding: var(--gap);
+}
+
+.textRecognitionHeader {
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.textRecognitionFooter {
+  text-align: end;
+}
+
+.textRecognitionThrobber {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  position: relative;
+  overflow: hidden;
+  margin-inline-end: 5.5px;
+}
+
+.textRecognitionThrobber::before {
+  content: "";
+  position: absolute;
+  background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
+  background-position: left center;
+  background-repeat: no-repeat;
+  width: 480px;
+  height: 100%;
+  animation: throbber-animation-ltr 1.05s steps(30) infinite;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.7;
+}
+
+.textRecognitionThrobber:dir(rtl)::before {
+  background-position-x: right;
+  animation: throbber-animation-rtl 1.05s steps(30) infinite;
+}
+
+.textRecognitionSuccessIcon {
+  display: inline-block;
+  background-color: #2AC3A2;
+  border: 3px solid #2AC3A2;
+  fill: --in-content-page-background;
+  -moz-context-properties: fill;
+  border-radius: 10px;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 6px;
+  animation: success-animation 0.3s cubic-bezier(.3,2,.48,.94);
+}
+
+.textRecognitionNoResultIcon {
+  display: inline-block;
+  fill: #FFBF00;
+  -moz-context-properties: fill;
+  width: 18px;
+  height: 18px;
+  margin-inline-end: 8px;
+}
+
+@media (prefers-contrast) {
+  .textRecognitionSuccessIcon {
+    background-color: currentColor;
+    border-color: currentColor;
+    fill: --in-content-page-background;
+  }
+}
+
+@keyframes throbber-animation-ltr {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes throbber-animation-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes success-animation {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
