@@ -372,10 +372,8 @@ ipc::IPCResult WebGPUParent::RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
   return IPC_OK();
 }
 
-// TODO: maintain a list of the requests and disable them when the WebGPUParent
-// dies.
 struct MapRequest {
-  WebGPUParent* mParent;
+  RefPtr<WebGPUParent> mParent;
   ffi::WGPUGlobal* mContext;
   ffi::WGPUBufferId mBufferId;
   ffi::WGPUHostMap mHostMap;
@@ -398,10 +396,13 @@ struct MapRequest {
 static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
                         uint8_t* userdata) {
   auto* req = reinterpret_cast<MapRequest*>(userdata);
-  BufferMapResult result;
 
-  // TODO: we'll need some logic here along the lines of:
-  // if (!req->mParent->IPCOpen()) { ... }
+  if (!req->mParent->CanSend()) {
+    delete req;
+    return;
+  }
+
+  BufferMapResult result;
 
   auto bufferId = req->mBufferId;
   auto* mapData = req->mParent->GetBufferMapData(bufferId);
