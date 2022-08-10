@@ -25,9 +25,14 @@ async function handlePrefChange(prefName, prevVal, newVal) {
     _endTour();
   } else {
     READY = false;
-    _loadConfig(lazy.featureTourProgress.message);
-    document.getElementById(CONTAINER_ID)?.remove();
-    await _renderCallout();
+    let container = document.getElementById(CONTAINER_ID);
+    container?.classList.add("hidden");
+    // wait for fade out transition
+    setTimeout(async () => {
+      _loadConfig(lazy.featureTourProgress.message);
+      container?.remove();
+      await _renderCallout();
+    }, TRANSITION_MS);
   }
 }
 
@@ -63,6 +68,7 @@ let CONFIG;
 let RENDER_OBSERVER;
 let READY = false;
 
+const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
 const MESSAGES = [
   {
@@ -212,7 +218,7 @@ const MESSAGES = [
 
 function _createContainer() {
   let container = document.createElement("div");
-  container.classList.add("onboardingContainer", "featureCallout");
+  container.classList.add("onboardingContainer", "featureCallout", "hidden");
   container.id = CONTAINER_ID;
   document.body.appendChild(container);
   return container;
@@ -307,6 +313,8 @@ function _positionCallout() {
   } else {
     positioners[arrowPosition]();
   }
+
+  container.classList.remove("hidden");
 }
 
 function _addPositionListeners() {
@@ -341,9 +349,14 @@ function _setupWindowFunctions() {
 }
 
 function _endTour() {
-  document.getElementById(CONTAINER_ID)?.remove();
-  _removePositionListeners();
-  RENDER_OBSERVER?.disconnect();
+  // wait for fade out transition
+  let container = document.getElementById(CONTAINER_ID);
+  container?.classList.add("hidden");
+  setTimeout(() => {
+    container?.remove();
+    _removePositionListeners();
+    RENDER_OBSERVER?.disconnect();
+  }, TRANSITION_MS);
 }
 
 async function _addScriptsAndRender(container) {
