@@ -6,22 +6,15 @@ package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.View
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
-import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
-import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
-import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTab
 
 /**
  * View holder for a recent tab item.
@@ -36,7 +29,6 @@ class RecentTabViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
     private val recentTabInteractor: RecentTabInteractor,
-    private val recentSyncedTabInteractor: RecentSyncedTabInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
@@ -52,7 +44,6 @@ class RecentTabViewHolder(
     @Composable
     override fun Content() {
         val recentTabs = components.appStore.observeAsComposableState { state -> state.recentTabs }
-        val recentSyncedTabState = components.appStore.observeAsComposableState { state -> state.recentSyncedTabState }
 
         Column {
             RecentTabs(
@@ -65,22 +56,6 @@ class RecentTabViewHolder(
                     )
                 )
             )
-
-            recentSyncedTabState.value?.let {
-                if (components.settings.enableTaskContinuityEnhancements && it is RecentSyncedTabState.Success) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    RecentSyncedTab(
-                        tab = it.tab,
-                        onRecentSyncedTabClick = { tab ->
-                            recentSyncedTabInteractor.onRecentSyncedTabClicked(tab)
-                        },
-                        onSeeAllSyncedTabsButtonClick = {
-                            recentSyncedTabInteractor.onSyncedTabShowAllClicked()
-                        },
-                    )
-                }
-            }
         }
     }
 }

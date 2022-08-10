@@ -156,8 +156,9 @@ class SessionControlViewTest {
             false,
             null,
             false,
-            historyMetadata,
-            pocketStories
+            showRecentSyncedTab = false,
+            recentVisits = historyMetadata,
+            pocketStories = pocketStories
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -192,6 +193,7 @@ class SessionControlViewTest {
             false,
             nimbusMessageCard,
             false,
+            showRecentSyncedTab = false,
             historyMetadata,
             pocketStories
         )
@@ -224,6 +226,7 @@ class SessionControlViewTest {
             false,
             null,
             true,
+            showRecentSyncedTab = false,
             historyMetadata,
             pocketStories
         )
@@ -259,6 +262,7 @@ class SessionControlViewTest {
             false,
             null,
             false,
+            showRecentSyncedTab = false,
             historyMetadata,
             pocketStories
         )
@@ -294,6 +298,7 @@ class SessionControlViewTest {
             false,
             null,
             false,
+            showRecentSyncedTab = false,
             historyMetadata,
             pocketStories
         )
@@ -330,6 +335,7 @@ class SessionControlViewTest {
             false,
             null,
             false,
+            showRecentSyncedTab = false,
             historyMetadata,
             pocketStories
         )
@@ -365,6 +371,7 @@ class SessionControlViewTest {
             false,
             null,
             true,
+            showRecentSyncedTab = true,
             historyMetadata,
             pocketStories
         )
