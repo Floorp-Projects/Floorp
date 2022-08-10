@@ -216,22 +216,21 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
 void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
                             const dom::Optional<uint64_t>& aSize,
                             JS::Rooted<JSObject*>* aObject, ErrorResult& aRv) {
+  if (!mMapped || !mShmem.IsReadable()) {
+    aRv.ThrowInvalidStateError("Buffer is not mapped");
+    return;
+  }
+
   const auto checkedOffset = CheckedInt<size_t>(aOffset);
   const auto checkedSize = aSize.WasPassed()
                                ? CheckedInt<size_t>(aSize.Value())
                                : CheckedInt<size_t>(mSize) - aOffset;
   const auto checkedMinBufferSize = checkedOffset + checkedSize;
+
   if (!checkedOffset.isValid() || !checkedSize.isValid() ||
-      !checkedMinBufferSize.isValid()) {
-    aRv.ThrowRangeError("Invalid mapped range");
-    return;
-  }
-  if (!mMapped || !mShmem.IsReadable()) {
-    aRv.ThrowInvalidStateError("Buffer is not mapped");
-    return;
-  }
-  if (checkedMinBufferSize.value() > mShmem.Size<uint8_t>()) {
-    aRv.ThrowOperationError("Mapped range exceeds buffer size");
+      !checkedMinBufferSize.isValid() || aOffset < mMapped->mOffset ||
+      checkedMinBufferSize.value() > mMapped->mOffset + mMapped->mSize) {
+    aRv.ThrowRangeError("Invalid range");
     return;
   }
 
