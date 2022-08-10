@@ -750,6 +750,10 @@ ConsoleAPI.prototype = {
   set maxLogLevel(aValue) {
     this._maxLogLevel = this._maxExplicitLogLevel = aValue;
   },
+
+  shouldLog(aLevel) {
+    return shouldLog(aLevel, this.maxLogLevel);
+  },
 };
 
 var console = new ConsoleAPI();
