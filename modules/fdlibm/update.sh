@@ -9,11 +9,11 @@ API_BASE_URL=https://api.github.com/repos/freebsd/freebsd-src
 
 get_commit() {
     curl -s "${API_BASE_URL}/commits?path=lib/msun/src&per_page=1" \
-        | python -c 'import json, sys; print(json.loads(sys.stdin.read())[0]["sha"])'
+        | python3 -c 'import json, sys; print(json.loads(sys.stdin.read())[0]["sha"])'
 }
 get_date() {
     curl -s "${API_BASE_URL}/commits/${COMMIT}" \
-        | python -c 'import json, sys; print(json.loads(sys.stdin.read())["commit"]["committer"]["date"])'
+        | python3 -c 'import json, sys; print(json.loads(sys.stdin.read())["commit"]["committer"]["date"])'
 }
 
 mv ./src/moz.build ./src_moz.build
