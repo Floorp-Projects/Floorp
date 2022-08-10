@@ -3967,12 +3967,14 @@ class nsIFrame : public nsQueryFrame {
     }
   }
 
-  Maybe<nscoord> ContainIntrinsicBSize() const {
-    return StyleDisplay()->GetContainSizeAxes().ContainIntrinsicBSize(*this);
+  Maybe<nscoord> ContainIntrinsicBSize(nscoord aNoneValue = 0) const {
+    return StyleDisplay()->GetContainSizeAxes().ContainIntrinsicBSize(
+        *this, aNoneValue);
   }
 
-  Maybe<nscoord> ContainIntrinsicISize() const {
-    return StyleDisplay()->GetContainSizeAxes().ContainIntrinsicISize(*this);
+  Maybe<nscoord> ContainIntrinsicISize(nscoord aNoneValue = 0) const {
+    return StyleDisplay()->GetContainSizeAxes().ContainIntrinsicISize(
+        *this, aNoneValue);
   }
 
  protected:
