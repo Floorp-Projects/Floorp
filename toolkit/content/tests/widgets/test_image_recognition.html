@@ -21,8 +21,16 @@
   );
   SimpleTest.waitForExplicitFinish();
 
+  function pushPref(preferenceName, value) {
+    return new Promise(resolve => {
+      const options = {"set": [[preferenceName, value]]};
+      SpecialPowers.pushPrefEnv(options, resolve);
+    });
+  }
+
   window.addEventListener("load", async () => {
     try {
+      await pushPref("dom.text-recognition.shadow-dom-enabled", true);
       const img = document.querySelector("#content img");
 
       info("Recognizing the image text");
