@@ -108,26 +108,22 @@ bool Buffer::Mappable() const {
 
 void Buffer::Cleanup() {
   AbortMapRequest();
-  if (mValid && mParent) {
-    mValid = false;
 
-    if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
-      // The array buffers could live longer than us and our shmem, so make sure
-      // we clear the external buffer bindings.
-      dom::AutoJSAPI jsapi;
-      if (jsapi.Init(mParent->GetOwnerGlobal())) {
-        IgnoredErrorResult rv;
-        UnmapArrayBuffers(jsapi.cx(), rv);
-      }
-    }
-
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      // Tell the parent side the about the imminent disparition of the shmem
-      // *before* deallocating it.
-      bridge->SendBufferDestroy(mId);
+  if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
+    // The array buffers could live longer than us and our shmem, so make sure
+    // we clear the external buffer bindings.
+    dom::AutoJSAPI jsapi;
+    if (jsapi.Init(mParent->GetOwnerGlobal())) {
+      IgnoredErrorResult rv;
+      UnmapArrayBuffers(jsapi.cx(), rv);
     }
   }
+  mMapped.reset();
+
+  if (mValid && !mParent->IsLost()) {
+    mParent->GetBridge()->SendBufferDestroy(mId);
+  }
+  mValid = false;
 }
 
 void Buffer::SetMapped(BufferAddress aOffset, BufferAddress aSize,
