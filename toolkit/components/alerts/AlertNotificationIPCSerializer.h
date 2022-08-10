@@ -66,7 +66,7 @@ struct IPDLParamTraits<nsIAlertNotification*> {
     WriteIPDLParam(aWriter, aActor, dir);
     WriteIPDLParam(aWriter, aActor, lang);
     WriteIPDLParam(aWriter, aActor, data);
-    WriteIPDLParam(aWriter, aActor, IPC::Principal(principal));
+    WriteIPDLParam(aWriter, aActor, principal);
     WriteIPDLParam(aWriter, aActor, inPrivateBrowsing);
     WriteIPDLParam(aWriter, aActor, requireInteraction);
     WriteIPDLParam(aWriter, aActor, silent);
@@ -84,7 +84,7 @@ struct IPDLParamTraits<nsIAlertNotification*> {
 
     nsString name, imageURL, title, text, cookie, dir, lang, data;
     bool textClickable, inPrivateBrowsing, requireInteraction, silent;
-    IPC::Principal principal;
+    nsCOMPtr<nsIPrincipal> principal;
     nsTArray<uint32_t> vibrate;
 
     if (!ReadIPDLParam(aReader, aActor, &name) ||

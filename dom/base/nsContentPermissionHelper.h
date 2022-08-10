@@ -22,16 +22,6 @@
 class nsPIDOMWindowInner;
 class nsContentPermissionRequestProxy;
 
-// Forward declare IPC::Principal here which is defined in
-// PermissionMessageUtils.h. Include this file will transitively includes
-// "windows.h" and it defines
-//   #define CreateEvent CreateEventW
-//   #define LoadImage LoadImageW
-// That will mess up windows build.
-namespace IPC {
-class Principal;
-}  // namespace IPC
-
 namespace mozilla::dom {
 
 class Element;
