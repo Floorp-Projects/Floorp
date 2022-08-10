@@ -9,6 +9,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 
+#include <tuple>
+
 #include "jsapi.h"
 #include "jsmath.h"
 
@@ -5436,8 +5438,7 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
   MOZ_ASSERT(callee_->isNativeWithoutJitEntry());
 
   MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Standard ||
-             flags_.getArgFormat() == CallFlags::FunCall ||
-             flags_.getArgFormat() == CallFlags::Spread);
+             flags_.getArgFormat() == CallFlags::FunCall);
 
   ObjOperandId calleeObjId;
   if (flags_.getArgFormat() == CallFlags::FunCall) {
@@ -5461,6 +5462,37 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
     ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
     writer.guardSpecificFunction(newTargetObjId, callee_);
   }
+}
+
+ObjOperandId
+InlinableNativeIRGenerator::emitNativeCalleeGuardAndLoadArgsArray() {
+  // Note: we rely on GuardSpecificFunction to also guard against the same
+  // native from a different realm.
+  MOZ_ASSERT(callee_->isNativeWithoutJitEntry());
+
+  MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Spread ||
+             flags_.getArgFormat() == CallFlags::FunApplyArray);
+
+  MOZ_ASSERT(!flags_.isConstructing());
+
+  ObjOperandId calleeObjId;
+  ObjOperandId argObjId;
+  if (flags_.getArgFormat() == CallFlags::FunApplyArray) {
+    MOZ_ASSERT(generator_.writer.numOperandIds() > 0, "argcId is initialized");
+
+    Int32OperandId argcId(0);
+    std::tie(calleeObjId, argObjId) =
+        generator_.emitFunApplyGuard(argcId, flags_.getArgFormat());
+  } else {
+    ValOperandId calleeValId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags_);
+    calleeObjId = writer.guardToObject(calleeValId);
+    argObjId = writer.loadSpreadArgs();
+  }
+
+  writer.guardSpecificFunction(calleeObjId, callee_);
+
+  return argObjId;
 }
 
 void IRGenerator::emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee) {
@@ -5493,8 +5525,8 @@ ObjOperandId CallIRGenerator::emitFunCallGuard(Int32OperandId argcId) {
   return writer.guardToObject(thisValId);
 }
 
-ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId,
-                                                CallFlags::ArgFormat format) {
+std::pair<ObjOperandId, ObjOperandId> CallIRGenerator::emitFunApplyGuard(
+    Int32OperandId argcId, CallFlags::ArgFormat format) {
   MOZ_ASSERT(argc_ == 2);
 
   JSFunction* callee = &callee_.toObject().as<JSFunction>();
@@ -5514,8 +5546,8 @@ ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId,
   ValOperandId argValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
 
+  ObjOperandId argObjId = writer.guardToObject(argValId);
   if (format == CallFlags::FunApplyArgsObj) {
-    ObjOperandId argObjId = writer.guardToObject(argValId);
     if (args_[1].toObject().is<MappedArgumentsObject>()) {
       writer.guardClass(argObjId, GuardClassKind::MappedArguments);
     } else {
@@ -5527,12 +5559,11 @@ ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId,
     writer.guardArgumentsObjectFlags(argObjId, flags);
   } else {
     MOZ_ASSERT(format == CallFlags::FunApplyArray);
-    ObjOperandId argObjId = writer.guardToObject(argValId);
     writer.guardClass(argObjId, GuardClassKind::Array);
     writer.guardArrayIsPacked(argObjId);
   }
 
-  return thisObjId;
+  return {thisObjId, argObjId};
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush() {
@@ -7441,7 +7472,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathMinMax(bool isMax) {
 
 AttachDecision InlinableNativeIRGenerator::tryAttachSpreadMathMinMax(
     bool isMax) {
-  MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Spread);
+  MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Spread ||
+             flags_.getArgFormat() == CallFlags::FunApplyArray);
 
   // The result will be an int32 if there is at least one argument,
   // and all the arguments are int32.
@@ -7458,11 +7490,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSpreadMathMinMax(
   // Initialize the input operand.
   initializeInputOperand();
 
-  // Guard callee is this Math function.
-  emitNativeCalleeGuard();
-
-  // Load the argument array
-  ObjOperandId argsId = writer.loadSpreadArgs();
+  // Guard callee is this Math function and load the argument array.
+  ObjOperandId argsId = emitNativeCalleeGuardAndLoadArgsArray();
 
   if (int32Result) {
     writer.int32MinMaxArrayResult(argsId, isMax);
@@ -9254,7 +9283,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
     return AttachDecision::NoAction;
   }
-  auto* target = &thisval_.toObject().as<JSFunction>();
+  Rooted<JSFunction*> target(cx_, &thisval_.toObject().as<JSFunction>());
 
   bool isScripted = target->hasJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNativeWithoutJitEntry());
@@ -9283,16 +9312,33 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  ObjOperandId thisObjId = emitFunApplyGuard(argcId, format);
-
   CallFlags targetFlags(format);
   if (mode_ == ICState::Mode::Specialized) {
-    // Ensure that |this| is the expected target function.
-    emitCalleeGuard(thisObjId, target);
-
     if (cx_->realm() == target->realm()) {
       targetFlags.setIsSameRealm();
     }
+  }
+
+  if (mode_ == ICState::Mode::Specialized && !isScripted &&
+      format == CallFlags::FunApplyArray) {
+    HandleValue newTarget = NullHandleValue;
+    HandleValue thisValue = args_[0];
+    Rooted<ArrayObject*> aobj(cx_, &args_[1].toObject().as<ArrayObject>());
+    HandleValueArray args = HandleValueArray::fromMarkedLocation(
+        aobj->length(), aobj->getDenseElements());
+
+    // Check for specific native-function optimizations.
+    InlinableNativeIRGenerator nativeGen(*this, target, newTarget, thisValue,
+                                         args, targetFlags);
+    TRY_ATTACH(nativeGen.tryAttachStub());
+  }
+
+  ObjOperandId thisObjId;
+  std::tie(thisObjId, std::ignore) = emitFunApplyGuard(argcId, format);
+
+  if (mode_ == ICState::Mode::Specialized) {
+    // Ensure that |this| is the expected target function.
+    emitCalleeGuard(thisObjId, target);
 
     if (isScripted) {
       writer.callScriptedFunction(thisObjId, argcId, targetFlags);
@@ -9517,7 +9563,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   }
 
   // Check for special-cased native spread calls.
-  if (flags_.getArgFormat() == CallFlags::Spread) {
+  if (flags_.getArgFormat() == CallFlags::Spread ||
+      flags_.getArgFormat() == CallFlags::FunApplyArray) {
     switch (native) {
       case InlinableNative::MathMin:
         return tryAttachSpreadMathMinMax(/*isMax = */ false);
