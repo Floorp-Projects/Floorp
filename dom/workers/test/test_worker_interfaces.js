@@ -41,19 +41,14 @@ let wasmGlobalInterfaces = [
   { name: "CompileError", insecureContext: true },
   { name: "LinkError", insecureContext: true },
   { name: "RuntimeError", insecureContext: true },
-  {
-    name: "Function",
-    insecureContext: true,
-    nightly: true,
-  },
-  {
-    name: "Exception",
-    insecureContext: true,
-  },
-  {
-    name: "Tag",
-    insecureContext: true,
-  },
+  { name: "Function", insecureContext: true, nightly: true },
+  { name: "Exception", insecureContext: true },
+  { name: "Tag", insecureContext: true },
+  { name: "compile", insecureContext: true },
+  { name: "compileStreaming", insecureContext: true },
+  { name: "instantiate", insecureContext: true },
+  { name: "instantiateStreaming", insecureContext: true },
+  { name: "validate", insecureContext: true },
 ];
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
@@ -113,6 +108,19 @@ let ecmaGlobals = [
   { name: "WeakRef", insecureContext: true },
   { name: "WeakSet", insecureContext: true },
   wasmGlobalEntry,
+  { name: "decodeURI", insecureContext: true },
+  { name: "decodeURIComponent", insecureContext: true },
+  { name: "encodeURI", insecureContext: true },
+  { name: "encodeURIComponent", insecureContext: true },
+  { name: "escape", insecureContext: true },
+  { name: "eval", insecureContext: true },
+  { name: "globalThis", insecureContext: true },
+  { name: "isFinite", insecureContext: true },
+  { name: "isNaN", insecureContext: true },
+  { name: "parseFloat", insecureContext: true },
+  { name: "parseInt", insecureContext: true },
+  { name: "undefined", insecureContext: true },
+  { name: "unescape", insecureContext: true },
 ];
 // IMPORTANT: Do not change the list above without review from
 //            a JavaScript Engine peer!
@@ -372,8 +380,38 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "WritableStreamDefaultWriter", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "cancelAnimationFrame", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "close", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "console", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "name", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "onmessage", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "onmessageerror", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "postMessage", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "requestAnimationFrame", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
 ];
 // IMPORTANT: Do not change the list above without review from a DOM peer!
+
+// List of functions defined on the global by the test harness or this test
+// file.
+let testFunctions = [
+  "ok",
+  "is",
+  "workerTestArrayEquals",
+  "workerTestDone",
+  "workerTestGetPermissions",
+  "workerTestGetHelperData",
+  "entryDisabled",
+  "createInterfaceMap",
+  "runTest",
+];
 
 function entryDisabled(
   entry,
@@ -432,8 +470,8 @@ function createInterfaceMap(data, ...interfaceGroups) {
 function runTest(parentName, parent, data, ...interfaceGroups) {
   var interfaceMap = createInterfaceMap(data, ...interfaceGroups);
   for (var name of Object.getOwnPropertyNames(parent)) {
-    // An interface name should start with an upper case character.
-    if (!/^[A-Z]/.test(name)) {
+    // Ignore functions on the global that are part of the test (harness).
+    if (parent === self && testFunctions.includes(name)) {
       continue;
     }
     ok(
