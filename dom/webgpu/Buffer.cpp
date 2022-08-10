@@ -43,8 +43,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
-               uint32_t aUsage)
-    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage) {
+               uint32_t aUsage, ipc::Shmem&& aShmem)
+    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage), mShmem(aShmem) {
   mozilla::HoldJSObjects(this);
 }
 
@@ -74,23 +74,16 @@ void Buffer::Cleanup() {
 
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      // Note: even if the buffer is considered mapped,
-      // the shmem may be empty before the mapAsync callback
-      // is resolved.
-      if (mMapped && mMapped->mShmem.IsReadable()) {
-        // Note: if the bridge is closed, all associated shmems are already
-        // deleted.
-        bridge->DeallocShmem(mMapped->mShmem);
-      }
+      // Tell the parent side the about the imminent disparition of the shmem
+      // *before* deallocating it.
       bridge->SendBufferDestroy(mId);
     }
   }
 }
 
-void Buffer::SetMapped(ipc::Shmem&& aShmem, bool aWritable) {
+void Buffer::SetMapped(bool aWritable) {
   MOZ_ASSERT(!mMapped);
   mMapped.emplace();
-  mMapped->mShmem = std::move(aShmem);
   mMapped->mWritable = aWritable;
 }
 
@@ -130,9 +123,7 @@ must be either GPUMapMode.READ or GPUMapMode.WRITE");
       return promise.forget();
   }
 
-  // Initialize with a dummy shmem, it will become real after the promise is
-  // resolved.
-  SetMapped(ipc::Shmem(), aMode == dom::GPUMapMode_Binding::WRITE);
+  SetMapped(aMode == dom::GPUMapMode_Binding::WRITE);
 
   const auto checked = aSize.WasPassed() ? CheckedInt<size_t>(aSize.Value())
                                          : CheckedInt<size_t>(mSize) - aOffset;
@@ -151,27 +142,20 @@ must be either GPUMapMode.READ or GPUMapMode.WRITE");
 
   mappingPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [promise, self](MaybeShmem&& aShmem) {
-        switch (aShmem.type()) {
-          case MaybeShmem::TShmem: {
-            // TODO: This isn't quite aligned with the spec but it prevents from
-            // crashing when unmapping before the promise is resolved.
-            if (self->mMapped.isSome()) {
-              self->mMapped->mShmem = std::move(aShmem);
-              promise->MaybeResolve(0);
-            } else {
-              promise->MaybeRejectWithOperationError(
-                  "Unmapped or invalid buffer");
-            }
-
+      [promise, self](BufferMapResult&& aResult) {
+        switch (aResult.type()) {
+          case BufferMapResult::TBufferMapSuccess: {
+            promise->MaybeResolve(0);
+            break;
+          }
+          case BufferMapResult::TBufferMapError: {
+            // TODO: update mapping state.
+            auto& error = aResult.get_BufferMapError();
+            promise->MaybeRejectWithOperationError(error.message());
             break;
           }
           default: {
-            if (self->mMapped.isSome()) {
-              self->mMapped->mShmem = ipc::Shmem();
-            }
-            promise->MaybeRejectWithOperationError(
-                "Attempted to map an invalid buffer");
+            MOZ_CRASH("unreachable");
           }
         }
       },
@@ -195,17 +179,17 @@ void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
     aRv.ThrowRangeError("Invalid mapped range");
     return;
   }
-  if (!mMapped || !mMapped->IsReady()) {
+  if (!mMapped || !mShmem.IsReadable()) {
     aRv.ThrowInvalidStateError("Buffer is not mapped");
     return;
   }
-  if (checkedMinBufferSize.value() > mMapped->mShmem.Size<uint8_t>()) {
+  if (checkedMinBufferSize.value() > mShmem.Size<uint8_t>()) {
     aRv.ThrowOperationError("Mapped range exceeds buffer size");
     return;
   }
 
   auto* const arrayBuffer = mParent->CreateExternalArrayBuffer(
-      aCx, checkedOffset.value(), checkedSize.value(), mMapped->mShmem);
+      aCx, checkedOffset.value(), checkedSize.value(), mShmem);
   if (!arrayBuffer) {
     aRv.NoteJSContextException(aCx);
     return;
@@ -240,8 +224,18 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   }
 
   UnmapArrayBuffers(aCx, aRv);
-  mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable,
-                       Mappable());
+
+  bool hasMapFlags = mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                               dom::GPUBufferUsage_Binding::MAP_READ);
+
+  if (!hasMapFlags) {
+    // We get here if the buffer was mapped at creation without map flags.
+    // It won't be possible to map the buffer again so we can get rid of
+    // our shmem handle on this side. The parent side will deallocate it.
+    mShmem = ipc::Shmem();
+  }
+
+  mParent->UnmapBuffer(mId, mMapped->mWritable);
   mMapped.reset();
 }
 

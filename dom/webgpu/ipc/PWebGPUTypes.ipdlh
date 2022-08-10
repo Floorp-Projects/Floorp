@@ -12,5 +12,19 @@ namespace webgpu {
     null_t;
 };
 
+struct BufferMapSuccess {
+    uint64_t offset;
+    uint64_t size;
+};
+
+struct BufferMapError {
+    nsCString message;
+};
+
+union BufferMapResult {
+    BufferMapSuccess;
+    BufferMapError;
+};
+
 }  // namespace layers
 }  // namespace mozilla

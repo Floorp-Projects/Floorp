@@ -62,8 +62,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   Maybe<DeviceRequest> AdapterRequestDevice(
       RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc,
       ffi::WGPULimits* aLimits);
-  RawId DeviceCreateBuffer(RawId aSelfId,
-                           const dom::GPUBufferDescriptor& aDesc);
+  RawId DeviceCreateBuffer(RawId aSelfId, const dom::GPUBufferDescriptor& aDesc,
+                           MaybeShmem&& aShmem);
   RawId DeviceCreateTexture(RawId aSelfId,
                             const dom::GPUTextureDescriptor& aDesc);
   RawId TextureCreateView(RawId aSelfId, RawId aDeviceId,

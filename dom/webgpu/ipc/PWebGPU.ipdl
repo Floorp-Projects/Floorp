@@ -41,16 +41,15 @@ parent:
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
-  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc);
+  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, MaybeShmem shmem);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
   async AdapterDestroy(RawId selfId);
   // TODO: We want to return an array of compilation messages.
   async DeviceCreateShaderModule(RawId selfId, RawId bufferId, nsString label, nsCString code) returns (WebGPUCompilationMessage[] messages);
-  async BufferReturnShmem(RawId selfId, Shmem shmem);
-  async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (MaybeShmem sm);
-  async BufferUnmap(RawId selfId, Shmem shmem, bool flush, bool keepShmem);
+  async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (BufferMapResult result);
+  async BufferUnmap(RawId selfId, bool flush);
   async BufferDestroy(RawId selfId);
   async TextureDestroy(RawId selfId);
   async TextureViewDestroy(RawId selfId);
