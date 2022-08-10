@@ -101,7 +101,6 @@ class CacheEntryImpl : public CacheEntry, public LinkedListElement<RefPtr<T>> {
                  HashNumber aHash)
       : CacheEntry(aTransform, aBounds, aHash) {}
 
- protected:
   void RemoveFromList() override {
     if (ListType::isInList()) {
       ListType::remove();
@@ -112,15 +111,25 @@ class CacheEntryImpl : public CacheEntry, public LinkedListElement<RefPtr<T>> {
 // CacheImpl manages a list of CacheEntry.
 template <typename T>
 class CacheImpl {
+  typedef LinkedList<RefPtr<T>> ListType;
+
+  static constexpr size_t kNumChains = 17;
+
  public:
   ~CacheImpl() {
-    while (RefPtr<T> entry = mEntries.popLast()) {
-      entry->Unlink();
+    for (size_t i = 0; i < kNumChains; ++i) {
+      while (RefPtr<T> entry = mChains[i].popLast()) {
+        entry->Unlink();
+      }
     }
   }
 
  protected:
-  LinkedList<RefPtr<T>> mEntries;
+  ListType& GetChain(HashNumber aHash) { return mChains[aHash % kNumChains]; }
+
+  void Insert(T* aEntry) { GetChain(aEntry->GetHash()).insertFront(aEntry); }
+
+  ListType mChains[kNumChains];
 };
 
 // TextureHandle is an abstract base class for supplying textures to drawing

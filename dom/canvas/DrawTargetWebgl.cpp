@@ -1953,7 +1953,7 @@ already_AddRefed<PathCacheEntry> PathCache::FindOrInsertEntry(
     const IntRect& aBounds, const Point& aOrigin, float aSigma) {
   HashNumber hash =
       PathCacheEntry::HashPath(aPath, aPattern, aTransform, aBounds);
-  for (const RefPtr<PathCacheEntry>& entry : mEntries) {
+  for (const RefPtr<PathCacheEntry>& entry : GetChain(hash)) {
     if (entry->MatchesPath(aPath, aPattern, aStrokeOptions, aTransform, aBounds,
                            aOrigin, hash, aSigma)) {
       return do_AddRef(entry);
@@ -1976,7 +1976,7 @@ already_AddRefed<PathCacheEntry> PathCache::FindOrInsertEntry(
   RefPtr<PathCacheEntry> entry =
       new PathCacheEntry(aPath, pattern, strokeOptions, aTransform, aBounds,
                          aOrigin, hash, aSigma);
-  mEntries.insertFront(entry);
+  Insert(entry);
   return entry.forget();
 }
 
@@ -2511,14 +2511,14 @@ already_AddRefed<GlyphCacheEntry> GlyphCache::FindOrInsertEntry(
     const GlyphBuffer& aBuffer, const DeviceColor& aColor,
     const Matrix& aTransform, const IntRect& aBounds) {
   HashNumber hash = GlyphCacheEntry::HashGlyphs(aBuffer, aTransform);
-  for (const RefPtr<GlyphCacheEntry>& entry : mEntries) {
+  for (const RefPtr<GlyphCacheEntry>& entry : GetChain(hash)) {
     if (entry->MatchesGlyphs(aBuffer, aColor, aTransform, aBounds, hash)) {
       return do_AddRef(entry);
     }
   }
   RefPtr<GlyphCacheEntry> entry =
       new GlyphCacheEntry(aBuffer, aColor, aTransform, aBounds, hash);
-  mEntries.insertFront(entry);
+  Insert(entry);
   return entry.forget();
 }
 
